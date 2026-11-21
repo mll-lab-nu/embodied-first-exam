@@ -1,0 +1,1181 @@
+{
+ "task": "organize_table",
+ "seed": 0,
+ "layout_index": 0,
+ "layout_file": "Assets/Eval_Layout/RoboDojo/arx_x5/0/organize_table_0.json",
+ "layout_sha256": "e55e5cffef73b1967ad26dc0c7c8933ce05e68f329450ae0ac933abf386fa5ba",
+ "layout": {
+  "Rigid": {
+   "mouse": [
+    {
+     "category": "mouse",
+     "category_idx": 4,
+     "group": null,
+     "xlim": [
+      0.0,
+      0.45
+     ],
+     "ylim": [
+      -0.3,
+      0.05
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 45,
+     "rotate_rand": true,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "mouse",
+     "default_pos": [
+      0.3377020406662775,
+      -0.06637537069273196,
+      0.7834037613289997
+     ],
+     "default_ori": [
+      0.705324742938121,
+      -0.0036802165089720182,
+      0.007509490999676908,
+      -0.7088350093996815
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.09,
+      "friction": 0.45,
+      "type": "rigid"
+     },
+     "visual": {}
+    }
+   ],
+   "alarm": [
+    {
+     "category": "alarm",
+     "category_idx": 0,
+     "group": null,
+     "xlim": [
+      -0.45,
+      0.0
+     ],
+     "ylim": [
+      -0.3,
+      0.05
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 0,
+     "rotate_rand": false,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "alarm",
+     "default_pos": [
+      -0.14785436584375244,
+      0.00262198817476348,
+      0.8051
+     ],
+     "default_ori": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.35,
+      "friction": 0.45,
+      "type": "rigid"
+     },
+     "visual": {}
+    }
+   ],
+   "keyboard": [
+    {
+     "category": "keyboard",
+     "category_idx": 0,
+     "group": null,
+     "xlim": [
+      -0.05,
+      0.05
+     ],
+     "ylim": [
+      -0.2,
+      -0.15
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 0,
+     "rotate_rand": false,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "keyboard",
+     "default_pos": [
+      0.016922024458287083,
+      -0.17026412963626458,
+      0.7783
+     ],
+     "default_ori": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "type": "rigid"
+     },
+     "visual": {}
+    }
+   ],
+   "garage": [
+    {
+     "category": "garage",
+     "category_idx": 8,
+     "group": null,
+     "xlim": [
+      -0.45,
+      0.0
+     ],
+     "ylim": [
+      -0.3,
+      0.05
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 45,
+     "rotate_rand": true,
+     "relative_plane": "Table",
+     "place_tag": "up",
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "garage",
+     "default_pos": [
+      -0.3635845071769554,
+      -0.19159811394957652,
+      0.8557
+     ],
+     "default_ori": [
+      0.9459933257320476,
+      0.0,
+      0.0,
+      -0.3241861003658547
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.35,
+      "friction": 0.45,
+      "type": "rigid"
+     },
+     "visual": {}
+    }
+   ]
+  },
+  "Geometry": {
+   "drawer": [
+    {
+     "category": "drawer",
+     "category_idx": 0,
+     "group": null,
+     "xlim": [
+      -0.45,
+      -0.25
+     ],
+     "ylim": [
+      0.15,
+      0.15
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 0,
+     "rotate_rand": false,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "drawer",
+     "default_pos": [
+      -0.44134455995176775,
+      0.0987,
+      0.765
+     ],
+     "default_ori": [
+      0.7071067811865476,
+      0.0,
+      0.0,
+      0.7071067811865476
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "type": "geometry"
+     },
+     "visual": {}
+    }
+   ],
+   "cube_cushion": [
+    {
+     "category": "cube_cushion",
+     "category_idx": 2,
+     "group": null,
+     "xlim": [
+      -0.15,
+      -0.15
+     ],
+     "ylim": [
+      0.1,
+      0.1
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 0,
+     "rotate_rand": false,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.0,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "cube_cushion",
+     "default_pos": [
+      -0.15,
+      0.1,
+      0.765
+     ],
+     "default_ori": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.12,
+      "friction": 0.25,
+      "size": [
+       0.05000000000000001,
+       0.05000000000000001,
+       9.99999997089617e-05
+      ],
+      "type": "geometry"
+     },
+     "visual": {}
+    }
+   ],
+   "monitor": [
+    {
+     "category": "monitor",
+     "category_idx": 0,
+     "group": null,
+     "xlim": [
+      -0.05,
+      0.15
+     ],
+     "ylim": [
+      0.2,
+      0.25
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 0,
+     "rotate_rand": false,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "monitor",
+     "default_pos": [
+      0.1163082852596539,
+      0.24715661361066027,
+      0.9877
+     ],
+     "default_ori": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "type": "geometry"
+     },
+     "visual": {}
+    }
+   ],
+   "mousemat": [
+    {
+     "category": "mousemat",
+     "category_idx": 0,
+     "group": null,
+     "xlim": [
+      0.35,
+      0.5
+     ],
+     "ylim": [
+      -0.1,
+      0.05
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 0,
+     "rotate_rand": false,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "mousemat",
+     "default_pos": [
+      0.49782559205677124,
+      -0.014482110388476022,
+      0.7686000000000001
+     ],
+     "default_ori": [
+      0.7071067811865476,
+      0.0,
+      0.0,
+      -0.7071067811865476
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "type": "geometry"
+     },
+     "visual": {}
+    }
+   ],
+   "frame": [
+    {
+     "category": "frame",
+     "category_idx": 0,
+     "group": null,
+     "xlim": [
+      0.1,
+      0.1
+     ],
+     "ylim": [
+      0.0,
+      0.0
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 0,
+     "rotate_rand": false,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0,
+     "check_mode": "enforce",
+     "need_check_stable": true,
+     "label": "frame",
+     "default_pos": [
+      0.10000299998125012,
+      0.0,
+      0.7655999925000468
+     ],
+     "default_ori": [
+      0.9999968750146484,
+      0.0,
+      0.002499992187536621,
+      0.0
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "type": "geometry"
+     },
+     "visual": {}
+    }
+   ],
+   "camera_stand": [
+    {
+     "category": "camera_stand",
+     "category_idx": 0,
+     "group": null,
+     "xlim": [
+      0.0,
+      0.0
+     ],
+     "ylim": [
+      -0.47,
+      -0.47
+     ],
+     "zlim": [
+      0.715,
+      0.715
+     ],
+     "qpos": [
+      0.707,
+      -0.707,
+      0.0,
+      0.0
+     ],
+     "rotate_deg": 0,
+     "rotate_rand": false,
+     "relative_plane": "Ground",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "camera_stand",
+     "default_pos": [
+      0.0,
+      -0.47,
+      0.765
+     ],
+     "default_ori": [
+      0.707,
+      -0.707,
+      0.0,
+      0.0
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "type": "geometry"
+     },
+     "visual": {}
+    }
+   ]
+  },
+  "Room": {
+   "default": "Simple_Room_nolight",
+   "default_pos": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "default_rot": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "scale": [
+    0.5,
+    0.5,
+    0.5
+   ]
+  },
+  "Table": {
+   "default": "material_0122",
+   "scale": [
+    1.4,
+    1.1,
+    0.05
+   ],
+   "default_pos": [
+    0.0,
+    -0.05,
+    0.74
+   ],
+   "default_ori": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "Ground": {
+   "geometry": "cube",
+   "thickness": 0.1,
+   "axis": "Z",
+   "default_pos": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "materials": {
+    "type": "mdl",
+    "default": "material_0564",
+    "random": false
+   },
+   "physics_material": {
+    "static_friction": 1.0,
+    "dynamic_friction": 1.0,
+    "restitution": 0.0,
+    "friction_combine_mode": "multiply",
+    "restitution_combine_mode": "multiply",
+    "compliant_contact_stiffness": 0.0,
+    "compliant_contact_damping": 0.0
+   }
+  },
+  "Background": {
+   "intensity": 1000,
+   "category_name": "brown_photostudio_02_4k.hdr"
+  }
+ },
+ "state_sha": "f2ec5164e3b7b92e",
+ "step_lim": 1000,
+ "control_hz": 25,
+ "action_dim": 14,
+ "instruction": "Place the alarm clock on the drawer, put the figurine on the stand, place the mouse on the mouse pad, and push the keyboard into the frame.",
+ "labels": [
+  "mouse",
+  "alarm",
+  "keyboard",
+  "garage",
+  "drawer",
+  "cube_cushion",
+  "monitor",
+  "mousemat",
+  "frame",
+  "camera_stand"
+ ],
+ "objects": {
+  "mouse": {
+   "position": [
+    0.33754,
+    -0.06639,
+    0.78303
+   ],
+   "orientation_wxyz": [
+    -0.70528,
+    -4e-05,
+    -0.00448,
+    0.70892
+   ],
+   "bbox_corners": [
+    [
+     -0.0585,
+     -0.0321,
+     0.0178
+    ],
+    [
+     0.0528,
+     -0.0401,
+     0.0186
+    ],
+    [
+     -0.0532,
+     0.0411,
+     0.0178
+    ],
+    [
+     0.0581,
+     0.0331,
+     0.0187
+    ],
+    [
+     -0.0582,
+     -0.0321,
+     -0.0185
+    ],
+    [
+     0.0531,
+     -0.0401,
+     -0.0177
+    ],
+    [
+     -0.0529,
+     0.0411,
+     -0.0185
+    ],
+    [
+     0.0584,
+     0.0331,
+     -0.0176
+    ]
+   ]
+  },
+  "alarm": {
+   "position": [
+    -0.14785,
+    0.00265,
+    0.80501
+   ],
+   "orientation_wxyz": [
+    1.0,
+    -0.00035,
+    8e-05,
+    0.0
+   ],
+   "bbox_corners": [
+    [
+     -0.04,
+     -0.0249,
+     -0.0401
+    ],
+    [
+     0.04,
+     -0.025,
+     -0.0401
+    ],
+    [
+     -0.0401,
+     -0.0249,
+     0.0399
+    ],
+    [
+     0.0399,
+     -0.0249,
+     0.0399
+    ],
+    [
+     -0.04,
+     0.0251,
+     -0.0401
+    ],
+    [
+     0.04,
+     0.025,
+     -0.0401
+    ],
+    [
+     -0.04,
+     0.0251,
+     0.0399
+    ],
+    [
+     0.04,
+     0.025,
+     0.0399
+    ]
+   ]
+  },
+  "keyboard": {
+   "position": [
+    0.01694,
+    -0.17019,
+    0.77717
+   ],
+   "orientation_wxyz": [
+    0.99999,
+    -0.00377,
+    0.00014,
+    -5e-05
+   ],
+   "bbox_corners": [
+    [
+     -0.1599,
+     -0.0765,
+     0.0131
+    ],
+    [
+     0.1599,
+     -0.0765,
+     0.0131
+    ],
+    [
+     -0.1599,
+     0.0764,
+     0.0134
+    ],
+    [
+     0.1599,
+     0.0765,
+     0.0133
+    ],
+    [
+     -0.1599,
+     -0.0765,
+     -0.0133
+    ],
+    [
+     0.1599,
+     -0.0764,
+     -0.0133
+    ],
+    [
+     -0.1599,
+     0.0765,
+     -0.013
+    ],
+    [
+     0.1599,
+     0.0765,
+     -0.0131
+    ]
+   ]
+  },
+  "garage": {
+   "position": [
+    -0.36406,
+    -0.19124,
+    0.85569
+   ],
+   "orientation_wxyz": [
+    0.94598,
+    -0.00104,
+    -0.00314,
+    -0.32422
+   ],
+   "bbox_corners": [
+    [
+     -0.06018,
+     0.00185,
+     -0.08486
+    ],
+    [
+     -0.0347,
+     -0.0027,
+     0.09563
+    ],
+    [
+     -0.0078,
+     0.05356,
+     -0.09095
+    ],
+    [
+     0.01768,
+     0.04901,
+     0.08954
+    ],
+    [
+     -0.0094,
+     -0.05058,
+     -0.09335
+    ],
+    [
+     0.01607,
+     -0.05513,
+     0.08715
+    ],
+    [
+     0.04297,
+     0.00112,
+     -0.09944
+    ],
+    [
+     0.06845,
+     -0.00342,
+     0.08106
+    ]
+   ]
+  },
+  "drawer": {
+   "position": [
+    -0.44134,
+    0.0987,
+    0.765
+   ],
+   "orientation_wxyz": [
+    0.70711,
+    0.0,
+    0.0,
+    0.70711
+   ],
+   "bbox_corners": [
+    [
+     0.18753,
+     0.16383,
+     0.0
+    ],
+    [
+     0.18753,
+     -0.18721,
+     0.0
+    ],
+    [
+     -0.07988,
+     0.16383,
+     0.0
+    ],
+    [
+     -0.07988,
+     -0.18721,
+     0.0
+    ],
+    [
+     0.18753,
+     0.16383,
+     0.22711
+    ],
+    [
+     0.18753,
+     -0.18721,
+     0.22711
+    ],
+    [
+     -0.07988,
+     0.16383,
+     0.22711
+    ],
+    [
+     -0.07988,
+     -0.18721,
+     0.22711
+    ]
+   ]
+  },
+  "cube_cushion": {
+   "position": [
+    -0.15,
+    0.1,
+    0.765
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bbox_corners": [
+    [
+     0.025,
+     0.025,
+     -0.0
+    ],
+    [
+     0.025,
+     -0.025,
+     -0.0
+    ],
+    [
+     -0.025,
+     0.025,
+     -0.0
+    ],
+    [
+     -0.025,
+     -0.025,
+     -0.0
+    ],
+    [
+     0.025,
+     0.025,
+     0.0
+    ],
+    [
+     0.025,
+     -0.025,
+     0.0
+    ],
+    [
+     -0.025,
+     0.025,
+     0.0
+    ],
+    [
+     -0.025,
+     -0.025,
+     0.0
+    ]
+   ]
+  },
+  "monitor": {
+   "position": [
+    0.11631,
+    0.24716,
+    0.9877
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bbox_corners": [
+    [
+     -0.2595,
+     -0.0931,
+     -0.222
+    ],
+    [
+     0.2585,
+     -0.0922,
+     -0.2232
+    ],
+    [
+     -0.2586,
+     -0.01,
+     0.2239
+    ],
+    [
+     0.2593,
+     -0.0091,
+     0.2227
+    ],
+    [
+     -0.2598,
+     0.0808,
+     -0.2544
+    ],
+    [
+     0.2581,
+     0.0817,
+     -0.2556
+    ],
+    [
+     -0.2589,
+     0.1639,
+     0.1915
+    ],
+    [
+     0.259,
+     0.1648,
+     0.1903
+    ]
+   ]
+  },
+  "mousemat": {
+   "position": [
+    0.49783,
+    -0.01448,
+    0.7686
+   ],
+   "orientation_wxyz": [
+    -0.70711,
+    0.0,
+    0.0,
+    0.70711
+   ],
+   "bbox_corners": [
+    [
+     0.1201,
+     -0.096,
+     -0.0036
+    ],
+    [
+     -0.1201,
+     -0.096,
+     -0.0036
+    ],
+    [
+     0.1201,
+     0.096,
+     -0.0036
+    ],
+    [
+     -0.1201,
+     0.096,
+     -0.0036
+    ],
+    [
+     0.1201,
+     -0.096,
+     0.0036
+    ],
+    [
+     -0.1201,
+     -0.096,
+     0.0036
+    ],
+    [
+     0.1201,
+     0.096,
+     0.0036
+    ],
+    [
+     -0.1201,
+     0.096,
+     0.0036
+    ]
+   ]
+  },
+  "frame": {
+   "position": [
+    0.1,
+    0.0,
+    0.7656
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.00249,
+    0.0
+   ],
+   "bbox_corners": [
+    [
+     -0.12,
+     -0.05,
+     0.0003
+    ],
+    [
+     0.12,
+     -0.05,
+     0.0003
+    ],
+    [
+     -0.12,
+     0.05,
+     0.0003
+    ],
+    [
+     0.12,
+     0.05,
+     0.0003
+    ],
+    [
+     -0.12,
+     -0.05,
+     0.0
+    ],
+    [
+     0.12,
+     -0.05,
+     0.0
+    ],
+    [
+     -0.12,
+     0.05,
+     0.0
+    ],
+    [
+     0.12,
+     0.05,
+     0.0
+    ]
+   ]
+  },
+  "camera_stand": {
+   "position": [
+    0.0,
+    -0.47,
+    0.765
+   ],
+   "orientation_wxyz": [
+    -0.707,
+    0.70721,
+    0.0,
+    0.0
+   ],
+   "bbox_corners": [
+    [
+     -0.15,
+     -0.5855,
+     -0.0798
+    ],
+    [
+     -0.15,
+     -0.5855,
+     0.045
+    ],
+    [
+     -0.15,
+     0.0145,
+     -0.0798
+    ],
+    [
+     -0.15,
+     0.0145,
+     0.045
+    ],
+    [
+     0.15,
+     -0.5855,
+     -0.0798
+    ],
+    [
+     0.15,
+     -0.5855,
+     0.045
+    ],
+    [
+     0.15,
+     0.0145,
+     -0.0798
+    ],
+    [
+     0.15,
+     0.0145,
+     0.045
+    ]
+   ]
+  }
+ },
+ "start_action": [
+  0.0,
+  -0.0,
+  0.0,
+  0.0,
+  -0.0,
+  0.0,
+  1.0,
+  0.0,
+  -0.0,
+  0.0,
+  0.0,
+  -0.0,
+  0.0,
+  1.0
+ ],
+ "physics": {}
+}

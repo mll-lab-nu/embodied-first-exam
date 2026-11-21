@@ -1,0 +1,1211 @@
+{
+ "task": "pour_by_language",
+ "seed": 0,
+ "layout_index": 0,
+ "layout_file": "Assets/Eval_Layout/RoboDojo/arx_x5/0/pour_by_language_0.json",
+ "layout_sha256": "a37dd2812e5642783a594633524700cdb30c00588dd9a132b7d4cbc4fb1b65cd",
+ "layout": {
+  "Rigid": {
+   "wine_bottle": [
+    {
+     "category": "wine_bottle",
+     "category_idx": 2,
+     "group": null,
+     "xlim": [
+      [
+       -0.2,
+       -0.2
+      ],
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.2,
+       0.2
+      ]
+     ],
+     "ylim": [
+      0.0,
+      0.0
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 0,
+     "rotate_rand": false,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "bottle_0",
+     "default_pos": [
+      -0.19974810774577764,
+      0.00034807582018722694,
+      0.8250044614467597
+     ],
+     "default_ori": [
+      0.9999935850617276,
+      0.002099986528629628,
+      -0.0028999813966790098,
+      9.999935850617276e-05
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "size": [
+       0.0823,
+       0.0821,
+       0.218
+      ],
+      "mass": 0.15,
+      "friction": 0.0,
+      "type": "rigid"
+     },
+     "visual": {}
+    },
+    {
+     "category": "wine_bottle",
+     "category_idx": 0,
+     "group": null,
+     "xlim": [
+      [
+       -0.2,
+       -0.2
+      ],
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.2,
+       0.2
+      ]
+     ],
+     "ylim": [
+      0.0,
+      0.0
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 0,
+     "rotate_rand": false,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "bottle_1",
+     "default_pos": [
+      0.00025189225422237826,
+      0.00034807582018722694,
+      0.8250044614467597
+     ],
+     "default_ori": [
+      0.9999935850617276,
+      0.002099986528629628,
+      -0.0028999813966790098,
+      9.999935850617276e-05
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "size": [
+       0.0823,
+       0.0821,
+       0.218
+      ],
+      "mass": 0.15,
+      "friction": 0.0,
+      "type": "rigid"
+     },
+     "visual": {}
+    },
+    {
+     "category": "wine_bottle",
+     "category_idx": 1,
+     "group": null,
+     "xlim": [
+      [
+       -0.2,
+       -0.2
+      ],
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.2,
+       0.2
+      ]
+     ],
+     "ylim": [
+      0.0,
+      0.0
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 0,
+     "rotate_rand": false,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "bottle_2",
+     "default_pos": [
+      0.20025189225422238,
+      0.00034807582018722694,
+      0.8250044614467597
+     ],
+     "default_ori": [
+      0.9999935850617276,
+      0.002099986528629628,
+      -0.0028999813966790098,
+      9.999935850617276e-05
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "size": [
+       0.0823,
+       0.0821,
+       0.218
+      ],
+      "mass": 0.15,
+      "friction": 0.0,
+      "type": "rigid"
+     },
+     "visual": {}
+    }
+   ],
+   "wine_bowl": [
+    {
+     "category": "wine_bowl",
+     "category_idx": 0,
+     "group": null,
+     "xlim": [
+      [
+       -0.15,
+       -0.15
+      ],
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.15,
+       0.15
+      ]
+     ],
+     "ylim": [
+      -0.15,
+      -0.15
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 0,
+     "rotate_rand": false,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "bowl_0",
+     "default_pos": [
+      0.14990804028410037,
+      -0.1499997696483409,
+      0.7851000383919432
+     ],
+     "default_ori": [
+      0.9999992600008214,
+      0.0,
+      0.0001999998520001643,
+      -0.0011999991120009855
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.25,
+      "friction": 0.3,
+      "type": "rigid"
+     },
+     "visual": {}
+    },
+    {
+     "category": "wine_bowl",
+     "category_idx": 1,
+     "group": null,
+     "xlim": [
+      [
+       -0.15,
+       -0.15
+      ],
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.15,
+       0.15
+      ]
+     ],
+     "ylim": [
+      -0.15,
+      -0.15
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 0,
+     "rotate_rand": false,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "bowl_1",
+     "default_pos": [
+      -0.14998731193923664,
+      -0.15023029747828476,
+      0.7852026434429906
+     ],
+     "default_ori": [
+      0.9999907301288973,
+      -0.004199961066541368,
+      0.0002999972190386692,
+      0.0008999916571160076
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.22,
+      "friction": 0.25,
+      "type": "rigid"
+     },
+     "visual": {}
+    },
+    {
+     "category": "wine_bowl",
+     "category_idx": 2,
+     "group": null,
+     "xlim": [
+      [
+       -0.15,
+       -0.15
+      ],
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.15,
+       0.15
+      ]
+     ],
+     "ylim": [
+      -0.15,
+      -0.15
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 0,
+     "rotate_rand": false,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "bowl_2",
+     "default_pos": [
+      6.799980800019199e-05,
+      -0.14992400014399984,
+      0.78500023999976
+     ],
+     "default_ori": [
+      0.999999500000375,
+      0.0005999997000002249,
+      -0.0007999996000003,
+      0.0
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.25,
+      "friction": 0.3,
+      "type": "rigid"
+     },
+     "visual": {}
+    }
+   ]
+  },
+  "Geometry": {
+   "camera_stand": [
+    {
+     "category": "camera_stand",
+     "category_idx": 0,
+     "group": null,
+     "xlim": [
+      0.0,
+      0.0
+     ],
+     "ylim": [
+      -0.47,
+      -0.47
+     ],
+     "zlim": [
+      0.715,
+      0.715
+     ],
+     "qpos": [
+      0.707,
+      -0.707,
+      0.0,
+      0.0
+     ],
+     "rotate_deg": 0,
+     "rotate_rand": false,
+     "relative_plane": "Ground",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "camera_stand",
+     "default_pos": [
+      0.0,
+      -0.47,
+      0.765
+     ],
+     "default_ori": [
+      0.707,
+      -0.707,
+      0.0,
+      0.0
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "type": "geometry"
+     },
+     "visual": {}
+    }
+   ]
+  },
+  "Fluid": {
+   "wuliangye": [
+    {
+     "category": "wuliangye",
+     "category_idx": 1,
+     "group": null,
+     "xlim": [
+      0.0,
+      0.0
+     ],
+     "ylim": [
+      0.0,
+      0.0
+     ],
+     "zlim": [
+      -0.16,
+      -0.16
+     ],
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 0,
+     "rotate_rand": false,
+     "relative_plane": "bottle_0",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "enforce",
+     "need_check_stable": true,
+     "label": "wine_0",
+     "default_pos": [
+      -0.19974810774577764,
+      0.00034807582018722694,
+      0.8238119683084466
+     ],
+     "default_ori": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "type": "fluid",
+      "particle_system": {
+       "particle_contact_offset": 0.0025,
+       "contact_offset": 0.0025,
+       "rest_offset": 0.002,
+       "fluid_rest_offset": 0.0015,
+       "solid_rest_offset": 0.0015,
+       "max_velocity": 2,
+       "smoothing": false,
+       "anisotropy": false,
+       "isosurface": true
+      },
+      "particle_material": {
+       "adhesion": null,
+       "adhesion_offset_scale": null,
+       "cohesion": 0.005,
+       "particle_adhesion_scale": null,
+       "particle_friction_scale": null,
+       "drag": null,
+       "lift": null,
+       "friction": 0.1,
+       "damping": 0.99,
+       "gravity_scale": 1.0,
+       "viscosity": 0.0091,
+       "vorticity_confinement": null,
+       "surface_tension": 0.0074,
+       "density": null,
+       "cfl_coefficient": null
+      },
+      "interaction_with_object": true
+     },
+     "visual": {
+      "visible": true,
+      "visual_mdl_path": "$Robodojo_ASSETS/Material/Fluid/Linen_Blue.mdl",
+      "scale": [
+       1,
+       1,
+       1
+      ]
+     }
+    },
+    {
+     "category": "wuliangye",
+     "category_idx": 2,
+     "group": null,
+     "xlim": [
+      0.0,
+      0.0
+     ],
+     "ylim": [
+      0.0,
+      0.0
+     ],
+     "zlim": [
+      -0.16,
+      -0.16
+     ],
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 0,
+     "rotate_rand": false,
+     "relative_plane": "bottle_1",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "enforce",
+     "need_check_stable": true,
+     "label": "wine_1",
+     "default_pos": [
+      0.00025189225422237826,
+      0.00034807582018722694,
+      0.8238119683084466
+     ],
+     "default_ori": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "type": "fluid",
+      "particle_system": {
+       "particle_contact_offset": 0.0025,
+       "contact_offset": 0.0025,
+       "rest_offset": 0.002,
+       "fluid_rest_offset": 0.0015,
+       "solid_rest_offset": 0.0015,
+       "max_velocity": 2,
+       "smoothing": false,
+       "anisotropy": false,
+       "isosurface": true
+      },
+      "particle_material": {
+       "adhesion": null,
+       "adhesion_offset_scale": null,
+       "cohesion": 0.005,
+       "particle_adhesion_scale": null,
+       "particle_friction_scale": null,
+       "drag": null,
+       "lift": null,
+       "friction": 0.1,
+       "damping": 0.99,
+       "gravity_scale": 1.0,
+       "viscosity": 0.0091,
+       "vorticity_confinement": null,
+       "surface_tension": 0.0074,
+       "density": null,
+       "cfl_coefficient": null
+      },
+      "interaction_with_object": true
+     },
+     "visual": {
+      "visible": true,
+      "visual_mdl_path": "$Robodojo_ASSETS/Material/Fluid/Linen_Yellow.mdl",
+      "scale": [
+       1,
+       1,
+       1
+      ]
+     }
+    },
+    {
+     "category": "wuliangye",
+     "category_idx": 3,
+     "group": null,
+     "xlim": [
+      0.0,
+      0.0
+     ],
+     "ylim": [
+      0.0,
+      0.0
+     ],
+     "zlim": [
+      -0.16,
+      -0.16
+     ],
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 0,
+     "rotate_rand": false,
+     "relative_plane": "bottle_2",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "enforce",
+     "need_check_stable": true,
+     "label": "wine_2",
+     "default_pos": [
+      0.20025189225422238,
+      0.00034807582018722694,
+      0.8238119683084466
+     ],
+     "default_ori": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "type": "fluid",
+      "particle_system": {
+       "particle_contact_offset": 0.0025,
+       "contact_offset": 0.0025,
+       "rest_offset": 0.002,
+       "fluid_rest_offset": 0.0015,
+       "solid_rest_offset": 0.0015,
+       "max_velocity": 2,
+       "smoothing": false,
+       "anisotropy": false,
+       "isosurface": true
+      },
+      "particle_material": {
+       "adhesion": null,
+       "adhesion_offset_scale": null,
+       "cohesion": 0.005,
+       "particle_adhesion_scale": null,
+       "particle_friction_scale": null,
+       "drag": null,
+       "lift": null,
+       "friction": 0.1,
+       "damping": 0.99,
+       "gravity_scale": 1.0,
+       "viscosity": 0.0091,
+       "vorticity_confinement": null,
+       "surface_tension": 0.0074,
+       "density": null,
+       "cfl_coefficient": null
+      },
+      "interaction_with_object": true
+     },
+     "visual": {
+      "visible": true,
+      "visual_mdl_path": "$Robodojo_ASSETS/Material/Fluid/Linen_Red.mdl",
+      "scale": [
+       1,
+       1,
+       1
+      ]
+     }
+    }
+   ]
+  },
+  "Room": {
+   "default": "Simple_Room_nolight",
+   "default_pos": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "default_rot": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "scale": [
+    0.5,
+    0.5,
+    0.5
+   ]
+  },
+  "Table": {
+   "default": "material_0122",
+   "scale": [
+    1.4,
+    1.1,
+    0.05
+   ],
+   "default_pos": [
+    0.0,
+    -0.05,
+    0.74
+   ],
+   "default_ori": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "Ground": {
+   "geometry": "cube",
+   "thickness": 0.1,
+   "axis": "Z",
+   "default_pos": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "materials": {
+    "type": "mdl",
+    "default": "material_0564",
+    "random": false
+   },
+   "physics_material": {
+    "static_friction": 1.0,
+    "dynamic_friction": 1.0,
+    "restitution": 0.0,
+    "friction_combine_mode": "multiply",
+    "restitution_combine_mode": "multiply",
+    "compliant_contact_stiffness": 0.0,
+    "compliant_contact_damping": 0.0
+   }
+  },
+  "Background": {
+   "intensity": 1000,
+   "category_name": "brown_photostudio_02_4k.hdr"
+  }
+ },
+ "state_sha": "d3281d21ef51bab6",
+ "step_lim": 800,
+ "control_hz": 25,
+ "action_dim": 14,
+ "instruction": "Pour the liquid from the first violet bottle into the first black bowl, from the second red bottle into the second white bowl, and from the third turquoise bottle into the third brown bowl. Then reset the robot arm.",
+ "labels": [
+  "bottle_0",
+  "bottle_1",
+  "bottle_2",
+  "bowl_0",
+  "bowl_1",
+  "bowl_2",
+  "wine_0",
+  "wine_1",
+  "wine_2",
+  "camera_stand"
+ ],
+ "objects": {
+  "bottle_0": {
+   "position": [
+    -0.19975,
+    0.00036,
+    0.82497
+   ],
+   "orientation_wxyz": [
+    0.99999,
+    0.00203,
+    -0.00295,
+    0.0001
+   ],
+   "bbox_corners": [
+    [
+     -0.0412,
+     -0.0411,
+     -0.0597
+    ],
+    [
+     -0.0412,
+     -0.0411,
+     0.1584
+    ],
+    [
+     -0.0412,
+     0.0411,
+     -0.0597
+    ],
+    [
+     -0.0412,
+     0.0411,
+     0.1584
+    ],
+    [
+     0.0412,
+     -0.0411,
+     -0.0597
+    ],
+    [
+     0.0412,
+     -0.0411,
+     0.1584
+    ],
+    [
+     0.0412,
+     0.0411,
+     -0.0597
+    ],
+    [
+     0.0412,
+     0.0411,
+     0.1584
+    ]
+   ]
+  },
+  "bottle_1": {
+   "position": [
+    0.00025,
+    0.00036,
+    0.82497
+   ],
+   "orientation_wxyz": [
+    0.99999,
+    0.00203,
+    -0.00294,
+    0.0001
+   ],
+   "bbox_corners": [
+    [
+     -0.0412,
+     -0.0411,
+     -0.0597
+    ],
+    [
+     -0.0412,
+     -0.0411,
+     0.1584
+    ],
+    [
+     -0.0412,
+     0.0411,
+     -0.0597
+    ],
+    [
+     -0.0412,
+     0.0411,
+     0.1584
+    ],
+    [
+     0.0412,
+     -0.0411,
+     -0.0597
+    ],
+    [
+     0.0412,
+     -0.0411,
+     0.1584
+    ],
+    [
+     0.0412,
+     0.0411,
+     -0.0597
+    ],
+    [
+     0.0412,
+     0.0411,
+     0.1584
+    ]
+   ]
+  },
+  "bottle_2": {
+   "position": [
+    0.20025,
+    0.00036,
+    0.82497
+   ],
+   "orientation_wxyz": [
+    0.99999,
+    0.00203,
+    -0.00294,
+    9e-05
+   ],
+   "bbox_corners": [
+    [
+     -0.0412,
+     -0.0411,
+     -0.0597
+    ],
+    [
+     -0.0412,
+     -0.0411,
+     0.1584
+    ],
+    [
+     -0.0412,
+     0.0411,
+     -0.0597
+    ],
+    [
+     -0.0412,
+     0.0411,
+     0.1584
+    ],
+    [
+     0.0412,
+     -0.0411,
+     -0.0597
+    ],
+    [
+     0.0412,
+     -0.0411,
+     0.1584
+    ],
+    [
+     0.0412,
+     0.0411,
+     -0.0597
+    ],
+    [
+     0.0412,
+     0.0411,
+     0.1584
+    ]
+   ]
+  },
+  "bowl_0": {
+   "position": [
+    0.1499,
+    -0.15,
+    0.78513
+   ],
+   "orientation_wxyz": [
+    1.0,
+    -1e-05,
+    0.0,
+    -0.0012
+   ],
+   "bbox_corners": [
+    [
+     -0.055,
+     -0.055,
+     -0.0201
+    ],
+    [
+     -0.055,
+     -0.055,
+     0.0199
+    ],
+    [
+     -0.055,
+     0.055,
+     -0.0201
+    ],
+    [
+     -0.055,
+     0.055,
+     0.0199
+    ],
+    [
+     0.055,
+     -0.055,
+     -0.0201
+    ],
+    [
+     0.055,
+     -0.055,
+     0.0199
+    ],
+    [
+     0.055,
+     0.055,
+     -0.0201
+    ],
+    [
+     0.055,
+     0.055,
+     0.0199
+    ]
+   ]
+  },
+  "bowl_1": {
+   "position": [
+    -0.14998,
+    -0.15024,
+    0.78478
+   ],
+   "orientation_wxyz": [
+    0.99999,
+    -0.00406,
+    0.00048,
+    0.0009
+   ],
+   "bbox_corners": [
+    [
+     -0.0551,
+     -0.0549,
+     -0.02
+    ],
+    [
+     -0.0551,
+     -0.0549,
+     0.02
+    ],
+    [
+     -0.0551,
+     0.0551,
+     -0.02
+    ],
+    [
+     -0.0551,
+     0.0551,
+     0.02
+    ],
+    [
+     0.0549,
+     -0.0549,
+     -0.02
+    ],
+    [
+     0.0549,
+     -0.0549,
+     0.02
+    ],
+    [
+     0.0549,
+     0.0551,
+     -0.02
+    ],
+    [
+     0.0549,
+     0.0551,
+     0.02
+    ]
+   ]
+  },
+  "bowl_2": {
+   "position": [
+    7e-05,
+    -0.14992,
+    0.7849
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.00059,
+    -0.00076,
+    -0.0
+   ],
+   "bbox_corners": [
+    [
+     -0.055,
+     -0.055,
+     -0.02
+    ],
+    [
+     -0.055,
+     -0.055,
+     0.02
+    ],
+    [
+     -0.055,
+     0.055,
+     -0.02
+    ],
+    [
+     -0.055,
+     0.055,
+     0.02
+    ],
+    [
+     0.055,
+     -0.055,
+     -0.02
+    ],
+    [
+     0.055,
+     -0.055,
+     0.02
+    ],
+    [
+     0.055,
+     0.055,
+     -0.02
+    ],
+    [
+     0.055,
+     0.055,
+     0.02
+    ]
+   ]
+  },
+  "wine_0": {
+   "error": "TypeError('cannot unpack non-iterable NoneType object')"
+  },
+  "wine_1": {
+   "error": "TypeError('cannot unpack non-iterable NoneType object')"
+  },
+  "wine_2": {
+   "error": "TypeError('cannot unpack non-iterable NoneType object')"
+  },
+  "camera_stand": {
+   "position": [
+    0.0,
+    -0.47,
+    0.765
+   ],
+   "orientation_wxyz": [
+    -0.707,
+    0.70721,
+    0.0,
+    0.0
+   ],
+   "bbox_corners": [
+    [
+     -0.15,
+     -0.5855,
+     -0.0798
+    ],
+    [
+     -0.15,
+     -0.5855,
+     0.045
+    ],
+    [
+     -0.15,
+     0.0145,
+     -0.0798
+    ],
+    [
+     -0.15,
+     0.0145,
+     0.045
+    ],
+    [
+     0.15,
+     -0.5855,
+     -0.0798
+    ],
+    [
+     0.15,
+     -0.5855,
+     0.045
+    ],
+    [
+     0.15,
+     0.0145,
+     -0.0798
+    ],
+    [
+     0.15,
+     0.0145,
+     0.045
+    ]
+   ]
+  }
+ },
+ "start_action": [
+  0.0,
+  -0.0,
+  0.0,
+  0.0,
+  -0.0,
+  0.0,
+  1.0,
+  0.0,
+  -0.0,
+  0.0,
+  0.0,
+  -0.0,
+  0.0,
+  1.0
+ ],
+ "physics": {},
+ "determinism": "verdict",
+ "determinism_why": "the liquid is simulated as GPU PhysX particles, which are not bit-reproducible across processes (also with enhanced determinism)"
+}
