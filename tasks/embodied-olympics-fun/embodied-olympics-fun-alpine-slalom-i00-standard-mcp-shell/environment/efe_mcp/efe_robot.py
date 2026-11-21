@@ -73,7 +73,8 @@ def observe(*, cameras=None, depth=None, seconds=None, save_to=None, inline_came
     Arguments:
       cameras (list["head_left" | "head_right" | "venue" | "follow_start"]): camera names (default: the robot's
           default cameras)
-      depth (bool): also save a depth map per camera (.npy, float32 metres, 0 = no reading)
+      depth (bool): also save a depth map per camera that has one (.npy, float32 metres, 0 = no reading); cameras
+          without depth are listed in no_depth_cameras
       seconds (float): hold and watch for this long (0: no time passes) [minimum 0, maximum 30]
       save_to (str): directory under /app for the files (default /app/obs)
       inline_cameras (list["head_left" | "head_right" | "venue" | "follow_start"]): cameras to also return as small

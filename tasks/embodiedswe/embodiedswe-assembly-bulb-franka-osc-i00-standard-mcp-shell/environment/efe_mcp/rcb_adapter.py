@@ -334,9 +334,15 @@ class RcbAdapter:
         out = {}
         if not c:                                  # no per-call calibration: the spec's, its pose only if fixed
             sc = ((self.spec or {}).get("cameras") or {}).get(cam)
-            if not isinstance(sc, dict) or sc.get("intrinsic_cv") is None:
+            K = sc.get("intrinsic_cv") if isinstance(sc, dict) else None
+            if K is None and isinstance(sc, dict) and sc.get("fovy_deg") and (sc.get("hw") or sc.get("resolution")):
+                # MuJoCo-style cameras (BiGym): the vertical field of view, square pixels, the centre as principal point
+                h, w = (sc["hw"] if sc.get("hw") else list(sc["resolution"])[::-1])[:2]
+                f = (float(h) / 2) / np.tan(np.radians(float(sc["fovy_deg"])) / 2)
+                K = [[f, 0.0, float(w) / 2], [0.0, f, float(h) / 2], [0.0, 0.0, 1.0]]
+            if K is None:
                 return out
-            c = {"intrinsic_cv": sc["intrinsic_cv"]}
+            c = {"intrinsic_cv": K}
             mount = sc.get("mount") if isinstance(sc.get("mount"), dict) else {}
             how = mount.get("type") or sc.get("type") or sc.get("mounted") or \
                 (sc.get("mount") if isinstance(sc.get("mount"), str) else None) or "fixed"
@@ -540,6 +546,11 @@ class RcbAdapter:
             raise ToolError(f"unknown cameras {bad}; cameras: {self.cams_all()}")
         cams = list(dict.fromkeys(cams + [c for c in (inline_cameras or []) if c not in cams]))
         seconds = float(seconds or 0)
+        no_depth = []
+        if depth:      # the spec says which cameras have depth; a request naming none of them is not sent with depth
+            sc = (self.spec or {}).get("cameras") or {}
+            no_depth = [c for c in cams if isinstance(sc.get(c), dict) and sc[c].get("depth") is False]
+            depth = len(no_depth) < len(cams)
         try:
             res = self.obs(cams, seconds=seconds, depth=depth, video="mp4" if seconds > 0 else "none")
         except self.rc.EpisodeOver as e:
@@ -550,6 +561,8 @@ class RcbAdapter:
         images, extras = self.package(res, F, w, cams, depth=depth, inline=inline_cameras, video=seconds > 0)
         out = {"cameras": images, **self.robot_state(now, res.meta, F), **self.native_state(now, res.meta),
                **self.common_meta(res), **self.raw_meta(res)}
+        if no_depth:
+            out["no_depth_cameras"] = no_depth
         return out, extras
 
     # -- building rows
