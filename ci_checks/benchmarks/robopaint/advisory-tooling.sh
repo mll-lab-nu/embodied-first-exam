@@ -34,7 +34,8 @@ for t in sorted(os.listdir(tasks)):
     if not t.startswith("robopaint-") or not os.path.isfile(os.path.join(tp, "task.toml")):
         continue
     n_tasks += 1
-    mode = t.rsplit("-", 1)[1]
+    # a standard task's tool-mode variants (-standard-mcp, -standard-mcp-shell) have its sim sidecar
+    mode = "standard" if re.search(r"-standard(-mcp(-shell)?)?$", t) else t.rsplit("-", 1)[1]
     need = {"tests/Dockerfile"} | ({"environment/sim/Dockerfile"} if mode == "standard" else
                                    {"environment/Dockerfile", "environment/scorer/Dockerfile"})
     for dp, dns, fns in os.walk(tp):

@@ -43,7 +43,11 @@ OWN_PROTOCOLS = _own_protocols()
 
 
 def own_protocols(name: str, mode: str | None) -> set[str]:
-    """The protocols a benchmark's own exported task may declare instead (empty: not such a task)."""
+    """The protocols a benchmark's own exported task may declare instead (empty: not such a task). A task of a tool mode
+    (scripts/task_conventions.py TOOL_MODES, else MCP_MODES: the standard twin's service, the efe-robot tools added)
+    serves its standard twin's."""
+    if mode in getattr(tc, "TOOL_MODES", tc.MCP_MODES) and name.endswith("-" + mode):
+        name, mode = name[: -len(mode)] + "standard", "standard"
     return OWN_PROTOCOLS.get(name, {}).get(mode or "", set())
 
 

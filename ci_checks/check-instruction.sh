@@ -11,7 +11,10 @@
 # uses. Code spans, fenced blocks, headings and a bold `**Task: ...**` sentence (the upstream benchmark's own words) are
 # not read. Findings are advisory (a pattern only sees words; review covers the rest).
 t="$1"; rc=0
-grep -q '/app/output/' "$t/instruction.md" || { echo "FAIL $t: instruction.md must state the deliverable under /app/output/"; rc=1; }
+# an MCP-only task (scripts/task_conventions.py MCP_MODES: -standard-mcp) has no file deliverable: the agent has no
+# shell and writes no files; the episode is graded as it ends
+[[ "$(basename "${t%/}")" == *-standard-mcp ]] || grep -q '/app/output/' "$t/instruction.md" || \
+    { echo "FAIL $t: instruction.md must state the deliverable under /app/output/"; rc=1; }
 grep -q '/tests/' "$t/instruction.md" && { echo "FAIL $t: instruction.md must not reference /tests/"; rc=1; }
 modes="${RCB_MODES_TABLE:-$(python3 "$(dirname "$0")/../scripts/task_conventions.py" modes)}"
 n="$(basename "${t%/}")"; side=0
