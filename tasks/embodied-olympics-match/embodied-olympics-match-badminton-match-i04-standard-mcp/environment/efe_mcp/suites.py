@@ -252,7 +252,7 @@ class EOMatch:
         raise ToolError("no signal tool in this task")
 
 
-def eo_section(m) -> str:
+def eo_section(m, shell_intro=None) -> str:
     turn = eo_turn(m)
     rows = [("`game spec`", "`spec()`: the whole spec is also saved as a JSON file (`spec_file`)"),
             ("`game status`", "`status()`"),
@@ -267,10 +267,15 @@ def eo_section(m) -> str:
             ("`game ready \"WHY\" \"PLAN\"`", "`ready(why, plan)`")]
     if m.get("team"):
         rows += [("`game say \"TEXT\"`", "`say(text)`"), ("`game team [SINCE]`", "`team(since?)`")]
-    L = ["## Robot tools (MCP server `efe-robot`)"]
-    L.append(_wrap("You play only through the tools of the MCP server `efe-robot` (in your tool list as `efe-robot` "
-                   "tools, for example `mcp__efe-robot__act`). You have no shell and cannot run code. Where this "
-                   "text names a `game` command or its HTTP call, use the tool of the same name:"))
+    if shell_intro:
+        L = ["## Robot tools (MCP server `efe-robot`) and their Python client `efe_robot`"]
+        L.append(_wrap(shell_intro.replace("the robot service's own client (below)", "the `game` command and its HTTP "
+                                           "calls (below)") + " The `game` commands and the tools that do the same:"))
+    else:
+        L = ["## Robot tools (MCP server `efe-robot`)"]
+        L.append(_wrap("You play only through the tools of the MCP server `efe-robot` (in your tool list as `efe-robot` "
+                       "tools, for example `mcp__efe-robot__act`). You have no shell and cannot run code. Where this "
+                       "text names a `game` command or its HTTP call, use the tool of the same name:"))
     L.append("")
     L.append("| `game` command | Tool |")
     L.append("|---|---|")
@@ -284,8 +289,12 @@ def eo_section(m) -> str:
          "invalid action, nothing happens; 409: not now). The tools keep under the service's request rate "
          "themselves.",
          "One tool call runs at a time. A call still executing after 45 s returns `{\"pending\": true, "
-         "\"operation\": id}`: call `wait(operation=id)` for its result.",
+         "\"operation\": id}`: call `wait(operation=id)` for its result" + (" (the Python functions wait for it "
+         "themselves)." if shell_intro else "."),
          "Nothing needs to be saved: the server records every tool call, and the service records the match."]
+    if shell_intro:
+        b[0] = b[0].replace("open a tile file with your file-reading tool", "open a tile file")
+        b.pop()
     L += [_wrap(x, "- ", "  ") for x in b]
     if m.get("notes"):
         L.append("")
@@ -359,6 +368,11 @@ def adapter_for(m):
 
 def instruction_section(m):
     return _kind(m)[2](m)
+
+
+def shell_section(m, intro):
+    """The tools section of the shell variant (standard-mcp-shell): the same tools, their Python client, a shell."""
+    return _kind(m)[2](m, intro)
 
 
 def transform_instruction(s, m, task):

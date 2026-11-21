@@ -1,0 +1,94 @@
+# Standard-mode twin of kinder-sweep-into-drawer-i00-privileged.
+schema_version = "1.3"
+artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, 
+  { source = "/data/final.json", service = "sim" },
+  { source = "/data/episode.jsonl", service = "sim" },
+  { source = "/data/trajectory.npz", service = "sim" },
+  { source = "/data/trajectory_live.f64", service = "sim" },
+  { source = "/data/replay.mp4", service = "sim" },
+  { source = "/data/replay.last.png", service = "sim" },
+  { source = "/data/trajectory.first.npz", service = "sim" },
+  { source = "/data/replay.first.mp4", service = "sim" },
+  { source = "/data/replay.first.last.png", service = "sim" },
+  { source = "/data/calls/", service = "sim" },
+  { source = "/data/startups.jsonl", service = "sim" },
+  { source = "/data/crash.log", service = "sim" },
+  "/app/output/",
+]
+
+[task]
+name = "embodied-first-exam/kinder-sweep-into-drawer-i00-standard-mcp-shell"
+description = "STANDARD MODE, MCP TOOLS AND SHELL (robot as a service, eai-standard/2.1): KinDER SweepIntoDrawer3D-o5 on the same frozen instance as kinder-sweep-into-drawer-i00-privileged. The agent only gets a client: /observe and /submit (the robot's camera RGB-D + joint encoders + base odometry; delta actions in chunks). No reset: one episode, which is graded. No privileged state, no goal check; the sim service records the episode and grades it as it ran (the live episode; nothing is replayed)."
+keywords = ["robotics", "kinder", "mujoco", "tidybot", "mobile-manipulation", "physical-reasoning", "standard-mode", "trajectory", "sweep-into-drawer", "mcp"]
+
+[metadata]
+task_type = "trajectory"
+simulator = "kinder"
+robot = "tidybot-plus-plus"
+family = "sweep-into-drawer"
+dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
+protocol = "eai-standard/2.1"
+instance_seed = 0
+expert_time_estimate_hours = 8.0
+oracle = "none"
+oracle_evidence = "GPT-6 Luna's privileged-mode trajectory of 2026-10-04, run `codex-gpt6_luna-medium` on the results site, which today's privileged verifier scores 1 (it moves the base diagonally by up to 0.13 m a step, beyond standard mode's 0.1 m disc, so it is no standard-mode example); in standard mode, the graded episode of run `codex-gpt6_1_sol-high` of 2026-10-03 (960 control steps, no reset), which the standard service scored 1 (live, fresh replay, deterministic); human review in PR #8"
+
+[metadata.seeds]
+# the seeds a runner may draw from (a list, { from = A, to = B } or "any") and the ones the reference solution
+# under solution/ is for, where they are not the default seed alone (docs/protocol/README.md §2)
+allowed = [0, 1, 2]
+
+[verifier]
+timeout_sec = 900.0
+environment_mode = "separate"
+network_mode = "no-network"
+
+# Resources (PROTOCOL §6): seal the monitor's record first.
+[[verifier.collect]]
+service = "rcb_monitor"
+command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
+timeout_sec = 120
+
+# The agent's time is up: stop whatever it left running in its container. Harbor stops that container only after
+# collecting from it (~12 s), and a script still running there would keep driving the robot past the deadline.
+[[verifier.collect]]
+service = "main"
+command = "kill -9 -1 2>/dev/null; exit 0"
+timeout_sec = 30
+
+# Then the episode ends: SIGUSR1 to the service (re-sent every 30 s, in case it was restarting), which grades it: the
+# live episode's verdict, nothing replayed. The loops run on the clock, inside timeout_sec: the verdict
+# ("finalized": true, set before any video is rendered) is in within seconds, or later after a crash-resume, which
+# re-runs the journal (840 s at most); then the hook waits for the video, one pass over the trajectory after the verdict
+# ("video_pending"), until 870 s -- a video that is not ready by then is lost, the verdict is not.
+[[verifier.collect]]
+service = "sim"
+command = "t0=$(date +%s); while [ ! -f /data/server.pid ] && [ $(( $(date +%s) - t0 )) -lt 120 ]; do sleep 2; done; i=0; while [ $(( $(date +%s) - t0 )) -lt 840 ] && ! grep -q '\"finalized\": true' /data/final.json 2>/dev/null; do [ $((i % 15)) -eq 0 ] && kill -USR1 $(cat /data/server.pid 2>/dev/null) 2>/dev/null; i=$((i + 1)); sleep 2; done; while [ $(( $(date +%s) - t0 )) -lt 870 ] && grep -q '\"video_pending\": true' /data/final.json 2>/dev/null; do sleep 2; done; cat /data/final.json"
+timeout_sec = 900
+
+[agent]
+timeout_sec = 1800.0
+# The agent container holds no simulator, but KinDER is public: the agent reaches the model APIs and the package registries, nothing else
+# (scripts/set_agent_egress.py HOSTS).
+network_mode = "allowlist"
+allowed_hosts = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com", "*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com", "pypi.org", "files.pythonhosted.org", "deb.debian.org", "security.debian.org", "archive.ubuntu.com", "security.ubuntu.com", "snapshot.ubuntu.com"]
+
+[environment]
+build_timeout_sec = 1800.0
+cpus = 4
+memory_mb = 16384
+storage_mb = 10240
+
+[verifier.environment]
+build_timeout_sec = 600.0
+
+
+# The efe-robot MCP server (mode standard-mcp-shell: its tools, their Python client and a shell; embodied_first_exam/standard/mcp/)
+[[environment.mcp_servers]]
+name = "efe-robot"
+transport = "stdio"
+command = "python3"
+args = ["/opt/tools/efe_mcp/server.py"]
+
+[verifier.env]
+RCB_LIMITS_ENFORCE = "${RCB_LIMITS_ENFORCE:-0}"

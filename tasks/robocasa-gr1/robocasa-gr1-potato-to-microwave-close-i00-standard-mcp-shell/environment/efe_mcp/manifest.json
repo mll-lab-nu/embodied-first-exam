@@ -1,0 +1,136 @@
+{
+ "manifest": "efe-mcp-manifest/0",
+ "suite": "robocasa-gr1",
+ "kind": "rcb",
+ "robot": "Fourier GR1 humanoid (arms and waist, fixed in the kitchen) with two six-command Fourier hands; the arms take absolute grip-site pose targets solved by whole-body inverse kinematics",
+ "frame": {
+  "suite": "the RoboCasa kitchen's world frame (metres, z up)",
+  "quat": "wxyz",
+  "base": {
+   "fixed": [
+    2.65,
+    -2.175,
+    0.97,
+    0.707107,
+    0.0,
+    0.0,
+    0.707107
+   ]
+  },
+  "base_text": "the robot base frame (body robot0_base, fixed in the kitchen): +X the way the robot faces, +Y its left, +Z up"
+ },
+ "cameras": [
+  "robot0_agentview_center",
+  "robot0_agentview_left",
+  "robot0_agentview_right",
+  "egoview",
+  "robot0_eye_in_right_hand",
+  "robot0_eye_in_left_hand"
+ ],
+ "default_cameras": [
+  "egoview",
+  "robot0_agentview_center"
+ ],
+ "action_cameras": [
+  "egoview"
+ ],
+ "state_cameras": [
+  "egoview"
+ ],
+ "control": {
+  "dt": 0.05,
+  "control_dt": 0.05,
+  "joint_speed": 1.5,
+  "min_move_s": 0.5,
+  "settle_s": 0.2,
+  "tolerance": {
+   "joint": 0.05
+  }
+ },
+ "types": {
+  "ee_pose": {
+   "dim": 24,
+   "hold": [
+    "ref"
+   ],
+   "hold_ref": {
+    "names": [
+     "cmd_right_x",
+     "cmd_right_y",
+     "cmd_right_z",
+     "cmd_right_rx",
+     "cmd_right_ry",
+     "cmd_right_rz",
+     "cmd_left_x",
+     "cmd_left_y",
+     "cmd_left_z",
+     "cmd_left_rx",
+     "cmd_left_ry",
+     "cmd_left_rz",
+     "cmd_right_little",
+     "cmd_right_ring",
+     "cmd_right_middle",
+     "cmd_right_index",
+     "cmd_right_thumb_flexion",
+     "cmd_right_thumb_rotation",
+     "cmd_left_little",
+     "cmd_left_ring",
+     "cmd_left_middle",
+     "cmd_left_index",
+     "cmd_left_thumb_flexion",
+     "cmd_left_thumb_rotation"
+    ]
+   }
+  }
+ },
+ "parts": {
+  "right_hand": {
+   "kind": "hand",
+   "note": "right Fourier hand: six finger position targets (rad) in the order little, ring, middle, index, thumb_flexion, thumb_rotation; 0 = straight and open, about 1.7 = fully bent (closed); values outside 0..1.7 change nothing more",
+   "joints": {
+    "type": "ee_pose",
+    "cols": [
+     12,
+     18
+    ]
+   },
+   "state": {
+    "joints": {
+     "names": [
+      "cmd_right_little",
+      "cmd_right_ring",
+      "cmd_right_middle",
+      "cmd_right_index",
+      "cmd_right_thumb_flexion",
+      "cmd_right_thumb_rotation"
+     ]
+    }
+   }
+  },
+  "left_hand": {
+   "kind": "hand",
+   "note": "left Fourier hand: six finger position targets (rad) in the order little, ring, middle, index, thumb_flexion, thumb_rotation; 0 = straight and open, about 1.7 = fully bent (closed); values outside 0..1.7 change nothing more",
+   "joints": {
+    "type": "ee_pose",
+    "cols": [
+     18,
+     24
+    ]
+   },
+   "state": {
+    "joints": {
+     "names": [
+      "cmd_left_little",
+      "cmd_left_ring",
+      "cmd_left_middle",
+      "cmd_left_index",
+      "cmd_left_thumb_flexion",
+      "cmd_left_thumb_rotation"
+     ]
+    }
+   }
+  }
+ },
+ "notes": "The arms take absolute grip-site pose targets in the robot base frame, sent with execute_trajectory space native, action_type ee_pose (24 numbers, one row per 0.05 s control step, each row a target the whole-body inverse kinematics moves toward): right x, y, z (m), rx, ry, rz (axis-angle, rad), the same for the left, then the six right-hand and six left-hand finger targets. cmd_* in proprio_now is the command in force (start from it and change what should move; interpolate long moves over several rows). The grip site is the origin of the hand's mounting frame at the wrist end of the hand, not a point between the fingertips; the four small pink spheres beside each hand are markers of the robot model. move_robot and execute_trajectory space joint set the fingers (the hands' joint_positions); the reported finger values are the commands in force. eef_left_*/eef_right_* in proprio_now are the grip sites' positions in the world frame. The cameras ride on the robot; each frame comes with its current calibration.",
+ "task": "robocasa-gr1-potato-to-microwave-close-i00"
+}

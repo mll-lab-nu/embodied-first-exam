@@ -1,0 +1,106 @@
+{
+ "manifest": "efe-mcp-manifest/0",
+ "suite": "robopaint",
+ "kind": "rcb",
+ "robot": "Franka Panda arm holding a brush fixed to its hand (no gripper)",
+ "frame": {
+  "suite": "world: z up, the robot base (panda_link0) at (-0.615, 0, 0), x away from the base, y to the robot's left",
+  "quat": "wxyz",
+  "base": {
+   "fixed": [
+    -0.615,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "base_text": "the robot base frame: the arm's base link panda_link0, +X away from the base over the table and the sheets, +Y to the robot's left (where the paint or ink is), +Z up"
+ },
+ "cameras": [
+  "canvas_cam",
+  "practice_cam",
+  "scene_cam",
+  "side_cam"
+ ],
+ "default_cameras": [
+  "canvas_cam",
+  "scene_cam",
+  "side_cam"
+ ],
+ "action_cameras": [
+  "canvas_cam"
+ ],
+ "state_cameras": [
+  "side_cam"
+ ],
+ "control": {
+  "dt": 0.1,
+  "control_dt": 0.05,
+  "joint_speed": 0.6,
+  "min_move_s": 0.5,
+  "settle_s": 0.2,
+  "ee_dt": 0.1,
+  "ee_speed": 0.1,
+  "ee_ang_speed": 0.6,
+  "ee_settle_s": 0.2,
+  "tolerance": {
+   "pos_m": 0.005,
+   "rot_rad": 0.05,
+   "joint": 0.03
+  }
+ },
+ "types": {
+  "joint_position": {
+   "dim": 7,
+   "hold": [
+    "measured"
+   ]
+  },
+  "ee_pose": {
+   "dim": 7,
+   "hold": [
+    "measured"
+   ],
+   "ee_mode": "interp",
+   "max_rows": 400,
+   "hold_measured_ee": true
+  }
+ },
+ "parts": {
+  "arm": {
+   "kind": "arm",
+   "note": "7 joints (panda_joint1..7, rad); the tool is a brush fixed to the hand, so there is no gripper: the end-effector pose is the tip of the brush's soft tuft",
+   "joints": {
+    "type": "joint_position",
+    "cols": [
+     0,
+     7
+    ]
+   },
+   "ee": {
+    "type": "ee_pose",
+    "cols": [
+     0,
+     7
+    ],
+    "point": "the tip of the brush's 15 mm soft tuft (tool frame tip)",
+    "mode_text": "rows dt apart: the service moves the tip target on a straight line from the previous row's target, one IK solve per 20 Hz control step, at most 0.25 m/s"
+   },
+   "state": {
+    "joints": {
+     "group": "joint_pos"
+    },
+    "ee_pose": {
+     "group": "tcp_pose"
+    }
+   }
+  }
+ },
+ "base": null,
+ "locomotion": null,
+ "notes": "Ink: one ink stone (spec_file static.wells, radius 20 mm) on a plate on the robot's left (+Y): the tip inside its circle and below the ink surface inks the brush and gathers its hairs to a point (the brush starts dry). The main sheet (scored, under canvas_cam) and the practice sheet beside it (free for tests) are described in spec_file static.sheets; positions in the world are not given: find the sheets and the ink stone on the cameras (side_cam shows the brush's height above the paper). One continuous contact of the loaded tip with the main sheet is one stroke, and pressing deeper gives a wider mark (the handle touches the paper 15 mm below its surface). A stroke is best sent as one execute_trajectory space ee call: a few rows (above the start, press down, sweep along the stroke, lift), dt 0.1 to 0.5 s apart; the service moves the tip on a straight line between consecutive rows. Hold the brush vertical, tuft down (the start orientation). The arm is position-controlled at 20 Hz and lags a moving target. The episode ends only when your time is up.",
+ "task": "robopaint-xingshu-huifenghechang-i00"
+}

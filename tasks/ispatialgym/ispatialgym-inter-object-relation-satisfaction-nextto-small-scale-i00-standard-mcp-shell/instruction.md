@@ -1,0 +1,172 @@
+# iSpatialGym — standard mode (robot as a service, eai-standard/2.2) — MCP tools and shell
+
+You drive an **R1Pro** mobile robot with two arms, in a house, **as if it were real hardware**. The simulator
+(iSpatialGym on BEHAVIOR-1K's OmniGibson) runs in a service you cannot open: you get one Python client and one episode.
+
+## Robot tools (MCP server `efe-robot`) and their Python client `efe_robot`
+Besides the robot service's own client (below), you get the robot through the tools of the MCP server `efe-robot` (in
+your tool list as `efe-robot` tools, for example `mcp__efe-robot__move_robot`) and through the same tools as Python
+functions: `import efe_robot` (`/opt/tools/efe_robot.py`, on `PYTHONPATH`; each function has the tool's name, arguments
+and result, and its docstring is the tool's description), or `python3 /opt/tools/efe_robot.py <tool> '<JSON arguments>'`
+from the shell. They all drive the one robot: use one route at a time. The calls of the service's client and the tools
+that do the same:
+
+| Client | Tool |
+|---|---|
+| `Robot()`, `r.spec()` | `describe_robot()`: the robot's parts, joints and limits, cameras, control period, action types and conventions, and the time left; the full spec is saved as a JSON file (`spec_file`) you can read |
+| `r.get_obs(cameras, seconds, depth)` | `observe(cameras, seconds, depth)` |
+| `r.submit(type, A, dt, interpolate)` | `execute_trajectory(space="native", action_type=type, native_rows=A, dt=dt, interpolate=...)`, or `move_robot` / `execute_trajectory` in the conventions below |
+| `r.status()`, `meta[...]` | every tool result: `time_left_s`, `sim_time_s`, `done`, `reason` and the service's messages |
+
+**Conventions** of `move_robot`, `locomote` and `execute_trajectory` (spaces other than `native`): the robot base frame
+at the start of each call (+X forward, +Y left, +Z up), metres and radians, quaternions `wxyz`, gripper 0 = open to 1 =
+closed. Base frame of this robot: under the robot's base_link at the height of its starting pose (about floor level): +X
+the way the base faces, +Y to the robot's left, +Z up; it moves with the base. Space `native` sends rows in the robot's
+own action types exactly as the sections below describe them (their frame, units and gripper values).
+
+**This robot** (Galaxea R1 Pro (iSpatialGym on BEHAVIOR-1K's OmniGibson): holonomic wheeled base, 4-joint torso, two
+7-joint arms with two-finger parallel grippers, head camera on the torso, a camera on each wrist): left (arm: 7 joints,
+end-effector pose, gripper); right (arm: 7 joints, end-effector pose, gripper); torso (torso: 4 joints); base (mobile:
+dx, dy, dyaw). Cameras: `robot_r1:zed_link:Camera:0`, `robot_r1:left_realsense_link:Camera:0`,
+`robot_r1:right_realsense_link:Camera:0`.
+
+- `describe_robot()`: call it first.
+- `observe(cameras?, depth?, seconds?, save_to?, inline_cameras?)`: images are written as JPEG files under `/app/obs/`
+  (depth as `.npy`, float32 metres; with `seconds` > 0 a video `.mp4` too); the result has their paths, each camera's
+  intrinsics `K` and pose in the robot base frame, each part's joints, gripper and end-effector pose, and `proprio_now`
+  (the robot's own proprioception row; its layout is in the spec file). Open an image with your file-reading tool;
+  `inline_cameras` also returns small images in the result.
+- `move_robot(goals, duration_s?)`: one goal per part,
+  `{target, position?, quaternion_wxyz?, joint_positions?, gripper?}` (the base: `{target: "base", dx, dy, dyaw}`); the
+  parts move together and the call returns when the motion is done, with `reached` (errors per goal), a `failure`
+  category if a goal was not reached, the state and the path of a frame per camera.
+- `execute_trajectory(space, rows | native_rows | rows_file, dt?, interpolate?)`: a dense trajectory, rows `dt` seconds
+  apart; a long one can come from a file under `/app` (`.npy` / `.csv` of native rows, `.json` of rows).
+- `wait(seconds?, operation?)`: let time pass holding the current command, or collect a pending operation.
+- `signal(kind, note)`: `done` records that you are finished (the episode itself ends as described above).
+- One tool call runs at a time (the Python functions wait for a pending call themselves). A call still executing after
+  45 s returns `{"pending": true, "operation": id}` while the robot goes on executing it: call `wait(operation=id)` (it
+  waits up to 45 s more each time) for its result. A result with `"episode_over": true` means the episode has ended.
+
+**Notes on this robot.** The goal picture is /app/goal.png: the head camera's view (robot_r1:zed_link:Camera:0, same
+resolution and intrinsics) once the task is done. Simulated time passes only while the robot moves or you wait, and the
+episode has a fixed number of control steps (30 per simulated second; control_steps_left in every result): give short
+motions a short duration_s. Success needs the scene and the robot still for 45 control steps: after the last motion,
+wait at least 1.5 s. End-effector poses (goals and state) are the fingertip centre (TCP), midway between the two
+fingertips, about 2 cm further along the fingers than the end-effector frame between the finger pads, where a grasped
+object is held (the proprio eef_pose group). An end-effector goal is solved by the robot's inverse kinematics from the
+current joints and moves only that arm, in joint space, without collision checking. Grasping is assisted: closing on an
+object holds what the finger pads touch, and the hand lets go only when fully open (gripper 0). The reported gripper
+value is 1 while the measured opening is below 9 cm (closed, or holding an object) and 0 when fully open;
+gripper_opening_m is the measured opening. The cameras give RGB only (no depth). The simulator runs at about 8 control
+steps per second of wall time.
+
+## Your task: make the scene look like a picture
+`/app/goal.png` is what the robot's head camera (`robot_r1:zed_link:Camera:0`) sees once the task is done. It is the same
+camera, resolution and intrinsics as the robot's own head camera. Change the scene so that it looks like the picture. No
+sentence here names the objects that matter or what to do with them: the picture is the whole task. The robot does not have to
+match the picture (its arms, grippers and base may be anywhere), and nothing the picture does not show is judged.
+
+## When the episode succeeds
+The sim service judges the episode while it runs.
+After every control step it checks three conditions:
+1. **Relations.** The objects the task is about stand in the relations the picture shows: what is on, in, under, next to
+   or touching what, what is open, and which objects the robot holds or has let go of.
+2. **Poses.** Every pose the task measures is within its tolerance of the pose in the picture:
+   - one object's pose: position within 0.09 m, orientation within 0.3 rad (17.2°)
+   - one object's pose: position within 0.09 m, orientation within 0.3 rad (17.2°)
+3. **At rest.** Conditions 1 and 2 have both held at every one of the last **45 control steps** (1.5 s of
+   simulated time), and during those steps the objects the task is about and the robot itself are still:
+   - at every step, each of them moves slower than 0.001 m/s and 0.005 rad/s, and each robot joint slower than 0.02 rad/s;
+   - over the whole window, none of them drifts more than 0.01 m or 0.05 rad, and no robot joint more than 0.05.
+
+The episode succeeds at the first control step where all three hold, which is the last step of that window. This text does
+not say which objects the task is about: the picture shows them.
+
+**Once the scene looks right, stop the robot and keep it still for at least 45 control steps.** Simulated time passes
+only while you submit rows or watch: first send a row with the base command at 0 (the base keeps its last
+command until the next row), then submit rows that hold still, or watch with `r.get_obs(seconds=...)`, which holds
+the last command.
+
+## Rules (real-robot rules)
+- **One episode, no reset.** The episode starts when the service is up. It ends on success; after **2076 control
+  steps** (69.2 s of simulated time, `spec["max_control_steps"]`; the reason is
+  "failed: the episode's control steps ran out"); when your time runs out; or on a simulator error.
+  Anything you knock over or push away stays where it ends up.
+- **What you can sense.** RGB images from the robot's three cameras, and the robot's own proprioception (joints, base pose
+  and velocity, end-effector and fingertip poses, gripper openings). Every pose is in the **odometry frame**: the robot's
+  `base_link` at the start of the episode (x forward, y left, z up). You get no object poses, no map, no world frame, and
+  no success signal before the episode ends.
+- **A malformed request is refused with a 400 and nothing is executed** (a wrong type or shape, a value out of range,
+  a `dt` that is not a whole number of control periods, `video_fps` outside 1-30, a call over the image budget below): fix it and send it again.
+- One call returns at most 300 images (`max_frames_per_call`, PROTOCOL §3 "Images per call").
+- **Nothing to hand in.** The service records your episode as the trajectory and grades it. Leave your script at
+  `/app/output/gen.py` for the record.
+- **Nothing is put into your context automatically.** Images and videos come back as arrays/bytes in a Python object;
+  what you look at and where you store it is your code's decision.
+- **If the service crashes** (a connection error or a 5xx answer), it restarts and resumes the SAME episode (never a
+  reset) in the state after the last call it completed, which you may not have received: call `r.wait_ready()`, then
+  check `r.status()` (`calls`, `control_steps`) before you continue.
+
+## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`)
+```python
+from rcb_client import Robot
+r = Robot()                                   # connects: waits while Isaac Sim starts and loads the scene
+                                              # (8-17 min measured; the first start in a container, while Isaac
+                                              # compiles its shaders, is the slow one; the wait is on your clock)
+spec = r.spec()                               # actions, cameras, robot_spec, world, kinematics, budget
+
+obs = r.get_obs()                             # the current head-camera frame: obs.last[cam] -> uint8 (1080, 1080, 3)
+obs = r.get_obs(cameras=[...])                # any of the three cameras (spec["cameras"])
+obs.meta["proprio"]                           # {"layout": [...], "now": [...]}: named columns (spec["proprio_groups"])
+obs.meta["cameras"]                           # per camera: intrinsic_cv / extrinsic_cv (odometry -> camera) of the LAST frame
+obs = r.get_obs(seconds=2.0, video="mp4")     # hold the last command and watch for 2 s (max 30): obs.video[cam] = mp4 bytes
+
+res = r.submit("joint_position", A, dt=0.1)   # A: (T, 23) rows dt seconds apart; streamed at 30 Hz
+res.meta["done"], res.meta["reason"], res.meta["clipped"], res.meta["control_steps_left"]
+res.video[cam]; res.frames[cam]; res.last[cam]; res.proprio   # execution video / frames / last frame per camera, proprio per frame
+```
+Cameras: `robot_r1:zed_link:Camera:0` (head: the goal image's camera; it moves with the base and the trunk),
+`robot_r1:left_realsense_link:Camera:0` and `robot_r1:right_realsense_link:Camera:0` (wrists), 1080×1080 RGB each, no
+depth. They all move, so always use the calibration that arrived with the image. While the robot moves a frame shows the
+scene 2 control steps (67 ms) before its `frame_step`; its `extrinsic_cv` is the pose it was rendered with.
+
+### The action: `joint_position` (23)
+Blocks (`spec["action_types"]["joint_position"]["blocks"]`): base (3), trunk (4), left arm (7), left gripper (1), right
+arm (7), right gripper (1). Rows are `dt` apart (`1/30 ≤ dt ≤ 0.5` s, a multiple of the 30 Hz control period: `k/30` s;
+any other `dt` is a 400); a chunk covers at most 10 s; out-of-limit values are clipped and listed in `meta["clipped"]`.
+- **Base**: a velocity command in [-1, 1] in the robot's own frame (forward, left, yaw rate), scaled to 0.75 m/s,
+  0.75 m/s and 1 rad/s; it switches at the row and holds until the next one; zeros stop.
+- **Trunk and arms**: absolute joint targets (rad), linearly interpolated between rows (or held, `interpolate="hold"`).
+- **Grippers**: one command each in [-1, 1]: -1 closed, 1 fully open, in between the fingers' target as a fraction of
+  their travel; it switches at the row. Grasping is assisted: closing on an object holds what the finger pads touch, and
+  the hand lets go only at 1.
+
+### Optional inputs (eai-standard/2.2)
+- **Per frame**: `res.frame_step`, `res.frame_time_s` and `res.extrinsic_cv[cam]` (N, 3, 4; odometry -> camera, OpenCV
+  axes). Intrinsics `spec["cameras"][cam]["intrinsic_cv"]` (the goal image's are the head camera's), mounting
+  `spec["cameras"][cam]["mount"]` (parent link + fixed `link_T_cam_cv`).
+- **Robot**: `spec["robot_spec"]`: joint names and limits, the gripper rule, the end-effector frame and the fingertip
+  centre (TCP), the base command.
+- **Proprioception**: named columns `spec["proprio_layout"]`, groups `spec["proprio_groups"]` (joint_pos, joint_vel,
+  joint_effort, gripper_opening, tcp_pose, eef_pose, base_pose, base_twist): `res.group("tcp_pose")` per frame,
+  `res.group("tcp_pose", now=True)` now. Mind the joint order: the joint columns follow `spec["robot_spec"]["joints"]`
+  (the trunk, then the two arms interleaved: left joint 1, right joint 1, left joint 2, ...), while the action's arm blocks
+  and the kinematics' `q` are grouped (left arm joints 1-7, then right arm joints 1-7); map by name.
+- **Kinematics** (stateless: no physics, no time): `r.fk(q)`, `r.ik({"left_tcp": pose}, seed=q)`; q =
+  `spec["kinematics"]["joint_names"]` (trunk + both arms); poses in the robot's base frame, or in the odometry frame with
+  `base_pose=` the 7 base_pose proprio columns.
+
+The simulator runs at about 7 control steps per second of wall time, and your 2076 control steps are
+the whole episode: look and plan before you spend them, and check `meta["done"]`.
+
+## External material
+You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+
+## Resources
+Your container: **8 CPUs**, **5 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
+
+## Time limit
+You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` counts the same limit from your first request to the service, so it never runs out before your time does: your real time left is `time_left_s` minus the time you spent before that request. Plan by it. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).

@@ -1,0 +1,10 @@
+# Separate verifier sandbox: grades the sim service's own artifacts (/data/final.json, the live episode's verdict);
+# needs nothing but python (no simulator: nothing is replayed).
+FROM docker.io/library/python:3.12.14-slim@sha256:f77ac9e44ae96ef2c90b8053ea08c31f8be030f824196b0ae4db6d462c84e51f
+COPY test.sh /tests/
+COPY --from=ghcr.io/mll-lab-nu/efe:ikea-mujoco-files-0.4.2@sha256:0cb74965f760e756ec7ac0bb41b7b16fba27aa12bfc382425945fa0cedd2b201 /standard/tests/grade.py /tests/grade.py
+RUN chmod +x /tests/test.sh && mkdir -p /logs/verifier
+WORKDIR /tests
+# resources (PROTOCOL §6) # rcb-monitor
+COPY --from=ghcr.io/mll-lab-nu/efe:monitor-0.5.0@sha256:ecc5f24f1516ca11711d7c2d3ac07c89f79cd9220812c1244498ec71e352402a /opt/rcb_monitor/rcb_limits.py /tests/rcb_limits.py
+COPY rcb_limits.json /tests/rcb_limits.json

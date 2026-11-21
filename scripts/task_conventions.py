@@ -156,8 +156,14 @@ MODE_REGISTRY = {
     "standard-mcp": {"short": "S-MCP", "section": "§3", "sidecar": True, "limit_scope": "agent",
                      "protocols": ("eai-standard/2.1", "eai-standard/2.2", "eai-standard/2.4"),
                      "twin": "privileged", "same_cutoff_as": "privileged"},
+    # standard-mcp with a shell: the same efe-robot tools, the same tools as a generated Python client
+    # (/opt/tools/efe_robot.py) and the task's own robot client; the agent's tools are not restricted
+    "standard-mcp-shell": {"short": "S-MCP+sh", "section": "§3", "sidecar": True, "limit_scope": "agent",
+                           "protocols": ("eai-standard/2.1", "eai-standard/2.2", "eai-standard/2.4"),
+                           "twin": "privileged", "same_cutoff_as": "privileged"},
 }
-MCP_MODES = ("standard-mcp",)   # modes whose agent controls the robot through the efe-robot MCP server
+MCP_MODES = ("standard-mcp",)   # modes whose agent controls the robot through the efe-robot MCP server only
+TOOL_MODES = ("standard-mcp", "standard-mcp-shell")   # modes whose task carries the efe-robot server (environment/efe_mcp/)
 # environment/efe_mcp/ of an MCP task: these files of embodied_first_exam/standard/mcp/, unchanged, + manifest.json
 EFE_MCP_SOURCE = Path(__file__).resolve().parent.parent / "embodied_first_exam" / "standard" / "mcp"
 EFE_MCP_FILES = ("server.py", "rcb_adapter.py", "geom.py", "schema.py", "workspace.py", "mcp_client.py",
@@ -295,6 +301,7 @@ CUTOFF_NOTE = {
                  "spent before that request. Plan by it." + _CUTOFF_CLOCK + _CUTOFF_WAITS + _CUTOFF_CLOSE),
 }
 CUTOFF_NOTE["realtime"] = CUTOFF_NOTE["standard"]
+CUTOFF_NOTE["standard-mcp-shell"] = CUTOFF_NOTE["standard"]
 CUTOFF_NOTE["standard-mcp"] = (
     "This is wall-clock time from the start of your session; the time the robot tools take counts. When it is up you "
     "are stopped without warning and the episode is graded as it stands at that moment. Every robot tool result "
@@ -1115,6 +1122,8 @@ def render_cutoff(sec: int, mode: str, bench: str = "", name: str = "") -> str:
     if mode in MCP_MODES and name and name.endswith("-" + mode) and \
             name[: -len(mode)] + "standard" in CUTOFF_NOTE_TASK:
         note = CUTOFF_NOTE_TASK_MCP
+    elif mode == "standard-mcp-shell" and name and name[: -len(mode)] + "standard" in CUTOFF_NOTE_TASK:
+        note = CUTOFF_NOTE_TASK[name[: -len(mode)] + "standard"]
     return CUTOFF_HEADING + "\n" + CUTOFF_SENTENCE.format(sec=sec) + "\n\n" + note + "\n"
 
 
@@ -1337,6 +1346,11 @@ def image_of(task: Path) -> str:
 
 def default_difficulty(task: Path, rows: dict[str, str]) -> str:
     twin = base_of(task) + "-privileged"
+    if mode_of(task) == "standard-mcp-shell":
+        return (f"Same scene, instance, success rule and time limit as `{base_of(task)}-standard` (see its Difficulty). "
+                "Here the agent has the `efe-robot` MCP tools (describe, observe, move parts to goals, execute "
+                "trajectories, wait, signal, in the robot base frame's conventions), the same tools as a Python client "
+                "(`/opt/tools/efe_robot.py`), the task's own robot client and a shell.")
     if mode_of(task) in MCP_MODES:
         return (f"Same scene, instance, success rule and time limit as `{base_of(task)}-standard` (see its Difficulty). "
                 "Here the agent has no shell and runs no code: it acts on the robot only through the `efe-robot` MCP "

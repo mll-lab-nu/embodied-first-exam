@@ -1,0 +1,102 @@
+{
+ "manifest": "efe-mcp-manifest/0",
+ "suite": "embodiedswe",
+ "kind": "rcb",
+ "robot": "Franka Emika Panda arm with the Franka Hand parallel gripper on a fixed base, driven by EmbodiedSWE's operational-space (torque) controller",
+ "frame": {
+  "suite": "the simulator's world frame (metres, z up)",
+  "quat": "wxyz",
+  "base": {
+   "fixed": [
+    -0.43,
+    0,
+    0.55,
+    1,
+    0,
+    0,
+    0
+   ]
+  },
+  "base_text": "the arm's base (panda_link0), at world (-0.43, 0, 0.55) with the world's axes: +X forward, +Y left, +Z up"
+ },
+ "cameras": [
+  "overview",
+  "wrist"
+ ],
+ "default_cameras": [
+  "overview",
+  "wrist"
+ ],
+ "action_cameras": [
+  "overview",
+  "wrist"
+ ],
+ "state_cameras": [
+  "overview"
+ ],
+ "control": {
+  "dt": 0.2,
+  "control_dt": 0.0666667,
+  "joint_speed": 0.5,
+  "min_move_s": 0.6,
+  "settle_s": 0.6,
+  "gripper_settle_s": 0.6,
+  "ee_dt": 0.2,
+  "ee_speed": 0.15,
+  "ee_ang_speed": 0.8,
+  "ee_settle_s": 0.6,
+  "tolerance": {
+   "pos_m": 0.01,
+   "rot_rad": 0.05,
+   "joint": 0.005
+  },
+  "max_chunk_s": 10.0
+ },
+ "types": {
+  "ee_pose": {
+   "dim": 9,
+   "hold": [
+    "last",
+    "measured"
+   ],
+   "ee_mode": "interp",
+   "hold_measured_ee": false
+  }
+ },
+ "parts": {
+  "arm": {
+   "kind": "arm",
+   "note": "end-effector pose = the panda_hand frame; joint_positions = the two finger position targets (m each, 0 closed, 0.04 open)",
+   "ee": {
+    "type": "ee_pose",
+    "cols": [
+     0,
+     7
+    ],
+    "point": "the panda_hand frame (the hand's flange); the point midway between the fingertips is 0.1034 m further along the hand's own +Z (approach) axis",
+    "mode_text": "a streamed pose target that the operational-space controller tracks; move_robot interpolates the path at about 0.15 m/s"
+   },
+   "joints": {
+    "type": "ee_pose",
+    "cols": [
+     7,
+     9
+    ]
+   },
+   "state": {
+    "ee_pose": {
+     "group": "ee_pose"
+    },
+    "joints": {
+     "group": "finger_target"
+    },
+    "gripper_opening_m": {
+     "group": "gripper_opening"
+    }
+   }
+  }
+ },
+ "signals": {},
+ "notes": "The arm takes end-effector poses only, tracked by EmbodiedSWE's operational-space (torque) controller; its seven joints take no direct command. The end-effector pose is the panda_hand frame, not the fingertips: the point midway between the fingertips is 0.1034 m along the hand's own +Z (approach) axis from it, so for a top-down grasp put panda_hand 0.1034 m above the grasp point. The arm's two joint_positions are the finger position targets (finger_1, finger_2, metres each: 0 = closed, 0.04 = open): send both together, e.g. [0.04, 0.04] to open and [0.0, 0.0] to close; a closed target on an object squeezes it. gripper_opening_m in the state is the measured distance between the finger pads (about 0.08 fully open). The measured joint angles are in observe's proprio_now (its layout: describe_robot's spec_file, proprio_layout). One episode, no reset; it ends by itself once the task is complete.",
+ "task": "embodiedswe-packing-tool-packing-franka-osc-i00"
+}

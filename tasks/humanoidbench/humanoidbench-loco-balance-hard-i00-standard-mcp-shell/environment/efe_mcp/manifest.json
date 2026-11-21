@@ -1,0 +1,107 @@
+{
+ "manifest": "efe-mcp-manifest/0",
+ "suite": "humanoidbench",
+ "kind": "rcb",
+ "robot": "Unitree H1 humanoid (HumanoidBench, MuJoCo): 19 position servos, no hands, no walking controller",
+ "frame": {
+  "suite": "the robot's pelvis frame (the service gives no root pose)",
+  "quat": "wxyz",
+  "base": {
+   "fixed": [
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0
+   ]
+  },
+  "base_text": "the pelvis frame: +X the way the pelvis faces, +Y left, +Z up (no part here takes an end-effector pose, and the service reports no position of the robot in the room)"
+ },
+ "cameras": [
+  "left_eye_camera",
+  "right_eye_camera",
+  "room_camera"
+ ],
+ "default_cameras": [
+  "left_eye_camera",
+  "room_camera"
+ ],
+ "action_cameras": [
+  "left_eye_camera",
+  "room_camera"
+ ],
+ "state_cameras": [
+  "left_eye_camera"
+ ],
+ "control": {
+  "dt": 0.02,
+  "control_dt": 0.02,
+  "joint_speed": 1.0,
+  "min_move_s": 0.5,
+  "settle_s": 0.0,
+  "max_chunk_s": 10.0
+ },
+ "types": {
+  "joint_position": {
+   "dim": 19,
+   "hold": [
+    "last"
+   ]
+  }
+ },
+ "parts": {
+  "legs": {
+   "kind": "legs",
+   "joints": {
+    "type": "joint_position",
+    "cols": [
+     0,
+     10
+    ]
+   },
+   "note": "left_hip_yaw, left_hip_roll, left_hip_pitch, left_knee, left_ankle, then the same five on the right; normalized servo targets (-1..1)"
+  },
+  "torso": {
+   "kind": "torso",
+   "joints": {
+    "type": "joint_position",
+    "cols": [
+     10,
+     11
+    ]
+   },
+   "note": "the torso yaw servo; normalized servo target (-1..1)"
+  },
+  "left": {
+   "kind": "arm",
+   "joints": {
+    "type": "joint_position",
+    "cols": [
+     11,
+     15
+    ]
+   },
+   "note": "left_shoulder_pitch, left_shoulder_roll, left_shoulder_yaw, left_elbow; normalized servo targets (-1..1)"
+  },
+  "right": {
+   "kind": "arm",
+   "joints": {
+    "type": "joint_position",
+    "cols": [
+     15,
+     19
+    ]
+   },
+   "note": "right_shoulder_pitch, right_shoulder_roll, right_shoulder_yaw, right_elbow; normalized servo targets (-1..1)"
+  }
+ },
+ "locomotion": null,
+ "base": null,
+ "resets": {
+  "note": "Each episode has its own control-step budget; only the last episode is graded, and a success ends the run at once."
+ },
+ "notes": "Every joint command here is HumanoidBench's own normalized servo target, not an angle: -1 and +1 command the two ends of that actuator's range (range_rad of action type joint_position in describe_robot's spec_file), linearly, so 0 is mid-range, not 0 rad; values outside -1..1 are clipped. The state reports measured joint angles in radians (proprio_now, layout proprio_layout: every joint's angle, then its velocity, then the pelvis IMU), so the two scales differ. At the start of each episode every servo targets 0 rad, which is (-(lo + hi) / (hi - lo)) on the normalized scale. move_robot and execute_trajectory space joint keep the parts you do not name at the last command you sent: until you have sent one in an episode (also after a reset), send a whole 19-number row with execute_trajectory space native (action_type joint_position). There is no walking or balance controller: standing, stepping and keeping balance all come from the servo targets you send, 50 per second of robot time (control period 0.02 s). Time passes only inside calls; the episode ends on success, a fall or its last control step, and the service only says that it ended and why.",
+ "task": "humanoidbench-loco-balance-hard-i00"
+}

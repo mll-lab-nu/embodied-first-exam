@@ -1,0 +1,128 @@
+{
+ "manifest": "efe-mcp-manifest/0",
+ "suite": "vlabench",
+ "kind": "rcb",
+ "robot": "Franka Emika Panda on a fixed mount with a two-finger gripper, absolute joint and finger position targets",
+ "frame": {
+  "suite": "VLABench's world frame (metres, z up; the robot faces +y, x to its right)",
+  "quat": "wxyz",
+  "base": {
+   "fixed": [
+    0.0,
+    -0.4,
+    0.78,
+    0.7071068,
+    0.0,
+    0.0,
+    0.7071068
+   ]
+  },
+  "base_text": "the robot base frame: at the arm's mount, +X forward across the table (world +y), +Y the robot's left (world -x), +Z up"
+ },
+ "cameras": [
+  "forward",
+  "left",
+  "right",
+  "wrist"
+ ],
+ "default_cameras": [
+  "forward",
+  "wrist"
+ ],
+ "action_cameras": [
+  "forward"
+ ],
+ "state_cameras": [
+  "forward"
+ ],
+ "control": {
+  "dt": 0.1,
+  "control_dt": 0.1,
+  "joint_speed": 0.6,
+  "min_move_s": 0.5,
+  "gripper_settle_s": 0.6,
+  "settle_s": 0.2,
+  "tolerance": {
+   "pos_m": 0.01,
+   "rot_rad": 0.05,
+   "joint": 0.03
+  }
+ },
+ "types": {
+  "joint_position": {
+   "dim": 9,
+   "hold": [
+    "ref",
+    "measured"
+   ],
+   "hold_ref": {
+    "names": [
+     "cmd_joint1",
+     "cmd_joint2",
+     "cmd_joint3",
+     "cmd_joint4",
+     "cmd_joint5",
+     "cmd_joint6",
+     "cmd_joint7",
+     "cmd_finger1",
+     "cmd_finger2"
+    ]
+   }
+  }
+ },
+ "parts": {
+  "arm": {
+   "kind": "arm",
+   "note": "Panda arm: 7 absolute joint position targets (rad); the gripper is the two finger openings (0.04 m each = open, 0 = closed), set together. There is no end-effector command; the hand pose is reported.",
+   "joints": {
+    "type": "joint_position",
+    "cols": [
+     0,
+     7
+    ]
+   },
+   "gripper": {
+    "type": "joint_position",
+    "col": 7,
+    "mirror_cols": [
+     8
+    ],
+    "open": 0.04,
+    "closed": 0.0
+   },
+   "state": {
+    "joints": {
+     "names": [
+      "joint1_pos",
+      "joint2_pos",
+      "joint3_pos",
+      "joint4_pos",
+      "joint5_pos",
+      "joint6_pos",
+      "joint7_pos"
+     ]
+    },
+    "gripper": {
+     "names": [
+      "finger1_pos"
+     ],
+     "open": 0.04,
+     "closed": 0.0
+    },
+    "ee_pose": {
+     "names": [
+      "tcp_x",
+      "tcp_y",
+      "tcp_z",
+      "tcp_qw",
+      "tcp_qx",
+      "tcp_qy",
+      "tcp_qz"
+     ]
+    }
+   }
+  }
+ },
+ "notes": "The arm takes absolute joint position targets only: native action joint_position is 9 numbers, the 7 joints (rad) and then the two fingers' openings (m: 0 closed .. 0.04 open, set both alike); move_robot's gripper 0..1 sets both fingers. Nothing enforces the arm's joint limits: stay inside the Panda's own (spec_file: action_types.joint_position.panda_joint_limits_rad). The reported end-effector pose is the hand's tool point (tcp). A closed grasp holds the finger targets at 0: the fingers stop on the object, so the reported gripper value (the measured opening of one finger) stays below 1 while something is held. The cameras' intrinsics and poses (cam2world_gl, OpenGL axes, world frame) are in describe_robot's spec_file.",
+ "task": "vlabench-heat-food-i00"
+}

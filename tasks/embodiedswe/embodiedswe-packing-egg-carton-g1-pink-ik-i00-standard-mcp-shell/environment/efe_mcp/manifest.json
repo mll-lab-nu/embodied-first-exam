@@ -1,0 +1,139 @@
+{
+ "manifest": "efe-mcp-manifest/0",
+ "suite": "embodiedswe",
+ "kind": "rcb",
+ "robot": "Unitree G1 humanoid with two Dex3 three-finger hands, pelvis fixed to the world, upper body driven by EmbodiedSWE's Pink IK",
+ "frame": {
+  "suite": "the simulator's world frame (metres, z up)",
+  "quat": "wxyz",
+  "base": {
+   "pos": {
+    "group": "base_pose",
+    "offset": 0,
+    "n": 3
+   },
+   "quat": {
+    "group": "base_pose",
+    "offset": 3,
+    "n": 4
+   },
+   "quat_order": "wxyz"
+  },
+  "base_text": "the pelvis: origin at the pelvis, +X the way the pelvis faces, +Y to the robot's left, +Z up (levelled)"
+ },
+ "cameras": [
+  "overview",
+  "head"
+ ],
+ "default_cameras": [
+  "overview",
+  "head"
+ ],
+ "action_cameras": [
+  "overview",
+  "head"
+ ],
+ "state_cameras": [
+  "overview"
+ ],
+ "control": {
+  "dt": 0.1,
+  "control_dt": 0.0166667,
+  "joint_speed": 1.0,
+  "min_move_s": 0.6,
+  "settle_s": 0.5,
+  "gripper_settle_s": 0.6,
+  "ee_dt": 0.1,
+  "ee_speed": 0.15,
+  "ee_ang_speed": 0.8,
+  "ee_settle_s": 0.5,
+  "tolerance": {
+   "pos_m": 0.015,
+   "rot_rad": 0.08,
+   "joint": 0.03
+  },
+  "max_chunk_s": 10.0
+ },
+ "types": {
+  "ee_pose": {
+   "dim": 28,
+   "hold": [
+    "last",
+    "measured"
+   ],
+   "ee_mode": "interp",
+   "hold_measured_ee": false
+  }
+ },
+ "parts": {
+  "left": {
+   "kind": "arm",
+   "note": "end-effector pose = the left wrist (left_wrist_yaw_link frame); the palm and fingers extend beyond it",
+   "ee": {
+    "type": "ee_pose",
+    "cols": [
+     0,
+     7
+    ],
+    "point": "the left wrist (left_wrist_yaw_link frame origin); the palm and fingers extend beyond it",
+    "mode_text": "a streamed wrist target for Pink IK (waist and both arms solved together); move_robot interpolates the path at about 0.15 m/s"
+   },
+   "state": {
+    "ee_pose": {
+     "group": "tcp_pose",
+     "offset": 0,
+     "n": 7
+    },
+    "gripper_opening_m": {
+     "group": "gripper_opening",
+     "offset": 0,
+     "n": 1
+    }
+   }
+  },
+  "right": {
+   "kind": "arm",
+   "note": "end-effector pose = the right wrist (right_wrist_yaw_link frame); the palm and fingers extend beyond it",
+   "ee": {
+    "type": "ee_pose",
+    "cols": [
+     7,
+     14
+    ],
+    "point": "the right wrist (right_wrist_yaw_link frame origin); the palm and fingers extend beyond it",
+    "mode_text": "a streamed wrist target for Pink IK (waist and both arms solved together); move_robot interpolates the path at about 0.15 m/s"
+   },
+   "state": {
+    "ee_pose": {
+     "group": "tcp_pose",
+     "offset": 7,
+     "n": 7
+    },
+    "gripper_opening_m": {
+     "group": "gripper_opening",
+     "offset": 1,
+     "n": 1
+    }
+   }
+  },
+  "hands": {
+   "kind": "hand",
+   "note": "the 14 Dex3 hand joint targets (rad) of both hands, in the order listed (each name says its hand and finger)",
+   "joints": {
+    "type": "ee_pose",
+    "cols": [
+     14,
+     28
+    ]
+   },
+   "state": {
+    "joints": {
+     "group": "hand_target"
+    }
+   }
+  }
+ },
+ "signals": {},
+ "notes": "Each arm takes its wrist pose (the left_wrist_yaw_link / right_wrist_yaw_link frame; the palm and fingers extend beyond it). EmbodiedSWE's Pink IK solves the waist and both arms (17 joints) for the two wrist targets together, so moving one wrist can shift the waist and the other arm a little. The pelvis is fixed to the world (the legs are locked). The part hands takes the 14 Dex3 hand joint targets (rad) of both hands in the order describe_robot lists them (each joint's name says its hand and finger): send all 14, copying the current targets (observe: parts.hands.joint_positions) for the joints you leave alone. There is no single gripper value: close and open a hand through its joint targets (their limits: describe_robot's spec_file, action_types.ee_pose.joint_limits); a target past a joint's limit presses the joint against it. Each arm's gripper_opening_m is the distance from that hand's thumb tip to the midpoint of its index and middle fingertips. The measured joint angles are in observe's proprio_now (its layout: describe_robot's spec_file, proprio_layout). One episode, no reset; it ends by itself once the task is complete.",
+ "task": "embodiedswe-packing-egg-carton-g1-pink-ik-i00"
+}

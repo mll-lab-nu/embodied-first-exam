@@ -1,0 +1,90 @@
+schema_version = "1.3"
+artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, 
+  { source = "/data/final.json", service = "sim" },
+  { source = "/data/episode.jsonl", service = "sim" },
+  { source = "/data/trajectory.npz", service = "sim" },
+  { source = "/data/trajectory_live.f64", service = "sim" },
+  { source = "/data/referee.json", service = "sim" },
+  { source = "/data/replay.mp4", service = "sim" },
+  { source = "/data/replay.last.png", service = "sim" },
+  { source = "/data/trajectory.first.npz", service = "sim" },
+  { source = "/data/replay.first.mp4", service = "sim" },
+  { source = "/data/replay.first.last.png", service = "sim" },
+  { source = "/data/calls/", service = "sim" },
+  { source = "/data/startups.jsonl", service = "sim" },
+  { source = "/data/crash.log", service = "sim" },
+  "/app/output/",
+]
+
+[task]
+name = "embodied-first-exam/embodied-olympics-fun-volleyball-serve-i00-standard-mcp-shell"
+description = "STANDARD MODE, MCP TOOLS AND SHELL (robot as a service, eai-standard/2.1): Embodied Olympics volleyball-serve on the same frozen instance as embodied-olympics-fun-volleyball-serve-i00-privileged. Serve the volleyball: from behind the end line, toss it up off your open left palm and hit it with one hand or arm over the net into the opponent's court. The agent only gets a client: the robot's two head cameras (depth on one), its joint sensors and IMUs, the venue's fixed camera, and action chunks (walking, running, joint targets, Unitree LowCmd, the hands' grip). 5 resets, the last attempt graded; no object state, no referee state during an attempt. The sim service records the attempt and grades it live with the family's referee (no grading replay)."
+keywords = ["robotics", "embodied-olympics", "sports", "mujoco", "unitree-h1-2", "humanoid", "standard-mode", "trajectory", "volleyball-serve", "mcp"]
+
+[metadata]
+task_type = "trajectory"
+simulator = "mujoco"
+robot = "unitree-h1-2"
+family = "volleyball_serve"
+category = "football-and-volleyball"
+dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
+protocol = "eai-standard/2.1"
+instance_seed = 0
+expert_time_estimate_hours = 8.0
+oracle = "full"
+oracle_evidence = "Reference: a tiny toss off the open left palm by the arm's own movement (no pin, no launch), then the same arm swings up with the trunk's turn and strikes the ball about 0.1 s after the toss with the upper arm and forearm (Rule 12.4.1 allows any part of the arm). Key times, arm keys and trunk lean come from CMA-ES, any arm more than 3 mm into the body rejected. The ball comes in at 0.66 m/s and leaves at 13.6 m/s; it lands 14.2 m ahead (4.7 m beyond the net), 3.8 m right of the middle; success after 1.61 s; live, replay and the state hash agree. The deepest self-overlap is 3.0 mm (the right wrist on the right hip at 0.11 s). 4 of 4 perturbations succeed (servo gains x0.97 / x1.03, the keys after the strike 10 ms earlier / later). The privileged twin's reference rows (161 control steps, success after 1.61 s) streamed through the client."
+
+[verifier]
+timeout_sec = 900.0
+environment_mode = "separate"
+network_mode = "no-network"
+
+# Resources (PROTOCOL §6): seal the monitor's record first.
+[[verifier.collect]]
+service = "rcb_monitor"
+command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
+timeout_sec = 120
+
+# The agent's time is up: stop whatever it left running in its container. Harbor stops that container only after
+# collecting from it (~12 s), and a script still running there would keep driving the robot past the deadline.
+[[verifier.collect]]
+service = "main"
+command = "kill -9 -1 2>/dev/null; exit 0"
+timeout_sec = 30
+
+# Then the episode ends: SIGUSR1 to the service (re-sent every 30 s, in case it was restarting), which grades the live
+# episode (no grading replay). The loops run on the clock, inside timeout_sec: the verdict ("finalized":
+# true, written before any video is rendered) may take until 840 s (the end waits through a crash-recovery resume);
+# then the hook waits for the video, one render pass from the trajectory ("video_pending"), until 870 s -- a video that
+# is not ready by then is lost, the verdict is not.
+[[verifier.collect]]
+service = "sim"
+command = "t0=$(date +%s); while [ ! -f /data/server.pid ] && [ $(( $(date +%s) - t0 )) -lt 120 ]; do sleep 2; done; i=0; while [ $(( $(date +%s) - t0 )) -lt 840 ] && ! grep -q '\"finalized\": true' /data/final.json 2>/dev/null; do [ $((i % 15)) -eq 0 ] && kill -USR1 $(cat /data/server.pid 2>/dev/null) 2>/dev/null; i=$((i + 1)); sleep 2; done; while [ $(( $(date +%s) - t0 )) -lt 870 ] && grep -q '\"video_pending\": true' /data/final.json 2>/dev/null; do sleep 2; done; cat /data/final.json"
+timeout_sec = 900
+
+[agent]
+timeout_sec = 7200.0
+# Egress: open, `network_mode = "public"` below (the author's choice). Embodied Olympics lets the agent search for and download
+# public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md). The agent's
+# container holds no simulator, no referee and no instance.
+network_mode = "public"        # open egress, the task author's choice (docs/protocol/README.md Appendix H.6)
+
+[environment]
+build_timeout_sec = 1800.0
+cpus = 4
+memory_mb = 10240
+storage_mb = 10240
+
+[verifier.environment]
+build_timeout_sec = 600.0
+
+
+# The efe-robot MCP server (mode standard-mcp-shell: its tools, their Python client and a shell; embodied_first_exam/standard/mcp/)
+[[environment.mcp_servers]]
+name = "efe-robot"
+transport = "stdio"
+command = "python3"
+args = ["/opt/tools/efe_mcp/server.py"]
+
+[verifier.env]
+RCB_LIMITS_ENFORCE = "${RCB_LIMITS_ENFORCE:-0}"

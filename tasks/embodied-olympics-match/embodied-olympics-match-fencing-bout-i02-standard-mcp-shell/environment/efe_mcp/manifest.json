@@ -1,0 +1,13 @@
+{
+ "manifest": "efe-mcp-manifest/0",
+ "kind": "eo-match",
+ "suite": "embodied-olympics-match",
+ "url": "http://localhost:8000",
+ "url_env": "SIM_URL",
+ "seat": "A",
+ "seat_env": "SEAT",
+ "max_wait_s": 10,
+ "notes": "Turn-based: nothing moves while you think; your chess clock runs on your turn. `spec` (its file) has the phrase table; `status` / `observe` have every phrase so far.",
+ "turn": true,
+ "task": "embodied-olympics-match-fencing-bout-i02"
+}

@@ -1,0 +1,129 @@
+{
+ "manifest": "efe-mcp-manifest/0",
+ "suite": "robocasa365",
+ "kind": "rcb",
+ "robot": "Franka Panda on an Omron mobile base with a torso lift (RoboCasa PandaOmron); the arm takes absolute joint position targets",
+ "frame": {
+  "suite": "the RoboCasa kitchen's world frame (metres, z up)",
+  "quat": "wxyz",
+  "base": {
+   "fixed": [
+    1.1823,
+    -0.7918,
+    0.0,
+    0.707107,
+    0.0,
+    0.0,
+    0.707107
+   ]
+  },
+  "base_text": "the mobile base's starting placement: on the floor at the base's origin, +X the way the arm faces, +Y the robot's left, +Z up; it stays where the base started (driving the base does not move this frame)"
+ },
+ "cameras": [
+  "robot0_agentview_center",
+  "robot0_agentview_left",
+  "robot0_agentview_right",
+  "robot0_eye_in_hand"
+ ],
+ "default_cameras": [
+  "robot0_agentview_center",
+  "robot0_eye_in_hand"
+ ],
+ "action_cameras": [
+  "robot0_agentview_center"
+ ],
+ "state_cameras": [
+  "robot0_agentview_center"
+ ],
+ "control": {
+  "dt": 0.05,
+  "control_dt": 0.05,
+  "joint_speed": 0.6,
+  "min_move_s": 0.5,
+  "gripper_settle_s": 0.8,
+  "settle_s": 0.2,
+  "tolerance": {
+   "joint": 0.03
+  }
+ },
+ "types": {
+  "joint_position": {
+   "dim": 13,
+   "hold": [
+    "ref"
+   ],
+   "hold_ref": {
+    "names": [
+     "cmd_arm_joint1",
+     "cmd_arm_joint2",
+     "cmd_arm_joint3",
+     "cmd_arm_joint4",
+     "cmd_arm_joint5",
+     "cmd_arm_joint6",
+     "cmd_arm_joint7",
+     "cmd_grip",
+     "cmd_base_x",
+     "cmd_base_y",
+     "cmd_base_yaw",
+     "cmd_torso",
+     "cmd_hybrid_mode"
+    ]
+   },
+   "zero_cols": [
+    8,
+    9,
+    10,
+    11
+   ]
+  }
+ },
+ "parts": {
+  "arm": {
+   "kind": "arm",
+   "note": "Panda arm: 7 absolute joint position targets (rad); the gripper is open or closed only. There is no end-effector command.",
+   "joints": {
+    "type": "joint_position",
+    "cols": [
+     0,
+     7
+    ]
+   },
+   "gripper": {
+    "type": "joint_position",
+    "col": 7,
+    "open": -1.0,
+    "closed": 1.0,
+    "binary": true
+   },
+   "state": {
+    "joints": {
+     "names": [
+      "robot0_joint1_pos",
+      "robot0_joint2_pos",
+      "robot0_joint3_pos",
+      "robot0_joint4_pos",
+      "robot0_joint5_pos",
+      "robot0_joint6_pos",
+      "robot0_joint7_pos"
+     ]
+    },
+    "gripper": {
+     "names": [
+      "cmd_grip"
+     ],
+     "open": -1.0,
+     "closed": 1.0
+    },
+    "ee_pose": {
+     "names": [
+      "eef_right_x",
+      "eef_right_y",
+      "eef_right_z"
+     ]
+    }
+   }
+  }
+ },
+ "notes": "The arm takes absolute joint position targets only (no end-effector command): describe_robot gives the joint limits. The base and the torso lift are driven with execute_trajectory space native, action_type joint_position (13 numbers, one row per 0.05 s control step): arm_joint1..7 (keep the current targets, cmd_* in proprio_now), grip (+1 closes, -1 opens), base_x, base_y, base_yaw (the mobile base's velocities in its own frame, normalised to [-1, 1]), torso (the lift's velocity, normalised), hybrid_mode (-1, the default). proprio_now has eef_right_x/y/z (the grip site's position in the world frame), the joints (robot0_joint1..7, mobilebase0_joint_mobile_forward/side/yaw, mobilebase0_joint_torso_height) and cmd_* (the last command). The poses the tools report are in the base's starting placement. The cameras ride on the robot; each frame comes with its current calibration.",
+ "task": "robocasa365-searing-meat-i00"
+}

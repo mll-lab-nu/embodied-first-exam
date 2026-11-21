@@ -1,0 +1,1712 @@
+{
+ "task": "arrange_largest_number_random",
+ "seed": 0,
+ "layout_index": 0,
+ "layout_file": "Assets/Eval_Layout/RoboDojo/arx_x5/0/arrange_largest_number_random_0.json",
+ "layout_sha256": "c7897e5204ca76bbd7c6cb3c93a794a4e5218c0c17a4312f047930f5e7e822d5",
+ "layout": {
+  "Rigid": {
+   "number": [
+    {
+     "category": "number",
+     "category_idx": 46,
+     "group": "texture1",
+     "xlim": [
+      -0.4,
+      0.4
+     ],
+     "ylim": [
+      -0.25,
+      -0.05
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 45,
+     "rotate_rand": true,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.015,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "digit_0",
+     "default_pos": [
+      0.14039141297706073,
+      -0.22239291664756314,
+      0.7732497426354126
+     ],
+     "default_ori": [
+      0.9650009907437336,
+      -0.0018814402626269166,
+      0.011802045502141527,
+      -0.26197377687111373
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "size": [
+       0.03918766435260745,
+       0.050074839151313985,
+       0.017
+      ],
+      "mass": 0.1,
+      "friction": 0.0,
+      "type": "rigid"
+     },
+     "visual": {}
+    },
+    {
+     "category": "number",
+     "category_idx": 43,
+     "group": "texture1",
+     "xlim": [
+      -0.4,
+      0.4
+     ],
+     "ylim": [
+      -0.25,
+      -0.05
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 45,
+     "rotate_rand": true,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.015,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "digit_1",
+     "default_pos": [
+      -0.30479628004785264,
+      -0.15503671454839552,
+      0.7728975275028648
+     ],
+     "default_ori": [
+      0.937153101781415,
+      0.0017347937982254247,
+      -0.004369210465235146,
+      0.34888674998036434
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "size": [
+       0.035704944518354285,
+       0.0508427371795506,
+       0.016
+      ],
+      "mass": 0.1,
+      "friction": 0.0,
+      "type": "rigid"
+     },
+     "visual": {}
+    },
+    {
+     "category": "number",
+     "category_idx": 45,
+     "group": "texture1",
+     "xlim": [
+      -0.4,
+      0.4
+     ],
+     "ylim": [
+      -0.25,
+      -0.05
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 45,
+     "rotate_rand": true,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.015,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "digit_2",
+     "default_pos": [
+      0.30838327060338694,
+      -0.08623140095832636,
+      0.7729028287988347
+     ],
+     "default_ori": [
+      0.9852181509043038,
+      -0.001773392671627747,
+      -0.0003083308850099436,
+      0.17129493611663532
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "size": [
+       0.03459529872196014,
+       0.05041107344995797,
+       0.016
+      ],
+      "mass": 0.1,
+      "friction": 0.0,
+      "type": "rigid"
+     },
+     "visual": {}
+    },
+    {
+     "category": "number",
+     "category_idx": 42,
+     "group": "texture1",
+     "xlim": [
+      -0.4,
+      0.4
+     ],
+     "ylim": [
+      -0.25,
+      -0.05
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 45,
+     "rotate_rand": true,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.015,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "digit_3",
+     "default_pos": [
+      -0.23249012177811848,
+      -0.12354193324109398,
+      0.772702266780354
+     ],
+     "default_ori": [
+      0.9934147590023147,
+      0.00022154947261758442,
+      0.0024414912760853096,
+      0.11454739906498522
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "size": [
+       0.03478703794145784,
+       0.0481029599305475,
+       0.015
+      ],
+      "mass": 0.1,
+      "friction": 0.0,
+      "type": "rigid"
+     },
+     "visual": {}
+    }
+   ],
+   "pokeball": [
+    {
+     "category_idx": 7,
+     "physics": {
+      "type": "rigid"
+     },
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "type": "cluttered",
+     "clutter_idx": 0,
+     "yaml_path": "Clutter/clutter.yml",
+     "relative_plane": "Table",
+     "default_pos": [
+      0.1977848409758464,
+      0.27102533971078147,
+      0.8047343578181123
+     ],
+     "default_ori": [
+      0.9991523104316419,
+      0.02782154745538825,
+      0.025954026168557815,
+      -0.015716570298297976
+     ]
+    }
+   ],
+   "phone_stand": [
+    {
+     "category_idx": 1,
+     "physics": {
+      "type": "rigid"
+     },
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "type": "cluttered",
+     "clutter_idx": 0,
+     "yaml_path": "Clutter/clutter.yml",
+     "relative_plane": "Table",
+     "default_pos": [
+      0.5403641696563178,
+      0.31183972599469983,
+      0.8412968630517244
+     ],
+     "default_ori": [
+      0.6846777774633324,
+      0.6867113459395948,
+      0.17232095145758833,
+      0.17305882842101233
+     ]
+    }
+   ],
+   "box": [
+    {
+     "category_idx": 1,
+     "physics": {
+      "type": "rigid"
+     },
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "type": "cluttered",
+     "clutter_idx": 0,
+     "yaml_path": "Clutter/clutter.yml",
+     "relative_plane": "Table",
+     "default_pos": [
+      -0.43235078015355866,
+      0.26977068530849996,
+      0.7657016805597984
+     ],
+     "default_ori": [
+      0.9988110915903842,
+      0.00020954972183176096,
+      0.0001899707990198304,
+      -0.04874754676940064
+     ]
+    }
+   ],
+   "hammer": [
+    {
+     "category_idx": 0,
+     "physics": {
+      "type": "rigid",
+      "mass": 0.0
+     },
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "type": "cluttered",
+     "clutter_idx": 0,
+     "yaml_path": "Clutter/clutter.yml",
+     "relative_plane": "Table",
+     "default_pos": [
+      -0.5276477540897232,
+      -0.3832627390567686,
+      0.7645765963079757
+     ],
+     "default_ori": [
+      0.9682598629228166,
+      0.0035897825022030657,
+      0.00527178363172586,
+      0.2498642823846887
+     ]
+    }
+   ],
+   "cap": [
+    {
+     "category_idx": 0,
+     "physics": {
+      "type": "rigid"
+     },
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "type": "cluttered",
+     "clutter_idx": 0,
+     "yaml_path": "Clutter/clutter.yml",
+     "relative_plane": "Table",
+     "default_pos": [
+      -0.24422437488898446,
+      0.041654029680495884,
+      0.802797711173963
+     ],
+     "default_ori": [
+      0.700135534320592,
+      0.7121477875868002,
+      0.03562274334026442,
+      0.03723952703457415
+     ]
+    }
+   ],
+   "keyboard": [
+    {
+     "category_idx": 0,
+     "physics": {
+      "type": "rigid"
+     },
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "type": "cluttered",
+     "clutter_idx": 0,
+     "yaml_path": "Clutter/clutter.yml",
+     "relative_plane": "Table",
+     "default_pos": [
+      -0.2245822372536116,
+      0.2469025937266505,
+      0.7793985725095364
+     ],
+     "default_ori": [
+      0.9998782367869864,
+      -0.010520129459233224,
+      0.001681277121747322,
+      0.01140227096450966
+     ]
+    }
+   ],
+   "french_fries": [
+    {
+     "category_idx": 0,
+     "physics": {
+      "type": "rigid"
+     },
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "type": "cluttered",
+     "clutter_idx": 0,
+     "yaml_path": "Clutter/clutter.yml",
+     "relative_plane": "Table",
+     "default_pos": [
+      0.13689203039861178,
+      0.002911664858295998,
+      0.7788729825038763
+     ],
+     "default_ori": [
+      0.7260514266343651,
+      -0.6435291273345705,
+      0.16168974156060442,
+      -0.18048827005729368
+     ]
+    }
+   ],
+   "house": [
+    {
+     "category_idx": 1,
+     "physics": {
+      "mass": 1200.0,
+      "friction": 0.65,
+      "type": "rigid"
+     },
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "type": "cluttered",
+     "clutter_idx": 0,
+     "yaml_path": "Clutter/clutter.yml",
+     "relative_plane": "Table",
+     "default_pos": [
+      -0.5587273966022348,
+      0.08074666938394943,
+      0.8221003566737254
+     ],
+     "default_ori": [
+      0.9741763195566816,
+      -0.00047302479624817265,
+      -0.0007115103513195066,
+      -0.22578699788863038
+     ]
+    }
+   ],
+   "ice_cream": [
+    {
+     "category_idx": 0,
+     "physics": {
+      "mass": 0.25,
+      "friction": 0.38,
+      "type": "rigid"
+     },
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "type": "cluttered",
+     "clutter_idx": 0,
+     "yaml_path": "Clutter/clutter.yml",
+     "relative_plane": "Table",
+     "default_pos": [
+      0.4241935837374064,
+      0.06490908061535657,
+      0.8352020174570048
+     ],
+     "default_ori": [
+      0.9971900476376794,
+      0.00017130201975232575,
+      -0.0022936056303745635,
+      0.07487802695846764
+     ]
+    }
+   ],
+   "darts_board": [
+    {
+     "category_idx": 0,
+     "physics": {
+      "type": "rigid"
+     },
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "type": "cluttered",
+     "clutter_idx": 0,
+     "yaml_path": "Clutter/clutter.yml",
+     "relative_plane": "Table",
+     "default_pos": [
+      -0.14054515241976648,
+      -0.27277211379532895,
+      0.770899999764
+     ],
+     "default_ori": [
+      0.995347881777206,
+      8.986741757973265e-05,
+      -0.00010919636009295462,
+      -0.09634611689960086
+     ]
+    }
+   ],
+   "book": [
+    {
+     "category_idx": 4,
+     "physics": {
+      "mass": 0.35,
+      "friction": 0.45,
+      "type": "rigid"
+     },
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "type": "cluttered",
+     "clutter_idx": 0,
+     "yaml_path": "Clutter/clutter.yml",
+     "relative_plane": "Table",
+     "default_pos": [
+      0.4370676072258497,
+      -0.2895889880235118,
+      0.7719
+     ],
+     "default_ori": [
+      -0.6955317135539089,
+      0.6955317135539089,
+      0.12741913294620769,
+      -0.12741913294620769
+     ]
+    }
+   ],
+   "sculpture": [
+    {
+     "category_idx": 0,
+     "physics": {
+      "mass": 0.85,
+      "friction": 0.25,
+      "type": "rigid"
+     },
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "type": "cluttered",
+     "clutter_idx": 0,
+     "yaml_path": "Clutter/clutter.yml",
+     "relative_plane": "Table",
+     "default_pos": [
+      0.46291700253761187,
+      0.19187339102177994,
+      0.8335036579437697
+     ],
+     "default_ori": [
+      0.977686299810634,
+      0.008269646373373189,
+      -0.005339727629706082,
+      -0.20983946106557497
+     ]
+    }
+   ],
+   "garage": [
+    {
+     "category_idx": 16,
+     "physics": {
+      "mass": 0.35,
+      "friction": 0.45,
+      "type": "rigid"
+     },
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "type": "cluttered",
+     "clutter_idx": 0,
+     "yaml_path": "Clutter/clutter.yml",
+     "relative_plane": "Table",
+     "default_pos": [
+      0.33567004305552794,
+      0.3513626410726838,
+      0.8221702238862089
+     ],
+     "default_ori": [
+      0.9912249100283543,
+      0.0027755773192556215,
+      -0.000368927940573135,
+      -0.13215648982172762
+     ]
+    }
+   ],
+   "toy_car": [
+    {
+     "category_idx": 1,
+     "physics": {
+      "mass": 0.045,
+      "friction": 0.45,
+      "type": "rigid"
+     },
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "type": "cluttered",
+     "clutter_idx": 0,
+     "yaml_path": "Clutter/clutter.yml",
+     "relative_plane": "Table",
+     "default_pos": [
+      0.42325192305470205,
+      -0.04649564716974798,
+      0.7948002807175407
+     ],
+     "default_ori": [
+      0.9990240005993539,
+      0.0019074447557689788,
+      0.00010756634753446836,
+      -0.04412931350527314
+     ]
+    }
+   ],
+   "minecraft_blocks": [
+    {
+     "category_idx": 8,
+     "physics": {
+      "type": "rigid"
+     },
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "type": "cluttered",
+     "clutter_idx": 0,
+     "yaml_path": "Clutter/clutter.yml",
+     "relative_plane": "Table",
+     "default_pos": [
+      -0.3786571795745397,
+      -0.013505894986625078,
+      0.805
+     ],
+     "default_ori": [
+      0.9999714689061994,
+      0.0,
+      0.0,
+      -0.007553897906246075
+     ]
+    }
+   ],
+   "stapler": [
+    {
+     "category_idx": 0,
+     "physics": {
+      "mass": 0.12,
+      "friction": 0.38,
+      "type": "rigid"
+     },
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "type": "cluttered",
+     "clutter_idx": 0,
+     "yaml_path": "Clutter/clutter.yml",
+     "relative_plane": "Table",
+     "default_pos": [
+      0.0018307945246627709,
+      0.12819962108673896,
+      0.7987996524041738
+     ],
+     "default_ori": [
+      0.9993747023218583,
+      0.00038191948268841635,
+      0.0005139428993021647,
+      0.035352430741072666
+     ]
+    }
+   ],
+   "bridge": [
+    {
+     "category_idx": 0,
+     "physics": {
+      "type": "rigid"
+     },
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "type": "cluttered",
+     "clutter_idx": 0,
+     "yaml_path": "Clutter/clutter.yml",
+     "relative_plane": "Table",
+     "default_pos": [
+      0.01964513803782105,
+      0.3878219643588905,
+      0.7649997800026972
+     ],
+     "default_ori": [
+      0.9981849861739339,
+      -9.979619831489274e-05,
+      6.371515000191207e-06,
+      -0.06022228306089082
+     ]
+    }
+   ],
+   "audio": [
+    {
+     "category_idx": 2,
+     "physics": {
+      "type": "rigid"
+     },
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "type": "cluttered",
+     "clutter_idx": 0,
+     "yaml_path": "Clutter/clutter.yml",
+     "relative_plane": "Table",
+     "default_pos": [
+      -0.5333421911045009,
+      -0.11981591683119296,
+      0.7720399740406522
+     ],
+     "default_ori": [
+      0.9868674207770077,
+      0.0011483110148861374,
+      -0.0008254561121581507,
+      0.16152613972034546
+     ]
+    }
+   ],
+   "dice": [
+    {
+     "category_idx": 0,
+     "physics": {
+      "type": "rigid"
+     },
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "type": "cluttered",
+     "clutter_idx": 0,
+     "yaml_path": "Clutter/clutter.yml",
+     "relative_plane": "Table",
+     "default_pos": [
+      -0.056788485438914904,
+      -0.0042992749309011535,
+      0.765
+     ],
+     "default_ori": [
+      0.9905160455358514,
+      -0.0004910025615312879,
+      -9.450984364783055e-05,
+      0.13739619179727447
+     ]
+    }
+   ],
+   "racket": [
+    {
+     "category_idx": 0,
+     "physics": {
+      "type": "rigid"
+     },
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "type": "cluttered",
+     "clutter_idx": 0,
+     "yaml_path": "Clutter/clutter.yml",
+     "relative_plane": "Table",
+     "default_pos": [
+      -0.3982866263442546,
+      -0.29936890857000215,
+      0.7640663126662783
+     ],
+     "default_ori": [
+      0.9771658295113688,
+      0.005072255417210089,
+      0.005446940057739295,
+      -0.21234769766670122
+     ]
+    }
+   ]
+  },
+  "Geometry": {
+   "camera_stand": [
+    {
+     "category": "camera_stand",
+     "category_idx": 0,
+     "group": null,
+     "xlim": [
+      0.0,
+      0.0
+     ],
+     "ylim": [
+      -0.47,
+      -0.47
+     ],
+     "zlim": [
+      0.715,
+      0.715
+     ],
+     "qpos": [
+      0.707,
+      -0.707,
+      0.0,
+      0.0
+     ],
+     "rotate_deg": 0,
+     "rotate_rand": false,
+     "relative_plane": "Ground",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "camera_stand",
+     "default_pos": [
+      0.0,
+      -0.47,
+      0.765
+     ],
+     "default_ori": [
+      0.707,
+      -0.707,
+      0.0,
+      0.0
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "type": "geometry"
+     },
+     "visual": {}
+    }
+   ],
+   "cube_cushion": [
+    {
+     "category": "cube_cushion",
+     "category_idx": 1,
+     "group": null,
+     "xlim": [
+      -0.45,
+      0.45
+     ],
+     "ylim": [
+      -0.1,
+      -0.05
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 0,
+     "rotate_rand": false,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.0,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "mat_0",
+     "symmetric_index": 0,
+     "symmetric_total": 4,
+     "dynamic_layout": {
+      "type": "x_symmetric_line",
+      "center": 0.0,
+      "spacing": 0.085
+     },
+     "shared_y": -0.09739803386831396,
+     "default_pos": [
+      -0.12760710942369063,
+      -0.09725868112123177,
+      0.7675
+     ],
+     "default_ori": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.05,
+      "friction": 0.3,
+      "size": [
+       0.12,
+       0.12,
+       0.005
+      ],
+      "type": "geometry"
+     },
+     "visual": {}
+    },
+    {
+     "category": "cube_cushion",
+     "category_idx": 1,
+     "group": null,
+     "xlim": [
+      -0.45,
+      0.45
+     ],
+     "ylim": [
+      -0.1,
+      -0.05
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 0,
+     "rotate_rand": false,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.0,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "mat_1",
+     "symmetric_index": 1,
+     "symmetric_total": 4,
+     "dynamic_layout": {
+      "type": "x_symmetric_line",
+      "center": 0.0,
+      "spacing": 0.085
+     },
+     "shared_y": -0.09739803386831396,
+     "default_pos": [
+      -0.04221880626391009,
+      -0.0974862989497031,
+      0.7675
+     ],
+     "default_ori": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.05,
+      "friction": 0.3,
+      "size": [
+       0.12,
+       0.12,
+       0.005
+      ],
+      "type": "geometry"
+     },
+     "visual": {}
+    },
+    {
+     "category": "cube_cushion",
+     "category_idx": 1,
+     "group": null,
+     "xlim": [
+      -0.45,
+      0.45
+     ],
+     "ylim": [
+      -0.1,
+      -0.05
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 0,
+     "rotate_rand": false,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.0,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "mat_2",
+     "symmetric_index": 2,
+     "symmetric_total": 4,
+     "dynamic_layout": {
+      "type": "x_symmetric_line",
+      "center": 0.0,
+      "spacing": 0.085
+     },
+     "shared_y": -0.09739803386831396,
+     "default_pos": [
+      0.042496099570933595,
+      -0.09698184190419727,
+      0.7675
+     ],
+     "default_ori": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.05,
+      "friction": 0.3,
+      "size": [
+       0.12,
+       0.12,
+       0.005
+      ],
+      "type": "geometry"
+     },
+     "visual": {}
+    },
+    {
+     "category": "cube_cushion",
+     "category_idx": 1,
+     "group": null,
+     "xlim": [
+      -0.45,
+      0.45
+     ],
+     "ylim": [
+      -0.1,
+      -0.05
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 0,
+     "rotate_rand": false,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.0,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "mat_3",
+     "symmetric_index": 3,
+     "symmetric_total": 4,
+     "dynamic_layout": {
+      "type": "x_symmetric_line",
+      "center": 0.0,
+      "spacing": 0.085
+     },
+     "shared_y": -0.09739803386831396,
+     "default_pos": [
+      0.12671707450459901,
+      -0.09806746836723568,
+      0.7675
+     ],
+     "default_ori": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.05,
+      "friction": 0.3,
+      "size": [
+       0.12,
+       0.12,
+       0.005
+      ],
+      "type": "geometry"
+     },
+     "visual": {}
+    }
+   ]
+  },
+  "Room": {
+   "default": "Simple_Room_azure",
+   "default_pos": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "default_rot": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "scale": [
+    0.5,
+    0.5,
+    0.5
+   ]
+  },
+  "Table": {
+   "default": "material_0016",
+   "scale": [
+    1.4,
+    1.1,
+    0.05
+   ],
+   "default_pos": [
+    0.0,
+    -0.05,
+    0.74
+   ],
+   "default_ori": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "Ground": {
+   "geometry": "cube",
+   "thickness": 0.1,
+   "axis": "Z",
+   "default_pos": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "materials": {
+    "type": "mdl",
+    "default": "material_0057",
+    "random": false
+   },
+   "physics_material": {
+    "static_friction": 1.0,
+    "dynamic_friction": 1.0,
+    "restitution": 0.0,
+    "friction_combine_mode": "multiply",
+    "restitution_combine_mode": "multiply",
+    "compliant_contact_stiffness": 0.0,
+    "compliant_contact_damping": 0.0
+   }
+  },
+  "Background": {
+   "intensity": 1000,
+   "category_name": "brown_photostudio_02_4k.hdr"
+  }
+ },
+ "state_sha": "543f4432767b5372",
+ "step_lim": 1050,
+ "control_hz": 25,
+ "action_dim": 14,
+ "instruction": "Arrange the numbers from left to right to form the largest possible number, and place them on the pad.",
+ "labels": [
+  "digit_0",
+  "digit_1",
+  "digit_2",
+  "digit_3",
+  "camera_stand",
+  "mat_0",
+  "mat_1",
+  "mat_2",
+  "mat_3"
+ ],
+ "objects": {
+  "digit_0": {
+   "position": [
+    0.1402,
+    -0.22258,
+    0.7731
+   ],
+   "orientation_wxyz": [
+    0.96497,
+    0.0148,
+    0.00257,
+    -0.26192
+   ],
+   "bbox_corners": [
+    [
+     0.0199,
+     -0.0237,
+     0.0078
+    ],
+    [
+     0.0174,
+     0.0249,
+     0.0089
+    ],
+    [
+     -0.0181,
+     -0.0256,
+     0.0076
+    ],
+    [
+     -0.0206,
+     0.023,
+     0.0087
+    ],
+    [
+     0.02,
+     -0.0233,
+     -0.0088
+    ],
+    [
+     0.0175,
+     0.0253,
+     -0.0076
+    ],
+    [
+     -0.018,
+     -0.0252,
+     -0.009
+    ],
+    [
+     -0.0205,
+     0.0234,
+     -0.0078
+    ]
+   ]
+  },
+  "digit_1": {
+   "position": [
+    -0.30478,
+    -0.15502,
+    0.7728
+   ],
+   "orientation_wxyz": [
+    0.93728,
+    0.00033,
+    -0.00045,
+    0.34858
+   ],
+   "bbox_corners": [
+    [
+     -0.0173,
+     0.0249,
+     0.0078
+    ],
+    [
+     -0.0175,
+     -0.0248,
+     0.0079
+    ],
+    [
+     0.0175,
+     0.0248,
+     0.0078
+    ],
+    [
+     0.0174,
+     -0.0249,
+     0.0078
+    ],
+    [
+     -0.0173,
+     0.0249,
+     -0.0078
+    ],
+    [
+     -0.0175,
+     -0.0248,
+     -0.0078
+    ],
+    [
+     0.0175,
+     0.0248,
+     -0.0078
+    ],
+    [
+     0.0174,
+     -0.0249,
+     -0.0078
+    ]
+   ]
+  },
+  "digit_2": {
+   "position": [
+    0.30839,
+    -0.08626,
+    0.77283
+   ],
+   "orientation_wxyz": [
+    0.98522,
+    1e-05,
+    -1e-05,
+    0.17129
+   ],
+   "bbox_corners": [
+    [
+     -0.0162,
+     0.0251,
+     0.0078
+    ],
+    [
+     -0.0171,
+     -0.0243,
+     0.0078
+    ],
+    [
+     0.0173,
+     0.0245,
+     0.0078
+    ],
+    [
+     0.0164,
+     -0.025,
+     0.0078
+    ],
+    [
+     -0.0162,
+     0.0251,
+     -0.0078
+    ],
+    [
+     -0.0171,
+     -0.0243,
+     -0.0078
+    ],
+    [
+     0.0173,
+     0.0245,
+     -0.0078
+    ],
+    [
+     0.0164,
+     -0.025,
+     -0.0078
+    ]
+   ]
+  },
+  "digit_3": {
+   "position": [
+    -0.23253,
+    -0.12354,
+    0.77266
+   ],
+   "orientation_wxyz": [
+    0.99342,
+    1e-05,
+    -4e-05,
+    0.11454
+   ],
+   "bbox_corners": [
+    [
+     -0.0178,
+     0.0246,
+     0.0077
+    ],
+    [
+     -0.0178,
+     -0.0246,
+     0.0077
+    ],
+    [
+     0.0178,
+     0.0246,
+     0.0077
+    ],
+    [
+     0.0178,
+     -0.0246,
+     0.0077
+    ],
+    [
+     -0.0178,
+     0.0246,
+     -0.0077
+    ],
+    [
+     -0.0178,
+     -0.0246,
+     -0.0077
+    ],
+    [
+     0.0178,
+     0.0246,
+     -0.0077
+    ],
+    [
+     0.0178,
+     -0.0246,
+     -0.0077
+    ]
+   ]
+  },
+  "camera_stand": {
+   "position": [
+    0.0,
+    -0.47,
+    0.765
+   ],
+   "orientation_wxyz": [
+    -0.707,
+    0.70721,
+    0.0,
+    0.0
+   ],
+   "bbox_corners": [
+    [
+     -0.15,
+     -0.5855,
+     -0.0798
+    ],
+    [
+     -0.15,
+     -0.5855,
+     0.045
+    ],
+    [
+     -0.15,
+     0.0145,
+     -0.0798
+    ],
+    [
+     -0.15,
+     0.0145,
+     0.045
+    ],
+    [
+     0.15,
+     -0.5855,
+     -0.0798
+    ],
+    [
+     0.15,
+     -0.5855,
+     0.045
+    ],
+    [
+     0.15,
+     0.0145,
+     -0.0798
+    ],
+    [
+     0.15,
+     0.0145,
+     0.045
+    ]
+   ]
+  },
+  "mat_0": {
+   "position": [
+    -0.12761,
+    -0.09726,
+    0.7675
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bbox_corners": [
+    [
+     -0.04,
+     -0.04,
+     -0.0025
+    ],
+    [
+     -0.04,
+     -0.04,
+     0.0025
+    ],
+    [
+     -0.04,
+     0.04,
+     -0.0025
+    ],
+    [
+     -0.04,
+     0.04,
+     0.0025
+    ],
+    [
+     0.04,
+     -0.04,
+     -0.0025
+    ],
+    [
+     0.04,
+     -0.04,
+     0.0025
+    ],
+    [
+     0.04,
+     0.04,
+     -0.0025
+    ],
+    [
+     0.04,
+     0.04,
+     0.0025
+    ]
+   ]
+  },
+  "mat_1": {
+   "position": [
+    -0.04222,
+    -0.09749,
+    0.7675
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bbox_corners": [
+    [
+     -0.04,
+     -0.04,
+     -0.0025
+    ],
+    [
+     -0.04,
+     -0.04,
+     0.0025
+    ],
+    [
+     -0.04,
+     0.04,
+     -0.0025
+    ],
+    [
+     -0.04,
+     0.04,
+     0.0025
+    ],
+    [
+     0.04,
+     -0.04,
+     -0.0025
+    ],
+    [
+     0.04,
+     -0.04,
+     0.0025
+    ],
+    [
+     0.04,
+     0.04,
+     -0.0025
+    ],
+    [
+     0.04,
+     0.04,
+     0.0025
+    ]
+   ]
+  },
+  "mat_2": {
+   "position": [
+    0.0425,
+    -0.09698,
+    0.7675
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bbox_corners": [
+    [
+     -0.04,
+     -0.04,
+     -0.0025
+    ],
+    [
+     -0.04,
+     -0.04,
+     0.0025
+    ],
+    [
+     -0.04,
+     0.04,
+     -0.0025
+    ],
+    [
+     -0.04,
+     0.04,
+     0.0025
+    ],
+    [
+     0.04,
+     -0.04,
+     -0.0025
+    ],
+    [
+     0.04,
+     -0.04,
+     0.0025
+    ],
+    [
+     0.04,
+     0.04,
+     -0.0025
+    ],
+    [
+     0.04,
+     0.04,
+     0.0025
+    ]
+   ]
+  },
+  "mat_3": {
+   "position": [
+    0.12672,
+    -0.09807,
+    0.7675
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bbox_corners": [
+    [
+     -0.04,
+     -0.04,
+     -0.0025
+    ],
+    [
+     -0.04,
+     -0.04,
+     0.0025
+    ],
+    [
+     -0.04,
+     0.04,
+     -0.0025
+    ],
+    [
+     -0.04,
+     0.04,
+     0.0025
+    ],
+    [
+     0.04,
+     -0.04,
+     -0.0025
+    ],
+    [
+     0.04,
+     -0.04,
+     0.0025
+    ],
+    [
+     0.04,
+     0.04,
+     -0.0025
+    ],
+    [
+     0.04,
+     0.04,
+     0.0025
+    ]
+   ]
+  }
+ },
+ "start_action": [
+  0.0,
+  -0.0,
+  0.0,
+  0.0,
+  -0.0,
+  0.0,
+  1.0,
+  0.0,
+  -0.0,
+  0.0,
+  0.0,
+  -0.0,
+  0.0,
+  1.0
+ ]
+}

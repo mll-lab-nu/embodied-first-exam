@@ -32,13 +32,14 @@
 #    unchanged; the MuJoCo service: as scripts/task_conventions.py replace_words spells it). RoboTwin's privileged
 #    tests/test.sh and solution/solve.sh differ by the task's name only and are compared with the name replaced.
 #    Not covered here: the per-task texts of these benchmarks (instruction.md, README.md, task.toml).
-# 5. The efe-robot MCP server (standard-mcp tasks, environment/efe_mcp/): its files byte-identical to
-#    embodied_first_exam/standard/mcp/, plus the task's manifest.json (scripts/task_conventions.py efe_mcp_problems).
+# 5. The efe-robot MCP server (standard-mcp and standard-mcp-shell tasks, environment/efe_mcp/): its files byte-identical
+#    to embodied_first_exam/standard/mcp/, plus the task's manifest.json (scripts/task_conventions.py efe_mcp_problems);
+#    a shell variant's efe_robot.py is what client_gen.py writes for that manifest.
 # Usage: check-tooling-identity.sh [tasks dir]   (repo-level; run_all.sh calls it once)
 set -uo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
 python3 - "${1:-$root/tasks}" "$root/embodied_first_exam/standard" <<'PY'
-import collections, hashlib, os, re, sys, tomllib
+import collections, hashlib, json, os, re, sys, tomllib
 from pathlib import Path
 tasks, src = sys.argv[1], sys.argv[2]
 ROOTD = os.path.dirname(os.path.dirname(os.path.abspath(src)))   # the repository (src: embodied_first_exam/standard)
@@ -222,9 +223,20 @@ for t in sorted(TDIR):
 # 5. the efe-robot MCP server of every MCP-mode task (environment/efe_mcp/): its files as in embodied_first_exam/standard/mcp/
 n_mcp = 0
 for t in sorted(TDIR):
-    if tc.mode_suffix(t) in getattr(tc, "MCP_MODES", ()) or tc.mode_suffix(t) == "standard-mcp-shell":
+    if tc.mode_suffix(t) in getattr(tc, "TOOL_MODES", ()):
         n_mcp += 1
         bad += [f"{t}/environment/efe_mcp/: {x}" for x in tc.efe_mcp_problems(Path(TDIR[t]))]
+        if tc.mode_suffix(t) == "standard-mcp-shell":   # its Python client: what client_gen.py writes for its manifest
+            if os.path.join(src, "mcp") not in sys.path:
+                sys.path.insert(0, os.path.join(src, "mcp"))
+            import client_gen
+            d = Path(TDIR[t]) / "environment" / "efe_mcp"
+            try:
+                want = client_gen.generate(json.loads((d / "manifest.json").read_text()))
+                if not (d / "efe_robot.py").is_file() or (d / "efe_robot.py").read_text() != want:
+                    bad.append(f"{t}/environment/efe_mcp/efe_robot.py: not what embodied_first_exam/standard/mcp/client_gen.py writes for its manifest.json")
+            except Exception as e:  # noqa: BLE001
+                bad.append(f"{t}/environment/efe_mcp/efe_robot.py: {type(e).__name__}: {e}")
 bad += [f"{b}: {len(v)} versions of {role}: " + ", ".join(f"{h} ({p})" for h, p in sorted(v.items()))
         for b, roles in sorted(seen.items()) for role, v in sorted(roles.items()) if len(v) > 1]
 if bad:

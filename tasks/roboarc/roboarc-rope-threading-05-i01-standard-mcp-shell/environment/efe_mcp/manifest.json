@@ -1,0 +1,182 @@
+{
+ "manifest": "efe-mcp-manifest/0",
+ "suite": "roboarc",
+ "kind": "rcb",
+ "robot": "two 6-joint ALOHA (ViperX) arms with parallel-jaw grippers on a fixed base",
+ "frame": {
+  "suite": "the service's world frame: origin at the robot's kinematic root link on its mounting, +z up",
+  "quat": "wxyz",
+  "base": {
+   "fixed": [
+    0.0,
+    0.0,
+    0.0,
+    0.7071068,
+    0.0,
+    0.0,
+    0.7071068
+   ]
+  },
+  "base_text": "the robot base frame: origin at the robot's root link (the origin of the service's frame), +Z up; +X is the service frame's +y axis (across the table, between the two arms) and +Y its -x axis (towards the left arm)"
+ },
+ "cameras": [
+  "cam_high",
+  "cam_low",
+  "cam_left_wrist",
+  "cam_right_wrist"
+ ],
+ "default_cameras": [
+  "cam_high",
+  "cam_low",
+  "cam_left_wrist",
+  "cam_right_wrist"
+ ],
+ "action_cameras": [
+  "cam_high"
+ ],
+ "state_cameras": [
+  "cam_high"
+ ],
+ "control": {
+  "dt": 0.08,
+  "control_dt": 0.04,
+  "joint_speed": 0.6,
+  "min_move_s": 0.5,
+  "gripper_settle_s": 0.5,
+  "settle_s": 0.2,
+  "ee_dt": 0.08,
+  "ee_speed": 0.15,
+  "ee_ang_speed": 0.8,
+  "ee_settle_s": 0.2,
+  "tolerance": {
+   "pos_m": 0.005,
+   "rot_rad": 0.05,
+   "joint": 0.03
+  }
+ },
+ "types": {
+  "joint_position": {
+   "dim": 14,
+   "hold": [
+    "ref",
+    "measured"
+   ],
+   "hold_ref": {
+    "group": "joint_cmd"
+   }
+  },
+  "ee_pose": {
+   "dim": 16,
+   "hold": [
+    "measured"
+   ],
+   "ee_mode": "interp",
+   "max_rows": 50,
+   "hold_measured_ee": true
+  }
+ },
+ "parts": {
+  "left": {
+   "kind": "arm",
+   "note": "6 joints (waist, shoulder, elbow, forearm_roll, wrist_angle, wrist_rotate; rad). Tool frame (TCP): a point near the closed finger pads, approach axis (hand to fingertips) = its local +x, fingers close along its local y; the fingertips reach about 16 mm beyond it.",
+   "joints": {
+    "type": "joint_position",
+    "cols": [
+     0,
+     6
+    ]
+   },
+   "gripper": {
+    "type": "joint_position",
+    "col": 6,
+    "open": 0.037,
+    "closed": 0.002
+   },
+   "ee": {
+    "type": "ee_pose",
+    "cols": [
+     0,
+     7
+    ],
+    "gripper_col": 7,
+    "point": "the gripper's tool frame (TCP), near the closed finger pads",
+    "mode_text": "the service solves each pose by inverse kinematics (no collision checking) and drives the arm there in joint space; move_robot sends the path as poses about 1.5 cm apart"
+   },
+   "state": {
+    "joints": {
+     "group": "joint_pos",
+     "offset": 0,
+     "n": 6
+    },
+    "gripper": {
+     "group": "joint_cmd",
+     "offset": 6,
+     "n": 1
+    },
+    "gripper_opening_m": {
+     "group": "gripper_opening",
+     "offset": 0,
+     "n": 1
+    },
+    "ee_pose": {
+     "group": "tcp_pose",
+     "offset": 0,
+     "n": 7
+    }
+   }
+  },
+  "right": {
+   "kind": "arm",
+   "note": "6 joints (waist, shoulder, elbow, forearm_roll, wrist_angle, wrist_rotate; rad). Tool frame (TCP): a point near the closed finger pads, approach axis (hand to fingertips) = its local +x, fingers close along its local y; the fingertips reach about 16 mm beyond it.",
+   "joints": {
+    "type": "joint_position",
+    "cols": [
+     7,
+     13
+    ]
+   },
+   "gripper": {
+    "type": "joint_position",
+    "col": 13,
+    "open": 0.037,
+    "closed": 0.002
+   },
+   "ee": {
+    "type": "ee_pose",
+    "cols": [
+     8,
+     15
+    ],
+    "gripper_col": 15,
+    "point": "the gripper's tool frame (TCP), near the closed finger pads",
+    "mode_text": "the service solves each pose by inverse kinematics (no collision checking) and drives the arm there in joint space; move_robot sends the path as poses about 1.5 cm apart"
+   },
+   "state": {
+    "joints": {
+     "group": "joint_pos",
+     "offset": 7,
+     "n": 6
+    },
+    "gripper": {
+     "group": "joint_cmd",
+     "offset": 13,
+     "n": 1
+    },
+    "gripper_opening_m": {
+     "group": "gripper_opening",
+     "offset": 1,
+     "n": 1
+    },
+    "ee_pose": {
+     "group": "tcp_pose",
+     "offset": 7,
+     "n": 7
+    }
+   }
+  }
+ },
+ "base": null,
+ "locomotion": null,
+ "notes": "The episode ends by itself at the first success (all of the task's final conditions holding for its confirmation time: after the last move let simulated time pass with wait or observe seconds), when the task's own failure predicate fires (reason task_failed) or when your time is up; there is no step budget and nothing to signal. End-effector goals are solved by the service's inverse kinematics (no collision checking) and driven to in joint space; a solution more than 0.5 rad from the current joints on any joint is refused for that arm (it holds), so long end-effector moves go in steps of a few cm and degrees. Arm joint targets move at most 0.04 rad per control step; a faster request takes the steps it needs. No gripper target goes lower than 15 mm below the tabletop. Grasping is assisted (spec robot_spec.grippers states the rule): closing on a graspable part inside its grasp region takes hold of it, and any command that opens the gripper by more than 0.2 % of its travel lets it go. The gripper value in the state is the command in force; gripper_opening_m is the measured gap between the finger pads. Joint efforts (proprio_now, *_effort) rise when an arm pushes on something.",
+ "task": "roboarc-rope-threading-05-i01"
+}

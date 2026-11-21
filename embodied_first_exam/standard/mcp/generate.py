@@ -27,6 +27,8 @@ import manifest as mf             # noqa: E402
 import schema as sch              # noqa: E402
 
 MODE = "standard-mcp"
+SHELL = "standard-mcp-shell"          # the same tools + their Python client (client_gen.py) + the task's client + a shell
+MODES = (MODE, SHELL)
 SERVER_FILES = ("server.py", "rcb_adapter.py", "geom.py", "schema.py", "workspace.py", "mcp_client.py",
                 "schema/tools.v0.json")
 SUITE_FILES = ("suites.py",)          # the non-RCB suites' tools, when present
@@ -91,22 +93,35 @@ def wrap(t: str, first: str = "", rest: str = "") -> str:
                          break_on_hyphens=False).replace("\0", " ")
 
 
-def tool_section(m: dict, task: pathlib.Path) -> str:
+SHELL_INTRO = ("Besides the robot service's own client (below), you get the robot through the tools of the MCP "
+               "server `efe-robot` (in your tool list as `efe-robot` tools, for example `mcp__efe-robot__{eg}`) and "
+               "through the same tools as Python functions: `import efe_robot` (`/opt/tools/efe_robot.py`, on "
+               "`PYTHONPATH`; each function has the tool's name, arguments and result, and its docstring is the tool's "
+               "description), or `python3 /opt/tools/efe_robot.py <tool> '<JSON arguments>'` from the shell. They all "
+               "drive the one robot: use one route at a time.")
+
+
+def tool_section(m: dict, task: pathlib.Path, mode: str = MODE) -> str:
     """`## Robot tools`: how the agent acts, generated from the task's manifest and the tool list it gets."""
     if m.get("kind", "rcb") != "rcb":
         import suites
-        return suites.instruction_section(m)
+        return suites.instruction_section(m) if mode == MODE else suites.shell_section(m, SHELL_INTRO.format(eg="act"))
     tools = {t["name"]: t for t in sch.tools_for(m)}
     parts = sch.part_lines(m)
     cams = ", ".join(f"`{c}`" for c in m.get("cameras") or []) or "see `describe_robot`"
     base_text = (m.get("frame") or {}).get("base_text", "")
     L = []
-    L.append("## Robot tools (MCP server `efe-robot`)")
-    L.append(wrap(
-        "You act on the robot only through the tools of the MCP server `efe-robot` (in your tool list as "
-        "`efe-robot` tools, for example `mcp__efe-robot__move_robot`). You have no shell and cannot run code. The "
-        "robot service and its rules are as described in this text; where it names calls of the Python client "
-        "`rcb_client.py`, which you cannot run here, use the tool that does the same:"))
+    if mode == SHELL:
+        L.append("## Robot tools (MCP server `efe-robot`) and their Python client `efe_robot`")
+        L.append(wrap(SHELL_INTRO.format(eg="move_robot") + " The calls of the service's client and the tools that do "
+                      "the same:"))
+    else:
+        L.append("## Robot tools (MCP server `efe-robot`)")
+        L.append(wrap(
+            "You act on the robot only through the tools of the MCP server `efe-robot` (in your tool list as "
+            "`efe-robot` tools, for example `mcp__efe-robot__move_robot`). You have no shell and cannot run code. The "
+            "robot service and its rules are as described in this text; where it names calls of the Python client "
+            "`rcb_client.py`, which you cannot run here, use the tool that does the same:"))
     L.append("")
     rows = [("`Robot()`, `r.spec()`", "`describe_robot()`: the robot's parts, joints and limits, cameras, control "
              "period, action types and conventions, and the time left; the full spec is saved as a JSON file "
@@ -177,7 +192,11 @@ def tool_section(m: dict, task: pathlib.Path) -> str:
     b.append("One tool call runs at a time. A call still executing after 45 s returns `{\"pending\": true, "
              "\"operation\": id}` while the robot goes on executing it: call `wait(operation=id)` (it waits up to 45 s "
              "more each time) for its result. A result with `\"episode_over\": true` means the episode has ended.")
-    b.append("Nothing needs to be saved: the server records every tool call, and the service records the episode.")
+    if mode == MODE:
+        b.append("Nothing needs to be saved: the server records every tool call, and the service records the episode.")
+    else:
+        b[-1] = b[-1].replace("One tool call runs at a time. ", "One tool call runs at a time (the Python functions "
+                              "wait for a pending call themselves). ")
     L += [wrap(x, "- ", "  ") for x in b]
     if m.get("notes"):
         L.append("")
@@ -216,17 +235,26 @@ def _remove_record_sentences(s: str) -> str:
     return r
 
 
-def transform_instruction(s: str, m: dict, task: pathlib.Path) -> str:
+def transform_instruction(s: str, m: dict, task: pathlib.Path, mode: str = MODE) -> str:
     lines = s.split("\n")
     if lines and lines[0].startswith("# "):
         t = lines[0]
-        t = t.replace("-standard", "-standard-mcp") if task.name in t else t
+        t = t.replace("-standard", "-" + mode) if task.name in t else t
+        label = "MCP TOOLS ONLY" if mode == MODE else "MCP TOOLS AND SHELL"
         if "STANDARD MODE" in t:
-            t = t.replace("STANDARD MODE", "STANDARD MODE, MCP TOOLS ONLY", 1)
+            t = t.replace("STANDARD MODE", "STANDARD MODE, " + label, 1)
         else:
-            t += " — MCP tools only"
+            t += " — " + ("MCP tools only" if mode == MODE else "MCP tools and shell")
         lines[0] = t
     s = "\n".join(lines)
+    if mode == SHELL:            # the standard text stays whole; the tools section goes before its first section
+        if m.get("kind", "rcb") != "rcb":
+            k = s.find("\n## Interface")
+            k = k if k >= 0 else s.find("\n## ")
+        else:
+            k = s.find("\n## ")
+        sec = tool_section(m, task, mode)
+        return (s[:k + 1] + sec + "\n" + s[k + 1:]) if k >= 0 else (s.rstrip() + "\n\n" + sec)
     for pat, rep in PHRASES:
         s = re.sub(pat, rep, s)
     s = _remove_record_sentences(s)
@@ -238,23 +266,26 @@ def transform_instruction(s: str, m: dict, task: pathlib.Path) -> str:
     s = CLIENT_HEADING_RE.sub(lambda mm: "## The robot service through its Python client (reference; act through the "
                                          "`efe-robot` tools above)", s, count=1)
     k = s.find("\n## ")
-    sec = tool_section(m, task)
+    sec = tool_section(m, task, mode)
     s = (s[:k + 1] + sec + "\n" + s[k + 1:]) if k >= 0 else (s.rstrip() + "\n\n" + sec)
     return s
 
 
 # -------------------------------------------------------------------------------------------------------- other files
-def transform_toml(s: str) -> str:
-    s = re.sub(r'(?m)^(description = ")STANDARD MODE \(', r"\1STANDARD MODE, MCP TOOLS ONLY (", s, count=1)
+def transform_toml(s: str, mode: str = MODE) -> str:
+    label = "MCP TOOLS ONLY" if mode == MODE else "MCP TOOLS AND SHELL"
+    s = re.sub(r'(?m)^(description = ")STANDARD MODE \(', r"\1STANDARD MODE, " + label + " (", s, count=1)
     s = re.sub(r'(?m)^(keywords = \[)(.*)\]$', lambda mm: mm.group(1) + mm.group(2) +
                (', "mcp"' if '"mcp"' not in mm.group(2) else "") + "]", s, count=1)
     if "[[environment.mcp_servers]]" not in s:
-        s = s.rstrip() + "\n" + MCP_TOML
+        s = s.rstrip() + "\n" + (MCP_TOML if mode == MODE else MCP_TOML.replace(
+            "Robot control through the efe-robot MCP server only (mode standard-mcp;",
+            "The efe-robot MCP server (mode standard-mcp-shell: its tools, their Python client and a shell;"))
     tomllib.loads(s)
     return s
 
 
-def transform_dockerfile(s: str) -> str:
+def transform_dockerfile(s: str, mode: str = MODE) -> str:
     if "efe_mcp" in s:
         return s
     lines = s.rstrip("\n").split("\n")
@@ -265,6 +296,8 @@ def transform_dockerfile(s: str) -> str:
     while at + 1 < len(lines) and lines[at].rstrip().endswith("\\"):
         at += 1
     lines.insert(at + 1, "COPY efe_mcp /opt/tools/efe_mcp")
+    if mode == SHELL:
+        lines.insert(at + 2, "COPY efe_mcp/efe_robot.py /opt/tools/efe_robot.py")
     return "\n".join(lines) + "\n"
 
 
@@ -294,7 +327,7 @@ def convert_solution(dst: pathlib.Path) -> bool:
     return True
 
 
-def install_server(dst: pathlib.Path, m: dict) -> None:
+def install_server(dst: pathlib.Path, m: dict, mode: str = MODE) -> None:
     d = dst / "environment" / "efe_mcp"
     if d.exists():
         shutil.rmtree(d)
@@ -302,14 +335,19 @@ def install_server(dst: pathlib.Path, m: dict) -> None:
     for f in SERVER_FILES + tuple(x for x in SUITE_FILES if (HERE / x).is_file() and m.get("kind", "rcb") != "rcb"):
         shutil.copy2(HERE / f, d / f)
     (d / "manifest.json").write_text(json.dumps(m, indent=1, ensure_ascii=False) + "\n")
+    if mode == SHELL:            # the same tools as Python functions (/opt/tools/efe_robot.py)
+        import client_gen
+        (d / "efe_robot.py").write_text(client_gen.generate(m))
 
 
-def generate(base: str, dry: bool = False) -> dict:
+def generate(base: str, dry: bool = False, mode: str = MODE) -> dict:
     src = tc.task_dir(base + "-standard")
     if not (src / "task.toml").is_file():
         raise SystemExit(f"{base}: no standard task dir")
-    dst = src.with_name(base + "-" + MODE)
+    dst = src.with_name(base + "-" + mode)
     m = task_manifest(src)
+    if mode == SHELL:             # what the tools cannot deliver, the shell can
+        m.pop("unsupported", None)
     if m.get("unsupported"):
         if dst.exists() and not dry:     # a variant generated before the manifest said otherwise
             shutil.rmtree(dst)
@@ -321,24 +359,25 @@ def generate(base: str, dry: bool = False) -> dict:
         shutil.rmtree(dst)
     shutil.copytree(src, dst, ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
     (dst / "DIGEST").unlink(missing_ok=True)
-    install_server(dst, m)
+    install_server(dst, m, mode)
     df = dst / "environment" / "Dockerfile"
-    df.write_text(transform_dockerfile(df.read_text()))
+    df.write_text(transform_dockerfile(df.read_text(), mode))
     tt = dst / "task.toml"
-    tt.write_text(transform_toml(tt.read_text()))
+    tt.write_text(transform_toml(tt.read_text(), mode))
     ins = dst / "instruction.md"
-    if m.get("kind", "rcb") != "rcb":
+    if m.get("kind", "rcb") != "rcb" and mode == MODE:
         import suites
         ins.write_text(suites.transform_instruction(ins.read_text(), m, dst))
     else:
-        ins.write_text(transform_instruction(ins.read_text(), m, dst))
-    info["oracle"] = convert_solution(dst)
+        ins.write_text(transform_instruction(ins.read_text(), m, dst, mode))
+    # the standard oracle runs unchanged in the shell variant (the service's client is there); MCP-only: through the tools
+    info["oracle"] = convert_solution(dst) if mode == MODE else (dst / "solution" / "solve.sh").is_file()
     rd = dst / "README.md"
     if rd.is_file():   # the twin's README rows and sections are kept; normalize re-renders the header
         rd.write_text(rd.read_text().replace(src.name, dst.name))
     tc.normalize(dst)
-    s = ins.read_text()
-    info["leftover_gen_py"] = "gen.py" in s
+    if mode == MODE:   # MCP-only: no shell to run the standard text's programs with
+        info["leftover_gen_py"] = "gen.py" in ins.read_text()
     return info
 
 
@@ -348,6 +387,7 @@ def main(argv=None):
     ap.add_argument("--suite", action="append", default=[], help="only these suites (tasks/ folder names)")
     ap.add_argument("--task", action="append", default=[], help="these bases")
     ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--mode", choices=MODES, default=MODE)
     a = ap.parse_args(argv)
     bases = list(a.task)
     if a.core:
@@ -360,7 +400,7 @@ def main(argv=None):
         if suite_manifest(suite) is None:
             skipped.append((b, suite))
             continue
-        info = generate(b, a.dry_run)
+        info = generate(b, a.dry_run, a.mode)
         if info.get("unsupported"):
             skipped.append((b, f"{suite}: {info['task']} has no MCP-only variant"))
             print(json.dumps(info))

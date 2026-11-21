@@ -1,0 +1,138 @@
+{
+ "manifest": "efe-mcp-manifest/0",
+ "suite": "pandadyn",
+ "kind": "rcb",
+ "robot": "two Franka Panda arms (7 joints each) facing each other across a table, panda-0 on the left and panda-1 on the right, each hand carrying the task's tool (or bare, with its two-finger gripper), torque-controlled behind jerk-limited joint servos",
+ "frame": {
+  "suite": "the scene's world frame (the table top is z = 0, z up)",
+  "quat": "wxyz",
+  "base": {
+   "fixed": [
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0
+   ]
+  },
+  "base_text": "the scene's world frame, shared by both arms: origin on the table top (z = 0), +X from the left arm (panda-0, at the -X end, facing +X) towards the right arm (panda-1, at the +X end, facing -X), +Y left as seen from the left arm, +Z up; positions in the task text are already in this frame, and each arm's base pose is in describe_robot's spec_file (robot_spec.arms)"
+ },
+ "cameras": [
+  "overview",
+  "closeup"
+ ],
+ "default_cameras": [
+  "overview",
+  "closeup"
+ ],
+ "action_cameras": [
+  "overview",
+  "closeup"
+ ],
+ "state_cameras": [
+  "closeup"
+ ],
+ "control": {
+  "dt": 0.05,
+  "control_dt": 0.01,
+  "joint_speed": 0.8,
+  "min_move_s": 0.3,
+  "settle_s": 0.3,
+  "gripper_settle_s": 1.6,
+  "tolerance": {
+   "joint": 0.03
+  },
+  "max_chunk_s": 10.0
+ },
+ "types": {
+  "joint_position": {
+   "dim": 16,
+   "hold": [
+    "ref",
+    "last"
+   ],
+   "hold_ref": {
+    "group": "target"
+   }
+  }
+ },
+ "parts": {
+  "left": {
+   "kind": "arm",
+   "joints": {
+    "type": "joint_position",
+    "cols": [
+     0,
+     7
+    ]
+   },
+   "state": {
+    "joints": {
+     "names": [
+      "panda-0_joint1",
+      "panda-0_joint2",
+      "panda-0_joint3",
+      "panda-0_joint4",
+      "panda-0_joint5",
+      "panda-0_joint6",
+      "panda-0_joint7"
+     ]
+    },
+    "ee_pose": {
+     "names": [
+      "panda-0_tool_x",
+      "panda-0_tool_y",
+      "panda-0_tool_z",
+      "panda-0_tool_qw",
+      "panda-0_tool_qx",
+      "panda-0_tool_qy",
+      "panda-0_tool_qz"
+     ]
+    }
+   },
+   "note": "panda-0: carries the task's tool rigidly in its hand, so no gripper command is offered: closing the gripper below about 12 mm touches the tool's adapter and ends the episode; its aperture target stays as it is. The end-effector pose in the state is the tool's frame (as the task text defines it)."
+  },
+  "right": {
+   "kind": "arm",
+   "joints": {
+    "type": "joint_position",
+    "cols": [
+     8,
+     15
+    ]
+   },
+   "state": {
+    "joints": {
+     "names": [
+      "panda-1_joint1",
+      "panda-1_joint2",
+      "panda-1_joint3",
+      "panda-1_joint4",
+      "panda-1_joint5",
+      "panda-1_joint6",
+      "panda-1_joint7"
+     ]
+    },
+    "ee_pose": {
+     "names": [
+      "panda-1_tool_x",
+      "panda-1_tool_y",
+      "panda-1_tool_z",
+      "panda-1_tool_qw",
+      "panda-1_tool_qx",
+      "panda-1_tool_qy",
+      "panda-1_tool_qz"
+     ]
+    }
+   },
+   "note": "panda-1: carries the task's tool rigidly in its hand, so no gripper command is offered: closing the gripper below about 12 mm touches the tool's adapter and ends the episode; its aperture target stays as it is. The end-effector pose in the state is the tool's frame (as the task text defines it)."
+  }
+ },
+ "resets": {
+  "note": "Here: 3 resets in all (describe_robot: resets); the scene is rebuilt (about a second of wall time, no robot time) and only the last episode is graded."
+ },
+ "notes": "Each arm takes absolute joint-position targets (rad). Its servo turns every new target into a smooth, jerk-limited motion (the joints arriving together, at most about 1.4 rad/s on joints 1-4 and 1.7 rad/s on joints 5-7) and tracks it with torque control, so a far target is reached smoothly: move_robot with a short duration_s (e.g. 0.01) sends the goal as one target and lets the servo set the pace, a longer duration_s ramps the target. There is no end-effector pose command and no kinematics service: joints only. The scene moves by itself from the first control step, and robot time passes only inside calls that move or wait (10 ms per control step; observe with seconds 0 is free), so prepare a motion before sending it and use execute_trajectory (space joint, dt from 0.01 s) for timed sequences. Positions in the task text are world coordinates (base_text says how they map to the base frame). describe_robot's spec_file has robot_spec (base poses, joint, servo and safety limits) and proprio_groups for proprio_now (joint_pos, tcp_pose, joint_vel, gripper_opening, joint_effort, tool_pose: world frame, quaternions wxyz; target: the targets in force). Native rows (action type joint_position): per arm joint1..7 (rad) then the gripper aperture (m, 0 = closed .. 0.08 = open), panda-0 first.",
+ "task": "pandadyn-d05-moving-ramp-relay-i00"
+}
