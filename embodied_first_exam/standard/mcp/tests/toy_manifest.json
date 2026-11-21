@@ -1,0 +1,7 @@
+{"manifest": "efe-mcp-manifest/0", "suite": "toy", "kind": "rcb", "robot": "toy 3-dof point robot",
+ "frame": {"suite": "toy world", "quat": "wxyz", "base": {"fixed": [0.1, 0, 0, 0.7071068, 0, 0, 0.7071068]}},
+ "cameras": ["top"], "default_cameras": ["top"],
+ "control": {"dt": 0.05, "joint_speed": 1.0},
+ "types": {"joint_position": {"hold": ["last", "measured"]}},
+ "parts": {"arm": {"kind": "arm", "joints": {"type": "joint_position", "cols": [0, 3]},
+                   "state": {"joints": {"group": "joint_pos"}, "ee_pose": {"group": "tcp_pose"}}}}}
