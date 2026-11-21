@@ -29,7 +29,8 @@ def _real_path() -> pathlib.Path:
     return pathlib.Path("/solution/ro_client.py")
 
 
-_mc = _load("efe_mcp_client", pathlib.Path(SERVER).parent / "mcp_client.py")
+_mc = _load("efe_mcp_client", HERE / "mcp_client.py" if (HERE / "mcp_client.py").is_file()       # the solution's copy
+            else pathlib.Path(SERVER).parent / "mcp_client.py")
 real = _load("ro_client_real", _real_path())
 _CLIENT = []
 
@@ -38,7 +39,7 @@ def _tool(name, **args):
     if not _CLIENT:
         here = str(HERE)
         pp = [p for p in os.environ.get("PYTHONPATH", "").split(os.pathsep) if p and os.path.abspath(p) != here]
-        env = {"PYTHONPATH": os.pathsep.join(pp), "EFE_MCP_ORACLE": "0"}
+        env = {"PYTHONPATH": os.pathsep.join(pp), "EFE_MCP_ORACLE": "0", "EFE_MCP_VIA": "oracle"}
         _CLIENT.append(_mc.McpClient(cmd=[sys.executable, SERVER], env=env))
     try:
         out = _CLIENT[0].call(name, **args)

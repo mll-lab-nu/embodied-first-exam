@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
 """Generate `<base>-standard-mcp` task dirs from their `<base>-standard` twins (branch `standard-mcp`; owner decisions
-D126-D131). Same sim sidecar, instance, grader and cutoff; the changes, nothing else:
+D126-D131, D145: the agent may run code to compute, the robot is reached only through tool calls of the model's own).
+Same sim sidecar, instance, grader and cutoff; the changes, nothing else:
 
   environment/efe_mcp/   the efe-robot MCP server (this directory's server files, unchanged) + the task's manifest.json
                          (manifests/<suite>.json resolved for the task, manifest.py)
-  environment/Dockerfile `COPY efe_mcp /opt/tools/efe_mcp`
+  environment/Dockerfile `COPY efe_mcp /opt/tools/efe_mcp`; the robot client goes to the server's own directory
+                         /opt/efe_mcp_client (off the agent's PYTHONPATH), an Embodied Olympics match's `game` command
+                         is not installed
   task.toml              `[[environment.mcp_servers]]` efe-robot (stdio), the description and keywords
   instruction.md         a `## Robot tools` section (from the manifest), the client section marked as reference,
                          record-keeping sentences that need a shell removed; normalize renders the mode's sections
   solution/              the twin's oracle unchanged (solve_standard.sh) on a client that goes through the MCP tools
-                         (oracle/rcb_client_mcp.py, oracle/sitecustomize.py)
+                         (oracle/rcb_client_mcp.py, oracle/sitecustomize.py, the MCP client mcp_client.py)
 
 then scripts/task_conventions.py normalize (README, monitor, caps, DIGEST).
 
@@ -27,10 +30,10 @@ import manifest as mf             # noqa: E402
 import schema as sch              # noqa: E402
 
 MODE = "standard-mcp"
-SERVER_FILES = ("server.py", "rcb_adapter.py", "geom.py", "schema.py", "workspace.py", "mcp_client.py",
-                "schema/tools.v0.json")
+SERVER_FILES = ("server.py", "rcb_adapter.py", "geom.py", "schema.py", "workspace.py", "schema/tools.v0.json")
 SUITE_FILES = ("suites.py",)          # the non-RCB suites' tools, when present
-ORACLE_FILES = ("oracle/rcb_client_mcp.py", "oracle/ro_client_mcp.py", "oracle/sitecustomize.py")
+ORACLE_FILES = ("oracle/rcb_client_mcp.py", "oracle/ro_client_mcp.py", "oracle/sitecustomize.py", "mcp_client.py")
+CLIENT_DIR = "/opt/efe_mcp_client"    # the server's robot client (rcb_adapter.py finds it there); not on PYTHONPATH
 MCP_TOML = """
 # Robot control through the efe-robot MCP server only (mode standard-mcp; embodied_first_exam/standard/mcp/)
 [[environment.mcp_servers]]
@@ -42,6 +45,7 @@ args = ["/opt/tools/efe_mcp/server.py"]
 CLIENT_HEADING_RE = re.compile(r"(?m)^## (Client\b[^\n]*|Robot service[^\n]*)$")
 RECORD_START_RE = re.compile(r"(?:Leave|Keep) (?:your|the)\s+(?:scripts?|controllers?|programs?|code)\b")
 CONTEXT_BULLET_RE = re.compile(r"(?ms)^- (?:\*\*Nothing is put into your context automatically\.\*\*|Nothing is put into your context automatically:|Images come back as arrays in a Python object;).*?(?=^- |^\n|^#|\Z)")
+CLIENT_GONE = "the client is not installed for your code: the `efe-robot` tools stand for it"
 PHRASES = [   # (whitespace-flexible pattern, replacement) in the intro and rules
     (r"You\s+get\s+one\s+client\s+and", "You get the `efe-robot` tools and"),
     (r"you\s+reach\s+it\s+only\s+through\s+a\s+client", "you reach it only through the `efe-robot` tools"),
@@ -50,8 +54,9 @@ PHRASES = [   # (whitespace-flexible pattern, replacement) in the intro and rule
     (r"you\s+get\s+its\s+client,", "you get the `efe-robot` tools,"),
     (r"Your\s+whole\s+interface\s+to\s+the\s+robot\.\s+", ""),
     (r";\s+write\s+your\s+own\s+controller\.", "."),
-    (r"\(`python\s+-c\s+\"import\s+rcb_client;\s+help\(rcb_client\)\"`\)",
-     "(`/opt/tools/rcb_client.py`, readable with your file-reading tool)"),
+    (r"`python\s+-c\s+\"import\s+rcb_client;\s+help\(rcb_client\)\"`(?:,\s+readable\s+with\s+your\s+file-reading\s+tool)?",
+     CLIENT_GONE),
+    (r"`/opt/tools/rcb_client\.py`(?:,\s+readable\s+with\s+your\s+file-reading\s+tool)?", CLIENT_GONE),
 ]
 
 
@@ -91,6 +96,14 @@ def wrap(t: str, first: str = "", rest: str = "") -> str:
                          break_on_hyphens=False).replace("\0", " ")
 
 
+# owner decision D145: the rule, in these words in every MCP-only task (the audit: scripts/mcp_only.py)
+RULE = ("You may write and run code to compute; every robot command and observation must go through the efe-robot "
+        "MCP tools; code must not contact the simulator. Each robot command or observation is a tool call you make "
+        "yourself: no script starts or calls the `efe-robot` server, and the service's record of its requests is "
+        "checked against the server's. To send a trajectory your code computed, save it as a file under `/app` and "
+        "pass its path as `rows_file` to `execute_trajectory`.")
+
+
 def tool_section(m: dict, task: pathlib.Path) -> str:
     """`## Robot tools`: how the agent acts, generated from the task's manifest and the tool list it gets."""
     if m.get("kind", "rcb") != "rcb":
@@ -104,9 +117,9 @@ def tool_section(m: dict, task: pathlib.Path) -> str:
     L.append("## Robot tools (MCP server `efe-robot`)")
     L.append(wrap(
         "You act on the robot only through the tools of the MCP server `efe-robot` (in your tool list as "
-        "`efe-robot` tools, for example `mcp__efe-robot__move_robot`). You have no shell and cannot run code. The "
-        "robot service and its rules are as described in this text; where it names calls of the Python client "
-        "`rcb_client.py`, which you cannot run here, use the tool that does the same:"))
+        "`efe-robot` tools, for example `mcp__efe-robot__move_robot`). " + RULE + " The robot service and its rules "
+        "are as described in this text; where it names calls of the Python client `rcb_client.py`, which is not "
+        "installed for your code here, use the tool that does the same:"))
     L.append("")
     rows = [("`Robot()`, `r.spec()`", "`describe_robot()`: the robot's parts, joints and limits, cameras, control "
              "period, action types and conventions, and the time left; the full spec is saved as a JSON file "
@@ -164,8 +177,10 @@ def tool_section(m: dict, task: pathlib.Path) -> str:
         b.append("`locomote(vx, vy, wz, duration_s, height?)`: walk with the robot's own controller (body-frame "
                  "velocities), then stop; returns the displacement.")
     b.append("`execute_trajectory(space, rows | native_rows | rows_file, dt?, interpolate?)`: a dense trajectory, "
-             "rows `dt` seconds apart; a long one can come from a file under `/app` (`.npy` / `.csv` of native rows, "
-             "`.json` of rows).")
+             "rows `dt` seconds apart. `rows_file` is the path of a file under `/app` that holds the rows: a `.npy` "
+             "(2-D float array) or `.csv` (one row per line, comma-separated) of native rows for space `native` (with "
+             "`action_type`), or a `.json` list: of number arrays (native rows) or of row objects as in `rows` (the "
+             "other spaces). Long arrays go this way rather than inline.")
     b.append("`wait(seconds?, operation?)`: let time pass holding the current command, or collect a pending "
              "operation.")
     if "reset_episode" in tools:
@@ -235,8 +250,8 @@ def transform_instruction(s: str, m: dict, task: pathlib.Path) -> str:
         "- **Images are files.** The tools write camera images, depth and video under `/app/obs/` and return their "
         "paths with small JSON; open an image with your file-reading tool, or ask for small images in the result "
         "with `inline_cameras`.\n"), s)
-    s = CLIENT_HEADING_RE.sub(lambda mm: "## The robot service through its Python client (reference; act through the "
-                                         "`efe-robot` tools above)", s, count=1)
+    s = CLIENT_HEADING_RE.sub(lambda mm: "## The robot service through its Python client (reference; your code cannot "
+                                         "reach it: act through the `efe-robot` tools above)", s, count=1)
     k = s.find("\n## ")
     sec = tool_section(m, task)
     s = (s[:k + 1] + sec + "\n" + s[k + 1:]) if k >= 0 else (s.rstrip() + "\n\n" + sec)
@@ -254,7 +269,12 @@ def transform_toml(s: str) -> str:
     return s
 
 
+GAME_COPY_RE = re.compile(r"^COPY\s.*\s/usr/local/bin/game\s*$")
+
+
 def transform_dockerfile(s: str) -> str:
+    """`COPY efe_mcp /opt/tools/efe_mcp` after the task's last /opt/tools line; then the robot client copied to
+    CLIENT_DIR instead of /opt/tools (the server's, not the agent's), and a match's `game` command left out."""
     if "efe_mcp" in s:
         return s
     lines = s.rstrip("\n").split("\n")
@@ -265,17 +285,28 @@ def transform_dockerfile(s: str) -> str:
     while at + 1 < len(lines) and lines[at].rstrip().endswith("\\"):
         at += 1
     lines.insert(at + 1, "COPY efe_mcp /opt/tools/efe_mcp")
-    return "\n".join(lines) + "\n"
+    out = []
+    for ln in lines:
+        if ln.lstrip().startswith("COPY") and re.search(r"/rcb_client\.py\s", ln) and ln.rstrip().endswith(" /opt/tools/"):
+            ln = ln.rstrip()[: -len("/opt/tools/")] + CLIENT_DIR + "/"
+        elif GAME_COPY_RE.match(ln.strip()):
+            continue
+        elif "/usr/local/bin/game" in ln and ln.lstrip().startswith("RUN"):
+            ln = re.sub(r"chmod \+x /usr/local/bin/game && ", "", ln)
+            assert "/usr/local/bin/game" not in ln, ln
+        out.append(ln)
+    return "\n".join(out) + "\n"
 
 
 SOLVE = """#!/bin/bash
 # Oracle (standard-mcp): the standard twin's oracle, unchanged (solve_standard.sh), with its robot client replaced by
 # one that sends every call through the efe-robot MCP server as tool calls (solution/mcp/rcb_client_mcp.py:
 # describe_robot, observe, execute_trajectory space native, wait, reset_episode); sitecustomize.py puts it in place of
-# rcb_client in every Python process this script starts.
+# rcb_client in every Python process this script starts. The client's wire format (rcb1.py, which some oracles import
+# to build their requests) is in the server's directory /opt/efe_mcp_client.
 set -e
 export EFE_MCP_ORACLE=1
-export PYTHONPATH="/solution/mcp${PYTHONPATH:+:$PYTHONPATH}"
+export PYTHONPATH="/solution/mcp${PYTHONPATH:+:$PYTHONPATH}:/opt/efe_mcp_client"
 bash /solution/solve_standard.sh "$@"
 """
 

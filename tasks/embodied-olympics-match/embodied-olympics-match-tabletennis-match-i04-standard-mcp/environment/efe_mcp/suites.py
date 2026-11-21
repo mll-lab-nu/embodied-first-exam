@@ -85,6 +85,7 @@ class EOMatch:
         self.last = 0.0
         self.lock = threading.Lock()
         self.turn = eo_turn(m)
+        self.on_sim = None          # the server's call log: one record per request to the service, before it is sent
 
     # -- HTTP
     def http(self, ep, body=None, timeout=600, tries=20):
@@ -95,6 +96,11 @@ class EOMatch:
             req = urllib.request.Request(f"{self.base}/{self.seat}/{ep}",
                                          data=None if body is None else json.dumps(body).encode(),
                                          headers={"Content-Type": "application/json"})
+            if self.on_sim is not None:
+                try:
+                    self.on_sim({"sim": f"/{self.seat}/{ep}", "method": "GET" if body is None else "POST"})
+                except Exception:       # the record never breaks a call
+                    pass
             try:
                 with urllib.request.urlopen(req, timeout=timeout) as r:
                     return json.load(r)
@@ -252,6 +258,13 @@ class EOMatch:
         raise ToolError("no signal tool in this task")
 
 
+# owner decision D145, in a match's terms (generate.py RULE)
+EO_RULE = ("You may write and run code to compute; every robot command and observation must go through the efe-robot "
+           "MCP tools; code must not contact the simulator. Each command or observation is a tool call you make "
+           "yourself: no script starts or calls the `efe-robot` server, and the service's record of its requests is "
+           "checked against the server's.")
+
+
 def eo_section(m) -> str:
     turn = eo_turn(m)
     rows = [("`game spec`", "`spec()`: the whole spec is also saved as a JSON file (`spec_file`)"),
@@ -269,8 +282,9 @@ def eo_section(m) -> str:
         rows += [("`game say \"TEXT\"`", "`say(text)`"), ("`game team [SINCE]`", "`team(since?)`")]
     L = ["## Robot tools (MCP server `efe-robot`)"]
     L.append(_wrap("You play only through the tools of the MCP server `efe-robot` (in your tool list as `efe-robot` "
-                   "tools, for example `mcp__efe-robot__act`). You have no shell and cannot run code. Where this "
-                   "text names a `game` command or its HTTP call, use the tool of the same name:"))
+                   "tools, for example `mcp__efe-robot__act`). " + EO_RULE + " Where this text names a `game` "
+                   "command or its HTTP call (the `game` command is not installed here), use the tool of the same "
+                   "name:"))
     L.append("")
     L.append("| `game` command | Tool |")
     L.append("|---|---|")

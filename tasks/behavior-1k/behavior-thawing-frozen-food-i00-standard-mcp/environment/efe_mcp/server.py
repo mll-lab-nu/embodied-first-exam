@@ -9,17 +9,36 @@ to the robot of the manifest). Conventions: the robot base frame at the start of
 /app/obs; results carry paths and small JSON. A call that runs longer than --max-block-s returns
 {"pending": true, "operation": id}; `wait(operation=id)` (or any later call) waits for it.
 
-Standard library + numpy (+ pillow for images); the robot is reached through the task's own /opt/tools/rcb_client.py.
-The server does not contact the robot before the first tools/call."""
+Standard library + numpy (+ pillow for images); the robot is reached through the task's own robot client (rcb_adapter.py).
+The server does not contact the robot before the first tools/call.
+
+Call log (EFE_MCP_LOG, default /logs/agent/efe-mcp.jsonl, the agent's log directory the runner collects; scripts/mcp_only.py
+audit reads it): a `server` line when the log is opened (this process, the process that started it), one line per tool
+call, and one `sim` line per request to the robot service, written before the request is sent."""
 from __future__ import annotations
 import argparse, json, os, pathlib, sys, threading, time, traceback, uuid
 VIA = os.environ.get("EFE_MCP_VIA", "")[:32]      # who started this server, if not the agent's harness (call log)
+
+
+def _proc(pid: int) -> dict:
+    """A process's name and command line (/proc), for the call log's `server` line."""
+    out = {"pid": pid}
+    try:
+        out["comm"] = pathlib.Path(f"/proc/{pid}/comm").read_text().strip()[:32]
+        out["cmd"] = pathlib.Path(f"/proc/{pid}/cmdline").read_bytes().replace(b"\0", b" ").decode(errors="replace").strip()[:160]
+    except OSError:
+        pass
+    return out
+
+
+PARENT = _proc(os.getppid())      # read at start-up: the process that started this server (the harness, or a script)
+CTX = threading.local()           # the tool call a worker thread runs (its `sim` lines name it)
 
 HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
 SERVER_NAME = "efe-robot"
-SERVER_VERSION = "0.1.0"
+SERVER_VERSION = "0.2.0"
 PROTOCOLS = ("2025-06-18", "2025-03-26", "2024-11-05")
 
 
@@ -51,6 +70,7 @@ class Ops:
         box = {"tool": name, "t0": time.time()}
 
         def work():
+            CTX.tool = name
             try:
                 box["result"] = fn(**kwargs)
             except BaseException as e:   # reported to the agent, never raised in the loop
@@ -96,8 +116,11 @@ class Server:
             self.adapter = suites.adapter_for(self.manifest)
         self.ops = Ops(max_block)
         self.log = None
+        self.llock = threading.Lock()
         self.out = sys.stdout
         self.wlock = threading.Lock()
+        if hasattr(self.adapter, "on_sim"):
+            self.adapter.on_sim = self.log_sim
 
     def send(self, msg):
         with self.wlock:
@@ -128,27 +151,38 @@ class Server:
             return {method.split("/")[0]: []}
         raise LookupError(method)
 
-    def log_call(self, name, args, t0, out):
-        """One line per tool call in the call log (EFE_MCP_LOG, default /logs/agent/efe-mcp.jsonl, the agent's log
-        directory the runner collects): what the robot was told through this server (scripts/mcp_only.py audit)."""
+    def _write(self, rec):
+        """One line of the call log (the module docstring); the log never breaks a call."""
         try:
-            if self.log is None:
-                p = pathlib.Path(os.environ.get("EFE_MCP_LOG") or "/logs/agent/efe-mcp.jsonl")
-                if not p.parent.is_dir():
-                    self.log = False
-                    return
-                self.log = open(p, "a", buffering=1)
-            if not self.log:
-                return
+            with self.llock:
+                if self.log is None:
+                    p = pathlib.Path(os.environ.get("EFE_MCP_LOG") or "/logs/agent/efe-mcp.jsonl")
+                    if not p.parent.is_dir():
+                        self.log = False
+                        return
+                    self.log = open(p, "a", buffering=1)
+                    self.log.write(json.dumps({"ts": round(time.time(), 3), "server": SERVER_VERSION, "pid": os.getpid(),
+                                               "parent": PARENT, **({"via": VIA} if VIA else {})}) + "\n")
+                if self.log:
+                    self.log.write(json.dumps({**rec, "pid": os.getpid()}, default=str) + "\n")
+        except Exception:
+            pass
+
+    def log_sim(self, rec):
+        """A request to the robot service, before it is sent (rcb_adapter.RcbAdapter._sim)."""
+        self._write({"ts": round(time.time(), 3), **rec, "tool": getattr(CTX, "tool", "")})
+
+    def log_call(self, name, args, t0, out):
+        """One line per tool call: what the robot was told through this server (scripts/mcp_only.py audit)."""
+        try:
             small = {k: (f"<{len(v)} rows>" if isinstance(v, list) and k in ("rows", "native_rows") else v)
                      for k, v in args.items()}
             txt = (out.get("content") or [{}])[0].get("text", "")
-            self.log.write(json.dumps({"ts": round(t0, 3), "dur_s": round(time.time() - t0, 3), "tool": name,
-                                       "args": small, "error": bool(out.get("isError")),
-                                       **({"via": VIA} if VIA else {}),
-                                       "pending": '"pending":true' in txt[:200]}, default=str) + "\n")
-        except Exception:      # the log never breaks a call
-            pass
+        except Exception:
+            return
+        self._write({"ts": round(t0, 3), "dur_s": round(time.time() - t0, 3), "tool": name, "args": small,
+                     "error": bool(out.get("isError")), **({"via": VIA} if VIA else {}),
+                     "pending": '"pending":true' in txt[:200]})
 
     def call(self, name, args):
         t0 = time.time()

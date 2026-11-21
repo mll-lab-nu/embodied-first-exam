@@ -6,9 +6,12 @@ copy the painting shown in the picture `/app/target.png` (a small acrylic painti
 
 ## Robot tools (MCP server `efe-robot`)
 You act on the robot only through the tools of the MCP server `efe-robot` (in your tool list as `efe-robot` tools, for
-example `mcp__efe-robot__move_robot`). You have no shell and cannot run code. The robot service and its rules are as
-described in this text; where it names calls of the Python client `rcb_client.py`, which you cannot run here, use the
-tool that does the same:
+example `mcp__efe-robot__move_robot`). You may write and run code to compute; every robot command and observation must
+go through the efe-robot MCP tools; code must not contact the simulator. Each robot command or observation is a tool
+call you make yourself: no script starts or calls the `efe-robot` server, and the service's record of its requests is
+checked against the server's. To send a trajectory your code computed, save it as a file under `/app` and pass its path
+as `rows_file` to `execute_trajectory`. The robot service and its rules are as described in this text; where it names
+calls of the Python client `rcb_client.py`, which is not installed for your code here, use the tool that does the same:
 
 | Client | Tool |
 |---|---|
@@ -37,7 +40,9 @@ pose). Cameras: `canvas_cam`, `practice_cam`, `scene_cam`, `side_cam`.
   the motion is done, with `reached` (errors per goal), a `failure` category if a goal was not reached, the state and
   the path of a frame per camera.
 - `execute_trajectory(space, rows | native_rows | rows_file, dt?, interpolate?)`: a dense trajectory, rows `dt` seconds
-  apart; a long one can come from a file under `/app` (`.npy` / `.csv` of native rows, `.json` of rows).
+  apart. `rows_file` is the path of a file under `/app` that holds the rows: a `.npy` (2-D float array) or `.csv` (one
+  row per line, comma-separated) of native rows for space `native` (with `action_type`), or a `.json` list: of number
+  arrays (native rows) or of row objects as in `rows` (the other spaces). Long arrays go this way rather than inline.
 - `wait(seconds?, operation?)`: let time pass holding the current command, or collect a pending operation.
 - `signal(kind, note)`: `done` records that you are finished (the episode itself ends as described above).
 - One tool call runs at a time. A call still executing after 45 s returns `{"pending": true, "operation": id}` while the
@@ -114,7 +119,7 @@ free):
 **Success iff the picture rule above holds and both process rules hold.** The continuous score is the one above ×
 min(1, 32300 / `path_mm`) × (1 − `scribble_share` when the second rule fails).
 
-## The robot service through its Python client (reference; act through the `efe-robot` tools above)
+## The robot service through its Python client (reference; your code cannot reach it: act through the `efe-robot` tools above)
 ```python
 from rcb_client import Robot
 r = Robot()                                   # connects (waits while the service builds the scene, under a minute)
@@ -167,7 +172,7 @@ view along the sheets that shows the brush's height).
 The exemplar is this robot's painting after Paul Gauguin, *Vision after the Sermon* (1888), a public-domain work (Wikimedia Commons `File:La vision après le sermon (Paul Gauguin).jpg`, Public domain); the exemplar picture is CC0.
 
 ## External material
-In this setting you act on the robot only through the `efe-robot` tools: you have no shell, you cannot run code and you cannot install packages. You may read anything installed in your container with your file-reading tools, the files the robot tools write included. Please solve the task yourself: do not look for a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed.
+You may install packages you need (pip, apt), and you may read anything installed in your container, the files the robot tools write included. You may write and run code to compute; every robot command and observation must go through the `efe-robot` MCP tools; code must not contact the simulator. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
 
 ## Resources
 Your container: **8 CPUs**, **5 GiB of memory**, **2048 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
@@ -175,4 +180,4 @@ Your container: **8 CPUs**, **5 GiB of memory**, **2048 processes and threads** 
 ## Time limit
 You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
 
-This is wall-clock time from the start of your session; the time the robot tools take counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. Every robot tool result reports `time_left_s`, the service's count of the same limit from your first tool call, so it never runs out before your time does: your real time left is `time_left_s` minus the time you spent before that call. Plan by it. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it with your file-reading tool before you decide that time is short, never guess. A robot tool that is still executing when its call has to return answers `pending` with an operation id: call `wait` with that `operation` to collect the result.
+This is wall-clock time from the start of your session; the time the robot tools take counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. Every robot tool result reports `time_left_s`, the service's count of the same limit from your first tool call, so it never runs out before your time does: your real time left is `time_left_s` minus the time you spent before that call. Plan by it. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. A robot tool that is still executing when its call has to return answers `pending` with an operation id: call `wait` with that `operation` to collect the result. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
