@@ -38,7 +38,7 @@
      "depth": {
       "type": "boolean",
       "default": false,
-      "description": "also save a depth map per camera (.npy, float32 metres, 0 = no reading)"
+      "description": "also save a depth map per camera that has one (.npy, float32 metres, 0 = no reading); cameras without depth are listed in no_depth_cameras"
      },
      "seconds": {
       "type": "number",
