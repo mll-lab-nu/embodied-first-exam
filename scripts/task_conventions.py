@@ -151,7 +151,13 @@ MODE_REGISTRY = {
                  "twin": "privileged", "same_cutoff_as": "privileged"},   # one cutoff for both modes (Appendix H.7)
     "realtime": {"short": "RT", "section": "§3", "sidecar": True, "limit_scope": "agent",
                           "protocols": ("eai-standard/2.3",), "twin": "privileged", "same_cutoff_as": None},
+    # standard mode with the robot reached only through the `efe-robot` MCP tools (embodied_first_exam/standard/mcp/):
+    # same sim sidecar, instance, grader and cutoff as the standard twin; no shell or code tool for the agent
+    "standard-mcp": {"short": "S-MCP", "section": "§3", "sidecar": True, "limit_scope": "agent",
+                     "protocols": ("eai-standard/2.1", "eai-standard/2.2", "eai-standard/2.4"),
+                     "twin": "privileged", "same_cutoff_as": "privileged"},
 }
+MCP_MODES = ("standard-mcp",)   # modes whose agent controls the robot through the efe-robot MCP server
 MODES = tuple(MODE_REGISTRY)
 SIDECAR_MODES = tuple(m for m, d in MODE_REGISTRY.items() if d["sidecar"])   # robot as a service (PROTOCOL §3)
 for _m, _d in MODE_REGISTRY.items():   # a registry that cannot parse names is refused at import (every check imports it)
@@ -197,6 +203,13 @@ EXTERNAL_TEXT = (
     "for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, "
     "or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and "
     "the package registries (PyPI, Debian / Ubuntu archives) only.")
+# The MCP-only modes (MCP_MODES): the agent has no shell, code or package tool, so the paragraph says what it may read
+EXTERNAL_TEXT_MCP = (
+    "In this setting you act on the robot only through the `efe-robot` tools: you have no shell, you cannot run code "
+    "and you cannot install packages. You may read anything installed in your container with your file-reading tools, "
+    "the files the robot tools write included. Please solve the task yourself: do not look for a ready-made solution "
+    "to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an "
+    "honour rule; trials are reviewed.")
 # Open network (PROTOCOL §2, Appendix H.6): the task author's choice, declared as
 # `[agent] network_mode = "public"` in task.toml (network_of). Such a task carries its own `## External material` paragraph (the author
 # says what may be used); normalize keeps it, and writes EXTERNAL_TEXT_OPEN where it has none.
@@ -248,6 +261,16 @@ CUTOFF_NOTE = {
                  "spent before that request. Plan by it." + _CUTOFF_CLOCK + _CUTOFF_WAITS + _CUTOFF_CLOSE),
 }
 CUTOFF_NOTE["realtime"] = CUTOFF_NOTE["standard"]
+CUTOFF_NOTE["standard-mcp"] = (
+    "This is wall-clock time from the start of your session; the time the robot tools take counts. When it is up you "
+    "are stopped without warning and the episode is graded as it stands at that moment. Every robot tool result "
+    "reports `time_left_s`, the service's count of the same limit from your first tool call, so it never runs out "
+    "before your time does: your real time left is `time_left_s` minus the time you spent before that call. Plan by "
+    "it. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, "
+    "gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your "
+    "session started, so it never gives you more time than you have: read it with your file-reading tool before you "
+    "decide that time is short, never guess. A robot tool that is still executing when its call has to return answers "
+    "`pending` with an operation id: call `wait` with that `operation` to collect the result.")
 assert set(CUTOFF_NOTE) == set(MODE_REGISTRY), "every mode of MODE_REGISTRY needs its CUTOFF_NOTE (PROTOCOL §5)"
 # A benchmark whose service counts the limit its own way has a note of its own (PROTOCOL §5).
 CUTOFF_NOTE_OWN = {}   # (benchmark label, mode) -> its note
@@ -873,7 +896,9 @@ def render_external(task: "Path | str" = "") -> str:
     task with open egress (`[agent] network_mode = "public"`, network_of) keeps its own paragraph (EXTERNAL_TEXT_OPEN
     when it has none)."""
     text = EXTERNAL_TEXT
-    if isinstance(task, Path) and network_of(task) == "open":
+    if isinstance(task, Path) and mode_suffix(task.name) in MCP_MODES:
+        text = EXTERNAL_TEXT_MCP
+    elif isinstance(task, Path) and network_of(task) == "open":
         text = external_paragraph(read_text(task / "instruction.md") or "") or EXTERNAL_TEXT_OPEN
     # the words above are the baseline every task carries; a task may add STRICTER requirements of
     # its own on top (never looser), as `[metadata.honour] stricter = "..."` in its task.toml, rendered after them
@@ -965,6 +990,23 @@ AGENT_END_TOKENS = ("the token budget: {tin:,} input and {tout:,} output tokens 
                     "input counts in full, output includes reasoning): past it every model request is refused and your "
                     "session ends;")
 AGENT_END_FINISH = "your `POST /finish`."
+# the same section for MCP_MODES: the agent ends the episode with the `signal` tool (the server sends POST /finish)
+AGENT_END_MCP = {
+    "send `POST /finish` with an empty JSON body (`{}`) to the service": "call the `signal` tool with `kind` `\"done\"`",
+    ", on the same base URL as your other calls (`http://sim:8000` or `http://localhost:8000`; in Python, for example "
+    "`requests.post(base + \"/finish\", json={})`)": "",
+    "After `/finish` every call is refused (409).": "After it every robot tool answers that the episode is over.",
+    "with `/finish` or": "with that signal or",
+    "your `POST /finish`.": "your `signal` `done`.",
+    "after it every `/submit` and `/finish` is refused (409).": "after it every action is refused.",
+    "`meta[\"control_steps\"]` counts the steps used so far; `meta[\"steps_left\"]` and `/status` `steps_left` give what "
+    "is left": "the robot tool results' `steps_left` gives what is left",
+    "(`meta[\"done\"]`, `meta[\"reason\"]` = `\"step_limit\"`; a chunk that reaches it stops there)":
+        "(the result's `done`, `reason` = `\"step_limit\"`; a trajectory that reaches it stops there)",
+    "`meta[\"time_left_s\"]` is the service's count": "the tool results' `time_left_s` is the service's count",
+    "and anything in `/spec`,": "and anything in the robot's spec,",
+    ", `spec[\"max_control_steps\"]` the limit ({n})": "",
+}
 # what one step is, in a benchmark's own terms (the limit's unit): (benchmark label) -> text after the number
 AGENT_END_STEP_UNIT = {
     "RoboDojo": (
@@ -1004,10 +1046,20 @@ def render_agent_end(task: Path) -> str | None:
         t = re.sub(r"`[^`]*`", lambda m: m.group(0).replace(" ", "\0"), t)
         return textwrap.fill(t, 120, initial_indent=first, subsequent_indent=rest, break_long_words=False,
                              break_on_hyphens=False).replace("\0", " ")
-    limits = ([AGENT_END_STEP.format(n=n, nth=_ordinal(n), unit=AGENT_END_STEP_UNIT.get(bench_of(task), ""))] if n else []) \
-        + [AGENT_END_TIME, AGENT_END_TOKENS.format(tin=TOKEN_BUDGET[0], tout=TOKEN_BUDGET[1]), AGENT_END_FINISH]
-    return (AGENT_END_HEADING + "\n" + wrap(AGENT_END_INTRO) + "\n\n"
-            + "\n".join(wrap(b, "- ", "  ") for b in AGENT_END_BULLETS) + "\n\n"
+    mcp = mode_suffix(task.name) in MCP_MODES
+
+    def tr(t: str) -> str:
+        if mcp:
+            for a, b in AGENT_END_MCP.items():
+                t = t.replace(a, b)
+        return t
+    step = AGENT_END_STEP
+    if mcp:
+        step = tr(step).replace(" ({n})", "")
+    limits = ([step.format(n=n, nth=_ordinal(n), unit=AGENT_END_STEP_UNIT.get(bench_of(task), ""))] if n else []) \
+        + [tr(AGENT_END_TIME), AGENT_END_TOKENS.format(tin=TOKEN_BUDGET[0], tout=TOKEN_BUDGET[1]), tr(AGENT_END_FINISH)]
+    return (AGENT_END_HEADING + "\n" + wrap(tr(AGENT_END_INTRO)) + "\n\n"
+            + "\n".join(wrap(tr(b), "- ", "  ") for b in AGENT_END_BULLETS) + "\n\n"
             + wrap(AGENT_END_LIMITS) + "\n" + "\n".join(wrap(b, "- ", "  ") for b in limits) + "\n")
 
 
@@ -1238,6 +1290,11 @@ def image_of(task: Path) -> str:
 
 def default_difficulty(task: Path, rows: dict[str, str]) -> str:
     twin = base_of(task) + "-privileged"
+    if mode_of(task) in MCP_MODES:
+        return (f"Same scene, instance, success rule and time limit as `{base_of(task)}-standard` (see its Difficulty). "
+                "Here the agent has no shell and runs no code: it acts on the robot only through the `efe-robot` MCP "
+                "tools (describe, observe, move parts to goals, execute trajectories, wait, signal), one call at a "
+                "time, in the robot base frame's conventions.")
     if mode_of(task) == "standard":
         return (f"Same scene, instance and success rule as `{twin}` (see its Difficulty). In standard mode the agent "
                 "loses resets, privileged state and planning primitives: it sees camera images and proprioception only, "

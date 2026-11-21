@@ -94,6 +94,7 @@ class Server:
             import suites
             self.adapter = suites.adapter_for(self.manifest)
         self.ops = Ops(max_block)
+        self.log = None
         self.out = sys.stdout
         self.wlock = threading.Lock()
 
@@ -126,7 +127,34 @@ class Server:
             return {method.split("/")[0]: []}
         raise LookupError(method)
 
+    def log_call(self, name, args, t0, out):
+        """One line per tool call in the call log (EFE_MCP_LOG, default /logs/agent/efe-mcp.jsonl, the agent's log
+        directory the runner collects): what the robot was told through this server (scripts/mcp_only.py audit)."""
+        try:
+            if self.log is None:
+                p = pathlib.Path(os.environ.get("EFE_MCP_LOG") or "/logs/agent/efe-mcp.jsonl")
+                if not p.parent.is_dir():
+                    self.log = False
+                    return
+                self.log = open(p, "a", buffering=1)
+            if not self.log:
+                return
+            small = {k: (f"<{len(v)} rows>" if isinstance(v, list) and k in ("rows", "native_rows") else v)
+                     for k, v in args.items()}
+            txt = (out.get("content") or [{}])[0].get("text", "")
+            self.log.write(json.dumps({"ts": round(t0, 3), "dur_s": round(time.time() - t0, 3), "tool": name,
+                                       "args": small, "error": bool(out.get("isError")),
+                                       "pending": '"pending":true' in txt[:200]}, default=str) + "\n")
+        except Exception:      # the log never breaks a call
+            pass
+
     def call(self, name, args):
+        t0 = time.time()
+        out = self._call(name, args)
+        self.log_call(name, args, t0, out)
+        return out
+
+    def _call(self, name, args):
         from rcb_adapter import ToolError
         try:
             if name not in self.by_name:
@@ -186,7 +214,7 @@ class Server:
 
 def main(argv=None):
     ap = argparse.ArgumentParser()
-    ap.add_argument("--manifest", default=str(HERE / "manifest.json"))
+    ap.add_argument("--manifest", default=os.environ.get("EFE_MCP_MANIFEST") or str(HERE / "manifest.json"))
     ap.add_argument("--max-block-s", type=float, default=float(os.environ.get("EFE_MCP_MAX_BLOCK_S", "45")))
     ap.add_argument("--print-tools", action="store_true", help="print the narrowed tool list and exit")
     a = ap.parse_args(argv)

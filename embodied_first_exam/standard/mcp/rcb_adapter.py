@@ -359,6 +359,14 @@ class RcbAdapter:
         w.prune()
         return images, extras
 
+    @staticmethod
+    def raw_meta(res) -> dict:
+        """The service's own response meta, for the reference solutions only (EFE_MCP_RAW_META=1 in the server's
+        environment, set by solution/mcp/rcb_client_mcp.py): they replay the standard twin's oracle through these tools."""
+        if os.environ.get("EFE_MCP_RAW_META") != "1":
+            return {}
+        return {"raw_meta": _jsonable({k: v for k, v in res.meta.items() if k not in ("cameras",)})}
+
     def common_meta(self, res) -> dict:
         m = res.meta
         out = {"time_left_s": _f(m.get("time_left_s"), 1), "sim_time_s": _f(m.get("sim_time_s"), 3)}
@@ -493,7 +501,7 @@ class RcbAdapter:
         w = workspace.Writer(save_to)
         images, extras = self.package(res, F, w, cams, depth=depth, inline=inline_cameras, video=seconds > 0)
         out = {"cameras": images, **self.robot_state(now, res.meta, F), **self.native_state(now, res.meta),
-               **self.common_meta(res)}
+               **self.common_meta(res), **self.raw_meta(res)}
         return out, extras
 
     # -- building rows
@@ -618,6 +626,7 @@ class RcbAdapter:
         out.update(st)
         out["frames"] = images
         out.update(self.common_meta(res))
+        out.update(self.raw_meta(res))
         return out, extras
 
     # -- move_robot
@@ -1075,7 +1084,7 @@ class RcbAdapter:
                 dim = self.type_dim(action_type)
                 if A.ndim != 2 or A.shape[1] != dim:
                     raise ToolError(f"{action_type}: rows of {dim} numbers expected, got shape {list(A.shape)}")
-                d = self.step_dt(dt) if dt else (self.step_dt(None) if dim else self.control_dt())
+                d = float(dt) if dt else self.control_dt()      # native: the service checks dt itself
                 res, ex, ms = self.run_rows(action_type, A, d, interpolate, tool="execute_trajectory")
                 return self.finish("execute_trajectory", res, F, ms, ex, inline=inline_cameras)
             if not rows:
@@ -1245,7 +1254,7 @@ class RcbAdapter:
         w = workspace.Writer()
         images, extras = self.package(res, F, w, cams, inline=inline_cameras)
         return {"waited_s": float(seconds or 0), "frames": images, **self.robot_state(now, res.meta, F),
-                **self.native_state(now, res.meta), **self.common_meta(res)}, extras
+                **self.native_state(now, res.meta), **self.common_meta(res), **self.raw_meta(res)}, extras
 
     def reset_episode(self, inline_cameras=None, **_):
         self.connect()
@@ -1266,7 +1275,8 @@ class RcbAdapter:
         w = workspace.Writer()
         images, extras = self.package(res, F, w, [c for c in cams if c in (getattr(res, "last", {}) or {})],
                                       inline=inline_cameras)
-        out = {"reset": True, "frames": images, **self.robot_state(now, res.meta, F), **self.common_meta(res)}
+        out = {"reset": True, "frames": images, **self.robot_state(now, res.meta, F), **self.common_meta(res),
+               **self.raw_meta(res)}
         for k in ("episode", "resets_left"):
             if res.meta.get(k) is not None:
                 out[k] = _jsonable(res.meta[k])
