@@ -34,7 +34,7 @@
 
 ## News
 
-- **2026-11-12**: [Where Do Today’s Agentic Robots Succeed and Fail?](https://www.embodied-first-exam.ai/blogs/failure-analysis/) Understanding the capability boundary of coding agents in robotics.
+- **2026-11-12**: [Where Do Today’s Agentic Robots Succeed and Fail?](https://www.embodied-first-exam.ai/blogs/failure-analysis/) Towards understanding the capability boundary of coding agents in robotics.
 - 🔥 **2026-10-19**: Embodied First Exam is released!
 
 ## Framework
