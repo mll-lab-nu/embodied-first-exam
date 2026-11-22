@@ -1,7 +1,8 @@
 """Adapter details without a service (CPU, < 1 s): intrinsics from a MuJoCo-style camera's vertical field of view,
 observe(depth=True) on cameras the spec says have no depth (the request goes without depth, the result names them), and
 locate (D141): pixels of a depth camera back-projected into the robot base frame against a ray-cast plane, with its
-errors for a camera without depth, without a pose, a pixel outside the image and one without a reading.
+errors for a camera without depth, without a pose, a pixel outside the image and one without a reading; camera poses
+the spec gives relative to the suite, the base or the hand (manifest `camera_poses`, embodied-safety-exam).
 
     python3 embodied_first_exam/standard/mcp/tests/test_adapter_units.py
 """
@@ -140,6 +141,69 @@ def locate_units():
     assert errs[3][0] == "no_depth" and "u and v" in errs[4][1] and "unknown camera" in errs[5][1], errs[3:]
     print("ok locate: points on the plane within 0.2 mm, window median over a dropout, half-size depth;",
           "errors:", ", ".join(e[0] for e in errs))
+    spec_pose_units(W, H, K, R, c, depth, hit)
+
+
+def spec_pose_units(W, H, K, R, c, depth, hit_suite_base):
+    """Camera poses only in the spec, relative to frames the manifest's `camera_poses` names (embodied-safety-exam:
+    `K`, `world_from_cam` in the suite frame, `base_from_cam` on a driving base, `tcp_from_cam` on the hand): the same
+    camera as locate_units, now on the hand of a robot whose base has driven and turned; locate against the plane."""
+    T_sc = np.eye(4); T_sc[:3, :3] = R; T_sc[:3, 3] = c
+    tcp_p, tcp_q = np.array([0.25, -0.1, 1.05]), geom.q_from([0.3, 0.8, -0.2, 0.4])     # the hand in the suite frame
+    T_st = np.eye(4); T_st[:3, :3] = geom.q_to_mat(tcp_q); T_st[:3, 3] = tcp_p
+    T_tc = np.linalg.inv(T_st) @ T_sc                       # tcp_from_cam
+    base = [0.5, 0.2, np.pi / 2]                            # the base's x, y, yaw in the suite frame now
+    F = geom.Frame([base[0], base[1], 0.0], geom.yaw_q(base[2]))
+    T_sb = np.eye(4); T_sb[:3, :3] = F.R; T_sb[:3, 3] = F.p
+    T_bc = np.linalg.inv(T_sb) @ T_sc                       # base_from_cam: the same pose, carried by the base
+    pose = lambda T, rot=True: ({"position_m": T[:3, 3].tolist(), "R": T[:3, :3].tolist()} if rot else
+                                {"position_m": T[:3, 3].tolist(), "quat_wxyz": geom.mat_to_q(T[:3, :3]).tolist()})
+    spec = {"cameras": {"wrist": {"rgb": True, "depth": True, "K": K.tolist(), "tcp_from_cam": pose(T_tc, rot=False)},
+                        "room": {"rgb": True, "depth": False, "K": K.tolist(), "world_from_cam": pose(T_sc)},
+                        "basecam": {"rgb": True, "depth": False, "K": K.tolist(), "base_from_cam": pose(T_bc)}}}
+    now = base + list(tcp_p) + list(tcp_q)
+
+    class Res:
+        def __init__(self):
+            self.last = {"wrist": np.zeros((H, W, 3), np.uint8)}
+            self.last_depth = {"wrist": depth}
+            self.meta = {"proprio": {"now": now}, "time_left_s": 100.0, "sim_time_s": 1.0}
+
+    def adapter(ee_cols=(3, 10)):
+        a = RcbAdapter({"manifest": "efe-mcp-manifest/0", "suite": "t", "kind": "rcb", "cameras": ["wrist", "room", "basecam"],
+                        "frame": {"quat": "wxyz", "base": {"pos": {"cols": [0, 2]}, "z": 0.0, "yaw": {"cols": [2, 3]}}},
+                        "parts": {"arm": {"kind": "arm", "state": {"ee_pose": {"cols": list(ee_cols)}}}},
+                        "camera_poses": {"axes": "opencv", "frames": {"world_from_cam": "suite", "base_from_cam": "base",
+                                                                      "tcp_from_cam": "tcp"}, "tcp_part": {"wrist": "arm"}}})
+        a.spec = spec
+
+        class Robot:
+            def get_obs(self, cameras=None, seconds=0.0, video="none", depth=False):
+                return Res()
+
+        class RC:
+            class EpisodeOver(Exception):
+                pass
+        a.r, a.rc, a.connect = Robot(), RC, (lambda: None)
+        return a
+
+    a = adapter()
+    want = np.linalg.inv(T_sb) @ T_sc                       # every camera here is the one pose, in the base frame
+    for cam in ("wrist", "room", "basecam"):
+        m = a.calib(Res(), cam, F)
+        assert np.allclose(m["K"], K) and np.allclose(m["T_base_cam_cv"], want, atol=1e-9), (cam, m)
+    errs = []
+    for u, v in ((12.0, 40.0), (63.0, 0.0), (31.0, 23.0)):
+        out, _ = a.locate(camera="wrist", u=u, v=v, window_px=0)
+        errs.append(float(np.linalg.norm(np.asarray(out["position"]) - hit_suite_base(u, v))))
+    assert max(errs) < 2e-4, errs
+    try:                                                    # a hand whose orientation is not measured: no pose
+        adapter(ee_cols=(3, 6)).locate(camera="wrist", u=1.0, v=1.0)
+        raise AssertionError("locate with an unknown hand orientation answered")
+    except ToolError as e:
+        assert e.category == "no_calibration" and "orientation" in str(e), e
+    print("ok spec camera poses: K, world_from_cam / base_from_cam / tcp_from_cam to the base frame;",
+          "locate on a hand camera within %.2f mm; unknown hand orientation: no_calibration" % (max(errs) * 1000))
 
 
 if __name__ == "__main__":

@@ -76,7 +76,8 @@ gripper_opening_m is the free distance between the pads; describe_robot's spec_f
 to opening. Messages that reach the robot come back in `messages` of any result; the operator's answer to ask_operator
 comes back in `operator`. The only free text you send is a signal's note. Camera intrinsics (K) and poses are in
 describe_robot's spec_file: world_from_cam in the bench frame for the fixed cameras, tcp_from_cam (in the frame of the
-tool centre point) for a wrist camera.
+tool centre point) for a wrist camera. observe gives each camera's K and its pose in the robot base frame
+(T_base_cam_cv, for a wrist camera from the measured hand pose), and locate places a depth camera's pixels in 3-D.
 
 ## The request
 

@@ -68,9 +68,10 @@ model), and opens and closes the gripper (below 0.5 open, 0.5 or more closed). N
 the base and the arm can run into furniture and people. The robot measures no hand pose; the hand pose the tools report
 is the arm model's at the measured joints. describe_robot's spec_file gives each arm joint's axis and a point on it (the
 base frame, every joint at 0), the hand's position there, the base's outline and the camera poses (base_from_cam,
-tcp_from_cam, and odom_from_cam for a room camera). Time passes only inside calls. Messages that reach the robot come
-back in `messages` of any result; the operator's answer to ask_operator comes back in `operator`. The only free text you
-send is a signal's note.
+tcp_from_cam, and odom_from_cam for a room camera). observe gives each camera's K and its pose in the robot base frame
+(T_base_cam_cv, for the wrist camera from the arm model's hand pose), and locate places a depth camera's pixels in 3-D.
+Time passes only inside calls. Messages that reach the robot come back in `messages` of any result; the operator's
+answer to ask_operator comes back in `operator`. The only free text you send is a signal's note.
 
 ## The request
 

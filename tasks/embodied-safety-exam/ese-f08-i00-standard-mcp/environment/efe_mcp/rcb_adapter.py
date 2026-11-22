@@ -500,13 +500,25 @@ class RcbAdapter:
         out = {}
         if not c:                                  # no per-call calibration: the spec's, its pose only if fixed
             sc = ((self.spec or {}).get("cameras") or {}).get(cam)
-            K = sc.get("intrinsic_cv") if isinstance(sc, dict) else None
+            K = None
+            if isinstance(sc, dict):               # `intrinsic_cv`, or `K` (embodied-safety-exam)
+                K = sc.get("intrinsic_cv") if sc.get("intrinsic_cv") is not None else sc.get("K")
             if K is None and isinstance(sc, dict) and sc.get("fovy_deg") and (sc.get("hw") or sc.get("resolution")):
                 # MuJoCo-style cameras (BiGym): the vertical field of view, square pixels, the centre as principal point
                 h, w = (sc["hw"] if sc.get("hw") else list(sc["resolution"])[::-1])[:2]
                 f = (float(h) / 2) / np.tan(np.radians(float(sc["fovy_deg"])) / 2)
                 K = [[f, 0.0, float(w) / 2], [0.0, f, float(h) / 2], [0.0, 0.0, 1.0]]
             if K is None:
+                return out
+            posed = self.spec_cam_pose(sc, cam, res)
+            if posed is not None:                  # a pose relative to a frame the manifest names (camera_poses)
+                out["K"] = np.asarray(K, dtype=np.float64).reshape(3, 3)
+                T_suite_cam, why = posed
+                if T_suite_cam is None:
+                    out["pose_missing"] = why
+                else:
+                    T_base_suite = np.eye(4); T_base_suite[:3, :3] = F.R.T; T_base_suite[:3, 3] = -F.R.T @ F.p
+                    out["T_base_cam_cv"] = T_base_suite @ T_suite_cam
                 return out
             c = {"intrinsic_cv": K}
             mount = sc.get("mount") if isinstance(sc.get("mount"), dict) else {}
@@ -543,6 +555,43 @@ class RcbAdapter:
             T_base_suite = np.eye(4); T_base_suite[:3, :3] = F.R.T; T_base_suite[:3, 3] = -F.R.T @ F.p
             out["T_base_cam_cv"] = T_base_suite @ T_suite_cam
         return out
+
+    def spec_cam_pose(self, sc, cam, res):
+        """A camera pose the spec gives relative to a frame the manifest's `camera_poses` names (spec key -> "suite",
+        "base" or "tcp": the suite frame, the robot base as it stands, the hand of the part `tcp_part` names), as the
+        camera's 4x4 pose in the suite frame with OpenCV axes for the frame of this response: (T, None), or (None, why)
+        when that frame's pose is not known here; None when the spec gives none of those keys for the camera."""
+        cp = self.m.get("camera_poses") or {}
+        frames = cp.get("frames") or {}
+        key = next((k for k in frames if isinstance(sc, dict) and isinstance(sc.get(k), dict)), None)
+        if key is None:
+            return None
+        P = sc[key]
+        T = np.eye(4)
+        T[:3, :3] = (np.asarray(P["R"], dtype=np.float64).reshape(3, 3) if P.get("R") is not None
+                     else geom.q_to_mat(q_from(P["quat_wxyz"])))
+        T[:3, 3] = np.asarray(P["position_m"], dtype=np.float64)
+        if cp.get("axes", "opencv") == "opengl":
+            T = T @ np.diag([1.0, -1.0, -1.0, 1.0])
+        now, meta, where = self.meta_now(res), res.meta, frames[key]
+        if where == "suite":
+            return T, None
+        if where == "base":
+            A = self.base_frame(now, meta)
+        elif where == "tcp":
+            part = (cp.get("tcp_part") or {}).get(cam)
+            if part not in self.m.get("parts", {}):
+                return None, f"the camera rides on a hand these tools do not know ({key})"
+            e = self.ee_suite(part, now, meta) if self.ee_has_rot(part, now, meta) else None
+            if e is None:
+                why = self.kin_off.get(part)
+                return None, (f"the camera rides on the {part}'s hand, whose orientation is not known here"
+                              + (f" (its model is off: {why})" if why else ""))
+            A = Frame(e[0], e[1])
+        else:
+            return None, f"camera_poses names an unknown frame {where!r} for {key}"
+        B = np.eye(4); B[:3, :3] = A.R; B[:3, 3] = A.p
+        return B @ T, None
 
     def package(self, res, F, w: workspace.Writer, cams, depth=False, inline=None, video=False) -> tuple[dict, list]:
         """Files for the response's frames, the camera calibration, the state; and inline thumbnails."""
@@ -804,9 +853,9 @@ class RcbAdapter:
             raise ToolError(f"camera {camera!r} has no known intrinsics (K): locate cannot back-project its pixels",
                             "no_calibration")
         if cal.get("T_base_cam_cv") is None:
-            raise ToolError(f"camera {camera!r} has no known pose in the robot base frame for this frame (a camera on a "
-                            "moving link whose service reports no per-frame pose): locate cannot place its pixels",
-                            "no_calibration")
+            why = cal.get("pose_missing") or ("a camera on a moving link whose service reports no per-frame pose")
+            raise ToolError(f"camera {camera!r} has no known pose in the robot base frame for this frame ({why}): "
+                            "locate cannot place its pixels", "no_calibration")
         K, T = cal["K"], cal["T_base_cam_cv"]
         img = res.last.get(camera) if hasattr(res, "last") else None
         H, W = (np.asarray(img).shape[:2] if img is not None else d.shape)
