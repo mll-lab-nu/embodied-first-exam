@@ -16,7 +16,7 @@ def spaces_of(m: dict) -> list:
     sp = []
     if any(P.get("joints") for P in parts):
         sp.append("joint")
-    if any(P.get("ee") or P.get("ik") for P in parts):
+    if any(P.get("ee") or P.get("ik") or (P.get("kin") and P.get("joints")) for P in parts):
         sp.append("ee")
     if any(P.get("ee_delta") for P in parts):
         sp.append("ee_delta")
@@ -30,13 +30,18 @@ def part_lines(m: dict) -> str:
     out = []
     for n, P in m.get("parts", {}).items():
         caps = []
-        if P.get("joints"):
-            j = P["joints"]
-            caps.append(f"{j['cols'][1] - j['cols'][0]} joints")
+        j = P.get("joints") or P.get("joint_delta")
+        if j:
+            caps.append(f"{j['cols'][1] - j['cols'][0]} joints" + (" (sent as per-step changes)" if P.get("joint_delta")
+                                                                   else ""))
         if P.get("ee") or P.get("ik"):
             caps.append("end-effector pose")
+        elif P.get("kin"):
+            caps.append("end-effector pose (inverse kinematics in these tools)")
         elif P.get("ee_delta"):
             caps.append("end-effector pose (stepped by its delta controller)")
+        elif j:
+            caps.append("no end-effector pose")
         if P.get("gripper"):
             caps.append("gripper")
         out.append(f"{n} ({P.get('kind', 'arm')}: {', '.join(caps) or 'state only'})")
@@ -54,9 +59,9 @@ def tools_for(m: dict) -> list:
     tools = {t["name"]: copy.deepcopy(t) for t in canonical()["tools"]}
     parts = m.get("parts", {})
     cams = list(m.get("cameras") or [])
-    has_pose = any(P.get("ee") or P.get("ik") or P.get("ee_delta") for P in parts.values())
+    has_pose = any(P.get("ee") or P.get("ik") or P.get("kin") or P.get("ee_delta") for P in parts.values())
     has_grip = any(P.get("gripper") for P in parts.values())
-    has_joints = any(P.get("joints") for P in parts.values())
+    has_joints = any(P.get("joints") or P.get("joint_delta") for P in parts.values())
     targets = list(parts) + (["base"] if m.get("base") else [])
     plines = part_lines(m)
 
@@ -68,6 +73,7 @@ def tools_for(m: dict) -> list:
     cam_enum(o["cameras"]); cam_enum(o["inline_cameras"])
     if cams:
         tools["observe"]["description"] += f" Cameras: {', '.join(cams)}."
+        tools["locate"]["inputSchema"]["properties"]["camera"]["enum"] = cams
 
     mv = tools["move_robot"]
     gi = mv["inputSchema"]["properties"]["goals"]["items"]["properties"]

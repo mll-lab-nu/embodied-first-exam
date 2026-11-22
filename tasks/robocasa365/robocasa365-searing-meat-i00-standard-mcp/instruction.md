@@ -30,8 +30,8 @@ Space `native` sends rows in the robot's own action types exactly as the section
 units and gripper values).
 
 **This robot** (Franka Panda on an Omron mobile base with a torso lift (RoboCasa PandaOmron); the arm takes absolute
-joint position targets): arm (arm: 7 joints, gripper). Cameras: `robot0_agentview_center`, `robot0_agentview_left`,
-`robot0_agentview_right`, `robot0_eye_in_hand`.
+joint position targets): arm (arm: 7 joints, end-effector pose (inverse kinematics in these tools), gripper). Cameras:
+`robot0_agentview_center`, `robot0_agentview_left`, `robot0_agentview_right`, `robot0_eye_in_hand`.
 
 - `describe_robot()`: call it first.
 - `observe(cameras?, depth?, seconds?, save_to?, inline_cameras?)`: images are written as JPEG files under `/app/obs/`
@@ -39,6 +39,10 @@ joint position targets): arm (arm: 7 joints, gripper). Cameras: `robot0_agentvie
   intrinsics `K` and pose in the robot base frame, each part's joints, gripper and end-effector pose, and `proprio_now`
   (the robot's own proprioception row; its layout is in the spec file). Open an image with your file-reading tool;
   `inline_cameras` also returns small images in the result.
+- `locate(camera, u, v | pixels, window_px?)`: the 3-D point in the robot base frame that a camera sees at pixel (u, v)
+  of its full-size image (u the column, v the row), or one per pixel of `pixels` [[u, v], ...]: from a new depth image
+  of that camera and its calibration (no time passes). For a camera with depth and a known pose; for any other the error
+  says so.
 - `move_robot(goals, duration_s?)`: one goal per part,
   `{target, position?, quaternion_wxyz?, joint_positions?, gripper?}`; the parts move together and the call returns when
   the motion is done, with `reached` (errors per goal), a `failure` category if a goal was not reached, the state and
@@ -54,15 +58,16 @@ joint position targets): arm (arm: 7 joints, gripper). Cameras: `robot0_agentvie
   with `"episode_over": true` means the episode has ended.
 - Nothing needs to be saved: the server records every tool call, and the service records the episode.
 
-**Notes on this robot.** The arm takes absolute joint position targets only (no end-effector command): describe_robot
-gives the joint limits. The base and the torso lift are driven with execute_trajectory space native, action_type
-joint_position (13 numbers, one row per 0.05 s control step): arm_joint1..7 (keep the current targets, cmd_* in
-proprio_now), grip (+1 closes, -1 opens), base_x, base_y, base_yaw (the mobile base's velocities in its own frame,
-normalised to [-1, 1]), torso (the lift's velocity, normalised), hybrid_mode (-1, the default). proprio_now has
-eef_right_x/y/z (the grip site's position in the world frame), the joints (robot0_joint1..7,
-mobilebase0_joint_mobile_forward/side/yaw, mobilebase0_joint_torso_height) and cmd_* (the last command). The poses the
-tools report are in the base's starting placement. The cameras ride on the robot; each frame comes with its current
-calibration.
+**Notes on this robot.** The arm takes absolute joint position targets (describe_robot gives the joint limits); a
+move_robot pose goal or an execute_trajectory ee row is turned into them here, by inverse kinematics on the robot's
+model from the measured joints, base and lift, without path planning or collision checking. The base and the torso lift
+are driven with execute_trajectory space native, action_type joint_position (13 numbers, one row per 0.05 s control
+step): arm_joint1..7 (keep the current targets, cmd_* in proprio_now), grip (+1 closes, -1 opens), base_x, base_y,
+base_yaw (the mobile base's velocities in its own frame, normalised to [-1, 1]), torso (the lift's velocity,
+normalised), hybrid_mode (-1, the default). proprio_now has eef_right_x/y/z (the grip site's position in the world
+frame), the joints (robot0_joint1..7, mobilebase0_joint_mobile_forward/side/yaw, mobilebase0_joint_torso_height) and
+cmd_* (the last command). The poses the tools report are in the base's starting placement. The cameras ride on the
+robot; each frame comes with its current calibration.
 
 ## Rules (real-robot rules)
 - **No reset.** What you knock over stays knocked over.

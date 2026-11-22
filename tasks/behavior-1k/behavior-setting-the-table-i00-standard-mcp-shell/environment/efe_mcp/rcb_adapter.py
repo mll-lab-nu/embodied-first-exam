@@ -91,6 +91,8 @@ class RcbAdapter:
         self.connect_error = None
         self.on_sim = None          # the server's call log: one record per request to the service, before it is sent
         self._note, self._seconds = "", 0.0
+        self._kin: dict = {}        # part -> its kinematic chain (manifest `kin`, D142) once checked, or None
+        self.kin_off: dict = {}     # part -> why its chain is off
 
     # ------------------------------------------------------------------ connection and client calls
     def connect(self):
@@ -335,18 +337,116 @@ class RcbAdapter:
             out["gripper"] = None if g is None else round(g, 3)
         if st.get("gripper_opening_m"):
             out["gripper_opening_m"] = _f(self.ref(st["gripper_opening_m"], now, meta)[0])
-        if st.get("ee_pose"):
-            v = self.ref(st["ee_pose"], now, meta)
-            if len(v) >= 7:
-                p, q = F.from_parent(v[:3], q_from(v[3:7], st["ee_pose"].get("quat", self.quat_order())))
+        pq = self.ee_suite(name, now, meta) if (st.get("ee_pose") or P.get("kin")) else None
+        if pq is not None:
+            if self.ee_has_rot(name, now, meta):
+                p, q = F.from_parent(pq[0], pq[1])
                 out["ee"] = {"position": _f(p), "quaternion_wxyz": _f(canon_q(q))}
             else:                                   # position only: the robot reports no hand orientation
-                out["ee"] = {"position": _f(F.from_parent(v[:3])[0])}
+                out["ee"] = {"position": _f(F.from_parent(pq[0])[0])}
         return out
 
-    def ee_suite(self, name, now, meta=None):
-        """The part's end-effector pose in the suite frame (p, wxyz q), from proprio."""
+    # ------------------------------------------------------------------ kinematics in the adapter (D142)
+    def kin_chain(self, name, now, meta=None):
+        """The part's kinematic chain (manifest `kin`) once it agrees with the robot, else None (kin_off says why)."""
+        K = (self.m["parts"].get(name) or {}).get("kin")
+        if not K:
+            return None
+        if name in self._kin:
+            return self._kin[name]
+        import kin
+        try:
+            C = kin.Chain(K)
+            why = self._kin_check(name, C, K, now, meta)
+        except Exception as e:      # noqa: BLE001 -- a model that does not load is off, with the reason
+            C, why = None, f"the model does not load ({type(e).__name__}: {e})"
+        if why:
+            self.kin_off[name] = why
+            C = None
+        self._kin[name] = C
+        return C
+
+    def kin_root(self, name, now, meta=None) -> Frame:
+        """The chain's root frame in the suite frame: the manifest's `root` (a suite position, the base frame's
+        orientation), else the robot base frame itself."""
+        K = self.m["parts"][name]["kin"]
+        F = self.base_frame(now, meta)
+        r = K.get("root")
+        if not r:
+            return F
+        q = F.q if r.get("orientation", "base") == "base" else q_from(r["quaternion_wxyz"])
+        return Frame(r["suite_position"], q)
+
+    def kin_q(self, name, now, meta=None):
+        return np.asarray(self.ref(self.m["parts"][name]["kin"]["state"], now, meta), dtype=np.float64)
+
+    def kin_fk_suite(self, name, C, now, meta=None):
+        T = C.fk(self.kin_q(name, now, meta))
+        R0 = self.kin_root(name, now, meta)
+        return R0.to_parent(T[:3, 3], geom.mat_to_q(T[:3, :3]))
+
+    def _kin_check(self, name, C, K, now, meta):
+        """Why the chain does not fit this robot (None: it does): its joint values must be in the state; where the
+        robot measures the hand's position, the model must put it there; where the spec gives the arm's joint axes
+        (`spec_arm`), they must be the model's."""
+        q = self.kin_q(name, now, meta)
+        if len(q) != C.n:
+            return f"{C.n} joint values expected in the state, got {len(q)}"
+        tol = float(K.get("check_tol_m", 0.005))
         st = self.m["parts"][name].get("state", {})
+        checked = False
+        if st.get("ee_pose"):
+            v = np.asarray(self.ref(st["ee_pose"], now, meta), dtype=np.float64)
+            p = self.kin_fk_suite(name, C, now, meta)[0]
+            d = float(np.linalg.norm(p - v[:3]))
+            if d > tol:
+                return f"the model puts the hand {d * 1000:.1f} mm from where the robot measures it"
+            checked = True
+        if K.get("spec_arm"):
+            A = self.spec or {}
+            for k in str(K["spec_arm"]).split("."):
+                A = A.get(k) if isinstance(A, dict) else None
+            if not isinstance(A, dict) or not A.get("axis"):
+                return f"the robot's spec has no arm kinematics ({K['spec_arm']}) to check the model against"
+            sol = [i for i in range(C.n) if C.solve[i]]
+            if len(A["axis"]) != len(sol):
+                return f"the spec's arm has {len(A['axis'])} joints, the model {len(sol)}"
+            for i, ax, pt in zip(sol, A["axis"], A.get("position_m") or [None] * len(sol)):
+                a = np.asarray(ax, dtype=np.float64)
+                if float(np.linalg.norm(a / np.linalg.norm(a) - K["joints"][i]["axis"])) > 2e-3:
+                    return f"joint {K['joints'][i]['name']}: the spec's axis {ax} is not the model's"
+                if pt is not None:
+                    off = np.asarray(pt, dtype=np.float64) - np.asarray(K["joints"][i]["point"], dtype=np.float64)
+                    if float(np.linalg.norm(np.cross(off, a / np.linalg.norm(a)))) > 2e-3:
+                        return f"joint {K['joints'][i]['name']}: the spec's axis does not pass where the model's does"
+            if A.get("tcp_at_zero_m") is not None:
+                d = float(np.linalg.norm(np.asarray(A["tcp_at_zero_m"], dtype=np.float64) - C.M[:3, 3]))
+                if d > tol:
+                    return f"the spec's hand position at zero is {d * 1000:.1f} mm from the model's"
+            checked = True
+        if not checked:
+            return "nothing the robot reports confirms the model"
+        return None
+
+    def ee_has_rot(self, name, now, meta=None) -> bool:
+        """The part's hand orientation is known: measured, or from its kinematic chain."""
+        st = self.m["parts"][name].get("state", {})
+        if self.m["parts"][name].get("kin") and self.kin_chain(name, now, meta) is not None:
+            return True
+        e = st.get("ee_pose")
+        return bool(e) and e.get("quat_fixed") is None and len(self.ref(e, now, meta)) >= 7
+
+    def ee_suite(self, name, now, meta=None):
+        """The part's end-effector pose in the suite frame (p, wxyz q), from proprio (a hand whose robot measures no
+        orientation: the orientation from its kinematic chain, where it has one)."""
+        st = self.m["parts"][name].get("state", {})
+        if self.m["parts"][name].get("kin"):
+            C = self.kin_chain(name, now, meta)
+            if C is not None and (not st.get("ee_pose") or len(self.ref(st["ee_pose"], now, meta)) < 7):
+                p, q = self.kin_fk_suite(name, C, now, meta)
+                if st.get("ee_pose"):           # the measured position, the model's orientation
+                    p = np.asarray(self.ref(st["ee_pose"], now, meta)[:3], dtype=np.float64)
+                return p, q
         if not st.get("ee_pose"):
             return None
         v = self.ref(st["ee_pose"], now, meta)
@@ -380,6 +480,19 @@ class RcbAdapter:
         return np.asarray(now if now is not None else [], dtype=np.float64)
 
     def cam_meta(self, res, cam, F):
+        c = self.calib(res, cam, F)
+        out = {}
+        if c.get("K") is not None:
+            out["K"] = _f(c["K"], 3)
+        if c.get("T_base_cam_cv") is not None:
+            out["T_base_cam_cv"] = _f(c["T_base_cam_cv"], 4)
+            out["extrinsic_note"] = "4x4 camera pose in the robot base frame, OpenCV camera axes (x right, y down, z forward)"
+        return out
+
+    def calib(self, res, cam, F) -> dict:
+        """The camera's calibration for this response, full precision: K (3x3) and T_base_cam_cv (4x4, the camera's pose
+        in the robot base frame F, OpenCV axes), each only if known (the response's per-call calibration, else the
+        spec's: its pose only for a camera that does not move)."""
         cams = res.meta.get("cameras") or {}
         if not cams and isinstance(res.meta.get("cameras_now"), dict):     # LIBERO: per-call calibration on submits
             cams = res.meta["cameras_now"]
@@ -417,18 +530,18 @@ class RcbAdapter:
                         c = {**c, k: v}
                         break
         if c.get("intrinsic_cv") is not None:
-            out["K"] = _f(c["intrinsic_cv"], 3)
+            out["K"] = np.asarray(c["intrinsic_cv"], dtype=np.float64).reshape(3, 3)
         T_suite_cam = None
         if c.get("extrinsic_cv") is not None:
-            E = np.asarray(c["extrinsic_cv"], dtype=np.float64).reshape(3, 4)        # suite frame -> camera (OpenCV)
+            E = np.asarray(c["extrinsic_cv"], dtype=np.float64)                     # suite frame -> camera (OpenCV)
+            E = E.reshape(4, 4)[:3] if E.size == 16 else E.reshape(3, 4)
             T_cam_suite = np.eye(4); T_cam_suite[:3, :] = E
             T_suite_cam = np.linalg.inv(T_cam_suite)
         elif c.get("cam2world_gl") is not None:                                     # camera (OpenGL) -> suite frame
             T_suite_cam = np.asarray(c["cam2world_gl"], dtype=np.float64).reshape(4, 4) @ np.diag([1.0, -1, -1, 1])
         if T_suite_cam is not None:
             T_base_suite = np.eye(4); T_base_suite[:3, :3] = F.R.T; T_base_suite[:3, 3] = -F.R.T @ F.p
-            out["T_base_cam_cv"] = _f(T_base_suite @ T_suite_cam, 4)
-            out["extrinsic_note"] = "4x4 camera pose in the robot base frame, OpenCV camera axes (x right, y down, z forward)"
+            out["T_base_cam_cv"] = T_base_suite @ T_suite_cam
         return out
 
     def package(self, res, F, w: workspace.Writer, cams, depth=False, inline=None, video=False) -> tuple[dict, list]:
@@ -442,12 +555,7 @@ class RcbAdapter:
                 entry["size"] = [int(np.asarray(img).shape[1]), int(np.asarray(img).shape[0])]
                 if inline and cam in inline:
                     extras.append(workspace.thumbnail(img))
-            d = None
-            if depth:
-                d = (getattr(res, "last_depth", {}) or {}).get(cam)
-                if d is None and cam in (getattr(res, "depth", {}) or {}):
-                    d = np.asarray(res.depth[cam])
-                    d = d[-1] if d.ndim == 3 else d
+            d = self.depth_of(res, cam) if depth else None
             if d is not None:
                 entry["depth"] = w.depth(cam, d)
             if video and cam in (getattr(res, "video", {}) or {}):
@@ -457,6 +565,15 @@ class RcbAdapter:
                 images[cam] = entry
         w.prune()
         return images, extras
+
+    @staticmethod
+    def depth_of(res, cam):
+        """The response's last depth image of `cam` (float32 metres, 0 = no reading), or None."""
+        d = (getattr(res, "last_depth", {}) or {}).get(cam)
+        if d is None and cam in (getattr(res, "depth", {}) or {}):
+            d = np.asarray(res.depth[cam])
+            d = d[-1] if d.ndim == 3 else d
+        return None if d is None else np.asarray(d, dtype=np.float32)
 
     @staticmethod
     def raw_meta(res) -> dict:
@@ -488,6 +605,8 @@ class RcbAdapter:
         for name, P in self.m["parts"].items():
             d = {"kind": P.get("kind", "arm")}
             j = P.get("joints")
+            K = P.get("kin") or {}
+            C = self.kin_chain(name, now, res.meta) if K else None
             if j:
                 lay = self.layout(j["type"])
                 names = j.get("names") or (lay[j["cols"][0]:j["cols"][1]] if lay else None)
@@ -495,12 +614,35 @@ class RcbAdapter:
                 lim = self.limits(j["type"], j["cols"])
                 if lim:
                     d["joints"]["limits"] = lim
+            elif P.get("joint_delta"):          # absolute goals, sent as the robot's per-step changes
+                jd = P["joint_delta"]
+                sol = [x for x in K.get("joints", []) if x.get("solve")]
+                d["joints"] = {"count": jd["cols"][1] - jd["cols"][0],
+                               "names": [x["name"] for x in sol] or (P.get("state", {}).get("joints") or {}).get("names"),
+                               "command": f"move_robot takes joint positions and sends them as per-step changes of at most "
+                                          f"{jd.get('max_step', 0.1)} rad (action type {jd['type']})"}
+                if sol and all(x.get("limits") for x in sol):
+                    d["joints"]["limits"] = [[_f(x["limits"][0]), _f(x["limits"][1])] for x in sol]
             if P.get("gripper"):
                 d["gripper"] = {"range": "0 = open, 1 = closed", **({"binary": True} if P["gripper"].get("binary") else {})}
             ee = P.get("ee") or {}
             if ee:
                 d["end_effector"] = {"point": ee.get("point", ""), "control": ee.get("mode_text", ee.get("mode", "planner")),
                                      "orientation": "quaternion_wxyz"}
+            elif P.get("ik"):
+                d["end_effector"] = {"point": P["ik"].get("point", P["ik"].get("frame", "")),
+                                     "control": "joint targets from the robot service's own inverse kinematics",
+                                     "orientation": "quaternion_wxyz"}
+            elif K and C is not None:
+                d["end_effector"] = {"point": K.get("point", ""),
+                                     "control": "joint targets from inverse kinematics in these tools, on the robot's own "
+                                                f"model ({K.get('source', 'the robot model')}); no path planning, no "
+                                                "collision checking",
+                                     "orientation": "quaternion_wxyz"}
+            elif K:
+                d["pose_goals"] = f"off: {self.kin_off.get(name, 'no model')}; this part takes joint positions only"
+            elif (j or P.get("joint_delta")) and not P.get("ee_delta"):
+                d["pose_goals"] = "none: this part takes joint positions only (no inverse kinematics here)"
             if P.get("ee_delta"):
                 d["end_effector_delta"] = {"point": P["ee_delta"].get("point", ""),
                                            "max_step_m": P["ee_delta"].get("pos_scale"), "note": P["ee_delta"].get("note", "")}
@@ -583,7 +725,7 @@ class RcbAdapter:
         parts = self.m["parts"].values()
         if any(P.get("joints") for P in parts):
             sp.append("joint")
-        if any(P.get("ee") or P.get("ik") for P in parts):
+        if any(P.get("ee") or P.get("ik") or (P.get("kin") and P.get("joints")) for P in parts):
             sp.append("ee")
         if any(P.get("ee_delta") for P in parts):
             sp.append("ee_delta")
@@ -617,6 +759,97 @@ class RcbAdapter:
         if no_depth:
             out["no_depth_cameras"] = no_depth
         return out, extras
+
+    def depth_cams(self):
+        """The cameras the spec says have depth (None: the spec does not say)."""
+        sc = (self.spec or {}).get("cameras")
+        if not isinstance(sc, dict) or not any(isinstance(v, dict) and "depth" in v for v in sc.values()):
+            return None
+        return [c for c in self.cams_all() if isinstance(sc.get(c), dict) and sc[c].get("depth")]
+
+    def locate(self, camera, u=None, v=None, pixels=None, window_px=1, **_):
+        """Pixels of a camera's image -> 3-D points in the robot base frame at the start of this call: a fresh image and
+        depth of that camera (no time passes), back-projected through its intrinsics and pose."""
+        self.connect()
+        if camera not in self.cams_all():
+            raise ToolError(f"unknown camera {camera!r}; cameras: {self.cams_all()}")
+        single = pixels is None
+        if single:
+            if u is None or v is None:
+                raise ToolError("give u and v, or pixels [[u, v], ...]")
+            pixels = [[u, v]]
+        elif u is not None or v is not None:
+            raise ToolError("give either u and v or pixels, not both")
+        dc = self.depth_cams()
+        if dc is not None and camera not in dc:
+            raise ToolError(f"camera {camera!r} has no depth, so locate cannot place its pixels in 3-D; cameras with "
+                            f"depth: {dc or 'none'}", "no_depth")
+        try:
+            res = self.obs([camera], seconds=0.0, depth=True, video="none")
+        except self.rc.EpisodeOver as e:
+            return self._episode_over(e), []
+        except ValueError as e:              # the service refused the request (400): a camera without depth
+            if dc is None:
+                raise ToolError(f"the service gives no depth for camera {camera!r} ({e}): locate needs a camera with "
+                                "depth", "no_depth")
+            raise
+        d = self.depth_of(res, camera)
+        if d is None or d.ndim != 2:
+            raise ToolError(f"the service returned no depth for camera {camera!r}: locate needs a camera with depth",
+                            "no_depth")
+        now = self.meta_now(res)
+        F = self.base_frame(now, res.meta)
+        cal = self.calib(res, camera, F)
+        if cal.get("K") is None:
+            raise ToolError(f"camera {camera!r} has no known intrinsics (K): locate cannot back-project its pixels",
+                            "no_calibration")
+        if cal.get("T_base_cam_cv") is None:
+            raise ToolError(f"camera {camera!r} has no known pose in the robot base frame for this frame (a camera on a "
+                            "moving link whose service reports no per-frame pose): locate cannot place its pixels",
+                            "no_calibration")
+        K, T = cal["K"], cal["T_base_cam_cv"]
+        img = res.last.get(camera) if hasattr(res, "last") else None
+        H, W = (np.asarray(img).shape[:2] if img is not None else d.shape)
+        sy, sx = d.shape[0] / float(H), d.shape[1] / float(W)       # depth at another size than the image: scaled
+        r = int(window_px or 0)
+        Kinv = np.linalg.inv(K)
+        pts = []
+        for uv in pixels:
+            pu, pv = float(uv[0]), float(uv[1])
+            e = {"pixel": [_f(pu, 2), _f(pv, 2)]}
+            if not (-0.5 <= pu < W - 0.5 and -0.5 <= pv < H - 0.5):
+                e["error"] = f"outside the image ({W} x {H} pixels: u in [0, {W - 1}], v in [0, {H - 1}])"
+                pts.append(e)
+                continue
+            cu = min(d.shape[1] - 1, max(0, int(round(pu * sx))))
+            cv = min(d.shape[0] - 1, max(0, int(round(pv * sy))))
+            k = min(r, cu, cv, d.shape[1] - 1 - cu, d.shape[0] - 1 - cv)     # a centred window, narrower at the border
+            win = d[cv - k:cv + k + 1, cu - k:cu + k + 1].astype(np.float64)
+            ok = win[np.isfinite(win) & (win > 0)]
+            if not ok.size:
+                e["error"] = "no depth reading there (0 = none: too far, too near, or a dropout)"
+                pts.append(e)
+                continue
+            z = float(np.median(ok))
+            pc = z * (Kinv @ np.array([pu, pv, 1.0]))           # z-depth: the ray scaled to depth z along the axis
+            pb = T[:3, :3] @ pc + T[:3, 3]
+            e.update({"position": _f(pb), "depth_m": _f(z), "readings": int(ok.size)})
+            pts.append(e)
+        w = workspace.Writer()
+        out = {"camera": camera, "frame": "robot base at the start of this call: +X forward, +Y left, +Z up (m)",
+               "camera_position": _f(T[:3, 3]), "image_size": [int(W), int(H)]}
+        if img is not None:
+            out["image"] = w.jpeg(camera, img)
+        w.prune()
+        if single:
+            if "error" in pts[0]:
+                raise ToolError(f"pixel ({pts[0]['pixel'][0]}, {pts[0]['pixel'][1]}) of {camera!r}: {pts[0]['error']}",
+                                "no_depth" if "depth" in pts[0]["error"] else "invalid")
+            out.update(pts[0])
+        else:
+            out["points"] = pts
+        out.update({**self.robot_state(now, res.meta, F), **self.common_meta(res)})
+        return out, []
 
     # -- building rows
     def hold_row(self, typ, now, meta=None) -> np.ndarray:
@@ -848,8 +1081,7 @@ class RcbAdapter:
                         if "position" in g:
                             r["position_error_m"] = _f(np.linalg.norm(p - np.asarray(g["position"])))
                             ok &= r["position_error_m"] <= tol.get("pos_m", 0.01)
-                        if "quaternion_wxyz" in g and P["state"]["ee_pose"].get("quat_fixed") is None and \
-                                len(self.ref(P["state"]["ee_pose"], now, meta)) >= 7:
+                        if "quaternion_wxyz" in g and self.ee_has_rot(g["target"], now, meta):
                             r["rotation_error_rad"] = _f(q_angle(q, q_from(g["quaternion_wxyz"])))
                             ok &= r["rotation_error_rad"] <= tol.get("rot_rad", 0.05)
                 if "joint_positions" in g and P.get("state", {}).get("joints"):
@@ -941,15 +1173,18 @@ class RcbAdapter:
                     ee_goals.append(g)
                 elif P.get("ik"):
                     joint_goals.append(self.ik_goal(g, F, now, meta))
+                elif P.get("kin"):
+                    joint_goals.append(self.kin_goal(g, F, now, meta))
                 elif P.get("ee_delta"):
                     delta_goals.append(g)
                 else:
-                    raise ToolError(f"{g['target']} takes no end-effector pose; use joint_positions")
+                    raise ToolError(f"{g['target']} takes no end-effector pose (no inverse kinematics for it here); "
+                                    "use joint_positions")
             else:
-                if "joint_positions" in g and not P.get("joints"):
+                if "joint_positions" in g and not (P.get("joints") or P.get("joint_delta")):
                     raise ToolError(f"{g['target']} takes no joint positions")
                 if "joint_positions" in g or "gripper" in g:
-                    if P.get("joints") or (P.get("gripper") and "col" in P["gripper"]):
+                    if P.get("joints") or P.get("joint_delta") or (P.get("gripper") and "col" in P["gripper"]):
                         joint_goals.append(g)
                     elif P.get("ee"):
                         ee_goals.append(g)
@@ -960,6 +1195,14 @@ class RcbAdapter:
                 else:
                     raise ToolError(f"{g['target']}: a goal needs position/quaternion_wxyz, joint_positions or gripper")
         res, executed, metas = None, 0, []
+        step_goals = [g for g in joint_goals if parts[g["target"]].get("joint_delta")]
+        joint_goals = [g for g in joint_goals if not parts[g["target"]].get("joint_delta")]
+        if step_goals:
+            res, n, ms = self.move_joints_delta(step_goals, duration_s, now, meta)
+            executed += n; metas += ms
+            if res.meta.get("done"):
+                return res, executed, metas
+            now = self.meta_now(res)
         if joint_goals:
             res, n, ms = self.move_joints(joint_goals, duration_s, now, meta)
             executed += n; metas += ms
@@ -1013,6 +1256,101 @@ class RcbAdapter:
         if "gripper" in g:
             out["gripper"] = g["gripper"]
         return out
+
+    def kin_goal(self, g, F, now, meta):
+        """A pose goal of a part with a kinematic chain (D142): the joint positions that reach it, solved here."""
+        name = g["target"]
+        C = self.kin_chain(name, now, meta)
+        if C is None:
+            raise ToolError(f"{name}: end-effector poses are off for this part ({self.kin_off.get(name, 'no model')}); "
+                            "use joint_positions", "internal")
+        pq = self.ee_suite(name, now, meta)
+        p_cur, q_cur = F.from_parent(*pq)
+        p = np.asarray(g.get("position", p_cur), dtype=np.float64)
+        q = q_from(g.get("quaternion_wxyz", q_cur))
+        ps, qs = F.to_parent(p, q)
+        pm, qm = self.kin_root(name, now, meta).from_parent(ps, qs)
+        Tg = np.eye(4); Tg[:3, :3] = geom.q_to_mat(qm); Tg[:3, 3] = pm
+        sol = C.ik(Tg, self.kin_q(name, now, meta))
+        if not sol["ok"]:
+            raise ToolError(f"{name}: no joint solution for that pose within the joint limits (the nearest is "
+                            f"{sol['pos_err_m'] * 1000:.0f} mm and {sol['rot_err_rad']:.2f} rad off)", "out_of_reach")
+        out = {"target": name, "joint_positions": [float(x) for x in sol["q"][C.idx]], "_from_pose": True}
+        if "gripper" in g:
+            out["gripper"] = g["gripper"]
+        return out
+
+    def move_joints_delta(self, goals, duration_s, now, meta):
+        """Joint goals of a part whose robot takes per-step joint changes (manifest `joint_delta`: each step's target is
+        the measured angle plus the row): bounded steps towards the goal, then re-measured and corrected, each correction
+        scaled by how much of the last one the joints followed (a step's target is not always reached within the step)."""
+        parts = self.m["parts"]
+        types = {parts[g["target"]]["joint_delta"]["type"] for g in goals}
+        if len(types) != 1:
+            raise ToolError(f"these goals use different action types ({sorted(types)}): send them in separate calls")
+        typ = types.pop()
+        c = self.m.get("control", {})
+        dt = self.step_dt(c.get("dt"))
+        tol = min(float(c.get("tolerance", {}).get("joint", 0.03)), 0.005)
+        base = self.hold_row(typ, now, meta)
+        grip = False
+        goal_q = {}
+        for g in goals:
+            P = parts[g["target"]]
+            if "gripper" in g:
+                self.set_grip(base, P["gripper"], self.g_to_suite(g["gripper"], P["gripper"]))
+                grip = True
+            if "joint_positions" in g:
+                a, b = P["joint_delta"]["cols"]
+                jp = np.asarray(g["joint_positions"], dtype=np.float64)
+                if len(jp) != b - a:
+                    raise ToolError(f"{g['target']}: {b - a} joint positions expected, got {len(jp)}")
+                goal_q[g["target"]] = jp
+        speed = float(c.get("joint_speed", 0.5))
+        res, executed, metas = None, 0, []
+        gain = {n: np.ones(len(G)) for n, G in goal_q.items()}
+        sent, before = {}, {}
+        for attempt in range(6):
+            meas = {n: np.asarray(self.ref(parts[n]["state"]["joints"], now, meta), dtype=np.float64)[:len(G)]
+                    for n, G in goal_q.items()}
+            for n in sent:                     # how much of the last correction the joints followed
+                big = np.abs(sent[n]) > 1e-3
+                ratio = np.where(big, (meas[n] - before[n]) / np.where(big, sent[n], 1.0), 1.0)
+                gain[n] = np.where(big, 1.0 / np.clip(ratio, 0.34, 1.0), gain[n])
+            resid = {n: G - meas[n] for n, G in goal_q.items()}
+            if attempt and max([float(np.max(np.abs(d))) for d in resid.values() if len(d)] + [0.0]) <= tol:
+                break
+            deltas = {n: resid[n] * (gain[n] if attempt else 1.0) for n in resid}
+            sent, before = deltas, meas
+            steps = []
+            for n, d in deltas.items():
+                D = parts[n]["joint_delta"]
+                per = min(float(D.get("max_step", 0.1)) * 0.95, speed * dt)
+                steps.append(int(math.ceil(float(np.max(np.abs(d))) / per - 1e-9)) if len(d) else 0)
+            k = max(steps + [0])
+            if attempt == 0:
+                if duration_s:
+                    k = max(k, int(math.ceil(float(duration_s) / dt - 1e-9)))
+                elif goal_q or grip:
+                    k = max(k, int(math.ceil(float(c.get("min_move_s", 0.5)) / dt - 1e-9)))
+            rows = []
+            for i in range(k):
+                r = base.copy()
+                for n, d in deltas.items():
+                    a, b = parts[n]["joint_delta"]["cols"]
+                    r[a:a + len(d)] = d / k
+                rows.append(r)
+            if attempt == 0:
+                settle = float(c.get("gripper_settle_s", 0.5)) if grip else float(c.get("settle_s", 0.0))
+                rows += [base.copy() for _ in range(int(round(settle / dt)))]
+            if not rows:
+                break
+            res, n_ex, ms = self.run_rows(typ, rows, dt, tool="move_robot")
+            executed += n_ex; metas += ms
+            if res.meta.get("done") or res.meta.get("stopped") or not goal_q:
+                break
+            now, meta = self.meta_now(res), res.meta
+        return res, executed, metas
 
     def move_joints(self, goals, duration_s, now, meta):
         parts = self.m["parts"]
@@ -1297,6 +1635,9 @@ class RcbAdapter:
             for k, v in r.items():
                 P = parts[k]
                 if "joint_positions" in v:
+                    if not P.get("joints"):
+                        raise ToolError(f"{k}: its joints take per-step changes, not positions, in this space: use "
+                                        "move_robot (joint_positions or a pose) or space native")
                     a, b = P["joints"]["cols"]
                     jp = np.asarray(v["joint_positions"], dtype=np.float64)
                     if len(jp) != b - a:
@@ -1307,8 +1648,52 @@ class RcbAdapter:
             out.append(cur)
         return np.asarray(out), typ
 
+    def rows_ee_kin(self, rows, F, now, meta):
+        """ee rows of parts with a kinematic chain and absolute joint targets (D142): each row's poses solved to joint
+        positions, each from the solution before it."""
+        parts = self.m["parts"]
+        typs = {parts[k]["joints"]["type"] for r in rows for k in r}
+        if len(typs) != 1:
+            raise ToolError(f"the rows mix action types {sorted(typs)}")
+        typ = typs.pop()
+        cur = self.hold_row(typ, now, meta)
+        seeds, poses = {}, {}
+        for k in {k for r in rows for k in r}:
+            C = self.kin_chain(k, now, meta)
+            if C is None:
+                raise ToolError(f"{k}: end-effector poses are off for this part ({self.kin_off.get(k, 'no model')})")
+            seeds[k] = (C, self.kin_q(k, now, meta))
+            poses[k] = F.from_parent(*self.ee_suite(k, now, meta))
+        out = []
+        for i, r in enumerate(rows):
+            cur = cur.copy()
+            for k, v in r.items():
+                P = parts[k]; C, seed = seeds[k]
+                p = np.asarray(v.get("position", poses[k][0]), dtype=np.float64)
+                q = q_from(v.get("quaternion_wxyz", poses[k][1]))
+                poses[k] = (p, q)
+                pm, qm = self.kin_root(k, now, meta).from_parent(*F.to_parent(p, q))
+                Tg = np.eye(4); Tg[:3, :3] = geom.q_to_mat(qm); Tg[:3, 3] = pm
+                sol = C.ik(Tg, seed, starts=0 if i else 12)
+                if not sol["ok"] and i:
+                    sol = C.ik(Tg, seed)
+                if not sol["ok"]:
+                    raise ToolError(f"row {i}, {k}: no joint solution for that pose within the joint limits (the nearest "
+                                    f"is {sol['pos_err_m'] * 1000:.0f} mm and {sol['rot_err_rad']:.2f} rad off); nothing "
+                                    "was sent", "out_of_reach")
+                seeds[k] = (C, sol["q"])
+                a, b = P["joints"]["cols"]
+                cur[a:b] = sol["q"][C.idx]
+                if "gripper" in v:
+                    self.set_grip(cur, P["gripper"], self.g_to_suite(v["gripper"], P["gripper"]))
+            out.append(cur)
+        return np.asarray(out), typ
+
     def rows_ee(self, rows, F, now, meta):
         parts = self.m["parts"]
+        kinp = [n for n, P in parts.items() if P.get("kin") and P.get("joints") and not P.get("ee")]
+        if rows and all(k in kinp for r in rows for k in r) and any(r for r in rows):
+            return self.rows_ee_kin(rows, F, now, meta)
         typs = set()
         for r in rows:
             self._check_parts(r, [n for n, P in parts.items() if P.get("ee")])

@@ -38,6 +38,10 @@ by 80 muscles): its own action types only (`execute_trajectory` space `native`; 
   intrinsics `K` and pose in the robot base frame, each part's joints, gripper and end-effector pose, and `proprio_now`
   (the robot's own proprioception row; its layout is in the spec file). Open an image with your file-reading tool;
   `inline_cameras` also returns small images in the result.
+- `locate(camera, u, v | pixels, window_px?)`: the 3-D point in the robot base frame that a camera sees at pixel (u, v)
+  of its full-size image (u the column, v the row), or one per pixel of `pixels` [[u, v], ...]: from a new depth image
+  of that camera and its calibration (no time passes). For a camera with depth and a known pose; for any other the error
+  says so.
 - `execute_trajectory(space, rows | native_rows | rows_file, dt?, interpolate?)`: a dense trajectory, rows `dt` seconds
   apart. `rows_file` is the path of a file under `/app` that holds the rows: a `.npy` (2-D float array) or `.csv` (one
   row per line, comma-separated) of native rows for space `native` (with `action_type`), or a `.json` list: of number

@@ -38,6 +38,13 @@ def main():
         o = c.call("observe", inline_cameras=["top"])
         img = o["cameras"]["top"]["image"]
         assert pathlib.Path(img).is_file() and img.startswith(str(tmp / "app" / "obs")), img
+        # locate is listed with this robot's cameras; the toy renders no depth, which the error says
+        assert c.tools["locate"]["inputSchema"]["properties"]["camera"]["enum"] == ["top"], c.tools["locate"]
+        try:
+            c.call("locate", camera="top", u=4, v=4)
+            raise AssertionError("locate without depth answered")
+        except McpToolError as e:
+            assert "no depth" in str(e), e
         r = c.call("move_robot", goals=[{"target": "arm", "joint_positions": [0.3, 0.2, 0.1]}], duration_s=1.0)
         assert r["moved"] and r["reached"][0]["ok"], r
         q = r["parts"]["arm"]["joint_positions"]

@@ -18,7 +18,7 @@ from __future__ import annotations
 import importlib.util, json, os, pathlib, sys
 
 SERVER = os.environ.get("EFE_MCP_SERVER", "/opt/tools/efe_mcp/server.py")
-TOOLS = json.loads('{"describe_robot": {"description": "The robot: its parts (arms, hands, grippers, base, legs) and what each accepts, joint names and limits, cameras, control rate, the action spaces, the conventions and the time left. Call this first."}, "observe": {"description": "Current camera images and robot state. Images, depth and video are written to files in the workspace; the result has their paths plus camera intrinsics and extrinsics, simulated time, time left and ea"}, "move_robot": {"description": "Move one or more parts to goals and block until done. A part goal sets an end-effector pose (position + quaternion_wxyz in the robot base frame at the start of the call), joint positions, and/or the g"}, "locomote": {"description": "Walk or drive with the robot\'s own locomotion controller: body-frame velocity (vx forward m/s, vy left m/s, wz counter-clockwise rad/s) for duration_s, then stop. Blocks until done. Unitree\'s H1-2 wal"}, "execute_trajectory": {"description": "Execute a dense trajectory, rows dt seconds apart, and block until done. space joint / ee / ee_delta / whole_body: `rows` is a list of objects naming parts, e.g. {\\"left\\": {\\"joint_positions\\": [...], \\"g"}, "wait": {"description": "Hold the current command and let `seconds` of time pass (0 = none); with `operation`, first wait for an operation a previous call left pending. Returns the state afterwards and the paths of saved fram"}, "signal": {"description": "End the episode or talk to the operator: done (the job is done), infeasible (it cannot be done), ask_operator (a question; the answer comes back), report (tell the operator something). The note says w"}, "reset_episode": {"description": "Start a new episode from the same frozen starting state (robot and every object back where they started), where this robot allows resets: it abandons the running episode, uses one reset of the budget "}}')
+TOOLS = json.loads('{"describe_robot": {"description": "The robot: its parts (arms, hands, grippers, base, legs) and what each accepts, joint names and limits, cameras, control rate, the action spaces, the conventions and the time left. Call this first."}, "observe": {"description": "Current camera images and robot state. Images, depth and video are written to files in the workspace; the result has their paths plus camera intrinsics and extrinsics, simulated time, time left and ea"}, "locate": {"description": "3-D points from pixels: for pixels (u, v) of a camera\'s image, the points the camera\'s depth sees there, in the robot base frame at the start of this call (metres). It takes a new image and depth of t"}, "move_robot": {"description": "Move one or more parts to goals and block until done. A part goal sets an end-effector pose (position + quaternion_wxyz in the robot base frame at the start of the call), joint positions, and/or the g"}, "locomote": {"description": "Walk or drive with the robot\'s own locomotion controller: body-frame velocity (vx forward m/s, vy left m/s, wz counter-clockwise rad/s) for duration_s, then stop. Blocks until done. Unitree\'s H1-2 wal"}, "execute_trajectory": {"description": "Execute a dense trajectory, rows dt seconds apart, and block until done. space joint / ee / ee_delta / whole_body: `rows` is a list of objects naming parts, e.g. {\\"left\\": {\\"joint_positions\\": [...], \\"g"}, "wait": {"description": "Hold the current command and let `seconds` of time pass (0 = none); with `operation`, first wait for an operation a previous call left pending. Returns the state afterwards and the paths of saved fram"}, "signal": {"description": "End the episode or talk to the operator: done (the job is done), infeasible (it cannot be done), ask_operator (a question; the answer comes back), report (tell the operator something). The note says w"}, "reset_episode": {"description": "Start a new episode from the same frozen starting state (robot and every object back where they started), where this robot allows resets: it abandons the running episode, uses one reset of the budget "}}')
 _client = None
 
 
@@ -82,13 +82,35 @@ def observe(*, cameras=None, depth=None, seconds=None, save_to=None, inline_came
     return call('observe', cameras=cameras, depth=depth, seconds=seconds, save_to=save_to, inline_cameras=inline_cameras)
 
 
+def locate(camera, *, u=None, v=None, pixels=None, window_px=None) -> dict:
+    """3-D points from pixels: for pixels (u, v) of a camera's image, the points the camera's depth sees there, in the
+    robot base frame at the start of this call (metres). It takes a new image and depth of that camera (no time
+    passes) and back-projects each pixel with the camera's intrinsics K and pose: (x, y, z) = z K^-1 (u, v, 1) in
+    the camera's axes, z the depth (the median of the valid readings within window_px pixels), then into the base
+    frame. Pixels are those of the camera's full-size image as observe saves it (u: column from the left, v: row
+    from the top, the centre of the top-left pixel at (0, 0)); the result has that frame's image. For a camera with
+    depth and a known pose; the error says when a camera has neither.
+
+    Arguments:
+      camera ("head_left" | "head_right" | "venue", required): camera name
+      u (float): pixel column (from the left)
+      v (float): pixel row (from the top)
+      pixels (list[list[float]]): several pixels [[u, v], ...] in place of u and v; each gets a point or an error
+          [minItems 1, maxItems 1000]
+      window_px (int): the depth is the median of the valid readings within this many pixels of (u, v) (0: that
+          pixel only) [minimum 0, maximum 10]
+    """
+    return call('locate', camera=camera, u=u, v=v, pixels=pixels, window_px=window_px)
+
+
 def move_robot(goals, *, duration_s=None, collision_aware=None, inline_cameras=None) -> dict:
     """Move one or more parts to goals and block until done. A part goal sets an end-effector pose (position +
     quaternion_wxyz in the robot base frame at the start of the call), joint positions, and/or the gripper (0 open,
     1 closed). A base goal {target: "base", dx, dy, dyaw} moves a mobile base by that much in its own frame. Parts
     not listed hold still. Returns whether it moved, which goals were reached (with errors), a failure category, the
-    time left and the paths of the frames saved after the move. This robot's targets: torso (torso: 1 joints); left
-    (arm: 7 joints, gripper); right (arm: 7 joints, gripper); legs (legs: 12 joints).
+    time left and the paths of the frames saved after the move. This robot's targets: torso (torso: 1 joints, no
+    end-effector pose); left (arm: 7 joints, no end-effector pose, gripper); right (arm: 7 joints, no end-effector
+    pose, gripper); legs (legs: 12 joints, no end-effector pose).
 
     Arguments:
       goals (list[{target, joint_positions, gripper}], required):  [minItems 1]
@@ -129,8 +151,9 @@ def execute_trajectory(space, *, rows=None, native_rows=None, rows_file=None, ac
     {"vx": .., "vy": .., "wz": ..}} (whole_body); parts a row does not name hold. space native: `native_rows` are
     number arrays in one of the robot's own action types (`action_type`, see describe_robot), sent unchanged. A long
     trajectory computed by code goes as a file under /app (`rows_file`: a .npy 2-D array or .csv of native rows, or
-    a .json list of native rows or of row objects). This robot's parts: torso (torso: 1 joints); left (arm: 7
-    joints, gripper); right (arm: 7 joints, gripper); legs (legs: 12 joints). Spaces: joint, whole_body, native.
+    a .json list of native rows or of row objects). This robot's parts: torso (torso: 1 joints, no end-effector
+    pose); left (arm: 7 joints, no end-effector pose, gripper); right (arm: 7 joints, no end-effector pose,
+    gripper); legs (legs: 12 joints, no end-effector pose). Spaces: joint, whole_body, native.
 
     Arguments:
       space ("joint" | "whole_body" | "native", required):

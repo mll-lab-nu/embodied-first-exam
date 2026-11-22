@@ -80,7 +80,238 @@
  "parts": {
   "arm": {
    "kind": "arm",
-   "note": "Panda arm: 7 absolute joint position targets (rad); the gripper is open or closed only. There is no end-effector command.",
+   "note": "Panda arm: 7 absolute joint position targets (rad); the gripper is open or closed only. An end-effector pose is solved to joint targets here (inverse kinematics on the robot's model, with the base and the lift where they are measured); the robot itself takes joint targets only.",
+   "kin": {
+    "source": "robosuite 1.5.2's PandaOmron as RoboCasa365 compiles it in the task's scene: the mobile base's three joints and the torso lift (measured), the Panda's seven joints, the grip site",
+    "point": "the grip site between the fingertips (gripper0_right_grip_site): +z the approach direction (out of the hand), the fingers close along its x axis",
+    "root": {
+     "suite_position": [
+      10.0,
+      10.0,
+      0.0
+     ],
+     "orientation": "base"
+    },
+    "state": {
+     "names": [
+      "mobilebase0_joint_mobile_forward_pos",
+      "mobilebase0_joint_mobile_side_pos",
+      "mobilebase0_joint_mobile_yaw_pos",
+      "mobilebase0_joint_torso_height_pos",
+      "robot0_joint1_pos",
+      "robot0_joint2_pos",
+      "robot0_joint3_pos",
+      "robot0_joint4_pos",
+      "robot0_joint5_pos",
+      "robot0_joint6_pos",
+      "robot0_joint7_pos"
+     ]
+    },
+    "joints": [
+     {
+      "name": "mobilebase0_joint_mobile_forward",
+      "type": "prismatic",
+      "axis": [
+       0.0,
+       1.0,
+       0.0
+      ],
+      "point": [
+       -0.21,
+       0.0,
+       0.0
+      ]
+     },
+     {
+      "name": "mobilebase0_joint_mobile_side",
+      "type": "prismatic",
+      "axis": [
+       1.0,
+       0.0,
+       0.0
+      ],
+      "point": [
+       -0.21,
+       0.0,
+       0.0
+      ]
+     },
+     {
+      "name": "mobilebase0_joint_mobile_yaw",
+      "type": "revolute",
+      "axis": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "point": [
+       -0.21,
+       0.0,
+       0.0
+      ]
+     },
+     {
+      "name": "mobilebase0_joint_torso_height",
+      "type": "prismatic",
+      "axis": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "point": [
+       0.0,
+       0.0,
+       0.7
+      ]
+     },
+     {
+      "name": "robot0_joint1",
+      "type": "revolute",
+      "axis": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "point": [
+       0.0,
+       0.0,
+       1.033
+      ],
+      "solve": true,
+      "limits": [
+       -2.8973,
+       2.8973
+      ]
+     },
+     {
+      "name": "robot0_joint2",
+      "type": "revolute",
+      "axis": [
+       0.0,
+       1.0,
+       0.0
+      ],
+      "point": [
+       0.0,
+       0.0,
+       1.033
+      ],
+      "solve": true,
+      "limits": [
+       -1.7628,
+       1.7628
+      ]
+     },
+     {
+      "name": "robot0_joint3",
+      "type": "revolute",
+      "axis": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "point": [
+       0.0,
+       0.0,
+       1.349
+      ],
+      "solve": true,
+      "limits": [
+       -2.8973,
+       2.8973
+      ]
+     },
+     {
+      "name": "robot0_joint4",
+      "type": "revolute",
+      "axis": [
+       0.0,
+       -1.0,
+       0.0
+      ],
+      "point": [
+       0.0825,
+       0.0,
+       1.349
+      ],
+      "solve": true,
+      "limits": [
+       -3.0718,
+       -0.0698
+      ]
+     },
+     {
+      "name": "robot0_joint5",
+      "type": "revolute",
+      "axis": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "point": [
+       0.0,
+       0.0,
+       1.733
+      ],
+      "solve": true,
+      "limits": [
+       -2.8973,
+       2.8973
+      ]
+     },
+     {
+      "name": "robot0_joint6",
+      "type": "revolute",
+      "axis": [
+       0.0,
+       -1.0,
+       0.0
+      ],
+      "point": [
+       0.0,
+       0.0,
+       1.733
+      ],
+      "solve": true,
+      "limits": [
+       -0.0175,
+       3.7525
+      ]
+     },
+     {
+      "name": "robot0_joint7",
+      "type": "revolute",
+      "axis": [
+       0.0,
+       0.0,
+       -1.0
+      ],
+      "point": [
+       0.088,
+       0.0,
+       1.733
+      ],
+      "solve": true,
+      "limits": [
+       -2.8973,
+       2.8973
+      ]
+     }
+    ],
+    "tcp": {
+     "position": [
+      0.088,
+      0.0,
+      1.5295
+     ],
+     "quaternion_wxyz": [
+      0.0,
+      0.3824559,
+      0.9239738,
+      0.0
+     ]
+    }
+   },
    "joints": {
     "type": "joint_position",
     "cols": [
@@ -124,6 +355,6 @@
    }
   }
  },
- "notes": "The arm takes absolute joint position targets only (no end-effector command): describe_robot gives the joint limits. The base and the torso lift are driven with execute_trajectory space native, action_type joint_position (13 numbers, one row per 0.05 s control step): arm_joint1..7 (keep the current targets, cmd_* in proprio_now), grip (+1 closes, -1 opens), base_x, base_y, base_yaw (the mobile base's velocities in its own frame, normalised to [-1, 1]), torso (the lift's velocity, normalised), hybrid_mode (-1, the default). proprio_now has eef_right_x/y/z (the grip site's position in the world frame), the joints (robot0_joint1..7, mobilebase0_joint_mobile_forward/side/yaw, mobilebase0_joint_torso_height) and cmd_* (the last command). The poses the tools report are in the base's starting placement. The cameras ride on the robot; each frame comes with its current calibration.",
+ "notes": "The arm takes absolute joint position targets (describe_robot gives the joint limits); a move_robot pose goal or an execute_trajectory ee row is turned into them here, by inverse kinematics on the robot's model from the measured joints, base and lift, without path planning or collision checking. The base and the torso lift are driven with execute_trajectory space native, action_type joint_position (13 numbers, one row per 0.05 s control step): arm_joint1..7 (keep the current targets, cmd_* in proprio_now), grip (+1 closes, -1 opens), base_x, base_y, base_yaw (the mobile base's velocities in its own frame, normalised to [-1, 1]), torso (the lift's velocity, normalised), hybrid_mode (-1, the default). proprio_now has eef_right_x/y/z (the grip site's position in the world frame), the joints (robot0_joint1..7, mobilebase0_joint_mobile_forward/side/yaw, mobilebase0_joint_torso_height) and cmd_* (the last command). The poses the tools report are in the base's starting placement. The cameras ride on the robot; each frame comes with its current calibration.",
  "task": "robocasa365-cereal-and-bowl-i00"
 }

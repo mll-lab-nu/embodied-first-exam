@@ -18,7 +18,7 @@ from __future__ import annotations
 import importlib.util, json, os, pathlib, sys
 
 SERVER = os.environ.get("EFE_MCP_SERVER", "/opt/tools/efe_mcp/server.py")
-TOOLS = json.loads('{"describe_robot": {"description": "The robot: its parts (arms, hands, grippers, base, legs) and what each accepts, joint names and limits, cameras, control rate, the action spaces, the conventions and the time left. Call this first."}, "observe": {"description": "Current camera images and robot state. Images, depth and video are written to files in the workspace; the result has their paths plus camera intrinsics and extrinsics, simulated time, time left and ea"}, "move_robot": {"description": "Move one or more parts to goals and block until done. A part goal sets an end-effector pose (position + quaternion_wxyz in the robot base frame at the start of the call), joint positions, and/or the g"}, "execute_trajectory": {"description": "Execute a dense trajectory, rows dt seconds apart, and block until done. space joint / ee / ee_delta / whole_body: `rows` is a list of objects naming parts, e.g. {\\"left\\": {\\"joint_positions\\": [...], \\"g"}, "wait": {"description": "Hold the current command and let `seconds` of time pass (0 = none); with `operation`, first wait for an operation a previous call left pending. Returns the state afterwards and the paths of saved fram"}, "signal": {"description": "End the episode or talk to the operator: done (the job is done), infeasible (it cannot be done), ask_operator (a question; the answer comes back), report (tell the operator something). The note says w"}}')
+TOOLS = json.loads('{"describe_robot": {"description": "The robot: its parts (arms, hands, grippers, base, legs) and what each accepts, joint names and limits, cameras, control rate, the action spaces, the conventions and the time left. Call this first."}, "observe": {"description": "Current camera images and robot state. Images, depth and video are written to files in the workspace; the result has their paths plus camera intrinsics and extrinsics, simulated time, time left and ea"}, "locate": {"description": "3-D points from pixels: for pixels (u, v) of a camera\'s image, the points the camera\'s depth sees there, in the robot base frame at the start of this call (metres). It takes a new image and depth of t"}, "move_robot": {"description": "Move one or more parts to goals and block until done. A part goal sets an end-effector pose (position + quaternion_wxyz in the robot base frame at the start of the call), joint positions, and/or the g"}, "execute_trajectory": {"description": "Execute a dense trajectory, rows dt seconds apart, and block until done. space joint / ee / ee_delta / whole_body: `rows` is a list of objects naming parts, e.g. {\\"left\\": {\\"joint_positions\\": [...], \\"g"}, "wait": {"description": "Hold the current command and let `seconds` of time pass (0 = none); with `operation`, first wait for an operation a previous call left pending. Returns the state afterwards and the paths of saved fram"}, "signal": {"description": "End the episode or talk to the operator: done (the job is done), infeasible (it cannot be done), ask_operator (a question; the answer comes back), report (tell the operator something). The note says w"}}')
 _client = None
 
 
@@ -81,6 +81,27 @@ def observe(*, cameras=None, depth=None, seconds=None, save_to=None, inline_came
           also return as small low-resolution images in the result
     """
     return call('observe', cameras=cameras, depth=depth, seconds=seconds, save_to=save_to, inline_cameras=inline_cameras)
+
+
+def locate(camera, *, u=None, v=None, pixels=None, window_px=None) -> dict:
+    """3-D points from pixels: for pixels (u, v) of a camera's image, the points the camera's depth sees there, in the
+    robot base frame at the start of this call (metres). It takes a new image and depth of that camera (no time
+    passes) and back-projects each pixel with the camera's intrinsics K and pose: (x, y, z) = z K^-1 (u, v, 1) in
+    the camera's axes, z the depth (the median of the valid readings within window_px pixels), then into the base
+    frame. Pixels are those of the camera's full-size image as observe saves it (u: column from the left, v: row
+    from the top, the centre of the top-left pixel at (0, 0)); the result has that frame's image. For a camera with
+    depth and a known pose; the error says when a camera has neither.
+
+    Arguments:
+      camera ("egocentric_mirrored_camera" | "over_shoulder_left_camera" | "wrist_cam", required): camera name
+      u (float): pixel column (from the left)
+      v (float): pixel row (from the top)
+      pixels (list[list[float]]): several pixels [[u, v], ...] in place of u and v; each gets a point or an error
+          [minItems 1, maxItems 1000]
+      window_px (int): the depth is the median of the valid readings within this many pixels of (u, v) (0: that
+          pixel only) [minimum 0, maximum 10]
+    """
+    return call('locate', camera=camera, u=u, v=v, pixels=pixels, window_px=window_px)
 
 
 def move_robot(goals, *, duration_s=None, collision_aware=None, inline_cameras=None) -> dict:

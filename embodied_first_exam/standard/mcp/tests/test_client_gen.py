@@ -30,6 +30,10 @@ import efe_robot as R
 d = R.describe_robot(); assert d["parts"]["arm"]["joints"]["count"] == 3, d
 o = R.observe(cameras=["top"]); img = o["cameras"]["top"]["image"]
 assert pathlib.Path(img).is_file() and "_py_" in pathlib.Path(img).name, img
+try:
+    R.locate("top", u=4, v=4); raise AssertionError("locate without depth answered")
+except R.ToolError as e:
+    assert "no depth" in str(e), e.payload
 r = R.move_robot([{"target": "arm", "joint_positions": [0.3, 0.2, 0.1]}], duration_s=1.0)
 assert r["moved"] and r["reached"][0]["ok"], r
 try:

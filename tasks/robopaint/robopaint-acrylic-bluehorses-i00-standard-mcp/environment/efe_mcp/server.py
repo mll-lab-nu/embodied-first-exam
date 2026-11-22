@@ -3,8 +3,8 @@
 
     python3 /opt/tools/efe_mcp/server.py [--manifest PATH] [--max-block-s 45]
 
-Tools: describe_robot, observe, move_robot, locomote, execute_trajectory, wait, signal (schema/tools.v0.json, narrowed
-to the robot of the manifest). Conventions: the robot base frame at the start of each call (+X forward, +Y left,
+Tools: describe_robot, observe, locate, move_robot, locomote, execute_trajectory, wait, signal (schema/tools.v0.json,
+narrowed to the robot of the manifest). Conventions: the robot base frame at the start of each call (+X forward, +Y left,
 +Z up), metres / radians, quaternions wxyz, gripper 0 = open .. 1 = closed. Images, depth and video are written under
 /app/obs; results carry paths and small JSON. A call that runs longer than --max-block-s returns
 {"pending": true, "operation": id}; `wait(operation=id)` (or any later call) waits for it.
