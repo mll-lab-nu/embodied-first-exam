@@ -179,6 +179,21 @@ def check(m: dict) -> list[str]:
         bad = [c for c in m.get(k) or [] if cams and c not in cams]
         if bad:
             errs.append(f"{k}: {bad} not in cameras")
+    cp = m.get("camera_poses")
+    if cp is not None:      # spec camera pose keys -> the frame each is in (rcb_adapter.spec_cam_pose)
+        fr = cp.get("frames") if isinstance(cp, dict) else None
+        if not isinstance(fr, dict) or not fr or any(v not in ("suite", "base", "tcp") for v in fr.values()):
+            errs.append("camera_poses.frames: {spec key: \"suite\" | \"base\" | \"tcp\"}")
+        if isinstance(cp, dict) and cp.get("axes", "opencv") not in ("opencv", "opengl"):
+            errs.append("camera_poses.axes: \"opencv\" or \"opengl\"")
+        tp = (cp.get("tcp_part") if isinstance(cp, dict) else None) or {}
+        for c, p in tp.items():
+            if cams and c not in cams:
+                errs.append(f"camera_poses.tcp_part: camera {c!r} not in cameras")
+            if p not in (m.get("parts") or {}):
+                errs.append(f"camera_poses.tcp_part: {c!r} -> {p!r} is not a part")
+            elif not ((m["parts"][p].get("state") or {}).get("ee_pose") or m["parts"][p].get("kin")):
+                errs.append(f"camera_poses.tcp_part: part {p!r} has no hand pose (state.ee_pose or kin)")
     try:
         sys.path.insert(0, str(HERE))
         import schema
