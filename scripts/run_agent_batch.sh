@@ -21,14 +21,24 @@
 #     ChatGPT login (codex)          CODEX_FORCE_AUTH_JSON=1 (Harbor uploads ~/.codex/auth.json into each trial)
 #     Claude subscription            CLAUDE_FORCE_OAUTH=1 and CLAUDE_CODE_OAUTH_TOKEN (`claude setup-token`)
 #     Azure OpenAI (codex)           AGENT_CONFIG=<config.toml with the Azure provider> and its key variable
-#   MODES        "privileged standard"   K  attempts per task (1); add `realtime` for <base>-realtime where it exists
+#   MODES        "privileged standard"   K  attempts per task (1); add `realtime` for <base>-realtime where it exists;
+#                the efe-robot MCP modes (scripts/mcp_only.py; owner decisions D131, D145): `standard-mcp` runs <base>-standard-mcp
+#                with the harness's standard tools (as standard mode: Codex keeps its shell, unified exec and patch tool,
+#                Claude Code its Bash, Write and Edit; no web tool either way); the rule that every robot command and
+#                observation is an efe-robot tool call of the model's own is checked after each job (mcp_audit.json in
+#                the job's directory, {ok, violations[], trials[]}: scripts/mcp_only.py audit-job).
+#                `standard-mcp-nocode` = the same task dirs without any code or file-writing tool (the ablation: Claude Code
+#                gets `mcp_only.py claude-args` after every other --ak, Codex a config through `mcp_only.py codex-config`);
+#                its jobs are <batch>-standard-mcp-nocode[-<task>], its task results go to <RESULTS>/<batch>-nocode/.
+#                `standard-mcp-shell` runs <base>-standard-mcp-shell (the tools beside the task's client and a shell;
+#                standard tools; the audit only counts the requests that did not come through the tools)
 #   SEQ          1 = one trial at a time per runner (default): task by task, each mode in MODES order, one Harbor job per
 #                task and mode ($JOBS/<batch>-<mode>-<task>/). Start the same command again to add a lane: every job is
 #                claimed (mkdir $JOBS/.claims/<job>) by exactly one runner, so K runners run K trials at a time. A job that
 #                already has its result.json (Harbor writes it when the job starts) is skipped; to rerun an interrupted
 #                job, move its directory and its claim away first.
 #                0 = one job per mode ($JOBS/<batch>-<mode>/), the modes side by side, N_P / N_S concurrent trials (2 / 2;
-#                N_S also for realtime)
+#                N_S also for realtime and the standard-mcp modes)
 #   WAIT_FOR     a file that must exist before a mode starts, e.g. "standard:<path>" (default: none)
 #   JOBS         <repo>/jobs/agents     LABEL  the run's title for the results README
 #   RUN_ID       the run id (docs/TAXONOMY.md "Run ids"): <harness>-<model>-<effort>, derived from AGENT / MODEL /
@@ -147,7 +157,9 @@ mkdir -p "$JOBS/.plan"
 python3 - "$R" "$JOBS/.plan/$batch.json" "$batch" "$RUN_ID" "$SEQ" "$MODES" "${tasks[@]}" <<'PY'
 import json, os, pathlib, sys
 repo, out, batch, run_id, seq, modes, *tasks = sys.argv[1:]
-name = lambda m, t: {"standard": f"{t}-standard", "limited": f"{t}-standard", "realtime": f"{t}-realtime"}.get(m, f"{t}-privileged")
+name = lambda m, t: {"standard": f"{t}-standard", "limited": f"{t}-standard", "realtime": f"{t}-realtime",
+                     "standard-mcp": f"{t}-standard-mcp", "standard-mcp-nocode": f"{t}-standard-mcp",
+                     "standard-mcp-shell": f"{t}-standard-mcp-shell"}.get(m, f"{t}-privileged")
 jobs = [{"job": f"{batch}-{m}-{t}" if seq == "1" else f"{batch}-{m}", "task": name(m, t), "mode": m}
         for t in tasks for m in modes.split() if any(pathlib.Path(repo).glob(f"tasks/*/{name(m, t)}/task.toml"))]   # tasks/<benchmark folder>/<task>/
 tmp = pathlib.Path(f"{out}.{os.getpid()}")
@@ -256,6 +268,23 @@ u.build_opener(u.ProxyHandler({})).open(sys.argv[1], timeout=15).read()' "$GW/_g
   log "usage gateway $GW (pid $gw_pid, raw bodies: $GATEWAY_RAW, token budget $TOKEN_BUDGET_IN in / $TOKEN_BUDGET_OUT out, agent egress: $GATEWAY_EGRESS); per-trial records in <trial>/gateway/"
 fi
 
+# the no-code ablation (MODES standard-mcp-nocode): its own harness flags, passed after every other --ak (Harbor keeps
+# the last --ak of a key, so the runner's disallowed_tools=WebSearch,WebFetch above does not replace the longer list)
+NOCODE_ARGS=()
+case " $MODES " in *" standard-mcp-nocode "*)
+  if [ "$AGENT" = claude-code ]; then
+    read -r -a NOCODE_ARGS <<< "$(python3 "$R/scripts/mcp_only.py" claude-args)"
+    case " ${NOCODE_ARGS[*]} " in *" disallowed_tools="*WebSearch*) ;; *) log "no no-code flags for Claude Code (scripts/mcp_only.py claude-args)"; exit 2 ;; esac
+  else
+    eff=""; for a in "${AGENT_ARGS[@]}"; do case "$a" in config=*) eff="${a#config=}" ;; esac; done   # the config in force (the gateway's copy, if any)
+    mkdir -p "$JOBS/.agent-config" && nocfg="$JOBS/.agent-config/config.nocode.toml.$$" \
+      && python3 "$R/scripts/mcp_only.py" codex-config ${eff:+"$eff"} > "$nocfg" && grep -q '^features\.shell_tool = false$\|^shell_tool = false$' "$nocfg" \
+      || { log "no no-code Codex config could be written from ${eff:-(no config)} (scripts/mcp_only.py codex-config)"; exit 2; }
+    NOCODE_ARGS=(--ak "config=$nocfg" --ak web_search=disabled)
+  fi
+  log "no-code ablation (standard-mcp-nocode): ${NOCODE_ARGS[*]}" ;;
+esac
+
 gateway_check() {  # before a job is claimed (GATEWAY=1): the gateway answers, else it is restarted on its port; 1 = it is
   # down for good and the lane stops (every trial would end as an infrastructure failure)
   [ "$GATEWAY" = 1 ] || return 0
@@ -284,11 +313,16 @@ wait_for() {  # <mode>: block until every WAIT_FOR file of this mode exists
   done
 }
 
-finish_job() {  # <job>: the raw logs compacted; no key in any saved file (+redact); the task results (outside the repository)
+finish_job() {  # <job> <mode>: the raw logs compacted; the MCP modes' audit; no key in any saved file (+redact); the task
+  # results (outside the repository)
   [ -d "$JOBS/$1" ] || return 0
   [ "$GATEWAY" = 1 ] && [ "$GATEWAY_RAW" = 1 ] && python3 "$R/scripts/usage_gateway/rawlog.py" compact "$JOBS/$1" 2>&1 | sed "s/^/[$1] /" | tee -a "$LOG"
+  case "${2:-}" in standard-mcp|standard-mcp-nocode|standard-mcp-shell)   # <job>/mcp_audit.json: {ok, violations[], trials[]}
+    python3 "$R/scripts/mcp_only.py" audit-job "$JOBS/$1" --mode "$2" 2>&1 | tail -2 | sed "s/^/[$1] /" | tee -a "$LOG" ;;
+  esac
   python3 "$R/scripts/scan_secrets.py" "$JOBS/$1" "${SCAN[@]}" --redact 2>&1 | tail -3 | sed "s/^/[$1] /" | tee -a "$LOG"
-  [ -n "$RESULTS" ] && python3 "$R/scripts/write_task_results.py" "$JOBS" "$1" "$RUN_ID" "$LABEL" --out "$RESULTS/$batch" 2>&1 | tail -3 | sed "s/^/[$1] /" | tee -a "$LOG"
+  local out="$RESULTS/$batch"; [ "${2:-}" = standard-mcp-nocode ] && out="$RESULTS/$batch-nocode"   # the ablation: results of their own
+  [ -n "$RESULTS" ] && python3 "$R/scripts/write_task_results.py" "$JOBS" "$1" "$RUN_ID" "$LABEL" --out "$out" 2>&1 | tail -3 | sed "s/^/[$1] /" | tee -a "$LOG"
 }
 
 summary() {  # one table per comparable configuration over every job of this batch, rewritten after each job (atomically: lanes share it)
@@ -328,9 +362,15 @@ for trial in jobs.glob(f"{batch}-*/*__*"):
         status, why, cfg = ("not_a_result", "no result.json", {}) if not r else ("legacy", None, {"mode": tc.mode_of(pathlib.Path(task))})
     key = tc.config_key(cfg)
     labels[key] = tc.config_label(cfg)
+    if trial.parent.name.startswith(f"{batch}-standard-mcp-nocode"):     # the no-code ablation: a table of its own
+        key += (("no_code", True),)
+        labels[key] = tc.config_label(cfg) + ", no code"
+    audit = wtr.load_json(trial.parent / "mcp_audit.json")              # the MCP modes' audit (scripts/mcp_only.py)
+    bad = sorted({v.get("kind", "?") for v in audit.get("violations") or [] if v.get("trial") == trial.name})
     keys = {k: rw[k] for k in ("deterministic", "live_success", "replay_success", "instance_ok", "missing_trajectory", "grader_error",
                                "infra_error", "resumes") if k in rw}
     res = "not a result (voided" + (f": {why}" if why else "") + ")" if status == "not_a_result" else status
+    res += f" MCP AUDIT: {', '.join(bad)}" if bad else ""
     val = cfg.get("validated") is True
     out = (tc.task_dir(task, R / "tasks") / "task.toml").is_file() and tc.set_of(tc.task_dir(task, R / "tasks")) != "core"
     groups[key].append((r.get("started_at") or "~", f"| {task}{'' if val else ' (unvalidated)'}{' (not core)' if out else ''} | {rw.get('success', '-')} | {res} | {json.dumps(keys)} | "
@@ -408,8 +448,9 @@ task_dirs() {  # <root> <harbor -i args...>: the task directories the -i argumen
   done
 }
 
-run_job() {  # <job> <concurrency> <harbor -i args...>
-  local job="$1" n="$2"; shift 2
+run_job() {  # <job> <concurrency> <mode> <harbor -i args...>
+  local job="$1" n="$2" mode="$3"; shift 3
+  local extra=(); [ "$mode" = standard-mcp-nocode ] && extra=("${NOCODE_ARGS[@]}")   # after AGENT_ARGS: they win
   local envf=(); [ -n "$ENV_FILE" ] && envf=(--env-file "$ENV_FILE")
   local root="$R" f dirs=()
   mapfile -t dirs < <(task_dirs "$R" "$@")
@@ -446,16 +487,18 @@ pathlib.Path(sys.argv[1]).write_text(json.dumps(out, indent=1) + "\n")
 PY
   [ "$GATEWAY" = 1 ] && printf '%s\n' "$job" >> "$gw_jobs"     # before Harbor starts: the gateway attributes this job's trials
   log "start $job: $* (concurrency $n, attempts $K)"
-  (cd "$root" && harbor run -p tasks "$@" "${AGENT_ARGS[@]}" "${envf[@]}" -n "$n" -k "$K" -y -o "$JOBS" --job-name "$job") > "$JOBS/$job.harbor.log" 2>&1
+  (cd "$root" && harbor run -p tasks "$@" "${AGENT_ARGS[@]}" "${extra[@]}" "${envf[@]}" -n "$n" -k "$K" -y -o "$JOBS" --job-name "$job") > "$JOBS/$job.harbor.log" 2>&1
   log "done $job (harbor rc=$?)"
   rm -rf "$root"
   return 0
 }
 
-name() {  # <mode> <base> -> task dir name: <base>-privileged / <base>-standard / <base>-realtime (PROTOCOL §1)
+name() {  # <mode> <base> -> task dir name: <base>-privileged / <base>-standard / <base>-realtime (PROTOCOL §1), the MCP modes'
   case "$1" in
     standard|limited) echo "$2-standard" ;;
     realtime) echo "$2-realtime" ;;
+    standard-mcp|standard-mcp-nocode) echo "$2-standard-mcp" ;;
+    standard-mcp-shell) echo "$2-standard-mcp-shell" ;;
     *) echo "$2-privileged" ;;
   esac
 }
@@ -471,8 +514,8 @@ if [ "$SEQ" = 1 ]; then
       mkdir "$JOBS/.claims/$job" 2>/dev/null || continue   # another lane of this batch took it
       wait_for "$m"
       gateway_check || { rmdir "$JOBS/.claims/$job" 2>/dev/null; break 2; }
-      run_job "$job" 1 -i "$(name "$m" "$t")" || { rmdir "$JOBS/.claims/$job" 2>/dev/null; not_started=$((not_started + 1)); continue; }   # another lane or a later run may take it
-      gateway_after "$job"; finish_job "$job"; summary
+      run_job "$job" 1 "$m" -i "$(name "$m" "$t")" || { rmdir "$JOBS/.claims/$job" 2>/dev/null; not_started=$((not_started + 1)); continue; }   # another lane or a later run may take it
+      gateway_after "$job"; finish_job "$job" "$m"; summary
       # the model account is out of credits, rate-limited or logged out: every further job would fail within minutes. Only
       # structured evidence counts (Codex's rate_limits and last event, Claude Code's result event): scripts/account_failure_check.py
       why=$(python3 "$R/scripts/account_failure_check.py" "$JOBS/$job"/*__*/ 2>&1); rc=$?
@@ -488,12 +531,12 @@ else
   for m in $MODES; do
     inc=(); for t in "${tasks[@]}"; do [ -d "$(src_of "$(name "$m" "$t")")" ] && inc+=(-i "$(name "$m" "$t")"); done
     [ ${#inc[@]} -eq 0 ] && continue
-    n="$N_P"; case "$m" in standard|limited|realtime) n="$N_S" ;; esac   # sidecar modes
-    (wait_for "$m"; run_job "$batch-$m" "$n" "${inc[@]}") &
+    n="$N_P"; case "$m" in standard|limited|realtime|standard-mcp|standard-mcp-nocode|standard-mcp-shell) n="$N_S" ;; esac   # sidecar modes
+    (wait_for "$m"; run_job "$batch-$m" "$n" "$m" "${inc[@]}") &
     pids+=($!)
   done
   wait "${pids[@]}"
-  for m in $MODES; do gateway_after "$batch-$m"; finish_job "$batch-$m"; done
+  for m in $MODES; do gateway_after "$batch-$m"; finish_job "$batch-$m" "$m"; done
 fi
 [ -d "${JOBS}_mirror" ] && python3 "$R/scripts/scan_secrets.py" "${JOBS}_mirror" "${SCAN[@]}" 2>&1 | tail -2 | sed "s/^/[mirror] /" | tee -a "$LOG"
 summary

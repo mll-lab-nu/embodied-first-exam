@@ -163,7 +163,8 @@ def main():
             "PYTHONPATH": str(MCP / "oracle")}
     out = subprocess.run([sys.executable, "-c", prog], cwd=player, env=env2, capture_output=True, text=True, timeout=120)
     assert out.returncode == 0 and '"final_state"' in out.stdout, out.stdout + out.stderr
-    calls = [json.loads(x)["tool"] for x in (tmp / "calls2.jsonl").read_text().splitlines()]
+    calls = [r["tool"] for r in map(json.loads, (tmp / "calls2.jsonl").read_text().splitlines())
+             if "tool" in r and "sim" not in r]                   # the tool calls (not the request records)
     assert len(fake2.acts) == 3 and calls.count("act") == 3 and calls.count("ready") == 3, (fake2.acts, calls)
     print("ok eo-match tools (lockstep) and the oracle's seat client through them (turn):", calls)
     srv.shutdown()

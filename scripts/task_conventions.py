@@ -152,7 +152,9 @@ MODE_REGISTRY = {
     "realtime": {"short": "RT", "section": "§3", "sidecar": True, "limit_scope": "agent",
                           "protocols": ("eai-standard/2.3",), "twin": "privileged", "same_cutoff_as": None},
     # standard mode with the robot reached only through the `efe-robot` MCP tools (embodied_first_exam/standard/mcp/):
-    # same sim sidecar, instance, grader and cutoff as the standard twin; no shell or code tool for the agent
+    # same sim sidecar, instance, grader and cutoff as the standard twin; the agent may run code to compute, but every
+    # robot command and observation is an efe-robot tool call of the model's own (owner decision D145; the audit:
+    # scripts/mcp_only.py)
     "standard-mcp": {"short": "S-MCP", "section": "§3", "sidecar": True, "limit_scope": "agent",
                      "protocols": ("eai-standard/2.1", "eai-standard/2.2", "eai-standard/2.4"),
                      "twin": "privileged", "same_cutoff_as": "privileged"},
@@ -166,9 +168,10 @@ MCP_MODES = ("standard-mcp",)   # modes whose agent controls the robot through t
 TOOL_MODES = ("standard-mcp", "standard-mcp-shell")   # modes whose task carries the efe-robot server (environment/efe_mcp/)
 # environment/efe_mcp/ of an MCP task: these files of embodied_first_exam/standard/mcp/, unchanged, + manifest.json
 EFE_MCP_SOURCE = Path(__file__).resolve().parent.parent / "embodied_first_exam" / "standard" / "mcp"
-EFE_MCP_FILES = ("server.py", "rcb_adapter.py", "geom.py", "schema.py", "workspace.py", "mcp_client.py",
-                 "schema/tools.v0.json")
-EFE_MCP_OPTIONAL = ("suites.py", "efe_robot.py")   # a suite tool kind; the shell variant's generated Python client
+EFE_MCP_FILES = ("server.py", "rcb_adapter.py", "geom.py", "schema.py", "workspace.py", "schema/tools.v0.json")
+# a suite tool kind; the shell variant's Python client (generated) and the MCP client it is built on: no client for
+# code to call the server in the MCP-only mode (its reference solution keeps its own copy, solution/mcp/)
+EFE_MCP_OPTIONAL = ("suites.py", "efe_robot.py", "mcp_client.py")
 
 
 def efe_mcp_problems(task: Path) -> list[str]:
@@ -188,6 +191,8 @@ def efe_mcp_problems(task: Path) -> list[str]:
     if "efe_robot.py" in have:
         if mode_suffix(Path(task).name) != "standard-mcp-shell":
             bad.append("efe_robot.py is the shell variant's client only")
+    if "mcp_client.py" in have and mode_suffix(Path(task).name) != "standard-mcp-shell":
+        bad.append("mcp_client.py is the shell variant's only (no client for code to call the server here)")
         have.discard("efe_robot.py")       # generated per task (client_gen.py): not a copy of a source file
     try:
         m = json.loads((d / "manifest.json").read_text())
@@ -243,13 +248,14 @@ EXTERNAL_TEXT = (
     "for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, "
     "or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and "
     "the package registries (PyPI, Debian / Ubuntu archives) only.")
-# The MCP-only modes (MCP_MODES): the agent has no shell, code or package tool, so the paragraph says what it may read
+# The MCP-only modes (MCP_MODES, owner decision D145): code computes, the robot is reached through the tools only
 EXTERNAL_TEXT_MCP = (
-    "In this setting you act on the robot only through the `efe-robot` tools: you have no shell, you cannot run code "
-    "and you cannot install packages. You may read anything installed in your container with your file-reading tools, "
-    "the files the robot tools write included. Please solve the task yourself: do not look for a ready-made solution "
-    "to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an "
-    "honour rule; trials are reviewed.")
+    "You may install packages you need (pip, apt), and you may read anything installed in your container, the files "
+    "the robot tools write included. You may write and run code to compute; every robot command and observation must "
+    "go through the `efe-robot` MCP tools; code must not contact the simulator. Please solve the task yourself: do not "
+    "search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded "
+    "demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your "
+    "model's API and the package registries (PyPI, Debian / Ubuntu archives) only.")
 # Open network (PROTOCOL §2, Appendix H.6): the task author's choice, declared as
 # `[agent] network_mode = "public"` in task.toml (network_of). Such a task carries its own `## External material` paragraph (the author
 # says what may be used); normalize keeps it, and writes EXTERNAL_TEXT_OPEN where it has none.
@@ -307,11 +313,8 @@ CUTOFF_NOTE["standard-mcp"] = (
     "are stopped without warning and the episode is graded as it stands at that moment. Every robot tool result "
     "reports `time_left_s`, the service's count of the same limit from your first tool call, so it never runs out "
     "before your time does: your real time left is `time_left_s` minus the time you spent before that call. Plan by "
-    "it. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, "
-    "gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your "
-    "session started, so it never gives you more time than you have: read it with your file-reading tool before you "
-    "decide that time is short, never guess. A robot tool that is still executing when its call has to return answers "
-    "`pending` with an operation id: call `wait` with that `operation` to collect the result.")
+    "it." + _CUTOFF_CLOCK + " A robot tool that is still executing when its call has to return answers `pending` with "
+    "an operation id: call `wait` with that `operation` to collect the result." + _CUTOFF_WAITS + _CUTOFF_CLOSE)
 assert set(CUTOFF_NOTE) == set(MODE_REGISTRY), "every mode of MODE_REGISTRY needs its CUTOFF_NOTE (PROTOCOL §5)"
 # A benchmark whose service counts the limit its own way has a note of its own (PROTOCOL §5).
 CUTOFF_NOTE_OWN = {}   # (benchmark label, mode) -> its note
@@ -337,9 +340,9 @@ CUTOFF_NOTE_TASK_MCP = (
     "count this limit for you: the clocks it reports are the game's own. Your session started when you received this "
     "task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) "
     "and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time "
-    "than you have: read it with your file-reading tool before you decide that time is short, never guess. A tool that "
-    "is still executing when its call has to return answers `pending` with an operation id: call `wait` with that "
-    "`operation` to collect the result.")
+    "than you have: read it (or run `date`) before you decide that time is short, never guess. A tool that is still "
+    "executing when its call has to return answers `pending` with an operation id: call `wait` with that `operation` "
+    "to collect the result." + _CUTOFF_WAITS + _CUTOFF_CLOSE)
 CUTOFF_NOTE_START = "This is wall-clock time from the start of your session;"   # how an earlier note is recognised
 WALL_CLOCK_ENV = "RCB_WALL_CLOCK_S"              # the standard modes' sim service: what its /spec budget and time_left_s report
 CUTOFF_CAP = 14400                               # PROTOCOL §2, no benchmark excepted (ci_checks/check-cutoffs.py)
@@ -1353,7 +1356,7 @@ def default_difficulty(task: Path, rows: dict[str, str]) -> str:
                 "(`/opt/tools/efe_robot.py`), the task's own robot client and a shell.")
     if mode_of(task) in MCP_MODES:
         return (f"Same scene, instance, success rule and time limit as `{base_of(task)}-standard` (see its Difficulty). "
-                "Here the agent has no shell and runs no code: it acts on the robot only through the `efe-robot` MCP "
+                "Here the agent may run code to compute, but it acts on the robot only through the `efe-robot` MCP "
                 "tools (describe, observe, move parts to goals, execute trajectories, wait, signal), one call at a "
                 "time, in the robot base frame's conventions.")
     if mode_of(task) == "standard":

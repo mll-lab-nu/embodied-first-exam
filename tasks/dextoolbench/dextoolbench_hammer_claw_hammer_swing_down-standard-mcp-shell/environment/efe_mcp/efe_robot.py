@@ -109,14 +109,16 @@ def execute_trajectory(space, *, rows=None, native_rows=None, rows_file=None, ac
     call), {"arm": {"dpos": [...], "drot": [...]}} (ee_delta: per-row translation and rotation vector), {"base":
     {"vx": .., "vy": .., "wz": ..}} (whole_body); parts a row does not name hold. space native: `native_rows` are
     number arrays in one of the robot's own action types (`action_type`, see describe_robot), sent unchanged. A long
-    trajectory can come from a file under /app (`rows_file`: .json list of rows, or .npy / .csv of native rows).
-    This robot's parts: arm (arm: 7 joints); left_hand (hand: 22 joints). Spaces: joint, native.
+    trajectory computed by code goes as a file under /app (`rows_file`: a .npy 2-D array or .csv of native rows, or
+    a .json list of native rows or of row objects). This robot's parts: arm (arm: 7 joints); left_hand (hand: 22
+    joints). Spaces: joint, native.
 
     Arguments:
       space ("joint" | "native", required):
       rows (list[dict]): rows for the named spaces [minItems 1]
       native_rows (list[list[float]]): rows for space native [minItems 1]
-      rows_file (str): path under /app of a .json, .npy or .csv file of rows
+      rows_file (str): path under /app of a file of rows: .npy (2-D float array) or .csv of native rows, or .json (a
+          list of native rows or of row objects)
       action_type (str): space native: the robot's action type
       dt (float): seconds between rows (default: the control period) [maximum 0.5]
       interpolate ("linear" | "hold"):

@@ -47,8 +47,11 @@ def main():
         out = subprocess.run([sys.executable, str(tmp / "oracle.py")], env=oenv, capture_output=True, text=True, timeout=120)
         assert out.returncode == 0, out.stdout + out.stderr
         assert "done True success" in out.stdout, out.stdout
-        calls = [json.loads(l) for l in (tmp / "efe-mcp.jsonl").read_text().splitlines()]
+        log = [json.loads(l) for l in (tmp / "efe-mcp.jsonl").read_text().splitlines()]
+        calls = [c for c in log if "tool" in c and "sim" not in c]     # the tool calls (not the request records)
         tools = [c["tool"] for c in calls]
+        assert any(c.get("server") and c.get("via") == "oracle" for c in log), log[:2]   # the oracle's server, labelled
+        assert any(c.get("sim") == "/submit" and c.get("note", "").startswith("efe-mcp:") for c in log), log[:5]
         assert "execute_trajectory" in tools and "describe_robot" in tools, tools
         print("ok oracle through the efe-robot MCP server:", out.stdout.strip().replace("\n", "; "), "| tool calls:", tools)
     finally:

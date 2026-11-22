@@ -201,7 +201,7 @@
   },
   {
    "name": "execute_trajectory",
-   "description": "Execute a dense trajectory, rows dt seconds apart, and block until done. space joint / ee / ee_delta / whole_body: `rows` is a list of objects naming parts, e.g. {\"left\": {\"joint_positions\": [...], \"gripper\": 1}} (joint), {\"left\": {\"position\": [...], \"quaternion_wxyz\": [...]}} (ee, robot base frame at the start of the call), {\"arm\": {\"dpos\": [...], \"drot\": [...]}} (ee_delta: per-row translation and rotation vector), {\"base\": {\"vx\": .., \"vy\": .., \"wz\": ..}} (whole_body); parts a row does not name hold. space native: `native_rows` are number arrays in one of the robot's own action types (`action_type`, see describe_robot), sent unchanged. A long trajectory can come from a file under /app (`rows_file`: .json list of rows, or .npy / .csv of native rows).",
+   "description": "Execute a dense trajectory, rows dt seconds apart, and block until done. space joint / ee / ee_delta / whole_body: `rows` is a list of objects naming parts, e.g. {\"left\": {\"joint_positions\": [...], \"gripper\": 1}} (joint), {\"left\": {\"position\": [...], \"quaternion_wxyz\": [...]}} (ee, robot base frame at the start of the call), {\"arm\": {\"dpos\": [...], \"drot\": [...]}} (ee_delta: per-row translation and rotation vector), {\"base\": {\"vx\": .., \"vy\": .., \"wz\": ..}} (whole_body); parts a row does not name hold. space native: `native_rows` are number arrays in one of the robot's own action types (`action_type`, see describe_robot), sent unchanged. A long trajectory computed by code goes as a file under /app (`rows_file`: a .npy 2-D array or .csv of native rows, or a .json list of native rows or of row objects).",
    "inputSchema": {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "type": "object",
@@ -237,7 +237,7 @@
      },
      "rows_file": {
       "type": "string",
-      "description": "path under /app of a .json, .npy or .csv file of rows"
+      "description": "path under /app of a file of rows: .npy (2-D float array) or .csv of native rows, or .json (a list of native rows or of row objects)"
      },
      "action_type": {
       "type": "string",

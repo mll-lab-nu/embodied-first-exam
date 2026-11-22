@@ -1,7 +1,10 @@
 """RCB -> EFE Robot MCP adapter: the unified tools on top of the task's own eai-standard/2.x client.
 
-The client is the task's `/opt/tools/rcb_client.py` (a 2.1 variant, 2.2 or 2.4); its keyword arguments differ between
-versions, so every call passes only the arguments its signature takes. Conventions (D129): the robot base frame at the
+The client is the task's own `rcb_client.py` (a 2.1 variant, 2.2 or 2.4: the server's copy in /opt/efe_mcp_client in the
+MCP-only mode, where the agent's code does not get it, else /opt/tools); its keyword arguments differ between versions, so
+every call passes only the arguments its signature takes. Every request the client sends is recorded first in the
+server's call log (`on_sim`), and every submit carries the note `efe-mcp:<tool>#<n>`: scripts/mcp_only.py audit
+compares them with the service's episode log. Conventions (D129): the robot base frame at the
 start of the call (+X forward, +Y left, +Z up), metres and radians, quaternions wxyz, gripper 0 = open .. 1 = closed;
 the manifest says how the suite's own frame, quaternion order and gripper scale map onto them."""
 from __future__ import annotations
@@ -12,7 +15,18 @@ import geom
 from geom import Frame, q_from, q_to, canon_q, q_angle
 import workspace
 
-TOOLS_DIR = os.environ.get("EFE_MCP_TOOLS_DIR", "/opt/tools")
+
+
+def _tools_dir() -> str:
+    """Where the robot client is: EFE_MCP_TOOLS_DIR, else the server's own copy (/opt/efe_mcp_client: the MCP-only mode,
+    off the agent's PYTHONPATH), else the task's /opt/tools (the shell variant)."""
+    for d in (os.environ.get("EFE_MCP_TOOLS_DIR"), "/opt/efe_mcp_client", "/opt/tools"):
+        if d and os.path.isfile(os.path.join(d, "rcb_client.py")):
+            return d
+    return os.environ.get("EFE_MCP_TOOLS_DIR") or "/opt/tools"
+
+
+TOOLS_DIR = _tools_dir()
 
 
 class ToolError(Exception):
@@ -51,6 +65,20 @@ def _jsonable(o):
     return o
 
 
+class _Traced:
+    """The client module's `requests` with every POST reported first (RcbAdapter._sim): the requests this server sent."""
+
+    def __init__(self, mod, cb):
+        self._mod, self._cb = mod, cb
+
+    def __getattr__(self, k):
+        return getattr(self._mod, k)
+
+    def post(self, url, *a, **kw):
+        self._cb(url)
+        return self._mod.post(url, *a, **kw)
+
+
 class RcbAdapter:
     def __init__(self, manifest: dict):
         self.m = manifest
@@ -61,6 +89,8 @@ class RcbAdapter:
         self.n = 0
         self.lock = threading.Lock()
         self.connect_error = None
+        self.on_sim = None          # the server's call log: one record per request to the service, before it is sent
+        self._note, self._seconds = "", 0.0
 
     # ------------------------------------------------------------------ connection and client calls
     def connect(self):
@@ -69,6 +99,8 @@ class RcbAdapter:
         if TOOLS_DIR not in sys.path:
             sys.path.insert(0, TOOLS_DIR)
         import rcb_client
+        if getattr(rcb_client, "requests", None) is not None and not isinstance(rcb_client.requests, _Traced):
+            rcb_client.requests = _Traced(rcb_client.requests, self._sim)
         self.rc = rcb_client
         self.r = rcb_client.Robot()
         self.spec = self.r.spec()
@@ -125,6 +157,22 @@ class RcbAdapter:
                 self.m["parts"].pop(name)
         return probs
 
+    def _sim(self, url):
+        """A request about to be sent to the service: its path, a submit's note, an observation's seconds."""
+        if self.on_sim is None:
+            return
+        from urllib.parse import urlsplit
+        path = urlsplit(str(url)).path or "/"
+        rec = {"sim": path}
+        if path == "/submit":
+            rec["note"] = self._note
+        elif path == "/observe":
+            rec["seconds"] = self._seconds
+        try:
+            self.on_sim(rec)
+        except Exception:       # the record never breaks a call
+            pass
+
     def _call(self, fn, *a, **kw):
         params = inspect.signature(fn).parameters
         if not any(p.kind == inspect.Parameter.VAR_KEYWORD for p in params.values()):
@@ -142,6 +190,7 @@ class RcbAdapter:
                 kw["depth"] = True
             else:
                 kw["include_depth"] = True
+        self._seconds = float(seconds)
         return self._call(self.r.get_obs, **kw)
 
     def submit(self, typ, A, dt, interpolate="linear", cams=None, video="none", note=None, tool="?"):
@@ -153,8 +202,12 @@ class RcbAdapter:
         if note is None:
             note = f"efe-mcp:{tool}#{self.n}" if self.m.get("control", {}).get("trace_note", True) else ""
         cams = list(cams if cams is not None else self.action_cams())
-        return self._call(self.r.submit, typ, A, dt=None if dt is None else float(dt), interpolate=interpolate,
-                          cameras=cams, video=video, note=note)
+        self._note = note
+        try:
+            return self._call(self.r.submit, typ, A, dt=None if dt is None else float(dt), interpolate=interpolate,
+                              cameras=cams, video=video, note=note)
+        finally:
+            self._note = ""
 
     # ------------------------------------------------------------------ manifest helpers
     def cams_all(self):
@@ -1406,7 +1459,7 @@ class RcbAdapter:
             raise ToolError(f"signal {kind!r} is not available here (available: {sorted(S) or ['done']})")
         sg = S[kind]
         if sg.get("finish"):
-            import requests
+            requests = getattr(self.rc, "requests", None) or __import__("requests")    # traced (_Traced)
             r = requests.post(self.r.base + "/finish", json={}, timeout=(5, 120))
             return {"finished": r.status_code == 200, "answer": _jsonable(r.json() if r.content else {})}, []
         typ = sg["type"]

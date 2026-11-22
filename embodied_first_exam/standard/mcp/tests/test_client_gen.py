@@ -45,8 +45,10 @@ R.close(); print("client ok")
         cli = subprocess.run([sys.executable, str(tmp / "efe_robot.py"), "wait", '{"seconds": 0.2}'], env=env,
                              capture_output=True, text=True, timeout=60)
         assert cli.returncode == 0 and "time_left_s" in json.loads(cli.stdout), cli.stdout + cli.stderr
-        calls = [json.loads(x) for x in (tmp / "calls.jsonl").read_text().splitlines()]
+        log = [json.loads(x) for x in (tmp / "calls.jsonl").read_text().splitlines()]
+        calls = [c for c in log if "tool" in c and "sim" not in c]      # the tool calls (not the request records)
         assert calls and all(c.get("via") == "python" for c in calls), calls
+        assert all(c.get("via") == "python" for c in log if "server" in c), log      # the servers it started
         print("ok generated Python client against the toy service:", [c["tool"] for c in calls])
     finally:
         sim.terminate()

@@ -23,8 +23,11 @@ Your actions are the sport's skill API (`act`, `toss`, `move`): the platform exe
 
 ## Robot tools (MCP server `efe-robot`)
 You play only through the tools of the MCP server `efe-robot` (in your tool list as `efe-robot` tools, for example
-`mcp__efe-robot__act`). You have no shell and cannot run code. Where this text names a `game` command or its HTTP call,
-use the tool of the same name:
+`mcp__efe-robot__act`). You may write and run code to compute; every robot command and observation must go through the
+efe-robot MCP tools; code must not contact the simulator. Each command or observation is a tool call you make yourself:
+no script starts or calls the `efe-robot` server, and the service's record of its requests is checked against the
+server's. Where this text names a `game` command or its HTTP call (the `game` command is not installed here), use the
+tool of the same name:
 
 | `game` command | Tool |
 |---|---|
@@ -80,7 +83,7 @@ Everything you need is in `spec`: the world frame, the release point, the camera
 execution scatter. The physics engine is mujoco (robots at 1 ms: the arm through the Franka Panda's setpoint generator and torque limits, the base by PD within the gantry's force) + a point-mass shuttle with quadratic drag integrated at 1 ms (sim/bm.py).
 
 ## External material
-In this setting you act on the robot only through the `efe-robot` tools: you have no shell, you cannot run code and you cannot install packages. You may read anything installed in your container with your file-reading tools, the files the robot tools write included. Please solve the task yourself: do not look for a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed.
+You may install packages you need (pip, apt), and you may read anything installed in your container, the files the robot tools write included. You may write and run code to compute; every robot command and observation must go through the `efe-robot` MCP tools; code must not contact the simulator. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
 
 ## Resources
 Your container: **2 CPUs**, **5 GiB of memory**, **2048 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
@@ -88,4 +91,4 @@ Your container: **2 CPUs**, **5 GiB of memory**, **2048 processes and threads** 
 ## Time limit
 You have 14400 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
 
-This is wall-clock time from the start of your session; the time the tools take counts. When it is up you are stopped without warning and graded on what stands at that moment, as the sections above say. The service does not count this limit for you: the clocks it reports are the game's own. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it with your file-reading tool before you decide that time is short, never guess. A tool that is still executing when its call has to return answers `pending` with an operation id: call `wait` with that `operation` to collect the result.
+This is wall-clock time from the start of your session; the time the tools take counts. When it is up you are stopped without warning and graded on what stands at that moment, as the sections above say. The service does not count this limit for you: the clocks it reports are the game's own. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. A tool that is still executing when its call has to return answers `pending` with an operation id: call `wait` with that `operation` to collect the result. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).

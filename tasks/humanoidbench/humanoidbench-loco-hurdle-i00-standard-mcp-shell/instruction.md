@@ -41,7 +41,9 @@ robot's own action types exactly as the sections below describe them (their fram
   the motion is done, with `reached` (errors per goal), a `failure` category if a goal was not reached, the state and
   the path of a frame per camera.
 - `execute_trajectory(space, rows | native_rows | rows_file, dt?, interpolate?)`: a dense trajectory, rows `dt` seconds
-  apart; a long one can come from a file under `/app` (`.npy` / `.csv` of native rows, `.json` of rows).
+  apart. `rows_file` is the path of a file under `/app` that holds the rows: a `.npy` (2-D float array) or `.csv` (one
+  row per line, comma-separated) of native rows for space `native` (with `action_type`), or a `.json` list: of number
+  arrays (native rows) or of row objects as in `rows` (the other spaces). Long arrays go this way rather than inline.
 - `wait(seconds?, operation?)`: let time pass holding the current command, or collect a pending operation.
 - `reset_episode()`: a new episode from the same starting state (it uses one reset of the budget).
 - `signal(kind, note)`: `done` records that you are finished (the episode itself ends as described above).

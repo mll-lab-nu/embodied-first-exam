@@ -15,9 +15,12 @@ SERVER = os.environ.get("EFE_MCP_SERVER", "/opt/tools/efe_mcp/server.py")
 
 
 def _load_mcp_client():
-    """mcp_client.py next to the server, loaded by path (the server's directory is not put on sys.path)."""
+    """mcp_client.py: the solution's own copy next to this file (the MCP-only mode ships none to the agent), else the
+    one next to the server; loaded by path (neither directory is put on sys.path)."""
     import importlib.util
-    spec = importlib.util.spec_from_file_location("efe_mcp_client", pathlib.Path(SERVER).parent / "mcp_client.py")
+    here = pathlib.Path(__file__).resolve().parent / "mcp_client.py"
+    spec = importlib.util.spec_from_file_location(
+        "efe_mcp_client", here if here.is_file() else pathlib.Path(SERVER).parent / "mcp_client.py")
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     return mod
@@ -39,7 +42,8 @@ def _client() -> McpClient:
     if _CLIENT is None:
         here = str(pathlib.Path(__file__).resolve().parent)
         pp = [p for p in os.environ.get("PYTHONPATH", "").split(os.pathsep) if p and os.path.abspath(p) != here]
-        env = {"PYTHONPATH": os.pathsep.join(pp) or "/opt/tools", "EFE_MCP_ORACLE": "0", "EFE_MCP_RAW_META": "1"}
+        env = {"PYTHONPATH": os.pathsep.join(pp) or "/opt/tools", "EFE_MCP_ORACLE": "0", "EFE_MCP_RAW_META": "1",
+               "EFE_MCP_VIA": "oracle"}
         _CLIENT = McpClient(cmd=[sys.executable, SERVER], env=env)
     return _CLIENT
 
