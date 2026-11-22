@@ -1,25 +1,29 @@
-# AutoBio · insert — frozen instance
+# AutoBio · insert (privileged)
 
-You control a **UR5e** arm (6 joints) with a Robotiq 2F-85 gripper, fixed to the bench, in AutoBio's simulated biology laboratory (MuJoCo 3.3.0), via Python, through joint
-position targets.
-**Task:** Move the 50 mL centrifuge tube from the rack it stands in to the other rack, into the slot at row 0, column 4 (AutoBio's indices: `s.task.rack2.get_position(s.data, 0, 4, '50ml')`). Success at the first control step where the tube's body is within 15 mm (horizontally) of that slot's centre and its height is between 0.829 and 0.831 m (standing in a slot it is at 0.830 m).
+## Task
+A UR5e arm (6 joints) with a Robotiq 2F-85 gripper, fixed to the bench, in AutoBio's simulated biology laboratory
+(MuJoCo). On the bench: two 10-slot tube racks (2 rows of 5 each) side by side, with one capped 50 mL tube standing in
+one of them. Move the 50 mL centrifuge tube (orange screw cap) from the rack it stands in to the other rack, into the
+slot AutoBio calls row 0, column 4 of that rack: of its two rows the one farther from the robot's base, and in that row
+the end slot on the side of the first rack. The scene is one fixed instance. You have the full simulator to develop
+with; you hand in a trajectory of robot actions.
 
-On the bench: two 10-slot tube racks (2 rows of 5 each) side by side, with one capped 50 mL tube standing in one of them.
+## Goal
+Success: the tube stands upright in that slot, seated all the way down. The episode ends the moment that is reached. A
+physics warning (an unstable simulation, for instance after the robot was driven hard into something) ends the episode
+at once, as a failure.
 
-AutoBio's own success test is `s.task.check()`: class `Insert` in `/opt/AutoBio/autobio/transfer_centrifuge_tube.py`.
-Embodied First Exam evaluates it after every control step: the first step at which it holds ends the episode in success (AutoBio's own rule for this task; its time limit is lifted).
+Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, path)`. It is replayed open-loop
+from the same initial state and scores 1 if its episode ends in success. Leave the script that produced it at
+`/app/output/gen.py`. Save a valid one early and overwrite it when you have a better one.
 
-This is a *fixed scene instance*: the start pose, the objects and the goal never change between resets. You may reset and
-retry as many times as you want. Your deliverable is **one replayable trajectory**, not a general policy.
+Rules: write your own controller; do not use the benchmark's demonstrations, trained policies or any published solution.
+Only the trajectory's rows count: anything else you change in the simulator while you develop changes nothing in the
+replay.
 
-## Deliverable
-Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below). It is replayed
-open-loop from the same initial state in one fresh process and scored 1 if the episode ends in success, else 0.
-Also leave the script that produced it at `/app/output/gen.py`.
-
-Save a trajectory as soon as you have one that works, improve it while time remains, and do not stop early.
-
-## Tooling (already installed; run `python` from any directory)
+## Robot Interface
+### Session
+`rcb_autobio` (installed; run `python` from any directory):
 ```python
 from rcb_autobio import Session
 s = Session(instance="/app/instance.json")   # a few seconds
@@ -31,7 +35,7 @@ s.command()                        # the targets in effect (after reset: the one
 s.step(a)                          # one control step (2 ms) with 7 targets; s.step(a, n=25) holds them 25 steps; False once the episode is over
 s.status()                         # {'success', 'done', 'reason', 'score', 'steps', 'state_sha', 'instance_ok', ...}
 s.record_start(); ...; actions = s.record_stop()   # (T, 7) targets, one row per control step executed
-s.replay(actions)                  # resets, replays open-loop until the episode ends or the rows do, returns status -> self-check
+s.replay(actions)                  # resets, replays open-loop until the episode ends or the rows do, returns status
 s.save_trajectory(actions, "/app/output/trajectory.npz")
 s.tcp_poses()                      # tool frames (`tcp`): x y z + wxyz quaternion, world frame
 s.fk(q); s.ik({frame: pose})       # kinematics of the arm joints (s.kinematic_joints()), no physics, no collision check
@@ -41,27 +45,32 @@ s.close()                          # release the renderer when you are done with
 ```
 There are no ready-made motions: AutoBio's scripted experts are not in this image. Its other code is, under
 `/opt/AutoBio/autobio` (importable once a Session exists): the scene helpers `s.task` is built from, its inverse
-kinematics (`kinematics.py`) and its path timing (`topp.py`).
+kinematics (`kinematics.py`) and its path timing (`topp.py`). One control step is one physics step, 2 ms: a row is
+executed for exactly one step, so a motion lasting 1 s is 500 rows (repeat a row to hold a target). Your wall-clock time
+is the budget (the reference replays at about 1000 control steps/s here); the one technical cap is 600000 rows per
+trajectory (1200 s of simulated time).
 
-CLI equivalent of the grader:
-`python /opt/tools/rcb_autobio.py replay --instance /app/instance.json --traj /app/output/trajectory.npz`
-
-## Conventions
-- Action: 7 position targets per control step, in this order: `shoulder_pan`, `shoulder_lift`, `elbow`, `wrist_1`, `wrist_2`, `wrist_3`, `2f85_fingers_actuator` (the Robotiq gripper: 0 open .. 255 closed). Arm joints are in rad. Each entry is the target of a PD position drive (stiffness, damping and force limit per entry: `s.actuators()`); a target outside the entry's range is clipped to it.
-- One control step is one physics step, 2 ms: a row is executed for exactly one step, so a motion lasting 1 s is 500
-  rows (repeat a row to hold a target). Your wall-clock time is the budget (the reference replays at about
-  1000 control steps/s here); the one technical cap is 600000 rows per trajectory (1200 s of simulated
-  time). A MuJoCo physics warning (an unstable simulation) ends the episode as a failure.
+### Actions
+- An action has 7 position targets per control step, in this order: `shoulder_pan`, `shoulder_lift`, `elbow`, `wrist_1`,
+  `wrist_2`, `wrist_3`, `2f85_fingers_actuator` (the Robotiq gripper: 0 open .. 255 closed). Arm joints are in rad. Each
+  entry is the target of a PD position drive (stiffness, damping and force limit per entry: `s.actuators()`); a target
+  outside the entry's range is clipped to it.
 - World frame: z up, metres; poses are x y z + wxyz quaternion; angles in rad.
-- Only the rows are replayed: anything else you change in `s.model` or `s.data` is lost in the grader's fresh process.
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+## Others
+- To check a trajectory the way it is graded, replay it from the command line:
+  `python /opt/tools/rcb_autobio.py replay --instance /app/instance.json --traj /app/output/trajectory.npz`.
 
-## Resources
-Your container: **4 CPUs**, **12 GiB of memory**, **8192 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
-
-## Time limit
-You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
-
-This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+## Limits
+- Time: 3600 s of wall-clock time from the start of your session; everything counts (the simulator's start-up too). At
+  the end you are stopped without warning and only what is in `/app/output/` at that moment is graded. Time left:
+  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`). Calls into a long-running process can block for their
+  whole wait time: use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, the simulator's and the benchmark's source included. Do not search for or
+  download a ready-made solution (published or reference solutions, recorded demonstrations, trained policies); trials
+  are reviewed.
+- Resources: 4 CPUs, 12 GiB memory, 8192 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`),
+  no GPU. Over a cap a process can be killed (the CPU cap only slows you down); usage: `/run/rcb-limits/usage.json`.
+- Resets: as many as you like (`s.reset()`).

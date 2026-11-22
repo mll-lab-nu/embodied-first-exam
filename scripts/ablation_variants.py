@@ -21,6 +21,12 @@ the commits' merge base). Then `[task] name` and the monitor's limits files take
 recomputed. The variants are the task versions of these commits, with the files images the runs pinned; they do not
 follow later changes to the base tasks under tasks/.
 
+Instructions v2 (owner decisions D158-D165): on the instructions-v2 branch every variant's instruction.md is in the v2
+skeleton (scripts/task_conventions.py V2_SECTIONS), converted from the text `generate` writes by the instructions' text
+generator (kept outside the repository, like the benchmarks' generators): the ablation's own sections become H3s
+(`### This run: ...`: no success signal under Goal, the state queries and the resets under Robot Interface) and the
+rules they change are restated. `check` accepts the sections at either level (FORM's headings are matched as text).
+
     python3 scripts/ablation_variants.py fetch                 fetch the ABLATIONS commits from FORK (git objects only)
     python3 scripts/ablation_variants.py generate [abl ...]    write ablations/<abl>/ for every core task
     python3 scripts/ablation_variants.py check [abl ...]       exit 1 unless every core task has its variant, in form

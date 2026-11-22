@@ -1,38 +1,35 @@
-# DexHand: Assemble a neatly aligned hamburger
+# DexHand · Assemble a neatly aligned hamburger (privileged)
 
-Assemble a neat hamburger on the serving plate. The bottom bun already rests on the plate; the beef patty, cheese slice, tomato slice, lettuce leaf and top bun start separately on preparation supports. Stack them from bottom to top in exactly this order: bottom bun, patty, cheese, tomato, lettuce, top bun. Success requires all six layers at the same time: every ingredient center within 12 mm horizontally of the plate center, every layer upright within 0.22 radians, heights strictly increasing in recipe order, all five consecutive pairs in physical contact and the bottom bun touching the plate. Then release the hamburger: with no hand contact on any ingredient, every ingredient linear speed at most 0.025 m/s and angular speed at most 0.25 rad/s, the complete condition must hold for 100 consecutive controls (2 s). The episode ends with success at that moment; a partial stack never counts. The episode ends immediately with failure, checked after every 2 ms physics substep, when any ingredient touches the table top or the floor (dropped, or knocked off its support, the plate or the stack), when any ingredient body falls below the table top (z < 0.30 m) or leaves the workspace box x in [-0.64, 0.64] m, y in [-0.52, 0.52] m, z in [0.30, 0.80] m, when a passive cheese or lettuce bending angle exceeds 0.65 radians, or when the physics becomes unstable; later actions cannot undo a failure. Only robot actuator targets are allowed; no object teleports, grasp welds, scripted object motion or direct ingredient forces. Lettuce and cheese use three passive elastic strips; other ingredients are rigid contact proxies. This task evaluates assembly under that approximation, not continuum food deformation or ingredient damage. The episode allows at most 7500 controls at 50 Hz; reaching that limit without success is a failure.
+## Task
+One dexterous hand on a six-axis wrist stage (no arm), at a table with a serving plate (DexHand, MuJoCo). Assemble a
+neat hamburger on the serving plate: the bottom bun already rests on the plate, and the beef patty, cheese slice, tomato
+slice, lettuce leaf and top bun start separately on preparation supports. Stack them from bottom to top in exactly this
+order: bottom bun, patty, cheese, tomato, lettuce, top bun. The scene is one fixed instance.
+You have the full simulator to develop with; you hand in a trajectory of motor targets.
 
-You control one dexterous hand mounted on a six-DoF wrist positioning stage (three prismatic and three serial revolute
-joints, no arm). The stage and the fingers are position actuated in the physics engine under native force bounds;
-grasping, carrying and releasing require physical contact. The controller runs at 50 Hz, with ten 2 ms physics
-substeps.
+## Goal
+Success: all six layers are stacked in that order, neatly centred on the plate and lying flat, each layer resting on the
+one below and the bottom bun on the plate; then the hand has let go and the burger stands still on its own for two
+seconds. A partial stack never counts. A replay ends as soon as the task is done; later rows are not run.
 
-## Hands
-Two genuine manufacturer hand models are available: `sharpa` (Sharpa Wave, 22 finger actuators; the default) and `wuji` (Wuji Hand 2.2, 20 finger actuators). The task, scene, mount, objects and success predicate are the same for both; only one hand is used per episode.
-Both hands hang from the same six-axis wrist stage, with the same wrist joints, ranges, gains and start targets.
-Choose the hand with `Session(..., hand="wuji")` or the environment variable `DEXHAND_HAND=wuji` (default `sharpa`). Action rows are `28` wide for `sharpa` and `26` wide for `wuji`; `s.actuator_names` gives the exact order. `s.save_trajectory(actions, path)` records the hand in the archive (`hand` member). The verifier rebuilds the scene with the recorded hand (default `sharpa` when the member is absent) and rejects a trajectory whose width does not match that hand; rows are never padded, truncated or converted between hands.
+The episode ends at once as a failure if an ingredient touches the table top or the floor (dropped, or knocked off its
+support, the plate or the stack) or leaves the work area, if the cheese or the lettuce is bent sharply, or if the
+physics becomes unstable. Later actions cannot undo a failure.
 
-## Action layout
-Each row is one 50 Hz control. The first six entries are the wrist-stage targets, identical for both hands:
-`wrist_x, wrist_y, wrist_z` (metres, world frame) and `wrist_rx, wrist_ry, wrist_rz` (radians, serial XYZ joints, not a
-quaternion). The finger targets follow in native actuator order, in radians:
+Deliverable: `/app/output/trajectory.npz` with a finite numeric `actions` array of shape `(T, 28)` for `sharpa` or
+`(T, 26)` for `wuji`, at most 7500 rows, plus the `hand` member (`s.save_trajectory` writes both), and
+`/app/output/gen.py`, the script that produced it. Save it compressed (`numpy.savez_compressed`; `s.save_trajectory`
+does): an archive larger than 64 MB is rejected. Save a valid one early and overwrite it when you have a better one.
 
-- `sharpa`: 28 values, the six wrist targets and 22 Sharpa Wave finger targets `right_thumb_CMC_FE` ... `right_pinky_DIP`.
-- `wuji`: 26 values, the same six wrist targets and 20 Wuji Hand 2.2 finger targets `r_wuji_r_THJ0..3`,
-  `r_wuji_r_FFJ0..3`, `r_wuji_r_MFJ0..3`, `r_wuji_r_RFJ0..3`, `r_wuji_r_LFJ0..3`.
+Rules: write your own controller; do not use the benchmark's demonstrations, trained policies or any published solution.
+Only the actuator targets count: changing `s.data` or the scene while you develop changes nothing in the replay.
 
-Every target must lie within `s.model.actuator_ctrlrange`. Both hands start from the same wrist targets; the frozen
-finger start pose of each hand is in `task.json` (`initial_targets`).
+Only the robot's actuator targets act on the scene: no object teleports, grasp welds, scripted object motion or applied
+forces.
 
-## Deliverable
-Save `/app/output/trajectory.npz` with a finite numeric `actions` array of shape `(T, 28)` for `sharpa` or `(T, 26)`
-for `wuji`, at most 7500 rows, plus the `hand` member (`s.save_trajectory` writes both), and
-`/app/output/gen.py`, the script that produced it. The separate verifier rebuilds the frozen scene with the recorded
-hand and replays only these motor targets in one fresh process, which must succeed. A replay stops at the first success or the first failure; later rows are not executed. Object poses,
-configuration overrides, pickled arrays and success claims are not deliverables and are never read.
-Save the archive compressed (`numpy.savez_compressed`; `s.save_trajectory` does): an archive file larger than 64 MB is rejected with reward 0.
-
-## Tooling
+## Robot Interface
+### Session
+`/opt/tools/rcb_dexhand.py`, importable as `rcb_dexhand`:
 ```python
 from rcb_dexhand import Session
 s = Session("assemble_hamburger")               # default hand: DEXHAND_HAND or "sharpa"
@@ -49,17 +46,51 @@ s.reset()                                       # exact frozen reset
 s.replay(actions)                               # reset, run rows until the episode ends, return status()
 s.save_trajectory(actions, "/app/output/trajectory.npz")
 ```
-Read `/opt/tools/task.json`, `scene.py` and `runtime.py` for the complete geometry, failure checks and predicate.
-The world frame has z up; lengths are in metres and angles in radians. The serving plate is centred at
-`task.json` `target_xy`; the table top is at z = 0.30 m.
+The world frame has z up; lengths are in metres and angles in radians. The serving plate is centred at `task.json`
+`target_xy`; the table top is at z = 0.30 m.
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+### Actions
+Each row is one 50 Hz control. The first six entries are the wrist-stage targets, identical for both hands:
+`wrist_x, wrist_y, wrist_z` (metres, world frame) and `wrist_rx, wrist_ry, wrist_rz` (radians, serial XYZ joints, not a
+quaternion). The finger targets follow in native actuator order, in radians:
 
-## Resources
-Your container: **2 CPUs**, **4 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
+- `sharpa`: 28 values, the six wrist targets and 22 Sharpa Wave finger targets `right_thumb_CMC_FE` ...
+  `right_pinky_DIP`.
+- `wuji`: 26 values, the same six wrist targets and 20 Wuji Hand 2.2 finger targets `r_wuji_r_THJ0..3`,
+  `r_wuji_r_FFJ0..3`, `r_wuji_r_MFJ0..3`, `r_wuji_r_RFJ0..3`, `r_wuji_r_LFJ0..3`.
 
-## Time limit
-You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+Every target must lie within `s.model.actuator_ctrlrange`. Both hands start from the same wrist targets; the frozen
+finger start pose of each hand is in `task.json` (`initial_targets`).
 
-This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+### Hands
+Two hand models: `sharpa` (Sharpa Wave, 22 finger actuators; the default) and `wuji` (Wuji Hand 2.2, 20 finger
+actuators); the task is the same for both. Choose the hand with `Session(..., hand="wuji")` or the environment variable
+`DEXHAND_HAND=wuji` (default `sharpa`). `s.save_trajectory(actions, path)` records the hand in the archive (`hand`
+member, `sharpa` when absent); a trajectory whose row width does not match its hand is rejected. Action rows are `28`
+wide for `sharpa` and `26` wide for `wuji`; `s.actuator_names` gives the exact order. Both hands hang from the same
+six-axis wrist stage, with the same wrist joints, ranges, gains and start targets.
+
+### Robot
+You control one dexterous hand mounted on a six-DoF wrist positioning stage (three prismatic and three serial revolute
+joints, no arm). The stage and the fingers are position actuated in the physics engine under native force bounds;
+grasping, carrying and releasing require physical contact. The controller runs at 50 Hz, with ten 2 ms physics substeps.
+
+The wrist targets `wrist_x, wrist_y, wrist_z` are world positions of the hand mount (metres) and
+`wrist_rx, wrist_ry, wrist_rz` serial XYZ joint angles (radians, not a quaternion).
+
+## Others
+- The lettuce and the cheese are soft: each is three elastic strips that bend. The other ingredients are rigid.
+
+## Limits
+- Time: 3600 s of wall-clock time from the start of your session; everything counts (the simulator's start-up too). At
+  the end you are stopped without warning and only what is in `/app/output/` at that moment is graded. Time left:
+  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`). Calls into a long-running process can block for their
+  whole wait time: use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, the simulator's and the benchmark's source included. Do not search for or
+  download a ready-made solution (published or reference solutions, recorded demonstrations, trained policies); trials
+  are reviewed.
+- Resources: 2 CPUs, 4 GiB memory, 1024 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`), no
+  GPU. Over a cap a process can be killed (the CPU cap only slows you down); usage: `/run/rcb-limits/usage.json`.
+- Resets: as many as you like (`s.reset()`).

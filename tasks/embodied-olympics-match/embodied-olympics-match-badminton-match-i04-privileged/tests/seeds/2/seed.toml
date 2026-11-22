@@ -1,5 +1,6 @@
-# Seed 2 of this match (tests/match_instance.json under this directory: the privileged verifier's frozen settings); the text
-# that names the seed: compose RO_SEED, the privileged instruction, the full-simulator adapter's INSTANCES.
+[[replace]]
+old = "## Task\nRobot singles badminton on a small court (the BWF court's lengths × 0.4, the net at its full height): each player is a\nFranka Panda arm with a racket, held to the real Panda's limits, on an x-y gantry base; the shuttle has the real\nshuttle's high drag and does not bounce. Rally scoring, one game to 11 points; the players' robots serve. You are seat\n`A` against the scripted level-5 opponent, seed 1034: the same fixed match as the realtime twin\n(`embodied-olympics-match-badminton-match-i04-realtime`), with the same robot, actions, rules, limits and opponent. The\nworld runs at 1/20 of real speed. You have the full simulator to develop with; you hand in a program that plays the\nmatch."
+new = "## Task\nRobot singles badminton on a small court (the BWF court's lengths × 0.4, the net at its full height): each player is a\nFranka Panda arm with a racket, held to the real Panda's limits, on an x-y gantry base; the shuttle has the real\nshuttle's high drag and does not bounce. Rally scoring, one game to 11 points; the players' robots serve. You are seat\n`A` against the scripted level-5 opponent, seed 2: the same fixed match as the realtime twin\n(`embodied-olympics-match-badminton-match-i04-realtime`), with the same robot, actions, rules, limits and opponent. The\nworld runs at 1/20 of real speed. You have the full simulator to develop with; you hand in a program that plays the\nmatch."
 
 [[replace]]
 old = "RO_SEED: \"1034\""

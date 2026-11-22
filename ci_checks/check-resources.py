@@ -31,6 +31,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 from task_conventions import (  # noqa: E402  (one renderer of the paragraph and the README section, one rule reader)
     CUTOFF_HEADING, RESOURCES_HEADING, RTX_GPU_MODELS, iter_tasks, mode_of, readme_resources, render_external,
     render_resources, rule_for, task_caps)
+import task_conventions as tconv  # noqa: E402  (instructions v2: render_limits)
 from rcb_monitor import inject  # noqa: E402  (one reader of the compose file's services and caps)
 
 FLOW_DEPLOY_RE = re.compile(r"^\s+(deploy|resources|reservations|devices|limits|capabilities):\s*[\[{]")
@@ -187,12 +188,23 @@ def check(task: Path) -> list[str]:
         return errs
     # instruction.md: `## External material`, then `## Resources`, before the closing `## Time limit`
     ins = (task / "instruction.md").read_text() if (task / "instruction.md").is_file() else ""
-    ins = re.sub(rf"(?ms)\n^{re.escape(CUTOFF_HEADING)}[ \t]*\n.*\Z", "", ins)   # with the blank line before it
-    want = render_resources(task)
-    if not ins.endswith("\n" + want):
+    if tconv.is_v2(ins):      # instructions v2: the Network and Resources lines of `## Limits`, rendered
+        lim = tconv.render_limits(task, ins)
+        for lab, text in (("Network", tconv.limits_network(task, dict(tconv.limits_lines(ins)).get("Network"))),
+                          ("Resources", tconv.limits_resources(task))):
+            if " ".join(f"{lab}: {text}".split()) not in " ".join(ins.split()):
+                errs.append(f"instruction.md's `{tconv.LIMITS_HEADING}` does not state the {lab} line rendered for the task "
+                            f"(run python3 scripts/task_conventions.py {rel(task)})")
+        if not ins.endswith("\n" + lim):
+            errs.append(f"instruction.md does not end with its rendered `{tconv.LIMITS_HEADING}` (run python3 "
+                        f"scripts/task_conventions.py {rel(task)})")
+        ins = None
+    if ins is None:
+        pass
+    elif not (ins := re.sub(rf"(?ms)\n^{re.escape(CUTOFF_HEADING)}[ \t]*\n.*\Z", "", ins)).endswith("\n" + (want := render_resources(task))):
         errs.append(f"instruction.md does not end (before `## Time limit`) with the `{RESOURCES_HEADING}` paragraph "
                     f"rendered from the caps (run python3 scripts/task_conventions.py {rel(task)})")
-    elif not ins[: -len(want)].endswith("\n" + render_external(task) + "\n"):
+    elif not ins[: -len(want)].endswith("\n" + render_external(task) + "\n"):   # v1
         errs.append("instruction.md does not state `## External material` (PROTOCOL §5; scripts/task_conventions.py "
                     f"EXTERNAL_TEXT) just before `{RESOURCES_HEADING}`")
     readme = (task / "README.md").read_text() if (task / "README.md").is_file() else ""

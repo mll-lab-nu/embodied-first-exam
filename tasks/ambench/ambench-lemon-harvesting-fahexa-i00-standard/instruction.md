@@ -1,42 +1,45 @@
-# AM-Bench · Lemon Harvesting — STANDARD MODE (robot as a service, eai-standard/2.2)
+# AM-Bench · ambench-lemon-harvesting-fahexa-i00 (standard)
 
-You control a simulated **aerial manipulator** **as if it were real hardware**: a fully actuated hexarotor (six tilted
-rotors, so it can hold any attitude while hovering) carrying a small arm (four joints: three pitch joints and a roll joint)
-with a two-finger gripper, in AM-Bench on Isaac Lab / Isaac Sim 5.1. The simulator runs in a service you cannot open. You
-get one client and one episode. **Task:** One lemon and six limes are fixed to the front face of a wall in front of the hovering aerial manipulator, and a grey storage tote sits on a small table against the wall to the robot's left. Harvest the lemon: free it from the wall and get it into the tote. Success needs the lemon's reference point (the base of the fruit) inside the tote's nominal box while the gripper is fully open.
+## Task
+A simulated aerial manipulator: a fully actuated hexarotor (six tilted rotors, so it can hold any attitude while
+hovering) carrying a small arm (four joints: three pitch joints and a roll joint) with a two-finger gripper, in AM-Bench
+(Isaac Lab). One lemon and six limes are fixed to the front face of a wall in front of the hovering aerial manipulator,
+and a grey storage tote sits on a small table against the wall to the robot's left. Harvest the lemon: free it from the
+wall and get it into the tote. The robot runs as a service you reach only through its client, as if it were real
+hardware: one live episode.
 
-## Scene
-The ground is the world's z = 0 plane. In front of the robot stands an immovable (kinematic) wall: a slab 0.1 m thick, 2.0 m wide and 2.0 m tall with a concrete-block surface, its front face turned toward the robot. The wall is the same in every instance. Seven fruits sit on its front face, each with its long axis pointing at the robot: one yellow lemon (about 7.6 x 5 x 5 cm, 50 g) and six green limes (about 7.6 x 6 x 6 cm). The limes are fixed in place and cannot be moved. The lemon is a free rigid body held to the wall by a breakable fixed joint: it stays put until the joint has to carry more than 10 N of force or 10 N m of torque, after which it is loose and falls under gravity. Where the fruits sit varies between instances: anywhere in a band 1 m wide and 0.4 m tall, centred sideways on the wall in its upper half, at least 15 cm apart. To the robot's left, against the wall, stands a small table (white top, about 0.45 x 0.48 m and 0.66 m tall) carrying an open-top grey plastic tote, 40 x 30 x 17 cm; table and tote are immovable and the same in every instance. Nothing moves by itself. The robot starts hovering level and motionless, facing the wall, with its arm at its zero joint configuration (end effector a little ahead of and above the airframe) and the gripper closed.
+### Scene
+The ground is the world's z = 0 plane. In front of the robot stands an immovable (kinematic) wall: a slab 0.1 m thick,
+2.0 m wide and 2.0 m tall with a concrete-block surface, its front face turned toward the robot. The wall is the same in
+every instance. Seven fruits sit on its front face, each with its long axis pointing at the robot: one yellow lemon
+(about 7.6 x 5 x 5 cm, 50 g) and six green limes (about 7.6 x 6 x 6 cm). The limes are fixed in place and cannot be
+moved. The lemon is a free rigid body held to the wall by a breakable fixed joint: it stays put until the joint has to
+carry more than 10 N of force or 10 N m of torque, after which it is loose and falls under gravity. Where the fruits sit
+varies between instances: anywhere in a band 1 m wide and 0.4 m tall, centred sideways on the wall in its upper half, at
+least 15 cm apart. To the robot's left, against the wall, stands a small table (white top, about 0.45 x 0.48 m and 0.66
+m tall) carrying an open-top grey plastic tote, 40 x 30 x 17 cm; table and tote are immovable and the same in every
+instance. Nothing moves by itself. The robot starts hovering level and motionless, facing the wall, with its arm at its
+zero joint configuration (end effector a little ahead of and above the airframe) and the gripper closed.
 
-## Success
-Success at a control step when both hold: (1) the lemon's root position (its body origin, at the bottom of the fruit in the lemon's own frame) is inside, bounds inclusive, the world-axis-aligned box container_root + [(-0.20, -0.15, 0), (0.20, 0.15, 0.17)] m, i.e. the tote's nominal 0.40 x 0.30 x 0.17 m size above its bottom-centre root; (2) the gripper width, arm_lfinger_joint + arm_rfinger_joint (each limited to [0.001, 0.045] m, so 0.002 to 0.09 m in total), is > 0.0898 m (gripper_open_threshold): both fingers essentially at their open limit. The lemon need not be at rest and its orientation is not tested; being inside the box at one step is enough. AM-Bench also reports lemon_grasped_and_detached (latched once lemon and tool tip have moved together >= 0.02 m with the gripper closed below 0.05 m and the lemon within 0.12 m of the tool tip) and lemon_delivered_released (the success itself); they are informational only. Evaluated after every control step (decimation 1, so after every 1/120 s physics step) on the simulated state; no hold time is required. The episode terminates at the first step where it holds. Otherwise it is truncated by the time limit: episode_length_s = 30 s, i.e. max_episode_length = 3600 control steps; AM-Bench raises the time-out when episode_length_buf >= max_episode_length - 1, i.e. at the 3599th step.
-The episode **ends by itself** at the first control step where the check holds (success), or when the task's episode
-length of **30 s** of simulated time runs out (a failure: AM-Bench's time-out ends the episode at control step
-3599; reason `episode_timeout`).
+## Goal
+Success: the lemon, pulled free of the wall, is in the tote and the gripper is fully open (it has let go of the lemon).
+The episode ends by itself as soon as the task is done (reason `success`), or as a failure when its 30 s of simulated
+time run out (reason `episode_timeout`).
 
-The fruits' positions, which fruit is the lemon, the tote's and table's poses and whether the lemon is still attached are not given: the yellow lemon has to be told from the green limes and located on the concrete wall with the onboard cameras, and the tote found on the table. The gripper width comes from proprioception; whether the lemon is in the tote can only be judged visually. Success is reported only by the episode's end (reason `success`).
+Nothing to hand in: the service records and grades the episode. Keep the script that drives the robot at
+`/app/output/gen.py`.
 
-## Rules (real-robot rules)
-- **No reset.** The episode starts when the service comes up and ends on success, at the time-out above, when your time
-  is up, or on a simulator error. Whatever you knock over or push stays that way.
-- **No privileged state.** You see what the two onboard cameras see (RGB, and depth if you ask) plus the robot's own
-  proprioception (airframe pose and velocity, arm joints, gripper, tool-frame pose, joint efforts, the target in force).
-  No object poses and no success measure; when AM-Bench's check holds, the episode ends at that control step
-  (`meta["done"]` true, `meta["reason"]` `"success"`).
-- **Simulated time only moves when you move the robot** (`submit`, or `get_obs(seconds=...)`): between your calls the
-  world is frozen, and the episode lasts at most 30 s of simulated time. There is no step budget otherwise:
-  the time limit (`## Time limit`) is your only budget (`meta["time_left_s"]`).
-- There is nothing to hand in: the service records your episode as the trajectory and grades it. Leave your script at
-  `/app/output/gen.py` for the record. The episode is graded as it stands when your time is up.
-- **If the service crashes**, a call fails with a connection error: the simulator restarts and resumes the SAME episode
-  (never a reset) in the state after the last call it completed (to the last bits: a rare GPU race
-  can leave those different), which you may not have received. `r.wait_ready()` waits
-  until it answers again (resuming replays the episode so far, which can take minutes; the wall clock keeps running), then
-  check `r.status()["control_steps"]` before you continue (`spec["on_service_error"]`).
-- **Nothing is put into your context automatically.** Images and videos come back as arrays/bytes in a Python object;
-  what you look at and where you store it is your code's decision.
+Real-robot rules:
+- One episode, no reset: what you knock over stays knocked over.
+- No privileged state: you get the robot's camera images (with their calibration) and its own sensor readings; no object
+  poses, no scene layout; the episode ends when the task is done.
+- Write your own controller; do not use the benchmark's demonstrations, trained policies or any published solution.
+- Simulated time moves only while the robot runs your commands or you watch it hold still: between your calls the world
+  is frozen.
 
-## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`)
+## Robot Interface
+### Client
+`/opt/tools/rcb_client.py` (protocol `eai-standard/2.2`):
 ```python
 from rcb_client import Robot
 r = Robot()                                   # connects: waits while Isaac Sim starts and builds the scene (see below)
@@ -54,54 +57,81 @@ res.frames["base_camera"]                     # uint8 (N,H,W,3) at video_fps if 
 res.last["ee_camera"]; res.proprio            # last frame per camera; float32 (N, 45) proprio at each video frame
 res.save("/app/runs/003")                     # meta.json, <cam>.mp4, frames/<cam>/NNN.jpg, last/<cam>.jpg, proprio.npy
 ```
+
 The service's first start in a trial compiles Isaac's shaders: `Robot()` can wait ~2-12 min (it prints its progress to
-stderr once a minute). It gives up after 3600 s (`Robot(timeout=...)`) with `RuntimeError("sim service unavailable ...")`:
-then call it again (nothing has happened in the episode yet; your wall clock runs from the start of the trial).
+stderr once a minute). It gives up after 3600 s (`Robot(timeout=...)`) with
+`RuntimeError("sim service unavailable ...")`: then call it again (nothing has happened in the episode yet; your wall
+clock runs from the start of the trial).
 
-Cameras (384×384 each, both moving with the robot): `ee_camera` (on the end effector, looking along the gripper) and
-`base_camera` (on the airframe, looking forward). `res.extrinsic_cv[cam]` has their pose at every frame.
-One call returns at most 3000 images (`max_frames_per_call`, PROTOCOL §3 "Images per call").
+If the service crashes, a call fails with a connection error: the simulator restarts and resumes the SAME episode (never
+a reset) in the state after the last call it completed, which you may not have received. `r.wait_ready()` waits until it
+answers again (resuming replays the episode so far, which can take minutes; the wall clock keeps running), then check
+`r.status()["control_steps"]` before you continue (`spec["on_service_error"]`).
 
-### Optional inputs (eai-standard/2.2; ask only for what you need)
+Simulated time moves only in `submit` and in `get_obs(seconds=s)` (the robot holds its current target while you watch,
+at most 30 s). One call returns at most 3000 images.
+
+Optional inputs (ask only for what you need):
 - Depth: `r.get_obs(depth=True)` -> `obs.last_depth[cam]` float32 (H,W) z-depth in metres, 0 = no reading, pixel-aligned
-  with `obs.last[cam]`; `r.submit(..., depth="frames")` -> also `res.depth[cam]` (N,H,W), one map per frame (1 mm steps).
+  with `obs.last[cam]`; `r.submit(..., depth="frames")` -> also `res.depth[cam]` (N,H,W), one map per frame (1 mm
+  steps).
 - Per frame: `res.frame_step` (control step), `res.frame_time_s`, `res.extrinsic_cv[cam]` (N,3,4 world -> camera, OpenCV
   axes). `spec["cameras"][cam]`: `intrinsic_cv` and `mount` (the parent link and a fixed `link_T_cam_cv`).
 - `spec["robot_spec"]` (the arm's joints and limits, the gripper and its command, the controller, the tool frame),
-  `spec["world"]` (frame, units, wxyz), `spec["proprio_groups"]` + `res.group("base_pose")` (joint_pos, joint_vel, tcp_pose,
-  gripper_opening, gripper_cmd, joint_effort, base_pose, base_vel, ee_cmd).
-- `r.fk(q4, base_pose=base7)` -> poses of `spec["kinematics"]["links"]` (in the airframe frame without `base_pose`, world
-  with it); `r.ik({"tcp": pose7}, seed=q4, base_pose=base7)` -> `{"ok", "q", "error"}`: a stateless model of the arm on its
-  airframe (no physics, no simulated time); `q4` = the arm's four joints. AM-Bench's own controller moves the airframe too
-  (below): this model is the arm alone, for reasoning about reach and camera poses.
+  `spec["world"]` (frame, units, wxyz), `spec["proprio_groups"]` + `res.group("base_pose")` (joint_pos, joint_vel,
+  tcp_pose, gripper_opening, gripper_cmd, joint_effort, base_pose, base_vel, ee_cmd).
+- `r.fk(q4, base_pose=base7)` -> poses of `spec["kinematics"]["links"]` (in the airframe frame without `base_pose`,
+  world with it); `r.ik({"tcp": pose7}, seed=q4, base_pose=base7)` -> `{"ok", "q", "error"}`: a stateless model of the
+  arm on its airframe (no physics, no simulated time); `q4` = the arm's four joints. AM-Bench's own controller moves the
+  airframe too (below): this model is the arm alone, for reasoning about reach and camera poses.
 
-### Action
+### Actions
+- World frame: metres, z up, the ground is the plane z = 0; positions relative to the environment's origin (the same
+  frame for the action, the proprio poses, the camera extrinsics and `r.fk` with `base_pose`); quaternions are wxyz.
+- At the start the airframe hovers level, facing +x, with the arm at its zero joint configuration and the gripper
+  closed.
 - `ee_pose` (8 per row): `x y z qw qx qy qz gripper` — AM-Bench's own action. The target pose of the tool frame `tcp`
   (the end-effector link, the frame of proprio `tcp_pose`; position in metres, world frame; orientation wxyz) and the
-  gripper command (**-1 = closed .. +1 = open**). Every control step, AM-Bench's whole-body controller turns the target into
-  an airframe pose (its floating-base inverse kinematics), the airframe pose into the six rotor thrusts (a PID) and the arm
-  joints into targets for their drives: you command where the end effector should be, the airframe follows.
-- Rows are `dt` apart (`1/120 ≤ dt ≤ 0.5` s, a multiple of the 120 Hz control period: 1/120, 2/120, ...; any other `dt` is
-  rejected, never rounded); `interpolate="hold"` (each row exactly as given, for its dt) or `"linear"` (default: from the
-  previous target, positions linear, orientation slerp, gripper linear); a chunk may cover at most 10 s; a gripper value
-  outside [-1, 1] is clipped and listed in `meta["clipped"]`. Start from the target in force (`res.group("ee_cmd")`, or the
-  proprio `tcp_pose`) to move smoothly: at the start the target is the end effector's own pose and the gripper is closed.
-- A malformed request (a wrong type, a value out of range, a position more than 30 m from the origin, a zero quaternion) is
-  answered 400 with the reason and executes nothing.
+  gripper command (-1 = closed .. +1 = open). Every control step, AM-Bench's whole-body controller turns the target into
+  an airframe pose (its floating-base inverse kinematics), the airframe pose into the six rotor thrusts (a PID) and the
+  arm joints into targets for their drives: you command where the end effector should be, the airframe follows.
+- Rows are `dt` apart (`1/120 ≤ dt ≤ 0.5` s, a multiple of the 120 Hz control period: 1/120, 2/120, ...; any other `dt`
+  is rejected, never rounded); `interpolate="hold"` (each row exactly as given, for its dt) or `"linear"` (default: from
+  the previous target, positions linear, orientation slerp, gripper linear); a chunk may cover at most 10 s; a gripper
+  value outside [-1, 1] is clipped and listed in `meta["clipped"]`. Start from the target in force
+  (`res.group("ee_cmd")`, or the proprio `tcp_pose`) to move smoothly: at the start the target is the end effector's own
+  pose and the gripper is closed.
+- A malformed request (a wrong type, a value out of range, a position more than 30 m from the origin, a zero quaternion)
+  is answered 400 with the reason and executes nothing.
 - Control and physics run at 120 Hz (simulated time; one physics step of 1/120 s per control step).
 
-## Conventions
-- World frame: metres, z up, the ground is the plane z = 0; positions relative to the environment's origin (the same frame
-  for the action, the proprio poses, the camera extrinsics and `/kinematics` with `base_pose`); quaternions are **wxyz**.
-- At the start the airframe hovers level, facing +x, with the arm at its zero joint configuration and the gripper closed.
+### Observations
+- Cameras (384×384 each, both moving with the robot): `ee_camera` (on the end effector, looking along the gripper) and
+  `base_camera` (on the airframe, looking forward); their intrinsics and mounts are in the spec's `cameras`, their pose
+  at every frame comes with each reply.
+- Depth (`depth=True`): z-depth in metres, 0 = no reading, pixel-aligned with the colour image, in 1 mm steps.
+- Proprioception: 45 values a row (their `layout` comes with them): the arm's joint positions, velocities and efforts,
+  the gripper's opening and command, the tool frame's pose (`tcp_pose`), the airframe's pose and velocity (`base_pose`,
+  `base_vel`) and the end-effector target in force (`ee_cmd`); the groups are in the spec's `proprio_groups`.
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+## Others
+- The fruits' positions, which fruit is the lemon, the tote's and table's poses and whether the lemon is still attached
+  are not given: the yellow lemon has to be told from the green limes and located on the concrete wall with the onboard
+  cameras, and the tote found on the table. The gripper width comes from proprioception; whether the lemon is in the
+  tote can only be judged visually.
 
-## Resources
-Your container: **2 CPUs**, **4 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
-
-## Time limit
-You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
-
-This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` counts the same limit from your first request to the service, so it never runs out before your time does: your real time left is `time_left_s` minus the time you spent before that request. Plan by it. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+## Limits
+- Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
+  the end you are stopped without warning and the episode is graded as it stands. Time left:
+  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`); the service's `time_left_s` (in every reply) starts at
+  your first request, so the file is the one to trust. Calls into a long-running process can block for their whole wait
+  time: use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, the simulator's and the benchmark's source included. Do not search for or
+  download a ready-made solution (published or reference solutions, recorded demonstrations, trained policies); trials
+  are reviewed.
+- Resources: 2 CPUs, 4 GiB memory, 1024 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`), no
+  GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap only
+  slows you down); usage: `/run/rcb-limits/usage.json`.
+- Resets: none: one episode.

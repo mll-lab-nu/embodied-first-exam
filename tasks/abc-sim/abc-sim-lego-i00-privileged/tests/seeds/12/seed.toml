@@ -1,4 +1,12 @@
 [[replace]]
+old = "## Task\nA bimanual robot in ABC Sim (MuJoCo): two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each) side\nby side at the near edge of a table, facing +x (the left arm is the one at +y). 12 LEGO-style blocks -- 6 red, 3 yellow,\n3 blue -- lie on the table with three bins, one per colour. Sort the blocks into the bins of their colours. The scene is\none fixed instance. You have the full simulator to develop with; you hand in a trajectory of robot actions."
+new = "## Task\nA bimanual robot in ABC Sim (MuJoCo): two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each) side\nby side at the near edge of a table, facing +x (the left arm is the one at +y). 14 LEGO-style blocks -- 4 red, 5 yellow,\n5 blue -- lie on the table with three bins, one per colour. Sort the blocks into the bins of their colours. The scene is\none fixed instance. You have the full simulator to develop with; you hand in a trajectory of robot actions."
+
+[[replace]]
+old = "## Task\nA bimanual robot in ABC Sim (MuJoCo): two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each) side\nby side at the near edge of a table, facing +x (the left arm is the one at +y). 12 LEGO-style blocks -- 6 red, 3 yellow,\n3 blue -- lie on the table with three bins, one per colour. Sort the blocks into the bins of their colours. The robot\nruns as a service you reach only through its client, as if it were real hardware: one live episode."
+new = "## Task\nA bimanual robot in ABC Sim (MuJoCo): two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each) side\nby side at the near edge of a table, facing +x (the left arm is the one at +y). 14 LEGO-style blocks -- 4 red, 5 yellow,\n5 blue -- lie on the table with three bins, one per colour. Sort the blocks into the bins of their colours. The robot\nruns as a service you reach only through its client, as if it were real hardware: one live episode."
+
+[[replace]]
 old = "state hash `2ebc48bf64974f98`"
 new = "state hash `b6aab9637937c44e`"
 

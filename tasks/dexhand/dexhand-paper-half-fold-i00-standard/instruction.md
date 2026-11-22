@@ -1,51 +1,40 @@
-# DexHand: Fold a sheet of paper in half with a permanent crease
+# DexHand · Fold a sheet of paper in half with a permanent crease (standard)
 
-Fold the sheet of paper on the table in half: lift its free half over its fixed half, press a permanent crease along the marked center line, take the hand away, and leave the folded sheet lying on the table. The 160 x 100 mm sheet (1.28 g) lies flat on the table top. Its left half is glued to a backing patch next to a dark clamp and cannot move; the right half is free, and its last 25 mm overhang the table edge. Success requires 100 consecutive 50 Hz control samples (2 s) in which no part of the hand touches the paper and all of these hold: fold angle of the free half above 2.6 rad, permanent (plastic) crease on the center line above 2.2 rad on average with at least 90% of its hinges above 2.2 rad, free edge within 18 mm of the fixed edge, stretch below 8%, and the whole sheet over the table top: every paper vertex within the table's extent (x from -0.345 to 0.135 m, y from -0.30 to 0.30 m) and at most 2 mm below the table top (z >= 0.298 m). The episode ends with that success, or fails immediately and permanently if any paper vertex sinks more than 10 mm below the table top (z < 0.29 m, for example bent down over the table edge) or leaves the workspace box (x from -0.03 to 0.19 m, y from -0.09 to 0.09 m, z <= 0.45 m), if the paper stretches by more than 8%, or the simulation becomes unstable. A fold that springs back, a crease that is not permanent, or a hand still touching the paper is not a success. Only the robot's motor targets act on the paper; there are no grasp welds, scripted paper motion or applied forces. The episode allows at most 1500 controls at 50 Hz (30 s).
+## Task
+One dexterous hand on a six-axis wrist stage (no arm), at a table (DexHand, MuJoCo). Fold the sheet of paper on the
+table in half: lift its free half over its fixed half, press a permanent crease along the marked centre line, take the
+hand away, and leave the folded sheet lying on the table. The 160 x 100 mm sheet (1.28 g) lies flat on the table top;
+its left half is glued to a backing patch next to a dark clamp and cannot move; the right half is free, and its last 25
+mm overhang the table edge.
+The robot runs as a service you reach only through its client, as if it were real hardware.
 
-A dexterous hand on a six-DoF wrist positioning stage is your robot. The wrist stage is position actuated in the
-physics engine; folding and creasing need physical contact. Physics runs at 0.5 ms (40 substeps per 20 ms control),
-and the controller runs at 50 Hz.
+## Goal
+Success: the free half is folded right over onto the fixed half, its edge close to the fixed edge, with a permanent
+crease along the centre line, the whole sheet over the table top and not stretched, and the hand has been off the paper
+for two seconds. A fold that springs back, a crease that is not permanent, or a hand still touching the paper does not
+count. The episode ends as soon as the task is done.
 
-## Scene (world frame, metres, z up)
-- Table top at z = 0.30 m, spanning x from -0.345 to 0.135 m (the edge on the hand's side) and y from -0.30 to
-  0.30 m. Fail-fast limits on every paper vertex, checked every 0.5 ms: z >= 0.29 m (10 mm below the table top)
-  and inside the workspace box x -0.03..0.19 m, y -0.09..0.09 m, z <= 0.45 m. At success every vertex must lie
-  within the table's x/y extent and at z >= 0.298 m (2 mm tolerance below the table top).
-- The sheet starts flat at z = 0.3012 m, spanning x from 0 to 0.16 m and y from -0.05 to 0.05 m. The half with
-  x <= 0.08 m is glued down and never moves; the fold line is at x = 0.08 m (an orange guide line marks it). A fold
-  brings the free edge (x = 0.16 m) back over the glued edge (x = 0): the free half rotates by more than 2.6 rad about
-  the fold line, upward and over.
-- The paper is a passive elastic/plastic sheet: it bends elastically about 0.5 rad beyond its rest shape and then
-  yields, so a crease becomes permanent only when the paper is bent well past its current rest shape, and a fold
-  that is merely held springs partly back when released. Contact compliance gives it an effective thickness of 0.7 mm.
+The episode ends at once as a failure if any part of the paper sinks well below the table top (for example bent down
+over the table edge) or leaves the work area, the paper is stretched, or the simulation becomes unstable. Later actions
+cannot undo a failure.
 
-## Hands
-Two genuine manufacturer hand models are available: `sharpa` (Sharpa Wave, 22 finger actuators; the default) and `wuji` (Wuji Hand 2.2, 20 finger actuators). The task, scene, mount, objects and success predicate are the same for both; only one hand is used per episode.
-The first six targets of a row drive the wrist stage that carries the hand: `wrist_x`, `wrist_y`, `wrist_z` (metres, world frame) and `wrist_rx`, `wrist_ry`, `wrist_rz` (radians, serial XYZ joints); the finger targets follow in the hand's native actuator order. Sharpa starts in a near-edge pregrasp; Wuji starts at the same six wrist targets with its fingers curled clear of the paper.
-The robot service runs the hand named by `DEXHAND_HAND` on the sim service (default `sharpa`); the agent cannot switch it during an episode. `spec()["hand"]` names it, and `spec()["action_types"]["joint_position"]` gives the row width (`28` for `sharpa`, `26` for `wuji`) and the exact order. The episode record names the hand; the service grades the episode it ran with that hand.
+Nothing to hand in: the service records and grades the episode. Keep the script that drives the robot at `/app/output/gen.py`.
 
-## Episodes and resets
-You have **20 resets** (`spec["budget"]["reset"]`, which is authoritative: if it says 0, there is no reset
-and the one episode is the run). A reset puts the robot and every object back in the same frozen starting state and
-starts a new episode, either abandoning the running one or after one has ended; it takes no simulated time and
-returns the start's images and proprioception:
-```python
-res = r._post("/reset", {"cameras": ["overview"]}, [], 900)   # POST /reset (the 2.2 client has no reset())
-res.meta["episode"], res.meta["resets_left"]
-```
-Once an episode has ended, `submit` raises `EpisodeOver` until you reset. **Only the last episode is graded**: an
-episode you reset away is never graded, a success ends the run at once (no reset after it), and when your time is up
-the episode then running is the one graded. The wall clock is the run's and never restarts; `meta["episode"]` and
-`meta["resets_left"]` count the episodes (`meta["control_steps"]` is the current episode's,
-`meta["control_steps_total"]` all of them).
+Real-robot rules:
+- Episodes: 20 resets (`spec()["budget"]["reset"]`), each a new episode from the same starting state; within an episode
+  what you knock over stays knocked over until you reset. Only the last episode is graded: a success ends the run at
+  once (no reset after it), and when your time is up the episode then running is graded.
+- No privileged state: you get the robot's camera images (with their calibration) and its own sensor readings; no object
+  poses, no scene layout, no score; the episode ends when the task is done, and the service tells you that it ended and
+  why.
+- Write your own controller; do not use the benchmark's demonstrations, trained policies or any published solution.
 
-## Robot service
-The simulator runs in a separate service. You receive camera RGB, optional calibrated depth, and the robot's own
-joint positions, velocities, actuator efforts, wrist pose and current targets; paper state is not published. An
-episode ends at the first success or failure, and after at most 1500 controls; a reset starts a new one (see
-`## Episodes and resets`). The service records every action and watch step, then judges the graded episode as it ran
-(that is the verdict; nothing is replayed). Leave your controller at `/app/output/gen.py`; no trajectory hand-in is needed.
+Only the robot's actuator targets act on the scene: no object teleports, grasp welds, scripted object motion or applied
+forces.
 
+## Robot Interface
+### Client
+`/opt/tools/rcb_client.py`:
 ```python
 from rcb_client import Robot
 r = Robot()
@@ -59,30 +48,81 @@ q = obs.group("joint_pos", now=True)
 res = r.submit("joint_position", rows, dt=0.02, interpolate="hold", video="none")
 r.fk(q)                       # robot-link forward kinematics; no physics is stepped
 r.status()
-res.save("/app/runs/001")
+res = r._post("/reset", {"cameras": ["overview"]}, [], 900)   # POST /reset (this client has no reset())
 ```
-`rows` is `(T, 28)` for `sharpa` or `(T, 26)` for `wuji`, in `spec["action_types"]["joint_position"]["layout"]`
-order: `wrist_x, wrist_y, wrist_z` translations (metres), `wrist_rx, wrist_ry, wrist_rz` serial XYZ rotational joints
-(radians), then the finger joints (radians). Actuator targets are clipped to the published joint limits and clipping
-is reported. `dt` must be a multiple of 0.02 s, between 0.02 and 0.5 s; a chunk covers at most 10 s. Hold
-interpolation holds each row for `dt`; linear interpolation starts from the previous target. The robot has no scalar
-gripper opening. Quaternions in measured poses use WXYZ; world z is up. Cameras are overview and side, at 640 x 480.
 Requests can return RGB frames or mp4, with depth `none`, `last` or `frames`. Each call returns at most 1,000 camera
 images, counting per-frame depth; reduce cameras, fps or duration for larger chunks. `get_obs(seconds=...)` holds the
-current targets for up to 30 s and records those steps (they count toward the 1500 controls). Calling it without
-seconds only observes the current state. Forward kinematics uses only the robot's own links; no IK primitive is
-supplied. If the service connection fails, call `r.wait_ready()` and inspect `r.status()` before continuing. Crash
-recovery resumes the same journaled episode, without a reset, and the wall-clock budget keeps running.
+current targets for up to 30 s and records those steps (they count toward the 1500 controls). Calling it without seconds
+only observes the current state. Forward kinematics uses only the robot's own links; no IK primitive is supplied. If the
+service connection fails, call `r.wait_ready()` and inspect `r.status()` before continuing. Crash recovery resumes the
+same journaled episode, without a reset, and the wall-clock budget keeps running.
 
-One call returns at most 1000 images (`max_frames_per_call`, PROTOCOL §3 "Images per call").
+Resets: `r._post("/reset", ...)` (`POST /reset`) starts a new episode from the same starting state, abandoning the
+running one or after one has ended; it takes no simulated time and returns the start's images and proprioception. Once
+an episode has ended, `submit` raises `EpisodeOver` until you reset. `meta["episode"]` and `meta["resets_left"]` count
+the episodes; `meta["control_steps"]` is the current episode's, `meta["control_steps_total"]` all of them.
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+### Actions
+`rows` is `(T, 28)` for `sharpa` or `(T, 26)` for `wuji`, in `spec["action_types"]["joint_position"]["layout"]` order:
+`wrist_x, wrist_y, wrist_z` translations (metres), `wrist_rx, wrist_ry, wrist_rz` serial XYZ rotational joints
+(radians), then the finger joints (radians). Actuator targets are clipped to the published joint limits and clipping is
+reported. `dt` must be a multiple of 0.02 s, between 0.02 and 0.5 s; a chunk covers at most 10 s. Hold interpolation
+holds each row for `dt`; linear interpolation starts from the previous target. The robot has no scalar gripper opening.
 
-## Resources
-Your container: **2 CPUs**, **10 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
+The first six targets of a row drive the wrist stage that carries the hand: `wrist_x`, `wrist_y`, `wrist_z` (metres,
+world frame) and `wrist_rx`, `wrist_ry`, `wrist_rz` (radians, serial XYZ joints); the finger targets follow in the
+hand's native actuator order.
 
-## Time limit
-You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+### Observations
+You receive camera RGB, optional calibrated depth, and the robot's own joint positions, velocities, actuator efforts,
+wrist pose and current targets; paper state is not published. Quaternions in measured poses use WXYZ; world z is up.
+Cameras are overview and side, at 640 x 480.
 
-This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` counts the same limit from your first request to the service, so it never runs out before your time does: your real time left is `time_left_s` minus the time you spent before that request. Plan by it. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+### Hands
+Two hand models: `sharpa` (Sharpa Wave, 22 finger actuators; the default) and `wuji` (Wuji Hand 2.2, 20 finger
+actuators); the task is the same for both, and one hand is used per episode. The service runs the hand that
+`DEXHAND_HAND` names on the sim service (default `sharpa`); you cannot switch it during an episode. The hand in use is
+`spec()["hand"]`; `spec()["action_types"]["joint_position"]` gives the row width (`28` for `sharpa`, `26` for `wuji`)
+and the exact order. Sharpa starts in a near-edge pregrasp; Wuji starts at the same six wrist targets with its fingers
+curled clear of the paper.
+
+### Robot
+A dexterous hand on a six-DoF wrist positioning stage is your robot. The wrist stage is position actuated in the physics
+engine; folding and creasing need physical contact. Physics runs at 0.5 ms (40 substeps per 20 ms control), and the
+controller runs at 50 Hz.
+
+The wrist targets `wrist_x, wrist_y, wrist_z` are world positions of the hand mount (metres) and
+`wrist_rx, wrist_ry, wrist_rz` serial XYZ joint angles (radians, not a quaternion).
+
+### Scene
+World frame, metres, z up.
+
+- Table top at z = 0.30 m, spanning x from -0.345 to 0.135 m (the edge on the hand's side) and y from -0.30 to 0.30 m.
+- The sheet starts flat at z = 0.3012 m, spanning x from 0 to 0.16 m and y from -0.05 to 0.05 m. The half with x <= 0.08
+  m is glued down and never moves; the fold line is at x = 0.08 m (an orange guide line marks it). A fold brings the
+  free edge (x = 0.16 m) back over the glued edge (x = 0): the free half rotates by more than 2.6 rad about the fold
+  line, upward and over.
+- The paper is a passive elastic/plastic sheet: it bends elastically about 0.5 rad beyond its rest shape and then
+  yields, so a crease becomes permanent only when the paper is bent well past its current rest shape, and a fold that is
+  merely held springs partly back when released. Contact compliance gives it an effective thickness of 0.7 mm.
+
+## Others
+- A fold that is merely held springs partly back when it is released.
+
+## Limits
+- Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
+  the end you are stopped without warning and the episode is graded as it stands. Time left:
+  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`); the service's `time_left_s` (in every reply) starts at
+  your first request, so the file is the one to trust. Calls into a long-running process can block for their whole wait
+  time: use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, the simulator's and the benchmark's source included. Do not search for or
+  download a ready-made solution (published or reference solutions, recorded demonstrations, trained policies); trials
+  are reviewed.
+- Resources: 2 CPUs, 10 GiB memory, 1024 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`),
+  no GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap
+  only slows you down); usage: `/run/rcb-limits/usage.json`.
+- Resets: at most 20 (`spec()["budget"]["reset"]`), each a new episode from the same starting state.
+- Steps: at most 1,500 control steps (30 s of simulated time) per episode; an episode that reaches them without success
+  has failed.

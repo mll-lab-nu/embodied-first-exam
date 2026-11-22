@@ -1,56 +1,37 @@
-# BEHAVIOR-1K · putting_shoes_on_rack — frozen instance
+# BEHAVIOR-1K · putting_shoes_on_rack (privileged)
 
-You control a simulated **R1Pro** mobile manipulator (BEHAVIOR-1K v3.9.2: OmniGibson on Isaac Sim, the 2026 BEHAVIOR
-Challenge stack) via Python. **Task:** Put both pairs of shoes on the hall tree in the corridor.
+## Task
+An R1Pro mobile bimanual robot in a simulated house (BEHAVIOR-1K: OmniGibson on Isaac Sim). Put the two pairs of shoes
+on the hall tree. Two gym shoes and two sandals lie on the corridor floor; the hall tree stands in an alcove at one end
+of the corridor: a low open shoe cabinet with a flat top, under a tall back panel with two small shelves. The scene is
+one fixed instance: the objects and the robot start the same way after every reset. You have the full simulator to
+develop with; you hand in one replayable trajectory of robot actions, not a general policy.
 
-The scene is `house_double_floor_lower`; the task objects are BDDL objects (`s.objects()`: `gym_shoe.n.01_1`, `gym_shoe.n.01_2`, `sandal.n.01_1`, `sandal.n.01_2`, `hallstand.n.01_1`; see
-`/behavior-src/bddl3/bddl/activity_definitions/putting_shoes_on_rack/problem0.bddl`). The success predicate is the task's BDDL
-goal in that file, evaluated by OmniGibson's object states; it counts once it has held for 1 s, released and at rest (`## Conventions`):
-```lisp
-(:goal
-    (and
-        (forall
-            (?sandal.n.01 - sandal.n.01)
-            (and
-                (touching ?sandal.n.01 ?hallstand.n.01_1)
-                (not
-                    (touching ?sandal.n.01 floor.n.01_1)
-                )
-            )
-        )
-        (forall
-            (?gym_shoe.n.01 - gym_shoe.n.01)
-            (and
-                (touching ?gym_shoe.n.01 ?hallstand.n.01_1)
-                (not
-                    (touching ?gym_shoe.n.01 floor.n.01_1)
-                )
-            )
-        )
-        (nextto gym_shoe.n.01_1 gym_shoe.n.01_2)
-        (nextto sandal.n.01_1 sandal.n.01_2)
-    )
-)
-```
-What the goal's predicates mean (OmniGibson's object states):
-- `nextto(A, B)`: the gap between A's and B's axis-aligned bounding boxes is at most one sixth of the mean of their summed box dimensions, and nothing lies between them along a horizontal axis.
-- `touching(A, B)`: A and B are in physical contact.
-The four shoes lie on the corridor floor. The hall tree stands in an alcove at one end of the corridor: a low open shoe cabinet with a flat top, under a tall back panel with two small shelves. OmniGibson's `nextto`: the gap between the two objects' axis-aligned bounding boxes is at most one sixth of the mean of their summed box dimensions (about 6 cm for these gym shoes, 5 cm for these sandals), and nothing lies between them along a horizontal axis.
+## Goal
+Success: all four shoes rest on the hall tree, none touching the floor; the two gym shoes stand side by side, close
+together with nothing between them, and so do the two sandals. It counts only once the scene has settled: nothing the
+task names (a tool included) is still in a gripper, and everything has come to rest. The replay of your trajectory ends
+as soon as the task is done; after your last row the robot is held still for a few seconds (as `s.settle()` does), and a
+success that settles in that time counts, so you need not record that wait. A fall of the robot or a simulator breakdown
+(a runaway or non-finite state, e.g. after the robot tumbles) ends the replay as a failure.
 
-This is a *fixed scene instance*: object poses and the robot's start pose never change between resets. You may reset
-and retry as many times as you want. Your deliverable is **one replayable trajectory**, not a general policy.
+Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, "/app/output/trajectory.npz")`:
+`actions` (T, 25), one row per control step, and `task`; at most 40,000 rows (22 min of simulated time). A longer file,
+one of another shape or one that cannot be read scores 0. It is replayed open-loop from the fixed start
+(`s.replay(actions)` and the replay CLI do the same); a replay can end slightly differently from your run, so leave a
+margin. Leave the script that produced it at `/app/output/gen.py`. Save a valid one early and overwrite it when you have
+a better one.
 
-## Deliverable
-Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below).
-It is replayed open-loop from the same initial state up to 3 times, each in a fresh process, and scored 1 if the task is
-completed (the success rule under `## Conventions`) by the end of any replay, which holds the robot still for up to
-5 s after your last row, else 0 (fresh replays can end slightly differently: leave a margin). Also leave the script that produced it at `/app/output/gen.py`.
+Rules: write your own controller; do not use the benchmark's demonstrations, trained policies or any published solution.
+Only the trajectory counts: changing the simulator's state while you develop changes nothing in the grading.
 
-## Tooling (already installed; run `python` from any directory)
+## Robot Interface
+### Session
+`/opt/tools/rcb_behavior.py`, importable as `rcb_behavior` (run `python` from any directory):
 ```python
 from rcb_behavior import Session
 s = Session("putting_shoes_on_rack", instance="/app/instance.json")   # ~3 min: launches Isaac Sim and loads the scene
-s.reset()                          # back to the frozen initial state (unlimited; approximate in-process, exact in a fresh process)
+s.reset()                          # back to the fixed start (as often as you like; approximate within a process, exact in a new one)
 p = s.primitives()                 # thin wrappers of the low-level action; each has a docstring: help(p["move_ee"])
 s.objects()                        # task objects: BDDL name -> category, world position, orientation (xyzw)
 p["move_base"](x, y, yaw)          # drive the base straight to a world pose (closed loop; no obstacle avoidance, no planning)
@@ -73,52 +54,49 @@ s.replay(actions)                  # resets, replays open-loop + settle(), retur
 s.save_trajectory(actions, "/app/output/trajectory.npz")
 s.render_video(actions, "/app/output/check.mp4")   # tiled robot cameras while replaying (with cameras="tiny": 16x16 tiles, upscaled)
 ```
-The primitives are deliberately thin (joint, base, IK and gripper moves): navigation, grasping, placing and every
-other skill are yours to build from them. OmniGibson itself is installed (`/behavior-src/OmniGibson`) with its own
-libraries; `/behavior-src` and the tooling in `/opt/tools` are mounted read-only (the grader uses its own copies).
+- The scene is `house_double_floor_lower`; the task's objects (`s.objects()`, the names the primitives take):
+  `gym_shoe.n.01_1` to `_2`, `sandal.n.01_1` to `_2`, `hallstand.n.01_1`.
+- The primitives are deliberately thin (joint, base, IK and gripper moves): navigation, grasping, placing and every
+  other skill are yours to build from them. Primitives that take an `arm` ("left" / "right") default to the left one.
+- `s.status()["success"]` is the success above; `goal` is the task's conditions alone, and `goal_objects_held` /
+  `goal_objects_moving` say what keeps them from counting (`s.goal_objects`: every object the task names, a tool or
+  appliance included); `fallen` and `breakdown` report the failures.
+- OmniGibson itself is installed (`/behavior-src/OmniGibson`) with its own libraries; `/behavior-src` and the tooling in
+  `/opt/tools` are read-only.
+- The replay CLI does what the grader does; run it to check yourself:
+  `python /opt/tools/rcb_behavior.py replay --task putting_shoes_on_rack --instance /app/instance.json --traj /app/output/trajectory.npz`
 
-Each graded replay is a fresh process running exactly this CLI (so run it to self-check; the grader stops at the first
-success, and one more replay with the challenge cameras only renders the video and never affects the score):
-`python /opt/tools/rcb_behavior.py replay --task putting_shoes_on_rack --instance /app/instance.json --traj /app/output/trajectory.npz`
+### Actions
+- Coordinates are in the world frame (metres, +z up); quaternions are XYZW (OmniGibson's convention); yaw in radians.
+- An action has 25 entries: base (3), trunk (4), left arm (7), left gripper (2), right arm (7), right gripper (2);
+  indices per controller: `s.robot.controller_action_idx`. Trunk, arm and gripper entries are absolute joint targets (a
+  gripper is 2 finger targets, 0 = closed; assisted grasping holds what a closing gripper touches and lets go only when
+  both fingers are commanded open). The base entries are x, y, yaw position targets in the robot's own frame, re-applied
+  every control step: a per-step displacement, 0 = stand still. `s.hold_action()` (the last command with the base at 0)
+  is the no-op.
+- Control runs at 30 Hz with 120 Hz physics. There is no step budget; a runaway guard ends an episode after 200,000
+  control steps (1.85 h of simulated time).
 
-## Conventions
-- Coordinates are in the world frame; quaternions are **XYZW** (OmniGibson convention); yaw in radians.
-- Action layout (25): base (3), trunk (4), left arm (7), left gripper (2), right arm (7), right gripper (2); indices per
-  controller: `s.robot.controller_action_idx`. Trunk, arm and gripper entries are absolute joint targets (a gripper is 2
-  finger targets, 0 = closed; assisted grasping holds what a closing gripper touches). The base entries are x, y, yaw
-  position targets in the robot's own frame, re-applied every control step: a per-step displacement, 0 = stand still.
-  `s.hold_action()` (the last command with the base at 0) is the no-op.
-- Control runs at 30 Hz with 120 Hz physics. There is no step budget: the time limit (`## Time limit`) is your only budget. Only a
-  runaway guard bounds an episode: it ends after 200,000 control steps (1.85 h of simulated time). **The trajectory
-  you deliver has at most 40,000 rows** (22 min of simulated time; a longer one is rejected: `bad_trajectory`, score 0).
-  The trajectory must be the file
-  `s.save_trajectory()` writes (an `.npz` with `actions` (T, 25) and `task`): a file the grader cannot read, or with
-  the wrong shape, is `bad_trajectory` too. The grader replays it at the simulator's own speed, each replay
-  within min(28000 s, max(1 h, 20 min + 0.67 s per row)); a replay that runs out of time is reported as a grader error.
-  **Success** (`s.status()["success"]`) is the goal holding for 1 s of simulated time in a row (30 control steps) with no
-  goal object attached to a gripper (assisted grasping lets go only when both fingers are commanded open) and every goal
-  object at rest (slower than 0.05 m/s); the episode ends there. The goal's literals being true for one frame, or with the
-  object still in the hand, is not success: `s.status()["goal"]` is the bare goal, `goal_objects_held` /
-  `goal_objects_moving` say what is missing (`s.goal_objects`: every object the goal names, a tool or appliance it
-  names, even inside a `not`, included). After your last row the grader holds the robot still (your last command, the
-  base at 0) for up to 5 s (`s.settle()`; `s.replay()` and the replay CLI do it too), so you need not record that wait.
-  A simulator breakdown (a non-finite or runaway robot or goal-object state, e.g. after the robot tumbles) ends the
-  episode as a failure (`s.status()["breakdown"]`). The episode also ends, as a failure, when the robot has fallen over: its base
-  tilted more than 41.4° from upright (the z of its up axis below 0.75), or more than 3 cm below the floor, for 10 s of
-  simulated time in a row (OmniGibson's own Falling rule; `s.status()["fallen"]`, `s.episode_done`). `s.reset()` starts
-  again; the grader's replays end at the same step. While the robot moves, the cameras' frames lag the physics by 2
-  control steps; `s.camera_info()` gives the pose they were rendered with.
-- Primitives that take an `arm` ("left" / "right") default to the left one.
-- Isaac Sim startup and scene loading take ~3 minutes per process and the simulator runs at ~7-11 steps/s: plan
-  experiments accordingly. Do not call `s.close()` until you have written every output (it terminates the process).
+### Observations
+- While the robot moves, the cameras' frames lag the physics by 2 control steps; `s.camera_info()` gives the pose they
+  were rendered with.
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+## Others
+- Isaac Sim's start-up and the scene's loading take about 3 minutes per process, and the simulator runs at ~7-11 control
+  steps/s: plan your experiments accordingly. Do not call `s.close()` until you have written every output (it ends the
+  process).
 
-## Resources
-Your container: **8 CPUs**, **29 GiB of memory**, **8192 processes and threads**, **32 GiB** of disk (new files under `/app`, `/tmp` and `/root`) and **one GPU, 22 GiB of its memory**. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
-
-## Time limit
-You have 7200 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
-
-This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+## Limits
+- Time: 7200 s of wall-clock time from the start of your session; everything counts (the simulator's start-up too). At
+  the end you are stopped without warning and only what is in `/app/output/` at that moment is graded. Time left:
+  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`). Calls into a long-running process can block for their
+  whole wait time: use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, the simulator's and the benchmark's source included. Do not search for or
+  download a ready-made solution (published or reference solutions, recorded demonstrations, trained policies); trials
+  are reviewed.
+- Resources: 8 CPUs, 29 GiB memory, 8192 processes and threads, 32 GiB disk (new files under `/app`, `/tmp`, `/root`),
+  one GPU (22 GiB of its memory). Over a cap a process can be killed (the CPU cap only slows you down); usage:
+  `/run/rcb-limits/usage.json`.
+- Resets: as many as you like (`s.reset()`).

@@ -1,27 +1,62 @@
-# Drive an allen bolt home with an L-key (Franka, operational-space control) — standard mode
+# EmbodiedSWE · drive an allen bolt home with an L-key, Franka (standard)
 
-The task of `embodiedswe-assembly-allen-bolt-franka-osc-i00-privileged`, on the same frozen scene. You drive a Franka Panda arm with its parallel gripper, under EmbodiedSWE's operational-space (torque) controller, as if it were real hardware: the simulator runs in a service you cannot open, and you get its client, one episode and no reset. The client's docstring is its manual (`/opt/tools/rcb_client.py`); `r.spec()` gives the numbers.
+## Task
+A Franka Panda arm with its parallel gripper, under EmbodiedSWE's operational-space (torque) controller. 1 small steel
+platform standing fixed on a sturdy table, each with an M16 threaded hole through its plate, and beside it: 1 L-shaped
+allen key lying on the table — the hole's M16 allen (socket-head) bolt already stands in it hand-started, a couple of
+turns captured. The hole carries real threads; the bolt head carries a 14 mm hex socket. Seat the key in the bolt's
+socket and drive it down (turn clockwise while pressing) until it seats. A seated bolt locks in place. The robot runs as
+a service you reach only through its client, as if it were real hardware: one live episode.
 
-## The task
-1 small steel platform standing fixed on a sturdy table, each with an M16 threaded hole through its plate, and beside it: 1 L-shaped allen key lying on the table — the hole's M16 allen (socket-head) bolt already stands in it hand-started, a couple of turns captured. The hole carries real threads; the bolt head carries a 14 mm hex socket.
-Goal: seat the key in the bolt's socket and drive it down (turn clockwise while pressing) until it seats. A seated bolt locks in place. The task is complete once the bolt is seated. The key holds in a firm pinch: close the fingers across either arm's hex and the grip locks; open wide to release.
+## Goal
+Success: the bolt is driven all the way down and seated in its hole, standing upright in it; nothing is asked of the key
+or the gripper. The episode ends as soon as the task is done, at the end of the first call after which it holds (judged
+on the live simulator).
 
-Success, exactly: at the end of the run, the M16 allen bolt standing in the small steel platform's threaded hole has its threaded tip at least 22 mm below the top face of the platform's plate (it starts hand-started with the tip 4.898 mm below that face; the head bottoms out at 24.8 mm), the tip lies within 4 mm horizontally of the hole's vertical axis, and the bolt's axis, tip to head, is within 5° of the hole axis (head up). The depth part does not hold at the start; the position and tilt parts do. Nothing is required of the key or the gripper, and there is no speed condition. [scene.success() = every bolt seated(); bolt origin = its thread tip; plate top 0.038 m above the platform origin on the table top; platform at world (0.42, 0, 0)]
+Nothing to hand in: the service records and grades the episode. Keep the script that drives the robot at
+`/app/output/gen.py`.
 
-## This robot
-- Action: `ee_pose` only, 9 values: the world pose of `panda_hand` (`x y z qw qx qy qz`) and the two finger position targets (m, 0 closed, 0.04 open). Rows are streamed at the 15 Hz control rate with your `dt`; `spec["action_types"]["ee_pose"]` has the layout, the controller and the joint limits. Coordinates are the simulator's world frame (metres, z up; `spec["world"]`).
-- Cameras (RGB 640×480, depth on request): `overview` (static) and `wrist` (on the hand). One call returns at most 240 images (`max_frames_per_call`, PROTOCOL §3 "Images per call": cameras × the frames captured, the first, one every round(15 / `video_fps`) control steps and the last, a per-frame depth one more image; `video="none"` captures only the first and the last); a larger request is refused (400) before anything runs. A call that names no cameras gets `overview`, `wrist` at 4 frames per second, so every call up to `max_chunk_s` / `max_watch_s` fits.
-- The episode ends after the first call at whose end the success condition holds (judged on the live simulator), when your time is up, on a simulator error, or after 400,000 control steps (7.4 h of simulated time, reason `step_guard`); it is graded as it stands then. Simulated time advances only inside your calls.
-- The service answers one request at a time: while a long call runs, every other request waits, so a client-side timeout means "busy", not "crashed".
-- Leave your scripts in `/app/output/` for the record.
+Real-robot rules:
+- One episode, no reset: what you knock over stays knocked over.
+- No privileged state: you get the robot's camera images (with their calibration) and its own sensor readings; no object
+  poses, no scene layout; the episode ends when the task is done.
+- Write your own controller; do not use the benchmark's demonstrations, trained policies or any published solution.
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+## Robot Interface
+### Client
+`/opt/tools/rcb_client.py`: its docstring is its manual; `r.spec()` gives the numbers. The service answers one request
+at a time: while a long call runs, every other request waits, so a client-side timeout means "busy", not "crashed".
+Simulated time advances only inside your calls. One call returns at most 240 images (cameras × the frames captured: the
+first, one every round(15 / `video_fps`) control steps and the last; a per-frame depth one more image; `video="none"`
+captures only the first and the last); a larger request is refused (400) before anything runs. A call that names no
+cameras gets `overview`, `wrist` at 4 frames per second, so every call up to `max_chunk_s` / `max_watch_s` fits.
 
-## Resources
-Your container: **8 CPUs**, **24 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
+### Actions
+The action is `ee_pose` only, 9 values: the world pose of `panda_hand` (`x y z qw qx qy qz`) and the two finger position
+targets (m, 0 closed, 0.04 open). Rows are streamed at the 15 Hz control rate with your `dt`;
+`spec["action_types"]["ee_pose"]` has the layout, the controller and the joint limits. Coordinates are the simulator's
+world frame (metres, z up; `spec["world"]`).
 
-## Time limit
-You have 14400 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+### Observations
+Cameras (RGB 640×480, depth on request): `overview` (static) and `wrist` (on the hand).
 
-This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` counts the same limit from your first request to the service, so it never runs out before your time does: your real time left is `time_left_s` minus the time you spent before that request. Plan by it. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+## Others
+- The key holds in a firm pinch: close the fingers across either arm's hex and the grip locks; open wide to release.
+
+## Limits
+- Time: 14400 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
+  the end you are stopped without warning and the episode is graded as it stands. Time left:
+  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`); the service's `time_left_s` (in every reply) starts at
+  your first request, so the file is the one to trust. Calls into a long-running process can block for their whole wait
+  time: use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, the simulator's and the benchmark's source included. Do not search for or
+  download a ready-made solution (published or reference solutions, recorded demonstrations, trained policies); trials
+  are reviewed.
+- Resources: 8 CPUs, 24 GiB memory, 1024 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`),
+  no GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap
+  only slows you down); usage: `/run/rcb-limits/usage.json`.
+- Resets: none: one episode.
+- Steps: at most 400,000 control steps (7.4 h of simulated time, reason `step_guard`); then the episode ends and is
+  graded as it stands.

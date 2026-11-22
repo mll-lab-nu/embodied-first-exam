@@ -1,67 +1,76 @@
-# RoboTwin 2.0 · shake_bottle — frozen instance
+# RoboTwin 2.0 · shake_bottle (privileged)
 
-You control a simulated dual-arm **ALOHA-AgileX** robot (RoboTwin 2.0 on SAPIEN 3 / PhysX, CuRobo motion
-planning) via Python. **Task:** Shake the bottle with proper arm.
+## Task
+A dual-arm ALOHA-AgileX robot at a table (RoboTwin 2.0, SAPIEN / PhysX). CuRobo plans the arms' motions. Shake the
+bottle with proper arm. The scene is one fixed instance: the objects start the same way after every reset. You have the
+full simulator to develop with; you hand in one replayable trajectory of robot actions, not a general policy.
 
-The scene objects are attributes of the task env (`env.bottle`, `env.bottle_id`, `env.id_list`; see `load_actors` in
-`/opt/RoboTwin/envs/shake_bottle.py`). RoboTwin's success predicate is `check_success` in that file:
-```python
-def check_success(self):
-        bottle_pose = self.bottle.get_pose().p
-        return bottle_pose[2] > 0.8 + self.table_z_bias
-```
+## Goal
+Success: the bottle is held up off the table. What counts is how things stand after the last action of your trajectory,
+replayed from the fixed start: a success reached earlier and lost by the end does not count.
 
-This is a *fixed scene instance*: object poses never change between resets. You may reset and retry as many
-times as you want. Your deliverable is **one replayable trajectory**, not a general policy.
+Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, "/app/output/trajectory.npz")`: the
+recorded actions, (T, 34), one row per physics step (1/250 s); at most 200,000 rows are graded. It is replayed open-loop
+from the fixed start (`s.replay(actions)` and the replay CLI do the same). Leave the script that produced it at
+`/app/output/gen.py`. Save a valid one early and overwrite it when you have a better one.
 
-## Deliverable
-Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below).
-It is replayed open-loop once from the same initial state in a fresh process and scored 1 if the task is
-completed at the end of the replay, else 0. Also leave the script that produced it at `/app/output/gen.py`.
+Rules: write your own controller; do not use the benchmark's demonstrations, trained policies or any published solution.
+Only the trajectory counts: changing the simulator's state while you develop changes nothing in the grading.
 
-## Tooling (already installed; run `python` from any directory)
+## Robot Interface
+### Session
+`/opt/tools/rcb_traj.py`, importable as `rcb_traj` (run `python` from any directory):
 ```python
 from rcb_traj import Session
 s = Session("shake_bottle", instance="/app/instance.json")   # rebuilds the scene, loads the CuRobo planner (~1 min first time)
-s.reset()                          # back to the frozen initial state (unlimited; each reset rebuilds the scene, a few seconds)
+s.reset()                          # back to the fixed start (as often as you like; each reset rebuilds the scene, a few seconds)
 env = s.env                        # the RoboTwin task env (envs/shake_bottle.py + envs/_base_task.py under /opt/RoboTwin)
 env.robot                          # Robot: get_left_tcp_pose(), get_left_arm_jointState(), left_plan_path(pose), ...
 s.record_start(); ...; actions = s.record_stop()   # actions: (T, 34) rows, one per physics step (1/250 s); at most 200,000 rows are graded
 s.status()                         # {'success': bool, 'sim_steps': int, 'resets': int, 'state_sha': str}
-s.replay(actions)                  # resets, replays open-loop, returns status  -> use this to self-check
+s.replay(actions)                  # resets, replays open-loop, returns status: use it to check yourself
 s.save_trajectory(actions, "/app/output/trajectory.npz")
 ```
-RoboTwin's planning primitives on `env` (see `envs/_base_task.py`; read the docstrings):
-`env.move(actions1, actions2=None)` executes action lists built by `env.grasp_actor(actor, arm_tag, pre_grasp_dis, grasp_dis, contact_point_id, ...)`,
-`env.place_actor(actor, arm_tag, target_pose, functional_point_id, pre_dis, dis, is_open, constrain, ...)`,
-`env.move_by_displacement(arm_tag, x, y, z, quat, move_axis)`, `env.move_to_pose(arm_tag, target_pose)`,
-`env.open_gripper(arm_tag)`, `env.close_gripper(arm_tag)`, `env.back_to_origin(arm_tag)`; `ArmTag("left"|"right")`,
-`Action`, and `GRASP_DIRECTION_DIC` from `envs.utils` / `envs._GLOBAL_CONFIGS`. Objects are RoboTwin `Actor`s
-(`.get_pose()`, `.get_functional_point(i)`, `.get_contact_point(i)`; articulated ones also `.get_qpos()`).
-Every physics step these primitives take is recorded while recording is on; `env.plan_success`
-turns False when a plan fails (later moves are skipped). Low-level control: `s.step(row)` with a row in the
-recorded layout (`s.action_layout`: 16 joint drive position targets, 16 velocity targets, left/right gripper
-command 0 = closed / 1 = open).
-Gripper state: the success predicate's gripper clauses (RoboTwin's `is_*_gripper_open()` / `is_*_gripper_close()`) are
-evaluated on the **finger joints' drive targets**, not on the two gripper-command columns of a row:
-`s.gripper_opening("left")` returns the (least open, most open) finger in command units, and a gripper is open when
-its least open finger is above 0.8, closed when its most open finger is below 0.2. A hand-written row therefore opens
-a gripper only through its finger position targets (the 7th–8th and 15th–16th of the 16); `env.open_gripper`,
-`env.close_gripper` and the other primitives set fingers and command together.
+- The scene's objects are attributes of the task env (`env.bottle`, `env.bottle_id`, `env.id_list`; see `load_actors` in
+  `/opt/RoboTwin/envs/shake_bottle.py`).
+- RoboTwin's planning primitives on `env` (see `envs/_base_task.py`; read the docstrings):
+  `env.move(actions1, actions2=None)` executes action lists built by
+  `env.grasp_actor(actor, arm_tag, pre_grasp_dis, grasp_dis, contact_point_id, ...)`,
+  `env.place_actor(actor, arm_tag, target_pose, functional_point_id, pre_dis, dis, is_open, constrain, ...)`,
+  `env.move_by_displacement(arm_tag, x, y, z, quat, move_axis)`, `env.move_to_pose(arm_tag, target_pose)`,
+  `env.open_gripper(arm_tag)`, `env.close_gripper(arm_tag)`, `env.back_to_origin(arm_tag)`; `ArmTag("left"|"right")`,
+  `Action`, and `GRASP_DIRECTION_DIC` from `envs.utils` / `envs._GLOBAL_CONFIGS`. Objects are RoboTwin `Actor`s
+  (`.get_pose()`, `.get_functional_point(i)`, `.get_contact_point(i)`; articulated ones also `.get_qpos()`).
+- Every physics step these primitives take is recorded while recording is on; `env.plan_success` turns False when a plan
+  fails (later moves are skipped). Low-level control: `s.step(row)` with a row in the recorded layout (see Actions
+  below).
+- The replay CLI does what the grader does; run it to check yourself:
+  `python /opt/tools/rcb_traj.py replay --task shake_bottle --instance /app/instance.json --traj /app/output/trajectory.npz`
 
-CLI equivalent of the grader:
-`python /opt/tools/rcb_traj.py replay --task shake_bottle --instance /app/instance.json --traj /app/output/trajectory.npz`
+### Actions
+- Coordinates are in the world frame (the table centre at the origin, +z up, the robot at y = -0.65 facing +y);
+  quaternions are WXYZ.
+- A recorded row (`s.action_layout`) has 34 entries: 16 joint drive position targets, 16 velocity targets, and the left
+  / right gripper commands (0 = closed, 1 = open); one row per physics step (1/250 s).
+- A gripper opens and closes by its finger joints' position targets (the 7th–8th and 15th–16th of the 16), not by the
+  two gripper-command columns: a hand-written row opens or closes a gripper only through those targets;
+  `env.open_gripper`, `env.close_gripper` and the other primitives set fingers and command together.
+  `s.gripper_opening("left")` returns the (least open, most open) finger in command units (0 = closed, 1 = open).
 
-Coordinates are in the world frame (table centre at the origin, +z up, the robot at y = -0.65 facing +y);
-quaternions are WXYZ. Rendering (optional, slow): `Session(..., enable_render=True)` then `s.render_frame("head_camera")`.
+### Observations
+- Rendering (optional, slow): `Session(..., enable_render=True)`, then `s.render_frame("head_camera")`.
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
-
-## Resources
-Your container: **4 CPUs**, **10 GiB of memory**, **1024 processes and threads**, **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`) and **one GPU, 13 GiB of its memory**. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
-
-## Time limit
-You have 1800 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
-
-This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+## Limits
+- Time: 1800 s of wall-clock time from the start of your session; everything counts (the simulator's start-up too). At
+  the end you are stopped without warning and only what is in `/app/output/` at that moment is graded. Time left:
+  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`). Calls into a long-running process can block for their
+  whole wait time: use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, the simulator's and the benchmark's source included. Do not search for or
+  download a ready-made solution (published or reference solutions, recorded demonstrations, trained policies); trials
+  are reviewed.
+- Resources: 4 CPUs, 10 GiB memory, 1024 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`),
+  one GPU (13 GiB of its memory). Over a cap a process can be killed (the CPU cap only slows you down); usage:
+  `/run/rcb-limits/usage.json`.
+- Resets: as many as you like (`s.reset()`).

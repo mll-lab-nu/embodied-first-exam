@@ -1,55 +1,36 @@
-# DexHand: Remove and reinstall a vacuum dust bin
+# DexHand · Remove and reinstall a vacuum dust bin (standard)
 
-Remove the dust bin from the handheld vacuum on the counter and reinstall it. The bin is held by its two lower tabs on ledges at the bottom of the motor housing and by a spring latch at the top: the latch tooth on the red release button stops the bin's top catch from tilting out, and a fixed lip over the catch bridge stops it from being lifted straight out, so the top must tilt out from under the lip, which the tooth only allows while the button is pressed. Stages, in order: (1) release and remove: press the release button by at least 5.8 mm while the bin is still in its seat (bin origin within 5 mm of its seated pose), then take the bin away until its origin is more than 30 mm from its seated pose (both measured in the vacuum-body frame); (2) reinstall: put the bin back so that its origin is within 3 mm and its orientation within 0.05 rad of the seated pose (vacuum-body frame), the release button is back up (travel at most 1.5 mm, latch tooth raised) and the bin's catch is behind the tooth face (at most 0.5 mm in front of it); (3) let go: the stage-2 condition must hold with no hand contact on the bin, the vacuum body or the button, the bin and the vacuum body at rest (linear speed at most 0.01 m/s, bin angular speed at most 0.1 rad/s), for 50 consecutive controls (1 s). The episode ends with success at that moment; partial completion never counts. The episode ends immediately with failure, checked after every 1 ms physics substep, when the vacuum body moves more than 50 mm or tilts more than 0.35 rad from its start pose, when the bin falls (centre-of-mass downward speed above 0.99 m/s, i.e. a free fall from 5 cm, or above 0.55 m/s while nothing touches it), touches the floor or a table leg, its origin drops below the counter top (z < 0.65 m) or leaves the workspace box x in [0.2, 1.1] m, y in [-0.45, 0.45] m, z in [0.6, 1.2] m, when bin and vacuum geometry interpenetrate by more than 4 mm, or when the physics becomes unstable; later actions cannot undo a failure. Only robot actuator targets (the two wrist stages and the fingers of both hands) are allowed; no object teleports, welds or applied forces. The episode allows at most 3000 controls at 50 Hz.
+## Task
+Two dexterous hands, each on its own six-axis wrist stage (no arm), at a counter (DexHand, MuJoCo). Remove the dust bin
+from the handheld vacuum on the counter and reinstall it: one hand steadies the vacuum (or works the button) while the
+other handles the bin.
+The robot runs as a service you reach only through its client, as if it were real hardware.
 
-You control two dexterous hands, each mounted on its own six-DoF wrist positioning stage (three prismatic and three
-serial revolute joints, no arm): the right hand on the stage `wrist_stage` (origin (0.45, 0.0, 0.8) m) and
-the left hand (the right hand's mirror image) on `left_wrist_stage` (origin (0.55, 0.3, 0.95) m).
-Both are needed as in the real task: one hand steadies the vacuum (or works the button) while the other handles the
-bin. The stages and the fingers are position actuated in the physics engine under native force bounds; the vacuum
-body, the dust bin and the release button move only through contact and their passive dynamics (the button is a spring-loaded
-slide). The controller runs at 50 Hz, with twenty 1 ms physics substeps.
+## Goal
+Success: in this order: the release button is pressed down (nearly its full travel) while the bin is still seated, and
+the bin is taken clear of its seat; the bin is put back exactly in its seat, the button back up and the bin's catch
+behind the latch tooth; then no hand touches the bin, the vacuum or the button, and both are still for a second. Partial
+completion never counts. The episode ends as soon as the task is done.
 
-## Hands
-Two genuine manufacturer hand models are available: `sharpa` (Sharpa Wave, 22 finger actuators; the default) and `wuji` (Wuji Hand 2.2, 20 finger actuators). The task, scene, mount, objects and success predicate are the same for both; only one hand is used per episode.
-Two hands, each on its own six-axis wrist stage. Sharpa (56): right stage (6), right fingers (22), left stage (6), left fingers (22). Wuji (52): right stage (6), left stage (6), right fingers (20), left fingers (20). The left hand is the right Wave mirrored in y (shared arm_rig.mirrored_left_wave); one row is one 50 Hz control (twenty 1 ms physics substeps).
-The robot service runs the hand named by `DEXHAND_HAND` on the sim service (default `sharpa`); the agent cannot switch it during an episode. `spec()["hand"]` names it, and `spec()["action_types"]["joint_position"]` gives the row width (`56` for `sharpa`, `52` for `wuji`) and the exact order. The episode record names the hand; the service grades the episode it ran with that hand.
+The episode ends at once as a failure if the vacuum body is moved or tilted; the bin falls (a free fall, or falling
+while nothing touches it), touches the floor or a table leg, drops below the counter top or leaves the work area; bin
+and vacuum are pressed into each other; or the physics becomes unstable. Later actions cannot undo a failure.
 
-## Scene and frames
-The world frame has z up; lengths are in metres, angles in radians, quaternions WXYZ. A handheld vacuum (free body
-`vacuum_body`, 0.752 kg) stands on its base skid on the counter (top at z = 0.65 m); its transparent dust bin (free body
-`dust_container`, 0.18 kg) sits in front of the motor housing, with the nozzle overhanging the counter edge. The bin is
-held at the bottom by two tabs resting on two ledges inside its mouth and at the top by the latch tooth of the red
-release button (`release_button`, spring-loaded slide joint `button_depression`, 0 to 6 mm of travel, 600 N/m; the
-source scene's values). The tooth's ramp lets the bin's catch push it down while the bin is closed; pressing the button
-(nearly its full 6 mm) lowers the tooth below the catch. Latch tooth, catch and bridge have the source's plastic friction
-0.55, so pushing the catch over the raised tooth needs a large closing force. A fixed lip on the housing sits 0.7 mm above the catch's bridge, so the seated bin cannot be
-lifted straight out: its top has to tilt out from under the lip, which the raised tooth prevents. The vacuum-body frame is the body frame of `vacuum_body`; the seated bin pose in that frame is
-fixed by the frozen start state (the bin starts seated). Cameras: `overview` (the counter
-from the front left) and `closeup` (the latch and the bin).
+Nothing to hand in: the service records and grades the episode. Keep the script that drives the robot at `/app/output/gen.py`.
 
-## Episodes and resets
-You have **1000 resets** (`spec["budget"]["reset"]`, which is authoritative: if it says 0, there is no reset
-and the one episode is the run). A reset puts the robot and every object back in the same frozen starting state and
-starts a new episode, either abandoning the running one or after one has ended; it takes no simulated time and
-returns the start's images and proprioception:
-```python
-res = r._post("/reset", {"cameras": ["overview"]}, [], 900)   # POST /reset (the 2.2 client has no reset())
-res.meta["episode"], res.meta["resets_left"]
-```
-Once an episode has ended, `submit` raises `EpisodeOver` until you reset. **Only the last episode is graded**: an
-episode you reset away is never graded, a success ends the run at once (no reset after it), and when your time is up
-the episode then running is the one graded. The wall clock is the run's and never restarts; `meta["episode"]` and
-`meta["resets_left"]` count the episodes (`meta["control_steps"]` is the current episode's,
-`meta["control_steps_total"]` all of them).
+Real-robot rules:
+- Resets: as many as your time allows, with save and load (Robot Interface,
+  `### This run: unlimited resets, save and load`); only the last episode is graded.
+- Privileged state queries: this run lets you read the simulator's state (Robot Interface,
+  `### This run: privileged state queries`); the answers never say whether the task is done.
+- Write your own controller; do not use the benchmark's demonstrations, trained policies or any published solution.
 
-## Robot service
-The simulator runs in a separate service. You receive camera RGB, optional calibrated depth, and the robot's own
-joint positions, velocities, actuator efforts, wrist pose and current targets. An episode ends at the first success
-or the first failure (see the task text); after that the service accepts no more actions until a reset. The service
-records every action and watch step, then judges the graded episode as it ran (that is the verdict; nothing is replayed).
-Leave your controller at `/app/output/gen.py`; no trajectory hand-in is needed.
+Only the robot's actuator targets act on the scene: no object teleports, grasp welds, scripted object motion or applied
+forces.
 
+## Robot Interface
+### Client
+`/opt/tools/rcb_client.py`:
 ```python
 from rcb_client import Robot
 r = Robot()
@@ -63,79 +44,137 @@ q = obs.group("joint_pos", now=True)
 res = r.submit("joint_position", rows, dt=0.02, interpolate="hold", video="none")
 r.fk(q)                       # robot-link forward kinematics; no physics is stepped
 r.status()
-res.save("/app/runs/001")
+res = r._post("/reset", {"cameras": ["overview"]}, [], 900)   # POST /reset (this client has no reset())
 ```
-`rows` is `(T, D)` in `spec["action_types"]["joint_position"]["layout"]` order. `D` is 56 for `sharpa`: the right
-stage `wrist_x, wrist_y, wrist_z` (metres, offsets of the stage from its origin) and `wrist_rx, wrist_ry, wrist_rz`
-(radians, serial XYZ joints), the 22 right Sharpa Wave finger targets `right_thumb_CMC_FE` ... `right_pinky_DIP`, the
-left stage `left_wrist_x` ... `left_wrist_rz` and the 22 left finger targets `left_thumb_CMC_FE` ... `left_pinky_DIP`.
-`D` is 52 for `wuji`: right stage, left stage, the right Wuji Hand 2.2 fingers `r_wuji_r_THJ0..3` ... `r_wuji_r_LFJ0..3`
-and the left Wuji fingers `l_wuji_l_...` (the layout list is authoritative). Actuator targets are clipped to the published joint
-limits and clipping is reported. `dt` must be a multiple of 0.02 s, between 0.02 and 0.5 s; a chunk covers at most
-10 s. Quaternions in measured poses use WXYZ; world z is up and the counter top is at z = 0.65 m. Cameras are overview
-and closeup, at 640 x 480. Forward kinematics uses only the robot's own links; no IK primitive is supplied. If the
-service connection fails, call `r.wait_ready()` and inspect `r.status()` before continuing.
+`get_obs(seconds=...)` holds the current targets and records those steps; without seconds it only observes the current
+state. Forward kinematics uses only the robot's own links; no IK primitive is supplied. If the service connection fails,
+call `r.wait_ready()` and inspect `r.status()` before continuing. One call returns at most 1000 images.
 
-One call returns at most 1000 images (`max_frames_per_call`, PROTOCOL §3 "Images per call").
+Resets: `r._post("/reset", ...)` (`POST /reset`) starts a new episode from the same starting state, abandoning the
+running one or after one has ended; it takes no simulated time and returns the start's images and proprioception. Once
+an episode has ended, `submit` raises `EpisodeOver` until you reset. `meta["episode"]` and `meta["resets_left"]` count
+the episodes; `meta["control_steps"]` is the current episode's, `meta["control_steps_total"]` all of them.
 
-## This run: privileged state queries
+### Actions
+`rows` is `(T, D)` in `spec["action_types"]["joint_position"]["layout"]` order. `D` is 56 for `sharpa`: the right stage
+`wrist_x, wrist_y, wrist_z` (metres, offsets of the stage from its origin) and `wrist_rx, wrist_ry, wrist_rz` (radians,
+serial XYZ joints), the 22 right Sharpa Wave finger targets `right_thumb_CMC_FE` ... `right_pinky_DIP`, the left stage
+`left_wrist_x` ... `left_wrist_rz` and the 22 left finger targets `left_thumb_CMC_FE` ... `left_pinky_DIP`. `D` is 52
+for `wuji`: right stage, left stage, the right Wuji Hand 2.2 fingers `r_wuji_r_THJ0..3` ... `r_wuji_r_LFJ0..3` and the
+left Wuji fingers `l_wuji_l_...` (the layout list is authoritative). Actuator targets are clipped to the published joint
+limits and clipping is reported. `dt` must be a multiple of 0.02 s, between 0.02 and 0.5 s; a chunk covers at most 10 s.
 
-This run lets you query the simulator's state. This section overrides anything above, and anything in `/spec`, that
-says object poses or the scene's state are never given.
+Sharpa (56): right stage (6), right fingers (22), left stage (6), left fingers (22). Wuji (52): right stage (6), left
+stage (6), right fingers (20), left fingers (20).
+
+### Observations
+You receive camera RGB, optional calibrated depth, and the robot's own joint positions, velocities, actuator efforts,
+wrist pose and current targets. Quaternions in measured poses use WXYZ; world z is up and the counter top is at z = 0.65
+m. Cameras are overview and closeup, at 640 x 480.
+
+### Hands
+Two hand models: `sharpa` (Sharpa Wave, 22 finger actuators; the default) and `wuji` (Wuji Hand 2.2, 20 finger
+actuators); the task is the same for both, and one hand is used per episode. The service runs the hand that
+`DEXHAND_HAND` names on the sim service (default `sharpa`); you cannot switch it during an episode. The hand in use is
+`spec()["hand"]`; `spec()["action_types"]["joint_position"]` gives the row width (`56` for `sharpa`, `52` for `wuji`)
+and the exact order.
+
+### Robot
+You control two dexterous hands, each mounted on its own six-DoF wrist positioning stage (three prismatic and three
+serial revolute joints, no arm): the right hand on the stage `wrist_stage` (origin (0.45, 0.0, 0.8) m) and the left hand
+(the right hand's mirror image) on `left_wrist_stage` (origin (0.55, 0.3, 0.95) m). Both are needed as in the real task:
+one hand steadies the vacuum (or works the button) while the other handles the bin. The stages and the fingers are
+position actuated in the physics engine under native force bounds; the vacuum body, the dust bin and the release button
+move only through contact and their passive dynamics (the button is a spring-loaded slide). The controller runs at 50
+Hz, with twenty 1 ms physics substeps.
+
+Each stage's `x, y, z` targets are offsets (metres, along the world axes) from its origin; the rotations are serial XYZ
+joints (radians).
+
+Two hands, each on its own six-axis wrist stage. The left hand is the right Wave mirrored in y; one row is one 50 Hz
+control (twenty 1 ms physics substeps).
+
+### Scene
+The world frame has z up; lengths are in metres, angles in radians, quaternions WXYZ. A handheld vacuum (free body
+`vacuum_body`, 0.752 kg) stands on its base skid on the counter (top at z = 0.65 m); its transparent dust bin (free body
+`dust_container`, 0.18 kg) sits in front of the motor housing, with the nozzle overhanging the counter edge. The bin is
+held at the bottom by two tabs resting on two ledges inside its mouth and at the top by the latch tooth of the red
+release button (`release_button`, spring-loaded slide joint `button_depression`, 0 to 6 mm of travel, 600 N/m). The
+tooth's ramp lets the bin's catch push it down while the bin is closed; pressing the button (nearly its full 6 mm)
+lowers the tooth below the catch. Latch tooth, catch and bridge have the source's plastic friction 0.55, so pushing the
+catch over the raised tooth needs a large closing force. A fixed lip on the housing sits 0.7 mm above the catch's
+bridge, so the seated bin cannot be lifted straight out: its top has to tilt out from under the lip, which the raised
+tooth prevents. The vacuum-body frame is the body frame of `vacuum_body`; the seated bin pose in that frame is fixed by
+the frozen start state (the bin starts seated). Cameras: `overview` (the counter from the front left) and `closeup` (the
+latch and the bin).
+
+### This run: privileged state queries
+This run lets you query the simulator's state.
 
 - `GET /state/entities` (on the same base URL as your other calls) lists what you can query:
-  `{"frame": ..., "quaternion_order": ..., "entities": {name: {"kind": ..., "fields": {field: unit}}}}`. The
-  kinds are `robot` (the robot's base or root), `robot_link` (a hand, a foot, an end effector), `object`,
-  `articulation` (a door, a drawer, a faucet: its joints) and `scene_feature` (a zone, a line, a hazard, a canvas
-  region). The list is fixed for the run.
+  `{"frame": ..., "quaternion_order": ..., "entities": {name: {"kind": ..., "fields": {field: unit}}}}`. The kinds are
+  `robot` (the robot's base or root), `robot_link` (a hand, a foot, an end effector), `object`, `articulation` (a door,
+  a drawer, a faucet: its joints) and `scene_feature` (a zone, a line, a hazard, a canvas region). The list is fixed for
+  the run.
 - `POST /state/query` with `{"names": ["robot", ...], "fields": ["pos", "quat"]}` answers JSON
-  `{"state": {name: {field: value}}, "control_steps": ..., "sim_time_s": ..., "state_queries": ...}` with the
-  current values. `fields` is optional: without it you get every field of each name. In Python:
+  `{"state": {name: {field: value}}, "control_steps": ..., "sim_time_s": ..., "state_queries": ...}` with the current
+  values. `fields` is optional: without it you get every field of each name. In Python:
   `requests.post(base + "/state/query", json={"names": ["robot"]}).json()["state"]`.
   - The usual fields: `pos` [x, y, z] m, `quat` (in `quaternion_order`), `lin_vel` m/s, `ang_vel` rad/s,
-    `height_above_ground` m, `joint_pos` / `joint_vel` {joint: value}, `size` [3] m (full extents), and `bbox`
-    [[min x, y, z], [max x, y, z]] m. A task may add its own; each field's unit is in the list.
+    `height_above_ground` m, `joint_pos` / `joint_vel` {joint: value}, `size` [3] m (full extents), and `bbox` [[min x,
+    y, z], [max x, y, z]] m. A task may add its own; each field's unit is in the list.
   - All values are in the world frame that `frame` describes.
   - A field that an entity does not have is left out of its entry.
   - An unknown name or field is a 400 that lists the valid ones.
 - A query only reads. It takes no control step, and it does not advance or pause the clock. In standard-realtime it
   answers at the current simulation time while the robot keeps moving. It is served while the episode runs (409 after
   the episode ended). Queries are counted and recorded; they do not change the grading.
-- Nothing else changes: the goal, the success rule and its thresholds are not given, and no answer says whether the
-  task is done.
+- Nothing else changes: the goal, the success rule and its thresholds are not given, and no answer says whether the task
+  is done.
 
-## This run: unlimited resets, save and load
-
-This run changes the reset budget and adds two calls. This section overrides anything above, and anything in `/spec`,
-that says there is no reset, one episode only, or fewer resets.
+### This run: unlimited resets, save and load
+This run changes the reset budget and adds two calls.
 
 - You have 1000 resets (`spec()["budget"]["reset"]` is 1000): in practice as many as your time allows.
-- `POST /reset` on the same base URL as your other calls (`http://sim:8000` or `http://localhost:8000`), with a JSON body
-  such as `{"cameras": []}` (in Python, for example `requests.post(base + "/reset", json={"cameras": []})`; the
+- `POST /reset` on the same base URL as your other calls (`http://sim:8000` or `http://localhost:8000`), with a JSON
+  body such as `{"cameras": []}` (in Python, for example `requests.post(base + "/reset", json={"cameras": []})`; the
   client's `_post("/reset", {"cameras": []}, [], 60)` where it has no `reset()`). It abandons the running episode, or
-  follows one that has ended (a failure or a fall included), and starts a new episode from the same starting state.
-  The answer carries the new episode's first frames; `meta` and `GET /status` add `episode`, `resets_left`, `saves`,
-  `loads` and `control_steps_total`.
+  follows one that has ended (a failure or a fall included), and starts a new episode from the same starting state. The
+  answer carries the new episode's first frames; `meta` and `GET /status` add `episode`, `resets_left`, `saves`, `loads`
+  and `control_steps_total`.
 - Where `/spec` has `state_ops`, two more calls exist (its text is the full rule):
   - `POST /save_state` with `{}` stores the current state in the service and answers JSON
     `{"handle": "s1", "step": ...}`. The handle is all you get, never the state's contents.
   - `POST /load_state` with `{"handle": "s1", "cameras": []}` restores a state saved earlier in this run and starts a
     new episode there; it answers as `/reset` does. At most 32 handles are kept (the least recently used one is
-    dropped). Saves and loads do not use up resets.
-  Where `/spec` has no `state_ops`, this task offers resets only.
-- Your time keeps running across resets and loads (in standard-realtime the robot's clock pauses after a reset or a
-  load until your next command).
-- Only the last episode is graded: from the starting state, or for a loaded episode the path that led to the saved
-  state followed by what you did after the load. The success rule is checked again from your next command on. A
-  success still ends the run: no reset, save or load after it.
+    dropped). Saves and loads do not use up resets. Where `/spec` has no `state_ops`, this task offers resets only.
+- Your time keeps running across resets and loads (in standard-realtime the robot's clock pauses after a reset or a load
+  until your next command).
+- Only the last episode is graded: from the starting state, or for a loaded episode the path that led to the saved state
+  followed by what you did after the load. The success rule is checked again from your next command on. A success still
+  ends the run: no reset, save or load after it.
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+## Others
+- The bin is held by its two lower tabs on ledges at the bottom of the motor housing and by a spring latch at the top:
+  the latch tooth on the red release button stops the bin's top catch from tilting out, and a fixed lip over the catch
+  bridge stops it from being lifted straight out, so the top must tilt out from under the lip, which the tooth only
+  allows while the button is pressed. The vacuum body, the bin and the button (a spring-loaded slide) move only through
+  contact.
 
-## Resources
-Your container: **2 CPUs**, **10 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
-
-## Time limit
-You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
-
-This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` counts the same limit from your first request to the service, so it never runs out before your time does: your real time left is `time_left_s` minus the time you spent before that request. Plan by it. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it (for example Codex's `yield_time_ms`) even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+## Limits
+- Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
+  the end you are stopped without warning and the episode is graded as it stands. Time left:
+  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`); the service's `time_left_s` (in every reply) starts at
+  your first request, so the file is the one to trust. Calls into a long-running process can block for their whole wait
+  time: use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, the simulator's and the benchmark's source included. Do not search for or
+  download a ready-made solution (published or reference solutions, recorded demonstrations, trained policies); trials
+  are reviewed.
+- Resources: 2 CPUs, 10 GiB memory, 1024 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`),
+  no GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap
+  only slows you down); usage: `/run/rcb-limits/usage.json`.
+- Resets: at most 1000 (`spec()["budget"]["reset"]`), each a new episode from the same starting state.
+- Steps: at most 3,000 control steps (60 s of simulated time) per episode; an episode that reaches them without success
+  has failed.

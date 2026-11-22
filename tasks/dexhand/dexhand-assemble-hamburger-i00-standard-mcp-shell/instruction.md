@@ -1,98 +1,78 @@
-# DexHand: Assemble a neatly aligned hamburger — MCP tools and shell
+# DexHand · Assemble a neatly aligned hamburger (standard-mcp-shell)
 
-Assemble a neat hamburger on the serving plate. The bottom bun already rests on the plate; the beef patty, cheese slice, tomato slice, lettuce leaf and top bun start separately on preparation supports. Stack them from bottom to top in exactly this order: bottom bun, patty, cheese, tomato, lettuce, top bun. Success requires all six layers at the same time: every ingredient center within 12 mm horizontally of the plate center, every layer upright within 0.22 radians, heights strictly increasing in recipe order, all five consecutive pairs in physical contact and the bottom bun touching the plate. Then release the hamburger: with no hand contact on any ingredient, every ingredient linear speed at most 0.025 m/s and angular speed at most 0.25 rad/s, the complete condition must hold for 100 consecutive controls (2 s). The episode ends with success at that moment; a partial stack never counts. The episode ends immediately with failure, checked after every 2 ms physics substep, when any ingredient touches the table top or the floor (dropped, or knocked off its support, the plate or the stack), when any ingredient body falls below the table top (z < 0.30 m) or leaves the workspace box x in [-0.64, 0.64] m, y in [-0.52, 0.52] m, z in [0.30, 0.80] m, when a passive cheese or lettuce bending angle exceeds 0.65 radians, or when the physics becomes unstable; later actions cannot undo a failure. Only robot actuator targets are allowed; no object teleports, grasp welds, scripted object motion or direct ingredient forces. Lettuce and cheese use three passive elastic strips; other ingredients are rigid contact proxies. This task evaluates assembly under that approximation, not continuum food deformation or ingredient damage. The episode allows at most 7500 controls at 50 Hz; reaching that limit without success is a failure.
+## Task
+One dexterous hand on a six-axis wrist stage (no arm), at a table with a serving plate (DexHand, MuJoCo). Assemble a
+neat hamburger on the serving plate: the bottom bun already rests on the plate, and the beef patty, cheese slice, tomato
+slice, lettuce leaf and top bun start separately on preparation supports. Stack them from bottom to top in exactly this
+order: bottom bun, patty, cheese, tomato, lettuce, top bun. The robot runs as a service you reach through the
+`efe-robot` MCP tools, their Python client `efe_robot` or the service's own client, as if it were real hardware.
 
-You control one dexterous hand mounted on a six-DoF wrist positioning stage (three prismatic and three serial revolute
-joints, no arm). The stage and the fingers are position actuated in the physics engine under native force bounds;
-grasping, carrying and releasing require physical contact. The controller runs at 50 Hz, with ten 2 ms physics
-substeps.
+## Goal
+Success: all six layers are stacked in that order, neatly centred on the plate and lying flat, each layer resting on the
+one below and the bottom bun on the plate; then the hand has let go and the burger stands still on its own for two
+seconds. A partial stack never counts. The episode ends as soon as the task is done.
 
-## Robot tools (MCP server `efe-robot`) and their Python client `efe_robot`
-Besides the robot service's own client (below), you get the robot through the tools of the MCP server `efe-robot` (in
-your tool list as `efe-robot` tools, for example `mcp__efe-robot__move_robot`) and through the same tools as Python
-functions: `import efe_robot` (`/opt/tools/efe_robot.py`, on `PYTHONPATH`; each function has the tool's name, arguments
-and result, and its docstring is the tool's description), or `python3 /opt/tools/efe_robot.py <tool> '<JSON arguments>'`
-from the shell. They all drive the one robot: use one route at a time. The calls of the service's client and the tools
-that do the same:
+The episode ends at once as a failure if an ingredient touches the table top or the floor (dropped, or knocked off its
+support, the plate or the stack) or leaves the work area, if the cheese or the lettuce is bent sharply, or if the
+physics becomes unstable. Later actions cannot undo a failure.
 
-| Client | Tool |
-|---|---|
-| `Robot()`, `r.spec()` | `describe_robot()`: the robot's parts, joints and limits, cameras, control period, action types and conventions, and the time left; the full spec is saved as a JSON file (`spec_file`) you can read |
-| `r.get_obs(cameras, seconds, depth)` | `observe(cameras, seconds, depth)` |
-| `r.submit(type, A, dt, interpolate)` | `execute_trajectory(space="native", action_type=type, native_rows=A, dt=dt, interpolate=...)`, or `move_robot` / `execute_trajectory` in the conventions below |
-| `r.status()`, `meta[...]` | every tool result: `time_left_s`, `sim_time_s`, `done`, `reason` and the service's messages |
-| `r.reset()` / `POST /reset` | `reset_episode()` |
+Nothing to hand in: the service records and grades the episode. Keep the script that drives the robot at
+`/app/output/gen.py`.
 
-**Conventions** of `move_robot`, `locomote` and `execute_trajectory` (spaces other than `native`): the robot base frame
-at the start of each call (+X forward, +Y left, +Z up), metres and radians, quaternions `wxyz`, gripper 0 = open to 1 =
-closed. Base frame of this robot: the scene's world frame (+Z up; the wrist stage is fixed in it): the coordinates of
-the task text. Space `native` sends rows in the robot's own action types exactly as the sections below describe them
-(their frame, units and gripper values).
+Real-robot rules:
+- Episodes: 20 resets (`spec()["budget"]["reset"]`), each a new episode from the same starting state; within an episode
+  what you knock over stays knocked over until you reset. Only the last episode is graded: a success ends the run at
+  once (no reset after it), and when your time is up the episode then running is graded.
+- No privileged state: you get the robot's camera images (with their calibration) and its own sensor readings; no object
+  poses, no scene layout, no score; the episode ends when the task is done, and the service tells you that it ended and
+  why.
+- Write your own controller; do not use the benchmark's demonstrations, trained policies or any published solution.
+- One route at a time: the tools, `efe_robot` and the service's client all drive the one robot.
 
-**This robot** (Sharpa Wave dexterous hand (22 finger joints) on a six-axis wrist stage (three prismatic and three
-serial revolute joints), no arm): arm (arm: 6 joints, no end-effector pose); right_hand (hand: 22 joints, no
-end-effector pose). Cameras: `overview`, `closeup`.
+Only the robot's actuator targets act on the scene: no object teleports, grasp welds, scripted object motion or applied
+forces.
 
-- `describe_robot()`: call it first.
-- `observe(cameras?, depth?, seconds?, save_to?, inline_cameras?)`: images are written as JPEG files under `/app/obs/`
-  (depth as `.npy`, float32 metres; with `seconds` > 0 a video `.mp4` too); the result has their paths, each camera's
-  intrinsics `K` and pose in the robot base frame, each part's joints, gripper and end-effector pose, and `proprio_now`
-  (the robot's own proprioception row; its layout is in the spec file). Open an image with your file-reading tool;
-  `inline_cameras` also returns small images in the result.
-- `locate(camera, u, v | pixels, window_px?)`: the 3-D point in the robot base frame that a camera sees at pixel (u, v)
-  of its full-size image (u the column, v the row), or one per pixel of `pixels` [[u, v], ...]: from a new depth image
-  of that camera and its calibration (no time passes). For a camera with depth and a known pose; for any other the error
-  says so.
+## Robot Interface
+### Tools
+The `efe-robot` tools (in your tool list, e.g. `mcp__efe-robot__move_robot`), also as Python functions:
+`import efe_robot` (`/opt/tools/efe_robot.py`, on `PYTHONPATH`; each function has the tool's name, arguments and result,
+its docstring the tool's description) or `python3 /opt/tools/efe_robot.py <tool> '<JSON arguments>'` from the shell.
+They and the service's client (`### Client`) all drive the one robot. Their conventions (all but space `native`): the
+robot base frame is the scene's world frame (+Z up; the wrist stage is fixed in it): the coordinates of the task text;
+metres, radians, quaternions `wxyz`, gripper 0 open .. 1 closed. Parts: arm (arm: 6 joints, no end-effector pose);
+right_hand (hand: 22 joints, no end-effector pose). Cameras: `overview`, `closeup`.
+
+- `describe_robot()`: call it first: parts and limits, cameras, control period, action types, the time left; the full
+  spec as a JSON file (`spec_file`).
+- `observe(cameras?, depth?, seconds?, inline_cameras?)`: JPEG images under `/app/obs/` (depth `.npy`, float32 metres;
+  with `seconds` > 0 an `.mp4` too, the robot held still meanwhile); the result has their paths, each camera's `K` and
+  pose in the base frame, each part's joints, gripper and end-effector pose, and `proprio_now` (the robot's own
+  proprioception row; its layout is in the spec file).
+- `locate(camera, u, v | pixels, window_px?)`: the 3-D point in the base frame a depth camera sees at pixel (u, v) of
+  its full-size image (u the column, v the row); no time passes.
 - `move_robot(goals, duration_s?)`: one goal per part,
   `{target, position?, quaternion_wxyz?, joint_positions?, gripper?}`; the parts move together and the call returns when
-  the motion is done, with `reached` (errors per goal), a `failure` category if a goal was not reached, the state and
-  the path of a frame per camera.
-- `execute_trajectory(space, rows | native_rows | rows_file, dt?, interpolate?)`: a dense trajectory, rows `dt` seconds
-  apart. `rows_file` is the path of a file under `/app` that holds the rows: a `.npy` (2-D float array) or `.csv` (one
-  row per line, comma-separated) of native rows for space `native` (with `action_type`), or a `.json` list: of number
-  arrays (native rows) or of row objects as in `rows` (the other spaces). Long arrays go this way rather than inline.
-- `wait(seconds?, operation?)`: let time pass holding the current command, or collect a pending operation.
-- `reset_episode()`: a new episode from the same starting state (it uses one reset of the budget).
-- `signal(kind, note)`: `done` records that you are finished (the episode itself ends as described above).
-- One tool call runs at a time (the Python functions wait for a pending call themselves). A call still executing after
-  45 s returns `{"pending": true, "operation": id}` while the robot goes on executing it: call `wait(operation=id)` (it
-  waits up to 45 s more each time) for its result. A result with `"episode_over": true` means the episode has ended.
+  the motion is done, with `reached` (the error per goal), a `failure` category if a goal was not reached, the state and
+  a frame per camera.
+- `execute_trajectory(space, rows | native_rows | rows_file, dt?, interpolate?)`: dense rows `dt` seconds apart; long
+  arrays as `rows_file`, a file under `/app` (`.npy` or `.csv` of native rows for space `native` with `action_type`, or
+  a `.json` list).
+- `wait(seconds?, operation?)`: let time pass holding the current command, or collect a pending call.
+- `reset_episode()`: a new episode from the same starting state (one reset of the budget).
+- `signal(kind, note)`: `done` records that you are finished (the episode itself ends as Goal says).
+- One call at a time (the Python functions wait for a pending call themselves). A call still running after 45 s returns
+  `{"pending": true, "operation": id}`: collect it with `wait(operation=id)`. `"episode_over": true` means the episode
+  has ended.
 
-**Notes on this robot.** One dexterous hand on a wrist stage: move the stage (part arm) and the fingers (part
-right_hand) with joint positions. Every column is a position target (servo); grasping and carrying work only through
-contact. The parts follow the Sharpa Wave layout (describe_robot spec_file: hand "sharpa"). With the Wuji hand (hand
-"wuji", 20 finger joints per hand) the columns differ: use execute_trajectory space native with the order in spec
-action_types.joint_position.layout. Rows are 0.02 s apart or a multiple of it; a call covers at most 10 s. Measured
-poses are in the world frame of the task text, quaternions wxyz.
+This robot: One dexterous hand on a wrist stage: move the stage (part arm) and the fingers (part right_hand) with joint
+positions. Every column is a position target (servo); grasping and carrying work only through contact. The parts follow
+the Sharpa Wave layout (describe_robot spec_file: hand "sharpa"). With the Wuji hand (hand "wuji", 20 finger joints per
+hand) the columns differ: use execute_trajectory space native with the order in spec action_types.joint_position.layout.
+Rows are 0.02 s apart or a multiple of it; a call covers at most 10 s. Measured poses are in the world frame of the task
+text, quaternions wxyz.
 
-## Hands
-Two genuine manufacturer hand models are available: `sharpa` (Sharpa Wave, 22 finger actuators; the default) and `wuji` (Wuji Hand 2.2, 20 finger actuators). The task, scene, mount, objects and success predicate are the same for both; only one hand is used per episode.
-Both hands hang from the same six-axis wrist stage, with the same wrist joints, ranges, gains and start targets.
-The robot service runs the hand named by `DEXHAND_HAND` on the sim service (default `sharpa`); the agent cannot switch it during an episode. `spec()["hand"]` names it, and `spec()["action_types"]["joint_position"]` gives the row width (`28` for `sharpa`, `26` for `wuji`) and the exact order. The episode record names the hand; the service grades the episode it ran with that hand.
-
-## Episodes and resets
-You have **20 resets** (`spec["budget"]["reset"]`, which is authoritative: if it says 0, there is no reset
-and the one episode is the run). A reset puts the robot and every object back in the same frozen starting state and
-starts a new episode, either abandoning the running one or after one has ended; it takes no simulated time and
-returns the start's images and proprioception:
-```python
-res = r._post("/reset", {"cameras": ["overview"]}, [], 900)   # POST /reset (the 2.2 client has no reset())
-res.meta["episode"], res.meta["resets_left"]
-```
-Once an episode has ended, `submit` raises `EpisodeOver` until you reset. **Only the last episode is graded**: an
-episode you reset away is never graded, a success ends the run at once (no reset after it), and when your time is up
-the episode then running is the one graded. The wall clock is the run's and never restarts; `meta["episode"]` and
-`meta["resets_left"]` count the episodes (`meta["control_steps"]` is the current episode's,
-`meta["control_steps_total"]` all of them).
-
-## Robot service
-The simulator runs in a separate service. You receive camera RGB, optional calibrated depth, and the robot's own
-joint positions, velocities, actuator efforts, wrist pose and current targets. An episode ends at the first success
-or the first failure (see the task text); after that the service accepts no more actions until a reset (see
-`## Episodes and resets`). The service records every action and watch step, then judges the graded episode as it ran
-(that is the verdict; nothing is replayed). Leave your controller at `/app/output/gen.py`; no trajectory hand-in is
-needed.
-
+### Client
+`/opt/tools/rcb_client.py`:
 ```python
 from rcb_client import Robot
 r = Robot()
@@ -106,32 +86,67 @@ q = obs.group("joint_pos", now=True)
 res = r.submit("joint_position", rows, dt=0.02, interpolate="hold", video="none")
 r.fk(q)                       # robot-link forward kinematics; no physics is stepped
 r.status()
-res.save("/app/runs/001")
+res = r._post("/reset", {"cameras": ["overview"]}, [], 900)   # POST /reset (this client has no reset())
 ```
-`rows` is `(T, D)` in `spec["action_types"]["joint_position"]["layout"]` order: the wrist targets `wrist_x, wrist_y,
-wrist_z` (metres) and `wrist_rx, wrist_ry, wrist_rz` (radians, serial XYZ joints), then the finger targets in radians.
-`D` is 28 for `sharpa` (22 Sharpa Wave finger joints `right_thumb_CMC_FE` ... `right_pinky_DIP`) and 26 for `wuji`
-(20 Wuji Hand 2.2 finger joints `r_wuji_r_THJ0..3`, `r_wuji_r_FFJ0..3`, `r_wuji_r_MFJ0..3`, `r_wuji_r_RFJ0..3`,
-`r_wuji_r_LFJ0..3`). Actuator targets are clipped to the published joint limits and clipping is reported. `dt` must be
-a multiple of 0.02 s, between 0.02 and 0.5 s; a chunk covers at most 10 s. Hold interpolation holds each row for `dt`;
-linear interpolation starts from the previous target. The robot has no scalar gripper opening. Quaternions in measured
-poses use WXYZ; world z is up and the table top is at z = 0.30 m. Cameras are overview and closeup, at 640 x 480.
 Requests can return RGB frames or mp4, with depth `none`, `last` or `frames`. Each call returns at most 1,000 camera
 images, counting per-frame depth; reduce cameras, fps or duration for larger chunks. `get_obs(seconds=...)` holds the
 current targets for up to 30 s and records those steps. Calling it without seconds only observes the current state.
-Forward kinematics uses only the robot's own links; no IK primitive is supplied. If the service connection fails,
-call `r.wait_ready()` and inspect `r.status()` before continuing. Crash recovery resumes the same journaled episode,
-without a reset, and the wall-clock budget keeps running.
+Forward kinematics uses only the robot's own links; no IK primitive is supplied. If the service connection fails, call
+`r.wait_ready()` and inspect `r.status()` before continuing. Crash recovery resumes the same journaled episode, without
+a reset, and the wall-clock budget keeps running.
 
-One call returns at most 1000 images (`max_frames_per_call`, PROTOCOL §3 "Images per call").
+Resets: `r._post("/reset", ...)` (`POST /reset`) starts a new episode from the same starting state, abandoning the
+running one or after one has ended; it takes no simulated time and returns the start's images and proprioception. Once
+an episode has ended, `submit` raises `EpisodeOver` until you reset. `meta["episode"]` and `meta["resets_left"]` count
+the episodes; `meta["control_steps"]` is the current episode's, `meta["control_steps_total"]` all of them.
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+### Actions
+`rows` is `(T, D)` in `spec["action_types"]["joint_position"]["layout"]` order: the wrist targets
+`wrist_x, wrist_y, wrist_z` (metres) and `wrist_rx, wrist_ry, wrist_rz` (radians, serial XYZ joints), then the finger
+targets in radians. `D` is 28 for `sharpa` (22 Sharpa Wave finger joints `right_thumb_CMC_FE` ... `right_pinky_DIP`) and
+26 for `wuji` (20 Wuji Hand 2.2 finger joints `r_wuji_r_THJ0..3`, `r_wuji_r_FFJ0..3`, `r_wuji_r_MFJ0..3`,
+`r_wuji_r_RFJ0..3`, `r_wuji_r_LFJ0..3`). Actuator targets are clipped to the published joint limits and clipping is
+reported. `dt` must be a multiple of 0.02 s, between 0.02 and 0.5 s; a chunk covers at most 10 s. Hold interpolation
+holds each row for `dt`; linear interpolation starts from the previous target. The robot has no scalar gripper opening.
 
-## Resources
-Your container: **2 CPUs**, **10 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
+### Observations
+You receive camera RGB, optional calibrated depth, and the robot's own joint positions, velocities, actuator efforts,
+wrist pose and current targets. Quaternions in measured poses use WXYZ; world z is up and the table top is at z = 0.30
+m. Cameras are overview and closeup, at 640 x 480.
 
-## Time limit
-You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+### Hands
+Two hand models: `sharpa` (Sharpa Wave, 22 finger actuators; the default) and `wuji` (Wuji Hand 2.2, 20 finger
+actuators); the task is the same for both, and one hand is used per episode. The service runs the hand that
+`DEXHAND_HAND` names on the sim service (default `sharpa`); you cannot switch it during an episode. The hand in use is
+`spec()["hand"]`; `spec()["action_types"]["joint_position"]` gives the row width (`28` for `sharpa`, `26` for `wuji`)
+and the exact order. Both hands hang from the same six-axis wrist stage, with the same wrist joints, ranges, gains and
+start targets.
 
-This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` counts the same limit from your first request to the service, so it never runs out before your time does: your real time left is `time_left_s` minus the time you spent before that request. Plan by it. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+### Robot
+You control one dexterous hand mounted on a six-DoF wrist positioning stage (three prismatic and three serial revolute
+joints, no arm). The stage and the fingers are position actuated in the physics engine under native force bounds;
+grasping, carrying and releasing require physical contact. The controller runs at 50 Hz, with ten 2 ms physics substeps.
+
+The wrist targets `wrist_x, wrist_y, wrist_z` are world positions of the hand mount (metres) and
+`wrist_rx, wrist_ry, wrist_rz` serial XYZ joint angles (radians, not a quaternion).
+
+## Others
+- The lettuce and the cheese are soft: each is three elastic strips that bend. The other ingredients are rigid.
+
+## Limits
+- Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
+  the end you are stopped without warning and the episode is graded as it stands. Time left:
+  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`); the service's `time_left_s` (in every reply) starts at
+  your first request, so the file is the one to trust. Calls into a long-running process can block for their whole wait
+  time: use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, the simulator's and the benchmark's source included. Do not search for or
+  download a ready-made solution (published or reference solutions, recorded demonstrations, trained policies); trials
+  are reviewed.
+- Resources: 2 CPUs, 10 GiB memory, 1024 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`),
+  no GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap
+  only slows you down); usage: `/run/rcb-limits/usage.json`.
+- Resets: at most 20 (`spec()["budget"]["reset"]`), each a new episode from the same starting state.
+- Steps: at most 7,500 control steps (150 s of simulated time) per episode; an episode that reaches them without success
+  has failed.

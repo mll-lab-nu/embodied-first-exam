@@ -1,28 +1,31 @@
-# AutoBio · pickup — STANDARD MODE (robot as a service, eai-standard/2.2)
+# AutoBio · pickup (standard)
 
-You control an **ALOHA arm** (6 joints and a parallel gripper), fixed to the bench, **as if it were real**: the simulator (AutoBio's biology laboratory on MuJoCo 3.3.0) runs
-in a service you cannot open. You get one client and one episode.
-**Task:** Pick up the 50 mL centrifuge tube (orange screw cap) that stands in the blue rack: hold it by its cap and lift it at least 9.5 cm. Success the moment the tube is that high while the gripper holds it by the cap (the test looks for contact between the cap and the gripper's left finger, so the cap has to be between the fingers).
+## Task
+An ALOHA arm (6 joints and a parallel gripper), fixed to the bench, in AutoBio's simulated biology laboratory (MuJoCo).
+On the bench: a 10-slot tube rack (2 rows of 5) with one capped 50 mL tube standing in it. Pick up the 50 mL centrifuge
+tube (orange screw cap) that stands in the blue rack: hold it by its cap and lift it. The robot runs as a service you
+reach only through its client, as if it were real hardware: one live episode.
 
-On the bench: a 10-slot tube rack (2 rows of 5) with one capped 50 mL tube standing in it.
+## Goal
+Success: the gripper holds the tube by its cap, the cap between the fingers, and has lifted it at least 9.5 cm out of
+the rack. The episode ends the moment that is reached. A physics warning (an unstable simulation, for instance after the
+robot was driven hard into something) ends the episode at once, as a failure. Ending the episode yourself
+(`r.submit("done", [])`) before the task is done is a failure.
 
-## Rules
-- **No reset.** The episode starts when the service comes up and ends the moment the goal is reached (success), when your time is up, or on a simulator
-  error. A MuJoCo physics warning (an unstable simulation, for instance after the robot was driven hard into
-  something) also ends it at once, as a failure: `meta["reason"]` is then `"failure: simulator warning (unstable state)"`.
-- **No privileged state.** You see what the cameras see (RGB, and depth on request, with each camera's calibration) and
-  the robot's own proprioception: joint positions, velocities and drive efforts, gripper openings, the
-  poses of its tool frames and the targets in effect. No poses of tubes, racks or instruments, no instrument state, no
-  success check: `meta["done"]` / `meta["reason"]` tell you when the episode is over and why.
-- Steps are unlimited; your only budget is the time limit (`## Time limit`; `meta["time_left_s"]` is the service's count of it).
-  Simulated time only advances with your commands (and `get_obs(seconds=...)`, which holds the last targets). Do not stop early.
-- `r.submit("done", [])` ends the episode in its current state; before the goal is reached that is a failure.
-- Nothing to hand in: the service records your episode and grades it. Leave your script at `/app/output/gen.py`.
-- **If the service crashes**, a call fails with a connection error: it restarts and resumes the SAME episode (never a
-  reset) in the state after the last call it completed. `r.wait_ready()` waits for it; then check `r.status()`.
-- **Nothing is put into your context automatically.** Images and videos come back as arrays/bytes in a Python object.
+Nothing to hand in: the service records and grades the episode. Keep the script that drives the robot at
+`/app/output/gen.py`.
 
-## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`)
+Real-robot rules:
+- One episode, no reset: what you knock over stays knocked over.
+- No privileged state: you get the robot's camera images (with their calibration) and its own proprioception (joint
+  positions, velocities and drive efforts, gripper openings, the poses of its tool frames and the targets in effect); no
+  poses of tubes, racks or instruments, no instrument state; the episode ends when the task is done, and the service
+  tells you that it ended and why.
+- Write your own controller; do not use the benchmark's demonstrations, trained policies or any published solution.
+
+## Robot Interface
+### Client
+`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
 ```python
 from rcb_client import Robot
 r = Robot()                                    # connects (waits while the service starts)
@@ -38,31 +41,44 @@ r.fk(q); r.ik({frame: pose})                   # kinematics of the arm joints (s
 r.submit("done", [])                           # ends the episode now, in its current state
 r.status()                                     # calls, control steps, done, reason, elapsed time
 ```
-Cameras (`table_cam_front`, `table_cam_left`, `wrist_cam`; 640x480): `table_cam_front` and `table_cam_left` are fixed and look at the bench from two sides;
-`wrist_cam` is mounted on the arm's last
-link and moves with it. `spec["cameras"]` gives each camera's mounting and intrinsics, and every response carries each
-frame's pose. Rendering is on the CPU: ask only for the cameras you need; `video="none"` makes a chunk fastest.
-Proprioception (`spec["proprio_groups"]`): `joint_pos` (`q_<joint>`), `joint_vel` (`qd_<joint>`), `gripper_opening`
-(metres between the fingertips, per parallel gripper), `tcp_pose` (each tool frame, `tcp`: x y z + wxyz
-quaternion in the world frame), `joint_effort` (`effort_<joint>`), `command` (`cmd_<entry>`, the targets in effect).
-`spec["robot_spec"]` is the robot's spec sheet: where each arm's base stands, joint limits, the drives' gains, the
-grippers' commands, the tool frames.
 
-### Action type `joint_position` (7)
-7 position targets per control step, in this order: `waist`, `shoulder`, `elbow`, `forearm_roll`, `wrist_angle`, `wrist_rotate`, `gripper` (the gripper's finger position: 0.002 m closed .. 0.037 m open). Arm joints are in rad. Each entry is the target of a PD position drive (stiffness, damping and force limit per entry: `spec["robot_spec"]["controller"]["gains"]`); a target outside the entry's range is clipped to it. Columns in
+Simulated time only advances with your commands (and `get_obs(seconds=...)`, which holds the last targets). If the
+service crashes, a call fails with a connection error: it restarts and resumes the same episode (never a reset) in the
+state after the last call it completed. `r.wait_ready()` waits for it; then check `r.status()`. One call returns at most
+3000 images; `video_fps` is up to 50, default 10.
+
+### Actions
+Action type `joint_position` (7): 7 position targets per control step, in this order: `waist`, `shoulder`, `elbow`,
+`forearm_roll`, `wrist_angle`, `wrist_rotate`, `gripper` (the gripper's finger position: 0.002 m closed .. 0.037 m
+open). Arm joints are in rad. Each entry is the target of a PD position drive (stiffness, damping and force limit per
+entry: `spec["robot_spec"]["controller"]["gains"]`); a target outside the entry's range is clipped to it. Columns in
 `spec["action_types"]["joint_position"]["layout"]` order. Rows are `dt` apart (a whole multiple of the 2 ms control
 period, at most 0.5 s; a chunk covers at most 10 s), `interpolate="linear"` (default, from the previous target) or
-`"hold"`; the client sends them as float32. The control rate is 500 Hz (one physics step per control step). There is
-no step budget: the one technical cap is `spec["max_control_steps"]`, 600000 (1200 s of simulated time), at which the
-episode ends. One call returns at most 3000 images (`max_frames_per_call`, PROTOCOL §3 "Images per call"); `video_fps` is up to 50, default 10.
+`"hold"`; the client sends them as float32. The control rate is 500 Hz (one physics step per control step). There is no
+step budget: the one technical cap is `spec["max_control_steps"]`, 600000 (1200 s of simulated time), at which the
+episode ends.
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+### Observations
+Cameras (`table_cam_front`, `table_cam_left`, `wrist_cam`; 640x480): `table_cam_front` and `table_cam_left` are fixed
+and look at the bench from two sides; `wrist_cam` is mounted on the arm's last link and moves with it. `spec["cameras"]`
+gives each camera's mounting and intrinsics, and every response carries each frame's pose. Proprioception
+(`spec["proprio_groups"]`): `joint_pos` (`q_<joint>`), `joint_vel` (`qd_<joint>`), `gripper_opening` (metres between the
+fingertips, per parallel gripper), `tcp_pose` (each tool frame, `tcp`: x y z + wxyz quaternion in the world frame),
+`joint_effort` (`effort_<joint>`), `command` (`cmd_<entry>`, the targets in effect). `spec["robot_spec"]` is the robot's
+spec sheet: where each arm's base stands, joint limits, the drives' gains, the grippers' commands, the tool frames.
 
-## Resources
-Your container: **4 CPUs**, **4 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
-
-## Time limit
-You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
-
-This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` counts the same limit from your first request to the service, so it never runs out before your time does: your real time left is `time_left_s` minus the time you spent before that request. Plan by it. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+## Limits
+- Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
+  the end you are stopped without warning and the episode is graded as it stands. Time left:
+  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`); the service's `time_left_s` (in every reply) starts at
+  your first request, so the file is the one to trust. Calls into a long-running process can block for their whole wait
+  time: use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, the simulator's and the benchmark's source included. Do not search for or
+  download a ready-made solution (published or reference solutions, recorded demonstrations, trained policies); trials
+  are reviewed.
+- Resources: 4 CPUs, 4 GiB memory, 1024 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`), no
+  GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap only
+  slows you down); usage: `/run/rcb-limits/usage.json`.
+- Resets: none: one episode.

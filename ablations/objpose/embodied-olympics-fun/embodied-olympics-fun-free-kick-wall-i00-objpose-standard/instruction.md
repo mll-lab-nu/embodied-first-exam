@@ -1,52 +1,52 @@
-# embodied-olympics free-kick-wall — instance i00 — STANDARD MODE (robot as a service)
+# Embodied Olympics · free kick over the wall (standard)
 
-You control a simulated Unitree G1 humanoid robot (29 joints, 1.32 m tall, 33 kg; the Embodied Olympics simulator on MuJoCo)
-**as if it were real hardware**: the simulator runs in a service you cannot open, and you reach it only through a
-client. **Task:** Take a direct free kick: with one kick of a foot, send the ball over or around the wall of mannequins into the official goal 20.0 m away.
+## Task
+You control a simulated Unitree G1 humanoid robot (29 joints, 1.32 m tall, 33 kg; the Embodied Olympics simulator on
+MuJoCo). Take a direct free kick: with one kick of a foot, send the ball over or around the wall of mannequins into the
+official goal 20.0 m away.
 
-## The venue
-You stand facing the goal line (+x) right behind the ball, ready to kick it with the right foot: its centre is 0.32 m ahead of your pelvis and -0.13 m to your left. The goal's centre is 20.0 m beyond the ball and 4.0 m to your left; the near post is almost straight ahead, the far post to the left. The wall stands 9.15 m from the ball across the way to the near post; the penalty area, the goal area and the arc are painted on the grass.
+You stand facing the goal line (+x) right behind the ball, ready to kick it with the right foot: its centre is 0.32 m
+ahead of your pelvis and -0.13 m to your left. The goal's centre is 20.0 m beyond the ball and 4.0 m to your left; the
+near post is almost straight ahead, the far post to the left. The wall stands 9.15 m from the ball across the way to the
+near post; the penalty area, the goal area and the arc are painted on the grass.
 
 Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level.
 
+The robot runs as a service you reach only through its client, as if it were real hardware.
 
-## The rules
-**Rule book:** IFAB Laws of the Game 2025/26: Law 1 (the goal 7.32 m x 2.44 m, posts and crossbar 12 cm wide; the penalty area 16.5 m deep), Law 2 (a size-5 ball: 68-70 cm round, 410-450 g), Law 10 (a goal: the whole ball passes over the goal line between the posts and under the crossbar), Law 13 (free kicks: a direct free kick, the ball stationary, in play when it is kicked and clearly moves; the kicker may not touch it again until it has touched another player; all opponents at least 9.15 m from the ball until it is in play) and the glossary (a kick: contact with the foot and/or the ankle). Where this task departs from it:
+## Goal
+Success: with one kick you send the ball over or around the wall into the goal: the whole ball over the goal line
+between the posts and under the bar.
 
-- Law 13 (the opponents): the defensive wall is 4 free-standing training mannequins (FORZA senior free-kick mannequin size: 1.75 m tall, 0.5 m wide) on FORZA's 13.0 kg rubber base, side by side with their faces 9.15 m from the ball, covering the near post. They are free bodies standing on the grass (rubber on grass, friction 0.8: an estimate): a ball that hits one can rock, slide or topple it. They do not jump, and there is no goalkeeper and no other player: opponents cannot be simulated otherwise.
-- Law 13 (one kick): the referee takes every contact of a foot with the ball within 0.15 s of the first as the one kick; a later contact by the kicker is a second touch. A referee's eye is replaced by this number.
-- Glossary (a kick is made with the foot or the ankle): the foot is the robot's ankle-roll link; its lower-leg collision hull covers the instep and the ankle, so a contact with that hull counts as the foot where it lies over the foot (from 0.08 m behind to 0.15 m ahead of the ankle joint) and no more than 0.12 m above the ankle joint; higher up it is the shin, which may not touch the ball.
-- Law 1: only the attacked end of the field is there (the penalty area, the goal area and the arc painted); the goal's net is a rigid cage 2.0 m deep; no wind. The free kick's spot (20.0 m from the goal line, 4.0 m to the right of the goal's centre) is this benchmark's choice: outside the penalty area, where a direct free kick is taken, and inside the range of the robot's measured hard kicks (10 to 16 m/s; the ball has to roll or fly about 21 m). The kicker starts at the ball, without a run-up.
+The referee in the service judges these stages, in order: **kick → goal**. An attempt (an episode) ends at the success,
+at the first foul or after 30 s of robot time, and a success ends the trial at once. Ending your session ends the run,
+so do not stop early: while you have attempts left, the run can still pass.
 
-A size-5 football (0.22 m across, 0.43 kg, in air) lies at rest on the grass in front of your right foot: its centre 0.32 m ahead of your pelvis and -0.13 m to your left (negative: to the right). The goal line is 20.0 m beyond the ball, square to the direction you face; the goal is 7.32 m wide between the posts and 2.44 m high under the crossbar (posts and bar 0.12 m thick), its centre 4.0 m to the left of the line straight ahead through the ball. A wall of 4 training mannequins stands between the ball and the goal, side by side, their faces 9.15 m from the ball, covering the near (right-hand) post (its outer edge 0.25 m outside the line from the ball to that post's inner edge): each 1.75 m tall and 0.5 m wide, 3.0 kg, standing free on a 13.0 kg rubber base (0.5 m wide, 0.4 m deep, 0.05 m high), so that a ball can knock one over. There is no goalkeeper. The kick is a contact of a foot of yours with the ball: the foot below the ankle, or your lower leg where it lies over the foot and no more than 0.12 m above the ankle joint; every such contact within 0.15 s of the first belongs to the one kick. You succeed at the moment the whole ball is over the goal line between the posts and under the bar; it may touch the mannequins, the posts, the bar and the ground on the way. You fail if any other part of you touches the ball at any time, if a foot touches the ball again later than 0.15 s after the first contact (a second touch), if the ball is not moving towards the goal line at the end of the kick, if the whole ball crosses the goal line outside the goal, if after the kick the ball has been slower than 0.1 m/s for 1.0 s, if you fall before the kick (your pelvis lower than 0.35 m above the ground, or any part of you other than the feet on the ground), or after 30 s. A fall after the kick does not end the attempt (the Laws judge the ball once it is in play, not the kicker; the setting fall_after_kick_fails = 0, where 1 would make any fall a failure).
+Nothing to hand in: the service records and grades the episode. Keep the script that drives the robot at
+`/app/output/gen.py`. Keep your scripts and a `NOTES.md` of at most 20 lines in `/app/output/` (your approach, what
+failed, what you downloaded or installed): save them early and keep them current.
 
-A referee in the service decides this from the simulator's state. The events that must happen, in order, are
-**kick → goal**. An attempt (an episode) ends at the success, at the first rule violation, or after 30 s
-(3000 control steps) of robot time.
+Real-robot rules:
+- Attempts: 5 resets, each a new attempt from the same start (the first attempt starts when the service comes up); only
+  your last attempt is graded.
+- Privileged state queries: this run lets you read the simulator's state (Robot Interface,
+  `### This run: privileged state queries`); the answers never say whether the task is done.
+- Write your own controller; public tools, robot models and pretrained controllers are allowed, a ready-made solution to
+  this task is not.
+- Once an attempt is over, every reply carries the referee's call: the outcome (`"success"` or the rule that ended it)
+  and how many of the stages it reached.
 
-## Real-robot rules
-- **Attempts.** The first episode starts when the service comes up. `r.reset()` abandons the running attempt (or
-  follows one that has ended) and starts a new one from the same start; `spec()["budget"]["reset"]` says how many
-  resets you have (5 here). **Only your last attempt is graded**, and a success ends the trial at once.
-- **Time moves only inside calls.** `submit` runs your rows and `get_obs(seconds=s)` holds the command in force for
-  s seconds; both use up the attempt's time. Between calls the robot waits, frozen, while you think; `get_obs()` with
-  no seconds is free.
-- **No privileged state.** You get what the robot's own sensors give: its two head cameras (`head_left`,
-  `head_right`, RGB 270 × 480, a stereo pair 5 cm apart, tilted 20° down; depth on `head_left`), its joint encoders,
-  motor torques and two IMUs (below), and the venue's fixed cameras (`venue`; `spec()["cameras"]` says
-  where each is mounted). Not where you or any object is, not the
-  referee's state. Once an attempt is over, every response carries the referee's call: `meta["outcome"]`
-  (`"success"` or the rule that ended it) and `meta["stages_reached"]` of `meta["stages_total"]`.
-- There is nothing to hand in: the service records your last attempt and grades it as it ran live (the referee's
-  call). Keep the script that drives the robot at `/app/output/gen.py` and a `NOTES.md` of at most 20 lines (your
-  approach, what failed, what you downloaded or installed) for the record: save them early and keep them current.
-- Wall clock: the time limit (`## Time limit`). It ends without warning, and ending your session earlier ends the run the same
-  way, so do not stop early: while you have attempts left, the run can still pass.
+The attempt fails at once if:
+- any part of you but a foot touches the ball, or you touch it a second time
+- the kick does not send the ball towards the goal line
+- the ball crosses the goal line outside the goal, or comes to a stop
+- you fall before the kick
 
-## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`)
-Your whole interface to the robot. Its docstring is the full reference (`python -c "import rcb_client;
-help(rcb_client)"`; it explains the protocol with another benchmark's example names: for this task `spec()` is
-authoritative).
+## Robot Interface
+### Client
+`/opt/tools/rcb_client.py` (protocol `eai-standard/2.1`) is your whole interface to the robot. Its docstring is the full
+reference (`python -c "import rcb_client; help(rcb_client)"`); its examples use another benchmark's names: for this task
+`r.spec()` is authoritative.
 
 | call | endpoint | what it does |
 |---|---|---|
@@ -57,22 +57,23 @@ authoritative).
 | `r.submit(type, A, dt=0.01, interpolate="linear", cameras=None, video="mp4")` | `POST /submit` | runs `A`, rows of that action type `dt` seconds apart (a multiple of 0.01; a chunk covers at most 10 s); stops early when the attempt ends |
 | `r.reset()` | `POST /reset` | a new attempt from the same start (see above) |
 
-One call returns at most 3000 images (`max_frames_per_call`, PROTOCOL §3 "Images per call").
+One call returns at most 3000 images (`max_frames_per_call`).
 
 The answers are binary (RCB1) and come back decoded: `res.meta` (the counters, `done`, `reason`, `proprio["now"]`,
 `clipped`), `res.last[camera]` (the last frame), `res.frames` or `res.video` (what the cameras saw during the call),
 `res.depth`, `res.proprio` (proprioception rows). Values outside the bounds are clipped and reported in
 `meta["clipped"]`, never refused; a malformed request raises `ValueError` and runs nothing. Rendering is most of a
 call's cost: a controller's call should ask for no video (`video="none"`, `cameras=["head_left"]` or fewer) and read
-`res.proprio`. With `interpolate="linear"` (the default) each control step's command is a straight line from the
-command in force to the row; `"hold"` applies the row as it is.
+`res.proprio`. With `interpolate="linear"` (the default) each control step's command is a straight line from the command
+in force to the row; `"hold"` applies the row as it is.
+
 ```python
 from rcb_client import Robot
 r = Robot()
 res = r.submit("walk", A, dt=0.02, video="none")   # A: (T, 22) rows of the `walk` type
 ```
 
-## Actions
+### Actions
 One row is one control step (10 ms; the physics runs at 1 kHz) unless `dt` spreads it. Every row ends with `grip_left`,
 `grip_right`.
 
@@ -84,131 +85,129 @@ One row is one control step (10 ms; the physics runs at 1 kHz) unless `dt` sprea
 | `run_arms` | `vx`, `vy`, `wz` + arms 14 joint targets | 19 | the running policy drives the legs and the waist; you give the 14 arm joint targets |
 | `joints` | all 29 joint targets | 31 | you give all 29 joint targets (rad); the default PD gains, no feed-forward |
 | `lowcmd` | all 29 joints × (`q`, `dq`, `tau`, `kp`, `kd`): 29 targets, then 29 velocities, 29 torques, 29 kp, 29 kd | 147 | Unitree's LowCmd for all 29 joints: position targets (rad), velocity targets (rad/s), feed-forward torques (N m), kp, kd; the motor torque is kp (q - q_measured) + kd (dq - dq_measured) + tau, evaluated at 1 kHz |
-| `walk_falcon` | `vx`, `vy`, `wz` + waist 3 + arms 14 joint targets (as `walk`) | 22 | FALCON's walking policy (LeCAR-Lab, trained with arm motions and forces on the hands; it also nudges the wrists) drives the legs from the velocity command (vx forward, vy to the left, m/s; wz turning left, rad/s; the robot's own frame); you give the waist and arm joint targets |
-| `walk_agile` | `vx`, `vy`, `wz` + waist 3 + arms 14 joint targets (as `walk`) | 22 | AGILE's velocity-height walking policy (NVIDIA WBC-AGILE, trained while the arms and the waist moved) drives the legs from the velocity command (vx forward, vy to the left, m/s; wz turning left, rad/s; the robot's own frame); you give the waist and arm joint targets |
+| `walk_falcon` | `vx`, `vy`, `wz` + waist 3 + arms 14 joint targets (as `walk`) | 22 | FALCON's walking policy (trained with arm motions and forces on the hands; it also nudges the wrists) drives the legs from the velocity command (vx forward, vy to the left, m/s; wz turning left, rad/s; the robot's own frame); you give the waist and arm joint targets |
+| `walk_agile` | `vx`, `vy`, `wz` + waist 3 + arms 14 joint targets (as `walk`) | 22 | AGILE's velocity-height walking policy (trained while the arms and the waist moved) drives the legs from the velocity command (vx forward, vy to the left, m/s; wz turning left, rad/s; the robot's own frame); you give the waist and arm joint targets |
 
-Velocity commands are in the robot's own frame (`vx` forward, `vy` to its left, m/s; `wz` turning left, rad/s). Bounds: `walk` |vx| ≤ 0.8, |vy| ≤ 0.5, |wz| ≤ 1.57; `walk_falcon` -0.8 ≤ vx ≤ 0.8, -0.5 ≤ vy ≤ 0.5, -1 ≤ wz ≤ 1; `walk_agile` -0.5 ≤ vx ≤ 0.8, -0.5 ≤ vy ≤ 0.5, -1 ≤ wz ≤ 1; `run` and `run_arms` 0 ≤ vx ≤ 5, |vy| ≤ 0.12, |wz| ≤ 0.5. Joint targets are absolute angles (rad). Values outside the bounds are clipped. `grip_left`, `grip_right`: ≥ 0.5 closes the hand's grip, < 0.5 opens it. At the start the robot stands in `stand` mode with the arms at rest: the `stand` row with the table's start angles and both grips open keeps it there.
+Velocity commands are in the robot's own frame (`vx` forward, `vy` to its left, m/s; `wz` turning left, rad/s). Bounds:
+`walk` |vx| ≤ 0.8, |vy| ≤ 0.5, |wz| ≤ 1.57; `walk_falcon` -0.8 ≤ vx ≤ 0.8, -0.5 ≤ vy ≤ 0.5, -1 ≤ wz ≤ 1; `walk_agile`
+-0.5 ≤ vx ≤ 0.8, -0.5 ≤ vy ≤ 0.5, -1 ≤ wz ≤ 1; `run` and `run_arms` 0 ≤ vx ≤ 5, |vy| ≤ 0.12, |wz| ≤ 0.5. Joint targets
+are absolute angles (rad). Values outside the bounds are clipped. `grip_left`, `grip_right`: ≥ 0.5 closes the hand's
+grip, < 0.5 opens it. At the start the robot stands in `stand` mode with the arms at rest: the `stand` row
+`[0, 0, 0, 0.2, 0.2, 0, 1.28, 0, 0, 0, 0.2, -0.2, 0, 1.28, 0, 0, 0, 0, 0]` (the waist and arms at their start angles,
+both grips open) keeps it there.
 
-Joint order everywhere (Unitree's SDK order), with each joint's range, speed limit, torque limit and default gains
-(also in `spec()["robot_facts"]`):
+Joint order everywhere (Unitree's SDK order): `left_hip_pitch`, `left_hip_roll`, `left_hip_yaw`, `left_knee`,
+`left_ankle_pitch`, `left_ankle_roll`, `right_hip_pitch`, `right_hip_roll`, `right_hip_yaw`, `right_knee`,
+`right_ankle_pitch`, `right_ankle_roll`, `waist_yaw`, `waist_roll`, `waist_pitch`, `left_shoulder_pitch`,
+`left_shoulder_roll`, `left_shoulder_yaw`, `left_elbow`, `left_wrist_roll`, `left_wrist_pitch`, `left_wrist_yaw`,
+`right_shoulder_pitch`, `right_shoulder_roll`, `right_shoulder_yaw`, `right_elbow`, `right_wrist_roll`,
+`right_wrist_pitch`, `right_wrist_yaw`. Each joint's range, speed and torque limits, default gains and start angle are
+in the spec's `robot_facts`.
 
-| # | joint | range (rad) | speed (rad/s) | torque (N m) | kp | kd | at the start (rad) |
-|---|---|---|---|---|---|---|---|
-| 0 | `left_hip_pitch` | [-2.5307, 2.8798] | 32 | 88 | 700 | 12 | -0.1 |
-| 1 | `left_hip_roll` | [-0.5236, 2.9671] | 20 | 139 | 700 | 12 | 0 |
-| 2 | `left_hip_yaw` | [-2.7576, 2.7576] | 32 | 88 | 500 | 8 | 0 |
-| 3 | `left_knee` | [-0.0873, 2.8798] | 20 | 139 | 900 | 15 | 0.3 |
-| 4 | `left_ankle_pitch` | [-0.8727, 0.5236] | 37 | 50 | 300 | 6 | -0.2 |
-| 5 | `left_ankle_roll` | [-0.2618, 0.2618] | 37 | 50 | 300 | 6 | 0 |
-| 6 | `right_hip_pitch` | [-2.5307, 2.8798] | 32 | 88 | 700 | 12 | -0.1 |
-| 7 | `right_hip_roll` | [-2.9671, 0.5236] | 20 | 139 | 700 | 12 | 0 |
-| 8 | `right_hip_yaw` | [-2.7576, 2.7576] | 32 | 88 | 500 | 8 | 0 |
-| 9 | `right_knee` | [-0.0873, 2.8798] | 20 | 139 | 900 | 15 | 0.3 |
-| 10 | `right_ankle_pitch` | [-0.8727, 0.5236] | 37 | 50 | 300 | 6 | -0.2 |
-| 11 | `right_ankle_roll` | [-0.2618, 0.2618] | 37 | 50 | 300 | 6 | 0 |
-| 12 | `waist_yaw` | [-2.618, 2.618] | 32 | 88 | 400 | 10 | 0 |
-| 13 | `waist_roll` | [-0.52, 0.52] | 37 | 50 | 400 | 10 | 0 |
-| 14 | `waist_pitch` | [-0.52, 0.52] | 37 | 50 | 400 | 10 | 0 |
-| 15 | `left_shoulder_pitch` | [-3.0892, 2.6704] | 37 | 25 | 300 | 6 | 0.2 |
-| 16 | `left_shoulder_roll` | [-1.5882, 2.2515] | 37 | 25 | 300 | 6 | 0.2 |
-| 17 | `left_shoulder_yaw` | [-2.618, 2.618] | 37 | 25 | 300 | 6 | 0 |
-| 18 | `left_elbow` | [-1.0472, 2.0944] | 37 | 25 | 300 | 6 | 1.28 |
-| 19 | `left_wrist_roll` | [-1.9722, 1.9722] | 37 | 25 | 100 | 2 | 0 |
-| 20 | `left_wrist_pitch` | [-1.6144, 1.6144] | 22 | 5 | 60 | 1 | 0 |
-| 21 | `left_wrist_yaw` | [-1.6144, 1.6144] | 22 | 5 | 60 | 1 | 0 |
-| 22 | `right_shoulder_pitch` | [-3.0892, 2.6704] | 37 | 25 | 300 | 6 | 0.2 |
-| 23 | `right_shoulder_roll` | [-2.2515, 1.5882] | 37 | 25 | 300 | 6 | -0.2 |
-| 24 | `right_shoulder_yaw` | [-2.618, 2.618] | 37 | 25 | 300 | 6 | 0 |
-| 25 | `right_elbow` | [-1.0472, 2.0944] | 37 | 25 | 300 | 6 | 1.28 |
-| 26 | `right_wrist_roll` | [-1.9722, 1.9722] | 37 | 25 | 100 | 2 | 0 |
-| 27 | `right_wrist_pitch` | [-1.6144, 1.6144] | 22 | 5 | 60 | 1 | 0 |
-| 28 | `right_wrist_yaw` | [-1.6144, 1.6144] | 22 | 5 | 60 | 1 | 0 |
+### Observations
+- Cameras: the robot's two head cameras `head_left` and `head_right` (RGB 270 × 480, a stereo pair 5 cm apart, tilted
+  20° down; depth on `head_left`) and the venue's fixed cameras (`venue`); the spec's `cameras` gives each one's field
+  of view and pose at the start.
+- Proprioception: each row has, in the spec's `proprio_layout` order: the 29 joint positions (`*_pos`, rad), their
+  velocities (`*_vel`, rad/s), the motor torques applied (`*_torque`, N m), the joint targets in force (`*_target`,
+  rad), the pelvis IMU and the torso IMU (each: orientation quaternion `qw, qx, qy, qz`, world from sensor; angular
+  velocity `gx, gy, gz`, rad/s; acceleration `ax, ay, az`, m/s², gravity included; in the sensor's frame),
+  `holding_left`, `holding_right` (1 while that hand grips something), `mode` (0 stand, 1 walk, 2 run, 3 run_arms, 4
+  joints / lowcmd; the G1 also 5 walk_falcon, 6 walk_agile), the velocity command in force (`cmd_vx`, `cmd_vy`,
+  `cmd_wz`) and `time_s`, the attempt's time. A real G1 has no sensor for its position in the venue, and neither do you:
+  that is what the cameras are for.
 
-What the platform does and does not do for you:
-
+### What the platform does
 - **`stand`** holds the legs at the standing pose with stiff gains and a gravity-support torque. It is not a balance
-  controller: it does not step and it has no feedback. After an arm movement the body sways a few centimetres for a
-  few seconds; a hard or fast swing of the arms, a push or a load can tip the robot over within a second or two.
+  controller: it does not step and it has no feedback. After an arm movement the body sways a few centimetres for a few
+  seconds; a hard or fast swing of the arms, a push or a load can tip the robot over within a second or two.
 - **`walk`** runs Unitree's own G1 walking policy (50 Hz) on the legs. At the largest forward command (0.8) it walks at
-  about 0.6 m/s; `vy` up to 0.5 and `wz` up to 1.57 rad/s; it follows with lag and barely moves in its first second.
-  At a zero command it marks time on the spot (the pelvis sways and drifts a centimetre or two per second) and
-  recovers from small disturbances, which `stand` does not. When the legs come to it from another mode it first blends
-  them to the stance (0.3 s) and holds a zero command until the robot is steady (up to 2 s). It was trained with the
-  arms at rest: moving the arms and the waist disturbs it.
+  about 0.6 m/s; `vy` up to 0.5 and `wz` up to 1.57 rad/s; it follows with lag and barely moves in its first second. At
+  a zero command it marks time on the spot (the pelvis sways and drifts a centimetre or two per second) and recovers
+  from small disturbances, which `stand` does not. When the legs come to it from another mode it first blends them to
+  the stance (0.3 s) and holds a zero command until the robot is steady (up to 2 s). It was trained with the arms at
+  rest: moving the arms and the waist disturbs it.
 - **`walk_falcon`** and **`walk_agile`** are two more walking policies for the G1's legs, with the same row as `walk`
-  (you keep the waist and the arms): FALCON (LeCAR-Lab, MIT; trained with arm motions and forces on the hands) and
-  AGILE's velocity-height policy (NVIDIA WBC-AGILE, Apache-2.0; trained while the arms and the waist moved), the
-  released weights run in numpy at 50 Hz on their own leg gains (kp 100 / 100 / 100 / 200 / 20 / 20 per leg). Both
-  hold still and follow the command better than `walk` while the arms move or carry something; FALCON also adds a small
-  correction to the wrists. FALCON zeroes speeds below 0.2 m/s and turns below 0.2 rad/s and stands with the pelvis at
-  about 0.74 m; AGILE zeroes commands of norm below 0.1, stands lower (about 0.68 m) and barely turns on the spot below
-  about 0.7 rad/s (walking at 0.2 m/s or more it turns as asked). Their command ranges are in the action table. A
-  walker takes the legs at once, from where they are (its memory starts afresh); `walk`, the other walker and `run`
-  take them from it the same way. Going from a walker straight to `stand` usually ends in a fall (`stand` holds
-  Unitree's stance and does not balance): give `walk` a zero command for about 2 s first.
-- **`run`** runs Embodied Olympics' athletics running policy (50 Hz) on all 29 joints: `vx` from 0 to about 4 m/s (it falls
+  (you keep the waist and the arms): FALCON (trained with arm motions and forces on the hands) and AGILE's
+  velocity-height policy (trained while the arms and the waist moved), the released weights run in numpy at 50 Hz on
+  their own leg gains (kp 100 / 100 / 100 / 200 / 20 / 20 per leg). Both hold still and follow the command better than
+  `walk` while the arms move or carry something; FALCON also adds a small correction to the wrists. FALCON zeroes speeds
+  below 0.2 m/s and turns below 0.2 rad/s and stands with the pelvis at about 0.74 m; AGILE zeroes commands of norm
+  below 0.1, stands lower (about 0.68 m) and barely turns on the spot below about 0.7 rad/s (walking at 0.2 m/s or more
+  it turns as asked). Their command ranges are in the action table. A walker takes the legs at once, from where they are
+  (its memory starts afresh); `walk`, the other walker and `run` take them from it the same way. Going from a walker
+  straight to `stand` usually ends in a fall (`stand` holds Unitree's stance and does not balance): give `walk` a zero
+  command for about 2 s first.
+- **`run`** runs the platform's athletics running policy (50 Hz) on all 29 joints: `vx` from 0 to about 4 m/s (it falls
   above that; the command changes at most 1.5 m/s per second), `|vy|` ≤ 0.12 m/s, `|wz|` ≤ 0.5 rad/s. `run_arms` gives
   you the arms while it keeps the legs and the waist; taking the arms away from its swing disturbs it. Switching to
-  `stand`, `walk` or `joints` above about 0.6 m/s usually ends in a fall: slow down first (from 2.4 m/s that takes
-  about 2 s and 2.3 m).
-- **`joints` / `lowcmd`** are yours: each motor's torque is `kp (q − q_measured) + kd (dq − dq_measured) + tau`, evaluated
-  at 1 kHz with your row held for its 10 ms, then limited by the motor's torque-speed curve and torque limit. `joints`
-  uses the default gains of the table and zero `dq` and `tau`; `lowcmd` takes yours (kp up to 1000 / 500 / 400 and kd up to
-  20 / 15 / 10 for legs / waist / arms). Nothing balances the robot in these modes but your own targets.
+  `stand`, `walk` or `joints` above about 0.6 m/s usually ends in a fall: slow down first (from 2.4 m/s that takes about
+  2 s and 2.3 m).
+- **`joints` / `lowcmd`** are yours: each motor's torque is `kp (q − q_measured) + kd (dq − dq_measured) + tau`,
+  evaluated at 1 kHz with your row held for its 10 ms, then limited by the motor's torque-speed curve and torque limit.
+  `joints` uses the default gains (the spec's `robot_facts`) and zero `dq` and `tau`; `lowcmd` takes yours (kp up to
+  1000 / 500 / 400 and kd up to 20 / 15 / 10 for legs / waist / arms). Nothing balances the robot in these modes but
+  your own targets.
 - **Every joint target** is clipped into the joint's range and moves at most the joint's speed limit × 10 ms per step
-  from the target in force. Joints a type does not name keep their targets. The speed limit is a limit on targets;
-  what bounds the joint itself is the motor's torque-speed curve (a `lowcmd` feed-forward torque can turn a joint up to
-  about 1.15 times that speed, where the motor's torque has fallen to zero).
-- **The hands** have no working fingers here; each carries a fist pad (a box of 4.4 × 8 × 10 cm beyond the wrist, the
-  10 cm along the forearm). Nothing in this task is grippable: `grip_left` and `grip_right` have no effect.
+  from the target in force. Joints a type does not name keep their targets. The speed limit is a limit on targets; what
+  bounds the joint itself is the motor's torque-speed curve (a `lowcmd` feed-forward torque can turn a joint up to about
+  1.15 times that speed, where the motor's torque has fallen to zero).
+- **The hands** have no working fingers here; each carries a fist pad (a box of 4.4 × 8 × 10 cm beyond the wrist, the 10
+  cm along the forearm). Nothing in this task is grippable: `grip_left` and `grip_right` have no effect.
 - **A tool on a hand** (a racket, a paddle, a club; where the task has one) is fixed to the wrist in place of the pad.
   It collides with the world, the ball and the rest of your own body.
 - **The air** is real: balls and implements feel drag and, when they spin, lift.
 - **If the physics diverges** (a numerical blow-up, typically from a violent joint command), the attempt ends as a
   failure: "the simulation became unstable".
 
-## Proprioception
-Each row (`meta["proprio"]["now"]`, `res.proprio`) has, in `spec()["proprio_layout"]` order: the 29 joint positions
-(`*_pos`, rad), their velocities (`*_vel`, rad/s), the motor torques applied (`*_torque`, N m), the joint targets in
-force (`*_target`, rad), the pelvis IMU and the torso IMU (each: orientation quaternion `qw, qx, qy, qz`, world from
-sensor; angular velocity `gx, gy, gz`, rad/s; acceleration `ax, ay, az`, m/s², gravity included; in the sensor's frame),
-`holding_left`, `holding_right` (1 while that hand grips something), `mode` (0 stand, 1 walk, 2 run, 3 run_arms,
-4 joints / lowcmd; the G1 also 5 walk_falcon, 6 walk_agile), the velocity command in force (`cmd_vx`, `cmd_vy`, `cmd_wz`) and `time_s`, the attempt's time. A
-real G1 has no sensor for its position in the venue, and neither do you: that is what the cameras are for.
+### Time
+- Time moves only inside calls: `submit` runs your rows and `get_obs(seconds=s)` holds the command in force for s
+  seconds; both use up the attempt's time. Between calls the robot waits, frozen, while you think; `r.get_obs()` with no
+  seconds is free.
 
-## This run: privileged state queries
-
-This run lets you query the simulator's state. This section overrides anything above, and anything in `/spec`, that
-says object poses or the scene's state are never given.
+### This run: privileged state queries
+This run lets you query the simulator's state.
 
 - `GET /state/entities` (on the same base URL as your other calls) lists what you can query:
-  `{"frame": ..., "quaternion_order": ..., "entities": {name: {"kind": ..., "fields": {field: unit}}}}`. The
-  kinds are `robot` (the robot's base or root), `robot_link` (a hand, a foot, an end effector), `object`,
-  `articulation` (a door, a drawer, a faucet: its joints) and `scene_feature` (a zone, a line, a hazard, a canvas
-  region). The list is fixed for the run.
+  `{"frame": ..., "quaternion_order": ..., "entities": {name: {"kind": ..., "fields": {field: unit}}}}`. The kinds are
+  `robot` (the robot's base or root), `robot_link` (a hand, a foot, an end effector), `object`, `articulation` (a door,
+  a drawer, a faucet: its joints) and `scene_feature` (a zone, a line, a hazard, a canvas region). The list is fixed for
+  the run.
 - `POST /state/query` with `{"names": ["robot", ...], "fields": ["pos", "quat"]}` answers JSON
-  `{"state": {name: {field: value}}, "control_steps": ..., "sim_time_s": ..., "state_queries": ...}` with the
-  current values. `fields` is optional: without it you get every field of each name. In Python:
+  `{"state": {name: {field: value}}, "control_steps": ..., "sim_time_s": ..., "state_queries": ...}` with the current
+  values. `fields` is optional: without it you get every field of each name. In Python:
   `requests.post(base + "/state/query", json={"names": ["robot"]}).json()["state"]`.
   - The usual fields: `pos` [x, y, z] m, `quat` (in `quaternion_order`), `lin_vel` m/s, `ang_vel` rad/s,
-    `height_above_ground` m, `joint_pos` / `joint_vel` {joint: value}, `size` [3] m (full extents), and `bbox`
-    [[min x, y, z], [max x, y, z]] m. A task may add its own; each field's unit is in the list.
+    `height_above_ground` m, `joint_pos` / `joint_vel` {joint: value}, `size` [3] m (full extents), and `bbox` [[min x,
+    y, z], [max x, y, z]] m. A task may add its own; each field's unit is in the list.
   - All values are in the world frame that `frame` describes.
   - A field that an entity does not have is left out of its entry.
   - An unknown name or field is a 400 that lists the valid ones.
 - A query only reads. It takes no control step, and it does not advance or pause the clock. In standard-realtime it
   answers at the current simulation time while the robot keeps moving. It is served while the episode runs (409 after
   the episode ended). Queries are counted and recorded; they do not change the grading.
-- Nothing else changes: the goal, the success rule and its thresholds are not given, and no answer says whether the
-  task is done.
+- Nothing else changes: the goal, the success rule and its thresholds are not given, and no answer says whether the task
+  is done.
 
-## External material
-The network is open. You may install packages (pip, apt), and you may search for, download and use public tools, robot models and pretrained controllers (for example a published Unitree G1 walking, jumping or whole-body policy): finding existing work and adapting it to this robot is encouraged. Say in your notes what you used. You may read anything installed in your container, this benchmark's own source code included. The one thing not to look up is a ready-made solution to this exact task, such as this benchmark's reference solutions. This is an honour rule; trials are reviewed.
+## Others
+Rule book: IFAB Laws of the Game. The rules here:
+- One direct free kick, 20 m from the goal line, over or round a wall of 4 mannequins standing 9.15 m from the ball and
+  covering the near post; no goalkeeper.
+- One kick, with a foot; a later touch by you is a second touch.
+- A fall after the kick does not end the attempt.
 
-## Resources
-Your container: **4 CPUs**, **10 GiB of memory**, **8192 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
-
-## Time limit
-You have 7200 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
-
-This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` counts the same limit from your first request to the service, so it never runs out before your time does: your real time left is `time_left_s` minus the time you spent before that request. Plan by it. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it (for example Codex's `yield_time_ms`) even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+## Limits
+- Time: 7200 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
+  the end you are stopped without warning and the episode is graded as it stands. Time left:
+  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`); the service's `time_left_s` (in every reply) starts at
+  your first request, so the file is the one to trust. Calls into a long-running process can block for their whole wait
+  time: use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: open. You may install packages and search for, download and use public tools, robot models and pretrained
+  controllers (say in your notes what you used); you may read anything in your container, the benchmark's source
+  included. Do not look up a ready-made solution to this exact task, such as the benchmark's reference solutions; trials
+  are reviewed.
+- Resources: 4 CPUs, 10 GiB memory, 8192 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`),
+  no GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap
+  only slows you down); usage: `/run/rcb-limits/usage.json`.
+- Resets: at most 5 (`spec()["budget"]["reset"]`), each a new episode from the same starting state.

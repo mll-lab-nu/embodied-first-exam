@@ -1,4 +1,12 @@
 [[replace]]
+old = "## Task\nA bimanual robot in ABC Sim (MuJoCo): two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each) side\nby side at the near edge of a table, facing +x (the left arm is the one at +y). 9 nuts and 10 bolts lie on the table\nwith two bins, a teal one and an orange one (loose objects, turned at some angle). Sort the parts: the nuts into the\nteal bin and the bolts into the orange bin. The scene is one fixed instance. You have the full simulator to develop\nwith; you hand in a trajectory of robot actions."
+new = "## Task\nA bimanual robot in ABC Sim (MuJoCo): two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each) side\nby side at the near edge of a table, facing +x (the left arm is the one at +y). 9 nuts and 8 bolts lie on the table with\ntwo bins, a teal one and an orange one (loose objects, turned at some angle). Sort the parts: the nuts into the teal bin\nand the bolts into the orange bin. The scene is one fixed instance. You have the full simulator to develop with; you\nhand in a trajectory of robot actions."
+
+[[replace]]
+old = "## Task\nA bimanual robot in ABC Sim (MuJoCo): two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each) side\nby side at the near edge of a table, facing +x (the left arm is the one at +y). 9 nuts and 10 bolts lie on the table\nwith two bins, a teal one and an orange one (loose objects, turned at some angle). Sort the parts: the nuts into the\nteal bin and the bolts into the orange bin. The robot runs as a service you reach only through its client, as if it were\nreal hardware: one live episode."
+new = "## Task\nA bimanual robot in ABC Sim (MuJoCo): two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each) side\nby side at the near edge of a table, facing +x (the left arm is the one at +y). 9 nuts and 8 bolts lie on the table with\ntwo bins, a teal one and an orange one (loose objects, turned at some angle). Sort the parts: the nuts into the teal bin\nand the bolts into the orange bin. The robot runs as a service you reach only through its client, as if it were real\nhardware: one live episode."
+
+[[replace]]
 old = "state hash `36a10f65fd90f73b`"
 new = "state hash `6f648da7c645f536`"
 

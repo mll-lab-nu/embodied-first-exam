@@ -1,26 +1,47 @@
-# couch — i199 — STANDARD MODE (robot as a service)
+# HumanCLAW · sit on the couch, i199 (standard)
 
-You control a simulated adult human body in a furnished house (HumanCLAW: Habitat-Sim with Half-Physics, an HSSD
-scene) **as if it were a real body**: the simulator runs in a service you cannot open, and you reach it only
-through a client. The body moves only by **motion skills**. **Task (HumanCLAW's own words):** Find the couch and move until your body is touching the target, with zero distance to the target object. Finally, sit on the couch.
+## Task
+A simulated adult human body in a furnished house (HumanCLAW: Habitat-Sim with Half-Physics, an HSSD scene); the body
+moves only by motion skills: walk, turn, side step, step back, steps up or down, sit and stop. Task (HumanCLAW's own
+words): Find the couch and move until your body is touching the target, with zero distance to the target object.
+Finally, sit on the couch. The robot runs as a service you reach only through its client, as if it were real hardware:
+one live episode.
 
-## Rules
-- **One episode, no reset.** It starts when the service comes up and ends at your **stop** action (the only way
-  to succeed), at the 100th action whatever it is, when your time is up, or on a simulator error.
-- **Time moves only inside calls.** Each action is one 0.5 s motion; between calls the body waits while you
-  think. `get_obs()` is free; `get_obs(seconds=s)` lets s seconds pass with the body standing still (no action
-  used).
-- **No privileged state, no score.** You see what the head camera sees (RGB, 448×448, 90° field of view), and
-  feel how many actions are used and left and how far your pelvis is above (or below) its starting height. Not
-  where you are, not where the target is, not a map: the service judges the episode and only tells you that it
-  ended (`meta["done"]`, `meta["reason"]`).
-- There is nothing to hand in: the service records the episode and grades it as it ran. Keep the script that
-  drives the body at `/app/output/gen.py` for the record.
+## Goal
+Success: you have sat down on a couch and are sitting on it, your pelvis resting on it at the end of your last motion,
+when you stop (any couch in the scene counts; at least one sit before the stop). The episode ends with your stop (action
+1), which declares that you are done: how things stand at that moment is what counts, and only a stop can succeed.
+Ending without a stop fails: the 100th action ends the episode whatever it is.
 
-## Scoring
-HumanCLAW's InteractSR: the episode ends with a **stop**, after at least one **sit**, and the pelvis touches the couch's mesh on the last frame of the last motion (any couch in the scene counts). Ending without a stop fails.
+Nothing to hand in: the service records and grades the episode. Keep the script that drives the robot at
+`/app/output/gen.py`.
 
-## Actions (`submit("skill", A)`, rows `[action_id, value]`)
+Real-robot rules:
+- One episode, no reset: what you knock over stays knocked over.
+- No privileged state: you see what the head camera sees and feel how many actions are used and left and how far your
+  pelvis is above (or below) its starting height; not where you are, not where the target is, not a map, no success
+  signal: the service only tells you that the episode ended (`meta["done"]`, `meta["reason"]`).
+- Write your own controller; do not use the benchmark's demonstrations, trained policies or any published solution.
+
+## Robot Interface
+### Client
+`/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`. Its docstring is the full reference
+(`python -c "import rcb_client; help(rcb_client)"`).
+```python
+from rcb_client import Robot
+r = Robot()                                  # connects and waits until the scene is ready
+r.spec()                                     # the body's facts, the action table, the camera
+res = r.get_obs()                            # res.last["ego"]: the head camera's image; res.meta["proprio"]["now"]
+res = r.submit("skill", [[2, 30.0], [0, 0.4]], video="none")   # turn left 30 degrees, then walk 0.4 m
+res.last["ego"]                              # what the head camera sees after the last action
+```
+Time moves only inside calls. Each action is one 0.5 s motion; between calls the body waits while you think. `get_obs()`
+is free; `get_obs(seconds=s)` lets s seconds pass with the body standing still (no action used). One call returns at
+most 3000 images.
+
+### Actions
+Actions go as `submit("skill", A)`, rows `[action_id, value]`:
+
 | id | action | value |
 |---|---|---|
 | 0 | walk forward | stride in m: `0.2`, `0.4` or `0.6` (nothing else) |
@@ -32,35 +53,32 @@ HumanCLAW's InteractSR: the episode ends with a **stop**, after at least one **s
 | 6 | side step | signed m, + left, - right; \|value\| clamped to [0.10, 0.50]; 0 is refused |
 | 7 | walk down one step | `0` |
 
-Each action except stop is one 0.5 s motion of the whole body (15 frames at 30 Hz), generated by HumanCLAW's
-motion model and played out under physics: the body ends up close to, not exactly at, what was asked, and it can
-bump into furniture (which can move). An episode allows **100 actions**, the stop included: the 100th action ends
-it whatever it is.
+Each action except stop is one 0.5 s motion of the whole body (15 frames at 30 Hz), generated by HumanCLAW's motion
+model and played out under physics: the body ends up close to, not exactly at, what was asked, and it can bump into
+furniture (which can move).
 
-A row that is invalid (an unknown id, a walk stride that is not 0.2 / 0.4 / 0.6, a turn of 0, a value on stop)
-refuses the whole call (`ValueError`) and nothing runs; a clamped value is reported in `meta["clipped"]`. `dt` must
-be 0.5 s (one row = one skill).
+A row that is invalid (an unknown id, a walk stride that is not 0.2 / 0.4 / 0.6, a turn of 0, a value on stop) refuses
+the whole call (`ValueError`) and nothing runs; a clamped value is reported in `meta["clipped"]`. `dt` must be 0.5 s
+(one row = one skill).
 
-## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`)
-Its docstring is the full reference (`python -c "import rcb_client; help(rcb_client)"`).
-```python
-from rcb_client import Robot
-r = Robot()                                  # connects and waits until the scene is ready
-r.spec()                                     # the body's facts, the action table, the camera
-res = r.get_obs()                            # res.last["ego"]: the head camera's image; res.meta["proprio"]["now"]
-res = r.submit("skill", [[2, 30.0], [0, 0.4]], video="none")   # turn left 30 degrees, then walk 0.4 m
-res.last["ego"]                              # what the head camera sees after the last action
-```
+### Observations
+- The head camera (`ego`): RGB, 448×448, 90° field of view; `res.last["ego"]` after the last action.
+- Proprioception (`res.meta["proprio"]["now"]`): how many actions are used and left and how far your pelvis is above (or
+  below) its starting height.
 
-One call returns at most 3000 images (`max_frames_per_call`, PROTOCOL §3 "Images per call").
-
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
-
-## Resources
-Your container: **4 CPUs**, **3 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
-
-## Time limit
-You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
-
-This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` counts the same limit from your first request to the service, so it never runs out before your time does: your real time left is `time_left_s` minus the time you spent before that request. Plan by it. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+## Limits
+- Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
+  the end you are stopped without warning and the episode is graded as it stands. Time left:
+  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`); the service's `time_left_s` (in every reply) starts at
+  your first request, so the file is the one to trust. Calls into a long-running process can block for their whole wait
+  time: use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, the simulator's and the benchmark's source included. Do not search for or
+  download a ready-made solution (published or reference solutions, recorded demonstrations, trained policies); trials
+  are reviewed.
+- Resources: 4 CPUs, 3 GiB memory, 1024 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`), no
+  GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap only
+  slows you down); usage: `/run/rcb-limits/usage.json`.
+- Resets: none: one episode.
+- Actions: at most 100 per episode, the stop included.

@@ -1,63 +1,84 @@
-# Quadrotor landing adaptation
+# roboEngineer · Quadrotor landing adaptation (standard)
 
-Make the quadrotor land gently on the visible circular pad and remain settled. The deployment simulator includes unmodeled dynamics. The nominal simulator and policy code in this image are available for inspection and training; the deployment simulator is accessed only through the client.
+## Task
+A simulated Intel Aero quadrotor (MuJoCo, with a learned ground-effect residual in the evaluator). Make the quadrotor
+land gently on the visible circular pad and remain settled. The deployment simulator includes unmodeled dynamics. You
+tune its numeric controller on the public nominal model in your container and deploy it to a hidden evaluator whose
+dynamics differ in ways you are not told; the evaluator runs as a service you reach only through its client.
 
-Use `python -m scripts.quadrotor_landing.public.client describe` to inspect your remaining budget. Develop a numeric policy following `public/policy.py`. The controller executes at 100 Hz with four bounded rotor-thrust commands. This task fixes the feedback-controller structure; you may train its three-axis residual-force model and tune its public gains. It does not accept arbitrary executable controllers.
+## Goal
+Success: the quadrotor lands gently on the pad (slowly at the first touch, touching nothing but the pad), settles there,
+level and still, and stays settled until the episode ends at 16 s. Landing elsewhere on the floor fails even if it later
+slides onto the pad, and so do tipping far over, leaving the flying area or climbing too high. A safe landing about as
+quick as a strong reference controller manages for that case scores 100, a slower safe landing 60 to 100, a failure 0.
+The evaluator runs the policy you select on 6 held-out cases (new episodes of the same hidden plant, never shown to
+you): success needs every case to pass, and `final_reward` reports the mean score (0-100).
 
-Submit each candidate with `python -m scripts.quadrotor_landing.public.client deploy --policy policy.json --note 'Observed failure and intended change' --out feedback.json`. The three deployment rounds share three adaptation cases. Feedback includes 20 Hz noisy navigation, IMU specific force, measured rotor RPM, your commands, and sixteen timestamped image samples. An episode that crashes or makes the simulation diverge ends at that moment: its telemetry and image samples stop there. Use only these observations to estimate the mismatch. Write your own fitting and analysis code. The nominal simulator is `scripts/quadrotor_landing/public/nominal.py`. Save each policy, your code changes, and a concise diagnosis. Do not look up task-specific solutions or hidden evaluator information.
+Deliverable: the policy of one completed deployment round. Seal it with
+`python -m scripts.quadrotor_landing.public.client seal --round-id round-N --note '...'`: you may select any completed
+round. This is irreversible for the session. If you finish or time out without sealing, the evaluator selects the latest
+round completed before the cutoff. In-flight or late rounds cannot be selected. With no eligible round the score is
+zero. Work in `/app` and preserve your code, policies, exact feedback and short iteration diagnoses in `/app/output/`.
+Save each policy, your code changes, and a concise diagnosis.
 
-Finish with `python -m scripts.quadrotor_landing.public.client seal --round-id round-3 --note 'Why this policy was selected'`. You may select any completed round. This is irreversible for the session. Six held-out cases are evaluated afterward; their data are unavailable during adaptation. Counts and deadline in the live contract are authoritative.
+Real-robot rules:
+- Deployment rounds: as many as your time allows, with save and load of development episodes (Robot Interface,
+  `### This run: unlimited resets, save and load`); grading is unchanged: the round you seal (or else the latest
+  completed one) is graded.
+- Privileged state queries: this run lets you read the simulator's state (Robot Interface,
+  `### This run: privileged state queries`); the answers never say whether the task is done.
+- Write your own fitting, training and analysis code; do not use published or reference solutions, trained policies for
+  this task, or hidden evaluator information.
 
-The observations use metres, seconds, world-frame position/velocity, a body-to-world quaternion in wxyz order, body angular velocity in rad/s, body-frame IMU specific force in m/s², and rotor speeds in RPM. The nominal thrust coefficient and geometry are public. The base plane is at world z=0; the nominal body origin is 0.09 m above it at touchdown. Camera frames are 1280×720 with a fixed world camera and no state or score overlays. The live contract identifies the rendering style. The commanded landing-pad position is `pad_position` in each observation. This is a public task goal, not a measurement of the robot. It remains fixed throughout the episode. Initial x/y and pad x/y are sampled in [-1, 1] m, conditioned on at least 0.5 m horizontal separation. Initial body-origin height is 0.8–1.5 m. Episodes last 16 s. Landing elsewhere on the floor fails, even if the robot later slides onto the pad.
+## Robot Interface
+### Client
+- `python -m scripts.quadrotor_landing.public.client describe`: your remaining budget (counts and deadline in the live
+  contract are authoritative). Calibration and health checks do not consume deployment rounds.
+- Deploy a candidate:
+  `python -m scripts.quadrotor_landing.public.client deploy --policy policy.json --note 'Observed failure and intended change' --out feedback.json`.
+  A deployment request consumes one round before execution.
+- Seal a round:
+  `python -m scripts.quadrotor_landing.public.client seal --round-id round-3 --note 'Why this policy was selected'`.
+- The deployment endpoint is `http://127.0.0.1:8000`; `GET /spec` describes its protocol.
 
-The `landing-policy/2` controller first approaches the pad horizontally, then descends; both durations and the feedback gains are tunable. Its learned correction has 3 × 14 bounded coefficients. The nominal model includes published mass and thrust calibration; inertias and geometry are approximate. This task does not claim a fully calibrated airframe.
+### Training
+Develop a numeric policy following `public/policy.py`. The controller executes at 100 Hz with four bounded rotor-thrust
+commands. This task fixes the feedback-controller structure; you may train its three-axis residual-force model and tune
+its public gains. It does not accept arbitrary executable controllers. The `landing-policy/2` controller first
+approaches the pad horizontally, then descends; both durations and the feedback gains are tunable. Its learned
+correction has 3 × 14 bounded coefficients. The nominal simulator is `scripts/quadrotor_landing/public/nominal.py`. Only
+validated numeric policies reach deployment; editing your local controller implementation does not change the
+evaluator's controller. Nominal training is unrestricted within the resource and time limits.
 
-Scoring (`oracle-relative-time/1`, task `random-pad-landing/4`): before adaptation begins, the evaluator freezes a private safe reference time `T_ref` for each case using a full-model numerical oracle. Safe completion within `1.10 × T_ref` earns 100. Later safe completion earns `60 + 40 × clip((16 - completion_time_s) / (16 - 1.10 × T_ref), 0, 1)`. Failure earns zero. This rewards quick safe completion relative to the difficulty of that particular start, pad and dynamics, rather than an arbitrary fixed target time. The reference is the best verified result of a finite optimization over the bounded controller family with exact state and residual feedback, not a certified global optimum. Actual reference times, oracle policies and trajectories are private. The 10% allowance is fixed for every case.
+### Feedback
+The three deployment rounds share three adaptation cases. Feedback includes 20 Hz noisy navigation, IMU specific force,
+measured rotor RPM, your commands, and sixteen timestamped image samples. An episode that crashes or makes the
+simulation diverge ends at that moment: its telemetry and image samples stop there.
+- The observations use metres, seconds, world-frame position/velocity, a body-to-world quaternion in wxyz order, body
+  angular velocity in rad/s, body-frame IMU specific force in m/s², and rotor speeds in RPM. The nominal thrust
+  coefficient and geometry are public. The base plane is at world z=0; the nominal body origin is 0.09 m above it at
+  touchdown.
+- Camera frames are 1280×720 with a fixed world camera and no state or score overlays. The live contract identifies the
+  rendering style.
+- The commanded landing-pad position is `pad_position` in each observation. This is a public task goal, not a
+  measurement of the robot. It remains fixed throughout the episode.
 
-Completion time runs from episode start through one continuous second of settled on-pad contact. Instability or takeoff resets the settled interval; the vehicle must stay settled through the 16-second episode end. Safe success requires no off-pad foot contact or body/rotor ground collision; first-contact vertical speed below 0.4 m/s and horizontal speed below 0.25 m/s; and a final continuous settled second with pad-relative horizontal error below 0.15 m, tilt below 0.15 rad, and translational speed below 0.08 m/s. Tilt over 0.8 rad, leaving the world square [-3, 3]² m, or body height over 3 m also fails. Missing the deadline earns zero.
+### This run: privileged state queries
+This run lets you read the simulator's true state during your development episodes.
 
-Aggregate grading reports mean score, success rate, and mean successful completion time. Actual scores, completion times, contacts, success flags and oracle data are not returned during adaptation; infer performance only from the allowed noisy observations and images. These scoring weights are benchmark choices, not paper-derived values.
-
-This task uses `eai-policy/1.0`. Work in `/app`, preserve your code, policies, exact feedback and short iteration diagnoses in `/app/output/`. Nominal training is unrestricted within the resource and time limits. Only validated numeric policies reach deployment; editing your local controller implementation does not change the evaluator's controller. The deployment endpoint is `http://127.0.0.1:8000`; `GET /spec` describes its protocol. A deployment request consumes one round before execution. No reset, held-out query, score query or arbitrary code execution is provided.
-
-Seal a completed round to select it. If you finish or time out without sealing, the evaluator selects the latest round completed before the cutoff. In-flight or late rounds cannot be selected. With no eligible round the score is zero. Harbor stops the agent at its time limit; the service also closes after the same duration from the first policy API request. Calibration and health checks do not consume deployment rounds. Binary benchmark success requires all six held-out cases to land safely; the continuous 0–100 score is reported separately as `final_reward` (`progress` is that score divided by 100).
-
-## This run: unlimited resets, save and load
-
-This run raises the deployment budget and adds two calls. This section overrides anything above, and anything in
-`/describe`, that says there are three rounds, or that no reset exists.
-
-- You have 1003 deployment rounds (`max_rounds` in `/describe`): in practice as many as your time allows. Every
-  deployment starts each development case afresh from its starting state (that is the reset); the cases and the hidden
-  dynamics stay the same.
-- `POST /save_state` with `{"round_id": "round-1", "case": 0, "t": 4.0}` names the state of that completed development
-  episode at its telemetry time at or before `t` seconds and answers `{"handle": "s1", "t": ...}`. The handle is all
-  you get, never the state's contents. At most 32 handles are kept (the least recently used one is dropped).
-- `POST /load_state` with `{"handle": "s1"}` makes your next deployment run only that case, starting from that saved
-  state, with the policy you deploy taking over there. The controller's run-time state (its phase, timers,
-  integrators, last action) carries over; its parameters are the new policy's. The loaded deployment's feedback covers
-  the whole episode, the saved path included, and its answer has `start` and `load_verified`. `{"handle": null}`
-  cancels a pending load. Saves and loads cost no round. In Python: `call("save_state", {...}, url="http://127.0.0.1:8000")`, `call("load_state", {...}, url="http://127.0.0.1:8000")`, then the client's `deploy`.
-- Grading is unchanged: the selected round's policy (sealed, or else the latest completed round) runs every held-out
-  case from its start, as described above; a policy deployed after a load is evaluated like any other.
-- Your time keeps running across deployments, saves and loads.
-
-## This run: privileged state queries
-
-This run lets you read the simulator's true state during your development episodes. This section overrides anything
-above, and anything in `/describe`, that says the true state is never returned during adaptation.
-
-- `GET /state/entities` (in Python: `json.load(urllib.request.urlopen("http://127.0.0.1:8000/state/entities"))`) lists what you can query: `{"frame", "quaternion_order", "entities": {name:
-  {"kind", "fields": {field: unit}, "static"}}, "rounds"}`. The kinds are `robot` (the robot's base or root, the
-  car, the drone), `object` (parked cars) and `scene_feature` (poles, a parking slot, a curb, a pad). `rounds` lists the
-  completed rounds you can query.
+- `GET /state/entities` (in Python: `json.load(urllib.request.urlopen("http://127.0.0.1:8000/state/entities"))`) lists
+  what you can query:
+  `{"frame", "quaternion_order", "entities": {name: {"kind", "fields": {field: unit}, "static"}}, "rounds"}`. The kinds
+  are `robot` (the robot's base or root, the car, the drone), `object` (parked cars) and `scene_feature` (poles, a
+  parking slot, a curb, a pad). `rounds` lists the completed rounds you can query.
 - `POST /state/query` with `{"names": [...], "fields": [...], "round_id": ..., "case": ..., "t": ...}` (in Python:
-  `call("state/query", {"names": ["drone"], "case": 0}, url="http://127.0.0.1:8000")` (with `call` from `scripts.quadrotor_landing.public.client`)) answers `{"round_id", "cases": [{"case", "t": [...], "state": {name: {field: [one value per time]}}}],
-  "state_queries"}`: the state of that round's development episodes at their telemetry times, that is the true pose
-  and velocity of each body and the robot's joints as its encoders read them (the same readings as the telemetry).
-  Only `names` is required: `fields` defaults to every field, `round_id` to the latest completed round, `case` to every
-  development case of that round, and `t` (seconds, or a window `[t0, t1]`) to every sample. A `static` entity gives
-  one value instead of a list.
+  `call("state/query", {"names": ["drone"], "case": 0}, url="http://127.0.0.1:8000")` (with `call` from
+  `scripts.quadrotor_landing.public.client`)) answers
+  `{"round_id", "cases": [{"case", "t": [...], "state": {name: {field: [one value per time]}}}], "state_queries"}`: the
+  state of that round's development episodes at their telemetry times, that is the true pose and velocity of each body
+  and the robot's joints as its encoders read them (the same readings as the telemetry). Only `names` is required:
+  `fields` defaults to every field, `round_id` to the latest completed round, `case` to every development case of that
+  round, and `t` (seconds, or a window `[t0, t1]`) to every sample. A `static` entity gives one value instead of a list.
   - The usual fields: `pos` [x, y, z] m, `quat` (in `quaternion_order`), `lin_vel` m/s, `ang_vel` rad/s (both in the
     world frame), `height_above_ground` m, `joint_pos` / `joint_vel` {joint: value}, `size` [3] m (full extents along
     the body's axes), `bbox` [[x, y, z] min, [x, y, z] max] m. Each field's unit is in the list.
@@ -67,13 +88,46 @@ above, and anything in `/describe`, that says the true state is never returned d
 - Nothing else changes: deployments return the same noisy feedback, and no answer holds a score, a success flag, the
   hidden dynamics or anything about the held-out cases.
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+### This run: unlimited resets, save and load
+This run raises the deployment budget and adds two calls.
 
-## Resources
-Your container: **2 CPUs**, **4 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
+- You have 1003 deployment rounds (`max_rounds` in `/describe`): in practice as many as your time allows. Every
+  deployment starts each development case afresh from its starting state (that is the reset); the cases and the hidden
+  dynamics stay the same.
+- `POST /save_state` with `{"round_id": "round-1", "case": 0, "t": 4.0}` names the state of that completed development
+  episode at its telemetry time at or before `t` seconds and answers `{"handle": "s1", "t": ...}`. The handle is all you
+  get, never the state's contents. At most 32 handles are kept (the least recently used one is dropped).
+- `POST /load_state` with `{"handle": "s1"}` makes your next deployment run only that case, starting from that saved
+  state, with the policy you deploy taking over there. The controller's run-time state (its phase, timers, integrators,
+  last action) carries over; its parameters are the new policy's. The loaded deployment's feedback covers the whole
+  episode, the saved path included, and its answer has `start` and `load_verified`. `{"handle": null}` cancels a pending
+  load. Saves and loads cost no round. In Python: `call("save_state", {...}, url="http://127.0.0.1:8000")`,
+  `call("load_state", {...}, url="http://127.0.0.1:8000")`, then the client's `deploy`.
+- Grading is unchanged: the selected round's policy (sealed, or else the latest completed round) runs every held-out
+  case from its start, as described above; a policy deployed after a load is evaluated like any other.
+- Your time keeps running across deployments, saves and loads.
 
-## Time limit
-You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+## Others
+- Initial x/y and pad x/y are sampled in [-1, 1] m, conditioned on at least 0.5 m horizontal separation. Initial
+  body-origin height is 0.8–1.5 m. Episodes last 16 s.
+- The nominal model includes published mass and thrust calibration; inertias and geometry are approximate. This task
+  does not claim a fully calibrated airframe.
 
-This is wall-clock time from the start of your session; the time you wait for the deployment service counts, deployments included. When it is up you are stopped without warning and the evaluator takes the round you sealed or, if you sealed none, the latest deployment that completed before that moment; a deployment still running then is not graded. The service's own deadline counts the same limit from your first request to it, so it never runs out before your time does. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it (for example Codex's `yield_time_ms`) even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+## Limits
+- Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the deployment service
+  too, deployments included). At the end you are stopped without warning and the evaluator takes the round you sealed
+  or, if you sealed none, the latest deployment that completed before then; a deployment still running is not graded.
+  Time left: `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`); the service's own deadline counts the same
+  limit from your first request to it. Calls into a long-running process can block for their whole wait time: use short
+  waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, the simulator's and the benchmark's source included. Do not search for or
+  download a ready-made solution (published or reference solutions, recorded demonstrations, trained policies); trials
+  are reviewed.
+- Resources: 2 CPUs, 4 GiB memory, 1024 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`), no
+  GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap only
+  slows you down); usage: `/run/rcb-limits/usage.json`.
+- Resets: every deployment starts its development cases afresh from their starting state; save and load as in Robot
+  Interface.
+- Rounds: as many as the ablation section in Robot Interface gives.

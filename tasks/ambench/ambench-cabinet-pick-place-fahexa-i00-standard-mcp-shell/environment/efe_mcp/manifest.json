@@ -115,6 +115,6 @@
  },
  "base": null,
  "locomotion": null,
- "notes": "The robot flies: there is no separate base command, the airframe moves wherever the end-effector target needs it (base_odometry in each result is the airframe's world position and heading). At the start the airframe hovers level facing +X with the arm at its zero joints and the gripper closed. Move in small steps and watch the cameras: the airframe, not only the arm, approaches nearby surfaces. The state's gripper value is the command in force; gripper_opening_m is the measured finger opening (0.002 m = closed on nothing). The episode ends by itself at the first control step where the task's success check holds, or at the task's episode length of simulated time (spec_file max_control_steps at 120 Hz).",
+ "notes": "The robot flies: there is no separate base command, the airframe moves wherever the end-effector target needs it (base_odometry in each result is the airframe's world position and heading). At the start the airframe hovers level facing +X with the arm at its zero joints and the gripper closed. Move in small steps and watch the cameras: the airframe, not only the arm, approaches nearby surfaces. The state's gripper value is the command in force; gripper_opening_m is the measured finger opening (0.002 m = closed on nothing). The episode ends by itself at the first control step where the task is done, or at the task's episode length of simulated time (spec_file max_control_steps at 120 Hz).",
  "task": "ambench-cabinet-pick-place-fahexa-i00"
 }

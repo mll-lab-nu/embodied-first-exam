@@ -1,68 +1,73 @@
-# Panda Dynamic Scenes · Moving grasp handover (D10) — frozen instance i00
+# Panda Dynamic Scenes · Moving grasp handover (D10) (privileged)
 
-You control two simulated **Franka Panda** arms (`panda-0` on the left, `panda-1` on the right; each with its standard hand and the task's tool where it has one) in a simulated scene (ManiSkill 3 / SAPIEN, rigid-body CPU PhysX at 1000 Hz) via Python.
-**Task:** A long bar-shaped part is already riding a powered roller conveyor when the episode starts. The left arm must grasp it with its gripper while it is still moving and lift it, then carry it, still moving, through a presentation point. It then hands the part over to the right arm while the part keeps moving: both grippers hold it at the same time, then the left gripper opens wide and lets go while the right one keeps holding it. Finally the right arm must lay the part into a long open slot that slides back and forth on a rail and let go of it while the slot is moving, so that the part lies in the slot while the slot is moving.
+## Task
+Two simulated Franka Panda arms (`panda-0` on the left, `panda-1` on the right; each with its standard hand and the
+task's tool where it has one) on a table (ManiSkill 3 / SAPIEN, rigid-body physics at 1000 Hz). A long bar-shaped part
+is already riding a powered roller conveyor when the episode starts. The left arm must grasp it with its gripper while
+it is still moving and lift it, then carry it, still moving, through a presentation point. It then hands the part over
+to the right arm while the part keeps moving: both grippers hold it at the same time, then the left gripper opens wide
+and lets go while the right one keeps holding it. Finally the right arm must lay the part into a long open slot that
+slides back and forth on a rail and let go of it while the slot is moving, so that the part lies in the slot while the
+slot is moving. The scene is one fixed instance: everything starts the same way after every reset. Things move by
+themselves from the first control step on: the scene does not wait for the robot. You have the full simulator to develop
+with; you hand in a trajectory of robot actions.
 
-This is a *fixed scene instance*: everything starts the same way after every reset, and you may reset and retry as many
-times as you want. Your deliverable is **one replayable trajectory** of the robot's low-level actions, not a general
-policy. Things move by themselves from the first control step on: the scene does not wait for the robot.
+### Scene
+Two Pandas with their standard two-finger grippers and no tool. panda-0 (left): base at (-0.55, -0.23, 0), yaw 0 (facing
++x). panda-1 (right): base at (0.74, 0.23, 0), yaw pi (facing -x). Each arm's tool frame is its gripper TCP (the point
+between the fingertips). At the start both TCPs point straight down (TCP z = world -z, and TCP x = world +x for both
+arms), so the fingers close along world y. Left TCP at (-0.10, -0.10, 0.20); right TCP at (0.19, 0.16, 0.23). Both
+grippers start partly open at 0.024 m per finger (0.048 m total aperture). The action's last entry is the total aperture
+in [0, 0.08] m, and each finger moves at most 0.025 m/s. In this task the fingers follow their own trajectory, not
+synchronized with the arm joints, so an aperture change does not stretch the duration of the arm motion.
 
-## Scene
-Two Pandas with their standard two-finger grippers and no tool. panda-0 (left): base at (-0.55, -0.23, 0), yaw 0 (facing +x). panda-1 (right): base at (0.74, 0.23, 0), yaw pi (facing -x). Each arm's tool frame is its gripper TCP (the point between the fingertips). At the start both TCPs point straight down (TCP z = world -z, and TCP x = world +x for both arms), so the fingers close along world y. Left TCP at (-0.10, -0.10, 0.20); right TCP at (0.19, 0.16, 0.23). Both grippers start partly open at 0.024 m per finger (0.048 m total aperture). The action's last entry is the total aperture in [0, 0.08] m, and each finger moves at most 0.025 m/s. In this task the fingers follow their own trajectory, not synchronized with the arm joints, so an aperture change does not stretch the duration of the arm motion. Role labels per phase (left, right): moving_pickup: moving_grasper, preparing_receiver; moving_presentation: moving_donor, tracking_receiver; overlapping_grips: donor_grip, receiver_grip; donor_release: releasing_donor, sole_support; receiver_slot_delivery: cleared_donor, slot_deliverer.
+An orange bar-shaped part (0.22 x 0.034 x 0.036 m, long axis along world x) lies across a short roller conveyor. The
+conveyor has 20 grey rollers (radius 6 mm, 136 mm long, axes along x, 12.5 mm apart along y) on a pedestal, all
+motor-driven so that their tops carry the part along +y. The part is longer than the rollers and overhangs them at both
+ends. At t = 0 the part is already moving along +y with the conveyor. The conveyor keeps running for the whole episode,
+and nothing stops the part at its end: a part that is not taken is carried off the end and falls. A blue open box, the
+'slot' (0.25 m along x by 0.13 m along y inside, 0.06 m deep), rides a straight rail along y. The slot is driven back
+and forth along the rail in a smooth sinusoidal oscillation by itself for the whole episode: slowly, and slowest where
+it turns around. The table top is the world's z = 0 plane.
 
-An orange bar-shaped part (0.22 x 0.034 x 0.036 m, long axis along world x) lies across a short roller conveyor. The conveyor has 20 grey rollers (radius 6 mm, 136 mm long, axes along x, 12.5 mm apart along y) on a pedestal, all motor-driven so that their tops carry the part along +y. The part is longer than the rollers and overhangs them at both ends. At t = 0 the part is already moving along +y with the conveyor. The conveyor keeps running for the whole episode, and nothing stops the part at its end: a part that is not taken is carried off the end and falls. A blue open box, the 'slot' (0.25 m along x by 0.13 m along y inside, 0.06 m deep), rides a straight rail along y. The slot is driven back and forth along the rail in a smooth sinusoidal oscillation by itself for the whole episode: slowly, and slowest where it turns around. The table top is the world's z = 0 plane.
+Exact sizes, masses, frictions, starting poses and velocities, and the instance's parameters: `s.params()`,
+`s.objects()`, `s.fixtures()` and `s.state()` (Robot Interface).
 
-Exactly (privileged information, also readable through the tooling): Conveyor: fixed articulation centred at (-0.08, -0.08, 0.10). Roller axes are at z = 0.108 (roller tops at z = 0.114), roller centres at y = -0.08 + (i - 9.5) x 0.0125 for i = 0..19 (from -0.19875 to +0.03875), each roller spanning x in [-0.148, -0.012]; roller friction 0.9. Each roller has a velocity drive toward -`incoming_speed` / 0.006 rad/s about +x (surface speed `incoming_speed` = 0.08 m/s toward +y at the top), with damping gain 0.012 and torque limit 0.008 N m, and is already spinning at that speed at reset. Part: box with half extents (0.11, 0.017, 0.018) m, mass `object_mass` = 0.065 kg, friction 0.8, restitution 0.05. At reset its centre is at (-0.08, y0, 0.133) with y0 ~ U(`part_y_low`, `part_y_high`) = U(-0.15, -0.12) (first draw), unrotated, with velocity (0, `incoming_speed`, 0). Slot: prismatic fixture, rail centre (0.24, 0.03, 0.10), axis +y, limits +-0.5 m; inside 0.25 x 0.13 m, 0.06 m deep, inner floor at the link origin (z = 0.10), moving mass 0.3 kg. A PD drive (kp 80, kd 8, force limit 8 N) tracks q*(t) = q0 + 0.20 sin(w t) with velocity target `fixture_speed` cos(w t), where w = `fixture_speed` / 0.20 = 0.175 rad/s (period about 35.9 s). q0 ~ U(`slot_offset_low`, `slot_offset_high`) = U(-0.06, -0.02) m is the second draw at reset (`fixture_phase` = 0: no phase draw, the law above); the initial velocity is `fixture_speed` = 0.035 m/s along +y. This is an oscillation of 0.20 m amplitude about q0 with peak speed `fixture_speed`. Its target speed exceeds 0.02 m/s only while |cos(w t)| > 0.02 / `fixture_speed` = 0.571: at this instance t < 5.5 s and 12.45 s < t < 23.45 s. Slot world y = 0.03 + q. No other random values; nothing is drawn after reset. Table friction `table_friction` = 0.08. Horizon `horizon` = 25 s.
+## Goal
+Success: the left gripper grasps the part while it still rides the conveyor and lifts it (above about 0.2 m); still
+holding it, it carries it, moving, past the presentation point, about (0.09, 0.05, 0.24); the right gripper takes hold
+while the part keeps moving, both grippers holding it together for a moment, then the left gripper opens wide and lets
+go, still in motion, while the right one keeps holding; finally the right gripper lays the part into the moving slot and
+lets go while the slot moves, and the part lies in the slot, held by neither gripper, for about 0.7 s while the slot
+moves. The task fails at once if the part drops during the carry and the handover.
 
-The instance's parameters (`s.params()`, SI units): `horizon` = 25, `object_mass` = 0.065, `incoming_speed` = 0.08, `part_y_low` = -0.15, `part_y_high` = -0.12, `fixture_speed` = 0.035, `fixture_phase` = 0, `slot_offset_low` = -0.06, `slot_offset_high` = -0.02, `handover_speed` = 0.04, `release_slot_speed` = 0.02, `table_friction` = 0.08.
+The steps count only in this order, and a step once done stays done. The replay ends as soon as the task is done or has
+failed; the task also fails at once when:
+- the task's horizon, 25 s of robot time, is reached before the task is done;
+- an object leaves the workspace (falls well below the table top or flies far away);
+- a robot part touches what it may not. There are no tools. The fingers of either gripper (finger links and pads) may
+  touch the part and nothing else: not the conveyor rollers or frame, not the slot or its rail, not the table. No other
+  robot part (hand or arm links) may touch anything, the part included. The two arms may never touch each other, finger
+  to finger included, and no arm may touch itself. In every task an arm never touches itself, no robot part touches the
+  table or the floor, a robot part other than an allowed one touches nothing, a tool touches only what the task allows,
+  and no contact presses deep into anything;
+- an arm goes beyond the Franka Panda's own safety limits on joint positions, joint and finger speeds, the hand's speed
+  and acceleration, joint accelerations and jerks, and motor torques and how fast they change (the numbers: the robot
+  spec's `safety_limits`). They count on the motion as measured, whatever was commanded (a catch or a strike moves the
+  arm too), and the servo's own reference motion is held to the same speed, acceleration and jerk limits.
 
-**Goal geometry.** Presentation point (0.09, 0.05, 0.24) for the part's centre (moving_presentation), announced at reset as `goal_target`. Lift height: part centre above z = 0.21 m (moving_pickup). Drop limit: part centre must stay at or above z = 0.13 m during moving_presentation, overlapping_grips and donor_release.
+Deliverable: `/app/output/trajectory.npz`, written with `Session.save_trajectory(...)`: it holds `task` and `actions`, a
+(T, 16) float array of at most 4,500 rows (one per control step); anything else (another shape, NaN, more rows, a file
+that is not such an npz) scores 0. It is replayed open-loop from the fixed start and scores 1 if the task succeeds in
+the replay, else 0. Keep the script that produced it at `/app/output/gen.py`. Save a valid one early and overwrite it
+when you have a better one.
 
-## Success (the task's own check)
-The task has 5 phases. They are checked after every physics step (1 ms) and must be completed **in this order**
-(a phase is checked only once the previous one is complete, and a completed phase stays complete):
-1. **moving_pickup**: the left gripper grips the part (both left-arm fingers, finger links or pads, are in contact with it) at a moment when the part moves faster than 0.025 m/s; this is recorded once. After that, with the left grip still holding, the part's centre rises above z = 0.21 m.
-2. **moving_presentation**: while the left gripper still grips the part (both fingers in contact), the part's centre comes within 0.07 m of the presentation point (0.09, 0.05, 0.24) at a moment when the part moves faster than 0.015 m/s.
-3. **overlapping_grips**: both grippers grip the part at the same time (both fingers of each hand in contact with it) while the part moves faster than `handover_speed` = 0.04 m/s, for 0.08 s without interruption.
-4. **donor_release**: the right gripper grips the part (both fingers in contact), no left-arm finger touches the part, the left gripper is open wider than 0.065 m (sum of its two finger positions), and the part moves faster than `handover_speed` = 0.04 m/s, all for 0.12 s without interruption. The release itself must happen in motion: the part's speed at the last step in this phase at which a left-arm finger touched it must have been above 0.04 m/s.
-5. **receiver_slot_delivery**: the part lies in the moving slot, and the slot moves along its rail faster than 0.02 m/s, for 0.7 s without interruption. The part touches the slot, and neither gripper grips it (a single finger may still touch it). The part must have been let go into a moving slot: at the last step in this phase at which a right-arm finger touched the part, the slot moved along its rail faster than `release_slot_speed` = 0.02 m/s. In the slot's frame its centre is within 0.014 m of the slot centre along x (the slot's long axis), within 0.045 m along y, and between 0.01 m and 0.06 m above the slot floor. It moves at less than 0.05 m/s relative to the slot. This completes the task.
+Rules: write your own controller; do not use the benchmark's demonstrations, trained policies or any published solution.
+Only the trajectory counts: changing the simulator's state while you develop changes nothing in the grading.
 
-The episode **ends by itself** at the first control step where the last phase is complete (success; rows after it are
-never executed) or where the task has failed. `s.status()` reports the phase you are in and the failure, if any.
-
-**The task fails** (the episode ends, reward 0) as soon as any of these happens:
-- during moving_presentation, overlapping_grips or donor_release, the part's centre drops below z = 0.13 m (`handover_drop`);
-- the task's horizon is reached: 25 s of simulated time (`timeout`);
-- an object leaves the workspace: its centre falls below z = -0.2 m or gets more than 1.8 m from the world's z axis
-  (`out_of_bounds`);
-- a forbidden contact or a deep interpenetration (below);
-- a safety limit is exceeded (`limit_violation`, below).
-
-**Contacts.** There are no tools. The fingers of either gripper (finger links and pads) may touch the part and nothing else: not the conveyor rollers or frame, not the slot or its rail, not the table. No other robot part (hand or arm links) may touch anything, the part included. The two arms may never touch each other, finger to finger included, and no arm may touch itself. In every task: the two arms (and their tools) never touch each other
-(`arm_arm_or_tool_collision`), an arm never touches itself (`self_collision`), no robot part touches the table or the floor
-(`forbidden_collision`, `tool_table_collision`), a robot link other than an allowed one touches no object or fixture
-(`forbidden_arm_object_contact`, `forbidden_arm_scene_contact`, `forbidden_arm_fixture_contact`), a tool touches only the
-task's objects and the fixtures the task allows (`forbidden_tool_fixture_contact`), and no contact penetrates deeper than
-4 mm (`excessive_penetration`).
-
-**Safety limits** (the Franka Panda's own limits, checked every 1 ms on each arm; `s.robot_spec()["safety_limits"]`):
-measured joint positions within the joint limits (+0.002 rad); measured joint speeds at most 1.01 x (2.175, 2.175, 2.175,
-2.175, 2.61, 2.61, 2.61) rad/s; finger speeds at most 0.051 m/s; the hand's TCP at most 1.01 x 1.7 m/s and 1.01 x
-2.5 rad/s; joint accelerations (measured over every 20 ms window) at most 1.05 x (15, 7.5, 10, 12.5, 15, 20, 20) rad/s²
-and jerks at most 1.05 x (7500, 3750, 5000, 6250, 7500, 10000, 10000) rad/s³; the TCP's acceleration (20 ms windows) at
-most 1.05 x 13 m/s² and 1.05 x 25 rad/s²; motor torques at most (87, 87, 87, 87, 12, 12, 12) N m, changing at most
-1000 N m/s. The servo's own reference motion is checked against the same speed, acceleration and jerk limits. A contact
-(a catch, a strike) moves the arm too: what is measured counts, whatever was commanded.
-
-## Deliverable
-Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below). It is replayed
-open-loop from the same initial state in one fresh process and scored 1 if the task succeeds in the replay,
-else 0. Also leave the script that produced it at `/app/output/gen.py`. Save a working trajectory
-as soon as you have one and overwrite it as you improve it: whatever is in `/app/output/` when the time is up is graded.
-The file holds `task` and `actions`, a (T, 16) float array of at most **4,500 rows** (one per control step);
-anything else (another shape, NaN, more rows, a file that is not such an npz) scores 0.
-
-## Tooling (already installed; run `python` from any directory)
+## Robot Interface
+### Session
+`rcb_pandadyn`, already installed (run `python` from any directory):
 ```python
 from rcb_pandadyn import Session
 s = Session(instance="/app/instance.json")   # ~5-15 s: builds the scene and resets it to the frozen instance
@@ -84,35 +89,45 @@ s.camera_info()                    # per camera: intrinsic_cv, extrinsic_cv (wor
 s.render_video(actions, "/app/output/check.mp4")   # replays from the frozen state while filming the overview camera
 s.u                                # the ManiSkill environment itself (`panda_dynamics` in /opt/pandadyn: read-only reference)
 ```
-The tooling is deliberately thin: joint targets, kinematics and state. Catching, striking, carrying and timing are yours to
-build. The environment's source, the task included, is in `/opt/pandadyn/panda_dynamics` (`tasks/dual/moving_grasp_handover.py`).
 
-The grader replays once, in a fresh process; it is exactly this CLI (a fresh process, so run it to self-check):
-`python /opt/tools/rcb_pandadyn.py replay --instance /app/instance.json --traj /app/output/trajectory.npz`
+The tooling is deliberately thin: joint targets, kinematics and state. Catching, striking, carrying and timing are yours
+to build. The environment's source is in `/opt/pandadyn/panda_dynamics`. Check a trajectory as the grader replays it:
+`python /opt/tools/rcb_pandadyn.py replay --instance /app/instance.json --traj /app/output/trajectory.npz`. One
+`Session` per process. Stepping runs at roughly 40-150 control steps per second; rendering happens only when a frame is
+asked for and never moves anything. Do not call `s.close()` before writing every output.
 
-## Conventions
-- World frame: metres, z up, the table top is the plane z = 0; quaternions are **wxyz**. Each arm's base pose is in the robot spec (`arms`).
-- Action row (16 values per control step): `[panda-0 joint1..7, panda-0 aperture, panda-1 joint1..7, panda-1 aperture]`. Each arm's 8 values are its 7 absolute joint-position
-  targets (rad, `panda_joint1..7`) and its total gripper aperture target (m, 0 = closed .. 0.08 = open; each finger moves at
-  most 0.025 m/s). Values outside the joint limits (`s.robot_spec()`) are clipped to them before they are executed, and the
-  trajectory records the clipped row.
+### Actions
+- Action row (16 values per control step): `[panda-0 joint1..7, panda-0 aperture, panda-1 joint1..7, panda-1 aperture]`.
+  Each arm's 8 values are its 7 absolute joint-position targets (rad, `panda_joint1..7`) and its total gripper aperture
+  target (m, 0 = closed .. 0.08 = open; each finger moves at most 0.025 m/s). Values outside the joint limits
+  (`s.robot_spec()`) are clipped to them before they are executed, and the trajectory records the clipped row.
 - The servo: every control step, each arm's latest target is turned into a smooth reference motion by a jerk-limited
-  trajectory generator (Ruckig, the joints synchronised to arrive together) within 65 % (speed), 55 % (acceleration) and 5 % (jerk) of the Panda's joint
-  speed, acceleration and jerk limits, and the arm tracks that reference with torque control (PD + inverse dynamics, the
-  Panda's torque and torque-rate limits). A new target replans from the current reference motion, so a target far away is
-  reached smoothly, not in one step. `s.robot_spec()["servo"]` has the exact limits and gains.
-- Control runs at 100 Hz (10 ms per row), physics at 1000 Hz. There is no step budget: the time limit (`## Time limit`) is
-  your only budget. A simulated episode ends at the latest at the task's horizon (25 s, 2500 rows).
-- One `Session` per process. Stepping runs at roughly 40-150 control steps per second; rendering happens only when a frame
-  is asked for and never moves anything. Do not call `s.close()` before writing every output.
+  trajectory generator (Ruckig, the joints synchronised to arrive together) within 65 % (speed), 55 % (acceleration) and
+  5 % (jerk) of the Panda's joint speed, acceleration and jerk limits, and the arm tracks that reference with torque
+  control (PD + inverse dynamics, the Panda's torque and torque-rate limits). A new target replans from the current
+  reference motion, so a target far away is reached smoothly, not in one step. `s.robot_spec()["servo"]` has the exact
+  limits and gains.
+- Control runs at 100 Hz (10 ms per row), physics at 1000 Hz. A simulated episode ends at the latest at the task's
+  horizon (25 s, 2500 rows).
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+### Observations
+- World frame: metres, z up, the table top is the plane z = 0; quaternions are wxyz. Each arm's base pose is in the
+  robot spec (`arms`).
+- Cameras: `s.render_frame("overview")` (the whole workspace) or `s.render_frame("closeup")` (the working area), RGB 640
+  x 480; `s.camera_info()` has their calibration. `s.proprio()` and `s.state()` (above) give the robot's and the scene's
+  state.
 
-## Resources
-Your container: **5 CPUs**, **10 GiB of memory**, **1024 processes and threads**, **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`) and **one GPU, 3 GiB of its memory**. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
-
-## Time limit
-You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
-
-This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+## Limits
+- Time: 3600 s of wall-clock time from the start of your session; everything counts (the simulator's start-up too). At
+  the end you are stopped without warning and only what is in `/app/output/` at that moment is graded. Time left:
+  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`). Calls into a long-running process can block for their
+  whole wait time: use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, the simulator's and the benchmark's source included. Do not search for or
+  download a ready-made solution (published or reference solutions, recorded demonstrations, trained policies); trials
+  are reviewed.
+- Resources: 5 CPUs, 10 GiB memory, 1024 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`),
+  one GPU (3 GiB of its memory). Over a cap a process can be killed (the CPU cap only slows you down); usage:
+  `/run/rcb-limits/usage.json`.
+- Resets: as many as you like (`s.reset()`).

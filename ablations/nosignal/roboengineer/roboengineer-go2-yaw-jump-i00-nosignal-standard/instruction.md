@@ -1,40 +1,82 @@
-# go2-yaw-jump
+# roboEngineer · go2-yaw-jump (standard)
 
-Jump through a commanded 110–150 degree heading change with verified airborne rotation and stable touchdown; ground spinning is rejected.
+## Task
+A simulated Unitree Go2 quadruped (MuJoCo). Jump through a commanded 110–150 degree heading change with verified
+airborne rotation and stable touchdown; ground spinning is rejected. You tune its numeric controller on the public
+nominal model in your container and deploy it to a hidden evaluator whose dynamics differ in ways you are not told; the
+evaluator runs as a service you reach only through its client.
 
-## Train, deploy, inspect and revise
-Use the public nominal model and write fitting/optimization code locally. Submit the documented numeric controller parameters. This track evaluates adaptation within a fixed controller ABI; it does not deploy arbitrary controller Python. Run `python -m control_public.go2_train --assets /opt/control-assets/go2 --task yaw-jump --out /app/output/nominal` for local nominal rollouts. The controller ABI and editable training helpers are in `control_public.go2`.
+## Goal
+Success: the Go2 turns through most of the commanded heading change in the air (a real jump: all feet off the ground for
+a moment, its body rising), lands close to the commanded heading and nearly in place, and then stands stably for the
+last second. Spinning on the ground fails; a failed case scores at most 49 of 100. The evaluator runs the policy you
+select on 10 held-out cases (new episodes of the same hidden plant, never shown to you): success needs every case to
+pass, and `final_reward` reports the mean score (0-100).
 
-Use `from control_public.client import Client, artifact`; `Client().describe()` provides the public defaults and bounds. Call `deploy(policy, diagnosis)` for up to three rounds. A deployment can take minutes: if your tool call times out and the response is lost, `result(round_id)` returns that completed round's stored response again (it runs nothing). An episode that crashes, leaves its course or arena, or makes the simulation diverge ends at that moment: its telemetry and frames stop there. Each round reuses the same 3 development cases. Diagnose failures from the returned video frames and noisy telemetry, then revise. Preserve code, training logs, policies and exact feedback under `/app/output/`. The client saves the exact response and image bytes. A diagnosis should briefly state the observed failure, proposed change and expected effect.
+Deliverable: the policy of one completed deployment round. `seal(round_id, summary)` selects it (once; it ends
+adaptation). If you seal none, the latest round completed before the cutoff counts; with no completed round the score is
+zero. Preserve code, training logs, policies and exact feedback under `/app/output/`. The client saves the exact
+response and image bytes.
 
-`seal(round_id, summary)` selects a completed round. No held-out feedback is returned. At agent exit the evaluator uses the sealed round or the latest round completed before cutoff; no eligible round scores zero. Hidden simulation runs in a separate container and accepts data-only policies. Network endpoint: `http://127.0.0.1:8000`. No reset or privileged-state endpoint exists.
+Real-robot rules:
+- No reset: deployments are your only runs on the hidden evaluator, at most three rounds, each on the same 3 development
+  cases from their start; no reset or privileged-state endpoint exists.
+- No privileged state: a deployment returns noisy telemetry and camera frames only; the evaluation dynamics, seeds, true
+  state, contacts and grades are never returned, and nothing about the held-out cases.
+- Write your own fitting, training and analysis code; do not use published or reference solutions, trained policies for
+  this task, or hidden evaluator information.
 
-## Verification and score
-Success requires flight >=0.08 s, height rise >=0.07 m, airborne yaw >=70% command with first-touch yaw error <0.25 rad, final yaw error <0.18 rad, drift <0.25 m, and final 1 s stable support; unsuccessful score capped at 49.
-The selected policy is tested on 10 disjoint cases in two fresh processes. Binary success requires all cases to pass; `final_reward` reports the continuous mean score. Evaluation dynamics, seeds, true state, contacts and grades are never returned during adaptation.
-
-## Modeling limitations
-A simulated port of published quadruped performance tasks, not a hardware calibration; MuJoCo contacts differ from other simulators.
-
-## This run: no success signal
-
-This run adds an explicit end to adaptation. This section overrides anything above that says only sealing ends it.
+### This run: no success signal
+This run adds an explicit end to adaptation.
 
 - No response tells you whether a policy succeeds or how it scores: a deployment returns its noisy telemetry and frames
   only, as described above, and `/spec` says `"success_signal": "hidden"`.
 - You decide when you are done: send `POST /finish` with `{"round_id": <a completed round>, "summary": "..."}` (both
-  optional) on the same base URL as your other calls (in Python: `Client().finish(round_id, summary)`). That round, or without one the latest
-  completed round, is the graded policy, evaluated on the held-out cases as described above. After `/finish` every call
-  is refused (409). Sealing a round ends adaptation the same way.
+  optional) on the same base URL as your other calls (in Python: `Client().finish(round_id, summary)`). That round, or
+  without one the latest completed round, is the graded policy, evaluated on the held-out cases as described above.
+  After `/finish` every call is refused (409). Sealing a round ends adaptation the same way.
 - If you do neither, the latest round completed before your time is up is graded, as described above.
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+## Robot Interface
+### Client
+- `from control_public.client import Client, artifact`; `Client().describe()` provides the public defaults and bounds.
+- `deploy(policy, diagnosis)` for one deployment round: it runs your policy on the development cases and returns their
+  feedback. A diagnosis should briefly state the observed failure, proposed change and expected effect.
+- A deployment can take minutes: if your tool call times out and the response is lost, `result(round_id)` returns that
+  completed round's stored response again (it runs nothing).
+- `seal(round_id, summary)` selects a completed round for grading.
+- The service: `http://127.0.0.1:8000`; it accepts data-only policies.
 
-## Resources
-Your container: **2 CPUs**, **6 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
+### Training
+Use the public nominal model and write fitting/optimization code locally. Submit the documented numeric controller
+parameters. This track evaluates adaptation within a fixed controller ABI; it does not deploy arbitrary controller
+Python. Run
+`python -m control_public.go2_train --assets /opt/control-assets/go2 --task yaw-jump --out /app/output/nominal` for
+local nominal rollouts. The controller ABI and editable training helpers are in `control_public.go2`.
 
-## Time limit
-You have 14400 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+### Feedback
+Each round reuses the same 3 development cases. An episode that crashes, leaves its course or arena, or makes the
+simulation diverge ends at that moment: its telemetry and frames stop there. Diagnose failures from the returned video
+frames and noisy telemetry, then revise.
 
-This is wall-clock time from the start of your session; the time you wait for the deployment service counts, deployments included. When it is up you are stopped without warning and the evaluator takes the round you sealed or, if you sealed none, the latest deployment that completed before that moment; a deployment still running then is not graded. The service's own deadline counts the same limit from your first request to it, so it never runs out before your time does. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it (for example Codex's `yield_time_ms`) even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+## Others
+- Modeling limitations: A simulated port of published quadruped performance tasks, not a hardware calibration; MuJoCo
+  contacts differ from other simulators.
+
+## Limits
+- Time: 14400 s of wall-clock time from the start of your session; everything counts (waiting for the deployment service
+  too, deployments included). At the end you are stopped without warning and the evaluator takes the round you sealed
+  or, if you sealed none, the latest deployment that completed before then; a deployment still running is not graded.
+  Time left: `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`); the service's own deadline counts the same
+  limit from your first request to it. Calls into a long-running process can block for their whole wait time: use short
+  waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, the simulator's and the benchmark's source included. Do not search for or
+  download a ready-made solution (published or reference solutions, recorded demonstrations, trained policies); trials
+  are reviewed.
+- Resources: 2 CPUs, 6 GiB memory, 1024 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`), no
+  GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap only
+  slows you down); usage: `/run/rcb-limits/usage.json`.
+- Resets: none: deployments are your only runs, each starting its development cases afresh.
+- Rounds: at most three deployment rounds (`Client().describe()` has what is left).

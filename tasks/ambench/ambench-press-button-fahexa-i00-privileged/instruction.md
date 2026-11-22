@@ -1,35 +1,44 @@
-# AM-Bench · Press Button — frozen instance i00
+# AM-Bench · ambench-press-button-fahexa-i00 (privileged)
 
-You control a simulated **aerial manipulator**: a fully actuated hexarotor (six tilted rotors, so it can hold any attitude
-while hovering) carrying a small arm (four joints: three pitch joints and a roll joint) with a two-finger gripper, in
-AM-Bench on Isaac Lab / Isaac Sim 5.1 (PhysX), via Python. **Task:** A wall stands in front of the hovering aerial manipulator, and a push button is mounted flat on the wall's front face, facing the robot: a red circular plunger in a dark-grey circular housing. Press the button, i.e. push its spring-loaded plunger into the housing, along the wall's normal, until it is depressed by at least 4 mm (40 % of its 10 mm travel).
+## Task
+A simulated aerial manipulator: a fully actuated hexarotor (six tilted rotors, so it can hold any attitude while
+hovering) carrying a small arm (four joints: three pitch joints and a roll joint) with a two-finger gripper, in AM-Bench
+(Isaac Lab). A wall stands in front of the hovering aerial manipulator, and a push button is mounted flat on the wall's
+front face, facing the robot: a red circular plunger in a dark-grey circular housing. Press the button: push its
+spring-loaded plunger into the housing, along the wall's normal. The scene is one fixed instance: it starts the same way
+after every reset. You have the full simulator to develop with; you hand in one replayable trajectory of the robot's
+actions.
 
-This is a *fixed scene instance*: the scene and the robot start the same way after every reset, and you may reset and
-retry as many times as you want. Your deliverable is **one replayable trajectory** of the robot's low-level actions, not a
-general policy.
+### Scene
+The ground is the world's z = 0 plane. In front of the robot stands an immovable (kinematic) wall: a slab 0.1 m thick,
+2.0 m wide and 2.0 m tall with a concrete-block surface, its front face turned toward the robot. Its distance, its
+sideways offset and a small tilt (the top leaning toward or away from the robot) vary between instances. On the wall's
+front face sits a push button: a dark-grey circular housing, 12 mm thick, fixed flush to the wall, and in front of it a
+red circular plunger, 10 mm thick, whose face stands about 2 cm proud of the wall surface. The plunger is the only
+moving part: it slides along the wall's normal into the housing (10 mm of travel) and is spring-loaded, returning to its
+rest position when not pushed. Where the button sits on the central part of the wall varies between instances, and so
+does its face size (plunger diameter between 6 and 12 cm, housing proportionally 1.2 times wider). Nothing moves by
+itself. The robot starts hovering level and motionless, facing the wall, with its arm at its zero joint configuration
+(end effector a little ahead of and above the airframe) and the gripper closed.
 
-## Scene
-The ground is the world's z = 0 plane. In front of the robot stands an immovable (kinematic) wall: a slab 0.1 m thick, 2.0 m wide and 2.0 m tall with a concrete-block surface, its front face turned toward the robot. Its distance, its sideways offset and a small tilt (the top leaning toward or away from the robot) vary between instances. On the wall's front face sits a push button: a dark-grey circular housing, 12 mm thick, fixed flush to the wall, and in front of it a red circular plunger, 10 mm thick, whose face stands about 2 cm proud of the wall surface. The plunger is the only moving part: it slides along the wall's normal into the housing (10 mm of travel) and is spring-loaded, returning to its rest position when not pushed. Where the button sits on the central part of the wall varies between instances, and so does its face size (plunger diameter between 6 and 12 cm, housing proportionally 1.2 times wider). Nothing moves by itself. The robot starts hovering level and motionless, facing the wall, with its arm at its zero joint configuration (end effector a little ahead of and above the airframe) and the gripper closed.
+## Goal
+Success: the button is pressed: its plunger pushed into the housing at least nearly halfway (a light touch is not
+enough). An episode ends by itself at the first control step where the task is done (the rows after it are never run),
+or as a failure when its 20 s of simulated time run out.
 
-Exactly (privileged information, also readable through the tooling): One environment; its origin is the world origin. Robot at every reset: base_link at (0, 0, 1.0) m with orientation (1, 0, 0, 0) wxyz (body +x is the world +x direction), zero velocity; arm_link1_pitch_joint = arm_link2_pitch_joint = arm_link3_pitch_joint = arm_link4_roll_joint = 0 rad; arm_lfinger_joint = arm_rfinger_joint = 0.001 m (their lower limit: gripper closed, gripper_width 0.002 m). By the robot's URDF kinematics this puts ee_link at about (0.227, 0, 1.124) m with identity orientation and the tool-tip point (ee_link origin + 0.18 m along the ee_link x axis) at about (0.407, 0, 1.124) m; the end-effector command is initialised to the current ee_link pose. Wall: kinematic cuboid 0.1 (x) x 2.0 (y) x 2.0 (z) m, nominal centre (2.0, 0.0, 1.0) m and orientation identity (front face the plane x = centre_x - 0.05, normal -x, toward the robot); friction 1.0 static / 1.0 dynamic, restitution 0; visual material NVIDIA Concrete_Block.mdl. At each reset (Isaac Lab mdp.reset_root_state_uniform) the centre becomes (2.0 + dx, 0.0 + dy, 1.0) with dx, dy ~ U(-0.2, 0.2) m independently, and the orientation becomes quat_from_euler_xyz(0, pitch, 0) with pitch ~ U(-0.2, 0.2) rad (a rotation about the world y axis through the wall centre; positive pitch tilts the top of the wall away from the robot, the front normal turning upward). Button: articulation push_button.usd with a fixed root (housing) and self-collisions disabled. At each reset, after the wall, its root is placed at wall_centre + R_wall (-0.05, by, bz) with by, bz ~ U(-0.3, 0.3) m independently (a point on the wall's front face, offset in the wall's own y-z plane) and given the wall's orientation, so the button's local +x is the wall normal pointing into the wall. Housing: cylinder along local x, radius 0.072 s, thickness 0.012 m (local x from -0.012 to 0), mass 0.5 kg, colour (0.1, 0.1, 0.1). Plunger (body 'plunger'; AM-Bench's goal_pos observation is its position): cylinder radius 0.06 s, thickness 0.01 m, authored at local x = -0.015 (its face about 2 cm in front of the wall surface), mass 0.02 kg, colour (0.9, 0.1, 0.1). Button physics material: static friction 0.6, dynamic 0.5, restitution 0.1. Prismatic joint PlungerSlideJoint along the button's local +x (positive = plunger pushed toward the wall), limits [0, 0.01] m, reset to 0 m with zero velocity every episode; Isaac Lab implicit actuator with stiffness 1000 N/m and damping 80 N s/m toward the target 0 m, effort limit 20 N, velocity limit 5 m/s. Scale s (applied to the button's local y and z only: face radius changes, thickness does not) ~ U(0.5, 1.0), drawn once when the environment is created (a prestartup event), not at each reset. Scene default physics material: friction 1.0 / 1.0, restitution 0.
+Deliverable: `/app/output/trajectory.npz`, written with `Session.save_trajectory(...)`: `task` and `actions`, a (T, 8)
+float array of at most 8,000 rows (one per control step); anything else (another shape, NaN, more rows, a row whose
+quaternion `qw qx qy qz` has zero length, a file that is not such an npz) scores 0. It is replayed open-loop from the
+same start up to 3 times and scores 1 if the task succeeds in any replay (a trajectory that only just succeeds may not
+succeed again: leave a margin). Keep the script that produced it at `/app/output/gen.py`. Save a valid one early and
+overwrite it when you have a better one.
 
-## Success (AM-Bench's own check)
-Success when the button's prismatic joint PlungerSlideJoint has position >= 0.004 m (button_pressed_threshold; the joint ranges from 0 m, unpressed, to 0.01 m, fully pressed; positive = plunger pushed into the housing toward the wall). Evaluated after every control step (decimation 1, so after every 1/120 s physics step) on the simulated state; no hold time is required. The episode terminates at the first step where it holds. Otherwise it is truncated by the time limit: episode_length_s = 20 s, i.e. max_episode_length = 2400 control steps; AM-Bench raises the time-out when episode_length_buf >= max_episode_length - 1, i.e. at the 2399th step.
-The episode **ends by itself** at the first control step where the check holds (success; rows after it are never
-executed), or when the task's episode length of **20 s** runs out (a failure: AM-Bench's time-out ends the episode
-at control step 2399). Isaac Lab resets the scene inside the step that ends an episode, so after it `s.state()` and
-`s.objects()` show the start again; `s.status()` keeps the outcome and the end state's hash, and the cameras show the end.
+Rules: write your own controller; do not use the benchmark's demonstrations, trained policies or any published solution.
+Only the trajectory counts: changing the simulator's state while you develop changes nothing in the grading.
 
-## Deliverable
-Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below). It is replayed
-open-loop from the same initial state up to 3 times, each in a fresh process, and scored 1 if the task succeeds in any replay, else 0
-(a trajectory that only just succeeds may not succeed in a fresh process: leave a margin). Also leave the script that produced it
-at `/app/output/gen.py`. Save a working trajectory as soon as you have one and overwrite it as you improve it: whatever
-is in `/app/output/` when the time is up is graded. The file holds `task` and `actions`, a (T, 8) float array of at most
-**8,000 rows** (one per control step); anything else (another shape, NaN, more rows, a row whose quaternion
-`qw qx qy qz` has zero length, a file that is not such an npz) scores 0.
-
-## Tooling (already installed; run `python` from any directory)
+## Robot Interface
+### Session
+`/opt/tools/rcb_ambench.py`:
 ```python
 from rcb_ambench import Session
 s = Session(instance="/app/instance.json")   # ~2-6 min: launches Isaac Sim, builds the scene, resets to the frozen instance
@@ -50,43 +59,53 @@ s.camera_info()                    # cameras=True: intrinsics, world -> camera e
 s.start_video("/app/output/try.mp4"); ...; s.stop_video()   # cameras=True only: film the steps in between (both cameras side by side)
 s.env                              # the Isaac Lab environment itself (AM-Bench's source is in /opt/ambench: read-only reference)
 ```
+
 The tooling is deliberately thin: the environment's own action, its state and its cameras. Reaching, pressing, pushing,
 turning and throwing are yours to build. Isaac Sim runs once per process, and only the first episode of a process is
-guaranteed to be bit-identical to a fresh process's: after changes, check your trajectory with the grader's CLI.
-**Cameras.** The robot's two onboard cameras come with `Session(..., cameras=True)` (decided once per process): a second
-Isaac process then draws them from the physics state (it starts with the Session and takes ~3.5 GB of GPU memory and ~12 GB
-of memory), so looking never changes the physics, which stays exactly the grader's.
+guaranteed to replay exactly as a new process does: after changes, check your trajectory with the replay command below.
 
-Each graded replay is a fresh process running exactly this CLI (so run it to self-check; the grader stops at the first success):
+The robot's two onboard cameras come with `Session(..., cameras=True)` (decided once per process): a second Isaac
+process then draws them from the physics state (it starts with the Session and takes ~3.5 GB of GPU memory and ~12 GB of
+memory), so looking never changes the physics, which stays exactly as in the replay.
+
+Your trajectory is replayed with exactly this command (stopping at the first success), so run it to self-check:
 `python /opt/tools/rcb_ambench.py replay --instance /app/instance.json --traj /app/output/trajectory.npz`
 (`... film --instance ... --traj ... --video out.mp4` films the same rows through the cameras). A process whose output
-shows `PhysX error: GPU ... fail to launch` or `CUDA error: out of memory` ran short of GPU memory and its physics is not
-reliable (PhysX steps on without the failed kernels): rerun it with fewer Isaac processes at once. The grader runs such a
-replay once more and never scores it.
+shows `PhysX error: GPU ... fail to launch` or `CUDA error: out of memory` ran short of GPU memory and its physics is
+not reliable: run it again with fewer Isaac processes at once.
 
-## Conventions
+### Actions
 - World frame: metres, z up, the ground is the plane z = 0; positions are relative to the environment's origin (the
-  tooling and the actions use the same origin); quaternions are **wxyz**.
+  tooling and the actions use the same origin); quaternions are wxyz.
 - Action row (8 values per control step), AM-Bench's absolute end-effector pose action: the target position of the
   end-effector link (x, y, z, m) and its target orientation (qw, qx, qy, qz, in AM-Bench's command frame of the end
-  effector: `s.proprio()["command"]` and `hold_action()` give the current target in the same convention), then the gripper
-  command (-1 = closed .. +1 = open). Every step, AM-Bench's floating-base inverse kinematics turns the target into an
-  airframe pose and arm joint targets, its PID controller turns the airframe pose into the six rotor thrusts, and the arm
-  joints track their targets.
-- Control and physics run at 120 Hz (one physics step per row). There is no step budget: the time limit (`## Time limit`)
-  is your only budget; an episode lasts at most 20 s of simulated time.
+  effector: `s.proprio()["command"]` and `hold_action()` give the current target in the same convention), then the
+  gripper command (-1 = closed .. +1 = open). Every step, AM-Bench's floating-base inverse kinematics turns the target
+  into an airframe pose and arm joint targets, its PID controller turns the airframe pose into the six rotor thrusts,
+  and the arm joints track their targets.
+- Control and physics run at 120 Hz (one physics step per row).
+
+## Others
 - One `Session` per process (Isaac Sim launches once, then the scene builds: ~2-6 min, the upper end on a busy host).
-  Physics is PhysX on the **GPU** (about 10-15 control steps per second of wall time). A camera-free Session takes ~2 GiB
-  of memory and ~1.2 GiB of GPU memory, one with cameras ~14 GiB and ~4.6 GiB (its render worker included): run at most
-  two Sessions with cameras at once. Do not call `s.close()` before writing every output.
+  Physics is PhysX on the GPU (about 10-15 control steps per second of wall time). A camera-free Session takes ~2 GiB of
+  memory and ~1.2 GiB of GPU memory, one with cameras ~14 GiB and ~4.6 GiB (its render worker included): run at most two
+  Sessions with cameras at once. Do not call `s.close()` before writing every output.
+- Isaac Lab resets the scene inside the step that ends an episode, so after it `s.state()` and `s.objects()` show the
+  start again; `s.status()` keeps the outcome and the end state's hash, and the cameras show the end.
+- Exact poses, sizes and joints of everything in the scene: `s.objects()`, `s.state()` and AM-Bench's source
+  (`/opt/ambench`).
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
-
-## Resources
-Your container: **8 CPUs**, **34 GiB of memory**, **1024 processes and threads**, **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`) and **one GPU, 16 GiB of its memory**. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
-
-## Time limit
-You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
-
-This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+## Limits
+- Time: 3600 s of wall-clock time from the start of your session; everything counts (the simulator's start-up too). At
+  the end you are stopped without warning and only what is in `/app/output/` at that moment is graded. Time left:
+  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`). Calls into a long-running process can block for their
+  whole wait time: use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, the simulator's and the benchmark's source included. Do not search for or
+  download a ready-made solution (published or reference solutions, recorded demonstrations, trained policies); trials
+  are reviewed.
+- Resources: 8 CPUs, 34 GiB memory, 1024 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`),
+  one GPU (16 GiB of its memory). Over a cap a process can be killed (the CPU cap only slows you down); usage:
+  `/run/rcb-limits/usage.json`.
+- Resets: as many as you like (`s.reset()`).

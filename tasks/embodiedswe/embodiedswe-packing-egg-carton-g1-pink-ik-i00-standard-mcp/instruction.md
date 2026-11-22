@@ -1,88 +1,84 @@
-# Put three eggs in the carton and close the lid (Unitree G1, fixed pelvis, Pink IK) — standard mode — MCP tools only
+# EmbodiedSWE · put three eggs in the carton and close the lid, Unitree G1 (standard-mcp)
 
-The task of `embodiedswe-packing-egg-carton-g1-pink-ik-i00-privileged`, on the same frozen scene. You drive a Unitree G1 humanoid with three-finger hands, its pelvis fixed, its arms and waist under EmbodiedSWE's Pink IK, as if it were real hardware: the simulator runs in a service you cannot open, and you get the `efe-robot` tools, one episode and no reset. The client's docstring is its manual (the client is not installed for your code: the `efe-robot` tools stand for it); `r.spec()` gives the numbers.
+## Task
+A Unitree G1 humanoid with three-finger hands, its pelvis fixed, its arms and waist under EmbodiedSWE's Pink IK. Four
+loose eggs lie on their sides on the left half of the table. On the right is a small four-cell egg carton fixed to the
+table, with its hinged lid standing fully open. The carton has four distinct pockets in a 2 by 2 layout. In three
+stages: pick eggs from the table one at a time, turn each upright, and place three eggs securely in three DISTINCT
+carton pockets; then push the hinged lid closed over them. The fourth egg is a distractor and can stay on the table. The
+robot runs as a service you reach only through the `efe-robot` MCP tools, as if it were real hardware: one live episode.
 
-## Robot tools (MCP server `efe-robot`)
-You act on the robot only through the tools of the MCP server `efe-robot` (in your tool list as `efe-robot` tools, for
-example `mcp__efe-robot__move_robot`). You may write and run code to compute; every robot command and observation must
-go through the efe-robot MCP tools; code must not contact the simulator. Each robot command or observation is a tool
-call you make yourself: no script starts or calls the `efe-robot` server, and the service's record of its requests is
-checked against the server's. To send a trajectory your code computed, save it as a file under `/app` and pass its path
-as `rows_file` to `execute_trajectory`. The robot service and its rules are as described in this text; where it names
-calls of the Python client `rcb_client.py`, which is not installed for your code here, use the tool that does the same:
+## Goal
+Success: three eggs sit upright (either end up) and settled in three different pockets of the carton, and the lid is
+shut over them, everything at rest; the fourth egg may stay on the table. The episode ends as soon as the task is done,
+at the end of the first call after which it holds (judged on the live simulator).
 
-| Client | Tool |
-|---|---|
-| `Robot()`, `r.spec()` | `describe_robot()`: the robot's parts, joints and limits, cameras, control period, action types and conventions, and the time left; the full spec is saved as a JSON file (`spec_file`) you can read |
-| `r.get_obs(cameras, seconds, depth)` | `observe(cameras, seconds, depth)` |
-| `r.submit(type, A, dt, interpolate)` | `execute_trajectory(space="native", action_type=type, native_rows=A, dt=dt, interpolate=...)`, or `move_robot` / `execute_trajectory` in the conventions below |
-| `r.status()`, `meta[...]` | every tool result: `time_left_s`, `sim_time_s`, `done`, `reason` and the service's messages |
+Nothing to hand in: the service records and grades the episode, and the tool server records your calls.
 
-**Conventions** of `move_robot`, `locomote` and `execute_trajectory` (spaces other than `native`): the robot base frame
-at the start of each call (+X forward, +Y left, +Z up), metres and radians, quaternions `wxyz`, gripper 0 = open to 1 =
-closed. Base frame of this robot: the pelvis: origin at the pelvis, +X the way the pelvis faces, +Y to the robot's left,
-+Z up (levelled). Space `native` sends rows in the robot's own action types exactly as the sections below describe them
-(their frame, units and gripper values).
+Real-robot rules:
+- One episode, no reset: what you knock over stays knocked over.
+- No privileged state: you get the robot's camera images (with their calibration) and its own sensor readings; no object
+  poses, no scene layout; the episode ends when the task is done.
+- Write your own controller; do not use the benchmark's demonstrations, trained policies or any published solution.
+- Tools only: you may write and run code to compute, but every robot command and observation is an `efe-robot` tool call
+  you make yourself; no script starts or calls the tool server, and code must not contact the simulator (the service's
+  request log is checked against the server's).
 
-**This robot** (Unitree G1 humanoid with two Dex3 three-finger hands, pelvis fixed to the world, upper body driven by
-EmbodiedSWE's Pink IK): left (arm: end-effector pose); right (arm: end-effector pose); hands (hand: 14 joints, no
-end-effector pose). Cameras: `overview`, `head`.
+## Robot Interface
+### Tools
+The `efe-robot` tools (in your tool list, e.g. `mcp__efe-robot__move_robot`). Their conventions (all but space
+`native`): the robot base frame is the pelvis: origin at the pelvis, +X the way the pelvis faces, +Y to the robot's
+left, +Z up (levelled); metres, radians, quaternions `wxyz`, gripper 0 open .. 1 closed. Parts: left (arm: end-effector
+pose); right (arm: end-effector pose); hands (hand: 14 joints, no end-effector pose). Cameras: `overview`, `head`.
 
-- `describe_robot()`: call it first.
-- `observe(cameras?, depth?, seconds?, save_to?, inline_cameras?)`: images are written as JPEG files under `/app/obs/`
-  (depth as `.npy`, float32 metres; with `seconds` > 0 a video `.mp4` too); the result has their paths, each camera's
-  intrinsics `K` and pose in the robot base frame, each part's joints, gripper and end-effector pose, and `proprio_now`
-  (the robot's own proprioception row; its layout is in the spec file). Open an image with your file-reading tool;
-  `inline_cameras` also returns small images in the result.
-- `locate(camera, u, v | pixels, window_px?)`: the 3-D point in the robot base frame that a camera sees at pixel (u, v)
-  of its full-size image (u the column, v the row), or one per pixel of `pixels` [[u, v], ...]: from a new depth image
-  of that camera and its calibration (no time passes). For a camera with depth and a known pose; for any other the error
-  says so.
+- `describe_robot()`: call it first: parts and limits, cameras, control period, action types, the time left; the full
+  spec as a JSON file (`spec_file`).
+- `observe(cameras?, depth?, seconds?, inline_cameras?)`: JPEG images under `/app/obs/` (depth `.npy`, float32 metres;
+  with `seconds` > 0 an `.mp4` too, the robot held still meanwhile); the result has their paths, each camera's `K` and
+  pose in the base frame, each part's joints, gripper and end-effector pose, and `proprio_now` (the robot's own
+  proprioception row; its layout is in the spec file).
+- `locate(camera, u, v | pixels, window_px?)`: the 3-D point in the base frame a depth camera sees at pixel (u, v) of
+  its full-size image (u the column, v the row); no time passes.
 - `move_robot(goals, duration_s?)`: one goal per part,
   `{target, position?, quaternion_wxyz?, joint_positions?, gripper?}`; the parts move together and the call returns when
-  the motion is done, with `reached` (errors per goal), a `failure` category if a goal was not reached, the state and
-  the path of a frame per camera.
-- `execute_trajectory(space, rows | native_rows | rows_file, dt?, interpolate?)`: a dense trajectory, rows `dt` seconds
-  apart. `rows_file` is the path of a file under `/app` that holds the rows: a `.npy` (2-D float array) or `.csv` (one
-  row per line, comma-separated) of native rows for space `native` (with `action_type`), or a `.json` list: of number
-  arrays (native rows) or of row objects as in `rows` (the other spaces). Long arrays go this way rather than inline.
-- `wait(seconds?, operation?)`: let time pass holding the current command, or collect a pending operation.
-- `signal(kind, note)`: `done` records that you are finished (the episode itself ends as described above).
-- One tool call runs at a time. A call still executing after 45 s returns `{"pending": true, "operation": id}` while the
-  robot goes on executing it: call `wait(operation=id)` (it waits up to 45 s more each time) for its result. A result
-  with `"episode_over": true` means the episode has ended.
-- Nothing needs to be saved: the server records every tool call, and the service records the episode.
+  the motion is done, with `reached` (the error per goal), a `failure` category if a goal was not reached, the state and
+  a frame per camera.
+- `execute_trajectory(space, rows | native_rows | rows_file, dt?, interpolate?)`: dense rows `dt` seconds apart; long
+  arrays as `rows_file`, a file under `/app` (`.npy` or `.csv` of native rows for space `native` with `action_type`, or
+  a `.json` list).
+- `wait(seconds?, operation?)`: let time pass holding the current command, or collect a pending call.
+- `signal(kind, note)`: `done` records that you are finished (the episode itself ends as Goal says).
+- One call at a time. A call still running after 45 s returns `{"pending": true, "operation": id}`: collect it with
+  `wait(operation=id)`. `"episode_over": true` means the episode has ended.
 
-**Notes on this robot.** Each arm takes its wrist pose (the left_wrist_yaw_link / right_wrist_yaw_link frame; the palm
-and fingers extend beyond it). EmbodiedSWE's Pink IK solves the waist and both arms (17 joints) for the two wrist
-targets together, so moving one wrist can shift the waist and the other arm a little. The pelvis is fixed to the world
-(the legs are locked). The part hands takes the 14 Dex3 hand joint targets (rad) of both hands in the order
-describe_robot lists them (each joint's name says its hand and finger): send all 14, copying the current targets
-(observe: parts.hands.joint_positions) for the joints you leave alone. There is no single gripper value: close and open
-a hand through its joint targets (their limits: describe_robot's spec_file, action_types.ee_pose.joint_limits); a target
-past a joint's limit presses the joint against it. Each arm's gripper_opening_m is the distance from that hand's thumb
-tip to the midpoint of its index and middle fingertips. The measured joint angles are in observe's proprio_now (its
-layout: describe_robot's spec_file, proprio_layout). One episode, no reset; it ends by itself once the task is complete.
+This robot: Each arm takes its wrist pose (the left_wrist_yaw_link / right_wrist_yaw_link frame; the palm and fingers
+extend beyond it). EmbodiedSWE's Pink IK solves the waist and both arms (17 joints) for the two wrist targets together,
+so moving one wrist can shift the waist and the other arm a little. The pelvis is fixed to the world (the legs are
+locked). The part hands takes the 14 Dex3 hand joint targets (rad) of both hands in the order describe_robot lists them
+(each joint's name says its hand and finger): send all 14, copying the current targets (observe:
+parts.hands.joint_positions) for the joints you leave alone. There is no single gripper value: close and open a hand
+through its joint targets (their limits: describe_robot's spec_file, action_types.ee_pose.joint_limits); a target past a
+joint's limit presses the joint against it. Each arm's gripper_opening_m is the distance from that hand's thumb tip to
+the midpoint of its index and middle fingertips. The measured joint angles are in observe's proprio_now (its layout:
+describe_robot's spec_file, proprio_layout). One episode, no reset; it ends by itself once the task is complete.
 
-## The task
-Four loose eggs lie on their sides on the left half of the table. On the right is a small four-cell egg carton fixed to the table, with its hinged lid standing fully open. The carton has four distinct pockets in a 2 by 2 layout.
-Goal (three stages): pick eggs from the table one at a time, turn each upright, and place three eggs securely in three DISTINCT carton pockets; then push the hinged lid closed over them. Every seated egg must remain upright and settled, and the lid must rest closed at the end. The fourth egg is a distractor and can stay on the table.
+### Observations
+Cameras (RGB 640×480, depth on request): `overview` (static) and `head` (on the torso, where the real G1 carries its
+depth camera).
 
-Success, exactly: at the end of the run three different pockets of the 2 x 2 carton each hold a seated egg (at least three eggs seated, at least three distinct pockets occupied). Pocket centres are 30 mm from the carton's centre along each of its two base axes. An egg counts as seated when, in the carton's base frame (origin at the carton's bottom centre, z along the carton's up), its centre is within 21 mm horizontally of a pocket centre and 15-42 mm above the carton base, its long axis is within 50° of the carton's vertical (either end up), and it moves slower than 0.05 m/s. The hinged lid is within 7° of fully shut; it starts 110° open. All four eggs, the spare included, move slower than 0.05 m/s, and the lid swings slower than 0.10 rad/s. Not true at the start.
-
-## This robot
-- Action: `ee_pose` only, 28 values: the world poses of the left and right `wrist_yaw_link` (`x y z qw qx qy qz` each), then 14 hand joint targets (rad). Rows are streamed at the 60 Hz control rate with your `dt`; `spec["action_types"]["ee_pose"]` has the layout, the controller and the joint limits. Coordinates are the simulator's world frame (metres, z up; `spec["world"]`).
-- Cameras (RGB 640×480, depth on request): `overview` (static) and `head` (on the torso, where the real G1 carries its depth camera). One call returns at most 240 images (`max_frames_per_call`, PROTOCOL §3 "Images per call": cameras × the frames captured, the first, one every round(60 / `video_fps`) control steps and the last, a per-frame depth one more image; `video="none"` captures only the first and the last); a larger request is refused (400) before anything runs. A call that names no cameras gets `overview`, `head` at 3 frames per second, so every call up to `max_chunk_s` / `max_watch_s` fits.
-- The episode ends after the first call at whose end the success condition holds (judged on the live simulator), when your time is up, on a simulator error, or after 400,000 control steps (1.9 h of simulated time, reason `step_guard`); it is graded as it stands then. Simulated time advances only inside your calls.
-- The service answers one request at a time: while a long call runs, every other request waits, so a client-side timeout means "busy", not "crashed".
-
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the files the robot tools write included. You may write and run code to compute; every robot command and observation must go through the `efe-robot` MCP tools; code must not contact the simulator. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
-
-## Resources
-Your container: **8 CPUs**, **24 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
-
-## Time limit
-You have 14400 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
-
-This is wall-clock time from the start of your session; the time the robot tools take counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. Every robot tool result reports `time_left_s`, the service's count of the same limit from your first tool call, so it never runs out before your time does: your real time left is `time_left_s` minus the time you spent before that call. Plan by it. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. A robot tool that is still executing when its call has to return answers `pending` with an operation id: call `wait` with that `operation` to collect the result. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+## Limits
+- Time: 14400 s of wall-clock time from the start of your session; everything counts (the time the tools take too). At
+  the end you are stopped without warning and the episode is graded as it stands. Time left:
+  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`); every tool result has the service's `time_left_s`, which
+  starts at your first tool call, so the file is the one to trust. Calls into a long-running process can block for their
+  whole wait time: use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, the files the tools write included. Do not search for or download a ready-made
+  solution (published or reference solutions, recorded demonstrations, trained policies); trials are reviewed.
+- Resources: 8 CPUs, 24 GiB memory, 1024 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`),
+  no GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap
+  only slows you down); usage: `/run/rcb-limits/usage.json`.
+- Resets: none: one episode.
+- Steps: at most 400,000 control steps (1.9 h of simulated time, reason `step_guard`); then the episode ends and is
+  graded as it stands.

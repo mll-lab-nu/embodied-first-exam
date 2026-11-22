@@ -1,208 +1,28 @@
-# RoboWits · hold_cup — frozen instance
+# RoboWits · hold_cup (privileged)
 
-You control a simulated **bimanual Marvin** robot (two 7-DoF arms with Pika parallel grippers; RoboWits on Genesis
-0.4.7 physics) via Python. **Task:** Put the cup on the green target area on the slope without sliding down.
+## Task
+A simulated bimanual Marvin robot (two 7-DoF arms with Pika parallel grippers; RoboWits on Genesis 0.4.7 physics). Put
+the cup on the green target area on the slope without sliding down. The scene is one fixed instance. You have the full
+simulator to develop with; you hand in a trajectory of robot actions.
 
-The green target area is hard to see: it lies on the slope's inclined face, mostly inside the slope's mesh, so the cameras show little or none of it (none at the start). It covers the middle of that face, about 13 cm by 17 cm, its centre within about 2 cm of the slope's centre seen from above (`s.objects()` gives its pose and bounds).
+## Goal
+Success: the cup stands upright on the green target area on the slope and stays there without sliding down; the robot
+has let go of the cup and moved its grippers away from it, and the cup stays on the table, clear of its edges. What
+counts is how things stand after the last action of your trajectory, replayed from the fixed start: a success reached
+earlier and lost by the end does not count. After your last row the grader holds its command for about three seconds (a
+second, then two seconds in which all of this must keep holding, with nothing moving).
 
-The scene objects are the env's entities (`s.objects()`: `cup`, `slope`, `coaster`, `target area`; see
-`/opt/robowits/gs_gym/envs/robowits/09_hold_cup.py`). RoboWits' success predicate is `_check_success` in that file:
-```python
-def _check_success(self) -> torch.Tensor:
-        """Check if task is successful: cup on target, stable, upright, within bounds."""
+Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, path)`: the (T, 16) actions, one row
+per control step (1/30 s), at most 200,000 rows (more score 0). It is replayed once from the fixed start, settle check
+included. Leave the script that produced it at `/app/output/gen.py`. Save a trajectory as soon as one replays
+successfully, and overwrite it when you have a better one.
 
-        objs_info = self.collect_objs_info()
+Rules: write your own controller; do not use the benchmark's demonstrations, trained policies or any published solution.
+Only the actions count: changing the simulator's state while you develop changes nothing in the replay.
 
-        TBL_X_MIN, TBL_X_MAX = 0.21, 1.00
-        TBL_Y_MIN, TBL_Y_MAX = -0.69, 0.69
-        UPRIGHT_TOLERANCE_DEG = 20.0  # Max tilt from vertical
-
-        cup = objs_info.get("cup")
-        target = objs_info.get("target area")
-
-        if cup is None or target is None:
-            return torch.tensor([False], dtype=torch.bool, device=self._device)
-
-        def is_upright(obj, tolerance_deg: float) -> bool:
-            """Check if object's local up vector is close to world up using euler angles."""
-            euler = obj.get("euler")
-            if euler is None:
-                return False
-            # euler values are in radians; convert to degrees
-            roll_deg = abs(math.degrees(float(euler[0])))
-            pitch_deg = abs(math.degrees(float(euler[1])))
-            # Normalize to [-180, 180] range
-            if roll_deg > 180:
-                roll_deg = 360 - roll_deg
-            if pitch_deg > 180:
-                pitch_deg = 360 - pitch_deg
-            return roll_deg <= tolerance_deg and pitch_deg <= tolerance_deg
-
-        def get_poly(obj):
-            ch = obj.get("convex_hull_2d", None)
-            try:
-                if ch is not None and len(ch) >= 3:
-                    return [(float(p[0]), float(p[1])) for p in ch]
-            except Exception:
-                pass
-            b = obj.get("bounds", None)
-            if b is None:
-                return None
-            try:
-                (xmin, ymin, _), (xmax, ymax, _) = b
-                return [
-                    (float(xmin), float(ymin)),
-                    (float(xmax), float(ymin)),
-                    (float(xmax), float(ymax)),
-                    (float(xmin), float(ymax)),
-                ]
-            except Exception:
-                return None
-
-        def poly_area(poly):
-            if poly is None or len(poly) < 3:
-                return 0.0
-            area = 0.0
-            for i in range(len(poly)):
-                x1, y1 = poly[i]
-                x2, y2 = poly[(i + 1) % len(poly)]
-                area += x1 * y2 - x2 * y1
-            return abs(area) * 0.5
-
-        def signed_area(poly):
-            s = 0.0
-            for i in range(len(poly)):
-                x1, y1 = poly[i]
-                x2, y2 = poly[(i + 1) % len(poly)]
-                s += x1 * y2 - x2 * y1
-            return 0.5 * s
-
-        def line_intersection(p1, p2, p3, p4):
-            x1, y1 = p1
-            x2, y2 = p2
-            x3, y3 = p3
-            x4, y4 = p4
-            denom = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4)
-            if abs(denom) < 1e-12:
-                return ((p1[0] + p2[0]) * 0.5, (p1[1] + p2[1]) * 0.5)
-            det1 = x1 * y2 - y1 * x2
-            det2 = x3 * y4 - y3 * x4
-            px = (det1 * (x3 - x4) - (x1 - x2) * det2) / denom
-            py = (det1 * (y3 - y4) - (y1 - y2) * det2) / denom
-            return (px, py)
-
-        def clip_polygon(subject, clip):
-            if subject is None or clip is None or len(subject) < 3 or len(clip) < 3:
-                return []
-            ori_sign = 1.0 if signed_area(clip) >= 0.0 else -1.0
-
-            def inside(pt, a, b):
-                cross = (b[0] - a[0]) * (pt[1] - a[1]) - (b[1] - a[1]) * (pt[0] - a[0])
-                return ori_sign * cross >= -1e-9
-
-            output = [(float(x), float(y)) for x, y in subject]
-            cl = [(float(x), float(y)) for x, y in clip]
-            for i in range(len(cl)):
-                a = cl[i]
-                b = cl[(i + 1) % len(cl)]
-                input_list = output
-                output = []
-                if not input_list:
-                    break
-                s = input_list[-1]
-                for e in input_list:
-                    if inside(e, a, b):
-                        if not inside(s, a, b):
-                            output.append(line_intersection(s, e, a, b))
-                        output.append(e)
-                    elif inside(s, a, b):
-                        output.append(line_intersection(s, e, a, b))
-                    s = e
-            return output
-
-        cup_poly = get_poly(cup)
-        target_poly = get_poly(target)
-
-        if cup_poly is None or target_poly is None:
-            return torch.tensor([False], dtype=torch.bool, device=self._device)
-
-        inter_poly = clip_polygon(cup_poly, target_poly)
-        cup_area = poly_area(cup_poly)
-        inter_area = poly_area(inter_poly)
-
-        if cup_area <= 0.0:
-            return torch.tensor([False], dtype=torch.bool, device=self._device)
-
-        overlap_ok = (inter_area / cup_area) >= 0.5
-
-        vel = cup.get("vel")
-        if vel is None:
-            return torch.tensor([False], dtype=torch.bool, device=self._device)
-
-        vnorm = math.sqrt(float(vel[0]) ** 2 + float(vel[1]) ** 2 + float(vel[2]) ** 2)
-        stable_ok = vnorm <= 0.005
-
-        upright_ok = is_upright(cup, UPRIGHT_TOLERANCE_DEG)
-
-        cup_ok = True
-        for pt in cup_poly:
-            x, y = float(pt[0]), float(pt[1])
-            if not (TBL_X_MIN - 1e-6 <= x <= TBL_X_MAX + 1e-6):
-                cup_ok = False
-                break
-            if not (TBL_Y_MIN - 1e-6 <= y <= TBL_Y_MAX + 1e-6):
-                cup_ok = False
-                break
-
-        not_held = not check_being_held(cup, self._robot)
-
-        return torch.tensor(
-            [overlap_ok and stable_ok and upright_ok and cup_ok and not_held], dtype=torch.bool, device=self._device
-        )
-```
-
-This is a *fixed scene instance*: object poses and the robot's start pose never change between resets. You may reset
-and retry as many times as you want. Your deliverable is **one replayable trajectory**, not a general policy.
-
-## Success criterion (as graded)
-This is exactly what the grader checks, written from the predicate above (RoboWits' `_check_success`, which the grader
-runs) and the release and rest condition the grader adds (the last item). Where the task text says something else,
-this section and the code are what count. After the last action of your trajectory the grader holds that action's
-command for a settle window: 1 s (30 control steps) with nothing checked, then 2 s (60 control steps) in which every
-condition below must hold at every 6th control step and at the last one, with each graded object staying within 2 mm
-of where it was when those 2 s began (the *check window*). It must pass in the grader's replay. `s.replay(actions)` runs
-exactly this and returns the verdict as `success` (and why in `settle`); `s.status()["success"]` is the same
-conditions at one instant, without the window (`predicate`: RoboWits' alone).
-
-- At least 50 % of the cup's footprint area lies over the target area.
-- The cup is still: its speed is at most 5 mm/s.
-- The cup is upright: its roll and its pitch (the x and y of its XYZ Euler angles) are each within 20 degrees of
-  level.
-- The cup's footprint lies inside the table bounds.
-- The cup is not held.
-- Released and at rest: no part of the robot touches the cup, and it moves at most 2 mm during the check window (a cup
-  that creeps down the slope at 1 mm/s or more does not count).
-
-Not checked: the coaster (where it is, whether the cup stands on it).
-
-Task text vs grader ("Put the cup on the green target area on the slope without sliding down."): "Without sliding
-down" is the check window: the conditions above for 2 s, with the cup at rest (at most 2 mm in 2 s), not one speed
-sample.
-
-Terms: a *footprint* is an object's outline seen from above (the 2D convex hull of its collision mesh in the x-y
-plane); *not held* means that neither gripper tip (`Gripper_Tip_R` / `Gripper_Tip_L`, the frames of `s.ee_pose`) is
-inside the object's axis-aligned bounding box grown by 3 cm on every side; the *table bounds* are the rectangle x
-0.21-1.00 m, |y| <= 0.69 m on the table top (z = 0.76 m).
-
-## Deliverable
-Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below).
-It is replayed open-loop once from the same initial state in a fresh process and scored 1 if the task is
-completed after the replay (the settle window of the success criterion above), else 0.
-Also leave the script that produced it at `/app/output/gen.py`.
-Save a trajectory as soon as one replays successfully (you can overwrite it later), and do not stop before you have
-one.
-
-## Tooling (already installed; run `python` from any directory)
+## Robot Interface
+### Session
+`/opt/tools/rcb_robowits.py`, importable as `rcb_robowits`:
 ```python
 from rcb_robowits import Session
 s = Session("hold_cup", instance="/app/instance.json")   # ~60 s: builds the frozen scene (object poses in instance.json)
@@ -212,7 +32,7 @@ s.objects()                        # objects: name -> position, orientation_wxyz
 p["move_ee"]("left", pos, quat_wxyz, linear=3)   # IK (RoboWits' own) to a gripper-tip pose, then joint interpolation
 p["move_joints"]("left", q7); p["set_gripper"]("left", 0.0); p["open_gripper"]("left"); p["hold"](10)
 s.ee_pose("left"); s.joint_positions(); s.ik("left", pos, quat_wxyz)    # kinematics helpers
-s.render_frame("ego")              # RGB uint8 (480, 848, 3) from one camera (s.VIDEO_CAMERAS); s.render_grid()
+s.render_frame("ego")              # RGB uint8 (480, 848, 3) from one camera (s.VIDEO_CAMERAS)
 s.render_depth("ego")              # float32 (480, 848) z-depth in metres (0 = no reading), pixel-aligned with render_frame("ego")
 s.camera_info()                    # per camera: intrinsic_cv, extrinsic_cv (world -> camera, OpenCV axes), cam2world_gl, mount
 s.robot_spec()                     # joints (position / velocity / effort limits), grippers, PD gains, tool frames Gripper_Tip_R/L
@@ -227,33 +47,42 @@ s.replay(actions)                  # resets, replays open-loop, then the settle 
 s.save_trajectory(actions, "/app/output/trajectory.npz")
 s.render_video(actions, "/app/output/check.mp4")   # replays from the frozen state and writes a tiled camera video
 ```
-The primitives are deliberately thin (IK moves, joint moves, gripper, hold): grasping, placing and every other skill
-are yours to build from them.
 
-CLI equivalent of the grader:
+The primitives are deliberately thin (IK moves, joint moves, gripper, hold): grasping, placing and every other skill are
+yours to build from them. `s.replay(actions)` runs exactly what the grader runs, settle check included, and returns the
+verdict as `success` (why it failed in `settle`); `s.status()["success"]` is the same conditions at one instant, without
+the settle check. One `Session` per process (Genesis initialises once). The physics runs on Genesis' bit-deterministic
+CPU backend at ~700 control steps/s; the GPU only renders camera images. Do not call `s.close()` before writing every
+output. The grader replays with this command; run it to self-check:
 `python /opt/tools/rcb_robowits.py replay --task hold_cup --instance /app/instance.json --traj /app/output/trajectory.npz`
 
-## Conventions
-- World frame: robot base at (0, 0, 1.08), table top at z = 0.76, x points away from the robot, y to its left (the left
-  arm works at y > 0). Quaternions are **WXYZ**.
+### Actions
 - Action (16): right arm 7 joint targets (rad), right gripper width (m, 0 closed .. 0.1 open), left arm 7 joint targets,
   left gripper width; absolute position targets tracked by PD controllers. `s.hold_action()` is the no-op.
-- Control runs at 30 Hz (4 physics substeps). There is no step budget: the time limit (`## Time limit`) is your only budget.
-  One technical cap: a trajectory, and a `Session` between two resets, has at most 200000 control steps (about
-  1.85 h of simulated time). `s.step` returns `True` on the step that reaches it and raises after it until
-  `s.reset()`; the grader scores a trajectory with more rows 0 (`bad_trajectory`).
-- Grippers open to 10 cm. The gripper tip frame's +z axis is the approach direction and +x the finger-closing
-  direction; `p["top_down_quat"](yaw)` builds a vertical-approach orientation whose fingers close along `yaw`.
-- One `Session` per process (Genesis initialises once). The physics runs on Genesis' bit-deterministic CPU backend at
-  ~700 control steps/s; the GPU only renders camera images. Do not call `s.close()` before writing every output.
+- Control runs at 30 Hz (4 physics substeps). A `Session` between two resets has at most 200,000 control steps. `s.step`
+  returns `True` on the step that reaches it and raises after it until `s.reset()`.
+- Grippers open to 10 cm. The gripper tip frame's +z axis is the approach direction and +x the finger-closing direction;
+  `p["top_down_quat"](yaw)` builds a vertical-approach orientation whose fingers close along `yaw`.
+- World frame: robot base at (0, 0, 1.08), table top at z = 0.76, x points away from the robot, y to its left (the left
+  arm works at y > 0). Quaternions are **WXYZ**.
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+## Others
+- The objects (their `s.objects()` names): `cup`, `slope`, `coaster`, `target area`.
+- The green target area is hard to see: it lies on the slope's inclined face, mostly inside the slope's mesh, so the
+  cameras show little or none of it (none at the start). It covers the middle of that face, about 13 cm by 17 cm, its
+  centre within about 2 cm of the slope's centre seen from above (`s.objects()` gives its pose and bounds).
 
-## Resources
-Your container: **4 CPUs**, **13 GiB of memory**, **1024 processes and threads**, **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`) and **one GPU, 5 GiB of its memory**. `blenderkit` runs in its own container: 1 CPU, 4 GiB of memory and 1024 processes and threads. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
-
-## Time limit
-You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
-
-This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+## Limits
+- Time: 3600 s of wall-clock time from the start of your session; everything counts (the simulator's start-up too). At
+  the end you are stopped without warning and only what is in `/app/output/` at that moment is graded. Time left:
+  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`). Calls into a long-running process can block for their
+  whole wait time: use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, the simulator's and the benchmark's source included. Do not search for or
+  download a ready-made solution (published or reference solutions, recorded demonstrations, trained policies); trials
+  are reviewed.
+- Resources: 4 CPUs, 13 GiB memory, 1024 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`),
+  one GPU (5 GiB of its memory); `blenderkit` runs in its own container (1 CPU, 4 GiB memory). Over a cap a process can
+  be killed (the CPU cap only slows you down); usage: `/run/rcb-limits/usage.json`.
+- Resets: as many as you like (`s.reset()`, an exact snapshot restore).

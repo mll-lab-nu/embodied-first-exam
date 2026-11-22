@@ -1,140 +1,90 @@
-# MuJoCo Playground · SpotFlatTerrainJoystick — STANDARD MODE, MCP TOOLS ONLY (robot as a service, eai-standard/2.2)
+# MuJoCo Playground · SpotFlatTerrainJoystick (standard-mcp)
 
-**Task:** Make Boston Dynamics Spot follow the joystick command schedule on flat ground for the whole 20 s episode without falling over.
+## Task
+Boston Dynamics Spot (MuJoCo Playground's scene, in MuJoCo), driven by 12 joint position actuators: there is no walking
+or balance controller. It starts standing still at its `home` pose. The ground is flat. Make it follow the joystick's
+command schedule on flat ground for the whole 20 s episode without falling over. The robot runs as a service you reach
+only through the `efe-robot` MCP tools, as if it were real hardware.
 
-You control the Boston Dynamics Spot quadruped — **as if it were real hardware** — in MuJoCo Playground's
-`SpotFlatTerrainJoystick` environment (plain MuJoCo 3.3.7 with Playground's scene, commit 4057c14). The simulator runs in a service you
-cannot open. You get the `efe-robot` tools and up to 11 episodes.
+## Goal
+Success: for the whole schedule the robot never falls, and in every command's stretch, after a short settling time at
+its start, its velocity over the ground (in its own frame) and its turning rate follow the command closely on average.
+The episode lasts the whole schedule (20 s, 1000 control steps); a fall (the trunk tilting well over) ends it at once,
+as a failure, and so does ending it yourself (`done`) or running out of time before the schedule's end.
 
-## Robot tools (MCP server `efe-robot`)
-You act on the robot only through the tools of the MCP server `efe-robot` (in your tool list as `efe-robot` tools, for
-example `mcp__efe-robot__move_robot`). You may write and run code to compute; every robot command and observation must
-go through the efe-robot MCP tools; code must not contact the simulator. Each robot command or observation is a tool
-call you make yourself: no script starts or calls the `efe-robot` server, and the service's record of its requests is
-checked against the server's. To send a trajectory your code computed, save it as a file under `/app` and pass its path
-as `rows_file` to `execute_trajectory`. The robot service and its rules are as described in this text; where it names
-calls of the Python client `rcb_client.py`, which is not installed for your code here, use the tool that does the same:
+Nothing to hand in: the service records and grades the episode, and the tool server records your calls.
 
-| Client | Tool |
-|---|---|
-| `Robot()`, `r.spec()` | `describe_robot()`: the robot's parts, joints and limits, cameras, control period, action types and conventions, and the time left; the full spec is saved as a JSON file (`spec_file`) you can read |
-| `r.get_obs(cameras, seconds, depth)` | `observe(cameras, seconds, depth)` |
-| `r.submit(type, A, dt, interpolate)` | `execute_trajectory(space="native", action_type=type, native_rows=A, dt=dt, interpolate=...)`, or `move_robot` / `execute_trajectory` in the conventions below |
-| `r.status()`, `meta[...]` | every tool result: `time_left_s`, `sim_time_s`, `done`, `reason` and the service's messages |
-| `r.reset()` / `POST /reset` | `reset_episode()` |
+Real-robot rules:
+- Episodes: 10 resets, each a new episode from the same starting state (Robot Interface). Only the last episode is
+  graded: a success ends the run at once (no reset after it), and when your time is up the episode then running is
+  graded.
+- No privileged state: you get the camera images (with their calibration) and the robot's own sensors (joint positions,
+  velocities and torques, the IMU, foot contacts); no world positions; when the episode ends, the service tells you that
+  it ended and why.
+- Write your own controller; do not use the benchmark's demonstrations, trained policies or any published solution.
+- Tools only: you may write and run code to compute, but every robot command and observation is an `efe-robot` tool call
+  you make yourself; no script starts or calls the tool server, and code must not contact the simulator (the service's
+  request log is checked against the server's).
 
-**Conventions** of `move_robot`, `locomote` and `execute_trajectory` (spaces other than `native`): the robot base frame
-at the start of each call (+X forward, +Y left, +Z up), metres and radians, quaternions `wxyz`, gripper 0 = open to 1 =
-closed. Base frame of this robot: the simulator's world frame (z up), not the trunk: the service reports no trunk pose,
-so camera poses are given in this frame; no part here takes an end-effector pose. Space `native` sends rows in the
-robot's own action types exactly as the sections below describe them (their frame, units and gripper values).
+## Robot Interface
+### Tools
+The `efe-robot` tools (in your tool list, e.g. `mcp__efe-robot__move_robot`). Their conventions (all but space
+`native`): the robot base frame is the simulator's world frame (z up), not the trunk: the service reports no trunk pose,
+so camera poses are given in this frame; no part here takes an end-effector pose; metres, radians, quaternions `wxyz`,
+gripper 0 open .. 1 closed. Parts: legs (legs: 12 joints, no end-effector pose). Cameras: `track`, `side`, `back`,
+`top`.
 
-**This robot** (Boston Dynamics Spot quadruped (MuJoCo Playground scene): 12 joint position actuators, no walking
-controller): legs (legs: 12 joints, no end-effector pose). Cameras: `track`, `side`, `back`, `top`.
-
-- `describe_robot()`: call it first.
-- `observe(cameras?, depth?, seconds?, save_to?, inline_cameras?)`: images are written as JPEG files under `/app/obs/`
-  (depth as `.npy`, float32 metres; with `seconds` > 0 a video `.mp4` too); the result has their paths, each camera's
-  intrinsics `K` and pose in the robot base frame, each part's joints, gripper and end-effector pose, and `proprio_now`
-  (the robot's own proprioception row; its layout is in the spec file). Open an image with your file-reading tool;
-  `inline_cameras` also returns small images in the result.
-- `locate(camera, u, v | pixels, window_px?)`: the 3-D point in the robot base frame that a camera sees at pixel (u, v)
-  of its full-size image (u the column, v the row), or one per pixel of `pixels` [[u, v], ...]: from a new depth image
-  of that camera and its calibration (no time passes). For a camera with depth and a known pose; for any other the error
-  says so.
+- `describe_robot()`: call it first: parts and limits, cameras, control period, action types, the time left; the full
+  spec as a JSON file (`spec_file`).
+- `observe(cameras?, depth?, seconds?, inline_cameras?)`: JPEG images under `/app/obs/` (depth `.npy`, float32 metres;
+  with `seconds` > 0 an `.mp4` too, the robot held still meanwhile); the result has their paths, each camera's `K` and
+  pose in the base frame, each part's joints, gripper and end-effector pose, and `proprio_now` (the robot's own
+  proprioception row; its layout is in the spec file).
+- `locate(camera, u, v | pixels, window_px?)`: the 3-D point in the base frame a depth camera sees at pixel (u, v) of
+  its full-size image (u the column, v the row); no time passes.
 - `move_robot(goals, duration_s?)`: one goal per part,
   `{target, position?, quaternion_wxyz?, joint_positions?, gripper?}`; the parts move together and the call returns when
-  the motion is done, with `reached` (errors per goal), a `failure` category if a goal was not reached, the state and
-  the path of a frame per camera.
-- `execute_trajectory(space, rows | native_rows | rows_file, dt?, interpolate?)`: a dense trajectory, rows `dt` seconds
-  apart. `rows_file` is the path of a file under `/app` that holds the rows: a `.npy` (2-D float array) or `.csv` (one
-  row per line, comma-separated) of native rows for space `native` (with `action_type`), or a `.json` list: of number
-  arrays (native rows) or of row objects as in `rows` (the other spaces). Long arrays go this way rather than inline.
-- `wait(seconds?, operation?)`: let time pass holding the current command, or collect a pending operation.
-- `reset_episode()`: a new episode from the same starting state (it uses one reset of the budget).
-- `signal(kind, note)`: `done` records that you are finished (the episode itself ends as described above).
-- One tool call runs at a time. A call still executing after 45 s returns `{"pending": true, "operation": id}` while the
-  robot goes on executing it: call `wait(operation=id)` (it waits up to 45 s more each time) for its result. A result
-  with `"episode_over": true` means the episode has ended.
-- Nothing needs to be saved: the server records every tool call, and the service records the episode.
+  the motion is done, with `reached` (the error per goal), a `failure` category if a goal was not reached, the state and
+  a frame per camera.
+- `execute_trajectory(space, rows | native_rows | rows_file, dt?, interpolate?)`: dense rows `dt` seconds apart; long
+  arrays as `rows_file`, a file under `/app` (`.npy` or `.csv` of native rows for space `native` with `action_type`, or
+  a `.json` list).
+- `wait(seconds?, operation?)`: let time pass holding the current command, or collect a pending call.
+- `reset_episode()`: a new episode from the same starting state (one reset of the budget).
+- `signal(kind, note)`: `done` records that you are finished (the episode itself ends as Goal says).
+- One call at a time. A call still running after 45 s returns `{"pending": true, "operation": id}`: collect it with
+  `wait(operation=id)`. `"episode_over": true` means the episode has ended.
 
-**Notes on this robot.** There is no walking or balance controller: every gait, turn and pose comes from the 12 joint
-targets you send, one row per control step (0.02 s). The joint targets are absolute angles in radians, in the same order
-as proprio group joint_pos; the state also has joint velocities and torques, the IMU (gyro, accelerometer, gravity
-direction, the trunk's velocity) and foot contacts (proprio_now, layout in describe_robot's spec_file: proprio_layout,
-proprio_groups). spec_file also has the home pose, the joint limits, the command schedule where the task has one (every
-result's command_now is the current command), and forward/inverse kinematics of the feet in the trunk frame for
-reference. Time passes only inside calls. The robot's own action type done (native, no columns) ends the episode at
-once.
+This robot: There is no walking or balance controller: every gait, turn and pose comes from the 12 joint targets you
+send, one row per control step (0.02 s). The joint targets are absolute angles in radians, in the same order as proprio
+group joint_pos; the state also has joint velocities and torques, the IMU (gyro, accelerometer, gravity direction, the
+trunk's velocity) and foot contacts (proprio_now, layout in describe_robot's spec_file: proprio_layout, proprio_groups).
+spec_file also has the home pose, the joint limits, the command schedule where the task has one (every result's
+command_now is the current command), and forward/inverse kinematics of the feet in the trunk frame for reference. Time
+passes only inside calls. The robot's own action type done (native, no columns) ends the episode at once.
 
-## The episode
-The robot starts standing still at Playground's `home` pose (this environment's reset does not move it). The ground is flat.
-For 20 s (1000 control steps) it is given this command schedule, drawn by Playground's command process (a new draw every 201 control steps, zero with probability 0.1). A command is a velocity in the robot's own frame: vx forward, vy to the left (the trunk's planar velocity), and the yaw rate:
+### Observations
+Cameras: `track`, `side`, `back`, `top` (they follow the robot); the spec's `["cameras"]` gives each one's mounting and
+intrinsics, and every response carries its pose. Proprioception (the spec's `["proprio_groups"]`): `joint_pos`,
+`joint_vel`, `joint_effort` (12 each, action order), `imu_gyro`, `imu_accelerometer`, `imu_gravity`, `imu_linvel` (3
+each, IMU frame: x forward, y left, z up), `foot_contact` (FL, FR, HL, HR).
 
-| from (s) | vx (m/s) | vy (m/s) | yaw rate (rad/s) |
-|---:|---:|---:|---:|
-| 0.00 | +0.713 | +0.045 | +0.609 |
-| 4.02 | -0.185 | -0.401 | -0.477 |
-| 8.04 | +0.605 | +0.115 | +0.049 |
-| 12.06 | +0.000 | +0.000 | +0.000 |
-| 16.08 | -0.281 | -0.742 | -0.667 |
+### Commands
+A command is a velocity in the robot's own frame: vx forward, vy to the left (the trunk's planar velocity), and the yaw
+rate. The schedule is the spec's `["command_schedule"]` (each segment's start and command); every response's
+the tool result's `command_now` is the current command.
 
-The same schedule is `spec["command_schedule"]`; every response's `meta["command_now"]` is the current command.
-
-## Rules (real-robot rules)
-- **Episodes and resets.** You have **10 resets** (`spec["budget"]["reset"]`, which is authoritative: if it
-  says 0, there is no reset and the one episode is the run). A reset (`POST /reset`, below) puts the robot back on the
-  same frozen starting state and starts a new episode, either abandoning the running one or after one has ended; it
-  takes no simulated time and returns the start's images and proprioception. Once an episode has ended, `submit`
-  raises `EpisodeOver` until you reset. **Only the last episode is graded**: an episode you reset away is never graded,
-  a success ends the run at once (no reset after it), and when your time is up the episode then running is the one
-  graded. The wall clock is the run's and never restarts; `meta["episode"]` and `meta["resets_left"]` count the
-  episodes (`meta["control_steps"]` is the current episode's).
-- **No privileged state.** You see the cameras that follow the robot (RGB, depth if you ask) and the robot's own
-  sensors: joint positions, velocities and torques, the IMU (gyro, accelerometer, gravity's direction, the trunk's
-  velocity), foot contacts. No world positions, no success check.
-- **The episode ends** after 1000 control steps, the whole schedule (`spec["max_control_steps"]`, counted by `meta["control_steps"]`), when the robot meets its termination rule (the trunk tilted by more than about 32 deg (the z component of the IMU frame's z axis below 0.85): a failure), when you submit `done`, or when your time is up (before the end of the schedule, both are failures).
-- **Success** is judged on the whole schedule: no termination, and in every command segment, after its first 25 control steps, a mean |v_xy - cmd_xy| of at most 0.2 m/s (`imu_linvel`) and a mean |w_z - cmd_wz| of at most 0.3 rad/s (`imu_gyro`).
-- Your only budget is the time limit (`## Time limit`). Simulated time only advances with your commands (and
-  `get_obs(seconds=...)`, which holds the current targets). `meta["time_left_s"]` is the service's count of the limit,
-  from your first request to the service: it never runs out before your time does, so plan by it.
-- Nothing to hand in: the service records the episode and grades it.
-- **If the service crashes**, a call fails with a connection error: it restarts and resumes the SAME episode (a crash
-  is never a reset and costs none) in the state after the last call it completed. `r.wait_ready()` waits for it; then check `r.status()`.
-- **Images are files.** The tools write camera images, depth and video under `/app/obs/` and return their paths with small JSON; open an image with your file-reading tool, or ask for small images in the result with `inline_cameras`.
-
-## The robot service through its Python client (reference; your code cannot reach it: act through the `efe-robot` tools above)
-```python
-from rcb_client import Robot
-r = Robot()                                    # connects (waits while the service starts)
-spec = r.spec()                                # action types, limits, cameras, robot_spec (home pose, gains), kinematics, command_schedule
-obs = r.get_obs()                              # obs.last[cam] -> uint8 (240, 320, 3); obs.meta["proprio"] {"layout", "now"}
-res = r.submit("joint_position", A, dt=0.02)   # A: (T, 12) rows dt apart; res.proprio (one row per frame), res.meta
-obs = r.get_obs(seconds=1.0, video="mp4")      # hold the current targets and watch for 1 s (max 30)
-r.fk(q); r.ik({"FL": [x, y, z, 1, 0, 0, 0]}, seed=q)   # feet in the trunk frame <-> joints (no physics)
-r.submit("done", [])                           # end the episode now
-r.status()                                     # calls, control steps, done, reason, elapsed time, episode, resets_left
-obs = r._post("/reset", {"cameras": ["track"]}, [], 900)   # POST /reset: a new episode (the 2.2 client has no reset())
-```
-Cameras: `track`, `side`, `back`, `top` (they follow the robot); `spec["cameras"]` gives each one's mounting and intrinsics, and every response carries its pose. Proprioception (`spec["proprio_groups"]`): `joint_pos`, `joint_vel`, `joint_effort` (12 each, action
-One call returns at most 3000 images (`max_frames_per_call`, PROTOCOL §3 "Images per call").
-order), `imu_gyro`, `imu_accelerometer`, `imu_gravity`, `imu_linvel` (3 each, IMU frame: x forward, y left, z up),
-`foot_contact` (FL, FR, HL, HR).
-
-### `joint_position` (12)
-FL, FR, HL, HR legs, each hx (abduction), hy (hip pitch), kn (knee): absolute targets of the joint position actuators (rad; kp = 300 N m/rad, joint damping 1 N m s/rad, plus the actuators' own damping of 20 N m s/rad).
-Rows are `dt` apart (a whole multiple of the 0.02 s control period, at most 0.5 s), `interpolate="linear"` (default) or
-`"hold"` between rows; a chunk covers at most 10 s; values outside the limits
-(`spec["action_types"]["joint_position"]["limits"]`) are clipped and listed in `res.meta["clipped"]`. Feedback control
-means short chunks: each response tells you where the robot is now.
-
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the files the robot tools write included. You may write and run code to compute; every robot command and observation must go through the `efe-robot` MCP tools; code must not contact the simulator. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
-
-## Resources
-Your container: **2 CPUs**, **4 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
-
-## Time limit
-You have 1800 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
-
-This is wall-clock time from the start of your session; the time the robot tools take counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. Every robot tool result reports `time_left_s`, the service's count of the same limit from your first tool call, so it never runs out before your time does: your real time left is `time_left_s` minus the time you spent before that call. Plan by it. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. A robot tool that is still executing when its call has to return answers `pending` with an operation id: call `wait` with that `operation` to collect the result. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+## Limits
+- Time: 1800 s of wall-clock time from the start of your session; everything counts (the time the tools take too). At
+  the end you are stopped without warning and the episode is graded as it stands. Time left:
+  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`); every tool result has the service's `time_left_s`, which
+  starts at your first tool call, so the file is the one to trust. Calls into a long-running process can block for their
+  whole wait time: use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, the files the tools write included. Do not search for or download a ready-made
+  solution (published or reference solutions, recorded demonstrations, trained policies); trials are reviewed.
+- Resources: 2 CPUs, 4 GiB memory, 1024 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`), no
+  GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap only
+  slows you down); usage: `/run/rcb-limits/usage.json`.
+- Resets: at most 10 (`reset_episode()`), each a new episode from the same starting state.

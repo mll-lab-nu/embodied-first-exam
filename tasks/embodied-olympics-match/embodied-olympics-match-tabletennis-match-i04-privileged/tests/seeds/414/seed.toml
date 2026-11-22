@@ -1,5 +1,6 @@
-# Seed 414 of this match (tests/match_instance.json under this directory: the privileged verifier's frozen settings); the text
-# that names the seed: compose RO_SEED, the privileged instruction, the full-simulator adapter's INSTANCES.
+[[replace]]
+old = "## Task\nRobot table tennis: each player is a Franka Panda arm with a paddle on an x-y rail base behind its end line, both held\nto the real robot's limits, and you see the game only through two cameras of four frames each. One game to 5 points; the\nplayers' robots serve by the ITTF service laws, with a toss device on the robot. You are seat `A` against the scripted\nlevel-4 opponent, seed 34: the same fixed match as the realtime twin\n(`embodied-olympics-match-tabletennis-match-i04-realtime`), with the same robot, actions, rules, limits and opponent.\nThe world runs at 1/10 of real speed. You have the full simulator to develop with; you hand in a program that plays the\nmatch."
+new = "## Task\nRobot table tennis: each player is a Franka Panda arm with a paddle on an x-y rail base behind its end line, both held\nto the real robot's limits, and you see the game only through two cameras of four frames each. One game to 5 points; the\nplayers' robots serve by the ITTF service laws, with a toss device on the robot. You are seat `A` against the scripted\nlevel-4 opponent, seed 414: the same fixed match as the realtime twin\n(`embodied-olympics-match-tabletennis-match-i04-realtime`), with the same robot, actions, rules, limits and opponent.\nThe world runs at 1/10 of real speed. You have the full simulator to develop with; you hand in a program that plays the\nmatch."
 
 [[replace]]
 old = "RO_SEED: \"34\""
@@ -8,10 +9,6 @@ new = "RO_SEED: \"414\""
 [[replace]]
 old = "\"seed\": 34}"
 new = "\"seed\": 414}"
-
-[[replace]]
-old = "level=4, seed=34)"
-new = "level=4, seed=414)"
 
 [[replace]]
 old = "level=4,seed=34)"

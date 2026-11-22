@@ -1,41 +1,65 @@
-# Full-simulator soccer: develop a program against level 2
+# Embodied Olympics · robot soccer 2 v 2, match against level 2 (privileged)
 
-Win one complete match against the frozen sport's scripted level-2 opponent, seed 7: the same frozen
-instance as `embodied-olympics-match-soccer-match-i00-realtime` (its realtime twin; there you see only camera images). The robot, the actions,
-the rules, the limits and the opponent are unchanged; the world runs at 1/5 of real speed.
+## Task
+Robot soccer 2 v 2: four simulated Booster T1 humanoids and one ball on a boarded 10 × 7 m pitch. You are seat `A`
+against the scripted level-2 opponent, seed 7: the same fixed match as the realtime twin
+(`embodied-olympics-match-soccer-match-i00-realtime`), with the same robot, actions, rules, limits and opponent. The
+world runs at 1/5 of real speed. You have the full simulator to develop with; you hand in a program that plays the
+match.
 
-## Development and deliverable
-`from tools.fullsim.session import Session`; `Session("soccer", level=2, seed=7)` gives `state()`,
-`world`, `spec()`, `act(command)`, `step(n)`, `ready()` and `reset()`. The simulator and its source are at
-`/opt/fullsim`. Reset rebuilds the WHOLE same-seed match. You may inspect and change private worlds and develop and
-search with repeated resets within your resource and time limits; nothing of this reaches the formal match.
-Read `/opt/fullsim/README.md` for the program API, the `truth` fields, the units and the self-test.
+## Goal
+Success: your program wins the complete formal match.
 
-Leave `/app/output/policy/program.py` and any helper or data files in that directory (512 regular files, 32 MiB;
-no links or special files). Define `make_policy(config)` returning an object with `act(view)`; it lives for the whole
-match. `view` holds `state` (the twin's observation fields), `truth` (the full current state), `scores`. Return one
-original action, a list of at most 2, `{"type": "ready"}` during a review, or None. No model or
-API calls during the formal evaluation. Submit executable code, not a recorded trajectory or a claimed score; save a
-valid program early and improve it.
+Deliverable: `/app/output/policy/program.py`, with any helper or data files in that directory (at most 512 regular files
+and 32 MiB; no links or special files; helpers are importable). It defines `make_policy(config)`, returning an object
+with `act(view)` that lives for the whole match. `view` has `state` (the twin's observation), `truth` (the full current
+state) and `scores`; `act` returns one action of the twin's interface (or a list of at most 2), `{"type": "ready"}`
+during a review, or None. Save a valid program early and overwrite it when you have a better one.
 
-## Formal evaluation
-A separate verifier without network runs your final program as an unprivileged process against a fresh, unmodified
-match; your program can read a public, read-only copy of the simulator (`/opt/dev`, the same as `/opt/fullsim`) for its
-own predictions, never the trusted copy that runs the match, the referee or the logs.
-There is no formal reset. The original realtime clock runs at S = 5 while your program computes; each
-review (after a point, a goal or another stoppage) freezes the world (at most 600 s). The formal match
-has 4800 s of wall time.
-The service replays the trusted journal once in a fresh process; success is a complete win by the original referee
-with a matching replay. The match runs on the wall clock, so, as in the realtime twin, the verifier's speed
-matters: it runs on 6 pinned CPUs. This fixed instance does not measure generalization to other instances.
+The formal match: a separate verifier without network runs your final program as an unprivileged process against a fresh
+match, with no reset. The world runs at 1/5 of real speed while your program computes, as in the realtime twin; each
+review (after a point, a goal or another stoppage) freezes it for at most 600 s; the formal match has 4800 s of wall
+time. The verifier runs on 6 pinned CPUs, so its speed matters.
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+Rules: write your own controller; do not use the benchmark's demonstrations, trained policies or any published solution.
+Hand in executable code, not a recorded trajectory or a claimed score; no model or API calls during the formal match.
+Your program may read the public, read-only copy of the simulator at `/opt/dev` for its own predictions, never the copy
+that runs the match, the referee or the logs.
 
-## Resources
-Your container: **6 CPUs**, **9 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
+## Robot Interface
+### Session
+```python
+from tools.fullsim.session import Session
+s = None
+s.spec()          # the action interface and the rules (as the twin's `game spec`)
+s.state()         # the observation
+s.world           # the whole mutable match
+s.act(command)    # one action of the twin's interface
+s.step(n)         # advances n control steps
+s.ready()         # ends a review
+s.reset()         # rebuilds the whole same-seed match
+```
+The simulator and its source are at `/opt/fullsim`; `/opt/fullsim/README.md` documents the program API, the `truth`
+fields, the units and a self-test of `program.py`.
 
-## Time limit
-You have 7200 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+### Actions
+The twin's actions (`s.spec()` gives their fields and ranges): per robot `walk`, `stand` and `kick`. During a review
+return `{"type": "ready"}`.
 
-This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+## Others
+- In development you may inspect and change private worlds and search with repeated resets; none of it reaches the
+  formal match.
+
+## Limits
+- Time: 7200 s of wall-clock time from the start of your session; everything counts (the simulator's start-up too). At
+  the end you are stopped without warning and only what is in `/app/output/` at that moment is graded. Time left:
+  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`). Calls into a long-running process can block for their
+  whole wait time: use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, the simulator's and the benchmark's source included. Do not search for or
+  download a ready-made solution (published or reference solutions, recorded demonstrations, trained policies); trials
+  are reviewed.
+- Resources: 6 CPUs, 9 GiB memory, 1024 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`), no
+  GPU. Over a cap a process can be killed (the CPU cap only slows you down); usage: `/run/rcb-limits/usage.json`.
+- Resets: as many as you like in development (`s.reset()`); none in the formal match.

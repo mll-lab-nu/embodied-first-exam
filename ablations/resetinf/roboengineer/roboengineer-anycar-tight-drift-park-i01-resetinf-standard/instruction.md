@@ -1,48 +1,95 @@
-# anycar-tight-drift-park
+# roboEngineer · anycar-tight-drift-park (standard)
 
-Follow the ordered U-bend, then execute a 180-degree drifting turn into a tight inside parallel-parking space between two stationary cars and hold a precise stop.
+## Task
+A simulated AnyCar racing car (an RC car; MuJoCo). Follow the ordered U-bend, then execute a 180-degree drifting turn
+into a tight inside parallel-parking space between two stationary cars and hold a precise stop. You tune its numeric
+controller on the public nominal model in your container and deploy it to a hidden evaluator whose dynamics differ in
+ways you are not told; the evaluator runs as a service you reach only through its client.
 
-## Train, deploy, inspect and revise
-Use the public nominal model and write fitting/optimization code locally. Submit the documented numeric controller parameters. This track evaluates adaptation within a fixed controller ABI; it does not deploy arbitrary controller Python. Run `python -m control_public.anycar_drift_v3_nominal --out /app/output/nominal` for local nominal rollouts. The controller entry point is `control_public.anycar_drift_v3`; ABI /3 coefficients are in `control_public.anycar_drift_feedback`, and legacy ABI /2 is also accepted. Each response preserves the public course in `feedback.command`, all 161 noisy telemetry rows and all 161 video frames at 10 Hz through 16 seconds. The course includes the public start position, target heading and fixed revision string.
+## Goal
+Success: the car completes the ordered U-route, then turns fully round (a half turn), most of it sliding in a real drift
+near the bay, into the tight inside parking bay, and stops with the whole car inside the bay, close to its centre and
+its heading, standing still for the last half second. A collision, a rollover, the chassis touching the ground or
+leaving the route fails. A successful case scores higher the closer the car stops to the bay's centre and heading; any
+other scores zero. The evaluator runs the policy you select on 10 held-out cases (new episodes of the same hidden plant,
+never shown to you): success needs every case to pass, and `final_reward` reports the mean score (0-100).
 
-Use `from control_public.client import Client, artifact`; `Client().describe()` provides the public defaults and bounds. Call `deploy(policy, diagnosis)` for up to three rounds. A deployment can take minutes: if your tool call times out and the response is lost, `result(round_id)` returns that completed round's stored response again (it runs nothing). An episode that crashes, leaves its course or arena, or makes the simulation diverge ends at that moment: its telemetry and frames stop there. Each round reuses the same 3 development cases. Diagnose failures from the returned video frames and noisy telemetry, then revise. Preserve code, training logs, policies and exact feedback under `/app/output/`. The client saves the exact response and image bytes. A diagnosis should briefly state the observed failure, proposed change and expected effect.
+Deliverable: the policy of one completed deployment round. `seal(round_id, summary)` selects it (once; it ends
+adaptation). If you seal none, the latest round completed before the cutoff counts; with no completed round the score is
+zero. Preserve code, training logs, policies and exact feedback under `/app/output/`. The client saves the exact
+response and image bytes.
 
-`seal(round_id, summary)` selects a completed round. No held-out feedback is returned. At agent exit the evaluator uses the sealed round or the latest round completed before cutoff; no eligible round scores zero. Hidden simulation runs in a separate container and accepts data-only policies. Network endpoint: `http://127.0.0.1:8000`. No reset or privileged-state endpoint exists.
+Real-robot rules:
+- Deployment rounds: as many as your time allows, with save and load of development episodes (Robot Interface,
+  `### This run: unlimited resets, save and load`); grading is unchanged: the round you seal (or else the latest
+  completed one) is graded.
+- No privileged state: a deployment returns noisy telemetry and camera frames only; the evaluation dynamics, seeds, true
+  state, contacts and grades are never returned, and nothing about the held-out cases.
+- Write your own fitting, training and analysis code; do not use published or reference solutions, trained policies for
+  this task, or hidden evaluator information.
 
-## Verification and score
-Complete the ordered U-route, then turn by pi radians within 0.25 rad, accumulating at least 120 degrees while sliding. Sliding requires body lateral speed >0.2 m/s, planar speed >0.6 m/s and sideslip >10 degrees near the bay; sustain it for 0.15 s and accumulate 0.06 m of lateral slide. Park the entire car envelope inside the bay with x error <0.18 m, y error <0.12 m, yaw error <0.14 rad, speed <0.08 m/s and yaw rate <0.1 rad/s for the final 0.5 s. Collision, rollover, chassis-ground contact or route departure fails. A successful case scores 100*exp(-final_position_error_m/0.25-final_yaw_error_rad/0.3); otherwise zero.
-The selected policy is tested on 10 disjoint cases in two fresh processes. Binary success requires all cases to pass; `final_reward` reports the continuous mean score. Evaluation dynamics, seeds, true state, contacts and grades are never returned during adaptation.
+## Robot Interface
+### Client
+- `from control_public.client import Client, artifact`; `Client().describe()` provides the public defaults and bounds.
+- `deploy(policy, diagnosis)` for one deployment round: it runs your policy on the development cases and returns their
+  feedback. A diagnosis should briefly state the observed failure, proposed change and expected effect.
+- A deployment can take minutes: if your tool call times out and the response is lost, `result(round_id)` returns that
+  completed round's stored response again (it runs nothing).
+- `seal(round_id, summary)` selects a completed round for grading.
+- The service: `http://127.0.0.1:8000`; it accepts data-only policies.
 
-## Modeling limitations
-Rigid RC tire contact and rear-wheel dry-friction brake; not a calibrated pneumatic-tire drifting or vehicle-damage model.
+### Training
+Use the public nominal model and write fitting/optimization code locally. Submit the documented numeric controller
+parameters. This track evaluates adaptation within a fixed controller ABI; it does not deploy arbitrary controller
+Python. Run `python -m control_public.anycar_drift_v3_nominal --out /app/output/nominal` for local nominal rollouts. The
+controller entry point is `control_public.anycar_drift_v3`; ABI /3 coefficients are in
+`control_public.anycar_drift_feedback`, and legacy ABI /2 is also accepted.
 
-## This run: unlimited resets, save and load
+### Feedback
+Each round reuses the same 3 development cases. Each response preserves the public course in `feedback.command`, all 161
+noisy telemetry rows and all 161 video frames at 10 Hz through 16 seconds. The course includes the public start position
+and target heading. An episode that crashes, leaves its course or arena, or makes the simulation diverge ends at that
+moment: its telemetry and frames stop there. Diagnose failures from the returned video frames and noisy telemetry, then
+revise.
 
-This run raises the deployment budget and adds two calls. This section overrides anything above, and anything in
-`/describe`, that says there are three rounds, or that no reset exists.
+### This run: unlimited resets, save and load
+This run raises the deployment budget and adds two calls.
 
 - You have 1003 deployment rounds (`max_rounds` in `/describe`): in practice as many as your time allows. Every
   deployment starts each development case afresh from its starting state (that is the reset); the cases and the hidden
   dynamics stay the same.
-- `POST /save_state` with `{"round_id": 0, "case": 0, "t": 4.0}` names the state of that completed development
-  episode at its telemetry time at or before `t` seconds and answers `{"handle": "s1", "t": ...}`. The handle is all
-  you get, never the state's contents. At most 32 handles are kept (the least recently used one is dropped).
+- `POST /save_state` with `{"round_id": 0, "case": 0, "t": 4.0}` names the state of that completed development episode
+  at its telemetry time at or before `t` seconds and answers `{"handle": "s1", "t": ...}`. The handle is all you get,
+  never the state's contents. At most 32 handles are kept (the least recently used one is dropped).
 - `POST /load_state` with `{"handle": "s1"}` makes your next deployment run only that case, starting from that saved
-  state, with the policy you deploy taking over there. The controller's run-time state (its phase, timers,
-  integrators, last action) carries over; its parameters are the new policy's. The loaded deployment's feedback covers
-  the whole episode, the saved path included, and its answer has `start` and `load_verified`. `{"handle": null}`
-  cancels a pending load. Saves and loads cost no round. In Python: `c.save_state(round_id, case, t)`, `c.load_state(handle)`, then `c.deploy(policy, diagnosis)`.
+  state, with the policy you deploy taking over there. The controller's run-time state (its phase, timers, integrators,
+  last action) carries over; its parameters are the new policy's. The loaded deployment's feedback covers the whole
+  episode, the saved path included, and its answer has `start` and `load_verified`. `{"handle": null}` cancels a pending
+  load. Saves and loads cost no round. In Python: `c.save_state(round_id, case, t)`, `c.load_state(handle)`, then
+  `c.deploy(policy, diagnosis)`.
 - Grading is unchanged: the selected round's policy (sealed, or else the latest completed round) runs every held-out
   case from its start, as described above; a policy deployed after a load is evaluated like any other.
 - Your time keeps running across deployments, saves and loads.
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+## Others
+- Modeling limitations: Rigid RC tire contact and rear-wheel dry-friction brake; not a calibrated pneumatic-tire
+  drifting or vehicle-damage model.
 
-## Resources
-Your container: **2 CPUs**, **6 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
-
-## Time limit
-You have 14400 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
-
-This is wall-clock time from the start of your session; the time you wait for the deployment service counts, deployments included. When it is up you are stopped without warning and the evaluator takes the round you sealed or, if you sealed none, the latest deployment that completed before that moment; a deployment still running then is not graded. The service's own deadline counts the same limit from your first request to it, so it never runs out before your time does. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it (for example Codex's `yield_time_ms`) even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+## Limits
+- Time: 14400 s of wall-clock time from the start of your session; everything counts (waiting for the deployment service
+  too, deployments included). At the end you are stopped without warning and the evaluator takes the round you sealed
+  or, if you sealed none, the latest deployment that completed before then; a deployment still running is not graded.
+  Time left: `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`); the service's own deadline counts the same
+  limit from your first request to it. Calls into a long-running process can block for their whole wait time: use short
+  waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, the simulator's and the benchmark's source included. Do not search for or
+  download a ready-made solution (published or reference solutions, recorded demonstrations, trained policies); trials
+  are reviewed.
+- Resources: 2 CPUs, 6 GiB memory, 1024 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`), no
+  GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap only
+  slows you down); usage: `/run/rcb-limits/usage.json`.
+- Resets: every deployment starts its development cases afresh from their starting state; save and load as in Robot
+  Interface.
+- Rounds: as many as the ablation section in Robot Interface gives.

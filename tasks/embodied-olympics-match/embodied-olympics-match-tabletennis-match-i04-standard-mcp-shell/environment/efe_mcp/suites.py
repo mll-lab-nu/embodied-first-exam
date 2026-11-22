@@ -361,6 +361,207 @@ def eo_transform_instruction(s: str, m: dict, task) -> str:
     return s
 
 
+# ---------------------------------------------------------------------------------------------- eo-match, v2 texts
+# The MCP variants of a v2 standard instruction (generate.py transform_instruction_v2 for this kind). MCP-only: the
+# `### Client` section becomes `### Tools`, the game commands and the program's words elsewhere become the tools; the
+# shell variant gets `### Tools` before the kept `### Client`. Task and Goal keep the mode's fixed words.
+EO_V2_PROGRAM_RE = r"^(?:You may write a program|You play through a program)"
+EO_V2_SUBS = [   # MCP-only, on each paragraph or list item joined into one line (before GAME_REF)
+    (r"`game (\w+) [^`]*`, or `game act` with (`\{[^`]*\}`)", r"`act` with \2"),
+    (r"(?i)\b(you never )sent (`game start`)", r"\1called \2"),
+    (r"\bsend (`game (?:start|ready)[^`]*`)", r"call \1"),
+    (r"the service's replies", "the tools' results"),
+    (r"\(your program's log, `game status`\)", "(`review_due` in every result)"),
+    (r"read `game spec` and prepare your program first", "read `game spec` first"),
+    (r"thinking, tool calls, your programs and your reviews", "thinking, tool calls and your reviews"),
+    (r"your thinking, your program's computation and", "your thinking and"),
+    (r"during an open `game wait DT` \(at most DT game seconds, then it stops again\)",
+     "during a `wait(seconds)` call (at most the game seconds you give, then it stops again)"),
+    (r"so a program has to keep calling", "so you have to keep calling"),
+    (r"if your program needs longer, its own time counts instead", "if you take longer, your own time counts instead"),
+    (r" ?One action at a time per seat \(429\)\.", ""),
+    (r" ?One act and one observation per seat in flight\.", ""),
+    (r"\(HTTP (\d{3})\)", r"(error \1)"),
+    (r" \(429\)", ""),
+    (r"`game act`", "`act`"),
+]
+
+
+def _eo_v2_items(text: str, fn) -> str:
+    """`text` with `fn(item) -> str | None` applied to each prose paragraph and list item, joined into one line (so a
+    phrase the generator wrapped still matches); a changed one is wrapped again, None drops it. Tables, code blocks,
+    headings and blank lines stay as they are."""
+    import generate as G
+    out, item, code = [], None, False      # item: [first prefix, rest prefix, original lines]
+
+    def flush():
+        nonlocal item
+        if item is None:
+            return
+        first, rest, lines = item
+        item = None
+        joined = " ".join(x.strip() for x in lines)
+        joined = joined[len(first.strip()):].strip() if first else joined
+        new = fn(joined)
+        if new is None or not new.strip():
+            return
+        out.extend(lines if new == joined else G.wrap(" ".join(new.split()), first, rest).split("\n"))
+
+    for ln in text.split("\n"):
+        if ln.lstrip().startswith("```"):
+            flush()
+            code = not code
+            out.append(ln)
+        elif code or not ln.strip() or ln.lstrip().startswith(("#", "|")):
+            flush()
+            out.append(ln)
+        elif re.match(r"^(\s*)- ", ln):
+            flush()
+            ind = re.match(r"^(\s*)", ln).group(1)
+            item = [ind + "- ", ind + "  ", [ln]]
+        elif item is not None and (item[0] == "" or ln.startswith(item[1])):
+            item[2].append(ln)
+        else:
+            flush()
+            item = ["", "", [ln]]
+    flush()
+    return "\n".join(out)
+
+
+def _eo_v2_mcp_words(t: str) -> str:
+    for a, b in EO_V2_SUBS:
+        t = re.sub(a, b, t)
+    for a, b in GAME_REF:
+        t = re.sub(a, b, t)
+    return re.sub(r"`game (\w+)[^`]*`", lambda mm: f"`act` (type `{mm.group(1)}`)", t)     # the sport's shortcuts
+
+
+def _eo_v2_client_rows(client: str) -> dict:
+    """{command word: (the command, its HTTP call, its description)} of the standard text's `game` command table."""
+    rows = {}
+    for ln in client.split("\n"):
+        c = [x.strip() for x in ln.strip().strip("|").split("|")] if ln.lstrip().startswith("|") else []
+        mm = re.match(r"`game (\w+)", c[0]) if len(c) >= 3 else None
+        if mm:
+            rows.setdefault(mm.group(1), (c[0], c[1], c[2]))
+    return rows
+
+
+EO_V2_BASE_CMDS = ("spec", "status", "start", "wait", "observe", "act", "ready", "say", "team", "skill")
+
+
+def eo_tools_v2(m: dict, client: str, mode: str) -> str:
+    """`### Tools` of a v2 eo-match instruction, from the manifest and the standard text's `### Client` table."""
+    import generate as G
+    rows = _eo_v2_client_rows(client)
+    turn = eo_turn(m)
+    words = (lambda t: t) if mode == G.SHELL else _eo_v2_mcp_words
+
+    def desc(cmd, default):
+        d = rows[cmd][2] if cmd in rows else default
+        return words(re.sub(r"\s*\((?:`game spec` lists the fields|the fields: `game spec`)\)", "", d))
+
+    if mode == G.SHELL:
+        intro = ("The `efe-robot` tools (in your tool list, e.g. `mcp__efe-robot__act`), also as Python functions: "
+                 "`import efe_robot` (`/opt/tools/efe_robot.py`, on `PYTHONPATH`; each function has the tool's name, "
+                 "arguments and result, its docstring the tool's description) or `python3 /opt/tools/efe_robot.py "
+                 "<tool> '<JSON arguments>'` from the shell. They carry the calls of the `game` command "
+                 "(`### Client`).")
+    else:
+        intro = "The `efe-robot` tools (in your tool list, e.g. `mcp__efe-robot__act`):"
+    b = [f"`spec()`: {desc('spec', 'the sport: actions, cameras, frames, units, rules, timing')}; the whole spec "
+         "also as a JSON file (`spec_file`).",
+         f"`status()`: {desc('status', 'the current state, no image')}.",
+         f"`start()`: {desc('start', 'you are ready; the match begins when every seat has started')}."]
+    if turn:
+        b.append("`wait()`: blocks until it is your turn (or a review is due, or the match is over).")
+    else:
+        b.append(f"`wait(seconds)`: let up to {float(m.get('max_wait_s', 10)):g} game seconds pass in one call; it "
+                 "stops early when the world freezes for a review or the match ends.")
+    b.append("`observe(query?, inline_tiles?)`: the state and the camera images as PNG files under `/app/obs/` (the "
+             "view and one file per tile, native size; pixel coordinates in a tile are its camera's own); "
+             "`inline_tiles` puts tiles in the result.")
+    act = "`act(action)`: one action, an object with `type` and the fields `spec` lists for it"
+    eg = next((r for k, r in rows.items() if k not in EO_V2_BASE_CMDS and "/act" in r[1]), None)
+    if eg:
+        body = re.search(r"(\{.*\})", eg[1])
+        if body:
+            act += f", e.g. `act({body.group(1)})` ({desc(re.match(r'`game (\w+)', eg[0]).group(1), '')})"
+    b.append(act + ".")
+    b.append("`ready(why, plan)`: your review (each at most 2000 characters).")
+    if m.get("team"):
+        b += ["`say(text)`: a message to your teammates, never shown to the other side.",
+              "`team(since?)`: your teammates' messages after seq `since`."]
+    b.append("Every result is the service's reply (the state under `now` or `state`), plus `review_due` (call `ready` "
+             "now) and `match_over`. A refused call returns the service's error (400 an invalid action, nothing "
+             "happens; 409 not now); the tools keep to the service's request rate themselves. One call at a time"
+             + (" (the Python functions wait for a pending call themselves)" if mode == G.SHELL else "")
+             + "; one still running after 45 s returns `{\"pending\": true, \"operation\": id}`: collect it with "
+             "`wait(operation=id)`.")
+    return "\n".join(["### Tools", G.wrap(intro)] + [G.wrap(x, "- ", "  ") for x in b]) + "\n"
+
+
+def eo_transform_instruction_v2(s: str, m: dict, task, mode: str) -> str:
+    import generate as G
+    tc = G.tc
+    mcp = mode == G.MODE
+    words = _eo_v2_mcp_words if mcp else (lambda t: t)
+    secs = G._v2_sections(s)
+    client = next((b for h, t in secs if h == "## Robot Interface" for h3, b in G._h3_split(t) if h3 == "### Client"),
+                  "")
+    out = []
+    for head, text in secs:
+        if head == "":
+            text = text.replace("(standard)", f"({mode})", 1)
+        elif head == "## Task":
+            text = G._swap_v2(text, tc.V2_MODE_LINE["standard"], tc.V2_MODE_LINE[mode])
+            text = _eo_v2_items(text, words)
+        elif head == "## Goal":
+            if mcp:
+                text = G._swap_v2(text, tc.V2_HAND_IN["standard"].split(". ")[0] + ".", tc.V2_HAND_IN[G.MODE])
+                text = G._remove_record_sentences(text)
+                text = _eo_v2_items(text, lambda t: None if re.match(EO_V2_PROGRAM_RE, t) else words(t))
+            else:
+                text = _eo_v2_items(text, lambda t: t.replace("Only you send `game start` and `game ready`.",
+                                                              "Only you send `game start` and `game ready` (or call "
+                                                              "`start` and `ready`)."))
+            rule = tc.V2_RULE_TOOLS if mcp else tc.V2_RULE_ROUTE
+            k = text.find(tc.V2_RULES_HEAD)
+            if k >= 0:      # the rules block: its bullet list ends at the first line that is not a bullet
+                lines = text[k:].split("\n")
+                j = 1
+                while j < len(lines) and (lines[j].startswith("- ") or lines[j].startswith("  ")):
+                    j += 1
+                lines.insert(j, G.wrap(rule, "- ", "  "))
+                text = text[:k] + "\n".join(lines)
+            else:
+                text = text.rstrip("\n") + "\n\n" + G.wrap(rule) + "\n\n"
+        elif head == "## Robot Interface":
+            tools = eo_tools_v2(m, client, mode).rstrip("\n")
+            h3 = G._h3_split(text)
+            new = [h3[0][1].strip("\n")] if h3[0][1].strip() else []
+            for h, body in h3[1:]:
+                if h == "### Client":
+                    new.append(tools)
+                    if mcp:
+                        continue
+                elif mcp:
+                    body = _eo_v2_items(body, words)
+                new.append(h + body.rstrip("\n"))
+            if not any(x.startswith("### Tools") for x in new):
+                new.insert(0, tools)
+            text = "\n" + "\n\n".join(new) + "\n\n"
+        elif head == "## Others" and mcp:
+            text = _eo_v2_items(text, lambda t: None if t.startswith("Your container:") else words(t))
+            if not text.strip():
+                continue
+        elif head == "## Limits" and mcp:
+            text = _eo_v2_items(text, words)
+        out.append((head + "\n" + text.lstrip("\n")) if head else text)
+    r = "".join(x if x.endswith("\n") else x + "\n" for x in out)
+    return G._rewrap_long(re.sub(r"\n{3,}", "\n\n", r))
+
+
 # --------------------------------------------------------------------------------------------------------- dispatch
 KINDS = {"eo-match": (eo_tools, EOMatch, eo_section, eo_transform_instruction)}
 
@@ -391,3 +592,13 @@ def shell_section(m, intro):
 
 def transform_instruction(s, m, task):
     return _kind(m)[3](s, m, task)
+
+
+KINDS_V2 = {"eo-match": eo_transform_instruction_v2}
+
+
+def transform_instruction_v2(s, m, task, mode):
+    """The MCP variant (`mode`: standard-mcp or standard-mcp-shell) of a v2 standard instruction."""
+    if m.get("kind") not in KINDS_V2:
+        raise ValueError(f"unknown tool kind {m.get('kind')!r}")
+    return KINDS_V2[m["kind"]](s, m, task, mode)

@@ -1,67 +1,73 @@
-# Panda Dynamic Scenes · Inertial cube flip, chute run and pocket recovery (S06) — frozen instance i00
+# Panda Dynamic Scenes · Inertial cube flip, chute run and pocket recovery (S06) (privileged)
 
-You control one simulated **Franka Panda** arm (7 joints, its standard hand, and the task's tool where it has one) in a simulated scene (ManiSkill 3 / SAPIEN, rigid-body CPU PhysX at 1000 Hz) via Python.
-**Task:** A cube rests on a raised launch surface. With a short push from the pusher blade, tip it over so that the face that initially faces the robot (-x) ends up on top, the cube completing the tip by its own momentum after the blade has let go, and let it settle. Then push the flipped cube onto an inclined chute, let it slide down by itself, meet it with the blade on its downhill side near the chute's lower end, and bring it to rest in the pocket at the bottom of the chute with the same face still on top.
+## Task
+One simulated Franka Panda arm (7 joints, its standard hand, and the task's tool where it has one) on a table (ManiSkill
+3 / SAPIEN, rigid-body physics at 1000 Hz). A cube rests on a raised launch surface. With a short push from the pusher
+blade, tip it over so that the face that initially faces the robot (-x) ends up on top, the cube completing the tip by
+its own momentum after the blade has let go, and let it settle. Then push the flipped cube onto an inclined chute, let
+it slide down by itself, meet it with the blade on its downhill side near the chute's lower end, and bring it to rest in
+the pocket at the bottom of the chute with the same face still on top. The scene is one fixed instance: everything
+starts the same way after every reset. Things move by themselves from the first control step on: the scene does not wait
+for the robot. You have the full simulator to develop with; you hand in a trajectory of robot actions.
 
-This is a *fixed scene instance*: everything starts the same way after every reset, and you may reset and retry as many
-times as you want. Your deliverable is **one replayable trajectory** of the robot's low-level actions, not a general
-policy.
+### Scene
+One Panda, base at (-0.40, 0, 0), yaw 0 (facing +x). Its hand carries a small blue pusher blade: a box 8 mm thick (tool
+x) x 50 mm wide (tool y) x 12 mm tall (tool z), centred at the tool frame origin; its pushing faces are normal to the
+tool x axis. The blade hangs from a rigid side adapter (part of the tool): from the hand a horizontal bar at tool z =
+0.035 runs from tool x = -0.12 to 0 at tool y = +0.13, then along y to y = 0.019, ending in a short 12 mm x 12 mm post
+at (0, 0.019) reaching down from z = 0.036 to z = 0 (the blade's mid-height); the post's foot meets the blade's +y end
+(it spans y 0.013 to 0.025 and tool x -0.006 to 0.006, 2 mm proud of each pushing face), so blade, bars and post are one
+rigid tool. The Panda TCP is at (-0.12, 0.13, 0.04) in the tool frame, so with the blade level the gripper points
+straight down. At the start the blade is level (tool axes aligned with the world axes, pushing faces normal to world x),
+its centre at (-0.05, -0.08, 0.179). The tool's adapter runs between the gripper's fingertips: closing the gripper to
+less than about 12 mm of aperture makes the fingers touch the adapter, which ends the episode as a collision with its
+own tool (the gripper starts fully open, at 0.08 m).
 
-## Scene
-One Panda, base at (-0.40, 0, 0), yaw 0 (facing +x). Its hand carries a small blue pusher blade: a box 8 mm thick (tool x) x 50 mm wide (tool y) x 12 mm tall (tool z), centred at the tool frame origin; its pushing faces are normal to the tool x axis. The blade hangs from a rigid side adapter (part of the tool): from the hand a horizontal bar at tool z = 0.035 runs from tool x = -0.12 to 0 at tool y = +0.13, then along y to y = 0.019, ending in a short 12 mm x 12 mm post at (0, 0.019) reaching down from z = 0.036 to z = 0 (the blade's mid-height); the post's foot meets the blade's +y end (it spans y 0.013 to 0.025 and tool x -0.006 to 0.006, 2 mm proud of each pushing face), so blade, bars and post are one rigid tool. The Panda TCP is at (-0.12, 0.13, 0.04) in the tool frame, so with the blade level the gripper points straight down. At the start the blade is level (tool axes aligned with the world axes, pushing faces normal to world x), its centre at (-0.05, -0.08, 0.179). The tool's adapter runs between the gripper's fingertips: closing the gripper to less than about 12 mm of aperture makes the fingers touch the adapter, which ends the episode as `self_collision` (the gripper starts fully open, at 0.08 m).
+An orange cube (44 mm edge) rests at t = 0 on a raised, flat orange launch surface (a slab 0.28 m along x by 0.18 m, on
+posts), one face toward the robot. The launch surface's far (+x) edge meets the top of a straight inclined grey chute (a
+trough with a 0.10 m wide floor and 22 mm side walls) that runs downhill in +x; the chute's top edge lies slightly below
+the launch surface. At the chute's low end sits a blue shallow pocket (an open box 0.12 m x 0.12 m inside with 12 mm
+walls), open on the side facing the chute, its floor flush with the chute's end. Friction is high enough that a cube at
+rest on the chute stays put, but a cube already sliding on it keeps sliding and speeds up by itself. Nothing moves at t
+= 0. The table top is the world's z = 0 plane.
 
-An orange cube (44 mm edge) rests at t = 0 on a raised, flat orange launch surface (a slab 0.28 m along x by 0.18 m, on posts), one face toward the robot. The launch surface's far (+x) edge meets the top of a straight inclined grey chute (a trough with a 0.10 m wide floor and 22 mm side walls) that runs downhill in +x; the chute's top edge lies slightly below the launch surface. At the chute's low end sits a blue shallow pocket (an open box 0.12 m x 0.12 m inside with 12 mm walls), open on the side facing the chute, its floor flush with the chute's end. Friction is high enough that a cube at rest on the chute stays put, but a cube already sliding on it keeps sliding and speeds up by itself. Nothing moves at t = 0. The table top is the world's z = 0 plane.
+Exact sizes, masses, frictions, starting poses and velocities, and the instance's parameters: `s.params()`,
+`s.objects()`, `s.fixtures()` and `s.state()` (Robot Interface).
 
-Exactly (privileged information, also readable through the tooling): Cube: half-extent `cube_half` = 0.022 m, mass `object_mass` = 0.05 kg, friction 0.65 (dynamic 0.5525), restitution 0.3. At reset it is at (0.035 + dx, dy, 0.14 + `cube_half` + 0.0005) = (0.035 + dx, dy, 0.1625), identity orientation, at rest; dx ~ U(-`start_jitter_x`, `start_jitter_x`) (= 0 at nominal) and then dy ~ U(-`start_jitter_y`, `start_jitter_y`) = U(-0.004, 0.004) m, both drawn at reset. Launch surface: static box 0.28 x 0.18 x 0.04 m centred at (0.02, 0, 0.12) (top z = 0.14, x -0.12..0.16, y -0.09..0.09), friction 0.65, two support posts. Chute: static channel whose floor top surface runs from (0.16, 0, 0.138) to (0.36, 0, 0.035), length 0.225 m, slope 27.25 deg, floor half-width 0.05 m, walls 8 mm thick and 0.022 m tall, friction `chute_friction` = 0.47; surface normal (0.4579, 0, 0.8890), downhill unit vector (0.8890, 0, -0.4579). Mean cube/chute static friction 0.56 > tan 27.25 deg = 0.515 > mean dynamic friction 0.476. Pocket: static open box, inner half-size 0.06 m, walls 12 mm high and 5 mm thick, open on its -x side, floor top at z = 0.035, centre (0.41, 0); friction 0.4, restitution 0.03. Announced at reset: `goal_goal` = (0.41, 0, 0.035 + `cube_half`) = (0.41, 0, 0.057) (pocket centre at resting height) and the flag `target_face` = (-1, 0, 0) (not in the observation). Phase parameters: `free_slide` = 0.12 m, `incoming_speed` = 0.33 m/s. Along-chute coordinate of the cube: s = (p - (0.16, 0, 0.138)) . (0.8890, 0, -0.4579). Pusher: `tool_mass` = 0.2 kg, `tool_friction` = 0.3, restitution 0.05; `tool_half` = 0.07 sets only the adapter post's offset. Table friction `table_friction` = 0.08.
+## Goal
+Success: the blade tips the cube over with a short push that ends before the cube is half-way over, the cube completing
+the tip on its own and settling with its original -x face (the one that faced the robot) on top; it is pushed onto the
+chute with that face still up and slides down by itself; the blade meets it on its downhill side near the chute's lower
+end (past x = 0.32) while it still slides fast, after a long free slide; finally it rests in the pocket with the same
+face on top for about half a second. The task fails at once if the blade touches the cube again after letting go and
+before it has tipped past half-way.
 
-The instance's parameters (`s.params()`, SI units): `horizon` = 25, `object_mass` = 0.05, `tool_mass` = 0.2, `tool_half` = 0.07, `incoming_speed` = 0.33, `table_friction` = 0.08, `tool_friction` = 0.3, `cube_half` = 0.022, `chute_friction` = 0.47, `free_slide` = 0.12, `start_jitter_x` = 0, `start_jitter_y` = 0.004.
+The steps count only in this order, and a step once done stays done. The replay ends as soon as the task is done or has
+failed; the task also fails at once when:
+- the task's horizon, 25 s of robot time, is reached before the task is done;
+- an object leaves the workspace (falls well below the table top or flies far away);
+- a robot part touches what it may not. Only the pusher (blade, adapter bars and post) may touch anything, and it may
+  touch only the cube: touching the launch surface, the chute, the pocket or the table is forbidden. No other part of
+  the robot, the fingers included, may touch anything, the cube included. In every task the arm never touches itself, no
+  robot part touches the table or the floor, a robot part other than an allowed one touches nothing, a tool touches only
+  what the task allows, and no contact presses deep into anything;
+- an arm goes beyond the Franka Panda's own safety limits on joint positions, joint and finger speeds, the hand's speed
+  and acceleration, joint accelerations and jerks, and motor torques and how fast they change (the numbers: the robot
+  spec's `safety_limits`). They count on the motion as measured, whatever was commanded (a catch or a strike moves the
+  arm too), and the servo's own reference motion is held to the same speed, acceleration and jerk limits.
 
-**Goal geometry.** Chute-entry line: cube centre at world x > 0.18 m (oriented_chute_entry). Intercept line: cube centre at world x > 0.32 m (downstream_intercept). The delivery target is the pocket's centre (a physical fixture). `goal_goal` is the pocket's centre, announced at reset (a fixture's position: privileged mode only).
+Deliverable: `/app/output/trajectory.npz`, written with `Session.save_trajectory(...)`: it holds `task` and `actions`, a
+(T, 8) float array of at most 4,500 rows (one per control step); anything else (another shape, NaN, more rows, a file
+that is not such an npz) scores 0. It is replayed open-loop from the fixed start and scores 1 if the task succeeds in
+the replay, else 0. Keep the script that produced it at `/app/output/gen.py`. Save a valid one early and overwrite it
+when you have a better one.
 
-## Success (the task's own check)
-The task has 4 phases. They are checked after every physics step (1 ms) and must be completed **in this order**
-(a phase is checked only once the previous one is complete, and a completed phase stays complete):
-1. **momentum_face_flip**: let tilt be the angle between the cube's initially vertical axis and world up. The blade's last contact with the cube must end while the tilt is between 0.03 and pi/4 - 0.02 = 0.765 rad (1.7 to 43.9 deg), and at some step more than 20 ms after that last contact the cube must still turn faster than 0.4 rad/s (an early release); the tilt must then pass pi/4 (45 deg) without further blade contact. After that the cube must lie with its original -x face on top (that face's outward normal within 0.18 rad of world +z), moving at less than 0.05 m/s and turning at less than 0.3 rad/s, touching the launch surface, for 0.25 s without interruption. Touching the cube with the blade again after the early release and before the tilt has passed 45 deg fails the task (flip_recontact_before_balance).
-2. **oriented_chute_entry**: the cube touches the chute while its centre is at world x > 0.18 m and its original -x face points away from the chute surface (that face's outward normal within 0.35 rad (20.1 deg) of the chute surface's normal). The cube's position along the chute's downhill direction at that moment is recorded as the start of its free slide.
-3. **downstream_intercept**: the phase completes at a step where the cube touches the blade and at the same time: the cube's centre is at world x > 0.32 m; the cube touches the chute; the blade's tool-frame origin lies on the downhill side of the cube's centre (positive component along the chute's downhill direction); since the start of its free slide the cube's centre has moved at least `free_slide` = 0.12 m along the chute's downhill direction; and on the previous physics step the cube's velocity component down the chute was at least `incoming_speed` = 0.33 m/s. Any cube-blade contact that does not meet all of these restarts the free slide from the cube's current position.
-4. **pocket_delivery**: the cube touches the pocket, its centre is within 0.04 m (horizontal distance) of the pocket's centre, its original -x face is on top (outward normal within 0.18 rad of world +z), it moves at less than 0.04 m/s and turns at less than 0.2 rad/s, for 0.5 s without interruption. This completes the task.
+Rules: write your own controller; do not use the benchmark's demonstrations, trained policies or any published solution.
+Only the trajectory counts: changing the simulator's state while you develop changes nothing in the grading.
 
-The episode **ends by itself** at the first control step where the last phase is complete (success; rows after it are
-never executed) or where the task has failed. `s.status()` reports the phase you are in and the failure, if any.
-
-**The task fails** (the episode ends, reward 0) as soon as any of these happens:
-- during momentum_face_flip, the blade touches the cube after an early release has been registered and before the cube's tilt has passed 45 deg (`flip_recontact_before_balance`);
-- the task's horizon is reached: 25 s of simulated time (`timeout`);
-- an object leaves the workspace: its centre falls below z = -0.2 m or gets more than 1.8 m from the world's z axis
-  (`out_of_bounds`);
-- a forbidden contact or a deep interpenetration (below);
-- a safety limit is exceeded (`limit_violation`, below).
-
-**Contacts.** Only the pusher (blade, adapter bars and post) may touch anything, and it may touch only the cube: touching the launch surface, the chute, the pocket or the table is forbidden. No other part of the robot, the fingers included, may touch anything, the cube included. In every task: the two arms (and their tools) never touch each other
-(`arm_arm_or_tool_collision`), an arm never touches itself (`self_collision`), no robot part touches the table or the floor
-(`forbidden_collision`, `tool_table_collision`), a robot link other than an allowed one touches no object or fixture
-(`forbidden_arm_object_contact`, `forbidden_arm_scene_contact`, `forbidden_arm_fixture_contact`), a tool touches only the
-task's objects and the fixtures the task allows (`forbidden_tool_fixture_contact`), and no contact penetrates deeper than
-4 mm (`excessive_penetration`).
-
-**Safety limits** (the Franka Panda's own limits, checked every 1 ms on each arm; `s.robot_spec()["safety_limits"]`):
-measured joint positions within the joint limits (+0.002 rad); measured joint speeds at most 1.01 x (2.175, 2.175, 2.175,
-2.175, 2.61, 2.61, 2.61) rad/s; finger speeds at most 0.051 m/s; the hand's TCP at most 1.01 x 1.7 m/s and 1.01 x
-2.5 rad/s; joint accelerations (measured over every 20 ms window) at most 1.05 x (15, 7.5, 10, 12.5, 15, 20, 20) rad/s²
-and jerks at most 1.05 x (7500, 3750, 5000, 6250, 7500, 10000, 10000) rad/s³; the TCP's acceleration (20 ms windows) at
-most 1.05 x 13 m/s² and 1.05 x 25 rad/s²; motor torques at most (87, 87, 87, 87, 12, 12, 12) N m, changing at most
-1000 N m/s. The servo's own reference motion is checked against the same speed, acceleration and jerk limits. A contact
-(a catch, a strike) moves the arm too: what is measured counts, whatever was commanded.
-
-## Deliverable
-Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below). It is replayed
-open-loop from the same initial state in one fresh process and scored 1 if the task succeeds in the replay,
-else 0. Also leave the script that produced it at `/app/output/gen.py`. Save a working trajectory
-as soon as you have one and overwrite it as you improve it: whatever is in `/app/output/` when the time is up is graded.
-The file holds `task` and `actions`, a (T, 8) float array of at most **4,500 rows** (one per control step);
-anything else (another shape, NaN, more rows, a file that is not such an npz) scores 0.
-
-## Tooling (already installed; run `python` from any directory)
+## Robot Interface
+### Session
+`rcb_pandadyn`, already installed (run `python` from any directory):
 ```python
 from rcb_pandadyn import Session
 s = Session(instance="/app/instance.json")   # ~5-15 s: builds the scene and resets it to the frozen instance
@@ -83,35 +89,45 @@ s.camera_info()                    # per camera: intrinsic_cv, extrinsic_cv (wor
 s.render_video(actions, "/app/output/check.mp4")   # replays from the frozen state while filming the overview camera
 s.u                                # the ManiSkill environment itself (`panda_dynamics` in /opt/pandadyn: read-only reference)
 ```
-The tooling is deliberately thin: joint targets, kinematics and state. Catching, striking, carrying and timing are yours to
-build. The environment's source, the task included, is in `/opt/pandadyn/panda_dynamics` (`tasks/single/cube_flip_route_recover.py`).
 
-The grader replays once, in a fresh process; it is exactly this CLI (a fresh process, so run it to self-check):
-`python /opt/tools/rcb_pandadyn.py replay --instance /app/instance.json --traj /app/output/trajectory.npz`
+The tooling is deliberately thin: joint targets, kinematics and state. Catching, striking, carrying and timing are yours
+to build. The environment's source is in `/opt/pandadyn/panda_dynamics`. Check a trajectory as the grader replays it:
+`python /opt/tools/rcb_pandadyn.py replay --instance /app/instance.json --traj /app/output/trajectory.npz`. One
+`Session` per process. Stepping runs at roughly 40-150 control steps per second; rendering happens only when a frame is
+asked for and never moves anything. Do not call `s.close()` before writing every output.
 
-## Conventions
-- World frame: metres, z up, the table top is the plane z = 0; quaternions are **wxyz**. Each arm's base pose is in the robot spec (`arms`).
+### Actions
 - Action row (8 values per control step): `[joint1..7, aperture]`. Each arm's 8 values are its 7 absolute joint-position
-  targets (rad, `panda_joint1..7`) and its total gripper aperture target (m, 0 = closed .. 0.08 = open; each finger moves at
-  most 0.025 m/s). Values outside the joint limits (`s.robot_spec()`) are clipped to them before they are executed, and the
-  trajectory records the clipped row.
+  targets (rad, `panda_joint1..7`) and its total gripper aperture target (m, 0 = closed .. 0.08 = open; each finger
+  moves at most 0.025 m/s). Values outside the joint limits (`s.robot_spec()`) are clipped to them before they are
+  executed, and the trajectory records the clipped row.
 - The servo: every control step, each arm's latest target is turned into a smooth reference motion by a jerk-limited
-  trajectory generator (Ruckig, the joints synchronised to arrive together) within 65 % (speed), 55 % (acceleration) and 5 % (jerk) of the Panda's joint
-  speed, acceleration and jerk limits, and the arm tracks that reference with torque control (PD + inverse dynamics, the
-  Panda's torque and torque-rate limits). A new target replans from the current reference motion, so a target far away is
-  reached smoothly, not in one step. `s.robot_spec()["servo"]` has the exact limits and gains.
-- Control runs at 100 Hz (10 ms per row), physics at 1000 Hz. There is no step budget: the time limit (`## Time limit`) is
-  your only budget. A simulated episode ends at the latest at the task's horizon (25 s, 2500 rows).
-- One `Session` per process. Stepping runs at roughly 40-150 control steps per second; rendering happens only when a frame
-  is asked for and never moves anything. Do not call `s.close()` before writing every output.
+  trajectory generator (Ruckig, the joints synchronised to arrive together) within 65 % (speed), 55 % (acceleration) and
+  5 % (jerk) of the Panda's joint speed, acceleration and jerk limits, and the arm tracks that reference with torque
+  control (PD + inverse dynamics, the Panda's torque and torque-rate limits). A new target replans from the current
+  reference motion, so a target far away is reached smoothly, not in one step. `s.robot_spec()["servo"]` has the exact
+  limits and gains.
+- Control runs at 100 Hz (10 ms per row), physics at 1000 Hz. A simulated episode ends at the latest at the task's
+  horizon (25 s, 2500 rows).
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+### Observations
+- World frame: metres, z up, the table top is the plane z = 0; quaternions are wxyz. Each arm's base pose is in the
+  robot spec (`arms`).
+- Cameras: `s.render_frame("overview")` (the whole workspace) or `s.render_frame("closeup")` (the working area), RGB 640
+  x 480; `s.camera_info()` has their calibration. `s.proprio()` and `s.state()` (above) give the robot's and the scene's
+  state.
 
-## Resources
-Your container: **5 CPUs**, **10 GiB of memory**, **1024 processes and threads**, **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`) and **one GPU, 3 GiB of its memory**. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
-
-## Time limit
-You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
-
-This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+## Limits
+- Time: 3600 s of wall-clock time from the start of your session; everything counts (the simulator's start-up too). At
+  the end you are stopped without warning and only what is in `/app/output/` at that moment is graded. Time left:
+  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`). Calls into a long-running process can block for their
+  whole wait time: use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, the simulator's and the benchmark's source included. Do not search for or
+  download a ready-made solution (published or reference solutions, recorded demonstrations, trained policies); trials
+  are reviewed.
+- Resources: 5 CPUs, 10 GiB memory, 1024 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`),
+  one GPU (3 GiB of its memory). Over a cap a process can be killed (the CPU cap only slows you down); usage:
+  `/run/rcb-limits/usage.json`.
+- Resets: as many as you like (`s.reset()`).

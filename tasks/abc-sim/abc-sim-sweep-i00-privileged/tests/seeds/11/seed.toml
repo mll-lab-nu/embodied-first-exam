@@ -1,4 +1,12 @@
 [[replace]]
+old = "## Task\nA bimanual robot in ABC Sim (MuJoCo): two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each) side\nby side at the near edge of a table, facing +x (the left arm is the one at +y). 2 crumpled paper scraps lie on the\ntable, with a brush, a dustpan and a trash can (all loose objects). Get the paper scraps into the trash can: sweep them\ninto the dustpan with the brush and empty it into the can, or any other way. The scene is one fixed instance. You have\nthe full simulator to develop with; you hand in a trajectory of robot actions."
+new = "## Task\nA bimanual robot in ABC Sim (MuJoCo): two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each) side\nby side at the near edge of a table, facing +x (the left arm is the one at +y). 4 crumpled paper scraps lie on the\ntable, with a brush, a dustpan and a trash can (all loose objects). Get the paper scraps into the trash can: sweep them\ninto the dustpan with the brush and empty it into the can, or any other way. The scene is one fixed instance. You have\nthe full simulator to develop with; you hand in a trajectory of robot actions."
+
+[[replace]]
+old = "## Task\nA bimanual robot in ABC Sim (MuJoCo): two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each) side\nby side at the near edge of a table, facing +x (the left arm is the one at +y). 2 crumpled paper scraps lie on the\ntable, with a brush, a dustpan and a trash can (all loose objects). Get the paper scraps into the trash can: sweep them\ninto the dustpan with the brush and empty it into the can, or any other way. The robot runs as a service you reach only\nthrough its client, as if it were real hardware: one live episode."
+new = "## Task\nA bimanual robot in ABC Sim (MuJoCo): two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each) side\nby side at the near edge of a table, facing +x (the left arm is the one at +y). 4 crumpled paper scraps lie on the\ntable, with a brush, a dustpan and a trash can (all loose objects). Get the paper scraps into the trash can: sweep them\ninto the dustpan with the brush and empty it into the can, or any other way. The robot runs as a service you reach only\nthrough its client, as if it were real hardware: one live episode."
+
+[[replace]]
 old = "state hash `acdf58bdd8888ca2`"
 new = "state hash `cd8dad8812eda0cc`"
 

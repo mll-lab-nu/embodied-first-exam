@@ -1,6 +1,6 @@
 [[replace]]
-old = "The table top is at z = 0.943. Arm base (`link0`): link0_right [-0.75, -0.4, 0.924], link0_left [-0.75, 0.4, 0.924]."
-new = "The table top is at z = 0.932. Arm base (`link0`): link0_right [-0.75, -0.4, 0.924], link0_left [-0.75, 0.4, 0.924]."
+old = "### Scene\nWorld frame, metres; z up; the robots stand at low x and reach towards +x. The table top is at z = 0.943. Arm base\n(`link0`): link0_right [-0.75, -0.4, 0.924], link0_left [-0.75, 0.4, 0.924]. The right arm works at y < 0, the left arm\nat y > 0. Quaternions are WXYZ. `s.objects()` gives the live poses of the task objects (`hot_dog`, `microwave`,\n`door_hinge`, `door_handle`, `start_button`, `stop_button`, `table_top`)."
+new = "### Scene\nWorld frame, metres; z up; the robots stand at low x and reach towards +x. The table top is at z = 0.932. Arm base\n(`link0`): link0_right [-0.75, -0.4, 0.924], link0_left [-0.75, 0.4, 0.924]. The right arm works at y < 0, the left arm\nat y > 0. Quaternions are WXYZ. `s.objects()` gives the live poses of the task objects (`hot_dog`, `microwave`,\n`door_hinge`, `door_handle`, `start_button`, `stop_button`, `table_top`)."
 
 [[replace]]
 old = "`microwave_cook_demo_10_2026-02-09_11-56-09_655851`"

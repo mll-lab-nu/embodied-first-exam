@@ -1,34 +1,56 @@
-# DexHand: Remove and reinstall a vacuum dust bin
+# DexHand · Remove and reinstall a vacuum dust bin (privileged)
 
-Remove the dust bin from the handheld vacuum on the counter and reinstall it. The bin is held by its two lower tabs on ledges at the bottom of the motor housing and by a spring latch at the top: the latch tooth on the red release button stops the bin's top catch from tilting out, and a fixed lip over the catch bridge stops it from being lifted straight out, so the top must tilt out from under the lip, which the tooth only allows while the button is pressed. Stages, in order: (1) release and remove: press the release button by at least 5.8 mm while the bin is still in its seat (bin origin within 5 mm of its seated pose), then take the bin away until its origin is more than 30 mm from its seated pose (both measured in the vacuum-body frame); (2) reinstall: put the bin back so that its origin is within 3 mm and its orientation within 0.05 rad of the seated pose (vacuum-body frame), the release button is back up (travel at most 1.5 mm, latch tooth raised) and the bin's catch is behind the tooth face (at most 0.5 mm in front of it); (3) let go: the stage-2 condition must hold with no hand contact on the bin, the vacuum body or the button, the bin and the vacuum body at rest (linear speed at most 0.01 m/s, bin angular speed at most 0.1 rad/s), for 50 consecutive controls (1 s). The episode ends with success at that moment; partial completion never counts. The episode ends immediately with failure, checked after every 1 ms physics substep, when the vacuum body moves more than 50 mm or tilts more than 0.35 rad from its start pose, when the bin falls (centre-of-mass downward speed above 0.99 m/s, i.e. a free fall from 5 cm, or above 0.55 m/s while nothing touches it), touches the floor or a table leg, its origin drops below the counter top (z < 0.65 m) or leaves the workspace box x in [0.2, 1.1] m, y in [-0.45, 0.45] m, z in [0.6, 1.2] m, when bin and vacuum geometry interpenetrate by more than 4 mm, or when the physics becomes unstable; later actions cannot undo a failure. Only robot actuator targets (the two wrist stages and the fingers of both hands) are allowed; no object teleports, welds or applied forces. The episode allows at most 3000 controls at 50 Hz.
+## Task
+Two dexterous hands, each on its own six-axis wrist stage (no arm), at a counter (DexHand, MuJoCo). Remove the dust bin
+from the handheld vacuum on the counter and reinstall it: one hand steadies the vacuum (or works the button) while the
+other handles the bin. The scene is one fixed instance.
+You have the full simulator to develop with; you hand in a trajectory of motor targets.
 
-You control two dexterous hands, each mounted on its own six-DoF wrist positioning stage (three prismatic and three
-serial revolute joints, no arm): the right hand on the stage `wrist_stage` (origin `task.json` `wrist_stage.origin`) and
-the left hand (the right hand's mirror image) on `left_wrist_stage` (origin `task.json` `left_wrist_stage.origin`).
-Both are needed as in the real task: one hand steadies the vacuum (or works the button) while the other handles the
-bin. The stages and the fingers are position actuated in the physics engine under native force bounds; the vacuum
-body, the dust bin and the release button move only through contact and their passive dynamics (the button is a spring-loaded
-slide). The controller runs at 50 Hz, with twenty 1 ms physics substeps.
+## Goal
+Success: in this order: the release button is pressed down (nearly its full travel) while the bin is still seated, and
+the bin is taken clear of its seat; the bin is put back exactly in its seat, the button back up and the bin's catch
+behind the latch tooth; then no hand touches the bin, the vacuum or the button, and both are still for a second. Partial
+completion never counts. A replay ends as soon as the task is done; later rows are not run.
 
-## Hands
-Two genuine manufacturer hand models are available: `sharpa` (Sharpa Wave, 22 finger actuators; the default) and `wuji` (Wuji Hand 2.2, 20 finger actuators). The task, scene, mount, objects and success predicate are the same for both; only one hand is used per episode.
-Two hands, each on its own six-axis wrist stage. Sharpa (56): right stage (6), right fingers (22), left stage (6), left fingers (22). Wuji (52): right stage (6), left stage (6), right fingers (20), left fingers (20). The left hand is the right Wave mirrored in y (shared arm_rig.mirrored_left_wave); one row is one 50 Hz control (twenty 1 ms physics substeps).
-Choose the hand with `Session(..., hand="wuji")` or the environment variable `DEXHAND_HAND=wuji` (default `sharpa`). Action rows are `56` wide for `sharpa` and `52` wide for `wuji`; `s.actuator_names` gives the exact order. `s.save_trajectory(actions, path)` records the hand in the archive (`hand` member). The verifier rebuilds the scene with the recorded hand (default `sharpa` when the member is absent) and rejects a trajectory whose width does not match that hand; rows are never padded, truncated or converted between hands.
+The episode ends at once as a failure if the vacuum body is moved or tilted; the bin falls (a free fall, or falling
+while nothing touches it), touches the floor or a table leg, drops below the counter top or leaves the work area; bin
+and vacuum are pressed into each other; or the physics becomes unstable. Later actions cannot undo a failure.
 
-## Scene and frames
-The world frame has z up; lengths are in metres, angles in radians, quaternions WXYZ. A handheld vacuum (free body
-`vacuum_body`, 0.752 kg) stands on its base skid on the counter (top at z = 0.65 m); its transparent dust bin (free body
-`dust_container`, 0.18 kg) sits in front of the motor housing, with the nozzle overhanging the counter edge. The bin is
-held at the bottom by two tabs resting on two ledges inside its mouth and at the top by the latch tooth of the red
-release button (`release_button`, spring-loaded slide joint `button_depression`, 0 to 6 mm of travel, 600 N/m; the
-source scene's values). The tooth's ramp lets the bin's catch push it down while the bin is closed; pressing the button
-(nearly its full 6 mm) lowers the tooth below the catch. Latch tooth, catch and bridge have the source's plastic friction
-0.55, so pushing the catch over the raised tooth needs a large closing force. A fixed lip on the housing sits 0.7 mm above the catch's bridge, so the seated bin cannot be
-lifted straight out: its top has to tilt out from under the lip, which the raised tooth prevents. The vacuum-body frame is the body frame of `vacuum_body`; the seated bin pose in that frame is
-`task.json` `checker.seat_pos` (metres) and `checker.seat_rot` (row-major 3 x 3). Cameras: `overview` (the counter
-from the front left) and `closeup` (the latch and the bin).
+Deliverable: `/app/output/trajectory.npz` with a finite numeric `actions` array of shape `(T, 56)` for `sharpa` or
+`(T, 52)` for `wuji`, at most 3000 rows, plus the `hand` member (`s.save_trajectory` writes both), and
+`/app/output/gen.py`, the script that produced it. Save it compressed (`numpy.savez_compressed`; `s.save_trajectory`
+does): an archive larger than 64 MB is rejected. Save a valid one early and overwrite it when you have a better one.
 
-## Action layout
+Rules: write your own controller; do not use the benchmark's demonstrations, trained policies or any published solution.
+Only the actuator targets count: changing `s.data` or the scene while you develop changes nothing in the replay.
+
+Only the robot's actuator targets act on the scene: no object teleports, grasp welds, scripted object motion or applied
+forces.
+
+## Robot Interface
+### Session
+`/opt/tools/rcb_dexhand.py`, importable as `rcb_dexhand`:
+```python
+from rcb_dexhand import Session
+s = Session("vacuum_bin_reseat")                # default hand: DEXHAND_HAND or "sharpa"
+s = Session("vacuum_bin_reseat", hand="wuji")   # explicit hand
+s.hand, s.action_dim, s.actuator_names          # selected hand, row width and exact row order
+s.hold_action()                                 # current motor targets
+s.model.actuator_ctrlrange                      # native target limits
+s.model, s.data                                 # privileged MuJoCo model and state
+s.features()                                    # seat error, button travel, catch clearance, contacts, speeds
+s.status()                                      # success, done, reason, steps, stage (0..3), total_stages
+s.step(row)                                     # twenty 1 ms physics substeps; a no-op once the episode is done
+s.snapshot(), s.restore(snap)                   # save / restore the full simulator and task state
+s.render_frame("overview")                      # RGB uint8 (480, 640, 3); also "closeup"
+s.reset()                                       # exact frozen reset
+s.replay(actions)                               # reset, run rows until the episode ends, return status()
+s.save_trajectory(actions, "/app/output/trajectory.npz")
+```
+`s.features()` reports `seat_distance_m`, `seat_angle_rad`, `button_travel_m`, `released_in_seat`,
+`catch_behind_tooth_m`, `hand_contacts`, the bin and vacuum speeds and `body_displacement_m`.
+
+### Actions
 Each row is one 50 Hz control holding a position target for every actuator, in native actuator order:
 
 - `sharpa` (56 values): 0-5 the right stage `wrist_x, wrist_y, wrist_z` (metres, offsets from its origin, world axes)
@@ -43,44 +65,57 @@ Each row is one 50 Hz control holding a position target for every actuator, in n
 Every target must lie within `s.model.actuator_ctrlrange`. The frozen start targets of each hand are in `task.json`
 (`initial_targets`).
 
-## Deliverable
-Save `/app/output/trajectory.npz` with a finite numeric `actions` array of shape `(T, 56)` for `sharpa` or `(T, 52)`
-for `wuji`, at most 3000 rows, plus the `hand` member (`s.save_trajectory` writes both), and
-`/app/output/gen.py`, the script that produced it. The separate verifier rebuilds the frozen scene with the recorded
-hand and replays only these motor targets in one fresh process, which must succeed. A replay stops at the first success or the first failure; later rows are not executed. Object poses,
-configuration overrides, pickled arrays and success claims are not deliverables and are never read.
-Save the archive compressed (`numpy.savez_compressed`; `s.save_trajectory` does): an archive file larger than 64 MB is rejected with reward 0.
+### Hands
+Two hand models: `sharpa` (Sharpa Wave, 22 finger actuators; the default) and `wuji` (Wuji Hand 2.2, 20 finger
+actuators); the task is the same for both. Choose the hand with `Session(..., hand="wuji")` or the environment variable
+`DEXHAND_HAND=wuji` (default `sharpa`). `s.save_trajectory(actions, path)` records the hand in the archive (`hand`
+member, `sharpa` when absent); a trajectory whose row width does not match its hand is rejected. Action rows are `56`
+wide for `sharpa` and `52` wide for `wuji`; `s.actuator_names` gives the exact order.
 
-## Tooling
-```python
-from rcb_dexhand import Session
-s = Session("vacuum_bin_reseat")                # default hand: DEXHAND_HAND or "sharpa"
-s = Session("vacuum_bin_reseat", hand="wuji")   # explicit hand
-s.hand, s.action_dim, s.actuator_names          # selected hand, row width and exact row order
-s.hold_action()                                 # current motor targets
-s.model.actuator_ctrlrange                      # native target limits
-s.model, s.data                                 # privileged MuJoCo model and state
-s.features()                                    # seat error, button travel, catch clearance, contacts, speeds
-s.status()                                      # success, done, reason, steps, stage (0..3), total_stages
-s.step(row)                                     # twenty 1 ms physics substeps; a no-op once the episode is done
-s.snapshot(), s.restore(snap)                   # save / restore the full simulator and predicate state
-s.render_frame("overview")                      # RGB uint8 (480, 640, 3); also "closeup"
-s.reset()                                       # exact frozen reset
-s.replay(actions)                               # reset, run rows until the episode ends, return status()
-s.save_trajectory(actions, "/app/output/trajectory.npz")
-```
-Read `/opt/tools/task.json`, `scene.py`, `checker.py` and `runtime.py` for the complete geometry, failure checks and
-predicate (the same code grades your archive). `s.features()` reports the quantities of the predicate: `seat_distance_m`,
-`seat_angle_rad`, `button_travel_m`, `released_in_seat`, `catch_behind_tooth_m`, `hand_contacts`, the bin and vacuum
-speeds and `body_displacement_m`.
+### Robot
+You control two dexterous hands, each mounted on its own six-DoF wrist positioning stage (three prismatic and three
+serial revolute joints, no arm): the right hand on the stage `wrist_stage` (origin `task.json` `wrist_stage.origin`) and
+the left hand (the right hand's mirror image) on `left_wrist_stage` (origin `task.json` `left_wrist_stage.origin`). Both
+are needed as in the real task: one hand steadies the vacuum (or works the button) while the other handles the bin. The
+stages and the fingers are position actuated in the physics engine under native force bounds; the vacuum body, the dust
+bin and the release button move only through contact and their passive dynamics (the button is a spring-loaded slide).
+The controller runs at 50 Hz, with twenty 1 ms physics substeps.
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+Each stage's `x, y, z` targets are offsets (metres, along the world axes) from its origin; the rotations are serial XYZ
+joints (radians).
 
-## Resources
-Your container: **2 CPUs**, **7 GiB of memory**, **2048 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
+Two hands, each on its own six-axis wrist stage. The left hand is the right Wave mirrored in y; one row is one 50 Hz
+control (twenty 1 ms physics substeps).
 
-## Time limit
-You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+### Scene
+The world frame has z up; lengths are in metres, angles in radians, quaternions WXYZ. A handheld vacuum (free body
+`vacuum_body`, 0.752 kg) stands on its base skid on the counter (top at z = 0.65 m); its transparent dust bin (free body
+`dust_container`, 0.18 kg) sits in front of the motor housing, with the nozzle overhanging the counter edge. The bin is
+held at the bottom by two tabs resting on two ledges inside its mouth and at the top by the latch tooth of the red
+release button (`release_button`, spring-loaded slide joint `button_depression`, 0 to 6 mm of travel, 600 N/m). The
+tooth's ramp lets the bin's catch push it down while the bin is closed; pressing the button (nearly its full 6 mm)
+lowers the tooth below the catch. Latch tooth, catch and bridge have the source's plastic friction 0.55, so pushing the
+catch over the raised tooth needs a large closing force. A fixed lip on the housing sits 0.7 mm above the catch's
+bridge, so the seated bin cannot be lifted straight out: its top has to tilt out from under the lip, which the raised
+tooth prevents. Cameras: `overview` (the counter from the front left) and `closeup` (the latch and the bin).
 
-This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+## Others
+- The bin is held by its two lower tabs on ledges at the bottom of the motor housing and by a spring latch at the top:
+  the latch tooth on the red release button stops the bin's top catch from tilting out, and a fixed lip over the catch
+  bridge stops it from being lifted straight out, so the top must tilt out from under the lip, which the tooth only
+  allows while the button is pressed. The vacuum body, the bin and the button (a spring-loaded slide) move only through
+  contact.
+
+## Limits
+- Time: 3600 s of wall-clock time from the start of your session; everything counts (the simulator's start-up too). At
+  the end you are stopped without warning and only what is in `/app/output/` at that moment is graded. Time left:
+  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`). Calls into a long-running process can block for their
+  whole wait time: use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, the simulator's and the benchmark's source included. Do not search for or
+  download a ready-made solution (published or reference solutions, recorded demonstrations, trained policies); trials
+  are reviewed.
+- Resources: 2 CPUs, 7 GiB memory, 2048 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`), no
+  GPU. Over a cap a process can be killed (the CPU cap only slows you down); usage: `/run/rcb-limits/usage.json`.
+- Resets: as many as you like (`s.reset()`).

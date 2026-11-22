@@ -1,45 +1,51 @@
-# BEHAVIOR-1K · clearing_food_from_table_into_fridge — STANDARD MODE (robot as a service, eai-standard/2.2)
+# BEHAVIOR-1K · clearing_food_from_table_into_fridge (standard)
 
-You drive an **R1Pro** mobile bimanual robot around a house **as if it were real hardware**: the simulator (BEHAVIOR-1K
-v3.9.2, the 2026 BEHAVIOR Challenge stack) runs in a service you cannot open. You get one client and one episode.
-**Task:** Clear the leftovers from the kitchen breakfast table into the fridge. A half chicken and a half apple pie lie on two plates on the table, and two empty tupperwares stand on the countertop; put the chicken and the pie into tupperwares, put both tupperwares into the refrigerator, and leave it closed. Success means all of the following hold at the same time: (1) the half chicken is inside a tupperware; (2) the half apple pie is inside a tupperware (the same one or the other); (3) both tupperwares are inside the refrigerator; (4) the refrigerator is closed. How the simulator judges them: inside(A, B): the centre of A's axis-aligned bounding box lies within B's bounding box and within B's interior (container) volume. open(A): at least one of A's openable joints (door, drawer, lid) is more than 5% of the way from closed to fully open; closed (not open) means every such joint is within 5% of closed. The service checks the goal; it counts once it has held for 1 s, released and at rest (Rules).
+## Task
+An R1Pro mobile bimanual robot in a simulated house (BEHAVIOR-1K: OmniGibson on Isaac Sim). Clear the leftovers from the
+kitchen breakfast table into the fridge. A half chicken and a half apple pie lie on two plates on the table, and two
+empty tupperwares stand on the countertop; put the chicken and the pie into tupperwares, put both tupperwares into the
+refrigerator, and leave it closed. The robot runs as a service you reach only through its client, as if it were real
+hardware: one live episode.
 
-## Rules (real-robot rules)
-- **No reset.** The episode starts when the service comes up and ends on success, when the robot has fallen over, when
-  your time is up, on a simulator error or breakdown, or at the runaway guard. Whatever you knock over or push away stays where it ends up.
-- **Success is a settled scene**: the goal has held for 1 s of simulated time in a row (30 control steps) with no goal
-  object in a gripper (assisted grasping lets go only when both fingers are commanded open) and every goal object at
-  rest (slower than 0.05 m/s); then the episode ends (`meta["reason"]` "success"). An object still in the hand, or a
-  goal that holds for one frame, is not success. Open the gripper, move clear and let the robot stand (e.g.
-  `r.get_obs(seconds=2.0)`). The goal objects are every object the goal names, a tool or appliance it names (even
-  inside a `not`) included. When your episode is still running at the end of your time (you stopped early, or your
-  time ran out), the service holds the robot still (your last command, the
-  base at 0) for up to 5 s more on the same simulator, and a goal that settles there counts; the service judges the
-  episode itself, nothing is replayed.
-- A simulator breakdown (a non-finite or runaway robot or goal-object state, e.g. after the robot tumbles; reason
-  "failure: simulator breakdown") ends the episode as a failure.
-- **A fall ends the episode as a failure** (`meta["reason"]` "failure: the robot fell over"): the robot has fallen over
-  when its base has been tilted more than 41.4° from upright, or more than 3 cm below the floor, for 10 s of simulated
-  time in a row (OmniGibson's own Falling rule; tilted means the z of the base's up axis is below 0.75, which the
-  proprioception gives as cos(rx)·cos(ry) of `base_footprint_rx_joint` and `base_footprint_ry_joint`).
-- **No privileged state.** You see what the robot's cameras see (RGB; depth on request) plus its own proprioception
-  (joints, base pose, end-effector and fingertip poses, gripper openings). No object poses, no map, no success predicate.
-- There is no step budget; your only budget is the time limit (`## Time limit`; `meta["time_left_s"]` is the service's count
-  of it). Actions and simulated time are reported as cost. Only a runaway guard bounds the episode: it ends at 200,000
-  control steps (1.85 h of simulated time; `spec["max_control_steps"]`, reason `step_guard`).
-- **A malformed request is refused with a 400 and nothing is executed** (a wrong type or shape, a value out of range,
-  a `dt` that is not a whole number of control periods, `video_fps` outside 1-30): fix it and send it again.
-- There is nothing to hand in: the service records your episode as the trajectory and grades it. Leave your script
-  at `/app/output/gen.py` for the record.
-- **Nothing is put into your context automatically.** Images and videos come back as arrays/bytes in a Python object;
-  what you look at and where you store it is your code's decision.
-- **If the service crashes** (a connection error or a 5xx answer), it restarts and resumes the SAME episode (never a
-  reset) in the state after the last call it completed, which you may not have received: call `r.wait_ready()`, then
-  check `r.status()` (`calls`, `control_steps`) before you continue. Resuming replays the episode so far (minutes in a long
-  episode) on your wall clock. A call that runs longer than `spec["max_call_wall_s"]` (900 s) stops at the next control
-  step and returns what it executed (`res.stopped`, `meta["executed_rows"]`).
+## Goal
+Success: the half chicken and the half apple pie are each inside a tupperware (the same one or not), both tupperwares
+are inside the refrigerator, and the refrigerator is closed. It counts only once the scene has settled: nothing the task
+names (a tool included) is still in a gripper, and everything has come to rest. What counts is how things stand at the
+end of the episode: a success reached earlier and lost by the end does not count, so finish in the state you want graded
+and stop sending commands. When your session ends with the episode still running, the robot is held still for a few
+seconds more (your last command, the base at 0), and a success that settles in that time counts.
 
-## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`)
+Nothing to hand in: the service records and grades the episode. Keep the script that drives the robot at
+`/app/output/gen.py`.
+
+Real-robot rules:
+- One episode, no reset: what you knock over stays knocked over.
+- No privileged state: you get the robot's camera images (with their calibration) and its own sensor readings; no object
+  poses, no scene layout, no success signal.
+- Write your own controller; do not use the benchmark's demonstrations, trained policies or any published solution.
+- The robot can fall over: a fall ends the episode as a failure, and so does a simulator breakdown (a runaway or
+  non-finite state of the robot or of an object, e.g. after the robot tumbles).
+
+### This run: no success signal
+This run changes how the episode ends.
+
+- The robot never tells you whether you have succeeded: reaching the goal changes no response, status, error or counter,
+  and the episode does not end there.
+- You decide when you are done: send `POST /finish` with an empty JSON body (`{}`) to the service, on the same base URL
+  as your other calls (`http://sim:8000` or `http://localhost:8000`; in Python, for example
+  `requests.post(base + "/finish", json={})`). The state at that moment is graded with the task's success rule (with the
+  task's settle or hold time described above, run from that state). After `/finish` every call is refused (409).
+- If you do not call it, the state when your session ends (you stop, or your time runs out) is graded.
+- A success reached earlier and then undone does not count: only the state at the end is graded. An event the task
+  records once it happens (for example a scored goal or a completed stage sequence) stays part of that state, also when
+  one of the task's failure rules ends the episode after it. Resets work as described above, within the budget, and only
+  the episode that ends with `/finish` or at the end of your session is graded.
+- The episode still ends on its own on a simulator error, at the task's technical step limit (graded as it stands), and
+  where the task's own rules end it as a failure (for example a fall), as described above.
+
+## Robot Interface
+### Client
+`/opt/tools/rcb_client.py` (protocol `eai-standard/2.2`):
 ```python
 from rcb_client import Robot
 r = Robot()                                   # connects: waits while Isaac Sim starts and loads the scene (3-12 min measured; the
@@ -55,77 +61,79 @@ res = r.submit("joint_position", A, dt=0.1)   # A: (T, 25) rows dt seconds apart
 res = r.submit("ee_pose", P)                  # P: (T, 16) end-effector targets for both arms; cuRobo IK per row
 res.meta["done"], res.meta["reason"], res.meta["plan"], res.meta["clipped"], res.meta["control_steps_chunk"]
 res.video[cam]; res.frames[cam]; res.last[cam]; res.proprio   # execution video / frames / last frame per camera, proprio per frame
-res.save("/app/runs/003")                     # meta.json, <cam>.mp4, frames/, last/, proprio.npy, depth, frame_meta.npz
 ```
-Cameras: `robot_r1:zed_link:Camera:0` (head; moves with the base and trunk), `robot_r1:left_realsense_link:Camera:0` and
-`robot_r1:right_realsense_link:Camera:0` (wrists), 224×224 each. They all move, so always use the calibration that
-arrived with the image. The world frame is OmniGibson's (metres, +z up, the floor is the plane z = 0); poses are
-position + quaternion **XYZW**.
+- Optional inputs (nothing changes unless you ask): `depth=True` on `get_obs` / `submit` adds `res.last_depth[cam]`,
+  float32 (224, 224); `depth="frames"` also returns `res.depth[cam]` (N, 224, 224), one per frame. Per frame:
+  `res.frame_step`, `res.frame_time_s` and `res.extrinsic_cv[cam]` (N, 3, 4). Proprio groups: `res.group("tcp_pose")`
+  per frame, `res.group("tcp_pose", now=True)` now.
+- Kinematics (stateless: no physics, no time): `r.fk(q)`, `r.ik({"left_tcp": pose}, seed=q)`; q =
+  `spec["kinematics"]["joint_names"]` (trunk + both arms, all proprio columns); poses in the robot's base frame, or in
+  the world frame with `base_pose=` the 7 base proprio columns.
+- A malformed request (a wrong type or shape, a value out of range, a `dt` that is not a whole number of control
+  periods, `video_fps` outside 1-30) is refused with a 400 and nothing is executed: fix it and send it again.
+- One call returns at most 5412 images. A call that runs longer than `spec["max_call_wall_s"]` (900 s) stops at the next
+  control step and returns what it executed (`res.stopped`, `meta["executed_rows"]`).
+- If the service crashes (a connection error or a 5xx answer), it restarts and resumes the same episode (never a reset)
+  in the state after the last call it completed, which you may not have received: call `r.wait_ready()`, then check
+  `r.status()` (`calls`, `control_steps`) before you continue. Resuming replays the episode so far (minutes in a long
+  episode) on your wall clock.
 
-### Action types
+### Actions
+- The world frame is OmniGibson's (metres, +z up, the floor is the plane z = 0); poses are position + quaternion XYZW.
 - `joint_position` (25), in the blocks `spec["action_types"]["joint_position"]["blocks"]` lists: base (3), trunk (4),
   left arm (7), left gripper (2), right arm (7), right gripper (2). Rows are `dt` apart (`1/30 ≤ dt ≤ 0.5` s, a multiple
-  of the 30 Hz control period: `k/30` s, e.g. 0.1 or 0.2; any other `dt` is a 400, it is never rounded); a chunk may
-  cover at most 10 s; out-of-limit values are clipped and listed in `meta["clipped"]`.
-  - Trunk and arm entries are absolute joint targets (rad), linearly interpolated between rows (or held, `interpolate="hold"`).
-  - **The three base entries are different**: they are position targets in the *robot's own frame* (x, y in m, yaw in
-    rad), re-applied on every control step, so they act as a per-step displacement: a row held for N control steps drives
+  of the 30 Hz control period: `k/30` s, e.g. 0.1 or 0.2; any other `dt` is refused, never rounded); a chunk covers at
+  most 10 s; out-of-limit values are clipped and listed in `meta["clipped"]`.
+  - Trunk and arm entries are absolute joint targets (rad), linearly interpolated between rows (or held,
+    `interpolate="hold"`).
+  - The three base entries are different: they are position targets in the robot's own frame (x, y in m, yaw in rad),
+    re-applied on every control step, so they act as a per-step displacement: a row held for N control steps drives
     roughly N times that far. They are bounded per step (0.15 m, 0.3 rad); zeros stand still. They switch at the row.
   - Each gripper is 2 finger targets in m (0 = closed, 0.05 = fully open); they switch at the row. Grasping is assisted:
-    a finger commanded below 0.05 closes and holds what the pads touch; only both fingers at >= 0.05 let go, so open
-    with 0.07 (0.05 + 0.02, the service's open command).
-- `ee_pose` (16): left `x y z qx qy qz qw gripper`, right the same; OmniGibson world frame, quaternions **xyzw**, gripper
-  1 = open, 0 = closed (switched at the start of the row). Each row is solved by cuRobo inverse kinematics for both end
-  effectors together (the trunk may bend too; no collision checking) and driven to in joint space; `dt` is ignored and the
-  base stands still. If no IK solution exists nothing moves, and `meta["plan"]` says so. The pose is the end-effector frame
+    a finger commanded below 0.05 closes and holds what the pads touch; only both fingers at ≥ 0.05 let go, so open with
+    0.07 (the service's open command).
+- `ee_pose` (16): left `x y z qx qy qz qw gripper`, right the same; world frame, quaternions xyzw, gripper 1 = open, 0 =
+  closed (switched at the start of the row). Each row is solved by cuRobo inverse kinematics for both end effectors
+  together (the trunk may bend too; no collision checking) and driven to in joint space; `dt` is ignored and the base
+  stands still. If no IK solution exists nothing moves, and `meta["plan"]` says so. The pose is the end-effector frame
   of the proprio `*_eef_*` entries, so an observed pose is a valid target. At most 50 rows per submit.
-  One call returns at most 5412 images (`max_frames_per_call`, PROTOCOL §3 "Images per call").
 
-### Optional inputs (eai-standard/2.2; nothing changes unless you ask)
-- **Depth**: `depth=True` on `get_obs` / `submit` adds `res.last_depth[cam]`, float32 (224, 224) z-depth in metres (0 = no
-  reading), pixel-aligned with the RGB; `depth="frames"` also returns `res.depth[cam]` (N, 224, 224), one per frame.
-- **Per frame**: `res.frame_step`, `res.frame_time_s` and `res.extrinsic_cv[cam]` (N, 3, 4; world -> camera, OpenCV
-  axes). While the robot moves, a frame shows the scene 2 control steps before its `frame_step`; its `extrinsic_cv` is the
-  pose it was rendered with. Intrinsics `spec["cameras"][cam]["intrinsic_cv"]`, mounting `spec["cameras"][cam]["mount"]`
-  (parent link + fixed `link_T_cam_cv`).
-- **Robot**: `spec["robot_spec"]`: joint names and real limits, gripper stroke and open/close rule, drive gains, the
-  end-effector frame vs the fingertip centre (TCP, 1.88 cm further along the fingers), the base's per-step and speed
-  limits; `spec["world"]`: frame, units, quaternion order, camera axes.
-- **Proprioception**: named columns `spec["proprio_layout"]`, groups `spec["proprio_groups"]` (joint_pos, joint_vel,
-  joint_effort, gripper_opening, tcp_pose, eef_pose, base_pose, ...): `res.group("tcp_pose")` per frame,
-  `res.group("tcp_pose", now=True)` now.
-- **Kinematics** (stateless: no physics, no time): `r.fk(q)`, `r.ik({"left_tcp": pose}, seed=q)`; q =
-  `spec["kinematics"]["joint_names"]` (trunk + both arms, all proprio columns); poses in the robot's base frame, or in the
-  world frame with `base_pose=` the 7 base proprio columns.
+### Observations
+- Cameras: `robot_r1:zed_link:Camera:0` (head; moves with the base and trunk), `robot_r1:left_realsense_link:Camera:0`
+  and `robot_r1:right_realsense_link:Camera:0` (wrists), 224×224 each: RGB, and depth on request (z-depth in metres, 0 =
+  no reading, pixel-aligned with the RGB). They all move, so always use the calibration that came with the image;
+  intrinsics `spec["cameras"][cam]["intrinsic_cv"]`, mounting `spec["cameras"][cam]["mount"]` (parent link + fixed
+  `link_T_cam_cv`). While the robot moves, a frame shows the scene 2 control steps before its step; the pose that comes
+  with it is the one it was rendered with.
+- Proprioception: joints, base pose, end-effector and fingertip poses, gripper openings, velocities and efforts, as
+  named columns (`spec["proprio_layout"]`) in groups (`spec["proprio_groups"]`: joint_pos, joint_vel, joint_effort,
+  gripper_opening, tcp_pose, eef_pose, base_pose, ...).
+- Robot and world facts: `spec["robot_spec"]` has the joint names and real limits, the gripper stroke and open / close
+  rule, the drive gains, the end-effector frame vs the fingertip centre (TCP, 1.88 cm further along the fingers), the
+  base's per-step and speed limits; `spec["world"]` has the frame, units, quaternion order and camera axes.
 
-For scale: the 2026 challenge's human teleoperators needed 436 s on average (13,068 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta["done"]`.
+## Others
+- Before you finish, open the grippers, move clear and let the robot stand still for a moment (e.g.
+  `r.get_obs(seconds=2.0)`).
+- How the episode ended is in `meta["reason"]`: "success", "failure: the robot fell over", "failure: simulator
+  breakdown" or `step_guard` (the runaway guard).
+- For scale: the challenge's human teleoperators needed 436 s on average (13,068 control steps) for this task, and the
+  simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta["done"]`.
 
-## This run: no success signal
-
-This run changes how the episode ends. This section overrides anything above, and anything in `/spec`, that says a
-success ends the episode, that `meta["reason"]` can be `"success"`, or that a success refuses later calls or resets.
-
-- The robot never tells you whether you have succeeded: reaching the goal changes no response, status, error or
-  counter, and the episode does not end there.
-- You decide when you are done: send `POST /finish` with an empty JSON body (`{}`) to the service, on the same base
-  URL as your other calls (`http://sim:8000` or `http://localhost:8000`; in Python, for example
-  `requests.post(base + "/finish", json={})`). The state at that moment is graded with the task's success rule (with
-  the task's settle or hold time described above, run from that state). After `/finish` every call is refused (409).
-- If you do not call it, the state when your session ends (you stop, or your time runs out) is graded.
-- A success reached earlier and then undone does not count: only the state at the end is graded. An event the task
-  records once it happens (for example a scored goal or a completed stage sequence) stays part of that state, also
-  when one of the task's failure rules ends the episode after it. Resets work as described above, within the budget,
-  and only the episode that ends with `/finish` or at the end of your session is graded.
-- The episode still ends on its own on a simulator error, at the task's technical step limit (graded as it stands),
-  and where the task's own rules end it as a failure (for example a fall), as described above.
-
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
-
-## Resources
-Your container: **8 CPUs**, **24 GiB of memory**, **8192 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
-
-## Time limit
-You have 7200 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
-
-This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` counts the same limit from your first request to the service, so it never runs out before your time does: your real time left is `time_left_s` minus the time you spent before that request. Plan by it. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it (for example Codex's `yield_time_ms`) even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+## Limits
+- Time: 7200 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
+  the end you are stopped without warning and the episode is graded as it stands. Time left:
+  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`); the service's `time_left_s` (in every reply) starts at
+  your first request, so the file is the one to trust. Calls into a long-running process can block for their whole wait
+  time: use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, the simulator's and the benchmark's source included. Do not search for or
+  download a ready-made solution (published or reference solutions, recorded demonstrations, trained policies); trials
+  are reviewed.
+- Resources: 8 CPUs, 24 GiB memory, 8192 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`),
+  no GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap
+  only slows you down); usage: `/run/rcb-limits/usage.json`.
+- Resets: none: one episode.
+- Steps: no step budget (actions and simulated time are reported as cost); a runaway guard ends the episode at 200,000
+  control steps (1.85 h of simulated time).

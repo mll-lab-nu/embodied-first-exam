@@ -292,6 +292,234 @@ def transform_instruction(s: str, m: dict, task: pathlib.Path, mode: str = MODE)
     return s
 
 
+# ---------------------------------------------------------------------------------------------- instruction, v2 form
+# instructions v2 (owner decisions D158-D165): the standard twin's text is in the v2 skeleton (task_conventions
+# V2_SECTIONS); its `## Robot Interface` starts with `### Client` (the service's client), then `### Actions` (the robot's
+# own action types) and the benchmark's other H3s. The MCP variants keep Task, Goal and Others, put the mode's fixed
+# words in (V2_MODE_LINE, V2_HAND_IN, V2_RULE_TOOLS / V2_RULE_ROUTE) and replace `### Client` by `### Tools` (from the
+# manifest). MCP-only: `### Actions` goes too where the manifest's notes give the native rows in the tools' terms (D164:
+# no client reference). normalize renders `## Limits`.
+V2_PHRASES = [   # the standard text's client words, in an MCP-only task's other sections
+    (r"`r\.get_obs\(seconds=([^)`]*)\)`", r"`observe(seconds=\1)`"),
+    (r"`get_obs\(seconds=([^)`]*)\)`", r"`observe(seconds=\1)`"),
+    (r"`r\.get_obs\(\)`", "`observe()`"),
+    (r"`r\.spec\(\)`", "the spec file (`describe_robot`)"),
+    (r"`spec\(\)\[", "the spec's `["),
+    (r"`spec\[", "the spec's `["),
+    (r"`meta\[\"([a-z_]+)\"\]`", r"the tool result's `\1`"),
+    (r"`obs\.meta\[\"cameras\"\]`", "`observe`'s camera entries"),
+    (r"`obs\.meta\[\"proprio\"\]`", "`proprio_now`"),
+    (r"through its client", "through the `efe-robot` tools"),
+    (r"the service's client", "the `efe-robot` tools"),
+    (r"`submit`", "`execute_trajectory`"),
+]
+
+
+V2_PHRASE_STARTS = re.compile(r"(?m)(?:(?<=[.!?] )|(?<=[.!?]\n)|(?<=^- )|(?<=\n\n)|\A)(the spec's|the spec file|the "
+                              r"tool result's|the `efe-robot` tools)")
+
+
+def _v2_phrases(text: str) -> str:
+    """V2_PHRASES applied to `text`; a substitution that starts a sentence starts with a capital."""
+    for pat, rep in V2_PHRASES:
+        text = re.sub(pat, rep, text)
+    return V2_PHRASE_STARTS.sub(lambda mm: mm.group(1)[0].upper() + mm.group(1)[1:], text)
+
+
+def _v2_sections(s: str) -> list[tuple[str, str]]:
+    """[(heading line or "" for the title part, text)] of a v2 instruction, H2 by H2."""
+    parts = re.split(r"(?m)^(## .+)$", s)
+    out = [("", parts[0])]
+    for i in range(1, len(parts), 2):
+        out.append((parts[i].strip(), parts[i + 1]))
+    return out
+
+
+def _h3_split(body: str) -> list[tuple[str, str]]:
+    parts = re.split(r"(?m)^(### .+)$", body)
+    out = [("", parts[0])]
+    for i in range(1, len(parts), 2):
+        out.append((parts[i].strip(), parts[i + 1]))
+    return out
+
+
+def tool_section_v2(m: dict, task: pathlib.Path, mode: str = MODE) -> str:
+    """`### Tools` of a v2 MCP instruction: the tools, their conventions and the robot's notes, from the manifest."""
+    tools = {t["name"]: t for t in sch.tools_for(m)}
+    parts = sch.part_lines(m)
+    cams = ", ".join(f"`{c}`" for c in m.get("cameras") or []) or "see `describe_robot`"
+    base_text = ((m.get("frame") or {}).get("base_text") or "").strip().rstrip(".")
+    sg = (m.get("signals") or {})
+    extra_kinds = [k for k in sg if k != "done"]
+    if mode == SHELL:
+        intro = ("The `efe-robot` tools (in your tool list, e.g. `mcp__efe-robot__move_robot`), also as Python "
+                 "functions: `import efe_robot` (`/opt/tools/efe_robot.py`, on `PYTHONPATH`; each function has the "
+                 "tool's name, arguments and result, its docstring the tool's description) or `python3 "
+                 "/opt/tools/efe_robot.py <tool> '<JSON arguments>'` from the shell. They and the service's client "
+                 "(`### Client`) all drive the one robot.")
+    else:
+        intro = "The `efe-robot` tools (in your tool list, e.g. `mcp__efe-robot__move_robot`)."
+    conv = (" Their conventions (all but space `native`): "
+            + (base_text if base_text.startswith("the robot base frame") else
+               f"the robot base frame is {base_text}" if base_text else
+               "the robot base frame at the start of each call (+X forward, +Y left, +Z up)")
+            + "; metres, radians, quaternions `wxyz`, gripper 0 open .. 1 closed.")
+    robot = (f" Parts: {parts}." if parts else " Parts: the robot's own action types only (`execute_trajectory` space "
+             "`native`).") + f" Cameras: {cams}."
+    L = ["### Tools", wrap(intro + conv + robot), ""]
+    b = ["`describe_robot()`: call it first: parts and limits, cameras, control period, action types, the time left; "
+         "the full spec as a JSON file (`spec_file`)."]
+    b.append("`observe(cameras?, depth?, seconds?, inline_cameras?)`: JPEG images under `/app/obs/` (depth `.npy`, "
+             "float32 metres; with `seconds` > 0 an `.mp4` too, the robot held still meanwhile); the result has their "
+             "paths, each camera's `K` and pose in the base frame, each part's joints, gripper and end-effector pose, "
+             "and `proprio_now` (the robot's own proprioception row; its layout is in the spec file).")
+    if "locate" in tools:
+        b.append("`locate(camera, u, v | pixels, window_px?)`: the 3-D point in the base frame a depth camera sees at "
+                 "pixel (u, v) of its full-size image (u the column, v the row); no time passes.")
+    if "move_robot" in tools:
+        b.append("`move_robot(goals, duration_s?)`: one goal per part, `{target, position?, quaternion_wxyz?, "
+                 "joint_positions?, gripper?}`" + (" (the base: `{target: \"base\", dx, dy, dyaw}`)" if m.get("base")
+                                                   else "")
+                 + "; the parts move together and the call returns when the motion is done, with `reached` (the error "
+                 "per goal), a `failure` category if a goal was not reached, the state and a frame per camera.")
+    if "locomote" in tools:
+        b.append("`locomote(vx, vy, wz, duration_s, height?)`: walk with the robot's own controller (body-frame "
+                 "velocities), then stop; returns the displacement.")
+    b.append("`execute_trajectory(space, rows | native_rows | rows_file, dt?, interpolate?)`: dense rows `dt` seconds "
+             "apart; long arrays as `rows_file`, a file under `/app` (`.npy` or `.csv` of native rows for space "
+             "`native` with `action_type`, or a `.json` list).")
+    b.append("`wait(seconds?, operation?)`: let time pass holding the current command, or collect a pending call.")
+    if "reset_episode" in tools:
+        b.append("`reset_episode()`: a new episode from the same starting state (one reset of the budget).")
+    done = sg.get("done") or {}
+    b.append("`signal(kind, note)`: " + ("end the episode (`done`)" if done.get("finish") or done.get("type")
+                                         else "`done` records that you are finished (the episode itself ends as Goal "
+                                              "says)")
+             + (", or " + ", ".join(f"`{k}`" for k in extra_kinds) if extra_kinds else "")
+             + (" (the tool's description says what each does)" if extra_kinds and m.get("signals_text") else "") + ".")
+    b.append(("One call at a time (the Python functions wait for a pending call themselves). " if mode == SHELL else
+              "One call at a time. ") + "A call still running after 45 s returns `{\"pending\": true, \"operation\": "
+             "id}`: collect it with `wait(operation=id)`. `\"episode_over\": true` means the episode has ended.")
+    L += [wrap(x, "- ", "  ") for x in b]
+    if m.get("notes"):
+        L += ["", wrap("This robot: " + str(m["notes"]).strip())]
+    return "\n".join(L) + "\n"
+
+
+def _swap_v2(text: str, old: str, new: str) -> str:
+    """`text` with the fixed phrase `old` replaced by `new` wherever the phrase stands, however the generator wrapped
+    it; a prose paragraph it lands in is wrapped again (lists, tables and code are left as they are)."""
+    pat = re.compile(r"\s+".join(re.escape(w) for w in old.split()))
+    paras = re.split(r"(\n[ \t]*\n)", text)
+    for i in range(0, len(paras), 2):
+        p = paras[i]
+        if not pat.search(p):
+            continue
+        q = pat.sub(lambda _: new, p)
+        body = q.strip("\n")
+        if not re.match(r"\s*(- |\d+\. |\||```|#)", body):
+            q = q[:len(q) - len(q.lstrip("\n"))] + wrap(" ".join(body.split())) + q[len(q.rstrip("\n")):]
+        paras[i] = q
+    return "".join(paras)
+
+
+def _rewrap_long(text: str, width: int = 120) -> str:
+    """Wrap again the prose lines and list items a substitution made longer than `width` (code blocks, tables and
+    headings stay as they are; items that still fit are not touched)."""
+    out, buf, in_code = [], [], False
+
+    def flush() -> None:
+        items = []   # [first prefix, rest prefix, words, original lines]
+        for ln in buf:
+            mm = re.match(r"^(\s*)(- |\d+\. )(.*)$", ln)
+            if mm:
+                items.append([mm.group(1) + mm.group(2), mm.group(1) + " " * len(mm.group(2)), mm.group(3), [ln]])
+            elif items:
+                items[-1][2] += " " + ln.strip()
+                items[-1][3].append(ln)
+            else:
+                items.append(["", "", ln.strip(), [ln]])
+        for first, rest, words, orig in items:
+            if any(len(x) > width for x in orig):
+                out.append(wrap(" ".join(words.split()), first, rest))
+            else:
+                out.extend(orig)
+        buf.clear()
+
+    for ln in text.split("\n"):
+        if ln.lstrip().startswith("```"):
+            flush()
+            in_code = not in_code
+            out.append(ln)
+        elif in_code:
+            out.append(ln)
+        elif not ln.strip() or ln.lstrip().startswith(("#", "|")):
+            flush()
+            out.append(ln)
+        else:
+            buf.append(ln)
+    flush()
+    return "\n".join(out)
+
+
+def transform_instruction_v2(s: str, m: dict, task: pathlib.Path, mode: str = MODE) -> str:
+    """The MCP variant of a v2 standard instruction (see above)."""
+    out = []
+    for head, text in _v2_sections(s):
+        if head == "":
+            text = text.replace("(standard)", f"({mode})", 1)
+        elif head == "## Task":
+            text = _swap_v2(text, tc.V2_MODE_LINE["standard"], tc.V2_MODE_LINE[mode])
+            text = _swap_v2(text, tc.V2_MODE_LINE_RESETS["standard"], tc.V2_MODE_LINE_RESETS[mode])   # a task with resets
+        elif head == "## Goal":
+            if mode == MODE:
+                text = _swap_v2(text, tc.V2_HAND_IN["standard"], tc.V2_HAND_IN[MODE])
+                text = _remove_record_sentences(text)
+            rule = tc.V2_RULE_TOOLS if mode == MODE else tc.V2_RULE_ROUTE
+            k = text.find(tc.V2_RULES_HEAD)
+            if k >= 0:      # the rules block: its bullet list ends at the first line that is not a bullet
+                lines = text[k:].split("\n")
+                j = 1
+                while j < len(lines) and (lines[j].startswith("- ") or lines[j].startswith("  ")):
+                    j += 1
+                lines.insert(j, wrap(rule, "- ", "  "))
+                text = text[:k] + "\n".join(lines)
+            else:
+                text = text.rstrip("\n") + "\n\n" + wrap(rule) + "\n\n"
+        elif head == "## Robot Interface":
+            h3 = _h3_split(text)
+            tools = tool_section_v2(m, task, mode)
+            new = [h3[0][1].strip("\n")] if h3[0][1].strip() else []
+            if mode == SHELL:
+                new.append(tools.rstrip("\n"))
+            for h, body in h3[1:]:
+                if h == "### Client":
+                    if mode == SHELL:
+                        new.append(h + body.rstrip("\n"))
+                    else:
+                        new.append(tools.rstrip("\n"))
+                    continue
+                if h == "### Actions" and mode == MODE and m.get("notes"):
+                    continue
+                if h == "### Actions" and mode == MODE:
+                    h = "### Native rows (`execute_trajectory` space `native`)"
+                if mode == MODE:
+                    body = _v2_phrases(body)
+                new.append(h + body.rstrip("\n"))
+            if not any(x.startswith("### Tools") for x in new):
+                new.insert(0, tools.rstrip("\n"))
+            text = "\n" + "\n\n".join(new) + "\n\n"
+        elif head == "## Limits" and mode == MODE:     # the task's own lines (normalize renders the rest)
+            text = text.replace('`spec()["budget"]["reset"]`', "`reset_episode()`")
+            text = _v2_phrases(text)
+        elif head in ("## Others",) and mode == MODE:
+            text = _v2_phrases(text)
+            text = _remove_record_sentences(text)
+        out.append((head + "\n" if head else "") + text.lstrip("\n") if head else text)
+    r = "".join(x if x.endswith("\n") else x + "\n" for x in out)
+    return _rewrap_long(re.sub(r"\n{3,}", "\n\n", r))
+
+
 # -------------------------------------------------------------------------------------------------------- other files
 def transform_toml(s: str, mode: str = MODE) -> str:
     label = "MCP TOOLS ONLY" if mode == MODE else "MCP TOOLS AND SHELL"
@@ -406,7 +634,13 @@ def generate(base: str, dry: bool = False, mode: str = MODE) -> dict:
     tt = dst / "task.toml"
     tt.write_text(transform_toml(tt.read_text(), mode))
     ins = dst / "instruction.md"
-    if m.get("kind", "rcb") != "rcb" and mode == MODE:
+    if tc.is_v2(ins.read_text()):
+        if m.get("kind", "rcb") != "rcb":
+            import suites
+            ins.write_text(suites.transform_instruction_v2(ins.read_text(), m, dst, mode))
+        else:
+            ins.write_text(transform_instruction_v2(ins.read_text(), m, dst, mode))
+    elif m.get("kind", "rcb") != "rcb" and mode == MODE:
         import suites
         ins.write_text(suites.transform_instruction(ins.read_text(), m, dst))
     else:

@@ -1,32 +1,26 @@
-# VLABench · select_chemistry_tube_common_sense — instance i00
+# VLABench · select_chemistry_tube_common_sense (privileged)
 
-You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: Take out the KMnO4 solution**
+## Task
+A Franka Panda arm at a table (VLABench on MuJoCo). Take out the KMnO4 solution The scene is one fixed instance. You
+have the full simulator to develop with; you hand in a trajectory of robot actions.
 
-This is a *fixed scene instance*: VLABench's own scene for `select_chemistry_tube_common_sense`, frozen (seed 0). You may reset and retry
-as often as you like. Your deliverable is **one replayable trajectory** of control steps, not a general policy.
+## Goal
+Success: the tube of KMnO4 solution has been taken out. Your trajectory is replayed from the fixed start, and the
+episode ends as soon as the task is done: the trajectory must end on that step (actions after it make it invalid).
 
-## Success
-VLABench's own success check for `select_chemistry_tube_common_sense` (the task's termination condition). The episode **ends the moment it
-holds**. The verifier replays your trajectory from the frozen start in a separate sandbox (once, in a fresh process;
-MuJoCo on the CPU is bit-exact) and passes it iff the task succeeds at its **last** action, the final state. A
-trajectory that goes on after the task has terminated is invalid; one that never gets there fails. `s.step()` and
-`s.status()` report `success` and `done`; `s.replay(A)` does exactly what the verifier does.
+Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory()`: key `actions`, shape `(T, 9)`, 1 ≤ T ≤
+4000; only this file is graded. Also leave `/app/output/gen.py` (the script that produced it; it should run and
+reproduce `trajectory.npz` from `/app/instance.json`) and `/app/output/NOTES.md` (at most 20 lines: your final approach
+and why it works, and what you tried that failed) for the people who read your work. Save a valid trajectory early and
+overwrite it when you have a better one.
 
-## Deliverable
-Leave three files under `/app/output/`. **Only the first is scored**; the other two are for the humans who read your
-work afterwards, so keep them short and factual.
+Rules: write your own controller (VLABench's general skills are allowed); do not use VLABench's expert solutions,
+trained policies or any published solution. Only the recorded control steps count: changing `s.physics` while you
+develop changes nothing in the replay.
 
-| file | what goes in it |
-|---|---|
-| `trajectory.npz` | the trajectory, written with `s.save_trajectory()` (below): key `actions`, shape `(T, 9)`, 1 ≤ T ≤ 4000 |
-| `gen.py` | the script that produced it; it should run and reproduce `trajectory.npz` from `/app/instance.json` |
-| `NOTES.md` | at most 20 lines: your final approach and why it works, and what you tried that failed |
-
-**Write `trajectory.npz` as soon as you have any trajectory at all, and overwrite it whenever you have a better one.**
-The time limit (`## Time limit`) ends without warning; a run that ends with no file scores zero. Do not
-stop early: keep improving and checking until you are sure the replay succeeds.
-
-## Tooling (`/opt/tools/vlb_tool.py`, importable as `vlb_tool`)
+## Robot Interface
+### Session
+`/opt/tools/vlb_tool.py`, importable as `vlb_tool`:
 ```python
 import numpy as np, vlb_tool
 s = vlb_tool.Session("/app/instance.json")  # the frozen instance; s.env is the VLABench (dm_control) environment
@@ -38,30 +32,33 @@ s.skill("pick", target_entity_name="...")   # VLABench's general skills (vlb_too
 s.ik(position, quaternion_wxyz)             # inverse kinematics for the hand -> {"success", "joint_positions"}
 s.actions                # every control step since the last reset (what save_trajectory() writes)
 s.save_trajectory()      # -> /app/output/trajectory.npz
-s.replay(A)              # reset, then replay A (what the verifier does)
-s.reset()                # back to the frozen start (bit-exact), as often as you like
+s.replay(A)              # reset, then replay A (as the grader does)
+s.reset()                # back to the frozen start, as often as you like
 o = s.observe("forward") # rgb, depth_m, intrinsic_cv, cam2world_gl; cameras forward, left, right, wrist
 ```
-- An action is 9 absolute position targets for VLABench's own actuators: the 7 arm joints (rad) and the 2 fingers
-  (m, 0 closed … 0.04 open), held for one control step (0.1 s, 100 physics steps). The model sets no arm joint
-  limits; the Panda's own are [-2.90, 2.90], [-1.76, 1.76], [-2.90, 2.90], [-3.07, -0.07], [-2.90, 2.90], [-0.02, 3.75], [-2.90, 2.90] rad.
-- World frame: metres; the robot's base is at (0, -0.4, 0.78) facing +y: x to the robot's right, y forward (across
-  the table), z up; quaternions are w x y z.
+
+`s.step()` and `s.status()` report `success` and `done`.
+
+### Actions
+- An action: 9 absolute position targets for VLABench's own actuators: the 7 arm joints (rad) and the 2 fingers (m, 0
+  closed … 0.04 open), held for one control step (0.1 s, 100 physics steps). The model sets no arm joint limits; the
+  Panda's own are [-2.90, 2.90], [-1.76, 1.76], [-2.90, 2.90], [-3.07, -0.07], [-2.90, 2.90], [-0.02, 3.75], [-2.90,
+  2.90] rad.
+- World frame: metres; the robot's base is at (0, -0.4, 0.78) facing +y: x to the robot's right, y forward (across the
+  table), z up; quaternions are w x y z.
 - Everything in `s.env` and `s.physics` is readable (privileged mode). VLABench's expert solutions for its tasks are not
   in this image.
 
-## Rules
-- Write your own controller (the general skills are allowed). Do not use VLABench's expert solutions or any published
-  solution for this benchmark.
-- Only the recorded control steps count: editing `s.physics` directly while debugging changes nothing in the replay.
-
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
-
-## Resources
-Your container: **4 CPUs**, **20 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
-
-## Time limit
-You have 1800 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
-
-This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+## Limits
+- Time: 1800 s of wall-clock time from the start of your session; everything counts (the simulator's start-up too). At
+  the end you are stopped without warning and only what is in `/app/output/` at that moment is graded. Time left:
+  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`). Calls into a long-running process can block for their
+  whole wait time: use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, the simulator's and the benchmark's source included. Do not search for or
+  download a ready-made solution (published or reference solutions, recorded demonstrations, trained policies); trials
+  are reviewed.
+- Resources: 4 CPUs, 20 GiB memory, 1024 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`),
+  no GPU. Over a cap a process can be killed (the CPU cap only slows you down); usage: `/run/rcb-limits/usage.json`.
+- Resets: as many as you like (`s.reset()`).

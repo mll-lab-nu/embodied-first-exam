@@ -1,35 +1,49 @@
-# MyoSuite · dex_cup_pour — STANDARD MODE (robot as a service, eai-standard/2.2)
+# MyoSuite · dex_cup_pour (standard)
 
-You control the **MyoHand**, a musculoskeletal model of a human forearm and hand, **as if it were real**: the simulator (MyoSuite 2.12.2 on MuJoCo) runs in a service
-you cannot open. You get one client and up to 11 episodes, and you act only through its actuators (39 muscles and 6 other actuators).
-**Task:** Move the cup along MyoDex's recorded pour (lift it and tilt it as if pouring) motion: a reference of the object's pose over 81 control steps (1.62 s), from GRAB motion capture (TCDM / MyoDex). The episode lasts exactly those 81 steps. Success: the object's motion follows the reference's: its centre of mass's displacement since the start within 0.03 m of the reference's displacement since the reference's start, and its rotation since the start within 0.5 rad of the reference's, at at least 90% of the control steps and at the last one, with the displacement error never above 0.05 m. Failure (the episode ends early): MyoDex's termination, the object more than 0.25 m from the reference or from the wrist.
+## Task
+The MyoHand, a musculoskeletal model of a human forearm and hand (MyoSuite, MuJoCo), driven only through its actuators
+(39 muscles and 6 other actuators): there is no joint-level controller. A cup stands on the table; the MyoHand is at its
+pre-grasp pose. Move the cup along MyoDex's recorded pour motion (lift it and tilt it as if pouring): a reference of the
+object's pose over 81 control steps (1.62 s), from motion capture. The robot runs as a service you reach only through its client, as if it were real hardware.
 
-A cup stands on the table; the MyoHand is at its pre-grasp pose.
+## Goal
+Success: the cup follows the recorded motion closely: its movement and its rotation since the start match the
+reference's at nearly every step and at the last one, and it never strays far from it. What counts is how things stand
+at the end of the episode: a success reached earlier and lost by the end does not count, so finish in the state you want
+graded and stop sending commands. The episode ends at once, as a failure, when the object gets far from the reference or
+from the wrist.
 
-## Rules
-- **Episodes and resets.** The episode starts when the service comes up and ends after 81 control steps (the reference motion; then it is judged), early at MyoDex's termination, when your time is up, or on
-  a simulator error. You have **10 resets** (`spec["budget"]["reset"]`, which is authoritative: if it says
-  0, there is no reset and the one episode is the run). A reset (`POST /reset`, below) puts the body and the scene back
-  on the same frozen starting state and starts a new episode, either abandoning the running one or after one has ended;
-  it takes no simulated time and returns the start's images and proprioception. Once an episode has ended, `submit`
-  raises `EpisodeOver` until you reset. **Only the last episode is graded**: an episode you reset away is never graded,
-  a success ends the run at once (no reset after it), and when your time is up the episode then running is the one
-  graded. The wall clock is the run's and never restarts; `meta["episode"]` and `meta["resets_left"]` count the
-  episodes (`meta["control_steps"]` is the current episode's).
-- **No privileged state.** You see what the cameras see (RGB, and depth on request, with each camera's calibration) and
-  the body's own proprioception: joint positions, velocities and actuator torques, muscle activations and lengths.
-  No object, ball, opponent or goal poses, no success check: `meta["done"]` / `meta["reason"]` tell you when the episode
-  is over and why.
-- The goal is a reference motion: `spec["reference_motion"]` gives, per control step, the object's centre of mass relative to where it starts and its orientation.
-- Steps are unlimited; your only budget is the time limit (`## Time limit`; `meta["time_left_s"]` is the service's count of it).
-  Simulated time only advances with your commands (and `get_obs(seconds=...)`, which holds the last command). Do not stop early: while
-  the episode runs, or a reset is left, the run can still pass.
-- Nothing to hand in: the service records your episode and grades it. Leave your script at `/app/output/gen.py`.
-- **If the service crashes**, a call fails with a connection error: it restarts and resumes the SAME episode (never a
-  reset) in the state after the last call it completed. `r.wait_ready()` waits for it; then check `r.status()`.
-- **Nothing is put into your context automatically.** Images and videos come back as arrays/bytes in a Python object.
+Nothing to hand in: the service records and grades the episode. Keep the script that drives the robot at
+`/app/output/gen.py`.
 
-## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`)
+Real-robot rules:
+- Episodes: 10 resets, each a new episode from the same starting state (Robot Interface). Only the last episode is
+  graded: a success ends the run at once (no reset after it), and when your time is up the episode then running is
+  graded.
+- No privileged state: you get the robot's camera images (with their calibration) and its own sensor readings; no object
+  poses, no scene layout, no success signal.
+- Write your own controller; do not use the benchmark's demonstrations, trained policies or any published solution.
+
+### This run: no success signal
+This run changes how the episode ends.
+
+- The robot never tells you whether you have succeeded: reaching the goal changes no response, status, error or counter,
+  and the episode does not end there.
+- You decide when you are done: send `POST /finish` with an empty JSON body (`{}`) to the service, on the same base URL
+  as your other calls (`http://sim:8000` or `http://localhost:8000`; in Python, for example
+  `requests.post(base + "/finish", json={})`). The state at that moment is graded with the task's success rule (with the
+  task's settle or hold time described above, run from that state). After `/finish` every call is refused (409).
+- If you do not call it, the state when your session ends (you stop, or your time runs out) is graded.
+- A success reached earlier and then undone does not count: only the state at the end is graded. An event the task
+  records once it happens (for example a scored goal or a completed stage sequence) stays part of that state, also when
+  one of the task's failure rules ends the episode after it. Resets work as described above, within the budget, and only
+  the episode that ends with `/finish` or at the end of your session is graded.
+- The episode still ends on its own on a simulator error, at the task's technical step limit (graded as it stands), and
+  where the task's own rules end it as a failure (for example a fall), as described above.
+
+## Robot Interface
+### Client
+`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
 ```python
 from rcb_client import Robot
 r = Robot()                                    # connects (waits while the service starts)
@@ -45,43 +59,53 @@ r.fk(q)                                        # forward kinematics of the liste
 r.status()                                     # calls, control steps, done, reason, elapsed time, episode, resets_left
 obs = r._post("/reset", {"cameras": ["left_cam"]}, [], 900)   # POST /reset: a new episode (the 2.2 client has no reset())
 ```
-Cameras: `left_cam`, `right_cam`, `center_cam`, `hand_top`, `hand_bottom`, `hand_side_inter`, `hand_side_exter`, `plam_lookat` (640x480; default `center_cam`). `hand_top` and `hand_side_inter` are close-ups of the hand, **mounted on the forearm** (the radius): they move with it (pronation turns them), so use the pose returned with each frame; `spec["cameras"]` gives each camera's mounting (static, fixed to a body, or a MuJoCo tracking camera that follows one) and intrinsics, and every response carries each frame's pose. Rendering is on the CPU: ask only for the cameras you need; `video="none"` makes a
-chunk fastest. One call returns at most 1000 images (`max_frames_per_call`, PROTOCOL §3 "Images per call"). Proprioception (`spec["proprio_groups"]`): `joint_pos` (`q_<joint>`), `joint_vel` (`qd_<joint>`),
-`muscle_activation` (`act_<muscle>`), `muscle_length` (`len_<muscle>`, m), `joint_effort` (`effort_<joint>`, the
-actuators' generalized force on each joint). `/kinematics` gives the fingertip sites and the camera mounts for any joint positions.
 
-### Action type `actuators` (45)
-45 real numbers per control step, one per actuator in order: 39 muscles and 6 non-muscle actuators. A muscle's command a maps to its excitation u = 1 / (1 + exp(-5 (a - 0.5))) and is not clipped (a = -1: u ~ 0.0006, a = 0.5: 0.5, a = 1: 0.92, a = 2: 0.9994); activation follows excitation with a first-order delay (~10 ms up, ~40 ms down); muscles only pull; one muscle can cross several joints; its force also depends on its length and velocity. The non-muscle actuators: `A_ARTx` (index 0): position target of joint ARTx in [-0.75, 0.5]; `A_ARTy` (index 1): position target of joint ARTy in [-0.5, 0.5]; `A_ARTz` (index 2): position target of joint ARTz in [-0.5, 0.3]; `A_ARRx` (index 3): position target of joint ARRx in [-1.75, 1.75]; `A_ARRy` (index 4): position target of joint ARRy in [-1.75, 1.75]; `A_ARRz` (index 5): position target of joint ARRz in [-1.75, 1.75]. Columns in `spec["action_types"]["actuators"]["layout"]` order. Rows are `dt` apart (a whole multiple of the
-20 ms control period, at most 0.5 s; a chunk covers at most 10 s), `interpolate="linear"` (default, from the
-previous command) or `"hold"`; the client sends them as float32. The control rate is 50 Hz (10 physics
-substeps); there is no step budget.
+Simulated time only advances with your commands (and `get_obs(seconds=...)`, which holds the last command). A reset
+(`POST /reset`, the `_post` line above) puts the body and the scene back on the same frozen starting state and starts a
+new episode, either abandoning the running one or after one has ended; it takes no simulated time and returns the
+start's images and proprioception. Once an episode has ended, `submit` raises `EpisodeOver` until you reset. The wall
+clock is the run's and never restarts; `meta["episode"]` and `meta["resets_left"]` count the episodes
+(`meta["control_steps"]` is the current episode's). If the service crashes, a call fails with a connection error: it
+restarts and resumes the same episode (never a reset) in the state after the last call it completed. `r.wait_ready()`
+waits for it; then check `r.status()`. One call returns at most 1000 images. `r.fk(q)` (`/kinematics`) gives the
+fingertip sites and the camera mounts for any joint positions.
 
-## This run: no success signal
+### Actions
+Action type `actuators` (45): 45 real numbers per control step, one per actuator in order: 39 muscles and 6 non-muscle
+actuators. A muscle's command a maps to its excitation u = 1 / (1 + exp(-5 (a - 0.5))) and is not clipped (a = -1: u ~
+0.0006, a = 0.5: 0.5, a = 1: 0.92, a = 2: 0.9994); activation follows excitation with a first-order delay (~10 ms up,
+~40 ms down); muscles only pull; one muscle can cross several joints; its force also depends on its length and velocity.
+The non-muscle actuators: `A_ARTx` (index 0): position target of joint ARTx in [-0.75, 0.5]; `A_ARTy` (index 1):
+position target of joint ARTy in [-0.5, 0.5]; `A_ARTz` (index 2): position target of joint ARTz in [-0.5, 0.3]; `A_ARRx`
+(index 3): position target of joint ARRx in [-1.75, 1.75]; `A_ARRy` (index 4): position target of joint ARRy in [-1.75,
+1.75]; `A_ARRz` (index 5): position target of joint ARRz in [-1.75, 1.75]. Columns in
+`spec["action_types"]["actuators"]["layout"]` order. Rows are `dt` apart (a whole multiple of the 20 ms control period,
+at most 0.5 s; a chunk covers at most 10 s), `interpolate="linear"` (default, from the previous command) or `"hold"`;
+the client sends them as float32. The control rate is 50 Hz (10 physics substeps); there is no step budget.
 
-This run changes how the episode ends. This section overrides anything above, and anything in `/spec`, that says a
-success ends the episode, that `meta["reason"]` can be `"success"`, or that a success refuses later calls or resets.
+### Observations
+Cameras: `left_cam`, `right_cam`, `center_cam`, `hand_top`, `hand_bottom`, `hand_side_inter`, `hand_side_exter`,
+`plam_lookat` (640x480; default `center_cam`). `hand_top` and `hand_side_inter` are close-ups of the hand, mounted on
+the forearm (the radius): they move with it (pronation turns them), so use the pose returned with each frame;
+`spec["cameras"]` gives each camera's mounting (static, fixed to a body, or a MuJoCo tracking camera that follows one)
+and intrinsics, and every response carries each frame's pose. Proprioception (`spec["proprio_groups"]`): `joint_pos`
+(`q_<joint>`), `joint_vel` (`qd_<joint>`), `muscle_activation` (`act_<muscle>`), `muscle_length` (`len_<muscle>`, m),
+`joint_effort` (`effort_<joint>`, the actuators' generalized force on each joint). The goal is a reference motion:
+`spec["reference_motion"]` gives, per control step, the object's centre of mass relative to where it starts and its
+orientation.
 
-- The robot never tells you whether you have succeeded: reaching the goal changes no response, status, error or
-  counter, and the episode does not end there.
-- You decide when you are done: send `POST /finish` with an empty JSON body (`{}`) to the service, on the same base
-  URL as your other calls (`http://sim:8000` or `http://localhost:8000`; in Python, for example
-  `requests.post(base + "/finish", json={})`). The state at that moment is graded with the task's success rule (with
-  the task's settle or hold time described above, run from that state). After `/finish` every call is refused (409).
-- If you do not call it, the state when your session ends (you stop, or your time runs out) is graded.
-- A success reached earlier and then undone does not count: only the state at the end is graded. An event the task
-  records once it happens (for example a scored goal or a completed stage sequence) stays part of that state, also
-  when one of the task's failure rules ends the episode after it. Resets work as described above, within the budget,
-  and only the episode that ends with `/finish` or at the end of your session is graded.
-- The episode still ends on its own on a simulator error, at the task's technical step limit (graded as it stands),
-  and where the task's own rules end it as a failure (for example a fall), as described above.
-
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
-
-## Resources
-Your container: **4 CPUs**, **7 GiB of memory**, **2048 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
-
-## Time limit
-You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
-
-This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` counts the same limit from your first request to the service, so it never runs out before your time does: your real time left is `time_left_s` minus the time you spent before that request. Plan by it. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it (for example Codex's `yield_time_ms`) even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+## Limits
+- Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
+  the end you are stopped without warning and the episode is graded as it stands. Time left:
+  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`); the service's `time_left_s` (in every reply) starts at
+  your first request, so the file is the one to trust. Calls into a long-running process can block for their whole wait
+  time: use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, the simulator's and the benchmark's source included. Do not search for or
+  download a ready-made solution (published or reference solutions, recorded demonstrations, trained policies); trials
+  are reviewed.
+- Resources: 4 CPUs, 7 GiB memory, 2048 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`), no
+  GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap only
+  slows you down); usage: `/run/rcb-limits/usage.json`.
+- Resets: at most 10 (`spec()["budget"]["reset"]`), each a new episode from the same starting state.

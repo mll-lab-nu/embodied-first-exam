@@ -1,65 +1,48 @@
-# RoboPaint · oil painting from a reference · The Starry Night (after van Gogh) — frozen instance
+# RoboPaint · oil painting from a reference · The Starry Night (after van Gogh) (privileged)
 
-You control a simulated **Franka Panda arm holding an oil-paint brush** via Python: ManiSkill 3.0.1 / SAPIEN 3.0.3 physics (PhysX on
-the CPU) for the robot; the paint is libmypaint's brush engine (MyPaint). **Task (paint from a reference):** paint the picture shown in `/app/target.png` (a square crop of Vincent van Gogh's The Starry Night, 1889) onto the main sheet with brush and oil paints, **in at most 2517 strokes**.
+## Task
+A simulated Franka Panda arm holding an oil-paint brush. Task (paint from a reference): paint the picture shown in
+`/app/target.png` (a square crop of Vincent van Gogh's The Starry Night, 1889) onto the main sheet with brush and oil
+paints, in at most 2517 strokes. The scene is one fixed instance. You have the full simulator to develop with; you hand
+in one replayable trajectory.
 
-This is a *fixed scene instance*: you may reset and retry as many times as you want. Your deliverable is **one replayable
-trajectory**, not a general policy.
+## Goal
+Success: your painting on the main sheet matches the picture: the same colours in the same places, the same lights and
+darks and the same edges, with paint where the picture has paint and only there, in at most 2517 strokes; a small offset
+of the whole painting (a few millimetres) is forgiven. The process rules below must hold as well. What counts is how
+things stand after the last action of your trajectory, replayed from the fixed start: a success reached earlier and lost
+by the end does not count.
 
-## The brush, the paints and the sheets
-- The brush is a rigid handle with a **15 mm soft tuft** (no collision; the handle hits the paper 15 mm below its surface); the
-  robot's tool point (TCP) is the tuft's tip. Hold it vertical (as at the start).
-- **Paints** (the picture's colours, premixed): 16 wells on a plate on the robot's left (+y), in three rows, radius 9 mm,
-  paint surface **z = 0.028 m** (plate top 0.026 m, rigid); `s.wells()` gives each well's name, colour and centre. **Dipping** = the tip
-  inside a well's circle and below the paint surface: the brush is then loaded with that paint on a fresh brush (the previous
-  paint is gone; no mixing on the palette, it never runs dry). The brush starts **dry**.
-- **Sheets** (surface z = **0.020 m**): the **main sheet**, a 227.18 mm square centred at world **(-0.100, 0.000)**, is scored; the
-  **practice sheet**, 227.18 x 99.41 mm centred at **(-0.100, -0.1856)**, is for test strokes and is never scored or counted.
-- **How the paint goes on**: at every physics step (100 Hz) the tip over a sheet is one motion event for libmypaint 1.6.1 with the
-  mypaint-brushes preset `tanda/oil-03-paint` made pointed (dab size scaled to the paper; the preset's random dab offset and
-  tracking noise follow the pressure like the dab size, so a light press draws a thin line; the frozen preset is the instance's
-  `brush.preset_json`): a wet oil paint whose mark depends on the **pressure** (press depth / 15 mm: straight strokes are about
-  2 mm wide at a 1.25 mm press, 2.5 mm at 1.5 mm, 3 mm at 2 mm, 4.2 mm at 3 mm, 6 mm at 4 mm, 8 mm at 5 mm and 11 mm from 6 mm on;
-  a lighter press thins and fades the line), the **speed**, the **direction** (the elliptical dabs follow it) and the engine's own
-  smudging and jitter (deterministic): strokes pick up and blend the wet paint already on the sheet, and later strokes lie over
-  earlier ones. The engine is `MyPaintPainter` in `/opt/tools/rcb_brush.py` (+ `/opt/mypaint`). One continuous contact is one
-  **stroke**; paint is permanent (only `s.reset()` clears it).
-- The arm is position-controlled (PD, 20 Hz targets): a moving target is followed with a lag of about 0.1 s.
+The score (`final_reward`, 0 to 1) is higher the closer your colours are to the picture's; it is scaled down above the
+stroke cap and when a process rule fails. `s.score()` returns the grader's metrics for the current sheet, `success` and
+`final_reward` included: a scoring service replays the actions you have executed since your last `s.reset()` and scores
+the resulting sheet.
 
-## Target and score
-- **The target is this picture**: `/app/target.png` (1024 x 1024 px, RGB) shows the exemplar at its true size and place on the main
-  sheet: the image covers the main sheet exactly, 0.2219 mm per pixel. Pixel (column u, row v), counted from 0 at the image's
-  top-left, has its centre at sheet millimetres X = (u + 0.5) · 227.18 / 1024, Y = (v + 0.5) · 227.18 / 1024 (X to the robot's
-  right, Y towards the robot, origin = the sheet's far-left corner as seen from the robot's base), i.e. at world
-  x = -0.100 + 0.1136 - Y/1000, y = 0.1136 - X/1000 (m) (`s.geo.mm_to_world(X, Y)`). Image top = the sheet's far edge (+x), image
-  left = the robot's left (+y): the same orientation as `s.canvas()` and `canvas_cam`.
-- The grader compares the main sheet with the picture: the painting is compared with the picture after the best single shift of the sheet, at most 5 mm along each axis (translation only; if the best shift reaches that limit, the sheet is scored unshifted); the metrics are then taken only inside the sheet's central area, 8 mm in from every edge (the border band is not scored); both blurred (σ = 1 mm); **ΔE** = the CIELAB colour difference (ΔE*ab) per pixel over the region where either has paint (dilated by 2 mm; the picture covers the whole sheet, so: the whole scored area): its mean and 90th percentile; **SSIM** of the lightness L* (σ 1.5 mm windows); **edge correlation** = the correlation of the lightness-gradient magnitudes of the two blurred pictures; **paint IoU** = the painted fraction of the scored area (paint coverage ≥ 0.5); the **number of strokes** on the main sheet (painted contacts). **Success iff mean ΔE ≤ 6.5, p90 ΔE ≤ 11.5, SSIM ≥ 0.68, edge correlation ≥ 0.52, paint IoU ≥ 0.96 and at most 2517 strokes.** `final_reward` = max(0, 1 - mean ΔE / 20) (scaled by 2517 / strokes above 2517). Reported as well: the mean ΔE after a 4 mm blur, the SSIM at a 0.5 mm blur, and per colour region of the picture (the connected areas nearest to one paint, at least 30 mm²) the fraction within ΔE 10: the minimum and the area-weighted mean. The shift found is reported too (`register_dx_mm`, `register_dy_mm`: mm along the picture's columns and rows). `s.score()` returns exactly these metrics for the current sheet: a scoring service (a separate container) replays the actions you have executed since your last `s.reset()` and scores the resulting sheet.
+Process rules: paint with brush strokes, the way a person paints: each stroke is one sweep of the loaded brush, pressed
+for the width you want. Colouring in or filling areas with a thin line, zigzag or serpentine fills, and contour-offset
+fills (paths that circle round and round inside an area) are not allowed and fail the task, even when the sheet matches
+the picture. The grader checks this on the replayed trajectory with two numbers you can check yourself; only painted
+strokes on the main sheet count (the practice sheet is free):
+- Paint path budget: `path_mm` ≤ 62300 mm. `path_mm` is the total length of the brush tip's path while it presses on the
+  main sheet with paint (all strokes together, sampled at every physics step).
+- Strokes are sweeps: `scribble_share` ≤ 0.1. A stroke's scribble ratio is its length divided by the diagonal of its
+  bounding box on the sheet (taken as at least 10 mm): about 1 for a straight or curved sweep, 2 for a sweep out and
+  back along the same line, more for a zigzag, a back-and-forth fill, a spiral or a loop. `scribble_share` is the share
+  of `path_mm` in strokes whose ratio is above 2.5.
 
-## Process rules
-Paint with brush strokes, the way a person paints: each stroke is one sweep of the loaded brush, pressed for the width you want.
-Colouring in or filling areas with a thin line, zigzag or serpentine fills, and contour-offset fills (paths that circle round and
-round inside an area) are not allowed and fail the task, even when the sheet matches the picture. The grader checks this on the
-replayed trajectory with two numbers you can check yourself; only painted strokes on the main sheet count (the practice sheet is
-free):
-- **Paint path budget: `path_mm` ≤ 62300 mm.** `path_mm` is the total length of the brush tip's path while it presses
-  on the main sheet with paint (all strokes together, sampled at every physics step). The strokes of our reference solution add up
-  to 20747 mm; the budget is 3 times that, rounded up.
-- **Strokes are sweeps: `scribble_share` ≤ 0.1.** A stroke's scribble ratio is its length divided by the
-  diagonal of its bounding box on the sheet (taken as at least 10 mm): about 1 for a straight or curved sweep,
-  2 for a sweep out and back along the same line, more for a zigzag, a back-and-forth fill, a spiral or a loop. `scribble_share`
-  is the share of `path_mm` in strokes whose ratio is above 2.5.
+Breaking a process rule fails the task. `s.score()` reports `path_mm`, `max_path_mm`, `scribble_share`, `scribble_max`
+(the largest ratio of a stroke), `longest_stroke_mm`, `image_success` (the picture rule alone), `strict_ok` (the process
+rules) and `success` (all).
 
-**Success iff the picture rule above holds and both process rules hold.** `final_reward` = the continuous score above ×
-min(1, 62300 / `path_mm`) × (1 − `scribble_share` when the second rule fails). `s.score()` reports `path_mm`,
-`max_path_mm`, `scribble_share`, `scribble_max` (the largest ratio of a stroke), `longest_stroke_mm`, `image_success` (the picture
-rule alone), `strict_ok` (the process rules) and `success` (all).
+Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, path)`; it is replayed open-loop
+from the frozen start and succeeds if the replay meets the rules above. Also leave the script that produced it at
+`/app/output/gen.py`. Save a valid trajectory early and overwrite it when you have a better one.
 
-## Deliverable
-Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below). It is replayed
-open-loop from the same initial state in one fresh process; it succeeds if the replay meets the success rule above.
-Also leave the script that produced it at `/app/output/gen.py`.
+Rules: write your own controller; do not use the benchmark's demonstrations, trained policies or any published solution.
 
-## Tooling (already installed; run `python` from any directory)
+## Robot Interface
+### Session
+`rcb_brush`, already installed (`python` from any directory):
 ```python
 from rcb_brush import Session
 s = Session(instance="/app/instance.json")    # a few seconds; builds the scene in the frozen state
@@ -81,7 +64,7 @@ s.render_grid()                    # cameras + the exact main sheet tiled
 s.step(action)                     # one low-level action (7 joint targets, rad) = one control step (1/20 s)
 s.record_start(); ...; actions = s.record_stop()    # (T, 7) actions, one row per control step
 s.status()                         # score + {'sim_steps', 'n_contacts', 'loaded', 'state_sha', 'n_dips', 'max_tilt_deg_in_contact', ...}
-s.replay(actions)                  # resets, replays open-loop, returns status (identical to a fresh process)
+s.replay(actions)                  # resets, replays open-loop, returns status (as the grader replays it)
 s.save_trajectory(actions, "/app/output/trajectory.npz")
 s.render_video(actions, "/app/output/check.mp4")   # replays from the frozen state and writes a tiled camera video
 s.camera_info(); s.render_depth("canvas_cam")      # per camera: K, extrinsics, image size, mount (all static); z-depth (m) on
@@ -94,27 +77,66 @@ s.state_sha(); s.n_steps                           # the state hash the replays 
 s.camera_params("canvas_cam"); p["get_tip_pose"](); p["get_joint_targets"]()   # one camera's calibration; = s.tip_pose(), s.hold_action()
 from rcb_brush import quat_mul, quat_slerp, quat_to_mat   # WXYZ quaternion helpers
 ```
-The primitives are deliberately thin (IK moves without collision checking, joint moves, hold); everything else is yours to build.
+The primitives are deliberately thin (IK moves without collision checking, joint moves, hold); everything else is yours
+to build.
 
-The grader replays once, in a fresh process, exactly this CLI (a fresh process, so run it to self-check):
-`python /opt/tools/rcb_brush.py replay --instance /app/instance.json --traj /app/output/trajectory.npz`
+This command replays a trajectory as the grader does (run it to self-check):
+```bash
+python /opt/tools/rcb_brush.py replay --instance /app/instance.json --traj /app/output/trajectory.npz
+```
 
-## Conventions
-- World frame: z up, table top z = 0, the robot's base at (-0.615, 0, 0), x forward (away from the base), y to the robot's left.
-  Quaternions are **WXYZ**. At the start the brush points straight down with the tip at about (0.000, 0.000, 0.108).
-- Action (7): panda_joint1..7 absolute joint-position targets (rad), ManiSkill's `pd_joint_pos` controller. `s.hold_action()`
-  is the no-op. Control runs at 20 Hz (physics 100 Hz).
-- **Your only budget is the time limit (`## Time limit`)**; there is no step budget. A runaway guard stops an episode at 72000 control steps (1 h
-  of simulated time). Everything runs on the CPU except camera rendering.
-- The picture is a public-domain painting, Vincent van Gogh, *The Starry Night* (1889; Wikimedia Commons `File:Van Gogh - Starry Night - Google Art Project.jpg`, Public domain), cropped to a square and downscaled to the sheet; libmypaint is ISC, the mypaint-brushes presets CC0 (`/opt/mypaint`).
+### Actions
+An action is 7 values: panda_joint1..7 absolute joint-position targets (rad), ManiSkill's `pd_joint_pos` controller;
+`s.hold_action()` is the no-op. Control runs at 20 Hz (physics 100 Hz). World frame: z up, table top z = 0, the robot's
+base at (-0.615, 0, 0), x forward (away from the base), y to the robot's left. Quaternions are WXYZ. At the start the
+brush points straight down with the tip at about (0.000, 0.000, 0.108).
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+### The brush, the paints and the sheets
+- The brush is a rigid handle with a 15 mm soft tuft (no collision; the handle hits the paper 15 mm below its surface);
+  the robot's tool point (TCP) is the tuft's tip. Hold it vertical (as at the start).
+- Paints (the picture's colours, premixed): 16 wells on a plate on the robot's left (+y), in three rows, radius 9 mm,
+  paint surface z = 0.028 m (plate top 0.026 m, rigid); `s.wells()` gives each well's name, colour and centre. Dipping =
+  the tip inside a well's circle and below the paint surface: the brush is then loaded with that paint on a fresh brush
+  (the previous paint is gone; no mixing on the palette, it never runs dry). The brush starts dry.
+- Sheets (surface z = 0.020 m): the main sheet, a 227.18 mm square centred at world (-0.100, 0.000), is scored; the
+  practice sheet, 227.18 x 99.41 mm centred at (-0.100, -0.1856), is for test strokes and is never scored or counted.
+- How the paint goes on: at every physics step (100 Hz) the tip over a sheet is one motion event for libmypaint with the
+  mypaint-brushes preset `tanda/oil-03-paint` made pointed (dab size scaled to the paper; the preset's random dab offset
+  and tracking noise follow the pressure like the dab size, so a light press draws a thin line; the frozen preset is the
+  instance's `brush.preset_json`): a wet oil paint whose mark depends on the pressure (press depth / 15 mm: straight
+  strokes are about 2 mm wide at a 1.25 mm press, 2.5 mm at 1.5 mm, 3 mm at 2 mm, 4.2 mm at 3 mm, 6 mm at 4 mm, 8 mm at
+  5 mm and 11 mm from 6 mm on; a lighter press thins and fades the line), the speed, the direction (the elliptical dabs
+  follow it) and the engine's own smudging and jitter (deterministic): strokes pick up and blend the wet paint already
+  on the sheet, and later strokes lie over earlier ones. The engine is `MyPaintPainter` in `/opt/tools/rcb_brush.py` (+
+  `/opt/mypaint`). One continuous contact is one stroke; paint is permanent (only `s.reset()` clears it).
+- The arm is position-controlled (PD, 20 Hz targets): a moving target is followed with a lag of about 0.1 s.
 
-## Resources
-Your container: **8 CPUs**, **12 GiB of memory**, **2048 processes and threads**, **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`) and **one GPU, 3 GiB of its memory**. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
+### The target picture
+`/app/target.png` (1024 x 1024 px, RGB) shows the exemplar at its true size and place on the main sheet: the image
+covers the main sheet exactly, 0.2219 mm per pixel. Pixel (column u, row v), counted from 0 at the image's top-left, has
+its centre at sheet millimetres X = (u + 0.5) · 227.18 / 1024, Y = (v + 0.5) · 227.18 / 1024 (X to the robot's right, Y
+towards the robot, origin = the sheet's far-left corner as seen from the robot's base), i.e. at world x = -0.100 +
+0.1136 - Y/1000, y = 0.1136 - X/1000 (m) (`s.geo.mm_to_world(X, Y)`). Image top = the sheet's far edge (+x), image left
+= the robot's left (+y): the same orientation as `s.canvas()` and `canvas_cam`.
 
-## Time limit
-You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+## Others
+- Everything runs on the CPU except camera rendering.
+- The picture is a public-domain painting, Vincent van Gogh, *The Starry Night* (1889; Wikimedia Commons
+  `File:Van Gogh - Starry Night - Google Art Project.jpg`, Public domain), cropped to a square and downscaled to the
+  sheet; libmypaint is ISC, the mypaint-brushes presets CC0 (`/opt/mypaint`).
 
-This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+## Limits
+- Time: 3600 s of wall-clock time from the start of your session; everything counts (the simulator's start-up too). At
+  the end you are stopped without warning and only what is in `/app/output/` at that moment is graded. Time left:
+  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`). Calls into a long-running process can block for their
+  whole wait time: use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, the simulator's and the benchmark's source included. Do not search for or
+  download a ready-made solution (published or reference solutions, recorded demonstrations, trained policies); trials
+  are reviewed.
+- Resources: 8 CPUs, 12 GiB memory, 2048 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`),
+  one GPU (3 GiB of its memory). Over a cap a process can be killed (the CPU cap only slows you down); usage:
+  `/run/rcb-limits/usage.json`.
+- Steps: no step budget; a runaway guard stops an episode at 72000 control steps (1 h of simulated time).
+- Resets: as many as you like (`s.reset()`: blank sheets, a dry brush, the robot at its start pose, exact).

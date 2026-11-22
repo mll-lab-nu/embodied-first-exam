@@ -1,74 +1,26 @@
-# DexJoCo · bimanual_photograph — frozen instance
+# DexJoCo · bimanual_photograph (privileged)
 
-You control two Franka Panda arms, each with a 16-DoF Allegro hand (DexJoCo on MuJoCo 3.4) via Python. **Task:** Hold the camera with the left hand in front of the logo and press its shutter with the right hand. Success, at one control step: the camera's view point is inside the target region (0.16 m radius, +-0.10 m height, 0.40 m in front of the logo along -x, i.e. about 0.3 m above the table), the camera's viewing axis is within 10 degrees of world +x, and the shutter button is touched by something other than the camera.
+## Task
+Two Franka Panda arms, each with a 16-joint Allegro hand (DexJoCo, MuJoCo). Hold the camera with the left hand in front
+of the logo and press its shutter with the right hand. The camera lies on the table between the robots; the logo disk
+stands at the far side of the table. The scene is one fixed instance.
+You have the full simulator to develop with; you hand in a trajectory of actions.
 
-The camera lies on the table between the robots; the logo disk stands at the far side of the table. `s.objects()` gives the live poses of the task objects (`camera`, `view_point`, `shutter`, `logo`, `target_region`, `table_top`). DexJoCo's success code (from
-`/opt/dexjoco/dexjoco/dexjoco/sim/envs/panda_bimanual_photograph_env.py`; `step()` ends the episode on success or on a task failure):
-```python
-def _compute_success(self) -> bool:
-    success, _ = self._compute_success_metrics()
-    return bool(success)
+## Goal
+Success: the left hand holds the camera in front of the logo, about 0.4 m from it and about 0.3 m above the table,
+looking straight at it (along +x), while something other than the camera, the right hand, presses its shutter button. A
+replay ends as soon as the task is done; later rows are not run.
 
-def _compute_success_metrics(self) -> Tuple[bool, Dict[str, Any]]:
-    region_center = self._data.geom_xpos[self._target_region_geom_id].copy()
-    region_rot = self._data.geom_xmat[self._target_region_geom_id].reshape(3, 3)
-    view_pos = self._data.site_xpos[self._view_site_id].copy()
-    delta_local = region_rot.T @ (view_pos - region_center)
-    radial_dist = float(np.linalg.norm(delta_local[:2]))
-    region_height_dist = float(abs(delta_local[2]))
-    region_pass = radial_dist <= _TARGET_REGION_RADIUS and region_height_dist <= _TARGET_REGION_HALF_HEIGHT
+Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(...)`, at most 50,000 rows (1000 s of robot
+time; `save_trajectory` refuses a longer one). It is replayed open-loop from the fixed start and passes if its episode
+ends in success. Also leave the script that produced it at `/app/output/gen.py`. Save a first trajectory early and
+overwrite it when you have a better one.
 
-    axis_z_world = self._data.geom_xmat[self._camera_axis_z_geom_id].reshape(3, 3)[:, 2].copy()
-    axis_z_norm = float(np.linalg.norm(axis_z_world))
-    if axis_z_norm < 1e-8:
-        axis_z_world = np.array([0.0, 0.0, 1.0], dtype=np.float64)
-    else:
-        axis_z_world = axis_z_world / axis_z_norm
+Rules: write your own controller; do not use the benchmark's demonstrations, trained policies or any published solution.
 
-    cos_val = float(np.clip(np.dot(axis_z_world, _WORLD_POS_X), -1.0, 1.0))
-    angle_deg = float(np.degrees(np.arccos(cos_val)))
-    angle_pass = angle_deg <= _TARGET_ANGLE_DEG
-
-    shutter_pressed = False
-    shutter_contact_count = 0
-    ncon = int(self._data.ncon)
-    for i in range(ncon):
-        c = self._data.contact[i]
-        g1 = int(c.geom1)
-        g2 = int(c.geom2)
-        if g1 == self._shutter_geom_id:
-            if g2 not in self._camera_geom_ids:
-                shutter_pressed = True
-                shutter_contact_count += 1
-        elif g2 == self._shutter_geom_id:
-            if g1 not in self._camera_geom_ids:
-                shutter_pressed = True
-                shutter_contact_count += 1
-
-    success = region_pass and angle_pass and shutter_pressed
-    return bool(success), {
-        "region_pass": bool(region_pass),
-        "angle_pass": bool(angle_pass),
-        "shutter_pressed": bool(shutter_pressed),
-        "radial_dist": radial_dist,
-        "region_height_dist": region_height_dist,
-        "view_angle_deg": angle_deg,
-        "shutter_contact_count": int(shutter_contact_count),
-    }
-```
-
-This is a *fixed scene instance*: object poses, the table height and the robot's start pose never change between
-resets. You may reset and retry as many times as you want. Your deliverable is **one replayable trajectory**, not a
-general policy.
-
-## Deliverable
-Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below). It is replayed
-open-loop from the same initial state in a fresh process and scored 1 if its episode ends in success, else 0. Also
-leave the script that produced it at `/app/output/gen.py`. A trajectory may have at most 50,000 rows
-(1000 s of robot time): `save_trajectory` refuses a longer one and the verifier scores it 0. Save a
-first trajectory early, improve it, and do not stop before the task is solved.
-
-## Tooling (already installed; run `python` from any directory)
+## Robot Interface
+### Session
+`/opt/tools/rcb_dexjoco.py`, importable as `rcb_dexjoco` (installed; run `python` from any directory):
 ```python
 from rcb_dexjoco import Session
 s = Session("bimanual_photograph", instance="/app/instance.npz")   # ~1 s: builds the env and loads the frozen state
@@ -84,42 +36,53 @@ s.render_frame("front")            # RGB uint8 (480, 640, 3); cameras: ['front',
 s.step(action)                     # one control step (46 values, below) = 1/50 s; returns False once the episode is over
 s.record_start(); ...; actions = s.record_stop()   # (T, 46) actions, one row per control step
 s.status()                         # {'success', 'done', 'reason', 'steps', 'resets', 'state_sha', 'info'}
-s.replay(actions)                  # resets, replays open-loop until the episode ends, returns status -> self-check
+s.replay(actions)                  # resets, replays open-loop until the episode ends (as the grader does), returns status
 s.save_trajectory(actions, "/app/output/trajectory.npz")
 s.render_video(actions, "/app/output/check.mp4", cameras=["front"])   # replays from the frozen state into a video
 ```
 The primitives are deliberately thin (tcp target moves, hand joint targets, hold): grasping, pressing, striking and
-every other skill are yours to build from them. `s.bodies()` lists every MuJoCo body for `p["get_body_pose"]`.
+every other skill are yours to build from them. `s.bodies()` lists every MuJoCo body for `p["get_body_pose"]`. The same
+replay from the shell:
+`python /opt/tools/rcb_dexjoco.py replay --task bimanual_photograph --instance /app/instance.npz --traj /app/output/trajectory.npz`.
 
-CLI equivalent of the grader:
-`python /opt/tools/rcb_dexjoco.py replay --task bimanual_photograph --instance /app/instance.npz --traj /app/output/trajectory.npz`
+### Actions
+- An action row (46): per arm, right first: tcp target position (3), tcp target orientation (4, wxyz), 16 Allegro joint
+  targets (rad). The arm tracks the target through DexJoCo's operational-space controller (it lags a moving target and
+  stops where contact blocks it); the hand joints are position-controlled. `s.hold_action()` is the no-op. At the start
+  the tcp target is right [-0.443, -0.4, 1.517] / [0.0, -1.0, 0.0, -0.0025], left [-0.443, 0.4, 1.517] / [0.0, -1.0,
+  0.0, -0.0025].
+- Allegro joint order (right hand): index finger 0-3, middle 4-7, ring 8-11, thumb 12-15 (joint 0 of a finger = spread,
+  1-3 = flexion from the knuckle out; thumb 12 = opposition). The LEFT hand's 16 values are mirrored: ring 0-3, middle
+  4-7, index 8-11, thumb 12-15. Target ranges (rad, same for every finger slot, thumb last): low [-0.47, -0.2, -0.17,
+  -0.23, -0.47, -0.2, -0.17, -0.23, -0.47, -0.2, -0.17, -0.23, 0.26, -0.1, -0.19, -0.16], high [0.47, 1.61, 1.71, 1.62,
+  0.47, 1.61, 1.71, 1.62, 0.47, 1.61, 1.71, 1.62, 1.4, 1.16, 1.64, 1.72]; the simulator clamps targets to them.
+- Control runs at 50 Hz (10 physics substeps of 2 ms): `s.step(action)` is one control step. An episode ends at the
+  first success or task failure; `s.step` then refuses further actions until `s.reset()`.
 
-## Conventions
-- World frame, metres; z up; the robots stand at low x and reach towards +x. The table top is at z = 0.930. Arm base (`link0`): link0_right [-0.75, -0.4, 0.924], link0_left [-0.75, 0.4, 0.924]. The right arm works at y < 0, the left arm at y > 0. Quaternions are **WXYZ**.
-- Action (46): per arm, right first: tcp target position (3), tcp target orientation (4, wxyz), 16 Allegro
-  joint targets (rad). The arm tracks the target through DexJoCo's operational-space controller (it lags a moving
-  target and stops where contact blocks it); the hand joints are position-controlled. `s.hold_action()` is the no-op.
-  At the start the tcp target is right [-0.443, -0.4, 1.517] / [0.0, -1.0, 0.0, -0.0025], left [-0.443, 0.4, 1.517] / [0.0, -1.0, 0.0, -0.0025].
-- Allegro joint order (right hand): index finger 0-3, middle 4-7, ring 8-11, thumb 12-15 (joint 0 of a finger =
-  spread, 1-3 = flexion from the knuckle out; thumb 12 = opposition). The LEFT hand's 16 values are mirrored: ring 0-3, middle 4-7, index 8-11, thumb 12-15.
-  Target ranges (rad, same for every finger slot, thumb last): low [-0.47, -0.2, -0.17, -0.23, -0.47, -0.2, -0.17, -0.23, -0.47, -0.2, -0.17, -0.23, 0.26, -0.1, -0.19, -0.16], high [0.47, 1.61, 1.71, 1.62, 0.47, 1.61, 1.71, 1.62, 0.47, 1.61, 1.71, 1.62, 1.4, 1.16, 1.64, 1.72]; the simulator clamps
-  targets to them.
-- Control runs at 50 Hz (10 physics substeps of 2 ms). DexJoCo's own episode cap and real-time pacing are lifted: your
-  sessions have no step budget, your wall-clock time is the limit (~180 control steps/s here); only the
-  trajectory you hand in is capped (50,000 rows). An episode ends at the first success or task failure; `s.step`
-  then refuses further actions until `s.reset()`.
-- The simulation repeats bit for bit, for one OpenBLAS thread count: the controller's linear algebra gives slightly
-  different results on 1, on 2-3 and on 4 or more threads. This container sets `OPENBLAS_NUM_THREADS=4`, as the verifier's
-  does; leave it as it is, or your replays will not match the verifier's. (OpenBLAS runs no more threads than the CPUs
-  a process may use: if the tooling warns that it runs fewer than 4, your replays here are not the verifier's.)
+### Scene
+World frame, metres; z up; the robots stand at low x and reach towards +x. The table top is at z = 0.930. Arm base
+(`link0`): link0_right [-0.75, -0.4, 0.924], link0_left [-0.75, 0.4, 0.924]. The right arm works at y < 0, the left arm
+at y > 0. Quaternions are WXYZ. `s.objects()` gives the live poses of the task objects (`camera`, `view_point`,
+`shutter`, `logo`, `target_region`, `table_top`).
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+## Others
+- Your sessions have no step budget (about 180 control steps per second here); only the trajectory you hand in is
+  capped.
+- The simulation repeats exactly only for one OpenBLAS thread count: the controller's linear algebra gives slightly
+  different results on 1, on 2-3 and on 4 or more threads. This container sets `OPENBLAS_NUM_THREADS=4`, as the grader's
+  does; leave it as it is, or your replays will not match the grader's. (OpenBLAS runs no more threads than the CPUs a
+  process may use: if the tooling warns that it runs fewer than 4, your replays here are not the grader's.)
 
-## Resources
-Your container: **4 CPUs**, **10 GiB of memory**, **2048 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
-
-## Time limit
-You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
-
-This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+## Limits
+- Time: 3600 s of wall-clock time from the start of your session; everything counts (the simulator's start-up too). At
+  the end you are stopped without warning and only what is in `/app/output/` at that moment is graded. Time left:
+  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`). Calls into a long-running process can block for their
+  whole wait time: use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, the simulator's and the benchmark's source included. Do not search for or
+  download a ready-made solution (published or reference solutions, recorded demonstrations, trained policies); trials
+  are reviewed.
+- Resources: 4 CPUs, 10 GiB memory, 2048 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`),
+  no GPU. Over a cap a process can be killed (the CPU cap only slows you down); usage: `/run/rcb-limits/usage.json`.
+- Resets: as many as you like (`s.reset()`).

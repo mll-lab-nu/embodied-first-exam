@@ -1,41 +1,46 @@
-# AM-Bench · Cabinet Pick and Place — STANDARD MODE (robot as a service, eai-standard/2.2)
+# AM-Bench · ambench-cabinet-pick-place-fahexa-i00-objpose_resetinf (standard)
 
-You control a simulated **aerial manipulator** **as if it were real hardware**: a fully actuated hexarotor (six tilted
-rotors, so it can hold any attitude while hovering) carrying a small arm (four joints: three pitch joints and a roll joint)
-with a two-finger gripper, in AM-Bench on Isaac Lab / Isaac Sim 5.1. The simulator runs in a service you cannot open. You
-get one client and one episode. **Task:** A tall wooden cabinet stands ahead of the hovering aerial manipulator, and a small soda can stands inside one of its shelf compartments, behind a closed sliding door. Get the can onto the top of the cabinet: AM-Bench counts success when the can's centre is less than 5 cm above a fixed height just below the cabinet's top surface (there is no horizontal condition) while the can moves slower than 0.1 m/s.
+## Task
+A simulated aerial manipulator: a fully actuated hexarotor (six tilted rotors, so it can hold any attitude while
+hovering) carrying a small arm (four joints: three pitch joints and a roll joint) with a two-finger gripper, in AM-Bench
+(Isaac Lab). A tall wooden cabinet stands ahead of the hovering aerial manipulator, and a small soda can stands inside
+one of its shelf compartments, behind a closed sliding door. Get the can onto the top of the cabinet. The robot runs as a service you reach only through its client, as if it were real hardware.
 
-## Scene
-The ground is the world's z = 0 plane; there is no wall. Ahead of the robot stands an immovable cabinet with light-wood panels and metal handles, about 1.2 m wide, 0.6 m deep and 1.68 m tall, its front facing the robot and its top a flat board. From the bottom up: a solid base; a drawer with a horizontal bar handle; a compartment closed by two hinged doors with vertical handles, which are locked; the can's compartment, about 27 cm tall, whose right half (as seen from the robot) is closed by a fixed panel and whose left half is closed by a sliding door with a vertical bar handle; and a top compartment closed by a front panel with a horizontal bar handle. The sliding door slides sideways to the robot's right, in front of the fixed panel, over 0.6 m of travel; it has no spring (it stays where it is left) and its motion is resisted by damping and friction. The bottom drawer and the top front panel are not jointed: they are loose parts held in place only by gravity and contact. The can (4 cm in diameter, 6.4 cm tall, 5 g, with a soda label) stands upright on the floor of the sliding-door compartment, a little in from the front and hidden behind the closed sliding door; its exact spot varies by a few centimetres between instances, and nothing else varies. Nothing moves by itself. The robot starts hovering level and motionless, facing the cabinet, with its arm at its zero joint configuration (end effector a little ahead of and above the airframe) and the gripper closed.
+### Scene
+The ground is the world's z = 0 plane; there is no wall. Ahead of the robot stands an immovable cabinet with light-wood
+panels and metal handles, about 1.2 m wide, 0.6 m deep and 1.68 m tall, its front facing the robot and its top a flat
+board. From the bottom up: a solid base; a drawer with a horizontal bar handle; a compartment closed by two hinged doors
+with vertical handles, which are locked; the can's compartment, about 27 cm tall, whose right half (as seen from the
+robot) is closed by a fixed panel and whose left half is closed by a sliding door with a vertical bar handle; and a top
+compartment closed by a front panel with a horizontal bar handle. The sliding door slides sideways to the robot's right,
+in front of the fixed panel, over 0.6 m of travel; it has no spring (it stays where it is left) and its motion is
+resisted by damping and friction. The bottom drawer and the top front panel are not jointed: they are loose parts held
+in place only by gravity and contact. The can (4 cm in diameter, 6.4 cm tall, 5 g, with a soda label) stands upright on
+the floor of the sliding-door compartment, a little in from the front and hidden behind the closed sliding door; its
+exact spot varies by a few centimetres between instances, and nothing else varies. Nothing moves by itself. The robot
+starts hovering level and motionless, facing the cabinet, with its arm at its zero joint configuration (end effector a
+little ahead of and above the airframe) and the gripper closed.
 
-## Success
-Success at a control step when both hold: (1) the can's root position (its body origin, the can's centre) satisfies 0 <= z - 1.67 < 0.05 m (drawer_top_z = 1.67 m above the environment origin, which is the world origin; i.e. 1.67 <= z < 1.72 m); (2) the norm of the can's linear velocity is < 0.1 m/s (can_place_velocity_threshold). Nothing else is tested: no horizontal (x, y) condition, no orientation, the can need not be released, and the door's position does not matter. AM-Bench also reports subtask criteria pulling_door_opened (|pull_door_slide - 0| >= 0.2 m), can_lifted (can z > its z at reset + 0.05 m) and can_placed_on_drawer (the success itself); they are informational only. Evaluated after every control step (decimation 1, so after every 1/120 s physics step) on the simulated state; no hold time is required. The episode terminates at the first step where it holds. Otherwise it is truncated by the time limit: episode_length_s = 60 s, i.e. max_episode_length = 7200 control steps; AM-Bench raises the time-out when episode_length_buf >= max_episode_length - 1, i.e. at the 7199th step.
-The episode **ends by itself** at the first control step where the check holds (success), or when the task's episode
-length of **60 s** of simulated time runs out (a failure: AM-Bench's time-out ends the episode at control step
-7199; reason `episode_timeout`).
+## Goal
+Success: the can stands at rest on the top of the cabinet; where on the top, which way up and whether the gripper still
+holds it do not matter. The episode ends by itself as soon as the task is done (reason `success`), or as a failure when
+its 60 s of simulated time run out (reason `episode_timeout`).
 
-Neither the cabinet's pose, the sliding door's position nor the can's pose is given: the cabinet, the door and its handle have to be found with the forward-looking onboard cameras, the can is hidden behind the closed door at the start, and whether the can ended at the right height and at rest can only be judged from the images together with proprioception. Success is not reported during the episode.
+Nothing to hand in: the service records and grades the episode. Keep the script that drives the robot at
+`/app/output/gen.py`.
 
-## Rules (real-robot rules)
-- **No reset.** The episode starts when the service comes up and ends on success, at the time-out above, when your time
-  is up, or on a simulator error. Whatever you knock over or push stays that way.
-- **No privileged state.** You see what the two onboard cameras see (RGB, and depth if you ask) plus the robot's own
-  proprioception (airframe pose and velocity, arm joints, gripper, tool-frame pose, joint efforts, the target in force).
-  No object poses, no success signal.
-- **Simulated time only moves when you move the robot** (`submit`, or `get_obs(seconds=...)`): between your calls the
-  world is frozen, and the episode lasts at most 60 s of simulated time. There is no step budget otherwise:
-  the time limit (`## Time limit`) is your only budget (`meta["time_left_s"]`).
-- There is nothing to hand in: the service records your episode as the trajectory and grades it. Leave your script at
-  `/app/output/gen.py` for the record. The episode is graded as it stands when your time is up.
-- **If the service crashes**, a call fails with a connection error: the simulator restarts and resumes the SAME episode
-  (never a reset) in the state after the last call it completed (to the last bits: a rare GPU race
-  can leave those different), which you may not have received. `r.wait_ready()` waits
-  until it answers again (resuming replays the episode so far, which can take minutes; the wall clock keeps running), then
-  check `r.status()["control_steps"]` before you continue (`spec["on_service_error"]`).
-- **Nothing is put into your context automatically.** Images and videos come back as arrays/bytes in a Python object;
-  what you look at and where you store it is your code's decision.
+Real-robot rules:
+- Resets: as many as your time allows, with save and load (Robot Interface,
+  `### This run: unlimited resets, save and load`); only the last episode is graded.
+- Write your own controller; do not use the benchmark's demonstrations, trained policies or any published solution.
+- Simulated time moves only while the robot runs your commands or you watch it hold still: between your calls the world
+  is frozen.
+- Privileged state queries: this run lets you read the simulator's state (Robot Interface,
+  `### This run: privileged state queries`); the answers never say whether the task is done.
 
-## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`)
+## Robot Interface
+### Client
+`/opt/tools/rcb_client.py` (protocol `eai-standard/2.2`):
 ```python
 from rcb_client import Robot
 r = Robot()                                   # connects: waits while Isaac Sim starts and builds the scene (see below)
@@ -53,105 +58,127 @@ res.frames["base_camera"]                     # uint8 (N,H,W,3) at video_fps if 
 res.last["ee_camera"]; res.proprio            # last frame per camera; float32 (N, 45) proprio at each video frame
 res.save("/app/runs/003")                     # meta.json, <cam>.mp4, frames/<cam>/NNN.jpg, last/<cam>.jpg, proprio.npy
 ```
+
 The service's first start in a trial compiles Isaac's shaders: `Robot()` can wait ~2-12 min (it prints its progress to
-stderr once a minute). It gives up after 3600 s (`Robot(timeout=...)`) with `RuntimeError("sim service unavailable ...")`:
-then call it again (nothing has happened in the episode yet; your wall clock runs from the start of the trial).
+stderr once a minute). It gives up after 3600 s (`Robot(timeout=...)`) with
+`RuntimeError("sim service unavailable ...")`: then call it again (nothing has happened in the episode yet; your wall
+clock runs from the start of the trial).
 
-Cameras (384×384 each, both moving with the robot): `ee_camera` (on the end effector, looking along the gripper) and
-`base_camera` (on the airframe, looking forward). `res.extrinsic_cv[cam]` has their pose at every frame.
-One call returns at most 3000 images (`max_frames_per_call`, PROTOCOL §3 "Images per call").
+If the service crashes, a call fails with a connection error: the simulator restarts and resumes the SAME episode (never
+a reset) in the state after the last call it completed, which you may not have received. `r.wait_ready()` waits until it
+answers again (resuming replays the episode so far, which can take minutes; the wall clock keeps running), then check
+`r.status()["control_steps"]` before you continue (`spec["on_service_error"]`).
 
-### Optional inputs (eai-standard/2.2; ask only for what you need)
+Simulated time moves only in `submit` and in `get_obs(seconds=s)` (the robot holds its current target while you watch,
+at most 30 s). One call returns at most 3000 images.
+
+Optional inputs (ask only for what you need):
 - Depth: `r.get_obs(depth=True)` -> `obs.last_depth[cam]` float32 (H,W) z-depth in metres, 0 = no reading, pixel-aligned
-  with `obs.last[cam]`; `r.submit(..., depth="frames")` -> also `res.depth[cam]` (N,H,W), one map per frame (1 mm steps).
+  with `obs.last[cam]`; `r.submit(..., depth="frames")` -> also `res.depth[cam]` (N,H,W), one map per frame (1 mm
+  steps).
 - Per frame: `res.frame_step` (control step), `res.frame_time_s`, `res.extrinsic_cv[cam]` (N,3,4 world -> camera, OpenCV
   axes). `spec["cameras"][cam]`: `intrinsic_cv` and `mount` (the parent link and a fixed `link_T_cam_cv`).
 - `spec["robot_spec"]` (the arm's joints and limits, the gripper and its command, the controller, the tool frame),
-  `spec["world"]` (frame, units, wxyz), `spec["proprio_groups"]` + `res.group("base_pose")` (joint_pos, joint_vel, tcp_pose,
-  gripper_opening, gripper_cmd, joint_effort, base_pose, base_vel, ee_cmd).
-- `r.fk(q4, base_pose=base7)` -> poses of `spec["kinematics"]["links"]` (in the airframe frame without `base_pose`, world
-  with it); `r.ik({"tcp": pose7}, seed=q4, base_pose=base7)` -> `{"ok", "q", "error"}`: a stateless model of the arm on its
-  airframe (no physics, no simulated time); `q4` = the arm's four joints. AM-Bench's own controller moves the airframe too
-  (below): this model is the arm alone, for reasoning about reach and camera poses.
+  `spec["world"]` (frame, units, wxyz), `spec["proprio_groups"]` + `res.group("base_pose")` (joint_pos, joint_vel,
+  tcp_pose, gripper_opening, gripper_cmd, joint_effort, base_pose, base_vel, ee_cmd).
+- `r.fk(q4, base_pose=base7)` -> poses of `spec["kinematics"]["links"]` (in the airframe frame without `base_pose`,
+  world with it); `r.ik({"tcp": pose7}, seed=q4, base_pose=base7)` -> `{"ok", "q", "error"}`: a stateless model of the
+  arm on its airframe (no physics, no simulated time); `q4` = the arm's four joints. AM-Bench's own controller moves the
+  airframe too (below): this model is the arm alone, for reasoning about reach and camera poses.
 
-### Action
+### Actions
+- World frame: metres, z up, the ground is the plane z = 0; positions relative to the environment's origin (the same
+  frame for the action, the proprio poses, the camera extrinsics and `r.fk` with `base_pose`); quaternions are wxyz.
+- At the start the airframe hovers level, facing +x, with the arm at its zero joint configuration and the gripper
+  closed.
 - `ee_pose` (8 per row): `x y z qw qx qy qz gripper` — AM-Bench's own action. The target pose of the tool frame `tcp`
   (the end-effector link, the frame of proprio `tcp_pose`; position in metres, world frame; orientation wxyz) and the
-  gripper command (**-1 = closed .. +1 = open**). Every control step, AM-Bench's whole-body controller turns the target into
-  an airframe pose (its floating-base inverse kinematics), the airframe pose into the six rotor thrusts (a PID) and the arm
-  joints into targets for their drives: you command where the end effector should be, the airframe follows.
-- Rows are `dt` apart (`1/120 ≤ dt ≤ 0.5` s, a multiple of the 120 Hz control period: 1/120, 2/120, ...; any other `dt` is
-  rejected, never rounded); `interpolate="hold"` (each row exactly as given, for its dt) or `"linear"` (default: from the
-  previous target, positions linear, orientation slerp, gripper linear); a chunk may cover at most 10 s; a gripper value
-  outside [-1, 1] is clipped and listed in `meta["clipped"]`. Start from the target in force (`res.group("ee_cmd")`, or the
-  proprio `tcp_pose`) to move smoothly: at the start the target is the end effector's own pose and the gripper is closed.
-- A malformed request (a wrong type, a value out of range, a position more than 30 m from the origin, a zero quaternion) is
-  answered 400 with the reason and executes nothing.
+  gripper command (-1 = closed .. +1 = open). Every control step, AM-Bench's whole-body controller turns the target into
+  an airframe pose (its floating-base inverse kinematics), the airframe pose into the six rotor thrusts (a PID) and the
+  arm joints into targets for their drives: you command where the end effector should be, the airframe follows.
+- Rows are `dt` apart (`1/120 ≤ dt ≤ 0.5` s, a multiple of the 120 Hz control period: 1/120, 2/120, ...; any other `dt`
+  is rejected, never rounded); `interpolate="hold"` (each row exactly as given, for its dt) or `"linear"` (default: from
+  the previous target, positions linear, orientation slerp, gripper linear); a chunk may cover at most 10 s; a gripper
+  value outside [-1, 1] is clipped and listed in `meta["clipped"]`. Start from the target in force
+  (`res.group("ee_cmd")`, or the proprio `tcp_pose`) to move smoothly: at the start the target is the end effector's own
+  pose and the gripper is closed.
+- A malformed request (a wrong type, a value out of range, a position more than 30 m from the origin, a zero quaternion)
+  is answered 400 with the reason and executes nothing.
 - Control and physics run at 120 Hz (simulated time; one physics step of 1/120 s per control step).
 
-## Conventions
-- World frame: metres, z up, the ground is the plane z = 0; positions relative to the environment's origin (the same frame
-  for the action, the proprio poses, the camera extrinsics and `/kinematics` with `base_pose`); quaternions are **wxyz**.
-- At the start the airframe hovers level, facing +x, with the arm at its zero joint configuration and the gripper closed.
+### Observations
+- Cameras (384×384 each, both moving with the robot): `ee_camera` (on the end effector, looking along the gripper) and
+  `base_camera` (on the airframe, looking forward); their intrinsics and mounts are in the spec's `cameras`, their pose
+  at every frame comes with each reply.
+- Depth (`depth=True`): z-depth in metres, 0 = no reading, pixel-aligned with the colour image, in 1 mm steps.
+- Proprioception: 45 values a row (their `layout` comes with them): the arm's joint positions, velocities and efforts,
+  the gripper's opening and command, the tool frame's pose (`tcp_pose`), the airframe's pose and velocity (`base_pose`,
+  `base_vel`) and the end-effector target in force (`ee_cmd`); the groups are in the spec's `proprio_groups`.
 
-## This run: privileged state queries
-
-This run lets you query the simulator's state. This section overrides anything above, and anything in `/spec`, that
-says object poses or the scene's state are never given.
+### This run: privileged state queries
+This run lets you query the simulator's state.
 
 - `GET /state/entities` (on the same base URL as your other calls) lists what you can query:
-  `{"frame": ..., "quaternion_order": ..., "entities": {name: {"kind": ..., "fields": {field: unit}}}}`. The
-  kinds are `robot` (the robot's base or root), `robot_link` (a hand, a foot, an end effector), `object`,
-  `articulation` (a door, a drawer, a faucet: its joints) and `scene_feature` (a zone, a line, a hazard, a canvas
-  region). The list is fixed for the run.
+  `{"frame": ..., "quaternion_order": ..., "entities": {name: {"kind": ..., "fields": {field: unit}}}}`. The kinds are
+  `robot` (the robot's base or root), `robot_link` (a hand, a foot, an end effector), `object`, `articulation` (a door,
+  a drawer, a faucet: its joints) and `scene_feature` (a zone, a line, a hazard, a canvas region). The list is fixed for
+  the run.
 - `POST /state/query` with `{"names": ["robot", ...], "fields": ["pos", "quat"]}` answers JSON
-  `{"state": {name: {field: value}}, "control_steps": ..., "sim_time_s": ..., "state_queries": ...}` with the
-  current values. `fields` is optional: without it you get every field of each name. In Python:
+  `{"state": {name: {field: value}}, "control_steps": ..., "sim_time_s": ..., "state_queries": ...}` with the current
+  values. `fields` is optional: without it you get every field of each name. In Python:
   `requests.post(base + "/state/query", json={"names": ["robot"]}).json()["state"]`.
   - The usual fields: `pos` [x, y, z] m, `quat` (in `quaternion_order`), `lin_vel` m/s, `ang_vel` rad/s,
-    `height_above_ground` m, `joint_pos` / `joint_vel` {joint: value}, `size` [3] m (full extents), and `bbox`
-    [[min x, y, z], [max x, y, z]] m. A task may add its own; each field's unit is in the list.
+    `height_above_ground` m, `joint_pos` / `joint_vel` {joint: value}, `size` [3] m (full extents), and `bbox` [[min x,
+    y, z], [max x, y, z]] m. A task may add its own; each field's unit is in the list.
   - All values are in the world frame that `frame` describes.
   - A field that an entity does not have is left out of its entry.
   - An unknown name or field is a 400 that lists the valid ones.
 - A query only reads. It takes no control step, and it does not advance or pause the clock. In standard-realtime it
   answers at the current simulation time while the robot keeps moving. It is served while the episode runs (409 after
   the episode ended). Queries are counted and recorded; they do not change the grading.
-- Nothing else changes: the goal, the success rule and its thresholds are not given, and no answer says whether the
-  task is done.
+- Nothing else changes: the goal, the success rule and its thresholds are not given, and no answer says whether the task
+  is done.
 
-## This run: unlimited resets, save and load
-
-This run changes the reset budget and adds two calls. This section overrides anything above, and anything in `/spec`,
-that says there is no reset, one episode only, or fewer resets.
+### This run: unlimited resets, save and load
+This run changes the reset budget and adds two calls.
 
 - You have 1000 resets (`spec()["budget"]["reset"]` is 1000): in practice as many as your time allows.
-- `POST /reset` on the same base URL as your other calls (`http://sim:8000` or `http://localhost:8000`), with a JSON body
-  such as `{"cameras": []}` (in Python, for example `requests.post(base + "/reset", json={"cameras": []})`; the
+- `POST /reset` on the same base URL as your other calls (`http://sim:8000` or `http://localhost:8000`), with a JSON
+  body such as `{"cameras": []}` (in Python, for example `requests.post(base + "/reset", json={"cameras": []})`; the
   client's `_post("/reset", {"cameras": []}, [], 60)` where it has no `reset()`). It abandons the running episode, or
-  follows one that has ended (a failure or a fall included), and starts a new episode from the same starting state.
-  The answer carries the new episode's first frames; `meta` and `GET /status` add `episode`, `resets_left`, `saves`,
-  `loads` and `control_steps_total`.
+  follows one that has ended (a failure or a fall included), and starts a new episode from the same starting state. The
+  answer carries the new episode's first frames; `meta` and `GET /status` add `episode`, `resets_left`, `saves`, `loads`
+  and `control_steps_total`.
 - Where `/spec` has `state_ops`, two more calls exist (its text is the full rule):
   - `POST /save_state` with `{}` stores the current state in the service and answers JSON
     `{"handle": "s1", "step": ...}`. The handle is all you get, never the state's contents.
   - `POST /load_state` with `{"handle": "s1", "cameras": []}` restores a state saved earlier in this run and starts a
     new episode there; it answers as `/reset` does. At most 32 handles are kept (the least recently used one is
-    dropped). Saves and loads do not use up resets.
-  Where `/spec` has no `state_ops`, this task offers resets only.
-- Your time keeps running across resets and loads (in standard-realtime the robot's clock pauses after a reset or a
-  load until your next command).
-- Only the last episode is graded: from the starting state, or for a loaded episode the path that led to the saved
-  state followed by what you did after the load. The success rule is checked again from your next command on. A
-  success still ends the run: no reset, save or load after it.
+    dropped). Saves and loads do not use up resets. Where `/spec` has no `state_ops`, this task offers resets only.
+- Your time keeps running across resets and loads (in standard-realtime the robot's clock pauses after a reset or a load
+  until your next command).
+- Only the last episode is graded: from the starting state, or for a loaded episode the path that led to the saved state
+  followed by what you did after the load. The success rule is checked again from your next command on. A success still
+  ends the run: no reset, save or load after it.
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+## Others
+- Neither the cabinet's pose, the sliding door's position nor the can's pose is given: the cabinet, the door and its
+  handle have to be found with the forward-looking onboard cameras, the can is hidden behind the closed door at the
+  start, and whether the can ended at the right height and at rest can only be judged from the images together with
+  proprioception. Success is not reported during the episode.
 
-## Resources
-Your container: **2 CPUs**, **4 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
-
-## Time limit
-You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
-
-This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` counts the same limit from your first request to the service, so it never runs out before your time does: your real time left is `time_left_s` minus the time you spent before that request. Plan by it. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it (for example Codex's `yield_time_ms`) even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+## Limits
+- Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
+  the end you are stopped without warning and the episode is graded as it stands. Time left:
+  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`); the service's `time_left_s` (in every reply) starts at
+  your first request, so the file is the one to trust. Calls into a long-running process can block for their whole wait
+  time: use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, the simulator's and the benchmark's source included. Do not search for or
+  download a ready-made solution (published or reference solutions, recorded demonstrations, trained policies); trials
+  are reviewed.
+- Resources: 2 CPUs, 4 GiB memory, 1024 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`), no
+  GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap only
+  slows you down); usage: `/run/rcb-limits/usage.json`.
+- Resets: at most 1000 (`spec()["budget"]["reset"]`), each a new episode from the same starting state.

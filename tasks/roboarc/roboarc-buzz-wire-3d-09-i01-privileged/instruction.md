@@ -1,53 +1,33 @@
-# RoboARC (simulator package `topogym`) · buzz_wire_3d — frozen instance
+# RoboARC · buzz_wire_3d (privileged)
 
-You control a simulated robot (**a 7-DoF Franka Panda arm with a Robotiq 2F-85 parallel gripper on a fixed base**; RoboARC on MuJoCo 3.14.0 physics, Nyx rendering) via Python.
-**Task:** Guide the metal loop along the entire wire from start to finish without touching the wire, then release the tool on the finish support. Black rubber sleeves on the wire are insulated: the ring may rest on them. The final bend and the post at the finish are insulated as well.
+## Task
+A 7-DoF Franka Panda arm with a Robotiq 2F-85 parallel gripper on a fixed base, at a table (RoboARC, MuJoCo). Guide the
+metal loop along the entire wire from start to finish without touching the wire, then release the tool on the finish
+support. Black rubber sleeves on the wire are insulated: the ring may rest on them. The final bend and the post at the
+finish are insulated as well. The scene is one fixed instance. You have the full simulator to develop with; you hand in
+a trajectory of robot actions.
 
-## Success requirements
+## Goal
+Success: the tool's loop has travelled along the whole wire, from its starting end to its finishing end, with the wire
+running through the loop all the way and no branch skipped; then the tool lies on the deck at the finishing end the way
+it lay at the start (loop at that end of the wire, handle pointing inward; turned over about its handle is fine),
+touching the deck, and the robot has let go of it and moved clear, with the tool at rest. If the loop comes off the wire
+before the end, the run has to start again from the starting end. Any touch of the tool's metal on the bare wire ends
+the episode as a failure, however light; the wooden handle, the insulated sleeves, the final bend and the post at the
+finish may be touched. Dropping the tool off the table ends the episode as a failure. A replay ends, as a success, as
+soon as all of this has held for a second; later rows are not run.
 
-- Start within 10 mm along the wire from its starting end and traverse continuously until within 10 mm of its finishing end. Keep one unambiguous wire crossing inside the loop. Skipping branches or taking the loop off the route before completing traversal does not count; restart from the beginning if tracking is lost.
-- After completing traversal, lower the tool onto the finish support. The completed traversal remains valid when the loop leaves the wire to rest on the support.
-- Match the finish resting pose within 5 mm and 10 degrees. A half-turn about the handle axis is an equivalent orientation. The tool must actually contact the finish support.
-- Keep all metal parts of the tool clear of the metal wire throughout the episode. Wooden-handle contact is not a metal-wire failure. Remove all robot contact before final confirmation.
-- Release all target parts and disengage any assisted grasp. Withdraw the robot until there is at least 5 mm of verified clearance from every target part; opening the fingers while still touching or surrounding the target is insufficient.
-- During confirmation, every target point or rigid body's linear speed must be at most 1 mm/s and its displacement from the start of confirmation at most 1 mm. Each target rigid body's angular speed must be at most 0.02 rad/s and angular drift at most 0.02 rad.
-- Keep all final conditions satisfied together for at least 1 s of simulation time. If any final condition stops holding, the confirmation interval starts again. A brief qualifying pose is not enough; let the simulation advance through the full interval.
+Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, path)`: the (T, 8) actions, one row
+per control step (1/40 s), at most 200000 rows (a longer trajectory is invalid). Leave the script that produced it at
+`/app/output/gen.py`. It is replayed once from the fixed start and passes if the task gets done within your rows. Save a
+valid one early and overwrite it when you have a better one.
 
-## Task failure conditions
+Rules: write your own controller; do not use the benchmark's demonstrations, trained policies or any published solution.
+Only the actions count: changing the simulator's state while you develop changes nothing in the replay.
 
-- Any metal-tool touch of the metal wire ends the episode in failure, including brief or zero-force touches.
-- The tool falling more than 100 mm below the tabletop ends the episode in failure.
-
-## Grader details (in addition to the requirements above)
-
-- Robot safety (this benchmark's tooling): no gripper target goes lower than 15 mm below the tabletop; a commanded target that would bring any part of a gripper lower is stopped there, on the commanded path. The fingertips reach about 6 mm beyond the tool frame (TCP) along its approach axis when open and about 19 mm when closed (the Robotiq fingertips move forward as they close). Arm drive torques are capped (the effort limits in robot_spec), so an arm pushing against an obstacle stalls at that torque. An arm with any part more than 5 mm deep in a fixed object (a fixture, the table) is stopped where it is: its joint targets become its measured joints for that control step, so it stops pushing (the safety readings report these stops as static_guard).
-- Forcing is recorded, not judged: an arm drive (not a gripper drive) at 95% of its torque cap or more while that arm's gripper, or a part it holds, presses on anything else with 20 N or more in total is forcing; 0.5 s of it on every physics tick is a forcing event in the evidence (`s.safety()`, `s.status()["forcing"]`), shown to the reviewer when a success is reviewed. Forcing does not end the episode and does not change the grade by itself.
-- The release clearance is measured between axis-aligned bounding boxes: one around each collision geometry of the whole robot (every link of both arms) and one around each collision geometry of the tool, so the true gap usually has to be larger than 5 mm.
-- The loop's usable opening: the wire's centreline must cross the loop's disk less than 12.67 mm from the loop's centre (loop inner radius 14.14 mm minus the 1.47 mm wire radius).
-- Continuous traversal: from one physics tick to the next, the crossing point may move along the wire by at most twice the loop's own motion in that tick (its displacement plus 12.67 mm times its rotation angle) plus 3 mm. A larger jump, no crossing, two crossings or a tangency cancels the traversal; it must then start again within 10 mm of the starting end, the end where the tool rests at the start.
-- The finish support is the deck, and the finish resting pose is the start resting pose repeated at the wire's finishing end: the tool lies on the deck with its loop at that end of the wire and its handle pointing inward, the way it lies at the start.
-- Metal contact is sampled at all 4 solver substeps of every tick. If any tick since the start had incomplete contact coverage (a simulator-side condition), the episode can no longer succeed.
-- Grasp regions (assisted grasping, see Grippers above; one sphere per graspable part): wand: radius 25 mm, on the wand's grip. Both finger contacts must lie inside the part's sphere; a part touched elsewhere is grasped physically. Each region's centre (in its link's frame) is in `/app/instance.json` under `simulator.grasp_assist.targets`.
-- A failure is reported in `s.status()["episode_end"]` as "wire_touched", "Wand fell below table" or "forced_breakdown: <what>" (<what>: the readable reason); `s.safety()` reports forcing, contact depths, volume ratios and table-guard stops against these limits.
-
-The scene objects are the task's entities (`s.objects()`: `wand`, `wire` (fixed), `wire_base` (fixed)).
-Implementation reference: `BuzzWireRedesign_medium.evaluate_state` (module `topogym.tasks.buzz_wire_3d.redesign.registered`).
-This is a partial implementation excerpt; delegated helpers, passage history and the shared release/confirmation
-checks also apply. The complete public goal requirements are stated above.
-```python
-    def evaluate_state(self, state):
-        return self.evaluate_transition(state, self.task_state)[0:3]
-```
-
-This is a *fixed scene instance*: object poses and the robot's start pose never change between resets. You may reset
-and retry as many times as you want. Your deliverable is **one replayable trajectory**, not a general policy.
-
-## Deliverable
-Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below).
-It is replayed open-loop once from the same initial state in a fresh process and scored 1 if the task is
-completed at the end of the replay, else 0. Also leave the script that produced it at `/app/output/gen.py`.
-
-## Tooling (already installed; run `python` from any directory)
+## Robot Interface
+### Session
+`/opt/tools/rcb_topogym.py`, importable as `rcb_topogym`:
 ```python
 from rcb_topogym import Session
 s = Session("buzz_wire_3d", instance="/app/instance.json")   # builds the frozen scene (instance.json) and compiles kernels
@@ -57,7 +37,7 @@ s.objects()                        # objects: name -> position, orientation_wxyz
 p["move_ee"]("arm", pos, quat_wxyz, linear=3)   # IK on the robot's model to a TCP pose, then joint interpolation
 p["move_joints"]("arm", q_arm); p["set_gripper"]("arm", 0.0); p["open_gripper"]("arm"); p["hold"](10)
 s.ee_pose("arm"); s.joint_positions(); s.ik("arm", pos, quat_wxyz)    # kinematics helpers (arms: ['arm'])
-s.render_frame("agentview")         # RGB uint8 (480, 848, 3) from one camera (s.VIDEO_CAMERAS); s.render_grid()
+s.render_frame("agentview")         # RGB uint8 (480, 848, 3) from one camera (s.VIDEO_CAMERAS)
 s.render_depth("agentview")         # float32 (480, 848) z-depth in metres (0 = no reading), pixel-aligned with render_frame
 s.camera_info()                    # per camera: intrinsic_cv, extrinsic_cv (world -> camera, OpenCV axes), cam2world_gl, mount
 s.robot_spec()                     # joints (limits), grippers (the grasping rule), PD gains, tool frames ['arm_tcp']
@@ -73,37 +53,72 @@ s.replay(actions)                  # resets, replays open-loop, returns status  
 s.save_trajectory(actions, "/app/output/trajectory.npz")
 s.render_video(actions, "/app/output/check.mp4")   # replays from the frozen state and writes a tiled camera video
 ```
-The primitives are deliberately thin (IK moves, joint moves, gripper, hold): grasping, placing and every other skill
-are yours to build from them.
 
-CLI equivalent of the grader:
-`python /opt/tools/rcb_topogym.py replay --task buzz_wire_3d --instance /app/instance.json --traj /app/output/trajectory.npz`
-
-## Conventions
-- World frame: +z up. Quaternions are **WXYZ**. The ee_pose action and the proprio TCP pose are given in this world frame.
-- Action (8): arm `arm`: 7 joint targets (rad), then `arm_native_gripper` = native drive target (rad, limits 0 .. 0.8: 0 = open, 0.8 = closed, the Robotiq 2F-85's driver joint; open/closed targets in robot_spec); absolute position targets tracked by PD controllers, out-of-limit
-  values clipped. `s.hold_action()` is the no-op.
-- Control runs at 40 Hz (10 physics step(s) per control step). There is no step budget, but a trajectory may have at most
-  200000 rows (83.3 min of simulated time): the verifier has to replay it within its own time limit, so `s.step` stops
-  after that many control steps since the last reset, and a longer trajectory is rejected as invalid (reward 0). The time limit
-  (`## Time limit`) is your only budget. One control step takes about 0.064 s of wall clock here, so budget your experiments.
-- Grippers: assisted grasping (contact_weld_v1): a gripper whose command moves towards closed takes hold of a graspable part (wand) once both fingers touch the same part inside its grasp region, the tool frame within 6 cm of it and the penetration at most 2 mm, for 0.02 s; the part then follows the gripper rigidly. Any command that opens the gripper (by more than 0.2 % of its travel) lets it go. A hold that breaks (the fingers open more than 15 %, the part drifts 1 cm / 0.15 rad from its held pose, the hold has to push or pull its part with more than 65 N averaged over 20 ms, or no finger has touched the part for 0.2 s) is lost, and the gripper must open before it can take hold again; that force is reached when, for example, two held parts that hook into each other are pulled apart, or a held part is pressed into another object. Two grippers never hold the same part; other objects are grasped physically (friction).
-- Tool frame (TCP, the ee pose and IK frame): a fixed point near the closed finger pads; approach axis (hand -> fingertips) = local [0.0, 0.0, 1.0], finger-closing axis = local [-0.0, -1.0, 0.0]. The ee_pose action, the proprio tcp pose and the IK use this frame.
-  `p["top_down_quat"](yaw)` builds a vertical approach whose fingers close along `yaw`; `p["gripper_quat"](yaw, approach)` any other.
-- The task succeeds once its predicate has held continuously for 1 s; that, or one of its failure predicates,
-  ends the simulated episode: later steps do not change the execution record or move the scene (`s.status()["episode_end"]`), and
-  `s.reset()` starts over.
+- The primitives are deliberately thin (IK moves, joint moves, gripper, hold): grasping, placing and every other skill
+  are yours to build from them.
 - One `Session` per process (one simulator per process). Building the scene and compiling its kernels can take minutes;
   every `Session`, including the one a replay or render CLI command starts, holds its own scene in GPU memory, so keep
   one alive at a time. Do not call `s.close()` before writing every output.
+- Once the episode has ended, later steps do not change the execution record or move the scene
+  (`s.status()["episode_end"]`), and `s.reset()` starts over.
+- A failure is reported in `s.status()["episode_end"]` as "wire_touched", "Wand fell below table" or "forced_breakdown:
+  <what>" (<what>: the readable reason); `s.safety()` reports forcing, contact depths, volume ratios and table-guard
+  stops, each next to its limit.
+- The grader replays with this command (run it to self-check):
+  `python /opt/tools/rcb_topogym.py replay --task buzz_wire_3d --instance /app/instance.json --traj /app/output/trajectory.npz`
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+### Actions
+- Action (8): arm `arm`: 7 joint targets (rad), then `arm_native_gripper` = native drive target (rad, limits 0 .. 0.8: 0
+  = open, 0.8 = closed, the Robotiq 2F-85's driver joint; open/closed targets in robot_spec); absolute position targets
+  tracked by PD controllers, out-of-limit values clipped. `s.hold_action()` is the no-op.
+- Control runs at 40 Hz (10 physics step(s) per control step). One control step takes about 0.064 s of wall clock here:
+  budget your experiments.
+- World frame: +z up. Quaternions are **WXYZ**. The ee_pose action and the proprio TCP pose are given in this world
+  frame.
+- Tool frame (TCP, the ee pose and IK frame): a fixed point near the closed finger pads; approach axis (hand ->
+  fingertips) = local [0.0, 0.0, 1.0], finger-closing axis = local [-0.0, -1.0, 0.0]. The ee_pose action, the proprio
+  tcp pose and the IK use this frame. `p["top_down_quat"](yaw)` builds a vertical approach whose fingers close along
+  `yaw`; `p["gripper_quat"](yaw, approach)` any other.
 
-## Resources
-Your container: **16 CPUs**, **30 GiB of memory**, **8192 processes and threads**, **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`) and **one GPU, 12 GiB of its memory**. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
+### Grasping
+- Assisted grasping: a gripper whose command moves towards closed takes hold of a graspable part (wand) once both
+  fingers touch the same part inside its grasp region, the tool frame within 6 cm of it and the penetration at most 2
+  mm, for 0.02 s; the part then follows the gripper rigidly. Any command that opens the gripper (by more than 0.2 % of
+  its travel) lets it go. A hold that breaks (the fingers open more than 15 %, the part drifts 1 cm / 0.15 rad from its
+  held pose, the hold has to push or pull its part with more than 65 N averaged over 20 ms, or no finger has touched the
+  part for 0.2 s) is lost, and the gripper must open before it can take hold again; that force is reached when, for
+  example, two held parts that hook into each other are pulled apart, or a held part is pressed into another object. Two
+  grippers never hold the same part; other objects are grasped physically (friction).
+- Grasp regions (one sphere per graspable part): wand: radius 25 mm, on the wand's grip. Both finger contacts must lie
+  inside the part's sphere; a part touched elsewhere is grasped physically. Each region's centre (in its link's frame)
+  is in `/app/instance.json` under `simulator.grasp_assist.targets`.
 
-## Time limit
-You have 10800 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+## Others
+- The scene's objects (`s.objects()`: `wand`, `wire` (fixed), `wire_base` (fixed)).
+- Robot safety: no gripper target goes lower than 15 mm below the tabletop; a commanded target that would bring any part
+  of a gripper lower is stopped there, on the commanded path. The fingertips reach about 6 mm beyond the tool frame
+  (TCP) along its approach axis when open and about 19 mm when closed (the Robotiq fingertips move forward as they
+  close). Arm drive torques are capped (the effort limits in robot_spec), so an arm pushing against an obstacle stalls
+  at that torque. An arm with any part more than 5 mm deep in a fixed object (a fixture, the table) is stopped where it
+  is: its joint targets become its measured joints for that control step, so it stops pushing (the safety readings
+  report these stops as static_guard).
+- Forcing (an arm drive near its torque cap while its gripper, or a part it holds, presses hard on something) is
+  recorded as evidence (`s.safety()`, `s.status()["forcing"]`) and shown to the reviewer when a success is reviewed; it
+  does not end the episode or change the grade by itself. A simulator breakdown ends the episode: as an infrastructure
+  error, or as your failure if an arm was forcing just before it.
+- The loop's opening is about 28 mm across; the wire is about 3 mm thick.
 
-This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+## Limits
+- Time: 10800 s of wall-clock time from the start of your session; everything counts (the simulator's start-up too). At
+  the end you are stopped without warning and only what is in `/app/output/` at that moment is graded. Time left:
+  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`). Calls into a long-running process can block for their
+  whole wait time: use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, the simulator's and the benchmark's source included. Do not search for or
+  download a ready-made solution (published or reference solutions, recorded demonstrations, trained policies); trials
+  are reviewed.
+- Resources: 16 CPUs, 30 GiB memory, 8192 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`),
+  one GPU (12 GiB of its memory). Over a cap a process can be killed (the CPU cap only slows you down); usage:
+  `/run/rcb-limits/usage.json`.
+- Resets: as many as you like (`s.reset()`).

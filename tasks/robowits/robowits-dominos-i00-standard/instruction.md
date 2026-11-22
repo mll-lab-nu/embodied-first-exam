@@ -1,63 +1,29 @@
-# RoboWits · dominos — STANDARD MODE (robot as a service, eai-standard/2.2)
+# RoboWits · dominos (standard)
 
-You control a bimanual **Marvin** robot (two 7-DoF arms with Pika parallel grippers) **as if it were real hardware**:
-the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Push the red block onto
-the green target area. White blocks 3, 2 and 1 and the red block stand upright in a row, a domino chain that ends just
-short of the green target area; white block 4 stands on its own, closer to the robot.
+## Task
+A bimanual Marvin robot (two 7-DoF arms with Pika parallel grippers), in RoboWits' simulation (Genesis). Push the red
+block onto the green target area. White blocks 3, 2 and 1 and the red block stand upright in a row, a domino chain that
+ends just short of the green target area; white block 4 stands on its own, closer to the robot. The robot runs as a
+service you reach only through its client, as if it were real hardware: one live episode.
 
-## Success criterion (as graded)
-This is exactly what the grader checks (RoboWits' success predicate, stated in words, and the release and rest
-condition the grader adds: the last item). Where the task text says something else, this section is what counts. After
-every `submit` and every `get_obs` that watches (`seconds` > 0) the service checks the conditions at that instant;
-when they hold, it keeps your last command for a settle window, inside the same call: 1 s with nothing checked, then 2
-s in which every condition must hold at every 6th control step and at the last one, with each graded object staying
-within 2 mm of where it was when those 2 s began (the *check window*). If the window passes, the episode ends as a
-success; if not, the episode goes on and `meta["settle"]` says why. When your session ends, the same window decides
-once more, after your last command. The window's steps are part of your recorded episode, and its result on the live
-simulator is the verdict: nothing is replayed to grade it.
+## Goal
+Success: the red block lies on the green target area; the robot does not touch the red block and it is at rest. When all
+of this holds after a call, the service holds your last command within that call for about three seconds (a second, then
+two seconds in which all of this must keep holding, with nothing moving); if it all holds through, the episode ends as a
+success, and if not, it goes on. When your session ends, the same check runs once more after your last command.
 
-- At least half of the red block's footprint area lies over the green target area's footprint.
-- Released and at rest: no part of the robot touches the red block, and it moves at most 2 mm during the check window.
+Nothing to hand in: the service records and grades the episode. Keep the script that drives the robot at
+`/app/output/gen.py`.
 
-Not checked: anything else: the red block's height, orientation, whether it rests on the table, the white blocks, and
-the table bounds.
+Real-robot rules:
+- One episode, no reset: what you knock over stays knocked over.
+- No privileged state: you get the robot's camera images (with their calibration) and its own sensor readings; no object
+  poses, no scene layout; the episode ends when the task is done.
+- Write your own controller; do not use the benchmark's demonstrations, trained policies or any published solution.
 
-Task text vs grader ("Push the red block onto the green target area."): Only where the red block is, seen from above,
-is checked, once it is released and at rest: how it got there is not. RoboWits' docstring says 30 %; the code requires
-50 %.
-
-Terms: a *footprint* is an object's outline seen from above; *not held* means that neither gripper tip (the `tcp_pose`
-points of your proprioception) is inside the object's bounding box grown by 3 cm on every side; the *table bounds* are
-a fixed rectangle slightly inside the edges of the table top (its corners are world positions, which this mode does
-not give: keeping clear of the table's edges satisfies it).
-
-## Rules (real-robot rules)
-- **No reset.** The episode starts when the service comes up and ends on success, when your time is up, on a
-  simulator error, or at the technical step cap below. Knocked-over objects stay knocked over.
-- **No privileged state.** You see what the cameras see (RGB, and depth when you ask for it) plus the robot's own state:
-  joint positions, velocities and drive efforts, gripper openings, end-effector poses. Nothing tells you where the
-  objects are (no object poses or positions), and no endpoint tests the success criterion: the episode simply ends
-  (`meta["done"]`, `reason` "success") the first time it holds through the settle window.
-- **Your only budget is the time limit (`## Time limit`)** (`meta["time_left_s"]` is the service's count of it). There is no step budget; actions
-  and simulated time are reported as cost. One technical cap: the episode has at most 200000 control steps (about
-  1.85 h of simulated time at 30 Hz; `spec["max_control_steps"]`, counted by `meta["control_steps"]`; a `get_obs`
-  that watches counts too). The call that reaches it stops there and the episode ends (`reason` "step_guard"); no
-  settle window runs after the cap, so such an episode is graded without one, as a failure. Use the time: ending your
-  session before the task is done ends the episode as a failure.
-- There is nothing to hand in: the service records your episode as the trajectory and grades it. Leave your script
-  at `/app/output/gen.py` for the record.
-- **Nothing is put into your context automatically.** Images and videos come back as arrays/bytes in a Python object;
-  what you look at and where you store it is your code's decision.
-- **A busy service has not crashed.** The service answers one request at a time: while a call runs, every other
-  request waits for it (`r.status()` from another process included), and a client-side timeout during that time means
-  "busy", not "crashed": nothing restarts, the call runs to its end and the episode goes on from there.
-- **If the service crashes** (the connection is refused or reset instead of an answer), it restarts and resumes the SAME
-  episode, never a reset, in the state after the last call it completed. `r.wait_ready()` waits until it answers again
-  (resuming replays the episode so far: about a second per 700 control steps); then check `r.status()` (`calls`,
-  `control_steps`) before you continue. A call that runs longer than `spec["max_call_wall_s"]` stops at the next control
-  step and returns what it executed (`res.stopped`, `meta["executed_rows"]`).
-
-## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`)
+## Robot Interface
+### Client
+`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
 ```python
 from rcb_client import Robot
 r = Robot()                                   # connects (waits while the service builds the scene, ~1 min)
@@ -82,16 +48,19 @@ res.group("tcp_pose"); res.group("joint_effort", now=True)   # proprio columns b
 r.fk(q14)["poses"]["Gripper_Tip_R"]           # forward kinematics of the 14 arm joints (spec["kinematics"]); moves nothing
 r.ik({"Gripper_Tip_R": pose}, seed=q14)       # inverse kinematics -> {"ok", "q", "error"}; moves nothing
 r.status(); r.wait_ready()                    # calls, control steps, done, reason; after a connection error: wait, then status
-res.save("/app/runs/003")                     # meta.json, <cam>.mp4, last/, frames/, proprio.npy, depth, frame_meta.npz
 ```
-Cameras: `ego` (static, above and behind the robot, looking at the table), `wrist_right` / `wrist_left` (on the wrists;
-they move, so use the pose that comes with each frame). Resolution 848×480. `spec["cameras"][cam]` gives the intrinsics
-and the mounting: a static pose, or the parent link and the fixed offset (world_T_cam = FK(link) · `link_T_cam_cv`). A
-point (X, Y, Z) in a camera's OpenCV frame (x right, y down, z forward) appears at u = fx·X/Z + cx, v = fy·Y/Z + cy; depth
-is that Z. `spec["robot_spec"]` lists the joints with their position, velocity and effort limits, the grippers, the PD
-gains and the tool frames; `spec["world"]` the frame conventions.
 
-### Action types
+A busy service has not crashed. The service answers one request at a time: while a call runs, every other request waits
+for it (`r.status()` from another process included), and a client-side timeout during that time means "busy", not
+"crashed": nothing restarts, the call runs to its end and the episode goes on from there. If the service crashes (the
+connection is refused or reset instead of an answer), it restarts and resumes the SAME episode, never a reset, in the
+state after the last call it completed. `r.wait_ready()` waits until it answers again (resuming replays the episode so
+far: about a second per 700 control steps); then check `r.status()` (`calls`, `control_steps`) before you continue. A
+call that runs longer than `spec["max_call_wall_s"]` stops at the next control step and returns what it executed
+(`res.stopped`, `meta["executed_rows"]`). When the settle check after a call fails, `meta["settle"]` says why. One call
+returns at most 1500 images.
+
+### Actions
 - `joint_position` (16): `Joint1_R..Joint7_R, right_gripper, Joint1_L..Joint7_L, left_gripper`; radians, gripper =
   opening width in metres, 0 = closed .. 0.1 = open. Absolute targets tracked by PD controllers. Rows are `dt` apart
   (`1/30 ≤ dt ≤ 0.5` s, a whole number of 1/30 s control periods: `2/30`, not `0.067`; any other `dt` is refused, never
@@ -99,29 +68,44 @@ gains and the tool frames; `spec["world"]` the frame conventions.
   the spec). Use `obs.meta["proprio"]["now"][:16]` as the starting row to move smoothly.
 - `ee_pose` (16): right `x y z qw qx qy qz gripper`, left same; world frame (robot base at (0, 0, 1.08), x away from the
   robot, y to its left, +z up); quaternions wxyz. Each row is solved by inverse kinematics (no collision checking) and
-  driven to in joint space; an arm whose IK fails holds and is reported in `meta["plan"]`. The pose is the **gripper tip**
-  frame: +z is the approach direction, +x the direction the fingers close along (same convention as the `proprio`
+  driven to in joint space; an arm whose IK fails holds and is reported in `meta["plan"]`. The pose is the **gripper
+  tip** frame: +z is the approach direction, +x the direction the fingers close along (same convention as the `proprio`
   end-effector poses, so an observed pose is a valid target). At most 50 rows per submit; `dt` is ignored; a gripper
   width outside 0 .. 0.1 is clipped and listed in `meta["clipped"]`.
 - A request with a field of the wrong type or out of range (`dt`, `seconds` outside 0 .. 30, `video_fps` not a whole
   number in 1 .. 30, `video`, `interpolate`, `cameras` not a list of names, `note` not a string, actions that are not
-  finite (T, 16) numbers) is answered 400 before anything is executed: the client raises `ValueError`, nothing has
-  moved and the episode goes on.
-- One call returns at most 1500 images (`max_frames_per_call`, PROTOCOL §3 "Images per call").
+  finite (T, 16) numbers) is answered 400 before anything is executed: the client raises `ValueError`, nothing has moved
+  and the episode goes on.
 
-Objects here: five blocks (four white, one red) standing upright, and the flat green target area on the table. The red
-block and white blocks 1-3 are out of the arms' reach.
+### Observations
+- Cameras: `ego` (static, above and behind the robot, looking at the table), `wrist_right` / `wrist_left` (on the
+  wrists; they move, so use the pose that comes with each frame). Resolution 848×480. `spec["cameras"][cam]` gives the
+  intrinsics and the mounting: a static pose, or the parent link and the fixed offset (world_T_cam = FK(link) ·
+  `link_T_cam_cv`). A point (X, Y, Z) in a camera's OpenCV frame (x right, y down, z forward) appears at u = fx·X/Z +
+  cx, v = fy·Y/Z + cy; depth is that Z.
+- `spec["robot_spec"]` lists the joints with their position, velocity and effort limits, the grippers, the PD gains and
+  the tool frames; `spec["world"]` the frame conventions.
 
-The wrist joints are limited to ±60°, so a vertical approach only works for finger-closing directions within about ±60°
-of the world y axis.
+## Others
+- Objects here: five blocks (four white, one red) standing upright, and the flat green target area on the table. The red
+  block and white blocks 1-3 are out of the arms' reach.
+- The wrist joints are limited to ±60°, so a vertical approach only works for finger-closing directions within about
+  ±60° of the world y axis.
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
-
-## Resources
-Your container: **4 CPUs**, **5 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
-
-## Time limit
-You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
-
-This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` counts the same limit from your first request to the service, so it never runs out before your time does: your real time left is `time_left_s` minus the time you spent before that request. Plan by it. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+## Limits
+- Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
+  the end you are stopped without warning and the episode is graded as it stands. Time left:
+  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`); the service's `time_left_s` (in every reply) starts at
+  your first request, so the file is the one to trust. Calls into a long-running process can block for their whole wait
+  time: use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, the simulator's and the benchmark's source included. Do not search for or
+  download a ready-made solution (published or reference solutions, recorded demonstrations, trained policies); trials
+  are reviewed.
+- Resources: 4 CPUs, 5 GiB memory, 1024 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`), no
+  GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap only
+  slows you down); usage: `/run/rcb-limits/usage.json`.
+- Resets: none: one episode.
+- Steps: no step budget; a technical cap ends the episode after 200,000 control steps (1/30 s each, watches included),
+  as a failure: no settle check runs after it.

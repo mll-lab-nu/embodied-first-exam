@@ -115,6 +115,6 @@
  },
  "base": null,
  "locomotion": null,
- "notes": "Grasping is sticky: when the gripper closes, an object a finger touches is attached, and it is released when the gripper opens. The gripper value in the state is the command in force; gripper_opening_m is the measured opening (it stays above the closed value when closed on something). Joint efforts (panda_joint1_effort ...) in proprio_now grow when the arm pushes on something. The episode ends by itself when the goal has held for 10 consecutive control steps.",
+ "notes": "Grasping is assisted: when the gripper closes, an object between its finger pads is attached, and it is released when the gripper opens. The gripper value in the state is the command in force; gripper_opening_m is the measured opening (it stays above the closed value when closed on something). Joint efforts (panda_joint1_effort ...) in proprio_now grow when the arm pushes on something. The episode ends by itself when the goal has held for 10 consecutive control steps.",
  "task": "maniguard-jar-transport-i13"
 }

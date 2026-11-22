@@ -1,151 +1,28 @@
-# RoboWits · cover_with_lid — frozen instance
+# RoboWits · cover_with_lid (privileged)
 
-You control a simulated **bimanual Marvin** robot (two 7-DoF arms with Pika parallel grippers; RoboWits on Genesis
-0.4.7 physics) via Python. **Task:** Cover the pot precisely using one lid.
+## Task
+A simulated bimanual Marvin robot (two 7-DoF arms with Pika parallel grippers; RoboWits on Genesis 0.4.7 physics). Cover
+the pot precisely using one lid. The scene is one fixed instance. You have the full simulator to develop with; you hand
+in a trajectory of robot actions.
 
-The scene objects are the env's entities (`s.objects()`: `pot without lid`, `small lid`, `lid medium`, `lid large`; see
-`/opt/robowits/gs_gym/envs/robowits/13_cover_with_lid.py`). RoboWits' success predicate is `_check_success` in that file:
-```python
-def _check_success(self) -> torch.Tensor:
-        """Check if task is successful: exactly one lid covers pot correctly."""
-        objs_info = self.collect_objs_info()
+## Goal
+Success: the pot is covered by the lid that fits it (the large one): the lid lies on the pot's rim, centred over the
+pot, both on the table and clear of its edges; the robot has let go of the lid, no longer touches it, and it is at rest.
+What counts is how things stand after the last action of your trajectory, replayed from the fixed start: a success
+reached earlier and lost by the end does not count. After your last row the grader holds its command for about three
+seconds (a second, then two seconds in which all of this must keep holding, with nothing moving).
 
-        TABLE_X_MIN, TABLE_X_MAX = 0.21, 1.00
-        TABLE_Y_MIN, TABLE_Y_MAX = -0.69, 0.69
-        OVERLAP_RATIO_MIN = 0.80
-        SIZE_RATIO_MIN = 0.85
-        SIZE_RATIO_MAX = 1.40
-        Z_ABOVE_EPS = 0.01
+Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, path)`: the (T, 16) actions, one row
+per control step (1/30 s), at most 200,000 rows (more score 0). It is replayed once from the fixed start, settle check
+included. Leave the script that produced it at `/app/output/gen.py`. Save a trajectory as soon as one replays
+successfully, and overwrite it when you have a better one.
 
-        def get_hull(obj):
-            hull = obj.get("convex_hull_2d", None)
-            if hull is not None and isinstance(hull, np.ndarray) and hull.shape[0] >= 3:
-                return hull.copy()
-            b = obj.get("bounds", None)
-            if b is None:
-                return None
-            (xmin, ymin, _), (xmax, ymax, _) = b
-            return np.array([[xmin, ymin], [xmax, ymin], [xmax, ymax], [xmin, ymax]], dtype=float)
+Rules: write your own controller; do not use the benchmark's demonstrations, trained policies or any published solution.
+Only the actions count: changing the simulator's state while you develop changes nothing in the replay.
 
-        def is_within_table_bounds(hull):
-            if hull is None or len(hull) == 0:
-                return False
-            xs = hull[:, 0]
-            ys = hull[:, 1]
-            return (
-                np.all(xs >= TABLE_X_MIN - 1e-3)
-                and np.all(xs <= TABLE_X_MAX + 1e-3)
-                and np.all(ys >= TABLE_Y_MIN - 1e-3)
-                and np.all(ys <= TABLE_Y_MAX + 1e-3)
-            )
-
-        def compute_overlap_ratio(hull1, hull2):
-            if hull1 is None or hull2 is None:
-                return 0.0
-            area1 = self._polygon_area(hull1)
-            if area1 <= 1e-9:
-                return 0.0
-            inter_area = _utils.intersection_area(hull1, hull2)
-            return inter_area / area1
-
-        pot = objs_info.get("pot without lid")
-        if pot is None:
-            return torch.tensor([False], dtype=torch.bool, device=self._device)
-
-        pot_hull = get_hull(pot)
-        if pot_hull is None:
-            return torch.tensor([False], dtype=torch.bool, device=self._device)
-
-        if not is_within_table_bounds(pot_hull):
-            return torch.tensor([False], dtype=torch.bool, device=self._device)
-
-        pot_area = self._polygon_area(pot_hull)
-        if pot_area <= 1e-6:
-            return torch.tensor([False], dtype=torch.bool, device=self._device)
-
-        pot_z = float(pot["pos"][2])
-
-        lid_names = ["small lid", "lid medium", "lid large"]
-        valid_candidates = []
-
-        for lname in lid_names:
-            lid = objs_info.get(lname)
-            if lid is None:
-                continue
-
-            lid_hull = get_hull(lid)
-            if lid_hull is None:
-                continue
-
-            if not is_within_table_bounds(lid_hull):
-                continue
-
-            lid_area = self._polygon_area(lid_hull)
-            if lid_area <= 1e-6:
-                continue
-
-            lid_z = float(lid["pos"][2])
-            if not (lid_z > pot_z + Z_ABOVE_EPS):
-                continue
-
-            size_ratio = lid_area / pot_area
-            if size_ratio < SIZE_RATIO_MIN or size_ratio > SIZE_RATIO_MAX:
-                continue
-
-            overlap = compute_overlap_ratio(lid_hull, pot_hull)
-            if overlap < OVERLAP_RATIO_MIN - 1e-6:
-                continue
-
-            valid_candidates.append(lname)
-
-        return torch.tensor([len(valid_candidates) == 1], dtype=torch.bool, device=self._device)
-```
-
-This is a *fixed scene instance*: object poses and the robot's start pose never change between resets. You may reset
-and retry as many times as you want. Your deliverable is **one replayable trajectory**, not a general policy.
-
-## Success criterion (as graded)
-This is exactly what the grader checks, written from the predicate above (RoboWits' `_check_success`, which the grader
-runs) and the release and rest condition the grader adds (the last item). Where the task text says something else,
-this section and the code are what count. After the last action of your trajectory the grader holds that action's
-command for a settle window: 1 s (30 control steps) with nothing checked, then 2 s (60 control steps) in which every
-condition below must hold at every 6th control step and at the last one, with each graded object staying within 2 mm
-of where it was when those 2 s began (the *check window*). It must pass in the grader's replay. `s.replay(actions)` runs
-exactly this and returns the verdict as `success` (and why in `settle`); `s.status()["success"]` is the same
-conditions at one instant, without the window (`predicate`: RoboWits' alone).
-
-- The pot's footprint lies inside the table bounds (1 mm tolerance).
-- Exactly one lid qualifies. A lid qualifies when its footprint lies inside the table bounds (1 mm tolerance), its
-  position's z is more than 1 cm above the pot's position's z (the origins of their poses: the pot's is at its
-  mid-height, z = 0.829 m here; a lid's about 1 cm above its lowest point), its footprint area is 0.85-1.40 times the
-  pot's, and at least 80 % of its footprint area lies over the pot's footprint.
-- In this scene only `lid large` is inside the size window (area about 1.23 times the pot's; `lid medium` about 0.60,
-  `small lid` about 0.25). Its overlap can reach only about 0.81 (the pot's area over the lid's), so it must sit
-  within about 1.4 cm of concentric with the pot.
-- Released and at rest: no part of the robot touches the large lid, and it moves at most 2 mm during the check window.
-
-Not checked: whether the lid touches the pot, any height beyond the one above, and where the other two lids are (they
-never qualify).
-
-Task text vs grader ("Cover the pot precisely using one lid."): "Using one lid" means exactly one qualifying lid: the
-wrong-size lids never qualify, so putting them on the pot as well costs nothing. "Cover" means the large lid released
-and at rest over the pot within the overlap and height tests (in practice: lying on its rim); holding it above the pot
-does not count.
-
-Terms: a *footprint* is an object's outline seen from above (the 2D convex hull of its collision mesh in the x-y
-plane); *not held* means that neither gripper tip (`Gripper_Tip_R` / `Gripper_Tip_L`, the frames of `s.ee_pose`) is
-inside the object's axis-aligned bounding box grown by 3 cm on every side; the *table bounds* are the rectangle x
-0.21-1.00 m, |y| <= 0.69 m on the table top (z = 0.76 m).
-
-## Deliverable
-Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below).
-It is replayed open-loop once from the same initial state in a fresh process and scored 1 if the task is
-completed after the replay (the settle window of the success criterion above), else 0.
-Also leave the script that produced it at `/app/output/gen.py`.
-Save a trajectory as soon as one replays successfully (you can overwrite it later), and do not stop before you have
-one.
-
-## Tooling (already installed; run `python` from any directory)
+## Robot Interface
+### Session
+`/opt/tools/rcb_robowits.py`, importable as `rcb_robowits`:
 ```python
 from rcb_robowits import Session
 s = Session("cover_with_lid", instance="/app/instance.json")   # ~60 s: builds the frozen scene (object poses in instance.json)
@@ -155,7 +32,7 @@ s.objects()                        # objects: name -> position, orientation_wxyz
 p["move_ee"]("left", pos, quat_wxyz, linear=3)   # IK (RoboWits' own) to a gripper-tip pose, then joint interpolation
 p["move_joints"]("left", q7); p["set_gripper"]("left", 0.0); p["open_gripper"]("left"); p["hold"](10)
 s.ee_pose("left"); s.joint_positions(); s.ik("left", pos, quat_wxyz)    # kinematics helpers
-s.render_frame("ego")              # RGB uint8 (480, 848, 3) from one camera (s.VIDEO_CAMERAS); s.render_grid()
+s.render_frame("ego")              # RGB uint8 (480, 848, 3) from one camera (s.VIDEO_CAMERAS)
 s.render_depth("ego")              # float32 (480, 848) z-depth in metres (0 = no reading), pixel-aligned with render_frame("ego")
 s.camera_info()                    # per camera: intrinsic_cv, extrinsic_cv (world -> camera, OpenCV axes), cam2world_gl, mount
 s.robot_spec()                     # joints (position / velocity / effort limits), grippers, PD gains, tool frames Gripper_Tip_R/L
@@ -170,33 +47,39 @@ s.replay(actions)                  # resets, replays open-loop, then the settle 
 s.save_trajectory(actions, "/app/output/trajectory.npz")
 s.render_video(actions, "/app/output/check.mp4")   # replays from the frozen state and writes a tiled camera video
 ```
-The primitives are deliberately thin (IK moves, joint moves, gripper, hold): grasping, placing and every other skill
-are yours to build from them.
 
-CLI equivalent of the grader:
+The primitives are deliberately thin (IK moves, joint moves, gripper, hold): grasping, placing and every other skill are
+yours to build from them. `s.replay(actions)` runs exactly what the grader runs, settle check included, and returns the
+verdict as `success` (why it failed in `settle`); `s.status()["success"]` is the same conditions at one instant, without
+the settle check. One `Session` per process (Genesis initialises once). The physics runs on Genesis' bit-deterministic
+CPU backend at ~700 control steps/s; the GPU only renders camera images. Do not call `s.close()` before writing every
+output. The grader replays with this command; run it to self-check:
 `python /opt/tools/rcb_robowits.py replay --task cover_with_lid --instance /app/instance.json --traj /app/output/trajectory.npz`
 
-## Conventions
-- World frame: robot base at (0, 0, 1.08), table top at z = 0.76, x points away from the robot, y to its left (the left
-  arm works at y > 0). Quaternions are **WXYZ**.
+### Actions
 - Action (16): right arm 7 joint targets (rad), right gripper width (m, 0 closed .. 0.1 open), left arm 7 joint targets,
   left gripper width; absolute position targets tracked by PD controllers. `s.hold_action()` is the no-op.
-- Control runs at 30 Hz (4 physics substeps). There is no step budget: the time limit (`## Time limit`) is your only budget.
-  One technical cap: a trajectory, and a `Session` between two resets, has at most 200000 control steps (about
-  1.85 h of simulated time). `s.step` returns `True` on the step that reaches it and raises after it until
-  `s.reset()`; the grader scores a trajectory with more rows 0 (`bad_trajectory`).
-- Grippers open to 10 cm. The gripper tip frame's +z axis is the approach direction and +x the finger-closing
-  direction; `p["top_down_quat"](yaw)` builds a vertical-approach orientation whose fingers close along `yaw`.
-- One `Session` per process (Genesis initialises once). The physics runs on Genesis' bit-deterministic CPU backend at
-  ~700 control steps/s; the GPU only renders camera images. Do not call `s.close()` before writing every output.
+- Control runs at 30 Hz (4 physics substeps). A `Session` between two resets has at most 200,000 control steps. `s.step`
+  returns `True` on the step that reaches it and raises after it until `s.reset()`.
+- Grippers open to 10 cm. The gripper tip frame's +z axis is the approach direction and +x the finger-closing direction;
+  `p["top_down_quat"](yaw)` builds a vertical-approach orientation whose fingers close along `yaw`.
+- World frame: robot base at (0, 0, 1.08), table top at z = 0.76, x points away from the robot, y to its left (the left
+  arm works at y > 0). Quaternions are **WXYZ**.
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+## Others
+- The objects (their `s.objects()` names): `pot without lid`, `small lid`, `lid medium`, `lid large`.
 
-## Resources
-Your container: **4 CPUs**, **13 GiB of memory**, **1024 processes and threads**, **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`) and **one GPU, 5 GiB of its memory**. `blenderkit` runs in its own container: 1 CPU, 4 GiB of memory and 1024 processes and threads. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
-
-## Time limit
-You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
-
-This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+## Limits
+- Time: 3600 s of wall-clock time from the start of your session; everything counts (the simulator's start-up too). At
+  the end you are stopped without warning and only what is in `/app/output/` at that moment is graded. Time left:
+  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`). Calls into a long-running process can block for their
+  whole wait time: use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, the simulator's and the benchmark's source included. Do not search for or
+  download a ready-made solution (published or reference solutions, recorded demonstrations, trained policies); trials
+  are reviewed.
+- Resources: 4 CPUs, 13 GiB memory, 1024 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`),
+  one GPU (5 GiB of its memory); `blenderkit` runs in its own container (1 CPU, 4 GiB memory). Over a cap a process can
+  be killed (the CPU cap only slows you down); usage: `/run/rcb-limits/usage.json`.
+- Resets: as many as you like (`s.reset()`, an exact snapshot restore).

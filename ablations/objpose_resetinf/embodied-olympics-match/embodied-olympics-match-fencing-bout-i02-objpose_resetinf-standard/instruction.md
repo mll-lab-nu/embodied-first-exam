@@ -1,112 +1,138 @@
-# Robot epee fencing: program play (bout)
+# Embodied Olympics · robot epee fencing, bout against level 2 (standard)
 
-You play robot epee fencing against a scripted opponent (you are seat `A`). Two Unitree G1 humanoids (the robot library's, NVIDIA's SONIC whole-body policy on the legs, waist and free arm, the point skill on the sword arm) holding real epees fence one FIE direct-elimination bout (15 touches or 9 minutes of fencing time, no draws; unwillingness to fight, FIE t.124) phrase by phrase: every phrase starts on guard 1.95 m apart, both fencers choose one of nine tactical intentions (lunge, low lunge, point in line, reactive line, stop-hit, counter-attack, delayed lunge, retreat, draw), each starts after a random 0-50 ms, and the phrase is played out as it was measured in MuJoCo (2916 phrases: every pair of intentions and delays); format bout: you against a scripted fencer that reads your choices (levels 1-2, `game spec` opponent), format duel: two players choosing at the same time.
-This is Embodied Olympics task `fencing-bout-wallclock-program-standard` (revision `fencing-7+core-0.2`), one frozen instance: the scripted opponent at level 2; the seed is fixed and never shown. The simulator service is at `http://localhost:8000`.
+## Task
+Two simulated Unitree G1 humanoids holding epees fence one bout, phrase by phrase: before each phrase each fencer
+chooses one of nine tactical intentions, which the robots execute. You are seat `A` against a scripted fencer at level
+2. It is turn-based: nothing moves while you think. The robot runs as a service you reach only through its client, as if it were real hardware.
 
-## Time
-Nothing moves while you think: the world waits for the player whose turn it is. Each player has a chess clock of 60 minutes of real time, running only on its own turn (thinking, tool calls, your programs and your reviews all count). **If your clock runs out, you lose.**
+## Goal
+Success: you win the bout.
 
-After each of your actions (except one that ends the match), send `game ready "WHY" "PLAN"` (a short review) before the game goes on.
-The match is graded when your session ends: stay until it is over. **If your session ends before the match is over, you lose the match** (a valid result, success 0), also if you never sent `game start`.
+The bout is graded when your session ends: stay until it is over. If your session ends before the bout is over, or you
+never sent `game start`, you lose.
 
-## Write a program
-You may write a program that observes, measures in the images, computes your next action and sends it, without a
-new model response for each action. You stay in the loop: watch its log, and stop, fix and restart it whenever
-needed. Only you send `game start` and `game ready`.
+Nothing to hand in: the service records and grades the episode. Keep your scripts, logs and notes in `/app/output/`.
 
-- Use only the camera images, the service's replies and this document; no simulator internals or hidden state.
-- One action at a time: an action sent before the previous one has returned is refused (HTTP 429).
-- Your container: Python 3.12 with numpy, SciPy and Pillow; the network reaches only your model's API and the package registries. Keep your scripts, logs
-  and notes in `/app/output/`.
+Real-robot rules:
+- Resets: as many as your time allows, with save and load (Robot Interface,
+  `### This run: unlimited resets, save and load`); only the last episode is graded.
+- Privileged state queries: this run lets you read the simulator's state (Robot Interface,
+  `### This run: privileged state queries`); the answers never say whether the task is done.
+- Write your own controller; do not use the benchmark's demonstrations, trained policies or any published solution.
+- Your chess clock: 60 minutes of real time, running only on your turn (thinking, tool calls, your programs and your
+  reviews all count). If it runs out, you lose.
+- After each of your actions (except one that ends the match) send `game ready "WHY" "PLAN"`, a short review, before the
+  game goes on.
+- You may write a program that observes, computes your next action and sends it; you stay in the loop (watch its log,
+  stop, fix, restart). Only you send `game start` and `game ready`.
 
-## Interface
-Use the `game` command, or the same calls as HTTP with JSON at `http://localhost:8000/<SEAT>/` (your seat is `$SEAT`):
+The bout (FIE direct elimination, no draws):
+- Every phrase starts on guard. Each fencer has chosen one intention (lunge, low lunge, point in line, reactive line,
+  stop-hit, counter-attack, delayed lunge, retreat, draw) and starts it after a short random delay, drawn for each
+  fencer after both have chosen; which end of the piste each fences from is drawn per phrase (the two ends play slightly
+  differently). The phrase ends at the first touch (the point on the opponent's body; the epee itself is not a target;
+  touches by both at almost the same moment are a double) or after a few seconds without one, and takes its fencing time
+  from the bout clock.
+- The first to 15 touches wins. After 9 minutes of fencing time the fencer ahead wins; at equal scores one more minute
+  is fenced and the first touch decides, else the fencer with priority (drawn by lot before that minute) wins. A double
+  counts for both, except at 14-14 (not counted) and in the extra minute (the scores stay equal).
+- Unwillingness to fight: a minute of fencing time without a touch gives, the first time, both fencers a P-red card (a
+  penalty touch each), the second time the lower score a P-black card, who loses the bout (at equal scores: a seeded
+  lot). No card at 14-14; the minute restarts after every touch, double and penalty touch, not after a phrase without a
+  touch; it does not apply in the extra minute.
+
+## Robot Interface
+### Client
+The `game` command, or the same calls as HTTP with JSON at `http://localhost:8000/<SEAT>/` (your seat is `$SEAT`):
 
 | `game` command | HTTP | |
 | --- | --- | --- |
-| `game spec` | `GET /spec` | the actions (types, fields, ranges), the cameras with their intrinsics, the rule constants |
+| `game spec` | `GET /spec` | the actions (types, fields, ranges), the cameras (pose, field of view, size, `focal_px`, `principal_point_px`), the world frame, the rule constants, the phrase table |
 | `game status` | `GET /status` | the current state, no image |
 | `game start` | `POST /start {}` | you are ready; the match begins when every seat has started |
-| `game wait` | `POST /wait {"timeout_s": 60}` | block until it is your turn (or the match is over) |
+| `game wait` | `POST /wait {"timeout_s": 60}` | blocks until it is your turn (or the match is over) |
 | `game observe` | `POST /observe {}` | the state and the camera images (one PNG of tiles: `observation.tiles`) |
-| `game act JSON` | `POST /act JSON` | one action |
-| `game phrase INTENTION` | `POST /act {"type":"phrase", ...}` | one action (`game spec` lists the fields and ranges) |
-| `game ready "WHY" "PLAN"` | `POST /ready {"why":"...","plan":"..."}` | your review after each of your actions |
+| `game act JSON` | `POST /act JSON` | any action |
+| `game phrase INTENTION` | `POST /act {"type": "phrase", ...}` | your intention for the next phrase (`game spec` lists the fields) |
+| `game ready "WHY" "PLAN"` | `POST /ready {"why": "...", "plan": "..."}` | your review |
 
-Errors: 400 = an invalid action (nothing happens), 409 = not now (not your turn, or a review is due), 429 = one
-action in flight, or more than 20 requests per second or 4 open requests from your seat (empty body: retry more slowly).
+Errors: 400 = an invalid action (nothing happens), 409 = not now (not your turn, or a review is due), 429 = one action
+in flight (sent before the previous one returned), or more than 20 requests per second or 4 open requests from your seat
+(empty body: retry more slowly).
 
-## Rules
-- two Unitree G1 humanoids (the robot library's, NVIDIA's SONIC whole-body policy on the legs, waist and free arm, the point skill on the sword arm) holding real epees fence one FIE direct-elimination bout (15 touches or 9 minutes of fencing time, no draws; unwillingness to fight, FIE t.124) phrase by phrase: every phrase starts on guard 1.95 m apart, both fencers choose one of nine tactical intentions (lunge, low lunge, point in line, reactive line, stop-hit, counter-attack, delayed lunge, retreat, draw), each starts after a random 0-50 ms, and the phrase is played out as it was measured in MuJoCo (2916 phrases: every pair of intentions and delays); format bout: you against a scripted fencer that reads your choices (levels 1-2, `game spec` opponent), format duel: two players choosing at the same time.
-- `bout`: one FIE direct-elimination bout (t.39-t.40): the first to 15 touches wins; 9 minutes of fencing time (one period); at time the fencer ahead wins; at equal scores one more minute for a deciding touch with priority drawn by lot before it (seeded), the priority holder winning if still equal; a double touch counts for both except at 14-14 (not counted); in the extra minute a double leaves the scores equal. Unwillingness to fight (t.124): one minute of fencing time without a touch: the first time both fencers get a P-red card, a penalty touch each; the second time the fencer with the lower score gets the P-black card and loses the bout (at equal scores: the one who loses a lot, seeded); no card at 14-14; the minute restarts after every touch, double, annulled double and penalty touch, not after a phrase without a touch; it does not apply in the extra minute (observation `passivity`)
-- `phrase`: every phrase starts with both fencers on guard 1.95 m apart; each fencer has chosen one intention (`game spec` intentions) and starts it after 0, 10, 20, 30, 40 or 50 ms (each equally likely, drawn for each fencer and phrase from the seed, after both have chosen); the phrase ends at the first touch (the apparatus: the point's force along the blade above 7.35 N for 2 ms on the opponent's body; the other's touch within 45 ms is a double) or after 3 s without one; it takes its fencing time from the bout clock (a clock that ends during a phrase ends it without a touch, t.44). The phrases were measured in MuJoCo (D1, D8); `game spec` phrase_table gives, for every pair of intentions, how many of the 72 equally likely phrases (36 pairs of delays x both ends of the piste) end with a touch for you, for the opponent, a double or none
-- `duel`: both players choose their intention for the next phrase; the first player's choice is kept hidden from the other until the phrase is fenced
-- `observation`: the state: the score, the phrase number, the fencing time and the time left, the extra minute and the priority, the passivity minute and the P-cards, and every phrase so far (your intention and the opponent's, both start delays, the result, its fencing time, the score after it, cards); the image: 2 rows (side camera beside the piste, top camera above it) x 2 columns (the last phrase half-way and at its end) of 800 x 360 tiles, your robot red, the opponent blue, the points yellow
-- `scripted_opponent`: format bout: the computer fencer chooses its intention before each phrase from what it has seen of the bout (both fencers' intentions and the results), never from your choice for this phrase; it knows the phrase table. Level 1 reads you with a few simple models of a player (repeats, answers, copies, plays what just won, goes round the menu) but mostly keeps a slow habit (the best answer to your whole-bout mix); level 2 predicts your next intention from your patterns, also models how you read it, answers what it expects, and now and then plays the table's equilibrium mix
-- Winner: the first to 15 touches wins (FIE t.40.1); a second minute without a touch (unwillingness to fight, FIE t.124) loses the bout for the fencer with the lower score, at equal scores for the one who loses a lot (seeded); at the end of the 9 minutes the fencer ahead wins; at equal scores one more minute is fenced and the first touch decides; if the scores are still equal after it, the fencer with priority, drawn by lot (seeded) before the extra minute, wins (FIE t.40.3). There are no draws.
-- Deviation D1 (rulebook t.22, t.28-t.31 (the bout's phrases and footwork)): the bout is fenced phrase by phrase: every phrase starts with both fencers on guard 1.95 m apart (pelvis to pelvis), each fencer chooses one of nine intentions (`game spec` intentions) executed by fixed skills on the robot, each starts its intention after 0, 10, ... or 50 ms (drawn per phrase), and the phrase ends at the first touch or after 3 s without one; distance, footwork between phrases and the length of the piste are not part of the bout (the screening found the robots' footwork too slow for a bout over the piste: docs/screening/fencing.md)
-- Deviation D2 (rulebook t.91, m.19, Material Rules Annexe B): the robot's whole structure is the target (t.91: the whole body), its epee (guard, blade, grip) is not; the apparatus measures the force on the point along the blade (> 7.35 N for >= 2 ms, three consecutive 1 ms samples; lockout 45 ms, inside the 40-50 ms tolerance)
-- Deviation D4 (rulebook t.39, t.40): the 9 minutes of fencing time are one period (no one-minute rests); every phrase takes its measured fencing time (to the halt, 3 s without a touch)
-- Deviation D5 (rulebook t.38.1.b): at 14-14 a double touch is not counted (the pool bout's rule at 4-4 applied to the 15-touch bout; the 2026 rules have no clause for 14-14 in direct elimination)
-- Deviation D8 (rulebook -): the fencer is the robot library's Unitree G1 (bodies/unitree_g1) with the epee on its right wrist mount, its legs, waist and free arm on NVIDIA's SONIC whole-body policy (tracking our en garde, step and lunge motions), its sword arm on the point skill; a lunge from guard covers about 0.25 m in 0.4 s, so the phrases are fenced from 1.95 m, where a lunge reaches the chest; you command it by intentions, not by motions
-- Deviation D9 (rulebook t.124): unwillingness to fight as the FIE applies it to direct-elimination bouts (t.124.1): one minute of fencing time without a hit -> 'Halt!'; the first time a P-red card to both fencers, a penalty hit each; the second time the P-black card to the fencer with the lower score, who loses the bout, at equal scores to the fencer who loses a seeded lot (t.124.1.b.i: lots for fencers not in the FIE ranking); no P-card at 14-14 (t.124.3.a): the minute restarts; the minute restarts after each hit, double, annulled double and penalty hit (t.124.3.d), not after a phrase without a touch; t.124 does not apply in the extra minute (t.124.3.f)
-- Deviation D11 (rulebook -): the two ends of the piste are not exactly alike in the simulation (the same phrase fenced from the other end ends differently in 205 of the 1431 pairs of mirrored phrases, about one in seven), so each phrase draws the end each fencer fences from, with probability 1/2 each: both fencers meet the same chances
+### Actions
+- `phrase`: your intention for the next phrase, one of the nine (`game phrase INTENTION`, or `game act` with
+  `{"type": "phrase", ...}`; `game spec` lists the intentions and the fields).
 
-## Geometry and physics
-Everything you need is in `game spec`: the world frame, the release point, the cameras (pose, field of view, size,
-`focal_px`, `principal_point_px`; pinhole: u = cx + f * x_right / depth, v = cy - f * y_up / depth) and the
-execution scatter. The physics engine is the phrases: MuJoCo 3.3.7 (1 ms physics steps, 10 ms control steps), two Unitree G1 of the robot library (bodies/unitree_g1, 29 DOF; Unitree's motor torque-speed curves through the library's output stage) with epees, robot x robot, blade x body and blade x blade contacts (bodies/contacts.py), NVIDIA SONIC (GR00T-WholeBodyControl b042411) on the legs, waist and free arm, the point skill on the sword arm, fencing-6's apparatus and phrase referee; each of the 2916 phrases measured once in that world (it is deterministic: 2799 earlier measurements of 1953 of the phrases all ended as in that run, with the same result at the same step) and replayed from sports/fencing/phrases/table.json.
+### Observations
+- The state: the score, the phrase number, the fencing time and the time left, the extra minute and the priority, the
+  passivity minute and the cards, and every phrase so far (both intentions, both start delays, the result, its fencing
+  time, the score after it, cards).
+- The image: 2 rows (a side camera beside the piste, a top camera above it) × 2 columns (the last phrase half-way and at
+  its end) of 800 × 360 tiles; your robot red, the opponent blue, the points yellow. Pinhole cameras (`game spec` gives
+  each one's pose, field of view, size, `focal_px` and `principal_point_px`): `u = cx + f · x_right / depth`,
+  `v = cy - f · y_up / depth`.
+- The phrase table (`game spec` `phrase_table`): for every pair of intentions, how many of its 72 equally likely phrases
+  (36 pairs of delays × both ends of the piste) end with a touch for you, for the opponent, a double or none.
 
-## This run: unlimited resets, save and load
-
-This run lets you restart the match and go back to a saved moment. This section overrides anything above that says
-there is one match only, or that a lost match ends your run.
-
-- `POST http://localhost:8000/$SEAT/reset` with `{}`: the match from its start again (the same instance: the world,
-  the opponent, the score and the clocks), as a new episode. You have 1000 resets (`budget.reset` in `/spec`).
-- `POST http://localhost:8000/$SEAT/save_state` with `{}` answers `{"handle": "s1", "step": ...}`: the whole match
-  now (the world, the opponent with its own internal state, the random generators, the score, the game clock) kept in
-  the service; the handle is all you get. `POST http://localhost:8000/$SEAT/load_state` with `{"handle": "s1"}` goes
-  back to it exactly, as a new episode. At most 32 handles are kept (the least recently used is dropped). Saves and
-  loads do not use up resets.
-- After a reset or a load the bout resumes at once, on the turn it had, with your clock as it was. The task's time limit keeps running.
-- A match you lose by its rules (the opponent wins it, a missed review, the clock) is held at its end: `/status` shows
-  phase `over`, and you may still reset or load. A match you win ends the run: no reset, save or load after it.
-- Only the last episode is graded, with the task's rules: from the start, or for a loaded episode the play that led
-  to the saved moment followed by what came after the load. If your session ends during a match, that match is
-  abandoned (success 0); a held loss stays a loss. `final.json` records `resets`, `saves`, `loads` and `episodes`.
-
-## This run: privileged state queries
-
-This run lets you query the simulator's state. This section overrides anything above that says to use only the
-camera images, the service's replies and this document, or that the simulator's state is never given.
+### This run: privileged state queries
+This run lets you query the simulator's state.
 
 - `GET http://localhost:8000/$SEAT/state/entities` lists what you can query:
-  `{"frame": ..., "quaternion_order": ..., "entities": {name: {"kind": ..., "fields": {field: unit}, "note"?}}}`.
-  The kinds are `robot` (your robot, and the opponent's when it is one), `robot_link` (your paddle, racket, rods or
-  blade), `object` (the ball or the shuttle, the opponent's paddle, racket or blade, a scripted opponent that is only
-  drawn), `articulation` (the opponent's rods) and `scene_feature` (the table, net, court, goals, playfield, piste and
-  its lines); `note` says what an entity is. The list is fixed for the run.
+  `{"frame": ..., "quaternion_order": ..., "entities": {name: {"kind": ..., "fields": {field: unit}, "note"?}}}`. The
+  kinds are `robot` (your robot, and the opponent's when it is one), `robot_link` (your paddle, racket, rods or blade),
+  `object` (the ball or the shuttle, the opponent's paddle, racket or blade, a scripted opponent that is only drawn),
+  `articulation` (the opponent's rods) and `scene_feature` (the table, net, court, goals, playfield, piste and its
+  lines); `note` says what an entity is. The list is fixed for the run.
 - `POST http://localhost:8000/$SEAT/state/query` with `{"names": ["ball", ...], "fields": ["pos"]}` answers JSON
-  `{"state": {name: {field: value}}, "control_steps": ..., "sim_time_s": ..., "state_queries": ...}` with the
-  current values from the simulator. `fields` is optional. The fields and their units are in the list: `pos` m,
-  `quat`, `lin_vel` m/s, `ang_vel` rad/s, `joint_pos` / `joint_vel` / `joint_range` {joint: value}, `size` (the
-  full extents along the body's own axes, m) and `bbox` (its axis-aligned box, `[[x, y, z] min, [x, y, z] max]`, m),
-  all in the frame `frame` names (your own frame, as in the observation). An unknown name or field is a 400 that
-  lists the valid ones.
-- A phrase is fenced at once, inside the act that completes it; between phrases the fencers stand on
-  guard, and a query gives that layout.
-- A query only reads: no control step, the clock neither advances nor pauses (your turn's clock keeps running).
-  It is served until the match is over (409 after). Queries are counted and recorded; they do not change the grading.
+  `{"state": {name: {field: value}}, "control_steps": ..., "sim_time_s": ..., "state_queries": ...}` with the current
+  values from the simulator. `fields` is optional. The fields and their units are in the list: `pos` m, `quat`,
+  `lin_vel` m/s, `ang_vel` rad/s, `joint_pos` / `joint_vel` / `joint_range` {joint: value}, `size` (the full extents
+  along the body's own axes, m) and `bbox` (its axis-aligned box, `[[x, y, z] min, [x, y, z] max]`, m), all in the frame
+  `frame` names (your own frame, as in the observation). An unknown name or field is a 400 that lists the valid ones.
+- A phrase is fenced at once, inside the act that completes it; between phrases the fencers stand on guard, and a query
+  gives that layout.
+- A query only reads: no control step, the clock neither advances nor pauses (your turn's clock keeps running). It is
+  served until the match is over (409 after). Queries are counted and recorded; they do not change the grading.
 - Nothing else changes: no answer holds the score, a point's result or the opponent's plan or strategy.
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+### This run: unlimited resets, save and load
+This run lets you restart the match and go back to a saved moment.
 
-## Resources
-Your container: **2 CPUs**, **4 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
+- `POST http://localhost:8000/$SEAT/reset` with `{}`: the match from its start again (the same instance: the world, the
+  opponent, the score and the clocks), as a new episode. You have 1000 resets (`budget.reset` in `/spec`).
+- `POST http://localhost:8000/$SEAT/save_state` with `{}` answers `{"handle": "s1", "step": ...}`: the whole match now
+  (the world, the opponent with its own internal state, the random generators, the score, the game clock) kept in the
+  service; the handle is all you get. `POST http://localhost:8000/$SEAT/load_state` with `{"handle": "s1"}` goes back to
+  it exactly, as a new episode. At most 32 handles are kept (the least recently used is dropped). Saves and loads do not
+  use up resets.
+- After a reset or a load the bout resumes at once, on the turn it had, with your clock as it was. The task's time limit
+  keeps running.
+- A match you lose by its rules (the opponent wins it, a missed review, the clock) is held at its end: `/status` shows
+  phase `over`, and you may still reset or load. A match you win ends the run: no reset, save or load after it.
+- Only the last episode is graded, with the task's rules: from the start, or for a loaded episode the play that led to
+  the saved moment followed by what came after the load. If your session ends during a match, that match is abandoned
+  (success 0); a held loss stays a loss. `final.json` records `resets`, `saves`, `loads` and `episodes`.
 
-## Time limit
-You have 7200 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+## Others
+- The opponent chooses its intention before each phrase from what it has seen (both fencers' intentions and the
+  results), never from your choice for this phrase; it knows the phrase table, predicts your next intention from your
+  patterns, models how you read it, and now and then plays the table's equilibrium mix.
+- Your container: Python 3.12 with numpy, SciPy and Pillow.
 
-This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and graded on what stands at that moment, as the sections above say. The service does not count this limit for you: the clocks it reports are the game's own. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it (for example Codex's `yield_time_ms`) even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+## Limits
+- Time: 7200 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
+  the end you are stopped without warning and the episode is graded as it stands. Time left:
+  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`); the service's `time_left_s` (in every reply) starts at
+  your first request, so the file is the one to trust. Calls into a long-running process can block for their whole wait
+  time: use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, the simulator's and the benchmark's source included. Do not search for or
+  download a ready-made solution (published or reference solutions, recorded demonstrations, trained policies); trials
+  are reviewed.
+- Resources: 2 CPUs, 4 GiB memory, 1024 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`), no
+  GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap only
+  slows you down); usage: `/run/rcb-limits/usage.json`.
+- Resets: as many as this run allows, with save and load (Robot Interface,
+  `### This run: unlimited resets, save and load`).

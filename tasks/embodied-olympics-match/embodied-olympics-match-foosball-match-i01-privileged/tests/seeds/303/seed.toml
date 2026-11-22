@@ -1,5 +1,6 @@
-# Seed 303 of this match (tests/match_instance.json under this directory: the privileged verifier's frozen settings); the text
-# that names the seed: compose RO_SEED, the privileged instruction, the full-simulator adapter's INSTANCES.
+[[replace]]
+old = "## Task\nTable football on a physical table: you drive the four motorised rods of one team by slide and angle targets. You are\nseat `A` against the scripted level-3 team, seed 7: the same fixed game as the realtime twin\n(`embodied-olympics-match-foosball-match-i01-realtime`), with the same robot, actions, rules, limits and opponent. The\nworld runs at 1/20 of real speed. You have the full simulator to develop with; you hand in a program that plays the\ngame."
+new = "## Task\nTable football on a physical table: you drive the four motorised rods of one team by slide and angle targets. You are\nseat `A` against the scripted level-3 team, seed 303: the same fixed game as the realtime twin\n(`embodied-olympics-match-foosball-match-i01-realtime`), with the same robot, actions, rules, limits and opponent. The\nworld runs at 1/20 of real speed. You have the full simulator to develop with; you hand in a program that plays the\ngame."
 
 [[replace]]
 old = "RO_SEED: \"7\""

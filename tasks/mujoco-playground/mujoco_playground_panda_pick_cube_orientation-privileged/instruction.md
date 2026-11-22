@@ -1,21 +1,27 @@
-# MuJoCo Playground · Panda pick cube with orientation
+# MuJoCo Playground · Panda pick cube with orientation (privileged)
 
-A **Franka Panda** arm stands in front of a **green box** (4 × 4 × 6 cm) on the floor. A **translucent red target box**
-floats above, tilted.
-**Task:** pick up the green box and hold it **at the target, in the target's orientation**. This is MuJoCo Playground's
-`PandaPickCubeOrientation`, run here in plain MuJoCo; the box and target poses are randomized as in Playground, with
-a fixed seed.
+## Task
+A Franka Panda arm (MuJoCo Playground's scene, in MuJoCo). It stands in front of a green box (4 x 4 x 6 cm) on the
+floor; a translucent red target box floats above it, tilted. Pick up the green box and hold it at the target, in the
+target's orientation. The scene is one fixed instance. You have the full simulator to develop with; you hand in a
+trajectory of actuator targets.
 
-## What you hand in
-`/app/output/trajectory.npz` — actuator targets, shape `(T, 8)` (T ≤ 3000), one row per control step (1/50 s), each held
-for 4 physics steps. Record it with the tooling so the layout is right. The verifier replays it from the frozen start
-in a separate sandbox (MuJoCo on CPU is bit-exact). Leave the script that produced it at `/app/output/gen.py`.
+## Goal
+Success: the green box is held at the target, close to the target box's centre and turned to its orientation. What
+counts is how things stand after the last action of your trajectory, replayed from the fixed start: a success reached
+earlier and lost by the end does not count.
 
-## Success
-At the **end of the trajectory** the box's centre is within **2 cm** of the target's centre (`s.target_pos`) and its
-orientation within **15°** of the target's (`s.target_quat_wxyz`, w x y z). `s.check()` computes exactly this.
+Deliverable: `/app/output/trajectory.npz`: actuator targets, shape `(T, 8)` (T at most 3000), one row per control step
+(1/50 s), each held for 4 physics steps; record it with the tooling so the layout is right. It is replayed from the
+frozen start. Leave the script that produced it at `/app/output/gen.py`. Save a valid one early and overwrite it when
+you have a better one.
 
-## Tooling (`/opt/tools/rcb_panda.py`, importable as `rcb_panda`)
+Rules: write your own controller; do not use the benchmark's demonstrations, trained policies or any published solution.
+Only the actuator targets count: changing `s.data` while you develop changes nothing in the replay.
+
+## Robot Interface
+### Session
+`/opt/tools/rcb_panda.py` (importable as `rcb_panda`):
 ```python
 import numpy as np, rcb_panda as rp
 s = rp.Session("/app/instance.json")    # the frozen instance; s.model / s.data are MuJoCo objects
@@ -24,26 +30,34 @@ st = s.state()      # qpos, qvel, targets, gripper_pos, gripper_mat, object_pos,
 s.record_start()
 r = s.step(targets) # (8,) actuator targets for one control step -> the success check fields
 A = s.record_stop(); s.save_trajectory(A)          # -> /app/output/trajectory.npz
-s.replay(A)         # fresh replay from the start (what the verifier does)
+s.replay(A)         # replay from the start, as graded
 s.reset()           # back to the start (as often as you like)
 img = s.render()                                    # RGB (240, 320, 3); s.render_grid() gives four views
 ```
+
+Everything in `s.model` / `s.data` is readable (privileged mode), e.g. for inverse kinematics with `mujoco.mj_jacSite`.
+`s.check()` checks success on the current state.
+
+### Actions
 Actuators: `actuator1..7` = joint position targets (rad) for `joint1..joint7`, `actuator8` = finger opening (0 = closed
 … 0.04 m = open). Limits: `s.lower`, `s.upper`. The site `gripper` sits between the fingertips; the hand approaches
-along the site's z axis and the fingers close along its y axis. Everything in `s.model` / `s.data` is readable
-(privileged mode), e.g. for inverse kinematics with `mujoco.mj_jacSite`.
+along the site's z axis and the fingers close along its y axis.
 
-## Rules
-- Write your own controller; do not use trained policies from MuJoCo Playground or elsewhere.
-- Only the actuator targets count: editing `s.data` while debugging changes nothing in the replay.
+### Observations
+`s.state()`: qpos, qvel, targets, gripper_pos, gripper_mat, object_pos, object_quat_wxyz, target_pos, target_quat_wxyz,
+plus the success check fields.
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
-
-## Resources
-Your container: **4 CPUs**, **5 GiB of memory**, **8192 processes and threads**, **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`) and **one GPU, 6 GiB of its memory**. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
-
-## Time limit
-You have 1800 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
-
-This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+## Limits
+- Time: 1800 s of wall-clock time from the start of your session; everything counts (the simulator's start-up too). At
+  the end you are stopped without warning and only what is in `/app/output/` at that moment is graded. Time left:
+  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`). Calls into a long-running process can block for their
+  whole wait time: use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, the simulator's and the benchmark's source included. Do not search for or
+  download a ready-made solution (published or reference solutions, recorded demonstrations, trained policies); trials
+  are reviewed.
+- Resources: 4 CPUs, 5 GiB memory, 8192 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`),
+  one GPU (6 GiB of its memory). Over a cap a process can be killed (the CPU cap only slows you down); usage:
+  `/run/rcb-limits/usage.json`.
+- Resets: as many as you like (`s.reset()`).
