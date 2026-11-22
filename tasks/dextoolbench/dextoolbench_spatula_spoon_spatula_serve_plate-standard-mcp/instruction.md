@@ -32,7 +32,8 @@ with its top at z = 0.53 m, and the iiwa's base stands at (0, 0.8, 0); no part h
 gripper values).
 
 **This robot** (KUKA iiwa 14 arm with a 22-joint Sharpa HA4 left hand on its flange (DexToolBench scene, MuJoCo): 29
-joint position targets): arm (arm: 7 joints); left_hand (hand: 22 joints). Cameras: `front`, `side`, `top`, `oblique`.
+joint position targets): arm (arm: 7 joints, no end-effector pose); left_hand (hand: 22 joints, no end-effector pose).
+Cameras: `front`, `side`, `top`, `oblique`.
 
 - `describe_robot()`: call it first.
 - `observe(cameras?, depth?, seconds?, save_to?, inline_cameras?)`: images are written as JPEG files under `/app/obs/`
@@ -40,6 +41,10 @@ joint position targets): arm (arm: 7 joints); left_hand (hand: 22 joints). Camer
   intrinsics `K` and pose in the robot base frame, each part's joints, gripper and end-effector pose, and `proprio_now`
   (the robot's own proprioception row; its layout is in the spec file). Open an image with your file-reading tool;
   `inline_cameras` also returns small images in the result.
+- `locate(camera, u, v | pixels, window_px?)`: the 3-D point in the robot base frame that a camera sees at pixel (u, v)
+  of its full-size image (u the column, v the row), or one per pixel of `pixels` [[u, v], ...]: from a new depth image
+  of that camera and its calibration (no time passes). For a camera with depth and a known pose; for any other the error
+  says so.
 - `move_robot(goals, duration_s?)`: one goal per part,
   `{target, position?, quaternion_wxyz?, joint_positions?, gripper?}`; the parts move together and the call returns when
   the motion is done, with `reached` (errors per goal), a `failure` category if a goal was not reached, the state and

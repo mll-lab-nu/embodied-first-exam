@@ -30,7 +30,7 @@ import manifest as mf             # noqa: E402
 import schema as sch              # noqa: E402
 
 MODE = "standard-mcp"
-SERVER_FILES = ("server.py", "rcb_adapter.py", "geom.py", "schema.py", "workspace.py", "schema/tools.v0.json")
+SERVER_FILES = ("server.py", "rcb_adapter.py", "geom.py", "kin.py", "schema.py", "workspace.py", "schema/tools.v0.json")
 SUITE_FILES = ("suites.py",)          # the non-RCB suites' tools, when present
 ORACLE_FILES = ("oracle/rcb_client_mcp.py", "oracle/ro_client_mcp.py", "oracle/sitecustomize.py", "mcp_client.py")
 CLIENT_DIR = "/opt/efe_mcp_client"    # the server's robot client (rcb_adapter.py finds it there); not on PYTHONPATH
@@ -166,6 +166,11 @@ def tool_section(m: dict, task: pathlib.Path) -> str:
              "and end-effector pose, and `proprio_now` (the robot's own proprioception row; its layout is in the spec "
              "file). Open an image with your file-reading tool; `inline_cameras` also returns small images in the "
              "result.")
+    if "locate" in tools:
+        b.append("`locate(camera, u, v | pixels, window_px?)`: the 3-D point in the robot base frame that a camera sees "
+                 "at pixel (u, v) of its full-size image (u the column, v the row), or one per pixel of `pixels` "
+                 "[[u, v], ...]: from a new depth image of that camera and its calibration (no time passes). For a "
+                 "camera with depth and a known pose; for any other the error says so.")
     if "move_robot" in tools:
         b.append("`move_robot(goals, duration_s?)`: one goal per part, `{target, position?, quaternion_wxyz?, "
                  "joint_positions?, gripper?}`" + (" (the base: `{target: \"base\", dx, dy, dyaw}`)" if m.get("base")

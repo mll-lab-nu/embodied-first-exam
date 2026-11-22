@@ -93,7 +93,7 @@ def check(m: dict) -> list[str]:
                     errs.append(f"frame.base.{k}: {_ref_ok(b[k])}")
     for name, P in (m.get("parts") or {}).items():
         where = f"parts.{name}"
-        for sec in ("joints", "ee", "ee_delta", "gripper", "ik"):
+        for sec in ("joints", "ee", "ee_delta", "gripper", "ik", "kin", "joint_delta"):
             if sec in P and not isinstance(P[sec], dict):
                 errs.append(f"{where}.{sec}: an object")
         j = P.get("joints")
@@ -121,6 +121,31 @@ def check(m: dict) -> list[str]:
         ik = P.get("ik")
         if ik and ("frame" not in ik or not j):
             errs.append(f"{where}.ik: frame, and joints to send the solution to")
+        jd = P.get("joint_delta")
+        if jd:
+            if j:
+                errs.append(f"{where}: joints or joint_delta, not both")
+            if "type" not in jd or len(jd.get("cols") or []) != 2 or jd["cols"][0] >= jd["cols"][1]:
+                errs.append(f"{where}.joint_delta: type and cols [first, end)")
+            if not (P.get("state") or {}).get("joints"):
+                errs.append(f"{where}.joint_delta: needs state.joints (the measured angles the changes add to)")
+        K = P.get("kin")
+        if K:
+            js = K.get("joints") or []
+            if not js or any(x.get("type", "revolute") not in ("revolute", "prismatic") or len(x.get("axis") or []) != 3
+                             or len(x.get("point") or []) != 3 for x in js):
+                errs.append(f"{where}.kin.joints: each a revolute or prismatic joint with axis and point")
+            t = K.get("tcp") or {}
+            if len(t.get("position") or []) != 3 or len(t.get("quaternion_wxyz") or []) != 4:
+                errs.append(f"{where}.kin.tcp: position and quaternion_wxyz")
+            if _ref_ok(K.get("state")) or len((K.get("state") or {}).get("names") or js) != len(js):
+                errs.append(f"{where}.kin.state: a reference to the {len(js)} joint values")
+            sol = sum(1 for x in js if x.get("solve"))
+            to = j or jd
+            if not to or to["cols"][1] - to["cols"][0] != sol:
+                errs.append(f"{where}.kin: {sol} solved joints, and joints or joint_delta with as many columns")
+            if not (K.get("spec_arm") or (P.get("state") or {}).get("ee_pose")):
+                errs.append(f"{where}.kin: a check against the robot (state.ee_pose or spec_arm)")
         for k, ref in (P.get("state") or {}).items():
             if k not in ("joints", "gripper", "gripper_opening_m", "ee_pose"):
                 errs.append(f"{where}.state.{k}: unknown (joints, gripper, gripper_opening_m, ee_pose)")
@@ -128,8 +153,8 @@ def check(m: dict) -> list[str]:
                 errs.append(f"{where}.state.{k}: {_ref_ok(ref)}")
         if (e or d or ik) and not (P.get("state") or {}).get("ee_pose") and not e:
             errs.append(f"{where}: an end-effector command needs state.ee_pose (the measured pose)")
-        if not any(P.get(k) for k in ("joints", "gripper", "ee", "ee_delta", "ik")):
-            errs.append(f"{where}: no command (joints, gripper, ee, ee_delta or ik)")
+        if not any(P.get(k) for k in ("joints", "joint_delta", "gripper", "ee", "ee_delta", "ik")):
+            errs.append(f"{where}: no command (joints, joint_delta, gripper, ee, ee_delta or ik)")
     B = m.get("base")
     if B:
         if B.get("mode", "velocity") == "pose":

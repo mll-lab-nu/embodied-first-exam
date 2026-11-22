@@ -162,7 +162,7 @@ MODE_REGISTRY = {
 MCP_MODES = ("standard-mcp",)   # modes whose agent controls the robot through the efe-robot MCP server only
 # environment/efe_mcp/ of an MCP task: these files of embodied_first_exam/standard/mcp/, unchanged, + manifest.json
 EFE_MCP_SOURCE = Path(__file__).resolve().parent.parent / "embodied_first_exam" / "standard" / "mcp"
-EFE_MCP_FILES = ("server.py", "rcb_adapter.py", "geom.py", "schema.py", "workspace.py", "schema/tools.v0.json")
+EFE_MCP_FILES = ("server.py", "rcb_adapter.py", "geom.py", "kin.py", "schema.py", "workspace.py", "schema/tools.v0.json")
 # a suite tool kind; the shell variant's Python client (generated) and the MCP client it is built on: no client for
 # code to call the server in the MCP-only mode (its reference solution keeps its own copy, solution/mcp/)
 EFE_MCP_OPTIONAL = ("suites.py", "efe_robot.py", "mcp_client.py")

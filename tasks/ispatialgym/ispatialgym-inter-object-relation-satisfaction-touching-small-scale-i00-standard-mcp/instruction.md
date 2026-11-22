@@ -27,8 +27,8 @@ own action types exactly as the sections below describe them (their frame, units
 
 **This robot** (Galaxea R1 Pro (iSpatialGym on BEHAVIOR-1K's OmniGibson): holonomic wheeled base, 4-joint torso, two
 7-joint arms with two-finger parallel grippers, head camera on the torso, a camera on each wrist): left (arm: 7 joints,
-end-effector pose, gripper); right (arm: 7 joints, end-effector pose, gripper); torso (torso: 4 joints); base (mobile:
-dx, dy, dyaw). Cameras: `robot_r1:zed_link:Camera:0`, `robot_r1:left_realsense_link:Camera:0`,
+end-effector pose, gripper); right (arm: 7 joints, end-effector pose, gripper); torso (torso: 4 joints, no end-effector
+pose); base (mobile: dx, dy, dyaw). Cameras: `robot_r1:zed_link:Camera:0`, `robot_r1:left_realsense_link:Camera:0`,
 `robot_r1:right_realsense_link:Camera:0`.
 
 - `describe_robot()`: call it first.
@@ -37,6 +37,10 @@ dx, dy, dyaw). Cameras: `robot_r1:zed_link:Camera:0`, `robot_r1:left_realsense_l
   intrinsics `K` and pose in the robot base frame, each part's joints, gripper and end-effector pose, and `proprio_now`
   (the robot's own proprioception row; its layout is in the spec file). Open an image with your file-reading tool;
   `inline_cameras` also returns small images in the result.
+- `locate(camera, u, v | pixels, window_px?)`: the 3-D point in the robot base frame that a camera sees at pixel (u, v)
+  of its full-size image (u the column, v the row), or one per pixel of `pixels` [[u, v], ...]: from a new depth image
+  of that camera and its calibration (no time passes). For a camera with depth and a known pose; for any other the error
+  says so.
 - `move_robot(goals, duration_s?)`: one goal per part,
   `{target, position?, quaternion_wxyz?, joint_positions?, gripper?}` (the base: `{target: "base", dx, dy, dyaw}`); the
   parts move together and the call returns when the motion is done, with `reached` (errors per goal), a `failure`

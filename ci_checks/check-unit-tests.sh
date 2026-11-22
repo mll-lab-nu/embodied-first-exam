@@ -48,10 +48,10 @@ if python3 -c "import numpy, requests" 2>/dev/null; then
            embodied_first_exam/standard/v2_1/selftest.py embodied_first_exam/standard/frames_selftest.py \
            embodied_first_exam/standard/agent_end/agent_end_selftest.py; do run 900 "$t"; done
   # the efe-robot MCP server (mode standard-mcp): toy service, the oracle's clients over the tools, the eo-match kind,
-  # the audit of the tools-only rule (scripts/mcp_only.py)
+  # the audit of the tools-only rule (scripts/mcp_only.py), locate and the adapter's kinematics
   for t in embodied_first_exam/standard/mcp/tests/test_toy.py embodied_first_exam/standard/mcp/tests/test_oracle_shim.py \
            embodied_first_exam/standard/mcp/tests/test_eo_match.py embodied_first_exam/standard/mcp/tests/test_adapter_units.py \
-           embodied_first_exam/standard/mcp/tests/test_mcp_audit.py; do
+           embodied_first_exam/standard/mcp/tests/test_mcp_audit.py embodied_first_exam/standard/mcp/tests/test_kin.py; do
     run 300 "$t"; done
 elif [ $all -eq 1 ]; then
   echo "FAIL check-unit-tests.sh --all: numpy and requests are needed for the second tier (pip install numpy requests)"; rc=1

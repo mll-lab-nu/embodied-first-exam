@@ -27,7 +27,8 @@ the way the base faces, +Y to its left, +Z up. Space `native` sends rows in the 
 sections below describe them (their frame, units and gripper values).
 
 **This robot** (TidyBot++ mobile manipulator in a flat: a holonomic base, a Kinova Gen3 7-joint arm and a Robotiq 2F-85
-gripper): arm (arm: gripper). Cameras: `room`, `base`, `wrist`.
+gripper): arm (arm: 7 joints (sent as per-step changes), end-effector pose (inverse kinematics in these tools),
+gripper). Cameras: `room`, `base`, `wrist`.
 
 - `describe_robot()`: call it first.
 - `observe(cameras?, depth?, seconds?, save_to?, inline_cameras?)`: images are written as JPEG files under `/app/obs/`
@@ -35,6 +36,10 @@ gripper): arm (arm: gripper). Cameras: `room`, `base`, `wrist`.
   intrinsics `K` and pose in the robot base frame, each part's joints, gripper and end-effector pose, and `proprio_now`
   (the robot's own proprioception row; its layout is in the spec file). Open an image with your file-reading tool;
   `inline_cameras` also returns small images in the result.
+- `locate(camera, u, v | pixels, window_px?)`: the 3-D point in the robot base frame that a camera sees at pixel (u, v)
+  of its full-size image (u the column, v the row), or one per pixel of `pixels` [[u, v], ...]: from a new depth image
+  of that camera and its calibration (no time passes). For a camera with depth and a known pose; for any other the error
+  says so.
 - `move_robot(goals, duration_s?)`: one goal per part,
   `{target, position?, quaternion_wxyz?, joint_positions?, gripper?}`; the parts move together and the call returns when
   the motion is done, with `reached` (errors per goal), a `failure` category if a goal was not reached, the state and
@@ -59,12 +64,15 @@ arm joint's measured angle, at most 0.1 a step; gripper = 0 open .. 1 closed (a 
 targets are the measured pose plus the row; a row of zeros with the gripper as it is holds the robot. To go forward
 along the current heading yaw (base_odometry.yaw in any result), each row has base_x = s cos(yaw), base_y = s sin(yaw)
 for a step length s (0.02 to 0.05 m a step is 0.2 to 0.5 m/s). At most 100 rows (10 s) a call. A held object can swing
-or slip under large steps: carry with small steps. move_robot opens and closes the gripper (below 0.5 open, 0.5 or more
-closed). Nothing plans a way or avoids anything: the base and the arm can run into furniture and people. The state has
-no hand pose: describe_robot's spec_file gives each arm joint's axis and a point on it (the base frame, every joint at
-0), the hand's position there, the base's outline and the camera poses (base_from_cam, tcp_from_cam, and odom_from_cam
-for a room camera). Time passes only inside calls. Messages that reach the robot come back in `messages` of any result;
-the operator's answer to ask_operator comes back in `operator`. The only free text you send is a signal's note.
+or slip under large steps: carry with small steps. move_robot takes joint positions and end-effector poses for the arm
+and sends them as such steps (an end-effector pose solved to joint positions here, by inverse kinematics on the arm's
+model), and opens and closes the gripper (below 0.5 open, 0.5 or more closed). Nothing plans a way or avoids anything:
+the base and the arm can run into furniture and people. The robot measures no hand pose; the hand pose the tools report
+is the arm model's at the measured joints. describe_robot's spec_file gives each arm joint's axis and a point on it (the
+base frame, every joint at 0), the hand's position there, the base's outline and the camera poses (base_from_cam,
+tcp_from_cam, and odom_from_cam for a room camera). Time passes only inside calls. Messages that reach the robot come
+back in `messages` of any result; the operator's answer to ask_operator comes back in `operator`. The only free text you
+send is a signal's note.
 
 ## The request
 
