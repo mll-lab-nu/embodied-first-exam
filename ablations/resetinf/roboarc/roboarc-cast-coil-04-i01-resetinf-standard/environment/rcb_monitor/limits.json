@@ -1,0 +1,27 @@
+{
+ "agent_timeout_sec": 10800,
+ "caps": {
+  "main": {
+   "cpus": 4.0,
+   "disk_gb": 10.0,
+   "memory_gb": 16.0,
+   "pids": 4096
+  },
+  "sim": {
+   "cpus": 4.0,
+   "gpu_memory_gb": 4.0,
+   "memory_gb": 9.0,
+   "pids": 1024
+  }
+ },
+ "disk_gb": 10.0,
+ "disk_tick_sec": 60,
+ "format": "rcb-limits/2",
+ "gpu": false,
+ "mode": "standard",
+ "scope_services": [
+  "main"
+ ],
+ "task": "roboarc-cast-coil-04-i01-resetinf-standard",
+ "tick_sec": 5
+}

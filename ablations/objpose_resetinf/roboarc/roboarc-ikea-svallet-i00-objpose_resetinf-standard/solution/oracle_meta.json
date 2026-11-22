@@ -1,0 +1,16 @@
+{
+ "K": 1,
+ "interpolate": "hold",
+ "dtype": "float64",
+ "rows": "the privileged twin's solution/trajectory.npz, time-dilated to the joint-speed rule by scripts/ikea_mujoco/standard/std_reference.py",
+ "rows_in": 65529,
+ "rows_out": 69414,
+ "method": "track",
+ "lag_rad": 0.1,
+ "steps_added": 3885,
+ "despiked_rows": 344,
+ "speed": "robot",
+ "max_step_rad": 0.00785397500000018,
+ "max_step_in_limits": 1.0,
+ "steps_over_limit": 0
+}

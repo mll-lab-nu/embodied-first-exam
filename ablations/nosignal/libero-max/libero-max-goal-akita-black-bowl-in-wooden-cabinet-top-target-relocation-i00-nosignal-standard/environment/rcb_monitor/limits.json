@@ -1,0 +1,26 @@
+{
+ "agent_timeout_sec": 1800,
+ "caps": {
+  "main": {
+   "cpus": 3.0,
+   "disk_gb": 10.0,
+   "memory_gb": 10.0,
+   "pids": 1024
+  },
+  "sim": {
+   "cpus": 3.0,
+   "memory_gb": 6.0,
+   "pids": 1024
+  }
+ },
+ "disk_gb": 10.0,
+ "disk_tick_sec": 60,
+ "format": "rcb-limits/2",
+ "gpu": false,
+ "mode": "standard",
+ "scope_services": [
+  "main"
+ ],
+ "task": "libero-max-goal-akita-black-bowl-in-wooden-cabinet-top-target-relocation-i00-nosignal-standard",
+ "tick_sec": 5
+}

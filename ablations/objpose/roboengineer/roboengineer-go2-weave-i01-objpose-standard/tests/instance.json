@@ -1,0 +1,663 @@
+{
+  "bank": {
+    "adaptation": [
+      {
+        "episode_seed": 11000,
+        "plant_seed": 11100,
+        "task": "weave"
+      },
+      {
+        "episode_seed": 11001,
+        "plant_seed": 11100,
+        "task": "weave"
+      },
+      {
+        "episode_seed": 11002,
+        "plant_seed": 11100,
+        "task": "weave"
+      }
+    ],
+    "held_out": [
+      {
+        "episode_seed": 11300,
+        "plant_seed": 11100,
+        "task": "weave"
+      },
+      {
+        "episode_seed": 11301,
+        "plant_seed": 11100,
+        "task": "weave"
+      },
+      {
+        "episode_seed": 11302,
+        "plant_seed": 11100,
+        "task": "weave"
+      },
+      {
+        "episode_seed": 11303,
+        "plant_seed": 11100,
+        "task": "weave"
+      },
+      {
+        "episode_seed": 11304,
+        "plant_seed": 11100,
+        "task": "weave"
+      },
+      {
+        "episode_seed": 11305,
+        "plant_seed": 11100,
+        "task": "weave"
+      },
+      {
+        "episode_seed": 11306,
+        "plant_seed": 11100,
+        "task": "weave"
+      },
+      {
+        "episode_seed": 11307,
+        "plant_seed": 11100,
+        "task": "weave"
+      },
+      {
+        "episode_seed": 11308,
+        "plant_seed": 11100,
+        "task": "weave"
+      },
+      {
+        "episode_seed": 11309,
+        "plant_seed": 11100,
+        "task": "weave"
+      }
+    ]
+  },
+  "evaluation_requirements": {
+    "device_isolation_verified": true,
+    "gpu_devices": [],
+    "mujoco_version": "3.5.0",
+    "physics": "mujoco-cpu",
+    "policy_inference": "numpy-cpu",
+    "render_backend": "osmesa"
+  },
+  "family": "go2",
+  "index": 1,
+  "name": "go2-weave",
+  "public": {
+    "adaptation_cases": 3,
+    "bounds": {
+      "attitude_gain": [
+        0.0,
+        2.5
+      ],
+      "crouch_height": [
+        0.16,
+        0.28
+      ],
+      "extend_height": [
+        0.3,
+        0.42
+      ],
+      "flight_time": [
+        0.1,
+        0.7
+      ],
+      "height": [
+        0.2,
+        0.36
+      ],
+      "jump_forward": [
+        0.0,
+        2.5
+      ],
+      "jump_yaw": [
+        0.0,
+        4.0
+      ],
+      "landing_height": [
+        0.22,
+        0.35
+      ],
+      "lateral_gain": [
+        0.3,
+        1.5
+      ],
+      "period": [
+        0.25,
+        1.2
+      ],
+      "push_duration": [
+        0.08,
+        0.35
+      ],
+      "push_gain": [
+        0.0,
+        5.0
+      ],
+      "push_pd_scale": [
+        0.0,
+        1.0
+      ],
+      "rate_gain": [
+        0.0,
+        0.3
+      ],
+      "stance_width": [
+        0.09,
+        0.18
+      ],
+      "stride_gain": [
+        0.0,
+        2.0
+      ],
+      "support": [
+        0.0,
+        2.0
+      ],
+      "swing_height": [
+        0.015,
+        0.13
+      ],
+      "yaw_gain": [
+        0.0,
+        2.0
+      ]
+    },
+    "channels": [
+      "FL_hip_joint",
+      "FL_thigh_joint",
+      "FL_calf_joint",
+      "FR_hip_joint",
+      "FR_thigh_joint",
+      "FR_calf_joint",
+      "RL_hip_joint",
+      "RL_thigh_joint",
+      "RL_calf_joint",
+      "RR_hip_joint",
+      "RR_thigh_joint",
+      "RR_calf_joint",
+      "dq_FL_hip_joint",
+      "dq_FL_thigh_joint",
+      "dq_FL_calf_joint",
+      "dq_FR_hip_joint",
+      "dq_FR_thigh_joint",
+      "dq_FR_calf_joint",
+      "dq_RL_hip_joint",
+      "dq_RL_thigh_joint",
+      "dq_RL_calf_joint",
+      "dq_RR_hip_joint",
+      "dq_RR_thigh_joint",
+      "dq_RR_calf_joint",
+      "imu_roll",
+      "imu_pitch",
+      "imu_yaw",
+      "gyro_x",
+      "gyro_y",
+      "gyro_z",
+      "command_vx",
+      "command_vy",
+      "command_yaw_rate",
+      "command_roll",
+      "command_pitch",
+      "command_jump",
+      "command_yaw"
+    ],
+    "default_policy": {
+      "enabled": true,
+      "feedback": [
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      ],
+      "joint_bias": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "kd": [
+        1.4,
+        1.4,
+        1.4,
+        1.4,
+        1.4,
+        1.4,
+        1.4,
+        1.4,
+        1.4,
+        1.4,
+        1.4,
+        1.4
+      ],
+      "kp": [
+        45.0,
+        45.0,
+        45.0,
+        45.0,
+        45.0,
+        45.0,
+        45.0,
+        45.0,
+        45.0,
+        45.0,
+        45.0,
+        45.0
+      ],
+      "parameters": {
+        "attitude_gain": 0.5,
+        "crouch_height": 0.2,
+        "extend_height": 0.4,
+        "flight_time": 0.35,
+        "height": 0.3,
+        "jump_forward": 1.0,
+        "jump_yaw": 1.0,
+        "landing_height": 0.28,
+        "lateral_gain": 1.0,
+        "period": 0.5,
+        "push_duration": 0.16,
+        "push_gain": 2.8,
+        "push_pd_scale": 0.25,
+        "rate_gain": 0.04,
+        "stance_width": 0.12,
+        "stride_gain": 1.0,
+        "support": 1.0,
+        "swing_height": 0.06,
+        "yaw_gain": 1.0
+      },
+      "schema": "go2-controller/1",
+      "trajectory": [
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    "evaluation_backend": "native MuJoCo CPU / NumPy CPU / OSMesa software rendering",
+    "feedback": "37 noisy proprioceptive/public-command channels and sampled images; no global position, velocity, contact flags, scores, hidden parameters or seeds.",
+    "goal": "Execute a predeclared body velocity command schedule to pass four alternating poles without contact; no global-position feedback.",
+    "held_out_cases": 10,
+    "image_interval_s": 1.0,
+    "limitations": "A simulated port of published quadruped performance tasks, not a hardware calibration; MuJoCo contacts differ from other simulators.",
+    "max_rounds": 3,
+    "name": "go2-weave",
+    "policy_abi": "go2-controller/1 bounded JSON; validated numeric parameters, 17x12 offsets and 12x6 feedback gains",
+    "protocol": "eai-policy/1.1",
+    "schema": "control-transfer/1",
+    "score": "Success requires four ordered alternating crossings, clearance >=0.16 m, no pole/body-ground collision, final x beyond last pole +0.35 m; score combines crossing fraction and tracking quality, unsuccessful capped at 49.",
+    "training_backend": "nominal MuJoCo CPU; GPU training may export the same bounded numeric artifact",
+    "units": [
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad/s",
+      "rad/s",
+      "rad/s",
+      "rad/s",
+      "rad/s",
+      "rad/s",
+      "rad/s",
+      "rad/s",
+      "rad/s",
+      "rad/s",
+      "rad/s",
+      "rad/s",
+      "rad",
+      "rad",
+      "rad",
+      "rad/s",
+      "rad/s",
+      "rad/s",
+      "m/s",
+      "m/s",
+      "rad/s",
+      "rad",
+      "rad",
+      "m",
+      "rad"
+    ]
+  },
+  "schema": "control-transfer-instance/2",
+  "transfer_track": "same-plant"
+}

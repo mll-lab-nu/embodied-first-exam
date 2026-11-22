@@ -1,0 +1,7 @@
+{
+ "preset": "puzzle.stack_blocks.g1.pink_ik",
+ "grader": "grader/stack_blocks.py",
+ "title": "Stack the blocks (Unitree G1, fixed pelvis, Pink IK)",
+ "text": "4 coloured wooden blocks (45 mm cubes) lie scattered flat on a work table, beside a marked square pad. Goal: stack all 4 blocks into a single upright tower centred on the pad — one block squarely on top of the next, faces level, so the finished tower stands 4 blocks high and stays standing. A block placed off-centre enough to overhang, set down crooked, or left off the pad does not count toward the tower.",
+ "success": "Success, exactly: the four 45 mm blocks form one tower on the dark square pad with exactly one block in each of the four levels: every block's centre is within 30 mm horizontally of the pad centre, its centre height is within 20 mm of 0.7225 m + 0.045 m x its level (levels 0-3, i.e. 0.7225 / 0.7675 / 0.8125 / 0.8575 m; table top 0.70 m), one of its faces is level within 25 deg (some cube axis within 25 deg of vertical), and every block moves slower than 0.05 m/s. Not true at the start (blocks scattered flat behind the pad)."
+}

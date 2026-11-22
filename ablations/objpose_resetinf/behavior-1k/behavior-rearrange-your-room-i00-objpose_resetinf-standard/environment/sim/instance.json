@@ -1,0 +1,183 @@
+{
+ "task": "rearrange_your_room",
+ "challenge_task": "rearrange_your_room",
+ "instance_id": 301,
+ "mode": "public_test",
+ "text": "Rearrange the bedroom. Move the tissue dispenser from the armchair onto one of the stands, and put the two pillows that lie on the floor onto the two beds, one pillow on each bed.",
+ "robot_config": "r1pro_primitives_eval.yaml",
+ "robot_config_sha": "d9d0c8bceea2",
+ "state_sha": "86893d873e40931f",
+ "action_dim": 25,
+ "challenge_max_steps": 19282,
+ "objects": {
+  "stand.n.04_2": {
+   "category": "nightstand",
+   "position": [
+    -1.9692,
+    0.8218,
+    0.222
+   ],
+   "orientation_xyzw": [
+    1.0,
+    -0.0002,
+    -0.0023,
+    0.0
+   ]
+  },
+  "armchair.n.01_1": {
+   "category": "armchair",
+   "position": [
+    1.6293,
+    -4.4355,
+    0.3667
+   ],
+   "orientation_xyzw": [
+    0.0007,
+    0.0005,
+    0.9238,
+    0.3828
+   ]
+  },
+  "tissue_dispenser.n.01_1": {
+   "category": "tissue_dispenser",
+   "position": [
+    1.6571,
+    -4.4194,
+    0.4827
+   ],
+   "orientation_xyzw": [
+    0.0116,
+    0.0558,
+    -0.5472,
+    0.8351
+   ]
+  },
+  "floor.n.01_2": {
+   "category": "floors",
+   "position": [
+    -0.5485,
+    4.1614,
+    -0.1399
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  },
+  "bed.n.01_1": {
+   "category": "bed",
+   "position": [
+    -1.2495,
+    -0.2894,
+    0.1796
+   ],
+   "orientation_xyzw": [
+    -0.003,
+    -0.0022,
+    -0.0,
+    1.0
+   ]
+  },
+  "stand.n.04_1": {
+   "category": "stand",
+   "position": [
+    2.1182,
+    -0.6915,
+    0.158
+   ],
+   "orientation_xyzw": [
+    0.0,
+    -0.0,
+    1.0,
+    -0.0
+   ]
+  },
+  "pillow.n.01_1": {
+   "category": "pillow",
+   "position": [
+    -1.1547,
+    1.1216,
+    0.0342
+   ],
+   "orientation_xyzw": [
+    0.0,
+    -0.0,
+    0.8872,
+    0.4615
+   ]
+  },
+  "stand.n.04_3": {
+   "category": "nightstand",
+   "position": [
+    -1.9692,
+    -3.6587,
+    0.222
+   ],
+   "orientation_xyzw": [
+    1.0,
+    -0.0002,
+    -0.0023,
+    0.0
+   ]
+  },
+  "stand.n.04_4": {
+   "category": "nightstand",
+   "position": [
+    -1.9692,
+    -1.4157,
+    0.222
+   ],
+   "orientation_xyzw": [
+    1.0,
+    -0.0002,
+    -0.0023,
+    0.0
+   ]
+  },
+  "bed.n.01_2": {
+   "category": "bed",
+   "position": [
+    -1.2495,
+    -2.5404,
+    0.1796
+   ],
+   "orientation_xyzw": [
+    -0.003,
+    -0.0022,
+    -0.0,
+    1.0
+   ]
+  },
+  "floor.n.01_1": {
+   "category": "floors",
+   "position": [
+    -0.0118,
+    -1.7363,
+    -0.1401
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  },
+  "pillow.n.01_2": {
+   "category": "pillow",
+   "position": [
+    0.7805,
+    -0.1719,
+    0.0342
+   ],
+   "orientation_xyzw": [
+    0.0,
+    -0.0,
+    0.9999,
+    -0.01
+   ]
+  }
+ },
+ "omnigibson_version": "3.9.2"
+}

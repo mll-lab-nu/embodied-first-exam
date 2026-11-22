@@ -1,0 +1,28 @@
+{
+ "agent_timeout_sec": 14400,
+ "caps": {
+  "main": {
+   "cpus": 4.0,
+   "disk_gb": 10.0,
+   "gpu_memory_gb": 20.0,
+   "memory_gb": 12.0,
+   "pids": 1024
+  },
+  "sim": {
+   "cpus": 4.0,
+   "memory_gb": 6.0,
+   "pids": 1024
+  }
+ },
+ "disk_gb": 10.0,
+ "disk_tick_sec": 60,
+ "format": "rcb-limits/2",
+ "gpu": true,
+ "gpu_memory_gb": 20.0,
+ "mode": "standard",
+ "scope_services": [
+  "main"
+ ],
+ "task": "roboengineer-g1-terrain-walk-i01-resetinf-standard",
+ "tick_sec": 5
+}

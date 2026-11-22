@@ -1,0 +1,113 @@
+{
+ "task": "rearranging_kitchen_furniture",
+ "challenge_task": "rearranging_kitchen_furniture",
+ "instance_id": 301,
+ "mode": "public_test",
+ "text": "Put the toaster, the food processor and the French press, which stand on the kitchen countertop, away into one kitchen cabinet, and close that cabinet.",
+ "robot_config": "r1pro_primitives_eval.yaml",
+ "robot_config_sha": "d9d0c8bceea2",
+ "state_sha": "1d635bde162e7af2",
+ "action_dim": 25,
+ "challenge_max_steps": 13414,
+ "objects": {
+  "countertop.n.01_1": {
+   "category": "bar",
+   "position": [
+    6.748,
+    -0.7066,
+    0.4014
+   ],
+   "orientation_xyzw": [
+    0.0,
+    -0.0,
+    0.7071,
+    0.7071
+   ]
+  },
+  "cabinet.n.01_1": {
+   "category": "top_cabinet",
+   "position": [
+    8.3042,
+    -0.373,
+    1.8874
+   ],
+   "orientation_xyzw": [
+    0.0,
+    -0.0,
+    1.0,
+    0.0
+   ]
+  },
+  "cabinet.n.01_2": {
+   "category": "top_cabinet",
+   "position": [
+    8.3043,
+    0.8304,
+    1.8874
+   ],
+   "orientation_xyzw": [
+    -0.0,
+    -0.0,
+    1.0,
+    0.0
+   ]
+  },
+  "french_press.n.01_1": {
+   "category": "french_press",
+   "position": [
+    7.4474,
+    -0.6362,
+    1.026
+   ],
+   "orientation_xyzw": [
+    0.0,
+    -0.0,
+    -0.0155,
+    0.9999
+   ]
+  },
+  "floor.n.01_1": {
+   "category": "floors",
+   "position": [
+    4.8314,
+    1.1399,
+    -0.15
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  },
+  "toaster.n.02_1": {
+   "category": "toaster",
+   "position": [
+    7.5989,
+    -0.478,
+    0.9811
+   ],
+   "orientation_xyzw": [
+    -0.0001,
+    -0.0001,
+    0.9845,
+    -0.1752
+   ]
+  },
+  "food_processor.n.01_1": {
+   "category": "food_processor",
+   "position": [
+    7.6705,
+    -0.7001,
+    0.9916
+   ],
+   "orientation_xyzw": [
+    0.0002,
+    -0.0006,
+    0.8798,
+    -0.4754
+   ]
+  }
+ },
+ "omnigibson_version": "3.9.2"
+}

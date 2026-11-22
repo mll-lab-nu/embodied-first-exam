@@ -1,0 +1,82 @@
+schema_version = "1.3"
+artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, 
+  { source = "/data/final.json", service = "sim" },
+  { source = "/data/episode.jsonl", service = "sim" },
+  { source = "/data/trajectory.npz", service = "sim" },
+  { source = "/data/trajectory_live.f64", service = "sim" },
+  { source = "/data/referee.json", service = "sim" },
+  { source = "/data/replay.mp4", service = "sim" },
+  { source = "/data/replay.last.png", service = "sim" },
+  { source = "/data/trajectory.first.npz", service = "sim" },
+  { source = "/data/replay.first.mp4", service = "sim" },
+  { source = "/data/replay.first.last.png", service = "sim" },
+  { source = "/data/calls/", service = "sim" },
+  { source = "/data/startups.jsonl", service = "sim" },
+  { source = "/data/crash.log", service = "sim" },
+  "/app/output/",
+]
+
+[task]
+name = "embodied-first-exam/embodied-olympics-fun-trampoline-i00-nosignal-standard"
+description = "STANDARD MODE (robot as a service, eai-standard/2.1): Embodied Olympics trampoline on the same frozen instance as embodied-olympics-fun-trampoline-i00-privileged. On the trampoline, bounce as you like, then do one tuck jump, land on both feet, stop the bounce (one more straight out-bounce at most) and stand still. The agent only gets a client: the robot's two head cameras (depth on one), its joint sensors and IMUs, the venue's fixed camera, and action chunks (walking, running, joint targets, Unitree LowCmd, the hands' grip). 5 resets, the last attempt graded; no object state, no referee state during an attempt. The sim service records the attempt and grades it live with the family's referee (no grading replay)."
+keywords = ["robotics", "embodied-olympics", "sports", "mujoco", "unitree-g1", "humanoid", "standard-mode", "trajectory", "trampoline"]
+
+[metadata]
+task_type = "trajectory"
+simulator = "mujoco"
+robot = "unitree-g1"
+family = "trampoline"
+category = "parkour-apparatus-balance"
+dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
+protocol = "eai-standard/2.1"
+instance_seed = 0
+expert_time_estimate_hours = 10.0
+oracle = "full"
+oracle_evidence = "Reference: a scripted G1 tuck jump (a balanced crouch, a lowcmd push on the sprung bed, the tuck held mid-flight, a squat landing that sinks as the bed recoils, one straight out-bounce, an ankle-strategy stand-up, 3 s still), chosen from 12 settings: 0.457 s of flight, a centre-of-mass rise of 0.32 m. The bed passes the FIG IV TRA 1 impact test in simulation (60 kg sphere from 4.00 m: deflection 0.988 m, in 940-1010 mm; rebound 3.486 m, in 3410-3660 mm). Negatives: nop, a tuck without a jump, pike first, a bent out-bounce, a second flight, a fall, an injected roll spin, an injected push onto the padding. The privileged twin's reference rows (755 control steps, success after 7.55 s) streamed through the client."
+
+[verifier]
+timeout_sec = 900.0
+environment_mode = "separate"
+network_mode = "no-network"
+
+# Resources (PROTOCOL §6): seal the monitor's record first.
+[[verifier.collect]]
+service = "rcb_monitor"
+command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
+timeout_sec = 120
+
+# The agent's time is up: stop whatever it left running in its container. Harbor stops that container only after
+# collecting from it (~12 s), and a script still running there would keep driving the robot past the deadline.
+[[verifier.collect]]
+service = "main"
+command = "kill -9 -1 2>/dev/null; exit 0"
+timeout_sec = 30
+
+# Then the episode ends: SIGUSR1 to the service (re-sent every 30 s, in case it was restarting), which grades the live
+# episode (no grading replay). The loops run on the clock, inside timeout_sec: the verdict ("finalized":
+# true, written before any video is rendered) may take until 840 s (the end waits through a crash-recovery resume);
+# then the hook waits for the video, one render pass from the trajectory ("video_pending"), until 870 s -- a video that
+# is not ready by then is lost, the verdict is not.
+[[verifier.collect]]
+service = "sim"
+command = "t0=$(date +%s); while [ ! -f /data/server.pid ] && [ $(( $(date +%s) - t0 )) -lt 120 ]; do sleep 2; done; i=0; while [ $(( $(date +%s) - t0 )) -lt 840 ] && ! grep -q '\"finalized\": true' /data/final.json 2>/dev/null; do [ $((i % 15)) -eq 0 ] && kill -USR1 $(cat /data/server.pid 2>/dev/null) 2>/dev/null; i=$((i + 1)); sleep 2; done; while [ $(( $(date +%s) - t0 )) -lt 870 ] && grep -q '\"video_pending\": true' /data/final.json 2>/dev/null; do sleep 2; done; cat /data/final.json"
+timeout_sec = 900
+
+[agent]
+timeout_sec = 7200.0
+# Egress: open, `network_mode = "public"` below (the author's choice). Embodied Olympics lets the agent search for and download
+# public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md). The agent's
+# container holds no simulator, no referee and no instance.
+network_mode = "public"        # open egress, the task author's choice (docs/protocol/README.md Appendix H.6)
+
+[environment]
+build_timeout_sec = 1800.0
+cpus = 4
+memory_mb = 10240
+storage_mb = 10240
+
+[verifier.environment]
+build_timeout_sec = 600.0
+
+[verifier.env]
+RCB_LIMITS_ENFORCE = "${RCB_LIMITS_ENFORCE:-0}"

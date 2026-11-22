@@ -1,0 +1,8 @@
+{
+ "task": "put_bottles_dustbin",
+ "seed": 28831,
+ "embodiment": "aloha-agilex",
+ "state_sha": "8766c75a74ac",
+ "text": "Put all three bottles into the dustbin that stands on the floor at the robot's left (x = -0.45). Only the left arm can reach the dustbin, so bottles on the right half of the table must be handed over from the right arm to the left arm in the air.",
+ "n_active_joints": 16
+}

@@ -1,0 +1,69 @@
+schema_version = "1.3"
+artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, 
+  { source = "/data/final.json", service = "sim" },
+  { source = "/data/episode.jsonl", service = "sim" },
+  { source = "/data/trajectory.npz", service = "sim" },
+  { source = "/data/replay.mp4", service = "sim" },
+  { source = "/data/server.log", service = "sim" },            # the service's own output (Harbor keeps none)
+  { source = "/data/journal.f64", service = "sim" },           # crash recovery: every executed control step (float64 rows)
+  { source = "/data/startups.jsonl", service = "sim" },        # crash recovery: one line per service start
+  { source = "/data/video.log", service = "sim" },             # the collect hook's render pass, which draws replay.mp4
+  "/app/output/",
+]
+
+[task]
+name = "embodied-first-exam/myosuite-dex-bunny-inspect-i00-nosignal-standard"
+description = "STANDARD MODE (robot as a service, eai-standard/2.2): MyoSuite dex_bunny_inspect (MyoHand, 39 muscles) on the same frozen instance as myosuite-dex-bunny-inspect-i00-privileged: Move the Stanford bunny along MyoDex's recorded inspect (lift it and turn it to look at it) motion: a reference of the object's pose over 99 control steps (1.98 s), from GRAB motion capture (TCDM / MyoDex). The agent only gets a client: cameras (RGB, optional depth, calibration), the body's joints and muscles, actuator command chunks, fingertip kinematics; 10 resets, only the last episode graded; no object state; the sim service records the episode and grades it as it ran (the live episode; nothing is replayed)."
+keywords = ["robotics", "myosuite", "mujoco", "musculoskeletal", "myohand", "code-as-policy", "trajectory", "dex_bunny_inspect", "standard-mode"]
+
+[metadata]
+task_type = "trajectory"
+simulator = "myosuite"            # MyoSuite 2.12.2 on MuJoCo 3.6.0 (CPU)
+robot = "myohand"
+family = "dex_bunny_inspect"
+dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
+protocol = "eai-standard/2.2"
+oracle = "none"
+oracle_evidence = "no positive example yet (two model attempts failed: Claude Code + Claude Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-10-06) and Codex + GPT-6 Luna, effort high, run `codex-gpt6_luna-high`); the task is marked unvalidated (PROTOCOL §2 `validated`); human review in PR #65"
+instance_seed = 0                 # MyoHandStanfordbunnyInspect-v0: seed(0), then reset(seed=0)
+expert_time_estimate_hours = 4.0
+
+[verifier]
+timeout_sec = 600.0
+environment_mode = "separate"
+network_mode = "no-network"
+
+# Resources (PROTOCOL §6): seal the monitor's record first.
+[[verifier.collect]]
+service = "rcb_monitor"
+command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
+timeout_sec = 120
+
+# The agent's time is up: stop whatever it left running in its container. Harbor stops that container only after
+# collecting from it (~12 s), and a script still running there would keep driving the robot past the deadline.
+[[verifier.collect]]
+service = "main"
+command = "kill -9 -1 2>/dev/null; exit 0"
+timeout_sec = 30
+
+[[verifier.collect]]
+service = "sim"
+command = "sh /srv/finalize.sh"   # end + dump + exit the service, write the live verdict to final.json, then the video
+timeout_sec = 1800                # the video's one render pass gets what is left (finalize.sh: RCB_COLLECT_BUDGET_S)
+
+[agent]
+timeout_sec = 3600.0
+# The agent reaches the model APIs and the package registries, nothing else (scripts/set_agent_egress.py HOSTS). MyoSuite's
+# trained baselines ship in its PyPI wheel (and a standard-mode agent could rebuild the simulator from it): reachable
+# since 2026-10-11, left to the instruction's honour rule (PROTOCOL §5).
+network_mode = "allowlist"
+allowed_hosts = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com", "*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com", "pypi.org", "files.pythonhosted.org", "deb.debian.org", "security.debian.org", "archive.ubuntu.com", "security.ubuntu.com", "snapshot.ubuntu.com"]
+
+[environment]
+build_timeout_sec = 1800.0
+cpus = 4
+memory_mb = 7168
+storage_mb = 10240
+
+[verifier.env]
+RCB_LIMITS_ENFORCE = "${RCB_LIMITS_ENFORCE:-0}"

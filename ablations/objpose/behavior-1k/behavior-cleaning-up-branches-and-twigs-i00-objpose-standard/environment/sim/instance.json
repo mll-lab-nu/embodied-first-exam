@@ -1,0 +1,99 @@
+{
+ "task": "cleaning_up_branches_and_twigs",
+ "challenge_task": "cleaning_up_branches_and_twigs",
+ "instance_id": 301,
+ "mode": "public_test",
+ "text": "Clean up the garden. Four branches lie on the ground in the garden, where the recycling bin also stands; put all four inside the recycling bin and leave the bin standing on the ground.",
+ "robot_config": "r1pro_primitives_eval.yaml",
+ "robot_config_sha": "d9d0c8bceea2",
+ "state_sha": "0e5c67333c1b5d4c",
+ "action_dim": 25,
+ "challenge_max_steps": 18790,
+ "objects": {
+  "branch.n.02_1": {
+   "category": "branch",
+   "position": [
+    -9.8419,
+    -2.1448,
+    0.0504
+   ],
+   "orientation_xyzw": [
+    -0.0,
+    0.0,
+    0.9531,
+    -0.3026
+   ]
+  },
+  "branch.n.02_4": {
+   "category": "branch",
+   "position": [
+    -3.9919,
+    -2.637,
+    0.0504
+   ],
+   "orientation_xyzw": [
+    -0.0,
+    0.0,
+    0.6306,
+    0.7761
+   ]
+  },
+  "branch.n.02_2": {
+   "category": "branch",
+   "position": [
+    -15.5772,
+    -1.8339,
+    0.0504
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    -0.4291,
+    0.9033
+   ]
+  },
+  "branch.n.02_3": {
+   "category": "branch",
+   "position": [
+    -0.624,
+    -2.4582,
+    0.0504
+   ],
+   "orientation_xyzw": [
+    -0.0,
+    0.0,
+    0.9805,
+    -0.1965
+   ]
+  },
+  "recycling_bin.n.01_1": {
+   "category": "recycling_bin",
+   "position": [
+    -10.2488,
+    -0.5935,
+    0.4685
+   ],
+   "orientation_xyzw": [
+    -0.0004,
+    -0.0016,
+    0.8746,
+    -0.4848
+   ]
+  },
+  "floor.n.01_1": {
+   "category": "floors",
+   "position": [
+    -8.2314,
+    -1.8533,
+    -0.15
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  }
+ },
+ "omnigibson_version": "3.9.2"
+}

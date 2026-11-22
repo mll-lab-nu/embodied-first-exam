@@ -1,0 +1,27 @@
+{
+ "agent_timeout_sec": 14400,
+ "caps": {
+  "main": {
+   "cpus": 8.0,
+   "disk_gb": 10.0,
+   "memory_gb": 24.0,
+   "pids": 1024
+  },
+  "sim": {
+   "cpus": 8.0,
+   "gpu_memory_gb": 18.0,
+   "memory_gb": 24.0,
+   "pids": 2048
+  }
+ },
+ "disk_gb": 10.0,
+ "disk_tick_sec": 60,
+ "format": "rcb-limits/2",
+ "gpu": false,
+ "mode": "standard",
+ "scope_services": [
+  "main"
+ ],
+ "task": "embodiedswe-puzzle-syringe-bimanual-franka-osc-i00-objpose_resetinf-standard",
+ "tick_sec": 5
+}
