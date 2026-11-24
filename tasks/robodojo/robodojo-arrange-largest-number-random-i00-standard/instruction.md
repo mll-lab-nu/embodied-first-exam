@@ -8,7 +8,7 @@ Nothing is handed in: the service grades the episode when it ends (`## Episode e
 completed before the time limit (`## Time limit`) is up. The time you wait for the service counts: its first
 start in a trial takes ~4-15 min (Client, below).
 
-**Task:** Put the four digit blocks onto the four mats, one on each mat, so that from left to right the row shows the largest possible number. Keep every block flat, face up, and turned the same way it is now. Then bring both arms back to where they started.
+**Task:** Put the four digit blocks on the four mats, one block per mat, so that the row reads the largest possible number from left to right, with each block still flat, face up and turned as it is now. Then bring both arms back to where they started.
 
 RoboDojo's own instruction for this scene: *"Arrange the numbers from left to right to form the largest possible number, and place them on the pad."*
 

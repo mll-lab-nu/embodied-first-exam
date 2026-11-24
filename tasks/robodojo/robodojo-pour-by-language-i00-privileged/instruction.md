@@ -7,7 +7,7 @@ setup on Isaac Sim 5.1 / Isaac Lab, PhysX) via Python. RoboDojo capability dimen
 trajectory as soon as you have one and overwrite it as you improve it. Every Python process that opens a `Session` first
 spends ~3-5 min launching Isaac Sim and building the scene, and that time counts.
 
-**Task:** Follow the spoken sentence and pour each named bottle into the bowl it names, doing the three pours in the order first, second, and third. You do not need to bring the arms back afterwards.
+**Task:** Pour each bottle named in the instruction into the bowl it names, in the order first, second, third.
 
 RoboDojo's own instruction for this scene: *"Pour the liquid from the first violet bottle into the first black bowl, from the second red bottle into the second white bowl, and from the third turquoise bottle into the third brown bowl. Then reset the robot arm."*
 

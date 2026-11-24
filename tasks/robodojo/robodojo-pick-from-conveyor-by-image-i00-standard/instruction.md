@@ -8,7 +8,7 @@ Nothing is handed in: the service grades the episode when it ends (`## Episode e
 completed before the time limit (`## Time limit`) is up. The time you wait for the service counts: its first
 start in a trial takes ~4-15 min (Client, below).
 
-**Task:** Identify, from the photo on the board, which of the four objects on the moving conveyor is the target, pick it up and put it in the basket, and lift the basket (with the target in it) more than 8 cm.
+**Task:** Find which of the four objects on the moving conveyor matches the photo on the board, put that object in the basket, and lift the basket with the object in it about a hand's length.
 
 RoboDojo's own instruction for this scene: *"Lift the basket more than 8 cm, identify the target object on the conveyor according to the image on the board, pick it up, and place it into the basket."*
 

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Identify, from the photo on the board, which of the four objects on the moving conveyor is the target, pick it up and put it in the basket, and lift the basket (with the target in it) more than 8 cm. (RoboDojo's `pick_from_conveyor_by_image`). RoboDojo capability dimension: Open. Instance i00 is RoboDojo's own evaluation layout
+Find which of the four objects on the moving conveyor matches the photo on the board, put that object in the basket, and lift the basket with the object in it about a hand's length. (RoboDojo's `pick_from_conveyor_by_image`). RoboDojo capability dimension: Open. Instance i00 is RoboDojo's own evaluation layout
 `arx_x5/0/pick_from_conveyor_by_image_0.json` (sha256 `b35518107e88e78d`), frozen in `instance.json`. The deliverable is one replayable trajectory of
 RoboDojo's 14-D joint action at 25 Hz (`/app/output/trajectory.npz`), graded by RoboDojo's own reward check for the task,
 with no step cap (RoboDojo's own evaluation gives a policy 700 actions; PROTOCOL §3).

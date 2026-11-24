@@ -7,7 +7,7 @@ setup on Isaac Sim 5.1 / Isaac Lab, PhysX) via Python. RoboDojo capability dimen
 trajectory as soon as you have one and overwrite it as you improve it. Every Python process that opens a `Session` first
 spends ~3-5 min launching Isaac Sim and building the scene, and that time counts.
 
-**Task:** Pick up the named target object from the table and lift it 10 cm.
+**Task:** Pick up the named target object from the table and lift it about a hand's length off the table.
 
 RoboDojo's own instruction for this scene: *"Pick up the mint green scissors by 10 cm."*
 

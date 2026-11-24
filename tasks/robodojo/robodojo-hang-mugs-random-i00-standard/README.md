@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Standard-mode twin of `robodojo-hang-mugs-random-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/hang_mugs_random_0.json`). Hang the three mugs using only the rack arms that point left or right. Hang the red mug by its handle. Hang each of the two pink pumpkin mugs on one of the two left-pointing arms, with its opening facing left along the arm. Then bring both arms back to where they started. (RoboDojo's `hang_mugs_random`). The agent drives the
+Standard-mode twin of `robodojo-hang-mugs-random-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/hang_mugs_random_0.json`). Using only the rack arms that point left or right, hang the red mug by its handle and hang each of the two pink pumpkin mugs on one of the two left-pointing arms with its opening facing left along the arm. Then bring both arms back to where they started. (RoboDojo's `hang_mugs_random`). The agent drives the
 robot only through the eai-standard/2.2 client (the simulator runs in the `sim` sidecar), which owns the scene and records
 the episode as a (T, 14) trajectory of RoboDojo's own joint action at 25 Hz.
 

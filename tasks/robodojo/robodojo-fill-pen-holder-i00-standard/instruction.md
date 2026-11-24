@@ -8,7 +8,7 @@ Nothing is handed in: the service grades the episode when it ends (`## Episode e
 completed before the time limit (`## Time limit`) is up. The time you wait for the service counts: its first
 start in a trial takes ~4-15 min (Client, below).
 
-**Task:** Use one arm to steady the pen holder and the other arm to drop all four pens into it: the white ballpoint writing tip down, and the black-and-gold pen and both markers cap end up. Then leave the holder upright on the table and return the arms home.
+**Task:** Use one arm to steady the pen holder and the other arm to drop all four pens into it: the white ballpoint writing tip down, and the black-and-gold pen and both markers cap end up. Then leave the holder upright on the table and bring both arms back to where they started.
 
 RoboDojo's own instruction for this scene: *"Hold the pen holder with one hand, place all pens into it with the other hand, then put it back down."*
 

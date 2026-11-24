@@ -31,5 +31,5 @@ old = "sha256 `a01c86062db05ce7`"
 new = "sha256 `672f1afe9aaa8ce7`"
 
 [[replace]]
-old = "Line up the five yellow rubber ducks standing upright in one straight row running from left to right. Order them by size with the smallest on the left and the largest on the right. Then bring both arms back to where they started."
-new = "Line up the five nesting dolls standing upright in one straight row running from left to right. Order them by size with the smallest on the left and the largest on the right. Then bring both arms back to where they started."
+old = "Stand the five yellow rubber ducks upright in one straight left-to-right row, ordered by size from the smallest on the left to the largest on the right. Then bring both arms back to where they started."
+new = "Stand the five nesting dolls upright in one straight left-to-right row, ordered by size from the smallest on the left to the largest on the right. Then bring both arms back to where they started."

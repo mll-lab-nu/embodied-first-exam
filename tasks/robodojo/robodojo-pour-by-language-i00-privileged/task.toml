@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/robodojo-pour-by-language-i00-privileged"
-description = "RoboDojo pour_by_language (Open; two ARX X5 arms with parallel grippers, Isaac Sim 5.1 / Isaac Lab): produce one replayable trajectory of RoboDojo's 14-D joint actions. Task: Follow the spoken sentence and pour each named bottle into the bowl it names, doing the three pours in the order first, second, and third. You do not need to bring the arms back afterwards. Frozen scene instance: RoboDojo's own evaluation layout arx_x5/0/pour_by_language_0.json; graded by RoboDojo's own reward check."
+description = "RoboDojo pour_by_language (Open; two ARX X5 arms with parallel grippers, Isaac Sim 5.1 / Isaac Lab): produce one replayable trajectory of RoboDojo's 14-D joint actions. Task: Pour each bottle named in the instruction into the bowl it names, in the order first, second, third. Frozen scene instance: RoboDojo's own evaluation layout arx_x5/0/pour_by_language_0.json; graded by RoboDojo's own reward check."
 keywords = ["robotics", "robodojo", "isaac-lab", "isaac-sim", "bimanual", "arx-x5", "code-as-policy", "trajectory", "privileged"]
 
 [metadata]

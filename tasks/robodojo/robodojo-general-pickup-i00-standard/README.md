@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Standard-mode twin of `robodojo-general-pickup-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/general_pickup_0.json`). Pick up the named target object from the table and lift it 10 cm. (RoboDojo's `general_pickup`). The agent drives the
+Standard-mode twin of `robodojo-general-pickup-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/general_pickup_0.json`). Pick up the named target object from the table and lift it about a hand's length off the table. (RoboDojo's `general_pickup`). The agent drives the
 robot only through the eai-standard/2.2 client (the simulator runs in the `sim` sidecar), which owns the scene and records
 the episode as a (T, 14) trajectory of RoboDojo's own joint action at 25 Hz.
 

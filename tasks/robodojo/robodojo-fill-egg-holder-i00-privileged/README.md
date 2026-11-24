@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Move the four eggs from the egg basket into the egg holder, which is the tray with a lid, and close the lid. Then bring both arms back to where they started. (RoboDojo's `fill_egg_holder`). RoboDojo capability dimension: Long-Horizon. Instance i00 is RoboDojo's own evaluation layout
+Move the four eggs from the egg basket into the egg holder, the tray with a lid, and close its lid. Then bring both arms back to where they started. (RoboDojo's `fill_egg_holder`). RoboDojo capability dimension: Long-Horizon. Instance i00 is RoboDojo's own evaluation layout
 `arx_x5/0/fill_egg_holder_0.json` (sha256 `d8bc6aef3d3fd1fb`), frozen in `instance.json`. The deliverable is one replayable trajectory of
 RoboDojo's 14-D joint action at 25 Hz (`/app/output/trajectory.npz`), graded by RoboDojo's own reward check for the task,
 with no step cap (RoboDojo's own evaluation gives a policy 700 actions; PROTOCOL §3).

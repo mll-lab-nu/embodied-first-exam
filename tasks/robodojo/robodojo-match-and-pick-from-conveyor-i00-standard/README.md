@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Standard-mode twin of `robodojo-match-and-pick-from-conveyor-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/match_and_pick_from_conveyor_0.json`). Watch the first object that appears on the conveyor, remember it, and pick up the identical object when it shows up again (lift it more than 10 cm). (RoboDojo's `match_and_pick_from_conveyor`). The agent drives the
+Standard-mode twin of `robodojo-match-and-pick-from-conveyor-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/match_and_pick_from_conveyor_0.json`). Watch the first object that appears on the conveyor, then pick up the identical object when it shows up again and lift it about a hand's length. (RoboDojo's `match_and_pick_from_conveyor`). The agent drives the
 robot only through the eai-standard/2.2 client (the simulator runs in the `sim` sidecar), which owns the scene and records
 the episode as a (T, 14) trajectory of RoboDojo's own joint action at 25 Hz.
 

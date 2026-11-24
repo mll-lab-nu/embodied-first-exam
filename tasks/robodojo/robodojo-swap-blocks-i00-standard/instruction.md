@@ -8,7 +8,7 @@ Nothing is handed in: the service grades the episode when it ends (`## Episode e
 completed before the time limit (`## Time limit`) is up. The time you wait for the service counts: its first
 start in a trial takes ~4-15 min (Client, below).
 
-**Task:** Swap the places of the two cubes in three moves by using the empty third mat as a parking spot, and press the spring button once after each of the three moves. The button rests slightly sunk and a press from where it rests does not count, so pull its cap up before each press. Finish with the cap pulled up and both arms back where they started.
+**Task:** Swap the two cubes in three moves, using the empty third mat as a parking spot, and after each move pull the spring button's cap up from its slightly sunk rest and press the button once. Then leave the cap pulled up and bring both arms back to where they started.
 
 RoboDojo's own instruction for this scene: *"Swap the two blocks using the empty mat, pressing the button after each move."*
 

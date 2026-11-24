@@ -15,5 +15,5 @@ old = "sha256 `346dfc9c75c87c95`"
 new = "sha256 `777621dcfe32a8d3`"
 
 [[replace]]
-old = "Use one arm to steady the pen holder and the other arm to drop all four pens into it: the white ballpoint writing tip down, and the black-and-gold pen and both markers cap end up. Then leave the holder upright on the table and return the arms home."
-new = "Use one arm to steady the pen holder and the other arm to drop all four pens into it, all cap end up: both black-and-gold pens and both markers. Then leave the holder upright on the table and return the arms home."
+old = "Use one arm to steady the pen holder and the other arm to drop all four pens into it: the white ballpoint writing tip down, and the black-and-gold pen and both markers cap end up. Then leave the holder upright on the table and bring both arms back to where they started."
+new = "Use one arm to steady the pen holder and the other arm to drop all four pens into it, all cap end up: both black-and-gold pens and both markers. Then leave the holder upright on the table and bring both arms back to where they started."

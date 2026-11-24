@@ -7,7 +7,7 @@ setup on Isaac Sim 5.1 / Isaac Lab, PhysX) via Python. RoboDojo capability dimen
 trajectory as soon as you have one and overwrite it as you improve it. Every Python process that opens a `Session` first
 spends ~3-5 min launching Isaac Sim and building the scene, and that time counts.
 
-**Task:** Play tic-tac-toe against the opponent arm. You go first. On each turn, put one of your gold rings on an empty cell, then bring both arms back home and keep them there until the opponent has placed its cross. Repeat this until all nine cells are filled.
+**Task:** Play tic-tac-toe against the opponent arm, moving first: each turn, put one of your gold rings on an empty cell, then bring both arms back to where they started and keep them there until the opponent has placed its cross. Repeat until all nine cells are filled.
 
 RoboDojo's own instruction for this scene: *"Play tic-tac-toe as the first player and fill the board with the opponent."*
 

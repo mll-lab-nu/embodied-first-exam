@@ -7,7 +7,7 @@ setup on Isaac Sim 5.1 / Isaac Lab, PhysX) via Python. RoboDojo capability dimen
 trajectory as soon as you have one and overwrite it as you improve it. Every Python process that opens a `Session` first
 spends ~3-5 min launching Isaac Sim and building the scene, and that time counts.
 
-**Task:** Identify, from the photo on the board, which of the four objects on the moving conveyor is the target, pick it up and put it in the basket, and lift the basket (with the target in it) more than 8 cm.
+**Task:** Find which of the four objects on the moving conveyor matches the photo on the board, put that object in the basket, and lift the basket with the object in it about a hand's length.
 
 RoboDojo's own instruction for this scene: *"Lift the basket more than 8 cm, identify the target object on the conveyor according to the image on the board, pick it up, and place it into the basket."*
 

@@ -14,7 +14,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/robodojo-pour-by-language-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.2): RoboDojo pour_by_language (Open) on the same frozen layout as the privileged task (arx_x5/0/pour_by_language_0.json). Task: Follow the spoken sentence and pour each named bottle into the bowl it names, doing the three pours in the order first, second, and third. You do not need to bring the arms back afterwards. The agent only gets a client: get_obs (RGB, depth + proprioception of both arms), submit (joint_position or ee_pose chunks). No reset, no privileged state; the sim service records the episode as a trajectory and grades the live episode."
+description = "STANDARD MODE (robot as a service, eai-standard/2.2): RoboDojo pour_by_language (Open) on the same frozen layout as the privileged task (arx_x5/0/pour_by_language_0.json). Task: Pour each bottle named in the instruction into the bowl it names, in the order first, second, third. The agent only gets a client: get_obs (RGB, depth + proprioception of both arms), submit (joint_position or ee_pose chunks). No reset, no privileged state; the sim service records the episode as a trajectory and grades the live episode."
 keywords = ["robotics", "robodojo", "isaac-lab", "isaac-sim", "bimanual", "arx-x5", "standard-mode", "trajectory"]
 
 [metadata]

@@ -7,7 +7,7 @@ setup on Isaac Sim 5.1 / Isaac Lab, PhysX) via Python. RoboDojo capability dimen
 trajectory as soon as you have one and overwrite it as you improve it. Every Python process that opens a `Session` first
 spends ~3-5 min launching Isaac Sim and building the scene, and that time counts.
 
-**Task:** Watch the first object that appears on the conveyor, remember it, and pick up the identical object when it shows up again (lift it more than 10 cm).
+**Task:** Watch the first object that appears on the conveyor, then pick up the identical object when it shows up again and lift it about a hand's length.
 
 RoboDojo's own instruction for this scene: *"Remember the first object on the conveyor, then pick the matching object when it appears again."*
 

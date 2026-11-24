@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Standard-mode twin of `robodojo-stack-blocks-random-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/stack_blocks_random_0.json`). Stack the three blocks, which differ in texture, into one tower. There are many other objects on the table that are not part of the task. When you are done, bring both arms back to where they started. (RoboDojo's `stack_blocks_random`). The agent drives the
+Standard-mode twin of `robodojo-stack-blocks-random-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/stack_blocks_random_0.json`). Stack the three blocks that differ in texture into one tower. Then bring both arms back to where they started. (RoboDojo's `stack_blocks_random`). The agent drives the
 robot only through the eai-standard/2.2 client (the simulator runs in the `sim` sidecar), which owns the scene and records
 the episode as a (T, 14) trajectory of RoboDojo's own joint action at 25 Hz.
 

@@ -8,7 +8,7 @@ Nothing is handed in: the service grades the episode when it ends (`## Episode e
 completed before the time limit (`## Time limit`) is up. The time you wait for the service counts: its first
 start in a trial takes ~4-15 min (Client, below).
 
-**Task:** First wait for the opponent arm to discard a mahjong tile, then flip face up the three tiles in your row that show the discarded tile's picture. Next, take the face-down tile from the top of the front stack at the far left and stand it upright at the right end of your row, next to the last tile. Finish with both grippers open.
+**Task:** After the opponent arm discards a mahjong tile, flip face up the three tiles in your row that show the same picture, then stand the face-down tile from the top of the front stack at the far left upright at the right end of your row, next to the last tile. Finish with both grippers open.
 
 RoboDojo's own instruction for this scene: *"Wait for the opponent to discard a tile, then declare a kong with the matching tiles."*
 

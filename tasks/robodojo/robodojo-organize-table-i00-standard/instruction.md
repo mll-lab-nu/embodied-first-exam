@@ -8,7 +8,7 @@ Nothing is handed in: the service grades the episode when it ends (`## Episode e
 completed before the time limit (`## Time limit`) is up. The time you wait for the service counts: its first
 start in a trial takes ~4-15 min (Client, below).
 
-**Task:** Put the alarm clock on the drawer and stand the cactus toy upright on the small grey square pad. Put the mouse on the mouse pad and push the keyboard into its frame. Then bring both arms back to where they started.
+**Task:** Put the alarm clock on the drawer, stand the cactus toy upright on the small grey square pad, put the mouse on the mouse pad and push the keyboard into its frame. Then bring both arms back to where they started.
 
 RoboDojo's own instruction for this scene: *"Place the alarm clock on the drawer, put the figurine on the stand, place the mouse on the mouse pad, and push the keyboard into the frame."*
 

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Pick up the two T-shaped blocks, exchange their places, and set each one down turned the way the other one was. Then bring both arms back to where they started. (RoboDojo's `swap_T`). RoboDojo capability dimension: Memory. Instance i00 is RoboDojo's own evaluation layout
+Exchange the places of the two T-shaped blocks, setting each one down turned the way the other one was. Then bring both arms back to where they started. (RoboDojo's `swap_T`). RoboDojo capability dimension: Memory. Instance i00 is RoboDojo's own evaluation layout
 `arx_x5/0/swap_T_0.json` (sha256 `e7181ce640596479`), frozen in `instance.json`. The deliverable is one replayable trajectory of
 RoboDojo's 14-D joint action at 25 Hz (`/app/output/trajectory.npz`), graded by RoboDojo's own reward check for the task,
 with no step cap (RoboDojo's own evaluation gives a policy 400 actions; PROTOCOL §3).

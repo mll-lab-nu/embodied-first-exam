@@ -7,7 +7,7 @@ setup on Isaac Sim 5.1 / Isaac Lab, PhysX) via Python. RoboDojo capability dimen
 trajectory as soon as you have one and overwrite it as you improve it. Every Python process that opens a `Session` first
 spends ~3-5 min launching Isaac Sim and building the scene, and that time counts.
 
-**Task:** Pick up the broom and hand it over to the right arm. Keep the dustpan on the table and use the broom to sweep the five small objects into it: a toy brick, two earbuds, and two paper balls. Finish with the broom on the open side of the dustpan, which is its right side, and bring both arms back to where they started.
+**Task:** Pick up the broom, hand it to the right arm, sweep the toy brick, the two earbuds and the two paper balls into the dustpan, which stays on the table, and leave the broom on the dustpan's open right side. Then bring both arms back to where they started.
 
 RoboDojo's own instruction for this scene: *"Pick up the broom, hand it over to the right hand, then use the dustpan to sweep the objects."*
 

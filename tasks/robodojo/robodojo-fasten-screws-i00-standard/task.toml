@@ -14,7 +14,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/robodojo-fasten-screws-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.2): RoboDojo fasten_screws (Precision) on the same frozen layout as the privileged task (arx_x5/0/fasten_screws_0.json). Task: Thread each of the three nuts all the way down onto the bolt of the same colour, keeping each nut lying flat with the same face up as now. Then open both grippers fully and bring both arms back to where they started. The agent only gets a client: get_obs (RGB, depth + proprioception of both arms), submit (joint_position or ee_pose chunks). No reset, no privileged state; the sim service records the episode as a trajectory and grades the live episode."
+description = "STANDARD MODE (robot as a service, eai-standard/2.2): RoboDojo fasten_screws (Precision) on the same frozen layout as the privileged task (arx_x5/0/fasten_screws_0.json). Task: Thread each of the three nuts all the way down onto the bolt of the same colour, keeping the nut flat with the same face up as now, and open both grippers fully. Then bring both arms back to where they started. The agent only gets a client: get_obs (RGB, depth + proprioception of both arms), submit (joint_position or ee_pose chunks). No reset, no privileged state; the sim service records the episode as a trajectory and grades the live episode."
 keywords = ["robotics", "robodojo", "isaac-lab", "isaac-sim", "bimanual", "arx-x5", "standard-mode", "trajectory"]
 
 [metadata]

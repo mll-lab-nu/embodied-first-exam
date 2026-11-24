@@ -8,7 +8,7 @@ Nothing is handed in: the service grades the episode when it ends (`## Episode e
 completed before the time limit (`## Time limit`) is up. The time you wait for the service counts: its first
 start in a trial takes ~4-15 min (Client, below).
 
-**Task:** Put the hammer, pliers, tape measure, and wrench each into its own matching slot in the toolbox, with each tool turned the right way to fit its slot. Then bring both arms back to where they started.
+**Task:** Put the hammer, the pliers, the tape measure and the wrench each into its own matching slot in the toolbox, turned to fit that slot. Then bring both arms back to where they started.
 
 RoboDojo's own instruction for this scene: *"Place each tool into its matching position in the toolbox, then reset the robot arm."*
 

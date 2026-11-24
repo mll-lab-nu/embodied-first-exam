@@ -19,5 +19,5 @@ old = "sha256 `e55e5cffef73b196`"
 new = "sha256 `a77cbdb1a24304dc`"
 
 [[replace]]
-old = "Put the alarm clock on the drawer and stand the cactus toy upright on the small grey square pad. Put the mouse on the mouse pad and push the keyboard into its frame. Then bring both arms back to where they started."
-new = "Put the alarm clock on the drawer and stand the moss-covered robot figurine upright on the small grey square pad. Put the mouse on the mouse pad and push the keyboard into its frame. Then bring both arms back to where they started."
+old = "Put the alarm clock on the drawer, stand the cactus toy upright on the small grey square pad, put the mouse on the mouse pad and push the keyboard into its frame. Then bring both arms back to where they started."
+new = "Put the alarm clock on the drawer, stand the moss-covered robot figurine upright on the small grey square pad, put the mouse on the mouse pad and push the keyboard into its frame. Then bring both arms back to where they started."

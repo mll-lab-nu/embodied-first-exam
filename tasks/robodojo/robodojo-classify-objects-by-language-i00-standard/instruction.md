@@ -8,7 +8,7 @@ Nothing is handed in: the service grades the episode when it ends (`## Episode e
 completed before the time limit (`## Time limit`) is up. The time you wait for the service counts: its first
 start in a trial takes ~4-15 min (Client, below).
 
-**Task:** Follow the spoken instruction and put each named category of objects into the basket it names, whether left, middle, or right. Then bring both arms back to where they started.
+**Task:** Put each object category named in the instruction into the basket it names: left, middle or right. Then bring both arms back to where they started.
 
 RoboDojo's own instruction for this scene: *"Put car objects into the left basket, watch objects into the middle basket, and wooden_toy objects into the right basket, then reset the robot arm."*
 

@@ -8,7 +8,7 @@ Nothing is handed in: the service grades the episode when it ends (`## Episode e
 completed before the time limit (`## Time limit`) is up. The time you wait for the service counts: its first
 start in a trial takes ~4-15 min (Client, below).
 
-**Task:** Pick up the named target object from the table and lift it 10 cm.
+**Task:** Pick up the named target object from the table and lift it about a hand's length off the table.
 
 RoboDojo's own instruction for this scene: *"Pick up the mint green scissors by 10 cm."*
 

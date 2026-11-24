@@ -7,7 +7,7 @@ setup on Isaac Sim 5.1 / Isaac Lab, PhysX) via Python. RoboDojo capability dimen
 trajectory as soon as you have one and overwrite it as you improve it. Every Python process that opens a `Session` first
 spends ~3-5 min launching Isaac Sim and building the scene, and that time counts.
 
-**Task:** Put the hammer, pliers, tape measure, and wrench each into its own matching slot in the toolbox, with each tool turned the right way to fit its slot. Then bring both arms back to where they started.
+**Task:** Put the hammer, the pliers, the tape measure and the wrench each into its own matching slot in the toolbox, turned to fit that slot. Then bring both arms back to where they started.
 
 RoboDojo's own instruction for this scene: *"Place each tool into its matching position in the toolbox, then reset the robot arm."*
 

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Standard-mode twin of `robodojo-pick-from-conveyor-by-image-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/pick_from_conveyor_by_image_0.json`). Identify, from the photo on the board, which of the four objects on the moving conveyor is the target, pick it up and put it in the basket, and lift the basket (with the target in it) more than 8 cm. (RoboDojo's `pick_from_conveyor_by_image`). The agent drives the
+Standard-mode twin of `robodojo-pick-from-conveyor-by-image-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/pick_from_conveyor_by_image_0.json`). Find which of the four objects on the moving conveyor matches the photo on the board, put that object in the basket, and lift the basket with the object in it about a hand's length. (RoboDojo's `pick_from_conveyor_by_image`). The agent drives the
 robot only through the eai-standard/2.2 client (the simulator runs in the `sim` sidecar), which owns the scene and records
 the episode as a (T, 14) trajectory of RoboDojo's own joint action at 25 Hz.
 

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Standard-mode twin of `robodojo-swap-blocks-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/swap_blocks_0.json`). Swap the places of the two cubes in three moves by using the empty third mat as a parking spot, and press the spring button once after each of the three moves. The button rests slightly sunk and a press from where it rests does not count, so pull its cap up before each press. Finish with the cap pulled up and both arms back where they started. (RoboDojo's `swap_blocks`). The agent drives the
+Standard-mode twin of `robodojo-swap-blocks-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/swap_blocks_0.json`). Swap the two cubes in three moves, using the empty third mat as a parking spot, and after each move pull the spring button's cap up from its slightly sunk rest and press the button once. Then leave the cap pulled up and bring both arms back to where they started. (RoboDojo's `swap_blocks`). The agent drives the
 robot only through the eai-standard/2.2 client (the simulator runs in the `sim` sidecar), which owns the scene and records
 the episode as a (T, 14) trajectory of RoboDojo's own joint action at 25 Hz.
 

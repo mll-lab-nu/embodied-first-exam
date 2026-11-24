@@ -7,7 +7,7 @@ setup on Isaac Sim 5.1 / Isaac Lab, PhysX) via Python. RoboDojo capability dimen
 trajectory as soon as you have one and overwrite it as you improve it. Every Python process that opens a `Session` first
 spends ~3-5 min launching Isaac Sim and building the scene, and that time counts.
 
-**Task:** Swap the places of the two cubes in three moves by using the empty third mat as a parking spot, and press the spring button once after each of the three moves. The button rests slightly sunk and a press from where it rests does not count, so pull its cap up before each press. Finish with the cap pulled up and both arms back where they started.
+**Task:** Swap the two cubes in three moves, using the empty third mat as a parking spot, and after each move pull the spring button's cap up from its slightly sunk rest and press the button once. Then leave the cap pulled up and bring both arms back to where they started.
 
 RoboDojo's own instruction for this scene: *"Swap the two blocks using the empty mat, pressing the button after each move."*
 

@@ -7,7 +7,7 @@ setup on Isaac Sim 5.1 / Isaac Lab, PhysX) via Python. RoboDojo capability dimen
 trajectory as soon as you have one and overwrite it as you improve it. Every Python process that opens a `Session` first
 spends ~3-5 min launching Isaac Sim and building the scene, and that time counts.
 
-**Task:** Pick up the key. Passing it from one gripper to the other is allowed, though you do not have to. Push it into the keyhole blade first and ring up, with its teeth toward the right-hand end of the slit. Then turn it about 60 degrees clockwise as seen from above and leave it standing straight in the keyhole.
+**Task:** Push the key into the keyhole blade first and ring up, with its teeth toward the right-hand end of the slit. Then give it about a sixth of a turn clockwise as seen from above and leave it standing straight in the keyhole.
 
 RoboDojo's own instruction for this scene: *"Pick up the key, hand it over to the other hand, insert it into the keyhole, then turn it."*
 

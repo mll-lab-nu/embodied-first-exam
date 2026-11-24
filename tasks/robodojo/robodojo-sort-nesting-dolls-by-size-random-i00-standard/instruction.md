@@ -8,7 +8,7 @@ Nothing is handed in: the service grades the episode when it ends (`## Episode e
 completed before the time limit (`## Time limit`) is up. The time you wait for the service counts: its first
 start in a trial takes ~4-15 min (Client, below).
 
-**Task:** Line up the five penguin-like dolls standing upright in one straight row running from left to right. Order them by size with the smallest on the left and the largest on the right. Then bring both arms back to where they started.
+**Task:** Stand the five penguin-like dolls upright in one straight left-to-right row, ordered by size from the smallest on the left to the largest on the right. Then bring both arms back to where they started.
 
 RoboDojo's own instruction for this scene: *"Arrange the five nesting dolls in a row from left to right, from smallest to largest."*
 

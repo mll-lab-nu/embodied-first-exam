@@ -8,7 +8,7 @@ Nothing is handed in: the service grades the episode when it ends (`## Episode e
 completed before the time limit (`## Time limit`) is up. The time you wait for the service counts: its first
 start in a trial takes ~4-15 min (Client, below).
 
-**Task:** Watch the first object that appears on the conveyor, remember it, and pick up the identical object when it shows up again (lift it more than 10 cm).
+**Task:** Watch the first object that appears on the conveyor, then pick up the identical object when it shows up again and lift it about a hand's length.
 
 RoboDojo's own instruction for this scene: *"Remember the first object on the conveyor, then pick the matching object when it appears again."*
 

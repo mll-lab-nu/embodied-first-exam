@@ -7,7 +7,7 @@ setup on Isaac Sim 5.1 / Isaac Lab, PhysX) via Python. RoboDojo capability dimen
 trajectory as soon as you have one and overwrite it as you improve it. Every Python process that opens a `Session` first
 spends ~3-5 min launching Isaac Sim and building the scene, and that time counts.
 
-**Task:** Stack the three blocks, which differ in texture, into one tower. Then bring both arms back to where they started.
+**Task:** Stack the three blocks that differ in texture into one tower. Then bring both arms back to where they started.
 
 RoboDojo's own instruction for this scene: *"Stack the three blocks with different textures."*
 
