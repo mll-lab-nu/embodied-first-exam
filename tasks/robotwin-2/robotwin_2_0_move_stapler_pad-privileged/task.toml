@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/robotwin_2_0_move_stapler_pad-privileged"
-description = "RoboTwin 2.0 move_stapler_pad (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Move the stapler onto the red mat: set it down in the middle of the mat, standing upright and lined up exactly with the mat's long side, then let go. Frozen scene instance (RoboTwin seed 60417)."
+description = "RoboTwin 2.0 move_stapler_pad (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Set the stapler down upright in the middle of the red mat, lined up exactly with the mat's long side. Then let go. Frozen scene instance (RoboTwin seed 60417)."
 keywords = ["robotics", "robotwin", "sapien", "aloha-agilex", "dual-arm", "code-as-policy", "trajectory", "move_stapler_pad"]
 
 [metadata]

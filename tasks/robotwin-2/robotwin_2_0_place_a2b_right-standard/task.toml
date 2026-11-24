@@ -16,7 +16,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/robotwin_2_0_place_a2b_right-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.1): RoboTwin 2.0 place_a2b_right on the same frozen instance as the privileged task (seed 28831). Pick up the box of playing cards and put it down about 10 to 15 cm to the right of the soap, level with it (the same distance from you), then let go. The agent only gets a client: /observe (RGB-D video, camera calibration, proprioception) and /submit (joint_position or ee_pose action chunks). No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
+description = "STANDARD MODE (robot as a service, eai-standard/2.1): RoboTwin 2.0 place_a2b_right on the same frozen instance as the privileged task (seed 28831). Pick up the box of playing cards and set it down about 15 cm to the right of the soap, the same distance from you as the soap. Then let go. The agent only gets a client: /observe (RGB-D video, camera calibration, proprioception) and /submit (joint_position or ee_pose action chunks). No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
 keywords = ["robotics", "robotwin", "sapien", "aloha-agilex", "dual-arm", "standard-mode", "trajectory", "place_a2b_right"]
 
 [metadata]

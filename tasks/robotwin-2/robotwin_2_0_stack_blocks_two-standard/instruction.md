@@ -1,8 +1,7 @@
 # RoboTwin 2.0 · stack_blocks_two — STANDARD MODE (robot as a service, eai-standard/2.1)
 
 You control a dual-arm **ALOHA-AgileX** robot **as if it were real hardware**: the simulator runs in a service you
-cannot open. You get one client and one episode. **Task:** Stack the green block on top of the red block, then open
-both grippers so the stack stays put.
+cannot open. You get one client and one episode. **Task:** Stack the green block on top of the red block, then let go.
 
 ## Rules (real-robot rules)
 - **No reset.** The episode starts when the service comes up and ends on success, when your time is up, or on a

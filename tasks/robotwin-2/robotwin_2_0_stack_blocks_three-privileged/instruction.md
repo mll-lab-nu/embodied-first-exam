@@ -1,7 +1,7 @@
 # RoboTwin 2.0 · stack_blocks_three — frozen instance
 
 You control a simulated dual-arm **ALOHA-AgileX** robot (RoboTwin 2.0 on SAPIEN 3 / PhysX, CuRobo motion
-planning) via Python. **Task:** There are three blocks on the table: red, green and blue. Stack the blue block on the green block and the green block on the red block, then let go.
+planning) via Python. **Task:** Stack the three blocks with the red block at the bottom, the green block in the middle and the blue block on top. Then let go.
 
 The scene objects are attributes of the task env (`env.block1`, `env.block2`, `env.block3`; see `load_actors` in
 `/opt/RoboTwin/envs/stack_blocks_three.py`). RoboTwin's success predicate is `check_success` in that file:

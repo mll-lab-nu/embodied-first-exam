@@ -1,7 +1,7 @@
 # RoboTwin 2.0 · move_playingcard_away — frozen instance
 
 You control a simulated dual-arm **ALOHA-AgileX** robot (RoboTwin 2.0 on SAPIEN 3 / PhysX, CuRobo motion
-planning) via Python. **Task:** Pick up the playing cards and set them down further out toward the left edge of the table, more than about 25 cm from the middle, then let go.
+planning) via Python. **Task:** Pick up the playing cards and set them down out toward the left edge of the table, roughly 25 cm or more from the middle. Then let go.
 
 The scene objects are attributes of the task env (`env.playingcards`, `env.playingcards_id`, `env.target_pose`; see `load_actors` in
 `/opt/RoboTwin/envs/move_playingcard_away.py`). RoboTwin's success predicate is `check_success` in that file:

@@ -1,8 +1,7 @@
 # RoboTwin 2.0 · stack_blocks_two — frozen instance
 
 You control a simulated dual-arm **ALOHA-AgileX** robot (RoboTwin 2.0 on SAPIEN 3 / PhysX, CuRobo motion
-planning) via Python. **Task:** Stack the green block on top of the red block, then open both grippers so the
-stack stays put. (RoboTwin's success predicate: the green block's centre is within 2.5 cm in x/y
+planning) via Python. **Task:** Stack the green block on top of the red block, then let go. (RoboTwin's success predicate: the green block's centre is within 2.5 cm in x/y
 and 1.2 cm in z of "5 cm above the red block's centre", and both grippers are open.)
 
 This is a *fixed scene instance*: the two blocks always start at the same poses. You may reset and retry as many

@@ -1,7 +1,7 @@
 # RoboTwin 2.0 · place_object_scale — frozen instance
 
 You control a simulated dual-arm **ALOHA-AgileX** robot (RoboTwin 2.0 on SAPIEN 3 / PhysX, CuRobo motion
-planning) via Python. **Task:** Use one arm to grab the bell and put it on the scale.
+planning) via Python. **Task:** Put the bell in the middle of the scale, then let go.
 
 The scene objects are attributes of the task env (`env.arm_tag`, `env.object`, `env.scale`, `env.scale_id`, `env.selected_model_id`, `env.selected_modelname`; see `load_actors` in
 `/opt/RoboTwin/envs/place_object_scale.py`). RoboTwin's success predicate is `check_success` in that file:

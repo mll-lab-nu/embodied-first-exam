@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/robotwin_2_0_place_dual_shoes-privileged"
-description = "RoboTwin 2.0 place_dual_shoes (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Put both shoes in the shoebox, sole down with their toes pointing to your left: the shoe from your left in the half of the box nearer you, the other shoe in the far half. Then let go. Frozen scene instance (RoboTwin seed 60417)."
+description = "RoboTwin 2.0 place_dual_shoes (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Put the shoe that starts on your left in the near half of the shoebox and the other shoe in the far half, both sole down with the toe pointing to your left. Then let go. Frozen scene instance (RoboTwin seed 60417)."
 keywords = ["robotics", "robotwin", "sapien", "aloha-agilex", "dual-arm", "code-as-policy", "trajectory", "place_dual_shoes"]
 
 [metadata]

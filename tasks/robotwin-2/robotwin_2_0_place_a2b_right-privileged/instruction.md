@@ -1,7 +1,7 @@
 # RoboTwin 2.0 · place_a2b_right — frozen instance
 
 You control a simulated dual-arm **ALOHA-AgileX** robot (RoboTwin 2.0 on SAPIEN 3 / PhysX, CuRobo motion
-planning) via Python. **Task:** Pick up the box of playing cards and put it down about 10 to 15 cm to the right of the soap, level with it (the same distance from you), then let go.
+planning) via Python. **Task:** Pick up the box of playing cards and set it down about 15 cm to the right of the soap, the same distance from you as the soap. Then let go.
 
 The scene objects are attributes of the task env (`env.object`, `env.selected_model_id_A`, `env.selected_model_id_B`, `env.selected_modelname_A`, `env.selected_modelname_B`, `env.target_object`; see `load_actors` in
 `/opt/RoboTwin/envs/place_a2b_right.py`). RoboTwin's success predicate is `check_success` in that file:

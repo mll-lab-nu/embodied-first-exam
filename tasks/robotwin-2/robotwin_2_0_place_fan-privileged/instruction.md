@@ -1,7 +1,7 @@
 # RoboTwin 2.0 · place_fan — frozen instance
 
 You control a simulated dual-arm **ALOHA-AgileX** robot (RoboTwin 2.0 on SAPIEN 3 / PhysX, CuRobo motion
-planning) via Python. **Task:** Grab the fan and place it on the red mat, and make sure the fan is facing the robot.
+planning) via Python. **Task:** Set the fan upright in the middle of the red mat, facing straight toward you, then let go.
 
 The scene objects are attributes of the task env (`env.color_value`, `env.fan`, `env.fan_id`, `env.pad`, `env.target_pose`; see `load_actors` in
 `/opt/RoboTwin/envs/place_fan.py`). RoboTwin's success predicate is `check_success` in that file:

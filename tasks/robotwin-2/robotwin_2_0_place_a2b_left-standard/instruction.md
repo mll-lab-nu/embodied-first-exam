@@ -1,7 +1,7 @@
 # RoboTwin 2.0 · place_a2b_left — STANDARD MODE (robot as a service, eai-standard/2.1)
 
 You control a dual-arm **ALOHA-AgileX** robot **as if it were real hardware**: the simulator runs in a service you
-cannot open. You get one client and one episode. **Task:** Pick up the toy car and put it down about 10 to 15 cm to the left of the bell, level with it (the same distance from you), then let go. The success check, run at the end of every call, passes when the toy car's position is to the left of the bell's (smaller x), between 8 cm and 20 cm from it in the table plane and less than 5 cm from it in y, and both grippers are commanded open (above 0.8).
+cannot open. You get one client and one episode. **Task:** Pick up the toy car and set it down about 15 cm to the left of the bell, the same distance from you as the bell. Then let go. The success check, run at the end of every call, passes when the toy car's position is to the left of the bell's (smaller x), between 8 cm and 20 cm from it in the table plane and less than 5 cm from it in y, and both grippers are commanded open (above 0.8).
 
 ## Rules (real-robot rules)
 - **No reset.** The episode starts when the service comes up and ends on success, when your time is up, or on a

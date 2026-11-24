@@ -1,7 +1,7 @@
 # RoboTwin 2.0 · move_can_pot — frozen instance
 
 You control a simulated dual-arm **ALOHA-AgileX** robot (RoboTwin 2.0 on SAPIEN 3 / PhysX, CuRobo motion
-planning) via Python. **Task:** There is a can and a pot on the table: pick up the can and set it down upright beside the pot, on the pot's right side, then let go.
+planning) via Python. **Task:** Pick up the can and stand it upright on the table right next to the pot, on the pot's right side and the same distance from you as the pot. Then let go.
 
 The scene objects are attributes of the task env (`env.arm_tag`, `env.can`, `env.can_id`, `env.orig_z`, `env.pot`, `env.pot_id`; see `load_actors` in
 `/opt/RoboTwin/envs/move_can_pot.py`). RoboTwin's success predicate is `check_success` in that file:

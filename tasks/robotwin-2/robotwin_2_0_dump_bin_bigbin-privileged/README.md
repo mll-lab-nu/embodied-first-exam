@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:robotwin-0.1.2` |
 
 ## Task
-RoboTwin 2.0 dump_bin_bigbin (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Pick up the small bin, pour all five balls into the big bin on the floor to your left, and keep holding the small bin up high when you finish. Frozen scene instance (RoboTwin seed 60417).
+RoboTwin 2.0 dump_bin_bigbin (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Pick up the small bin and pour all five balls into the big bin on the floor to your left. At the end, keep holding the small bin up high, roughly 30 cm above the table. Frozen scene instance (RoboTwin seed 60417).
 
 ## Difficulty
 RoboTwin's scripted expert needs 8 planned motions (60 lines); official data-generation success on ALOHA-AgileX 84% (the expert's own pass rate over random layouts); in our image the expert passed on seed 60417 on attempt 1 of 1 with 3928 physics steps. Tags from the code: dual-arm, loop/timing. RoboTwin evaluation budget 600 policy actions. The trajectory is the raw per-step drive-target record, so any plan failure or a grasp that slips during replay scores 0.
@@ -45,4 +45,4 @@ Caps per container (PROTOCOL §6).
 | RoboTwin eval step limit | 600 (policy-eval budget upstream; indicative of task length) |
 
 ### Goal
-Pick up the small bin, pour all five balls into the big bin on the floor to your left, and keep holding the small bin up high when you finish.
+Pick up the small bin and pour all five balls into the big bin on the floor to your left. At the end, keep holding the small bin up high, roughly 30 cm above the table.

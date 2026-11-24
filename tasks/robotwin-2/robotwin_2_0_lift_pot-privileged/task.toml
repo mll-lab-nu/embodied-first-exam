@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/robotwin_2_0_lift_pot-privileged"
-description = "RoboTwin 2.0 lift_pot (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Lift the pot off the table with both arms, one hand on each handle, keeping it roughly level. Frozen scene instance (RoboTwin seed 28831)."
+description = "RoboTwin 2.0 lift_pot (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Grip the pot's left handle with the left arm and its right handle with the right arm. Then lift the pot off the table and hold it there, roughly level. Frozen scene instance (RoboTwin seed 28831)."
 keywords = ["robotics", "robotwin", "sapien", "aloha-agilex", "dual-arm", "code-as-policy", "trajectory", "lift_pot"]
 
 [metadata]

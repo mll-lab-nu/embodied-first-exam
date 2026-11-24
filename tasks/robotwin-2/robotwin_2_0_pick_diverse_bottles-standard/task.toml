@@ -16,7 +16,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/robotwin_2_0_pick_diverse_bottles-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.1): RoboTwin 2.0 pick_diverse_bottles on the same frozen instance as the privileged task (seed 77321). Pick up both bottles, one in each hand, bring them toward you and hold them up side by side in front of you near the middle, the left bottle on the left. The agent only gets a client: /observe (RGB-D video, camera calibration, proprioception) and /submit (joint_position or ee_pose action chunks). No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
+description = "STANDARD MODE (robot as a service, eai-standard/2.1): RoboTwin 2.0 pick_diverse_bottles on the same frozen instance as the privileged task (seed 77321). Pick up both bottles, one in each hand, and bring them closer to you. Hold them up well above the table, side by side near the middle, with the bottle that started on your left still on the left. The agent only gets a client: /observe (RGB-D video, camera calibration, proprioception) and /submit (joint_position or ee_pose action chunks). No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
 keywords = ["robotics", "robotwin", "sapien", "aloha-agilex", "dual-arm", "standard-mode", "trajectory", "pick_diverse_bottles"]
 
 [metadata]

@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/robotwin_2_0_place_fan-privileged"
-description = "RoboTwin 2.0 place_fan (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Grab the fan and place it on the red mat, and make sure the fan is facing the robot. Frozen scene instance (RoboTwin seed 60417)."
+description = "RoboTwin 2.0 place_fan (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Set the fan upright in the middle of the red mat, facing straight toward you, then let go. Frozen scene instance (RoboTwin seed 60417)."
 keywords = ["robotics", "robotwin", "sapien", "aloha-agilex", "dual-arm", "code-as-policy", "trajectory", "place_fan"]
 
 [metadata]

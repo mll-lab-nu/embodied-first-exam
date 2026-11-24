@@ -1,7 +1,7 @@
 # RoboTwin 2.0 · place_container_plate — frozen instance
 
 You control a simulated dual-arm **ALOHA-AgileX** robot (RoboTwin 2.0 on SAPIEN 3 / PhysX, CuRobo motion
-planning) via Python. **Task:** Place the cup onto the plate.
+planning) via Python. **Task:** Put the cup on the plate, then let go.
 
 The scene objects are attributes of the task env (`env.actor_name`, `env.container`, `env.container_id`, `env.plate`, `env.plate_id`; see `load_actors` in
 `/opt/RoboTwin/envs/place_container_plate.py`). RoboTwin's success predicate is `check_success` in that file:

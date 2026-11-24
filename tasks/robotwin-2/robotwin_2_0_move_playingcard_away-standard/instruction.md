@@ -1,7 +1,7 @@
 # RoboTwin 2.0 · move_playingcard_away — STANDARD MODE (robot as a service, eai-standard/2.1)
 
 You control a dual-arm **ALOHA-AgileX** robot **as if it were real hardware**: the simulator runs in a service you
-cannot open. You get one client and one episode. **Task:** Pick up the playing cards and set them down further out toward the left edge of the table, more than about 25 cm from the middle, then let go. The success check, run at the end of every call, passes when the playing cards are more than 23 cm from the table's centre line (|x| > 0.23 m) and both grippers are commanded open (above 0.8).
+cannot open. You get one client and one episode. **Task:** Pick up the playing cards and set them down out toward the left edge of the table, roughly 25 cm or more from the middle. Then let go. The success check, run at the end of every call, passes when the playing cards are more than 23 cm from the table's centre line (|x| > 0.23 m) and both grippers are commanded open (above 0.8).
 
 ## Rules (real-robot rules)
 - **No reset.** The episode starts when the service comes up and ends on success, when your time is up, or on a

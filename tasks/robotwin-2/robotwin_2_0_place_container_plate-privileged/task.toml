@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/robotwin_2_0_place_container_plate-privileged"
-description = "RoboTwin 2.0 place_container_plate (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Place the cup onto the plate. Frozen scene instance (RoboTwin seed 60417)."
+description = "RoboTwin 2.0 place_container_plate (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Put the cup on the plate, then let go. Frozen scene instance (RoboTwin seed 60417)."
 keywords = ["robotics", "robotwin", "sapien", "aloha-agilex", "dual-arm", "code-as-policy", "trajectory", "place_container_plate"]
 
 [metadata]

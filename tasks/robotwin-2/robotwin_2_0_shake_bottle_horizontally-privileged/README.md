@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:robotwin-0.1.2` |
 
 ## Task
-RoboTwin 2.0 shake_bottle_horizontally (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Pick up the bottle and shake it side to side while holding it up. Frozen scene instance (RoboTwin seed 60417).
+RoboTwin 2.0 shake_bottle_horizontally (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Pick up the bottle, shake it side to side, and keep holding it up off the table at the end. Frozen scene instance (RoboTwin seed 60417).
 
 ## Difficulty
 RoboTwin's scripted expert needs 8 planned motions (49 lines); official data-generation success on ALOHA-AgileX 90% (the expert's own pass rate over random layouts); in our image the expert passed on seed 60417 on attempt 1 of 6 with 3692 physics steps. Tags from the code: dual-arm, rotation, loop/timing. RoboTwin evaluation budget 700 policy actions. The trajectory is the raw per-step drive-target record, so any plan failure or a grasp that slips during replay scores 0.
@@ -45,4 +45,4 @@ Caps per container (PROTOCOL §6).
 | RoboTwin eval step limit | 700 (policy-eval budget upstream; indicative of task length) |
 
 ### Goal
-Pick up the bottle and shake it side to side while holding it up.
+Pick up the bottle, shake it side to side, and keep holding it up off the table at the end.
