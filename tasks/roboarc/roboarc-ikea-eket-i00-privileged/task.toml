@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/roboarc-ikea-eket-i00-privileged"
-description = "IKEA MuJoCo EKET cabinet (dual Franka Panda + Menagerie Panda hand, MuJoCo 3.14.0 CPU): produce one replayable trajectory. Build the EKET cabinet frame: slide the two side panels into the top panel, then the back panel into its grooves, then the bottom panel onto the sides, and leave the cabinet standing on the table on its own. Frozen scene (the scene's keyframe 'home'); physical grasps, no assist."
+description = "IKEA MuJoCo EKET cabinet (dual Franka Panda + Menagerie Panda hand, MuJoCo 3.14.0 CPU): produce one replayable trajectory. Build the EKET cabinet frame: the parts start in a row on the table (a side panel, the top panel, the bottom panel, the other side panel, the back panel); slide the side panel lying next to the top panel into the top panel first, then the other side panel, then the back panel into its grooves, then the bottom panel onto the sides, and leave the cabinet standing on the table on its own. Frozen scene (the scene's keyframe 'home'); physical grasps, no assist."
 keywords = ["robotics", "roboarc", "ikea", "furniture-assembly", "mujoco", "panda", "bimanual", "code-as-policy", "trajectory"]
 
 [metadata]

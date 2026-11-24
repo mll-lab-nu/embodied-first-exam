@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/roboarc-ikea-ikea365-i00-privileged"
-description = "IKEA MuJoCo IKEA 365+ serving stand (dual Franka Panda + Menagerie Panda hand, MuJoCo 3.14.0 CPU): produce one replayable trajectory. Rebuild the IKEA 365+ serving stand: take the screw out of member A and park it, lay member B across member A, bring the screw back and screw it in through both members until it seats, turn the stand over, and place the bowl on it. Frozen scene (the scene's keyframe 'home'); physical grasps, no assist."
+description = "IKEA MuJoCo IKEA 365+ serving stand (dual Franka Panda + Menagerie Panda hand, MuJoCo 3.14.0 CPU): produce one replayable trajectory. Rebuild the IKEA 365+ serving stand: take the screw out of member A and set it down clear of both members, lay member B across member A, bring the screw back and hold it upright and still with its tip just inside the hole in member B, then screw it in through both members until it seats; lift the stand about 10 cm off the bench, turn it upside down while it is still in the air, set it down, and place the bowl on it. Frozen scene (the scene's keyframe 'home'); physical grasps, no assist."
 keywords = ["robotics", "roboarc", "ikea", "furniture-assembly", "mujoco", "panda", "bimanual", "code-as-policy", "trajectory"]
 
 [metadata]

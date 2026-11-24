@@ -2,7 +2,7 @@
 
 You control a robot (**two 7-DoF Franka Panda arms, each with the MuJoCo Menagerie Panda hand (two-finger, tendon-coupled)**; plain MuJoCo 3.14.0 on the CPU) **as if it were real hardware**: the simulator
 runs in a service you cannot open. You get one client and one episode: cameras, proprioception and joint commands.
-**Task:** Rebuild the IKEA 365+ serving stand: take the screw out of member A and park it, lay member B across member A, bring the screw back and screw it in through both members until it seats, turn the stand over, and place the bowl on it.
+**Task:** Rebuild the IKEA 365+ serving stand: take the screw out of member A and set it down clear of both members, lay member B across member A, bring the screw back and hold it upright and still with its tip just inside the hole in member B, then screw it in through both members until it seats; lift the stand about 10 cm off the bench, turn it upside down while it is still in the air, set it down, and place the bowl on it.
 
 ## Success requirements
 

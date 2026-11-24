@@ -2,11 +2,11 @@
 
 You control a robot (**two 7-DoF Franka Panda arms, each with the MuJoCo Menagerie Panda hand (two-finger, tendon-coupled)**; plain MuJoCo 3.14.0 on the CPU) **as if it were real hardware**: the simulator
 runs in a service you cannot open. You get one client and one episode: cameras, proprioception and joint commands.
-**Task:** Build the EKET cabinet frame: slide the two side panels into the top panel, then the back panel into its grooves, then the bottom panel onto the sides, and leave the cabinet standing on the table on its own.
+**Task:** Build the EKET cabinet frame: the parts start in a row on the table (a side panel, the top panel, the bottom panel, the other side panel, the back panel); slide the side panel lying next to the top panel into the top panel first, then the other side panel, then the back panel into its grooves, then the bottom panel onto the sides, and leave the cabinet standing on the table on its own.
 
 ## Success requirements
 
-- The seven operations happen in this order, each measured against the top panel: side A entry and slide, side B entry and slide, back slide, bottom entry and slide. Each one must reach its goal pose within the scene's gates (goal error 0.25 to 0.8 mm, angle 0.1 to 1 degree, nearly at rest, with contact with its counterpart panels).
+- The seven operations happen in this order, each measured against the top panel: side A (the side panel that starts next to the top panel) entry and slide, side B entry and slide, back slide, bottom entry and slide. Each one must reach its goal pose within the scene's gates (goal error 0.25 to 0.8 mm, angle 0.1 to 1 degree, nearly at rest, with contact with its counterpart panels).
 - The four frame joints (side A and side B to the top, the bottom to both sides) are latched, and the five panels are finite.
 - At the end the panels are released (no robot contact, no applied force), rest on the table (at least one panel touches the table top, none touches the floor) and move slower than 0.01 m/s and 0.05 rad/s.
 - At the end every panel, the back included (it has no frame joint), is still in its assembled place: within 10 mm and 2 degrees of its goal pose relative to the top panel (the benchmark's end-pose rule, rcb_ikea.END_POSE_RULES).

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:roboarc-0.2.0` |
 
 ## Task
-RoboARC lock_picking (Franka Panda + Robotiq 2F-85, MuJoCo): produce one replayable trajectory. Pick up the two-tab key from its rest. Insert the tabbed key through all two rotor plates and the final END plate, while respecting their slots and stops. The key's leading tab is longer than its second tab, which sits one plate spacing behind it. Frozen scene instance (variation lock_picking_very_easy, seed 0).
+RoboARC lock_picking (Franka Panda + Robotiq 2F-85, MuJoCo): produce one replayable trajectory. Pick up the two-tab key from its rest. Insert the tabbed key through both rotor plates and the final END plate, while respecting their slots and stops. The key's leading tab is longer than its second tab, which sits one plate spacing behind it. Frozen scene instance (variation lock_picking_very_easy, seed 0).
 
 ## Difficulty
 A 7-dof franka panda arm with a robotiq 2f-85 parallel gripper on a fixed base with a 8-D joint-target action space at 40 Hz; success needs the task's predicate (above) held for 0.5 s. Grasping: assisted grasping (contact_weld_v1).
@@ -52,7 +52,7 @@ Caps per container (PROTOCOL §6).
 | Success rule | task-native success (goal_complete True; frozen parameters; terminal revision terminal_v6_chain_lock) |
 
 ### Goal
-Pick up the two-tab key from its rest. Insert the tabbed key through all two rotor plates and the final END plate, while respecting their slots and stops. The key's leading tab is longer than its second tab, which sits one plate spacing behind it.
+Pick up the two-tab key from its rest. Insert the tabbed key through both rotor plates and the final END plate, while respecting their slots and stops. The key's leading tab is longer than its second tab, which sits one plate spacing behind it.
 
 ### Success requirements
 - Keep the finite-length shaft passing through the full thickness of all three plates at once, facing the insertion direction. Reaching END with only the shaft tip is insufficient.
@@ -74,7 +74,7 @@ Pick up the two-tab key from its rest. Insert the tabbed key through all two rot
 - The shaft reaches from 305 mm behind the leading tab to 15 mm in front of it; all 6 plate faces must lie within that length.
 - Tabs: half-width 4 degrees; the leading tab reaches radius 36 mm and the second tab, 120 mm behind it, 22 mm. Slots: half-width 8 degrees, reaching radius 45 mm (deep) or 28 mm (shallow). A tab that overlaps a plate must sit inside one of that plate's slots that reaches beyond the tab, with an angular margin of at least asin(axis offset / tab radius) + the tilt.
 - Rotor stops (from each rotor's start angle, seen from the side the key enters, looking along the key toward END; rotor 1 is the first plate the key reaches): rotor 1 4 degrees counterclockwise and 49 degrees clockwise; rotor 2 29 degrees counterclockwise and 4 degrees clockwise. Going more than 0.5 degrees beyond a stop ends the episode.
-- Grasp regions (assisted grasping, see Grippers above; one sphere per graspable part): lock_key: radius 32 mm, on the key's handle. Both finger contacts must lie inside the part's sphere; a part touched elsewhere is grasped physically. Each region's centre (in its link's frame) is in `/app/instance.json` under `simulator.grasp_assist.targets`.
+- Grasp regions (assisted grasping, see Grippers in instruction.md; one sphere per graspable part): lock_key: radius 32 mm, on the key's handle. Both finger contacts must lie inside the part's sphere; a part touched elsewhere is grasped physically. Each region's centre (in its link's frame) is in `/app/instance.json` under `simulator.grasp_assist.targets`.
 - Grading: the verifier replays your trajectory once in a fresh process. This family's physics runs on the CPU (MuJoCo, float64), so a replay reproduces your own run on the same host; the rule is kept as a margin: the replay runs the rows with the thresholds above and, if the episode has not ended after the last row, holds the final targets for up to 2 s (80 control steps), stopping at the first success or failure, so a confirmation that starts a few physics ticks later than in your own run can still complete; the hold uses the thresholds above too (no tolerance for this family). Success needs the replay to succeed AND to reach the goal with the thresholds above within your own rows (not only in the hold). Nothing else changes. A recording stops at your own success, so a replay whose confirmation ends a few ticks later needs more rows: you may append copies of the final row (holding still) before saving. `s.replay(actions, grading=True)` replays as the verifier does.
 - A failure is reported in `s.status()["episode_end"]` as "rotor_limit_exceeded", "Key fell below table" or "forced_breakdown: <what>" (<what>: the readable reason); `s.safety()` reports forcing, contact depths, volume ratios and table-guard stops against these limits.
 

@@ -63,7 +63,7 @@ Thread the rope through the cyan ring (R1) then green ring (R2) then purple ring
 - Aperture check: round_ring, compression allowance 1 mm. This allowance changes the geometric passage test; the collision geometry stays as declared.
 - The material start is the rope end that is farther from the rings at the start.
 - Only the grippers' fingers collide with the rope and the rings: every other robot part (palms, wrists, arm links, bases) passes through them without contact, so only the fingers can push, pinch or hold the rope.
-- Grasp regions (assisted grasping, see Grippers above; one or more spheres per graspable part): rope: 200 spheres of radius 8 mm. Both finger contacts must lie inside one of the part's spheres; a part touched elsewhere is grasped physically.
+- Grasp regions (assisted grasping, see Grasping in instruction.md; one or more spheres per graspable part): rope: 200 spheres of radius 8 mm. Both finger contacts must lie inside one of the part's spheres; a part touched elsewhere is grasped physically.
 - Grading: the live episode is the verdict: success needs it to succeed with the thresholds above (within its confirmation time); a live failure is final. Nothing is replayed to grade it: the video is rendered afterwards from the recorded rows and never changes the grade.
 
 | | |

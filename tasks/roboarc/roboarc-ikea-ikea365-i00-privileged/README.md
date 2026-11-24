@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:ikea-mujoco-0.3.0` |
 
 ## Task
-IKEA 365+ serving stand (AA-2568481-2) in plain MuJoCo 3.14.0 (CPU, float64) with two 7-DoF Franka Panda arms, each with the MuJoCo Menagerie Panda hand (two-finger, tendon-coupled): produce one replayable trajectory. Rebuild the IKEA 365+ serving stand: take the screw out of member A and park it, lay member B across member A, bring the screw back and screw it in through both members until it seats, turn the stand over, and place the bowl on it.
+IKEA 365+ serving stand (AA-2568481-2) in plain MuJoCo 3.14.0 (CPU, float64) with two 7-DoF Franka Panda arms, each with the MuJoCo Menagerie Panda hand (two-finger, tendon-coupled): produce one replayable trajectory. Rebuild the IKEA 365+ serving stand: take the screw out of member A and set it down clear of both members, lay member B across member A, bring the screw back and hold it upright and still with its tip just inside the hole in member B, then screw it in through both members until it seats; lift the stand about 10 cm off the bench, turn it upside down while it is still in the air, set it down, and place the bowl on it.
 
 ## Difficulty
 Bimanual furniture assembly with physical grasps (no assist), 16-D actuator action at 400 Hz
@@ -51,7 +51,7 @@ Caps per container (PROTOCOL §6).
 | Initial state | sha256 `4e9e040022202b3e…` of the mjSTATE_INTEGRATION vector |
 
 ### Goal
-Rebuild the IKEA 365+ serving stand: take the screw out of member A and park it, lay member B across member A, bring the screw back and screw it in through both members until it seats, turn the stand over, and place the bowl on it.
+Rebuild the IKEA 365+ serving stand: take the screw out of member A and set it down clear of both members, lay member B across member A, bring the screw back and hold it upright and still with its tip just inside the hole in member B, then screw it in through both members until it seats; lift the stand about 10 cm off the bench, turn it upside down while it is still in the air, set it down, and place the bowl on it.
 
 ### Success requirements
 - The seven operations are accepted in this order: remove the screw, park the screw, cross the members, return the screw, reinstall the screw, turn the stand, place the bowl.
