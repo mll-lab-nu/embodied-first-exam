@@ -1,7 +1,7 @@
 # RoboCasa365 · ReheatMeal — STANDARD MODE (robot as a service)
 
 A **Franka Panda arm on an Omron mobile base** (with a torso lift) works in a kitchen: RoboCasa365's `ReheatMeal` kitchen task (robosuite, MuJoCo).
-**Task: Place the tupperware containing the shrimp and carrot meal in the microwave. Close the microwave door and press the start button to reheat the meal.**
+**Task: Take the tupperware containing the shrimp and carrot meal out of the fridge and place it in the microwave. Close the microwave door and press the start button to reheat the meal.**
 The scene is one frozen instance: the initial state of one of the benchmark's official demonstrations.
 
 You control the robot **as if it were real hardware**: the simulator runs in a service you cannot open. You get one

@@ -1,7 +1,7 @@
 # RoboCasa365 · OvenBroilFish — STANDARD MODE (robot as a service)
 
 A **Franka Panda arm on an Omron mobile base** (with a torso lift) works in a kitchen: RoboCasa365's `OvenBroilFish` kitchen task (robosuite, MuJoCo).
-**Task: Place the fish on the bottom rack of the oven, and slide the tray back inside. Close the oven door.**
+**Task: Place the fish on the bottom rack of the oven, and slide the rack back inside. Close the oven door.**
 The scene is one frozen instance: the initial state of one of the benchmark's official demonstrations.
 
 You control the robot **as if it were real hardware**: the simulator runs in a service you cannot open. You get one

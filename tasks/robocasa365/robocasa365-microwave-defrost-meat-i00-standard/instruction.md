@@ -1,7 +1,7 @@
 # RoboCasa365 · MicrowaveDefrostMeat — STANDARD MODE (robot as a service)
 
 A **Franka Panda arm on an Omron mobile base** (with a torso lift) works in a kitchen: RoboCasa365's `MicrowaveDefrostMeat` kitchen task (robosuite, MuJoCo).
-**Task: Place the tupperware containing the frozen chicken drumstick in the microwave. Close the microwave door and press the start button to defrost the meat.**
+**Task: Take the tupperware containing the frozen chicken drumstick out of the freezer and place it in the microwave. Close the microwave door and press the start button to defrost the meat.**
 The scene is one frozen instance: the initial state of one of the benchmark's official demonstrations.
 
 You control the robot **as if it were real hardware**: the simulator runs in a service you cannot open. You get one

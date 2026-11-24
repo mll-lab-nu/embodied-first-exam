@@ -345,6 +345,53 @@ def action_spec(env) -> dict:
     return out
 
 
+# -- task text errata -----------------------------------------------------------------------------------------
+# The frozen instance keeps the benchmark's own language string (ep_meta["lang"]); the instance file is pinned and is
+# not edited. Where that string is wrong for the instance, the text the agent is shown (Session.inst["text"]: the
+# privileged state()["instruction"], the service's spec task_text and task info) is the corrected sentence, the same
+# one as the task's instruction.md Task line. Keyed by env_name and the exact upstream string, so any other instance
+# of the family keeps its own text.
+#  - ChooseMeasuringCup, TongBuffetSetup: upstream picks the drawer side from a re-sampled robot anchor, but the robot
+#    is then placed at the demonstration's base pose on the other side of the drawer (kitchen.py, init_robot_base_pos):
+#    the side word is the opposite of the robot's actual one.
+#  - SearingMeat: the check needs the drumstick in the pan (check_obj_in_receptacle "meat", "pan").
+#  - OvenBroilFish: there is no tray; the pulled-out rack is what goes back in.
+#  - SweetenCoffee: a trailing space.
+#  - MicrowaveDefrostMeat, ReheatMeal: where the tupperware starts (the freezer / the fridge).
+TEXT_ERRATA = {
+    ("ChooseMeasuringCup", "Open the right drawer and place the smaller measuring cup on the counter."):
+        "Open the top drawer on your left and place the smaller measuring cup on the counter.",
+    ("TongBuffetSetup", "Take the tongs from the drawer on the left and place them on the dining counter next to the "
+                        "tray containing the hot dog."):
+        "Take the tongs from the top drawer on your right and place them on the dining counter next to the tray "
+        "containing the hot dog.",
+    ("SearingMeat", "Grab the pan from the cabinet and place it on the rear right burner on the stove. Then place the "
+                    "chicken drumstick on the stove and turn the burner on."):
+        "Grab the pan from the cabinet and place it on the rear right burner on the stove. Then place the chicken "
+        "drumstick in the pan and turn the burner on.",
+    ("OvenBroilFish", "Place the fish on the bottom rack of the oven, and slide the tray back inside. Close the oven "
+                      "door."):
+        "Place the fish on the bottom rack of the oven, and slide the rack back inside. Close the oven door.",
+    ("SweetenCoffee", "Take a sugar cube from the saucer and place it inside the coffee. Then, grab milk from the "
+                      "fridge and place it next to the coffee on the counter to sweeten the coffee. "):
+        "Take a sugar cube from the saucer and place it inside the coffee. Then, grab milk from the fridge and place "
+        "it next to the coffee on the counter to sweeten the coffee.",
+    ("MicrowaveDefrostMeat", "Place the tupperware containing the frozen chicken drumstick in the microwave. Close the "
+                             "microwave door and press the start button to defrost the meat."):
+        "Take the tupperware containing the frozen chicken drumstick out of the freezer and place it in the microwave. "
+        "Close the microwave door and press the start button to defrost the meat.",
+    ("ReheatMeal", "Place the tupperware containing the shrimp and carrot meal in the microwave. Close the microwave "
+                   "door and press the start button to reheat the meal."):
+        "Take the tupperware containing the shrimp and carrot meal out of the fridge and place it in the microwave. "
+        "Close the microwave door and press the start button to reheat the meal.",
+}
+
+
+def task_text(env_name: str, lang: str) -> str:
+    """The task sentence the agent is shown: the instance's own language string, or its erratum (TEXT_ERRATA)."""
+    return TEXT_ERRATA.get((env_name, lang), lang)
+
+
 # -- the session ----------------------------------------------------------------------------------------------
 def scene_option() -> mujoco.MjvOption:
     """What robosuite's own cameras draw (its defaults render_collision_mesh=False, render_visual_mesh=True): the visual
@@ -363,7 +410,8 @@ class Session:
         self.instance_path = Path(instance)
         self.frozen, self.instance_sha = load_instance(self.instance_path)
         self.meta = json.loads(str(self.frozen["ep_meta"]))
-        self.inst = {"text": self.meta.get("lang", ""), "env_name": json.loads(str(self.frozen["config"]))["env_name"]}
+        env_name = json.loads(str(self.frozen["config"]))["env_name"]
+        self.inst = {"text": task_text(env_name, self.meta.get("lang", "")), "env_name": env_name}
         self.env = None
         self._renderers: dict = {}
         self.reset()

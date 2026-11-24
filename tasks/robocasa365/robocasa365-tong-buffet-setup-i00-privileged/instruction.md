@@ -1,7 +1,7 @@
 # RoboCasa365 · TongBuffetSetup
 
 A **Franka Panda arm on an Omron mobile base** (with a torso lift) works in a kitchen: RoboCasa365's `TongBuffetSetup` kitchen task (robosuite, MuJoCo).
-**Task: Take the tongs from the drawer on the left and place them on the dining counter next to the tray containing the hot dog.**
+**Task: Take the tongs from the top drawer on your right and place them on the dining counter next to the tray containing the hot dog.**
 The scene is one frozen instance: the initial state of one of the benchmark's official demonstrations (kitchen
 layout, style, fixtures, objects and their poses).
 
