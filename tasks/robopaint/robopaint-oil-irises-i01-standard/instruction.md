@@ -2,7 +2,7 @@
 
 You control a **Franka Panda arm holding an oil-paint brush** (ManiSkill 3.0.1 physics; a painting-engine brush) **as if it were real
 hardware**: the simulator runs in a service you cannot open. You get one client and one episode. **Task (paint from a reference):**
-paint the picture shown in `/app/target.png` (a square crop of Vincent van Gogh's Irises, 1889) onto the main sheet with brush and oil paints, **in at most 2486 strokes**.
+paint the picture shown in `/app/target.png` onto the main sheet with brush and oil paints, **in at most 2486 strokes**. The picture is a square crop of Vincent van Gogh's Irises, 1889.
 
 ## Rules (real-robot rules)
 - **No reset.** The episode starts when the service comes up and ends when your time is up (or on a simulator error). Paint is

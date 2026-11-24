@@ -2,7 +2,7 @@
 
 You control a **UR5e** arm (6 joints) with a Robotiq 2F-85 gripper, fixed to the bench, **as if it were real**: the simulator (AutoBio's biology laboratory on MuJoCo 3.3.0) runs
 in a service you cannot open. You get one client and one episode.
-**Task:** Open the lid of the thermal cycler, which starts closed and locked: turn the lever on the lid back from its locked end (0.94 rad of travel) and swing the lid fully open (1.9 rad). Success the moment the lid and its lever are both within 0.003 rad of their fully open end positions.
+**Task:** Open the lid of the thermal cycler, which starts closed and locked: turn the lever on the lid all the way back from its locked end and swing the lid fully open. Success the moment the lid and its lever are both within 0.003 rad of their fully open end positions.
 
 On the bench: a thermal cycler (a Bio-Rad C1000 model) with its lid closed and locked by the lever on the lid.
 

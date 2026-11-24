@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/roboarc-cast-coil-02-i01-privileged"
-description = "RoboARC cast_coil (ALOHA 2, MuJoCo): produce one replayable trajectory. Assemble the gold and silver pieces into a cube with flush outer faces, then release both on the table. Frozen scene instance (variation easier, seed 0)."
+description = "RoboARC cast_coil (ALOHA 2, MuJoCo): produce one replayable trajectory. Fit the gold and silver pieces together into a cube with flush outer faces, resting on the table. Then let go of both and move the robot clear of them. Frozen scene instance (variation easier, seed 0)."
 keywords = ["robotics", "roboarc", "mujoco", "aloha", "code-as-policy", "trajectory", "cast_coil"]
 
 [metadata]

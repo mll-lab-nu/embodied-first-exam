@@ -1,7 +1,7 @@
 # RoboARC (simulator package `topogym`) · fiber_bundling — STANDARD MODE (robot as a service, eai-standard/2.4)
 
 You control a robot (**a 7-DoF Franka Panda arm with a Robotiq 2F-85 parallel gripper on a fixed base**) **as if it were real hardware**: the simulator runs in a service you cannot open. You get one
-client and one episode. **Task:** Pass every fine fiber and the front sheath through the fixed copper ring; keep the rear terminal anchored.
+client and one episode. **Task:** Pass every fine fiber, tip first, and the front sheath through the fixed copper ring, touching only the thick sheath with the gripper. Leave the rear terminal anchored where it is.
 
 ## Success requirements
 

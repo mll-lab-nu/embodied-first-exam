@@ -1,7 +1,7 @@
 # RoboARC (simulator package `topogym`) · knot_untying — frozen instance
 
 You control a simulated robot (**two 6-DoF ALOHA (ViperX) arms with parallel-jaw grippers on a fixed base**; RoboARC on MuJoCo 3.14.0 physics, Nyx rendering) via Python.
-**Task:** Untie and spread the rope on the tabletop until its top-down projection has no crossings or overlaps, then release it.
+**Task:** Untie the rope and spread it out flat on the table so that, seen from above, it nowhere crosses or overlaps itself. Then let go of it and move the robot clear of it.
 
 ## Success requirements
 

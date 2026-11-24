@@ -1,7 +1,7 @@
 # YAMLab · HangMugOnTree-v0 — frozen instance i15
 
 You control two simulated **I2RT YAM arms with parallel two-finger grippers** on a workstation table (YAMLab's bimanual
-setup on Isaac Lab / Isaac Sim 5.1, PhysX physics) via Python. **Task:** Pick up the mug with the **left** arm, hand it over to the **right** arm (the right gripper takes it, then the left one lets go, with the mug kept lifted), and hang the mug on the mug tree, released by both grippers.
+setup on Isaac Lab / Isaac Sim 5.1, PhysX physics) via Python. **Task:** Pick up the mug with the **left** arm and hand it to the **right** arm, keeping the mug in the air: the right gripper takes it, then the left gripper lets go. Then hang the mug on the mug tree and let go of it with both grippers.
 
 The scene's two task objects are `mug` (YAMLab asset `Mug/mug_015`, 12.6 × 9.9 × 9.5 cm) and `mug_tree` (YAMLab asset `MugTree/mug_tree_015`, 16.2 × 16.2 × 34.2 cm): `s.objects()` gives their poses, sizes (in their own frames: x × y × z, the root at the box centre) and bounding boxes, `p["get_object_points"](name)` their mesh points.
 

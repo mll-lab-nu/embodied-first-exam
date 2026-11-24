@@ -45,7 +45,7 @@ Caps per container (PROTOCOL §6).
 ## Details
 
 ### Goal
-Separate and place the whole hedgehog ball, including every spike inside the green dashed goal region. Keep all cage components on the puzzle/system side.
+Separate the hedgehog ball from the cage and put the whole of it, every spike included, inside the green dashed goal region. Leave all the cage parts behind, no closer to the goal region than they were at the start.
 
 ### Success requirements
 - Put every part of the whole hedgehog ball, including every spike inside the fixed goal volume, leaving at least 1 mm inside its horizontal border. The centre alone is insufficient; no tip, spike, ring segment or cord segment may remain outside.

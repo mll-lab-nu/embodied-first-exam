@@ -15,7 +15,7 @@
 KinDER `kinder/ScoopPour3D-o50-v0` (Dynamic3D, TidyBot++), seed 0, privileged mode: the agent has the simulator and its state and
 hands in one trajectory, replayed open-loop in a fresh process. Its standard-mode twin is `kinder-scoop-pour-i01-standard`.
 
-Task: move all 50 small dark-red cubes from the yellow bin into the green bin; a scoop is in the scene. The task succeeds the moment every cube's centre is inside the green bin, at least 1 cm from each of its inner walls and at least 0.5 cm below its rim.
+Task: move all 50 small dark-red cubes from the yellow bin into the green bin. You may use the scoop in the scene. The task succeeds the moment every cube's centre is inside the green bin, at least 1 cm from each of its inner walls and at least 0.5 cm below its rim.
 
 ## Difficulty
 Nonprehensile, tool use, dynamics: move 50 small cubes from one bin to another with a scoop, each ending well inside the target bin. The variant is upstream's o50 (both cube families use theirs, tasks/kinder/README.md).

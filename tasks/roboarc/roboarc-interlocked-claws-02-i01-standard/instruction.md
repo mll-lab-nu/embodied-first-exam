@@ -1,7 +1,7 @@
 # RoboARC (simulator package `topogym`) · interlocked_claws — STANDARD MODE (robot as a service, eai-standard/2.4)
 
 You control a robot (**two 6-DoF ALOHA (ViperX) arms with parallel-jaw grippers on a fixed base**) **as if it were real hardware**: the simulator runs in a service you cannot open. You get one
-client and one episode. **Task:** Separate and place the entire brown claw piece inside the green dashed goal region. Keep the other claw piece on the puzzle/system side.
+client and one episode. **Task:** Separate the brown claw piece from the other claw piece and put the whole of it inside the green dashed goal region. Leave the other claw piece behind, no closer to the goal region than it was at the start.
 
 ## Success requirements
 

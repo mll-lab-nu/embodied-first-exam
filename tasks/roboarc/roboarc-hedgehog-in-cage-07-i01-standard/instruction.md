@@ -1,7 +1,7 @@
 # RoboARC (simulator package `topogym`) · hedgehog_in_cage — STANDARD MODE (robot as a service, eai-standard/2.4)
 
 You control a robot (**a 7-DoF Franka Panda arm with a Robotiq 2F-85 parallel gripper on a fixed base**) **as if it were real hardware**: the simulator runs in a service you cannot open. You get one
-client and one episode. **Task:** Separate and place the whole owl, including both wings, the tail, the legs and the beak inside the green dashed goal region. Keep the cage and its mount on the puzzle/system side. A thin rod with a box handle lies on the table; you may use it as a tool. It is a task piece: if it falls off the table (more than 100 mm below the tabletop), the episode ends in failure.
+client and one episode. **Task:** Separate the owl from the cage and put the whole of it, both wings, the tail, the legs and the beak included, inside the green dashed goal region. Leave the cage and its mount behind, no closer to the goal region than they were at the start. A thin rod with a box handle lies on the table, and you may use it as a tool. It counts as a task piece: if it falls off the table, the episode ends in failure.
 
 ## Success requirements
 

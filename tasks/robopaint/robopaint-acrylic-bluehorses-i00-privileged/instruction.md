@@ -1,7 +1,7 @@
 # RoboPaint · acrylic stroke copy · The Large Blue Horses (after Marc) — frozen instance
 
 You control a simulated **Franka Panda arm holding a round acrylic brush** via Python: ManiSkill 3.0.1 / SAPIEN 3.0.3 physics (PhysX on
-the CPU) for the robot; the paint is libmypaint's brush engine (MyPaint). **Task (笔触临摹, stroke copy):** copy the painting shown in the picture `/app/target.png` (a small acrylic painting after Franz Marc's The Large Blue Horses, 1911) onto the main sheet, **in at most 390 strokes**.
+the CPU) for the robot; the paint is libmypaint's brush engine (MyPaint). **Task (笔触临摹, stroke copy):** copy the painting shown in the picture `/app/target.png` onto the main sheet, **in at most 390 strokes**. The picture is a small acrylic painting after Franz Marc's The Large Blue Horses, 1911.
 
 This is a *fixed scene instance*: you may reset and retry as many times as you want. Your deliverable is **one replayable
 trajectory**, not a general policy.

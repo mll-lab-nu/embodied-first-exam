@@ -1,7 +1,7 @@
 # RoboPaint · oil painting from a reference · Mona Lisa (after Leonardo) — frozen instance
 
 You control a simulated **Franka Panda arm holding an oil-paint brush** via Python: ManiSkill 3.0.1 / SAPIEN 3.0.3 physics (PhysX on
-the CPU) for the robot; the paint is libmypaint's brush engine (MyPaint). **Task (paint from a reference):** paint the picture shown in `/app/target.png` (a square crop of Leonardo da Vinci's Mona Lisa, c. 1503-06) onto the main sheet with brush and oil paints, **in at most 2507 strokes**.
+the CPU) for the robot; the paint is libmypaint's brush engine (MyPaint). **Task (paint from a reference):** paint the picture shown in `/app/target.png` onto the main sheet with brush and oil paints, **in at most 2507 strokes**. The picture is a square crop of Leonardo da Vinci's Mona Lisa, c. 1503-06.
 
 This is a *fixed scene instance*: you may reset and retry as many times as you want. Your deliverable is **one replayable
 trajectory**, not a general policy.

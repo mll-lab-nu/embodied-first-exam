@@ -45,7 +45,7 @@ Caps per container (PROTOCOL §6).
 ## Details
 
 ### Goal
-Separate and place the entire cord and wooden handle together inside the green dashed goal region. Keep the fixed post, stopper ball and base on the puzzle/system side.
+Separate the cord and its wooden handle from the puzzle and put both, whole, inside the green dashed goal region. Leave the fixed post, the stopper ball and the base behind, no closer to the goal region than they were at the start.
 
 ### Success requirements
 - Put every part of the entire cord and wooden handle together inside the fixed goal volume, leaving at least 1 mm inside its horizontal border. The centre alone is insufficient; no tip, spike, ring segment or cord segment may remain outside.

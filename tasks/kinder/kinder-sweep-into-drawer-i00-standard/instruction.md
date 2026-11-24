@@ -2,7 +2,7 @@
 
 You control a simulated TidyBot++ mobile manipulator (KinDER / MuJoCo) -- a holonomic base, a Kinova Gen3 7-DoF
 arm and a Robotiq 2F-85 gripper -- **as if it were real hardware**: the simulator runs in a service you cannot open,
-and you reach it only through a client. **Task:** get the five small dark-red cubes on top of the kitchen island into the middle drawer of the island's upper row of drawers, which starts closed; a wiper lies next to the cubes. The task succeeds the moment all five cubes' centres are inside that drawer, each at least 2.5 cm from the drawer's two side walls.
+and you reach it only through a client. **Task:** get the five small dark-red cubes on top of the kitchen island into the middle drawer of the island's upper row of drawers. The drawer starts closed, and a wiper lies next to the cubes. The task succeeds the moment all five cubes' centres are inside that drawer, each at least 2.5 cm from the drawer's two side walls.
 
 ## Rules (real-robot rules)
 - **No reset: one episode.** The episode starts when the service comes up. It ends when the task succeeds, after

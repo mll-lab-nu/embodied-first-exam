@@ -1,7 +1,7 @@
 # YAMLab · PutPotOnCooktop-v0 — frozen instance i07
 
 You control two simulated **I2RT YAM arms with parallel two-finger grippers** on a workstation table (YAMLab's bimanual
-setup on Isaac Lab / Isaac Sim 5.1, PhysX physics) via Python. **Task:** Lift the pot with **both** arms (both grippers holding it), put it down on the cooktop, upright, and let go with both grippers.
+setup on Isaac Lab / Isaac Sim 5.1, PhysX physics) via Python. **Task:** Lift the pot with **both** arms, each gripper holding it, put it down upright on the cooktop, and let go with both grippers.
 
 The scene's two task objects are `pot` (YAMLab asset `Pot/pot_007`, 33.4 × 24.9 × 14.7 cm) and `cooktop` (YAMLab asset `Cooktop/cooktop_007`, 27.4 × 31.6 × 6.0 cm): `s.objects()` gives their poses, sizes (in their own frames: x × y × z, the root at the box centre) and bounding boxes, `p["get_object_points"](name)` their mesh points.
 

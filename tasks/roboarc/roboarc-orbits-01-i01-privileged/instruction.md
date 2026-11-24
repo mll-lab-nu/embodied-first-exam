@@ -1,7 +1,7 @@
 # RoboARC (simulator package `topogym`) · orbits — frozen instance
 
 You control a simulated robot (**two 6-DoF ALOHA (ViperX) arms with parallel-jaw grippers on a fixed base**; RoboARC on MuJoCo 3.14.0 physics, Nyx rendering) via Python.
-**Task:** Separate and place the entire cord and wooden handle together inside the green dashed goal region. Keep the fixed post, stopper ball and base on the puzzle/system side.
+**Task:** Separate the cord and its wooden handle from the puzzle and put both, whole, inside the green dashed goal region. Leave the fixed post, the stopper ball and the base behind, no closer to the goal region than they were at the start.
 
 ## Success requirements
 

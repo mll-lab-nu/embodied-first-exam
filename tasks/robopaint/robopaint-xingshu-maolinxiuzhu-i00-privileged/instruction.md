@@ -2,8 +2,7 @@
 
 You control a simulated **Franka Panda arm holding a large Chinese writing brush (毛笔)** via Python: ManiSkill 3.0.1 / SAPIEN 3.0.3
 physics (PhysX on the CPU) for the robot; the brush's mark is a dynamic virtual brush model of a real brush (below).
-**Task (臨帖):** copy the exemplar work **茂林脩竹** (4 characters in running script, 行书, in two columns read right to left), shown in the picture `/app/target.png`, onto the main
-sheet with brush and ink, **in at most 21 strokes**.
+**Task (臨帖):** copy the exemplar work **茂林脩竹**, shown in the picture `/app/target.png`, onto the main sheet with brush and ink, **in at most 21 strokes**. It is 4 characters in running script (行书), in two columns read right to left.
 
 This is a *fixed scene instance*: you may reset and retry as many times as you want. Your deliverable is **one replayable
 trajectory**, not a general policy.

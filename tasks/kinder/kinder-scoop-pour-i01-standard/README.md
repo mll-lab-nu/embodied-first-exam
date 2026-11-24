@@ -17,7 +17,7 @@ Standard mode (robot as a service, `eai-standard/2.1`) of `kinder-scoop-pour-i01
 cameras, joint encoders, the base's odometry -- and
 never the scene's state or the goal check. No reset: one episode, which is graded.
 
-Task: move all 50 small dark-red cubes from the yellow bin into the green bin; a scoop is in the scene. The task succeeds the moment every cube's centre is inside the green bin, at least 1 cm from each of its inner walls and at least 0.5 cm below its rim.
+Task: move all 50 small dark-red cubes from the yellow bin into the green bin. You may use the scoop in the scene. The task succeeds the moment every cube's centre is inside the green bin, at least 1 cm from each of its inner walls and at least 0.5 cm below its rim.
 
 ## Difficulty
 Nonprehensile, tool use, dynamics: move 50 small cubes from one bin to another with a scoop, each ending well inside the target bin. The variant is upstream's o50 (both cube families use theirs, tasks/kinder/README.md).

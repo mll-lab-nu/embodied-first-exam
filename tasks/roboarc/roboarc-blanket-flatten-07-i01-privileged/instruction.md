@@ -1,7 +1,7 @@
 # RoboARC (simulator package `topogym`) · blanket_flatten — frozen instance
 
 You control a simulated robot (**two 6-DoF ALOHA (ViperX) arms with parallel-jaw grippers on a fixed base**; RoboARC on MuJoCo 3.14.0 physics, Nyx rendering) via Python.
-**Task:** Unfold and spread the blanket flat on the table without overlaps or excessive stretching, then release it and withdraw.
+**Task:** Unfold the blanket and spread it flat on the table, with no part folded over another and without stretching it. Then let go of it and move the robot clear of it.
 
 ## Success requirements
 

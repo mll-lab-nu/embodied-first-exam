@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:roboarc-0.2.0` |
 
 ## Task
-RoboARC fiber_bundling (Franka Panda + Robotiq 2F-85, MuJoCo): produce one replayable trajectory. Pass every fine fiber and the front sheath through the fixed copper ring; keep the rear terminal anchored. Frozen scene instance (variation fiber_bundling_rd_hard, seed 0).
+RoboARC fiber_bundling (Franka Panda + Robotiq 2F-85, MuJoCo): produce one replayable trajectory. Pass every fine fiber, tip first, and the front sheath through the fixed copper ring, touching only the thick sheath with the gripper. Leave the rear terminal anchored where it is. Frozen scene instance (variation fiber_bundling_rd_hard, seed 0).
 
 ## Difficulty
 A 7-dof franka panda arm with a robotiq 2f-85 parallel gripper on a fixed base with a 8-D joint-target action space at 40 Hz; success needs the task's predicate (above) held for 0.5 s. Grasping: assisted grasping (contact_weld_v1).
@@ -49,7 +49,7 @@ Caps per container (PROTOCOL §6).
 | Success rule | task-native success (goal_complete True; frozen parameters; terminal revision terminal_v4_fiber_ring_plane) |
 
 ### Goal
-Pass every fine fiber and the front sheath through the fixed copper ring; keep the rear terminal anchored.
+Pass every fine fiber, tip first, and the front sheath through the fixed copper ring, touching only the thick sheath with the gripper. Leave the rear terminal anchored where it is.
 
 ### Success requirements
 - Pass every fiber tip first, then successive material points through to its root. The actual crossing history must be observed; placing fibers on the far side or passing only the tips is not completion.

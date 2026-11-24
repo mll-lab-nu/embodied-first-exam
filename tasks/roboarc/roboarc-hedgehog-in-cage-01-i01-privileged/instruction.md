@@ -1,7 +1,7 @@
 # RoboARC (simulator package `topogym`) · hedgehog_in_cage — frozen instance
 
 You control a simulated robot (**a 7-DoF Franka Panda arm with a Robotiq 2F-85 parallel gripper on a fixed base**; RoboARC on MuJoCo 3.14.0 physics, Nyx rendering) via Python.
-**Task:** Separate and place the whole hedgehog ball, including every spike inside the green dashed goal region. Keep all cage components on the puzzle/system side.
+**Task:** Separate the hedgehog ball from the cage and put the whole of it, every spike included, inside the green dashed goal region. Leave all the cage parts behind, no closer to the goal region than they were at the start.
 
 ## Success requirements
 

@@ -1,7 +1,7 @@
 # RoboARC (simulator package `topogym`) · cast_coil — frozen instance
 
 You control a simulated robot (**two 6-DoF ALOHA (ViperX) arms with parallel-jaw grippers on a fixed base**; RoboARC on MuJoCo 3.14.0 physics, Nyx rendering) via Python.
-**Task:** Assemble the gold and silver pieces into a cube with flush outer faces, then release both on the table.
+**Task:** Fit the gold and silver pieces together into a cube with flush outer faces, resting on the table. Then let go of both and move the robot clear of them.
 
 ## Success requirements
 

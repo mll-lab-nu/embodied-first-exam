@@ -1,7 +1,7 @@
 # sweep-into-drawer — instance i00
 
 You control a simulated TidyBot++ mobile manipulator (KinDER / MuJoCo) via Python: a holonomic base, a Kinova Gen3
-7-DoF arm and a Robotiq 2F-85 gripper. **Task:** get the five small dark-red cubes on top of the kitchen island into the middle drawer of the island's upper row of drawers, which starts closed; a wiper lies next to the cubes. The task succeeds the moment all five cubes' centres are inside that drawer, each at least 2.5 cm from the drawer's two side walls.
+7-DoF arm and a Robotiq 2F-85 gripper. **Task:** get the five small dark-red cubes on top of the kitchen island into the middle drawer of the island's upper row of drawers. The drawer starts closed, and a wiper lies next to the cubes. The task succeeds the moment all five cubes' centres are inside that drawer, each at least 2.5 cm from the drawer's two side walls.
 
 This is a *fixed scene instance*: KinDER builds its scenes from a seed, and yours is pinned in `/app/instance.json`.
 You may reset and retry as many times as you want. Your deliverable is **one replayable trajectory**, not a general

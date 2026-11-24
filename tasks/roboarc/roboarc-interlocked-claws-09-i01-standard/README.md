@@ -45,7 +45,7 @@ Caps per container (PROTOCOL §6).
 ## Details
 
 ### Goal
-Separate and place the entire brown claw piece inside the green dashed goal region. Keep the other claw piece on the puzzle/system side. In this design the brown claw piece is a key and the other piece is a teal lock.
+Separate the brown claw piece from the other claw piece and put the whole of it inside the green dashed goal region. Leave the other claw piece behind, no closer to the goal region than it was at the start. In this design the brown claw piece is a key and the other piece is a teal lock.
 
 ### Success requirements
 - Put every part of the entire brown claw piece inside the fixed goal volume, leaving at least 1 mm inside its horizontal border. The centre alone is insufficient; no tip, spike, ring segment or cord segment may remain outside.

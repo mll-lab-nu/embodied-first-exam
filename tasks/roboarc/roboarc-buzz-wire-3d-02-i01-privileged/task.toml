@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/roboarc-buzz-wire-3d-02-i01-privileged"
-description = "RoboARC buzz_wire_3d (Franka Panda + Robotiq 2F-85, MuJoCo): produce one replayable trajectory. Guide the metal loop along the entire wire from start to finish without touching the wire, then release the tool on the finish support. Frozen scene instance (variation easier, seed 0)."
+description = "RoboARC buzz_wire_3d (Franka Panda + Robotiq 2F-85, MuJoCo): produce one replayable trajectory. Guide the metal loop along the whole wire from start to finish, with no metal part of the tool touching the wire. Then lay the tool on the finish support the way it lay at the start, let go of it, and move the robot clear of it. Frozen scene instance (variation easier, seed 0)."
 keywords = ["robotics", "roboarc", "mujoco", "panda_robotiq", "code-as-policy", "trajectory", "buzz_wire_3d"]
 
 [metadata]

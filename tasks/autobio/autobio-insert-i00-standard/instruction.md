@@ -2,7 +2,7 @@
 
 You control a **UR5e** arm (6 joints) with a Robotiq 2F-85 gripper, fixed to the bench, **as if it were real**: the simulator (AutoBio's biology laboratory on MuJoCo 3.3.0) runs
 in a service you cannot open. You get one client and one episode.
-**Task:** Move the 50 mL centrifuge tube (orange screw cap) from the rack it stands in to the other rack, into the slot AutoBio calls row 0, column 4 of that rack: of its two rows the one farther from the robot's base, and in that row the end slot on the side of the first rack. Success the moment the tube stands in that slot: within 15 mm of the slot's centre and seated at the height at which a tube stands in a slot (within 1 mm).
+**Task:** Move the 50 mL centrifuge tube with the orange screw cap from the rack it stands in to the other rack, into the slot AutoBio calls row 0, column 4 of that rack: of its two rows the one farther from the robot's base, and in that row the end slot on the side of the first rack. Success the moment the tube stands in that slot: within 15 mm of the slot's centre and seated at the height at which a tube stands in a slot (within 1 mm).
 
 On the bench: two 10-slot tube racks (2 rows of 5 each) side by side, with one capped 50 mL tube standing in one of them.
 

@@ -45,7 +45,7 @@ Caps per container (PROTOCOL §6).
 ## Details
 
 ### Goal
-Separate and place the entire silver keyhole piece inside the green dashed goal region. Keep the gold piece on the puzzle/system side.
+Separate the silver keyhole piece from the puzzle and put the whole of it inside the green dashed goal region. Leave the gold piece behind, no closer to the goal region than it was at the start.
 
 ### Success requirements
 - Put every part of the entire silver keyhole piece inside the fixed goal volume, leaving at least 1 mm inside its horizontal border. The centre alone is insufficient; no tip, spike, ring segment or cord segment may remain outside.

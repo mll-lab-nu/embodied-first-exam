@@ -45,7 +45,7 @@ Caps per container (PROTOCOL §6).
 ## Details
 
 ### Goal
-Guide the metal loop along the entire wire from start to finish without touching the wire, then release the tool on the finish support. Black rubber sleeves on the wire are insulated: the ring may rest on them. The final bend and the post at the finish are insulated as well.
+Guide the metal loop along the whole wire from start to finish, with no metal part of the tool touching the wire. Then lay the tool on the finish support the way it lay at the start, let go of it, and move the robot clear of it. The black rubber sleeves on the wire are insulated, so the loop may touch them. The final bend and the post at the finish are insulated as well.
 
 ### Success requirements
 - Start within 10 mm along the wire from its starting end and traverse continuously until within 10 mm of its finishing end. Keep one unambiguous wire crossing inside the loop. Skipping branches or taking the loop off the route before completing traversal does not count; restart from the beginning if tracking is lost.

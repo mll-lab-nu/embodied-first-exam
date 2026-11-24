@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:roboarc-0.2.0` |
 
 ## Task
-RoboARC orbits (ALOHA 2, MuJoCo): produce one replayable trajectory. Separate and place the entire cord and wooden handle together inside the green dashed goal region. Keep the fixed post, stopper ball and base on the puzzle/system side. Frozen scene instance (variation orbits_very_easy, seed 0).
+RoboARC orbits (ALOHA 2, MuJoCo): produce one replayable trajectory. Separate the cord and its wooden handle from the puzzle and put both, whole, inside the green dashed goal region. Leave the fixed post, the stopper ball and the base behind, no closer to the goal region than they were at the start. Frozen scene instance (variation orbits_very_easy, seed 0).
 
 ## Difficulty
 Two 6-dof aloha (viperx) arms with parallel-jaw grippers on a fixed base with a 14-D joint-target action space at 40 Hz; success needs the task's predicate (above) held for 0.5 s. Grasping: assisted grasping (contact_weld_v1).
@@ -52,7 +52,7 @@ Caps per container (PROTOCOL §6).
 | Success rule | task-native success (goal_complete True; frozen parameters; terminal revision placement_region_v2_default_success) |
 
 ### Goal
-Separate and place the entire cord and wooden handle together inside the green dashed goal region. Keep the fixed post, stopper ball and base on the puzzle/system side.
+Separate the cord and its wooden handle from the puzzle and put both, whole, inside the green dashed goal region. Leave the fixed post, the stopper ball and the base behind, no closer to the goal region than they were at the start.
 
 ### Success requirements
 - Put every part of the entire cord and wooden handle together inside the fixed goal volume, leaving at least 1 mm inside its horizontal border. The centre alone is insufficient; no tip, spike, ring segment or cord segment may remain outside.

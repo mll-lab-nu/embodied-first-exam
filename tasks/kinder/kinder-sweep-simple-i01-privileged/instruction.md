@@ -1,7 +1,7 @@
 # sweep-simple — instance i01
 
 You control a simulated TidyBot++ mobile manipulator (KinDER / MuJoCo) via Python: a holonomic base, a Kinova Gen3
-7-DoF arm and a Robotiq 2F-85 gripper. **Task:** get the fifty small dark-red cubes scattered on the floor into the translucent grey box marked on the floor at the end of the kitchen island (the free-standing white-topped counter) nearest the robot; a wiper stands on the floor near the cubes. The task succeeds the moment all fifty cubes' centres are inside that box.
+7-DoF arm and a Robotiq 2F-85 gripper. **Task:** get the fifty small dark-red cubes scattered on the floor into the translucent grey box marked on the floor at the kitchen island's end nearest the robot. The kitchen island is the free-standing counter with the white top, and a wiper stands on the floor near the cubes. The task succeeds the moment all fifty cubes' centres are inside that box.
 
 This is a *fixed scene instance*: KinDER builds its scenes from a seed, and yours is pinned in `/app/instance.json`.
 You may reset and retry as many times as you want. Your deliverable is **one replayable trajectory**, not a general

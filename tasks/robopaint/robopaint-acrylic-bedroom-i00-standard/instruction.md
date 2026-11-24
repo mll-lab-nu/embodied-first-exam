@@ -2,7 +2,7 @@
 
 You control a **Franka Panda arm holding a round acrylic brush** (ManiSkill 3.0.1 physics; a painting-engine brush) **as if it were real
 hardware**: the simulator runs in a service you cannot open. You get one client and one episode. **Task (笔触临摹, stroke copy):**
-copy the painting shown in the picture `/app/target.png` (a small acrylic painting after Vincent van Gogh's The Bedroom, 1888) onto the main sheet, **in at most 388 strokes**.
+copy the painting shown in the picture `/app/target.png` onto the main sheet, **in at most 388 strokes**. The picture is a small acrylic painting after Vincent van Gogh's The Bedroom, 1888.
 
 ## Rules (real-robot rules)
 - **No reset.** The episode starts when the service comes up and ends when your time is up (or on a simulator error). Paint is

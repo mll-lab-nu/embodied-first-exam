@@ -2,7 +2,7 @@
 
 You control two **I2RT YAM arms with parallel two-finger grippers** on a workstation table (YAMLab's bimanual setup)
 **as if they were real hardware**: the simulator runs in a service you cannot open. You get one client and one episode.
-**Task:** Pick up the mug with the **left** arm, hand it over to the **right** arm (the right gripper takes it, then the left one lets go, with the mug kept lifted), and hang the mug on the mug tree, released by both grippers. The scene has the mug and the mug tree on the table.
+**Task:** Pick up the mug with the **left** arm and hand it to the **right** arm, keeping the mug in the air: the right gripper takes it, then the left gripper lets go. Then hang the mug on the mug tree and let go of it with both grippers. The scene has the mug and the mug tree on the table.
 
 ## Success
 1. **pick**: the **left** gripper grasps the mug (YAMLab's grasp detection: both fingers of that gripper touch the mug with at least 0.1 N, on their pads) and the mug's centre is more than 5 cm above its resting height, for 8 consecutive control steps;

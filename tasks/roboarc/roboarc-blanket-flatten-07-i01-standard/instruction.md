@@ -1,7 +1,7 @@
 # RoboARC (simulator package `topogym`) · blanket_flatten — STANDARD MODE (robot as a service, eai-standard/2.4)
 
 You control a robot (**two 6-DoF ALOHA (ViperX) arms with parallel-jaw grippers on a fixed base**) **as if it were real hardware**: the simulator runs in a service you cannot open. You get one
-client and one episode. **Task:** Unfold and spread the blanket flat on the table without overlaps or excessive stretching, then release it and withdraw.
+client and one episode. **Task:** Unfold the blanket and spread it flat on the table, with no part folded over another and without stretching it. Then let go of it and move the robot clear of it.
 
 ## Success requirements
 

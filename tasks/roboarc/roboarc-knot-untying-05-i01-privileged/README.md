@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:roboarc-0.2.0` |
 
 ## Task
-RoboARC knot_untying (ALOHA 2, MuJoCo): produce one replayable trajectory. Untie and spread the rope on the tabletop until its top-down projection has no crossings or overlaps, then release it. Frozen scene instance (variation knot_untying_hard, seed 0).
+RoboARC knot_untying (ALOHA 2, MuJoCo): produce one replayable trajectory. Untie the rope and spread it out flat on the table so that, seen from above, it nowhere crosses or overlaps itself. Then let go of it and move the robot clear of it. Frozen scene instance (variation knot_untying_hard, seed 0).
 
 ## Difficulty
 Two 6-dof aloha (viperx) arms with parallel-jaw grippers on a fixed base with a 14-D joint-target action space at 40 Hz; success needs the task's predicate (above) held for 0.5 s. Grasping: physical grasping only (no assisted grasping).
@@ -52,7 +52,7 @@ Caps per container (PROTOCOL §6).
 | Success rule | task-native success (goal_complete True; frozen parameters; terminal revision terminal_v5_fixed_contact_active_clearance_1mm) |
 
 ### Goal
-Untie and spread the rope on the tabletop until its top-down projection has no crossings or overlaps, then release it.
+Untie the rope and spread it out flat on the table so that, seen from above, it nowhere crosses or overlaps itself. Then let go of it and move the robot clear of it.
 
 ### Success requirements
 - Remove projected crossings, overlaps, collapsed projected segments and exact foldbacks. Nonlocal rope segments must be separated by at least one rope diameter in the top-down view; merely changing over/under order is insufficient.

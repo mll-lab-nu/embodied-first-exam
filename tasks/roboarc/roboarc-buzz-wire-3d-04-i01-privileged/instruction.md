@@ -1,7 +1,7 @@
 # RoboARC (simulator package `topogym`) · buzz_wire_3d — frozen instance
 
 You control a simulated robot (**a 7-DoF Franka Panda arm with a Robotiq 2F-85 parallel gripper on a fixed base**; RoboARC on MuJoCo 3.14.0 physics, Nyx rendering) via Python.
-**Task:** Guide the metal loop along the entire wire from start to finish without touching the wire, then release the tool on the finish support.
+**Task:** Guide the metal loop along the whole wire from start to finish, with no metal part of the tool touching the wire. Then lay the tool on the finish support the way it lay at the start, let go of it, and move the robot clear of it.
 
 ## Success requirements
 

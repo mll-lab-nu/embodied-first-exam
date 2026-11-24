@@ -1,7 +1,7 @@
 # constrained-cupboard — instance i00
 
 You control a simulated TidyBot++ mobile manipulator (KinDER / MuJoCo) via Python: a holonomic base, a Kinova Gen3
-7-DoF arm and a Robotiq 2F-85 gripper. **Task:** put the six brown rods lying on the floor (30 cm long) into the six 40 cm-tall compartments of the row of eleven narrow cupboards standing side by side, one rod each, as the state names pair them: rod `cuboid_i` into cupboard `cupboard_i` for i = 0 to 5, whose tall compartment is the upper one in `cupboard_0` to `cupboard_2` and the lower one in `cupboard_3` to `cupboard_5`. The task succeeds the moment every rod's centre is inside its compartment: above that compartment's shelf, below the shelf over it, and within the cupboard's 10 cm width and 30 cm depth.
+7-DoF arm and a Robotiq 2F-85 gripper. **Task:** put the six brown rods, each about 30 cm long, that lie on the floor into the tall compartments of six of the eleven narrow cupboards standing side by side in a row, one rod per cupboard, paired by their state names: rod `cuboid_i` goes into cupboard `cupboard_i`, for i = 0 to 5. The tall compartment is the upper one in `cupboard_0` to `cupboard_2` and the lower one in `cupboard_3` to `cupboard_5`. The task succeeds the moment every rod's centre is inside its compartment: above that compartment's shelf, below the shelf over it, and within the cupboard's 10 cm width and 30 cm depth.
 
 This is a *fixed scene instance*: KinDER builds its scenes from a seed, and yours is pinned in `/app/instance.json`.
 You may reset and retry as many times as you want. Your deliverable is **one replayable trajectory**, not a general

@@ -1,7 +1,7 @@
 # RoboARC (simulator package `topogym`) · cast_coil — frozen instance
 
 You control a simulated robot (**two 6-DoF ALOHA (ViperX) arms with parallel-jaw grippers on a fixed base**; RoboARC on MuJoCo 3.14.0 physics, Nyx rendering) via Python.
-**Task:** Assemble the gold and silver Cast Coil pieces into their matching interlocking configuration, then release both.
+**Task:** Fit the gold and silver Cast Coil pieces fully together, interlocked the way they are made to fit, with the assembly resting on the table. Then let go of both and move the robot clear of them.
 
 ## Success requirements
 

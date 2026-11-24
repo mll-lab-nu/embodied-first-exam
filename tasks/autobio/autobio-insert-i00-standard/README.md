@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:autobio-0.1.0` |
 
 ## Task
-AutoBio's `insert` (Transfer centrifuge tube) on the same frozen instance as `autobio-insert-i00-privileged`: Move the 50 mL centrifuge tube (orange screw cap) from the rack it stands in to the other rack, into the slot AutoBio calls row 0, column 4 of that rack: of its two rows the one farther from the robot's base, and in that row the end slot on the side of the first rack. Success the moment the tube stands in that slot: within 15 mm of the slot's centre and seated at the height at which a tube stands in a slot (within 1 mm).
+AutoBio's `insert` (Transfer centrifuge tube) on the same frozen instance as `autobio-insert-i00-privileged`: Move the 50 mL centrifuge tube with the orange screw cap from the rack it stands in to the other rack, into the slot AutoBio calls row 0, column 4 of that rack: of its two rows the one farther from the robot's base, and in that row the end slot on the side of the first rack. Success the moment the tube stands in that slot: within 15 mm of the slot's centre and seated at the height at which a tube stands in a slot (within 1 mm).
 On the bench: two 10-slot tube racks (2 rows of 5 each) side by side, with one capped 50 mL tube standing in one of them. Standard mode (eai-standard/2.2): the agent drives the robot through a client in one episode, with only its proprioception and the scene's cameras.
 
 ## Difficulty

@@ -2,7 +2,7 @@
 
 You control an **ALOHA arm** (6 joints and a parallel gripper), fixed to the bench, **as if it were real**: the simulator (AutoBio's biology laboratory on MuJoCo 3.3.0) runs
 in a service you cannot open. You get one client and one episode.
-**Task:** Pick up the 50 mL centrifuge tube (orange screw cap) that stands in the blue rack: hold it by its cap and lift it at least 9.5 cm. Success the moment the tube is that high while the gripper holds it by the cap (the test looks for contact between the cap and the gripper's left finger, so the cap has to be between the fingers).
+**Task:** Pick up the 50 mL centrifuge tube with the orange screw cap from the blue rack: hold it by its cap and lift it at least 10 cm. Success the moment the tube is that high while the gripper holds it by the cap (the test looks for contact between the cap and the gripper's left finger, so the cap has to be between the fingers).
 
 On the bench: a 10-slot tube rack (2 rows of 5) with one capped 50 mL tube standing in it.
 

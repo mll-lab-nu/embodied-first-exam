@@ -1,7 +1,7 @@
 # dynamo — instance i00
 
 You control a simulated TidyBot++ mobile manipulator (KinDER / MuJoCo) via Python: a holonomic base, a Kinova Gen3
-7-DoF arm and a Robotiq 2F-85 gripper. **Task:** drive the robot into the translucent green square marked on the floor; three chairs stand in the way and can be pushed. The task succeeds the moment the centre of the robot's base is inside the square. (The red, blue and yellow squares only mark where the chairs started.)
+7-DoF arm and a Robotiq 2F-85 gripper. **Task:** drive the robot into the translucent green square marked on the floor. Three chairs stand in the way, and you may push them. The task succeeds the moment the centre of the robot's base is inside the square. The red, blue and yellow squares only mark where the chairs started.
 
 This is a *fixed scene instance*: KinDER builds its scenes from a seed, and yours is pinned in `/app/instance.json`.
 You may reset and retry as many times as you want. Your deliverable is **one replayable trajectory**, not a general

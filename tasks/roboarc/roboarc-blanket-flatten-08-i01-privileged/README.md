@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:roboarc-0.2.0` |
 
 ## Task
-RoboARC blanket_flatten (ALOHA 2, MuJoCo): produce one replayable trajectory. Unfold and spread the blanket flat on the table without overlaps or excessive stretching, then release it and withdraw. Frozen scene instance (variation blanket_flatten_medium, seed 0).
+RoboARC blanket_flatten (ALOHA 2, MuJoCo): produce one replayable trajectory. Unfold the blanket and spread it flat on the table, with no part folded over another and without stretching it. Then let go of it and move the robot clear of it. Frozen scene instance (variation blanket_flatten_medium, seed 0).
 
 ## Difficulty
 Two 6-dof aloha (viperx) arms with parallel-jaw grippers on a fixed base with a 14-D joint-target action space at 40 Hz; success needs the task's predicate (above) held for 0.5 s. Grasping: assisted grasping (pbd_local_patch_v1).
@@ -52,7 +52,7 @@ Caps per container (PROTOCOL §6).
 | Success rule | task-native success (goal_complete True; frozen parameters; terminal revision release_settling_v1) |
 
 ### Goal
-Unfold and spread the blanket flat on the table without overlaps or excessive stretching, then release it and withdraw.
+Unfold the blanket and spread it flat on the table, with no part folded over another and without stretching it. Then let go of it and move the robot clear of it.
 
 ### Success requirements
 - Cover at least 95% of the blanket's unfolded material area in top-down projection. Overlapping layers count only once, holes do not count, and a large outer bounding box is insufficient.

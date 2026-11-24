@@ -1,7 +1,7 @@
 # RoboARC (simulator package `topogym`) · slotted_post_ring — STANDARD MODE (robot as a service, eai-standard/2.4)
 
 You control a robot (**two 6-DoF ALOHA (ViperX) arms with parallel-jaw grippers on a fixed base**) **as if it were real hardware**: the simulator runs in a service you cannot open. You get one
-client and one episode. **Task:** Separate and place the entire removable metal ring inside the green dashed goal region. Keep the post, cord, beads and end discs on the puzzle/system side.
+client and one episode. **Task:** Separate the removable metal ring from the puzzle and put the whole of it inside the green dashed goal region. Leave the post, cord, beads and end discs behind, no closer to the goal region than they were at the start.
 
 ## Success requirements
 

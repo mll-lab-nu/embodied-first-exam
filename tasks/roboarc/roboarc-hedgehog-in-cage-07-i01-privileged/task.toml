@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/roboarc-hedgehog-in-cage-07-i01-privileged"
-description = "RoboARC hedgehog_in_cage (Franka Panda + Robotiq 2F-85, MuJoCo): produce one replayable trajectory. Separate and place the whole owl, including both wings, the tail, the legs and the beak inside the green dashed goal region. Keep the cage and its mount on the puzzle/system side. A thin rod with a box handle lies on the table; you may use it as a tool. It is a task piece: if it falls off the table (more than 100 mm below the tabletop), the episode ends in failure. Frozen scene instance (variation hedgehog_in_cage_owl, seed 0)."
+description = "RoboARC hedgehog_in_cage (Franka Panda + Robotiq 2F-85, MuJoCo): produce one replayable trajectory. Separate the owl from the cage and put the whole of it, both wings, the tail, the legs and the beak included, inside the green dashed goal region. Leave the cage and its mount behind, no closer to the goal region than they were at the start. A thin rod with a box handle lies on the table, and you may use it as a tool. It counts as a task piece: if it falls off the table, the episode ends in failure. Frozen scene instance (variation hedgehog_in_cage_owl, seed 0)."
 keywords = ["robotics", "roboarc", "mujoco", "panda_robotiq", "code-as-policy", "trajectory", "hedgehog_in_cage"]
 
 [metadata]

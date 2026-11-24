@@ -1,5 +1,5 @@
 {
- "task_text": "Pick up the 50 mL centrifuge tube (orange screw cap) that stands in the blue rack: hold it by its cap and lift it at least 9.5 cm. Success the moment the tube is that high while the gripper holds it by the cap (the test looks for contact between the cap and the gripper's left finger, so the cap has to be between the fingers).",
+ "task_text": "Pick up the 50 mL centrifuge tube with the orange screw cap from the blue rack: hold it by its cap and lift it at least 10 cm. Success the moment the tube is that high while the gripper holds it by the cap (the test looks for contact between the cap and the gripper's left finger, so the cap has to be between the fingers).",
  "default_cameras": [
   "table_cam_front",
   "wrist_cam"

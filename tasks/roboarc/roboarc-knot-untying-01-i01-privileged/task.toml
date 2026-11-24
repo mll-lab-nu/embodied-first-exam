@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/roboarc-knot-untying-01-i01-privileged"
-description = "RoboARC knot_untying (ALOHA 2, MuJoCo): produce one replayable trajectory. Untie and spread the rope on the tabletop until its top-down projection has no crossings or overlaps, then release it. Frozen scene instance (variation very_easy, seed 0)."
+description = "RoboARC knot_untying (ALOHA 2, MuJoCo): produce one replayable trajectory. Untie the rope and spread it out flat on the table so that, seen from above, it nowhere crosses or overlaps itself. Then let go of it and move the robot clear of it. Frozen scene instance (variation very_easy, seed 0)."
 keywords = ["robotics", "roboarc", "mujoco", "aloha", "code-as-policy", "trajectory", "knot_untying"]
 
 [metadata]

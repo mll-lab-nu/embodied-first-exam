@@ -2,7 +2,7 @@
 
 You control two **I2RT YAM arms with parallel two-finger grippers** on a workstation table (YAMLab's bimanual setup)
 **as if they were real hardware**: the simulator runs in a service you cannot open. You get one client and one episode.
-**Task:** Lift the pot with **both** arms (both grippers holding it), put it down on the cooktop, upright, and let go with both grippers. The scene has the pot and the cooktop on the table.
+**Task:** Lift the pot with **both** arms, each gripper holding it, put it down upright on the cooktop, and let go with both grippers. The scene has the pot and the cooktop on the table.
 
 ## Success
 1. **pick**: the pot's centre is more than 5 cm above its resting height while **both** grippers grasp it (YAMLab's grasp detection: both fingers of that gripper touch the pot with at least 0.1 N, on their pads), for 8 consecutive control steps;

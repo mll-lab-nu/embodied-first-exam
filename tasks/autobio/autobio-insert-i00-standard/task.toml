@@ -13,7 +13,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/autobio-insert-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.2): AutoBio insert (Transfer centrifuge tube) on the same frozen instance as autobio-insert-i00-privileged: Move the 50 mL centrifuge tube (orange screw cap) from the rack it stands in to the other rack, into the slot AutoBio calls row 0, column 4 of that rack: of its two rows the one farther from the robot's base, and in that row the end slot on the side of the first rack. The agent only gets a client: cameras (RGB, optional depth, calibration), the robot's proprioception, joint position chunks, arm kinematics; one episode, no reset, no object or instrument state; the sim service records the episode and grades the live episode (no grading replay)."
+description = "STANDARD MODE (robot as a service, eai-standard/2.2): AutoBio insert (Transfer centrifuge tube) on the same frozen instance as autobio-insert-i00-privileged: Move the 50 mL centrifuge tube with the orange screw cap from the rack it stands in to the other rack, into the slot AutoBio calls row 0, column 4 of that rack: of its two rows the one farther from the robot's base, and in that row the end slot on the side of the first rack. The agent only gets a client: cameras (RGB, optional depth, calibration), the robot's proprioception, joint position chunks, arm kinematics; one episode, no reset, no object or instrument state; the sim service records the episode and grades the live episode (no grading replay)."
 keywords = ["robotics", "autobio", "mujoco", "laboratory", "biology", "ur5e-robotiq-2f85", "code-as-policy", "trajectory", "insert", "standard-mode"]
 
 [metadata]

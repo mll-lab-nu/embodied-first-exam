@@ -1,7 +1,7 @@
 # RoboARC (simulator package `topogym`) · cast_coil — STANDARD MODE (robot as a service, eai-standard/2.4)
 
 You control a robot (**two 6-DoF ALOHA (ViperX) arms with parallel-jaw grippers on a fixed base**) **as if it were real hardware**: the simulator runs in a service you cannot open. You get one
-client and one episode. **Task:** Assemble the gold and silver pieces into a cube with flush outer faces, then release both on the table.
+client and one episode. **Task:** Fit the gold and silver pieces together into a cube with flush outer faces, resting on the table. Then let go of both and move the robot clear of them.
 
 ## Success requirements
 

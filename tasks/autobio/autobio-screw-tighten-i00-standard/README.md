@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:autobio-0.1.0` |
 
 ## Task
-AutoBio's `screw_tighten` (Screw on centrifuge tube cap) on the same frozen instance as `autobio-screw-tighten-i00-privileged`: Screw the cap onto the 50 mL centrifuge tube. The tube stands open in the rack; its cap lies on the bench. Success the moment the cap is on the tube's thread, its axis within 5 mm of the tube's, and screwed down to within 3.3 mm of fully on.
+AutoBio's `screw_tighten` (Screw on centrifuge tube cap) on the same frozen instance as `autobio-screw-tighten-i00-privileged`: Screw the cap onto the 50 mL centrifuge tube. The tube stands open in the rack, and its cap lies on the bench. Success the moment the cap is on the tube's thread, its axis within 5 mm of the tube's, and screwed down to within 3.3 mm of fully on.
 On the bench: a rack with an open 50 mL tube standing in it, and the tube's screw cap lying on the bench. The thread is a real one: the cap goes on only by turning it. AutoBio's prompt for this task: "one grips tube while the other twists cap". Standard mode (eai-standard/2.2): the agent drives the robot through a client in one episode, with only its proprioception and the scene's cameras.
 
 ## Difficulty

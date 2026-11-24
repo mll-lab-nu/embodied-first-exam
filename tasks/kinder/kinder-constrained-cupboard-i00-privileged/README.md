@@ -15,7 +15,7 @@
 KinDER `kinder/ConstrainedCupboard3D-o6-v0` (Dynamic3D, TidyBot++), seed 0, privileged mode: the agent has the simulator and its state and
 hands in one trajectory, replayed open-loop in a fresh process. Its standard-mode twin is `kinder-constrained-cupboard-i00-standard`.
 
-Task: put the six brown rods lying on the floor (30 cm long) into the six 40 cm-tall compartments of the row of eleven narrow cupboards standing side by side, one rod each, as the state names pair them: rod `cuboid_i` into cupboard `cupboard_i` for i = 0 to 5, whose tall compartment is the upper one in `cupboard_0` to `cupboard_2` and the lower one in `cupboard_3` to `cupboard_5`. The task succeeds the moment every rod's centre is inside its compartment: above that compartment's shelf, below the shelf over it, and within the cupboard's 10 cm width and 30 cm depth.
+Task: put the six brown rods, each about 30 cm long, that lie on the floor into the tall compartments of six of the eleven narrow cupboards standing side by side in a row, one rod per cupboard, paired by their state names: rod `cuboid_i` goes into cupboard `cupboard_i`, for i = 0 to 5. The tall compartment is the upper one in `cupboard_0` to `cupboard_2` and the lower one in `cupboard_3` to `cupboard_5`. The task succeeds the moment every rod's centre is inside its compartment: above that compartment's shelf, below the shelf over it, and within the cupboard's 10 cm width and 30 cm depth.
 
 ## Difficulty
 Geometric: six identical rods, each into the one narrow compartment it is owed (standard mode names them by distance and by place in the row).

@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/roboarc-slotted-post-ring-01-i01-privileged"
-description = "RoboARC slotted_post_ring (ALOHA 2, MuJoCo): produce one replayable trajectory. Separate and place the entire removable metal ring inside the green dashed goal region. Keep the post, cord, beads and end discs on the puzzle/system side. Frozen scene instance (variation slotted_post_ring_very_easy, seed 0)."
+description = "RoboARC slotted_post_ring (ALOHA 2, MuJoCo): produce one replayable trajectory. Separate the removable metal ring from the puzzle and put the whole of it inside the green dashed goal region. Leave the post, cord, beads and end discs behind, no closer to the goal region than they were at the start. Frozen scene instance (variation slotted_post_ring_very_easy, seed 0)."
 keywords = ["robotics", "roboarc", "mujoco", "aloha", "code-as-policy", "trajectory", "slotted_post_ring"]
 
 [metadata]

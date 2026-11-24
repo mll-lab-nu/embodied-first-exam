@@ -1,7 +1,7 @@
 # RoboPaint · oil painting from a reference · Wanderer above the Sea of Fog (after Friedrich) — frozen instance
 
 You control a simulated **Franka Panda arm holding an oil-paint brush** via Python: ManiSkill 3.0.1 / SAPIEN 3.0.3 physics (PhysX on
-the CPU) for the robot; the paint is libmypaint's brush engine (MyPaint). **Task (paint from a reference):** paint the picture shown in `/app/target.png` (a square crop of Caspar David Friedrich's Wanderer above the Sea of Fog, c. 1817) onto the main sheet with brush and oil paints, **in at most 1974 strokes**.
+the CPU) for the robot; the paint is libmypaint's brush engine (MyPaint). **Task (paint from a reference):** paint the picture shown in `/app/target.png` onto the main sheet with brush and oil paints, **in at most 1974 strokes**. The picture is a square crop of Caspar David Friedrich's Wanderer above the Sea of Fog, c. 1817.
 
 This is a *fixed scene instance*: you may reset and retry as many times as you want. Your deliverable is **one replayable
 trajectory**, not a general policy.

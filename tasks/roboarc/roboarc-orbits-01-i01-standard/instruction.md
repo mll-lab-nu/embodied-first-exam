@@ -1,7 +1,7 @@
 # RoboARC (simulator package `topogym`) · orbits — STANDARD MODE (robot as a service, eai-standard/2.4)
 
 You control a robot (**two 6-DoF ALOHA (ViperX) arms with parallel-jaw grippers on a fixed base**) **as if it were real hardware**: the simulator runs in a service you cannot open. You get one
-client and one episode. **Task:** Separate and place the entire cord and wooden handle together inside the green dashed goal region. Keep the fixed post, stopper ball and base on the puzzle/system side.
+client and one episode. **Task:** Separate the cord and its wooden handle from the puzzle and put both, whole, inside the green dashed goal region. Leave the fixed post, the stopper ball and the base behind, no closer to the goal region than they were at the start.
 
 ## Success requirements
 

@@ -45,7 +45,7 @@ Caps per container (PROTOCOL §6).
 ## Details
 
 ### Goal
-Assemble the gold and silver Cast Coil pieces into their matching interlocking configuration, then release both.
+Fit the gold and silver Cast Coil pieces fully together, interlocked the way they are made to fit, with the assembly resting on the table. Then let go of both and move the robot clear of them.
 
 ### Success requirements
 - Align the pieces' matching assembly frames with relative position error below 1 mm and relative angular error below 0.02 rad.

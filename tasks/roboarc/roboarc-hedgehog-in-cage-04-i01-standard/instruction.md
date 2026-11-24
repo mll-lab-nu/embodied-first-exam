@@ -1,7 +1,7 @@
 # RoboARC (simulator package `topogym`) · hedgehog_in_cage — STANDARD MODE (robot as a service, eai-standard/2.4)
 
 You control a robot (**a 7-DoF Franka Panda arm with a Robotiq 2F-85 parallel gripper on a fixed base**) **as if it were real hardware**: the simulator runs in a service you cannot open. You get one
-client and one episode. **Task:** Separate and place the whole hedgehog ball, including every spike inside the green dashed goal region. Keep all cage components on the puzzle/system side.
+client and one episode. **Task:** Separate the hedgehog ball from the cage and put the whole of it, every spike included, inside the green dashed goal region. Leave all the cage parts behind, no closer to the goal region than they were at the start.
 
 ## Success requirements
 

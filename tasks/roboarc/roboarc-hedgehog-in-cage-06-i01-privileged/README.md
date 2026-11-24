@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:roboarc-0.2.0` |
 
 ## Task
-RoboARC hedgehog_in_cage (Franka Panda + Robotiq 2F-85, MuJoCo): produce one replayable trajectory. Separate and place the whole star, including every spike inside the green dashed goal region. Keep all cage components on the puzzle/system side. A thin rod with a box handle lies on the table; you may use it as a tool. It is a task piece: if it falls off the table (more than 100 mm below the tabletop), the episode ends in failure. Frozen scene instance (variation hedgehog_in_cage_cast_cage, seed 0).
+RoboARC hedgehog_in_cage (Franka Panda + Robotiq 2F-85, MuJoCo): produce one replayable trajectory. Separate the star from the cage and put the whole of it, every spike included, inside the green dashed goal region. Leave all the cage parts behind, no closer to the goal region than they were at the start. A thin rod with a box handle lies on the table, and you may use it as a tool. It counts as a task piece: if it falls off the table, the episode ends in failure. Frozen scene instance (variation hedgehog_in_cage_cast_cage, seed 0).
 
 ## Difficulty
 A 7-dof franka panda arm with a robotiq 2f-85 parallel gripper on a fixed base with a 8-D joint-target action space at 40 Hz; success needs the task's predicate (above) held for 2 s. Grasping: assisted grasping (contact_weld_v1).
@@ -49,7 +49,7 @@ Caps per container (PROTOCOL §6).
 | Success rule | task-native success (goal_complete True; frozen parameters; terminal revision hedgehog_placement_v4_grasp_contact_2mm) |
 
 ### Goal
-Separate and place the whole star, including every spike inside the green dashed goal region. Keep all cage components on the puzzle/system side. A thin rod with a box handle lies on the table; you may use it as a tool. It is a task piece: if it falls off the table (more than 100 mm below the tabletop), the episode ends in failure.
+Separate the star from the cage and put the whole of it, every spike included, inside the green dashed goal region. Leave all the cage parts behind, no closer to the goal region than they were at the start. A thin rod with a box handle lies on the table, and you may use it as a tool. It counts as a task piece: if it falls off the table, the episode ends in failure.
 
 ### Success requirements
 - Put every part of the whole star, including every spike inside the fixed goal volume, leaving at least 1 mm inside its horizontal border. The centre alone is insufficient; no tip, spike, ring segment or cord segment may remain outside.

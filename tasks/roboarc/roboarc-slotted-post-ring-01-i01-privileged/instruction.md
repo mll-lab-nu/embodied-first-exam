@@ -1,7 +1,7 @@
 # RoboARC (simulator package `topogym`) · slotted_post_ring — frozen instance
 
 You control a simulated robot (**two 6-DoF ALOHA (ViperX) arms with parallel-jaw grippers on a fixed base**; RoboARC on MuJoCo 3.14.0 physics, Nyx rendering) via Python.
-**Task:** Separate and place the entire removable metal ring inside the green dashed goal region. Keep the post, cord, beads and end discs on the puzzle/system side.
+**Task:** Separate the removable metal ring from the puzzle and put the whole of it inside the green dashed goal region. Leave the post, cord, beads and end discs behind, no closer to the goal region than they were at the start.
 
 ## Success requirements
 

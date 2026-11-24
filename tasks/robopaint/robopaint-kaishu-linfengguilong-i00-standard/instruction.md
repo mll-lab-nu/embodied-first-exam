@@ -2,8 +2,7 @@
 
 You control a **Franka Panda arm holding a large Chinese writing brush (毛笔)** (ManiSkill 3.0.1 physics; the brush's mark comes from
 a dynamic model of a real brush) **as if it were real hardware**: the simulator runs in a service you cannot open. You get one
-client and one episode. **Task (臨帖):** copy the exemplar work **麟鳳龜龍** (4 characters in regular script, 楷书, in two columns read right to left), shown in the picture
-`/app/target.png`, onto the main sheet with brush and ink, **in at most 71 strokes**.
+client and one episode. **Task (臨帖):** copy the exemplar work **麟鳳龜龍**, shown in the picture `/app/target.png`, onto the main sheet with brush and ink, **in at most 71 strokes**. It is 4 characters in regular script (楷书), in two columns read right to left.
 
 ## Rules (real-robot rules)
 - **No reset.** The episode starts when the service comes up and ends when your time is up (or on a simulator error). Ink is

@@ -15,7 +15,7 @@
 KinDER `kinder/Dynamo3D-o3-v0` (Dynamic3D, TidyBot++), seed 0, privileged mode: the agent has the simulator and its state and
 hands in one trajectory, replayed open-loop in a fresh process. Its standard-mode twin is `kinder-dynamo-i00-standard`.
 
-Task: drive the robot into the translucent green square marked on the floor; three chairs stand in the way and can be pushed. The task succeeds the moment the centre of the robot's base is inside the square. (The red, blue and yellow squares only mark where the chairs started.)
+Task: drive the robot into the translucent green square marked on the floor. Three chairs stand in the way, and you may push them. The task succeeds the moment the centre of the robot's base is inside the square. The red, blue and yellow squares only mark where the chairs started.
 
 ## Difficulty
 Nonprehensile: three chairs stand between the robot and the floor square, and the base can push them. The benchmark's fixture: the pipeline check, with an oracle in both modes.

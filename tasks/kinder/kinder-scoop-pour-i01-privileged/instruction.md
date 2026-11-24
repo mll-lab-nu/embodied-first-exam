@@ -1,7 +1,7 @@
 # scoop-pour — instance i01
 
 You control a simulated TidyBot++ mobile manipulator (KinDER / MuJoCo) via Python: a holonomic base, a Kinova Gen3
-7-DoF arm and a Robotiq 2F-85 gripper. **Task:** move all 50 small dark-red cubes from the yellow bin into the green bin; a scoop is in the scene. The task succeeds the moment every cube's centre is inside the green bin, at least 1 cm from each of its inner walls and at least 0.5 cm below its rim.
+7-DoF arm and a Robotiq 2F-85 gripper. **Task:** move all 50 small dark-red cubes from the yellow bin into the green bin. You may use the scoop in the scene. The task succeeds the moment every cube's centre is inside the green bin, at least 1 cm from each of its inner walls and at least 0.5 cm below its rim.
 
 This is a *fixed scene instance*: KinDER builds its scenes from a seed, and yours is pinned in `/app/instance.json`.
 You may reset and retry as many times as you want. Your deliverable is **one replayable trajectory**, not a general
