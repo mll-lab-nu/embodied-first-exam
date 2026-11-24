@@ -7,7 +7,7 @@ setup on Isaac Sim 5.1 / Isaac Lab, PhysX) via Python. RoboDojo capability dimen
 trajectory as soon as you have one and overwrite it as you improve it. Every Python process that opens a `Session` first
 spends ~3-5 min launching Isaac Sim and building the scene, and that time counts.
 
-**Task:** Pick up the two T-shaped blocks, exchange their positions, and set each down with the orientation the other one had, then return the arm(s) to the start pose.
+**Task:** Pick up the two T-shaped blocks, exchange their positions, and set each down with the orientation the other one had, then bring both arms back to where they started.
 
 RoboDojo's own instruction for this scene: *"Pick up the two T-shaped blocks, swap their positions, and place them back with the correct orientations."*
 

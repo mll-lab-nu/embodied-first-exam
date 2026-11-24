@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Standard-mode twin of `robodojo-fill-pen-holder-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/fill_pen_holder_0.json`). Use one arm to steady the pen holder and the other arm to drop all four pens (two pens and two oil pens) into it, pen tip down, then leave the holder upright on the table and return the arms home. (RoboDojo's `fill_pen_holder`). The agent drives the
+Standard-mode twin of `robodojo-fill-pen-holder-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/fill_pen_holder_0.json`). Use one arm to steady the pen holder and the other arm to drop all four pens into it: the white ballpoint writing tip down, and the black-and-gold pen and both markers cap end up. Then leave the holder upright on the table and return the arms home. (RoboDojo's `fill_pen_holder`). The agent drives the
 robot only through the eai-standard/2.2 client (the simulator runs in the `sim` sidecar), which owns the scene and records
 the episode as a (T, 14) trajectory of RoboDojo's own joint action at 25 Hz.
 

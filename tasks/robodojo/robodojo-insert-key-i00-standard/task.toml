@@ -14,7 +14,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/robodojo-insert-key-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.2): RoboDojo insert_key (Precision) on the same frozen layout as the privileged task (arx_x5/0/insert_key_0.json). Task: Pick up the key, pass it between hands, insert it into the keyhole (slot) and turn it so it ends fully inserted, upright and rotated. The agent only gets a client: get_obs (RGB, depth + proprioception of both arms), submit (joint_position or ee_pose chunks). No reset, no privileged state; the sim service records the episode as a trajectory and grades the live episode."
+description = "STANDARD MODE (robot as a service, eai-standard/2.2): RoboDojo insert_key (Precision) on the same frozen layout as the privileged task (arx_x5/0/insert_key_0.json). Task: Pick up the key (handing it from one gripper to the other is optional), push it blade first, ring up, into the keyhole with its teeth toward the right-hand end of the slit, then turn it about 60 degrees clockwise (seen from above), leaving it standing straight in the keyhole. The agent only gets a client: get_obs (RGB, depth + proprioception of both arms), submit (joint_position or ee_pose chunks). No reset, no privileged state; the sim service records the episode as a trajectory and grades the live episode."
 keywords = ["robotics", "robodojo", "isaac-lab", "isaac-sim", "bimanual", "arx-x5", "standard-mode", "trajectory"]
 
 [metadata]

@@ -8,7 +8,7 @@ Nothing is handed in: the service grades the episode when it ends (`## Episode e
 completed before the time limit (`## Time limit`) is up. The time you wait for the service counts: its first
 start in a trial takes ~4-15 min (Client, below).
 
-**Task:** Pick up the broom, hand it over to the other (right) arm, and use the broom with the dustpan (which stays on the table) to sweep all the small cubes into the dustpan, then return the arm(s) to the start pose.
+**Task:** Pick up the broom, hand it over to the other (right) arm, and use the broom with the dustpan (which stays on the table) to sweep all the small cubes into the dustpan, then leave the broom on the open (right) side of the dustpan and bring both arms back to where they started.
 
 RoboDojo's own instruction for this scene: *"Pick up the broom, hand it over to the right hand, then use the dustpan to sweep the blocks."*
 

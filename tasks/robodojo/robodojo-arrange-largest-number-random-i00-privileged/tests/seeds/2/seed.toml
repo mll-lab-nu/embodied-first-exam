@@ -25,3 +25,7 @@ new = "arx_x5/2/arrange_largest_number_random_0.json"
 [[replace]]
 old = "sha256 `c7897e5204ca76bb`"
 new = "sha256 `8ba2312da758e897`"
+
+[[replace]]
+old = "Place the four digit blocks on the four mats so that the row reads the largest possible number from left to right, keeping each block flat, face up and turned as it is now; then bring both arms back to where they started."
+new = "Place the five digit blocks on the five mats so that the row reads the largest possible number from left to right, keeping each block flat, face up and turned as it is now; then bring both arms back to where they started."

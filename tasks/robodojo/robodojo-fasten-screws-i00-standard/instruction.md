@@ -8,7 +8,7 @@ Nothing is handed in: the service grades the episode when it ends (`## Episode e
 completed before the time limit (`## Time limit`) is up. The time you wait for the service counts: its first
 start in a trial takes ~4-15 min (Client, below).
 
-**Task:** Pick up each of the three nuts and screw/place it onto the bolt of the same colour (same model index), so each nut sits upright and centred on its bolt, then open the gripper and return the arm home.
+**Task:** Thread each of the three nuts, lying flat with the same face up as now, down onto the bolt of the same colour; then open both grippers fully and bring both arms back to where they started.
 
 RoboDojo's own instruction for this scene: *"Insert and tighten each screw into the nut of the same color."*
 

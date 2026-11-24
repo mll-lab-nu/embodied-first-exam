@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/robodojo-stack-bowls-random-i00-privileged"
-description = "RoboDojo stack_bowls_random (Generalization (randomised variant: other models, clutter); two ARX X5 arms with parallel grippers, Isaac Sim 5.1 / Isaac Lab): produce one replayable trajectory of RoboDojo's 14-D joint actions. Task: Nest/stack the three identical bowls into one stack, then return the arm(s) to the start pose. Distractor objects are on the table. Frozen scene instance: RoboDojo's own evaluation layout arx_x5/0/stack_bowls_random_0.json; graded by RoboDojo's own reward check."
+description = "RoboDojo stack_bowls_random (Generalization (randomised variant: other models, clutter); two ARX X5 arms with parallel grippers, Isaac Sim 5.1 / Isaac Lab): produce one replayable trajectory of RoboDojo's 14-D joint actions. Task: Nest/stack the three identical bowls into one stack, then bring both arms back to where they started. Distractor objects are on the table. Frozen scene instance: RoboDojo's own evaluation layout arx_x5/0/stack_bowls_random_0.json; graded by RoboDojo's own reward check."
 keywords = ["robotics", "robodojo", "isaac-lab", "isaac-sim", "bimanual", "arx-x5", "code-as-policy", "trajectory", "privileged"]
 
 [metadata]

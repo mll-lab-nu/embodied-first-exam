@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Put the hammer, pliers, tape measure and wrench each into its matching slot inside the toolbox (with the right orientation), then return the arm(s) to the start pose. (RoboDojo's `store_tools_in_toolbox`). RoboDojo capability dimension: Open. Instance i00 is RoboDojo's own evaluation layout
+Put the hammer, pliers, tape measure and wrench each into its matching slot inside the toolbox (with the right orientation), then bring both arms back to where they started. (RoboDojo's `store_tools_in_toolbox`). RoboDojo capability dimension: Open. Instance i00 is RoboDojo's own evaluation layout
 `arx_x5/0/store_tools_in_toolbox_0.json` (sha256 `e5afcda29f1d149b`), frozen in `instance.json`. The deliverable is one replayable trajectory of
 RoboDojo's 14-D joint action at 25 Hz (`/app/output/trajectory.npz`), graded by RoboDojo's own reward check for the task,
 with no step cap (RoboDojo's own evaluation gives a policy 900 actions; PROTOCOL §3).

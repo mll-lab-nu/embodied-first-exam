@@ -7,7 +7,7 @@ setup on Isaac Sim 5.1 / Isaac Lab, PhysX) via Python. RoboDojo capability dimen
 trajectory as soon as you have one and overwrite it as you improve it. Every Python process that opens a `Session` first
 spends ~3-5 min launching Isaac Sim and building the scene, and that time counts.
 
-**Task:** Cover the three coloured blocks with the three cups one after another from left to right, remember which colour is under which cup, then uncover them one at a time in the order red, green, blue, and finally return the arm home.
+**Task:** Cover the three coloured blocks with the three cups one after another from left to right, remember which colour is under which cup, then uncover them one at a time in the order red, green, blue, and finally bring both arms back to where they started.
 
 RoboDojo's own instruction for this scene: *"Cover the blocks from left to right, remember their colors, then uncover them in the order: red, green, and blue."*
 

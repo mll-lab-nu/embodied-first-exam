@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Standard-mode twin of `robodojo-organize-table-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/organize_table_0.json`). Tidy the desk: put the alarm clock on the drawer, put the figurine on its stand (cube cushion), put the mouse on the mouse pad, push the keyboard into the frame, and return both arms to their start pose. (RoboDojo's `organize_table`). The agent drives the
+Standard-mode twin of `robodojo-organize-table-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/organize_table_0.json`). Tidy the desk: put the alarm clock on the drawer, stand the cactus toy upright on the small grey square pad, put the mouse on the mouse pad, push the keyboard into the frame, and return both arms to their start pose. (RoboDojo's `organize_table`). The agent drives the
 robot only through the eai-standard/2.2 client (the simulator runs in the `sim` sidecar), which owns the scene and records
 the episode as a (T, 14) trajectory of RoboDojo's own joint action at 25 Hz.
 

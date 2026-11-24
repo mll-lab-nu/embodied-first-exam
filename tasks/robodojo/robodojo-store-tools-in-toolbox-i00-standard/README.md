@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Standard-mode twin of `robodojo-store-tools-in-toolbox-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/store_tools_in_toolbox_0.json`). Put the hammer, pliers, tape measure and wrench each into its matching slot inside the toolbox (with the right orientation), then return the arm(s) to the start pose. (RoboDojo's `store_tools_in_toolbox`). The agent drives the
+Standard-mode twin of `robodojo-store-tools-in-toolbox-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/store_tools_in_toolbox_0.json`). Put the hammer, pliers, tape measure and wrench each into its matching slot inside the toolbox (with the right orientation), then bring both arms back to where they started. (RoboDojo's `store_tools_in_toolbox`). The agent drives the
 robot only through the eai-standard/2.2 client (the simulator runs in the `sim` sidecar), which owns the scene and records
 the episode as a (T, 14) trajectory of RoboDojo's own joint action at 25 Hz.
 

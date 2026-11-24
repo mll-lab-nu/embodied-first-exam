@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Cover the three coloured blocks with the three cups one after another from left to right, remember which colour is under which cup, then uncover them one at a time in the order red, green, blue, and finally return the arm home. (RoboDojo's `cover_blocks`). RoboDojo capability dimension: Memory. Instance i00 is RoboDojo's own evaluation layout
+Cover the three coloured blocks with the three cups one after another from left to right, remember which colour is under which cup, then uncover them one at a time in the order red, green, blue, and finally bring both arms back to where they started. (RoboDojo's `cover_blocks`). RoboDojo capability dimension: Memory. Instance i00 is RoboDojo's own evaluation layout
 `arx_x5/0/cover_blocks_0.json` (sha256 `10a84eed03be80f3`), frozen in `instance.json`. The deliverable is one replayable trajectory of
 RoboDojo's 14-D joint action at 25 Hz (`/app/output/trajectory.npz`), graded by RoboDojo's own reward check for the task,
 with no step cap (RoboDojo's own evaluation gives a policy 800 actions; PROTOCOL §3).

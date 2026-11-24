@@ -7,7 +7,7 @@ setup on Isaac Sim 5.1 / Isaac Lab, PhysX) via Python. RoboDojo capability dimen
 trajectory as soon as you have one and overwrite it as you improve it. Every Python process that opens a `Session` first
 spends ~3-5 min launching Isaac Sim and building the scene, and that time counts.
 
-**Task:** Put each named category of objects into the specified basket (left, middle, right) as given in the language instruction, then put the arm back home.
+**Task:** Put each named category of objects into the specified basket (left, middle, right) as given in the language instruction, then bring both arms back to where they started.
 
 RoboDojo's own instruction for this scene: *"Put car objects into the left basket, watch objects into the middle basket, and wooden_toy objects into the right basket, then reset the robot arm."*
 

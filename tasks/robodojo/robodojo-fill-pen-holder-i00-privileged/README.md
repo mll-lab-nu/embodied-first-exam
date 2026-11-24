@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Use one arm to steady the pen holder and the other arm to drop all four pens (two pens and two oil pens) into it, pen tip down, then leave the holder upright on the table and return the arms home. (RoboDojo's `fill_pen_holder`). RoboDojo capability dimension: Long-Horizon. Instance i00 is RoboDojo's own evaluation layout
+Use one arm to steady the pen holder and the other arm to drop all four pens into it: the white ballpoint writing tip down, and the black-and-gold pen and both markers cap end up. Then leave the holder upright on the table and return the arms home. (RoboDojo's `fill_pen_holder`). RoboDojo capability dimension: Long-Horizon. Instance i00 is RoboDojo's own evaluation layout
 `arx_x5/0/fill_pen_holder_0.json` (sha256 `346dfc9c75c87c95`), frozen in `instance.json`. The deliverable is one replayable trajectory of
 RoboDojo's 14-D joint action at 25 Hz (`/app/output/trajectory.npz`), graded by RoboDojo's own reward check for the task,
 with no step cap (RoboDojo's own evaluation gives a policy 1100 actions; PROTOCOL §3).

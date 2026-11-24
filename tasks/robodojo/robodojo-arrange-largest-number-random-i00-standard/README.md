@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Standard-mode twin of `robodojo-arrange-largest-number-random-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/arrange_largest_number_random_0.json`). Look at the digit blocks on the table (4 or 5 of them) and place them on the row of mats so that, read in order along the row, they form the largest possible number (largest digit on the first mat, smallest on the last), then return the arm home. (RoboDojo's `arrange_largest_number_random`). The agent drives the
+Standard-mode twin of `robodojo-arrange-largest-number-random-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/arrange_largest_number_random_0.json`). Place the four digit blocks on the four mats so that the row reads the largest possible number from left to right, keeping each block flat, face up and turned as it is now; then bring both arms back to where they started. (RoboDojo's `arrange_largest_number_random`). The agent drives the
 robot only through the eai-standard/2.2 client (the simulator runs in the `sim` sidecar), which owns the scene and records
 the episode as a (T, 14) trajectory of RoboDojo's own joint action at 25 Hz.
 

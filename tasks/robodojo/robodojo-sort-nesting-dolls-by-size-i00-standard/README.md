@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Standard-mode twin of `robodojo-sort-nesting-dolls-by-size-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/sort_nesting_dolls_by_size_0.json`). Arrange the five nesting dolls upright in a straight row, ordered by size from the smallest at the smallest world x to the largest at the largest world x, and return the arms to their start pose. (RoboDojo's `sort_nesting_dolls_by_size`). The agent drives the
+Standard-mode twin of `robodojo-sort-nesting-dolls-by-size-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/sort_nesting_dolls_by_size_0.json`). Line up the five yellow rubber ducks, standing upright, in one straight left-to-right row: smallest on the left, largest on the right. Then bring both arms back to where they started. (RoboDojo's `sort_nesting_dolls_by_size`). The agent drives the
 robot only through the eai-standard/2.2 client (the simulator runs in the `sim` sidecar), which owns the scene and records
 the episode as a (T, 14) trajectory of RoboDojo's own joint action at 25 Hz.
 

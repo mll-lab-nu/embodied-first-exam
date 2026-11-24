@@ -25,8 +25,7 @@ The objects the check reads (RoboDojo's labels in brackets; left/right = world -
   pointing toward you and to the right [shoe].
 
 An object's *centre* below is the point RoboDojo tests for it (its origin): for the car, toothbrush, hammer and shoe
-that is the middle of its bounding box. Each item's *front end* is: for the car, the end that points right at the start (RoboDojo's frame for the car is
-set by the asset: go by that start pose, not by the car's styling), the toothbrush's brush head, the
+that is the middle of its bounding box. Each item's *front end* is: the car's nose (pointing right at the start), the toothbrush's brush head, the
 hammer's head and the shoe's toe. All of these must hold at the same action boundary:
 - **Each of the car, toothbrush, hammer and shoe** (each item separately):
   - its centre, seen from above, inside the box's floor area: the box's full depth front to back, but only the
@@ -65,9 +64,9 @@ be open.
 
 **Notes from RoboDojo's code.** "Front" is fixed by the code, not by the instruction alone: the car, toothbrush and
 hammer are tested through an asset-defined frame [active functional point 'checkpoint'] whose +x runs along the item's
-length toward the car's front end (as defined above), the brush head and the hammer head; the shoe is tested through its own body frame, whose
+length toward the car's nose, the brush head and the hammer head; the shoe is tested through its own body frame, whose
 +x points to the heel, so the code asks for the shoe's +x to point right while it asks for the others' 'checkpoint'
-+x to point left. Physically all four come to the same thing: the car's front end, brush head, hammer head and toe toward the left. Placement is tested only on each item's centre, seen
++x to point left. Physically all four come to the same thing: the car's nose, brush head, hammer head and toe toward the left. Placement is tested only on each item's centre, seen
 from above, against the box's floor area, with no height test: an item may lean on the box wall or overhang, and in
 principle could rest on the rim as long as its centre is over that area. The heading tests ignore tilt (they are
 measured seen from above), so an item lying on its side counts; only the box itself must stay upright. The box is

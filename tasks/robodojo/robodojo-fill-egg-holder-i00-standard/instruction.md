@@ -8,7 +8,7 @@ Nothing is handed in: the service grades the episode when it ends (`## Episode e
 completed before the time limit (`## Time limit`) is up. The time you wait for the service counts: its first
 start in a trial takes ~4-15 min (Client, below).
 
-**Task:** Move the four eggs from the egg basket into the egg holder (an articulated tray with a lid), close the lid, and return the arm home.
+**Task:** Move the four eggs from the egg basket into the egg holder (an articulated tray with a lid), close the lid, and bring both arms back to where they started.
 
 RoboDojo's own instruction for this scene: *"Place the four eggs from the basket into the egg holder, then close the lid."*
 

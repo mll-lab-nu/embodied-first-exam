@@ -8,7 +8,7 @@ Nothing is handed in: the service grades the episode when it ends (`## Episode e
 completed before the time limit (`## Time limit`) is up. The time you wait for the service counts: its first
 start in a trial takes ~4-15 min (Client, below).
 
-**Task:** Hang the headphones on the headphone stand, close the laptop, then put the closed laptop upright into the vertical laptop storage rack, and finally return the arm(s) to the start pose.
+**Task:** Hang the headphones by their headband on the stand's hanger, with the ear cup now on the right still on the right and the side now on the table facing away from you; close the laptop and stand it in the rack on its front edge, hinge edge up; then bring both arms back to where they started.
 
 RoboDojo's own instruction for this scene: *"Hang the headphones on the headphone stand, close the laptop, then place it into the vertical laptop stand."*
 

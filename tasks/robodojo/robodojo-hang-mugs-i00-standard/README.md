@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Standard-mode twin of `robodojo-hang-mugs-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/hang_mugs_0.json`). Hang all three mugs by their handles on the mug rack (cup_holder), then bring both arms back to where they started. (RoboDojo's `hang_mugs`). The agent drives the
+Standard-mode twin of `robodojo-hang-mugs-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/hang_mugs_0.json`). Hang each of the three mugs by its handle on one of the four rack arms that point left or right (not the two pointing toward or away from you), then bring both arms back to where they started. (RoboDojo's `hang_mugs`). The agent drives the
 robot only through the eai-standard/2.2 client (the simulator runs in the `sim` sidecar), which owns the scene and records
 the episode as a (T, 14) trajectory of RoboDojo's own joint action at 25 Hz.
 

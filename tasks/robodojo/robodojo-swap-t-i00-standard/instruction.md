@@ -8,7 +8,7 @@ Nothing is handed in: the service grades the episode when it ends (`## Episode e
 completed before the time limit (`## Time limit`) is up. The time you wait for the service counts: its first
 start in a trial takes ~4-15 min (Client, below).
 
-**Task:** Pick up the two T-shaped blocks, exchange their positions, and set each down with the orientation the other one had, then return the arm(s) to the start pose.
+**Task:** Pick up the two T-shaped blocks, exchange their positions, and set each down with the orientation the other one had, then bring both arms back to where they started.
 
 RoboDojo's own instruction for this scene: *"Pick up the two T-shaped blocks, swap their positions, and place them back with the correct orientations."*
 

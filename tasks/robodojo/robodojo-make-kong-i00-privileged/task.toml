@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/robodojo-make-kong-i00-privileged"
-description = "RoboDojo make_kong (Long-Horizon; two ARX X5 arms with parallel grippers, Isaac Sim 5.1 / Isaac Lab): produce one replayable trajectory of RoboDojo's 14-D joint actions. Task: Wait for the opponent (support arm) to discard a mahjong tile, then declare a kong: flip the three tiles in your row that match the discarded tile and put the extra tile (mahjong9_0) upright at the end of your row, with grippers open. Frozen scene instance: RoboDojo's own evaluation layout arx_x5/0/make_kong_0.json; graded by RoboDojo's own reward check."
+description = "RoboDojo make_kong (Long-Horizon; two ARX X5 arms with parallel grippers, Isaac Sim 5.1 / Isaac Lab): produce one replayable trajectory of RoboDojo's 14-D joint actions. Task: Wait for the opponent (support arm) to discard a mahjong tile, then declare a kong: flip the three tiles of your row that show the discarded tile's picture face up, then take the face-down tile from the top of the front stack at the far left, stand it upright at the right end of your row next to the last tile, and open both grippers. Frozen scene instance: RoboDojo's own evaluation layout arx_x5/0/make_kong_0.json; graded by RoboDojo's own reward check."
 keywords = ["robotics", "robodojo", "isaac-lab", "isaac-sim", "bimanual", "arx-x5", "code-as-policy", "trajectory", "privileged"]
 
 [metadata]

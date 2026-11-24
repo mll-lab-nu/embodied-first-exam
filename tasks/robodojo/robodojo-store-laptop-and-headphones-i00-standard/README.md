@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Standard-mode twin of `robodojo-store-laptop-and-headphones-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/store_laptop_and_headphones_0.json`). Hang the headphones on the headphone stand, close the laptop, then put the closed laptop upright into the vertical laptop storage rack, and finally return the arm(s) to the start pose. (RoboDojo's `store_laptop_and_headphones`). The agent drives the
+Standard-mode twin of `robodojo-store-laptop-and-headphones-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/store_laptop_and_headphones_0.json`). Hang the headphones by their headband on the stand's hanger, with the ear cup now on the right still on the right and the side now on the table facing away from you; close the laptop and stand it in the rack on its front edge, hinge edge up; then bring both arms back to where they started. (RoboDojo's `store_laptop_and_headphones`). The agent drives the
 robot only through the eai-standard/2.2 client (the simulator runs in the `sim` sidecar), which owns the scene and records
 the episode as a (T, 14) trajectory of RoboDojo's own joint action at 25 Hz.
 

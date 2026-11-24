@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Pick up the broom, hand it over to the other (right) arm, and use the broom with the dustpan (which stays on the table) to sweep all the small objects (bricks, earbuds, paper balls) into the dustpan, then return the arm(s) to the start pose. (RoboDojo's `sweep_blocks_random`). RoboDojo capability dimension: Generalization (randomised variant: other models, clutter). Instance i00 is RoboDojo's own evaluation layout
+Pick up the broom, hand it over to the other (right) arm, and use the broom with the dustpan (which stays on the table) to sweep the five small objects (a toy brick, two earbuds, two paper balls) into the dustpan, then leave the broom on the open (right) side of the dustpan and bring both arms back to where they started. (RoboDojo's `sweep_blocks_random`). RoboDojo capability dimension: Generalization (randomised variant: other models, clutter). Instance i00 is RoboDojo's own evaluation layout
 `arx_x5/0/sweep_blocks_random_0.json` (sha256 `d04495ad79faf3f3`), frozen in `instance.json`. The deliverable is one replayable trajectory of
 RoboDojo's 14-D joint action at 25 Hz (`/app/output/trajectory.npz`), graded by RoboDojo's own reward check for the task,
 with no step cap (RoboDojo's own evaluation gives a policy 1000 actions; PROTOCOL §3).

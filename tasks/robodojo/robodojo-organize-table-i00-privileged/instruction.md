@@ -7,7 +7,7 @@ setup on Isaac Sim 5.1 / Isaac Lab, PhysX) via Python. RoboDojo capability dimen
 trajectory as soon as you have one and overwrite it as you improve it. Every Python process that opens a `Session` first
 spends ~3-5 min launching Isaac Sim and building the scene, and that time counts.
 
-**Task:** Tidy the desk: put the alarm clock on the drawer, put the figurine on its stand (cube cushion), put the mouse on the mouse pad, push the keyboard into the frame, and return both arms to their start pose.
+**Task:** Tidy the desk: put the alarm clock on the drawer, stand the cactus toy upright on the small grey square pad, put the mouse on the mouse pad, push the keyboard into the frame, and return both arms to their start pose.
 
 RoboDojo's own instruction for this scene: *"Place the alarm clock on the drawer, put the figurine on the stand, place the mouse on the mouse pad, and push the keyboard into the frame."*
 

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Stack the wooden blocks and boards into a three-level tower: two pillar blocks (one on the left, one on the right) with a long board across them, two more blocks standing on that board with a second board on top, and finally the two top pieces stacked on the second board; then send the arm home. (RoboDojo's `build_tower`). RoboDojo capability dimension: Precision. Instance i00 is RoboDojo's own evaluation layout
+Stack the wooden blocks and boards into a three-level tower: two white pillar blocks (one of the two that start on the left, one of the two that start on the right) with the long board across them, the other two pillars standing on that board with the short board on top, then the thin plank on the short board and the green roof piece on the plank; then send both arms home. (RoboDojo's `build_tower`). RoboDojo capability dimension: Precision. Instance i00 is RoboDojo's own evaluation layout
 `arx_x5/0/build_tower_0.json` (sha256 `afcf896086392357`), frozen in `instance.json`. The deliverable is one replayable trajectory of
 RoboDojo's 14-D joint action at 25 Hz (`/app/output/trajectory.npz`), graded by RoboDojo's own reward check for the task,
 with no step cap (RoboDojo's own evaluation gives a policy 1050 actions; PROTOCOL §3).

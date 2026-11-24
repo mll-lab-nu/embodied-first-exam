@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Look at the digit blocks on the table (4 or 5 of them) and place them on the row of mats so that, read in order along the row, they form the largest possible number (largest digit on the first mat, smallest on the last), then return the arm home. (RoboDojo's `arrange_largest_number_random`). RoboDojo capability dimension: Generalization (randomised variant: other models, clutter). Instance i00 is RoboDojo's own evaluation layout
+Place the four digit blocks on the four mats so that the row reads the largest possible number from left to right, keeping each block flat, face up and turned as it is now; then bring both arms back to where they started. (RoboDojo's `arrange_largest_number_random`). RoboDojo capability dimension: Generalization (randomised variant: other models, clutter). Instance i00 is RoboDojo's own evaluation layout
 `arx_x5/0/arrange_largest_number_random_0.json` (sha256 `c7897e5204ca76bb`), frozen in `instance.json`. The deliverable is one replayable trajectory of
 RoboDojo's 14-D joint action at 25 Hz (`/app/output/trajectory.npz`), graded by RoboDojo's own reward check for the task,
 with no step cap (RoboDojo's own evaluation gives a policy 1050 actions; PROTOCOL §3).

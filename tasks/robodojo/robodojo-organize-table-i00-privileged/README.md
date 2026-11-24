@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Tidy the desk: put the alarm clock on the drawer, put the figurine on its stand (cube cushion), put the mouse on the mouse pad, push the keyboard into the frame, and return both arms to their start pose. (RoboDojo's `organize_table`). RoboDojo capability dimension: Long-Horizon. Instance i00 is RoboDojo's own evaluation layout
+Tidy the desk: put the alarm clock on the drawer, stand the cactus toy upright on the small grey square pad, put the mouse on the mouse pad, push the keyboard into the frame, and return both arms to their start pose. (RoboDojo's `organize_table`). RoboDojo capability dimension: Long-Horizon. Instance i00 is RoboDojo's own evaluation layout
 `arx_x5/0/organize_table_0.json` (sha256 `e55e5cffef73b196`), frozen in `instance.json`. The deliverable is one replayable trajectory of
 RoboDojo's 14-D joint action at 25 Hz (`/app/output/trajectory.npz`), graded by RoboDojo's own reward check for the task,
 with no step cap (RoboDojo's own evaluation gives a policy 1000 actions; PROTOCOL §3).

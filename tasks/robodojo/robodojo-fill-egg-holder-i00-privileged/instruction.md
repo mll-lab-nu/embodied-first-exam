@@ -7,14 +7,14 @@ setup on Isaac Sim 5.1 / Isaac Lab, PhysX) via Python. RoboDojo capability dimen
 trajectory as soon as you have one and overwrite it as you improve it. Every Python process that opens a `Session` first
 spends ~3-5 min launching Isaac Sim and building the scene, and that time counts.
 
-**Task:** Move the four eggs from the egg basket into the egg holder (an articulated tray with a lid), close the lid, and return the arm home.
+**Task:** Move the four eggs from the egg basket into the egg holder (an articulated tray with a lid), close the lid, and bring both arms back to where they started.
 
 RoboDojo's own instruction for this scene: *"Place the four eggs from the basket into the egg holder, then close the lid."*
 
 The scene's labelled objects (RoboDojo's labels; `s.objects()` gives their poses and bounding boxes):
 - egg_basket: egg basket (Geometry, category egg_basket), 1, on the table, x in [-0.4,0.4], y in [-0.2,-0.1], random yaw within +/-30 deg.
 - target0..target3: eggs (category egg), 4, start in/on the basket: positions relative to the basket's plane 'egg_basket/egg_basket/0', x,y in [-0.1,0.1] (basket-local), random yaw +/-45 deg, margin 0 (so they may touch).
-- egg_holder: egg holder with hinged lid (Articulation, category egg_holder), 1, on the table, x in [-0.05,0.05], y in [-0.2,-0.1] (near the centre), initial lid state is whatever the asset's default is (presumably open, not determinable statically).
+- egg_holder: egg holder with hinged lid (Articulation, category egg_holder), 1, on the table, x in [-0.05,0.05], y in [-0.2,-0.1] (near the centre), the lid starts open (the asset's default joint state: lid standing upright behind the cups).
 
 This is a *fixed scene instance*: one of RoboDojo's own evaluation layouts (`arx_x5/0/fill_egg_holder_0.json`), frozen; the objects and the
 robot's start pose never change between resets. You may reset and retry as many times as you want. Your deliverable is

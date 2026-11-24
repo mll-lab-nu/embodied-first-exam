@@ -7,7 +7,7 @@ setup on Isaac Sim 5.1 / Isaac Lab, PhysX) via Python. RoboDojo capability dimen
 trajectory as soon as you have one and overwrite it as you improve it. Every Python process that opens a `Session` first
 spends ~3-5 min launching Isaac Sim and building the scene, and that time counts.
 
-**Task:** Hang all three mugs by their handles on the mug rack (cup holder) with the arm(s), then return the arm home.
+**Task:** Hang the three mugs on the rack's arms that point left or right: the red mug by its handle, and each of the two pink pumpkin mugs from one of the two left-pointing arms, its opening facing left along the arm. Then bring both arms back to where they started.
 
 RoboDojo's own instruction for this scene: *"Hang all the mugs on the mug rack."*
 

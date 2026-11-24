@@ -8,7 +8,7 @@ Nothing is handed in: the service grades the episode when it ends (`## Episode e
 completed before the time limit (`## Time limit`) is up. The time you wait for the service counts: its first
 start in a trial takes ~4-15 min (Client, below).
 
-**Task:** Cover the three coloured blocks with the three cups one after another from left to right, remember which colour is under which cup, then uncover them one at a time in the order red, green, blue, and finally return the arm home.
+**Task:** Cover the three coloured blocks with the three cups one after another from left to right, remember which colour is under which cup, then uncover them one at a time in the order red, green, blue, and finally bring both arms back to where they started.
 
 RoboDojo's own instruction for this scene: *"Cover the blocks from left to right, remember their colors, then uncover them in the order: red, green, and blue."*
 

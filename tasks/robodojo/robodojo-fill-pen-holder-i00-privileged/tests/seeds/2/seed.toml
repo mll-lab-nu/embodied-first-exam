@@ -13,3 +13,7 @@ new = "arx_x5/2/fill_pen_holder_0.json"
 [[replace]]
 old = "sha256 `346dfc9c75c87c95`"
 new = "sha256 `5cb119b226d1ce98`"
+
+[[replace]]
+old = "Use one arm to steady the pen holder and the other arm to drop all four pens into it: the white ballpoint writing tip down, and the black-and-gold pen and both markers cap end up. Then leave the holder upright on the table and return the arms home."
+new = "Use one arm to steady the pen holder and the other arm to drop all four pens into it: both white ballpoints writing tip down, and both markers cap end up. Then leave the holder upright on the table and return the arms home."

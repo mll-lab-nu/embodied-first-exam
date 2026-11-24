@@ -7,7 +7,7 @@ setup on Isaac Sim 5.1 / Isaac Lab, PhysX) via Python. RoboDojo capability dimen
 trajectory as soon as you have one and overwrite it as you improve it. Every Python process that opens a `Session` first
 spends ~3-5 min launching Isaac Sim and building the scene, and that time counts.
 
-**Task:** Look at the digit blocks on the table (4 or 5 of them) and place them on the row of mats so that, read in order along the row, they form the largest possible number (largest digit on the first mat, smallest on the last), then return the arm home.
+**Task:** Place the four digit blocks on the four mats so that the row reads the largest possible number from left to right, keeping each block flat, face up and turned as it is now; then bring both arms back to where they started.
 
 RoboDojo's own instruction for this scene: *"Arrange the numbers from left to right to form the largest possible number, and place them on the pad."*
 

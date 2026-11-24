@@ -25,3 +25,7 @@ new = "arx_x5/1/sweep_blocks_random_0.json"
 [[replace]]
 old = "sha256 `d04495ad79faf3f3`"
 new = "sha256 `57202a3a3660f8a8`"
+
+[[replace]]
+old = "Pick up the broom, hand it over to the other (right) arm, and use the broom with the dustpan (which stays on the table) to sweep the five small objects (a toy brick, two earbuds, two paper balls) into the dustpan, then leave the broom on the open (right) side of the dustpan and bring both arms back to where they started."
+new = "Pick up the broom, hand it over to the other (right) arm, and use the broom with the dustpan (which stays on the table) to sweep the six small objects (two toy bricks, two earbuds, two paper balls) into the dustpan, then leave the broom on the open (right) side of the dustpan and bring both arms back to where they started."

@@ -8,7 +8,7 @@ Nothing is handed in: the service grades the episode when it ends (`## Episode e
 completed before the time limit (`## Time limit`) is up. The time you wait for the service counts: its first
 start in a trial takes ~4-15 min (Client, below).
 
-**Task:** Play tic-tac-toe as the first player against the support-arm opponent: place your 5 pieces on the 3x3 board, taking turns with the opponent arm (which places its 4 pieces on random empty cells), until all 9 cells hold a piece.
+**Task:** Play tic-tac-toe as the first player against the opponent arm: put one of your gold rings on an empty cell, then bring both arms back home and keep them there until the opponent has placed its cross; repeat until all nine cells are filled.
 
 RoboDojo's own instruction for this scene: *"Play tic-tac-toe as the first player and fill the board with the opponent."*
 

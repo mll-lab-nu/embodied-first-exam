@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Standard-mode twin of `robodojo-swap-t-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/swap_T_0.json`). Pick up the two T-shaped blocks, exchange their positions, and set each down with the orientation the other one had, then return the arm(s) to the start pose. (RoboDojo's `swap_T`). The agent drives the
+Standard-mode twin of `robodojo-swap-t-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/swap_T_0.json`). Pick up the two T-shaped blocks, exchange their positions, and set each down with the orientation the other one had, then bring both arms back to where they started. (RoboDojo's `swap_T`). The agent drives the
 robot only through the eai-standard/2.2 client (the simulator runs in the `sim` sidecar), which owns the scene and records
 the episode as a (T, 14) trajectory of RoboDojo's own joint action at 25 Hz.
 

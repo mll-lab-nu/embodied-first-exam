@@ -8,7 +8,7 @@ Nothing is handed in: the service grades the episode when it ends (`## Episode e
 completed before the time limit (`## Time limit`) is up. The time you wait for the service counts: its first
 start in a trial takes ~4-15 min (Client, below).
 
-**Task:** Nest/stack the three identical bowls into one stack, then return the arm(s) to the start pose. Distractor objects are on the table.
+**Task:** Nest/stack the three identical bowls into one stack, then bring both arms back to where they started. Distractor objects are on the table.
 
 RoboDojo's own instruction for this scene: *"Stack the three bowls together."*
 

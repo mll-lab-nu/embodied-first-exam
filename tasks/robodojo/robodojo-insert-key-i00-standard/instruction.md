@@ -8,7 +8,7 @@ Nothing is handed in: the service grades the episode when it ends (`## Episode e
 completed before the time limit (`## Time limit`) is up. The time you wait for the service counts: its first
 start in a trial takes ~4-15 min (Client, below).
 
-**Task:** Pick up the key, pass it between hands, insert it into the keyhole (slot) and turn it so it ends fully inserted, upright and rotated.
+**Task:** Pick up the key (handing it from one gripper to the other is optional), push it blade first, ring up, into the keyhole with its teeth toward the right-hand end of the slit, then turn it about 60 degrees clockwise (seen from above), leaving it standing straight in the keyhole.
 
 RoboDojo's own instruction for this scene: *"Pick up the key, hand it over to the other hand, insert it into the keyhole, then turn it."*
 

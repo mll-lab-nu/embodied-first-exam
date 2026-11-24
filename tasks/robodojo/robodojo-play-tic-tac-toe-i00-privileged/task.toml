@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/robodojo-play-tic-tac-toe-i00-privileged"
-description = "RoboDojo play_tic_tac_toe (Long-Horizon; two ARX X5 arms with parallel grippers, Isaac Sim 5.1 / Isaac Lab): produce one replayable trajectory of RoboDojo's 14-D joint actions. Task: Play tic-tac-toe as the first player against the support-arm opponent: place your 5 pieces on the 3x3 board, taking turns with the opponent arm (which places its 4 pieces on random empty cells), until all 9 cells hold a piece. Frozen scene instance: RoboDojo's own evaluation layout arx_x5/0/play_tic_tac_toe_0.json; graded by RoboDojo's own reward check."
+description = "RoboDojo play_tic_tac_toe (Long-Horizon; two ARX X5 arms with parallel grippers, Isaac Sim 5.1 / Isaac Lab): produce one replayable trajectory of RoboDojo's 14-D joint actions. Task: Play tic-tac-toe as the first player against the opponent arm: put one of your gold rings on an empty cell, then bring both arms back home and keep them there until the opponent has placed its cross; repeat until all nine cells are filled. Frozen scene instance: RoboDojo's own evaluation layout arx_x5/0/play_tic_tac_toe_0.json; graded by RoboDojo's own reward check."
 keywords = ["robotics", "robodojo", "isaac-lab", "isaac-sim", "bimanual", "arx-x5", "code-as-policy", "trajectory", "privileged"]
 
 [metadata]

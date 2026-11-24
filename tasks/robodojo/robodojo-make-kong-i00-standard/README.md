@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Standard-mode twin of `robodojo-make-kong-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/make_kong_0.json`). Wait for the opponent (support arm) to discard a mahjong tile, then declare a kong: flip the three tiles in your row that match the discarded tile and put the extra tile (mahjong9_0) upright at the end of your row, with grippers open. (RoboDojo's `make_kong`). The agent drives the
+Standard-mode twin of `robodojo-make-kong-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/make_kong_0.json`). Wait for the opponent (support arm) to discard a mahjong tile, then declare a kong: flip the three tiles of your row that show the discarded tile's picture face up, then take the face-down tile from the top of the front stack at the far left, stand it upright at the right end of your row next to the last tile, and open both grippers. (RoboDojo's `make_kong`). The agent drives the
 robot only through the eai-standard/2.2 client (the simulator runs in the `sim` sidecar), which owns the scene and records
 the episode as a (T, 14) trajectory of RoboDojo's own joint action at 25 Hz.
 
