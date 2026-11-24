@@ -1,23 +1,17 @@
 # RoboDojo · make_kong (standard)
 
 ## Task
-Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). After the
-opponent arm discards a mahjong tile, flip face up the three tiles in your row that show the same picture, then stand
-the face-down tile from the top of the front stack at the far left upright at the right end of your row, next to the
-last tile. Finish with both grippers open. RoboDojo's own instruction for this scene: "Wait for the opponent to discard
-a tile, then declare a kong with the matching tiles." The robot runs as a service you reach only through its client, as
-if it were real hardware: one live episode.
+After the opponent's arm discards a tile, flip face up the three tiles in your row with the same picture. Then stand the
+face-down tile from the top of the front stack at the far left on its short end at the right end of your row, the end
+that pointed right on top, and open both grippers.
 
 ## Goal
-Success: the three tiles of your row with the same picture as the tile the opponent discarded have been flipped face up
-(tip each one away from you so that it falls onto its back, picture up; tipped toward you it lies picture down), with
-the other nine tiles of your four groups of three still standing; after that, the replacement tile (the top tile of the
-front stack of face-down tiles at the far left) stands upright on its short end in the next place at the right end of
-your row, the end that pointed right at the start on top, and both grippers are open. Flip the three matching tiles
-before you turn the replacement tile, and do not knock over the other tiles of your row. Keep your arms near their start
-poses while the opponent's arm is out: one of your arms moved far from its start pose then ends the episode as a
-failure. What counts is how things stand at the end of the episode: a success reached earlier and lost by the end does
-not count, so finish in the state you want graded and stop sending commands.
+Success: the three tiles in your row with the same picture as the discarded tile are face up and the other nine tiles of
+your four sets of three still stand; after that, the tile from the front stack stands on its short end at the right end
+of your row, the end that pointed right at the start on top; and both grippers are open. Moving one of your arms far
+from where it started while the opponent's arm is out ends the episode as a failure. What counts is how things stand at
+the end of the episode: a success reached earlier and lost by the end does not count, so finish in the state you want
+graded and stop sending commands.
 
 You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
 you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
@@ -33,6 +27,9 @@ Real-robot rules:
 - Write your own controller; do not use the benchmark's demonstrations, trained policies or any published solution.
 
 ## Robot Interface
+Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). The robot
+runs as a service you reach only through its client, as if it were real hardware: one live episode.
+
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
 ```python
@@ -106,22 +103,7 @@ most 3000 images.
   pose in this frame.
 
 ## Others
-- The objects (left / right = world -x / +x, "away" = +y, away from the arms): Every tile is the same block, with a
-  white face carrying the picture and a green back:
-  - your row: 14 tiles standing upright on their short ends in a straight line across the front of the table, faces
-    toward you, side by side. From the left: four groups of three identical tiles, then a pair of identical
-    tiles of a fifth kind at the right end.
-  - the opponent's row: four tiles standing in the middle of the table in front of the opponent's arm (the white arm on
-    the far side), green backs toward you, faces toward the opponent. Each shows the same picture as one of your four
-    groups of three.
-  - the replacement tile: the top tile of the front (nearer) of the two small stacks of face-down tiles at the far left;
-    it lies flat, green back up, long side left-right, and has the same picture as the pair at the right end of your
-    row.
-- The opponent's arm (the white arm on the far side, not yours) replays a recorded discard motion, chosen by where the
-  discarded tile stands in the opponent's row (its rank from the left among the four). It is queued after your first
-  action and moves only while your actions run, in lock-step with them.
-- Watch which tile the opponent lays face up, find the three tiles in your row with the same picture, and flip those.
-  The instruction does not name the tile and no numbers are given.
+- The opponent's arm starts after your first action and moves only while your actions run, in lock-step with them.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At

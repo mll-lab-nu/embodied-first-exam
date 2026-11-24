@@ -1,20 +1,13 @@
 # RoboDojo · arrange_largest_number (privileged)
 
 ## Task
-Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /
-Isaac Lab, PhysX). Put the four digit blocks on the four mats, one block per mat, so that the row reads the largest
-possible number from left to right, with each block still flat, face up and turned as it is now. Then bring both arms
-back to where they started. RoboDojo's own instruction for this scene: "Arrange the numbers from left to right to form
-the largest possible number, and place them on the pad." The scene is one fixed instance. You have the full simulator to
-develop with; you hand in a trajectory of robot actions.
+Put the four digit blocks on the four mats, one per mat, so that they read the largest possible number from left to
+right. Keep each block face up and turned as it is now. Then move both arms back to where they started.
 
 ## Goal
-Success: each of the four digit blocks lies centred on its own mat, so that the row of mats read from left to right
-shows the largest possible number (the largest digit on the leftmost mat, the smallest on the rightmost); each block is
-still flat, face up and turned as at the start, readable from the arms' side (carry the blocks without turning them: a
-numeral stood on its edge or turned upside down fails, except that a 0 may lie upside down; a numeral turned face down
-fails, except a 0 or an 8); and both arms are back near where they started (the grippers may stay closed). A replay ends
-as soon as the task is done; later rows are not run.
+Success: each digit block lies on its own mat, the mats read the largest possible number from left to right, each block
+is face up and turned as at the start, and both arms are back where they started. A replay ends as soon as the task is
+done; later rows are not run.
 
 Deliverable: `/app/output/trajectory.npz` with `task` and `actions`, a (T, 14) float array of at most 15,000 rows, one
 per action (1/25 s); write it with `s.save_trajectory()`. Anything else (another shape, NaN, more rows) scores 0. Leave
@@ -26,6 +19,10 @@ Rules: write your own controller; do not use the benchmark's demonstrations, tra
 Only the actions count: changing the simulator's state while you develop changes nothing in the replay.
 
 ## Robot Interface
+Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /
+Isaac Lab, PhysX). The scene is one fixed instance. You have the full simulator to develop with; you hand in a
+trajectory of robot actions.
+
 ### Session
 `/opt/tools/rcb_robodojo.py`, importable as `rcb_robodojo`:
 ```python
@@ -70,15 +67,8 @@ with this command; run it to self-check (it stops at the first success):
   end-effector pose in this frame.
 
 ## Others
-- The objects (their `s.objects()` labels in brackets; left / right = world -x / +x, "away" = +y, away from the arms):
-  - the digit blocks: four blue numerals cut out of plastic, each a little smaller than a mat, lying flat and face up on
-    the near half of the table, scattered around the mats; each is roughly upright as read from the arms' side (the top
-    of the numeral pointing away from you), some turned more than others [digit_0 ... digit_3, in no particular order;
-    the digit is the block's model, read it from the numeral].
-  - the mats: four round, light-wood-coloured pads, evenly spaced in a left-to-right row across the middle of the table
-    [mat_0 is the leftmost, then mat_1, mat_2, mat_3 the rightmost].
-- Read the digit on each block from the cameras and work out the order: largest digit on the leftmost mat (the one
-  farthest to world -x), smallest on the rightmost.
+- Labels in `s.objects()`: `digit_0`..`digit_3` (the digit blocks, in no particular order); `mat_0`..`mat_3` (the mats,
+  from left to right).
 - RoboDojo's own reset settles the scene again from where it is, so after actions a reset gives the same layout and
   start pose but not bit-for-bit the same state; a replay after such a reset can end slightly differently from the
   grader's. Each graded replay runs the first episode of a newly started Session (nothing stepped before it): test on

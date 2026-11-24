@@ -1,20 +1,15 @@
 # RoboDojo · pour_by_language (privileged)
 
 ## Task
-Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac
-Sim / Isaac Lab, PhysX). Pour each bottle named in the instruction into the bowl it names, in the order first, second,
-third. RoboDojo's own instruction for this scene: "Pour the liquid from the first violet bottle into the first black
-bowl, from the second red bottle into the second white bowl, and from the third turquoise bottle into the third brown
-bowl. Then reset the robot arm." The scene is one fixed instance. You have the full simulator to develop with; you hand
-in a trajectory of robot actions.
+Pour the violet bottle into the black bowl, then the red bottle into the white bowl, then the turquoise bottle into the
+brown bowl, in that order.
 
 ## Goal
-Success: the violet bottle has been poured into the black bowl, the red bottle into the white bowl and the
-turquoise bottle into the brown bowl, in that order: nearly all of each bottle's liquid has left it, almost all of that
-is in its bowl, and little is spilled. A pour is judged at the moment its bottle stands upright again, so finish pouring
-before you stand it up (a failed pour can be tried again). Keep to the order: if an arm comes back to where it started
-while a later bowl holds its liquid and an earlier one does not, the episode ends at once as a failure. A replay ends as
-soon as the task is done; later rows are not run.
+Success: the violet bottle has been poured into the black bowl, then the red bottle into the white bowl, then the
+turquoise bottle into the brown bowl, each bottle nearly emptied into its bowl with little spilled. Each pour is judged
+at the moment its bottle stands upright again, so finish pouring before you stand it up. If an arm comes back to where
+it started while a later bowl holds its liquid and an earlier one does not, the episode ends at once as a failure. A
+replay ends as soon as the task is done; later rows are not run.
 
 Deliverable: `/app/output/trajectory.npz` with `task` and `actions`, a (T, 14) float array of at most 15,000 rows, one
 per action (1/25 s); write it with `s.save_trajectory()`. Anything else (another shape, NaN, more rows) scores 0. Leave
@@ -27,6 +22,10 @@ Rules: write your own controller; do not use the benchmark's demonstrations, tra
 Only the actions count: changing the simulator's state while you develop changes nothing in the replay.
 
 ## Robot Interface
+Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /
+Isaac Lab, PhysX). The scene is one fixed instance. You have the full simulator to develop with; you hand in a
+trajectory of robot actions.
+
 ### Session
 `/opt/tools/rcb_robodojo.py`, importable as `rcb_robodojo`:
 ```python
@@ -71,14 +70,8 @@ with this command; run it to self-check (it stops at the first success):
   end-effector pose in this frame.
 
 ## Others
-- The objects (their `s.objects()` labels in brackets; left / right = world -x / +x, "away" = +y, away from the arms):
-  Three bottles stand in a row across the middle of the table, tall and holding liquid; three shallow bowls stand in a
-  row in front of them, nearer the arms. The sentence in the task names them by colour, and pairs them, in its order:
-  - first: the violet bottle [bottle_0, its liquid wine_0] into the black bowl [bowl_0].
-  - second: the red bottle [bottle_1, wine_1] into the white bowl [bowl_1].
-  - third: the turquoise bottle [bottle_2, wine_2] into the brown bowl [bowl_2].
-- The sentence names the bottles and bowls by colour and orders the pairs first, second, third; find each named bottle
-  and bowl in the scene by its colour.
+- Labels in `s.objects()`: `bottle_0`..`bottle_2` (the violet, red and turquoise bottles), with their liquids
+  `wine_0`..`wine_2`; `bowl_0`..`bowl_2` (the black, white and brown bowls).
 - RoboDojo's own reset settles the scene again from where it is, so after actions a reset gives the same layout and
   start pose but not bit-for-bit the same state; a replay after such a reset can end slightly differently from the
   grader's. Each graded replay runs the first episode of a newly started Session (nothing stepped before it): test on

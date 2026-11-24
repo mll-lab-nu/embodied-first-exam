@@ -1,19 +1,14 @@
 # RoboDojo · play_tic_tac_toe (privileged)
 
 ## Task
-Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac
-Sim / Isaac Lab, PhysX). Play tic-tac-toe against the opponent arm, moving first: each turn, put one of your gold rings
-on an empty cell, then bring both arms back to where they started and keep them there until the opponent has placed its
-cross. Repeat until all nine cells are filled. RoboDojo's own instruction for this scene: "Play tic-tac-toe as the first
-player and fill the board with the opponent." The scene is one fixed instance. You have the full simulator to develop
-with; you hand in a trajectory of robot actions.
+Play tic-tac-toe against the opponent arm and go first: put one of your gold rings in an empty cell, then move both arms
+back to where they started and keep them there until the opponent has placed its cross. Repeat until all nine cells are
+filled.
 
 ## Goal
-Success: all nine cells of the board hold one piece each, lying flat on the board in the middle of its cell:
-your five gold rings and the opponent's four crosses; no winner is needed. After each ring you place, bring both arms
-back to where they started and keep them there while the opponent arm is away from its home: if one of your arms is away
-from where it started while the opponent arm is out, the episode ends at once as a failure. A replay ends as soon as the
-task is done; later rows are not run.
+Success: all nine cells hold one piece each, lying flat in the middle of its cell: your five gold rings and the
+opponent's four crosses; no winner is needed. If one of your arms is away from where it started while the opponent arm
+is out, the episode ends at once as a failure. A replay ends as soon as the task is done; later rows are not run.
 
 Deliverable: `/app/output/trajectory.npz` with `task` and `actions`, a (T, 14) float array of at most 15,000 rows, one
 per action (1/25 s); write it with `s.save_trajectory()`. Anything else (another shape, NaN, more rows) scores 0. Leave
@@ -25,6 +20,10 @@ Rules: write your own controller; do not use the benchmark's demonstrations, tra
 Only the actions count: changing the simulator's state while you develop changes nothing in the replay.
 
 ## Robot Interface
+Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /
+Isaac Lab, PhysX). The scene is one fixed instance. You have the full simulator to develop with; you hand in a
+trajectory of robot actions.
+
 ### Session
 `/opt/tools/rcb_robodojo.py`, importable as `rcb_robodojo`:
 ```python
@@ -69,20 +68,11 @@ with this command; run it to self-check (it stops at the first success):
   end-effector pose in this frame.
 
 ## Others
-- The objects (their `s.objects()` labels in brackets; left / right = world -x / +x, "away" = +y, away from the arms):
-  - the board: the thin black square board with a yellow 3 x 3 grid, in the middle of the table just in front of the
-    centre [checkerboard]. Its nine cells are squares; a cell's *centre* is the middle of its square [support points
-    cell/0..cell/8: cell/0 is the near-left cell, numbered left to right, then row by row away from you].
-  - your five pieces: the gold rings ("O") in a row in front of the board, nearest to you [player_piece0 ..
-    player_piece4, from left to right].
-  - the opponent's four pieces: the gold crosses ("X") in a row on the far side of the board, in front of the third
-    (white) arm [opponent_piece0 .. opponent_piece3, from left to right].
-  - the opponent arm: the white arm on the far side of the table, not under your control [support_arm0].
-- Take turns: place exactly one ring, centred in an empty cell, bring both arms home, then keep sending actions (for
-  example holding still at home) until the opponent's arm has put its cross on an empty cell and gone back: it moves
-  only while your actions run. It picks its cell at random among the empty ones.
-- The opponent waits if you place two rings before it replies, or if a piece lies near a cell without being centred in
-  it; without its four crosses the board never fills.
+- Labels in `s.objects()`: `checkerboard` (the board), with support points `cell/0`..`cell/8` (its cells, from the
+  near-left one, left to right and then row by row away from you); `player_piece0`..`player_piece4` (your gold rings);
+  `opponent_piece0`..`opponent_piece3` (the opponent's crosses); `support_arm0` (the opponent arm).
+- The opponent arm moves only while you keep sending actions (holding still counts), and it waits while a piece sits
+  near a cell without being centred in it.
 - RoboDojo's own reset settles the scene again from where it is, so after actions a reset gives the same layout and
   start pose but not bit-for-bit the same state; a replay after such a reset can end slightly differently from the
   grader's. Each graded replay runs the first episode of a newly started Session (nothing stepped before it): test on

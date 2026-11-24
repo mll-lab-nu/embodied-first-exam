@@ -1,20 +1,14 @@
 # RoboDojo · store_laptop_and_headphones (privileged)
 
 ## Task
-Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /
-Isaac Lab, PhysX). Hang the headphones by their headband on the stand's hanger, with the ear cup now on the right still
-on the right and the side now lying on the table facing away from you, then close the laptop and stand it in the rack on
-its front edge with the hinge edge up. Then bring both arms back to where they started. RoboDojo's own instruction for
-this scene: "Hang the headphones on the headphone stand, close the laptop, then place it into the vertical laptop
-stand." The scene is one fixed instance. You have the full simulator to develop with; you hand in a trajectory of robot
-actions.
+Hang the headphones by their headband on the headphone stand without turning them around: the ear cup now on the right
+stays on the right, and the side now on the table faces away from you. Then close the laptop and stand it in the laptop
+rack, hinge edge up. Then move both arms back to where they started.
 
 ## Goal
-Success: the headphones hang by their headband on the stand's hanger, headband up, each ear cup at its own end of the
-hanger (the ear cup now on the right stays on the right) and the side now lying on the table facing away from you; the
-laptop is closed and stands in the rack on its front edge (the edge now toward you) with the hinge edge up, its width
-along the rack; the headphones still hang while the laptop is in the rack; and both arms are back where they started
-(the grippers may stay closed). A replay ends as soon as the task is done; later rows are not run.
+Success: the headphones hang by their headband on the headphone stand, the ear cup that was on the right still on the
+right and the side that lay on the table facing away from you; the laptop is closed and stands in the laptop rack, hinge
+edge up; and both arms are back where they started. A replay ends as soon as the task is done; later rows are not run.
 
 Deliverable: `/app/output/trajectory.npz` with `task` and `actions`, a (T, 14) float array of at most 15,000 rows, one
 per action (1/25 s); write it with `s.save_trajectory()`. Anything else (another shape, NaN, more rows) scores 0. Leave
@@ -26,6 +20,10 @@ Rules: write your own controller; do not use the benchmark's demonstrations, tra
 Only the actions count: changing the simulator's state while you develop changes nothing in the replay.
 
 ## Robot Interface
+Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /
+Isaac Lab, PhysX). The scene is one fixed instance. You have the full simulator to develop with; you hand in a
+trajectory of robot actions.
+
 ### Session
 `/opt/tools/rcb_robodojo.py`, importable as `rcb_robodojo`:
 ```python
@@ -70,15 +68,8 @@ with this command; run it to self-check (it stops at the first success):
   end-effector pose in this frame.
 
 ## Others
-- The objects (their `s.objects()` labels in brackets; left / right = world -x / +x, "away" = +y, away from the arms):
-  - the headphones: over-ear headphones lying flat on the table at the front, ear cups toward you and to the left and
-    right, the headband pointing roughly away from you [headset].
-  - the headphone stand: the tall stand at the left: a curved dark-wood hanger bar on a black post over a wooden tray
-    [stand].
-  - the laptop: the silver laptop on the black riser in the centre, open, keyboard toward you, hinge and screen on the
-    far side [laptop].
-  - the rack: the small vertical laptop rack at the right: a narrow slot between upright panels on a base plate
-    [vertical_laptop_storage_rack]. The black riser under the laptop [laptop_stand] is not checked.
+- Labels in `s.objects()`: `headset` (the headphones); `stand` (the headphone stand); `laptop` (the laptop);
+  `vertical_laptop_storage_rack` (the laptop rack).
 - RoboDojo's own reset settles the scene again from where it is, so after actions a reset gives the same layout and
   start pose but not bit-for-bit the same state; a replay after such a reset can end slightly differently from the
   grader's. Each graded replay runs the first episode of a newly started Session (nothing stepped before it): test on

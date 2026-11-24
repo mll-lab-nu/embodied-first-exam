@@ -1,15 +1,12 @@
 # RoboDojo · insert_tubes (privileged)
 
 ## Task
-Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /
-Isaac Lab, PhysX). Insert all three test tubes into the tube rack and return the arms to their start pose. RoboDojo's
-own instruction for this scene: "Insert the three tubes into the rack one by one." The scene is one fixed instance. You
-have the full simulator to develop with; you hand in a trajectory of robot actions.
+Put the three test tubes into the holes of the tube rack, cap up and pushed well down. Then move both arms back to where
+they started.
 
 ## Goal
-Success: all three test tubes stand in holes of the rack, cap up and pushed well down (any tube in any hole), and both
-arms are back where they started (the grippers may stay closed). A replay ends as soon as the task is done; later rows
-are not run.
+Success: all three test tubes stand in holes of the tube rack, cap up and pushed well down, and both arms are back where
+they started. A replay ends as soon as the task is done; later rows are not run.
 
 Deliverable: `/app/output/trajectory.npz` with `task` and `actions`, a (T, 14) float array of at most 15,000 rows, one
 per action (1/25 s); write it with `s.save_trajectory()`. Anything else (another shape, NaN, more rows) scores 0. Leave
@@ -21,6 +18,10 @@ Rules: write your own controller; do not use the benchmark's demonstrations, tra
 Only the actions count: changing the simulator's state while you develop changes nothing in the replay.
 
 ## Robot Interface
+Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /
+Isaac Lab, PhysX). The scene is one fixed instance. You have the full simulator to develop with; you hand in a
+trajectory of robot actions.
+
 ### Session
 `/opt/tools/rcb_robodojo.py`, importable as `rcb_robodojo`:
 ```python
@@ -65,11 +66,7 @@ with this command; run it to self-check (it stops at the first success):
   end-effector pose in this frame.
 
 ## Others
-- The objects (their `s.objects()` labels in brackets; left / right = world -x / +x, "away" = +y, away from the arms):
-  - the three test tubes: identical white tubes, with an orange cap on one end and a closed, tapered white bottom on the
-    other; they lie on their sides on the table, caps pointing roughly away from you [tube0, tube1, tube2;
-    interchangeable].
-  - the rack: the blue tube rack in the middle of the table, with two rows of five holes [slot].
+- Labels in `s.objects()`: `tube0`..`tube2` (the three test tubes); `slot` (the tube rack).
 - RoboDojo's own reset settles the scene again from where it is, so after actions a reset gives the same layout and
   start pose but not bit-for-bit the same state; a replay after such a reset can end slightly differently from the
   grader's. Each graded replay runs the first episode of a newly started Session (nothing stepped before it): test on

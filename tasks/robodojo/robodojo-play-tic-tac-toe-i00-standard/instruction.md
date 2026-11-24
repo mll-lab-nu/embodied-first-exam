@@ -1,20 +1,15 @@
 # RoboDojo · play_tic_tac_toe (standard)
 
 ## Task
-Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim).
-Play tic-tac-toe against the opponent arm, moving first: each turn, put one of your gold rings on an empty cell, then
-bring both arms back to where they started and keep them there until the opponent has placed its cross. Repeat until all
-nine cells are filled. RoboDojo's own instruction for this scene: "Play tic-tac-toe as the first player and fill the
-board with the opponent." The robot runs as a service you reach only through its client, as if it were real hardware:
-one live episode.
+Play tic-tac-toe against the opponent arm and go first: put one of your gold rings in an empty cell, then move both arms
+back to where they started and keep them there until the opponent has placed its cross. Repeat until all nine cells are
+filled.
 
 ## Goal
-Success: all nine cells of the board hold one piece each, lying flat on the board in the middle of its cell:
-your five gold rings and the opponent's four crosses; no winner is needed. After each ring you place, bring both arms
-back to where they started and keep them there while the opponent arm is away from its home: if one of your arms is away
-from where it started while the opponent arm is out, the episode ends at once as a failure. What counts is how things
-stand at the end of the episode: a success reached earlier and lost by the end does not count, so finish in the state
-you want graded and stop sending commands.
+Success: all nine cells hold one piece each, lying flat in the middle of its cell: your five gold rings and the
+opponent's four crosses; no winner is needed. If one of your arms is away from where it started while the opponent arm
+is out, the episode ends at once as a failure. What counts is how things stand at the end of the episode: a success
+reached earlier and lost by the end does not count, so finish in the state you want graded and stop sending commands.
 
 You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
 you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
@@ -30,6 +25,9 @@ Real-robot rules:
 - Write your own controller; do not use the benchmark's demonstrations, trained policies or any published solution.
 
 ## Robot Interface
+Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). The robot
+runs as a service you reach only through its client, as if it were real hardware: one live episode.
+
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
 ```python
@@ -103,18 +101,8 @@ most 3000 images.
   pose in this frame.
 
 ## Others
-- The objects (left / right = world -x / +x, "away" = +y, away from the arms):
-  - the board: the thin black square board with a yellow 3 x 3 grid, in the middle of the table just in front of the
-    centre. Its nine cells are squares; a cell's *centre* is the middle of its square.
-  - your five pieces: the gold rings ("O") in a row in front of the board, nearest to you.
-  - the opponent's four pieces: the gold crosses ("X") in a row on the far side of the board, in front of the third
-    (white) arm.
-  - the opponent arm: the white arm on the far side of the table, not under your control.
-- Take turns: place exactly one ring, centred in an empty cell, bring both arms home, then keep sending actions (for
-  example holding still at home) until the opponent's arm has put its cross on an empty cell and gone back: it moves
-  only while your actions run. It picks its cell at random among the empty ones.
-- The opponent waits if you place two rings before it replies, or if a piece lies near a cell without being centred in
-  it; without its four crosses the board never fills.
+- The opponent arm moves only while you keep sending actions (holding still counts), and it waits while a piece sits
+  near a cell without being centred in it.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At

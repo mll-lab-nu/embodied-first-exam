@@ -1,18 +1,14 @@
 # RoboDojo · pack_objects_into_box (privileged)
 
 ## Task
-Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /
-Isaac Lab, PhysX). Put the car, electric toothbrush, hammer and shoe into the box, each oriented with its front facing
-the same way (left), with the box upright and aligned, then return both arms to the start pose. RoboDojo's own
-instruction for this scene: "Place all the objects into the box with their front sides facing left." The scene is one
-fixed instance. You have the full simulator to develop with; you hand in a trajectory of robot actions.
+Put the car, the toothbrush, the hammer and the shoe in the box, each lying lengthwise with its front end pointing left,
+and keep the box upright where it is. Then move both arms back to where they started.
 
 ## Goal
-Success: the toy car, the toothbrush, the hammer and the shoe all lie in the box, in its middle part away from the short
-end walls, wholly inside it, each lengthwise along the box's long side with its front end pointing left (for the car the
-end that points right at the start, whatever its styling; the toothbrush's brush head, the hammer's head, the shoe's
-toe); the box still stands upright and is not turned further; and both arms are back where they started (the grippers
-may stay closed). A replay ends as soon as the task is done; later rows are not run.
+Success: the car, the toothbrush, the hammer and the shoe lie wholly inside the box, in its middle away from the short
+end walls, each lengthwise with its front end pointing left (for the car, the end that pointed right at the start; the
+toothbrush's brush head, the hammer's head, the shoe's toe); the box still stands upright and is not turned; and both
+arms are back where they started. A replay ends as soon as the task is done; later rows are not run.
 
 Deliverable: `/app/output/trajectory.npz` with `task` and `actions`, a (T, 14) float array of at most 15,000 rows, one
 per action (1/25 s); write it with `s.save_trajectory()`. Anything else (another shape, NaN, more rows) scores 0. Leave
@@ -24,6 +20,10 @@ Rules: write your own controller; do not use the benchmark's demonstrations, tra
 Only the actions count: changing the simulator's state while you develop changes nothing in the replay.
 
 ## Robot Interface
+Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /
+Isaac Lab, PhysX). The scene is one fixed instance. You have the full simulator to develop with; you hand in a
+trajectory of robot actions.
+
 ### Session
 `/opt/tools/rcb_robodojo.py`, importable as `rcb_robodojo`:
 ```python
@@ -68,12 +68,8 @@ with this command; run it to self-check (it stops at the first success):
   end-effector pose in this frame.
 
 ## Others
-- The objects (their `s.objects()` labels in brackets; left / right = world -x / +x, "away" = +y, away from the arms):
-  - the box: an open cardboard box with its flaps folded out, toward the back, its long side roughly left-right [box].
-  - the toy car: a silver sports car with a black roof [car].
-  - the toothbrush: a white electric toothbrush [electric_toothbrush].
-  - the hammer: a hammer with a wooden handle and a steel head [hammer].
-  - the shoe: a white sneaker with three black stripes [shoe].
+- Labels in `s.objects()`: `box` (the box); `car` (the car); `electric_toothbrush` (the toothbrush); `hammer` (the
+  hammer); `shoe` (the shoe).
 - RoboDojo's own reset settles the scene again from where it is, so after actions a reset gives the same layout and
   start pose but not bit-for-bit the same state; a replay after such a reset can end slightly differently from the
   grader's. Each graded replay runs the first episode of a newly started Session (nothing stepped before it): test on

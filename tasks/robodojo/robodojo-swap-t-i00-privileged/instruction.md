@@ -1,17 +1,13 @@
 # RoboDojo · swap_T (privileged)
 
 ## Task
-Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /
-Isaac Lab, PhysX). Exchange the places of the two T-shaped blocks, setting each one down turned the way the other one
-was. Then bring both arms back to where they started. RoboDojo's own instruction for this scene: "Pick up the two
-T-shaped blocks, swap their positions, and place them back with the correct orientations." The scene is one fixed
-instance. You have the full simulator to develop with; you hand in a trajectory of robot actions.
+Swap the places of the two T-shaped blocks, each set down turned the way the other one was and the same side up as
+before. Then move both arms back to where they started.
 
 ## Goal
-Success: the two T-shaped blocks have swapped places: each lies where the other lay at the start, turned the way the
-other was turned, flat on the same face as at the start (a T turned over looks the same from above but does not count),
-and both arms are back where they started (the grippers may stay closed). A replay ends as soon as the task is done;
-later rows are not run.
+Success: each T-shaped block lies where the other one lay at the start, turned the way the other one was, the same side
+up as before, and both arms are back where they started. A replay ends as soon as the task is done; later rows are not
+run.
 
 Deliverable: `/app/output/trajectory.npz` with `task` and `actions`, a (T, 14) float array of at most 15,000 rows, one
 per action (1/25 s); write it with `s.save_trajectory()`. Anything else (another shape, NaN, more rows) scores 0. Leave
@@ -23,6 +19,10 @@ Rules: write your own controller; do not use the benchmark's demonstrations, tra
 Only the actions count: changing the simulator's state while you develop changes nothing in the replay.
 
 ## Robot Interface
+Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /
+Isaac Lab, PhysX). The scene is one fixed instance. You have the full simulator to develop with; you hand in a
+trajectory of robot actions.
+
 ### Session
 `/opt/tools/rcb_robodojo.py`, importable as `rcb_robodojo`:
 ```python
@@ -67,13 +67,7 @@ with this command; run it to self-check (it stops at the first success):
   end-effector pose in this frame.
 
 ## Others
-- The objects (their `s.objects()` labels in brackets; left / right = world -x / +x, "away" = +y, away from the arms):
-  - the red T: a flat T-shaped block lying flat just left of centre near the front [t0].
-  - the blue T: the same shape and size, lying flat to its right [t1]. The two blocks are the same model apart from the
-    colour.
-- The targets are the two blocks' START poses: note where each T lies and which way its stem points from the first
-  images, before moving either block; once a block moves, its start pose can no longer be read off the scene.
-- Each block's target place is taken by the other block until it moves: set one block aside first.
+- Labels in `s.objects()`: `t0`, `t1` (the two T-shaped blocks).
 - RoboDojo's own reset settles the scene again from where it is, so after actions a reset gives the same layout and
   start pose but not bit-for-bit the same state; a replay after such a reset can end slightly differently from the
   grader's. Each graded replay runs the first episode of a newly started Session (nothing stepped before it): test on

@@ -1,17 +1,11 @@
 # RoboDojo · put_bottles_into_dustbin (privileged)
 
 ## Task
-Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /
-Isaac Lab, PhysX). Pick up all four bottles from the table and throw/put them into the dustbin standing beside the table
-(use a handover between the two hands when a bottle is out of reach), then return the arms to their start pose.
-RoboDojo's own instruction for this scene: "Pick up the bottles and throw them into the dustbin, using handover when
-needed." The scene is one fixed instance. You have the full simulator to develop with; you hand in a trajectory of robot
-actions.
+Put all four bottles into the dustbin beside the table. Then move both arms back to where they started.
 
 ## Goal
-Success: all four bottles are inside the dustbin, wholly below its rim (standing or lying), and both arms are
-back near where they started (the grippers may stay closed). A replay ends as soon as the task is done; later rows are
-not run.
+Success: all four bottles are in the dustbin, wholly below its rim, and both arms are back where they started. A replay
+ends as soon as the task is done; later rows are not run.
 
 Deliverable: `/app/output/trajectory.npz` with `task` and `actions`, a (T, 14) float array of at most 15,000 rows, one
 per action (1/25 s); write it with `s.save_trajectory()`. Anything else (another shape, NaN, more rows) scores 0. Leave
@@ -23,6 +17,10 @@ Rules: write your own controller; do not use the benchmark's demonstrations, tra
 Only the actions count: changing the simulator's state while you develop changes nothing in the replay.
 
 ## Robot Interface
+Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /
+Isaac Lab, PhysX). The scene is one fixed instance. You have the full simulator to develop with; you hand in a
+trajectory of robot actions.
+
 ### Session
 `/opt/tools/rcb_robodojo.py`, importable as `rcb_robodojo`:
 ```python
@@ -67,14 +65,7 @@ with this command; run it to self-check (it stops at the first success):
   end-effector pose in this frame.
 
 ## Others
-- The objects (their `s.objects()` labels in brackets; left / right = world -x / +x as seen from the arms, "away" = +y):
-  - the four bottles: drink bottles of different kinds and sizes spread over the table, three standing upright and one
-    lying on its side [bottle0 .. bottle3].
-  - the dustbin: the large black square bin standing beside the left end of the table, its rim just below the table top;
-    it does not move [dustbin].
-- The dustbin stands beside the left end of the table, within reach of the left arm only: hand the bottles on the right
-  over from the right hand to the left. Dropping a bottle in from above is fine, but one that bounces back out does not
-  count.
+- Labels in `s.objects()`: `bottle0`..`bottle3` (the bottles); `dustbin` (the dustbin).
 - RoboDojo's own reset settles the scene again from where it is, so after actions a reset gives the same layout and
   start pose but not bit-for-bit the same state; a replay after such a reset can end slightly differently from the
   grader's. Each graded replay runs the first episode of a newly started Session (nothing stepped before it): test on

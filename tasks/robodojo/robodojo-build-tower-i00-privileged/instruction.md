@@ -1,23 +1,16 @@
 # RoboDojo · build_tower (privileged)
 
 ## Task
-Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /
-Isaac Lab, PhysX). Stack the wooden blocks and boards into a three-level tower: two white pillar blocks (one of the two
-that start on the left, one of the two that start on the right) with the long board across them, the other two pillars
-standing on that board with the short board on top, then the thin plank on the short board and the green roof piece on
-the plank; then send both arms home. RoboDojo's own instruction for this scene: "Build a tower using the wooden blocks
-and wooden boards." The scene is one fixed instance. You have the full simulator to develop with; you hand in a
-trajectory of robot actions.
+Build a three-level tower: the long board across two pillars, one from the left and one from the right; the other two
+pillars on the long board with the short board across them; the thin plank along the middle of the short board; and the
+roof piece on the middle of the plank, its ridge across the plank. Keep every piece the way up it is now. Then move both
+arms back to where they started.
 
 ## Goal
-Success: the tower stands in three levels: the long board lies across two pillars, one of the two that started on the
-left and one of the two that started on the right (two pillars from the same side do not count); the other two pillars
-stand on the long board with the short board across them, centred over the long board; the thin plank lies on the middle
-of the short board, its long side along the board's; and the green roof stands on the middle of the plank, its ridge
-running across the plank. Every piece stays the way up it started and sits flat (a pillar rolled a quarter turn onto
-another side, or stood on its small end, does not count; the roof stands apex up); and both arms are back near where
-they started (the grippers may stay closed) while the tower stands. A replay ends as soon as the task is done; later
-rows are not run.
+Success: the long board lies across two pillars, one from the left and one from the right; the other two pillars stand
+on it with the short board across them, centred over it; the thin plank lies along the middle of the short board; the
+roof piece stands on the middle of the plank, its ridge across the plank; every piece lies flat the way up it started;
+and both arms are back where they started. A replay ends as soon as the task is done; later rows are not run.
 
 Deliverable: `/app/output/trajectory.npz` with `task` and `actions`, a (T, 14) float array of at most 15,000 rows, one
 per action (1/25 s); write it with `s.save_trajectory()`. Anything else (another shape, NaN, more rows) scores 0. Leave
@@ -29,6 +22,10 @@ Rules: write your own controller; do not use the benchmark's demonstrations, tra
 Only the actions count: changing the simulator's state while you develop changes nothing in the replay.
 
 ## Robot Interface
+Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /
+Isaac Lab, PhysX). The scene is one fixed instance. You have the full simulator to develop with; you hand in a
+trajectory of robot actions.
+
 ### Session
 `/opt/tools/rcb_robodojo.py`, importable as `rcb_robodojo`:
 ```python
@@ -73,16 +70,9 @@ with this command; run it to self-check (it stops at the first success):
   end-effector pose in this frame.
 
 ## Others
-- The objects (their `s.objects()` labels in brackets; left / right = world -x / +x, "away" = +y, away from the arms):
-  - the long board: the light-wood board lying flat across the middle of the table, its long side left-right; the
-    farther and longer of the two boards [block0].
-  - the short board: the same kind of board but shorter, lying flat in front of the long one, nearer to you [block7].
-  - the four pillars: identical white blocks with a square cross-section, each lying on one of its long faces. Two start
-    on the left half of the table [block1, block5]; two start on the right half [block2, block6].
-  - the plank: the thin tan plank, a little longer than it is wide, lying flat off to one side of the table, its long
-    side pointing away from you [block3].
-  - the roof: the green triangular prism (a little house roof), standing on its flat bottom off to one side of the
-    table, apex up, its ridge running front to back [block4].
+- Labels in `s.objects()`: `block0` (the long board); `block7` (the short board); `block1`, `block5` (the pillars that
+  start on the left); `block2`, `block6` (the pillars that start on the right); `block3` (the thin plank); `block4` (the
+  roof piece).
 - RoboDojo's own reset settles the scene again from where it is, so after actions a reset gives the same layout and
   start pose but not bit-for-bit the same state; a replay after such a reset can end slightly differently from the
   grader's. Each graded replay runs the first episode of a newly started Session (nothing stepped before it): test on

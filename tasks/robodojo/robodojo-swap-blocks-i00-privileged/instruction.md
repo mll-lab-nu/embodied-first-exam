@@ -1,21 +1,15 @@
 # RoboDojo · swap_blocks (privileged)
 
 ## Task
-Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /
-Isaac Lab, PhysX). Swap the two cubes in three moves, using the empty third mat as a parking spot, and after each move
-pull the spring button's cap up from its slightly sunk rest and press the button once. Then leave the cap pulled up and
-bring both arms back to where they started. RoboDojo's own instruction for this scene: "Swap the two blocks using the
-empty mat, pressing the button after each move." The scene is one fixed instance. You have the full simulator to develop
-with; you hand in a trajectory of robot actions.
+Swap the two cubes in three moves, lifting each one and using the empty mat as a parking spot. After each move, pull the
+button's cap up and press the button once; a press from rest does not count. Then pull the cap up once more and move
+both arms back to where they started while it is still up (it sinks back when let go).
 
 ## Goal
-Success: the two cubes have swapped mats in three moves, using the empty mat as a parking spot: one cube onto the empty
-mat, the other cube onto the first cube's old mat, then the cube from the parking mat onto the second cube's old mat
-(either cube may go first). After each move, pull the spring button's cap up from its slightly sunk rest and then press
-the button once. At the end each cube sits on the mat where the other one started, each nearly centred on its mat, the
-cap is left pulled up, and both arms are back where they started (the grippers may stay closed). Press the button
-exactly three times in the whole episode: a fourth counted press ends the episode as a failure, and fewer than three
-means no success. A replay ends as soon as the task is done; later rows are not run.
+Success: the two cubes have swapped mats in three moves through the empty mat, each nearly centred on its new mat, the
+button was pressed after each move, and both arms are back where they started while the cap is pulled up. Press the
+button exactly three times in the whole episode: a fourth counted press ends the episode as a failure, and fewer than
+three means no success. A replay ends as soon as the task is done; later rows are not run.
 
 Deliverable: `/app/output/trajectory.npz` with `task` and `actions`, a (T, 14) float array of at most 15,000 rows, one
 per action (1/25 s); write it with `s.save_trajectory()`. Anything else (another shape, NaN, more rows) scores 0. Leave
@@ -27,6 +21,10 @@ Rules: write your own controller; do not use the benchmark's demonstrations, tra
 Only the actions count: changing the simulator's state while you develop changes nothing in the replay.
 
 ## Robot Interface
+Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /
+Isaac Lab, PhysX). The scene is one fixed instance. You have the full simulator to develop with; you hand in a
+trajectory of robot actions.
+
 ### Session
 `/opt/tools/rcb_robodojo.py`, importable as `rcb_robodojo`:
 ```python
@@ -71,18 +69,8 @@ with this command; run it to self-check (it stops at the first success):
   end-effector pose in this frame.
 
 ## Others
-- The objects (their `s.objects()` labels in brackets; left / right = world -x / +x, "away" = +y, away from the arms):
-  - the three mats: round light-wood discs, in a row left-right in front of you: the left mat [mat0], the middle mat
-    [mat1], the right mat [mat2].
-  - the two blocks: identical red cubes, each on its own mat [target0, target1], each turned a little about the
-    vertical; the third mat starts empty.
-  - the button: the round orange-red spring button on the table just in front of the middle mat, nearer to you
-    [button0]. The two cubes are told apart by the mat they started on.
-- Lift each cube clear of its mat when you move it.
-- The spring button's cap rests a little below its top and sinks back there when let go. A press counts only when the
-  cap was first pulled up (for example by gripping its rim and lifting) and then pushed down; a press from the rest
-  position is not counted. After each press the cap has to be pulled up again and at the end it must be up while both
-  arms are back home.
+- Labels in `s.objects()`: `mat0`, `mat1`, `mat2` (the three mats); `target0`, `target1` (the two cubes); `button0` (the
+  button).
 - RoboDojo's own reset settles the scene again from where it is, so after actions a reset gives the same layout and
   start pose but not bit-for-bit the same state; a replay after such a reset can end slightly differently from the
   grader's. Each graded replay runs the first episode of a newly started Session (nothing stepped before it): test on

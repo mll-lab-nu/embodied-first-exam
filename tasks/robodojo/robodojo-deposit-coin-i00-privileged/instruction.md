@@ -1,16 +1,12 @@
 # RoboDojo · deposit_coin (privileged)
 
 ## Task
-Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /
-Isaac Lab, PhysX). Take the coin out of the upright coin holder and drop it into the piggy bank through its slot. Then
-bring both arms back to where they started. RoboDojo's own instruction for this scene: "Pick up the coin from the holder
-and insert it precisely into the coin bank." The scene is one fixed instance. You have the full simulator to develop
-with; you hand in a trajectory of robot actions.
+Take the coin from the coin holder and drop it into the piggy bank through the slot. Then move both arms back to where
+they started.
 
 ## Goal
-Success: the coin has gone through the slot and lies inside the piggy bank, low in its body (not on top of it, stuck in
-the slot or held above it), and both arms are back where they started (the grippers may stay closed). A replay ends as
-soon as the task is done; later rows are not run.
+Success: the coin is inside the piggy bank and both arms are back where they started. A replay ends as soon as the task
+is done; later rows are not run.
 
 Deliverable: `/app/output/trajectory.npz` with `task` and `actions`, a (T, 14) float array of at most 15,000 rows, one
 per action (1/25 s); write it with `s.save_trajectory()`. Anything else (another shape, NaN, more rows) scores 0. Leave
@@ -22,6 +18,10 @@ Rules: write your own controller; do not use the benchmark's demonstrations, tra
 Only the actions count: changing the simulator's state while you develop changes nothing in the replay.
 
 ## Robot Interface
+Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /
+Isaac Lab, PhysX). The scene is one fixed instance. You have the full simulator to develop with; you hand in a
+trajectory of robot actions.
+
 ### Session
 `/opt/tools/rcb_robodojo.py`, importable as `rcb_robodojo`:
 ```python
@@ -66,14 +66,7 @@ with this command; run it to self-check (it stops at the first success):
   end-effector pose in this frame.
 
 ## Others
-- The objects (their `s.objects()` labels in brackets; left / right = world -x / +x, "away" = +y, away from the arms):
-  - the coin: a small gold coin, standing on its edge in a small dark holder on the table, its faces roughly toward you
-    and away [coin0] (the holder is not checked [vertical_coin_stand])
-  - the piggy bank: the pink piggy bank, standing on the table (its body runs left-right), with the coin slot on top of
-    its back, in the middle, running along the body [piggy_bank; the slot is its 'slot_opening' point, not checked]. The
-    bank is fixed to the table.
-- The piggy bank and the coin holder are fixed to the table. The slot is narrow and runs along the pig's body: line the
-  coin's faces up with it before you let go.
+- Labels in `s.objects()`: `coin0` (the coin); `vertical_coin_stand` (the coin holder); `piggy_bank` (the piggy bank).
 - RoboDojo's own reset settles the scene again from where it is, so after actions a reset gives the same layout and
   start pose but not bit-for-bit the same state; a replay after such a reset can end slightly differently from the
   grader's. Each graded replay runs the first episode of a newly started Session (nothing stepped before it): test on

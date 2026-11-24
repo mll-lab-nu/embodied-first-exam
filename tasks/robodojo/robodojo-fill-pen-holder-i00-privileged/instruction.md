@@ -1,18 +1,12 @@
 # RoboDojo · fill_pen_holder (privileged)
 
 ## Task
-Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /
-Isaac Lab, PhysX). Use one arm to steady the pen holder and the other arm to drop all four pens into it: the white
-ballpoint writing tip down, and the black-and-gold pen and both markers cap end up. Then leave the holder upright on the
-table and bring both arms back to where they started. RoboDojo's own instruction for this scene: "Hold the pen holder
-with one hand, place all pens into it with the other hand, then put it back down." The scene is one fixed instance. You
-have the full simulator to develop with; you hand in a trajectory of robot actions.
+Put all four pens in the pen holder: the white ballpoint tip down, the other three cap end up. Then make sure the holder
+stands upright and move both arms back to where they started.
 
 ## Goal
-Success: all four pens stand in the pen holder at the same time, each with its lower end well down inside the cup: the
-white ballpoint writing tip down, and the black-and-gold pen and both markers cap end up (leaning is fine). The holder
-stands upright on the table, and both arms are back where they started (the grippers may stay closed). A replay ends as
-soon as the task is done; later rows are not run.
+Success: all four pens are in the holder the right way up, the holder stands upright, and both arms are back where they
+started. A replay ends as soon as the task is done; later rows are not run.
 
 Deliverable: `/app/output/trajectory.npz` with `task` and `actions`, a (T, 14) float array of at most 15,000 rows, one
 per action (1/25 s); write it with `s.save_trajectory()`. Anything else (another shape, NaN, more rows) scores 0. Leave
@@ -24,6 +18,10 @@ Rules: write your own controller; do not use the benchmark's demonstrations, tra
 Only the actions count: changing the simulator's state while you develop changes nothing in the replay.
 
 ## Robot Interface
+Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /
+Isaac Lab, PhysX). The scene is one fixed instance. You have the full simulator to develop with; you hand in a
+trajectory of robot actions.
+
 ### Session
 `/opt/tools/rcb_robodojo.py`, importable as `rcb_robodojo`:
 ```python
@@ -68,16 +66,9 @@ with this command; run it to self-check (it stops at the first success):
   end-effector pose in this frame.
 
 ## Others
-- The objects (their `s.objects()` labels in brackets; left / right = world -x / +x, "away" = +y, away from the arms):
-  - the pen holder: an orange hexagonal cup, open at the top, standing right of centre on the near half of the table
-    [pen_holder].
-  - the four pens, all lying on the table left of the holder:
-    - the black-and-gold pen: a long black pen with gold trim; its cap end is the end with the clip [target0];
-    - the white ballpoint: a white ballpoint pen; its writing tip is the tapered end [target1];
-    - the light-blue marker: a light-blue marker with its cap on [target2];
-    - the purple marker: a purple marker with its cap on [target3].
-- The pen holder is loose: it can slide or tip over, so steady it with one arm while the other puts the pens in; if it
-  tips over, stand it up again.
+- Labels in `s.objects()`: `pen_holder` (the pen holder); `target0`..`target3` (the black-and-gold pen, the white
+  ballpoint, the light-blue marker, the purple marker).
+- The black-and-gold pen's cap end is the end with the clip.
 - RoboDojo's own reset settles the scene again from where it is, so after actions a reset gives the same layout and
   start pose but not bit-for-bit the same state; a replay after such a reset can end slightly differently from the
   grader's. Each graded replay runs the first episode of a newly started Session (nothing stepped before it): test on

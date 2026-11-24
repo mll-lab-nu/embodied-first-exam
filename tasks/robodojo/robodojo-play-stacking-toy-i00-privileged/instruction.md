@@ -1,17 +1,12 @@
 # RoboDojo · play_stacking_toy (privileged)
 
 ## Task
-Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /
-Isaac Lab, PhysX). Put all ten stacking-toy blocks onto the correct pegs of the base, exactly centred on the pegs, then
-return both arms to the start pose. RoboDojo's own instruction for this scene: "Place all stacking toy pieces onto the
-correct pegs." The scene is one fixed instance. You have the full simulator to develop with; you hand in a trajectory of
-robot actions.
+Put all ten blocks of the stacking toy on their matching pegs of the base, all blocks of one kind on the same peg,
+pushed down. Then move both arms back to where they started.
 
 ## Goal
-Success: every block is threaded onto a peg of the base, all blocks of one kind on the same peg and each kind on its own
-correct peg (work out from the toy which peg takes which kind), pushed down so that the peg holds it centred, and both
-arms are back where they started (the grippers may stay closed). A replay ends as soon as the task is done; later rows
-are not run.
+Success: every block is pushed down onto its matching peg of the base, all blocks of one kind on the same peg, and both
+arms are back where they started. A replay ends as soon as the task is done; later rows are not run.
 
 Deliverable: `/app/output/trajectory.npz` with `task` and `actions`, a (T, 14) float array of at most 15,000 rows, one
 per action (1/25 s); write it with `s.save_trajectory()`. Anything else (another shape, NaN, more rows) scores 0. Leave
@@ -23,6 +18,10 @@ Rules: write your own controller; do not use the benchmark's demonstrations, tra
 Only the actions count: changing the simulator's state while you develop changes nothing in the replay.
 
 ## Robot Interface
+Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /
+Isaac Lab, PhysX). The scene is one fixed instance. You have the full simulator to develop with; you hand in a
+trajectory of robot actions.
+
 ### Session
 `/opt/tools/rcb_robodojo.py`, importable as `rcb_robodojo`:
 ```python
@@ -67,16 +66,8 @@ with this command; run it to self-check (it stops at the first success):
   end-effector pose in this frame.
 
 ## Others
-- The objects (their `s.objects()` labels in brackets; left / right = world -x / +x, "away" = +y, away from the arms):
-  - the base: the white board lying roughly left-right on the table, centred, nearer to you than most of the blocks,
-    with four upright pegs in a row, getting shorter from left to right [stack_base; support points pole/0, pole/1,
-    pole/2, pole/3, left to right: each is a point on that peg's axis].
-  - four identical purple five-pointed stars [block0, block1, block2, block3].
-  - three identical blue rectangular blocks [block4, block5, block6].
-  - two identical yellow square blocks [block7, block8].
-  - one orange-red round disc [block9].
-- Which group goes on which peg: RoboDojo's instruction only says "the correct pegs".
-- The base is fixed and does not move.
+- Labels in `s.objects()`: `stack_base` (the base; its support points `pole/0`..`pole/3` each lie on one peg's axis);
+  `block0`..`block3`, `block4`..`block6`, `block7`..`block8` and `block9` (the ten blocks, one group per kind).
 - RoboDojo's own reset settles the scene again from where it is, so after actions a reset gives the same layout and
   start pose but not bit-for-bit the same state; a replay after such a reset can end slightly differently from the
   grader's. Each graded replay runs the first episode of a newly started Session (nothing stepped before it): test on

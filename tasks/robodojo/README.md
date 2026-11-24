@@ -44,12 +44,12 @@ privileged twins are graded as every privileged task, on up to 3 fresh replays, 
 54 privileged + 54 standard = 108 task directories. `oracle = "none"` for every task (below).
 
 The task directories are the deliverable; the tooling that built them is kept outside this repository. Each task carries:
-- its instruction, in the five sections every v2 instruction has (Task, Goal, Robot Interface, Others, Limits): the
-  task and what success looks like in plain words, the way a person would be briefed, every condition RoboDojo's
-  check tests stated without its thresholds or function names (objects by appearance and starting place; object
-  counts and a rough number the task itself is about stay). The check's code
-  (`task/RoboDojo/tasks/<benchmark>/<task>.py`, its config, `env/reward_manager/`) is the reference for the exact
-  thresholds and logic.
+- its instruction, in the sections of every v2 instruction (Task, Goal, Robot Interface, Limits, and Others only
+  for what the robot cannot see for itself): briefly, in plain words, what to do and what success looks like, the
+  way one person asks another to do a chore. Every condition RoboDojo's check tests is stated without its thresholds
+  or function names, and the only numbers in that text are object counts (Robot Interface and Limits keep theirs).
+  The check's code (`task/RoboDojo/tasks/<benchmark>/<task>.py`, its config, `env/reward_manager/`) is the reference
+  for the exact thresholds and logic.
 - its instance's `instance.json` (`environment/sim/instance.json`): the evaluation layout verbatim (with its sha256),
   the state hash after RoboDojo's reset, RoboDojo's language instruction for the layout, and per-task fields
   (`physics`, `determinism`) from the determinism test's output (`rcb_robodojo.py make-instance --task T --seed 0

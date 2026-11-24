@@ -1,16 +1,11 @@
 # RoboDojo · pick_from_conveyor_by_image (privileged)
 
 ## Task
-Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /
-Isaac Lab, PhysX). Find which of the four objects on the moving conveyor matches the photo on the board, put that object
-in the basket, and lift the basket with the object in it about a hand's length. RoboDojo's own instruction for this
-scene: "Lift the basket more than 8 cm, identify the target object on the conveyor according to the image on the board,
-pick it up, and place it into the basket." The scene is one fixed instance. You have the full simulator to develop with;
-you hand in a trajectory of robot actions.
+Put the object shown in the photo on the board into the basket on the belt, then lift the basket about a hand's length.
 
 ## Goal
-Success: the object shown in the photo on the board lies in the basket, resting on its floor, and the basket with it is
-held up about a hand's length off the belt. A replay ends as soon as the task is done; later rows are not run.
+Success: the object shown in the photo lies on the basket's floor, and the basket is held about a hand's length above
+the belt. A replay ends as soon as the task is done; later rows are not run.
 
 Deliverable: `/app/output/trajectory.npz` with `task` and `actions`, a (T, 14) float array of at most 15,000 rows, one
 per action (1/25 s); write it with `s.save_trajectory()`. Anything else (another shape, NaN, more rows) scores 0. Leave
@@ -22,6 +17,10 @@ Rules: write your own controller; do not use the benchmark's demonstrations, tra
 Only the actions count: changing the simulator's state while you develop changes nothing in the replay.
 
 ## Robot Interface
+Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /
+Isaac Lab, PhysX). The scene is one fixed instance. You have the full simulator to develop with; you hand in a
+trajectory of robot actions.
+
 ### Session
 `/opt/tools/rcb_robodojo.py`, importable as `rcb_robodojo`:
 ```python
@@ -66,18 +65,8 @@ with this command; run it to self-check (it stops at the first success):
   end-effector pose in this frame.
 
 ## Others
-- The objects (their `s.objects()` labels in brackets; left / right = world -x / +x, "away" = +y, away from the arms):
-  - the basket: the light-blue plastic shopping basket with a handle, on the belt [basket]; it rides the belt like the
-    other objects.
-  - the target: the one object on the belt that is shown in the photo on the board (the framed picture standing on the
-    stand straight in front of the arms, facing the camera) [target]. The four objects on the belt start to the left of
-    the basket, at least some of them out of view at the start, and each looks different [target, object1, object2,
-    object3].
-- The belt runs from left to right (world +x) the whole episode, carrying the basket and the four objects; the basket
-  leaves the arms' reach on the right after several seconds unless it is picked up, and the objects arrive from the left
-  one after another.
-- Look at the photo on the board to tell which of the four objects is the target. The text does not name it.
-- The basket rides the belt with the objects; once it has left the arms' reach it cannot be picked up.
+- Labels in `s.objects()`: `basket` (the basket); `target` (the object shown in the photo); `object1`..`object3` (the
+  other three objects on the belt).
 - RoboDojo's own reset settles the scene again from where it is, so after actions a reset gives the same layout and
   start pose but not bit-for-bit the same state; a replay after such a reset can end slightly differently from the
   grader's. Each graded replay runs the first episode of a newly started Session (nothing stepped before it): test on

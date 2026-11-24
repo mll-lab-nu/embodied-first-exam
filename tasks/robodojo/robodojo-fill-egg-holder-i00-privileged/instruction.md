@@ -1,16 +1,12 @@
 # RoboDojo · fill_egg_holder (privileged)
 
 ## Task
-Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /
-Isaac Lab, PhysX). Move the four eggs from the egg basket into the egg holder, the tray with a lid, and close its lid.
-Then bring both arms back to where they started. RoboDojo's own instruction for this scene: "Place the four eggs from
-the basket into the egg holder, then close the lid." The scene is one fixed instance. You have the full simulator to
-develop with; you hand in a trajectory of robot actions.
+Put the four eggs from the egg basket into the egg holder and close its lid. Then move both arms back to where they
+started.
 
 ## Goal
-Success: all four eggs rest in the egg holder's cups (any egg in any cup; an egg on the closed lid, on the rim or held
-above the holder does not count), the holder's lid is closed down over the cups, and both arms are back where they
-started (the grippers may stay closed). A replay ends as soon as the task is done; later rows are not run.
+Success: all four eggs are in the egg holder's cups, its lid is closed, and both arms are back where they started. A
+replay ends as soon as the task is done; later rows are not run.
 
 Deliverable: `/app/output/trajectory.npz` with `task` and `actions`, a (T, 14) float array of at most 15,000 rows, one
 per action (1/25 s); write it with `s.save_trajectory()`. Anything else (another shape, NaN, more rows) scores 0. Leave
@@ -22,6 +18,10 @@ Rules: write your own controller; do not use the benchmark's demonstrations, tra
 Only the actions count: changing the simulator's state while you develop changes nothing in the replay.
 
 ## Robot Interface
+Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /
+Isaac Lab, PhysX). The scene is one fixed instance. You have the full simulator to develop with; you hand in a
+trajectory of robot actions.
+
 ### Session
 `/opt/tools/rcb_robodojo.py`, importable as `rcb_robodojo`:
 ```python
@@ -66,13 +66,8 @@ with this command; run it to self-check (it stops at the first success):
   end-effector pose in this frame.
 
 ## Others
-- The objects (their `s.objects()` labels in brackets; left / right = world -x / +x, "away" = +y, away from the arms):
-  - the four eggs: identical light-brown eggs, lying on their sides in the woven basket on the table [target0, target1,
-    target2, target3] (the basket is fixed and not checked [egg_basket])
-  - the egg holder: the white egg carton in front of you, near the centre: four round cups in a 2 x 2 block, with its
-    lid hinged at the cups' far edge and standing open, upright, behind them [egg_holder].
-- Put all four eggs in before you close the lid.
-- The egg carton is not fixed to the table and moves if it is pushed; the egg basket is fixed.
+- Labels in `s.objects()`: `target0`..`target3` (the four eggs); `egg_holder` (the egg holder); `egg_basket` (the egg
+  basket).
 - RoboDojo's own reset settles the scene again from where it is, so after actions a reset gives the same layout and
   start pose but not bit-for-bit the same state; a replay after such a reset can end slightly differently from the
   grader's. Each graded replay runs the first episode of a newly started Session (nothing stepped before it): test on

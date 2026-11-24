@@ -1,19 +1,15 @@
 # RoboDojo · organize_table (privileged)
 
 ## Task
-Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /
-Isaac Lab, PhysX). Put the alarm clock on the drawer, stand the cactus toy upright on the small grey square pad, put the
-mouse on the mouse pad and push the keyboard into its frame. Then bring both arms back to where they started. RoboDojo's
-own instruction for this scene: "Place the alarm clock on the drawer, put the figurine on the stand, place the mouse on
-the mouse pad, and push the keyboard into the frame." The scene is one fixed instance. You have the full simulator to
-develop with; you hand in a trajectory of robot actions.
+Put the alarm clock on the drawer, stand the cactus toy on the small grey square pad, put the mouse on the mouse pad and
+push the keyboard into its frame, each kept the way up and the way round it started. Then move both arms back to where
+they started.
 
 ## Goal
-Success: the mouse lies on the mouse pad, its buttons still pointing away from you; the keyboard has been pushed over
-the middle of the frame drawn on the table, still flat, keys up, its long side left-right; the cactus toy stands upright
-on the small grey square pad; the alarm clock stands upright on top of the drawer; all four have come to rest; and both
-arms are back where they started (the grippers may stay closed). Keep each object the way up and the way round it
-started. A replay ends as soon as the task is done; later rows are not run.
+Success: the alarm clock stands upright on the drawer, the cactus toy stands upright on the small grey square pad, the
+mouse lies on the mouse pad and the keyboard lies over the middle of its frame, each the way up and the way round it
+started; all four have come to rest; and both arms are back where they started. A replay ends as soon as the task is
+done; later rows are not run.
 
 Deliverable: `/app/output/trajectory.npz` with `task` and `actions`, a (T, 14) float array of at most 15,000 rows, one
 per action (1/25 s); write it with `s.save_trajectory()`. Anything else (another shape, NaN, more rows) scores 0. Leave
@@ -25,6 +21,10 @@ Rules: write your own controller; do not use the benchmark's demonstrations, tra
 Only the actions count: changing the simulator's state while you develop changes nothing in the replay.
 
 ## Robot Interface
+Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /
+Isaac Lab, PhysX). The scene is one fixed instance. You have the full simulator to develop with; you hand in a
+trajectory of robot actions.
+
 ### Session
 `/opt/tools/rcb_robodojo.py`, importable as `rcb_robodojo`:
 ```python
@@ -69,16 +69,9 @@ with this command; run it to self-check (it stops at the first success):
   end-effector pose in this frame.
 
 ## Others
-- The objects (their `s.objects()` labels in brackets; left / right = world -x / +x, "away" = +y, away from the arms):
-  - the computer mouse: black, with a blue scroll wheel, on the right, its buttons pointing roughly away from you
-    [mouse].
-  - the mouse pad: the thin black pad on the right [mousemat].
-  - the keyboard: grey, lying flat in front of you, its long side left-right [keyboard].
-  - the frame: the thin rectangular outline drawn on the table straight ahead, behind the keyboard [frame].
-  - the cactus toy: a green cactus in a small brown pot, at the front left [garage].
-  - the small grey square pad: the small flat grey square on the table behind the alarm clock [cube_cushion].
-  - the alarm clock: the beige clock [alarm].
-  - the drawer: the white drawer unit at the far left [drawer].
+- Labels in `s.objects()`: `alarm` (the alarm clock); `drawer` (the drawer); `garage` (the cactus toy); `cube_cushion`
+  (the small grey square pad); `mouse` (the mouse); `mousemat` (the mouse pad); `keyboard` (the keyboard); `frame` (the
+  keyboard's frame).
 - RoboDojo's own reset settles the scene again from where it is, so after actions a reset gives the same layout and
   start pose but not bit-for-bit the same state; a replay after such a reset can end slightly differently from the
   grader's. Each graded replay runs the first episode of a newly started Session (nothing stepped before it): test on

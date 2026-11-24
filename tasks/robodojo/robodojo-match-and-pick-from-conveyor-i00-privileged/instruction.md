@@ -1,15 +1,12 @@
 # RoboDojo · match_and_pick_from_conveyor (privileged)
 
 ## Task
-Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /
-Isaac Lab, PhysX). Watch the first object that appears on the conveyor, then pick up the identical object when it shows
-up again and lift it about a hand's length. RoboDojo's own instruction for this scene: "Remember the first object on the
-conveyor, then pick the matching object when it appears again." The scene is one fixed instance. You have the full
-simulator to develop with; you hand in a trajectory of robot actions.
+Remember the first object on the belt, then pick up its identical copy when it comes by later and lift it about a hand's
+length.
 
 ## Goal
-Success: the identical copy of the first object on the belt, when it comes along later among other objects, is lifted
-about a hand's length above the belt. A replay ends as soon as the task is done; later rows are not run.
+Success: the identical copy of the first object on the belt is lifted about a hand's length above the belt. A replay
+ends as soon as the task is done; later rows are not run.
 
 Deliverable: `/app/output/trajectory.npz` with `task` and `actions`, a (T, 14) float array of at most 15,000 rows, one
 per action (1/25 s); write it with `s.save_trajectory()`. Anything else (another shape, NaN, more rows) scores 0. Leave
@@ -21,6 +18,10 @@ Rules: write your own controller; do not use the benchmark's demonstrations, tra
 Only the actions count: changing the simulator's state while you develop changes nothing in the replay.
 
 ## Robot Interface
+Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /
+Isaac Lab, PhysX). The scene is one fixed instance. You have the full simulator to develop with; you hand in a
+trajectory of robot actions.
+
 ### Session
 `/opt/tools/rcb_robodojo.py`, importable as `rcb_robodojo`:
 ```python
@@ -65,18 +66,8 @@ with this command; run it to self-check (it stops at the first success):
   end-effector pose in this frame.
 
 ## Others
-- The objects (their `s.objects()` labels in brackets; left / right = world -x / +x, "away" = +y, away from the arms):
-  - the first object: the one object already on the belt at the start, right of centre in front of the right arm
-    [target0].
-  - the matching object: an identical copy of the first object (same model, same size and colours), which starts out of
-    view to the left, upstream on the belt, among three other objects that each look different [target1; the others are
-    other0, other1, other2].
-- The belt runs from left to right (world +x) the whole episode. The first object leaves the cameras' view on the right
-  after a few seconds; the other four objects come in from the left one after another and pass in front of the left arm
-  soon after, then move on to the right.
-- Remember what the first object looks like, then pick its identical copy among the objects that arrive later. No text
-  names the object.
-- Once the copy has been carried away by the belt or has fallen off it, it cannot be picked any more.
+- Labels in `s.objects()`: `target0` (the first object); `target1` (its identical copy); `other0`..`other2` (the other
+  three objects).
 - RoboDojo's own reset settles the scene again from where it is, so after actions a reset gives the same layout and
   start pose but not bit-for-bit the same state; a replay after such a reset can end slightly differently from the
   grader's. Each graded replay runs the first episode of a newly started Session (nothing stepped before it): test on

@@ -1,21 +1,15 @@
 # RoboDojo · imitate_sorting_sequence (privileged)
 
 ## Task
-Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /
-Isaac Lab, PhysX). Watch the support (opponent) arm place five objects into the far basket one after another, then place
-your five matching objects into your basket in that same order, and finish with both arms back at their start pose.
-RoboDojo's own instruction for this scene: "Observe the object placement order, remember it, then place the
-corresponding objects into the basket in the same order." The scene is one fixed instance. You have the full simulator
-to develop with; you hand in a trajectory of robot actions.
+Watch the opponent's arm put five objects into the far basket one at a time, then put your five matching objects into
+your basket in the same order. Then move both arms back to where they started.
 
 ## Goal
-Success: your five objects have gone into your basket (the white basket at the front left) one at a time, in the order
-in which the opponent's arm put the matching objects into the far basket, each let go only once all the ones before it
-are in; at the end all five are in your basket and both arms are back where they started (the grippers may stay closed).
-Keep your arms near their start poses while the opponent's arm is out demonstrating: a large move of one of your arms
-while it is away from its own start ends the episode as a failure. Letting go of an object in your basket while one that
-comes earlier in the order is still missing ends the episode as a failure. A replay ends as soon as the task is done;
-later rows are not run.
+Success: your five objects went into your basket one at a time, in the order the opponent's arm used, all five are in it
+at the end, and both arms are back where they started. Moving one of your arms far from where it started while the
+opponent's arm is out ends the episode as a failure. Letting go of an object in your basket while one that comes earlier
+in the order is still missing ends the episode as a failure. A replay ends as soon as the task is done; later rows are
+not run.
 
 Deliverable: `/app/output/trajectory.npz` with `task` and `actions`, a (T, 14) float array of at most 15,000 rows, one
 per action (1/25 s); write it with `s.save_trajectory()`. Anything else (another shape, NaN, more rows) scores 0. Leave
@@ -27,6 +21,10 @@ Rules: write your own controller; do not use the benchmark's demonstrations, tra
 Only the actions count: changing the simulator's state while you develop changes nothing in the replay.
 
 ## Robot Interface
+Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /
+Isaac Lab, PhysX). The scene is one fixed instance. You have the full simulator to develop with; you hand in a
+trajectory of robot actions.
+
 ### Session
 `/opt/tools/rcb_robodojo.py`, importable as `rcb_robodojo`:
 ```python
@@ -71,20 +69,9 @@ with this command; run it to self-check (it stops at the first success):
   end-effector pose in this frame.
 
 ## Others
-- The objects (their `s.objects()` labels in brackets; left / right = world -x / +x, "away" = +y, away from the arms):
-  - your basket: the white open basket at the front left, next to the left arm [basket0].
-  - the far basket: the identical white basket at the far right, next to the opponent's arm (the white arm on the far
-    side) [basket1].
-  - your five objects, on the near half of the table [t0, t1, t2, t3, t4, in the order listed]: a smartwatch with a dark
-    green band, a small black action camera, a yellow toy school bus, a mobile phone lying flat and a bunny figurine in
-    a navy outfit.
-  - the opponent's five objects: an identical copy of each of yours, on the far half of the table [aim0..aim4].
-- The opponent's arm (not yours) replays a recorded demonstration: it picks its five objects and puts them into the far
-  basket in the secret order. It is queued after your first action and moves only while your actions run, in lock-step
-  with them, so it plays during the first part of the episode.
-- Watch (with the cameras) the order in which the opponent's arm puts its objects into the far basket, remember it, and
-  put your matching objects into your basket in the same order. The order depends on the seed and the instruction does
-  not state it.
+- Labels in `s.objects()`: `basket0` (your basket); `basket1` (the far basket); `t0`..`t4` (your five objects);
+  `aim0`..`aim4` (the opponent's five objects).
+- The opponent's arm starts after your first action and moves only while your actions run, in lock-step with them.
 - RoboDojo's own reset settles the scene again from where it is, so after actions a reset gives the same layout and
   start pose but not bit-for-bit the same state; a replay after such a reset can end slightly differently from the
   grader's. Each graded replay runs the first episode of a newly started Session (nothing stepped before it): test on

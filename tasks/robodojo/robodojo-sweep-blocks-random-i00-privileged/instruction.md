@@ -1,18 +1,13 @@
 # RoboDojo · sweep_blocks_random (privileged)
 
 ## Task
-Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /
-Isaac Lab, PhysX). Pick up the broom, hand it to the right arm, sweep the toy brick, the two earbuds and the two paper
-balls into the dustpan, which stays on the table, and leave the broom on the dustpan's open right side. Then bring both
-arms back to where they started. RoboDojo's own instruction for this scene: "Pick up the broom, hand it over to the
-right hand, then use the dustpan to sweep the objects." The scene is one fixed instance. You have the full simulator to
-develop with; you hand in a trajectory of robot actions.
+Sweep the toy brick, the two earbuds and the two paper balls into the dustpan, keeping the dustpan flat on the table,
+and leave the broom well to the right of the dustpan. Then move both arms back to where they started.
 
 ## Goal
-Success: the toy brick, the two earbuds and the two paper balls have been swept into the dustpan and lie well inside it,
-on its floor and not in the corners by its lip; the dustpan still lies flat on the table (it may be slid or turned, but
-not lifted or tipped); the broom lies on the dustpan's open right side, well clear of the pan; and both arms are back
-where they started (the grippers may stay closed). A replay ends as soon as the task is done; later rows are not run.
+Success: the toy brick, the two earbuds and the two paper balls lie well inside the dustpan, the dustpan lies flat on
+the table, the broom lies well to the right of the dustpan, and both arms are back where they started. A replay ends as
+soon as the task is done; later rows are not run.
 
 Deliverable: `/app/output/trajectory.npz` with `task` and `actions`, a (T, 14) float array of at most 15,000 rows, one
 per action (1/25 s); write it with `s.save_trajectory()`. Anything else (another shape, NaN, more rows) scores 0. Leave
@@ -24,6 +19,10 @@ Rules: write your own controller; do not use the benchmark's demonstrations, tra
 Only the actions count: changing the simulator's state while you develop changes nothing in the replay.
 
 ## Robot Interface
+Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /
+Isaac Lab, PhysX). The scene is one fixed instance. You have the full simulator to develop with; you hand in a
+trajectory of robot actions.
+
 ### Session
 `/opt/tools/rcb_robodojo.py`, importable as `rcb_robodojo`:
 ```python
@@ -68,13 +67,8 @@ with this command; run it to self-check (it stops at the first success):
   end-effector pose in this frame.
 
 ## Others
-- The objects (their `s.objects()` labels in brackets; left / right = world -x / +x, "away" = +y, away from the arms):
-  - the dustpan: mustard-yellow, with its short handle, lying flat on the table; its open front edge (the lip) faces
-    right, its handle points left [broom_shovel].
-  - the broom: a small hand brush, cream handle and yellow bristles, lying flat on the left half of the table, bristles
-    pointing roughly away from you [broom].
-  - the five small objects to sweep, all on the right half of the table: a toy brick [target_2_0], two crumpled paper
-    balls [target_1_0, target_1_1] and two earbuds [target_3_0, target_3_1].
+- Labels in `s.objects()`: `broom_shovel` (the dustpan); `broom` (the broom); `target_2_0` (the toy brick);
+  `target_1_0`, `target_1_1` (the two paper balls); `target_3_0`, `target_3_1` (the two earbuds).
 - RoboDojo's own reset settles the scene again from where it is, so after actions a reset gives the same layout and
   start pose but not bit-for-bit the same state; a replay after such a reset can end slightly differently from the
   grader's. Each graded replay runs the first episode of a newly started Session (nothing stepped before it): test on

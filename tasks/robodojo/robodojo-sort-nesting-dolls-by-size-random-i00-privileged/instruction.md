@@ -1,16 +1,12 @@
 # RoboDojo · sort_nesting_dolls_by_size_random (privileged)
 
 ## Task
-Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /
-Isaac Lab, PhysX). Stand the five penguin-like dolls upright in one straight left-to-right row, ordered by size from the
-smallest on the left to the largest on the right. Then bring both arms back to where they started. RoboDojo's own
-instruction for this scene: "Arrange the five nesting dolls in a row from left to right, from smallest to largest." The
-scene is one fixed instance. You have the full simulator to develop with; you hand in a trajectory of robot actions.
+Stand the five dolls upright in a straight row from left to right, smallest to largest, with a little space between
+them. Then move both arms back to where they started.
 
 ## Goal
-Success: the five penguin-like dolls stand upright in one straight left-to-right row, anywhere on the table, ordered by
-size from the smallest on the left to the largest on the right, with a little space between neighbours, and both arms
-are back where they started (the grippers may stay closed). A replay ends as soon as the task is done; later rows are
+Success: the five dolls stand upright in a straight row, smallest on the left to largest on the right, with a little
+space between them, and both arms are back where they started. A replay ends as soon as the task is done; later rows are
 not run.
 
 Deliverable: `/app/output/trajectory.npz` with `task` and `actions`, a (T, 14) float array of at most 15,000 rows, one
@@ -23,6 +19,10 @@ Rules: write your own controller; do not use the benchmark's demonstrations, tra
 Only the actions count: changing the simulator's state while you develop changes nothing in the replay.
 
 ## Robot Interface
+Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /
+Isaac Lab, PhysX). The scene is one fixed instance. You have the full simulator to develop with; you hand in a
+trajectory of robot actions.
+
 ### Session
 `/opt/tools/rcb_robodojo.py`, importable as `rcb_robodojo`:
 ```python
@@ -67,9 +67,7 @@ with this command; run it to self-check (it stops at the first success):
   end-effector pose in this frame.
 
 ## Others
-- The objects (their `s.objects()` labels in brackets; left / right = world -x / +x as seen from the arms, "away" = +y):
-  The five dolls are [doll0..doll4]. Their order of size is their order of height.
-- The other objects on the table are only clutter: keep the row clear of them.
+- Labels in `s.objects()`: `doll0`..`doll4` (the five dolls).
 - RoboDojo's own reset settles the scene again from where it is, so after actions a reset gives the same layout and
   start pose but not bit-for-bit the same state; a replay after such a reset can end slightly differently from the
   grader's. Each graded replay runs the first episode of a newly started Session (nothing stepped before it): test on

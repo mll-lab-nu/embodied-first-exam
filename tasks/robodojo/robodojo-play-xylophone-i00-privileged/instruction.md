@@ -1,18 +1,13 @@
 # RoboDojo · play_Xylophone (privileged)
 
 ## Task
-Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /
-Isaac Lab, PhysX). Pick up the mallet from its stand and strike the 8 xylophone keys one after another, from left to
-right, lifting the mallet clear of the keys between strikes. RoboDojo's own instruction for this scene: "Pick up the
-mallet and strike all xylophone keys from left to right." The scene is one fixed instance. You have the full simulator
-to develop with; you hand in a trajectory of robot actions.
+Pick up the mallet and strike all eight xylophone keys in order from left to right, lifting the mallet head clear of the
+keys between strikes.
 
 ## Goal
-Success: the mallet's red ball has struck all eight xylophone keys in order, from the longest key at the left to
-the shortest at the right: bring the ball down onto each key (resting on it or just above it, long enough to be seen; a
-quick tap can be missed), and after every key but the last lift the ball itself clear of the keys before the next one
-(tilting the stick up while the ball stays low does not count). After the eighth key nothing more is needed. A replay
-ends as soon as the task is done; later rows are not run.
+Success: the mallet head has struck all eight keys in order from left to right, staying on each key long enough to be
+seen (a quick tap can be missed), with the head itself lifted clear of the keys between strikes. A replay ends as soon
+as the task is done; later rows are not run.
 
 Deliverable: `/app/output/trajectory.npz` with `task` and `actions`, a (T, 14) float array of at most 15,000 rows, one
 per action (1/25 s); write it with `s.save_trajectory()`. Anything else (another shape, NaN, more rows) scores 0. Leave
@@ -24,6 +19,10 @@ Rules: write your own controller; do not use the benchmark's demonstrations, tra
 Only the actions count: changing the simulator's state while you develop changes nothing in the replay.
 
 ## Robot Interface
+Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /
+Isaac Lab, PhysX). The scene is one fixed instance. You have the full simulator to develop with; you hand in a
+trajectory of robot actions.
+
 ### Session
 `/opt/tools/rcb_robodojo.py`, importable as `rcb_robodojo`:
 ```python
@@ -68,12 +67,7 @@ with this command; run it to self-check (it stops at the first success):
   end-effector pose in this frame.
 
 ## Others
-- The objects (their `s.objects()` labels in brackets; left / right = world -x / +x, "away" = +y, away from the arms):
-  - the xylophone: the low rainbow xylophone on a light wooden frame, its eight coloured keys side by side from left to
-    right, the longest (pink-red) at the left end and the shortest (magenta) at the right end [xylophone].
-  - the mallet: the wooden stick with a small red ball head at one end, lying across its stand [mallet].
-  - the stand: the small white rest under the mallet's handle [mallet_stand].
-- The xylophone is fixed; the mallet starts lying on its stand and has to be picked up first.
+- Labels in `s.objects()`: `xylophone` (the xylophone); `mallet` (the mallet); `mallet_stand` (the mallet's stand).
 - RoboDojo's own reset settles the scene again from where it is, so after actions a reset gives the same layout and
   start pose but not bit-for-bit the same state; a replay after such a reset can end slightly differently from the
   grader's. Each graded replay runs the first episode of a newly started Session (nothing stepped before it): test on

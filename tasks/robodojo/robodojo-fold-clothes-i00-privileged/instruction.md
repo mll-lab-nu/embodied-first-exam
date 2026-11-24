@@ -1,19 +1,15 @@
 # RoboDojo · fold_clothes (privileged)
 
 ## Task
-Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /
-Isaac Lab, PhysX). Fold the long-sleeve shirt lying flat on the table: first fold both sleeves in across the chest, then
-fold the bottom hem up to the shoulders, using both arms, and finish with both arms back home with grippers open.
-RoboDojo's own instruction for this scene: "Fold the clothes neatly." The scene is one fixed instance. You have the full
-simulator to develop with; you hand in a trajectory of robot actions.
+Fold the shirt: first both sleeves in across the chest, then the bottom hem up to the shoulders. Then move both arms
+back to where they started, with both grippers open.
 
 ## Goal
-Success: the shirt is folded: first both sleeves folded in across the chest, each onto the opposite side, then the
-bottom hem folded straight up to the shoulders (not sideways or twisted); then open both grippers and bring both arms
-back to where they started. The fold is judged at the moment both arms arrive home with open grippers after having been
-away, so finish the folds before you bring the arms home. Fold both sleeves in before you fold the hem up: an arm coming
-back to where it started while the hem is folded up and a sleeve is not folded in ends the episode as a failure. A
-replay ends as soon as the task is done; later rows are not run.
+Success: both sleeves are folded in across the chest, then the hem is folded straight up to the shoulders, and then both
+arms are back where they started with both grippers open. The fold is judged at the moment both arms arrive home with
+open grippers after having been away, so finish the folds first. An arm coming back to where it started while the hem is
+folded up and a sleeve is not folded in ends the episode as a failure. A replay ends as soon as the task is done; later
+rows are not run.
 
 Deliverable: `/app/output/trajectory.npz` with `task` and `actions`, a (T, 14) float array of at most 15,000 rows, one
 per action (1/25 s); write it with `s.save_trajectory()`. Anything else (another shape, NaN, more rows) scores 0. Leave
@@ -25,6 +21,10 @@ Rules: write your own controller; do not use the benchmark's demonstrations, tra
 Only the actions count: changing the simulator's state while you develop changes nothing in the replay.
 
 ## Robot Interface
+Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /
+Isaac Lab, PhysX). The scene is one fixed instance. You have the full simulator to develop with; you hand in a
+trajectory of robot actions.
+
 ### Session
 `/opt/tools/rcb_robodojo.py`, importable as `rcb_robodojo`:
 ```python
@@ -69,10 +69,7 @@ with this command; run it to self-check (it stops at the first success):
   end-effector pose in this frame.
 
 ## Others
-- The objects (their `s.objects()` labels in brackets; left / right = world -x / +x, "away" = +y, away from the arms):
-  - the shirt: a red long-sleeve top lying flat in the middle of the table in front of you, collar away from you, hem
-    toward you, the sleeves spread out to both sides, the whole shirt turned slightly (seen from above) [target].
-- Both arms are needed for the folds.
+- Labels in `s.objects()`: `target` (the shirt).
 - RoboDojo's own reset settles the scene again from where it is, so after actions a reset gives the same layout and
   start pose but not bit-for-bit the same state; a replay after such a reset can end slightly differently from the
   grader's. Each graded replay runs the first episode of a newly started Session (nothing stepped before it): test on

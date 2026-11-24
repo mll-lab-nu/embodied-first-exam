@@ -1,19 +1,15 @@
 # RoboDojo · hang_mugs_random (privileged)
 
 ## Task
-Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /
-Isaac Lab, PhysX). Using only the rack arms that point left or right, hang the red mug by its handle and hang each of
-the two pink pumpkin mugs on one of the two left-pointing arms with its opening facing left along the arm. Then bring
-both arms back to where they started. RoboDojo's own instruction for this scene: "Hang all the mugs on the mug rack."
-The scene is one fixed instance. You have the full simulator to develop with; you hand in a trajectory of robot actions.
+Hang the three mugs on the mug rack: the red mug by its handle on an arm that points left or right, and the two pink
+pumpkin mugs on any arm, each with its opening facing up or up and to the left and its handle pointing sideways, not up.
+Then move both arms back to where they started.
 
 ## Goal
-Success: each of the three mugs hangs on the mug rack with its handle on one of the rack arms, and both arms are back
-where they started (the grippers may stay closed). The red mug hangs by its handle, handle above the mug, on one of the
-four rack arms that point left or right (not on the two arms that point toward or away from you). Each of the two pink
-pumpkin mugs may hang on any rack arm, with its opening facing up, or facing left and at least slightly up, and with its
-handle pointing roughly left or right from the mug rather than straight up, so a pumpkin mug hanging with its handle
-above it leans to the right. A replay ends as soon as the task is done; later rows are not run.
+Success: each of the three mugs hangs on the mug rack by its handle: the red mug, handle above the mug, on an arm that
+points left or right; each pink pumpkin mug with its opening facing up or up and to the left and its handle pointing
+sideways, not up; and both arms are back where they started. A replay ends as soon as the task is done; later rows are
+not run.
 
 Deliverable: `/app/output/trajectory.npz` with `task` and `actions`, a (T, 14) float array of at most 15,000 rows, one
 per action (1/25 s); write it with `s.save_trajectory()`. Anything else (another shape, NaN, more rows) scores 0. Leave
@@ -25,6 +21,10 @@ Rules: write your own controller; do not use the benchmark's demonstrations, tra
 Only the actions count: changing the simulator's state while you develop changes nothing in the replay.
 
 ## Robot Interface
+Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /
+Isaac Lab, PhysX). The scene is one fixed instance. You have the full simulator to develop with; you hand in a
+trajectory of robot actions.
+
 ### Session
 `/opt/tools/rcb_robodojo.py`, importable as `rcb_robodojo`:
 ```python
@@ -69,13 +69,8 @@ with this command; run it to self-check (it stops at the first success):
   end-effector pose in this frame.
 
 ## Others
-- The objects (their `s.objects()` labels in brackets; left / right = world -x / +x, "away" = +y, away from the arms):
-  - the three mugs [mug0, mug1, mug2, in the order listed], all standing upright on the table: a red mug with a white
-    inside; a pink pumpkin-shaped mug; a second, identical pink pumpkin-shaped mug.
-  - the mug rack: the wooden mug tree at the back: a round base and a tall pole with six arms at three heights. At the
-    lowest and the top level one arm points roughly left and one roughly right; at the middle level one points roughly
-    toward you and one away. The arms slope upward. [cup_holder].
-- The other objects on the table are only clutter.
+- Labels in `s.objects()`: `mug0` (the red mug); `mug1`, `mug2` (the two pink pumpkin mugs); `cup_holder` (the mug
+  rack).
 - RoboDojo's own reset settles the scene again from where it is, so after actions a reset gives the same layout and
   start pose but not bit-for-bit the same state; a replay after such a reset can end slightly differently from the
   grader's. Each graded replay runs the first episode of a newly started Session (nothing stepped before it): test on

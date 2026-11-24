@@ -1,18 +1,13 @@
 # RoboDojo · store_tools_in_toolbox (privileged)
 
 ## Task
-Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /
-Isaac Lab, PhysX). Put the hammer, the pliers, the tape measure and the wrench each into its own matching slot in the
-toolbox, turned to fit that slot. Then bring both arms back to where they started. RoboDojo's own instruction for this
-scene: "Place each tool into its matching position in the toolbox, then reset the robot arm." The scene is one fixed
-instance. You have the full simulator to develop with; you hand in a trajectory of robot actions.
+Put the hammer, the pliers, the tape measure and the wrench each into its own matching slot in the toolbox, the same
+side up as now. Then move both arms back to where they started.
 
 ## Goal
-Success: the hammer, the pliers, the tape measure and the wrench each lie in their own matching slot of the toolbox (the
-recess moulded to that tool's shape), all four at the same time, wholly inside the box and below its rim; each is turned
-to fit its slot, which is the way it lies now: long side front to back, handle toward you, head or jaw at the far end,
-the same face up (only the pliers may lie the other face up); and both arms are back where they started (the grippers
-may stay closed). A replay ends as soon as the task is done; later rows are not run.
+Success: the hammer, the pliers, the tape measure and the wrench each lie in their own matching slot in the toolbox, the
+same side up as at the start, and both arms are back where they started. A replay ends as soon as the task is done;
+later rows are not run.
 
 Deliverable: `/app/output/trajectory.npz` with `task` and `actions`, a (T, 14) float array of at most 15,000 rows, one
 per action (1/25 s); write it with `s.save_trajectory()`. Anything else (another shape, NaN, more rows) scores 0. Leave
@@ -24,6 +19,10 @@ Rules: write your own controller; do not use the benchmark's demonstrations, tra
 Only the actions count: changing the simulator's state while you develop changes nothing in the replay.
 
 ## Robot Interface
+Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /
+Isaac Lab, PhysX). The scene is one fixed instance. You have the full simulator to develop with; you hand in a
+trajectory of robot actions.
+
 ### Session
 `/opt/tools/rcb_robodojo.py`, importable as `rcb_robodojo`:
 ```python
@@ -68,19 +67,7 @@ with this command; run it to self-check (it stops at the first success):
   end-effector pose in this frame.
 
 ## Others
-- The objects (their `s.objects()` labels in brackets; left / right = world -x / +x, "away" = +y, away from the arms):
-  - the toolbox: the open teal tray with moulded tool recesses in the middle of the table, a carrying-handle cut-out in
-    its left wall; it is fixed in place [toolbox].
-  - the hammer: silver claw hammer with a dark grip, lying flat left of the toolbox, handle pointing toward you, head at
-    the far end [hammer].
-  - the wrench: black-handled adjustable wrench lying flat left of the toolbox, handle toward you, jaw at the far end
-    [wrench].
-  - the tape measure: the small yellow tape measure lying flat on one of its round faces right of the toolbox
-    [tape_measure].
-  - the pliers: yellow-and-black-handled pliers lying flat right of the toolbox, handles toward you, jaws at the far end
-    [pliers].
-- Every tool already lies the way its recess wants it: carry each one into the box without turning or tipping it.
-- Placing one tool can knock another out of its recess.
+- Labels in `s.objects()`: `toolbox`, `hammer`, `pliers`, `tape_measure`, `wrench`.
 - RoboDojo's own reset settles the scene again from where it is, so after actions a reset gives the same layout and
   start pose but not bit-for-bit the same state; a replay after such a reset can end slightly differently from the
   grader's. Each graded replay runs the first episode of a newly started Session (nothing stepped before it): test on

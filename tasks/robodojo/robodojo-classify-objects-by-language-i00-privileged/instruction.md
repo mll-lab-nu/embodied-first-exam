@@ -1,18 +1,12 @@
 # RoboDojo · classify_objects_by_language (privileged)
 
 ## Task
-Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /
-Isaac Lab, PhysX). Put each object category named in the instruction into the basket it names: left, middle or right.
-Then bring both arms back to where they started. RoboDojo's own instruction for this scene: "Put car objects into the
-left basket, watch objects into the middle basket, and wooden_toy objects into the right basket, then reset the robot
-arm." The scene is one fixed instance. You have the full simulator to develop with; you hand in a trajectory of robot
-actions.
+Put the cars in the left basket, the watches in the middle basket and the wooden toys in the right basket. Then move
+both arms back to where they started.
 
 ## Goal
-Success: every object of the first category RoboDojo's instruction names is in the left (white) basket, every object of
-the second in the middle (blue) basket and every object of the third in the right (red) basket; each object rests in its
-basket, let go and not held up above the rim; and both arms are back where they started (the grippers may stay closed).
-A replay ends as soon as the task is done; later rows are not run.
+Success: every car is in the left basket, every watch in the middle basket and every wooden toy in the right basket, and
+both arms are back where they started. A replay ends as soon as the task is done; later rows are not run.
 
 Deliverable: `/app/output/trajectory.npz` with `task` and `actions`, a (T, 14) float array of at most 15,000 rows, one
 per action (1/25 s); write it with `s.save_trajectory()`. Anything else (another shape, NaN, more rows) scores 0. Leave
@@ -24,6 +18,10 @@ Rules: write your own controller; do not use the benchmark's demonstrations, tra
 Only the actions count: changing the simulator's state while you develop changes nothing in the replay.
 
 ## Robot Interface
+Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /
+Isaac Lab, PhysX). The scene is one fixed instance. You have the full simulator to develop with; you hand in a
+trajectory of robot actions.
+
 ### Session
 `/opt/tools/rcb_robodojo.py`, importable as `rcb_robodojo`:
 ```python
@@ -68,14 +66,8 @@ with this command; run it to self-check (it stops at the first success):
   end-effector pose in this frame.
 
 ## Others
-- The objects (their `s.objects()` labels in brackets; left / right = world -x / +x, "away" = +y, away from the arms):
-  - the three baskets: open-top plastic bins, in a row across the far half of the table:
-    white on the left [basket0], blue in the middle [basket1], red on the right [basket2].
-  - the objects: small objects of the three categories RoboDojo's instruction names, scattered on the table [cat0_*,
-    cat1_*, cat2_*]. Which objects belong to which category is for you to tell by sight.
-- RoboDojo's instruction (quoted above) names the three categories in the order left, middle, right basket. The names
-  are RoboDojo's category names; match them to the objects by sight.
-- The baskets are fixed in place.
+- Labels in `s.objects()`: `basket0`, `basket1`, `basket2` (the left, middle and right baskets); `cat0_*` (the cars);
+  `cat1_*` (the watches); `cat2_*` (the wooden toys).
 - RoboDojo's own reset settles the scene again from where it is, so after actions a reset gives the same layout and
   start pose but not bit-for-bit the same state; a replay after such a reset can end slightly differently from the
   grader's. Each graded replay runs the first episode of a newly started Session (nothing stepped before it): test on

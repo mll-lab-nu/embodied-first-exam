@@ -1,17 +1,13 @@
 # RoboDojo · hang_mugs (privileged)
 
 ## Task
-Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /
-Isaac Lab, PhysX). Hang each of the three mugs by its handle on one of the four rack arms that point left or right, not
-on the two arms that point toward or away from you. Then bring both arms back to where they started. RoboDojo's own
-instruction for this scene: "Hang all the mugs on the mug rack." The scene is one fixed instance. You have the full
-simulator to develop with; you hand in a trajectory of robot actions.
+Hang the three mugs by their handles on the rack arms that point left or right, one mug per arm. Then move both arms
+back to where they started.
 
 ## Goal
-Success: each of the three mugs hangs by its handle, handle above the mug, on one of the four rack arms that point left
-or right (not on the two arms that point toward or away from you), one mug per arm; nothing holds the mugs; and both
-arms are back where they started (the grippers may stay closed). A replay ends as soon as the task is done; later rows
-are not run.
+Success: each of the three mugs hangs by its handle, handle above the mug, on its own rack arm that points left or
+right; nothing holds the mugs; and both arms are back where they started. A replay ends as soon as the task is done;
+later rows are not run.
 
 Deliverable: `/app/output/trajectory.npz` with `task` and `actions`, a (T, 14) float array of at most 15,000 rows, one
 per action (1/25 s); write it with `s.save_trajectory()`. Anything else (another shape, NaN, more rows) scores 0. Leave
@@ -23,6 +19,10 @@ Rules: write your own controller; do not use the benchmark's demonstrations, tra
 Only the actions count: changing the simulator's state while you develop changes nothing in the replay.
 
 ## Robot Interface
+Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /
+Isaac Lab, PhysX). The scene is one fixed instance. You have the full simulator to develop with; you hand in a
+trajectory of robot actions.
+
 ### Session
 `/opt/tools/rcb_robodojo.py`, importable as `rcb_robodojo`:
 ```python
@@ -67,12 +67,7 @@ with this command; run it to self-check (it stops at the first success):
   end-effector pose in this frame.
 
 ## Others
-- The objects (their `s.objects()` labels in brackets; left / right = world -x / +x, "away" = +y, away from the arms):
-  - the three mugs [mug0, mug1, mug2, in the order listed; interchangeable]: a white polka-dot teacup with a red handle;
-    a yellow mug shaped like a toy figure's head; an ochre (dark yellow) mug. All stand upright on the table.
-  - the mug rack: the wooden mug tree behind the mugs: a round base and a tall pole with six arms at three heights. At
-    the lowest and the top level one arm points roughly left and one roughly right; at the middle level one points
-    toward you and one away. All arms slope upward [cup_holder].
+- Labels in `s.objects()`: `mug0`..`mug2` (the three mugs); `cup_holder` (the mug rack).
 - RoboDojo's own reset settles the scene again from where it is, so after actions a reset gives the same layout and
   start pose but not bit-for-bit the same state; a replay after such a reset can end slightly differently from the
   grader's. Each graded replay runs the first episode of a newly started Session (nothing stepped before it): test on

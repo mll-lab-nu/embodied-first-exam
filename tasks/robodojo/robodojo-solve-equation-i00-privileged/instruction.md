@@ -1,18 +1,13 @@
 # RoboDojo · solve_equation (privileged)
 
 ## Task
-Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /
-Isaac Lab, PhysX). An arithmetic equation (a op b = result) is laid out on pads with exactly one number or operator
-missing; pick the correct missing digit or operator tile from the loose tiles on the table, place it on the empty pad,
-and bring the arms home. RoboDojo's own instruction for this scene: "Complete the equation by selecting the correct
-missing number or operator and placing it on the pad, then reset the robot arm." The scene is one fixed instance. You
-have the full simulator to develop with; you hand in a trajectory of robot actions.
+Complete the equation on the pads: put the loose tile that makes it true on the empty pad, face up and the same way
+round as the tiles already there. Then move both arms back to where they started.
 
 ## Goal
-Success: the loose tile that makes the equation true lies on the empty pad, close to its centre, face up and
-reading the same way as the tiles already on the pads (carry it without turning it: a tile turned half round does not
-count even when it looks the same, nor one flipped over), and both arms are back near where they started (the grippers
-may stay closed). A replay ends as soon as the task is done; later rows are not run.
+Success: the tile that makes the equation true lies near the centre of the empty pad, face up and the same way round as
+the other tiles (turned half round does not count, even if it looks the same), and both arms are back where they
+started. A replay ends as soon as the task is done; later rows are not run.
 
 Deliverable: `/app/output/trajectory.npz` with `task` and `actions`, a (T, 14) float array of at most 15,000 rows, one
 per action (1/25 s); write it with `s.save_trajectory()`. Anything else (another shape, NaN, more rows) scores 0. Leave
@@ -24,6 +19,10 @@ Rules: write your own controller; do not use the benchmark's demonstrations, tra
 Only the actions count: changing the simulator's state while you develop changes nothing in the replay.
 
 ## Robot Interface
+Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /
+Isaac Lab, PhysX). The scene is one fixed instance. You have the full simulator to develop with; you hand in a
+trajectory of robot actions.
+
 ### Session
 `/opt/tools/rcb_robodojo.py`, importable as `rcb_robodojo`:
 ```python
@@ -68,17 +67,9 @@ with this command; run it to self-check (it stops at the first success):
   end-effector pose in this frame.
 
 ## Others
-- The objects (their `s.objects()` labels in brackets; left / right = world -x / +x, "away" = +y, away from the arms):
-  - the five round light-wood pads in an evenly spaced row across the middle of the table [mat0..mat4, left to right].
-    Four of them carry the equation's tiles (digits, an operator disc and a black disc with a white "="); one is empty
-    [t0..t4, the one of the missing slot absent].
-  - the four loose operator tiles: black discs with a white symbol ("+", "-", "x" for times and "÷" for divided by), in
-    a row near you [plus, minus, multiplication, division].
-  - ten loose coloured digit tiles 0-9 scattered between the pads and the arms [num_0..num_9]. RoboDojo reads the
-    printed digit of a tile [model index mod 10; the labels do not follow the digits].
-- Read the equation on the pads to see which slot is empty and which tile makes it true, and the symbols and digits on
-  the loose tiles to pick that tile. The language instruction is generic.
-- The equation uses whole numbers: a difference is never negative and a division is exact.
+- Labels in `s.objects()`: `mat0`..`mat4` (the pads); `t0`..`t4` (the tiles on the pads, none for the empty one);
+  `plus`, `minus`, `multiplication`, `division` (the loose operator tiles); `num_0`..`num_9` (the loose digit tiles;
+  these labels do not follow the printed digits).
 - RoboDojo's own reset settles the scene again from where it is, so after actions a reset gives the same layout and
   start pose but not bit-for-bit the same state; a replay after such a reset can end slightly differently from the
   grader's. Each graded replay runs the first episode of a newly started Session (nothing stepped before it): test on

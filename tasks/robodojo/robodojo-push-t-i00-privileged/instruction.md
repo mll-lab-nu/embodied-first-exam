@@ -1,16 +1,12 @@
 # RoboDojo · push_T (privileged)
 
 ## Task
-Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /
-Isaac Lab, PhysX). Push the T-shaped block (without lifting it) until it lies exactly on top of the gray T-shaped pad,
-with the same position and orientation, then return the arms to their start pose. RoboDojo's own instruction for this
-scene: "Push the T-shaped block to align it precisely with the gray T-shaped pad." The scene is one fixed instance. You
-have the full simulator to develop with; you hand in a trajectory of robot actions.
+Push the T-shaped block, without lifting it, until it lies exactly on the gray T-shaped pad, the same way round. Then
+move both arms back to where they started.
 
 ## Goal
-Success: the T block lies flat on the grey T pad, exactly over it, crossbar on crossbar and stem on stem, the
-same way round, and both arms are back near where they started (the grippers may stay closed). Never lift the block:
-picking it up, tipping it onto an edge or letting it hop ends the episode at once as a failure; push it along the table.
+Success: the block lies flat exactly over the pad, the same way round, and both arms are back where they started.
+Picking up the block, tipping it onto an edge or letting it hop ends the episode at once as a failure.
 
 Deliverable: `/app/output/trajectory.npz` with `task` and `actions`, a (T, 14) float array of at most 15,000 rows, one
 per action (1/25 s); write it with `s.save_trajectory()`. Anything else (another shape, NaN, more rows) scores 0. Leave
@@ -22,6 +18,10 @@ Rules: write your own controller; do not use the benchmark's demonstrations, tra
 Only the actions count: changing the simulator's state while you develop changes nothing in the replay.
 
 ## Robot Interface
+Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /
+Isaac Lab, PhysX). The scene is one fixed instance. You have the full simulator to develop with; you hand in a
+trajectory of robot actions.
+
 ### Session
 `/opt/tools/rcb_robodojo.py`, importable as `rcb_robodojo`:
 ```python
@@ -66,11 +66,7 @@ with this command; run it to self-check (it stops at the first success):
   end-effector pose in this frame.
 
 ## Others
-- The objects (their `s.objects()` labels in brackets; left / right = world -x / +x, "away" = +y, away from the arms):
-  - the T block: the flat red plastic T lying flat on the table near you [t].
-  - the pad: the flat grey T drawn on the table, a little larger than the block, left of centre and near you; it shows
-    where the block must end, in place and in heading (crossbar on crossbar, stem on stem) [target_t].
-- The pad is only a drawing on the table, not an obstacle: the block slides over it.
+- Labels in `s.objects()`: `t` (the block); `target_t` (the pad).
 - RoboDojo's own reset settles the scene again from where it is, so after actions a reset gives the same layout and
   start pose but not bit-for-bit the same state; a replay after such a reset can end slightly differently from the
   grader's. Each graded replay runs the first episode of a newly started Session (nothing stepped before it): test on

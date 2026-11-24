@@ -1,22 +1,16 @@
 # RoboDojo · make_kong (privileged)
 
 ## Task
-Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /
-Isaac Lab, PhysX). After the opponent arm discards a mahjong tile, flip face up the three tiles in your row that show
-the same picture, then stand the face-down tile from the top of the front stack at the far left upright at the right end
-of your row, next to the last tile. Finish with both grippers open. RoboDojo's own instruction for this scene: "Wait for
-the opponent to discard a tile, then declare a kong with the matching tiles." The scene is one fixed instance. You have
-the full simulator to develop with; you hand in a trajectory of robot actions.
+After the opponent's arm discards a tile, flip face up the three tiles in your row with the same picture. Then stand the
+face-down tile from the top of the front stack at the far left on its short end at the right end of your row, the end
+that pointed right on top, and open both grippers.
 
 ## Goal
-Success: the three tiles of your row with the same picture as the tile the opponent discarded have been flipped face up
-(tip each one away from you so that it falls onto its back, picture up; tipped toward you it lies picture down), with
-the other nine tiles of your four groups of three still standing; after that, the replacement tile (the top tile of the
-front stack of face-down tiles at the far left) stands upright on its short end in the next place at the right end of
-your row, the end that pointed right at the start on top, and both grippers are open. Flip the three matching tiles
-before you turn the replacement tile, and do not knock over the other tiles of your row. Keep your arms near their start
-poses while the opponent's arm is out: one of your arms moved far from its start pose then ends the episode as a
-failure. A replay ends as soon as the task is done; later rows are not run.
+Success: the three tiles in your row with the same picture as the discarded tile are face up and the other nine tiles of
+your four sets of three still stand; after that, the tile from the front stack stands on its short end at the right end
+of your row, the end that pointed right at the start on top; and both grippers are open. Moving one of your arms far
+from where it started while the opponent's arm is out ends the episode as a failure. A replay ends as soon as the task
+is done; later rows are not run.
 
 Deliverable: `/app/output/trajectory.npz` with `task` and `actions`, a (T, 14) float array of at most 15,000 rows, one
 per action (1/25 s); write it with `s.save_trajectory()`. Anything else (another shape, NaN, more rows) scores 0. Leave
@@ -28,6 +22,10 @@ Rules: write your own controller; do not use the benchmark's demonstrations, tra
 Only the actions count: changing the simulator's state while you develop changes nothing in the replay.
 
 ## Robot Interface
+Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /
+Isaac Lab, PhysX). The scene is one fixed instance. You have the full simulator to develop with; you hand in a
+trajectory of robot actions.
+
 ### Session
 `/opt/tools/rcb_robodojo.py`, importable as `rcb_robodojo`:
 ```python
@@ -72,23 +70,10 @@ with this command; run it to self-check (it stops at the first success):
   end-effector pose in this frame.
 
 ## Others
-- The objects (their `s.objects()` labels in brackets; left / right = world -x / +x, "away" = +y, away from the arms):
-  Every tile is the same block, with a white face carrying the picture and a green back:
-  - your row: 14 tiles standing upright on their short ends in a straight line across the front of the table, faces
-    toward you, side by side. From the left: four groups of three identical tiles [mahjong0_0..0_2,
-    mahjong1_0..1_2, mahjong2_0..2_2, mahjong3_0..3_2], then a pair of identical tiles of a fifth kind at the right end
-    [mahjong4_0, mahjong4_1].
-  - the opponent's row: four tiles standing in the middle of the table in front of the opponent's arm (the white arm on
-    the far side), green backs toward you, faces toward the opponent. Each shows the same picture as one of your four
-    groups of three [mahjong5_0..mahjong8_0].
-  - the replacement tile: the top tile of the front (nearer) of the two small stacks of face-down tiles at the far left;
-    it lies flat, green back up, long side left-right, and has the same picture as the pair at the right end of your row
-    [mahjong9_0].
-- The opponent's arm (the white arm on the far side, not yours) replays a recorded discard motion, chosen by where the
-  discarded tile stands in the opponent's row (its rank from the left among the four). It is queued after your first
-  action and moves only while your actions run, in lock-step with them.
-- Watch which tile the opponent lays face up, find the three tiles in your row with the same picture, and flip those.
-  The instruction does not name the tile and no numbers are given.
+- Labels in `s.objects()`: `mahjong0_0`..`mahjong3_2` (your four sets of three, `mahjongK_0`..`mahjongK_2` per set);
+  `mahjong4_0`, `mahjong4_1` (the last two tiles of your row); `mahjong5_0`..`mahjong8_0` (the opponent's four tiles);
+  `mahjong9_0` (the tile from the front stack).
+- The opponent's arm starts after your first action and moves only while your actions run, in lock-step with them.
 - RoboDojo's own reset settles the scene again from where it is, so after actions a reset gives the same layout and
   start pose but not bit-for-bit the same state; a replay after such a reset can end slightly differently from the
   grader's. Each graded replay runs the first episode of a newly started Session (nothing stepped before it): test on

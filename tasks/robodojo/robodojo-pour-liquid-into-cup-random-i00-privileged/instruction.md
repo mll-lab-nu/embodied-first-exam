@@ -1,16 +1,12 @@
 # RoboDojo · pour_liquid_into_cup_random (privileged)
 
 ## Task
-Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /
-Isaac Lab, PhysX). Pick up the bottle and pour its liquid into the cup, then stand the bottle upright again. RoboDojo's
-own instruction for this scene: "Pour the liquid from the bottle into the cup." The scene is one fixed instance. You
-have the full simulator to develop with; you hand in a trajectory of robot actions.
+Pour the liquid from the bottle into the cup, then stand the bottle upright again.
 
 ## Goal
-Success: nearly all the liquid has left the bottle and almost all of it is in the cup, with little spilled, and
-the bottle has then been stood back upright (it may stay in the hand). The pour is judged at the moment the bottle
-stands upright again, so finish pouring into the cup before you stand it up; if that try fails, pour more and stand it
-up again.
+Success: nearly all the liquid has left the bottle, almost all of it is in the cup with little spilled, and the bottle
+stands upright again. The pour is judged at the moment the bottle stands upright again, so finish pouring before you
+stand it up.
 
 Deliverable: `/app/output/trajectory.npz` with `task` and `actions`, a (T, 14) float array of at most 15,000 rows, one
 per action (1/25 s); write it with `s.save_trajectory()`. Anything else (another shape, NaN, more rows) scores 0. Leave
@@ -23,6 +19,10 @@ Rules: write your own controller; do not use the benchmark's demonstrations, tra
 Only the actions count: changing the simulator's state while you develop changes nothing in the replay.
 
 ## Robot Interface
+Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /
+Isaac Lab, PhysX). The scene is one fixed instance. You have the full simulator to develop with; you hand in a
+trajectory of robot actions.
+
 ### Session
 `/opt/tools/rcb_robodojo.py`, importable as `rcb_robodojo`:
 ```python
@@ -67,11 +67,7 @@ with this command; run it to self-check (it stops at the first success):
   end-effector pose in this frame.
 
 ## Others
-- The objects (their `s.objects()` labels in brackets; left / right = world -x / +x, "away" = +y, away from the arms):
-  - the bottle: the red liquor bottle, standing upright, neck up [bottle].
-  - the liquid: the particle fluid that starts inside the bottle [wine].
-  - the cup: the small mint-green mug with an owl face and a handle on its side [cup].
-- The other things on the table are only clutter.
+- Labels in `s.objects()`: `bottle` (the bottle); `wine` (its liquid); `cup` (the cup).
 - RoboDojo's own reset settles the scene again from where it is, so after actions a reset gives the same layout and
   start pose but not bit-for-bit the same state; a replay after such a reset can end slightly differently from the
   grader's. Each graded replay runs the first episode of a newly started Session (nothing stepped before it): test on

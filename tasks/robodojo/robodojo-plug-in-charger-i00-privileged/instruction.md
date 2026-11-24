@@ -1,16 +1,12 @@
 # RoboDojo · plug_in_charger (privileged)
 
 ## Task
-Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /
-Isaac Lab, PhysX). Pick up the charger and plug it into the socket of the power strip so that it sits upright and fully
-inserted, then return the arms to their start pose. RoboDojo's own instruction for this scene: "Plug the charger into
-the power strip." The scene is one fixed instance. You have the full simulator to develop with; you hand in a trajectory
-of robot actions.
+Plug the charger into the power strip, upright and pushed all the way in. Then move both arms back to where they
+started.
 
 ## Goal
-Success: the charger stands upright in an outlet of the power strip, prongs straight down and pushed well into
-the outlet (resting on top of the strip does not count), and both arms are back near where they started (the grippers
-may stay closed), all at the same time. A replay ends as soon as the task is done; later rows are not run.
+Success: the charger stands upright in an outlet of the power strip with its prongs pushed well in, and both arms are
+back where they started. A replay ends as soon as the task is done; later rows are not run.
 
 Deliverable: `/app/output/trajectory.npz` with `task` and `actions`, a (T, 14) float array of at most 15,000 rows, one
 per action (1/25 s); write it with `s.save_trajectory()`. Anything else (another shape, NaN, more rows) scores 0. Leave
@@ -22,6 +18,10 @@ Rules: write your own controller; do not use the benchmark's demonstrations, tra
 Only the actions count: changing the simulator's state while you develop changes nothing in the replay.
 
 ## Robot Interface
+Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /
+Isaac Lab, PhysX). The scene is one fixed instance. You have the full simulator to develop with; you hand in a
+trajectory of robot actions.
+
 ### Session
 `/opt/tools/rcb_robodojo.py`, importable as `rcb_robodojo`:
 ```python
@@ -66,12 +66,7 @@ with this command; run it to self-check (it stops at the first success):
   end-effector pose in this frame.
 
 ## Others
-- The objects (their `s.objects()` labels in brackets; left / right = world -x / +x, "away" = +y, away from the arms):
-  - the charger: the small white wall-charger block with two metal prongs, lying flat with its prongs pointing toward
-    you [charger].
-  - the power strip: the long, low white strip, lying flat, its long side roughly left-right; its outlets are on its top
-    face [socket].
-- The power strip is loose: it can be pushed or knocked while you plug the charger in.
+- Labels in `s.objects()`: `charger` (the charger); `socket` (the power strip).
 - RoboDojo's own reset settles the scene again from where it is, so after actions a reset gives the same layout and
   start pose but not bit-for-bit the same state; a replay after such a reset can end slightly differently from the
   grader's. Each graded replay runs the first episode of a newly started Session (nothing stepped before it): test on

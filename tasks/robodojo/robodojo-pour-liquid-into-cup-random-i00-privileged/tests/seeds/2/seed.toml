@@ -1,12 +1,4 @@
 [[replace]]
-old = "## Others\n- The objects (their `s.objects()` labels in brackets; left / right = world -x / +x, \"away\" = +y, away from the arms):\n  - the bottle: the red liquor bottle, standing upright, neck up [bottle].\n  - the liquid: the particle fluid that starts inside the bottle [wine].\n  - the cup: the small mint-green mug with an owl face and a handle on its side [cup].\n- The other things on the table are only clutter.\n- RoboDojo's own reset settles the scene again from where it is, so after actions a reset gives the same layout and\n  start pose but not bit-for-bit the same state; a replay after such a reset can end slightly differently from the\n  grader's. Each graded replay runs the first episode of a newly started Session (nothing stepped before it): test on\n  that."
-new = "## Others\n- The objects (their `s.objects()` labels in brackets; left / right = world -x / +x, \"away\" = +y, away from the arms):\n  - the bottle: the dark green glass liquor bottle with a gold label, standing upright, neck up [bottle].\n  - the liquid: the particle fluid that starts inside the bottle [wine].\n  - the cup: the small mustard-yellow cup with no handle [cup].\n- The other things on the table are only clutter.\n- RoboDojo's own reset settles the scene again from where it is, so after actions a reset gives the same layout and\n  start pose but not bit-for-bit the same state; a replay after such a reset can end slightly differently from the\n  grader's. Each graded replay runs the first episode of a newly started Session (nothing stepped before it): test on\n  that."
-
-[[replace]]
-old = "## Others\n- The objects (left / right = world -x / +x, \"away\" = +y, away from the arms):\n  - the bottle: the red liquor bottle, standing upright, neck up.\n  - the liquid: the particle fluid that starts inside the bottle.\n  - the cup: the small mint-green mug with an owl face and a handle on its side.\n- The other things on the table are only clutter."
-new = "## Others\n- The objects (left / right = world -x / +x, \"away\" = +y, away from the arms):\n  - the bottle: the dark green glass liquor bottle with a gold label, standing upright, neck up.\n  - the liquid: the particle fluid that starts inside the bottle.\n  - the cup: the small mustard-yellow cup with no handle.\n- The other things on the table are only clutter."
-
-[[replace]]
 old = "arx_x5/0/pour_liquid_into_cup_random_0.json"
 new = "arx_x5/2/pour_liquid_into_cup_random_0.json"
 
