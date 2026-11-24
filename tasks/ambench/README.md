@@ -48,7 +48,7 @@ directories, `oracle = "full"`.
 | `peg_in_hole_fahexa` | `PegInHole` | insert the held peg into a socket on a (tilted) wall | 20 s | 1041 (`88054491…`) |
 | `ndt_fahexa` | `NDT` | hold the end effector at an inspection point high on a warehouse wall for 100 steps | 20 s | 1212 (`bd8da252…`) |
 | `lemon_harvesting_fahexa` | `LemonHarvesting` | pick the lemon off its stem and drop it into the tote | 30 s | 1739 (`a0426217…`) |
-| `cabinet_pick_place_fahexa` | `CabinetPickPlace` | lift a can onto the cabinet's top shelf | 60 s | 2752 (`c8c72a8b…`) |
+| `cabinet_pick_place_fahexa` | `CabinetPickPlace` | lift a can onto the top of the cabinet | 60 s | 2752 (`c8c72a8b…`) |
 | `pull_lever_fahexa` (standard only) | `PullLever` | pull a spring-loaded lever on a (tilted) wall up by > 40° | 20 s | 899 (no single end state: six replays, three states) |
 
 **PullLever, standard only.** GPU PhysX does not replay it bit for bit (Determinism below): the same rows, from

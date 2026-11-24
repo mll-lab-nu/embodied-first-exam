@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:robowits-0.1.1` |
 
 ## Task
-Move any of the three cubes to the left of the goal line. One replayable trajectory from the frozen instance
+Move any one of the three cubes past the yellow goal line, to its far side from the robot, and leave it there on the table. One replayable trajectory from the frozen instance
 (evaluation scene 0 of RoboWits task 28), with the privileged tooling (`rcb_robowits.py`: the scene's state, resets,
 thin primitives, replay); the success criterion as graded is in `instruction.md`.
 

@@ -1,1 +1,1 @@
-With the wrist locked, keep the controller steady and move the joystick through left, front, right, back, then center, holding each checkpoint. Checkpoints are joint angles relative to the shell, not world tilt.
+With the wrist locked, keep the controller steady and move the joystick through left (tilted toward the wrist), front (toward the little-finger side), right (toward the fingertips), back (toward the thumb side), then center, holding each checkpoint. Checkpoints are joint angles relative to the shell, not world tilt.

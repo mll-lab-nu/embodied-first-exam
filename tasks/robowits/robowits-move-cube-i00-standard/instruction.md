@@ -1,8 +1,8 @@
 # RoboWits · move_cube — STANDARD MODE (robot as a service, eai-standard/2.2)
 
 You control a bimanual **Marvin** robot (two 7-DoF arms with Pika parallel grippers) **as if it were real hardware**:
-the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Move any of the three
-cubes to the left of the goal line.
+the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Move any one of the three
+cubes past the yellow goal line, to its far side from the robot, and leave it there on the table.
 
 ## Success criterion (as graded)
 This is exactly what the grader checks (RoboWits' success predicate, stated in words, and the release and rest
@@ -26,7 +26,7 @@ simulator is the verdict: nothing is replayed to grade it.
 Not checked: anything else: whether the cube is on the table top or still on a slope, its height and orientation, and
 the other two cubes (except that neither may become a counted cube during the check window).
 
-Task text vs grader ("Move any of the three cubes to the left of the goal line."): "To the left of the goal line"
+Task text vs grader: RoboWits' own task text is "Move any of the three cubes to the left of the goal line."; "to the left of the goal line" there
 means beyond it, farther from the robot than the line, not to the left as the robot sees it.
 
 Terms: a *footprint* is an object's outline seen from above; *not held* means that neither gripper tip (the `tcp_pose`

@@ -1,6 +1,6 @@
 # DexHand: Paper Mate palm-to-tripod pen regrasp
 
-With the wrist fixed, move the unsupported pen 30 mm along its initial longitudinal axis relative to the palm, then turn its axis by 45 degrees and hold its marked grip band with thumb, index and middle fingertips. The initial pen rests against the central palm surfaces; the final pen must clear those central palm surfaces. All three named fingertips must contact the marked band. Other finger links may also contribute contact; an exclusive fingertip-only grasp is not required. No table support, other hand or whole-object release is allowed.
+With the wrist fixed, slide the unsupported pen 30 mm along its length toward the fingertips (relative to the palm), then turn its axis by 45 degrees and hold its marked grip band with thumb, index and middle fingertips. The initial pen rests against the central palm surfaces; the final pen must clear those central palm surfaces. All three named fingertips must contact the marked band. Other finger links may also contribute contact; an exclusive fingertip-only grasp is not required. No table support, other hand or whole-object release is allowed.
 
 You control one dexterous hand on a six-DoF wrist positioning stage: a Sharpa Wave hand with 22 independently
 actuated finger joints (the default) or a Wuji Hand 2.2 with 20 (see Hands).

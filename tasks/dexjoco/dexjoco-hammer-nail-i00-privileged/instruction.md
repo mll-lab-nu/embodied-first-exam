@@ -1,6 +1,6 @@
 # DexJoCo · hammer_nail — frozen instance
 
-You control a Franka Panda arm with a 16-DoF Allegro hand (DexJoCo on MuJoCo 3.4) via Python. **Task:** Pick up the hammer and drive the nail into the wooden block by striking its head. A strike counts only if the hammer face was moving down faster than 0.02 m/s just before it touched the nail; each counted strike drives the nail 8 mm x min(3, speed / 0.02) deeper (at most 7.26 cm). Success: the nail is at least 4 cm deep.
+You control a Franka Panda arm with a 16-DoF Allegro hand (DexJoCo on MuJoCo 3.4) via Python. **Task:** Pick up the hammer and drive the nail into the wooden block by striking its head. Only a real swing counts: the hammer face must be coming down faster than about 0.2 m/s just before it hits the nail; a blow at that speed drives the nail about 8 mm deeper and a faster one further, up to about 2.4 cm per strike (from about 0.6 m/s; at most 7.26 cm in all). Success: the nail is at least 4 cm deep.
 
 The hammer lies on the table at the robot's right (low y); the nail stands upright in a wooden block in front of the robot. The nail is not a free body: it only moves down when struck. `s.objects()` gives the live poses of the task objects (`hammer`, `nail`, `nail_top`, `wood_top`, `table_top`). DexJoCo's success code (from
 `/opt/dexjoco/dexjoco/dexjoco/sim/envs/panda_hammer_nail_env.py`; `step()` ends the episode on success or on a task failure):
