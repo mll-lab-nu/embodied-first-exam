@@ -7,7 +7,7 @@ client. **Task:** Juggle three balls in a cascade: throw each ball from one hand
 ## The venue
 You stand on level ground, nothing around you. Your forearms point forwards, your palms up and your fingers forwards, the hands' grasp centres about 0.37 m apart and 1.1 m above the ground; a ball is held in each hand, and the red ball waits in a small two-wheel ball machine on the ground 1.0 m in front of you, which lobs it onto your left hand. A hand's closure command closes its fingers and thumb; with the hand open, a ball rests on its palm.
 
-Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level.
+Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level; the origin (x = 0, y = 0) of the texts below is on the floor under your pelvis at the start.
 
 
 ## The rules

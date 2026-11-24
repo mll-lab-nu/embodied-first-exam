@@ -7,7 +7,7 @@ client. **Task:** From the top of the key, with the basketball held in your two 
 ## The venue
 A FIBA court. You stand at the top of the key facing the basket (+x): the point under the ring's centre is 4.425 m ahead of your pelvis, the backboard's face 0.375 m beyond it, the end line's inner edge 1.575 m beyond that point. The free-throw line (the top of the restricted area; its edge on your side 5.8 m from the end line) is 0.2 m ahead of your pelvis, just in front of your toes; the side lines are 15.0 m apart, 7.5 m to each side of you. The ring's top edge is 2.39 m above the floor. Painted on the floor: the boundary lines, the restricted area, the free-throw line and circle, the three-point line, the no-charge semi-circle, the centre line and circle. The ball is held between your two hands in front of your chest, its centre 1.13 m above the floor and 0.39 m ahead of your pelvis: the hands open (grip values 0, the fingers straight), the palms on its two sides (on these hands it bears on the two thumbs, which lie a little proud of the palms), and the arms pressing the palms in (the start command's shoulder roll and yaw are a little further in than the arms stand: the difference is the squeeze). A grip value is that hand's closure command (0 open, 1 every finger and thumb joint closing towards its closed angle; a finger stops on what it touches).
 
-Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level.
+Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level; the origin (x = 0, y = 0) of the texts below is on the floor under your pelvis at the start.
 
 
 ## The rules

@@ -7,10 +7,10 @@ This is a *fixed instance*: the same venue and start every time. You may reset a
 Your deliverable is **one replayable trajectory**, not a general policy.
 
 ## The venue
-You stand on the level start platform (6.0 m long) at the top, facing the right side of the course (-y), the board's nose (under your left foot) pointing down the fall line (+x) (a 120 cm children's board, sidecut radius 6 m), your front boot 0.3 m behind the platform's edge (the red start line, about 1.8 m before x = 0 and 0.2 m above it); the edge rounds onto the slope, which falls at 18.3 degrees for the whole course and flattens out after the finish into an outrun. The gates' poles are red and blue, 1.8 m out of the snow; the finish has two posts and a banner.
+You stand on the level start platform (6.0 m long) at the top, facing the right side of the course (-y), the board's nose (under your left foot) pointing down the fall line (+x) (a 120 cm children's board, sidecut radius 6 m), your front boot 0.3 m behind the platform's edge (the red start line, about 2.8 m before x = 0 and 0.6 m above it); the edge rounds onto the slope, which falls at 18.3 degrees for the whole course and flattens out after the finish into an outrun. The gates' poles are red and blue, 1.8 m out of the snow; the finish has two posts and a banner.
 
-Frame: metres; the origin is on the floor under your pelvis at the start, +x is the way you face at the start, +y is
-to your left, +z is up; the floor is z = 0. 
+Frame: metres; the venue's frame, which the venue text, the rules and `s.state()` use: at the start your pelvis is
+above (x, y) = (-3.33, 0.00) and you face -y (+x is to your left); +z is up; the course is not level: the snow is z = 0 at x = 0. 
 
 ## The rules
 **Rule book:** FIS International Competition Rules (ICR), Snowboard, edition 2024/25, parallel slalom (PSL): Art. 2507.2 (turning poles of consecutive gates 10-14 m apart; vertical drop 80-120 m, at least 18 gates), the gate passed when the board and both feet pass outside the gate's turning pole in the direction of the turn (as alpine ICR 661.4.2 for parallel events), flex turning poles (alpine ICR 680), no continuing after a missed gate, a fall. Where this task departs from it:

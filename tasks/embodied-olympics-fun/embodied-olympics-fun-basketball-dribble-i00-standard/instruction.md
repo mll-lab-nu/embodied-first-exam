@@ -7,7 +7,7 @@ client. **Task:** Dribble the basketball, which starts held in your two hands, f
 ## The venue
 You stand in the backcourt just inside the end line, facing up the court (+x): the end line's inner edge is 0.5 m behind your pelvis and the centre line 14.0 m beyond that edge. The basket of this end is to your right: the court's long axis, with the backboard (its lower edge 2.9 m high, 1.2 m in from the end line) and the ring, is 2.5 m to your right; the side lines are 15.0 m apart, the nearer one 5 m to your left. Painted on the floor: the boundary lines, the restricted area, the free-throw line (5.8 m from the end line) and circle, the three-point line, the centre line and circle. The ball rests on your upturned right hand in front of your chest, its centre about 1.1 m above the floor, 0.39 m ahead of your pelvis and 0.06 m to its right; the right hand's fingers point forwards under it, curled a little round it (grip value 0.3), the left hand's palm is on its left side, open (grip value 0); the start command keeps that hold. A grip value is that hand's closure command: 0 opens the fingers, 1 closes every finger and the thumb until they meet something.
 
-Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level.
+Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level; the origin (x = 0, y = 0) of the texts below is on the floor under your pelvis at the start.
 
 
 ## The rules

@@ -5,9 +5,9 @@ You control a simulated Unitree G1 humanoid robot (29 joints, 1.32 m tall, 35 kg
 client. **Task:** Vault over the bar with the pole you carry: plant its tip in the box, leave the ground hanging on it, go over the bar between the uprights and come down on the mat, with the bar still on its pegs.
 
 ## The venue
-You stand on the runway facing the box (+x), your pelvis 20 m before the zero line, in the middle of the runway; the runway goes on 20 m behind you. The pole lies level along +x in your right hand, held at its middle across the palm (grip value 1), the right arm hanging, the forearm pointing forwards and down; the left hand is open (grip value 0). A grip value is that hand's closure command (0 open, 1 every finger and thumb joint closing towards its closed angle; a finger stops on what it touches). The pole is a free body: `held` in your state says which hand holds it. The bar is red with white ends, the uprights grey, the mats blue; the box is the dark patch at the runway's end, the zero line white.
+You stand on the runway facing the box (+x), your pelvis 20 m before the zero line, in the middle of the runway; the runway goes on 20 m behind you. The pole lies level along +x in your right hand, held at its middle across the palm (grip value 1), the right arm hanging, the forearm pointing forwards and down; the left hand is open (grip value 0). A grip value is that hand's closure command (0 open, 1 every finger and thumb joint closing towards its closed angle; a finger stops on what it touches). The pole is a free body: `holding_left` / `holding_right` in your proprioception show which hand holds it. The bar is red with white ends, the uprights grey, the mats blue; the box is the dark patch at the runway's end, the zero line white.
 
-Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level.
+Directions are the venue's, which the venue text and the rules use: at the start your pelvis is above (x, y) = (-20.00, 0.00) and you face +x (+y is to your left); +z is up; the floor is level.
 
 
 ## The rules

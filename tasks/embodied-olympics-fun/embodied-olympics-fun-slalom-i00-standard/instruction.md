@@ -7,7 +7,7 @@ client. **Task:** Run the Illinois agility course: up the left side and round th
 ## The venue
 You stand at the start facing up the course (+x), 0.6 m to the right of the start cone, the front ends of your feet 0.02 m behind the start line (your pelvis at x = -0.13 m, y = +1.9 m). The cones are orange; the course's outline and its centre line are painted white on a level sports floor that goes on for several metres on every side.
 
-Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level.
+Directions are the venue's, which the venue text and the rules use: at the start your pelvis is above (x, y) = (-0.13, 1.90) and you face +x (+y is to your left); +z is up; the floor is level.
 
 
 ## The rules

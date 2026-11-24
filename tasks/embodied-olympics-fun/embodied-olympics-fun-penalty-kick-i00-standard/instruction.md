@@ -7,7 +7,7 @@ client. **Task:** Take a penalty kick: with one kick of a foot, send the ball th
 ## The venue
 You stand facing the goal (+x), 3.0 m behind the penalty mark, on the line through the mark and the centre of the goal. The ball lies on the mark. The penalty area, the goal area and the arc are painted on the grass; the dummy stands in the middle of the goal.
 
-Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level.
+Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level; the origin (x = 0, y = 0) of the texts below is on the floor under your pelvis at the start.
 
 
 ## The rules

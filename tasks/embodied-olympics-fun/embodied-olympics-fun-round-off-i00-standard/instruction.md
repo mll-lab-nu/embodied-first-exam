@@ -7,7 +7,7 @@ client. **Task:** Do a round-off: go from your feet onto your hands, turn half r
 ## The venue
 You stand in the middle of a gymnastics floor-exercise area, 12.0 m by 12.0 m, marked by white lines, flat, level and rigid, with nothing on it; you face +x.
 
-Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level.
+Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level; the origin (x = 0, y = 0) of the texts below is on the floor under your pelvis at the start.
 
 
 ## The rules

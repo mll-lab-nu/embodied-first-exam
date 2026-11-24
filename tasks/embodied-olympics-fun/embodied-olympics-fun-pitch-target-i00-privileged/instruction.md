@@ -9,8 +9,8 @@ Your deliverable is **one replayable trajectory**, not a general policy.
 ## The venue
 You stand on the mound facing home plate (+x), both feet across the pitcher's plate, your pelvis above its middle; home plate's front edge is 18.1 m ahead and 0.254 m below the plate you stand on. The mound's level top reaches 0.15 m in front of the pitcher's plate, 0.56 m behind it and 0.76 m to each side. A backstop stands 3 m behind home plate. Your right forearm is level and points forwards, the hand's fingers forwards and closed round the ball, which rests against the palm (the palm faces your left). Still air. The hand opens when your right grip command goes to 0 (the fingers at most 260 deg/s).
 
-Frame: metres; the origin is on the floor under your pelvis at the start, +x is the way you face at the start, +y is
-to your left, +z is up; the floor is z = 0. 
+Frame: metres; the venue's frame, which the venue text, the rules and `s.state()` use: at the start your pelvis is
+above (x, y) = (-0.09, 0.00) and you face +x (+y is to your left); +z is up; the floor is z = 0. 
 
 ## The rules
 **Rule book:** Official Baseball Rules (MLB, 2024 edition): 2.01 and Appendices 1-2 (the pitcher's plate 60 ft 6 in from the back point of home plate, 10 in above it; the mound), 2.02 (home plate), 3.01 (the ball), 5.07(a) (the pivot foot in contact with the plate), 5.07(c) (the 15 s pitch timer), Definitions of Terms: "strike zone", "in flight". Where this task departs from it:

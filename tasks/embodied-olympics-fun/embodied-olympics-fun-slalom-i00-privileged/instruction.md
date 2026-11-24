@@ -9,8 +9,8 @@ Your deliverable is **one replayable trajectory**, not a general policy.
 ## The venue
 You stand at the start facing up the course (+x), 0.6 m to the right of the start cone, the front ends of your feet 0.02 m behind the start line (your pelvis at x = -0.13 m, y = +1.9 m). The cones are orange; the course's outline and its centre line are painted white on a level sports floor that goes on for several metres on every side.
 
-Frame: metres; the origin is on the floor under your pelvis at the start, +x is the way you face at the start, +y is
-to your left, +z is up; the floor is z = 0. 
+Frame: metres; the venue's frame, which the venue text, the rules and `s.state()` use: at the start your pelvis is
+above (x, y) = (-0.13, 1.90) and you face +x (+y is to your left); +z is up; the floor is z = 0. 
 
 ## The rules
 **Rule book:** The Illinois Agility Test (Getchell 1979; the standard field test of agility): a course 10 m long and 5 m wide marked by four corner cones, four more cones on its centre line 3.3 m apart; the runner sprints up the left side and round the far-left cone, back to the centre cone on the start line, weaves up through the four centre cones and back down, sprints up the right side and round the far-right cone and back to the finish; a touched or knocked cone voids the trial. Where this task departs from it:

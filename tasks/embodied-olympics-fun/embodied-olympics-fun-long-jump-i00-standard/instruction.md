@@ -7,7 +7,7 @@ client. **Task:** Do a long jump: run up, take off behind the take-off line, fly
 ## The venue
 You stand on the runway facing the pit (+x), your pelvis 20 m before the take-off line, in the middle of the runway; the runway goes on 20 m behind you. The runway is red with white edge lines, the board white, the sand yellow, the ground around it grass. Everything is level.
 
-Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level.
+Directions are the venue's, which the venue text and the rules use: at the start your pelvis is above (x, y) = (-20.00, 0.00) and you face +x (+y is to your left); +z is up; the floor is level.
 
 
 ## The rules

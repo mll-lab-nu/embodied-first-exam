@@ -7,7 +7,7 @@ client. **Task:** Serve: standing in your right service court, let the shuttle g
 ## The venue
 You stand in your right service court facing the net (+x), whose plane is 2.45 m ahead of your pelvis; the middle of the centre line is 0.45 m to your left, so your service court reaches from the near edge of the centre line to the outer edge of the singles side line 2.59 m to the right of the centre line's middle, and from the short service line (its edge nearest the net 1.98 m from the net) back to the back boundary line 6.70 m from the net. The receiver's right service court, your target, is beyond the net on the other side of the centre line: from 1.98 m to 6.70 m beyond the net, from the centre line to the singles side line 2.59 m to the left of the centre line's middle. Your forearms point forward; your left hand, its palm facing in, holds the shuttle round its feathers, the shuttle hanging cork down across the palm; your right hand holds the racket's handle near its butt across the palm, the fingers and the thumb closed round it, the racket pointing out of the index finger's side, its strings facing the way your palm does.
 
-Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level.
+Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level; the origin (x = 0, y = 0) of the texts below is on the floor under your pelvis at the start.
 
 
 ## The rules

@@ -7,7 +7,7 @@ client. **Task:** Kick a conversion: with one place kick of a foot, send the rug
 ## The venue
 You stand facing the posts (+x) right behind the ball on its tee, ready to kick it with the right foot (its centre 0.3 m ahead of your pelvis, -0.17 m to your left); the posts are 5.0 m beyond the ball, one each side of the line through the ball, 5.6 m apart. The 5-metre line, the goal line and the in-goal are painted on the grass.
 
-Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level.
+Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level; the origin (x = 0, y = 0) of the texts below is on the floor under your pelvis at the start.
 
 
 ## The rules

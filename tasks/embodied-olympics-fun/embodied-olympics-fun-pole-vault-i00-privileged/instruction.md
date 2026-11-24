@@ -9,8 +9,8 @@ Your deliverable is **one replayable trajectory**, not a general policy.
 ## The venue
 You stand on the runway facing the box (+x), your pelvis 20 m before the zero line, in the middle of the runway; the runway goes on 20 m behind you. The pole lies level along +x in your right hand, held at its middle across the palm (grip value 1), the right arm hanging, the forearm pointing forwards and down; the left hand is open (grip value 0). A grip value is that hand's closure command (0 open, 1 every finger and thumb joint closing towards its closed angle; a finger stops on what it touches). The pole is a free body: `held` in your state says which hand holds it. The bar is red with white ends, the uprights grey, the mats blue; the box is the dark patch at the runway's end, the zero line white.
 
-Frame: metres; the origin is on the floor under your pelvis at the start, +x is the way you face at the start, +y is
-to your left, +z is up; the floor is z = 0. 
+Frame: metres; the venue's frame, which the venue text, the rules and `s.state()` use: at the start your pelvis is
+above (x, y) = (-20.00, 0.00) and you face +x (+y is to your left); +z is up; the floor is z = 0. 
 
 ## The rules
 **Rule book:** World Athletics Competition and Technical Rules, 2024 edition: TR 28 (28.1 the bar may be moved up to 0.80 m from the zero line towards the landing area; 28.2 failures: (a) the bar does not remain on both pegs, (b) touching the ground or the landing area beyond the zero line with the body or the pole without first clearing the bar, (c) moving a hand up the pole after leaving the ground, (d) steadying the bar with a hand; 28.6 a runway of at least 40 m; 28.8 the box; 28.9-28.10 the uprights and pegs 4.28 to 4.37 m apart, the 4.50 m bar of at most 2.25 kg; 28.12 a landing area of at least 5 m x 5 m x 0.8 m with front pieces 2 m long), TR 25.17 (one minute for a trial). Where this task departs from it:

@@ -7,7 +7,7 @@ client. **Task:** Serve the volleyball: from behind the end line, toss it up off
 ## The venue
 You face the net (+x), which is 9.5 m ahead of you, from the middle of the service zone. Your upper arms hang and your forearms point forward; the left forearm is turned palm up (its elbow roll at -90 degrees) and the ball rests on the middle of the left palm, its centre about 1.3 m above the floor, 0.43 m ahead of your pelvis and 0.21 m to its left. The start command keeps the palm level under the ball (the joint table's start angles are where the arm stands with the ball on it; the command differs from them by the arm's sag).
 
-Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level.
+Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level; the origin (x = 0, y = 0) of the texts below is on the floor under your pelvis at the start.
 
 
 ## The rules

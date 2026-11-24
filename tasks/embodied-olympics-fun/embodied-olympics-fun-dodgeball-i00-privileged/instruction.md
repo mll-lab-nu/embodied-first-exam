@@ -9,8 +9,8 @@ Your deliverable is **one replayable trajectory**, not a general policy.
 ## The venue
 A wooden sports floor with the 18 m x 9 m court painted on it; you stand in the middle of your half, 5 m behind the centre line, facing the opponents' half (+x), where the five machines stand in a row 8 m in front of you, their heads at about head height, turning to follow you. The side lines are 4.5 m to your left and right, your back line 4 m behind you.
 
-Frame: metres; the origin is on the floor under your pelvis at the start, +x is the way you face at the start, +y is
-to your left, +z is up; the floor is z = 0. 
+Frame: metres; the venue's frame, which the venue text, the rules and `s.state()` use: at the start your pelvis is
+above (x, y) = (-5.00, 0.00) and you face +x (+y is to your left); +z is up; the floor is z = 0. 
 
 ## The rules
 **Rule book:** WDBF Cloth Dodgeball Rules 2026 (World Dodgeball Federation): rule 1.1 (the playing court 18 m x 9 m), 1.3 (lines 5 cm wide, drawn inside the court; the centre line; the neutral zone lines 7 m from the back lines), 1.4 (fair territory, neutral zone), 2.1-2.3 (five balls of textured no-sting cloth over foam over a butyl bladder, 17.78 cm across, 110-125 mbar), 15.1 (a live player is out when hit by a live ball on any part of the body or clothing), 16.2 and 16.6 (a thrown ball is live from the throw until it touches a surface or a dead object that is not a ball), 26.1-26.5 (out of bounds: touching a boundary line, a surface outside them, the opponents' fair territory or the neutral zone line next to it: out). Where this task departs from it:

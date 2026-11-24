@@ -11,7 +11,7 @@ S x 10 ms of wall-clock time (real time). `spec()["timing"]["slowdown"]` states 
 ## The venue
 You stand on a level floor facing +x, your arms hanging. The paddle's handle lies across your right palm in a shakehand grip, the fingers and the thumb closed round it, the blade beyond the index finger's side and its faces looking the way your palm does (forehand) and the back of your hand (backhand). The ball rests in the cup of a dropper 0.36 m ahead of your pelvis and -0.2 m to your left (negative: to your right), its centre 1.2 m above the floor: a ring round it and two leaves under it, on a carriage that hangs from an arm reaching towards you from a column further ahead (+x). At 2.0 s the leaves slide apart and the ball falls, with no speed and no spin; the cup then moves 0.35 m back along the arm. There is no wind.
 
-Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level.
+Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level; the origin (x = 0, y = 0) of the texts below is on the floor under your pelvis at the start.
 
 
 ## The rules

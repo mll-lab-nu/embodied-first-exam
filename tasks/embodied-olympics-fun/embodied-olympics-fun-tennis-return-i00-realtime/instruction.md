@@ -11,7 +11,7 @@ S x 10 ms of wall-clock time (real time). `spec()["timing"]["slowdown"]` states 
 ## The venue
 You stand as the receiver: 2.75 m to the right of the court's centre line, your pelvis 0.5 m behind your baseline, facing the net (+x), which is 12.385 m ahead of you. Painted on the court, all 0.05 m wide and inside the measurements: the two baselines, the two singles sidelines, the two service lines, the centre service line between them and a 0.10 m centre mark on each baseline; there are no doubles lines. The far baseline is 23.77 m beyond yours. The server is a ball machine on a stand: the ball leaves its two wheels where a server strikes it, 2.7 m above the ground, 0.2 m behind the far baseline and 0.8 m to the server's right of the centre mark (your left of the centre line). The net gives a little when something meets it. The serve is flat, with a little topspin; it bounces in your right service box, the one between the centre line and the right sideline, and reaches your baseline about a second after it was struck. The racket's handle lies across your right palm near its butt, held by the closed fingers and thumb, the butt just beyond your little finger; the strings face the way your palm faces, and the racket points up, square to your forearm.
 
-Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level.
+Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level; the origin (x = 0, y = 0) of the texts below is on the floor under your pelvis at the start.
 
 
 ## The rules

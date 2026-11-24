@@ -7,7 +7,7 @@ client. **Task:** On the trampoline, bounce as you like, then do one tuck jump, 
 ## The venue
 The bed is 4.28 m long (along x) and 2.14 m wide, its surface 1.155 m above the floor at rest, centred under you. It is held by springs: it gives under load, about 5690.0 N per metre of depth, and springs back. Around it, over the springs and the frame (5.05 x 2.91 m inside), lies padding 0.05 m thick; safety platforms with mats stand at both ends and mats lie on the floor around. Red lines mark area A (2.15 x 1.08 m) and area B (1.08 x 1.08 m) round the centre, and a 0.70 m red cross the centre. Nothing moves but the bed.
 
-Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level.
+Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level; the origin (x = 0, y = 0) of the texts below is on the floor under your pelvis at the start.
 
 
 ## The rules

@@ -7,7 +7,7 @@ client. **Task:** Serve: from behind your baseline, release the tennis ball from
 ## The venue
 You stand as the server: your pelvis 0.5 m behind your baseline and 1.0 m to the right of the centre mark, facing the net (+x), which is 12.385 m ahead of you. Painted on the court, all 0.05 m wide and inside the measurements: the two baselines, the two singles sidelines, the two service lines, the centre service line between them and a 0.10 m centre mark on each baseline; there are no doubles lines. Your target, the far service box on the left of the centre line, begins at the net and ends 6.4 m beyond it, and reaches from the centre service line 4.115 m to the left. The ball is held in your left hand; the spare ball rests in a cup on a thin stand, its centre 0.25 m ahead of your pelvis, 0.6 m to your left and 1.05 m above the ground. The racket's handle lies across your right palm near its butt, held by the closed fingers and thumb, the racket pointing along your forearm, its strings facing the way your palm faces.
 
-Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level.
+Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level; the origin (x = 0, y = 0) of the texts below is on the floor under your pelvis at the start.
 
 
 ## The rules

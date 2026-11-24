@@ -7,7 +7,7 @@ client. **Task:** Return the service: after the table tennis ball has bounced on
 ## The venue
 You stand at your end of the table facing it (+x), on its centre line, your pelvis 0.5 m behind your end line; the net is 1.37 m beyond the end line and the server's end line 2.74 m. A table-tennis ball machine stands behind the server's end line; the ball leaves its wheels where a server strikes it: 3.288919 m ahead of your pelvis, -0.199863 m to your left (negative: to your right) and 0.899714 m above the floor. The service reproduces one of a library of legal robot services: they leave the server's racket at 2.2 to 4.5 m/s with up to 34 rad/s of spin and bounce on your court between 0.2 and 0.8 s after the strike; short services bounce a second time on your court if you do not strike them. Your arms hang; the paddle's handle lies across your right palm in a shakehand grip, the fingers and the thumb closed round it, the blade beyond the index finger's side and its faces looking the way your palm does (forehand) and the back of your hand (backhand).
 
-Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level.
+Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level; the origin (x = 0, y = 0) of the texts below is on the floor under your pelvis at the start.
 
 
 ## The rules

@@ -9,8 +9,8 @@ Your deliverable is **one replayable trajectory**, not a general policy.
 ## The venue
 You stand facing +x with your feet side by side, their front ends 0.05 m behind the take-off line (white); your pelvis is 0.164 m behind the line. The floor is level and firm; a yellow line is painted across it at the qualifying mark.
 
-Frame: metres; the origin is on the floor under your pelvis at the start, +x is the way you face at the start, +y is
-to your left, +z is up; the floor is z = 0. 
+Frame: metres; the venue's frame, which the venue text, the rules and `s.state()` use: at the start your pelvis is
+above (x, y) = (-0.16, 0.00) and you face +x (+y is to your left); +z is up; the floor is z = 0. 
 
 ## The rules
 **Rule book:** The standing long jump (standing broad jump) of school and club fitness test batteries (Eurofit, ALPHA-Fitness, the Chinese National Student Physical Health Standard): the feet side by side behind the take-off line, a two-foot take-off with no step or preliminary hop, a landing on the feet; the jump is measured from the take-off line to the nearest point of contact at the landing. Where this task departs from it:

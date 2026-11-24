@@ -7,7 +7,7 @@ client. **Task:** Go over the steeplechase hurdle in front of you and over or th
 ## The venue
 You stand on the track facing the hurdle (+x), on the centre line of the water jump. The hurdle's near face is 10.0 m ahead; its bar is as high as your hip joints. Directly behind the bar the pit drops 0.5 m; its far edge is 3.66 m beyond the hurdle's near face. The track continues level beyond the pit and on both sides of it.
 
-Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level.
+Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level; the origin (x = 0, y = 0) of the texts below is on the floor under your pelvis at the start.
 
 
 ## The rules

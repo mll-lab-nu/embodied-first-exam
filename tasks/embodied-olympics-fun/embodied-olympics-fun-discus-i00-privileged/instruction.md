@@ -9,8 +9,8 @@ Your deliverable is **one replayable trajectory**, not a general policy.
 ## The venue
 You stand in the rear half of the circle facing the sector (+x), your pelvis 0.55 m behind the circle's centre. Your right forearm is level and points forwards, rolled palm up; the discus lies flat on the palm, the closed hand's fingertips curled over its rim. There is no cage. Still air.
 
-Frame: metres; the origin is on the floor under your pelvis at the start, +x is the way you face at the start, +y is
-to your left, +z is up; the floor is z = 0. 
+Frame: metres; the venue's frame, which the venue text, the rules and `s.state()` use: at the start your pelvis is
+above (x, y) = (-0.55, 0.00) and you face +x (+y is to your left); +z is up; the floor is z = 0. 
 
 ## The rules
 **Rule book:** World Athletics Competition and Technical Rules 2024: TR 32.5-32.8 (the circle, 2.50 m for the discus), TR 32.12 (the 34.92 degree sector), TR 32.13, 32.14, 32.16, 32.17 and 32.20 (throwing events: the start, failures, the landing, leaving the circle, the measurement), TR 34 (the men's discus), TR 35 (the discus cage). Where this task departs from it:

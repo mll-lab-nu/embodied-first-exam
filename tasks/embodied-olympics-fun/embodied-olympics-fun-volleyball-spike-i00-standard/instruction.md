@@ -7,7 +7,7 @@ client. **Task:** Spike the set: jump and strike the volleyball that comes down 
 ## The venue
 You face the net (+x) from the attack line. A volleyball machine stands at the setter's place, its wheels 2.3 m above the floor, 1 m from the net and 5 m to your right, aimed up along the net towards you. About 3.0 s after the start it sets the ball towards you; it reaches 4.5 m and comes down at about 57 degrees below the horizontal and 6 to 7 m/s, still moving to your left. About 1.2 s after the set it is 2.8 m above the floor, 2.5 m ahead of where you stand and straight in front of you, half a metre from the net; about 0.07 s later it is down to the height of the net's top, and untouched it lands just outside the left side line.
 
-Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level.
+Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level; the origin (x = 0, y = 0) of the texts below is on the floor under your pelvis at the start.
 
 
 ## The rules

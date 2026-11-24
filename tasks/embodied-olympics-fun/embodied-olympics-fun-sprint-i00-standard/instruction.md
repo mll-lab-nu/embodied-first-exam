@@ -7,7 +7,7 @@ client. **Task:** Run the 50 m: wait for the starter's gun, then sprint down you
 ## The venue
 You stand in your lane facing the finish (+x), the front ends of your feet 0.02 m behind the start line, your pelvis 0.18 m behind it. The lane lines are white on a red track; there are two white finish posts beside the track at 50.0 m. You cannot hear the starter: a start lamp on a post 4 m ahead of the start line, 1.0 m to the left of your lane's centre and 0.8 m above the track, shows the commands: red from "on your marks", yellow from "set", green from the gun.
 
-Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level.
+Directions are the venue's, which the venue text and the rules use: at the start your pelvis is above (x, y) = (-0.18, 0.00) and you face +x (+y is to your left); +z is up; the floor is level.
 
 
 ## The rules

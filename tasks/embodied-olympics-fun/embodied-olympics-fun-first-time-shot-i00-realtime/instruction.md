@@ -11,7 +11,7 @@ S x 10 ms of wall-clock time (real time). `spec()["timing"]["slowdown"]` states 
 ## The venue
 You face the goal (+x) on level grass, 0.3 m behind the penalty mark, on the line through the mark and the centre of the goal. The ramp stands on the pass line to your left, its foot 4.0 m from the centre line; it is 0.4 m wide between its rails and curves into the grass at its foot on an arc of 1.5 m radius; the ball is visible at the gate near its top. Released at 2.0 s, it reaches the grass about 1.8 s later and crosses in front of you, 0.3 m ahead of your pelvis, about 3.1 s after the release, at about 3.1 m/s, rolling from your left to your right.
 
-Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level.
+Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level; the origin (x = 0, y = 0) of the texts below is on the floor under your pelvis at the start.
 
 
 ## The rules

@@ -7,7 +7,7 @@ client. **Task:** Trap the pass: take the football that is passed along the grou
 ## The venue
 You face +x on level grass. The ball machine stands 15 m ahead of you, its wheels half a metre to the right of the line you face along, aimed back along it. About 3.2 s after the start the pass leaves it; it reaches you about 2.0 s later, rolling at about 6.0 m/s, half a metre to the right of your pelvis (about 0.35 m outside your right foot).
 
-Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level.
+Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level; the origin (x = 0, y = 0) of the texts below is on the floor under your pelvis at the start.
 
 
 ## The rules

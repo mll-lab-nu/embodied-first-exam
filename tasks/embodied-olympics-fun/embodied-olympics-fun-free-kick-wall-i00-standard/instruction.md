@@ -7,7 +7,7 @@ client. **Task:** Take a direct free kick: with one kick of a foot, send the bal
 ## The venue
 You stand facing the goal line (+x) right behind the ball, ready to kick it with the right foot: its centre is 0.32 m ahead of your pelvis and -0.13 m to your left. The goal's centre is 20.0 m beyond the ball and 4.0 m to your left; the near post is almost straight ahead, the far post to the left. The wall stands 9.15 m from the ball across the way to the near post; the penalty area, the goal area and the arc are painted on the grass.
 
-Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level.
+Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level; the origin (x = 0, y = 0) of the texts below is on the floor under your pelvis at the start.
 
 
 ## The rules

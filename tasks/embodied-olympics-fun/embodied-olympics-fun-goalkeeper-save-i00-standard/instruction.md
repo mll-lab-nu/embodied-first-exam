@@ -7,7 +7,7 @@ client. **Task:** Keep goal: three penalty kicks are shot at the official goal y
 ## The venue
 You stand on the goal line in the middle of the official goal, facing the field (+x); the goal and its net are behind you. Three two-wheel ball machines stand 11 m in front of you around the penalty mark, their heads at about knee height, each turned towards its stated aim; the goal area and the penalty area are painted on the grass. At 20.0 m/s a shot needs a little over half a second to reach the goal line.
 
-Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level.
+Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level; the origin (x = 0, y = 0) of the texts below is on the floor under your pelvis at the start.
 
 
 ## The rules

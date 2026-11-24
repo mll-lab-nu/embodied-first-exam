@@ -7,7 +7,7 @@ client. **Task:** Skip rope: turn the rope forwards with both hands, over your h
 ## The venue
 You stand facing +x on the level wooden floor of a sports hall. In each hand you hold a handle (0.15 m long, 0.028 m thick) across the palm, the fingers closed round it, its far end about 0.07 m beyond the index finger's side, where the rope is attached on a swivel. The rope is 2.13 m long and 0.1 kg, made of plastic beads 9.5 mm thick. It hangs from each handle straight down to the floor and lies on the floor behind your heels in a bow whose middle is about 0.25 m behind your pelvis or further. Nothing else is near you.
 
-Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level.
+Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level; the origin (x = 0, y = 0) of the texts below is on the floor under your pelvis at the start.
 
 
 ## The rules

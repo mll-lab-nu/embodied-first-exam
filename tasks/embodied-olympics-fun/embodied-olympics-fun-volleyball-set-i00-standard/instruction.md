@@ -7,7 +7,7 @@ client. **Task:** Set the pass: with one overhead contact of your hands, send th
 ## The venue
 You face +x, along the net, which is 1 m to your right; the back court is to your left. A volleyball machine stands in the back court, its wheels 0.9 m above the floor, 5.5 m to your left and 1.5 m ahead of you, aimed up towards you. About 3.0 s after the start it tosses the ball; it climbs to about 3.8 m and comes down steeply (about 56 degrees below the horizontal) at just under 7 m/s, travelling from your left to your right. About 1.3 s after the toss it is 2.1 m above the floor about 0.25 m in front of your head; untouched it lands beside the centre line to your right. The hitter's target is painted on the floor 5 m ahead of you.
 
-Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level.
+Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level; the origin (x = 0, y = 0) of the texts below is on the floor under your pelvis at the start.
 
 
 ## The rules

@@ -7,7 +7,7 @@ client. **Task:** Juggle the football on your head: a ball machine in front of y
 ## The venue
 You stand at the centre of the 4.572 m grid facing +x, its edges half that to your front, back and sides. A ball machine stands on the grass in front of you, its two wheels 1.0 m ahead of where your pelvis starts and 0.6 m above the ground, aimed up and back towards you, with the ball in its chute. Its gate opens at 1.0 s; about 0.28 s later the ball leaves the wheels, rises to about 2 m and comes down on the top of your head (if you stand still) at about 3.5 m/s, moving towards you at about 1.1 m/s.
 
-Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level.
+Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level; the origin (x = 0, y = 0) of the texts below is on the floor under your pelvis at the start.
 
 
 ## The rules

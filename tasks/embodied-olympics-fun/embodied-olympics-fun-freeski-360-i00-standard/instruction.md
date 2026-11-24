@@ -5,9 +5,9 @@ You control a simulated Unitree G1 humanoid robot (29 joints, 1.32 m tall, 33 kg
 client. **Task:** Drop in from the start platform, ride the in-run, take off from the kicker, do a 360 in the air, land on your skis and ride away past the finish line.
 
 ## The venue
-x runs down the course from the start platform's back edge; you stand facing +x near the platform's front edge (the start line, 6.0 m from its back) with your boots 0.3 m behind it; the platform is level, 8 m wide. Past the edge the in-run falls at 35.0 degrees for 38.0 m, bends (radius 30.0 m) into a 5.0 m flat, and the kicker (6.0 m wide) rises from it (radius 18.0 m) to a 1.0 m lip at 25.0 degrees; the lip is about 59 m down the course and about 23 m below the platform. Behind the lip the table runs 15.0 m from the lip at the flat's level to the knoll (blue line), the landing falls at 36.0 degrees for 30.0 m (24.0 m wide), bends (radius 30.0 m) into the flat outrun (45.0 m, 30.0 m wide); the finish line (green) is 15.0 m into the outrun. Red lines mark the start line and the lip.
+x runs down the course from the start platform's back edge; you stand facing +x near the platform's front edge (the start line, 6.0 m from its back) with your boots 0.3 m behind it; the platform is level, 8 m wide. Past the edge the in-run falls at 35.0 degrees for 38.0 m, bends (radius 30.0 m) into a 5.0 m flat, and the kicker (6.0 m wide) rises from it (radius 18.0 m) to a lip 1.0 m long at 25.0 degrees; the lip is about 72 m down the course (66 m past the start line) and about 27 m below the platform. Behind the lip the table runs 15.0 m from the lip at the flat's level to the knoll (blue line), the landing falls at 36.0 degrees for 30.0 m (24.0 m wide), bends (radius 30.0 m) into the flat outrun (45.0 m, 30.0 m wide); the finish line (green) is 15.0 m into the outrun. Red lines mark the start line and the lip.
 
-Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level.
+Directions are the venue's, which the venue text and the rules use: at the start your pelvis is above (x, y) = (5.67, 0.00) and you face +x (+y is to your left); +z is up; the course is not level: the start platform is z = 0.
 
 
 ## The rules

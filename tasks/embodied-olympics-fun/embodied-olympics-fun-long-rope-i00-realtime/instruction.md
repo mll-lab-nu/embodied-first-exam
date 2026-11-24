@@ -11,7 +11,7 @@ S x 10 ms of wall-clock time (real time). `spec()["timing"]["slowdown"]` states 
 ## The venue
 You stand facing +x on a wooden gym floor, in the middle between two rope-turning machines, which stand at y = -1.8 m and y = +1.8 m on the line through your feet (you face across the rope). The rope's axis, the line between the machines' crank axles, is 1.0 m above the floor right above your feet. The centre zone is painted on the floor. At the start the rope is turning at 1.0 revolutions per second; its lowest part has just passed under you and is rising behind you: it comes over your head, down in front of you and under your feet once per turn.
 
-Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level.
+Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level; the origin (x = 0, y = 0) of the texts below is on the floor under your pelvis at the start.
 
 
 ## The rules

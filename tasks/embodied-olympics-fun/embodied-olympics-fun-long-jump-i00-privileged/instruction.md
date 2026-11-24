@@ -9,8 +9,8 @@ Your deliverable is **one replayable trajectory**, not a general policy.
 ## The venue
 You stand on the runway facing the pit (+x), your pelvis 20 m before the take-off line, in the middle of the runway; the runway goes on 20 m behind you. The runway is red with white edge lines, the board white, the sand yellow, the ground around it grass. Everything is level.
 
-Frame: metres; the origin is on the floor under your pelvis at the start, +x is the way you face at the start, +y is
-to your left, +z is up; the floor is z = 0. 
+Frame: metres; the venue's frame, which the venue text, the rules and `s.state()` use: at the start your pelvis is
+above (x, y) = (-20.00, 0.00) and you face +x (+y is to your left); +z is up; the floor is z = 0. 
 
 ## The rules
 **Rule book:** World Athletics Competition and Technical Rules, 2024 edition: TR 29 (the runway, the take-off board, the landing area), TR 30.1 (failures: 30.1.1 the take-off line, 30.1.2 the board's ends, 30.1.4 the ground between the line and the landing area, 30.1.5 the ground outside the landing area), TR 30.3 (the measurement), TR 25.17 (one minute for a trial). Where this task departs from it:

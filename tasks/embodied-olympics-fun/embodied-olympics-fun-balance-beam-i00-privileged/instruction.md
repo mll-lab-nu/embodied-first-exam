@@ -9,8 +9,8 @@ Your deliverable is **one replayable trajectory**, not a general policy.
 ## The venue
 At t = 0 you stand on the beam's near end, facing along it (+x), in a tandem stance: the left foot in front of the right, both on the beam's centre line, the feet's centres 0.15 m and 0.39 m from the near end (the soles reach from 0.09 m to 0.52 m); your pelvis is 0.25 m from the near end and 0.75 m above the beam's top, so your soles are 1.25 m above the floor. The beam is narrower than your normal stance (your feet are normally 0.24 m apart; each sole is 0.07 m wide), so here the robot does NOT start in `stand` mode: it starts with all its joints holding the tandem pose on the default gains, as after a `joints` row, and the hold command at t = 0 is a `lowcmd` row that keeps those targets (left alone, the robot stays standing like that). A `stand` row would move the legs to the normal stance and a `walk` row would start the normal gait: both put the feet beside the beam. The beam and its two supports (0.9 m from each end) are fixed; the far end is marked yellow.
 
-Frame: metres; the origin is on the floor under your pelvis at the start, +x is the way you face at the start, +y is
-to your left, +z is up; the floor is z = 0. 
+Frame: metres; the venue's frame, which the venue text, the rules and `s.state()` use: at the start your pelvis is
+above (x, y) = (0.25, 0.00) and you face +x (+y is to your left); +z is up; the floor is z = 0. 
 
 ## The rules
 **Rule book:** FIG Apparatus Norms (Fédération Internationale de Gymnastique), women's artistic gymnastics, balance beam: length 5.00 m, width of the top 0.10 m, depth of the beam body 0.16 m, top 1.25 m above the floor; FIG Code of Points, women's artistic gymnastics: a beam exercise lasts at most 1 min 30 s. Where this task departs from it:

@@ -7,7 +7,7 @@ client. **Task:** Push the weighted sled with your palms on its two upright hand
 ## The venue
 You stand facing the sled (+x) in the middle of the lane; its two handles are 0.5 m in front of your pelvis, one each side of your centre line. The start line runs under the sled's front edge, the finish line 12.5 m farther on; the lane's side lines are 1.0 m to each side.
 
-Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level.
+Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level; the origin (x = 0, y = 0) of the texts below is on the floor under your pelvis at the start.
 
 
 ## The rules

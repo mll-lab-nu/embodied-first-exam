@@ -7,7 +7,7 @@ client. **Task:** Breaking: go down to the floor and do three consecutive windmi
 ## The venue
 You stand in the middle of a breaking stage, a 8.0 m by 8.0 m laminate floor, flat, level and rigid, with a red line on its right side and a blue line on its left; you face +x.
 
-Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level.
+Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level; the origin (x = 0, y = 0) of the texts below is on the floor under your pelvis at the start.
 
 
 ## The rules

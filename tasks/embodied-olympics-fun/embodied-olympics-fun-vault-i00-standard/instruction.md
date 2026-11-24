@@ -7,7 +7,7 @@ client. **Task:** Vault over the vault table at the end of the run-up: go over i
 ## The venue
 You stand at the start of the run-up, a strip 1.0 m wide that leads straight ahead (+x) to the springboard and the table; the board's low end is 23.3 m ahead of you and its high end 24.5 m. The table's top is higher than your shoulders' joints are when you stand (about 1.47 m is the height of your shoulders, 1.03 m that of your pelvis). Table, pedestal and mat are fixed; the board moves on its spring.
 
-Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level.
+Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level; the origin (x = 0, y = 0) of the texts below is on the floor under your pelvis at the start.
 
 
 ## The rules

@@ -7,7 +7,7 @@ client. **Task:** Do a forward dive straight (101A) from the 10 m platform: from
 ## The venue
 The platform's top is 10.0 m above the water, 6.0 m long and 3.0 m wide; its front edge (a 0.2 m thick slab) is 0.119 m ahead of your pelvis, about 2 cm ahead of your toes, square across your path, and you stand on its centre line. It projects 1.5 m beyond the pool's edge; the water lies ahead and below. Handrails 1.0 m high run along both sides of the platform and across its back, the side rails ending 1.0 m before the front edge. The platform is rigid; nothing in the venue moves.
 
-Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level.
+Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level; the origin (x = 0, y = 0) of the texts below is on the floor under your pelvis at the start.
 
 
 ## The rules

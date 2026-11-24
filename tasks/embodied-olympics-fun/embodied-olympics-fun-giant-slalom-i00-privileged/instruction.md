@@ -7,10 +7,10 @@ This is a *fixed instance*: the same venue and start every time. You may reset a
 Your deliverable is **one replayable trajectory**, not a general policy.
 
 ## The venue
-You stand on the level start platform (6.0 m long) at the top, facing down the fall line (+x), on your skis (138 cm junior giant-slalom skis, sidecut radius 14.5 m), your boots 0.3 m behind its edge (the red start line, about 1.8 m before x = 0 and 0.2 m above it); the edge rounds onto the slope, which falls at 18.3 degrees for the whole course and flattens out after the finish into an outrun. The gates' poles and panels are red and blue, the poles 1.8 m out of the snow; the finish has two posts and a banner.
+You stand on the level start platform (6.0 m long) at the top, facing down the fall line (+x), on your skis (138 cm junior giant-slalom skis, sidecut radius 14.5 m), your boots 0.3 m behind its edge (the red start line, about 2.8 m before x = 0 and 0.6 m above it); the edge rounds onto the slope, which falls at 18.3 degrees for the whole course and flattens out after the finish into an outrun. The gates' poles and panels are red and blue, the poles 1.8 m out of the snow; the finish has two posts and a banner.
 
-Frame: metres; the origin is on the floor under your pelvis at the start, +x is the way you face at the start, +y is
-to your left, +z is up; the floor is z = 0. 
+Frame: metres; the venue's frame, which the venue text, the rules and `s.state()` use: at the start your pelvis is
+above (x, y) = (-3.17, 0.00) and you face +x (+y is to your left); +z is up; the course is not level: the snow is z = 0 at x = 0. 
 
 ## The rules
 **Rule book:** FIS International Competition Rules (ICR), Book IV, Alpine, edition 2025: Art. 614.2 (gates, no continuing after a missed gate or a stop), 661.4.1 and 661.4.1.1 (a gate is passed when both ski tips and both feet cross the gate line, the shortest line on the snow between the inner poles of its two pole pairs), 680 (flex turning poles), 690 and 901.2.2 (panels of about 75 x 50 cm, their lower edge at least 1 m above the snow), 901 (giant slalom technical data: a gate of four poles and two panels, alternately red and blue, 4-8 m wide, at least 10 m between the nearest poles of consecutive gates, direction changes 11-15 % of the vertical drop), 902-903 (the course). Where this task departs from it:

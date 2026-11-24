@@ -9,8 +9,8 @@ Your deliverable is **one replayable trajectory**, not a general policy.
 ## The venue
 You stand in your lane facing the finish (+x), the front ends of your feet 0.02 m behind the start line, your pelvis 0.23 m behind it. The lane lines are white on a red track; the hurdles' top bars are white with black stripes, their bases and counterweights grey on the track, reaching 0.7 m towards you along the lane's edges; two white posts stand beside the finish line. In your rest pose your forearms point forward at about the height of a hurdle's top.
 
-Frame: metres; the origin is on the floor under your pelvis at the start, +x is the way you face at the start, +y is
-to your left, +z is up; the floor is z = 0. 
+Frame: metres; the venue's frame, which the venue text, the rules and `s.state()` use: at the start your pelvis is
+above (x, y) = (-0.23, 0.00) and you face +x (+y is to your left); +z is up; the floor is z = 0. 
 
 ## The rules
 **Rule book:** World Athletics Competition and Technical Rules, 2024 edition: TR 22 (22.1-22.3 distances and heights: the men's hurdle 1.067 m high, 13.72 m to the first, 9.14 m between; at the indoor distance of 50 m that is four hurdles and 8.86 m from the last to the finish; 22.4-22.5 the hurdle: metal with a non-metallic top bar, two bases and two uprights at the extreme end of each base supporting a rectangular frame reinforced by a cross bar, 1.18 to 1.20 m wide, a top bar 70 mm high and 10 to 25 mm thick, a base at most 0.70 m long, at least 10 kg, counterweights set so that a horizontal force of 3.6 to 4.0 kg at the centre of the top bar's top edge topples it; placed with the feet towards the approaching athlete; 22.6 each hurdle is gone over in the athlete's own lane; 22.6.1 a foot or leg beside the hurdle below the plane of its top; 22.6.2 knocking down or displacing a hurdle by hand or body; 22.7 knocking hurdles down otherwise is no offence), TR 17.3 (lanes), TR 18.2 and TR 19 (the finish). Where this task departs from it:
