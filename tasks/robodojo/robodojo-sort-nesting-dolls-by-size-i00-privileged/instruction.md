@@ -7,7 +7,7 @@ setup on Isaac Sim 5.1 / Isaac Lab, PhysX) via Python. RoboDojo capability dimen
 trajectory as soon as you have one and overwrite it as you improve it. Every Python process that opens a `Session` first
 spends ~3-5 min launching Isaac Sim and building the scene, and that time counts.
 
-**Task:** Line up the five yellow rubber ducks, standing upright, in one straight left-to-right row: smallest on the left, largest on the right. Then bring both arms back to where they started.
+**Task:** Line up the five yellow rubber ducks standing upright in one straight row running from left to right. Order them by size with the smallest on the left and the largest on the right. Then bring both arms back to where they started.
 
 RoboDojo's own instruction for this scene: *"Arrange the five nesting dolls in a row from left to right, from smallest to largest."*
 

@@ -23,5 +23,5 @@ old = "sha256 `8d45b23010c950c3`"
 new = "sha256 `f307d2c415696b22`"
 
 [[replace]]
-old = "Place the four digit blocks on the four mats so that the row reads the largest possible number from left to right, keeping each block flat, face up and turned as it is now; then bring both arms back to where they started."
-new = "Place the five digit blocks on the five mats so that the row reads the largest possible number from left to right, keeping each block flat, face up and turned as it is now; then bring both arms back to where they started."
+old = "Put the four digit blocks onto the four mats, one on each mat, so that from left to right the row shows the largest possible number. Keep every block flat, face up, and turned the same way it is now. Then bring both arms back to where they started."
+new = "Put the five digit blocks onto the five mats, one on each mat, so that from left to right the row shows the largest possible number. Keep every block flat, face up, and turned the same way it is now. Then bring both arms back to where they started."

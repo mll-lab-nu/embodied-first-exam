@@ -7,7 +7,7 @@ setup on Isaac Sim 5.1 / Isaac Lab, PhysX) via Python. RoboDojo capability dimen
 trajectory as soon as you have one and overwrite it as you improve it. Every Python process that opens a `Session` first
 spends ~3-5 min launching Isaac Sim and building the scene, and that time counts.
 
-**Task:** Wait for the opponent (support arm) to discard a mahjong tile, then declare a kong: flip the three tiles of your row that show the discarded tile's picture face up, then take the face-down tile from the top of the front stack at the far left, stand it upright at the right end of your row next to the last tile, and open both grippers.
+**Task:** First wait for the opponent arm to discard a mahjong tile, then flip face up the three tiles in your row that show the discarded tile's picture. Next, take the face-down tile from the top of the front stack at the far left and stand it upright at the right end of your row, next to the last tile. Finish with both grippers open.
 
 RoboDojo's own instruction for this scene: *"Wait for the opponent to discard a tile, then declare a kong with the matching tiles."*
 

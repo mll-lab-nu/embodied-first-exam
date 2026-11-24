@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Stack the three blocks (that differ in texture) on top of each other into one tower, then bring both arms back to where they started. (RoboDojo's `stack_blocks`). RoboDojo capability dimension: Generalization. Instance i00 is RoboDojo's own evaluation layout
+Stack the three blocks, which differ in texture, into one tower. Then bring both arms back to where they started. (RoboDojo's `stack_blocks`). RoboDojo capability dimension: Generalization. Instance i00 is RoboDojo's own evaluation layout
 `arx_x5/0/stack_blocks_0.json` (sha256 `9a6b1ba160b2fc54`), frozen in `instance.json`. The deliverable is one replayable trajectory of
 RoboDojo's 14-D joint action at 25 Hz (`/app/output/trajectory.npz`), graded by RoboDojo's own reward check for the task,
 with no step cap (RoboDojo's own evaluation gives a policy 550 actions; PROTOCOL §3).

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Wait for the opponent (support arm) to discard a mahjong tile, then declare a kong: flip the three tiles of your row that show the discarded tile's picture face up, then take the face-down tile from the top of the front stack at the far left, stand it upright at the right end of your row next to the last tile, and open both grippers. (RoboDojo's `make_kong`). RoboDojo capability dimension: Long-Horizon. Instance i00 is RoboDojo's own evaluation layout
+First wait for the opponent arm to discard a mahjong tile, then flip face up the three tiles in your row that show the discarded tile's picture. Next, take the face-down tile from the top of the front stack at the far left and stand it upright at the right end of your row, next to the last tile. Finish with both grippers open. (RoboDojo's `make_kong`). RoboDojo capability dimension: Long-Horizon. Instance i00 is RoboDojo's own evaluation layout
 `arx_x5/0/make_kong_0.json` (sha256 `4e13e55934b1b3bd`), frozen in `instance.json`. The deliverable is one replayable trajectory of
 RoboDojo's 14-D joint action at 25 Hz (`/app/output/trajectory.npz`), graded by RoboDojo's own reward check for the task,
 with no step cap (RoboDojo's own evaluation gives a policy 600 actions; PROTOCOL §3).

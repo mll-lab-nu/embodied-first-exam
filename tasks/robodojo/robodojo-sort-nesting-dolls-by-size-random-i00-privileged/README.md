@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Arrange the five nesting dolls upright in a straight row, ordered by size from the smallest at the smallest world x to the largest at the largest world x, and return the arms to their start pose. (RoboDojo's `sort_nesting_dolls_by_size_random`). RoboDojo capability dimension: Generalization (randomised variant: other models, clutter). Instance i00 is RoboDojo's own evaluation layout
+Line up the five penguin-like dolls standing upright in one straight row running from left to right. Order them by size with the smallest on the left and the largest on the right. Then bring both arms back to where they started. (RoboDojo's `sort_nesting_dolls_by_size_random`). RoboDojo capability dimension: Generalization (randomised variant: other models, clutter). Instance i00 is RoboDojo's own evaluation layout
 `arx_x5/0/sort_nesting_dolls_by_size_random_0.json` (sha256 `f45438f654fd1ce7`), frozen in `instance.json`. The deliverable is one replayable trajectory of
 RoboDojo's 14-D joint action at 25 Hz (`/app/output/trajectory.npz`), graded by RoboDojo's own reward check for the task,
 with no step cap (RoboDojo's own evaluation gives a policy 1050 actions; PROTOCOL §3).

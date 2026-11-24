@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Standard-mode twin of `robodojo-classify-objects-by-language-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/classify_objects_by_language_0.json`). Put each named category of objects into the specified basket (left, middle, right) as given in the language instruction, then bring both arms back to where they started. (RoboDojo's `classify_objects_by_language`). The agent drives the
+Standard-mode twin of `robodojo-classify-objects-by-language-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/classify_objects_by_language_0.json`). Follow the spoken instruction and put each named category of objects into the basket it names, whether left, middle, or right. Then bring both arms back to where they started. (RoboDojo's `classify_objects_by_language`). The agent drives the
 robot only through the eai-standard/2.2 client (the simulator runs in the `sim` sidecar), which owns the scene and records
 the episode as a (T, 14) trajectory of RoboDojo's own joint action at 25 Hz.
 

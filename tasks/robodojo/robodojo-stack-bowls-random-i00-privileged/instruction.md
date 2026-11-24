@@ -7,7 +7,7 @@ setup on Isaac Sim 5.1 / Isaac Lab, PhysX) via Python. RoboDojo capability dimen
 trajectory as soon as you have one and overwrite it as you improve it. Every Python process that opens a `Session` first
 spends ~3-5 min launching Isaac Sim and building the scene, and that time counts.
 
-**Task:** Nest/stack the three identical bowls into one stack, then bring both arms back to where they started. Distractor objects are on the table.
+**Task:** Nest the three identical bowls into one stack. The other objects on the table are not part of the task. When you are done, bring both arms back to where they started.
 
 RoboDojo's own instruction for this scene: *"Stack the three bowls together."*
 

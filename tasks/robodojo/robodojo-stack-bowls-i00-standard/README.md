@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Standard-mode twin of `robodojo-stack-bowls-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/stack_bowls_0.json`). Nest/stack the three identical bowls into one stack, then bring both arms back to where they started. (RoboDojo's `stack_bowls`). The agent drives the
+Standard-mode twin of `robodojo-stack-bowls-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/stack_bowls_0.json`). Nest the three identical bowls into one stack. Then bring both arms back to where they started. (RoboDojo's `stack_bowls`). The agent drives the
 robot only through the eai-standard/2.2 client (the simulator runs in the `sim` sidecar), which owns the scene and records
 the episode as a (T, 14) trajectory of RoboDojo's own joint action at 25 Hz.
 

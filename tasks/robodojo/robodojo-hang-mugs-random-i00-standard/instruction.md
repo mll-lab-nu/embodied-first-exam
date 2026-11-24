@@ -8,7 +8,7 @@ Nothing is handed in: the service grades the episode when it ends (`## Episode e
 completed before the time limit (`## Time limit`) is up. The time you wait for the service counts: its first
 start in a trial takes ~4-15 min (Client, below).
 
-**Task:** Hang the three mugs on the rack's arms that point left or right: the red mug by its handle, and each of the two pink pumpkin mugs from one of the two left-pointing arms, its opening facing left along the arm. Then bring both arms back to where they started.
+**Task:** Hang the three mugs using only the rack arms that point left or right. Hang the red mug by its handle. Hang each of the two pink pumpkin mugs on one of the two left-pointing arms, with its opening facing left along the arm. Then bring both arms back to where they started.
 
 RoboDojo's own instruction for this scene: *"Hang all the mugs on the mug rack."*
 

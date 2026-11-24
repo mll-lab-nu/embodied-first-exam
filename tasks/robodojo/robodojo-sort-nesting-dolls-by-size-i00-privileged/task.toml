@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/robodojo-sort-nesting-dolls-by-size-i00-privileged"
-description = "RoboDojo sort_nesting_dolls_by_size (Generalization; two ARX X5 arms with parallel grippers, Isaac Sim 5.1 / Isaac Lab): produce one replayable trajectory of RoboDojo's 14-D joint actions. Task: Line up the five yellow rubber ducks, standing upright, in one straight left-to-right row: smallest on the left, largest on the right. Then bring both arms back to where they started. Frozen scene instance: RoboDojo's own evaluation layout arx_x5/0/sort_nesting_dolls_by_size_0.json; graded by RoboDojo's own reward check."
+description = "RoboDojo sort_nesting_dolls_by_size (Generalization; two ARX X5 arms with parallel grippers, Isaac Sim 5.1 / Isaac Lab): produce one replayable trajectory of RoboDojo's 14-D joint actions. Task: Line up the five yellow rubber ducks standing upright in one straight row running from left to right. Order them by size with the smallest on the left and the largest on the right. Then bring both arms back to where they started. Frozen scene instance: RoboDojo's own evaluation layout arx_x5/0/sort_nesting_dolls_by_size_0.json; graded by RoboDojo's own reward check."
 keywords = ["robotics", "robodojo", "isaac-lab", "isaac-sim", "bimanual", "arx-x5", "code-as-policy", "trajectory", "privileged"]
 
 [metadata]

@@ -8,7 +8,7 @@ Nothing is handed in: the service grades the episode when it ends (`## Episode e
 completed before the time limit (`## Time limit`) is up. The time you wait for the service counts: its first
 start in a trial takes ~4-15 min (Client, below).
 
-**Task:** Stack the three blocks (that differ in texture) on top of each other into one tower, then bring both arms back to where they started.
+**Task:** Stack the three blocks, which differ in texture, into one tower. Then bring both arms back to where they started.
 
 RoboDojo's own instruction for this scene: *"Stack the three blocks with different textures."*
 

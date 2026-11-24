@@ -27,5 +27,5 @@ old = "sha256 `9fb225ebf9b90391`"
 new = "sha256 `5cdede7e82cd29e9`"
 
 [[replace]]
-old = "Hang the three mugs on the rack's arms that point left or right: the red mug by its handle, and each of the two pink pumpkin mugs from one of the two left-pointing arms, its opening facing left along the arm. Then bring both arms back to where they started."
-new = "Hang each of the three mugs by its handle on one of the four rack arms that point left or right (not the two pointing toward or away from you), then bring both arms back to where they started."
+old = "Hang the three mugs using only the rack arms that point left or right. Hang the red mug by its handle. Hang each of the two pink pumpkin mugs on one of the two left-pointing arms, with its opening facing left along the arm. Then bring both arms back to where they started."
+new = "Hang each of the three mugs by its handle on one of the four rack arms that point left or right. Do not use the two rack arms that point toward or away from you. Then bring both arms back to where they started."

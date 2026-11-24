@@ -8,7 +8,7 @@ Nothing is handed in: the service grades the episode when it ends (`## Episode e
 completed before the time limit (`## Time limit`) is up. The time you wait for the service counts: its first
 start in a trial takes ~4-15 min (Client, below).
 
-**Task:** Sort the small objects on the table by category into the three baskets: all objects of one category go into one basket, and the three categories go into the three different baskets. Then bring both arms back to where they started.
+**Task:** Sort the small objects on the table by category into the three baskets. Put one category in each basket so the three categories go into the three different baskets. Then bring both arms back to where they started.
 
 RoboDojo's own instruction for this scene: *"Sort the objects by category into the three baskets."*
 

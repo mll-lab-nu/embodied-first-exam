@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Thread each of the three nuts, lying flat with the same face up as now, down onto the bolt of the same colour; then open both grippers fully and bring both arms back to where they started. (RoboDojo's `fasten_screws`). RoboDojo capability dimension: Precision. Instance i00 is RoboDojo's own evaluation layout
+Thread each of the three nuts all the way down onto the bolt of the same colour, keeping each nut lying flat with the same face up as now. Then open both grippers fully and bring both arms back to where they started. (RoboDojo's `fasten_screws`). RoboDojo capability dimension: Precision. Instance i00 is RoboDojo's own evaluation layout
 `arx_x5/0/fasten_screws_0.json` (sha256 `13ee331afd559001`), frozen in `instance.json`. The deliverable is one replayable trajectory of
 RoboDojo's 14-D joint action at 25 Hz (`/app/output/trajectory.npz`), graded by RoboDojo's own reward check for the task,
 with no step cap (RoboDojo's own evaluation gives a policy 1900 actions; PROTOCOL §3).

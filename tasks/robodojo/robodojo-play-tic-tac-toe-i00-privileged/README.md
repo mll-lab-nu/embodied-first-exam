@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Play tic-tac-toe as the first player against the opponent arm: put one of your gold rings on an empty cell, then bring both arms back home and keep them there until the opponent has placed its cross; repeat until all nine cells are filled. (RoboDojo's `play_tic_tac_toe`). RoboDojo capability dimension: Long-Horizon. Instance i00 is RoboDojo's own evaluation layout
+Play tic-tac-toe against the opponent arm. You go first. On each turn, put one of your gold rings on an empty cell, then bring both arms back home and keep them there until the opponent has placed its cross. Repeat this until all nine cells are filled. (RoboDojo's `play_tic_tac_toe`). RoboDojo capability dimension: Long-Horizon. Instance i00 is RoboDojo's own evaluation layout
 `arx_x5/0/play_tic_tac_toe_0.json` (sha256 `b5fe280e548e5845`), frozen in `instance.json`. The deliverable is one replayable trajectory of
 RoboDojo's 14-D joint action at 25 Hz (`/app/output/trajectory.npz`), graded by RoboDojo's own reward check for the task,
 with no step cap (RoboDojo's own evaluation gives a policy 1100 actions; PROTOCOL §3).

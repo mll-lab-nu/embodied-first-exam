@@ -7,7 +7,7 @@ setup on Isaac Sim 5.1 / Isaac Lab, PhysX) via Python. RoboDojo capability dimen
 trajectory as soon as you have one and overwrite it as you improve it. Every Python process that opens a `Session` first
 spends ~3-5 min launching Isaac Sim and building the scene, and that time counts.
 
-**Task:** Thread each of the three nuts, lying flat with the same face up as now, down onto the bolt of the same colour; then open both grippers fully and bring both arms back to where they started.
+**Task:** Thread each of the three nuts all the way down onto the bolt of the same colour, keeping each nut lying flat with the same face up as now. Then open both grippers fully and bring both arms back to where they started.
 
 RoboDojo's own instruction for this scene: *"Insert and tighten each screw into the nut of the same color."*
 

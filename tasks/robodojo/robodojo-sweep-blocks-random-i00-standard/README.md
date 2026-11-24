@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Standard-mode twin of `robodojo-sweep-blocks-random-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/sweep_blocks_random_0.json`). Pick up the broom, hand it over to the other (right) arm, and use the broom with the dustpan (which stays on the table) to sweep the five small objects (a toy brick, two earbuds, two paper balls) into the dustpan, then leave the broom on the open (right) side of the dustpan and bring both arms back to where they started. (RoboDojo's `sweep_blocks_random`). The agent drives the
+Standard-mode twin of `robodojo-sweep-blocks-random-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/sweep_blocks_random_0.json`). Pick up the broom and hand it over to the right arm. Keep the dustpan on the table and use the broom to sweep the five small objects into it: a toy brick, two earbuds, and two paper balls. Finish with the broom on the open side of the dustpan, which is its right side, and bring both arms back to where they started. (RoboDojo's `sweep_blocks_random`). The agent drives the
 robot only through the eai-standard/2.2 client (the simulator runs in the `sim` sidecar), which owns the scene and records
 the episode as a (T, 14) trajectory of RoboDojo's own joint action at 25 Hz.
 
