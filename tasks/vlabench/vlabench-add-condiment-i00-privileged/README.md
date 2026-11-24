@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:vlabench-0.2.0` |
 
 ## Task
-VLABench's `add_condiment`: a Franka Panda arm at a table, instructed **"Add the BBQ sauce to the dish: hold the BBQ sauce bottle over the pan and tip it past horizontal, as if pouring (no sauce actually flows)."** (a direct command). One
+VLABench's `add_condiment`: a Franka Panda arm at a table, instructed **"Hold the BBQ sauce bottle over the pan and tip it past horizontal, as if pouring sauce into the pan. No sauce actually flows out."** (a direct command). One
 frozen scene instance (VLABench's own episode configuration for the task, seed 0); the deliverable is one
 replayable trajectory of joint-position control steps (`/app/output/trajectory.npz`, `(T, 9)`, T ≤ 4000), graded by
 VLABench's own success check at its end.

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:myosuite-0.1.1` |
 
 ## Task
-MyoSuite `myoHandKeyTurnFixed-v0` (MyoHand, 39 muscles) on the same frozen instance as `myosuite-key-turn-i00-privileged`: Turn the key held between the thumb and the index finger by more than 3.14 rad (half a turn). Success: the key's hinge angle above 3.14 rad for 50 consecutive control steps (1.0 s). Failure (the episode ends): the index or thumb tip more than 0.13 m from the key head.
+MyoSuite `myoHandKeyTurnFixed-v0` (MyoHand, 39 muscles) on the same frozen instance as `myosuite-key-turn-i00-privileged`: Turn the key held between the thumb and the index finger by more than 3.14 rad (half a turn). Success: the key's hinge angle above 3.14 rad for 50 consecutive control steps (1.0 s). The episode ends in failure if the index fingertip or the thumb tip moves more than about a hand's width away from the key head.
 The key sits in a lock in front of the palm; its head is between the thumb and the index finger. Standard mode (eai-standard/2.2): the agent drives the body through a client, with only its own proprioception and the scene's cameras, and 10 resets (only the last episode is graded).
 
 ## Difficulty

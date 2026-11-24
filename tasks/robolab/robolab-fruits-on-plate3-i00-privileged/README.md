@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robolab-0.2.2` |
 
 ## Task
-Make sure exactly three fruits end up on the plate (one orange is already on it).
+One orange is already on the plate. Put fruits on the plate so that exactly three are on it at the end, then let go.
 
 ## Difficulty
 RoboLab labels this task "complex" (3 subtasks; attributes: semantics, vague, counting); its success term (`object_on_top`) asks for exactly 3 of 7 objects onto clay_plates. The tooling gives only thin primitives (move_ee on Isaac Lab's differential IK, joint moves, gripper, hold), so every grasp, transport and placement is the agent's to build. RoboLab ships no expert solution.

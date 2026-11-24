@@ -1,7 +1,7 @@
 # LIBERO-MAX · libero_spatial — instance i01 — STANDARD MODE (robot as a service)
 
 You control a simulated **Franka Panda** arm (LIBERO on robosuite / MuJoCo) **as if it were real hardware**: the
-simulator runs in a service you cannot open, and you reach it only through a client. **Task: Pick the akita black bowl on the cookies box and place it on the plate.** LIBERO-PRO's initial-pose variant moved the target bowl (`akita_black_bowl_1`, the goal's) from where the sentence puts it, farther from the robot and a little to the robot's right, and turned it: it starts on the table, not on the cookies box (no bowl is on the box). The bowl to move is still that one; the other black bowl stands on top of the wooden cabinet.
+simulator runs in a service you cannot open, and you reach it only through a client. **Task: Pick the akita black bowl on the cookies box and place it on the plate.** In this LIBERO-PRO variant, the bowl to move, `akita_black_bowl_1`, starts on the table instead of on the cookies box: it sits a bit farther from the robot and a little to the robot's right, and it is turned. No bowl is on the cookies box, so move that bowl, not the other black bowl on top of the wooden cabinet.
 
 The scene can change while you work: once during the episode, when your gripper first gets close to one of the task's
 objects, the scene changes (as in LIBERO-MAX): an object or a receptacle may be moved, an obstacle or a few other

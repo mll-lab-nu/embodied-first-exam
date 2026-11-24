@@ -1,7 +1,7 @@
 # VLABench · select_chemistry_tube_spatial — instance i00 — STANDARD MODE (robot as a service)
 
 You control a simulated **Franka Panda** arm (VLABench on MuJoCo) **as if it were real hardware**: the simulator runs in
-a service you cannot open, and you reach it only through a client. **Task: Take out the solution in the 1st row and 5th column of the tube stand, counting rows from the one nearest the robot and columns from left to right as seen from the robot.**
+a service you cannot open, and you reach it only through a client. **Task: Take the tube in the first row and fifth column out of the tube stand. Count rows from the row nearest the robot, and count columns from left to right as the robot sees them.**
 
 ## Rules (real-robot rules)
 - **One episode, no reset.** The episode starts when the service comes up. It ends when the task succeeds, after

@@ -1,6 +1,6 @@
 # VLABench · add_condiment — instance i00
 
-You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: Add the BBQ sauce to the dish: hold the BBQ sauce bottle over the pan and tip it past horizontal, as if pouring (no sauce actually flows).**
+You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: Hold the BBQ sauce bottle over the pan and tip it past horizontal, as if pouring sauce into the pan. No sauce actually flows out.**
 
 This states exactly what VLABench's success check requires; VLABench's own wording (also in `s.state()["instruction"]`) is: "Add bbq_sauce to the dish".
 

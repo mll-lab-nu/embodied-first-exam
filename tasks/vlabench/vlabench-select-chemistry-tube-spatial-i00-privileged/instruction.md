@@ -1,6 +1,6 @@
 # VLABench · select_chemistry_tube_spatial — instance i00
 
-You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: Take out the solution in the 1st row and 5th column of the tube stand, counting rows from the one nearest the robot and columns from left to right as seen from the robot.**
+You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: Take the tube in the first row and fifth column out of the tube stand. Count rows from the row nearest the robot, and count columns from left to right as the robot sees them.**
 
 This states exactly what VLABench's success check requires; VLABench's own wording (also in `s.state()["instruction"]`) is: "Take out the solution on the 1th row and 5th column".
 

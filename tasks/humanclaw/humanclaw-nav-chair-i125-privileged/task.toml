@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/humanclaw-nav-chair-i125-privileged"
-description = "HumanCLAW find-navigate (chair), one frozen HSSD episode: produce one replayable trajectory of at most 100 motion skills for a simulated human body. Find the chair and move until your body is touching the target, with zero distance to the target object. In plain words: walk up to a chair until you are within about 20 cm of it, then stop."
+description = "HumanCLAW find-navigate (chair), one frozen HSSD episode: produce one replayable trajectory of at most 100 motion skills for a simulated human body. Find the chair and move until your body is touching the target, with zero distance to the target object. In plain words: walk up to a chair and stop right next to it, about 20 cm away or closer."
 keywords = ["robotics", "humanclaw", "habitat-sim", "humanoid", "navigation", "code-as-policy", "trajectory", "chair"]
 
 [metadata]

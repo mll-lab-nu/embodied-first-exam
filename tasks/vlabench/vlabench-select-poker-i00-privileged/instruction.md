@@ -1,6 +1,6 @@
 # VLABench · select_poker — instance i00
 
-You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: Please pick up the poker ace of hearts and hold it up in the gripper, at least 0.9 m above the floor.**
+You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: Pick up the ace of hearts. Hold it in the gripper at least 15 cm above the table.**
 
 This states exactly what VLABench's success check requires; VLABench's own wording (also in `s.state()["instruction"]`) is: "Please pick the poker ace of hearts".
 

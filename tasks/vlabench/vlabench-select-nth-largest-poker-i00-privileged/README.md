@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:vlabench-0.2.0` |
 
 ## Task
-VLABench's `select_nth_largest_poker`: a Franka Panda arm at a table, instructed **"Please pick up the lowest-ranked poker card (aces count high) and hold it up in the gripper, at least 0.9 m above the floor."** (a direct command). One
+VLABench's `select_nth_largest_poker`: a Franka Panda arm at a table, instructed **"Pick up the lowest card, counting aces as high. Hold it in the gripper at least 15 cm above the table."** (a direct command). One
 frozen scene instance (VLABench's own episode configuration for the task, seed 0); the deliverable is one
 replayable trajectory of joint-position control steps (`/app/output/trajectory.npz`, `(T, 9)`, T ≤ 4000), graded by
 VLABench's own success check at its end.

@@ -1,7 +1,7 @@
 # VLABench · select_fruit_common_sense — instance i00 — STANDARD MODE (robot as a service)
 
 You control a simulated **Franka Panda** arm (VLABench on MuJoCo) **as if it were real hardware**: the simulator runs in
-a service you cannot open, and you reach it only through a client. **Task: Put the pear on the plate (the fruits on the table are pear, peach, mango and orange).**
+a service you cannot open, and you reach it only through a client. **Task: The fruits on the table are a pear, a peach, a mango and an orange. Put the pear on the plate.**
 
 ## Rules (real-robot rules)
 - **One episode, no reset.** The episode starts when the service comes up. It ends when the task succeeds, after

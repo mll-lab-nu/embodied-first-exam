@@ -13,7 +13,7 @@
 
 ## Task
 HumanCLAW find-navigate (chair), privileged mode: one frozen episode,
-delivered as one trajectory of at most 100 motion skills. Find the chair and move until your body is touching the target, with zero distance to the target object. In plain words: walk up to a chair until you are within about 20 cm of it, then stop. Modes, rules and what differs from
+delivered as one trajectory of at most 100 motion skills. Find the chair and move until your body is touching the target, with zero distance to the target object. In plain words: walk up to a chair and stop right next to it, about 20 cm away or closer. Modes, rules and what differs from
 HumanCLAW's own evaluator: `tasks/humanclaw/README.md`.
 
 ## Difficulty

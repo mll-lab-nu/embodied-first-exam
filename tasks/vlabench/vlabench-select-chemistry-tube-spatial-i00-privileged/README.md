@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:vlabench-0.2.0` |
 
 ## Task
-VLABench's `select_chemistry_tube_spatial`: a Franka Panda arm at a table, instructed **"Take out the solution in the 1st row and 5th column of the tube stand, counting rows from the one nearest the robot and columns from left to right as seen from the robot."** (a description of where the target is). One
+VLABench's `select_chemistry_tube_spatial`: a Franka Panda arm at a table, instructed **"Take the tube in the first row and fifth column out of the tube stand. Count rows from the row nearest the robot, and count columns from left to right as the robot sees them."** (a description of where the target is). One
 frozen scene instance (VLABench's own episode configuration for the task, seed 0); the deliverable is one
 replayable trajectory of joint-position control steps (`/app/output/trajectory.npz`, `(T, 9)`, T ≤ 4000), graded by
 VLABench's own success check at its end.

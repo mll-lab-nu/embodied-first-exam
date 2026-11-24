@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:vlabench-0.2.0` |
 
 ## Task
-VLABench's `heat_food` as a robot service: a Franka Panda arm at a table, instructed **"Please heat the cooked food from the tray: put it into the microwave, close the microwave's door and press its start button (heating itself is not simulated)."**
+VLABench's `heat_food` as a robot service: a Franka Panda arm at a table, instructed **"Heat the cooked food from the tray. Put it in the microwave, close the microwave door and press the start button. The food does not actually heat up in the simulation."**
 (a direct command), on the same frozen instance as `vlabench-heat-food-i00-privileged`. The simulator runs in the
 `sim` sidecar (`environment/sim/server.py` on main's `rcb_service.py`); the agent only has the client: four cameras
 (RGB 320×320, depth on request, calibrated), the robot's own state, and joint-position chunks. One episode, no reset,

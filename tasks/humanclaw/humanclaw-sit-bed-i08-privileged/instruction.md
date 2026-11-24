@@ -2,7 +2,7 @@
 
 You control a simulated adult human body in a furnished house (HumanCLAW: Habitat-Sim with Half-Physics, an HSSD
 scene). The body moves only by **motion skills**: walk, turn, side step, step back, steps up or down, sit, and stop.
-**Task (HumanCLAW's own words):** Find the bed and move until your body is touching the target, with zero distance to the target object. Finally, sit on the bed. In plain words: walk up to a bed, sit down on it, and stop while you are still sitting on it.
+**Task (HumanCLAW's own words):** Find the bed and move until your body is touching the target, with zero distance to the target object. Finally, sit on the bed. In plain words: walk up to a bed and sit down on it. Then stop while you are still sitting on it.
 
 ## Scoring
 HumanCLAW's InteractSR: the episode ends with a **stop**, after at least one **sit**, and the pelvis touches the bed's mesh on the last frame of the last motion (any bed in the scene counts). Ending without a stop (running out of the 100 actions) fails.

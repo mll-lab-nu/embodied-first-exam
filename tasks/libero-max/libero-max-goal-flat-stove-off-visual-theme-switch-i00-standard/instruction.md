@@ -1,7 +1,7 @@
 # LIBERO-MAX · libero_goal — instance i00 — STANDARD MODE (robot as a service)
 
 You control a simulated **Franka Panda** arm (LIBERO on robosuite / MuJoCo) **as if it were real hardware**: the
-simulator runs in a service you cannot open, and you reach it only through a client. **Task: The stove is already off: turn its knob the rest of the way in the off direction, as far as it goes.**
+simulator runs in a service you cannot open, and you reach it only through a client. **Task: The stove is already off. Turn its knob further in the off direction, as far as it will go.**
 
 The scene can change while you work: once during the episode, when your gripper first gets close to one of the task's
 objects, the scene changes (as in LIBERO-MAX): an object or a receptacle may be moved, an obstacle or a few other

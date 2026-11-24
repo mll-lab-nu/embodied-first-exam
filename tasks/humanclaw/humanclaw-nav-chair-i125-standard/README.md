@@ -13,7 +13,7 @@
 
 ## Task
 HumanCLAW find-navigate (chair), standard mode: the same frozen
-episode and success rule as `humanclaw-nav-chair-i125-privileged`, with the head camera only, one episode and no reset. Find the chair and move until your body is touching the target, with zero distance to the target object. In plain words: walk up to a chair until you are within about 20 cm of it, then stop.
+episode and success rule as `humanclaw-nav-chair-i125-privileged`, with the head camera only, one episode and no reset. Find the chair and move until your body is touching the target, with zero distance to the target object. In plain words: walk up to a chair and stop right next to it, about 20 cm away or closer.
 Modes and rules: `tasks/humanclaw/README.md`.
 
 ## Difficulty

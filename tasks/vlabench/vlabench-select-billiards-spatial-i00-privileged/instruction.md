@@ -1,6 +1,6 @@
 # VLABench · select_billiards_spatial — instance i00
 
-You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: Please put the striped 14 ball into the right bottom pocket: the corner pocket on the robot's right, behind the robot's base.**
+You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: Put the striped 14 ball into the right bottom pocket. That is the corner pocket on the robot's right, behind the robot.**
 
 This states exactly what VLABench's success check requires; VLABench's own wording (also in `s.state()["instruction"]`) is: "Please put the striped_14 in the right bottom pocket.".
 

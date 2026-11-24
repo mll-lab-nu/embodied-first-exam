@@ -1,6 +1,6 @@
 # VLABench · select_chemistry_tube_semantic — instance i00
 
-You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: Take out the KMnO4 solution.**
+You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: Take the tube of KMnO4 solution out of the tube stand.**
 
 This states exactly what VLABench's success check requires; VLABench's own wording (also in `s.state()["instruction"]`) is: "Take out the KMnO4 solution in a conversation".
 

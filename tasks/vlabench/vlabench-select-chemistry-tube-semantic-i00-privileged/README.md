@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:vlabench-0.2.0` |
 
 ## Task
-VLABench's `select_chemistry_tube_semantic`: a Franka Panda arm at a table, instructed **"Take out the KMnO4 solution."** (a direct command: VLABench's semantic variant names the target directly here). One
+VLABench's `select_chemistry_tube_semantic`: a Franka Panda arm at a table, instructed **"Take the tube of KMnO4 solution out of the tube stand."** (a direct command: VLABench's semantic variant names the target directly here). One
 frozen scene instance (VLABench's own episode configuration for the task, seed 0); the deliverable is one
 replayable trajectory of joint-position control steps (`/app/output/trajectory.npz`, `(T, 9)`, T ≤ 4000), graded by
 VLABench's own success check at its end.

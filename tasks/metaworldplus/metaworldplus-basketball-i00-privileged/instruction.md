@@ -1,6 +1,6 @@
 # MetaWorld+ · basketball
 
-A **Sawyer** arm stands at a table: Meta-World's `basketball-v3` environment (MuJoCo). **Task: Pick up the ball and hold it in the basketball hoop's ring at the end (a ball that drops through the hoop does not count).**
+A **Sawyer** arm stands at a table: Meta-World's `basketball-v3` environment (MuJoCo). **Task: Pick up the ball and hold it inside the basketball hoop's ring at the end. Do not let it drop through the hoop.**
 The scene is one frozen instance of Meta-World's own randomization (object and goal positions; seed 0).
 
 ## What you hand in

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:vlabench-0.2.0` |
 
 ## Task
-VLABench's `select_chemistry_tube_spatial` as a robot service: a Franka Panda arm at a table, instructed **"Take out the solution in the 1st row and 5th column of the tube stand, counting rows from the one nearest the robot and columns from left to right as seen from the robot."**
+VLABench's `select_chemistry_tube_spatial` as a robot service: a Franka Panda arm at a table, instructed **"Take the tube in the first row and fifth column out of the tube stand. Count rows from the row nearest the robot, and count columns from left to right as the robot sees them."**
 (a description of where the target is), on the same frozen instance as `vlabench-select-chemistry-tube-spatial-i00-privileged`. The simulator runs in the
 `sim` sidecar (`environment/sim/server.py` on main's `rcb_service.py`); the agent only has the client: four cameras
 (RGB 320×320, depth on request, calibrated), the robot's own state, and joint-position chunks. One episode, no reset,

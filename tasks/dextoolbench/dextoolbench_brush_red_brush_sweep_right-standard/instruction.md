@@ -1,6 +1,6 @@
 # DexToolBench · red brush · sweep_right (MuJoCo) — STANDARD MODE (robot as a service)
 
-A KUKA iiwa 14 arm with a 22-joint **Sharpa HA4** dexterous hand stands next to a table with a **brush** on it (DexToolBench's `red_brush`; it is grey in this scene).
+A KUKA iiwa 14 arm with a 22-joint **Sharpa HA4** dexterous hand stands next to a table with a grey **brush** on it. DexToolBench calls it `red_brush`.
 **Task:** pick up the brush and move it through the demonstrated motion (a sweep to the right): bring it to each
 of the **38 goal poses in order** (the green ghost tool shows the current goal). This is task `brush / red_brush /
 sweep_right` of DexToolBench (SimToolReal), run here in plain MuJoCo.

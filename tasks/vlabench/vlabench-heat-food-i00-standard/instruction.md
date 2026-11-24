@@ -1,7 +1,7 @@
 # VLABench · heat_food — instance i00 — STANDARD MODE (robot as a service)
 
 You control a simulated **Franka Panda** arm (VLABench on MuJoCo) **as if it were real hardware**: the simulator runs in
-a service you cannot open, and you reach it only through a client. **Task: Please heat the cooked food from the tray: put it into the microwave, close the microwave's door and press its start button (heating itself is not simulated).**
+a service you cannot open, and you reach it only through a client. **Task: Heat the cooked food from the tray. Put it in the microwave, close the microwave door and press the start button. The food does not actually heat up in the simulation.**
 
 ## Rules (real-robot rules)
 - **One episode, no reset.** The episode starts when the service comes up. It ends when the task succeeds, after

@@ -1,6 +1,6 @@
 # VLABench · select_nth_largest_poker — instance i00
 
-You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: Please pick up the lowest-ranked poker card (aces count high) and hold it up in the gripper, at least 0.9 m above the floor.**
+You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: Pick up the lowest card, counting aces as high. Hold it in the gripper at least 15 cm above the table.**
 
 This states exactly what VLABench's success check requires; VLABench's own wording (also in `s.state()["instruction"]`) is: "Please pick the the smallest poker".
 

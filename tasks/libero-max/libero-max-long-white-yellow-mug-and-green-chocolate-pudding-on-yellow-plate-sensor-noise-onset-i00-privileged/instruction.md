@@ -1,6 +1,6 @@
 # LIBERO-MAX · libero_10 · sensor-noise onset — instance i00
 
-A **Franka Panda** arm (LIBERO on robosuite / MuJoCo) at a table. **Task: Put the white-and-yellow mug on the plate and put the chocolate pudding beside the plate, on the robot's left of it.** LIBERO calls that spot the right of the plate (`living_room_table_yellow_plate_right_region`), as seen from the front of the table, facing the robot.
+A **Franka Panda** arm (LIBERO on robosuite / MuJoCo) at a table. **Task: Put the white-and-yellow mug on the plate. Put the chocolate pudding next to the plate, on the robot's left of the plate.** LIBERO's success check calls this spot `living_room_table_yellow_plate_right_region`, because it names sides as seen by someone at the front of the table facing the robot.
 The scene is one frozen LIBERO-MAX case: a LIBERO-PRO variant of a libero_10 task (object), with one online
 event: the first time the gripper comes within 0.18 m of `white_yellow_mug_1`, LIBERO-MAX changes the scene
 once (the camera images get noise (std 24 on 0..255) and a blocked patch (8% of the image)). You have the full simulator state, so you can see the change happen (`s.state()["event_fired"]`).

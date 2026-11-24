@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:vlabench-0.2.0` |
 
 ## Task
-VLABench's `select_mahjong_semantic`: a Franka Panda arm at a table, instructed **"You are replacing me to play mahjong, and I think it's time to discard the 9 of characters (9 man) now: put that tile on the placemat."** (a request in conversation that names the target tile). One
+VLABench's `select_mahjong_semantic`: a Franka Panda arm at a table, instructed **"You are playing mahjong for me, and it is time to discard the 9 of characters, also called 9 man. Put that tile on the placemat."** (a request in conversation that names the target tile). One
 frozen scene instance (VLABench's own episode configuration for the task, seed 0); the deliverable is one
 replayable trajectory of joint-position control steps (`/app/output/trajectory.npz`, `(T, 9)`, T ≤ 4000), graded by
 VLABench's own success check at its end.

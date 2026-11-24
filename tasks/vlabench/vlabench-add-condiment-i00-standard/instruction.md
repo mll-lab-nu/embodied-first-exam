@@ -1,7 +1,7 @@
 # VLABench · add_condiment — instance i00 — STANDARD MODE (robot as a service)
 
 You control a simulated **Franka Panda** arm (VLABench on MuJoCo) **as if it were real hardware**: the simulator runs in
-a service you cannot open, and you reach it only through a client. **Task: Add the BBQ sauce to the dish: hold the BBQ sauce bottle over the pan and tip it past horizontal, as if pouring (no sauce actually flows).**
+a service you cannot open, and you reach it only through a client. **Task: Hold the BBQ sauce bottle over the pan and tip it past horizontal, as if pouring sauce into the pan. No sauce actually flows out.**
 
 ## Rules (real-robot rules)
 - **One episode, no reset.** The episode starts when the service comes up. It ends when the task succeeds, after

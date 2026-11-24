@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:vlabench-0.2.0` |
 
 ## Task
-VLABench's `add_condiment` as a robot service: a Franka Panda arm at a table, instructed **"Add the BBQ sauce to the dish: hold the BBQ sauce bottle over the pan and tip it past horizontal, as if pouring (no sauce actually flows)."**
+VLABench's `add_condiment` as a robot service: a Franka Panda arm at a table, instructed **"Hold the BBQ sauce bottle over the pan and tip it past horizontal, as if pouring sauce into the pan. No sauce actually flows out."**
 (a direct command), on the same frozen instance as `vlabench-add-condiment-i00-privileged`. The simulator runs in the
 `sim` sidecar (`environment/sim/server.py` on main's `rcb_service.py`); the agent only has the client: four cameras
 (RGB 320×320, depth on request, calibrated), the robot's own state, and joint-position chunks. One episode, no reset,
