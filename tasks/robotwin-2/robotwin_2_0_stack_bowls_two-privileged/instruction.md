@@ -1,7 +1,7 @@
 # RoboTwin 2.0 · stack_bowls_two — frozen instance
 
 You control a simulated dual-arm **ALOHA-AgileX** robot (RoboTwin 2.0 on SAPIEN 3 / PhysX, CuRobo motion
-planning) via Python. **Task:** Stack the two bowls on top of each other.
+planning) via Python. **Task:** Stack the two bowls inside one another on the table, then let go.
 
 The scene objects are attributes of the task env (`env.bowl1`, `env.bowl2`; see `load_actors` in
 `/opt/RoboTwin/envs/stack_bowls_two.py`). RoboTwin's success predicate is `check_success` in that file:

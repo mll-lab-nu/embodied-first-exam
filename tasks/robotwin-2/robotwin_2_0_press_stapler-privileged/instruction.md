@@ -1,7 +1,7 @@
 # RoboTwin 2.0 · press_stapler — frozen instance
 
 You control a simulated dual-arm **ALOHA-AgileX** robot (RoboTwin 2.0 on SAPIEN 3 / PhysX, CuRobo motion
-planning) via Python. **Task:** Use one arm to press the stapler.
+planning) via Python. **Task:** Press down on the stapler with one gripper.
 
 The scene objects are attributes of the task env (`env.stapler`, `env.stapler_id`; see `load_actors` in
 `/opt/RoboTwin/envs/press_stapler.py`). RoboTwin's success predicate is `check_success` in that file:

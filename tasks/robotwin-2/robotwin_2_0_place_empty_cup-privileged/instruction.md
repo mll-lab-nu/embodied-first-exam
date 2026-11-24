@@ -1,7 +1,7 @@
 # RoboTwin 2.0 · place_empty_cup — frozen instance
 
 You control a simulated dual-arm **ALOHA-AgileX** robot (RoboTwin 2.0 on SAPIEN 3 / PhysX, CuRobo motion
-planning) via Python. **Task:** Use an arm to place the empty cup on the coaster.
+planning) via Python. **Task:** Put the empty cup in the middle of the coaster, then let go.
 
 The scene objects are attributes of the task env (`env.coaster`, `env.cup`; see `load_actors` in
 `/opt/RoboTwin/envs/place_empty_cup.py`). RoboTwin's success predicate is `check_success` in that file:

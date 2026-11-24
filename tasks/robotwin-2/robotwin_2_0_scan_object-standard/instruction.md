@@ -1,7 +1,7 @@
 # RoboTwin 2.0 · scan_object — STANDARD MODE (robot as a service, eai-standard/2.1)
 
 You control a dual-arm **ALOHA-AgileX** robot **as if it were real hardware**: the simulator runs in a service you
-cannot open. You get one client and one episode. **Task:** Pick up the scanner with one arm and the tea box with the other, hold the tea box up in front of the robot, and point the scanner's head at the box from 0 to 7 cm away so it can be scanned. Keep both grippers closed at the end (nothing is put down).
+cannot open. You get one client and one episode. **Task:** Pick up the scanner with one arm and the tea box with the other. Keep holding both, with the scanner's head pointed straight at the middle of the box and almost touching it.
 
 ## Rules (real-robot rules)
 - **No reset.** The episode starts when the service comes up and ends on success, when your time is up, or on a

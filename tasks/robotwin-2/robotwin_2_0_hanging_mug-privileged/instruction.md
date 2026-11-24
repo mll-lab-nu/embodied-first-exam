@@ -1,7 +1,7 @@
 # RoboTwin 2.0 · hanging_mug — frozen instance
 
 You control a simulated dual-arm **ALOHA-AgileX** robot (RoboTwin 2.0 on SAPIEN 3 / PhysX, CuRobo motion
-planning) via Python. **Task:** Use left arm to pick the mug on the table, rotate the mug and put the mug down in the middle of the table, use the right arm to pick the mug and hang it onto the rack.
+planning) via Python. **Task:** With the left arm, pick up the mug, turn it and set it down in the middle of the table. Then pick it up with the right arm, hang it on the rack by its handle and let go.
 
 The scene objects are attributes of the task env (`env.mug`, `env.mug_id`, `env.rack`; see `load_actors` in
 `/opt/RoboTwin/envs/hanging_mug.py`). RoboTwin's success predicate is `check_success` in that file:

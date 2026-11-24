@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:robotwin-0.1.2` |
 
 ## Task
-RoboTwin 2.0 handover_mic (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Use one arm to grasp the microphone on the table and handover it to the other arm. Frozen scene instance (RoboTwin seed 28831).
+RoboTwin 2.0 handover_mic (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Pick up the microphone with the arm on its side of the table and hand it over to the other arm. End with the other arm holding it up, roughly 20 cm above the table on its own side, and the first arm's gripper open. Frozen scene instance (RoboTwin seed 28831).
 
 ## Difficulty
 RoboTwin's scripted expert needs 6 planned motions (58 lines); official data-generation success on ALOHA-AgileX 87% (the expert's own pass rate over random layouts); in our image the expert passed on seed 28831 on attempt 2 of 2 with 2942 physics steps. Tags from the code: handover, rotation, contact-predicate. RoboTwin evaluation budget 600 policy actions. The trajectory is the raw per-step drive-target record, so any plan failure or a grasp that slips during replay scores 0.
@@ -45,4 +45,4 @@ Caps per container (PROTOCOL §6).
 | RoboTwin eval step limit | 600 (policy-eval budget upstream; indicative of task length) |
 
 ### Goal
-Use one arm to grasp the microphone on the table and handover it to the other arm.
+Pick up the microphone with the arm on its side of the table and hand it over to the other arm. End with the other arm holding it up, roughly 20 cm above the table on its own side, and the first arm's gripper open.

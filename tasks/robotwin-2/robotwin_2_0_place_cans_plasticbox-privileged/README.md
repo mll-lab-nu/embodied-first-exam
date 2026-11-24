@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:robotwin-0.1.2` |
 
 ## Task
-RoboTwin 2.0 place_cans_plasticbox (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Use dual arm to pick and place cans into plasticbox. Frozen scene instance (RoboTwin seed 60417).
+RoboTwin 2.0 place_cans_plasticbox (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Put both cans into the plastic box, then let go. Frozen scene instance (RoboTwin seed 60417).
 
 ## Difficulty
 RoboTwin's scripted expert needs 7 planned motions (50 lines); official data-generation success on ALOHA-AgileX 100% (the expert's own pass rate over random layouts); in our image the expert passed on seed 60417 on attempt 1 of 6 with 3878 physics steps. Tags from the code: dual-arm. RoboTwin evaluation budget 800 policy actions. The trajectory is the raw per-step drive-target record, so any plan failure or a grasp that slips during replay scores 0.
@@ -45,4 +45,4 @@ Caps per container (PROTOCOL §6).
 | RoboTwin eval step limit | 800 (policy-eval budget upstream; indicative of task length) |
 
 ### Goal
-Use dual arm to pick and place cans into plasticbox.
+Put both cans into the plastic box, then let go.

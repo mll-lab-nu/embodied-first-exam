@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/robotwin_2_0_beat_block_hammer-privileged"
-description = "RoboTwin 2.0 beat_block_hammer (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. There is a hammer and a block on the table, use the arm to grab the hammer and beat the block. Frozen scene instance (RoboTwin seed 28831)."
+description = "RoboTwin 2.0 beat_block_hammer (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Pick up the hammer and hit the block with it, leaving the hammer's head resting on the middle of the block's top. Frozen scene instance (RoboTwin seed 28831)."
 keywords = ["robotics", "robotwin", "sapien", "aloha-agilex", "dual-arm", "code-as-policy", "trajectory", "beat_block_hammer"]
 
 [metadata]

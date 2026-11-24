@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/robotwin_2_0_handover_mic-privileged"
-description = "RoboTwin 2.0 handover_mic (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Use one arm to grasp the microphone on the table and handover it to the other arm. Frozen scene instance (RoboTwin seed 28831)."
+description = "RoboTwin 2.0 handover_mic (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Pick up the microphone with the arm on its side of the table and hand it over to the other arm. End with the other arm holding it up, roughly 20 cm above the table on its own side, and the first arm's gripper open. Frozen scene instance (RoboTwin seed 28831)."
 keywords = ["robotics", "robotwin", "sapien", "aloha-agilex", "dual-arm", "code-as-policy", "trajectory", "handover_mic"]
 
 [metadata]

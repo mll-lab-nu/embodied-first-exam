@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:robotwin-0.1.2` |
 
 ## Task
-RoboTwin 2.0 beat_block_hammer (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. There is a hammer and a block on the table, use the arm to grab the hammer and beat the block. Frozen scene instance (RoboTwin seed 28831).
+RoboTwin 2.0 beat_block_hammer (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Pick up the hammer and hit the block with it, leaving the hammer's head resting on the middle of the block's top. Frozen scene instance (RoboTwin seed 28831).
 
 ## Difficulty
 RoboTwin's scripted expert needs 3 planned motions (25 lines); official data-generation success on ALOHA-AgileX 64% (the expert's own pass rate over random layouts); in our image the expert passed on seed 28831 on attempt 2 of 6 with 1531 physics steps. Tags from the code: single-arm, contact-predicate. RoboTwin evaluation budget 400 policy actions. The trajectory is the raw per-step drive-target record, so any plan failure or a grasp that slips during replay scores 0.
@@ -45,4 +45,4 @@ Caps per container (PROTOCOL §6).
 | RoboTwin eval step limit | 400 (policy-eval budget upstream; indicative of task length) |
 
 ### Goal
-There is a hammer and a block on the table, use the arm to grab the hammer and beat the block.
+Pick up the hammer and hit the block with it, leaving the hammer's head resting on the middle of the block's top.

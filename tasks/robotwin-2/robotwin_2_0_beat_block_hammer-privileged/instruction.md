@@ -1,7 +1,7 @@
 # RoboTwin 2.0 · beat_block_hammer — frozen instance
 
 You control a simulated dual-arm **ALOHA-AgileX** robot (RoboTwin 2.0 on SAPIEN 3 / PhysX, CuRobo motion
-planning) via Python. **Task:** There is a hammer and a block on the table, use the arm to grab the hammer and beat the block.
+planning) via Python. **Task:** Pick up the hammer and hit the block with it, leaving the hammer's head resting on the middle of the block's top.
 
 The scene objects are attributes of the task env (`env.block`, `env.hammer`; see `load_actors` in
 `/opt/RoboTwin/envs/beat_block_hammer.py`). RoboTwin's success predicate is `check_success` in that file:

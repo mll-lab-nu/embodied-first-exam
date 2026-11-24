@@ -1,7 +1,7 @@
 # RoboTwin 2.0 · place_can_basket — frozen instance
 
 You control a simulated dual-arm **ALOHA-AgileX** robot (RoboTwin 2.0 on SAPIEN 3 / PhysX, CuRobo motion
-planning) via Python. **Task:** Put the can into the basket, then lift the basket with the other arm and hold it up: the basket must end at least 2 cm above its start height and upright, with the can inside it (touching the basket, not the table).
+planning) via Python. **Task:** Put the can into the basket with one arm. Then lift the basket a little off the table with the other arm and hold it upright, with the can still inside.
 
 The scene objects are attributes of the task env (`env.arm_tag`, `env.basket`, `env.basket_id`, `env.basket_name`, `env.can`, `env.can_id`, `env.can_name`, `env.object_start_height`, `env.start_height`; see `load_actors` in
 `/opt/RoboTwin/envs/place_can_basket.py`). RoboTwin's success predicate is `check_success` in that file:

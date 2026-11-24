@@ -1,7 +1,7 @@
 # RoboTwin 2.0 · rotate_qrcode — frozen instance
 
 You control a simulated dual-arm **ALOHA-AgileX** robot (RoboTwin 2.0 on SAPIEN 3 / PhysX, CuRobo motion
-planning) via Python. **Task:** Use arm to catch the qrcode board on the table, pick it up and rotate to let the qrcode face towards the robot.
+planning) via Python. **Task:** Pick up the QR-code board and set it back down on the table standing upright, with the QR code facing straight toward you. Then let go.
 
 The scene objects are attributes of the task env (`env.model_id`, `env.qrcode`; see `load_actors` in
 `/opt/RoboTwin/envs/rotate_qrcode.py`). RoboTwin's success predicate is `check_success` in that file:

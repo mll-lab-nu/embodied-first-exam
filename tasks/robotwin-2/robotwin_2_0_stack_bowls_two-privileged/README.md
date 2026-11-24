@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:robotwin-0.1.2` |
 
 ## Task
-RoboTwin 2.0 stack_bowls_two (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Stack the two bowls on top of each other. Frozen scene instance (RoboTwin seed 60417).
+RoboTwin 2.0 stack_bowls_two (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Stack the two bowls inside one another on the table, then let go. Frozen scene instance (RoboTwin seed 60417).
 
 ## Difficulty
 RoboTwin's scripted expert needs 5 planned motions (53 lines); official data-generation success on ALOHA-AgileX 78% (the expert's own pass rate over random layouts); in our image the expert passed on seed 60417 on attempt 1 of 6 with 3998 physics steps. Tags from the code: dual-arm, rotation. RoboTwin evaluation budget 900 policy actions. The trajectory is the raw per-step drive-target record, so any plan failure or a grasp that slips during replay scores 0.
@@ -45,4 +45,4 @@ Caps per container (PROTOCOL §6).
 | RoboTwin eval step limit | 900 (policy-eval budget upstream; indicative of task length) |
 
 ### Goal
-Stack the two bowls on top of each other.
+Stack the two bowls inside one another on the table, then let go.

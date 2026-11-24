@@ -16,7 +16,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/robotwin_2_0_handover_mic-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.1): RoboTwin 2.0 handover_mic on the same frozen instance as the privileged task (seed 28831). Use one arm to grasp the microphone on the table and handover it to the other arm. The agent only gets a client: /observe (RGB-D video, camera calibration, proprioception) and /submit (joint_position or ee_pose action chunks). No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
+description = "STANDARD MODE (robot as a service, eai-standard/2.1): RoboTwin 2.0 handover_mic on the same frozen instance as the privileged task (seed 28831). Pick up the microphone with the arm on its side of the table and hand it over to the other arm. End with the other arm holding it up, roughly 20 cm above the table on its own side, and the first arm's gripper open. The agent only gets a client: /observe (RGB-D video, camera calibration, proprioception) and /submit (joint_position or ee_pose action chunks). No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
 keywords = ["robotics", "robotwin", "sapien", "aloha-agilex", "dual-arm", "standard-mode", "trajectory", "handover_mic"]
 
 [metadata]

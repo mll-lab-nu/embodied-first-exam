@@ -1,7 +1,7 @@
 # RoboTwin 2.0 · put_bottles_dustbin — STANDARD MODE (robot as a service, eai-standard/2.1)
 
 You control a dual-arm **ALOHA-AgileX** robot **as if it were real hardware**: the simulator runs in a service you
-cannot open. You get one client and one episode. **Task:** Put all three bottles into the dustbin that stands on the floor at the robot's left (x = -0.45). Only the left arm can reach the dustbin, so bottles on the right half of the table must be handed over from the right arm to the left arm in the air.
+cannot open. You get one client and one episode. **Task:** Put all three bottles into the dustbin on the floor to your left. Only the left arm can reach the dustbin, so pass the bottles on the right half of the table from the right arm to the left arm.
 
 ## Rules (real-robot rules)
 - **No reset.** The episode starts when the service comes up and ends on success, when your time is up, or on a

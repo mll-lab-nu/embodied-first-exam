@@ -1,7 +1,7 @@
 # RoboTwin 2.0 · place_cans_plasticbox — frozen instance
 
 You control a simulated dual-arm **ALOHA-AgileX** robot (RoboTwin 2.0 on SAPIEN 3 / PhysX, CuRobo motion
-planning) via Python. **Task:** Use dual arm to pick and place cans into plasticbox.
+planning) via Python. **Task:** Put both cans into the plastic box, then let go.
 
 The scene objects are attributes of the task env (`env.object1`, `env.object1_id`, `env.object2`, `env.object2_id`, `env.plasticbox`, `env.plasticbox_id`; see `load_actors` in
 `/opt/RoboTwin/envs/place_cans_plasticbox.py`). RoboTwin's success predicate is `check_success` in that file:

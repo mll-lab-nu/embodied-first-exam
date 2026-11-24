@@ -1,7 +1,7 @@
 # RoboTwin 2.0 · place_phone_stand — frozen instance
 
 You control a simulated dual-arm **ALOHA-AgileX** robot (RoboTwin 2.0 on SAPIEN 3 / PhysX, CuRobo motion
-planning) via Python. **Task:** Pick up the phone and put it on the phone stand.
+planning) via Python. **Task:** Stand the phone on the phone stand, with its bottom edge resting on the stand's ledge. Then let go.
 
 The scene objects are attributes of the task env (`env.phone`, `env.phone_id`, `env.stand`, `env.stand_id`; see `load_actors` in
 `/opt/RoboTwin/envs/place_phone_stand.py`). RoboTwin's success predicate is `check_success` in that file:

@@ -1,7 +1,7 @@
 # RoboTwin 2.0 · place_can_basket — STANDARD MODE (robot as a service, eai-standard/2.1)
 
 You control a dual-arm **ALOHA-AgileX** robot **as if it were real hardware**: the simulator runs in a service you
-cannot open. You get one client and one episode. **Task:** Put the can into the basket, then lift the basket with the other arm and hold it up: the basket must end at least 2 cm above its start height and upright, with the can inside it (touching the basket, not the table).
+cannot open. You get one client and one episode. **Task:** Put the can into the basket with one arm. Then lift the basket a little off the table with the other arm and hold it upright, with the can still inside.
 
 ## Rules (real-robot rules)
 - **No reset.** The episode starts when the service comes up and ends on success, when your time is up, or on a

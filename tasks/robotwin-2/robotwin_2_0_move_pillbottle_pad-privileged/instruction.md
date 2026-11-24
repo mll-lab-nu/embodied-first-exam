@@ -1,7 +1,7 @@
 # RoboTwin 2.0 · move_pillbottle_pad — frozen instance
 
 You control a simulated dual-arm **ALOHA-AgileX** robot (RoboTwin 2.0 on SAPIEN 3 / PhysX, CuRobo motion
-planning) via Python. **Task:** Use one arm to pick the pillbottle and place it onto the pad.
+planning) via Python. **Task:** Set the pill bottle down upright in the middle of the pad, then let go.
 
 The scene objects are attributes of the task env (`env.pad`, `env.pillbottle`, `env.pillbottle_id`; see `load_actors` in
 `/opt/RoboTwin/envs/move_pillbottle_pad.py`). RoboTwin's success predicate is `check_success` in that file:

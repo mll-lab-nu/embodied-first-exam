@@ -1,7 +1,7 @@
 # RoboTwin 2.0 · handover_mic — frozen instance
 
 You control a simulated dual-arm **ALOHA-AgileX** robot (RoboTwin 2.0 on SAPIEN 3 / PhysX, CuRobo motion
-planning) via Python. **Task:** Use one arm to grasp the microphone on the table and handover it to the other arm.
+planning) via Python. **Task:** Pick up the microphone with the arm on its side of the table and hand it over to the other arm. End with the other arm holding it up, roughly 20 cm above the table on its own side, and the first arm's gripper open.
 
 The scene objects are attributes of the task env (`env.grasp_arm_tag`, `env.handover_arm_tag`, `env.microphone`, `env.microphone_id`; see `load_actors` in
 `/opt/RoboTwin/envs/handover_mic.py`). RoboTwin's success predicate is `check_success` in that file:
