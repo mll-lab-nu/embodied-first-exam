@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:vlabench-0.2.0` |
 
 ## Task
-VLABench's `reflection_qa`: a Franka Panda arm at a table, instructed **"Choose the mirror with the largest reflection ratio: press the button in front of it."** (a physics question, answered by pressing the button in front of the right object). One
+VLABench's `reflection_qa`: a Franka Panda arm at a table, instructed **"Press the button in front of the mirror with the largest reflection ratio."** (a physics question, answered by pressing the button in front of the right object). One
 frozen scene instance (VLABench's own episode configuration for the task, seed 0); the deliverable is one
 replayable trajectory of joint-position control steps (`/app/output/trajectory.npz`, `(T, 9)`, T ≤ 4000), graded by
 VLABench's own success check at its end.

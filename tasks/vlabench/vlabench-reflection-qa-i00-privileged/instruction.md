@@ -1,6 +1,6 @@
 # VLABench · reflection_qa — instance i00
 
-You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: Choose the mirror with the largest reflection ratio: press the button in front of it.**
+You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: Press the button in front of the mirror with the largest reflection ratio.**
 
 This states exactly what VLABench's success check requires; VLABench's own wording (also in `s.state()["instruction"]`) is: "Choose the mirror with the largest reflection ratio.".
 

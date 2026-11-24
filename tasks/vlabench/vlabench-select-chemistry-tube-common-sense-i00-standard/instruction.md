@@ -1,7 +1,7 @@
 # VLABench · select_chemistry_tube_common_sense — instance i00 — STANDARD MODE (robot as a service)
 
 You control a simulated **Franka Panda** arm (VLABench on MuJoCo) **as if it were real hardware**: the simulator runs in
-a service you cannot open, and you reach it only through a client. **Task: Take out the KMnO4 solution**
+a service you cannot open, and you reach it only through a client. **Task: Take the tube of KMnO4 solution out of the tube stand.**
 
 ## Rules (real-robot rules)
 - **One episode, no reset.** The episode starts when the service comes up. It ends when the task succeeds, after

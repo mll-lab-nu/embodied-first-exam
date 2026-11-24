@@ -1,6 +1,6 @@
 # LIBERO-MAX · libero_goal · target relocation — instance i00
 
-A **Franka Panda** arm (LIBERO on robosuite / MuJoCo) at a table. **Task: Open the top layer of the drawer and put the bowl inside.**
+A **Franka Panda** arm (LIBERO on robosuite / MuJoCo) at a table. **Task: Open the top drawer of the cabinet and put the bowl inside it.**
 The scene is one frozen LIBERO-MAX case: a LIBERO-PRO variant of a libero_goal task (initial_pose_position_angle), with one online
 event: the first time the gripper comes within 0.18 m of `akita_black_bowl_1`, LIBERO-MAX changes the scene
 once (`akita_black_bowl_1` is moved 0.06 m across the table, direction (-0.707, -0.707)). You have the full simulator state, so you can see the change happen (`s.state()["event_fired"]`).

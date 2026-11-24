@@ -1,6 +1,6 @@
 # VLABench · select_chemistry_tube_common_sense — instance i00
 
-You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: Take out the KMnO4 solution**
+You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: Take the tube of KMnO4 solution out of the tube stand.**
 
 This is a *fixed scene instance*: VLABench's own scene for `select_chemistry_tube_common_sense`, frozen (seed 0). You may reset and retry
 as often as you like. Your deliverable is **one replayable trajectory** of control steps, not a general policy.

@@ -1,6 +1,6 @@
 # LIBERO-MAX · libero_object · distractor burst — instance i00
 
-A **Franka Panda** arm (LIBERO on robosuite / MuJoCo) at a table. **Task: Pick the ketchup and place it in the basket.**
+A **Franka Panda** arm (LIBERO on robosuite / MuJoCo) at a table. **Task: Pick up the ketchup and place it in the basket.**
 The scene is one frozen LIBERO-MAX case: a LIBERO-PRO variant of a libero_object task (view_occlusion), with one online
 event: the first time the gripper comes within 0.18 m of `ketchup_1`, LIBERO-MAX changes the scene
 once (5 other objects appear on the table (`cream_cheese_1`, `bbq_sauce_1`, `salad_dressing_1`, `alphabet_soup_1`, `milk_1`)). You have the full simulator state, so you can see the change happen (`s.state()["event_fired"]`).

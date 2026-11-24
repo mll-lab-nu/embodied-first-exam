@@ -1,6 +1,6 @@
 # LIBERO-MAX · libero_spatial · camera shift — instance i00
 
-A **Franka Panda** arm (LIBERO on robosuite / MuJoCo) at a table. **Task: Pick the akita black bowl on the top of the cabinet and place it on the plate.**
+A **Franka Panda** arm (LIBERO on robosuite / MuJoCo) at a table. **Task: Pick up the black bowl on top of the cabinet and place it on the plate.**
 The scene is one frozen LIBERO-MAX case: a LIBERO-PRO variant of a libero_spatial task (task), with one online
 event: the first time the gripper comes within 0.18 m of `akita_black_bowl_2`, LIBERO-MAX changes the scene
 once (the `agentview` camera moves by (-0.06, 0.03, 0) m, turns -22° and its field of view changes by -12°). You have the full simulator state, so you can see the change happen (`s.state()["event_fired"]`).

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:vlabench-0.2.0` |
 
 ## Task
-VLABench's `magnetism_qa` as a robot service: a Franka Panda arm at a table, instructed **"We are conducting an experiment to identify whether the objects made of various kinds of materials are magnetic. Choose the object that is magnetic: press the button in front of it."**
+VLABench's `magnetism_qa` as a robot service: a Franka Panda arm at a table, instructed **"We are testing which of these objects, made of different materials, are magnetic. Press the button in front of the magnetic object."**
 (a physics question, answered by pressing the button in front of the right object), on the same frozen instance as `vlabench-magnetism-qa-i00-privileged`. The simulator runs in the
 `sim` sidecar (`environment/sim/server.py` on main's `rcb_service.py`); the agent only has the client: four cameras
 (RGB 320×320, depth on request, calibrated), the robot's own state, and joint-position chunks. One episode, no reset,

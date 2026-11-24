@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:libero-max-0.1.1` |
 
 ## Task
-LIBERO-MAX case `pro-visual-noise-glare-object-t01-i07-visual_theme_switch-d0-p195` as a robot service: a Franka Panda arm at a table, instructed **"Pick the cream cheese and place it in the basket."**, on
+LIBERO-MAX case `pro-visual-noise-glare-object-t01-i07-visual_theme_switch-d0-p195` as a robot service: a Franka Panda arm at a table, instructed **"Pick up the cream cheese and place it in the basket."**, on
 the same frozen instance as `libero-max-object-cream-cheese-in-basket-visual-theme-switch-i00-privileged`, with the same online event (visual-theme switch: the image colours change (channels permuted (2, 0, 1), scaled (0.7, 1.15, 1.3)), the
 first time the gripper comes within 0.18 m of `cream_cheese_1`). The simulator runs in the `sim` sidecar
 (`environment/sim/server.py` on main's `rcb_service.py`); the agent only has the client: two cameras (RGB

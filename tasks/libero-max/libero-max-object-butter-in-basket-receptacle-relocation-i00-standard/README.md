@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:libero-max-0.1.1` |
 
 ## Task
-LIBERO-MAX case `pro-initial-pose-position-angle-object-t06-i08-receptacle_relocation-d0-p195` as a robot service: a Franka Panda arm at a table, instructed **"Pick the butter and place it in the basket."**, on
+LIBERO-MAX case `pro-initial-pose-position-angle-object-t06-i08-receptacle_relocation-d0-p195` as a robot service: a Franka Panda arm at a table, instructed **"Pick up the butter and place it in the basket."**, on
 the same frozen instance as `libero-max-object-butter-in-basket-receptacle-relocation-i00-privileged`, with the same online event (receptacle relocation: the receptacle `basket_1` is moved 0.06 m, direction (-0.707, 0.707); it jumps there alone: what already rests in or on it stays where it was, and where it lands on another object the physics pushes the two apart, the
 first time the gripper comes within 0.18 m of `butter_1`). The simulator runs in the `sim` sidecar
 (`environment/sim/server.py` on main's `rcb_service.py`); the agent only has the client: two cameras (RGB

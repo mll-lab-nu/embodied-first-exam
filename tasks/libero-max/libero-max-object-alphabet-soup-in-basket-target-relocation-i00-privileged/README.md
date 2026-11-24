@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:libero-max-0.1.1` |
 
 ## Task
-LIBERO-MAX case `pro-object-shape-object-t00-i03-target_relocation-d0-p195`: a Franka Panda arm at a table, instructed **"Pick the alphabet soup and place it in the basket."**, on a LIBERO-PRO variant
+LIBERO-MAX case `pro-object-shape-object-t00-i03-target_relocation-d0-p195`: a Franka Panda arm at a table, instructed **"Pick up the alphabet soup and place it in the basket."**, on a LIBERO-PRO variant
 of a libero_object task (object_shape). Online event (target relocation): the first time the gripper comes within
 0.18 m of `alphabet_soup_1`, LIBERO-MAX changes the scene once (`alphabet_soup_1` is moved 0.06 m across the table, direction (0, 1)). The deliverable is one
 replayable trajectory of LIBERO's OSC control steps (`/app/output/trajectory.npz`, `(T, 7)`, T ≤ 280), graded by

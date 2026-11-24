@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:vlabench-0.2.0` |
 
 ## Task
-VLABench's `take_out_cool_drink`: a Franka Panda arm at a table, instructed **"I am so thirsty after sport, I want to drink something healthy cool: take it out of the small fridge and close the fridge door."** (a direct command). One
+VLABench's `take_out_cool_drink`: a Franka Panda arm at a table, instructed **"I am thirsty after sport and want a cool, healthy drink. Take it out of the small fridge and close the fridge door."** (a direct command). One
 frozen scene instance (VLABench's own episode configuration for the task, seed 0); the deliverable is one
 replayable trajectory of joint-position control steps (`/app/output/trajectory.npz`, `(T, 9)`, T ≤ 4000), graded by
 VLABench's own success check at its end.

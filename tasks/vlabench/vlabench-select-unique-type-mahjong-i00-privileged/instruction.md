@@ -1,6 +1,6 @@
 # VLABench · select_unique_type_mahjong — instance i00
 
-You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: Put the unique type mahjong on the placemat**
+You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: One mahjong tile is the only one of its suit. Put that tile on the placemat.**
 
 This is a *fixed scene instance*: VLABench's own scene for `select_unique_type_mahjong`, frozen (seed 0). You may reset and retry
 as often as you like. Your deliverable is **one replayable trajectory** of control steps, not a general policy.

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:libero-max-0.1.1` |
 
 ## Task
-LIBERO-MAX case `pro-object-spatial-t00-i09-target_relocation-d0-p195`: a Franka Panda arm at a table, instructed **"Pick the akita black bowl between the plate and the ramekin and place it on the plate."**, on a LIBERO-PRO variant
+LIBERO-MAX case `pro-object-spatial-t00-i09-target_relocation-d0-p195`: a Franka Panda arm at a table, instructed **"Pick up the black bowl between the plate and the ramekin and place it on the plate."**, on a LIBERO-PRO variant
 of a libero_spatial task (object). Online event (target relocation): the first time the gripper comes within
 0.18 m of `black_bowl_1`, LIBERO-MAX changes the scene once (`black_bowl_1` is moved 0.06 m across the table, direction (0, -1)). The deliverable is one
 replayable trajectory of LIBERO's OSC control steps (`/app/output/trajectory.npz`, `(T, 7)`, T ≤ 220), graded by

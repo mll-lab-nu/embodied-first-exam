@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:libero-max-0.1.1` |
 
 ## Task
-LIBERO-MAX case `pro-object-object-t08-i04-camera_shift-d0-p195` as a robot service: a Franka Panda arm at a table, instructed **"Pick the chocolate pudding and place it in the basket."**, on
+LIBERO-MAX case `pro-object-object-t08-i04-camera_shift-d0-p195` as a robot service: a Franka Panda arm at a table, instructed **"Pick up the chocolate pudding and place it in the basket."**, on
 the same frozen instance as `libero-max-object-green-chocolate-pudding-in-red-basket-camera-shift-i00-privileged`, with the same online event (camera shift: the `agentview` camera moves by (0.06, 0, 0.02) m, turns 18° and its field of view changes by +12°, the
 first time the gripper comes within 0.18 m of `green_chocolate_pudding_1`). The simulator runs in the `sim` sidecar
 (`environment/sim/server.py` on main's `rcb_service.py`); the agent only has the client: two cameras (RGB

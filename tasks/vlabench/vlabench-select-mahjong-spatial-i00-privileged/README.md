@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:vlabench-0.2.0` |
 
 ## Task
-VLABench's `select_mahjong_spatial`: a Franka Panda arm at a table, instructed **"Put the 7th mahjong from left to right (as seen from the robot) on the placemat."** (a description of where the target is). One
+VLABench's `select_mahjong_spatial`: a Franka Panda arm at a table, instructed **"Put the seventh mahjong tile from the left, as the robot sees the row, on the placemat."** (a description of where the target is). One
 frozen scene instance (VLABench's own episode configuration for the task, seed 0); the deliverable is one
 replayable trajectory of joint-position control steps (`/app/output/trajectory.npz`, `(T, 9)`, T ≤ 4000), graded by
 VLABench's own success check at its end.

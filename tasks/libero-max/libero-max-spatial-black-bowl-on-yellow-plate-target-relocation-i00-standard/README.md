@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:libero-max-0.1.1` |
 
 ## Task
-LIBERO-MAX case `pro-object-spatial-t00-i09-target_relocation-d0-p195` as a robot service: a Franka Panda arm at a table, instructed **"Pick the akita black bowl between the plate and the ramekin and place it on the plate."**, on
+LIBERO-MAX case `pro-object-spatial-t00-i09-target_relocation-d0-p195` as a robot service: a Franka Panda arm at a table, instructed **"Pick up the black bowl between the plate and the ramekin and place it on the plate."**, on
 the same frozen instance as `libero-max-spatial-black-bowl-on-yellow-plate-target-relocation-i00-privileged`, with the same online event (target relocation: `black_bowl_1` is moved 0.06 m across the table, direction (0, -1), the
 first time the gripper comes within 0.18 m of `black_bowl_1`). The simulator runs in the `sim` sidecar
 (`environment/sim/server.py` on main's `rcb_service.py`); the agent only has the client: two cameras (RGB

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:libero-max-0.1.1` |
 
 ## Task
-LIBERO-MAX case `pro-object-10-t03-i06-obstacle_insertion-d1-p195` as a robot service: a Franka Panda arm at a table, instructed **"Put the black bowl in the bottom drawer of the cabinet and close it."**, on
+LIBERO-MAX case `pro-object-10-t03-i06-obstacle_insertion-d1-p195` as a robot service: a Franka Panda arm at a table, instructed **"Put the black bowl in the bottom drawer of the cabinet. Then close the drawer all the way."**, on
 the same frozen instance as `libero-max-long-black-bowl-in-wooden-cabinet-bottom-closed-obstacle-insertion-i01-privileged`, with the same online event (obstacle insertion: `wine_bottle_1` appears as an obstacle, offset (0, -0.14, 0) m from `black_bowl_1`, the
 first time the gripper comes within 0.18 m of `black_bowl_1`). The simulator runs in the `sim` sidecar
 (`environment/sim/server.py` on main's `rcb_service.py`); the agent only has the client: two cameras (RGB

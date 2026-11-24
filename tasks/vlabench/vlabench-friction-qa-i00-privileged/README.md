@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:vlabench-0.2.0` |
 
 ## Task
-VLABench's `friction_qa`: a Franka Panda arm at a table, instructed **"We are going to test the friction of the different object. Choose the object that slides the slowest on a steel ramp: press the button in front of it."** (a physics question, answered by pressing the button in front of the right object). One
+VLABench's `friction_qa`: a Franka Panda arm at a table, instructed **"We are testing the friction of different objects. Press the button in front of the object that slides the slowest on a steel ramp."** (a physics question, answered by pressing the button in front of the right object). One
 frozen scene instance (VLABench's own episode configuration for the task, seed 0); the deliverable is one
 replayable trajectory of joint-position control steps (`/app/output/trajectory.npz`, `(T, 9)`, T ≤ 4000), graded by
 VLABench's own success check at its end.

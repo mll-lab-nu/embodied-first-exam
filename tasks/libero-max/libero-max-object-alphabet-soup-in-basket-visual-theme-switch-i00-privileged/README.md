@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:libero-max-0.1.1` |
 
 ## Task
-LIBERO-MAX case `pro-initial-pose-position-angle-object-t00-i01-visual_theme_switch-d1-p195`: a Franka Panda arm at a table, instructed **"Pick the alphabet soup and place it in the basket."**, on a LIBERO-PRO variant
+LIBERO-MAX case `pro-initial-pose-position-angle-object-t00-i01-visual_theme_switch-d1-p195`: a Franka Panda arm at a table, instructed **"Pick up the alphabet soup and place it in the basket."**, on a LIBERO-PRO variant
 of a libero_object task (initial_pose_position_angle). Online event (visual-theme switch): the first time the gripper comes within
 0.18 m of `alphabet_soup_1`, LIBERO-MAX changes the scene once (the image colours change (channels permuted (1, 2, 0), scaled (1.25, 0.7, 1.1))). The deliverable is one
 replayable trajectory of LIBERO's OSC control steps (`/app/output/trajectory.npz`, `(T, 7)`, T ≤ 280), graded by

@@ -1,6 +1,6 @@
 # VLABench · select_specific_type_book — instance i00
 
-You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: Please take out the book of history on the shelf**
+You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: Take the history book out of the bookshelf.**
 
 This is a *fixed scene instance*: VLABench's own scene for `select_specific_type_book`, frozen (seed 0). You may reset and retry
 as often as you like. Your deliverable is **one replayable trajectory** of control steps, not a general policy.

@@ -1,6 +1,6 @@
 # VLABench · select_mahjong — instance i00
 
-You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: Put the mahjong of 6 sou on the placemat.**
+You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: Put the 6 sou mahjong tile on the placemat.**
 
 This states exactly what VLABench's success check requires; VLABench's own wording (also in `s.state()["instruction"]`) is: "Pick up the mahjong of 6 sou".
 

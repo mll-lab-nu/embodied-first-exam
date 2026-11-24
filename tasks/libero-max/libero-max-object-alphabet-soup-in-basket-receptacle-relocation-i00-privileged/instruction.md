@@ -1,6 +1,6 @@
 # LIBERO-MAX · libero_object · receptacle relocation — instance i00
 
-A **Franka Panda** arm (LIBERO on robosuite / MuJoCo) at a table. **Task: Pick the alphabet soup and place it in the basket.**
+A **Franka Panda** arm (LIBERO on robosuite / MuJoCo) at a table. **Task: Pick up the alphabet soup and place it in the basket.**
 The scene is one frozen LIBERO-MAX case: a LIBERO-PRO variant of a libero_object task (object_texture), with one online
 event: the first time the gripper comes within 0.18 m of `alphabet_soup_1`, LIBERO-MAX changes the scene
 once (the receptacle `basket_1` is moved 0.06 m, direction (-1, 0); it jumps there alone: what already rests in or on it stays where it was, and where it lands on another object the physics pushes the two apart). You have the full simulator state, so you can see the change happen (`s.state()["event_fired"]`).

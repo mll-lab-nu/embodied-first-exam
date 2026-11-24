@@ -1,6 +1,6 @@
 # VLABench · select_mahjong_spatial — instance i00
 
-You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: Put the 7th mahjong from left to right (as seen from the robot) on the placemat.**
+You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: Put the seventh mahjong tile from the left, as the robot sees the row, on the placemat.**
 
 This states exactly what VLABench's success check requires; VLABench's own wording (also in `s.state()["instruction"]`) is: "Put the 7th mahjong from left to right on the placemat".
 

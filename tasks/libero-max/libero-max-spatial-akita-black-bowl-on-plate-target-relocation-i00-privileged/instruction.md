@@ -1,6 +1,6 @@
 # LIBERO-MAX · libero_spatial · target relocation — instance i00
 
-A **Franka Panda** arm (LIBERO on robosuite / MuJoCo) at a table. **Task: Pick the akita black bowl next to the cookies box and place it on the plate.** In this LIBERO-PRO variant, the bowl to move, `akita_black_bowl_1`, no longer stands right next to the cookies box: it sits a bit farther from the robot and a little to the robot's right, and it is turned. Move that bowl, not the other black bowl on the stove.
+A **Franka Panda** arm (LIBERO on robosuite / MuJoCo) at a table. **Task: Pick up the black bowl next to the cookies box and place it on the plate.** In this LIBERO-PRO variant, the bowl to move, `akita_black_bowl_1`, no longer stands right next to the cookies box: it sits a bit farther from the robot and a little to the robot's right, and it is turned. Move that bowl, not the other black bowl on the stove.
 The scene is one frozen LIBERO-MAX case: a LIBERO-PRO variant of a libero_spatial task (initial_pose_position_angle), with one online
 event: the first time the gripper comes within 0.18 m of `akita_black_bowl_1`, LIBERO-MAX changes the scene
 once (`akita_black_bowl_1` is moved 0.06 m across the table, direction (-0.707, 0.707)). You have the full simulator state, so you can see the change happen (`s.state()["event_fired"]`).

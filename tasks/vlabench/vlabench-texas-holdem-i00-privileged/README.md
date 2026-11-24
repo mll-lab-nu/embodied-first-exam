@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:vlabench-0.2.0` |
 
 ## Task
-VLABench's `texas_holdem`: a Franka Panda arm at a table, instructed **"We're playing Texas hold'em! Show me your hand on the placemat: put the 6 of hearts, 7 of diamonds, 8 of clubs, 9 of hearts and 10 of spades on the placemat."** (a direct command). One
+VLABench's `texas_holdem`: a Franka Panda arm at a table, instructed **"We're playing Texas hold'em. Show me your hand by putting these five cards on the placemat: the 6 of hearts, 7 of diamonds, 8 of clubs, 9 of hearts and 10 of spades."** (a direct command). One
 frozen scene instance (VLABench's own episode configuration for the task, seed 0); the deliverable is one
 replayable trajectory of joint-position control steps (`/app/output/trajectory.npz`, `(T, 9)`, T ≤ 4000), graded by
 VLABench's own success check at its end.

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:libero-max-0.1.1` |
 
 ## Task
-LIBERO-MAX case `pro-position-object-t02-i06-sensor_noise_onset-d0-p195`: a Franka Panda arm at a table, instructed **"Pick the salad dressing and place it in the basket."**, on a LIBERO-PRO variant
+LIBERO-MAX case `pro-position-object-t02-i06-sensor_noise_onset-d0-p195`: a Franka Panda arm at a table, instructed **"Pick up the salad dressing and place it in the basket."**, on a LIBERO-PRO variant
 of a libero_object task (position). Online event (sensor-noise onset): the first time the gripper comes within
 0.18 m of `salad_dressing_1`, LIBERO-MAX changes the scene once (the camera images get noise (std 24 on 0..255) and a blocked patch (8% of the image)). The deliverable is one
 replayable trajectory of LIBERO's OSC control steps (`/app/output/trajectory.npz`, `(T, 7)`, T ≤ 280), graded by

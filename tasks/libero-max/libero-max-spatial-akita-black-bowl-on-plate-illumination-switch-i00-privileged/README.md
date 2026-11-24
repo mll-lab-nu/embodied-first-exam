@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:libero-max-0.1.1` |
 
 ## Task
-LIBERO-MAX case `pro-object-shape-spatial-t01-i01-illumination_switch-d0-p195`: a Franka Panda arm at a table, instructed **"Pick the akita black bowl next to the ramekin and place it on the plate."**, on a LIBERO-PRO variant
+LIBERO-MAX case `pro-object-shape-spatial-t01-i01-illumination_switch-d0-p195`: a Franka Panda arm at a table, instructed **"Pick up the black bowl next to the ramekin and place it on the plate."**, on a LIBERO-PRO variant
 of a libero_spatial task (object_shape). Online event (illumination switch): the first time the gripper comes within
 0.18 m of `akita_black_bowl_1`, LIBERO-MAX changes the scene once (the lighting is scaled by 0.2). The deliverable is one
 replayable trajectory of LIBERO's OSC control steps (`/app/output/trajectory.npz`, `(T, 7)`, T ≤ 220), graded by

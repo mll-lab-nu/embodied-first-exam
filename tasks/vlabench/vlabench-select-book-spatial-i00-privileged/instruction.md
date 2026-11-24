@@ -1,6 +1,6 @@
 # VLABench · select_book_spatial — instance i00
 
-You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: Please take the second book from the left (as seen from the robot) on the top layer out of the bookshelf.**
+You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: Take the second book from the left on the top shelf out of the bookshelf. Count from the left as the robot sees the books.**
 
 This states exactly what VLABench's success check requires; VLABench's own wording (also in `s.state()["instruction"]`) is: "Please take the second book on the top layer".
 

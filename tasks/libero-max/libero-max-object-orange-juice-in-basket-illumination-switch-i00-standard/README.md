@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:libero-max-0.1.1` |
 
 ## Task
-LIBERO-MAX case `pro-object-texture-object-t09-i05-illumination_switch-d1-p195` as a robot service: a Franka Panda arm at a table, instructed **"Pick the orange juice and place it in the basket."**, on
+LIBERO-MAX case `pro-object-texture-object-t09-i05-illumination_switch-d1-p195` as a robot service: a Franka Panda arm at a table, instructed **"Pick up the orange juice and place it in the basket."**, on
 the same frozen instance as `libero-max-object-orange-juice-in-basket-illumination-switch-i00-privileged`, with the same online event (illumination switch: the lighting is scaled by 1.8, the
 first time the gripper comes within 0.18 m of `orange_juice_1`). The simulator runs in the `sim` sidecar
 (`environment/sim/server.py` on main's `rcb_service.py`); the agent only has the client: two cameras (RGB

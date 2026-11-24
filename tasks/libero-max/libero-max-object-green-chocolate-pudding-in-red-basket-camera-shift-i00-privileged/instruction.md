@@ -1,6 +1,6 @@
 # LIBERO-MAX · libero_object · camera shift — instance i00
 
-A **Franka Panda** arm (LIBERO on robosuite / MuJoCo) at a table. **Task: Pick the chocolate pudding and place it in the basket.**
+A **Franka Panda** arm (LIBERO on robosuite / MuJoCo) at a table. **Task: Pick up the chocolate pudding and place it in the basket.**
 The scene is one frozen LIBERO-MAX case: a LIBERO-PRO variant of a libero_object task (object), with one online
 event: the first time the gripper comes within 0.18 m of `green_chocolate_pudding_1`, LIBERO-MAX changes the scene
 once (the `agentview` camera moves by (0.06, 0, 0.02) m, turns 18° and its field of view changes by +12°). You have the full simulator state, so you can see the change happen (`s.state()["event_fired"]`).

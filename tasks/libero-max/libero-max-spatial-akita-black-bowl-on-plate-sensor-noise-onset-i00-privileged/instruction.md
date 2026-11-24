@@ -1,6 +1,6 @@
 # LIBERO-MAX · libero_spatial · sensor-noise onset — instance i00
 
-A **Franka Panda** arm (LIBERO on robosuite / MuJoCo) at a table. **Task: Pick the akita black bowl next to the ramekin and place it on the plate.**
+A **Franka Panda** arm (LIBERO on robosuite / MuJoCo) at a table. **Task: Pick up the black bowl next to the ramekin and place it on the plate.**
 The scene is one frozen LIBERO-MAX case: a LIBERO-PRO variant of a libero_spatial task (visual_noise_glare), with one online
 event: the first time the gripper comes within 0.18 m of `akita_black_bowl_1`, LIBERO-MAX changes the scene
 once (the camera images get noise (std 36 on 0..255) and a blocked patch (16% of the image)). You have the full simulator state, so you can see the change happen (`s.state()["event_fired"]`).

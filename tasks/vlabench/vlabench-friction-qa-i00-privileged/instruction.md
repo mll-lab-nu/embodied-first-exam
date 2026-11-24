@@ -1,6 +1,6 @@
 # VLABench · friction_qa — instance i00
 
-You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: We are going to test the friction of the different object. Choose the object that slides the slowest on a steel ramp: press the button in front of it.**
+You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: We are testing the friction of different objects. Press the button in front of the object that slides the slowest on a steel ramp.**
 
 This states exactly what VLABench's success check requires; VLABench's own wording (also in `s.state()["instruction"]`) is: "We are going to test the friction of the different object. Choose the object that slides the slowest on a steel ramp.".
 

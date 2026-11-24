@@ -1,6 +1,6 @@
 # VLABench · magnetism_qa — instance i00
 
-You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: We are conducting an experiment to identify whether the objects made of various kinds of materials are magnetic. Choose the object that is magnetic: press the button in front of it.**
+You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: We are testing which of these objects, made of different materials, are magnetic. Press the button in front of the magnetic object.**
 
 This states exactly what VLABench's success check requires; VLABench's own wording (also in `s.state()["instruction"]`) is: "We are conducting an experiment to identify whether the objects made of various kinds of materials are magnetic. Choose the object that is magnetic.".
 

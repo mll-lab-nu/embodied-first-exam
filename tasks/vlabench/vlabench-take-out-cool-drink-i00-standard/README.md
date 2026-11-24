@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:vlabench-0.2.0` |
 
 ## Task
-VLABench's `take_out_cool_drink` as a robot service: a Franka Panda arm at a table, instructed **"I am so thirsty after sport, I want to drink something healthy cool: take it out of the small fridge and close the fridge door."**
+VLABench's `take_out_cool_drink` as a robot service: a Franka Panda arm at a table, instructed **"I am thirsty after sport and want a cool, healthy drink. Take it out of the small fridge and close the fridge door."**
 (a direct command), on the same frozen instance as `vlabench-take-out-cool-drink-i00-privileged`. The simulator runs in the
 `sim` sidecar (`environment/sim/server.py` on main's `rcb_service.py`); the agent only has the client: four cameras
 (RGB 320×320, depth on request, calibrated), the robot's own state, and joint-position chunks. One episode, no reset,

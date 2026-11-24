@@ -1,7 +1,7 @@
 # LIBERO-MAX · libero_object — instance i00 — STANDARD MODE (robot as a service)
 
 You control a simulated **Franka Panda** arm (LIBERO on robosuite / MuJoCo) **as if it were real hardware**: the
-simulator runs in a service you cannot open, and you reach it only through a client. **Task: Pick the cream cheese and place it in the basket.**
+simulator runs in a service you cannot open, and you reach it only through a client. **Task: Pick up the cream cheese and place it in the basket.**
 
 The scene can change while you work: once during the episode, when your gripper first gets close to one of the task's
 objects, the scene changes (as in LIBERO-MAX): an object or a receptacle may be moved, an obstacle or a few other

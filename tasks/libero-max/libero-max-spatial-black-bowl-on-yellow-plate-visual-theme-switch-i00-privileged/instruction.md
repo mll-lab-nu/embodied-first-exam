@@ -1,6 +1,6 @@
 # LIBERO-MAX · libero_spatial · visual-theme switch — instance i00
 
-A **Franka Panda** arm (LIBERO on robosuite / MuJoCo) at a table. **Task: Pick the akita black bowl from table center and place it on the plate.**
+A **Franka Panda** arm (LIBERO on robosuite / MuJoCo) at a table. **Task: Pick up the black bowl from the middle of the table and place it on the plate.**
 The scene is one frozen LIBERO-MAX case: a LIBERO-PRO variant of a libero_spatial task (object), with one online
 event: the first time the gripper comes within 0.18 m of `black_bowl_1`, LIBERO-MAX changes the scene
 once (the image colours change (channels permuted (1, 2, 0), scaled (1.25, 0.7, 1.1))). You have the full simulator state, so you can see the change happen (`s.state()["event_fired"]`).

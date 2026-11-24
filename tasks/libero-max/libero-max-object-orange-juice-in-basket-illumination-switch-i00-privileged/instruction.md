@@ -1,6 +1,6 @@
 # LIBERO-MAX · libero_object · illumination switch — instance i00
 
-A **Franka Panda** arm (LIBERO on robosuite / MuJoCo) at a table. **Task: Pick the orange juice and place it in the basket.**
+A **Franka Panda** arm (LIBERO on robosuite / MuJoCo) at a table. **Task: Pick up the orange juice and place it in the basket.**
 The scene is one frozen LIBERO-MAX case: a LIBERO-PRO variant of a libero_object task (object_texture), with one online
 event: the first time the gripper comes within 0.18 m of `orange_juice_1`, LIBERO-MAX changes the scene
 once (the lighting is scaled by 1.8). You have the full simulator state, so you can see the change happen (`s.state()["event_fired"]`).

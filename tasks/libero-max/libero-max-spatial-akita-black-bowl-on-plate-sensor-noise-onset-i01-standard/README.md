@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:libero-max-0.1.1` |
 
 ## Task
-LIBERO-MAX case `pro-initial-pose-position-angle-spatial-t03-i00-sensor_noise_onset-d1-p195` as a robot service: a Franka Panda arm at a table, instructed **"Pick the akita black bowl on the cookies box and place it on the plate."**, on
+LIBERO-MAX case `pro-initial-pose-position-angle-spatial-t03-i00-sensor_noise_onset-d1-p195` as a robot service: a Franka Panda arm at a table, instructed **"Pick up the black bowl on the cookies box and place it on the plate."**, on
 the same frozen instance as `libero-max-spatial-akita-black-bowl-on-plate-sensor-noise-onset-i01-privileged`, with the same online event (sensor-noise onset: the camera images get noise (std 36 on 0..255) and a blocked patch (16% of the image), the
 first time the gripper comes within 0.18 m of `akita_black_bowl_1`). The simulator runs in the `sim` sidecar
 (`environment/sim/server.py` on main's `rcb_service.py`); the agent only has the client: two cameras (RGB

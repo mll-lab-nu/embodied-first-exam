@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:vlabench-0.2.0` |
 
 ## Task
-VLABench's `select_unique_type_mahjong` as a robot service: a Franka Panda arm at a table, instructed **"Put the unique type mahjong on the placemat"**
+VLABench's `select_unique_type_mahjong` as a robot service: a Franka Panda arm at a table, instructed **"One mahjong tile is the only one of its suit. Put that tile on the placemat."**
 (a direct command), on the same frozen instance as `vlabench-select-unique-type-mahjong-i00-privileged`. The simulator runs in the
 `sim` sidecar (`environment/sim/server.py` on main's `rcb_service.py`); the agent only has the client: four cameras
 (RGB 320×320, depth on request, calibrated), the robot's own state, and joint-position chunks. One episode, no reset,
