@@ -1,7 +1,7 @@
 # RoboTwin 2.0 · place_bread_basket — frozen instance
 
 You control a simulated dual-arm **ALOHA-AgileX** robot (RoboTwin 2.0 on SAPIEN 3 / PhysX, CuRobo motion
-planning) via Python. **Task:** If there is one bread on the table, use one arm to grab the bread and put it in the basket, if there are two breads on the table, use two arms to simultaneously grab up two breads and put them in the basket.
+planning) via Python. **Task:** Put both breads into the basket, then let go.
 
 The scene objects are attributes of the task env (`env.basket_id`, `env.bread_id`, `env.breadbasket`; see `load_actors` in
 `/opt/RoboTwin/envs/place_bread_basket.py`). RoboTwin's success predicate is `check_success` in that file:

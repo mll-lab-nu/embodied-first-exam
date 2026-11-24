@@ -1,7 +1,7 @@
 # RoboTwin 2.0 · place_burger_fries — frozen instance
 
 You control a simulated dual-arm **ALOHA-AgileX** robot (RoboTwin 2.0 on SAPIEN 3 / PhysX, CuRobo motion
-planning) via Python. **Task:** Use dual arm to pick the hamburg and frenchfries and put them onto the tray.
+planning) via Python. **Task:** Put the hamburger on the left half of the tray and the fries on the right half, then let go of both.
 
 The scene objects are attributes of the task env (`env.frenchfries`, `env.hamburg`, `env.object1_id`, `env.object2_id`, `env.tray`, `env.tray_id`; see `load_actors` in
 `/opt/RoboTwin/envs/place_burger_fries.py`). RoboTwin's success predicate is `check_success` in that file:

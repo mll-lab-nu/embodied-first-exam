@@ -1,7 +1,7 @@
 # RoboTwin 2.0 · grab_roller — frozen instance
 
 You control a simulated dual-arm **ALOHA-AgileX** robot (RoboTwin 2.0 on SAPIEN 3 / PhysX, CuRobo motion
-planning) via Python. **Task:** Use both arms to grab the roller on the table.
+planning) via Python. **Task:** Grab the roller with both arms, lift it off the table and keep holding it.
 
 The scene objects are attributes of the task env (`env.model_id`, `env.roller`; see `load_actors` in
 `/opt/RoboTwin/envs/grab_roller.py`). RoboTwin's success predicate is `check_success` in that file:

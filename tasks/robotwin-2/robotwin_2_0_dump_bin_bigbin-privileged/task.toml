@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/robotwin_2_0_dump_bin_bigbin-privileged"
-description = "RoboTwin 2.0 dump_bin_bigbin (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Grab the small bin and pour the balls into the big bin. Frozen scene instance (RoboTwin seed 60417)."
+description = "RoboTwin 2.0 dump_bin_bigbin (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Pick up the small bin, pour all five balls into the big bin on the floor to your left, and keep holding the small bin up high when you finish. Frozen scene instance (RoboTwin seed 60417)."
 keywords = ["robotics", "robotwin", "sapien", "aloha-agilex", "dual-arm", "code-as-policy", "trajectory", "dump_bin_bigbin"]
 
 [metadata]

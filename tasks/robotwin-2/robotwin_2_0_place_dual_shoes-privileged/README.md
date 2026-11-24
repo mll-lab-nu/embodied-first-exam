@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:robotwin-0.1.2` |
 
 ## Task
-RoboTwin 2.0 place_dual_shoes (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Use both arms to pick up the two shoes on the table and put them in the shoebox, with the shoe tip pointing to the left. Frozen scene instance (RoboTwin seed 60417).
+RoboTwin 2.0 place_dual_shoes (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Put both shoes in the shoebox, sole down with their toes pointing to your left: the shoe from your left in the half of the box nearer you, the other shoe in the far half. Then let go. Frozen scene instance (RoboTwin seed 60417).
 
 ## Difficulty
 RoboTwin's scripted expert needs 4 planned motions (50 lines); official data-generation success on ALOHA-AgileX 77% (the expert's own pass rate over random layouts); in our image the expert passed on seed 60417 on attempt 1 of 1 with 3806 physics steps. Tags from the code: dual-arm, rotation, loop/timing. RoboTwin evaluation budget 600 policy actions. The trajectory is the raw per-step drive-target record, so any plan failure or a grasp that slips during replay scores 0.
@@ -45,4 +45,4 @@ Caps per container (PROTOCOL §6).
 | RoboTwin eval step limit | 600 (policy-eval budget upstream; indicative of task length) |
 
 ### Goal
-Use both arms to pick up the two shoes on the table and put them in the shoebox, with the shoe tip pointing to the left.
+Put both shoes in the shoebox, sole down with their toes pointing to your left: the shoe from your left in the half of the box nearer you, the other shoe in the far half. Then let go.

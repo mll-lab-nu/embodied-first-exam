@@ -1,7 +1,7 @@
 # RoboTwin 2.0 · place_object_stand — frozen instance
 
 You control a simulated dual-arm **ALOHA-AgileX** robot (RoboTwin 2.0 on SAPIEN 3 / PhysX, CuRobo motion
-planning) via Python. **Task:** Use appropriate arm to place the object on the stand.
+planning) via Python. **Task:** Use appropriate arm to place the bell on the stand.
 
 The scene objects are attributes of the task env (`env.displaystand`, `env.displaystand_id`, `env.object`, `env.selected_model_id`, `env.selected_modelname`; see `load_actors` in
 `/opt/RoboTwin/envs/place_object_stand.py`). RoboTwin's success predicate is `check_success` in that file:

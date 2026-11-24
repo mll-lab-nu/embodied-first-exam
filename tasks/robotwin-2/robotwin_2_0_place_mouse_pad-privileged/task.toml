@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/robotwin_2_0_place_mouse_pad-privileged"
-description = "RoboTwin 2.0 place_mouse_pad (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Grab the mouse and place it on a colored mat. Frozen scene instance (RoboTwin seed 60417)."
+description = "RoboTwin 2.0 place_mouse_pad (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Put the mouse in the middle of the blue mat, lying flat and lined up with the mat's long side, then let go. Frozen scene instance (RoboTwin seed 60417)."
 keywords = ["robotics", "robotwin", "sapien", "aloha-agilex", "dual-arm", "code-as-policy", "trajectory", "place_mouse_pad"]
 
 [metadata]

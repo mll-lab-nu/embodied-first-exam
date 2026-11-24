@@ -1,7 +1,7 @@
 # RoboTwin 2.0 · lift_pot — STANDARD MODE (robot as a service, eai-standard/2.1)
 
 You control a dual-arm **ALOHA-AgileX** robot **as if it were real hardware**: the simulator runs in a service you
-cannot open. You get one client and one episode. **Task:** Use arms to lift the pot. The success check, run at the end of every call, passes when the pot's reference point (the point on the pot's vertical axis about 4 cm above its bottom [the pot's origin]) is above z = 0.82 m (8 cm above the height of the table top, so the pot's bottom must be lifted about 4 cm or more off the table), the pot is tilted less than 36 degrees from upright, and each gripper centre (TCP) is within 3 cm of the pot's grasp point for that arm (one on each of the pot's two side handles: the left arm's on the handle on the robot's left, the right arm's on the other [contact points 0 and 1]).
+cannot open. You get one client and one episode. **Task:** Lift the pot off the table with both arms, one hand on each handle, keeping it roughly level. The success check, run at the end of every call, passes when the pot's reference point (the point on the pot's vertical axis about 4 cm above its bottom [the pot's origin]) is above z = 0.82 m (8 cm above the height of the table top, so the pot's bottom must be lifted about 4 cm or more off the table), the pot is tilted less than 36 degrees from upright, and each gripper centre (TCP) is within 3 cm of the pot's grasp point for that arm (one on each of the pot's two side handles: the left arm's on the handle on the robot's left, the right arm's on the other [contact points 0 and 1]).
 
 ## Rules (real-robot rules)
 - **No reset.** The episode starts when the service comes up and ends on success, when your time is up, or on a

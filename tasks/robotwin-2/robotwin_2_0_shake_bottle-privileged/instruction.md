@@ -1,7 +1,7 @@
 # RoboTwin 2.0 · shake_bottle — frozen instance
 
 You control a simulated dual-arm **ALOHA-AgileX** robot (RoboTwin 2.0 on SAPIEN 3 / PhysX, CuRobo motion
-planning) via Python. **Task:** Shake the bottle with proper arm.
+planning) via Python. **Task:** Pick up the bottle and shake it while holding it up.
 
 The scene objects are attributes of the task env (`env.bottle`, `env.bottle_id`, `env.id_list`; see `load_actors` in
 `/opt/RoboTwin/envs/shake_bottle.py`). RoboTwin's success predicate is `check_success` in that file:

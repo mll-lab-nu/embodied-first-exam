@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:robotwin-0.1.2` |
 
 ## Task
-RoboTwin 2.0 place_fan (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Grab the fan and place it on a colored mat, and make sure the fan is facing the robot. Frozen scene instance (RoboTwin seed 60417).
+RoboTwin 2.0 place_fan (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Grab the fan and place it on the red mat, and make sure the fan is facing the robot. Frozen scene instance (RoboTwin seed 60417).
 
 ## Difficulty
 RoboTwin's scripted expert needs 3 planned motions (26 lines); official data-generation success on ALOHA-AgileX 95% (the expert's own pass rate over random layouts); in our image the expert passed on seed 60417 on attempt 1 of 1 with 2211 physics steps. Tags from the code: single-arm, joint-predicate. RoboTwin evaluation budget 400 policy actions. The trajectory is the raw per-step drive-target record, so any plan failure or a grasp that slips during replay scores 0.
@@ -45,4 +45,4 @@ Caps per container (PROTOCOL §6).
 | RoboTwin eval step limit | 400 (policy-eval budget upstream; indicative of task length) |
 
 ### Goal
-Grab the fan and place it on a colored mat, and make sure the fan is facing the robot.
+Grab the fan and place it on the red mat, and make sure the fan is facing the robot.

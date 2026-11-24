@@ -1,7 +1,7 @@
 # RoboTwin 2.0 · lift_pot — frozen instance
 
 You control a simulated dual-arm **ALOHA-AgileX** robot (RoboTwin 2.0 on SAPIEN 3 / PhysX, CuRobo motion
-planning) via Python. **Task:** Use arms to lift the pot.
+planning) via Python. **Task:** Lift the pot off the table with both arms, one hand on each handle, keeping it roughly level.
 
 The scene objects are attributes of the task env (`env.model_id`, `env.model_name`, `env.pot`; see `load_actors` in
 `/opt/RoboTwin/envs/lift_pot.py`). RoboTwin's success predicate is `check_success` in that file:

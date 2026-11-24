@@ -1,7 +1,7 @@
 # RoboTwin 2.0 · open_laptop — frozen instance
 
 You control a simulated dual-arm **ALOHA-AgileX** robot (RoboTwin 2.0 on SAPIEN 3 / PhysX, CuRobo motion
-planning) via Python. **Task:** Use one arm to open the laptop.
+planning) via Python. **Task:** Use the left arm to open the laptop lid well wider than it starts, and keep the left gripper on the lid when you finish.
 
 The scene objects are attributes of the task env (`env.arm_tag`, `env.model_id`, `env.model_name`; see `load_actors` in
 `/opt/RoboTwin/envs/open_laptop.py`). RoboTwin's success predicate is `check_success` in that file:

@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/robotwin_2_0_place_bread_skillet-privileged"
-description = "RoboTwin 2.0 place_bread_skillet (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. If there is one bread on the table, use one arm to grab the bread and put it into the skillet. Frozen scene instance (RoboTwin seed 28831)."
+description = "RoboTwin 2.0 place_bread_skillet (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Lift the skillet a little off the table with one arm and keep holding it, and with the other arm put the bread into the skillet. Frozen scene instance (RoboTwin seed 28831)."
 keywords = ["robotics", "robotwin", "sapien", "aloha-agilex", "dual-arm", "code-as-policy", "trajectory", "place_bread_skillet"]
 
 [metadata]

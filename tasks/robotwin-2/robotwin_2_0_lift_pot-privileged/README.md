@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:robotwin-0.1.2` |
 
 ## Task
-RoboTwin 2.0 lift_pot (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Use arms to lift the pot. Frozen scene instance (RoboTwin seed 28831).
+RoboTwin 2.0 lift_pot (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Lift the pot off the table with both arms, one hand on each handle, keeping it roughly level. Frozen scene instance (RoboTwin seed 28831).
 
 ## Difficulty
 RoboTwin's scripted expert needs 3 planned motions (21 lines); official data-generation success on ALOHA-AgileX 27% (the expert's own pass rate over random layouts); in our image the expert passed on seed 28831 on attempt 2 of 2 with 1504 physics steps. Tags from the code: articulated, dual-arm, contact-predicate. RoboTwin evaluation budget 400 policy actions. The trajectory is the raw per-step drive-target record, so any plan failure or a grasp that slips during replay scores 0.
@@ -45,4 +45,4 @@ Caps per container (PROTOCOL §6).
 | RoboTwin eval step limit | 400 (policy-eval budget upstream; indicative of task length) |
 
 ### Goal
-Use arms to lift the pot.
+Lift the pot off the table with both arms, one hand on each handle, keeping it roughly level.

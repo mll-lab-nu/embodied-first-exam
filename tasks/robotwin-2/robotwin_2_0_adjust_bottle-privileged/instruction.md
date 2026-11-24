@@ -1,7 +1,7 @@
 # RoboTwin 2.0 · adjust_bottle — frozen instance
 
 You control a simulated dual-arm **ALOHA-AgileX** robot (RoboTwin 2.0 on SAPIEN 3 / PhysX, CuRobo motion
-planning) via Python. **Task:** Pick up the bottle on the table headup with the correct arm.
+planning) via Python. **Task:** Pick up the bottle and hold it up high above the table, a little further out to your right than where it started.
 
 The scene objects are attributes of the task env (`env.bottle`, `env.model_id`, `env.qpose_tag`; see `load_actors` in
 `/opt/RoboTwin/envs/adjust_bottle.py`). RoboTwin's success predicate is `check_success` in that file:

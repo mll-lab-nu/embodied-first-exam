@@ -1,7 +1,7 @@
 # RoboTwin 2.0 · pick_dual_bottles — frozen instance
 
 You control a simulated dual-arm **ALOHA-AgileX** robot (RoboTwin 2.0 on SAPIEN 3 / PhysX, CuRobo motion
-planning) via Python. **Task:** Pick up one bottle with one arm, and pick up another bottle with the other arm.
+planning) via Python. **Task:** Pick up both bottles, one in each hand, bring them toward you and hold them up side by side in front of you near the middle, the left bottle on the left.
 
 The scene objects are attributes of the task env (`env.bottle1`, `env.bottle2`, `env.left_target_pose`, `env.render_freq`, `env.right_target_pose`; see `load_actors` in
 `/opt/RoboTwin/envs/pick_dual_bottles.py`). RoboTwin's success predicate is `check_success` in that file:

@@ -1,7 +1,7 @@
 # RoboTwin 2.0 · move_stapler_pad — frozen instance
 
 You control a simulated dual-arm **ALOHA-AgileX** robot (RoboTwin 2.0 on SAPIEN 3 / PhysX, CuRobo motion
-planning) via Python. **Task:** Use appropriate arm to move the stapler to a colored mat.
+planning) via Python. **Task:** Move the stapler onto the red mat: set it down in the middle of the mat, standing upright and lined up exactly with the mat's long side, then let go.
 
 The scene objects are attributes of the task env (`env.color_value`, `env.pad`, `env.stapler`, `env.stapler_id`; see `load_actors` in
 `/opt/RoboTwin/envs/move_stapler_pad.py`). RoboTwin's success predicate is `check_success` in that file:

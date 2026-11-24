@@ -1,7 +1,7 @@
 # RoboTwin 2.0 · blocks_ranking_size — frozen instance
 
 You control a simulated dual-arm **ALOHA-AgileX** robot (RoboTwin 2.0 on SAPIEN 3 / PhysX, CuRobo motion
-planning) via Python. **Task:** There are three blocks on the table, the color of the blocks is random, move the blocks to the center of the table, and arrange them from largest to smallest, from left to right.
+planning) via Python. **Task:** Line up the three blocks in a straight row, close together, from the largest on your left to the smallest on your right, then let go.
 
 The scene objects are attributes of the task env (`env.block1`, `env.block2`, `env.block3`; see `load_actors` in
 `/opt/RoboTwin/envs/blocks_ranking_size.py`). RoboTwin's success predicate is `check_success` in that file:

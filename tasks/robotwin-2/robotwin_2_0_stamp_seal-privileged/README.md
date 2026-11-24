@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:robotwin-0.1.2` |
 
 ## Task
-RoboTwin 2.0 stamp_seal (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Grab the stamp and stamp onto the specific color mat. Frozen scene instance (RoboTwin seed 91573).
+RoboTwin 2.0 stamp_seal (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Pick up the stamp and set it down right in the middle of the olive mat, then let go. Frozen scene instance (RoboTwin seed 91573).
 
 ## Difficulty
 RoboTwin's scripted expert needs 3 planned motions (27 lines); official data-generation success on ALOHA-AgileX 56% (the expert's own pass rate over random layouts); in our image the expert passed on seed 91573 on attempt 3 of 6 with 1866 physics steps. Tags from the code: single-arm. RoboTwin evaluation budget 400 policy actions. The trajectory is the raw per-step drive-target record, so any plan failure or a grasp that slips during replay scores 0.
@@ -45,4 +45,4 @@ Caps per container (PROTOCOL §6).
 | RoboTwin eval step limit | 400 (policy-eval budget upstream; indicative of task length) |
 
 ### Goal
-Grab the stamp and stamp onto the specific color mat.
+Pick up the stamp and set it down right in the middle of the olive mat, then let go.

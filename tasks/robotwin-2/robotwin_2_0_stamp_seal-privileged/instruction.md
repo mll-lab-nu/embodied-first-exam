@@ -1,7 +1,7 @@
 # RoboTwin 2.0 · stamp_seal — frozen instance
 
 You control a simulated dual-arm **ALOHA-AgileX** robot (RoboTwin 2.0 on SAPIEN 3 / PhysX, CuRobo motion
-planning) via Python. **Task:** Grab the stamp and stamp onto the specific color mat.
+planning) via Python. **Task:** Pick up the stamp and set it down right in the middle of the olive mat, then let go.
 
 The scene objects are attributes of the task env (`env.color_value`, `env.seal`, `env.seal_id`, `env.target`, `env.target_pose`; see `load_actors` in
 `/opt/RoboTwin/envs/stamp_seal.py`). RoboTwin's success predicate is `check_success` in that file:

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:robotwin-0.1.2` |
 
 ## Task
-RoboTwin 2.0 place_a2b_right (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Use appropriate arm to place object A on the right of object B. Frozen scene instance (RoboTwin seed 28831).
+RoboTwin 2.0 place_a2b_right (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Pick up the box of playing cards and put it down about 10 to 15 cm to the right of the soap, level with it (the same distance from you), then let go. Frozen scene instance (RoboTwin seed 28831).
 
 ## Difficulty
 RoboTwin's scripted expert needs 3 planned motions (23 lines); official data-generation success on ALOHA-AgileX 81% (the expert's own pass rate over random layouts); in our image the expert passed on seed 28831 on attempt 2 of 2 with 2010 physics steps. Tags from the code: single-arm. RoboTwin evaluation budget 400 policy actions. The trajectory is the raw per-step drive-target record, so any plan failure or a grasp that slips during replay scores 0.
@@ -45,4 +45,4 @@ Caps per container (PROTOCOL §6).
 | RoboTwin eval step limit | 400 (policy-eval budget upstream; indicative of task length) |
 
 ### Goal
-Use appropriate arm to place object A on the right of object B.
+Pick up the box of playing cards and put it down about 10 to 15 cm to the right of the soap, level with it (the same distance from you), then let go.

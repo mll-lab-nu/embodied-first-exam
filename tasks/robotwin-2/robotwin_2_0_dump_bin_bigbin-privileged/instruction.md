@@ -1,7 +1,7 @@
 # RoboTwin 2.0 · dump_bin_bigbin — frozen instance
 
 You control a simulated dual-arm **ALOHA-AgileX** robot (RoboTwin 2.0 on SAPIEN 3 / PhysX, CuRobo motion
-planning) via Python. **Task:** Grab the small bin and pour the balls into the big bin.
+planning) via Python. **Task:** Pick up the small bin, pour all five balls into the big bin on the floor to your left, and keep holding the small bin up high when you finish.
 
 The scene objects are attributes of the task env (`env.deskbin`, `env.deskbin_id`, `env.dustbin`, `env.garbage_num`, `env.sphere_lst`; see `load_actors` in
 `/opt/RoboTwin/envs/dump_bin_bigbin.py`). RoboTwin's success predicate is `check_success` in that file:

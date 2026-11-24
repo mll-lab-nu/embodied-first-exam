@@ -1,7 +1,7 @@
 # RoboTwin 2.0 · place_mouse_pad — frozen instance
 
 You control a simulated dual-arm **ALOHA-AgileX** robot (RoboTwin 2.0 on SAPIEN 3 / PhysX, CuRobo motion
-planning) via Python. **Task:** Grab the mouse and place it on a colored mat.
+planning) via Python. **Task:** Put the mouse in the middle of the blue mat, lying flat and lined up with the mat's long side, then let go.
 
 The scene objects are attributes of the task env (`env.color_value`, `env.mouse`, `env.mouse_id`, `env.target`; see `load_actors` in
 `/opt/RoboTwin/envs/place_mouse_pad.py`). RoboTwin's success predicate is `check_success` in that file:

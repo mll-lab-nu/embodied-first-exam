@@ -1,7 +1,7 @@
 # RoboTwin 2.0 · place_dual_shoes — frozen instance
 
 You control a simulated dual-arm **ALOHA-AgileX** robot (RoboTwin 2.0 on SAPIEN 3 / PhysX, CuRobo motion
-planning) via Python. **Task:** Use both arms to pick up the two shoes on the table and put them in the shoebox, with the shoe tip pointing to the left.
+planning) via Python. **Task:** Put both shoes in the shoebox, sole down with their toes pointing to your left: the shoe from your left in the half of the box nearer you, the other shoe in the far half. Then let go.
 
 The scene objects are attributes of the task env (`env.left_shoe`, `env.right_shoe`, `env.shoe_box`, `env.shoe_id`; see `load_actors` in
 `/opt/RoboTwin/envs/place_dual_shoes.py`). RoboTwin's success predicate is `check_success` in that file:

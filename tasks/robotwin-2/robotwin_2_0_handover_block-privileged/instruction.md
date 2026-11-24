@@ -1,7 +1,7 @@
 # RoboTwin 2.0 · handover_block — frozen instance
 
 You control a simulated dual-arm **ALOHA-AgileX** robot (RoboTwin 2.0 on SAPIEN 3 / PhysX, CuRobo motion
-planning) via Python. **Task:** Use the left arm to grasp the red block on the table, handover it to the right arm and place it on the blue pad.
+planning) via Python. **Task:** Use the left arm to pick up the red block on the table, hand it over to the right arm, and with the right arm stand it upright on the blue pad on the same end that was down at the start, then let go.
 
 The scene objects are attributes of the task env (`env.box`, `env.target_box`; see `load_actors` in
 `/opt/RoboTwin/envs/handover_block.py`). RoboTwin's success predicate is `check_success` in that file:

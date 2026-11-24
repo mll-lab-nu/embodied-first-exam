@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:robotwin-0.1.2` |
 
 ## Task
-RoboTwin 2.0 move_playingcard_away (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Use the arm to pick up the playing card and move it away from the table. For example, if the playing card is on the outward side of the table, you should move it further outward side of the table. Frozen scene instance (RoboTwin seed 60417).
+RoboTwin 2.0 move_playingcard_away (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Pick up the playing cards and set them down further out toward the left edge of the table, more than about 25 cm from the middle, then let go. Frozen scene instance (RoboTwin seed 60417).
 
 ## Difficulty
 RoboTwin's scripted expert needs 3 planned motions (16 lines); official data-generation success on ALOHA-AgileX 99% (the expert's own pass rate over random layouts); in our image the expert passed on seed 60417 on attempt 1 of 6 with 1656 physics steps. Tags from the code: single-arm. RoboTwin evaluation budget 400 policy actions. The trajectory is the raw per-step drive-target record, so any plan failure or a grasp that slips during replay scores 0.
@@ -45,4 +45,4 @@ Caps per container (PROTOCOL §6).
 | RoboTwin eval step limit | 400 (policy-eval budget upstream; indicative of task length) |
 
 ### Goal
-Use the arm to pick up the playing card and move it away from the table. For example, if the playing card is on the outward side of the table, you should move it further outward side of the table.
+Pick up the playing cards and set them down further out toward the left edge of the table, more than about 25 cm from the middle, then let go.
