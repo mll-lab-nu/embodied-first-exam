@@ -7,7 +7,7 @@ client. **Task:** Stay balanced on the roller board for 30.0 s: neither end of t
 ## The venue
 You face +x, standing upright in the rest pose with your feet side by side on the middle of the deck, 0.24 m apart, one on each side of the roller, whose axis runs fore-aft under you. At t = 0 the board is not level: as just after a mount, the deck is tilted 3.0 degrees with its left end low (its top about 0.188 m above the floor at the middle), resting on the roller under its middle, and you stand square on it, tilted with it, your centre of mass about 4 cm to the left of the roller's line of contact; everything is at rest. Left alone, the board tips further to the left and runs out from under you within a second; the robot's stance does not correct it. The floor is all around.
 
-Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level; the origin (x = 0, y = 0) of the texts below is on the floor under your pelvis at the start.
+Directions are taken from where you stand at the start: +x is the way you face, +y is to your left and +z is up. The floor is level. The point x = 0, y = 0 in the texts below is on the floor under your pelvis at the start.
 
 
 ## The rules

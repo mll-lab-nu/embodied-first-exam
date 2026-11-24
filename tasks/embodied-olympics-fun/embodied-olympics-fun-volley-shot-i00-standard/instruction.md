@@ -7,7 +7,7 @@ client. **Task:** Volley the cross: strike the football that is crossed to you f
 ## The venue
 You face the goal (+x) from the penalty mark. The ball machine stands on the grass about 6 m ahead of you and 19 m to your left, aimed across the penalty area. About 3.0 s after the start the cross leaves it; it climbs to about 4.5 m and comes down steeply (about 40 degrees below the horizontal) at roughly 11.7 m/s, travelling mostly from your left to your right. About 2 s after the cross it is knee-high about 0.6 m in front of you, a little to your left; untouched it lands about half a metre in front of you, on the side of your right foot.
 
-Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level; the origin (x = 0, y = 0) of the texts below is on the floor under your pelvis at the start.
+Directions are taken from where you stand at the start: +x is the way you face, +y is to your left and +z is up. The floor is level. The point x = 0, y = 0 in the texts below is on the floor under your pelvis at the start.
 
 
 ## The rules

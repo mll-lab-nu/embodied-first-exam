@@ -7,7 +7,7 @@ client. **Task:** Do a high jump: approach the bar, take off from one foot, go o
 ## The venue
 You stand on the runway facing the bar (+x), your pelvis 8 m before it, opposite its middle. The bar is red with white ends, the uprights grey, the mat blue; the runway is level and goes on 15 m before the bar and to both sides.
 
-Directions are the venue's, which the venue text and the rules use: at the start your pelvis is above (x, y) = (-8.00, 0.00) and you face +x (+y is to your left); +z is up; the floor is level.
+The venue text and the rules use the venue's frame. At the start, your pelvis is above the point x = -8, y = 0, and you face +x, with +y to your left. +z is up. The floor is level.
 
 
 ## The rules

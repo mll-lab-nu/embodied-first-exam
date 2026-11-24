@@ -9,8 +9,7 @@ Your deliverable is **one replayable trajectory**, not a general policy.
 ## The venue
 You stand on the goal line in the middle of the official goal, facing the field (+x); the goal and its net are behind you. Three two-wheel ball machines stand 11 m in front of you around the penalty mark, their heads at about knee height, each turned towards its stated aim; the goal area and the penalty area are painted on the grass. At 20.0 m/s a shot needs a little over half a second to reach the goal line.
 
-Frame: metres; the origin is on the floor under your pelvis at the start, +x is the way you face at the start, +y is
-to your left, +z is up; the floor is z = 0. 
+Units are metres. The origin is on the floor under your pelvis at the start. +x is the way you face at the start, +y is to your left and +z is up. The floor is at z = 0. 
 
 ## The rules
 **Rule book:** IFAB Laws of the Game 2025/26: Law 1 (the goal 7.32 m x 2.44 m with posts and crossbar 12 cm wide on the goal line, the penalty mark 11 m from the goal line, the goal area 5.5 m x 18.32 m), Law 2 (a size-5 ball: 68-70 cm round, 410-450 g), Law 10 (a goal: the whole ball over the goal line between the posts and under the crossbar), Law 12 (a goalkeeper may handle the ball in their own penalty area) and Law 14 (the penalty kick: the goalkeeper remains on the goal line, facing the kicker, between the goalposts, without touching the goalposts, crossbar or goal net, until the ball has been kicked; when the ball is kicked the goalkeeper must have at least part of one foot touching, or in line with, the goal line). Where this task departs from it:

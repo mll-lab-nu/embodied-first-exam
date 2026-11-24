@@ -9,8 +9,7 @@ Your deliverable is **one replayable trajectory**, not a general policy.
 ## The venue
 At t = 0 you hang still under the middle of the bar, facing +x: both arms straight up, the wrists turned so that the palms face forwards and the fingers point up, each hand closed round the bar (grip values 1), your legs in the standing posture. A grip value is that hand's closure command (0 open, 1 every finger and thumb joint closing towards its closed angle; a finger stops on what it touches). The bar is not a free body: the `held` flags of your state stay empty for it; the grip is judged as the rules say. Nothing holds the legs up here: the `stand` action keeps the legs in the stance with a feed-forward meant for standing on the ground; `joints` or `lowcmd` rows drive every joint. The uprights stand at the two ends of the bar, 1.2 m to either side of you.
 
-Frame: metres; the origin is on the floor under your pelvis at the start, +x is the way you face at the start, +y is
-to your left, +z is up; the floor is z = 0. 
+Units are metres. The origin is on the floor under your pelvis at the start. +x is the way you face at the start, +y is to your left and +z is up. The floor is at z = 0. 
 
 ## The rules
 **Rule book:** CrossFit Games movement standard, toes-to-bar: from a full hang with the arms extended and the heels behind the bar, both feet touch the bar at the same time between the hands; kipping is allowed. The bar is the FIG horizontal bar (FIG Apparatus Norms: 2.80 m above the floor, 2.40 m between the uprights, 28 mm in diameter) over 0.20 m mats. Where this task departs from it:

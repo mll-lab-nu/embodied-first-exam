@@ -9,8 +9,7 @@ Your deliverable is **one replayable trajectory**, not a general policy.
 ## The venue
 You stand facing +x on the level wooden floor of a sports hall. In each hand you hold a handle (0.15 m long, 0.028 m thick) across the palm, the fingers closed round it, its far end about 0.07 m beyond the index finger's side, where the rope is attached on a swivel. The rope is 2.13 m long and 0.1 kg, made of plastic beads 9.5 mm thick. It hangs from each handle straight down to the floor and lies on the floor behind your heels in a bow whose middle is about 0.25 m behind your pelvis or further. Nothing else is near you.
 
-Frame: metres; the origin is on the floor under your pelvis at the start, +x is the way you face at the start, +y is
-to your left, +z is up; the floor is z = 0. 
+Units are metres. The origin is on the floor under your pelvis at the start. +x is the way you face at the start, +y is to your left and +z is up. The floor is at z = 0. 
 
 ## The rules
 **Rule book:** The Chinese National Student Physical Fitness Standard (国家学生体质健康标准, 2014 revision, Ministry of Education 教体艺〔2014〕5号), one-minute rope skipping (1分钟跳绳): the rope turned forwards, a two-foot jump (正摇双脚跳); each turn of the rope round the body that passes under the feet counts one; a miss (the rope caught on the body) does not stop the clock, the skipper starts the rope again; the result is the count in one minute. The family's success line is the standard's pass mark (60 points) for first-grade boys: 17 jumps in one minute. Where this task departs from it:

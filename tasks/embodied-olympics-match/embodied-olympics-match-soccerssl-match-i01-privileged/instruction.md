@@ -1,6 +1,6 @@
 # Full-simulator soccer_ssl: develop a program against level 4
 
-Win one complete match against the frozen sport's level-4 opponent team (the reinforcement-learned tier), seed 7: the same frozen
+Win one complete match against the frozen sport's level-4 opponent team, which was trained with reinforcement learning. You play level 4, seed 7: the same frozen
 instance as `embodied-olympics-match-soccerssl-match-i01-realtime` (its realtime twin; there you see only camera images). The robot, the actions,
 the rules, the limits and the opponent are unchanged; the world runs at 1/10 of real speed.
 

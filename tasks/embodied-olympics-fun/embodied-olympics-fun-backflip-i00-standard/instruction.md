@@ -7,7 +7,7 @@ client. **Task:** Do a standing backflip: jump, turn backwards through a full tu
 ## The venue
 You stand in the middle of a floor-exercise area, 12.0 m by 12.0 m, flat, level and rigid, with nothing on it.
 
-Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level; the origin (x = 0, y = 0) of the texts below is on the floor under your pelvis at the start.
+Directions are taken from where you stand at the start: +x is the way you face, +y is to your left and +z is up. The floor is level. The point x = 0, y = 0 in the texts below is on the floor under your pelvis at the start.
 
 
 ## The rules

@@ -9,8 +9,7 @@ Your deliverable is **one replayable trajectory**, not a general policy.
 ## The venue
 You stand in the rear half of the circle facing the sector (+x), your pelvis 0.45 m behind the circle's centre; the stop board is at the front of the circle, 1.5 m ahead of you. Your right arm is folded up in front of the right side of your chest, the open palm facing up, in towards the neck and a little back, the shot resting on it against the right side of the neck, just above and in front of the right shoulder. The start command is not where the arm stands (the joint table's start targets differ from its angles: the difference carries the shot's weight on the soft arm servos); held as it is, the shot stays and the robot stands (its pelvis drifts about 2 cm in the minute). Still air.
 
-Frame: metres; the venue's frame, which the venue text, the rules and `s.state()` use: at the start your pelvis is
-above (x, y) = (-0.45, 0.00) and you face +x (+y is to your left); +z is up; the floor is z = 0. 
+Units are metres. The venue text, the rules and `s.state()` all use the venue's frame. At the start, your pelvis is roughly above the point x = -0.5, y = 0, and you face +x, with +y to your left. +z is up. The floor is at z = 0. 
 
 ## The rules
 **Rule book:** World Athletics Competition and Technical Rules 2024: TR 32.5-32.8 (the circle), TR 32.12 (the sector), TR 32.13, 32.14, 32.16, 32.17 and 32.20 (throwing events: the start, failures, the landing, leaving the circle, the measurement), TR 33.1 (the put from the shoulder), TR 33.2 (the stop board), TR 33.4-33.5 (the men's shot). Where this task departs from it:

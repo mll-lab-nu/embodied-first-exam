@@ -9,8 +9,7 @@ Your deliverable is **one replayable trajectory**, not a general policy.
 ## The venue
 You stand on the approach facing the pins (+x), your pelvis 0.60 m behind the foul line on the lane's centre line. The ball is pressed between your two palms in front of your hips, its centre about 0.82 m above the approach and 0.19 m ahead of your pelvis: your upper arms are a little back, your forearms point forwards and down and are turned in so that the palms squeeze it; the start command keeps that squeeze (the joint table's start angles are a little further in than the arms stand: the difference is the squeeze). Under the ball's weight your standing body leans forwards a little and sways. The approach and the lane are 0.1 m above the building's floor, which surrounds the approach. The head pin is 18.288 m beyond the foul line on the centre line. Your hands have no grip: the grip columns of the action rows do nothing in this task.
 
-Frame: metres; the venue's frame, which the venue text, the rules and `s.state()` use: at the start your pelvis is
-above (x, y) = (-0.60, 0.00) and you face +x (+y is to your left); +z is up; the floor is z = 0. 
+Units are metres. The venue text, the rules and `s.state()` all use the venue's frame. At the start, your pelvis is above the point x = -0.6, y = 0, and you face +x, with +y to your left. +z is up. The floor is at z = 0. 
 
 ## The rules
 **Rule book:** USBC Playing Rules 2024-2025 and USBC Equipment Specifications: the lane (60 ft from the foul line to the head pin, 41.5 in wide, gutters, pin deck), the pins (15 in, 3 lb 6 oz, 12 in apart), the ball (at most 8.595 in and 16 lb); the playing rules on a strike, a legal delivery, the foul (Rule 5) and legal and illegal pinfall. The rules do not say how the ball is held or with how many hands: a two-handed delivery is legal. Where this task departs from it:

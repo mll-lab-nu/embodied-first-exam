@@ -9,8 +9,7 @@ Your deliverable is **one replayable trajectory**, not a general policy.
 ## The venue
 You stand facing the goal line (+x) right behind the ball, ready to kick it with the right foot: its centre is 0.32 m ahead of your pelvis and -0.13 m to your left. The goal's centre is 20.0 m beyond the ball and 4.0 m to your left; the near post is almost straight ahead, the far post to the left. The wall stands 9.15 m from the ball across the way to the near post; the penalty area, the goal area and the arc are painted on the grass.
 
-Frame: metres; the origin is on the floor under your pelvis at the start, +x is the way you face at the start, +y is
-to your left, +z is up; the floor is z = 0. 
+Units are metres. The origin is on the floor under your pelvis at the start. +x is the way you face at the start, +y is to your left and +z is up. The floor is at z = 0. 
 
 ## The rules
 **Rule book:** IFAB Laws of the Game 2025/26: Law 1 (the goal 7.32 m x 2.44 m, posts and crossbar 12 cm wide; the penalty area 16.5 m deep), Law 2 (a size-5 ball: 68-70 cm round, 410-450 g), Law 10 (a goal: the whole ball passes over the goal line between the posts and under the crossbar), Law 13 (free kicks: a direct free kick, the ball stationary, in play when it is kicked and clearly moves; the kicker may not touch it again until it has touched another player; all opponents at least 9.15 m from the ball until it is in play) and the glossary (a kick: contact with the foot and/or the ankle). Where this task departs from it:

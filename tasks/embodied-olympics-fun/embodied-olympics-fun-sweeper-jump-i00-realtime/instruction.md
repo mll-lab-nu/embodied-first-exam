@@ -11,7 +11,7 @@ S x 10 ms of wall-clock time (real time). `spec()["timing"]["slowdown"]` states 
 ## The venue
 A Meltdown sweeper on a level bed: the motion base, a column 0.4 m in radius, stands 3.2 m in front of you (you face it); you stand in the middle of your podium, its top 0.4 m above the bed. The boom sticks out from the base at shin height and turns counter-clockwise seen from above: it comes at you from your left. At the start it points 200.0 degrees of its turn before your podium (on the far side of the base), turning; it will be over your podium in about 4.17 s.
 
-Directions are the venue's, which the venue text and the rules use: at the start your pelvis is above (x, y) = (3.20, 0.00) and you face -x (+y is to your right); +z is up; the floor is level.
+The venue text and the rules use the venue's frame. At the start, your pelvis is above the point x = 3.2, y = 0, and you face -x, with +y to your right. +z is up. The floor is level.
 
 
 ## The rules

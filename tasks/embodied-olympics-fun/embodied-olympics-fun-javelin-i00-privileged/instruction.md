@@ -9,8 +9,7 @@ Your deliverable is **one replayable trajectory**, not a general policy.
 ## The venue
 You stand on the runway's centre line facing the sector (+x), your pelvis 2.0 m behind the middle of the arc; the arc's centre is 6.0 m behind you, its ends are 0.25 m behind its middle and 2.0 m to either side, and the runway reaches 28 m behind you. Your right arm hangs down, the hand's fingers pointing down; the javelin lies level across the closed hand's palm, its cord held by the fingers and thumb, pointing forwards (the tip 0.92 m ahead of the hand). Still air. The hand opens when your right grip command goes to 0 (the fingers at most 260 deg/s).
 
-Frame: metres; the venue's frame, which the venue text, the rules and `s.state()` use: at the start your pelvis is
-above (x, y) = (-2.00, 0.00) and you face +x (+y is to your left); +z is up; the floor is z = 0. 
+Units are metres. The venue text, the rules and `s.state()` all use the venue's frame. At the start, your pelvis is above the point x = -2, y = 0, and you face +x, with +y to your left. +z is up. The floor is at z = 0. 
 
 ## The rules
 **Rule book:** World Athletics Competition and Technical Rules 2024: TR 32.9 (the javelin runway and its arc), TR 32.12 (the sector), TR 32.14, 32.16, 32.17 and 32.20 (throwing events: failures, the landing, leaving the runway, the measurement), TR 38.1 (the throw), TR 38.3-38.6 (the javelin: the women's implement, its grip). Where this task departs from it:

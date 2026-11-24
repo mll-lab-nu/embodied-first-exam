@@ -9,8 +9,7 @@ Your deliverable is **one replayable trajectory**, not a general policy.
 ## The venue
 You stand facing +x on a wooden gym floor, in the middle between two rope-turning machines, which stand at y = -1.8 m and y = +1.8 m on the line through your feet (you face across the rope). The rope's axis, the line between the machines' crank axles, is 1.0 m above the floor right above your feet. The centre zone is painted on the floor. At the start the rope is turning at 1.0 revolutions per second; its lowest part has just passed under you and is rising behind you: it comes over your head, down in front of you and under your feet once per turn.
 
-Frame: metres; the origin is on the floor under your pelvis at the start, +x is the way you face at the start, +y is
-to your left, +z is up; the floor is z = 0. 
+Units are metres. The origin is on the floor under your pelvis at the start. +x is the way you face at the start, +y is to your left and +z is up. The floor is at z = 0. 
 
 ## The rules
 **Rule book:** The Asian Jump Rope Union's AC2026 Asian Long Rope Championship Rules (AJRU, IJRU's continental body): event #2 '8 Jumpers' (two turners turn one long rope, the jumpers jump it together; the rope must pass under the feet of the jumpers to score 1 point) with the turners 3.6 m apart, the distance event #1 'Figure 8' sets (event #2 sets none); the common rules (the rope remains still until the start signal; leaving the event area is a space violation); and the IJRU Judging Manual (show freestyle, long rope): a long rope is at least 6.0 m long. Where this task departs from it:

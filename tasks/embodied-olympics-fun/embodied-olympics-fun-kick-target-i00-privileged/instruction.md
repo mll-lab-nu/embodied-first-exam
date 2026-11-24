@@ -9,8 +9,7 @@ Your deliverable is **one replayable trajectory**, not a general policy.
 ## The venue
 You face the bag (+x); its near side is 0.625 m in front of your pelvis and it hangs still, its lower end 0.55 m above the floor. The band is white.
 
-Frame: metres; the origin is on the floor under your pelvis at the start, +x is the way you face at the start, +y is
-to your left, +z is up; the floor is z = 0. 
+Units are metres. The origin is on the floor under your pelvis at the start. +x is the way you face at the start, +y is to your left and +z is up. The floor is at z = 0. 
 
 ## The rules
 **Rule book:** No rule book for a bag. The kick is judged by the scoring criterion of World Taekwondo's Competition Rules (a valid point is a kick delivered with a part of the foot below the ankle bone to the trunk protector, with the required level of impact) and of kickboxing (the shin also strikes), applied to a standard heavy bag (30 kg, 1.2 m, on a chain). Where this task departs from it:

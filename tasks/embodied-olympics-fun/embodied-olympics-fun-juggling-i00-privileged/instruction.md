@@ -9,8 +9,7 @@ Your deliverable is **one replayable trajectory**, not a general policy.
 ## The venue
 You stand on level grass. Your upper arms hang, your forearms point forward and are turned so that the palms face each other; the ball is pressed between them, its centre about 0.85 m above the ground and 0.33 m ahead of your pelvis. The start command keeps that squeeze (the joint table's start angles are where the arms stand with the ball between the palms; the command is a little further in: the difference is the squeeze).
 
-Frame: metres; the origin is on the floor under your pelvis at the start, +x is the way you face at the start, +y is
-to your left, +z is up; the floor is z = 0. 
+Units are metres. The origin is on the floor under your pelvis at the start. +x is the way you face at the start, +y is to your left and +z is up. The floor is at z = 0. 
 
 ## The rules
 **Rule book:** Keepie-uppie (ball juggling), the football skill: the ball is dropped from the hands and kept in the air with the feet, the legs and the head, each touch counted, the count ending when the ball touches the ground or a hand; it is a skill test, not an event of the Laws, and the family's standard is 10 consecutive touches. IFAB Laws of the Game 2025/26 for the ball (Law 2: size 5, 68-70 cm round, 410-450 g) and for handling (Law 12: the hand or the arm). Where this task departs from it:

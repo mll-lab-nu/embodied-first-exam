@@ -7,7 +7,7 @@ client. **Task:** Bowl a strike: from behind the foul line, deliver the ball you
 ## The venue
 You stand on the approach facing the pins (+x), your pelvis 0.60 m behind the foul line on the lane's centre line. The ball is pressed between your two palms in front of your hips, its centre about 0.82 m above the approach and 0.19 m ahead of your pelvis: your upper arms are a little back, your forearms point forwards and down and are turned in so that the palms squeeze it; the start command keeps that squeeze (the joint table's start angles are a little further in than the arms stand: the difference is the squeeze). Under the ball's weight your standing body leans forwards a little and sways. The approach and the lane are 0.1 m above the building's floor, which surrounds the approach. The head pin is 18.288 m beyond the foul line on the centre line. Your hands have no grip: the grip columns of the action rows do nothing in this task.
 
-Directions are the venue's, which the venue text and the rules use: at the start your pelvis is above (x, y) = (-0.60, 0.00) and you face +x (+y is to your left); +z is up; the floor is level.
+The venue text and the rules use the venue's frame. At the start, your pelvis is above the point x = -0.6, y = 0, and you face +x, with +y to your left. +z is up. The floor is level.
 
 
 ## The rules

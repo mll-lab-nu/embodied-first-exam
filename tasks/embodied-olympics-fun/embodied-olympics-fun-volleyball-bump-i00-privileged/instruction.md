@@ -9,8 +9,7 @@ Your deliverable is **one replayable trajectory**, not a general policy.
 ## The venue
 You face the net (+x), which is 6 m ahead of you; your end line is 3 m behind you. A volleyball machine stands on the floor behind the far end line, its wheels 2.6 m above the floor, 15.6 m ahead of you and 1.5 m to your left, aimed at your court. About 3.0 s after the start it serves the ball at about 14 m/s; it climbs to a little over 4 m, clears the net by more than a metre and comes down at about 40 degrees below the horizontal and 11.4 m/s. About 1.4 s after the serve it is 1 m above the floor about 0.9 m in front of you and 0.8 m to your left; untouched it lands level with you, about 0.75 m to your left. The setter's target is painted on the floor at the net, ahead of you and to your right.
 
-Frame: metres; the origin is on the floor under your pelvis at the start, +x is the way you face at the start, +y is
-to your left, +z is up; the floor is z = 0. 
+Units are metres. The origin is on the floor under your pelvis at the start. +x is the way you face at the start, +y is to your left and +z is up. The floor is at z = 0. 
 
 ## The rules
 **Rule book:** FIVB Official Volleyball Rules 2025-2028: Rule 1 (the court 18 m x 9 m, the attack lines 3 m from the centre line), Rule 2 (the men's net, top at 2.43 m, the antennas), Rule 3 (the ball: 65-67 cm round, 260-280 g), Rule 9.2 (the hit: the ball may touch any part of the body, it must not be caught or thrown), Rule 11 (no contact with the net, the foot not wholly beyond the centre line), Rule 14.5 (the serve may not be blocked). Where this task departs from it:

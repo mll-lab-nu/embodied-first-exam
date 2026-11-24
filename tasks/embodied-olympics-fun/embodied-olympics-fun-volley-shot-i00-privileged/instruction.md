@@ -9,8 +9,7 @@ Your deliverable is **one replayable trajectory**, not a general policy.
 ## The venue
 You face the goal (+x) from the penalty mark. The ball machine stands on the grass about 6 m ahead of you and 19 m to your left, aimed across the penalty area. About 3.0 s after the start the cross leaves it; it climbs to about 4.5 m and comes down steeply (about 40 degrees below the horizontal) at roughly 11.7 m/s, travelling mostly from your left to your right. About 2 s after the cross it is knee-high about 0.6 m in front of you, a little to your left; untouched it lands about half a metre in front of you, on the side of your right foot.
 
-Frame: metres; the origin is on the floor under your pelvis at the start, +x is the way you face at the start, +y is
-to your left, +z is up; the floor is z = 0. 
+Units are metres. The origin is on the floor under your pelvis at the start. +x is the way you face at the start, +y is to your left and +z is up. The floor is at z = 0. 
 
 ## The rules
 **Rule book:** IFAB Laws of the Game 2025/26: Law 1 (the goal 7.32 m x 2.44 m with posts and crossbar 12 cm wide, the penalty mark 11 m from the goal line, the penalty area, the goal area), Law 2 (a size-5 ball: 68-70 cm round, 410-450 g), Law 10 (a goal: the whole ball over the goal line between the posts and under the bar), Law 12 (handball), Law 13 (9.15 m from the ball until it is in play) and the glossary (a kick is a contact with the foot or the ankle). Where this task departs from it:

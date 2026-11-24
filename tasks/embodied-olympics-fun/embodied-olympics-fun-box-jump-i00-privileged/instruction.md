@@ -9,8 +9,7 @@ Your deliverable is **one replayable trajectory**, not a general policy.
 ## The venue
 You stand on the floor facing the box (+x); its near face is 0.6 m ahead of your pelvis (your toes reach about 0.16 m ahead of your pelvis) and it is centred on your line. The box rests on the floor on its 0.51 m by 0.76 m face and can slide or tip if it is pushed.
 
-Frame: metres; the origin is on the floor under your pelvis at the start, +x is the way you face at the start, +y is
-to your left, +z is up; the floor is z = 0. 
+Units are metres. The origin is on the floor under your pelvis at the start. +x is the way you face at the start, +y is to your left and +z is up. The floor is at z = 0. 
 
 ## The rules
 **Rule book:** CrossFit's box jump movement standard (the CrossFit Games Open workout descriptions: both feet start on the floor, both feet end on the box, hips and knees fully extended on top) on the men's prescribed box: 24 in (0.61 m) high, the 20 x 24 x 30 in plyometric box standing on its 20 x 30 in face. Where this task departs from it:

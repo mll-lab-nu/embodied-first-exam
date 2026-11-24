@@ -7,7 +7,7 @@ client. **Task:** Punch the heavy bag once with the knuckles of your right fist,
 ## The venue
 You face the bag (+x); its near side is 0.575 m in front of your pelvis and it hangs still. The band is white. Your arms are at rest: the upper arms down, the forearms level and pointing at the bag, the fists 0.1 m short of it.
 
-Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level; the origin (x = 0, y = 0) of the texts below is on the floor under your pelvis at the start.
+Directions are taken from where you stand at the start: +x is the way you face, +y is to your left and +z is up. The floor is level. The point x = 0, y = 0 in the texts below is on the floor under your pelvis at the start.
 
 
 ## The rules

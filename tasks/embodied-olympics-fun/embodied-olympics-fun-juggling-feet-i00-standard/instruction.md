@@ -7,7 +7,7 @@ client. **Task:** Juggle the football with your feet: drop it from between your 
 ## The venue
 You stand on level grass in the middle of a 5.0 m x 5.0 m grid marked by white lines, facing along one side. Your upper arms hang, your forearms point forward and are turned so that the palms face each other; the ball is pressed between them, its centre about 0.85 m above the ground and 0.33 m ahead of your pelvis. The start command keeps that squeeze (the joint table's start angles are where the arms stand with the ball between the palms; the command is a little further in: the difference is the squeeze).
 
-Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level; the origin (x = 0, y = 0) of the texts below is on the floor under your pelvis at the start.
+Directions are taken from where you stand at the start: +x is the way you face, +y is to your left and +z is up. The floor is level. The point x = 0, y = 0 in the texts below is on the floor under your pelvis at the start.
 
 
 ## The rules

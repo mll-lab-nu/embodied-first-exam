@@ -7,7 +7,7 @@ client. **Task:** Throw the tennis ball held in your right hand at the target ci
 ## The venue
 You face the wall (+x), your pelvis 0.40 m behind the line; the wall is 5.0 m beyond the line, 6 m wide and 4 m high. The target circle is straight ahead. The ball is held in your closed right hand (closure command 1), against the palm, the forearm level and pointing forwards; your left hand is open (closure command 0). Still air. The grip columns of the action rows are the hands' closure commands (0 open, 1 closed).
 
-Directions are the venue's, which the venue text and the rules use: at the start your pelvis is above (x, y) = (-0.40, 0.00) and you face +x (+y is to your left); +z is up; the floor is level.
+The venue text and the rules use the venue's frame. At the start, your pelvis is above the point x = -0.4, y = 0, and you face +x, with +y to your left. +z is up. The floor is level.
 
 
 ## The rules

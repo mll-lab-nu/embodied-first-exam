@@ -9,8 +9,7 @@ Your deliverable is **one replayable trajectory**, not a general policy.
 ## The venue
 You stand on the track facing the hurdle (+x), on the centre line of the water jump. The hurdle's near face is 10.0 m ahead; its bar is as high as your hip joints. Directly behind the bar the pit drops 0.5 m; its far edge is 3.66 m beyond the hurdle's near face. The track continues level beyond the pit and on both sides of it.
 
-Frame: metres; the origin is on the floor under your pelvis at the start, +x is the way you face at the start, +y is
-to your left, +z is up; the floor is z = 0. 
+Units are metres. The origin is on the floor under your pelvis at the start. +x is the way you face at the start, +y is to your left and +z is up. The floor is at z = 0. 
 
 ## The rules
 **Rule book:** World Athletics Competition and Technical Rules 2024, Technical Rule 23 (steeplechase races): the men's hurdle 0.914 m high with a top bar 0.127 m square; the hurdle at the water jump 3.66 m wide and fixed; the water jump 3.66 m long including the hurdle, the pit 3.66 m wide, 0.50 m deep at the hurdle for about 1.20 m, then a uniform slope up to the level of the track at the far end; each athlete shall go over each hurdle (in any manner) and over or through the water, and is disqualified for stepping to one side of the water jump or trailing a foot or leg below the horizontal plane of the top of the hurdle at the instant of clearance. Where this task departs from it:

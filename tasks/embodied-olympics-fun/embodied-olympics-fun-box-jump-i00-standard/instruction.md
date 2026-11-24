@@ -7,7 +7,7 @@ client. **Task:** Jump from the floor onto the 0.61 m box in front of you with a
 ## The venue
 You stand on the floor facing the box (+x); its near face is 0.6 m ahead of your pelvis (your toes reach about 0.16 m ahead of your pelvis) and it is centred on your line. The box rests on the floor on its 0.51 m by 0.76 m face and can slide or tip if it is pushed.
 
-Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level; the origin (x = 0, y = 0) of the texts below is on the floor under your pelvis at the start.
+Directions are taken from where you stand at the start: +x is the way you face, +y is to your left and +z is up. The floor is level. The point x = 0, y = 0 in the texts below is on the floor under your pelvis at the start.
 
 
 ## The rules

@@ -9,8 +9,7 @@ Your deliverable is **one replayable trajectory**, not a general policy.
 ## The venue
 A Meltdown sweeper on a level bed: the motion base, a column 0.4 m in radius, stands 3.2 m in front of you (you face it); you stand in the middle of your podium, its top 0.4 m above the bed. The boom sticks out from the base at shin height and turns counter-clockwise seen from above: it comes at you from your left. At the start it points 200.0 degrees of its turn before your podium (on the far side of the base), turning; it will be over your podium in about 4.17 s.
 
-Frame: metres; the venue's frame, which the venue text, the rules and `s.state()` use: at the start your pelvis is
-above (x, y) = (3.20, 0.00) and you face -x (+y is to your right); +z is up; the floor is z = 0. 
+Units are metres. The venue text, the rules and `s.state()` all use the venue's frame. At the start, your pelvis is above the point x = 3.2, y = 0, and you face -x, with +y to your right. +z is up. The floor is at z = 0. 
 
 ## The rules
 **Rule book:** No official rule book exists: the sweeper is a party and amusement game, not a sport. The closest real device is Galaxy Multi Rides' 'Meltdown' (US Meltdown operator manual: an eight-player game, each player standing on a podium round a motion base whose foam booms spin round, 'the aim of the game is to either duck under, or jump over the boom as it spins around'; players must not grab, hold or ride the booms; a player who is hit is out; one 1 hp spin motor on a speed dial, at most 15.82 rpm; foam boom attachments 220 lb for the two booms; riders at least 48 in (1.22 m) tall and at most 200 lb), the same game as the 'Sweeper' of the TV show Wipeout. Its rules as played: stay on your podium, jump the low boom each time it comes round, the last player not hit wins. Where this task departs from it:

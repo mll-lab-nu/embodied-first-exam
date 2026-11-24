@@ -9,8 +9,7 @@ Your deliverable is **one replayable trajectory**, not a general policy.
 ## The venue
 You stand facing the sled (+x) in the middle of the lane; its two handles are 0.5 m in front of your pelvis, one each side of your centre line. The start line runs under the sled's front edge, the finish line 12.5 m farther on; the lane's side lines are 1.0 m to each side.
 
-Frame: metres; the origin is on the floor under your pelvis at the start, +x is the way you face at the start, +y is
-to your left, +z is up; the floor is z = 0. 
+Units are metres. The origin is on the floor under your pelvis at the start. +x is the way you face at the start, +y is to your left and +z is up. The floor is at z = 0. 
 
 ## The rules
 **Rule book:** HYROX Rulebook 2026/27 (the Sled Push station: the sled pushed 50 m in four 12.5 m lengths on the competition turf, each length counted when the whole sled is over the line; the athlete stays in the lane; the loads, the sled included: 102 kg Women Open, 152 kg Men Open and Women Pro, 202 kg Men Pro). There is no rule book for a sled push alone; HYROX's station is the closest official event. Where this task departs from it:

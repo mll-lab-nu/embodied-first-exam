@@ -4,7 +4,7 @@ Win one complete match against the frozen sport's built-in RL opponent (seat B, 
 instance as `embodied-olympics-match-tabletennis-duelrl-i01-realtime` (its realtime twin; there you see only camera images). The robot, the actions,
 the rules, the limits and the opponent are unchanged; the world runs at 1/10 of real speed.
 
-There is no scripted level: seat B is the twin's built-in player, `builtin_players.RLOpponentV2`, in the service process (its code is in your copy of the simulator). Level 0 in the simulator's commands (the self-test's `--level 0` in `/opt/fullsim/README.md`) stands for it.
+There is no scripted level: seat B is the twin's built-in player, `builtin_players.RLOpponentV2`, in the service process (its code is in your copy of the simulator). In the simulator's commands, such as the self-test's `--level 0` in `/opt/fullsim/README.md`, level 0 stands for this built-in player.
 
 ## Development and deliverable
 `from tools.fullsim.duel import DuelSession`; `DuelSession("tabletennis", seed=8)` (a `Session` in which seat B plays as in the twin) gives `state()`,

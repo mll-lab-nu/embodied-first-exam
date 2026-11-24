@@ -7,7 +7,7 @@ client. **Task:** Skate the speed slalom: from the start box, 12 m of run-up, th
 ## The venue
 You stand at the start facing +x on both skates, side by side, your pelvis at x = -0.25 m on the cone line's axis y = 0, the skates inside the start box (between x = -0.4 m and x = 0). The first cone is 12.0 m ahead of the start line; the line of cones runs straight ahead. The floor is a level, smooth sports floor.
 
-Directions are the venue's, which the venue text and the rules use: at the start your pelvis is above (x, y) = (-0.25, 0.00) and you face +x (+y is to your left); +z is up; the floor is level.
+The venue text and the rules use the venue's frame. At the start, your pelvis is roughly above the point x = -0.2, y = 0, and you face +x, with +y to your left. +z is up. The floor is level.
 
 
 ## The rules

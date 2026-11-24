@@ -9,8 +9,7 @@ Your deliverable is **one replayable trajectory**, not a general policy.
 ## The venue
 You stand facing the far line (+x), the front ends of your feet 0.02 m behind the start line (your pelvis 0.13 m behind it). Both lines are white, 5 cm wide and 6 m long, on a level sports floor that goes on for 10 m beyond each line and 4.0 m to either side of the centre line y = 0 (the court); a cone stands at each end of each line.
 
-Frame: metres; the venue's frame, which the venue text, the rules and `s.state()` use: at the start your pelvis is
-above (x, y) = (-0.13, 0.00) and you face +x (+y is to your left); +z is up; the floor is z = 0. 
+Units are metres. The venue text, the rules and `s.state()` all use the venue's frame. At the start, your pelvis is roughly above the point x = -0.1, y = 0, and you face +x, with +y to your left. +z is up. The floor is at z = 0. 
 
 ## The rules
 **Rule book:** The 4 x 10 m shuttle run of school fitness test batteries (the speed-agility test of the ALPHA-Fitness battery): two parallel lines 10 m apart, four legs, the line crossed at every turn, the time taken when the runner crosses the start line at the end of the fourth leg. Where this task departs from it:

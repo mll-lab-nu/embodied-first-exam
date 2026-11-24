@@ -12,8 +12,7 @@ Goal: bus the table, SORTED. Move the two yellow lemons that sit in the front wo
 
 A Unitree G1 humanoid with three-finger hands, fixed at the pelvis (legs locked), a stationary upper-body manipulator. Control mode 'pink_ik': 17 arm+waist joints driven by the Pink IK solver (absolute wrist poses), plus 14 hand joints by direct position target. Action dim 28.
 
-To be precise about the sort: the two lemons go into the blue
-crate and the two limes onto the round tray; nothing else is moved.
+So the sort is: the two lemons go into the blue crate, the two limes go onto the round tray, and nothing else moves.
 
 The task is complete when `env.scene.success()` is true for the env (a `(num_envs,)` bool tensor) at the end of the
 graded run.

@@ -7,7 +7,7 @@ client. **Task:** Do a vertical jump: from a standstill, jump off both feet with
 ## The venue
 You stand facing +x on a level, firm floor. The vane's middle line is 0.04 m ahead of your pelvis, where your raised hand is; it reaches 0.45 m to each side of you. The stand's post is 0.60 m to your left, 0.07 m ahead; it stands on a base plate 0.02 m high that covers x from -0.18 to 0.32 m and y from 0.55 to 0.95 m (your pelvis is at x = 0, y = 0). The vane is yellow, the stand grey.
 
-Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level; the origin (x = 0, y = 0) of the texts below is on the floor under your pelvis at the start.
+Directions are taken from where you stand at the start: +x is the way you face, +y is to your left and +z is up. The floor is level. The point x = 0, y = 0 in the texts below is on the floor under your pelvis at the start.
 
 
 ## The rules

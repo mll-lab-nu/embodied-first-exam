@@ -3,7 +3,7 @@
 You control a bimanual robot -- two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each) side by side at the near edge of a table, facing +x (the left arm is the one at +y) -- via Python (ABC Sim, `abc_sim` on MuJoCo 3.6.0).
 **Task:** Follow the directive **"put exactly 1 red object in the box"**. Success: the box holds exactly one red object, and no object of another colour. An object is in the box when its centre is inside the box's interior (between its walls, below the lid); the count is read anew at every step, so taking an object out again, or dropping in one too many, undoes it. The goal must hold for 30 consecutive control steps (1.02 s); the episode then ends in success.
 
-Twelve small coloured objects of several shapes, small and large, lie on the table next to an opaque box. The box's lid has a slot covered by a light spring-hinged flap: objects go in through the slot. The task's directive, as the scene states it: "put exactly 1 red object in the box".
+Twelve small objects in several shapes and colours, some larger than others, lie on the table next to an opaque box. The box's lid has a slot covered by a light spring-hinged flap: objects go in through the slot. The task's directive, as the scene states it: "put exactly 1 red object in the box".
 
 This is a *fixed scene instance*: the start state, the objects and the goal never change between resets. You may reset
 and retry as many times as you want. Your deliverable is **one replayable trajectory**, not a general policy.

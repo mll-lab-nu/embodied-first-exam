@@ -7,10 +7,9 @@ This is a *fixed instance*: the same venue and start every time. You may reset a
 Your deliverable is **one replayable trajectory**, not a general policy.
 
 ## The venue
-You stand on the level start platform (6.0 m long) at the top, facing down the fall line (+x), on your skis (128 cm junior slalom skis, sidecut radius 8 m), your boots 0.3 m behind its edge (the red start line, about 2.8 m before x = 0 and 0.6 m above it); the edge rounds onto the slope, which falls at 18.3 degrees for the whole course and flattens out after the finish into an outrun. The gates' poles are red and blue, 1.8 m out of the snow; the finish has two posts and a banner.
+You stand at the top of the course on the level start platform, which is about 6 m long. You face straight down the slope, along +x, on junior slalom skis about 1.3 m long with a sidecut radius of about 8 m. Your boots are about 30 cm behind the platform's front edge, which is the red start line, about 3 m before x = 0 and about 0.6 m above it. The edge rounds onto the slope, which falls at about 18 degrees for the whole course and levels out into an outrun after the finish. The gates' poles are red and blue, 1.8 m out of the snow; the finish has two posts and a banner.
 
-Frame: metres; the venue's frame, which the venue text, the rules and `s.state()` use: at the start your pelvis is
-above (x, y) = (-3.17, 0.00) and you face +x (+y is to your left); +z is up; the course is not level: the snow is z = 0 at x = 0. 
+Units are metres. The venue text, the rules and `s.state()` all use the venue's frame. At the start, your pelvis is roughly above the point x = -3.2, y = 0, and you face +x, with +y to your left. +z is up. The course is not level, and the snow is at z = 0 where x = 0. 
 
 ## The rules
 **Rule book:** FIS International Competition Rules (ICR), Book IV, Alpine, edition 2025: Art. 614.2 (gates, no continuing after a missed gate or a stop), 661.4.1 and 661.4.1.2 (a gate is passed when both ski tips and both feet cross the gate line, the shortest line between the turning pole and the outside pole), 680 (flex poles), 801 (slalom technical data: gates of two poles, alternately red and blue, 4.0 m wide (4-6 m), turning poles of consecutive gates 6-13 m apart, direction changes 30-35 % of the vertical drop +/- 3), 802 (the slope: about 33-45 %, may be gentler). Where this task departs from it:

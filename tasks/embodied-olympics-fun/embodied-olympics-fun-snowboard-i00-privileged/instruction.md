@@ -7,10 +7,9 @@ This is a *fixed instance*: the same venue and start every time. You may reset a
 Your deliverable is **one replayable trajectory**, not a general policy.
 
 ## The venue
-You stand on the level start platform (6.0 m long) at the top, facing the right side of the course (-y), the board's nose (under your left foot) pointing down the fall line (+x) (a 120 cm children's board, sidecut radius 6 m), your front boot 0.3 m behind the platform's edge (the red start line, about 2.8 m before x = 0 and 0.6 m above it); the edge rounds onto the slope, which falls at 18.3 degrees for the whole course and flattens out after the finish into an outrun. The gates' poles are red and blue, 1.8 m out of the snow; the finish has two posts and a banner.
+You stand at the top of the course on the level start platform, which is about 6 m long, on a children's snowboard about 1.2 m long with a sidecut radius of about 6 m. You face the right side of the course, along -y, and the board's nose, under your left foot, points straight down the slope, along +x. Your front boot is about 30 cm behind the platform's front edge, which is the red start line, about 3 m before x = 0 and about 0.6 m above it. The edge rounds onto the slope, which falls at about 18 degrees for the whole course and levels out into an outrun after the finish. The gates' poles are red and blue, 1.8 m out of the snow; the finish has two posts and a banner.
 
-Frame: metres; the venue's frame, which the venue text, the rules and `s.state()` use: at the start your pelvis is
-above (x, y) = (-3.33, 0.00) and you face -y (+x is to your left); +z is up; the course is not level: the snow is z = 0 at x = 0. 
+Units are metres. The venue text, the rules and `s.state()` all use the venue's frame. At the start, your pelvis is roughly above the point x = -3.3, y = 0, and you face -y, with +x to your left. +z is up. The course is not level, and the snow is at z = 0 where x = 0. 
 
 ## The rules
 **Rule book:** FIS International Competition Rules (ICR), Snowboard, edition 2024/25, parallel slalom (PSL): Art. 2507.2 (turning poles of consecutive gates 10-14 m apart; vertical drop 80-120 m, at least 18 gates), the gate passed when the board and both feet pass outside the gate's turning pole in the direction of the turn (as alpine ICR 661.4.2 for parallel events), flex turning poles (alpine ICR 680), no continuing after a missed gate, a fall. Where this task departs from it:

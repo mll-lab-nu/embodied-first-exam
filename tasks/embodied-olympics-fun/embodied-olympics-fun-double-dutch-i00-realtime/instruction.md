@@ -11,7 +11,7 @@ S x 10 ms of wall-clock time (real time). `spec()["timing"]["slowdown"]` states 
 ## The venue
 A wooden sports floor. The two turning machines stand on the y axis, at y = -1.95 m and +1.95 m (to your right and left), the ropes turning between them across your way. You stand at x = -1.5 m, y = 0, facing +x, towards the middle of the ropes (x = 0), outside the space the turning ropes sweep; the centre zone is painted on the floor round the middle.
 
-Directions are the venue's, which the venue text and the rules use: at the start your pelvis is above (x, y) = (-1.50, 0.00) and you face +x (+y is to your left); +z is up; the floor is level.
+The venue text and the rules use the venue's frame. At the start, your pelvis is above the point x = -1.5, y = 0, and you face +x, with +y to your left. +z is up. The floor is level.
 
 
 ## The rules

@@ -9,8 +9,7 @@ Your deliverable is **one replayable trajectory**, not a general policy.
 ## The venue
 You stand in the middle of a breaking stage, a 8.0 m by 8.0 m laminate floor, flat, level and rigid, with a red line on its right side and a blue line on its left; you face +x.
 
-Frame: metres; the origin is on the floor under your pelvis at the start, +x is the way you face at the start, +y is
-to your left, +z is up; the floor is z = 0. 
+Units are metres. The origin is on the floor under your pelvis at the start. +x is the way you face at the start, +y is to your left and +z is up. The floor is at z = 0. 
 
 ## The rules
 **Rule book:** WDSF Breaking Rules and Regulations Manual (BRRM, version 4, January 2023, the rules of the Paris 2024 qualification): 2.2 'The elements of Breaking' (power moves: spinning moves driven by centrifugal force, the windmill family among the most frequent; in a pure power move set the feet seldom touch the ground); 4.6.4 (judging, the values affecting all domains): 'Crash' (slip, crash, wipe-out: non-intentional loss of physical control); 7.1 Field of Play: a 'Fast Break System Laminate' floor, at least 6.5 m x 6.5 m, advised 8.00 m x 8.00 m, a red line on the right side and a blue line on the left side. Where this task departs from it:

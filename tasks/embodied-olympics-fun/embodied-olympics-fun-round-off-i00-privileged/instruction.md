@@ -9,8 +9,7 @@ Your deliverable is **one replayable trajectory**, not a general policy.
 ## The venue
 You stand in the middle of a gymnastics floor-exercise area, 12.0 m by 12.0 m, marked by white lines, flat, level and rigid, with nothing on it; you face +x.
 
-Frame: metres; the origin is on the floor under your pelvis at the start, +x is the way you face at the start, +y is
-to your left, +z is up; the floor is z = 0. 
+Units are metres. The origin is on the floor under your pelvis at the start. +x is the way you face at the start, +y is to your left and +z is up. The floor is at z = 0. 
 
 ## The rules
 **Rule book:** FIG Men's Artistic Gymnastics Code of Points 2025-2028: floor exercise, Art. 10.1 (the floor area, 12 m x 12 m), Art. 10.2.1.2a (inside the floor area, the lines included), Art. 10.2.2.6l (a round-off with a 1/4 turn to land facing forward, the Tinsica, is not permitted: the round-off lands facing back), Art. 9.2.12-13 (an element through the handstand deviating more than 45 degrees from it is not recognised), Art. 9.2.17 (landings on the feet, the feet at most 10 cm apart to bring the heels together); the round-off itself as gymnastics defines it: a half turn with hand support, the legs joined over the top, both feet landing together facing the direction you came from. Where this task departs from it:

@@ -9,8 +9,7 @@ Your deliverable is **one replayable trajectory**, not a general policy.
 ## The venue
 You stand in your lane facing the finish (+x), the front ends of your feet 0.02 m behind the start line, your pelvis 0.18 m behind it. The lane lines are white on a red track; there are two white finish posts beside the track at 50.0 m. You cannot hear the starter: a start lamp on a post 4 m ahead of the start line, 1.0 m to the left of your lane's centre and 0.8 m above the track, shows the commands: red from "on your marks", yellow from "set", green from the gun.
 
-Frame: metres; the venue's frame, which the venue text, the rules and `s.state()` use: at the start your pelvis is
-above (x, y) = (-0.18, 0.00) and you face +x (+y is to your left); +z is up; the floor is z = 0. 
+Units are metres. The venue text, the rules and `s.state()` all use the venue's frame. At the start, your pelvis is roughly above the point x = -0.2, y = 0, and you face +x, with +y to your left. +z is up. The floor is at z = 0. 
 
 ## The rules
 **Rule book:** World Athletics Competition and Technical Rules, 2024 edition: TR 16 (the start: 16.5 the line, 16.6-16.8 false starts), TR 17.3 (lanes), TR 18.2 and TR 19 (the finish, timing); the distance is the 50 m of indoor athletics. Where this task departs from it:

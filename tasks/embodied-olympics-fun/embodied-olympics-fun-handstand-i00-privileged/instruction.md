@@ -9,8 +9,7 @@ Your deliverable is **one replayable trajectory**, not a general policy.
 ## The venue
 You stand in the middle of a gymnastics floor-exercise area, 12.0 m by 12.0 m, marked by white lines, flat, level and rigid, with nothing on it; you face +x.
 
-Frame: metres; the origin is on the floor under your pelvis at the start, +x is the way you face at the start, +y is
-to your left, +z is up; the floor is z = 0. 
+Units are metres. The origin is on the floor under your pelvis at the start. +x is the way you face at the start, +y is to your left and +z is up. The floor is at z = 0. 
 
 ## The rules
 **Rule book:** FIG Men's Artistic Gymnastics Code of Points 2025-2028: floor exercise, element I.19 'Handstand (2 s.)' (EG I, non-acrobatic elements); Art. 9.2.15 (a hold element is held at least 2 s, measured from the moment a complete stop has been reached; no stop is not recognised); Art. 9.2.13 (a handstand deviating more than 45 degrees from the vertical is not recognised); Art. 10.1 (the floor area, 12 m x 12 m); Art. 10.2.1.2a (the exercise inside the floor area, the lines included). Where this task departs from it:

@@ -7,7 +7,7 @@ client. **Task:** Do a triple jump: run up, hop from behind the take-off line an
 ## The venue
 You stand on the runway facing the pit (+x), your pelvis 20 m before the take-off line, in the middle of the runway; the runway goes on 20 m behind you. The runway is red with white edge lines, the board white, the sand yellow, the ground around it grass. Everything is level.
 
-Directions are the venue's, which the venue text and the rules use: at the start your pelvis is above (x, y) = (-20.00, 0.00) and you face +x (+y is to your left); +z is up; the floor is level.
+The venue text and the rules use the venue's frame. At the start, your pelvis is above the point x = -20, y = 0, and you face +x, with +y to your left. +z is up. The floor is level.
 
 
 ## The rules

@@ -9,8 +9,7 @@ Your deliverable is **one replayable trajectory**, not a general policy.
 ## The venue
 At t = 0 you stand on a 1.1 m block (0.40 m along x, 0.80 m along y) behind the bar, its centre -0.3 m from the bar along x, facing +x: both arms straight up, the wrists turned so that the palms face forwards and the fingers point up, the hands open (grip values 0), the bar about 0.15 m above and 0.12 m ahead of the palms. A grip value is that hand's closure command (0 open, 1 every finger and thumb joint closing towards its closed angle; a finger stops on what it touches); a full close takes about 0.1 s. The bar is not a free body: the `held` flags of your state stay empty for it; the grip is judged as the rules say. The `stand` action keeps the legs in the stance; `joints` or `lowcmd` rows drive every joint. The uprights stand at the two ends of the bar, 1.2 m to either side of you; the landing mats (0.20 m) cover the floor under the bar around the block.
 
-Frame: metres; the venue's frame, which the venue text, the rules and `s.state()` use: at the start your pelvis is
-above (x, y) = (-0.23, 0.00) and you face +x (+y is to your left); +z is up; the floor is z = 0. 
+Units are metres. The venue text, the rules and `s.state()` all use the venue's frame. At the start, your pelvis is roughly above the point x = -0.2, y = 0, and you face +x, with +y to your left. +z is up. The floor is at z = 0. 
 
 ## The rules
 **Rule book:** FIG Apparatus Norms, men's artistic gymnastics, horizontal bar: the bar 2.80 m above the floor (2.60 m above the 0.20 m landing mats), 2.40 m between the uprights, 28 mm in diameter, fixed in the uprights; FIG Code of Points (men's artistic gymnastics), horizontal bar: the giant swing (a full circle round the bar with the body extended, in hang). Where this task departs from it:

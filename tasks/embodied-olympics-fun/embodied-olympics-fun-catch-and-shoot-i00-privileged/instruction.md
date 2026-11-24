@@ -9,8 +9,7 @@ Your deliverable is **one replayable trajectory**, not a general policy.
 ## The venue
 A FIBA court. You stand at the top of the key facing the basket (+x), your arms at rest and your hands empty: the point under the ring's centre is 5.8 m ahead of your pelvis (inside the three-point line; the free-throw line is 1.575 m ahead of you). The passing machine stands on the left wing, where a passer would: its wheels' nip (where the ball leaves) 0.92 m ahead of you and 3.97 m to your left, 1.25 m above the floor, its head aimed at you; the ball waits in its throat behind the wheels. The pass is aimed at the point 0.4 m straight ahead of where your pelvis starts, 1.25 m above the floor: it leaves on a flat arc (13 degrees up, rising 0.2 m) and is there 0.44 s later, moving at about 8.4 m/s to your right and 16 degrees downwards. Your hands are open (grip values 0). A grip value is that hand's closure command (0 open, 1 every finger and thumb drive closing; a finger stops on what it touches). The ball is a free body: `held` in your state says which hand holds it (its fingers and its thumb or palm on it).
 
-Frame: metres; the origin is on the floor under your pelvis at the start, +x is the way you face at the start, +y is
-to your left, +z is up; the floor is z = 0. 
+Units are metres. The origin is on the floor under your pelvis at the start. +x is the way you face at the start, +y is to your left and +z is up. The floor is at z = 0. 
 
 ## The rules
 **Rule book:** FIBA Official Basketball Rules 2024: Art. 2 (court), Art. 3 and the Basketball Equipment appendix (backboard, ring, size-7 ball), Art. 13 (how the ball is played: with the hands), Art. 14 (control: a player holds a live ball), Art. 16 (goal; a ball that passes through the basket from below is a violation), Art. 25 (travelling). Where this task departs from it:

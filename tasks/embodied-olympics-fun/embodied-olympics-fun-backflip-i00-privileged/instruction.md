@@ -9,8 +9,7 @@ Your deliverable is **one replayable trajectory**, not a general policy.
 ## The venue
 You stand in the middle of a floor-exercise area, 12.0 m by 12.0 m, flat, level and rigid, with nothing on it.
 
-Frame: metres; the origin is on the floor under your pelvis at the start, +x is the way you face at the start, +y is
-to your left, +z is up; the floor is z = 0. 
+Units are metres. The origin is on the floor under your pelvis at the start. +x is the way you face at the start, +y is to your left and +z is up. The floor is at z = 0. 
 
 ## The rules
 **Rule book:** FIG Code of Points, floor exercise: the salto backward tucked from a stand (a standing back tuck), landed on the feet; FIG Apparatus Norms, floor: a 12 m x 12 m performance area. Where this task departs from it:

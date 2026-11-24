@@ -5,9 +5,9 @@ You control a simulated Unitree G1 humanoid robot (29 joints, 1.32 m tall, 33 kg
 client. **Task:** Ride the parallel slalom on your snowboard: one run down the course, the board and both feet through each of the 18 gates in order, then over the finish line.
 
 ## The venue
-You stand on the level start platform (6.0 m long) at the top, facing the right side of the course (-y), the board's nose (under your left foot) pointing down the fall line (+x) (a 120 cm children's board, sidecut radius 6 m), your front boot 0.3 m behind the platform's edge (the red start line, about 2.8 m before x = 0 and 0.6 m above it); the edge rounds onto the slope, which falls at 18.3 degrees for the whole course and flattens out after the finish into an outrun. The gates' poles are red and blue, 1.8 m out of the snow; the finish has two posts and a banner.
+You stand at the top of the course on the level start platform, which is about 6 m long, on a children's snowboard about 1.2 m long with a sidecut radius of about 6 m. You face the right side of the course, along -y, and the board's nose, under your left foot, points straight down the slope, along +x. Your front boot is about 30 cm behind the platform's front edge, which is the red start line, about 3 m before x = 0 and about 0.6 m above it. The edge rounds onto the slope, which falls at about 18 degrees for the whole course and levels out into an outrun after the finish. The gates' poles are red and blue, 1.8 m out of the snow; the finish has two posts and a banner.
 
-Directions are the venue's, which the venue text and the rules use: at the start your pelvis is above (x, y) = (-3.33, 0.00) and you face -y (+x is to your left); +z is up; the course is not level: the snow is z = 0 at x = 0.
+The venue text and the rules use the venue's frame. At the start, your pelvis is roughly above the point x = -3.3, y = 0, and you face -y, with +x to your left. +z is up. The course is not level, and the snow is at z = 0 where x = 0.
 
 
 ## The rules

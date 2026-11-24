@@ -9,8 +9,7 @@ Your deliverable is **one replayable trajectory**, not a general policy.
 ## The venue
 You stand facing +x on a level, firm floor. The vane's middle line is 0.04 m ahead of your pelvis, where your raised hand is; it reaches 0.45 m to each side of you. The stand's post is 0.60 m to your left, 0.07 m ahead; it stands on a base plate 0.02 m high that covers x from -0.18 to 0.32 m and y from 0.55 to 0.95 m (your pelvis is at x = 0, y = 0). The vane is yellow, the stand grey.
 
-Frame: metres; the origin is on the floor under your pelvis at the start, +x is the way you face at the start, +y is
-to your left, +z is up; the floor is z = 0. 
+Units are metres. The origin is on the floor under your pelvis at the start. +x is the way you face at the start, +y is to your left and +z is up. The floor is at z = 0. 
 
 ## The rules
 **Rule book:** The Sargent jump (the jump-and-reach vertical jump test of school and club fitness batteries; Sargent 1921): the standing reach is measured flat-footed with one arm stretched overhead; from a standstill, with no step or preliminary hop, the athlete jumps off both feet and touches a vane of the measuring stand (Vertec) at the top of the jump; the result is the height touched above the standing reach. Where this task departs from it:

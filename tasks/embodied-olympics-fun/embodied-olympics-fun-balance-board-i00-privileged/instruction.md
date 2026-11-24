@@ -9,8 +9,7 @@ Your deliverable is **one replayable trajectory**, not a general policy.
 ## The venue
 You face +x, standing upright in the rest pose with your feet side by side on the middle of the deck, 0.24 m apart, one on each side of the roller, whose axis runs fore-aft under you. At t = 0 the board is not level: as just after a mount, the deck is tilted 3.0 degrees with its left end low (its top about 0.188 m above the floor at the middle), resting on the roller under its middle, and you stand square on it, tilted with it, your centre of mass about 4 cm to the left of the roller's line of contact; everything is at rest. Left alone, the board tips further to the left and runs out from under you within a second; the robot's stance does not correct it. The floor is all around.
 
-Frame: metres; the origin is on the floor under your pelvis at the start, +x is the way you face at the start, +y is
-to your left, +z is up; the floor is z = 0. 
+Units are metres. The origin is on the floor under your pelvis at the start. +x is the way you face at the start, +y is to your left and +z is up. The floor is at z = 0. 
 
 ## The rules
 **Rule book:** No federation rule book: the roller balance board (Indo Board style rocker-roller trainer): a rigid deck 0.76 m x 0.38 m lying loose on a free roller of 0.085 m radius, with a stop under each end of the deck; the standard is the balance trainer's: time on the board with neither end of the deck nor the rider touching the floor. Where this task departs from it:

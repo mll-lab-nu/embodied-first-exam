@@ -9,8 +9,7 @@ Your deliverable is **one replayable trajectory**, not a general policy.
 ## The venue
 You face the wall (+x), your pelvis 0.40 m behind the line; the wall is 5.0 m beyond the line, 6 m wide and 4 m high. The target circle is straight ahead. The ball is held in your closed right hand (closure command 1), against the palm, the forearm level and pointing forwards; your left hand is open (closure command 0). Still air. The grip columns of the action rows are the hands' closure commands (0 open, 1 closed).
 
-Frame: metres; the venue's frame, which the venue text, the rules and `s.state()` use: at the start your pelvis is
-above (x, y) = (-0.40, 0.00) and you face +x (+y is to your left); +z is up; the floor is z = 0. 
+Units are metres. The venue text, the rules and `s.state()` all use the venue's frame. At the start, your pelvis is above the point x = -0.4, y = 0, and you face +x, with +y to your left. +z is up. The floor is at z = 0. 
 
 ## The rules
 **Rule book:** No rule book: a wall-ball drill (throw and catch against a wall, as used in baseball, cricket and handball training) with this benchmark's numbers. The ball is the ITF's (Rules of Tennis 2024, Rule 3 and Appendix I: size, mass, rebound). Where this task departs from it:

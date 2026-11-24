@@ -9,8 +9,7 @@ Your deliverable is **one replayable trajectory**, not a general policy.
 ## The venue
 You stand in the backcourt just inside the end line, facing up the court (+x): the end line's inner edge is 0.5 m behind your pelvis and the centre line 14.0 m beyond that edge. The basket of this end is to your right: the court's long axis, with the backboard (its lower edge 2.9 m high, 1.2 m in from the end line) and the ring, is 2.5 m to your right; the side lines are 15.0 m apart, the nearer one 5 m to your left. Painted on the floor: the boundary lines, the restricted area, the free-throw line (5.8 m from the end line) and circle, the three-point line, the centre line and circle. The ball rests on your upturned right hand in front of your chest, its centre about 1.1 m above the floor, 0.39 m ahead of your pelvis and 0.06 m to its right; the right hand's fingers point forwards under it, curled a little round it (grip value 0.3), the left hand's palm is on its left side, open (grip value 0); the start command keeps that hold. A grip value is that hand's closure command: 0 opens the fingers, 1 closes every finger and the thumb until they meet something.
 
-Frame: metres; the origin is on the floor under your pelvis at the start, +x is the way you face at the start, +y is
-to your left, +z is up; the floor is z = 0. 
+Units are metres. The origin is on the floor under your pelvis at the start. +x is the way you face at the start, +y is to your left and +z is up. The floor is at z = 0. 
 
 ## The rules
 **Rule book:** FIBA Official Basketball Rules 2024: Art. 2 (court), Art. 3 and the Basketball Equipment appendix (size-7 ball), Art. 13 (how the ball is played), Art. 14 (control: a player holds a live ball), Art. 23 (out of bounds), Art. 24 (dribbling), Art. 25 (travelling), Art. 28.1.3 (when a dribbled ball is in the frontcourt). Where this task departs from it:

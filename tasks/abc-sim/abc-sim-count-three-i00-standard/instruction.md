@@ -4,7 +4,7 @@ You control a bimanual robot -- two I2RT YAM arms (6 revolute joints and a paral
 service you cannot open. You get one client and one episode, and you act only through the robot's joint targets.
 **Task:** Follow the directive **"put exactly 3 objects in the box"**. Success: the box holds exactly 3 objects (of any kind). An object is in the box when its centre is inside the box's interior (between its walls, below the lid); the count is read anew at every step, so taking an object out again, or dropping in one too many, undoes it. The goal must hold for 30 consecutive control steps (1.02 s); the episode then ends in success.
 
-Twelve small coloured objects of several shapes, small and large, lie on the table next to an opaque box. The box's lid has a slot covered by a light spring-hinged flap: objects go in through the slot.
+Twelve small objects in several shapes and colours, some larger than others, lie on the table next to an opaque box. The box's lid has a slot covered by a light spring-hinged flap: objects go in through the slot.
 
 ## Rules
 - **One episode.** It starts when the service comes up and ends on success,

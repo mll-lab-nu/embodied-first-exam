@@ -7,7 +7,7 @@ client. **Task:** Throw the discus that lies on your right palm, your fingers cu
 ## The venue
 You stand in the rear half of the circle facing the sector (+x), your pelvis 0.55 m behind the circle's centre. Your right forearm is level and points forwards, rolled palm up; the discus lies flat on the palm, the closed hand's fingertips curled over its rim. There is no cage. Still air.
 
-Directions are the venue's, which the venue text and the rules use: at the start your pelvis is above (x, y) = (-0.55, 0.00) and you face +x (+y is to your left); +z is up; the floor is level.
+The venue text and the rules use the venue's frame. At the start, your pelvis is roughly above the point x = -0.6, y = 0, and you face +x, with +y to your left. +z is up. The floor is level.
 
 
 ## The rules

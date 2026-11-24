@@ -7,7 +7,7 @@ client. **Task:** Receive the serve: pass the volleyball that is served over the
 ## The venue
 You face the net (+x), which is 6 m ahead of you; your end line is 3 m behind you. A volleyball machine stands on the floor behind the far end line, its wheels 2.6 m above the floor, 15.6 m ahead of you and 1.5 m to your left, aimed at your court. About 3.0 s after the start it serves the ball at about 14 m/s; it climbs to a little over 4 m, clears the net by more than a metre and comes down at about 40 degrees below the horizontal and 11.4 m/s. About 1.4 s after the serve it is 1 m above the floor about 0.9 m in front of you and 0.8 m to your left; untouched it lands level with you, about 0.75 m to your left. The setter's target is painted on the floor at the net, ahead of you and to your right.
 
-Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level; the origin (x = 0, y = 0) of the texts below is on the floor under your pelvis at the start.
+Directions are taken from where you stand at the start: +x is the way you face, +y is to your left and +z is up. The floor is level. The point x = 0, y = 0 in the texts below is on the floor under your pelvis at the start.
 
 
 ## The rules

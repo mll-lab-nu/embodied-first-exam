@@ -7,7 +7,7 @@ client. **Task:** Do a forward dive straight (101A) from the 3 m springboard: fr
 ## The venue
 The springboard's top is 3.0 m above the water; it is 4.88 m long and 0.5 m wide, hinged at its rear end and resting on a fulcrum 1.88 m in front of the hinge; its tip at rest is 0.119 m ahead of your pelvis, about 2 cm ahead of your toes, and you stand on its centre line. Beyond the fulcrum it is free: it dips under load (about 5446.0 N per metre at the tip) and springs back. The concrete platform that carries the board's stand is 0.35 m below the board's top and ends 0.44 m beyond the front of the fulcrum's housing, at the pool's edge; handrails 1.0 m high run along its sides. The water lies ahead and below. Nothing in the venue moves but the board.
 
-Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level; the origin (x = 0, y = 0) of the texts below is on the floor under your pelvis at the start.
+Directions are taken from where you stand at the start: +x is the way you face, +y is to your left and +z is up. The floor is level. The point x = 0, y = 0 in the texts below is on the floor under your pelvis at the start.
 
 
 ## The rules

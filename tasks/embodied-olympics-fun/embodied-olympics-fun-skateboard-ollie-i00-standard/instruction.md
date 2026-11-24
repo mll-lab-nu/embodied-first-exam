@@ -7,7 +7,7 @@ client. **Task:** Ollie the skateboard from a standstill: pop the tail, take the
 ## The venue
 A level concrete plaza. You stand across the board, which is at rest on the ground, facing -y, left foot towards the nose: the board's long axis points along +x, its nose at +x. Your feet are in your standing stance, 0.24 m apart, the left one about the middle of the deck, the right one at the tail's bend; the board's centre is 0.11 m ahead (in x) of your pelvis.
 
-Directions are the venue's, which the venue text and the rules use: at the start your pelvis is above (x, y) = (0.00, 0.00) and you face -y (+x is to your left); +z is up; the floor is level.
+The venue text and the rules use the venue's frame. At the start, your pelvis is above the point x = 0, y = 0, and you face -y, with +x to your left. +z is up. The floor is level.
 
 
 ## The rules

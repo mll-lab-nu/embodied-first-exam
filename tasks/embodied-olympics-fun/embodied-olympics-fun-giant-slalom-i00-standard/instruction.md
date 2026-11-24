@@ -5,9 +5,9 @@ You control a simulated Unitree G1 humanoid robot (29 joints, 1.32 m tall, 33 kg
 client. **Task:** Ski the giant slalom: one run down the course on your skis, both ski tips and both feet through each of the 26 gates in order, then over the finish line.
 
 ## The venue
-You stand on the level start platform (6.0 m long) at the top, facing down the fall line (+x), on your skis (138 cm junior giant-slalom skis, sidecut radius 14.5 m), your boots 0.3 m behind its edge (the red start line, about 2.8 m before x = 0 and 0.6 m above it); the edge rounds onto the slope, which falls at 18.3 degrees for the whole course and flattens out after the finish into an outrun. The gates' poles and panels are red and blue, the poles 1.8 m out of the snow; the finish has two posts and a banner.
+You stand at the top of the course on the level start platform, which is about 6 m long. You face straight down the slope, along +x, on junior giant-slalom skis about 1.4 m long with a sidecut radius of about 15 m. Your boots are about 30 cm behind the platform's front edge, which is the red start line, about 3 m before x = 0 and about 0.6 m above it. The edge rounds onto the slope, which falls at about 18 degrees for the whole course and levels out into an outrun after the finish. The gates' poles and panels are red and blue, the poles 1.8 m out of the snow; the finish has two posts and a banner.
 
-Directions are the venue's, which the venue text and the rules use: at the start your pelvis is above (x, y) = (-3.17, 0.00) and you face +x (+y is to your left); +z is up; the course is not level: the snow is z = 0 at x = 0.
+The venue text and the rules use the venue's frame. At the start, your pelvis is roughly above the point x = -3.2, y = 0, and you face +x, with +y to your left. +z is up. The course is not level, and the snow is at z = 0 where x = 0.
 
 
 ## The rules

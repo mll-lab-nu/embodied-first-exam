@@ -7,7 +7,7 @@ client. **Task:** Throw the javelin held by its cord in your right hand over the
 ## The venue
 You stand on the runway's centre line facing the sector (+x), your pelvis 2.0 m behind the middle of the arc; the arc's centre is 6.0 m behind you, its ends are 0.25 m behind its middle and 2.0 m to either side, and the runway reaches 28 m behind you. Your right arm hangs down, the hand's fingers pointing down; the javelin lies level across the closed hand's palm, its cord held by the fingers and thumb, pointing forwards (the tip 0.92 m ahead of the hand). Still air. The hand opens when your right grip command goes to 0 (the fingers at most 260 deg/s).
 
-Directions are the venue's, which the venue text and the rules use: at the start your pelvis is above (x, y) = (-2.00, 0.00) and you face +x (+y is to your left); +z is up; the floor is level.
+The venue text and the rules use the venue's frame. At the start, your pelvis is above the point x = -2, y = 0, and you face +x, with +y to your left. +z is up. The floor is level.
 
 
 ## The rules

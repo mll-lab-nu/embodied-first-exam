@@ -9,8 +9,7 @@ Your deliverable is **one replayable trajectory**, not a general policy.
 ## The venue
 A wooden sports floor. The two turning machines stand on the y axis, at y = -1.95 m and +1.95 m (to your right and left), the ropes turning between them across your way. You stand at x = -1.5 m, y = 0, facing +x, towards the middle of the ropes (x = 0), outside the space the turning ropes sweep; the centre zone is painted on the floor round the middle.
 
-Frame: metres; the venue's frame, which the venue text, the rules and `s.state()` use: at the start your pelvis is
-above (x, y) = (-1.50, 0.00) and you face +x (+y is to your left); +z is up; the floor is z = 0. 
+Units are metres. The venue text, the rules and `s.state()` all use the venue's frame. At the start, your pelvis is above the point x = -1.5, y = 0, and you face +x, with +y to your left. +z is up. The floor is at z = 0. 
 
 ## The rules
 **Rule book:** IJRU Rule Book 5.0.0 (International Jump Rope Union, 2026): Competition Manual, event Double Dutch Single Freestyle (DDSF: three athletes, two turners and one jumper, one set of two ropes; a 12 x 12 m field); Judging Manual, Counting: 'Double Dutch ropes must be turned counter clockwise with the right hand and clockwise with the left hand'; Violations: a space violation is any part of an athlete touching the ground outside the field; ropes may be of any length. Where this task departs from it:

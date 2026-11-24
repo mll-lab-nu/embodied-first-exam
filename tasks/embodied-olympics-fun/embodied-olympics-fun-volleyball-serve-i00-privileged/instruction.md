@@ -9,8 +9,7 @@ Your deliverable is **one replayable trajectory**, not a general policy.
 ## The venue
 You face the net (+x), which is 9.5 m ahead of you, from the middle of the service zone. Your upper arms hang and your forearms point forward; the left forearm is turned palm up (its elbow roll at -90 degrees) and the ball rests on the middle of the left palm, its centre about 1.3 m above the floor, 0.43 m ahead of your pelvis and 0.21 m to its left. The start command keeps the palm level under the ball (the joint table's start angles are where the arm stands with the ball on it; the command differs from them by the arm's sag).
 
-Frame: metres; the origin is on the floor under your pelvis at the start, +x is the way you face at the start, +y is
-to your left, +z is up; the floor is z = 0. 
+Units are metres. The origin is on the floor under your pelvis at the start. +x is the way you face at the start, +y is to your left and +z is up. The floor is at z = 0. 
 
 ## The rules
 **Rule book:** FIVB Official Volleyball Rules 2025-2028: Rule 1 (the court 18 m x 9 m, the service zone 9 m wide behind the end line), Rule 2 (the men's net, top at 2.43 m, the antennas), Rule 3 (the ball: 65-67 cm round, 260-280 g), Rule 8 (ball in and out: the lines belong to the court; a ball that touches an antenna or crosses the net's plane outside the crossing space is out), Rule 10.2 (the ball may touch the net while crossing it), Rule 12.4 (the service: the ball is hit with one hand or any part of the arm after being tossed or released from the hands; one toss only; the server does not touch the court or the floor outside the service zone at the hit; the hit comes within 8 s of the whistle). Where this task departs from it:

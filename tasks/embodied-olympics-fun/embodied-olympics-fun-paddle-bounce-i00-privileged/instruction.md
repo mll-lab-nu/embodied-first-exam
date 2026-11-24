@@ -9,8 +9,7 @@ Your deliverable is **one replayable trajectory**, not a general policy.
 ## The venue
 You stand on a level floor facing +x, your arms hanging. The paddle's handle lies across your right palm in a shakehand grip, the fingers and the thumb closed round it, the blade beyond the index finger's side and its faces looking the way your palm does (forehand) and the back of your hand (backhand). The ball rests in the cup of a dropper 0.36 m ahead of your pelvis and -0.2 m to your left (negative: to your right), its centre 1.2 m above the floor: a ring round it and two leaves under it, on a carriage that hangs from an arm reaching towards you from a column further ahead (+x). At 2.0 s the leaves slide apart and the ball falls, with no speed and no spin; the cup then moves 0.35 m back along the arm. There is no wind.
 
-Frame: metres; the origin is on the floor under your pelvis at the start, +x is the way you face at the start, +y is
-to your left, +z is up; the floor is z = 0. 
+Units are metres. The origin is on the floor under your pelvis at the start. +x is the way you face at the start, +y is to your left and +z is up. The floor is at z = 0. 
 
 ## The rules
 **Rule book:** ITTF Handbook 2024, The Laws of Table Tennis, for the equipment: 2.3 (the ball), 2.4 (the racket), 2.5.5 (the racket hand: the hand carrying the racket). Bouncing the ball on the racket is a ball-control drill, not an event with a rule book: the number of consecutive bounces asked for is this benchmark's line. Where this task departs from it:

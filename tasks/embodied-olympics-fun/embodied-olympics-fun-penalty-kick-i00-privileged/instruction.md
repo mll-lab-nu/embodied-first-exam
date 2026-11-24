@@ -9,8 +9,7 @@ Your deliverable is **one replayable trajectory**, not a general policy.
 ## The venue
 You stand facing the goal (+x), 3.0 m behind the penalty mark, on the line through the mark and the centre of the goal. The ball lies on the mark. The penalty area, the goal area and the arc are painted on the grass; the dummy stands in the middle of the goal.
 
-Frame: metres; the origin is on the floor under your pelvis at the start, +x is the way you face at the start, +y is
-to your left, +z is up; the floor is z = 0. 
+Units are metres. The origin is on the floor under your pelvis at the start. +x is the way you face at the start, +y is to your left and +z is up. The floor is at z = 0. 
 
 ## The rules
 **Rule book:** IFAB Laws of the Game 2025/26: Law 1 (the goal 7.32 m x 2.44 m with posts and crossbar 12 cm wide, the penalty mark 11 m from the goal line, the penalty area, the goal area and the penalty arc), Law 2 (a size-5 ball: 68-70 cm round, 410-450 g), Law 14 (the penalty kick: the ball at rest on the mark, kicked forward, the goalkeeper on the goal line between the posts until the kick), Law 10 (kicks from the penalty mark: one kick, which is over when the ball stops moving or goes out of play; the kicker may not play the ball a second time) and the glossary (a kick is a contact with the foot or the ankle). Where this task departs from it:

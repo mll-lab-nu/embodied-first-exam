@@ -9,8 +9,7 @@ Your deliverable is **one replayable trajectory**, not a general policy.
 ## The venue
 You stand at the centre of the 4.572 m grid facing +x, its edges half that to your front, back and sides. A ball machine stands on the grass in front of you, its two wheels 1.0 m ahead of where your pelvis starts and 0.6 m above the ground, aimed up and back towards you, with the ball in its chute. Its gate opens at 1.0 s; about 0.28 s later the ball leaves the wheels, rises to about 2 m and comes down on the top of your head (if you stand still) at about 3.5 m/s, moving towards you at about 1.1 m/s.
 
-Frame: metres; the origin is on the floor under your pelvis at the start, +x is the way you face at the start, +y is
-to your left, +z is up; the floor is z = 0. 
+Units are metres. The origin is on the floor under your pelvis at the start. +x is the way you face at the start, +y is to your left and +z is up. The floor is at z = 0. 
 
 ## The rules
 **Rule book:** Ontario Soccer Association, Technical Benchmark Exercises (2015, for U12-U13 players), exercise 1 'Head Juggling': one attempt, the player in a 5 x 5 yard grid keeps the ball up with the head, each head juggle one point, the count stopped by the ball touching the ground, by another body part, or by stepping out of the grid; the benchmark records the count and sets no pass mark, so the family's standard is 10 consecutive headers (the same standard as the family 'juggling'). IFAB Laws of the Game 2025/26 for the ball (Law 2: size 5, 68-70 cm round, 410-450 g). Where this task departs from it:

@@ -11,7 +11,7 @@ S x 10 ms of wall-clock time (real time). `spec()["timing"]["slowdown"]` states 
 ## The venue
 You stand on the dohyo's clay, 0.55 m above the arena floor, facing +x, at the middle of the ring sideways; the ring's centre is ahead of you, 0.71 m in front of your pelvis. The two starting lines cross the ring's middle 0.7 m apart; the opponent stands the same distance beyond the centre, facing you. The ring of bales is 4.55 m across inside; the clay goes on beyond the bales to the mound's square edge, 3.35 m from the centre.
 
-Directions are the venue's, which the venue text and the rules use: at the start your pelvis is above (x, y) = (-0.71, 0.00) and you face +x (+y is to your left); +z is up; the floor is level.
+The venue text and the rules use the venue's frame. At the start, your pelvis is roughly above the point x = -0.7, y = 0, and you face +x, with +y to your left. +z is up. The floor is level.
 
 
 ## The rules

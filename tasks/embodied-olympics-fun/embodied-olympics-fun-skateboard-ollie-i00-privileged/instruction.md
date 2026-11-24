@@ -9,8 +9,7 @@ Your deliverable is **one replayable trajectory**, not a general policy.
 ## The venue
 A level concrete plaza. You stand across the board, which is at rest on the ground, facing -y, left foot towards the nose: the board's long axis points along +x, its nose at +x. Your feet are in your standing stance, 0.24 m apart, the left one about the middle of the deck, the right one at the tail's bend; the board's centre is 0.11 m ahead (in x) of your pelvis.
 
-Frame: metres; the venue's frame, which the venue text, the rules and `s.state()` use: at the start your pelvis is
-above (x, y) = (0.00, 0.00) and you face -y (+x is to your left); +z is up; the floor is z = 0. 
+Units are metres. The venue text, the rules and `s.state()` all use the venue's frame. At the start, your pelvis is above the point x = 0, y = 0, and you face -y, with +x to your left. +z is up. The floor is at z = 0. 
 
 ## The rules
 **Rule book:** World Skate, Skateboarding Technical Commission, Street & Park Competition Rules (update of April 2025): Technical Specifications of Materials, Skateboard (a deck with four wheels attached by trucks; it cannot be physically attached to the skater's feet); the Runs + Tricks format (single tricks, one attempt each); Makes versus Bails (the Head Judge decides whether a trick is landed). Where this task departs from it:

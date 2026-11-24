@@ -9,8 +9,7 @@ Your deliverable is **one replayable trajectory**, not a general policy.
 ## The venue
 You stand at the start of the run-up, a strip 1.0 m wide that leads straight ahead (+x) to the springboard and the table; the board's low end is 23.3 m ahead of you and its high end 24.5 m. The table's top is higher than your shoulders' joints are when you stand (about 1.47 m is the height of your shoulders, 1.03 m that of your pelvis). Table, pedestal and mat are fixed; the board moves on its spring.
 
-Frame: metres; the origin is on the floor under your pelvis at the start, +x is the way you face at the start, +y is
-to your left, +z is up; the floor is z = 0. 
+Units are metres. The origin is on the floor under your pelvis at the start. +x is the way you face at the start, +y is to your left and +z is up. The floor is at z = 0. 
 
 ## The rules
 **Rule book:** FIG Apparatus Norms (men's vault): the vault table 1.35 m high, its top 1.20 m long and 0.95 m wide; a run-up of 25 m, 1 m wide; a springboard 1.20 m by 0.60 m, 0.22 m high at its high end; landing mats 6 m by 2.5 m, 0.20 m thick. FIG Code of Points for Men's Artistic Gymnastics, the vault section, for what makes a vault invalid: no support of a hand on the table, a foot on the table, not landing feet first. Where this task departs from it:

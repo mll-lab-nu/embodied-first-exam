@@ -7,7 +7,7 @@ client. **Task:** Run the 50 m hurdles over four free-standing hurdles: go over 
 ## The venue
 You stand in your lane facing the finish (+x), the front ends of your feet 0.02 m behind the start line, your pelvis 0.23 m behind it. The lane lines are white on a red track; the hurdles' top bars are white with black stripes, their bases and counterweights grey on the track, reaching 0.7 m towards you along the lane's edges; two white posts stand beside the finish line. In your rest pose your forearms point forward at about the height of a hurdle's top.
 
-Directions are the venue's, which the venue text and the rules use: at the start your pelvis is above (x, y) = (-0.23, 0.00) and you face +x (+y is to your left); +z is up; the floor is level.
+The venue text and the rules use the venue's frame. At the start, your pelvis is roughly above the point x = -0.2, y = 0, and you face +x, with +y to your left. +z is up. The floor is level.
 
 
 ## The rules

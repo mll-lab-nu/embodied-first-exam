@@ -7,7 +7,7 @@ client. **Task:** Catch the fly ball: close one of your hands on the baseball be
 ## The venue
 You stand on a level field facing the pitching machine (+x), 40.0 m away, its head tilted up towards you. The ball rises to about 11 m and comes down steeply, about three seconds after the launch, somewhere within 3.0 m of you. Your hands are open, the fingers pointing forwards along your forearms. Still air.
 
-Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level; the origin (x = 0, y = 0) of the texts below is on the floor under your pelvis at the start.
+Directions are taken from where you stand at the start: +x is the way you face, +y is to your left and +z is up. The floor is level. The point x = 0, y = 0 in the texts below is on the floor under your pelvis at the start.
 
 
 ## The rules

@@ -7,7 +7,7 @@ client. **Task:** Head the cross: meet the football that is crossed to you from 
 ## The venue
 You face the goal (+x) from the edge of the goal area. The ball machine stands on the grass about 3 m ahead of you and 20 m to your left, aimed across the goal area. About 2.9 s after the start the cross leaves it; it climbs to about 4.4 m and comes down at about 33 degrees below the horizontal and roughly 11.7 m/s, travelling from your left to your right, almost parallel to the goal line. About 1.8 s after it has left the machine it passes about 0.45 m in front of you at the height of your head (its centre 1.65 m above the grass); untouched it lands about 2 m to your right.
 
-Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level; the origin (x = 0, y = 0) of the texts below is on the floor under your pelvis at the start.
+Directions are taken from where you stand at the start: +x is the way you face, +y is to your left and +z is up. The floor is level. The point x = 0, y = 0 in the texts below is on the floor under your pelvis at the start.
 
 
 ## The rules

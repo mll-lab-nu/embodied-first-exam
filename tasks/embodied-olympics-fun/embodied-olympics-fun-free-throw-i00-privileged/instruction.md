@@ -9,8 +9,7 @@ Your deliverable is **one replayable trajectory**, not a general policy.
 ## The venue
 A FIBA court. You stand inside the free-throw semi-circle facing the basket (+x), your pelvis 0.35 m behind the free-throw line's near edge and on the line through the ring's centre; the point under the ring's centre is 4.225 m beyond that edge. Painted on the floor: the restricted area, the free-throw line and circle, the three-point line, the no-charge semi-circle. The ball is in your hands in front of your chest, its centre 1.13 m above the floor and 0.39 m ahead of your pelvis: both hands open (grip values 0, the fingers straight), your palms on its two sides (on these hands it bears on the two thumbs, which lie a little proud of the palms); the start command turns your shoulders a little further in than your arms stand (the difference is the squeeze that holds the ball). A grip value is that hand's closure command (0 open, 1 every finger and thumb drive closing; a finger stops on what it touches). The ball is a free body: `held` in your state says which hand holds it (its fingers and its thumb or palm on it; the open-hand squeeze at the start touches no finger, so `held` is empty there).
 
-Frame: metres; the origin is on the floor under your pelvis at the start, +x is the way you face at the start, +y is
-to your left, +z is up; the floor is z = 0. 
+Units are metres. The origin is on the floor under your pelvis at the start. +x is the way you face at the start, +y is to your left and +z is up. The floor is at z = 0. 
 
 ## The rules
 **Rule book:** FIBA Official Basketball Rules 2024: Art. 2 (court), Art. 3 and the Basketball Equipment appendix (backboard, ring, size-7 ball), Art. 13 (how the ball is played: with the hands), Art. 14 (control: a player holds a live ball), Art. 16 (goal; a ball that passes through the basket from below is a violation), Art. 43 (free throws). Where this task departs from it:

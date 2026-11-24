@@ -9,8 +9,7 @@ Your deliverable is **one replayable trajectory**, not a general policy.
 ## The venue
 You stand facing the posts (+x) right behind the ball on its tee, ready to kick it with the right foot (its centre 0.3 m ahead of your pelvis, -0.17 m to your left); the posts are 5.0 m beyond the ball, one each side of the line through the ball, 5.6 m apart. The 5-metre line, the goal line and the in-goal are painted on the grass.
 
-Frame: metres; the origin is on the floor under your pelvis at the start, +x is the way you face at the start, +y is
-to your left, +z is up; the floor is z = 0. 
+Units are metres. The origin is on the floor under your pelvis at the start. +x is the way you face at the start, +y is to your left and +z is up. The floor is at z = 0. 
 
 ## The rules
 **Rule book:** World Rugby Laws of the Game (2025): Law 1 (the goal posts 5.6 m apart, the crossbar's top edge 3.0 m above the ground, the posts at least 3.4 m high, padding on the posts; the 5-metre line), Law 2 (the ball: oval, 280-300 mm long, 740-770 mm round end to end, 580-620 mm round across, 410-460 g), Law 8 (8.4: a goal is scored when the ball is kicked over the crossbar and between the goal posts without first touching a team-mate or the ground; 8.7: a conversion is a place-kick or a drop-kick; 8.8: the kick is taken on a line through the place where the try was awarded, parallel to the touchlines, the ball on the ground or on a kicking tee, within 60 seconds). Where this task departs from it:

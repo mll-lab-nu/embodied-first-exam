@@ -9,8 +9,7 @@ Your deliverable is **one replayable trajectory**, not a general policy.
 ## The venue
 You face the bag (+x); its near side is 0.575 m in front of your pelvis and it hangs still. The band is white. Your arms are at rest: the upper arms down, the forearms level and pointing at the bag, the fists 0.1 m short of it.
 
-Frame: metres; the origin is on the floor under your pelvis at the start, +x is the way you face at the start, +y is
-to your left, +z is up; the floor is z = 0. 
+Units are metres. The origin is on the floor under your pelvis at the start. +x is the way you face at the start, +y is to your left and +z is up. The floor is at z = 0. 
 
 ## The rules
 **Rule book:** No rule book for a bag. The punch is judged by the scoring criterion of Olympic-style boxing (IBA Technical and Competition Rules: a scoring blow lands with the knuckle part of the closed glove on the target area, with force; a push or a slap does not score), applied to a standard heavy bag (30 kg, 1.2 m, on a chain). Where this task departs from it:

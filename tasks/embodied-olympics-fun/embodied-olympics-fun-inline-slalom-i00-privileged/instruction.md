@@ -9,8 +9,7 @@ Your deliverable is **one replayable trajectory**, not a general policy.
 ## The venue
 You stand at the start facing +x on both skates, side by side, your pelvis at x = -0.25 m on the cone line's axis y = 0, the skates inside the start box (between x = -0.4 m and x = 0). The first cone is 12.0 m ahead of the start line; the line of cones runs straight ahead. The floor is a level, smooth sports floor.
 
-Frame: metres; the venue's frame, which the venue text, the rules and `s.state()` use: at the start your pelvis is
-above (x, y) = (-0.25, 0.00) and you face +x (+y is to your left); +z is up; the floor is z = 0. 
+Units are metres. The venue text, the rules and `s.state()` all use the venue's frame. At the start, your pelvis is roughly above the point x = -0.2, y = 0, and you face +x, with +y to your left. +z is up. The floor is at z = 0. 
 
 ## The rules
 **Rule book:** World Skate Inline Freestyle Regulation (update of October 2025): 3.10 official cones (7.6-8.0 cm high, base 7.2-7.5 cm, top 2.4-2.7 cm); 4.2 the cone lines and their marking stickers (7.7 cm, a 0.7 cm centre point); 7 Speed Slalom (on one foot, as fast as possible): 7.1.1 20 cones 80 cm apart, 7.1.3 the start box (two start lines 40 cm apart), 7.1.5 the first cone 12 m from the start line and the end line 80 cm beyond the last cone, 7.3.1.1 the free start of the time trials (time starts when any part of the body crosses the gate beam, 40 cm above the ground), 7.3.2 the cone line entered on one foot, 7.3.3 the end line crossed by the supporting foot with a wheel on the ground, 7.4.2 first-cone penalties, 7.4.3 the free foot and changing foot, 7.4.4 end-line penalties, 7.4.5 +0.2 s per kicked cone or missed interval, more than 4 cone penalties void the run. Where this task departs from it:

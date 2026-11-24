@@ -7,7 +7,7 @@ client. **Task:** Do a standing long jump: from a standstill behind the take-off
 ## The venue
 You stand facing +x with your feet side by side, their front ends 0.05 m behind the take-off line (white); your pelvis is 0.164 m behind the line. The floor is level and firm; a yellow line is painted across it at the qualifying mark.
 
-Directions are the venue's, which the venue text and the rules use: at the start your pelvis is above (x, y) = (-0.16, 0.00) and you face +x (+y is to your left); +z is up; the floor is level.
+The venue text and the rules use the venue's frame. At the start, your pelvis is roughly above the point x = -0.2, y = 0, and you face +x, with +y to your left. +z is up. The floor is level.
 
 
 ## The rules

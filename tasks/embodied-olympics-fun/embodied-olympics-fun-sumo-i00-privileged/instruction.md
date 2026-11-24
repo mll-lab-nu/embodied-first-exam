@@ -9,8 +9,7 @@ Your deliverable is **one replayable trajectory**, not a general policy.
 ## The venue
 You stand on the dohyo's clay, 0.55 m above the arena floor, facing +x, at the middle of the ring sideways; the ring's centre is ahead of you, 0.71 m in front of your pelvis. The two starting lines cross the ring's middle 0.7 m apart; the opponent stands the same distance beyond the centre, facing you. The ring of bales is 4.55 m across inside; the clay goes on beyond the bales to the mound's square edge, 3.35 m from the centre.
 
-Frame: metres; the venue's frame, which the venue text, the rules and `s.state()` use: at the start your pelvis is
-above (x, y) = (-0.71, 0.00) and you face +x (+y is to your left); +z is up; the floor is z = 0. 
+Units are metres. The venue text, the rules and `s.state()` all use the venue's frame. At the start, your pelvis is roughly above the point x = -0.7, y = 0, and you face +x, with +y to your left. +z is up. The floor is at z = 0. 
 
 ## The rules
 **Rule book:** Japan Sumo Association, the rules of professional sumo (honzumo): the dohyo (the ring of 4.55 m inside the shobu-dawara bales on a raised clay mound, the two shikiri-sen starting lines 0.9 m long, 0.06 m wide and 0.7 m apart); the decision (kimarite / shobu-dawara rules): a wrestler loses when any part of his body touches the ground outside the ring, or any part other than the soles of his feet touches the ground inside it, first; forbidden techniques (kinjite) lose the bout (among them striking with a closed fist and kicking the chest or stomach); there are no weight classes. Where this task departs from it:

@@ -7,7 +7,7 @@ client. **Task:** Dodge: five cloth dodgeballs are thrown at you by ball machine
 ## The venue
 A wooden sports floor with the 18 m x 9 m court painted on it; you stand in the middle of your half, 5 m behind the centre line, facing the opponents' half (+x), where the five machines stand in a row 8 m in front of you, their heads at about head height, turning to follow you. The side lines are 4.5 m to your left and right, your back line 4 m behind you.
 
-Directions are the venue's, which the venue text and the rules use: at the start your pelvis is above (x, y) = (-5.00, 0.00) and you face +x (+y is to your left); +z is up; the floor is level.
+The venue text and the rules use the venue's frame. At the start, your pelvis is above the point x = -5, y = 0, and you face +x, with +y to your left. +z is up. The floor is level.
 
 
 ## The rules

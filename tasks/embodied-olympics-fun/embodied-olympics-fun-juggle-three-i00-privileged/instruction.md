@@ -9,8 +9,7 @@ Your deliverable is **one replayable trajectory**, not a general policy.
 ## The venue
 You stand on level ground, nothing around you. Your forearms point forwards, your palms up and your fingers forwards, the hands' grasp centres about 0.37 m apart and 1.1 m above the ground; a ball is held in each hand, and the red ball waits in a small two-wheel ball machine on the ground 1.0 m in front of you, which lobs it onto your left hand. A hand's closure command closes its fingers and thumb; with the hand open, a ball rests on its palm.
 
-Frame: metres; the origin is on the floor under your pelvis at the start, +x is the way you face at the start, +y is
-to your left, +z is up; the floor is z = 0. 
+Units are metres. The origin is on the floor under your pelvis at the start. +x is the way you face at the start, +y is to your left and +z is up. The floor is at z = 0. 
 
 ## The rules
 **Rule book:** No rule book: the three-ball cascade as jugglers define and count it (siteswap 3; the International Jugglers' Association counts a run in catches): each ball is thrown from one hand and caught by the other, the hands throw in turn, the balls follow one another in a fixed order; a run ends with a drop. Where this task departs from it:

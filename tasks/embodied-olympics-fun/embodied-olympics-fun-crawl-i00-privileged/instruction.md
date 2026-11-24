@@ -9,8 +9,7 @@ Your deliverable is **one replayable trajectory**, not a general policy.
 ## The venue
 You stand upright on level ground facing the obstacle (+x), on its centre line, your pelvis 1.0 m before the first wire. You are 1.32 m tall and your pelvis is 0.79 m high when you stand: the wires are lower than your hips. The posts stand at the two ends of every wire, 2.0 m apart; the ground under the wires is the same level, rigid ground. The last wire is painted yellow.
 
-Frame: metres; the origin is on the floor under your pelvis at the start, +x is the way you face at the start, +y is
-to your left, +z is up; the floor is z = 0. 
+Units are metres. The origin is on the floor under your pelvis at the start. +x is the way you face at the start, +y is to your left and +z is up. The floor is at z = 0. 
 
 ## The rules
 **Rule book:** No federation rule book: the low-wire crawl of military obstacle courses and obstacle-course racing (wires strung about 18 in, 0.45 m, above the ground; the athlete passes under all of them and may not go round or over). The layout is this benchmark's: wires every 0.5 m over 10 m. Where this task departs from it:

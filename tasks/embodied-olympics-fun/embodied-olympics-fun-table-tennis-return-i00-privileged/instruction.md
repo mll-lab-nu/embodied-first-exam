@@ -9,8 +9,7 @@ Your deliverable is **one replayable trajectory**, not a general policy.
 ## The venue
 You stand at your end of the table facing it (+x), on its centre line, your pelvis 0.5 m behind your end line; the net is 1.37 m beyond the end line and the server's end line 2.74 m. A table-tennis ball machine stands behind the server's end line; the ball leaves its wheels where a server strikes it: 3.288919 m ahead of your pelvis, -0.199863 m to your left (negative: to your right) and 0.899714 m above the floor. The service reproduces one of a library of legal robot services: they leave the server's racket at 2.2 to 4.5 m/s with up to 34 rad/s of spin and bounce on your court between 0.2 and 0.8 s after the strike; short services bounce a second time on your court if you do not strike them. Your arms hang; the paddle's handle lies across your right palm in a shakehand grip, the fingers and the thumb closed round it, the blade beyond the index finger's side and its faces looking the way your palm does (forehand) and the back of your hand (backhand).
 
-Frame: metres; the origin is on the floor under your pelvis at the start, +x is the way you face at the start, +y is
-to your left, +z is up; the floor is z = 0. 
+Units are metres. The origin is on the floor under your pelvis at the start. +x is the way you face at the start, +y is to your left and +z is up. The floor is at z = 0. 
 
 ## The rules
 **Rule book:** ITTF Handbook 2024, The Laws of Table Tennis: 2.1 (the table), 2.2 (the net assembly), 2.3 (the ball), 2.4 (the racket), 2.5 (definitions: struck, obstruction, racket hand, free hand), 2.6 (the service), 2.7 (the return), 2.10 (a point). Where this task departs from it:

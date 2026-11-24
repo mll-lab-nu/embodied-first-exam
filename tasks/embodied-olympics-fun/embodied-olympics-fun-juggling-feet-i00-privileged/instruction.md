@@ -9,8 +9,7 @@ Your deliverable is **one replayable trajectory**, not a general policy.
 ## The venue
 You stand on level grass in the middle of a 5.0 m x 5.0 m grid marked by white lines, facing along one side. Your upper arms hang, your forearms point forward and are turned so that the palms face each other; the ball is pressed between them, its centre about 0.85 m above the ground and 0.33 m ahead of your pelvis. The start command keeps that squeeze (the joint table's start angles are where the arms stand with the ball between the palms; the command is a little further in: the difference is the squeeze).
 
-Frame: metres; the origin is on the floor under your pelvis at the start, +x is the way you face at the start, +y is
-to your left, +z is up; the floor is z = 0. 
+Units are metres. The origin is on the floor under your pelvis at the start. +x is the way you face at the start, +y is to your left and +z is up. The floor is at z = 0. 
 
 ## The rules
 **Rule book:** Ontario Soccer, OPDL Player Technical Benchmark Exercises (2015): Ball Mastery, juggled on the instep (the exercise list's 'one attempt on each instep', the warm-up's 'instep right juggling' and 'instep left juggling'): the ball starts in the hands, the player works in a 5 m x 5 m grid and has 60 seconds, the maximum number of consecutive juggles is recorded, and the ground, another surface or stepping out of the grid stops the count; the test sets no pass mark, so the family's standard is 10 consecutive foot juggles (the first milestone of youth juggling ladders and the standard of the existing juggling family). IFAB Laws of the Game 2025/26 for the ball (Law 2: size 5, 68-70 cm round, 410-450 g) and for handling (Law 12: the hand or the arm). Where this task departs from it:
