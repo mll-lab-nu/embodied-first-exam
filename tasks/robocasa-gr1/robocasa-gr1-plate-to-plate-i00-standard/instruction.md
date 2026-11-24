@@ -1,7 +1,7 @@
 # RoboCasa-GR1 · PosttrainPnPNovelFromPlateToPlateSplitA — STANDARD MODE (robot as a service)
 
 A **Fourier GR1 humanoid** (arms, waist and two dexterous six-command Fourier hands; fixed base) works at a kitchen counter: RoboCasa's GR1 tabletop `PosttrainPnPNovelFromPlateToPlateSplitA` task (robosuite, MuJoCo).
-**Task: pick the sweet potato from the plate and place it in the plate.**
+**Task: pick the sweet potato from the plate and place it on the other, empty plate.**
 The scene is one frozen instance: the initial state of one of the benchmark's official demonstrations.
 
 You control the robot **as if it were real hardware**: the simulator runs in a service you cannot open. You get one
@@ -23,10 +23,10 @@ the state of the live episode **after the last executed control step**: the epis
 replayed. A success reached earlier and then lost does not count: end in the state you want graded and stop submitting.
 
 All of these hold on the graded state (upstream `_check_success`, `tabletop_24dc.py`):
-- the sweet potato is in the plate: touching the plate, with its centre horizontally within 0.7 x the plate's horizontal radius of the plate's centre;
+- the sweet potato is on the other plate (the empty one it does not start on): touching that plate, with its centre horizontally within 0.7 x the plate's horizontal radius of the plate's centre;
 - the sweet potato does not touch the counter;
-- the plate is upright (its z axis has a world-z component above 0.8);
-- **both hands are clear**: each grip site (left and right) is more than 0.25 m from the sweet potato's origin and more than 0.25 m from the plate's origin (`any_gripper_obj_far`, th = 0.25) -- release the sweet potato and move both hands away before the end.
+- that plate is upright (its z axis has a world-z component above 0.8);
+- **both hands are clear**: each grip site (left and right) is more than 0.25 m from the sweet potato's origin and more than 0.25 m from that plate's origin (`any_gripper_obj_far`, th = 0.25) -- release the sweet potato and move both hands away before the end.
 
 ## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`)
 ```python

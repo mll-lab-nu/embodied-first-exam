@@ -1,7 +1,7 @@
 # RoboCasa · MicrowaveThawing
 
 A **Franka Panda arm on an Omron mobile base** (with a torso lift) works in a kitchen: RoboCasa's `MicrowaveThawing` kitchen task (robosuite, MuJoCo).
-**Task: Pick the squash from the counter and place it in the microwave. Then turn on the microwave.**
+**Task: Pick the squash from the counter and place it in the microwave. Then close the microwave door and turn on the microwave.**
 The scene is one frozen instance: the initial state of one of the benchmark's official demonstrations (kitchen
 layout, style, fixtures, objects and their poses).
 

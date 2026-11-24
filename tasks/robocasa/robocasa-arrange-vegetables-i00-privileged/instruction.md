@@ -1,7 +1,7 @@
 # RoboCasa · ArrangeVegetables
 
 A **Franka Panda arm on an Omron mobile base** (with a torso lift) works in a kitchen: RoboCasa's `ArrangeVegetables` kitchen task (robosuite, MuJoCo).
-**Task: Pick the vegetables from the sink and place them on the cutting board.**
+**Task: Pick the carrot and the lemon from the sink and place them on the cutting board.**
 The scene is one frozen instance: the initial state of one of the benchmark's official demonstrations (kitchen
 layout, style, fixtures, objects and their poses).
 
