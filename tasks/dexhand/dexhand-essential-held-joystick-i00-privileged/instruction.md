@@ -1,6 +1,6 @@
 # DexHand: Held Joy-Con thumbstick sequence
 
-With the wrist locked, keep the controller steady and move the joystick through left (tilted toward the wrist), front (toward the little-finger side), right (toward the fingertips), back (toward the thumb side), then center, holding each checkpoint. Checkpoints are joint angles relative to the shell, not world tilt.
+Keep the wrist locked and the controller steady. Tilt the joystick left (toward the wrist), then front (toward the little-finger side), then right (toward the fingertips), then back (toward the thumb side), and then return it to the center, holding it at each of these five checkpoints. Checkpoints are joint angles relative to the shell, not world tilt.
 
 You control one dexterous hand on a six-DoF wrist positioning stage: a Sharpa Wave hand with 22 independently
 actuated finger joints (the default) or a Wuji Hand 2.2 with 20 (see Hands).

@@ -1,6 +1,6 @@
 # DexHand: Multi-turn encoder knob with fixed-wrist finger gait
 
-Keep the wrist fixed. Turn the rotary encoder knob two full turns clockwise as seen looking at its face (+720 degrees), then one full turn back (to +360 degrees) and hold it still. The real encoder cap has its actual rounded outer profile, normal surface friction and bearing resistance, and a passive unlimited-turn hinge. There is no task-object actuator or powered turning assistance. Maintain load-bearing hand contact throughout and perform at least four contact handoffs involving overlapping fingers.
+Keep the wrist fixed. Turn the rotary encoder knob two full turns clockwise, as seen looking at its face, then one full turn back, and hold it still. The real encoder cap has its actual rounded outer profile, normal surface friction and bearing resistance, and a passive unlimited-turn hinge. There is no task-object actuator or powered turning assistance. Maintain load-bearing hand contact throughout and perform at least four contact handoffs involving overlapping fingers.
 
 You control one dexterous hand on a six-DoF wrist positioning stage: a Sharpa Wave hand with 22 independently
 actuated finger joints (the default) or a Wuji Hand 2.2 with 20 (see Hands).

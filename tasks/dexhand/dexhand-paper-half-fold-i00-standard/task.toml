@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/dexhand-paper-half-fold-i00-standard"
-description = "Fold the free half of a 160 x 100 mm sheet over its adhered half with a dexterous hand (the Sharpa Wave by default, or the Wuji Hand 2.2), press a permanent crease, release, and keep the fold on the table."
+description = "Fold the free half of a sheet of paper over its glued half with one dexterous hand, the Sharpa Wave by default or the Wuji Hand 2.2. Press a permanent crease, let go, and leave the folded sheet on the table."
 keywords = ["robotics", "dexterous-hand", "mujoco", "sharpa-wave", "wuji-hand-2.2", "deformable_manipulation", "deformable", "paper-folding"]
 
 [metadata]

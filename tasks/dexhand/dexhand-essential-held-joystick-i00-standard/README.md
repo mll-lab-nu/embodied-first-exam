@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:dexhand-0.2.0@sha256:0d42994b83d95ab5301c592b35586550c9ee426490115e4b43f3b8cf8cc43350` |
 
 ## Task
-With the wrist locked, keep the controller steady and move the joystick through left (tilted toward the wrist), front (toward the little-finger side), right (toward the fingertips), back (toward the thumb side), then center, holding each checkpoint. Checkpoints are joint angles relative to the shell, not world tilt.
+Keep the wrist locked and the controller steady. Tilt the joystick left (toward the wrist), then front (toward the little-finger side), then right (toward the fingertips), then back (toward the thumb side), and then return it to the center, holding it at each of these five checkpoints. Checkpoints are joint angles relative to the shell, not world tilt.
 
 ## Difficulty
 hard: Stabilize a real Joy-Con mesh while independently steering and releasing its passive spring-centered two-axis thumbstick.

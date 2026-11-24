@@ -1,6 +1,6 @@
 # DexHand: Free-held cube layer reversal
 
-With the wrist locked, turn only the top layer a quarter turn (+90 degrees) counter-clockwise as seen from above, turn it back to where it started, and turn it a quarter turn counter-clockwise again. Stabilize the free cube body with other fingers; no external support or object actuation is allowed.
+Keep the wrist locked. Turn only the top layer of the cube a quarter turn counter-clockwise, as seen from above, then turn it back to where it started, and then turn it a quarter turn counter-clockwise again and hold it still. Stabilize the free cube body with other fingers; no external support or object actuation is allowed.
 
 You control one dexterous hand on a six-DoF wrist positioning stage: a Sharpa Wave hand with 22 independently
 actuated finger joints (the default) or a Wuji Hand 2.2 with 20 (see Hands).

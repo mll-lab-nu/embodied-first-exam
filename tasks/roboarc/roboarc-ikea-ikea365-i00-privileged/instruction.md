@@ -1,7 +1,7 @@
 # IKEA MuJoCo · IKEA 365+ serving stand — frozen scene
 
 You control a simulated robot (**two 7-DoF Franka Panda arms, each with the MuJoCo Menagerie Panda hand (two-finger, tendon-coupled)**; plain MuJoCo 3.14.0 on the CPU, float64) via Python.
-**Task:** Rebuild the IKEA 365+ serving stand: take the screw out of member A and set it down clear of both members, lay member B across member A, bring the screw back and hold it upright and still with its tip just inside the hole in member B, then screw it in through both members until it seats; lift the stand about 10 cm off the bench, turn it upside down while it is still in the air, set it down, and place the bowl on it.
+**Task:** To rebuild the IKEA 365+ serving stand, take the screw out of member A and set it down on its own, away from both members, lay member B across member A, hold the screw upright and still with its tip just inside the hole in member B, and screw it in through both members until it seats. Then lift the stand more than 10 cm off the bench, turn it upside down while it is in the air, set it down, and place the bowl on it.
 
 ## Success requirements
 

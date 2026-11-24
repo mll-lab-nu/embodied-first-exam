@@ -112,7 +112,7 @@ gains and the tool frames; `spec["world"]` the frame conventions.
   moved and the episode goes on.
 - One call returns at most 1500 images (`max_frames_per_call`, PROTOCOL §3 "Images per call").
 
-Objects here: heavy book, cup support 1, cup support 2, support cube 1 (fixed under the table, out of reach), support cube 2.
+Objects here: heavy book, cup support 1, cup support 2, support cube 2, and support cube 1, which is fixed under the table out of reach.
 
 The wrist joints are limited to ±60°, so a vertical approach only works for finger-closing directions within about ±60°
 of the world y axis.

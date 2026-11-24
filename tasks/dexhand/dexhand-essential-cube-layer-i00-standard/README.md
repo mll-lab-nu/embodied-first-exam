@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:dexhand-0.2.0@sha256:0d42994b83d95ab5301c592b35586550c9ee426490115e4b43f3b8cf8cc43350` |
 
 ## Task
-With the wrist locked, turn only the top layer a quarter turn (+90 degrees) counter-clockwise as seen from above, turn it back to where it started, and turn it a quarter turn counter-clockwise again. Stabilize the free cube body with other fingers; no external support or object actuation is allowed.
+Keep the wrist locked. Turn only the top layer of the cube a quarter turn counter-clockwise, as seen from above, then turn it back to where it started, and then turn it a quarter turn counter-clockwise again and hold it still. Stabilize the free cube body with other fingers; no external support or object actuation is allowed.
 
 ## Difficulty
 hard: Keep a free cube body steady while independently turning its top layer through an ordered quarter-turn reversal.

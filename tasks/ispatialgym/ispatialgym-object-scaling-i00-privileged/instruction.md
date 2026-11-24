@@ -7,8 +7,7 @@ often as you like and plan with the full simulator. You hand in one trajectory, 
 ## Your task: make the scene look like a picture
 `/app/goal.png` is what the robot's head camera (`robot_r1:zed_link:Camera:0`) sees once the task is done. It is the same
 camera, resolution and intrinsics as the robot's own head camera. Change the scene so that it looks like the picture. No
-sentence here names the objects that matter or what to do with them: the picture is the whole task. The robot must keep holding what it holds at the start; otherwise it does not have to
-match the picture (its base and other arm may be anywhere), and nothing the picture does not show is judged.
+sentence here names the objects that matter or what to do with them: the picture is the whole task. Keep holding whatever the robot holds at the start. Apart from that, the robot does not have to match the picture: its base and its other arm may be anywhere, and nothing the picture does not show is judged.
 
 ## When a replay succeeds
 The grader judges each replay of your trajectory (`## What you hand in`).

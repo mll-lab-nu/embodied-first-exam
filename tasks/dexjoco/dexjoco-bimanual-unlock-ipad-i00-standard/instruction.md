@@ -1,7 +1,7 @@
 # DexJoCo · bimanual_unlock_ipad — STANDARD MODE (robot as a service, eai-standard/2.2)
 
 You control two Franka Panda arms, each with a 16-DoF Allegro hand, **as if it were real hardware**: the simulator runs in a service you cannot open. You get
-one client and one episode. **Task:** Enter the passcode 1-2-3 on the iPad's screen (picking the iPad up is allowed, not required). A digit is pressed when a fingertip of the right hand (index, middle, ring or thumb) touches its button; touches by the left hand do not count; pressing any other digit than the next one of 1-2-3 ends the episode as a failure. Success: the screen is unlocked (1, 2, 3 in order) and stays unlocked for 10 consecutive control steps.
+one client and one episode. **Task:** Enter the passcode 1-2-3 on the iPad's screen. You may pick the iPad up, but you do not have to. A digit counts as pressed when a fingertip of the right hand touches its button, and touches by the left hand do not count. Pressing any digit other than the next one in 1-2-3 ends the episode as a failure. Success: the screen is unlocked (1, 2, 3 in order) and stays unlocked for 10 consecutive control steps.
 
 The iPad rests on a stand on the table, screen facing the robots; its keypad shows the digits.
 

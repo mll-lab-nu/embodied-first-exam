@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:dexjoco-0.1.2` |
 
 ## Task
-DexJoCo `hammer_nail` (a Franka Panda arm with a 16-DoF Allegro hand) on the same frozen instance as `dexjoco-hammer-nail-i00-privileged`: Pick up the hammer and drive the nail into the wooden block by striking its head. Only a real swing counts: the hammer face must be coming down faster than about 0.2 m/s just before it hits the nail; a blow at that speed drives the nail about 8 mm deeper and a faster one further, up to about 2.4 cm per strike (from about 0.6 m/s; at most 7.26 cm in all). Success: the nail is at least 4 cm deep.
+DexJoCo `hammer_nail` (a Franka Panda arm with a 16-DoF Allegro hand) on the same frozen instance as `dexjoco-hammer-nail-i00-privileged`: Pick up the hammer and drive the nail into the wooden block by striking its head. Only a real downward swing counts: the hammer face must be moving down faster than about 20 cm per second just before it hits the nail. Such a blow drives the nail about 1 cm deeper, and a faster blow drives it further, up to about 2.5 cm per strike. Success: the nail is at least 4 cm deep.
 Standard mode (eai-standard/2.2): the agent drives the robot through a client in one episode, with the robot's own
 sensors, calibrated cameras (RGB, optional depth) and the robot's kinematics.
 

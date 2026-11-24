@@ -1,7 +1,7 @@
 # IKEA MuJoCo · EKET cabinet — frozen scene
 
 You control a simulated robot (**two 7-DoF Franka Panda arms, each with the MuJoCo Menagerie Panda hand (two-finger, tendon-coupled)**; plain MuJoCo 3.14.0 on the CPU, float64) via Python.
-**Task:** Build the EKET cabinet frame: the parts start in a row on the table (a side panel, the top panel, the bottom panel, the other side panel, the back panel); slide the side panel lying next to the top panel into the top panel first, then the other side panel, then the back panel into its grooves, then the bottom panel onto the sides, and leave the cabinet standing on the table on its own.
+**Task:** Build the EKET cabinet frame from the five panels lying in a row on the table: slide the side panel next to the top panel into the top panel first, then the other side panel, then the back panel into its grooves, and last the bottom panel onto the sides. Leave the cabinet standing on the table on its own.
 
 ## Success requirements
 
