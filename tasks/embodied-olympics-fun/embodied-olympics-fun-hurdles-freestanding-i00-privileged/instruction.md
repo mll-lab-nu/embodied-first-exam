@@ -1,7 +1,7 @@
 # embodied-olympics hurdles-freestanding — instance i00
 
 You control a simulated Unitree H1-2 humanoid robot (27 joints, 1.78 m tall, 67 kg; the Embodied Olympics simulator on MuJoCo)
-via Python. **Task:** Run the 50 m hurdles over four free-standing hurdles: go over each one in your lane, never beside it, under its top, or after pushing it away, leave at least one of them standing, and bring your torso to the finish line.
+via Python. **Task:** Run the 50 m hurdles: go over each of the four free-standing hurdles in your lane, never beside or under it and never after pushing it out of the way, then bring your torso to the finish line. Leave at least one hurdle standing in its place.
 
 This is a *fixed instance*: the same venue and start every time. You may reset and retry as many times as you want.
 Your deliverable is **one replayable trajectory**, not a general policy.

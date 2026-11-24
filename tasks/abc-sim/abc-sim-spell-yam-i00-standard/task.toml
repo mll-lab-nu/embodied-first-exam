@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, { source
 
 [task]
 name = "embodied-first-exam/abc-sim-spell-yam-i00-standard"
-description = "ABC Sim spell yam (two I2RT YAM arms, MuJoCo): Spell YAM: put the blocks Y, A, M in a row on the table, in this order, reading from left to right as the arms face the table. The robot as a service (eai-standard/2.2); graded by the live episode."
+description = "ABC Sim spell yam (two I2RT YAM arms, MuJoCo): Spell YAM: lay the blocks Y, A and M on the table, each with a letter face up, next to each other in a straight row, in this order from left to right as the arms face the table. The robot as a service (eai-standard/2.2); graded by the live episode."
 keywords = ["robotics", "abc-sim", "mujoco", "yam", "bimanual", "spell_yam", "standard"]
 
 [metadata]

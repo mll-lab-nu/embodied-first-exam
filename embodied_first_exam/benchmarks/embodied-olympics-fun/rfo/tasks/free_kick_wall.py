@@ -83,7 +83,7 @@ class Task(TaskBase):
                   toe_x_m=0.15, fall_z_m=0.35, fall_after_kick_fails=0)
 
     sentence = ("Take a direct free kick: with one kick of a foot, send the ball over or around the wall of "
-                "mannequins into the official goal {distance_m} m away.")
+                "mannequins into the official goal {distance_m:g} m away.")
     rules = ("A size-5 football (0.22 m across, 0.43 kg, in air) lies at rest on the grass in front of your right "
              "foot: its centre {ball_ahead_m} m ahead of your pelvis and {ball_side_m} m to your left (negative: "
              "to the "

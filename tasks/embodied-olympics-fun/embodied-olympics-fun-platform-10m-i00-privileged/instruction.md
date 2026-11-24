@@ -1,7 +1,7 @@
 # embodied-olympics platform-10m — instance i00
 
 You control a simulated Unitree G1 humanoid robot (29 joints, 1.32 m tall, 33 kg; the Embodied Olympics simulator on MuJoCo)
-via Python. **Task:** Do a forward dive straight (101A) from the 10 m platform: from your standing start at its front end, take off, turn half a somersault forwards in the straight position and enter the water head first, vertical, with your arms stretched beyond your head.
+via Python. **Task:** Do dive 101A, a forward dive straight, from the 10 m platform: take off from your standing start at its front end, turn half a somersault forwards in the straight position, and enter the water head first and vertical, with your arms stretched beyond your head.
 
 This is a *fixed instance*: the same venue and start every time. You may reset and retry as many times as you want.
 Your deliverable is **one replayable trajectory**, not a general policy.

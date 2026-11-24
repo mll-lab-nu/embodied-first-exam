@@ -1,7 +1,7 @@
 # embodied-olympics sled-push — instance i00
 
 You control a simulated Unitree H1-2 humanoid robot (27 joints, 1.78 m tall, 67 kg; the Embodied Olympics simulator on MuJoCo)
-via Python. **Task:** Push the weighted sled with your palms on its two upright handles until the whole sled is over the line 12.5 m ahead, within 60 s.
+via Python. **Task:** Push the weighted sled by its two upright handles, touching it only with your hands on the handles, until the whole sled is over the finish line 12.5 m ahead, within a minute.
 
 This is a *fixed instance*: the same venue and start every time. You may reset and retry as many times as you want.
 Your deliverable is **one replayable trajectory**, not a general policy.

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Breaking: go down to the floor and do three consecutive windmills, rolling over your upper back, shoulders and chest while your legs circle round above the floor. (Embodied Olympics `breaking-windmill`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Breaking: go down to the floor and do three windmills in a row, rolling over your upper back, shoulders and chest while your legs circle above the floor and neither your hips nor your legs touch it. (Embodied Olympics `breaking-windmill`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
 
 ## Difficulty
 A windmill is a continuous rolling and spinning motion on the shoulders with nothing built in for any of it, and every revolution loses energy to the floor that has to be put back. You also have to get down to the floor from standing first. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 5 resets (only the last attempt is graded).

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Dunk the basketball with both hands: holding it in your two hands, jump, force it down through the ring from above with both hands on it, and land on your feet. (Embodied Olympics `dunk`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Dunk the basketball with both hands: holding it in your two hands, take at most two steps, jump and force it down through the ring from above with both hands on it. Then let go of it, land on your feet and stand. (Embodied Olympics `dunk`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
 
 ## Difficulty
 With both arms up and the ball held between the hands its centre is about 2.19 m above the floor; the ring is at 2.39 m, so the whole 67 kg body has to rise about 0.4 m (the ball's centre to about 2.53 m) while the hands keep the ball through the jump's accelerations, and the hands, wrists and forearms have to go into a ring only 0.21 m wider than the ball, then the robot has to come down on its feet. The robot has a walking gait and nothing that jumps or lands; the built-in walking gait steps on the spot even at a zero command, so while the ball is in your hands its steps are counted like any others. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 5 resets (only the last attempt is graded).

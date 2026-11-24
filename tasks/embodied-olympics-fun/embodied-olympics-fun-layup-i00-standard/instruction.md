@@ -2,7 +2,7 @@
 
 You control a simulated Unitree H1-2 humanoid robot (27 joints, 1.78 m tall, 67 kg; the Embodied Olympics simulator on MuJoCo)
 **as if it were real hardware**: the simulator runs in a service you cannot open, and you reach it only through a
-client. **Task:** Make a layup: with the basketball held in your two hands take at most two steps towards the basket, jump, and let go of the ball in the air close to the ring so that it enters the basket from above.
+client. **Task:** Make a layup: holding the basketball in your two hands, take at most two steps towards the basket, jump, and let go of the ball in the air close to the ring so that it enters the basket from above.
 
 ## The venue
 A FIBA court. You stand in the restricted area facing the basket (+x); the point under the ring's centre is 3.0 m ahead of your pelvis, the backboard's face 0.375 m beyond it. Painted on the floor: the restricted area, the free-throw line and circle behind you, and the no-charge semi-circle (1.25 m round the point under the ring, open towards the end line). The ball rests on your upturned right hand in front of your chest, its centre about 1.1 m above the floor, 0.39 m ahead of your pelvis and 0.06 m to its right; the right hand's fingers point forwards under it, curled a little round it (grip value 0.3), the left hand's palm is on its left side, open (grip value 0); the start command keeps that hold. A grip value is that hand's closure command: 0 opens the fingers, 1 closes every finger and the thumb until they meet something.

@@ -156,7 +156,7 @@ class Task(TaskBase):
                   mu_dry=0.20, pin_down_tilt_deg=20.0, settle_s=5.0, release_s=0.05, fall_pelvis_m=0.50)
 
     sentence = ("Bowl a strike: from behind the foul line, deliver the ball you hold pressed between your two palms "
-                "down the lane so that all ten pins are knocked down.")
+                "down the lane so that it knocks down all ten pins.")
     rules = ("The lane is {lane_width_m} m wide and runs {lane_length_m} m from the foul line to the head pin's spot, "
              "with a gutter {gutter_width_m} m wide and {gutter_depth_m} m deep on each side; behind the foul line "
              "the approach, level with the lane, is {approach_length_m} m long. Ten pins ({pin_height_m} m tall, "

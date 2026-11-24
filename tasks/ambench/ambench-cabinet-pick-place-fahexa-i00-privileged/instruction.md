@@ -2,7 +2,7 @@
 
 You control a simulated **aerial manipulator**: a fully actuated hexarotor (six tilted rotors, so it can hold any attitude
 while hovering) carrying a small arm (four joints: three pitch joints and a roll joint) with a two-finger gripper, in
-AM-Bench on Isaac Lab / Isaac Sim 5.1 (PhysX), via Python. **Task:** A tall wooden cabinet stands ahead of the hovering aerial manipulator, and a small soda can stands inside one of its shelf compartments, behind a closed sliding door. Get the can onto the top of the cabinet: AM-Bench counts success when the can's centre is less than 5 cm above a fixed height just below the cabinet's top surface (there is no horizontal condition) while the can moves slower than 0.1 m/s.
+AM-Bench on Isaac Lab / Isaac Sim 5.1 (PhysX), via Python. **Task:** A tall wooden cabinet stands ahead of the hovering aerial manipulator, and a small soda can stands inside one of its shelf compartments, behind a closed sliding door. Get the can onto the top of the cabinet and let it come almost to rest. Only the can's height is checked, not where it is across the top.
 
 This is a *fixed scene instance*: the scene and the robot start the same way after every reset, and you may reset and
 retry as many times as you want. Your deliverable is **one replayable trajectory** of the robot's low-level actions, not a

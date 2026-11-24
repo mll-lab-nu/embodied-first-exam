@@ -1,7 +1,7 @@
 # embodied-olympics trampoline — instance i00
 
 You control a simulated Unitree G1 humanoid robot (29 joints, 1.32 m tall, 33 kg; the Embodied Olympics simulator on MuJoCo)
-via Python. **Task:** On the trampoline, bounce as you like, then do one tuck jump, land on both feet, stop the bounce (one more straight out-bounce at most) and stand still.
+via Python. **Task:** On the trampoline, bounce as you like, then do one tuck jump and land on both feet. Stop the bounce with at most one more straight bounce, then stand still.
 
 This is a *fixed instance*: the same venue and start every time. You may reset and retry as many times as you want.
 Your deliverable is **one replayable trajectory**, not a general policy.

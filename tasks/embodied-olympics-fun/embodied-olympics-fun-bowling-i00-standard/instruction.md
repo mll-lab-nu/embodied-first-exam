@@ -2,7 +2,7 @@
 
 You control a simulated Unitree H1-2 humanoid robot (27 joints, 1.78 m tall, 67 kg; the Embodied Olympics simulator on MuJoCo)
 **as if it were real hardware**: the simulator runs in a service you cannot open, and you reach it only through a
-client. **Task:** Bowl a strike: from behind the foul line, deliver the ball you hold pressed between your two palms down the lane so that all ten pins are knocked down.
+client. **Task:** Bowl a strike: from behind the foul line, deliver the ball you hold pressed between your two palms down the lane so that it knocks down all ten pins.
 
 ## The venue
 You stand on the approach facing the pins (+x), your pelvis 0.60 m behind the foul line on the lane's centre line. The ball is pressed between your two palms in front of your hips, its centre about 0.82 m above the approach and 0.19 m ahead of your pelvis: your upper arms are a little back, your forearms point forwards and down and are turned in so that the palms squeeze it; the start command keeps that squeeze (the joint table's start angles are a little further in than the arms stand: the difference is the squeeze). Under the ball's weight your standing body leans forwards a little and sways. The approach and the lane are 0.1 m above the building's floor, which surrounds the approach. The head pin is 18.288 m beyond the foul line on the centre line. Your hands have no grip: the grip columns of the action rows do nothing in this task.

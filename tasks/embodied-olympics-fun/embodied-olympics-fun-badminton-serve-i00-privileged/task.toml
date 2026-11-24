@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/embodied-olympics-fun-badminton-serve-i00-privileged"
-description = "Embodied Olympics badminton-serve (one Unitree G1 on the Embodied Olympics simulator, MuJoCo 3.3.7, CPU) in privileged mode: produce one replayable trajectory. Serve: standing in your right service court, let the shuttle go from your left hand and hit it with the racket in your right hand, base first and below 1.15 m, over the net into the receiver's service court diagonally opposite. A referee of events, geometry and contact rules decides the success."
+description = "Embodied Olympics badminton-serve (one Unitree G1 on the Embodied Olympics simulator, MuJoCo 3.3.7, CPU) in privileged mode: produce one replayable trajectory. Stand in your right service court and let the shuttle go from your left hand. Hit it with the racket in your right hand, cork base first and with the whole shuttle below 1.15 m, over the net into the receiver's service court diagonally opposite. A referee of events, geometry and contact rules decides the success."
 keywords = ["robotics", "embodied-olympics", "sports", "mujoco", "unitree-g1", "humanoid", "trajectory", "badminton-serve"]
 
 [metadata]

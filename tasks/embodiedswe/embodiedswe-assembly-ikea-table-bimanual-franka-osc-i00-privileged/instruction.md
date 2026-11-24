@@ -8,7 +8,7 @@ An NVIDIA GPU is available. Your job: write a program that completes the task be
 ## The task
 
 An IKEA-style side table, partly assembled, lying on a sturdy waist-high workbench. The free-standing tabletop slab (~0.55 x 0.55 m, 5 cm thick) carries 4 upright threaded studs at its corners (xy = (+0.25, +0.25), (-0.25, +0.25), (+0.25, -0.25), (-0.25, -0.25) m, relative to the slab centre). 4 loose legs — each a threaded nut on a graspable cylindrical shaft — lie on their side in a row near the centre of the workbench, ready to be picked up and fitted.
-Goal: screw every leg down onto its stud (turn it clockwise while pressing down) until it seats. A seated leg locks in place. The table is assembled once all 4 legs are seated.
+Goal: screw each of the 4 legs down onto a stud, turning it clockwise while pressing down, until it seats. A seated leg locks in place. The table is assembled once all 4 legs are seated.
 
 2 robots operating in the same workspace as one composite embodiment. The action vector is their actions concatenated in order ('left' dims [0:8), 'right' dims [8:16); total 16).
 [left] A Franka Emika Panda arm with a parallel-jaw gripper, fixed to the table. Control mode 'osc': 7 arm joints by operational-space control (joint torque); the action is 6 end-effector pose deltas, plus 2 gripper fingers by direct position target. Action dim 8.

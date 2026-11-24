@@ -13,7 +13,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/labutopia-press-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.2): LabUtopia press (Press) on the same frozen instance as labutopia-press-i00-privileged: Press the red button on the instrument's front panel (the two grey buttons next to it do not count) and keep it pressed. The agent only gets a client: cameras (RGB, optional depth, calibration), the robot's proprioception, joint target chunks, arm kinematics; one episode, no reset, no object or instrument state; the sim service records the episode and grades the live episode (no grading replay)."
+description = "STANDARD MODE (robot as a service, eai-standard/2.2): LabUtopia press (Press) on the same frozen instance as labutopia-press-i00-privileged: Press the red button on the instrument's front panel, not the two grey buttons next to it, and keep it pressed. The agent only gets a client: cameras (RGB, optional depth, calibration), the robot's proprioception, joint target chunks, arm kinematics; one episode, no reset, no object or instrument state; the sim service records the episode and grades the live episode (no grading replay)."
 keywords = ["robotics", "labutopia", "isaac-sim", "laboratory", "chemistry", "franka-panda", "code-as-policy", "trajectory", "press", "standard-mode"]
 
 [metadata]

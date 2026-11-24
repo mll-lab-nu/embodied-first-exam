@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/dexjoco-click-mouse-i00-privileged"
-description = "DexJoCo click_mouse (a Franka Panda arm with a 16-DoF Allegro hand, MuJoCo): produce one replayable trajectory. Put the computer mouse on the magenta mousepad and click its button. Frozen scene instance (the initial state of a DexJoCo human demonstration)."
+description = "DexJoCo click_mouse (a Franka Panda arm with a 16-DoF Allegro hand, MuJoCo): produce one replayable trajectory. Put the computer mouse on the magenta mousepad, click the mouse button while it is on the pad, and leave the mouse there. Frozen scene instance (the initial state of a DexJoCo human demonstration)."
 keywords = ["robotics", "dexjoco", "mujoco", "allegro", "dexterous-manipulation", "code-as-policy", "trajectory", "click_mouse"]
 
 [metadata]

@@ -2,7 +2,7 @@
 
 You control a **Franka Panda** arm (7 joints) with its two-finger gripper, fixed to a laboratory bench, **as if it were real**: the simulator (LabUtopia's chemistry laboratory on NVIDIA Isaac
 Sim) runs in a service you cannot open. You get one client and one episode.
-**Task:** Pick up the glass beaker, shake it, and hold it still. Nothing is counted while the beaker's centre is less than 5 cm above where it stood. Success the moment the second of these is met: (1) five times, the beaker's centre moves 5 cm or more (horizontally) from where it was when that count began; (2) after the fifth, the centre stays within 1 cm in each horizontal direction over one second (60 control steps in a row).
+**Task:** Pick up the glass beaker, shake it, then hold it still in the air. Nothing is counted while the beaker's centre is less than 5 cm above where it stood. Success the moment the second of these is met: (1) five times, the beaker's centre moves 5 cm or more (horizontally) from where it was when that count began; (2) after the fifth, the centre stays within 1 cm in each horizontal direction over one second (60 control steps in a row).
 
 On the bench in front of the arm: one small glass beaker, about 6.5 cm across and 10 cm tall.
 

@@ -411,9 +411,9 @@ class Task(TaskBase):
         drop_max_speed_m_s=4.0, clear_s=0.03, retouch_gap_s=0.03, max_touch_s=0.02, hold_gap_s=0.05,
         string_restitution=RACKET["restitution"], landing_gap_s=0.02, fall_z_m=0.35)
 
-    sentence = ("Serve: standing in your right service court, let the shuttle go from your left hand and hit it with "
-                "the racket in your right hand, base first and below 1.15 m, over the net into the receiver's service "
-                "court diagonally opposite.")
+    sentence = ("Stand in your right service court and let the shuttle go from your left hand. Hit it with the racket "
+                "in your right hand, cork base first and with the whole shuttle below 1.15 m, over the net into the "
+                "receiver's service court diagonally opposite.")
     rules = (
         "The court is the BWF court: {court_length_m} m long and {court_width_m} m wide (between the doubles side "
         "lines), with the singles side lines {singles_width_m} m apart, a short service line {short_service_m} m from "

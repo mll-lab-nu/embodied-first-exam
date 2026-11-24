@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:labutopia-0.1.0` |
 
 ## Task
-LabUtopia's `press` (Press) on the same frozen instance as `labutopia-press-i00-privileged`: Press the red button on the instrument's front panel (the two grey buttons next to it do not count) and keep it pressed. Success the moment its cap has been pushed in more than 5 mm for one second (60 control steps in a row). The panel is vertical and faces the arm: the button is pushed in along the forward (+x) axis of the arm's base.
+LabUtopia's `press` (Press) on the same frozen instance as `labutopia-press-i00-privileged`: Press the red button on the instrument's front panel, not the two grey buttons next to it, and keep it pressed. Success the moment its cap has been pushed in more than 5 mm for one second (60 control steps in a row). The panel is vertical and faces the arm: the button is pushed in along the forward (+x) axis of the arm's base.
 In front of the arm stands an instrument with a vertical front panel that carries three square buttons in a row, each 8 cm across: one red, two dark grey. Standard mode (eai-standard/2.2): the agent drives the robot through a client in one episode, with only its proprioception and the scene's cameras.
 
 ## Difficulty

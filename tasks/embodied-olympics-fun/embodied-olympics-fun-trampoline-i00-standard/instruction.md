@@ -2,7 +2,7 @@
 
 You control a simulated Unitree G1 humanoid robot (29 joints, 1.32 m tall, 33 kg; the Embodied Olympics simulator on MuJoCo)
 **as if it were real hardware**: the simulator runs in a service you cannot open, and you reach it only through a
-client. **Task:** On the trampoline, bounce as you like, then do one tuck jump, land on both feet, stop the bounce (one more straight out-bounce at most) and stand still.
+client. **Task:** On the trampoline, bounce as you like, then do one tuck jump and land on both feet. Stop the bounce with at most one more straight bounce, then stand still.
 
 ## The venue
 The bed is 4.28 m long (along x) and 2.14 m wide, its surface 1.155 m above the floor at rest, centred under you. It is held by springs: it gives under load, about 5690.0 N per metre of depth, and springs back. Around it, over the springs and the frame (5.05 x 2.91 m inside), lies padding 0.05 m thick; safety platforms with mats stand at both ends and mats lie on the floor around. Red lines mark area A (2.15 x 1.08 m) and area B (1.08 x 1.08 m) round the centre, and a 0.70 m red cross the centre. Nothing moves but the bed.

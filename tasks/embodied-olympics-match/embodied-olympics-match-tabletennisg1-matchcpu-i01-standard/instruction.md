@@ -3,7 +3,7 @@
 **Standard mode: the world waits for you.** Wherever this document speaks of the world running in real time ("never waits", computation that costs game time, wall seconds per control step), it describes this task's realtime twin; here the Timing section's lockstep rule holds. A match you leave standing never ends, and it is lost when your session ends (abandoned).
 
 ## 1. Goal
-You control a legged humanoid (Unitree G1, 29 DOF) in a Table tennis (G1) match from seat `A`. Your opponent is a G1 driven by the platform at level 4 of four (L1-L4; `game spec` names it).
+You control a Unitree G1 legged humanoid with 29 degrees of freedom in a table tennis match from seat `A`. Your opponent is a G1 that the platform drives at level 4, the highest of its four levels L1-L4, as `game spec` shows.
 Your goal is to win by developing, operating and continuously improving your robot's control within the rules.
 You are encouraged to study your opponent: observe how it plays, find its patterns and weaknesses, anticipate what it will do, and adapt your tactics to gain an advantage.
 

@@ -1,7 +1,7 @@
 # embodied-olympics shot-put — instance i00
 
 You control a simulated Unitree H1-2 humanoid robot (27 joints, 1.78 m tall, 67 kg; the Embodied Olympics simulator on MuJoCo)
-via Python. **Task:** Put the shot that rests on your open right palm at your neck, from the shoulder with that hand alone, so that it lands inside the sector at least 6.0 m from the circle, then leave the circle from its rear half and stand.
+via Python. **Task:** Put the shot that rests on your open right palm at your neck, pushing it from the shoulder with that hand alone, so that it lands inside the sector at least 6 m from the circle. Then leave the circle from its rear half and stand.
 
 This is a *fixed instance*: the same venue and start every time. You may reset and retry as many times as you want.
 Your deliverable is **one replayable trajectory**, not a general policy.

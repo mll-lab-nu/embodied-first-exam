@@ -2,7 +2,7 @@
 
 You control a simulated Unitree G1 humanoid robot (29 joints, 1.32 m tall, 33 kg; the Embodied Olympics simulator on MuJoCo)
 **as if it were real hardware**: the simulator runs in a service you cannot open, and you reach it only through a
-client. **Task:** Do a forward dive straight (101A) from the 3 m springboard: from your standing start at its end, take off from both feet, turn half a somersault forwards in the straight position and enter the water head first, vertical, with your arms stretched beyond your head.
+client. **Task:** Do dive 101A, a forward dive straight, from the 3 m springboard: take off from both feet from your standing start at its end, turn half a somersault forwards in the straight position, and enter the water head first and vertical, with your arms stretched beyond your head.
 
 ## The venue
 The springboard's top is 3.0 m above the water; it is 4.88 m long and 0.5 m wide, hinged at its rear end and resting on a fulcrum 1.88 m in front of the hinge; its tip at rest is 0.119 m ahead of your pelvis, about 2 cm ahead of your toes, and you stand on its centre line. Beyond the fulcrum it is free: it dips under load (about 5446.0 N per metre at the tip) and springs back. The concrete platform that carries the board's stand is 0.35 m below the board's top and ends 0.44 m beyond the front of the fulcrum's housing, at the pool's edge; handrails 1.0 m high run along its sides. The water lies ahead and below. Nothing in the venue moves but the board.

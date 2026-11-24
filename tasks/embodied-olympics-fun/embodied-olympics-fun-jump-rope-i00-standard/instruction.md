@@ -2,7 +2,7 @@
 
 You control a simulated Unitree G1 humanoid robot (29 joints, 1.32 m tall, 35 kg; the Embodied Olympics simulator on MuJoCo)
 **as if it were real hardware**: the simulator runs in a service you cannot open, and you reach it only through a
-client. **Task:** Skip rope: turn the rope forwards with both hands, over your head and under your feet, and jump it with both feet together, 17 times within one minute.
+client. **Task:** Skip rope: turn the rope forwards with both hands, over your head and under your feet, and jump it with both feet together 17 times within one minute. Then land on your feet and stand.
 
 ## The venue
 You stand facing +x on the level wooden floor of a sports hall. In each hand you hold a handle (0.15 m long, 0.028 m thick) across the palm, the fingers closed round it, its far end about 0.07 m beyond the index finger's side, where the rope is attached on a swivel. The rope is 2.13 m long and 0.1 kg, made of plastic beads 9.5 mm thick. It hangs from each handle straight down to the floor and lies on the floor behind your heels in a bow whose middle is about 0.25 m behind your pelvis or further. Nothing else is near you.

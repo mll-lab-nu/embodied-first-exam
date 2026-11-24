@@ -2,7 +2,7 @@
 
 You control a simulated **aerial manipulator**: a fully actuated hexarotor (six tilted rotors, so it can hold any attitude
 while hovering) carrying a small arm (four joints: three pitch joints and a roll joint) with a two-finger gripper, in
-AM-Bench on Isaac Lab / Isaac Sim 5.1 (PhysX), via Python. **Task:** The hovering aerial manipulator starts holding a metal peg (a cylinder 15 cm long and 4 cm in diameter) in its gripper, pointing straight ahead. A wall stands ahead with a blue square socket mounted on its front face: a square frame whose square opening faces the robot and is closed at the back by a red plate. Insert the peg: the centre of the peg's front end (the end pointing ahead at the start) must be inside the square opening and more than 2 cm deep into it (the opening is 3 cm deep up to the red plate).
+AM-Bench on Isaac Lab / Isaac Sim 5.1 (PhysX), via Python. **Task:** The hovering aerial manipulator starts holding a metal peg (a cylinder 15 cm long and 4 cm in diameter) in its gripper, pointing straight ahead. A wall stands ahead with a blue square socket mounted on its front face: a square frame whose square opening faces the robot and is closed at the back by a red plate. Insert the peg: push the centre of its front end, the end that points ahead at the start, into the square opening until it is more than two-thirds of the way to the red plate at the back.
 
 This is a *fixed scene instance*: the scene and the robot start the same way after every reset, and you may reset and
 retry as many times as you want. Your deliverable is **one replayable trajectory** of the robot's low-level actions, not a

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Kick the trunk protector of the dummy in front of you once with a foot, hard enough to score, then land and stand still for 2.0 s. (Embodied Olympics `taekwondo-kick`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Kick the trunk protector of the dummy in front of you once with a foot, hard enough to score, then land and stand still for two seconds. (Embodied Olympics `taekwondo-kick`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
 
 ## Difficulty
 The protector is above the robot's hip joints: the foot has to rise above hip height, fast, while the other leg alone carries the 33 kg body; the robot has no kicking or one-leg balance skill, and the protector's push back and the leg's swing both throw the body off its standing foot before it has to come down on both feet and stand. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 5 resets (only the last attempt is graded).

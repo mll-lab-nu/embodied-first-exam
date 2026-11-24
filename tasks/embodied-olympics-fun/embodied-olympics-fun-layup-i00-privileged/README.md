@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Make a layup: with the basketball held in your two hands take at most two steps towards the basket, jump, and let go of the ball in the air close to the ring so that it enters the basket from above. (Embodied Olympics `layup`: one Unitree H1-2 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
+Make a layup: holding the basketball in your two hands, take at most two steps towards the basket, jump, and let go of the ball in the air close to the ring so that it enters the basket from above. (Embodied Olympics `layup`: one Unitree H1-2 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
 
 ## Difficulty
 Two steps and a jump have to carry a 67 kg body almost two metres while the hands keep the ball through every footfall, and the release comes in the air, about a metre below a ring that is 0.21 m wider than the ball: the hands have to let it go with the speed of the arms' own push, since a hand does not bounce it. The robot has a walking gait and nothing that jumps or lands; the built-in walking gait steps on the spot even at a zero command, so while the ball is in your hands its steps are counted like any others.

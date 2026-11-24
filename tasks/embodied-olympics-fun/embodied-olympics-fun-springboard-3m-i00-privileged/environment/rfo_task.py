@@ -339,9 +339,9 @@ class Task(Dive, TaskBase):
                   somersault_deg=180.0, somersault_tol_deg=45.0, entry_near_m=0.5, entry_far_m=3.0, line_tol_m=0.5,
                   board_friction=1.0)
 
-    sentence = ("Do a forward dive straight (101A) from the 3 m springboard: from your standing start at its end, "
-                "take off from both feet, turn half a somersault forwards in the straight position and enter the "
-                "water head first, vertical, with your arms stretched beyond your head.")
+    sentence = ("Do dive 101A, a forward dive straight, from the 3 m springboard: take off from both feet from your "
+                "standing start at its end, turn half a somersault forwards in the straight position, and enter the "
+                "water head first and vertical, with your arms stretched beyond your head.")
     rules = ("You stand at the end of the 3 m springboard facing the water (+x). The board bends and springs back "
              "under you: you may rock it with your feet on it. The dive: take off from both feet at once (both "
              "feet stay on the board until the take-off: a foot off it for more than {two_foot_window_s} s while "

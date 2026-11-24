@@ -2,7 +2,7 @@
 
 You control a simulated Unitree H1-2 humanoid robot (27 joints, 1.78 m tall, 67 kg; the Embodied Olympics simulator on MuJoCo)
 **as if it were real hardware**: the simulator runs in a service you cannot open, and you reach it only through a
-client. **Task:** Throw the discus that lies on your right palm, your fingers curled over its rim, from inside the circle so that it lands inside the sector at least 15.0 m from the circle, then leave the circle from its rear half and stand.
+client. **Task:** Throw the discus that lies on your right palm, your fingers curled over its rim, from inside the circle so that it lands inside the sector at least 15 m from the circle. Then leave the circle from its rear half and stand.
 
 ## The venue
 You stand in the rear half of the circle facing the sector (+x), your pelvis 0.55 m behind the circle's centre. Your right forearm is level and points forwards, rolled palm up; the discus lies flat on the palm, the closed hand's fingertips curled over its rim. There is no cage. Still air.

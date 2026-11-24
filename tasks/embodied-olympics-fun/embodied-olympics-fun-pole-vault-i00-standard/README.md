@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Vault over the bar with the pole you carry: plant its tip in the box, leave the ground hanging on it, go over the bar between the uprights and come down on the mat, with the bar still on its pegs. (Embodied Olympics `pole-vault`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Vault over the bar with the pole you carry: run up, plant its tip in the box, leave the ground hanging on the pole, go over the bar between the uprights and come down on the mat, with the bar still on its pegs. (Embodied Olympics `pole-vault`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
 
 ## Difficulty
 The bar is 1.0 m up and the robot 1.32 m tall: its whole body has to pass over it on a rigid pole that gives nothing back, from a run-up that the running policy makes at about 4 m/s, with arms whose motors give 25 N m, and three-finger hands that hold little along the pole: the plant's jolt slides the pole through the hands. Nothing built in grips, plants, swings or lets go. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 5 resets (only the last attempt is graded).

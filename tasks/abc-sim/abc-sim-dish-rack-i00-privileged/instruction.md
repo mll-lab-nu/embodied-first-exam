@@ -1,7 +1,7 @@
 # ABC Sim · load the dish rack -- frozen instance
 
 You control a bimanual robot -- two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each) side by side at the near edge of a table, facing +x (the left arm is the one at +y) -- via Python (ABC Sim, `abc_sim` on MuJoCo 3.6.0).
-**Task:** Load the plate into the dish rack, standing on edge. Success: every plate stands on edge in the rack: its face within 33 deg of vertical, touching the rack, touching neither gripper (released), and within the rack's footprint (with a 0.05 m margin). The goal must hold for 30 consecutive control steps (1.02 s); the episode then ends in success.
+**Task:** Stand the plate on edge in the dish rack and let go of it. Success: every plate stands on edge in the rack: its face within 33 deg of vertical, touching the rack, touching neither gripper (released), and within the rack's footprint (with a 0.05 m margin). The goal must hold for 30 consecutive control steps (1.02 s); the episode then ends in success.
 
 1 plate lies flat on the table next to a dish rack (both loose objects). The task's directive, as the scene states it: "load plates into tabletop dish rack".
 

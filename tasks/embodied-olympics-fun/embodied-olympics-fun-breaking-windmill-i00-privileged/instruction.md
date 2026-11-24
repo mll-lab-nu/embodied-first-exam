@@ -1,7 +1,7 @@
 # embodied-olympics breaking-windmill — instance i00
 
 You control a simulated Unitree G1 humanoid robot (29 joints, 1.32 m tall, 33 kg; the Embodied Olympics simulator on MuJoCo)
-via Python. **Task:** Breaking: go down to the floor and do three consecutive windmills, rolling over your upper back, shoulders and chest while your legs circle round above the floor.
+via Python. **Task:** Breaking: go down to the floor and do three windmills in a row, rolling over your upper back, shoulders and chest while your legs circle above the floor and neither your hips nor your legs touch it.
 
 This is a *fixed instance*: the same venue and start every time. You may reset and retry as many times as you want.
 Your deliverable is **one replayable trajectory**, not a general policy.

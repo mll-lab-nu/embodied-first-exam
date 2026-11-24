@@ -41,8 +41,8 @@ class Task(TaskBase):
                   top_tol_m=0.02, top_normal_deg=20.0, upright_pelvis_m=1.00, stand_tilt_deg=20.0, still_m_s=0.35,
                   stand_s=2.0)
 
-    sentence = ("Jump from the floor onto the 0.61 m box in front of you with a two-foot take-off, land on its top with "
-                "both feet, and stand up straight on it.")
+    sentence = ("Jump from the floor onto the box in front of you with a two-foot take-off, land on its top with both "
+                "feet, and stand up straight on it.")
     rules = ("The box is a free rigid body of {box_mass_kg} kg (not fixed to the floor; friction coefficient "
              "{box_friction}, a stiff wooden surface: contact time constant {box_contact_s} s): {box_height_m} m high, its top {box_length_m} m long (along +x, the way you face) and "
              "{box_width_m} m wide. You must get onto it with one jump. Your jump is your first flight phase of at "

@@ -1,6 +1,6 @@
 # Full-simulator badminton duel: develop a program against the built-in RL opponent
 
-Win one complete match against the frozen sport's built-in RL opponent (seat B, builtin_players:RLOpponent), seed 1001: the same frozen
+Win one complete match against the frozen sport's built-in RL opponent `builtin_players:RLOpponent` in seat B, seed 1001: the same frozen
 instance as `embodied-olympics-match-badminton-duelrl-i01-realtime` (its realtime twin; there you see only camera images). The robot, the actions,
 the rules, the limits and the opponent are unchanged; the world runs at 1/20 of real speed.
 

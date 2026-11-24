@@ -2,7 +2,7 @@
 
 You control a simulated Unitree G1 humanoid robot (29 joints, 1.32 m tall, 33 kg; the Embodied Olympics simulator on MuJoCo)
 **as if it were real hardware**: the simulator runs in a service you cannot open, and you reach it only through a
-client. **Task:** Take a direct free kick: with one kick of a foot, send the ball over or around the wall of mannequins into the official goal 20.0 m away.
+client. **Task:** Take a direct free kick: with one kick of a foot, send the ball over or around the wall of mannequins into the official goal 20 m away.
 
 ## The venue
 You stand facing the goal line (+x) right behind the ball, ready to kick it with the right foot: its centre is 0.32 m ahead of your pelvis and -0.13 m to your left. The goal's centre is 20.0 m beyond the ball and 4.0 m to your left; the near post is almost straight ahead, the far post to the left. The wall stands 9.15 m from the ball across the way to the near post; the penalty area, the goal area and the arc are painted on the grass.

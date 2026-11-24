@@ -2,7 +2,7 @@
 
 You control a simulated Unitree G1 humanoid robot (29 joints, 1.32 m tall, 33 kg; the Embodied Olympics simulator on MuJoCo)
 **as if it were real hardware**: the simulator runs in a service you cannot open, and you reach it only through a
-client. **Task:** Get under the low wires in front of you and crawl the whole course until your whole body is beyond the last wire, without touching a wire.
+client. **Task:** Crawl under all the low wires in front of you, between the two rows of posts, until your whole body is past the last, yellow wire. Do not touch any wire.
 
 ## The venue
 You stand upright on level ground facing the obstacle (+x), on its centre line, your pelvis 1.0 m before the first wire. You are 1.32 m tall and your pelvis is 0.79 m high when you stand: the wires are lower than your hips. The posts stand at the two ends of every wire, 2.0 m apart; the ground under the wires is the same level, rigid ground. The last wire is painted yellow.

@@ -2,7 +2,7 @@
 
 You control a bimanual robot -- two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each) side by side at the near edge of a table, facing +x (the left arm is the one at +y) -- **as if it were real**: the simulator (ABC Sim on MuJoCo 3.6.0) runs in a
 service you cannot open. You get one client and one episode, and you act only through the robot's joint targets.
-**Task:** Hang the mug on the mug tree. Success: the mug's centre is within 0.115 m horizontally of the tree's axis and between the tree's base and 0.05 m above its top, and the mug touches neither the table nor either gripper (it hangs from the tree, released). The goal must hold for 30 consecutive control steps (1.02 s); the episode then ends in success.
+**Task:** Hang the mug on the mug tree and let go of it. Success: the mug's centre is within 0.115 m horizontally of the tree's axis and between the tree's base and 0.05 m above its top, and the mug touches neither the table nor either gripper (it hangs from the tree, released). The goal must hold for 30 consecutive control steps (1.02 s); the episode then ends in success.
 
 A mug stands on the table near a mug tree (a stand with pegs).
 

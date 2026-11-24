@@ -4,7 +4,7 @@ The task of `embodiedswe-assembly-nut-thread-franka-osc-i00-privileged`, on the 
 
 ## The task
 1 M16 bolt standing upright, fixed on a sturdy table, and 1 loose M16 nut resting flat on the table beside it, ready to be picked up and fitted. Each bolt carries real threads.
-Goal: pick up the nut, set it on the bolt, and screw it down (turn it clockwise while pressing down) until it seats. A seated nut locks in place. The task is complete once the nut is seated.
+Goal: pick up the nut, set it on the bolt and screw it down, turning it clockwise while pressing down, until it seats. A seated nut locks in place. The task is complete once the nut is seated.
 
 Success, exactly: at the end of the run, the M16 nut is threaded down the fixed upright M16 bolt so that the point on its axis 10 mm below the nut's bottom face [the nut's origin] is at most 12 mm above the bolt's base on the table top, i.e. the nut's bottom face is at most 22 mm above the table top (resting on the bolt's top it is about 35 mm; fully bottomed about 11 mm); that point is within 15 mm horizontally of the bolt's axis, and the nut's axis is within 10° of the bolt axis with the same face up as at the start. Not true at the start (the nut rests flat beside the bolt). No speed or release condition. [grader: seated().all(); bolt origin at its base, world (0.5, 0, 0); nut origin 10 mm below its bottom face]
 

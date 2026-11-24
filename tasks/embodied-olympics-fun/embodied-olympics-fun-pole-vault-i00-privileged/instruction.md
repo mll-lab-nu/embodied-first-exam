@@ -1,7 +1,7 @@
 # embodied-olympics pole-vault — instance i00
 
 You control a simulated Unitree G1 humanoid robot (29 joints, 1.32 m tall, 35 kg; the Embodied Olympics simulator on MuJoCo)
-via Python. **Task:** Vault over the bar with the pole you carry: plant its tip in the box, leave the ground hanging on it, go over the bar between the uprights and come down on the mat, with the bar still on its pegs.
+via Python. **Task:** Vault over the bar with the pole you carry: run up, plant its tip in the box, leave the ground hanging on the pole, go over the bar between the uprights and come down on the mat, with the bar still on its pegs.
 
 This is a *fixed instance*: the same venue and start every time. You may reset and retry as many times as you want.
 Your deliverable is **one replayable trajectory**, not a general policy.

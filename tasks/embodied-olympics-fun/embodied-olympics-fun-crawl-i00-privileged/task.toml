@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/embodied-olympics-fun-crawl-i00-privileged"
-description = "Embodied Olympics crawl (one Unitree G1 on the Embodied Olympics simulator, MuJoCo 3.3.7, CPU) in privileged mode: produce one replayable trajectory. Get under the low wires in front of you and crawl the whole course until your whole body is beyond the last wire, without touching a wire. A referee of events, geometry and contact rules decides the success."
+description = "Embodied Olympics crawl (one Unitree G1 on the Embodied Olympics simulator, MuJoCo 3.3.7, CPU) in privileged mode: produce one replayable trajectory. Crawl under all the low wires in front of you, between the two rows of posts, until your whole body is past the last, yellow wire. Do not touch any wire. A referee of events, geometry and contact rules decides the success."
 keywords = ["robotics", "embodied-olympics", "sports", "mujoco", "unitree-g1", "humanoid", "trajectory", "crawl"]
 
 [metadata]

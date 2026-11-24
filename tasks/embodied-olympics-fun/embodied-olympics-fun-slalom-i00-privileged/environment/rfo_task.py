@@ -62,9 +62,9 @@ class Task(TaskBase):
     params = dict(length_m=10.0, width_m=5.0, cone_spacing_m=3.3, cone_radius_m=0.09, cone_height_m=0.23,
                   cone_mass_kg=0.25, toe_gap_m=0.02, down_z_m=0.40, down_limit_s=10.0)
 
-    sentence = ("Run the Illinois agility course: up the left side and round the far-left cone, back to the centre "
-                "cone on the start line, weave up through the four centre cones and back down, up the right side "
-                "and round the far-right cone, and back over the finish line, without touching a cone.")
+    sentence = ("Run the Illinois agility course without touching a cone: go up the left side and round the far-left "
+                "cone, back round the centre cone on the start line, and weave up through the four centre cones and "
+                "back down. Then go up the right side, round the far-right cone, and back over the finish line.")
     rules = ("The course is {length_m} m long (x from 0 to {length_m} m) and {width_m} m wide, centred on y = 0: its "
              "left side line is half that width to the left of the centre line (y > 0), its right side line as far "
              "to the right. Corner cones stand where the side lines meet the start line x = 0 (the start cone on "

@@ -51,8 +51,8 @@ class Task(TaskBase):
                   sled_gap_m=0.50, move_m=0.10, robot_mass_kg=67.0, load_percent_bm=7, sled_total_kg=5.0,   # these two: _derive()
                   hyrox_force_n=450, fall_pelvis_m=0.50)
 
-    sentence = ("Push the weighted sled with your palms on its two upright handles until the whole sled is over the "
-                "line {length_m} m ahead, within {time_limit_s} s.")
+    sentence = ("Push the weighted sled by its two upright handles, touching it only with your hands on the handles, "
+                "until the whole sled is over the finish line {length_m:g} m ahead, within a minute.")
     rules = ("A prowler-type push sled stands on the turf in front of you, its two upright handles towards you: two "
              "steel runners {sled_length_m} m long, {sled_width_m} m apart outside, the handles {pole_diameter_m} m "
              "thick and {pole_height_m} m high at its rear corners; it carries {sled_total_kg} kg in all and its "

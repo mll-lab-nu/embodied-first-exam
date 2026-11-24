@@ -4,7 +4,7 @@ The task of `embodiedswe-puzzle-spatula-franka-osc-i00-privileged`, on the same 
 
 ## The task
 A slice of bread (7-9 cm across) lies in a stainless fry pan (26 cm across, rim 5 cm high) on a sturdy table; an empty bamboo plate (30 cm) waits beside it. A red-handled spatula (thin 9 cm blade) rests on the surface.
-Goal: first FLIP the bread in the pan (the browned underside ends up), then slide the blade under it again, carry it over the pan's rim and set it down flat on the plate.
+Goal: first flip the bread in the pan so that its browned underside ends up, then slide the blade under it again, carry it over the pan's rim and set it down flat on the plate.
 The pan's rim walls the slice in: enter over the rim, and the wall is a backstop a slide can pin the slice against.
 TOOL ONLY: never touch the bread with fingers or gripper — it disqualifies the episode. The bread must ARRIVE on the blade: a slice pushed, shoved or thrown onto the plate does not count. A slice spilled onto the bare surface is a failure you can recover from — wedge it up and continue. The spatula holds in a firm pinch: close the fingers across its handle and the grip locks; open wide to release.
 

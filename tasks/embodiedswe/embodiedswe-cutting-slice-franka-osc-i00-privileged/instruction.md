@@ -7,7 +7,7 @@ An NVIDIA GPU is available. Your job: write a program that completes the task be
 
 ## The task
 
-A carrot lies on a chopping board on a kitchen island; a chef knife lies on a knife rest beside the board. The carrot is scored at 7 transverse planes. Goal: pick up the knife and press its edge down through each scored plane (blade aligned with the plane) to cut the carrot into slices. The carrot is cut once every plane has been pressed through and the pieces separate, all of them staying on the board.
+A carrot lies on a chopping board on a kitchen island; a chef knife lies on a knife rest beside the board. The carrot is scored at 7 transverse planes. Goal: pick up the knife and cut the carrot into slices by pressing its edge down through each scored plane, with the blade lined up with that plane. The carrot is cut once every plane has been pressed through and the pieces separate, all of them staying on the board.
 
 A Franka Emika Panda arm with a parallel-jaw gripper, fixed to the table. Control mode 'osc': 7 arm joints by operational-space control (joint torque); the action is 6 end-effector pose deltas, plus 2 gripper fingers by direct position target. Action dim 8.
 

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Kick the trunk protector of the dummy in front of you once with a foot, hard enough to score, then land and stand still for 2.0 s. (Embodied Olympics `taekwondo-kick`: one Unitree G1 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
+Kick the trunk protector of the dummy in front of you once with a foot, hard enough to score, then land and stand still for two seconds. (Embodied Olympics `taekwondo-kick`: one Unitree G1 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
 
 ## Difficulty
 The protector is above the robot's hip joints: the foot has to rise above hip height, fast, while the other leg alone carries the 33 kg body; the robot has no kicking or one-leg balance skill, and the protector's push back and the leg's swing both throw the body off its standing foot before it has to come down on both feet and stand.

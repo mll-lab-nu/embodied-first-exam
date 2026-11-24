@@ -2,7 +2,7 @@
 
 You control a bimanual robot -- two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each) side by side at the near edge of a table, facing +x (the left arm is the one at +y) -- **as if it were real**: the simulator (ABC Sim on MuJoCo 3.6.0) runs in a
 service you cannot open. You get one client and one episode, and you act only through the robot's joint targets.
-**Task:** Sort the blocks into the bins of their colours. Success: every block is in the bin of its colour and no block is in another colour's bin, at the same time; a block is in a bin when its centre is inside the bin's interior region. The goal must hold for 30 consecutive control steps (1.02 s); the episode then ends in success.
+**Task:** Put every block into the bin of its own colour. Success: every block is in the bin of its colour and no block is in another colour's bin, at the same time; a block is in a bin when its centre is inside the bin's interior region. The goal must hold for 30 consecutive control steps (1.02 s); the episode then ends in success.
 
 12 LEGO-style blocks -- 6 red, 3 yellow, 3 blue -- lie on the table with three bins, one per colour.
 

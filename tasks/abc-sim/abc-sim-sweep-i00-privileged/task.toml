@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/abc-sim-sweep-i00-privileged"
-description = "ABC Sim sweep paper scraps (two I2RT YAM arms, MuJoCo): Get the paper scraps into the trash can: sweep them into the dustpan with the brush and empty it into the can, or any other way. Frozen scene instance; one replayable trajectory, graded by two fresh-process replays."
+description = "ABC Sim sweep paper scraps (two I2RT YAM arms, MuJoCo): Get all the paper scraps into the trash can, for example by sweeping them into the dustpan with the brush and emptying the dustpan into the can. Frozen scene instance; one replayable trajectory, graded by two fresh-process replays."
 keywords = ["robotics", "abc-sim", "mujoco", "yam", "bimanual", "sweep", "privileged"]
 
 [metadata]

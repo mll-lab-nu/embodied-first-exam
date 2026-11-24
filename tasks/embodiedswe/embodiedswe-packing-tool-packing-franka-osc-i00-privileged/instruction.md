@@ -8,7 +8,7 @@ An NVIDIA GPU is available. Your job: write a program that completes the task be
 ## The task
 
 A black high-gloss chest of drawers (~37 cm wide, 36 cm tall) stands on the table: four sliding drawers stacked top to bottom, each with a real pull handle on its front. All drawers start shut. In front of the chest lie three tools: a green stapler, a pair of scissors, and a utility knife.
-Goal: pull drawers open as needed and pack the tools — the STAPLER goes in the TOP (1st) drawer, the SCISSORS in the SECOND drawer, the KNIFE in the THIRD drawer (the 4th/bottom drawer stays shut and gets nothing) — then push every drawer shut. An item counts only inside its own drawer's tray; the job is done when all three tools are stowed and every drawer is shut.
+Goal: pull drawers open as needed and put the stapler in the top drawer, the scissors in the second drawer and the utility knife in the third drawer, then push all four drawers shut. The bottom drawer gets nothing. An item counts only inside its own drawer's tray; the job is done when all three tools are stowed and every drawer is shut.
 
 A Franka Emika Panda arm with a parallel-jaw gripper, fixed to the table. Control mode 'osc': 7 arm joints by operational-space control (joint torque); the action is 6 end-effector pose deltas, plus 2 gripper fingers by direct position target. Action dim 8.
 

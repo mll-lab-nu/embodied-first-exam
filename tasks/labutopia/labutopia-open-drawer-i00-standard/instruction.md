@@ -2,7 +2,7 @@
 
 You control a **Franka Panda** arm (7 joints) with its two-finger gripper, fixed to a laboratory bench, **as if it were real**: the simulator (LabUtopia's chemistry laboratory on NVIDIA Isaac
 Sim) runs in a service you cannot open. You get one client and one episode.
-**Task:** Open the top drawer of the cabinet (the upper of its two drawers) and let go of it. Success the moment the drawer's handle has been more than 12 cm from where it started, with the gripper more than 4 cm away from the handle (measured from the point between the fingertips to the handle's centre), for one second (60 control steps in a row).
+**Task:** Open the upper of the cabinet's two drawers and let go of it. Success the moment the drawer's handle has been more than 12 cm from where it started, with the gripper more than 4 cm away from the handle (measured from the point between the fingertips to the handle's centre), for one second (60 control steps in a row).
 
 On the bench in front of the arm: a grey cabinet with a white top, about 67 cm deep, 76 cm wide and 79 cm high: two drawers at the top, one above the other, each with a bar handle, and two doors below them. Everything is closed.
 

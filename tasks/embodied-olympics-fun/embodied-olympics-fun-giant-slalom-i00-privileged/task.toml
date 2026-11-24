@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/embodied-olympics-fun-giant-slalom-i00-privileged"
-description = "Embodied Olympics giant-slalom (one Unitree G1 on the Embodied Olympics simulator, MuJoCo 3.3.7, CPU) in privileged mode: produce one replayable trajectory. Ski the giant slalom: one run down the course on your skis, both ski tips and both feet through each of the 26 gates in order, then over the finish line. A referee of events, geometry and contact rules decides the success."
+description = "Embodied Olympics giant-slalom (one Unitree G1 on the Embodied Olympics simulator, MuJoCo 3.3.7, CPU) in privileged mode: produce one replayable trajectory. Ski the giant slalom in one run down the course: take both ski tips and both feet through each of the 26 gates in order, then cross the finish line. A referee of events, geometry and contact rules decides the success."
 keywords = ["robotics", "embodied-olympics", "sports", "mujoco", "unitree-g1", "humanoid", "trajectory", "giant-slalom"]
 
 [metadata]

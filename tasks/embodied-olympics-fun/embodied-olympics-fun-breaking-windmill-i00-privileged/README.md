@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Breaking: go down to the floor and do three consecutive windmills, rolling over your upper back, shoulders and chest while your legs circle round above the floor. (Embodied Olympics `breaking-windmill`: one Unitree G1 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
+Breaking: go down to the floor and do three windmills in a row, rolling over your upper back, shoulders and chest while your legs circle above the floor and neither your hips nor your legs touch it. (Embodied Olympics `breaking-windmill`: one Unitree G1 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
 
 ## Difficulty
 A windmill is a continuous rolling and spinning motion on the shoulders with nothing built in for any of it, and every revolution loses energy to the floor that has to be put back. You also have to get down to the floor from standing first.

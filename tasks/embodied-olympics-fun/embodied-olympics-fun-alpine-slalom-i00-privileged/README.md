@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Ski the slalom: one run down the course on your skis, both ski tips and both feet through each of the 32 gates in order, then over the finish line. (Embodied Olympics `alpine-slalom`: one Unitree G1 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
+Ski the slalom in one run down the course: take both ski tips and both feet through each of the 32 gates in order, then cross the finish line. (Embodied Olympics `alpine-slalom`: one Unitree G1 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
 
 ## Difficulty
 Skis glide and carve: to turn, the robot must roll its skis onto their edges and lean its body into the turn so that the snow's force passes through its centre of mass, with no walking or running policy to help; each change of turn shifts its whole body across the skis. Speed builds on the slope, and a lean that does not match the turn throws it on the snow.

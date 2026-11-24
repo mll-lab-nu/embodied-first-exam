@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Vault over the bar with the pole you carry: plant its tip in the box, leave the ground hanging on it, go over the bar between the uprights and come down on the mat, with the bar still on its pegs. (Embodied Olympics `pole-vault`: one Unitree G1 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
+Vault over the bar with the pole you carry: run up, plant its tip in the box, leave the ground hanging on the pole, go over the bar between the uprights and come down on the mat, with the bar still on its pegs. (Embodied Olympics `pole-vault`: one Unitree G1 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
 
 ## Difficulty
 The bar is 1.0 m up and the robot 1.32 m tall: its whole body has to pass over it on a rigid pole that gives nothing back, from a run-up that the running policy makes at about 4 m/s, with arms whose motors give 25 N m, and three-finger hands that hold little along the pole: the plant's jolt slides the pole through the hands. Nothing built in grips, plants, swings or lets go.

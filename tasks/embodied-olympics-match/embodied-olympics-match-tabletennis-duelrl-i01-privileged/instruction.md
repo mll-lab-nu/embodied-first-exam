@@ -1,6 +1,6 @@
 # Full-simulator table tennis duel: develop a program against the built-in RL opponent
 
-Win one complete match against the frozen sport's built-in RL opponent (seat B, builtin_players:RLOpponentV2), seed 8: the same frozen
+Win one complete match against the frozen sport's built-in RL opponent `builtin_players:RLOpponentV2` in seat B, seed 8: the same frozen
 instance as `embodied-olympics-match-tabletennis-duelrl-i01-realtime` (its realtime twin; there you see only camera images). The robot, the actions,
 the rules, the limits and the opponent are unchanged; the world runs at 1/10 of real speed.
 

@@ -1,7 +1,7 @@
 # embodied-olympics alpine-slalom — instance i00
 
 You control a simulated Unitree G1 humanoid robot (29 joints, 1.32 m tall, 33 kg; the Embodied Olympics simulator on MuJoCo)
-via Python. **Task:** Ski the slalom: one run down the course on your skis, both ski tips and both feet through each of the 32 gates in order, then over the finish line.
+via Python. **Task:** Ski the slalom in one run down the course: take both ski tips and both feet through each of the 32 gates in order, then cross the finish line.
 
 This is a *fixed instance*: the same venue and start every time. You may reset and retry as many times as you want.
 Your deliverable is **one replayable trajectory**, not a general policy.

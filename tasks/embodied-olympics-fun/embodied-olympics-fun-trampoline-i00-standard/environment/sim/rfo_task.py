@@ -78,8 +78,8 @@ class Task(TaskBase):
                   stand_s=3.0, still_m_s=0.35,
                   feet_max_m=0.28, bed_friction=1.0)
 
-    sentence = ("On the trampoline, bounce as you like, then do one tuck jump, land on both feet, stop the bounce "
-                "(one more straight out-bounce at most) and stand still.")
+    sentence = ("On the trampoline, bounce as you like, then do one tuck jump and land on both feet. Stop the bounce "
+                "with at most one more straight bounce, then stand still.")
     rules = ("You stand at the centre of the trampoline's bed, {bed_height_m} m above the floor, facing +x along its "
              "length. A flight is a time of at least {min_air_s} s in which nothing of you touches anything; your "
              "centre of "

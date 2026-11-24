@@ -1,7 +1,7 @@
 # DexJoCo · pinch_tongs — STANDARD MODE (robot as a service, eai-standard/2.2)
 
 You control a Franka Panda arm with a 16-DoF Allegro hand, **as if it were real hardware**: the simulator runs in a service you cannot open. You get
-one client and one episode. **Task:** Pick up the tongs and open and close them three times while holding them up. A pinch counts each time the tongs' hinge goes from open (>= 0.1 rad) to closed (<= -0.07 rad). Success: at least three pinches counted and the tongs at least 0.10 m above the table, held for 30 consecutive control steps.
+one client and one episode. **Task:** Pick up the tongs, open and close them three times while holding them up, then keep holding them up. A pinch counts each time the tongs' hinge goes from open (>= 0.1 rad) to closed (<= -0.07 rad). Success: at least three pinches counted and the tongs at least 0.10 m above the table, held for 30 consecutive control steps.
 
 The kitchen tongs lie on the table in front of the robot; their two arms are joined by a hinge (`tongs_hinge`).
 

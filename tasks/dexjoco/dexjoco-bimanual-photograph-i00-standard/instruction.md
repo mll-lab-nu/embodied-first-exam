@@ -1,7 +1,7 @@
 # DexJoCo · bimanual_photograph — STANDARD MODE (robot as a service, eai-standard/2.2)
 
 You control two Franka Panda arms, each with a 16-DoF Allegro hand, **as if it were real hardware**: the simulator runs in a service you cannot open. You get
-one client and one episode. **Task:** Hold the camera with the left hand in front of the logo and press its shutter with the right hand. Success, at one control step: the camera's view point is inside the target region (0.16 m radius, +-0.10 m height, 0.40 m in front of the logo along -x, i.e. about 0.3 m above the table), the camera's viewing axis is within 10 degrees of world +x, and the shutter button is touched by something other than the camera.
+one client and one episode. **Task:** Hold the camera in the left hand about 40 cm in front of the logo, pointing at it, and press its shutter with the right hand. Success, at one control step: the camera's view point is inside the target region (0.16 m radius, +-0.10 m height, 0.40 m in front of the logo along -x, i.e. about 0.3 m above the table), the camera's viewing axis is within 10 degrees of world +x, and the shutter button is touched by something other than the camera.
 
 The camera lies on the table between the robots; the logo disk stands at the far side of the table.
 

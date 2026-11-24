@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:abc-sim-0.3.0` |
 
 ## Task
-ABC Sim `turn_mug_right_side_up` (two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each) side by side at the near edge of a table, facing +x (the left arm is the one at +y)): Turn every mug right side up. Success: every mug stands upright (its axis within 18 deg of vertical, opening up) with its centre no more than 0.03 m higher than where it started (set back down). The goal must hold for 30 consecutive control steps (1.02 s); the episode then ends in success.
+ABC Sim `turn_mug_right_side_up` (two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each) side by side at the near edge of a table, facing +x (the left arm is the one at +y)): Turn every mug right side up and set it back down. Success: every mug stands upright (its axis within 18 deg of vertical, opening up) with its centre no more than 0.03 m higher than where it started (set back down). The goal must hold for 30 consecutive control steps (1.02 s); the episode then ends in success.
 2 mugs stand upside down on a tray on the table. The deliverable is one replayable trajectory (`/app/output/trajectory.npz`, `(T, 14)`, one row per 0.034 s control step).
 
 ## Difficulty

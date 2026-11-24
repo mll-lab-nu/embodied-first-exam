@@ -7,7 +7,7 @@ An NVIDIA GPU is available. Your job: write a program that completes the task be
 
 ## The task
 
-A tomato lies on a chopping board on a kitchen island; a chef knife lies on a knife rest beside the board. The tomato is scored on a grid: 2 planes across and 2 along it. Goal: pick up the knife and press its edge down through each scored plane (blade aligned with the plane — turn the blade 90 deg for the second set) to dice the tomato. It is diced once every plane has been pressed through and the pieces separate, all of them staying on the board.
+A tomato lies on a chopping board on a kitchen island; a chef knife lies on a knife rest beside the board. The tomato is scored on a grid: 2 planes across and 2 along it. Goal: pick up the knife and dice the tomato by pressing its edge down through each scored plane, with the blade lined up with that plane. Turn the blade a quarter turn for the second set of planes. It is diced once every plane has been pressed through and the pieces separate, all of them staying on the board.
 
 A Franka Emika Panda arm with a parallel-jaw gripper, fixed to the table. Control mode 'osc': 7 arm joints by operational-space control (joint torque); the action is 6 end-effector pose deltas, plus 2 gripper fingers by direct position target. Action dim 8.
 

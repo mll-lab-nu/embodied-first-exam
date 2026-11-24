@@ -2,7 +2,7 @@
 
 You control a **Franka Panda** arm (7 joints) with its two-finger gripper, fixed to a laboratory bench, in LabUtopia's simulated chemistry laboratory (NVIDIA Isaac Sim, PhysX), via Python,
 through joint targets.
-**Task:** Pick up the beaker and set it down on the square target plate. Success, at the first control step at which the second condition has held for 60 consecutive control steps (1 s): (1) the beaker's centre has been more than 0.10 m above where it started; (2) after that, its centre is within 0.05 m (horizontally) of the plate's centre and within 0.05 m of its initial height, and the hand (the point between the fingertips) is more than 0.05 m from the beaker's centre.
+**Task:** Pick up the beaker, set it down on the square target plate and let go of it. Success, at the first control step at which the second condition has held for 60 consecutive control steps (1 s): (1) the beaker's centre has been more than 0.10 m above where it started; (2) after that, its centre is within 0.05 m (horizontally) of the plate's centre and within 0.05 m of its initial height, and the hand (the point between the fingertips) is more than 0.05 m from the beaker's centre.
 
 On the bench in front of the arm: a glass beaker, about 11 cm across and 9 cm tall, and a white square plate, 10 cm x 10 cm, lying flat on the bench.
 

@@ -1,7 +1,7 @@
 # embodied-olympics dribble-slalom — instance i00
 
 You control a simulated Unitree G1 humanoid robot (29 joints, 1.32 m tall, 33 kg; the Embodied Olympics simulator on MuJoCo)
-via Python. **Task:** Dribble the football through the slalom: out through the six cones, round the last one and back through them over the start line, keeping the ball within 2 m and touching no cone.
+via Python. **Task:** Dribble the football out through the six cones, passing each on the side of its yellow mark, round the last cone and back through them, then over the start line. Keep the ball within 2 m of you and touch no cone.
 
 This is a *fixed instance*: the same venue and start every time. You may reset and retry as many times as you want.
 Your deliverable is **one replayable trajectory**, not a general policy.

@@ -2,7 +2,7 @@
 
 You control a simulated Unitree G1 humanoid robot (29 joints, 1.32 m tall, 33 kg; the Embodied Olympics simulator on MuJoCo)
 **as if it were real hardware**: the simulator runs in a service you cannot open, and you reach it only through a
-client. **Task:** Skate the speed slalom: from the start box, 12 m of run-up, then on one foot through the 20 cones, passing them alternately left and right, and over the end line, as fast as you can.
+client. **Task:** Skate the speed slalom: from the start box, skate up to the 20 cones and through them on one foot, passing them alternately on the left and the right, then cross the end line on that foot, all within one minute.
 
 ## The venue
 You stand at the start facing +x on both skates, side by side, your pelvis at x = -0.25 m on the cone line's axis y = 0, the skates inside the start box (between x = -0.4 m and x = 0). The first cone is 12.0 m ahead of the start line; the line of cones runs straight ahead. The floor is a level, smooth sports floor.

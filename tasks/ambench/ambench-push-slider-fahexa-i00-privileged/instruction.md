@@ -2,7 +2,7 @@
 
 You control a simulated **aerial manipulator**: a fully actuated hexarotor (six tilted rotors, so it can hold any attitude
 while hovering) carrying a small arm (four joints: three pitch joints and a roll joint) with a two-finger gripper, in
-AM-Bench on Isaac Lab / Isaac Sim 5.1 (PhysX), via Python. **Task:** A wall stands in front of the hovering aerial manipulator, with a horizontal slider mounted on its front face: a straight rail about 1 m long and a red knob that slides along it. The knob starts at the rail's left end (as seen from the robot facing the wall) and must be pushed along the rail until it is within 5 cm of the right end of its travel, i.e. at least 0.95 m along its 1 m travel.
+AM-Bench on Isaac Lab / Isaac Sim 5.1 (PhysX), via Python. **Task:** A wall stands in front of the hovering aerial manipulator, with a horizontal slider mounted on its front face: a straight rail about 1 m long and a red knob that slides along it. Push the red knob from the left end of the rail, as seen from the robot facing the wall, to its right end, stopping no more than 5 cm short of it.
 
 This is a *fixed scene instance*: the scene and the robot start the same way after every reset, and you may reset and
 retry as many times as you want. Your deliverable is **one replayable trajectory** of the robot's low-level actions, not a

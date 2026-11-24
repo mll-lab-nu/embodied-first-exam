@@ -1,6 +1,6 @@
 # DexJoCo · bimanual_photograph — frozen instance
 
-You control two Franka Panda arms, each with a 16-DoF Allegro hand (DexJoCo on MuJoCo 3.4) via Python. **Task:** Hold the camera with the left hand in front of the logo and press its shutter with the right hand. Success, at one control step: the camera's view point is inside the target region (0.16 m radius, +-0.10 m height, 0.40 m in front of the logo along -x, i.e. about 0.3 m above the table), the camera's viewing axis is within 10 degrees of world +x, and the shutter button is touched by something other than the camera.
+You control two Franka Panda arms, each with a 16-DoF Allegro hand (DexJoCo on MuJoCo 3.4) via Python. **Task:** Hold the camera in the left hand about 40 cm in front of the logo, pointing at it, and press its shutter with the right hand. Success, at one control step: the camera's view point is inside the target region (0.16 m radius, +-0.10 m height, 0.40 m in front of the logo along -x, i.e. about 0.3 m above the table), the camera's viewing axis is within 10 degrees of world +x, and the shutter button is touched by something other than the camera.
 
 The camera lies on the table between the robots; the logo disk stands at the far side of the table. `s.objects()` gives the live poses of the task objects (`camera`, `view_point`, `shutter`, `logo`, `target_region`, `table_top`). DexJoCo's success code (from
 `/opt/dexjoco/dexjoco/dexjoco/sim/envs/panda_bimanual_photograph_env.py`; `step()` ends the episode on success or on a task failure):

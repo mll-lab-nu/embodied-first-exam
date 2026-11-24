@@ -6,8 +6,7 @@ You drive an **R1Pro** mobile robot with two arms, in a house, **as if it were r
 ## Your task: make the scene look like a picture
 `/app/goal.png` is what the robot's head camera (`robot_r1:zed_link:Camera:0`) sees once the task is done. It is the same
 camera, resolution and intrinsics as the robot's own head camera. Change the scene so that it looks like the picture. No
-sentence here names the objects that matter or what to do with them: the picture is the whole task. The robot does not have to
-match the picture (its arms, grippers and base may be anywhere), and nothing the picture does not show is judged.
+sentence here names the objects that matter or what to do with them: the picture is the whole task. The robot does not have to match the picture: its arms, grippers and base may be anywhere, and nothing the picture does not show is judged.
 
 ## When the episode succeeds
 The sim service judges the episode while it runs.

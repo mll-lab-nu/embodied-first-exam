@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:dexjoco-0.1.2` |
 
 ## Task
-DexJoCo `pinch_tongs` (a Franka Panda arm with a 16-DoF Allegro hand) on the same frozen instance as `dexjoco-pinch-tongs-i00-privileged`: Pick up the tongs and open and close them three times while holding them up. A pinch counts each time the tongs' hinge goes from open (>= 0.1 rad) to closed (<= -0.07 rad). Success: at least three pinches counted and the tongs at least 0.10 m above the table, held for 30 consecutive control steps.
+DexJoCo `pinch_tongs` (a Franka Panda arm with a 16-DoF Allegro hand) on the same frozen instance as `dexjoco-pinch-tongs-i00-privileged`: Pick up the tongs, open and close them three times while holding them up, then keep holding them up. A pinch counts each time the tongs' hinge goes from open (>= 0.1 rad) to closed (<= -0.07 rad). Success: at least three pinches counted and the tongs at least 0.10 m above the table, held for 30 consecutive control steps.
 Standard mode (eai-standard/2.2): the agent drives the robot through a client in one episode, with the robot's own
 sensors, calibrated cameras (RGB, optional depth) and the robot's kinematics.
 

@@ -1,6 +1,6 @@
 # Quadrotor landing adaptation
 
-Make the quadrotor land gently on the visible circular pad and remain settled. The deployment simulator includes unmodeled dynamics. The nominal simulator and policy code in this image are available for inspection and training; the deployment simulator is accessed only through the client.
+Land the quadrotor gently on the visible circular pad and keep it settled there. The deployment simulator includes unmodeled dynamics. The nominal simulator and policy code in this image are available for inspection and training; the deployment simulator is accessed only through the client.
 
 Use `python -m scripts.quadrotor_landing.public.client describe` to inspect your remaining budget. Develop a numeric policy following `public/policy.py`. The controller executes at 100 Hz with four bounded rotor-thrust commands. This task fixes the feedback-controller structure; you may train its three-axis residual-force model and tune its public gains. It does not accept arbitrary executable controllers.
 

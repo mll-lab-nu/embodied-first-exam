@@ -1,6 +1,6 @@
 # Full-simulator humanoid soccer at the joint level (GPU tier): develop a program against the learned joint-level team (level 5)
 
-Win one complete match against the frozen sport's learned joint-level team (level 5), seed 101: the same frozen
+Win one complete match against the frozen sport's learned joint-level team at level 5, seed 101: the same frozen
 instance as `embodied-olympics-match-soccer-jointgpu-i01-realtime` (its realtime twin; there you see only camera images). The robot, the actions,
 the rules, the limits and the opponent are unchanged; the world runs at 1/10 of real speed.
 

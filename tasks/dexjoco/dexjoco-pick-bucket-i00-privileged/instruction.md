@@ -1,6 +1,6 @@
 # DexJoCo · pick_bucket — frozen instance
 
-You control a Franka Panda arm with a 16-DoF Allegro hand (DexJoCo on MuJoCo 3.4) via Python. **Task:** Put the boxed food into the bucket, then lift the bucket. Success: the boxed food's centre is inside the bounding box of the bucket's eight reference corners AND the bucket's bottom is at least 0.15 m above where it started, at the same control step.
+You control a Franka Panda arm with a 16-DoF Allegro hand (DexJoCo on MuJoCo 3.4) via Python. **Task:** Put the boxed food into the bucket, then lift the bucket with the food still inside. Success: the boxed food's centre is inside the bounding box of the bucket's eight reference corners AND the bucket's bottom is at least 0.15 m above where it started, at the same control step.
 
 The bucket stands on the table with a hinged handle over it; the boxed food lies next to it. The handle swings on a hinge (`bucket_handle`). `s.objects()` gives the live poses of the task objects (`bucket`, `bucket_handle`, `boxed_food`, `table_top`). DexJoCo's success code (from
 `/opt/dexjoco/dexjoco/dexjoco/sim/envs/panda_pick_bucket_env.py`; `step()` ends the episode on success or on a task failure):

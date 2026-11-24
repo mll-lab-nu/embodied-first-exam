@@ -1,7 +1,7 @@
 # embodied-olympics bowling — instance i00
 
 You control a simulated Unitree H1-2 humanoid robot (27 joints, 1.78 m tall, 67 kg; the Embodied Olympics simulator on MuJoCo)
-via Python. **Task:** Bowl a strike: from behind the foul line, deliver the ball you hold pressed between your two palms down the lane so that all ten pins are knocked down.
+via Python. **Task:** Bowl a strike: from behind the foul line, deliver the ball you hold pressed between your two palms down the lane so that it knocks down all ten pins.
 
 This is a *fixed instance*: the same venue and start every time. You may reset and retry as many times as you want.
 Your deliverable is **one replayable trajectory**, not a general policy.

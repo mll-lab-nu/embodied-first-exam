@@ -2,7 +2,7 @@
 
 You control a simulated Unitree H1-2 humanoid robot (27 joints, 1.78 m tall, 67 kg; the Embodied Olympics simulator on MuJoCo)
 **as if it were real hardware**: the simulator runs in a service you cannot open, and you reach it only through a
-client. **Task:** Vault over the vault table at the end of the run-up: go over it with only your hands touching it, land on your feet on the landing mat and stand.
+client. **Task:** Vault over the vault table at the end of the run-up: go over it with at least one hand on its top and nothing but your hands touching it, then land on your feet on the landing mat and stand.
 
 ## The venue
 You stand at the start of the run-up, a strip 1.0 m wide that leads straight ahead (+x) to the springboard and the table; the board's low end is 23.3 m ahead of you and its high end 24.5 m. The table's top is higher than your shoulders' joints are when you stand (about 1.47 m is the height of your shoulders, 1.03 m that of your pelvis). Table, pedestal and mat are fixed; the board moves on its spring.

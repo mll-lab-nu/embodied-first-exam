@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-On the trampoline, bounce as you like, then do one tuck jump, land on both feet, stop the bounce (one more straight out-bounce at most) and stand still. (Embodied Olympics `trampoline`: one Unitree G1 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
+On the trampoline, bounce as you like, then do one tuck jump and land on both feet. Stop the bounce with at most one more straight bounce, then stand still. (Embodied Olympics `trampoline`: one Unitree G1 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
 
 ## Difficulty
 The robot must time its leg push with a bed that drops and recoils under it to gain height, tuck and open again in the air, land on both feet, and then kill the bounce of a springy bed with its legs until it stands still.

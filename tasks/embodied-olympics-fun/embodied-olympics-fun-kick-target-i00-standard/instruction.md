@@ -2,7 +2,7 @@
 
 You control a simulated Unitree H1-2 humanoid robot (27 joints, 1.78 m tall, 67 kg; the Embodied Olympics simulator on MuJoCo)
 **as if it were real hardware**: the simulator runs in a service you cannot open, and you reach it only through a
-client. **Task:** Kick the heavy bag once with your right foot or shin, on the marked band at trunk height, hard enough to give it 20.0 N s, then stand on both feet.
+client. **Task:** Kick the heavy bag once with your right foot or shin, on the marked band at trunk height, hard enough to give it an impulse of at least 20 N s. Then stand on both feet.
 
 ## The venue
 You face the bag (+x); its near side is 0.625 m in front of your pelvis and it hangs still, its lower end 0.55 m above the floor. The band is white.

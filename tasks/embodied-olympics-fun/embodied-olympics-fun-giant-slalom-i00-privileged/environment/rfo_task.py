@@ -1035,8 +1035,8 @@ class Task(AlpineRace):
     params = dict(platform_m=6.0, start_back_m=0.30, dns_s=20.0, slope_deg=18.3, brink_radius_m=6.0, outrun_radius_m=80.0, outrun_m=100.0, course_width_m=40.0,
                   n_gates=26, first_gate_m=15.0, gate_spacing_m=24.0, offset_m=2.0, gate_width_m=5.0, first_side=1.0,
                   course_m=640.0, finish_width_m=14.0, fall_h_m=0.35, stop_speed_m_s=0.10, stop_s=1.5)
-    sentence = ("Ski the giant slalom: one run down the course on your skis, both ski tips and both feet through each "
-                "of the {n_gates} gates in order, then over the finish line.")
+    sentence = ("Ski the giant slalom in one run down the course: take both ski tips and both feet through each of "
+                "the {n_gates} gates in order, then cross the finish line.")
     rules = ("FIS alpine giant slalom, one run (a course of the U16-U14 minimum vertical drop). The course is a groomed slope falling at "
              "{slope_deg} degrees along +x (the fall line), {course_width_m} m wide, centred on y = 0. Each of your "
              "feet is bound to a giant-slalom ski. You stand on your skis on the level start platform at the top of the course, your boots "

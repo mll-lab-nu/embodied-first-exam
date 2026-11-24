@@ -1,6 +1,6 @@
 # DexJoCo · pinch_tongs — frozen instance
 
-You control a Franka Panda arm with a 16-DoF Allegro hand (DexJoCo on MuJoCo 3.4) via Python. **Task:** Pick up the tongs and open and close them three times while holding them up. A pinch counts each time the tongs' hinge goes from open (>= 0.1 rad) to closed (<= -0.07 rad). Success: at least three pinches counted and the tongs at least 0.10 m above the table, held for 30 consecutive control steps.
+You control a Franka Panda arm with a 16-DoF Allegro hand (DexJoCo on MuJoCo 3.4) via Python. **Task:** Pick up the tongs, open and close them three times while holding them up, then keep holding them up. A pinch counts each time the tongs' hinge goes from open (>= 0.1 rad) to closed (<= -0.07 rad). Success: at least three pinches counted and the tongs at least 0.10 m above the table, held for 30 consecutive control steps.
 
 The kitchen tongs lie on the table in front of the robot; their two arms are joined by a hinge (`tongs_hinge`). `s.objects()` gives the live poses of the task objects (`tongs`, `tongs_hinge`, `table_top`). DexJoCo's success code (from
 `/opt/dexjoco/dexjoco/dexjoco/sim/envs/panda_pinch_tongs_env.py`; `step()` ends the episode on success or on a task failure):

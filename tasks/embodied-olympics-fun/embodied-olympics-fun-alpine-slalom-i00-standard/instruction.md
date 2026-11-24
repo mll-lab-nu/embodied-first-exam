@@ -2,7 +2,7 @@
 
 You control a simulated Unitree G1 humanoid robot (29 joints, 1.32 m tall, 33 kg; the Embodied Olympics simulator on MuJoCo)
 **as if it were real hardware**: the simulator runs in a service you cannot open, and you reach it only through a
-client. **Task:** Ski the slalom: one run down the course on your skis, both ski tips and both feet through each of the 32 gates in order, then over the finish line.
+client. **Task:** Ski the slalom in one run down the course: take both ski tips and both feet through each of the 32 gates in order, then cross the finish line.
 
 ## The venue
 You stand at the top of the course on the level start platform, which is about 6 m long. You face straight down the slope, along +x, on junior slalom skis about 1.3 m long with a sidecut radius of about 8 m. Your boots are about 30 cm behind the platform's front edge, which is the red start line, about 3 m before x = 0 and about 0.6 m above it. The edge rounds onto the slope, which falls at about 18 degrees for the whole course and levels out into an outrun after the finish. The gates' poles are red and blue, 1.8 m out of the snow; the finish has two posts and a banner.

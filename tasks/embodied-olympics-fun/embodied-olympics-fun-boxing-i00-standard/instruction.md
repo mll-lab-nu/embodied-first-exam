@@ -2,7 +2,7 @@
 
 You control a simulated Unitree H1-2 humanoid robot (27 joints, 1.78 m tall, 67 kg; the Embodied Olympics simulator on MuJoCo)
 **as if it were real hardware**: the simulator runs in a service you cannot open, and you reach it only through a
-client. **Task:** Punch the heavy bag once with the knuckles of your right fist, on the marked band, hard enough to give it 12.0 N s, then bring the fist back to your guard and stand.
+client. **Task:** Punch the heavy bag once with the knuckles of your right fist, on the marked band, hard enough to give it an impulse of at least 12 N s. Then bring the fist back to your guard, close to your right shoulder, and stand.
 
 ## The venue
 You face the bag (+x); its near side is 0.575 m in front of your pelvis and it hangs still. The band is white. Your arms are at rest: the upper arms down, the forearms level and pointing at the bag, the fists 0.1 m short of it.

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Skate the speed slalom: from the start box, 12 m of run-up, then on one foot through the 20 cones, passing them alternately left and right, and over the end line, as fast as you can. (Embodied Olympics `inline-slalom`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Skate the speed slalom: from the start box, skate up to the 20 cones and through them on one foot, passing them alternately on the left and the right, then cross the end line on that foot, all within one minute. (Embodied Olympics `inline-slalom`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
 
 ## Difficulty
 Skating is pushing against wheels that only grip sideways: the robot has no skating gait and no balance on one foot, and on one skate it stands on a line of wheels, so it can only stay up by steering the skate under its weight while weaving through cones 0.8 m apart. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 5 resets (only the last attempt is graded).

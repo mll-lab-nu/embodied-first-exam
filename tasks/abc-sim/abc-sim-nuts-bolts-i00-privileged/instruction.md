@@ -1,7 +1,7 @@
 # ABC Sim · sort nuts and bolts -- frozen instance
 
 You control a bimanual robot -- two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each) side by side at the near edge of a table, facing +x (the left arm is the one at +y) -- via Python (ABC Sim, `abc_sim` on MuJoCo 3.6.0).
-**Task:** Sort the parts: the nuts into the teal bin and the bolts into the orange bin. Success: every nut is in one bin and every bolt in the other, at the same time (the rule also accepts the bins swapped); a part is in a bin when its centre is inside the bin's interior region (between its walls, from just above its floor to below its rim). The goal must hold for 30 consecutive control steps (1.02 s); the episode then ends in success.
+**Task:** Put all the nuts into one bin and all the bolts into the other. Success: every nut is in one bin and every bolt in the other, at the same time (the rule also accepts the bins swapped); a part is in a bin when its centre is inside the bin's interior region (between its walls, from just above its floor to below its rim). The goal must hold for 30 consecutive control steps (1.02 s); the episode then ends in success.
 
 9 nuts and 10 bolts lie on the table with two bins, a teal one and an orange one (loose objects, turned at some angle). The task's directive, as the scene states it: "sort the nuts and bolts into their matching bins".
 

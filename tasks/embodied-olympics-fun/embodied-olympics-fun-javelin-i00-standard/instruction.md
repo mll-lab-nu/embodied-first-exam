@@ -2,7 +2,7 @@
 
 You control a simulated Unitree H1-2 humanoid robot (27 joints, 1.78 m tall, 67 kg; the Embodied Olympics simulator on MuJoCo)
 **as if it were real hardware**: the simulator runs in a service you cannot open, and you reach it only through a
-client. **Task:** Throw the javelin held by its cord in your right hand over the shoulder from behind the arc so that its head strikes the ground first, inside the sector, at least 20.0 m from the arc, then leave the runway behind the arc and stand.
+client. **Task:** Throw the javelin, held by its cord in your right hand, over your shoulder from behind the arc so that its head strikes the ground first, inside the sector and at least 20 m from the arc. Then leave the runway behind the arc and stand.
 
 ## The venue
 You stand on the runway's centre line facing the sector (+x), your pelvis 2.0 m behind the middle of the arc; the arc's centre is 6.0 m behind you, its ends are 0.25 m behind its middle and 2.0 m to either side, and the runway reaches 28 m behind you. Your right arm hangs down, the hand's fingers pointing down; the javelin lies level across the closed hand's palm, its cord held by the fingers and thumb, pointing forwards (the tip 0.92 m ahead of the hand). Still air. The hand opens when your right grip command goes to 0 (the fingers at most 260 deg/s).

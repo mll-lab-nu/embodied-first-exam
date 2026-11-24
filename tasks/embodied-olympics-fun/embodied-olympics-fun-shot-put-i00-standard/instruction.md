@@ -2,7 +2,7 @@
 
 You control a simulated Unitree H1-2 humanoid robot (27 joints, 1.78 m tall, 67 kg; the Embodied Olympics simulator on MuJoCo)
 **as if it were real hardware**: the simulator runs in a service you cannot open, and you reach it only through a
-client. **Task:** Put the shot that rests on your open right palm at your neck, from the shoulder with that hand alone, so that it lands inside the sector at least 6.0 m from the circle, then leave the circle from its rear half and stand.
+client. **Task:** Put the shot that rests on your open right palm at your neck, pushing it from the shoulder with that hand alone, so that it lands inside the sector at least 6 m from the circle. Then leave the circle from its rear half and stand.
 
 ## The venue
 You stand in the rear half of the circle facing the sector (+x), your pelvis 0.45 m behind the circle's centre; the stop board is at the front of the circle, 1.5 m ahead of you. Your right arm is folded up in front of the right side of your chest, the open palm facing up, in towards the neck and a little back, the shot resting on it against the right side of the neck, just above and in front of the right shoulder. The start command is not where the arm stands (the joint table's start targets differ from its angles: the difference carries the shot's weight on the soft arm servos); held as it is, the shot stays and the robot stands (its pelvis drifts about 2 cm in the minute). Still air.

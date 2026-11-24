@@ -194,8 +194,9 @@ class Task(TaskBase):
                   mat_height_m=0.80, mat_gap_m=0.15, front_piece_m=2.0, mat_timeconst_s=0.069,
                   min_support_s=0.15, min_pole_load=0.5, runup_min_m_s=2.5, runup_window_s=0.5, pole_min_deg=20.0, climb_m=0.05, bar_hand_s=0.10, bar_drop_m=0.05, bar_wait_s=2.0)
 
-    sentence = ("Vault over the bar with the pole you carry: plant its tip in the box, leave the ground hanging on "
-                "it, go over the bar between the uprights and come down on the mat, with the bar still on its pegs.")
+    sentence = ("Vault over the bar with the pole you carry: run up, plant its tip in the box, leave the ground "
+                "hanging on the pole, go over the bar between the uprights and come down on the mat, with the bar "
+                "still on its pegs.")
     rules = ("World Athletics rules for the pole vault. You carry the pole ({pole_length_m} m long, "
              "{pole_diameter_m} m thick, {pole_mass_kg} kg; rigid: it does not bend) held at its middle in your right "
              "hand. Your hands are three-finger hands (a thumb, an index and a middle finger) that hold by contact and "

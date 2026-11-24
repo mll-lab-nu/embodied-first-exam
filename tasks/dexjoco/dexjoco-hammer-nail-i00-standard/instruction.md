@@ -1,7 +1,7 @@
 # DexJoCo · hammer_nail — STANDARD MODE (robot as a service, eai-standard/2.2)
 
 You control a Franka Panda arm with a 16-DoF Allegro hand, **as if it were real hardware**: the simulator runs in a service you cannot open. You get
-one client and one episode. **Task:** Pick up the hammer and drive the nail into the wooden block by striking its head. Only a real downward swing counts: the hammer face must be moving down faster than about 20 cm per second just before it hits the nail. Such a blow drives the nail about 1 cm deeper, and a faster blow drives it further, up to about 2.5 cm per strike. Success: the nail is at least 4 cm deep.
+one client and one episode. **Task:** Pick up the hammer and drive the nail into the wooden block by striking the nail's head with it. Only a real downward swing counts: the hammer face must be moving down faster than about 20 cm per second just before it hits the nail. Such a blow drives the nail about 1 cm deeper, and a faster blow drives it further, up to about 2.5 cm per strike. Success: the nail is at least 4 cm deep.
 
 The hammer lies on the table at the robot's right (low y); the nail stands upright in a wooden block in front of the robot. The nail is not a free body: it only moves down when struck.
 

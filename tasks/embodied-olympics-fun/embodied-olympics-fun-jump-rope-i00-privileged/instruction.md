@@ -1,7 +1,7 @@
 # embodied-olympics jump-rope — instance i00
 
 You control a simulated Unitree G1 humanoid robot (29 joints, 1.32 m tall, 35 kg; the Embodied Olympics simulator on MuJoCo)
-via Python. **Task:** Skip rope: turn the rope forwards with both hands, over your head and under your feet, and jump it with both feet together, 17 times within one minute.
+via Python. **Task:** Skip rope: turn the rope forwards with both hands, over your head and under your feet, and jump it with both feet together 17 times within one minute. Then land on your feet and stand.
 
 This is a *fixed instance*: the same venue and start every time. You may reset and retry as many times as you want.
 Your deliverable is **one replayable trajectory**, not a general policy.

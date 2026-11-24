@@ -1,7 +1,7 @@
 # embodied-olympics skateboard-ollie — instance i00
 
 You control a simulated Unitree G1 humanoid robot (29 joints, 1.32 m tall, 33 kg; the Embodied Olympics simulator on MuJoCo)
-via Python. **Task:** Ollie the skateboard from a standstill: pop the tail, take the board up with your feet until all of it is at least 0.05 m off the ground, land on it and stand still on it for 1.0 s.
+via Python. **Task:** Ollie the skateboard from a standstill: pop the tail and lift the board with your feet until all of it is at least 5 cm off the ground, then land on it and stand still on it for a second.
 
 This is a *fixed instance*: the same venue and start every time. You may reset and retry as many times as you want.
 Your deliverable is **one replayable trajectory**, not a general policy.

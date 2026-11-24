@@ -2,8 +2,7 @@
 
 You control a bimanual **Marvin** robot (two 7-DoF arms with Pika parallel grippers) **as if it were real hardware**:
 the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Push the red block onto
-the green target area. White blocks 3, 2 and 1 and the red block stand upright in a row, a domino chain that ends just
-short of the green target area; white block 4 stands on its own, closer to the robot.
+the green target area. White blocks 3, 2 and 1 and the red block stand upright in a row, a domino chain that ends just short of the green target area. White block 4 stands on its own, closer to the robot.
 
 ## Success criterion (as graded)
 This is exactly what the grader checks (RoboWits' success predicate, stated in words, and the release and rest

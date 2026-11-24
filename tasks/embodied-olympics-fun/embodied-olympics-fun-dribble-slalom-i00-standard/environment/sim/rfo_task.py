@@ -41,8 +41,9 @@ class Task(TaskBase):
     params = dict(cones=6, cone_spacing_m=2.0, first_cone_m=2.0, start_line_m=1.0, ball_ahead_m=0.5, control_m=2.0,
                   cone_height_m=0.30, cone_base_radius_m=0.11, fall_z_m=0.35)
 
-    sentence = ("Dribble the football through the slalom: out through the six cones, round the last one and back "
-                "through them over the start line, keeping the ball within 2 m and touching no cone.")
+    sentence = ("Dribble the football out through the six cones, passing each on the side of its yellow mark, round "
+                "the last cone and back through them, then over the start line. Keep the ball within 2 m of you and "
+                "touch no cone.")
     rules = ("A size-5 football (0.22 m across, 0.43 kg) lies {ball_ahead_m} m ahead of you, behind the start line, "
              "which is {start_line_m} m ahead of you and square to the way you face. Six cones ({cone_height_m} m "
              "high, base radius {cone_base_radius_m} m, free-standing) stand on the line you face along, the first "

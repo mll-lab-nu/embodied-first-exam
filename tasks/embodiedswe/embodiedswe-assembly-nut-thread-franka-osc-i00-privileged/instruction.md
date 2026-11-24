@@ -8,7 +8,7 @@ An NVIDIA GPU is available. Your job: write a program that completes the task be
 ## The task
 
 1 M16 bolt standing upright, fixed on a sturdy table, and 1 loose M16 nut resting flat on the table beside it, ready to be picked up and fitted. Each bolt carries real threads.
-Goal: pick up the nut, set it on the bolt, and screw it down (turn it clockwise while pressing down) until it seats. A seated nut locks in place. The task is complete once the nut is seated.
+Goal: pick up the nut, set it on the bolt and screw it down, turning it clockwise while pressing down, until it seats. A seated nut locks in place. The task is complete once the nut is seated.
 
 A Franka Emika Panda arm with a parallel-jaw gripper, fixed to the table. Control mode 'osc': 7 arm joints by operational-space control (joint torque); the action is 6 end-effector pose deltas, plus 2 gripper fingers by direct position target. Action dim 8.
 

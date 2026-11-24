@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/dexjoco-hammer-nail-i00-privileged"
-description = "DexJoCo hammer_nail (a Franka Panda arm with a 16-DoF Allegro hand, MuJoCo): produce one replayable trajectory. Pick up the hammer and drive the nail into the wooden block by striking its head. Frozen scene instance (the initial state of a DexJoCo human demonstration)."
+description = "DexJoCo hammer_nail (a Franka Panda arm with a 16-DoF Allegro hand, MuJoCo): produce one replayable trajectory. Pick up the hammer and drive the nail into the wooden block by striking the nail's head with it. Frozen scene instance (the initial state of a DexJoCo human demonstration)."
 keywords = ["robotics", "dexjoco", "mujoco", "allegro", "dexterous-manipulation", "code-as-policy", "trajectory", "hammer_nail"]
 
 [metadata]

@@ -2,7 +2,7 @@
 
 You control a simulated Unitree H1-2 humanoid robot (27 joints, 1.78 m tall, 67 kg; the Embodied Olympics simulator on MuJoCo)
 **as if it were real hardware**: the simulator runs in a service you cannot open, and you reach it only through a
-client. **Task:** Push the weighted sled with your palms on its two upright handles until the whole sled is over the line 12.5 m ahead, within 60 s.
+client. **Task:** Push the weighted sled by its two upright handles, touching it only with your hands on the handles, until the whole sled is over the finish line 12.5 m ahead, within a minute.
 
 ## The venue
 You stand facing the sled (+x) in the middle of the lane; its two handles are 0.5 m in front of your pelvis, one each side of your centre line. The start line runs under the sled's front edge, the finish line 12.5 m farther on; the lane's side lines are 1.0 m to each side.

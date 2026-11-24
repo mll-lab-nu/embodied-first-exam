@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:abc-sim-0.2.0` |
 
 ## Task
-ABC Sim `hang_mug_on_mug_rack` (two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each) side by side at the near edge of a table, facing +x (the left arm is the one at +y)): Hang the mug on the mug tree. Success: the mug's centre is within 0.115 m horizontally of the tree's axis and between the tree's base and 0.05 m above its top, and the mug touches neither the table nor either gripper (it hangs from the tree, released). The goal must hold for 30 consecutive control steps (1.02 s); the episode then ends in success.
+ABC Sim `hang_mug_on_mug_rack` (two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each) side by side at the near edge of a table, facing +x (the left arm is the one at +y)): Hang the mug on the mug tree and let go of it. Success: the mug's centre is within 0.115 m horizontally of the tree's axis and between the tree's base and 0.05 m above its top, and the mug touches neither the table nor either gripper (it hangs from the tree, released). The goal must hold for 30 consecutive control steps (1.02 s); the episode then ends in success.
 A mug stands on the table near a mug tree (a stand with pegs). The robot is a service; the episode it runs is graded.
 
 ## Difficulty

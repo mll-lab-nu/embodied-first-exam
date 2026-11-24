@@ -2,7 +2,7 @@
 
 You control a simulated Unitree H1-2 humanoid robot (27 joints, 1.78 m tall, 67 kg; the Embodied Olympics simulator on MuJoCo)
 **as if it were real hardware**: the simulator runs in a service you cannot open, and you reach it only through a
-client. **Task:** Run the 50 m hurdles over four free-standing hurdles: go over each one in your lane, never beside it, under its top, or after pushing it away, leave at least one of them standing, and bring your torso to the finish line.
+client. **Task:** Run the 50 m hurdles: go over each of the four free-standing hurdles in your lane, never beside or under it and never after pushing it out of the way, then bring your torso to the finish line. Leave at least one hurdle standing in its place.
 
 ## The venue
 You stand in your lane facing the finish (+x), the front ends of your feet 0.02 m behind the start line, your pelvis 0.23 m behind it. The lane lines are white on a red track; the hurdles' top bars are white with black stripes, their bases and counterweights grey on the track, reaching 0.7 m towards you along the lane's edges; two white posts stand beside the finish line. In your rest pose your forearms point forward at about the height of a hurdle's top.

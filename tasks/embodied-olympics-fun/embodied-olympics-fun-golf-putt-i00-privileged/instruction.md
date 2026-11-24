@@ -1,7 +1,7 @@
 # embodied-olympics golf-putt — instance i00
 
 You control a simulated Unitree G1 humanoid robot (29 joints, 1.32 m tall, 34 kg; the Embodied Olympics simulator on MuJoCo)
-via Python. **Task:** Hole the 3.0 m putt: with one stroke of the putter held in your right hand, roll the golf ball that lies on the green into the hole, without letting go of the putter.
+via Python. **Task:** Hole the 3 m putt: with one stroke of the putter held in your right hand, roll the golf ball that lies on the green into the hole, without letting go of the putter.
 
 This is a *fixed instance*: the same venue and start every time. You may reset and retry as many times as you want.
 Your deliverable is **one replayable trajectory**, not a general policy.

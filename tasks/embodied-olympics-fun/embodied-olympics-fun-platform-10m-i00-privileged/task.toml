@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/embodied-olympics-fun-platform-10m-i00-privileged"
-description = "Embodied Olympics platform-10m (one Unitree G1 on the Embodied Olympics simulator, MuJoCo 3.3.7, CPU) in privileged mode: produce one replayable trajectory. Do a forward dive straight (101A) from the 10 m platform: from your standing start at its front end, take off, turn half a somersault forwards in the straight position and enter the water head first, vertical, with your arms stretched beyond your head. A referee of events, geometry and contact rules decides the success."
+description = "Embodied Olympics platform-10m (one Unitree G1 on the Embodied Olympics simulator, MuJoCo 3.3.7, CPU) in privileged mode: produce one replayable trajectory. Do dive 101A, a forward dive straight, from the 10 m platform: take off from your standing start at its front end, turn half a somersault forwards in the straight position, and enter the water head first and vertical, with your arms stretched beyond your head. A referee of events, geometry and contact rules decides the success."
 keywords = ["robotics", "embodied-olympics", "sports", "mujoco", "unitree-g1", "humanoid", "trajectory", "platform-10m"]
 
 [metadata]

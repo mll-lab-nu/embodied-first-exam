@@ -98,7 +98,8 @@ class Task(TaskBase):
                   min_impulse_n_s=12.0, max_contact_s=0.10, touch_gap_s=0.03, guard_m=0.35, guard_s=2.0, fall_pelvis_m=0.50)
 
     sentence = ("Punch the heavy bag once with the knuckles of your {fist} fist, on the marked band, hard enough to "
-                "give it {min_impulse_n_s} N s, then bring the fist back to your guard and stand.")
+                "give it an impulse of at least {min_impulse_n_s:g} N s. Then bring the fist back to your guard, "
+                "close to your {fist} shoulder, and stand.")
     rules = ("A heavy bag ({bag_mass_kg} kg, {bag_length_m} m long, {bag_diameter_m} m across) hangs by a "
              "{chain_length_m} m chain from a hook, free to swing in every direction; its top is {bag_top_m} m above "
              "the floor and its axis {bag_distance_m} m in front of you. The marked band runs round the bag from "

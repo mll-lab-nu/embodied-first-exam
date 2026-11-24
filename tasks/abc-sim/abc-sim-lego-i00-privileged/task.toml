@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/abc-sim-lego-i00-privileged"
-description = "ABC Sim sort LEGO blocks (two I2RT YAM arms, MuJoCo): Sort the blocks into the bins of their colours. Frozen scene instance; one replayable trajectory, graded by two fresh-process replays."
+description = "ABC Sim sort LEGO blocks (two I2RT YAM arms, MuJoCo): Put every block into the bin of its own colour. Frozen scene instance; one replayable trajectory, graded by two fresh-process replays."
 keywords = ["robotics", "abc-sim", "mujoco", "yam", "bimanual", "lego", "privileged"]
 
 [metadata]

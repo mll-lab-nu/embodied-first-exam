@@ -1,7 +1,7 @@
 # embodied-olympics badminton-serve — instance i00
 
 You control a simulated Unitree G1 humanoid robot (29 joints, 1.32 m tall, 35 kg; the Embodied Olympics simulator on MuJoCo)
-via Python. **Task:** Serve: standing in your right service court, let the shuttle go from your left hand and hit it with the racket in your right hand, base first and below 1.15 m, over the net into the receiver's service court diagonally opposite.
+via Python. **Task:** Stand in your right service court and let the shuttle go from your left hand. Hit it with the racket in your right hand, cork base first and with the whole shuttle below 1.15 m, over the net into the receiver's service court diagonally opposite.
 
 This is a *fixed instance*: the same venue and start every time. You may reset and retry as many times as you want.
 Your deliverable is **one replayable trajectory**, not a general policy.

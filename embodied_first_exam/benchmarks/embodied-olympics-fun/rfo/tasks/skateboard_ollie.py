@@ -73,8 +73,8 @@ class Task(TaskBase):
         fall_z_m=0.30,
     )
 
-    sentence = ("Ollie the skateboard from a standstill: pop the tail, take the board up with your feet until all "
-                "of it is at least {clear_m} m off the ground, land on it and stand still on it for {stand_s} s.")
+    sentence = ("Ollie the skateboard from a standstill: pop the tail and lift the board with your feet until all of "
+                "it is at least 5 cm off the ground, then land on it and stand still on it for a second.")
     rules = ("The skateboard: a {deck_length_m} m deck, {deck_width_m} m wide, with a kicktail and a nose turned "
              "up {kick_deg} degrees, on two trucks {wheelbase_m} m apart with four {wheel_radius_m} m-radius wheels; "
              "the trucks steer when the deck tilts (pivot axis {pivot_deg} degrees, {bushing_nm_rad} N m/rad of "

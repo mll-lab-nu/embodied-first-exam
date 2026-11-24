@@ -1,7 +1,7 @@
 # embodied-olympics freeski-360 — instance i00
 
 You control a simulated Unitree G1 humanoid robot (29 joints, 1.32 m tall, 33 kg; the Embodied Olympics simulator on MuJoCo)
-via Python. **Task:** Drop in from the start platform, ride the in-run, take off from the kicker, do a 360 in the air, land on your skis and ride away past the finish line.
+via Python. **Task:** Drop in from the start platform and ride the in-run. Take off from the kicker and do a 360, then land on your skis and ride away past the finish line.
 
 This is a *fixed instance*: the same venue and start every time. You may reset and retry as many times as you want.
 Your deliverable is **one replayable trajectory**, not a general policy.

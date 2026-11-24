@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-match-0.1.0@sha256:99255569bf68bcf27f4e4867b58bad55c1d54fe73281920882e97c310836b6c7` |
 
 ## Task
-Win one complete match against the frozen sport's scripted L4 opponent, seed 34: the same frozen instance as `embodied-olympics-match-tabletennis-match-i04-realtime` (its realtime twin; there you see only camera images).
+Win one complete match against the frozen sport's scripted level-4 opponent, seed 34: the same frozen instance as `embodied-olympics-match-tabletennis-match-i04-realtime` (its realtime twin; there you see only camera images).
 
 ## Difficulty
 Same frozen sport and instance as `embodied-olympics-match-tabletennis-match-i04-realtime`: scripted level 4, seed 34; full-simulator

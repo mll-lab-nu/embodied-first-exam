@@ -2,7 +2,7 @@
 
 You control a simulated Unitree G1 humanoid robot (29 joints, 1.32 m tall, 33 kg; the Embodied Olympics simulator on MuJoCo)
 **as if it were real hardware**: the simulator runs in a service you cannot open, and you reach it only through a
-client. **Task:** Run the Illinois agility course: up the left side and round the far-left cone, back to the centre cone on the start line, weave up through the four centre cones and back down, up the right side and round the far-right cone, and back over the finish line, without touching a cone.
+client. **Task:** Run the Illinois agility course without touching a cone: go up the left side and round the far-left cone, back round the centre cone on the start line, and weave up through the four centre cones and back down. Then go up the right side, round the far-right cone, and back over the finish line.
 
 ## The venue
 You stand at the start facing up the course (+x), 0.6 m to the right of the start cone, the front ends of your feet 0.02 m behind the start line (your pelvis at x = -0.13 m, y = +1.9 m). The cones are orange; the course's outline and its centre line are painted white on a level sports floor that goes on for several metres on every side.

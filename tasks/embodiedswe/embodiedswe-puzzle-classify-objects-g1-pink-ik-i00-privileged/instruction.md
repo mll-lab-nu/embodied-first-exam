@@ -7,7 +7,7 @@ An NVIDIA GPU is available. Your job: write a program that completes the task be
 
 ## The task
 
-3 coloured wooden blocks (45 mm cubes) lie scattered on a work table: 1 red, 1 blue, 1 green. On the table are 3 marked coloured zones, one per colour (red and blue and green). Goal: sort every block into the zone whose colour matches it — put each block fully onto its matching-colour zone. A block left off the zones, or placed on the wrong colour's zone, does not count.
+3 coloured wooden blocks (45 mm cubes) lie scattered on a work table: 1 red, 1 blue, 1 green. On the table are 3 marked coloured zones, one per colour (red and blue and green). Goal: put each of the three blocks fully onto the zone of its own colour. A block left off the zones, or placed on the wrong colour's zone, does not count.
 
 A Unitree G1 humanoid with three-finger hands, fixed at the pelvis (legs locked), a stationary upper-body manipulator. Control mode 'pink_ik': 17 arm+waist joints driven by the Pink IK solver (absolute wrist poses), plus 14 hand joints by direct position target. Action dim 28.
 

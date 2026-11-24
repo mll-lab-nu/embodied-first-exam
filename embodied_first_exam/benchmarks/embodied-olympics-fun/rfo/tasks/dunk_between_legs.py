@@ -376,9 +376,9 @@ class Task(TaskBase):
                   basket_touch_s=0.30, max_steps=2, step_gap_s=0.03, foot_slide_m=0.20, stand_s=1.0,
                   stand_speed_m_s=0.35, stand_upright_cos=0.94)
 
-    sentence = ("From the top of the key, with the basketball held in your two hands, dribble it, make one "
-                "of its bounces pass between your legs, gather it in both hands, and with at most two steps dunk it: "
-                "force it down through the ring from above with your hands on it, then land on your feet.")
+    sentence = ("From the top of the key, dribble the basketball that starts in your two hands and make one of its "
+                "bounces pass between your legs, then gather it in both hands. With at most two steps, dunk it: force "
+                "it down through the ring from above with your hands on it, then let go, land on your feet and stand.")
     rules = ("A FIBA court ({court_width_m} m wide inside its side lines, lines {line_width_m} m wide); the official "
              "basket: a rigid ring of {ring_inner_diameter_m} m inner diameter ({ring_metal_m} m metal), its top edge "
              "{ring_height_m} m above the floor, its centre {ring_centre_to_board_m} m in front of a backboard "

@@ -1,7 +1,7 @@
 # embodied-olympics balance-board — instance i00
 
 You control a simulated Unitree G1 humanoid robot (29 joints, 1.32 m tall, 33 kg; the Embodied Olympics simulator on MuJoCo)
-via Python. **Task:** Stay balanced on the roller board for 30.0 s: neither end of the deck nor any part of you may touch the floor.
+via Python. **Task:** Stay balanced on the roller board for 30 seconds. Touch only the deck, and only with your feet, and keep both ends of the deck off the floor.
 
 This is a *fixed instance*: the same venue and start every time. You may reset and retry as many times as you want.
 Your deliverable is **one replayable trajectory**, not a general policy.

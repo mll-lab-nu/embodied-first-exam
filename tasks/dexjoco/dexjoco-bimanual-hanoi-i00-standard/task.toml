@@ -13,7 +13,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/dexjoco-bimanual-hanoi-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.2): DexJoCo bimanual_hanoi (two Franka Panda arms, each with a 16-DoF Allegro hand) on the same frozen instance as dexjoco-bimanual-hanoi-i00-privileged. Tower of Hanoi with three disks on three vertical posts in a row along y: the small disk is on post A (y > 0, the left arm's side), the medium disk on post B (middle), the large disk on post C (y < 0). The agent only gets a client: calibrated cameras (RGB, optional depth), the robot's joints and tcp poses, tcp-target + hand-joint chunks at 50 Hz, the robot's kinematics; one episode, no reset, no object state; the sim service records the episode and grades it live (no grading replay)."
+description = "STANDARD MODE (robot as a service, eai-standard/2.2): DexJoCo bimanual_hanoi (two Franka Panda arms, each with a 16-DoF Allegro hand) on the same frozen instance as dexjoco-bimanual-hanoi-i00-privileged. This is a Tower of Hanoi with three disks on three upright posts in a row along y. The small disk starts on post A, at y > 0 on the left arm's side, the medium disk on post B in the middle, and the large disk on post C, at y < 0. The agent only gets a client: calibrated cameras (RGB, optional depth), the robot's joints and tcp poses, tcp-target + hand-joint chunks at 50 Hz, the robot's kinematics; one episode, no reset, no object state; the sim service records the episode and grades it live (no grading replay)."
 keywords = ["robotics", "dexjoco", "mujoco", "allegro", "dexterous-manipulation", "standard-mode", "robot-as-a-service", "bimanual_hanoi"]
 
 [metadata]

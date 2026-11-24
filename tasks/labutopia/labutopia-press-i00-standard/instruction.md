@@ -2,7 +2,7 @@
 
 You control a **Franka Panda** arm (7 joints) with its two-finger gripper, fixed to a laboratory bench, **as if it were real**: the simulator (LabUtopia's chemistry laboratory on NVIDIA Isaac
 Sim) runs in a service you cannot open. You get one client and one episode.
-**Task:** Press the red button on the instrument's front panel (the two grey buttons next to it do not count) and keep it pressed. Success the moment its cap has been pushed in more than 5 mm for one second (60 control steps in a row). The panel is vertical and faces the arm: the button is pushed in along the forward (+x) axis of the arm's base.
+**Task:** Press the red button on the instrument's front panel, not the two grey buttons next to it, and keep it pressed. Success the moment its cap has been pushed in more than 5 mm for one second (60 control steps in a row). The panel is vertical and faces the arm: the button is pushed in along the forward (+x) axis of the arm's base.
 
 In front of the arm stands an instrument with a vertical front panel that carries three square buttons in a row, each 8 cm across: one red, two dark grey.
 

@@ -2,7 +2,7 @@
 
 You control a simulated Unitree G1 humanoid robot (29 joints, 1.32 m tall, 33 kg; the Embodied Olympics simulator on MuJoCo)
 **as if it were real hardware**: the simulator runs in a service you cannot open, and you reach it only through a
-client. **Task:** Breaking: go down to the floor and do three consecutive windmills, rolling over your upper back, shoulders and chest while your legs circle round above the floor.
+client. **Task:** Breaking: go down to the floor and do three windmills in a row, rolling over your upper back, shoulders and chest while your legs circle above the floor and neither your hips nor your legs touch it.
 
 ## The venue
 You stand in the middle of a breaking stage, a 8.0 m by 8.0 m laminate floor, flat, level and rigid, with a red line on its right side and a blue line on its left; you face +x.

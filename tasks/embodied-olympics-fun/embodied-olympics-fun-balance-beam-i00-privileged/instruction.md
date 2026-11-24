@@ -1,7 +1,7 @@
 # embodied-olympics balance-beam — instance i00
 
 You control a simulated Unitree G1 humanoid robot (29 joints, 1.32 m tall, 33 kg; the Embodied Olympics simulator on MuJoCo)
-via Python. **Task:** Walk along the balance beam from the end you stand on to the other end and stand there, without anything touching the floor.
+via Python. **Task:** Walk along the balance beam from the end you stand on to the far end, marked yellow, and stand there, touching the beam only with your feet and never touching the floor.
 
 This is a *fixed instance*: the same venue and start every time. You may reset and retry as many times as you want.
 Your deliverable is **one replayable trajectory**, not a general policy.

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Hole the 3.0 m putt: with one stroke of the putter held in your right hand, roll the golf ball that lies on the green into the hole, without letting go of the putter. (Embodied Olympics `golf-putt`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Hole the 3 m putt: with one stroke of the putter held in your right hand, roll the golf ball that lies on the green into the hole, without letting go of the putter. (Embodied Olympics `golf-putt`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
 
 ## Difficulty
 The hole is two and a half ball widths across and three metres away: the ball must start within about one degree of the line and at a speed between the one that just reaches the hole and the one that jumps it, and there is no second stroke. The club is an adult's, long and heavy for this robot's wrist, and it has to be brought from where it starts to an address beside the ball first. It is held across the palm of a three-finger hand by friction: levered it turns in the fingers, so it has to be carried with the shaft near the vertical, and the swing rocks it in the hand, so the face at impact is not quite where the arm put it. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 5 resets (only the last attempt is graded).

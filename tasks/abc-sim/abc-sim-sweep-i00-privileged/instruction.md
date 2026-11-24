@@ -1,7 +1,7 @@
 # ABC Sim · sweep paper scraps -- frozen instance
 
 You control a bimanual robot -- two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each) side by side at the near edge of a table, facing +x (the left arm is the one at +y) -- via Python (ABC Sim, `abc_sim` on MuJoCo 3.6.0).
-**Task:** Get the paper scraps into the trash can: sweep them into the dustpan with the brush and empty it into the can, or any other way. Success: all 2 scraps are inside the trash can at the same time (each scrap's centre within the can's inner radius of its axis and between its floor and its rim). Pushing scraps off the table does not count. The goal must hold for 30 consecutive control steps (1.02 s); the episode then ends in success.
+**Task:** Get all the paper scraps into the trash can, for example by sweeping them into the dustpan with the brush and emptying the dustpan into the can. Success: all 2 scraps are inside the trash can at the same time (each scrap's centre within the can's inner radius of its axis and between its floor and its rim). Pushing scraps off the table does not count. The goal must hold for 30 consecutive control steps (1.02 s); the episode then ends in success.
 
 2 crumpled paper scraps lie on the table, with a brush, a dustpan and a trash can (all loose objects). The task's directive, as the scene states it: "sweep away paper scraps from the table".
 

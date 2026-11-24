@@ -65,8 +65,8 @@ class Task(TaskBase):
     params = dict(wall_distance_m=5.0, target_height_m=1.5, target_diameter_m=0.5, target_y_m=0.0, release_s=0.05,
                   retouch_grace_s=0.15, held_gap_s=0.05, hold_s=1.0, fall_pelvis_m=0.50)
 
-    sentence = ("Throw the tennis ball held in your right hand at the target circle on the wall and catch the "
-                "rebound in a hand before it touches the ground, and keep hold of it.")
+    sentence = ("From behind the line, throw the tennis ball held in your right hand at the target circle on the "
+                "wall, then catch the rebound in a hand before it touches the ground and keep hold of it.")
     rules = ("The tennis ball (" + f"{2 * BALL['radius']:.3f} m across, {BALL['mass']:.4f} kg, it keeps "
              f"{BALL['bounce']:.3f} of its speed in a bounce" + ", it flies in air with drag) starts held in "
              "your right hand. Both your hands are five-finger hands that hold things only by contact and friction; "

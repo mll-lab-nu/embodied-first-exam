@@ -2,7 +2,7 @@
 
 You control a simulated Unitree G1 humanoid robot (29 joints, 1.32 m tall, 33 kg; the Embodied Olympics simulator on MuJoCo)
 **as if it were real hardware**: the simulator runs in a service you cannot open, and you reach it only through a
-client. **Task:** Ollie the skateboard from a standstill: pop the tail, take the board up with your feet until all of it is at least 0.05 m off the ground, land on it and stand still on it for 1.0 s.
+client. **Task:** Ollie the skateboard from a standstill: pop the tail and lift the board with your feet until all of it is at least 5 cm off the ground, then land on it and stand still on it for a second.
 
 ## The venue
 A level concrete plaza. You stand across the board, which is at rest on the ground, facing -y, left foot towards the nose: the board's long axis points along +x, its nose at +x. Your feet are in your standing stance, 0.24 m apart, the left one about the middle of the deck, the right one at the tail's bend; the board's centre is 0.11 m ahead (in x) of your pelvis.

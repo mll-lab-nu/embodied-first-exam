@@ -125,7 +125,7 @@ class Task(TaskBase):
                   release_s=0.05, stand_s=1.0, fall_z_m=0.35)
 
     sentence = ("Skip rope: turn the rope forwards with both hands, over your head and under your feet, and jump it "
-                "with both feet together, {count} times within one minute.")
+                "with both feet together {count} times within one minute. Then land on your feet and stand.")
     rules = ("You hold a skipping rope by its two handles, one in each of your three-finger hands. Turn it forwards: "
              "over your head from back to front, then down in front of you and under your feet from front to back. "
              "A jump counts when the rope, after passing over your head, passes under both feet while nothing of you "

@@ -4,7 +4,7 @@ The task of `embodiedswe-packing-pen-holder-franka-osc-i00-privileged`, on the s
 
 ## The task
 An open hexagonal pen holder (a cup, ~80 mm wide across its corners, 120 mm tall) stands on a work table. Scattered on its other side lie mechanical pencils, flat on the surface: up to 4 pencils (12 mm thick, 150 mm long), each with a pointed writing tip at one end and a click button at the other. Between one and all pencils are present in any episode: count what you see.
-Goal: put every pencil into the holder tip-up (writing tip pointing out of the cup), then leave the loaded holder standing upright on the surface. You may hold the holder while filling it; a pencil dropped tip-down or left leaning outside the cup does not count, and a tipped-over holder scores nothing until it is stood up.
+Goal: put every pencil into the holder with its writing tip pointing up out of the cup, then leave the loaded holder standing upright on the table. You may hold the holder while filling it; a pencil dropped tip-down or left leaning outside the cup does not count, and a tipped-over holder scores nothing until it is stood up.
 
 Success, exactly: for every pencil present in this episode, in the hexagonal pen holder's own frame its click-button end lies within 35 mm of the holder's centre axis, more than 35 mm below the holder's rim (holder 120 mm tall) and no more than 5 mm below the cup floor, and its button-to-tip line points tip-up within 45 deg of the holder axis; the holder stands with its axis within 10 deg of world vertical, its bottom within 10 mm of the table top height, and the holder and every pencil each move slower than 0.05 m/s. Absent pencils are ignored. Not true at the start (pencils lie flat outside the cup).
 

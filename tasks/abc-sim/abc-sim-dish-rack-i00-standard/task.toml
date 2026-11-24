@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, { source
 
 [task]
 name = "embodied-first-exam/abc-sim-dish-rack-i00-standard"
-description = "ABC Sim load the dish rack (two I2RT YAM arms, MuJoCo): Load the plate into the dish rack, standing on edge. The robot as a service (eai-standard/2.2); graded by the live episode."
+description = "ABC Sim load the dish rack (two I2RT YAM arms, MuJoCo): Stand the plate on edge in the dish rack and let go of it. The robot as a service (eai-standard/2.2); graded by the live episode."
 keywords = ["robotics", "abc-sim", "mujoco", "yam", "bimanual", "dish_rack", "standard"]
 
 [metadata]

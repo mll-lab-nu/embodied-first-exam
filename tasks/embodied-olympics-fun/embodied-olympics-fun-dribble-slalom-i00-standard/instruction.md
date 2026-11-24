@@ -2,7 +2,7 @@
 
 You control a simulated Unitree G1 humanoid robot (29 joints, 1.32 m tall, 33 kg; the Embodied Olympics simulator on MuJoCo)
 **as if it were real hardware**: the simulator runs in a service you cannot open, and you reach it only through a
-client. **Task:** Dribble the football through the slalom: out through the six cones, round the last one and back through them over the start line, keeping the ball within 2 m and touching no cone.
+client. **Task:** Dribble the football out through the six cones, passing each on the side of its yellow mark, round the last cone and back through them, then over the start line. Keep the ball within 2 m of you and touch no cone.
 
 ## The venue
 You face +x, down the line of cones, on level grass; the ball lies on the ground straight ahead of your pelvis and the start line is just beyond it. The last cone is 13 m ahead of you. A yellow mark beside each cone shows the side to pass it on the way out.

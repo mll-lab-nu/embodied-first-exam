@@ -2,7 +2,7 @@
 
 You control a simulated Unitree G1 humanoid robot (29 joints, 1.32 m tall, 33 kg; the Embodied Olympics simulator on MuJoCo)
 **as if it were real hardware**: the simulator runs in a service you cannot open, and you reach it only through a
-client. **Task:** Drop in from the start platform, ride the in-run, take off from the kicker, do a 360 in the air, land on your skis and ride away past the finish line.
+client. **Task:** Drop in from the start platform and ride the in-run. Take off from the kicker and do a 360, then land on your skis and ride away past the finish line.
 
 ## The venue
 x runs down the course from the start platform's back edge; you stand facing +x near the platform's front edge (the start line, 6.0 m from its back) with your boots 0.3 m behind it; the platform is level, 8 m wide. Past the edge, the in-run falls at 35 degrees for about 38 m, then curves on a radius of about 30 m into a flat stretch about 5 m long. From that flat the kicker, about 6 m wide, curves up on a radius of about 18 m to a lip about 1 m long, angled at 25 degrees. The lip is about 72 m down the course, which is about 66 m past the start line, and about 27 m below the platform. Behind the lip the table runs 15.0 m from the lip at the flat's level to the knoll (blue line), the landing falls at 36.0 degrees for 30.0 m (24.0 m wide), bends (radius 30.0 m) into the flat outrun (45.0 m, 30.0 m wide); the finish line (green) is 15.0 m into the outrun. Red lines mark the start line and the lip.

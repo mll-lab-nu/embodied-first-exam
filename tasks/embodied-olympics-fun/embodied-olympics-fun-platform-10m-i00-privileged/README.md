@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Do a forward dive straight (101A) from the 10 m platform: from your standing start at its front end, take off, turn half a somersault forwards in the straight position and enter the water head first, vertical, with your arms stretched beyond your head. (Embodied Olympics `platform-10m`: one Unitree G1 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
+Do dive 101A, a forward dive straight, from the 10 m platform: take off from your standing start at its front end, turn half a somersault forwards in the straight position, and enter the water head first and vertical, with your arms stretched beyond your head. (Embodied Olympics `platform-10m`: one Unitree G1 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
 
 ## Difficulty
 A dive needs a take-off that is high enough and gives exactly the right forward rotation, then a straight body with the legs drawn together, the toes pointed and the short arms stretched overhead through a 1.4 s fall. A small error at the take-off becomes a short or over-rotated entry, and nothing can be corrected once it is in the air.

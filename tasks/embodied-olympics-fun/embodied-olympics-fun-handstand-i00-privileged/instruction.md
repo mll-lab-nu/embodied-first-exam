@@ -1,7 +1,7 @@
 # embodied-olympics handstand — instance i00
 
 You control a simulated Unitree G1 humanoid robot (29 joints, 1.32 m tall, 33 kg; the Embodied Olympics simulator on MuJoCo)
-via Python. **Task:** Do a handstand: from your stance get up onto your hands, hold the handstand still for 2 s with only your hands on the floor, then come back down onto your feet and stand.
+via Python. **Task:** Do a handstand: from your stance, get up onto your hands and hold a straight handstand still for two seconds with only your hands on the floor. Then come back down onto your feet and stand.
 
 This is a *fixed instance*: the same venue and start every time. You may reset and retry as many times as you want.
 Your deliverable is **one replayable trajectory**, not a general policy.

@@ -1,7 +1,7 @@
 # embodied-olympics javelin — instance i00
 
 You control a simulated Unitree H1-2 humanoid robot (27 joints, 1.78 m tall, 67 kg; the Embodied Olympics simulator on MuJoCo)
-via Python. **Task:** Throw the javelin held by its cord in your right hand over the shoulder from behind the arc so that its head strikes the ground first, inside the sector, at least 20.0 m from the arc, then leave the runway behind the arc and stand.
+via Python. **Task:** Throw the javelin, held by its cord in your right hand, over your shoulder from behind the arc so that its head strikes the ground first, inside the sector and at least 20 m from the arc. Then leave the runway behind the arc and stand.
 
 This is a *fixed instance*: the same venue and start every time. You may reset and retry as many times as you want.
 Your deliverable is **one replayable trajectory**, not a general policy.

@@ -2,7 +2,7 @@
 
 You control a simulated Unitree H1-2 humanoid robot (27 joints, 1.78 m tall, 67 kg; the Embodied Olympics simulator on MuJoCo)
 **as if it were real hardware**: the simulator runs in a service you cannot open, and you reach it only through a
-client. **Task:** Throw the tennis ball held in your right hand at the target circle on the wall and catch the rebound in a hand before it touches the ground, and keep hold of it.
+client. **Task:** From behind the line, throw the tennis ball held in your right hand at the target circle on the wall, then catch the rebound in a hand before it touches the ground and keep hold of it.
 
 ## The venue
 You face the wall (+x), your pelvis 0.40 m behind the line; the wall is 5.0 m beyond the line, 6 m wide and 4 m high. The target circle is straight ahead. The ball is held in your closed right hand (closure command 1), against the palm, the forearm level and pointing forwards; your left hand is open (closure command 0). Still air. The grip columns of the action rows are the hands' closure commands (0 open, 1 closed).

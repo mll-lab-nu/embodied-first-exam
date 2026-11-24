@@ -2,7 +2,7 @@
 
 You control a simulated Unitree H1-2 humanoid robot (27 joints, 1.78 m tall, 67 kg; the Embodied Olympics simulator on MuJoCo)
 **as if it were real hardware**: the simulator runs in a service you cannot open, and you reach it only through a
-client. **Task:** Dunk the basketball with both hands: holding it in your two hands, jump, force it down through the ring from above with both hands on it, and land on your feet.
+client. **Task:** Dunk the basketball with both hands: holding it in your two hands, take at most two steps, jump and force it down through the ring from above with both hands on it. Then let go of it, land on your feet and stand.
 
 ## The venue
 A FIBA court. You stand under the basket's front, facing it (+x), inside the no-charge semi-circle: the point under the ring's centre is 0.75 m ahead of your pelvis, the backboard's face 0.375 m beyond it. The ring's top edge is 2.39 m above the floor. The ball is held between your two hands in front of your chest, its centre 1.13 m above the floor and 0.39 m ahead of your pelvis: the hands open (grip values 0, the fingers straight), the palms on its two sides (on these hands it bears on the two thumbs, which lie a little proud of the palms), and the arms pressing the palms in (the start command's shoulder roll and yaw are a little further in than the arms stand: the difference is the squeeze). A grip value is that hand's closure command (0 open, 1 every finger and thumb joint closing towards its closed angle; a finger stops on what it touches).

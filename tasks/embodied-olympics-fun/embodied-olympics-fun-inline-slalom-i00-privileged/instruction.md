@@ -1,7 +1,7 @@
 # embodied-olympics inline-slalom — instance i00
 
 You control a simulated Unitree G1 humanoid robot (29 joints, 1.32 m tall, 33 kg; the Embodied Olympics simulator on MuJoCo)
-via Python. **Task:** Skate the speed slalom: from the start box, 12 m of run-up, then on one foot through the 20 cones, passing them alternately left and right, and over the end line, as fast as you can.
+via Python. **Task:** Skate the speed slalom: from the start box, skate up to the 20 cones and through them on one foot, passing them alternately on the left and the right, then cross the end line on that foot, all within one minute.
 
 This is a *fixed instance*: the same venue and start every time. You may reset and retry as many times as you want.
 Your deliverable is **one replayable trajectory**, not a general policy.

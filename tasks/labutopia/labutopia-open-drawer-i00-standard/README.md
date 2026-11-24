@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:labutopia-0.1.0` |
 
 ## Task
-LabUtopia's `open_drawer` (Open Drawer) on the same frozen instance as `labutopia-open-drawer-i00-privileged`: Open the top drawer of the cabinet (the upper of its two drawers) and let go of it. Success the moment the drawer's handle has been more than 12 cm from where it started, with the gripper more than 4 cm away from the handle (measured from the point between the fingertips to the handle's centre), for one second (60 control steps in a row).
+LabUtopia's `open_drawer` (Open Drawer) on the same frozen instance as `labutopia-open-drawer-i00-privileged`: Open the upper of the cabinet's two drawers and let go of it. Success the moment the drawer's handle has been more than 12 cm from where it started, with the gripper more than 4 cm away from the handle (measured from the point between the fingertips to the handle's centre), for one second (60 control steps in a row).
 On the bench in front of the arm: a grey cabinet with a white top, about 67 cm deep, 76 cm wide and 79 cm high: two drawers at the top, one above the other, each with a bar handle, and two doors below them. Everything is closed. Standard mode (eai-standard/2.2): the agent drives the robot through a client in one episode, with only its proprioception and the scene's cameras.
 
 ## Difficulty

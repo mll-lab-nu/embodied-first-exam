@@ -25,8 +25,8 @@ class Task(TaskBase):
     params = dict(wire_height_m=0.45, course_length_m=10.0, wire_spacing_m=0.5, lane_width_m=2.0,
                   start_distance_m=1.0, wire_diameter_m=0.008)
 
-    sentence = ("Get under the low wires in front of you and crawl the whole course until your whole body is beyond "
-                "the last wire, without touching a wire.")
+    sentence = ("Crawl under all the low wires in front of you, between the two rows of posts, until your whole body "
+                "is past the last, yellow wire. Do not touch any wire.")
     rules = ("The obstacle is a lane along +x, {lane_width_m} m wide between two rows of posts, centred on y = 0. "
              "Horizontal wires cross it every {wire_spacing_m} m over {course_length_m} m: the first is "
              "{start_distance_m} m ahead of where your pelvis starts, the last {course_length_m} m further on. Each "

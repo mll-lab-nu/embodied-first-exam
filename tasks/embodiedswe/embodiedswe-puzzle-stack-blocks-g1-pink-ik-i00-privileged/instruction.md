@@ -7,7 +7,7 @@ An NVIDIA GPU is available. Your job: write a program that completes the task be
 
 ## The task
 
-4 coloured wooden blocks (45 mm cubes) lie scattered flat on a work table, beside a marked square pad. Goal: stack all 4 blocks into a single upright tower centred on the pad — one block squarely on top of the next, faces level, so the finished tower stands 4 blocks high and stays standing. A block placed off-centre enough to overhang, set down crooked, or left off the pad does not count toward the tower.
+4 coloured wooden blocks (45 mm cubes) lie scattered flat on a work table, beside a marked square pad. Goal: stack all 4 blocks into one upright tower, 4 blocks high, centred on the pad, each block squarely on the one below with its faces level, and leave it standing. A block placed off-centre enough to overhang, set down crooked, or left off the pad does not count toward the tower.
 
 A Unitree G1 humanoid with three-finger hands, fixed at the pelvis (legs locked), a stationary upper-body manipulator. Control mode 'pink_ik': 17 arm+waist joints driven by the Pink IK solver (absolute wrist poses), plus 14 hand joints by direct position target. Action dim 28.
 

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Push the weighted sled with your palms on its two upright handles until the whole sled is over the line 12.5 m ahead, within 60 s. (Embodied Olympics `sled-push`: one Unitree H1-2 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
+Push the weighted sled by its two upright handles, touching it only with your hands on the handles, until the whole sled is over the finish line 12.5 m ahead, within a minute. (Embodied Olympics `sled-push`: one Unitree H1-2 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
 
 ## Difficulty
 The sled weighs 5.0 kg on high-friction turf: keeping it moving takes a steady push of about 22 N, against which the walking policy (trained for walking, not pushing) has to keep its balance on 67 kg. Bare palms can only push: if the sled drifts sideways or the hands slip off a handle, nothing holds it.

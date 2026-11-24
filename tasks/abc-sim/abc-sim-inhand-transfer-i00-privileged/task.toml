@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/abc-sim-inhand-transfer-i00-privileged"
-description = "ABC Sim in-hand transfer (two I2RT YAM arms, MuJoCo): Hand the cream cheese stick over to the other side: pick it up with the right arm, pass it to the other gripper and put it down on the left (+y) half. Frozen scene instance; one replayable trajectory, graded by two fresh-process replays."
+description = "ABC Sim in-hand transfer (two I2RT YAM arms, MuJoCo): Pick up the cream cheese stick with the right arm, pass it to the left gripper, and put it down on the table on the left side, toward +y, at least 10 cm past the middle line between the two arms. Frozen scene instance; one replayable trajectory, graded by two fresh-process replays."
 keywords = ["robotics", "abc-sim", "mujoco", "yam", "bimanual", "inhand_transfer", "privileged"]
 
 [metadata]

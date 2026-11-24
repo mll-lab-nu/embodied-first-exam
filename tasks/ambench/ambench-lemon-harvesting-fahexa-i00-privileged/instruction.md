@@ -2,7 +2,7 @@
 
 You control a simulated **aerial manipulator**: a fully actuated hexarotor (six tilted rotors, so it can hold any attitude
 while hovering) carrying a small arm (four joints: three pitch joints and a roll joint) with a two-finger gripper, in
-AM-Bench on Isaac Lab / Isaac Sim 5.1 (PhysX), via Python. **Task:** One lemon and six limes are fixed to the front face of a wall in front of the hovering aerial manipulator, and a grey storage tote sits on a small table against the wall to the robot's left. Harvest the lemon: free it from the wall and get it into the tote. Success needs the lemon's reference point (the base of the fruit) inside the tote's nominal box while the gripper is fully open.
+AM-Bench on Isaac Lab / Isaac Sim 5.1 (PhysX), via Python. **Task:** One lemon and six limes are fixed to the front face of a wall in front of the hovering aerial manipulator, and a grey storage tote sits on a small table against the wall to the robot's left. Harvest the lemon: pull it off the wall, put it into the tote and open the gripper fully. Success needs the lemon's reference point (the base of the fruit) inside the tote's nominal box while the gripper is fully open.
 
 This is a *fixed scene instance*: the scene and the robot start the same way after every reset, and you may reset and
 retry as many times as you want. Your deliverable is **one replayable trajectory** of the robot's low-level actions, not a

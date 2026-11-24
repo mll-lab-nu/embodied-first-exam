@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-From the top of the key, with the basketball held in your two hands, dribble it, make one of its bounces pass between your legs, gather it in both hands, and with at most two steps dunk it: force it down through the ring from above with your hands on it, then land on your feet. (Embodied Olympics `dunk-between-legs`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+From the top of the key, dribble the basketball that starts in your two hands and make one of its bounces pass between your legs, then gather it in both hands. With at most two steps, dunk it: force it down through the ring from above with your hands on it, then let go, land on your feet and stand. (Embodied Olympics `dunk-between-legs`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
 
 ## Difficulty
 Every touch of the dribble has to push the ball down with a hand, and one bounce has to go through the narrow gap between the robot's own feet and come out where a hand can meet it, without touching a leg; then both hands have to catch the moving ball and hold it, with only the hands' contact and friction holding it. After at most two steps the 67 kg body has to rise about 0.4 m with the ball held overhead and bring it down into a ring only 0.21 m wider than the ball, and land; the robot has a walking gait (which steps on the spot even at a zero command) and nothing that jumps or lands. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 5 resets (only the last attempt is graded).

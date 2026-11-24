@@ -2,7 +2,7 @@
 
 You control a simulated Unitree G1 humanoid robot (29 joints, 1.32 m tall, 33 kg; the Embodied Olympics simulator on MuJoCo)
 **as if it were real hardware**: the simulator runs in a service you cannot open, and you reach it only through a
-client. **Task:** Do a forward dive straight (101A) from the 10 m platform: from your standing start at its front end, take off, turn half a somersault forwards in the straight position and enter the water head first, vertical, with your arms stretched beyond your head.
+client. **Task:** Do dive 101A, a forward dive straight, from the 10 m platform: take off from your standing start at its front end, turn half a somersault forwards in the straight position, and enter the water head first and vertical, with your arms stretched beyond your head.
 
 ## The venue
 The platform's top is 10.0 m above the water, 6.0 m long and 3.0 m wide; its front edge (a 0.2 m thick slab) is 0.119 m ahead of your pelvis, about 2 cm ahead of your toes, square across your path, and you stand on its centre line. It projects 1.5 m beyond the pool's edge; the water lies ahead and below. Handrails 1.0 m high run along both sides of the platform and across its back, the side rails ending 1.0 m before the front edge. The platform is rigid; nothing in the venue moves.

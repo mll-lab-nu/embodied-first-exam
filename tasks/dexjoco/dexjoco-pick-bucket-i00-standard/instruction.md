@@ -1,7 +1,7 @@
 # DexJoCo · pick_bucket — STANDARD MODE (robot as a service, eai-standard/2.2)
 
 You control a Franka Panda arm with a 16-DoF Allegro hand, **as if it were real hardware**: the simulator runs in a service you cannot open. You get
-one client and one episode. **Task:** Put the boxed food into the bucket, then lift the bucket. Success: the boxed food's centre is inside the bounding box of the bucket's eight reference corners AND the bucket's bottom is at least 0.15 m above where it started, at the same control step.
+one client and one episode. **Task:** Put the boxed food into the bucket, then lift the bucket with the food still inside. Success: the boxed food's centre is inside the bounding box of the bucket's eight reference corners AND the bucket's bottom is at least 0.15 m above where it started, at the same control step.
 
 The bucket stands on the table with a hinged handle over it; the boxed food lies next to it. The handle swings on a hinge (`bucket_handle`).
 

@@ -156,9 +156,9 @@ class Task(TaskBase):
                   release_gap_s=0.03, stand_s=1.0,
                   fall_pelvis_m=0.50, grip_scale=1.0)
 
-    sentence = ("Throw the discus that lies on your right palm, your fingers curled over its rim, from inside the circle so that it lands "
-                "inside the sector at least {qualifying_mark_m} m from the circle, then leave the circle from its "
-                "rear half and stand.")
+    sentence = ("Throw the discus that lies on your right palm, your fingers curled over its rim, from inside the "
+                "circle so that it lands inside the sector at least {qualifying_mark_m:g} m from the circle. Then "
+                "leave the circle from its rear half and stand.")
     rules = ("The men's discus ({discus_mass_kg} kg, {discus_diameter_m} m across, {discus_thickness_m} m thick at "
              "its centre) starts flat on the palm of your right hand, the fingertips curled over its rim (the row's "
              "right grip value is the hand's closure command, 0 open to 1 closed; nothing is welded or grippable: "

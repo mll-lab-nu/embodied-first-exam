@@ -1,7 +1,7 @@
 # embodied-olympics taekwondo-kick — instance i00
 
 You control a simulated Unitree G1 humanoid robot (29 joints, 1.32 m tall, 33 kg; the Embodied Olympics simulator on MuJoCo)
-via Python. **Task:** Kick the trunk protector of the dummy in front of you once with a foot, hard enough to score, then land and stand still for 2.0 s.
+via Python. **Task:** Kick the trunk protector of the dummy in front of you once with a foot, hard enough to score, then land and stand still for two seconds.
 
 This is a *fixed instance*: the same venue and start every time. You may reset and retry as many times as you want.
 Your deliverable is **one replayable trajectory**, not a general policy.

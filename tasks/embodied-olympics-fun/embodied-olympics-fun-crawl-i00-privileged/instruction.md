@@ -1,7 +1,7 @@
 # embodied-olympics crawl — instance i00
 
 You control a simulated Unitree G1 humanoid robot (29 joints, 1.32 m tall, 33 kg; the Embodied Olympics simulator on MuJoCo)
-via Python. **Task:** Get under the low wires in front of you and crawl the whole course until your whole body is beyond the last wire, without touching a wire.
+via Python. **Task:** Crawl under all the low wires in front of you, between the two rows of posts, until your whole body is past the last, yellow wire. Do not touch any wire.
 
 This is a *fixed instance*: the same venue and start every time. You may reset and retry as many times as you want.
 Your deliverable is **one replayable trajectory**, not a general policy.

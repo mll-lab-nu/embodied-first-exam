@@ -8,7 +8,7 @@ An NVIDIA GPU is available. Your job: write a program that completes the task be
 ## The task
 
 1 small steel platform standing fixed on a sturdy table, each with an M16 threaded hole through its plate, and beside it: 1 L-shaped allen key lying on the table — the hole's M16 allen (socket-head) bolt already stands in it hand-started, a couple of turns captured. The hole carries real threads; the bolt head carries a 14 mm hex socket.
-Goal: seat the key in the bolt's socket and drive it down (turn clockwise while pressing) until it seats. A seated bolt locks in place. The task is complete once the bolt is seated. The key holds in a firm pinch: close the fingers across either arm's hex and the grip locks; open wide to release.
+Goal: seat the key in the bolt's socket and turn it clockwise while pressing down until the bolt seats. A seated bolt locks in place. The task is complete once the bolt is seated. The key holds in a firm pinch: close the fingers across either arm's hex and the grip locks; open wide to release.
 
 A Franka Emika Panda arm with a parallel-jaw gripper, fixed to the table. Control mode 'osc': 7 arm joints by operational-space control (joint torque); the action is 6 end-effector pose deltas, plus 2 gripper fingers by direct position target. Action dim 8.
 

@@ -4,7 +4,7 @@ The task of `embodiedswe-assembly-bulb-franka-osc-i00-privileged`, on the same f
 
 ## The task
 1 lamp socket standing upright, fixed on a sturdy table, and 1 loose light bulb lying on the table beside it, ready to be picked up and fitted. Each socket carries a real internal thread.
-Goal: pick up the bulb, set it on the socket, and screw it down (turn it clockwise while pressing down) until it seats. A seated bulb is held by its thread, and GLOWS ever brighter as it screws home — from a faint orange at first electrical contact to fully bright warm white exactly when seated. The task is complete once the bulb is seated.
+Goal: pick up the bulb, set it on the socket and screw it down, turning it clockwise while pressing down, until it seats. A seated bulb is held by its thread, and GLOWS ever brighter as it screws home — from a faint orange at first electrical contact to fully bright warm white exactly when seated. The task is complete once the bulb is seated.
 
 Success, exactly: at the end of the run, the light bulb's lowest point (the bottom tip of its metal screw cap) is at most 27 mm above the base of the fixed lamp socket where it stands on the table (the socket's bore mouth is 38.5 mm above that base; a bulb merely resting on the mouth sits at about 35 mm or more), that point lies within 15 mm horizontally of the socket's vertical axis, and the bulb's axis from cap to glass is within 12° of the socket axis (glass up). Not true at the start (the bulb lies on the table beside the socket). No speed or release condition. [grader: seated().all(); bulb origin = its lowest point; socket origin on the table top at world (0.41, 0, 0)]
 

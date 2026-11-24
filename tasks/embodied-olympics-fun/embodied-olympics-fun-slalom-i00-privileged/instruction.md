@@ -1,7 +1,7 @@
 # embodied-olympics slalom — instance i00
 
 You control a simulated Unitree G1 humanoid robot (29 joints, 1.32 m tall, 33 kg; the Embodied Olympics simulator on MuJoCo)
-via Python. **Task:** Run the Illinois agility course: up the left side and round the far-left cone, back to the centre cone on the start line, weave up through the four centre cones and back down, up the right side and round the far-right cone, and back over the finish line, without touching a cone.
+via Python. **Task:** Run the Illinois agility course without touching a cone: go up the left side and round the far-left cone, back round the centre cone on the start line, and weave up through the four centre cones and back down. Then go up the right side, round the far-right cone, and back over the finish line.
 
 This is a *fixed instance*: the same venue and start every time. You may reset and retry as many times as you want.
 Your deliverable is **one replayable trajectory**, not a general policy.

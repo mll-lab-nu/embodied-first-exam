@@ -1,6 +1,6 @@
 # Full-simulator table tennis: develop a program against L4
 
-Win one complete match against the frozen sport's scripted L4 opponent, seed 34: the same frozen instance
+Win one complete match against the frozen sport's scripted level-4 opponent, seed 34: the same frozen instance
 as `embodied-olympics-match-tabletennis-match-i04-realtime` (its realtime twin; there you see only camera images).
 The original Franka Panda, high-level actions, serve laws, limits, scoring and opponent are unchanged.
 First to five, win by two from 4:4, cap seven. Full simulator development is allowed; no video is required.

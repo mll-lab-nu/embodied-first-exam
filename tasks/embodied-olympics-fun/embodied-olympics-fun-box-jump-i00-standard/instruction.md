@@ -2,7 +2,7 @@
 
 You control a simulated Unitree H1-2 humanoid robot (27 joints, 1.78 m tall, 67 kg; the Embodied Olympics simulator on MuJoCo)
 **as if it were real hardware**: the simulator runs in a service you cannot open, and you reach it only through a
-client. **Task:** Jump from the floor onto the 0.61 m box in front of you with a two-foot take-off, land on its top with both feet, and stand up straight on it.
+client. **Task:** Jump from the floor onto the box in front of you with a two-foot take-off, land on its top with both feet, and stand up straight on it.
 
 ## The venue
 You stand on the floor facing the box (+x); its near face is 0.6 m ahead of your pelvis (your toes reach about 0.16 m ahead of your pelvis) and it is centred on your line. The box rests on the floor on its 0.51 m by 0.76 m face and can slide or tip if it is pushed.

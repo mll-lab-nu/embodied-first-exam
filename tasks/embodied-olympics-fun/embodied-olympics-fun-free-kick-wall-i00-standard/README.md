@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Take a direct free kick: with one kick of a foot, send the ball over or around the wall of mannequins into the official goal 20.0 m away. (Embodied Olympics `free-kick-wall`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Take a direct free kick: with one kick of a foot, send the ball over or around the wall of mannequins into the official goal 20 m away. (Embodied Olympics `free-kick-wall`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
 
 ## Difficulty
 The wall hides the near half of the goal: the ball has to be driven past or over its end along a narrow line, or round it into the far half, some 21 m, which needs well over 6 m/s off the foot (over the wall about 11 m/s). The robot has no kicking skill: Embodied Olympics' balanced model-based kick sends the ball off at about 4 m/s, and a swing hard enough (10 to 16 m/s measured) throws the 33 kg body round on its standing foot. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 5 resets (only the last attempt is graded).

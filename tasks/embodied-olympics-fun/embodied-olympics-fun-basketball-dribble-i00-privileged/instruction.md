@@ -1,7 +1,7 @@
 # embodied-olympics basketball-dribble — instance i00
 
 You control a simulated Unitree H1-2 humanoid robot (27 joints, 1.78 m tall, 67 kg; the Embodied Olympics simulator on MuJoCo)
-via Python. **Task:** Dribble the basketball, which starts held in your two hands, from the end line across the centre line, 14 m up the court, one hand at a time, without a dribbling, carrying or travelling violation.
+via Python. **Task:** Dribble the basketball, which starts in your two hands, from the end line up the court until it bounces beyond the centre line with both your feet beyond it too. Use one hand at a time and commit no dribbling, carrying or travelling violation.
 
 This is a *fixed instance*: the same venue and start every time. You may reset and retry as many times as you want.
 Your deliverable is **one replayable trajectory**, not a general policy.

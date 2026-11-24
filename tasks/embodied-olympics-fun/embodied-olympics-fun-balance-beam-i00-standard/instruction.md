@@ -2,7 +2,7 @@
 
 You control a simulated Unitree G1 humanoid robot (29 joints, 1.32 m tall, 33 kg; the Embodied Olympics simulator on MuJoCo)
 **as if it were real hardware**: the simulator runs in a service you cannot open, and you reach it only through a
-client. **Task:** Walk along the balance beam from the end you stand on to the other end and stand there, without anything touching the floor.
+client. **Task:** Walk along the balance beam from the end you stand on to the far end, marked yellow, and stand there, touching the beam only with your feet and never touching the floor.
 
 ## The venue
 At t = 0 you stand on the beam's near end, facing along it (+x), in a tandem stance: the left foot in front of the right, both on the beam's centre line, the feet's centres 0.15 m and 0.39 m from the near end (the soles reach from 0.09 m to 0.52 m); your pelvis is 0.25 m from the near end and 0.75 m above the beam's top, so your soles are 1.25 m above the floor. The beam is narrower than your normal stance (your feet are normally 0.24 m apart; each sole is 0.07 m wide), so here the robot does NOT start in `stand` mode: it starts with all its joints holding the tandem pose on the default gains, as after a `joints` row, and the hold command at t = 0 is a `lowcmd` row that keeps those targets (left alone, the robot stays standing like that). A `stand` row would move the legs to the normal stance and a `walk` row would start the normal gait: both put the feet beside the beam. The beam and its two supports (0.9 m from each end) are fixed; the far end is marked yellow.

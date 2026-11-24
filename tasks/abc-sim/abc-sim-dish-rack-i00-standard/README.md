@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:abc-sim-0.2.0` |
 
 ## Task
-ABC Sim `load_plates_into_dish_rack` (two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each) side by side at the near edge of a table, facing +x (the left arm is the one at +y)): Load the plate into the dish rack, standing on edge. Success: every plate stands on edge in the rack: its face within 33 deg of vertical, touching the rack, touching neither gripper (released), and within the rack's footprint (with a 0.05 m margin). The goal must hold for 30 consecutive control steps (1.02 s); the episode then ends in success.
+ABC Sim `load_plates_into_dish_rack` (two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each) side by side at the near edge of a table, facing +x (the left arm is the one at +y)): Stand the plate on edge in the dish rack and let go of it. Success: every plate stands on edge in the rack: its face within 33 deg of vertical, touching the rack, touching neither gripper (released), and within the rack's footprint (with a 0.05 m margin). The goal must hold for 30 consecutive control steps (1.02 s); the episode then ends in success.
 1 plate lies flat on the table next to a dish rack (both loose objects). The robot is a service; the episode it runs is graded.
 
 ## Difficulty

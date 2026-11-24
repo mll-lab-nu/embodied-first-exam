@@ -9,7 +9,7 @@ An NVIDIA GPU is available. Your job: write a program that completes the task be
 
 A gaming-PC case lying on its side on a sturdy table, opening up, its motherboard facing the ceiling. The board carries 7 case-mount screw holes, each backed by an M8 threaded insert in the case. Beside the case: 7 loose M8 allen (socket-head) bolts lying in a row, and one long-series L-shaped allen key (its arm is long enough that the swinging handle clears the case walls). Each bolt head carries a 7 mm hex socket.
 Every hole already holds its bolt hand-started upright, a few threads in.
-Goal: seat the key in a bolt's socket and drive the bolt down (turn clockwise while pressing) until it seats — then move on to the next hole. A seated bolt locks in place. The task is complete once all 7 bolts are seated. The key holds in a firm pinch: close the fingers across its handle's hex and the grip locks; open wide to release.
+Goal: seat the key in a bolt's socket and turn it clockwise while pressing down until the bolt seats, then move on to the next hole. A seated bolt locks in place. The task is complete once all 7 bolts are seated. The key holds in a firm pinch: close the fingers across its handle's hex and the grip locks; open wide to release.
 
 A Franka Emika Panda arm with a parallel-jaw gripper, fixed to the table. Control mode 'osc': 7 arm joints by operational-space control (joint torque); the action is 6 end-effector pose deltas, plus 2 gripper fingers by direct position target. Action dim 8.
 

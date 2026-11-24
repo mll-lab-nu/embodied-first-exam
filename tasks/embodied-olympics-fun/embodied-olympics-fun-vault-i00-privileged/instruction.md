@@ -1,7 +1,7 @@
 # embodied-olympics vault — instance i00
 
 You control a simulated Unitree H1-2 humanoid robot (27 joints, 1.78 m tall, 67 kg; the Embodied Olympics simulator on MuJoCo)
-via Python. **Task:** Vault over the vault table at the end of the run-up: go over it with only your hands touching it, land on your feet on the landing mat and stand.
+via Python. **Task:** Vault over the vault table at the end of the run-up: go over it with at least one hand on its top and nothing but your hands touching it, then land on your feet on the landing mat and stand.
 
 This is a *fixed instance*: the same venue and start every time. You may reset and retry as many times as you want.
 Your deliverable is **one replayable trajectory**, not a general policy.

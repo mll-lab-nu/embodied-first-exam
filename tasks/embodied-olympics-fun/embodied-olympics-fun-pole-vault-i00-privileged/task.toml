@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/embodied-olympics-fun-pole-vault-i00-privileged"
-description = "Embodied Olympics pole-vault (one Unitree G1 on the Embodied Olympics simulator, MuJoCo 3.3.7, CPU) in privileged mode: produce one replayable trajectory. Vault over the bar with the pole you carry: plant its tip in the box, leave the ground hanging on it, go over the bar between the uprights and come down on the mat, with the bar still on its pegs. A referee of events, geometry and contact rules decides the success."
+description = "Embodied Olympics pole-vault (one Unitree G1 on the Embodied Olympics simulator, MuJoCo 3.3.7, CPU) in privileged mode: produce one replayable trajectory. Vault over the bar with the pole you carry: run up, plant its tip in the box, leave the ground hanging on the pole, go over the bar between the uprights and come down on the mat, with the bar still on its pegs. A referee of events, geometry and contact rules decides the success."
 keywords = ["robotics", "embodied-olympics", "sports", "mujoco", "unitree-g1", "humanoid", "trajectory", "pole-vault"]
 
 [metadata]

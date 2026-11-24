@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/abc-sim-hang-mug-i00-privileged"
-description = "ABC Sim hang a mug (two I2RT YAM arms, MuJoCo): Hang the mug on the mug tree. Frozen scene instance; one replayable trajectory, graded by two fresh-process replays."
+description = "ABC Sim hang a mug (two I2RT YAM arms, MuJoCo): Hang the mug on the mug tree and let go of it. Frozen scene instance; one replayable trajectory, graded by two fresh-process replays."
 keywords = ["robotics", "abc-sim", "mujoco", "yam", "bimanual", "hang_mug", "privileged"]
 
 [metadata]

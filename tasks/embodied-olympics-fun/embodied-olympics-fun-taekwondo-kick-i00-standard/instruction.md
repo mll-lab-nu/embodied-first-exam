@@ -2,7 +2,7 @@
 
 You control a simulated Unitree G1 humanoid robot (29 joints, 1.32 m tall, 33 kg; the Embodied Olympics simulator on MuJoCo)
 **as if it were real hardware**: the simulator runs in a service you cannot open, and you reach it only through a
-client. **Task:** Kick the trunk protector of the dummy in front of you once with a foot, hard enough to score, then land and stand still for 2.0 s.
+client. **Task:** Kick the trunk protector of the dummy in front of you once with a foot, hard enough to score, then land and stand still for two seconds.
 
 ## The venue
 You stand on the mat facing the dummy (+x); the front of its protector is 0.58 m in front of your pelvis, centred on you, from 0.78 m to 1.12 m high (above your hips).

@@ -2,7 +2,7 @@
 
 You control a **Franka Panda** arm (7 joints) with its two-finger gripper, fixed to a laboratory bench, **as if it were real**: the simulator (LabUtopia's chemistry laboratory on NVIDIA Isaac
 Sim) runs in a service you cannot open. You get one client and one episode.
-**Task:** Pick up the glass beaker and set it down on the white square plate. Success the moment, after the beaker's centre has been more than 10 cm above where it stood, the beaker has stood on the plate for one second (60 control steps in a row): its centre within 5 cm (horizontally) of the plate's centre and within 5 cm of the height at which it started, with the gripper more than 5 cm away from the beaker's centre (measured from the point between the fingertips).
+**Task:** Pick up the glass beaker, set it down on the white square plate and let go of it. Success the moment, after the beaker's centre has been more than 10 cm above where it stood, the beaker has stood on the plate for one second (60 control steps in a row): its centre within 5 cm (horizontally) of the plate's centre and within 5 cm of the height at which it started, with the gripper more than 5 cm away from the beaker's centre (measured from the point between the fingertips).
 
 On the bench in front of the arm: a glass beaker, about 11 cm across and 9 cm tall, and a white square plate, 10 cm x 10 cm, lying flat on the bench.
 

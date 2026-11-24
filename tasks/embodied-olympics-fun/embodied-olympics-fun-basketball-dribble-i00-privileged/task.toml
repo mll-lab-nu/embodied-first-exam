@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/embodied-olympics-fun-basketball-dribble-i00-privileged"
-description = "Embodied Olympics basketball-dribble (one Unitree H1-2 on the Embodied Olympics simulator, MuJoCo 3.3.7, CPU) in privileged mode: produce one replayable trajectory. Dribble the basketball, which starts held in your two hands, from the end line across the centre line, 14 m up the court, one hand at a time, without a dribbling, carrying or travelling violation. A referee of events, geometry and contact rules decides the success."
+description = "Embodied Olympics basketball-dribble (one Unitree H1-2 on the Embodied Olympics simulator, MuJoCo 3.3.7, CPU) in privileged mode: produce one replayable trajectory. Dribble the basketball, which starts in your two hands, from the end line up the court until it bounces beyond the centre line with both your feet beyond it too. Use one hand at a time and commit no dribbling, carrying or travelling violation. A referee of events, geometry and contact rules decides the success."
 keywords = ["robotics", "embodied-olympics", "sports", "mujoco", "unitree-h1-2", "humanoid", "trajectory", "basketball-dribble"]
 
 [metadata]

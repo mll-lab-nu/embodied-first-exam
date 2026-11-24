@@ -1,7 +1,7 @@
 # embodied-olympics free-kick-wall — instance i00
 
 You control a simulated Unitree G1 humanoid robot (29 joints, 1.32 m tall, 33 kg; the Embodied Olympics simulator on MuJoCo)
-via Python. **Task:** Take a direct free kick: with one kick of a foot, send the ball over or around the wall of mannequins into the official goal 20.0 m away.
+via Python. **Task:** Take a direct free kick: with one kick of a foot, send the ball over or around the wall of mannequins into the official goal 20 m away.
 
 This is a *fixed instance*: the same venue and start every time. You may reset and retry as many times as you want.
 Your deliverable is **one replayable trajectory**, not a general policy.

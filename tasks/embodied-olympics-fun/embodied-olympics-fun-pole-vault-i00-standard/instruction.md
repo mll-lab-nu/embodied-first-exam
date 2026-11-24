@@ -2,7 +2,7 @@
 
 You control a simulated Unitree G1 humanoid robot (29 joints, 1.32 m tall, 35 kg; the Embodied Olympics simulator on MuJoCo)
 **as if it were real hardware**: the simulator runs in a service you cannot open, and you reach it only through a
-client. **Task:** Vault over the bar with the pole you carry: plant its tip in the box, leave the ground hanging on it, go over the bar between the uprights and come down on the mat, with the bar still on its pegs.
+client. **Task:** Vault over the bar with the pole you carry: run up, plant its tip in the box, leave the ground hanging on the pole, go over the bar between the uprights and come down on the mat, with the bar still on its pegs.
 
 ## The venue
 You stand on the runway facing the box (+x), your pelvis 20 m before the zero line, in the middle of the runway; the runway goes on 20 m behind you. The pole lies level along +x in your right hand, held at its middle across the palm (grip value 1), the right arm hanging, the forearm pointing forwards and down; the left hand is open (grip value 0). A grip value is that hand's closure command (0 open, 1 every finger and thumb joint closing towards its closed angle; a finger stops on what it touches). The pole is a loose object. The `holding_left` and `holding_right` values in your proprioception show which hand holds it. The bar is red with white ends, the uprights grey, the mats blue; the box is the dark patch at the runway's end, the zero line white.

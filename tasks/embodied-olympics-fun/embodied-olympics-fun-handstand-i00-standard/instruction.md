@@ -2,7 +2,7 @@
 
 You control a simulated Unitree G1 humanoid robot (29 joints, 1.32 m tall, 33 kg; the Embodied Olympics simulator on MuJoCo)
 **as if it were real hardware**: the simulator runs in a service you cannot open, and you reach it only through a
-client. **Task:** Do a handstand: from your stance get up onto your hands, hold the handstand still for 2 s with only your hands on the floor, then come back down onto your feet and stand.
+client. **Task:** Do a handstand: from your stance, get up onto your hands and hold a straight handstand still for two seconds with only your hands on the floor. Then come back down onto your feet and stand.
 
 ## The venue
 You stand in the middle of a gymnastics floor-exercise area, 12.0 m by 12.0 m, marked by white lines, flat, level and rigid, with nothing on it; you face +x.

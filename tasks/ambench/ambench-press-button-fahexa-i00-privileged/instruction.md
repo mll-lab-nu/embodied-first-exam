@@ -2,7 +2,7 @@
 
 You control a simulated **aerial manipulator**: a fully actuated hexarotor (six tilted rotors, so it can hold any attitude
 while hovering) carrying a small arm (four joints: three pitch joints and a roll joint) with a two-finger gripper, in
-AM-Bench on Isaac Lab / Isaac Sim 5.1 (PhysX), via Python. **Task:** A wall stands in front of the hovering aerial manipulator, and a push button is mounted flat on the wall's front face, facing the robot: a red circular plunger in a dark-grey circular housing. Press the button, i.e. push its spring-loaded plunger into the housing, along the wall's normal, until it is depressed by at least 4 mm (40 % of its 10 mm travel).
+AM-Bench on Isaac Lab / Isaac Sim 5.1 (PhysX), via Python. **Task:** A wall stands in front of the hovering aerial manipulator, and a push button is mounted flat on the wall's front face, facing the robot: a red circular plunger in a dark-grey circular housing. Press the button: push its spring-loaded plunger straight into the housing by at least 4 mm of its 10 mm travel.
 
 This is a *fixed scene instance*: the scene and the robot start the same way after every reset, and you may reset and
 retry as many times as you want. Your deliverable is **one replayable trajectory** of the robot's low-level actions, not a

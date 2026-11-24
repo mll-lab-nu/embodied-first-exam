@@ -2,7 +2,7 @@
 
 You control a **Franka Panda** arm (7 joints) with its two-finger gripper, fixed to a laboratory bench, in LabUtopia's simulated chemistry laboratory (NVIDIA Isaac Sim, PhysX), via Python,
 through joint targets.
-**Task:** Put the beaker on the heater's plate and press the heater's button. Success, at the first control step at which the third condition is met: (1) the beaker's centre has been above z = 0.82 m; (2) after that, the beaker has been on the plate: its centre at or below z = 0.86 m and within 0.05 m in x and in y of the plate's frame (`/World/heat_device/heat_device/heat_device/plat`); (3) after that, the beaker is on the plate as in (2) and the button's frame (`/World/heat_device/button`) is below z = 0.761 m.
+**Task:** Put the beaker on the heater's plate and leave it there, then press the heater's button. Success, at the first control step at which the third condition is met: (1) the beaker's centre has been above z = 0.82 m; (2) after that, the beaker has been on the plate: its centre at or below z = 0.86 m and within 0.05 m in x and in y of the plate's frame (`/World/heat_device/heat_device/heat_device/plat`); (3) after that, the beaker is on the plate as in (2) and the button's frame (`/World/heat_device/button`) is below z = 0.761 m.
 
 On the bench in front of the arm: a small glass beaker, about 6.5 cm across and 10 cm tall, and a heater: a white hot plate about 25 cm x 18 cm x 9 cm with a square plate on top, a display on its front and a round red button at one front corner.
 
