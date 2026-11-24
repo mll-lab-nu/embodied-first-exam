@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:libero-max-0.1.1` |
 
 ## Task
-LIBERO-MAX case `pro-semantic-spatial-t06-i08-obstacle_insertion-d0-p195`: a Franka Panda arm at a table, instructed **"Grab the black bowl beside the cookie box and set it on plate."**, on a LIBERO-PRO variant
+LIBERO-MAX case `pro-semantic-spatial-t06-i08-obstacle_insertion-d0-p195`: a Franka Panda arm at a table, instructed **"Grab the black bowl on the table (not the one on the stove) and set it on the plate."**, on a LIBERO-PRO variant
 of a libero_spatial task (semantic). Online event (obstacle insertion): the first time the gripper comes within
 0.18 m of `akita_black_bowl_1`, LIBERO-MAX changes the scene once (`cookies_1` appears as an obstacle, offset (0.14, 0, 0) m from `akita_black_bowl_1`). The deliverable is one
 replayable trajectory of LIBERO's OSC control steps (`/app/output/trajectory.npz`, `(T, 7)`, T ≤ 220), graded by

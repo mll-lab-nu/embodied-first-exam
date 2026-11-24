@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:vlabench-0.2.0` |
 
 ## Task
-VLABench's `select_billiards`: a Franka Panda arm at a table, instructed **"Please put the striped_14 in the middle pocket on the robot's right (+x) side of the table, near x = 0.56, y = 0.02."** (a direct command). One
+VLABench's `select_billiards`: a Franka Panda arm at a table, instructed **"Please put the striped 14 ball into the middle pocket on the robot's right side of the table."** (a direct command). One
 frozen scene instance (VLABench's own episode configuration for the task, seed 0); the deliverable is one
 replayable trajectory of joint-position control steps (`/app/output/trajectory.npz`, `(T, 9)`, T ≤ 4000), graded by
 VLABench's own success check at its end.

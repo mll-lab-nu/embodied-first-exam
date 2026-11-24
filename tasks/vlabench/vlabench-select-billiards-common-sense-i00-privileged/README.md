@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:vlabench-0.2.0` |
 
 ## Task
-VLABench's `select_billiards_common_sense`: a Franka Panda arm at a table, instructed **"Please put the ball worth 7 score in the middle pocket on the robot's right (+x) side of the table, near x = 0.56, y = 0.02."** (a common-sense riddle that names the target only indirectly). One
+VLABench's `select_billiards_common_sense`: a Franka Panda arm at a table, instructed **"Please put the snooker ball worth 7 points into the middle pocket on the robot's right side of the table."** (a common-sense riddle that names the target only indirectly). One
 frozen scene instance (VLABench's own episode configuration for the task, seed 0); the deliverable is one
 replayable trajectory of joint-position control steps (`/app/output/trajectory.npz`, `(T, 9)`, T ≤ 4000), graded by
 VLABench's own success check at its end.

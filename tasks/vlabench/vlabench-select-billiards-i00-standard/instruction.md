@@ -1,7 +1,7 @@
 # VLABench · select_billiards — instance i00 — STANDARD MODE (robot as a service)
 
 You control a simulated **Franka Panda** arm (VLABench on MuJoCo) **as if it were real hardware**: the simulator runs in
-a service you cannot open, and you reach it only through a client. **Task: Please put the striped_14 in the middle pocket on the robot's right (+x) side of the table, near x = 0.56, y = 0.02.**
+a service you cannot open, and you reach it only through a client. **Task: Please put the striped 14 ball into the middle pocket on the robot's right side of the table.**
 
 ## Rules (real-robot rules)
 - **One episode, no reset.** The episode starts when the service comes up. It ends when the task succeeds, after

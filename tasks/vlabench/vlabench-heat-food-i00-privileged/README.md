@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:vlabench-0.2.0` |
 
 ## Task
-VLABench's `heat_food`: a Franka Panda arm at a table, instructed **"Please heat cooked_food from tray_seen: put it into microwave_seen, close the microwave's door and press its start button (heating itself is not simulated)."** (a direct command). One
+VLABench's `heat_food`: a Franka Panda arm at a table, instructed **"Please heat the cooked food from the tray: put it into the microwave, close the microwave's door and press its start button (heating itself is not simulated)."** (a direct command). One
 frozen scene instance (VLABench's own episode configuration for the task, seed 0); the deliverable is one
 replayable trajectory of joint-position control steps (`/app/output/trajectory.npz`, `(T, 9)`, T ≤ 4000), graded by
 VLABench's own success check at its end.

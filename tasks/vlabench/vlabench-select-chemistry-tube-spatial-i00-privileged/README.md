@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:vlabench-0.2.0` |
 
 ## Task
-VLABench's `select_chemistry_tube_spatial`: a Franka Panda arm at a table, instructed **"Take out the solution on the 1th row and 5th column"** (a description of where the target is). One
+VLABench's `select_chemistry_tube_spatial`: a Franka Panda arm at a table, instructed **"Take out the solution in the 1st row and 5th column of the tube stand, counting rows from the one nearest the robot and columns from left to right as seen from the robot."** (a description of where the target is). One
 frozen scene instance (VLABench's own episode configuration for the task, seed 0); the deliverable is one
 replayable trajectory of joint-position control steps (`/app/output/trajectory.npz`, `(T, 9)`, T ≤ 4000), graded by
 VLABench's own success check at its end.
@@ -51,6 +51,7 @@ Caps per container (PROTOCOL §6).
 | Upstream | VLABench @ cf588fe (MIT), assets `lerobot/vlabench-assets` @ 08d7a44; MuJoCo 3.2.2, dm_control 1.0.22 |
 | Actions | 9 absolute position targets per 0.1 s control step: 7 arm joints (rad), 2 fingers (m, 0 … 0.04) |
 | Resources | 4 CPUs, no GPU (CPU physics, OSMesa rendering) |
+| Instruction | restated; VLABench's own: "Take out the solution on the 1th row and 5th column" (graded: the KMnO4 tube is no longer in chemistry_tube_stand (not_contain); upstream does not say from which side rows and columns are counted, and its columns are the stand's five slots (the 4th slot of that row is empty)) |
 
 ### Provenance
 The instance (`environment/instance.json`, byte copy in `tests/`) and the

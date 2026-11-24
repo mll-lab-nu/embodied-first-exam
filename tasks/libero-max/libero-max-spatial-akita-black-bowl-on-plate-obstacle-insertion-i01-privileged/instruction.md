@@ -1,6 +1,6 @@
 # LIBERO-MAX · libero_spatial · obstacle insertion — instance i01
 
-A **Franka Panda** arm (LIBERO on robosuite / MuJoCo) at a table. **Task: Grab the black bowl beside the cookie box and set it on plate.**
+A **Franka Panda** arm (LIBERO on robosuite / MuJoCo) at a table. **Task: Grab the black bowl on the table (not the one on the stove) and set it on the plate.**
 The scene is one frozen LIBERO-MAX case: a LIBERO-PRO variant of a libero_spatial task (semantic), with one online
 event: the first time the gripper comes within 0.18 m of `akita_black_bowl_1`, LIBERO-MAX changes the scene
 once (`cookies_1` appears as an obstacle, offset (0.14, 0, 0) m from `akita_black_bowl_1`). You have the full simulator state, so you can see the change happen (`s.state()["event_fired"]`).

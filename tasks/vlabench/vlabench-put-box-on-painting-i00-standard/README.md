@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:vlabench-0.2.0` |
 
 ## Task
-VLABench's `put_box_on_painting` as a robot service: a Franka Panda arm at a table, instructed **"Please put the box on the Dinner and Love on the River."**
+VLABench's `put_box_on_painting` as a robot service: a Franka Panda arm at a table, instructed **"Please put the box on the painting “Dinner and Love on the River”."**
 (a direct command), on the same frozen instance as `vlabench-put-box-on-painting-i00-privileged`. The simulator runs in the
 `sim` sidecar (`environment/sim/server.py` on main's `rcb_service.py`); the agent only has the client: four cameras
 (RGB 320×320, depth on request, calibrated), the robot's own state, and joint-position chunks. One episode, no reset,
@@ -52,3 +52,4 @@ Caps per container (PROTOCOL §6).
 | Actions | `joint_position` (9, float64): absolute targets for the 7 arm joints (rad) and the 2 fingers (m), 0.1 s per control step |
 | Episode cap | 9000 control steps (900 s of robot time; `spec.max_control_steps`, docs/protocol/standard_mode.md) |
 | Resources | 4 CPUs, no GPU (CPU physics, OSMesa rendering) |
+| Instruction | restated; VLABench's own: "Please put the box on the Dinner and Love on the River." (graded: target_box inside the painting Dinner and Love on the River (contain); upstream splices the title in unquoted) |

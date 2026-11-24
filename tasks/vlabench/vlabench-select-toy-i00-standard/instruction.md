@@ -1,7 +1,7 @@
 # VLABench · select_toy — instance i00 — STANDARD MODE (robot as a service)
 
 You control a simulated **Franka Panda** arm (VLABench on MuJoCo) **as if it were real hardware**: the simulator runs in
-a service you cannot open, and you reach it only through a client. **Task: Put the mickey into the giftbox_seen**
+a service you cannot open, and you reach it only through a client. **Task: Put the Mickey Mouse toy into the gift box.**
 
 ## Rules (real-robot rules)
 - **One episode, no reset.** The episode starts when the service comes up. It ends when the task succeeds, after

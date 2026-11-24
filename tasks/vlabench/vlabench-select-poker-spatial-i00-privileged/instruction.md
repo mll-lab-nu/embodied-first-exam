@@ -1,6 +1,6 @@
 # VLABench · select_poker_spatial — instance i00
 
-You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: Please pick up the 4th poker card from left to right (as seen from the robot) and hold it up (grasped, lifted to z >= 0.9 m).**
+You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: Please pick up the 4th poker card from left to right (as seen from the robot) and hold it up in the gripper, at least 0.9 m above the floor.**
 
 This states exactly what VLABench's success check requires; VLABench's own wording (also in `s.state()["instruction"]`) is: "Please pick the 4th poker from left to right".
 

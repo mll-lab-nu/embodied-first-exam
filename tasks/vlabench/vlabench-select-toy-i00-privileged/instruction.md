@@ -1,6 +1,8 @@
 # VLABench · select_toy — instance i00
 
-You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: Put the mickey into the giftbox_seen**
+You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: Put the Mickey Mouse toy into the gift box.**
+
+This states exactly what VLABench's success check requires; VLABench's own wording (also in `s.state()["instruction"]`) is: "Put the mickey into the giftbox_seen".
 
 This is a *fixed scene instance*: VLABench's own scene for `select_toy`, frozen (seed 0). You may reset and retry
 as often as you like. Your deliverable is **one replayable trajectory** of control steps, not a general policy.

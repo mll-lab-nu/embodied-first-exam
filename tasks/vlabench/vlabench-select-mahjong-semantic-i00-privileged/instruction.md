@@ -1,6 +1,6 @@
 # VLABench · select_mahjong_semantic — instance i00
 
-You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: You are replacing me to play mahjong, and i think it's time to take out ('9', 'man') now: put that tile on the placemat.**
+You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: You are replacing me to play mahjong, and I think it's time to discard the 9 of characters (9 man) now: put that tile on the placemat.**
 
 This states exactly what VLABench's success check requires; VLABench's own wording (also in `s.state()["instruction"]`) is: "You are replacing me to play mahjong, and i think it's time to take out ('9', 'man') now".
 

@@ -1,6 +1,8 @@
 # VLABench · select_chemistry_tube_spatial — instance i00
 
-You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: Take out the solution on the 1th row and 5th column**
+You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: Take out the solution in the 1st row and 5th column of the tube stand, counting rows from the one nearest the robot and columns from left to right as seen from the robot.**
+
+This states exactly what VLABench's success check requires; VLABench's own wording (also in `s.state()["instruction"]`) is: "Take out the solution on the 1th row and 5th column".
 
 This is a *fixed scene instance*: VLABench's own scene for `select_chemistry_tube_spatial`, frozen (seed 0). You may reset and retry
 as often as you like. Your deliverable is **one replayable trajectory** of control steps, not a general policy.

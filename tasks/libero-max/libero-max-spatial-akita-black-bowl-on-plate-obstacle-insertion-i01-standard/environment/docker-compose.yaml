@@ -22,7 +22,7 @@ services:
       - /tmp                                            # robosuite writes its log there
     environment:
       RCB_INSTANCE: /srv/instance.json
-      RCB_TASK_TEXT: "Grab the black bowl beside the cookie box and set it on plate."
+      RCB_TASK_TEXT: "Grab the black bowl on the table (not the one on the stove) and set it on the plate."
       RCB_EPISODE: "Ends when the task succeeds (reason \"success\"), after 9000 control steps (\"failed\"), when your time is up (\"timeout\"), or on a simulator error (\"error\")."
       RCB_WALL_CLOCK_S: "1800.0"
       RCB_MAX_CONTROL_STEPS: "9000"

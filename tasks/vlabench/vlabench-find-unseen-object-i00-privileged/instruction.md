@@ -1,6 +1,6 @@
 # VLABench · find_unseen_object — instance i00
 
-You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: Find the apple for me and take it out of cabinet_seen.**
+You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: Find the apple for me and take it out of the cabinet.**
 
 This states exactly what VLABench's success check requires; VLABench's own wording (also in `s.state()["instruction"]`) is: "find the apple for me".
 

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:vlabench-0.2.0` |
 
 ## Task
-VLABench's `select_chemistry_tube_spatial` as a robot service: a Franka Panda arm at a table, instructed **"Take out the solution on the 1th row and 5th column"**
+VLABench's `select_chemistry_tube_spatial` as a robot service: a Franka Panda arm at a table, instructed **"Take out the solution in the 1st row and 5th column of the tube stand, counting rows from the one nearest the robot and columns from left to right as seen from the robot."**
 (a description of where the target is), on the same frozen instance as `vlabench-select-chemistry-tube-spatial-i00-privileged`. The simulator runs in the
 `sim` sidecar (`environment/sim/server.py` on main's `rcb_service.py`); the agent only has the client: four cameras
 (RGB 320×320, depth on request, calibrated), the robot's own state, and joint-position chunks. One episode, no reset,
@@ -52,3 +52,4 @@ Caps per container (PROTOCOL §6).
 | Actions | `joint_position` (9, float64): absolute targets for the 7 arm joints (rad) and the 2 fingers (m), 0.1 s per control step |
 | Episode cap | 9000 control steps (900 s of robot time; `spec.max_control_steps`, docs/protocol/standard_mode.md) |
 | Resources | 4 CPUs, no GPU (CPU physics, OSMesa rendering) |
+| Instruction | restated; VLABench's own: "Take out the solution on the 1th row and 5th column" (graded: the KMnO4 tube is no longer in chemistry_tube_stand (not_contain); upstream does not say from which side rows and columns are counted, and its columns are the stand's five slots (the 4th slot of that row is empty)) |

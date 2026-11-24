@@ -1,6 +1,6 @@
 # VLABench · heat_food — instance i00
 
-You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: Please heat cooked_food from tray_seen: put it into microwave_seen, close the microwave's door and press its start button (heating itself is not simulated).**
+You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: Please heat the cooked food from the tray: put it into the microwave, close the microwave's door and press its start button (heating itself is not simulated).**
 
 This states exactly what VLABench's success check requires; VLABench's own wording (also in `s.state()["instruction"]`) is: "Please heat cooked_food from tray_seen.".
 

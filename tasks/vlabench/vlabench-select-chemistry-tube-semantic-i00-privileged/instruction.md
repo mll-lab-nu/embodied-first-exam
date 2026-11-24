@@ -1,6 +1,8 @@
 # VLABench · select_chemistry_tube_semantic — instance i00
 
-You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: Take out the KMnO4 solution in a conversation**
+You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: Take out the KMnO4 solution.**
+
+This states exactly what VLABench's success check requires; VLABench's own wording (also in `s.state()["instruction"]`) is: "Take out the KMnO4 solution in a conversation".
 
 This is a *fixed scene instance*: VLABench's own scene for `select_chemistry_tube_semantic`, frozen (seed 0). You may reset and retry
 as often as you like. Your deliverable is **one replayable trajectory** of control steps, not a general policy.

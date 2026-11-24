@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:vlabench-0.2.0` |
 
 ## Task
-VLABench's `select_drink`: a Franka Panda arm at a table, instructed **"Take out the juice_seen from the fridge_open"** (a direct command). One
+VLABench's `select_drink`: a Franka Panda arm at a table, instructed **"Take out the juice from the fridge."** (a direct command). One
 frozen scene instance (VLABench's own episode configuration for the task, seed 0); the deliverable is one
 replayable trajectory of joint-position control steps (`/app/output/trajectory.npz`, `(T, 9)`, T ≤ 4000), graded by
 VLABench's own success check at its end.
@@ -51,6 +51,7 @@ Caps per container (PROTOCOL §6).
 | Upstream | VLABench @ cf588fe (MIT), assets `lerobot/vlabench-assets` @ 08d7a44; MuJoCo 3.2.2, dm_control 1.0.22 |
 | Actions | 9 absolute position targets per 0.1 s control step: 7 arm joints (rad), 2 fingers (m, 0 … 0.04) |
 | Resources | 4 CPUs, no GPU (CPU physics, OSMesa rendering) |
+| Instruction | restated; VLABench's own: "Take out the juice_seen from the fridge_open" (graded: juice_seen is no longer inside fridge_open (not_contain); upstream names the objects by their asset labels) |
 
 ### Provenance
 The instance (`environment/instance.json`, byte copy in `tests/`) and the

@@ -1,6 +1,6 @@
 # VLABench · select_billiards_common_sense — instance i00
 
-You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: Please put the ball worth 7 score in the middle pocket on the robot's right (+x) side of the table, near x = 0.56, y = 0.02.**
+You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: Please put the snooker ball worth 7 points into the middle pocket on the robot's right side of the table.**
 
 This states exactly what VLABench's success check requires; VLABench's own wording (also in `s.state()["instruction"]`) is: "Please put the ball worth 7 score in hole".
 

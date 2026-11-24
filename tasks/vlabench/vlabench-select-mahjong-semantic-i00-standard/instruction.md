@@ -1,7 +1,7 @@
 # VLABench · select_mahjong_semantic — instance i00 — STANDARD MODE (robot as a service)
 
 You control a simulated **Franka Panda** arm (VLABench on MuJoCo) **as if it were real hardware**: the simulator runs in
-a service you cannot open, and you reach it only through a client. **Task: You are replacing me to play mahjong, and i think it's time to take out ('9', 'man') now: put that tile on the placemat.**
+a service you cannot open, and you reach it only through a client. **Task: You are replacing me to play mahjong, and I think it's time to discard the 9 of characters (9 man) now: put that tile on the placemat.**
 
 ## Rules (real-robot rules)
 - **One episode, no reset.** The episode starts when the service comes up. It ends when the task succeeds, after

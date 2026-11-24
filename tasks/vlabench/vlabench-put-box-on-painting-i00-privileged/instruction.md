@@ -1,6 +1,8 @@
 # VLABench · put_box_on_painting — instance i00
 
-You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: Please put the box on the Dinner and Love on the River.**
+You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: Please put the box on the painting “Dinner and Love on the River”.**
+
+This states exactly what VLABench's success check requires; VLABench's own wording (also in `s.state()["instruction"]`) is: "Please put the box on the Dinner and Love on the River.".
 
 This is a *fixed scene instance*: VLABench's own scene for `put_box_on_painting`, frozen (seed 0). You may reset and retry
 as often as you like. Your deliverable is **one replayable trajectory** of control steps, not a general policy.

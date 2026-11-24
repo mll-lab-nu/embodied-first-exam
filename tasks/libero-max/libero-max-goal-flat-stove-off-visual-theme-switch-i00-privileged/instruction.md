@@ -1,6 +1,6 @@
 # LIBERO-MAX · libero_goal · visual-theme switch — instance i00
 
-A **Franka Panda** arm (LIBERO on robosuite / MuJoCo) at a table. **Task: Turn off the stove.**
+A **Franka Panda** arm (LIBERO on robosuite / MuJoCo) at a table. **Task: The stove is already off: turn its knob the rest of the way in the off direction, as far as it goes.**
 The scene is one frozen LIBERO-MAX case: a LIBERO-PRO variant of a libero_goal task (task), with one online
 event: the first time the gripper comes within 0.18 m of `flat_stove_1`, LIBERO-MAX changes the scene
 once (the image colours change (channels permuted (1, 2, 0), scaled (1.25, 0.7, 1.1))). You have the full simulator state, so you can see the change happen (`s.state()["event_fired"]`).
