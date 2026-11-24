@@ -1,9 +1,8 @@
 # RoboDojo · swap_blocks (privileged)
 
 ## Task
-Swap the two cubes in three moves, lifting each one and using the empty mat as a parking spot. After each move, pull the
-button's cap up and press the button once; a press from rest does not count. Then pull the cap up once more and move
-both arms back to where they started while it is still up (it sinks back when let go).
+Swap the two cubes in three moves, lifting each cube and using the empty mat as a parking spot. After each move, pull
+the button's cap up and press it once. Finish with the cap pulled up while both arms are back where they started.
 
 ## Goal
 Success: the two cubes have swapped mats in three moves through the empty mat, each nearly centred on its new mat, the

@@ -1,16 +1,15 @@
 # RoboDojo · build_tower (privileged)
 
 ## Task
-Build a three-level tower: the long board across two pillars, one from the left and one from the right; the other two
-pillars on the long board with the short board across them; the thin plank along the middle of the short board; and the
-roof piece on the middle of the plank, its ridge across the plank. Keep every piece the way up it is now. Then move both
-arms back to where they started.
+Build a three-level tower: the long board across two pillars, one from each side; the other two pillars on it, under the
+short board; then the thin plank along the short board and the roof piece on the middle of the plank, ridge across it.
+Keep every piece the way up it is now. Then move both arms back to where they started.
 
 ## Goal
-Success: the long board lies across two pillars, one from the left and one from the right; the other two pillars stand
-on it with the short board across them, centred over it; the thin plank lies along the middle of the short board; the
-roof piece stands on the middle of the plank, its ridge across the plank; every piece lies flat the way up it started;
-and both arms are back where they started. A replay ends as soon as the task is done; later rows are not run.
+Success: the long board lies across two pillars, one from each side; the other two pillars stand on it under the short
+board, centred over it; the thin plank lies along the middle of the short board with the roof piece on its middle, ridge
+across it; every piece lies flat the way up it started; and both arms are back where they started. A replay ends as soon
+as the task is done; later rows are not run.
 
 Deliverable: `/app/output/trajectory.npz` with `task` and `actions`, a (T, 14) float array of at most 15,000 rows, one
 per action (1/25 s); write it with `s.save_trajectory()`. Anything else (another shape, NaN, more rows) scores 0. Leave

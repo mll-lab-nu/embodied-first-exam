@@ -2,14 +2,13 @@
 
 ## Task
 Hang the three mugs on the mug rack: the red mug by its handle on an arm that points left or right, and the two pink
-pumpkin mugs on any arm, each with its opening facing up or up and to the left and its handle pointing sideways, not up.
-Then move both arms back to where they started.
+pumpkin mugs on any arm, opening facing up or up-left and handle sideways. Then move both arms back to where they
+started.
 
 ## Goal
-Success: each of the three mugs hangs on the mug rack by its handle: the red mug, handle above the mug, on an arm that
-points left or right; each pink pumpkin mug with its opening facing up or up and to the left and its handle pointing
-sideways, not up; and both arms are back where they started. A replay ends as soon as the task is done; later rows are
-not run.
+Success: each of the three mugs hangs on the mug rack: the red mug by its handle, handle above the mug, on an arm that
+points left or right; each pink pumpkin mug with its opening facing up or up-left and its handle sideways; and both arms
+are back where they started. A replay ends as soon as the task is done; later rows are not run.
 
 Deliverable: `/app/output/trajectory.npz` with `task` and `actions`, a (T, 14) float array of at most 15,000 rows, one
 per action (1/25 s); write it with `s.save_trajectory()`. Anything else (another shape, NaN, more rows) scores 0. Leave

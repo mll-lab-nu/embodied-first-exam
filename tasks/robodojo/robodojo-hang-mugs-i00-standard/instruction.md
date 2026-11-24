@@ -1,14 +1,14 @@
 # RoboDojo · hang_mugs (standard)
 
 ## Task
-Hang the three mugs by their handles on the rack arms that point left or right, one mug per arm. Then move both arms
-back to where they started.
+Hang the three mugs by their handles on the rack arms that point left or right. Then move both arms back to where they
+started.
 
 ## Goal
-Success: each of the three mugs hangs by its handle, handle above the mug, on its own rack arm that points left or
-right; nothing holds the mugs; and both arms are back where they started. What counts is how things stand at the end of
-the episode: a success reached earlier and lost by the end does not count, so finish in the state you want graded and
-stop sending commands.
+Success: each of the three mugs hangs by its handle, handle above the mug, on a rack arm that points left or right;
+nothing holds the mugs; and both arms are back where they started. What counts is how things stand at the end of the
+episode: a success reached earlier and lost by the end does not count, so finish in the state you want graded and stop
+sending commands.
 
 You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
 you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands

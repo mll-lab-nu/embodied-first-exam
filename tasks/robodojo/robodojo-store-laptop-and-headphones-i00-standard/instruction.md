@@ -1,9 +1,9 @@
 # RoboDojo · store_laptop_and_headphones (standard)
 
 ## Task
-Hang the headphones by their headband on the headphone stand without turning them around: the ear cup now on the right
-stays on the right, and the side now on the table faces away from you. Then close the laptop and stand it in the laptop
-rack, hinge edge up. Then move both arms back to where they started.
+Hang the headphones by their headband on the headphone stand, the ear cup now on the right still on the right and the
+side now on the table facing away from you. Close the laptop and stand it in the laptop rack, hinge edge up. Then move
+both arms back to where they started.
 
 ## Goal
 Success: the headphones hang by their headband on the headphone stand, the ear cup that was on the right still on the

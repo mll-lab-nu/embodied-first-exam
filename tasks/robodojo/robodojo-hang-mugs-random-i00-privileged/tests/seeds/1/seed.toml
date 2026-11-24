@@ -1,18 +1,18 @@
 [[replace]]
-old = "## Task\nHang the three mugs on the mug rack: the red mug by its handle on an arm that points left or right, and the two pink\npumpkin mugs on any arm, each with its opening facing up or up and to the left and its handle pointing sideways, not up.\nThen move both arms back to where they started."
-new = "## Task\nHang the three mugs by their handles on the rack arms that point left or right.\nThen move both arms back to where they started."
+old = "## Task\nHang the three mugs on the mug rack: the red mug by its handle on an arm that points left or right, and the two pink\npumpkin mugs on any arm, opening facing up or up-left and handle sideways. Then move both arms back to where they\nstarted."
+new = "## Task\nHang the three mugs by their handles on the rack arms that point left or right. Then move both arms back to where they\nstarted."
 
 [[replace]]
-old = "## Goal\nSuccess: each of the three mugs hangs on the mug rack by its handle: the red mug, handle above the mug, on an arm that\npoints left or right; each pink pumpkin mug with its opening facing up or up and to the left and its handle pointing\nsideways, not up; and both arms are back where they started. A replay ends as soon as the task is done; later rows are\nnot run."
-new = "## Goal\nSuccess: each of the three mugs hangs by its handle, handle above the mug, on a rack arm that points left or right, and both arms are back where they started. A replay ends as soon as the task is done; later rows are\nnot run."
+old = "## Goal\nSuccess: each of the three mugs hangs on the mug rack: the red mug by its handle, handle above the mug, on an arm that\npoints left or right; each pink pumpkin mug with its opening facing up or up-left and its handle sideways; and both arms\nare back where they started. A replay ends as soon as the task is done; later rows are not run."
+new = "## Goal\nSuccess: each of the three mugs hangs by its handle, handle above the mug, on a rack arm that points left or right, and both arms\nare back where they started. A replay ends as soon as the task is done; later rows are not run."
 
 [[replace]]
 old = "## Others\n- Labels in `s.objects()`: `mug0` (the red mug); `mug1`, `mug2` (the two pink pumpkin mugs); `cup_holder` (the mug\n  rack).\n- RoboDojo's own reset settles the scene again from where it is, so after actions a reset gives the same layout and\n  start pose but not bit-for-bit the same state; a replay after such a reset can end slightly differently from the\n  grader's. Each graded replay runs the first episode of a newly started Session (nothing stepped before it): test on\n  that."
 new = "## Others\n- Labels in `s.objects()`: `mug0`..`mug2` (the three mugs); `cup_holder` (the mug\n  rack).\n- RoboDojo's own reset settles the scene again from where it is, so after actions a reset gives the same layout and\n  start pose but not bit-for-bit the same state; a replay after such a reset can end slightly differently from the\n  grader's. Each graded replay runs the first episode of a newly started Session (nothing stepped before it): test on\n  that."
 
 [[replace]]
-old = "## Goal\nSuccess: each of the three mugs hangs on the mug rack by its handle: the red mug, handle above the mug, on an arm that\npoints left or right; each pink pumpkin mug with its opening facing up or up and to the left and its handle pointing\nsideways, not up; and both arms are back where they started. What counts is how things stand at the end of the episode:\na success reached earlier and lost by the end does not count, so finish in the state you want graded and stop sending\ncommands."
-new = "## Goal\nSuccess: each of the three mugs hangs by its handle, handle above the mug, on a rack arm that points left or right, and both arms are back where they started. What counts is how things stand at the end of the episode:\na success reached earlier and lost by the end does not count, so finish in the state you want graded and stop sending\ncommands."
+old = "## Goal\nSuccess: each of the three mugs hangs on the mug rack: the red mug by its handle, handle above the mug, on an arm that\npoints left or right; each pink pumpkin mug with its opening facing up or up-left and its handle sideways; and both arms\nare back where they started. What counts is how things stand at the end of the episode: a success reached earlier and\nlost by the end does not count, so finish in the state you want graded and stop sending commands."
+new = "## Goal\nSuccess: each of the three mugs hangs by its handle, handle above the mug, on a rack arm that points left or right, and both arms\nare back where they started. What counts is how things stand at the end of the episode: a success reached earlier and\nlost by the end does not count, so finish in the state you want graded and stop sending commands."
 
 [[replace]]
 old = "arx_x5/0/hang_mugs_random_0.json"

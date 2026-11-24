@@ -1,12 +1,12 @@
 # RoboDojo · sort_nesting_dolls_by_size_random (standard)
 
 ## Task
-Stand the five dolls upright in a straight row from left to right, smallest to largest, with a little space between
-them. Then move both arms back to where they started.
+Stand the five nesting dolls upright in a straight row from left to right, smallest to largest, with a little space
+between them. Then move both arms back to where they started.
 
 ## Goal
-Success: the five dolls stand upright in a straight row, smallest on the left to largest on the right, with a little
-space between them, and both arms are back where they started. What counts is how things stand at the end of the
+Success: the five nesting dolls stand upright in a straight row, smallest on the left to largest on the right, with a
+little space between them, and both arms are back where they started. What counts is how things stand at the end of the
 episode: a success reached earlier and lost by the end does not count, so finish in the state you want graded and stop
 sending commands.
 

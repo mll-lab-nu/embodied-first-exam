@@ -1,16 +1,15 @@
 # RoboDojo · make_kong (privileged)
 
 ## Task
-After the opponent's arm discards a tile, flip face up the three tiles in your row with the same picture. Then stand the
-face-down tile from the top of the front stack at the far left on its short end at the right end of your row, the end
-that pointed right on top, and open both grippers.
+After the opponent's arm discards a tile, flip face up the three tiles in your row that match it. Then stand the top
+tile of the front stack at the far left on its short end at the right end of your row, its right end up, and open both
+grippers.
 
 ## Goal
-Success: the three tiles in your row with the same picture as the discarded tile are face up and the other nine tiles of
-your four sets of three still stand; after that, the tile from the front stack stands on its short end at the right end
-of your row, the end that pointed right at the start on top; and both grippers are open. Moving one of your arms far
-from where it started while the opponent's arm is out ends the episode as a failure. A replay ends as soon as the task
-is done; later rows are not run.
+Success: the three tiles in your row that match the discarded tile are face up and the other nine tiles of your four
+sets of three still stand; then the tile from the front stack stands on its short end at the right end of your row, its
+right end up; and both grippers are open. Moving one of your arms far from where it started while the opponent's arm is
+out ends the episode as a failure. A replay ends as soon as the task is done; later rows are not run.
 
 Deliverable: `/app/output/trajectory.npz` with `task` and `actions`, a (T, 14) float array of at most 15,000 rows, one
 per action (1/25 s); write it with `s.save_trajectory()`. Anything else (another shape, NaN, more rows) scores 0. Leave

@@ -2,15 +2,14 @@
 
 ## Task
 Hang the three mugs on the mug rack: the red mug by its handle on an arm that points left or right, and the two pink
-pumpkin mugs on any arm, each with its opening facing up or up and to the left and its handle pointing sideways, not up.
-Then move both arms back to where they started.
+pumpkin mugs on any arm, opening facing up or up-left and handle sideways. Then move both arms back to where they
+started.
 
 ## Goal
-Success: each of the three mugs hangs on the mug rack by its handle: the red mug, handle above the mug, on an arm that
-points left or right; each pink pumpkin mug with its opening facing up or up and to the left and its handle pointing
-sideways, not up; and both arms are back where they started. What counts is how things stand at the end of the episode:
-a success reached earlier and lost by the end does not count, so finish in the state you want graded and stop sending
-commands.
+Success: each of the three mugs hangs on the mug rack: the red mug by its handle, handle above the mug, on an arm that
+points left or right; each pink pumpkin mug with its opening facing up or up-left and its handle sideways; and both arms
+are back where they started. What counts is how things stand at the end of the episode: a success reached earlier and
+lost by the end does not count, so finish in the state you want graded and stop sending commands.
 
 You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
 you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
