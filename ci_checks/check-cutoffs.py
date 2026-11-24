@@ -65,7 +65,10 @@ NOT_THE_LIMIT = (r"simulated time|robot time|of play\b|control steps?|physics|pe
 
 
 def own_text(instruction: str) -> str:
-    """The instruction without the generated parts: the three closing sections (and cutoff paragraphs anywhere)."""
+    """The instruction without the generated parts: the three closing sections (and cutoff paragraphs anywhere); a v2
+    text without its `## Limits`."""
+    if tc.is_v2(instruction):
+        return re.sub(rf"(?ms)^{re.escape(tc.LIMITS_HEADING)}[ \t]*(?:\n.*?)?(?=^## |\Z)", "", instruction)
     s = tc.strip_cutoff(instruction)
     for heading in (tc.EXTERNAL_HEADING, tc.RESOURCES_HEADING, *tc.OLD_RESOURCES_HEADINGS):
         s = re.sub(rf"(?ms)^{re.escape(heading)}[ \t]*(?:\n.*?)?(?=^## |\Z)", "", s)
@@ -114,15 +117,25 @@ def check_task(task: Path) -> list[str]:
     want = tc.render_cutoff(sec, mode, bench, task.name)
     if not ins.startswith("# "):
         errs.append("instruction.md does not start with its `# ` title line")
-    if not ins.endswith("\n\n" + want):
+    if tc.is_v2(ins):      # instructions v2: `## Limits` last, rendered (its Time line states the cutoff)
+        lim = tc.render_limits(task, ins)
+        if not ins.endswith("\n\n" + lim):
+            errs.append(f"instruction.md does not end with the `{tc.LIMITS_HEADING}` section rendered for its {sec} s in "
+                        f"{mode} mode (run scripts/task_conventions.py on the task)")
+        if len(re.findall(rf"(?m)^{re.escape(tc.LIMITS_HEADING)}[ \t]*$", ins)) > 1:
+            errs.append(f"instruction.md has the `{tc.LIMITS_HEADING}` heading more than once")
+        errs += [f"instruction.md states the agent's limit a second time, outside `{tc.LIMITS_HEADING}` ({x}); say "
+                 f"\"{tc.V2_CUTOFF_REF}\" instead of a number" for x in other_limits(ins)]
+    elif not ins.endswith("\n\n" + want):
         stated = re.findall(tc.CUTOFF_RE, ins)
         errs.append(f"instruction.md does not end with the `{tc.CUTOFF_HEADING}` section rendered for its {sec} s in {mode} mode "
                     "(the last thing the agent reads; nothing after it; run scripts/task_conventions.py on the task)"
                     + (f" (it says {', '.join(stated)} seconds)" if stated else " (the sentence is missing)"))
-    if len(re.findall(tc.CUTOFF_RE, ins)) > 1 or len(re.findall(rf"(?m)^{re.escape(tc.CUTOFF_HEADING)}[ \t]*$", ins)) > 1:
-        errs.append(f"instruction.md has the cutoff sentence or the `{tc.CUTOFF_HEADING}` heading more than once")
-    errs += [f"instruction.md states the agent's limit a second time, outside `{tc.CUTOFF_HEADING}` ({x}); say "
-             f"\"{tc.CUTOFF_REF}\" instead of a number" for x in other_limits(ins)]
+    if not tc.is_v2(ins):
+        if len(re.findall(tc.CUTOFF_RE, ins)) > 1 or len(re.findall(rf"(?m)^{re.escape(tc.CUTOFF_HEADING)}[ \t]*$", ins)) > 1:
+            errs.append(f"instruction.md has the cutoff sentence or the `{tc.CUTOFF_HEADING}` heading more than once")
+        errs += [f"instruction.md states the agent's limit a second time, outside `{tc.CUTOFF_HEADING}` ({x}); say "
+                 f"\"{tc.CUTOFF_REF}\" instead of a number" for x in other_limits(ins)]
     readme = (task / "README.md").read_text(encoding="utf-8") if (task / "README.md").is_file() else ""
     if f"| Agent time budget | {sec} s;" not in readme:
         errs.append(f"README.md's `Agent time budget` row does not say {sec} s")

