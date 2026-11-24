@@ -2,7 +2,7 @@
 
 You control the **MyoHand**, a musculoskeletal model of a human forearm and hand (MyoSuite 2.12.2 on MuJoCo), via Python, through its actuators — 39
 muscles: there is no joint-level controller.
-**Task:** Hold the object at the goal: its centre within 0.010 m of the goal site for 50 consecutive control steps (1.0 s). Failure (the episode ends): the object more than 0.30 m from the goal (dropped). The object starts resting in the hand and falls if the hand does not grip it.
+**Task:** Hold the object at the goal, with its centre within about 1 cm of the goal site, for a full second. The episode ends in failure if the object gets more than about 30 cm from the goal, that is, if it is dropped. The object starts resting in the hand and falls if the hand does not grip it.
 
 A small object rests in the palm of the upturned hand; the goal site is right above it. `s.state()` gives the task's observation dict (privileged): `hand_qpos`, `hand_qvel`, `obj_pos`, `obj_err`, `act`.
 MyoSuite's reward code (from `/usr/local/lib/python3.11/site-packages/myosuite/envs/myo/myobase/obj_hold_v0.py`; `solved` is the goal test,

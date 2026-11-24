@@ -2,7 +2,7 @@
 
 You control the **MyoArm**, a musculoskeletal model of a human shoulder, arm and hand (MyoSuite 2.12.2 on MuJoCo), via Python, through its actuators — 63
 muscles: there is no joint-level controller.
-**Task:** Pick up the object from the table and put it in the target receptacle: the object's position within 0.1 m of the target (rotation is ignored) for 100 consecutive control steps (1.0 s). Failure (the episode ends): the palm more than 0.5 m from the object.
+**Task:** Pick up the object from the table and put it in the target receptacle, with its position within about 10 cm of the target for a full second. Its rotation does not matter. The episode ends in failure if the palm gets more than about half a metre from the object.
 
 An object stands on the table in front of the arm; a receptacle marks the target position. `s.state()` gives the task's observation dict (privileged): `hand_qpos`, `hand_qpos_corrected`, `hand_qvel`, `obj_pos`, `goal_pos`, `palm_pos`, `pos_err`, `reach_err`, `obj_rot`, `goal_rot`, `rot_err`, `act`.
 MyoSuite's reward code (from `/usr/local/lib/python3.11/site-packages/myosuite/envs/myo/myochallenge/relocate_v0.py`; `solved` is the goal test,

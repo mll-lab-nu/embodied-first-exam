@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:bigym2-0.1.1` |
 
 ## Task
-Open both doors of the wall cabinet. (BiGym 2.0 `wall_cupboard_open`, a Unitree G1 humanoid whose legs and waist NVIDIA's GR00T whole-body controller drives.)
+Open both doors of the wall cabinet all the way. (BiGym 2.0 `wall_cupboard_open`, a Unitree G1 humanoid whose legs and waist NVIDIA's GR00T whole-body controller drives.)
 
 ## Difficulty
 Two hinged doors above the counter, both opened to within about 9 degrees of fully open at the same time.

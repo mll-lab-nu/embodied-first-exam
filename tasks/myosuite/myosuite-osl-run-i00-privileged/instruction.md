@@ -2,7 +2,7 @@
 
 You control the **MyoLeg + OSL**, a free-standing musculoskeletal model of a human whose right leg is an Open-Source Leg knee-ankle prosthesis (MyoSuite 2.12.2 on MuJoCo), via Python, through its actuators — 54
 muscles and 2 non-muscle actuators: there is no joint-level controller.
-**Task:** Run the track: move forward 29 m along it to the finish (MyoChallenge 2024 OSL Run, its own win condition), staying within 1 m of the track's centre line and on your feet; the right leg is the prosthesis (`osl_knee_angle_r`, `osl_ankle_angle_r`), driven by its own controller, so you command only the 54 muscles. Failure (the episode ends): falling, leaving the track sideways, or moving 2 m backwards. There is no time limit.
+**Task:** Run forward along the track for 29 m to the finish, MyoChallenge 2024 OSL Run's own win condition, staying on your feet and within about a metre of the track's centre line. The right leg is the prosthesis (`osl_knee_angle_r`, `osl_ankle_angle_r`) and is driven by its own controller, so you command only the 54 muscles. The episode ends in failure if you fall, leave the track sideways, or move about 2 m backwards. There is no time limit.
 
 A musculoskeletal body whose right leg is an Open-Source Leg prosthesis (knee and ankle motors driven by its own controller) stands at the start of a straight, flat running track. `s.state()` gives the task's observation dict (privileged): `terrain`, `internal_qpos`, `internal_qvel`, `grf`, `socket_force`, `torso_angle`, `muscle_length`, `muscle_velocity`, `muscle_force`, `act`, `model_root_pos`, `model_root_vel`, `hfield`.
 MyoSuite's reward code (from `/usr/local/lib/python3.11/site-packages/myosuite/envs/myo/myochallenge/run_track_v0.py`; `solved` is the goal test,

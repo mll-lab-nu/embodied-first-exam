@@ -2,9 +2,7 @@
 
 You control a simulated Unitree H1 humanoid with two Shadow dexterous hands (HumanoidBench / MuJoCo) **as if
 it were real hardware**: the simulator runs in a service you cannot open, and you reach it only through a
-client. **Task:** six loose objects — a chair, a trophy, a pair of headphones, two packages and a snow globe —
-are scattered around the room (the table and the bookshelf are fixed). Tidy up: gather them together, so they
-end up close to one another rather than spread out.
+client. **Task:** gather the six loose objects scattered around the room so that they end up close together: the chair, the trophy, the pair of headphones, the two packages and the snow globe. The table and the bookshelf are fixed.
 
 ## Rules (real-robot rules)
 - **Episodes and resets.** The episode starts when the service comes up. It ends when the task succeeds, when

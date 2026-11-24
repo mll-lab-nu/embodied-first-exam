@@ -2,7 +2,7 @@
 
 You control the **MyoHand**, a musculoskeletal model of a human forearm and hand (MyoSuite 2.12.2 on MuJoCo), via Python, through its actuators — 39
 muscles: there is no joint-level controller.
-**Task:** Move all five fingertips onto their targets: the norm of the stacked fingertip-to-target errors (5 tips x 3 coordinates) below 0.0625 m, for 50 consecutive control steps (1.0 s). Failure (the episode ends, from the third control step on): that norm above 0.220 m.
+**Task:** Move all five fingertips onto their targets and hold them there for a full second, with the combined error, the norm of all five fingertip-to-target offsets stacked together, below about 6 cm. Once the first two control steps have passed, the episode ends in failure if that combined error goes above about 20 cm.
 
 The hand hangs relaxed; five small spheres mark where the thumb, index, middle, ring and little fingertips must go. `s.state()` gives the task's observation dict (privileged): `qpos`, `qvel`, `act`, `tip_pos`, `target_pos`, `reach_err`.
 MyoSuite's reward code (from `/usr/local/lib/python3.11/site-packages/myosuite/envs/myo/myobase/reach_v0.py`; `solved` is the goal test,

@@ -4,7 +4,7 @@ You control a simulated Unitree G1 humanoid robot with two-finger grippers (BiGy
 hardware**: the simulator runs in a service you cannot open, and you reach it only through a client. NVIDIA's GR00T
 whole-body controller, a learned policy that runs inside every control step, drives the legs and waist and keeps the
 robot balanced: you command where it walks, how high its pelvis is, how far its torso leans forward, its arm joints and its grippers.
-**Task:** Take the cups from the counter and gently put them away in the wall cabinet.
+**Task:** Take both cups from the counter and put them on the bottom shelf of the wall cabinet. Then let go, with both grippers off the cups.
 
 At the start the two cups stand on the counter in front of you (about 0.7 m away, 14° to your left, 0.86 m above the floor; about 0.6 m away, straight ahead, 0.86 m above the floor); the wall cabinet above the counter has two closed glass doors, their handles about 0.5 m away, straight ahead, 1.24 m above the floor and about 0.5 m away, straight ahead, 1.24 m above the floor, and its bottom shelf is about 0.8 m away, straight ahead, 1.15 m above the floor. (Distances are from your pelvis along the floor, directions from the way you face,
 heights above the floor; measured on this scene.)

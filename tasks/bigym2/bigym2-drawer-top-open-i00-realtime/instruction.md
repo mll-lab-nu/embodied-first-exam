@@ -5,7 +5,7 @@ hardware**: the simulator runs in a service you cannot open, and you reach it on
 it does not wait for you: once the episode is running, the robot moves in real time while you think. NVIDIA's GR00T
 whole-body controller, a learned policy that runs inside every control step, drives the legs and waist and keeps the
 robot balanced: you command where it walks, how high its pelvis is, its arm joints and its grippers.
-**Task:** Open the top drawer of the kitchen cabinet.
+**Task:** Pull the top drawer of the kitchen cabinet all the way open.
 
 At the start the kitchen cabinet is in front of you; the handle of its top drawer is about 0.5 m away, straight ahead, 0.73 m above the floor. (Distances are from your pelvis along the floor, directions from the way you face,
 heights above the floor; measured on this scene.)

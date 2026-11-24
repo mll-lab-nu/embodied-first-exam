@@ -2,9 +2,7 @@
 
 You control a simulated Unitree H1 humanoid (HumanoidBench / MuJoCo) **as if it were real hardware**: the
 simulator runs in a service you cannot open, and you reach it only through a client. Like real hardware, it
-does not wait for you: once an episode is running, the robot moves in real time while you think. **Task:** run
-the robot forward down the walled track, past the hurdles, without touching the side or back walls and without
-falling.
+does not wait for you: once an episode is running, the robot moves in real time while you think. **Task:** run the robot forward down the walled track and over the hurdles, without touching the side or back walls and without falling.
 
 ## Rules (real-robot rules)
 - **Time does not stop.** An episode starts paused, on the frozen starting state, its servos holding their

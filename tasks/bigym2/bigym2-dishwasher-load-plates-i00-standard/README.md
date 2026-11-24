@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:bigym2-0.1.1` |
 
 ## Task
-Take the plates from the dish rack and gently slot them into the dishwasher's lower rack. (BiGym 2.0 `dishwasher_load_plates`; the robot as a service: its three onboard cameras and its proprioception only, one
+Take both plates from the dish rack and stand them on edge in the dishwasher's lower rack, each facing left or right as seen from where you started. Then let go, with both grippers off the plates. (BiGym 2.0 `dishwasher_load_plates`; the robot as a service: its three onboard cameras and its proprioception only, one
 episode.)
 
 ## Difficulty

@@ -1,7 +1,7 @@
 # Panda Dynamic Scenes · Plate catch, transport and release (S02) — frozen instance i00
 
 You control one simulated **Franka Panda** arm (7 joints, its standard hand, and the task's tool where it has one) in a simulated scene (ManiSkill 3 / SAPIEN, rigid-body CPU PhysX at 1000 Hz) via Python.
-**Task:** A ball is tossed up next to the robot when the episode starts. Catch it on the flat, rimless plate the Panda holds, settle it at the plate's centre, carry it through two waypoints (a turn) without letting it roll off, settle it again, then tip it off the plate into a basin that slides back and forth along a rail, where it must come to rest while the basin is moving.
+**Task:** A ball is tossed up next to the robot when the episode starts. Catch it on the flat, rimless plate the Panda holds and settle it at the plate's centre. Carry it through two waypoints that make a turn without letting it roll off, and settle it again. Then tip it off the plate into a basin that slides back and forth along a rail, where it must come to rest while the basin is moving.
 
 This is a *fixed scene instance*: everything starts the same way after every reset, and you may reset and retry as many
 times as you want. Your deliverable is **one replayable trajectory** of the robot's low-level actions, not a general

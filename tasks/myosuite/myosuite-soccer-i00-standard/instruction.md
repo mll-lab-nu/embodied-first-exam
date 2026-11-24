@@ -2,7 +2,7 @@
 
 You control the **MyoLegs**, a free-standing musculoskeletal model of a human torso and both legs, **as if it were real**: the simulator (MyoSuite 2.12.2 on MuJoCo) runs in a service
 you cannot open. You get one client and up to 11 episodes, and you act only through its actuators (290 muscles).
-**Task:** Score a goal: kick the ball into the goal, past the goalkeeper, within 10 s of simulated time (MyoChallenge 2025 Soccer P1: the ball's centre crosses the goal line between the posts and under the bar). Failure (the episode ends): the pelvis below 0.2 m (fallen), or the time limit.
+**Task:** Score a goal within 10 s: kick the ball past the goalkeeper so that its centre crosses the goal line between the posts and under the bar, as MyoChallenge 2025 Soccer P1 judges it. The episode ends in failure if you fall, with your pelvis dropping below about 20 cm, or at the time limit.
 
 A musculoskeletal body with two legs stands on a soccer pitch; a ball lies in front of it and a goalkeeper guards the goal.
 

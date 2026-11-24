@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:bigym2-0.1.1` |
 
 ## Task
-Turn the upside-down cup the right way up and gently set it back down. (BiGym 2.0 `flip_cup`, a Unitree G1 humanoid whose legs and waist NVIDIA's GR00T whole-body controller drives.)
+Turn the upside-down cup over and stand it the right way up on the counter. Then let go, with both grippers off the cup. (BiGym 2.0 `flip_cup`, a Unitree G1 humanoid whose legs and waist NVIDIA's GR00T whole-body controller drives.)
 
 ## Difficulty
 In-hand reorientation: an upside-down cup turned 180 degrees and set down within 5 degrees of upright, the tightest orientation tolerance in the suite.

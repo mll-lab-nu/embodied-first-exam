@@ -89,7 +89,7 @@
    "wz": -0.08692560344934464
   }
  ],
- "text": "Make the Unitree Go1 follow the joystick command schedule on rough terrain (a 20 x 20 m heightfield, up to 5 cm high) for the whole 20 s episode without falling over.",
+ "text": "Make the Unitree Go1 follow the joystick command schedule on rough, bumpy ground for the whole 20 s episode without falling over.",
  "facts": {
   "start_xy_m": [
    -0.096,

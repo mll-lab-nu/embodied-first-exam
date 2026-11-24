@@ -2,7 +2,7 @@
 
 You control a simulated Unitree H1 humanoid with two Shadow dexterous hands (HumanoidBench / MuJoCo) **as if
 it were real hardware**: the simulator runs in a service you cannot open, and you reach it only through a
-client. **Task:** lift the dumbbell from the floor to overhead — close to two metres up — and hold it there.
+client. **Task:** lift the dumbbell from the floor to overhead, about two metres up, and hold it there.
 
 ## Rules (real-robot rules)
 - **Episodes and resets.** The episode starts when the service comes up. It ends when the task succeeds, when

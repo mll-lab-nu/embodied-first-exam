@@ -5,7 +5,7 @@ hardware**: the simulator runs in a service you cannot open, and you reach it on
 it does not wait for you: once the episode is running, the robot moves in real time while you think. NVIDIA's GR00T
 whole-body controller, a learned policy that runs inside every control step, drives the legs and waist and keeps the
 robot balanced: you command where it walks, how high its pelvis is, how far its torso leans forward, its arm joints and its grippers.
-**Task:** Pick the cardboard box up from the side table and gently set it down on the kitchen counter.
+**Task:** Pick up the cardboard box from the side table and set it down on top of the kitchen counter. Then let go, with both grippers off the box.
 
 At the start the cardboard box stands on a low side table, about 1.3 m away, 52° to your right, 0.62 m above the floor; the front edge of the kitchen counter's top is about 0.7 m away, straight ahead, 0.71 m above the floor. (Distances are from your pelvis along the floor, directions from the way you face,
 heights above the floor; measured on this scene.)

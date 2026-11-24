@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0` |
 
 ## Task
-A square puck slides toward the robot over an almost frictionless table at the start. First touch it with the paddle; then strike it so that, sliding free of the paddle, it hits a sliding blocker bar that obstructs the way to the goal fast enough to push it aside along its rail. Let the puck slide back across a recovery line by itself, strike it a second time, and make it bank off the rail designated for this episode (one of two rails, coloured green; the other is grey) without touching the other rail, and then cross the goal line while the blocker is still pushed aside. The deliverable is one replayable trajectory of 100 Hz joint-target actions (`/app/output/trajectory.npz`,
+A square puck slides toward the robot over an almost frictionless table at the start. First touch it with the paddle. Then strike it so that, sliding free of the paddle, it hits the sliding blocker bar that blocks the way to the goal fast enough to push it aside along its rail. Let the puck slide back across a recovery line by itself and strike it a second time. Make it bank off the green rail designated for this episode, without touching the other, grey rail, and then cross the goal line while the blocker is still pushed aside. The deliverable is one replayable trajectory of 100 Hz joint-target actions (`/app/output/trajectory.npz`,
 8 values per row), graded by the task's own staged success check: 5 phases (`first_strike`, `clear_blocker`, `recover_deflection`, `second_strike`, `bank_and_goal`), in order,
 with no failure event and no safety-limit violation, within the task's horizon of 35 s.
 

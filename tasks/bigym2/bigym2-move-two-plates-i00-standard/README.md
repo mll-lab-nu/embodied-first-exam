@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:bigym2-0.1.1` |
 
 ## Task
-Take both plates out of the left dish rack and gently stand them in the right dish rack. (BiGym 2.0 `move_two_plates`; the robot as a service: its three onboard cameras and its proprioception only, one
+Take both plates out of the left dish rack and stand them on edge in slots of the right dish rack, facing the same way as they do now and clear of the table. Then let go, with both grippers off the plates. (BiGym 2.0 `move_two_plates`; the robot as a service: its three onboard cameras and its proprioception only, one
 episode.)
 
 ## Difficulty

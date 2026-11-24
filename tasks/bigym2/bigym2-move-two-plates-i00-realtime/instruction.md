@@ -5,7 +5,7 @@ hardware**: the simulator runs in a service you cannot open, and you reach it on
 it does not wait for you: once the episode is running, the robot moves in real time while you think. NVIDIA's GR00T
 whole-body controller, a learned policy that runs inside every control step, drives the legs and waist and keeps the
 robot balanced: you command where it walks, how high its pelvis is, how far its torso leans forward, its arm joints and its grippers.
-**Task:** Take both plates out of the left dish rack and gently stand them in the right dish rack.
+**Task:** Take both plates out of the left dish rack and stand them on edge in slots of the right dish rack, facing the same way as they do now and clear of the table. Then let go, with both grippers off the plates.
 
 At the start both plates stand in the left dish rack, about 0.7 m away, 29° to your left, 0.82 m above the floor; the right dish rack is about 0.7 m away, 21° to your right, 0.70 m above the floor. Both racks are on the table in front of you. (Distances are from your pelvis along the floor, directions from the way you face,
 heights above the floor; measured on this scene.)

@@ -1,8 +1,7 @@
 # DexToolBench · flat spatula · flip_over (MuJoCo)
 
 A KUKA iiwa 14 arm with a 22-joint **Sharpa HA4** dexterous hand stands next to a table with a **flat spatula** on it.
-**Task:** pick up the flat spatula and move it through the demonstrated motion (flipping something over): bring it to each
-of the **45 goal poses in order** (the green ghost tool shows the current goal). This is task `spatula / flat_spatula /
+**Task:** pick up the flat spatula and move it through the demonstrated motion of flipping something over: bring it to each of the **45 goal poses in order**. A green ghost spatula shows the current goal. This is task `spatula / flat_spatula /
 flip_over` of DexToolBench (SimToolReal), run here in plain MuJoCo.
 
 ## What you hand in

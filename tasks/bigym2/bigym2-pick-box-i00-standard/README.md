@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:bigym2-0.1.1` |
 
 ## Task
-Pick the cardboard box up from the side table and gently set it down on the kitchen counter. (BiGym 2.0 `pick_box`; the robot as a service: its three onboard cameras and its proprioception only, one
+Pick up the cardboard box from the side table and set it down on top of the kitchen counter. Then let go, with both grippers off the box. (BiGym 2.0 `pick_box`; the robot as a service: its three onboard cameras and its proprioception only, one
 episode.)
 
 ## Difficulty

@@ -1,8 +1,7 @@
 # DexToolBench · long screwdriver · spin_vertical (MuJoCo)
 
 A KUKA iiwa 14 arm with a 22-joint **Sharpa HA4** dexterous hand stands next to a table with a **long screwdriver** on it.
-**Task:** pick up the long screwdriver and move it through the demonstrated motion (spinning it about a vertical axis): bring it to each
-of the **100 goal poses in order** (the green ghost tool shows the current goal). This is task `screwdriver / long_screwdriver /
+**Task:** pick up the long screwdriver and spin it about a vertical axis along the demonstrated motion: bring it to each of the **100 goal poses in order**. A green ghost screwdriver shows the current goal. This is task `screwdriver / long_screwdriver /
 spin_vertical` of DexToolBench (SimToolReal), run here in plain MuJoCo.
 
 ## What you hand in

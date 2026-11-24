@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:bigym2-0.1.1` |
 
 ## Task
-Pick the cardboard box up from the side table and gently set it down on the kitchen counter. (BiGym 2.0 `pick_box`, a Unitree G1 humanoid whose legs and waist NVIDIA's GR00T whole-body controller drives.)
+Pick up the cardboard box from the side table and set it down on top of the kitchen counter. Then let go, with both grippers off the box. (BiGym 2.0 `pick_box`, a Unitree G1 humanoid whose legs and waist NVIDIA's GR00T whole-body controller drives.)
 
 ## Difficulty
 Whole-body carry: squat to a low side table, lift a 3 kg box with two palmless grippers, turn and walk, set it on the counter.

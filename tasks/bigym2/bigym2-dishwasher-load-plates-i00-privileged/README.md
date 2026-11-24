@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:bigym2-0.1.1` |
 
 ## Task
-Take the plates from the dish rack and gently slot them into the dishwasher's lower rack. (BiGym 2.0 `dishwasher_load_plates`, a Unitree G1 humanoid whose legs and waist NVIDIA's GR00T whole-body controller drives.)
+Take both plates from the dish rack and stand them on edge in the dishwasher's lower rack, each facing left or right as seen from where you started. Then let go, with both grippers off the plates. (BiGym 2.0 `dishwasher_load_plates`, a Unitree G1 humanoid whose legs and waist NVIDIA's GR00T whole-body controller drives.)
 
 ## Difficulty
 Two plates moved from a drainer into the dishwasher's low rack and stood on edge; a dropped plate ends the episode.

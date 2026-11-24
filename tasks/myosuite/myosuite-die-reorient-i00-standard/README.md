@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:myosuite-0.1.1` |
 
 ## Task
-MyoSuite `myoChallengeDieReorientP1-v0` (MyoHand, 39 muscles) on the same frozen instance as `myosuite-die-reorient-i00-privileged`: Rotate the die in the hand to the target pose: its position within 0.025 m of the target and the norm of its Euler-angle error below 0.262 rad, for 100 consecutive control steps (1.0 s). Failure (the episode ends): the die more than 0.2 m from the target (dropped).
+MyoSuite `myoChallengeDieReorientP1-v0` (MyoHand, 39 muscles) on the same frozen instance as `myosuite-die-reorient-i00-privileged`: Rotate the die in the hand to the target pose and hold it there for a full second, with its position within about 2.5 cm of the target and its orientation within about 15 degrees of the target's, measured as the norm of the Euler-angle error. The episode ends in failure if the die gets more than about 20 cm from the target, that is, if it is dropped.
 A die rests in the palm of the upturned hand; a translucent target die shows the goal orientation. Standard mode (eai-standard/2.2): the agent drives the body through a client, with only its own proprioception and the scene's cameras, and 10 resets (only the last episode is graded).
 
 ## Difficulty

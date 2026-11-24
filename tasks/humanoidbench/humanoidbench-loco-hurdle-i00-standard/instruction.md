@@ -1,8 +1,7 @@
 # hurdle — instance 00 — STANDARD MODE (robot as a service)
 
 You control a simulated Unitree H1 humanoid (HumanoidBench / MuJoCo) **as if it were real hardware**: the
-simulator runs in a service you cannot open, and you reach it only through a client. **Task:** run the robot
-forward down the walled track, past the hurdles, without touching the side or back walls and without falling.
+simulator runs in a service you cannot open, and you reach it only through a client. **Task:** run the robot forward down the walled track and over the hurdles, without touching the side or back walls and without falling.
 
 ## Rules (real-robot rules)
 - **Episodes and resets.** The episode starts when the service comes up. It ends when the task succeeds, when

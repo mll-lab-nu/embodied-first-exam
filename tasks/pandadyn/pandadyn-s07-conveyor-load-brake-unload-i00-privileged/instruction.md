@@ -1,7 +1,7 @@
 # Panda Dynamic Scenes · Conveyor pick, carriage load, braking and dock unload (S07) — frozen instance i00
 
 You control one simulated **Franka Panda** arm (7 joints, its standard hand, and the task's tool where it has one) in a simulated scene (ManiSkill 3 / SAPIEN, rigid-body CPU PhysX at 1000 Hz) via Python.
-**Task:** At the start a small cube (the part) rides along a powered roller conveyor, and a shallow carriage is already coasting along a frictionless rail. Grasp the part with the gripper while it is moving and lift it; set it on the moving carriage and let go while the carriage is still moving; then grip the carriage's vertical handle with both fingers and bring the carriage to a stop, with the part still on it, before it reaches the end of its rail; grasp the part again and lift it off the carriage; finally set it down in a fixed dock and leave it there at rest.
+**Task:** At the start a small cube, the part, rides along a powered roller conveyor, and a shallow carriage is already coasting along a frictionless rail. Grasp the part with the gripper while it is moving and lift it. Set it on the moving carriage and let go while the carriage is still moving. Then grip the carriage's vertical handle with both fingers and bring the carriage to a stop, with the part still on it, before it reaches the end of its rail. Grasp the part again and lift it off the carriage. Finally set it down in a fixed dock and leave it there at rest.
 
 This is a *fixed scene instance*: everything starts the same way after every reset, and you may reset and retry as many
 times as you want. Your deliverable is **one replayable trajectory** of the robot's low-level actions, not a general

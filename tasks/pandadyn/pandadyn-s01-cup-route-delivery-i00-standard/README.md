@@ -18,7 +18,7 @@ client (docs/protocol/standard_mode.md Part 1, with the optional reset capabilit
 live and records every control step it ran. Between the agent's calls the world is frozen; 3 resets, only the last
 episode graded. The sidecar's adapter (`environment/sim/server.py`) is the benchmark's realtime twins', code for code,
 on the same shared service layer, so where a family has that twin the two modes differ only in the clock. Compare against the
-privileged task to measure the cost of losing privileged state, free resets and self-replay. An orange ball is thrown upward at the start and comes back down near the robot. Catch it in the open cup the Panda holds, pour it into the designated one of two raised gravity channels, let it roll down that channel by itself, drop off its end and bounce off the tilted rebound plate below it, catch it in the cup again while it flies, and finally put it into a cart that slides back and forth on a rail, where it must rest while the cart is still moving.
+privileged task to measure the cost of losing privileged state, free resets and self-replay. An orange ball is thrown upward at the start and comes back down near the robot. Catch it in the open cup the Panda holds and pour it into the designated one of the two raised gravity channels. Let it roll down that channel by itself, drop off its end and bounce off the tilted rebound plate below it. Catch it in the cup again while it flies, and finally put it into a cart that slides back and forth on a rail, where it must rest while the cart is still moving.
 
 ## Difficulty
 That of `pandadyn-s01-cup-route-delivery-i00-privileged` (its README), without object poses or the success signal and with 3 resets: the moving objects

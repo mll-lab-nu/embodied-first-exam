@@ -1,6 +1,6 @@
 # MuJoCo Playground · SpotJoystickGaitTracking — frozen episode
 
-**Task:** Make Boston Dynamics Spot follow the joystick command schedule for the whole 20 s episode with the commanded gait (the feet's swing pattern, frequency and height) without falling over.
+**Task:** Make Boston Dynamics Spot follow the joystick command schedule for the whole 20 s episode without falling over. Move its feet in the commanded gait, matching its swing pattern, rhythm and foot height.
 
 You control the Boston Dynamics Spot quadruped in one episode of MuJoCo Playground's `SpotJoystickGaitTracking` environment, rebuilt in plain
 MuJoCo 3.3.7 from Playground's own scene files (Apache-2.0, commit 4057c14) and the robot from MuJoCo Menagerie. The

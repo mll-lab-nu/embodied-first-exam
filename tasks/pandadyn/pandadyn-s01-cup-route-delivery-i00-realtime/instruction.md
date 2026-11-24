@@ -3,7 +3,7 @@
 You control one simulated **Franka Panda** arm (7 joints, its standard hand, and the task's tool where it has one) **as if it were real hardware**: the simulator (ManiSkill 3 / SAPIEN, rigid-body physics at
 1000 Hz) runs in a service you cannot open, you reach it only through a client, and like the real world it does not wait
 for you: once an episode is running, the scene and the robot move while you think.
-**Task:** An orange ball is thrown upward at the start and comes back down near the robot. Catch it in the open cup the Panda holds, pour it into the designated one of two raised gravity channels, let it roll down that channel by itself, drop off its end and bounce off the tilted rebound plate below it, catch it in the cup again while it flies, and finally put it into a cart that slides back and forth on a rail, where it must rest while the cart is still moving.
+**Task:** An orange ball is thrown upward at the start and comes back down near the robot. Catch it in the open cup the Panda holds and pour it into the designated one of the two raised gravity channels. Let it roll down that channel by itself, drop off its end and bounce off the tilted rebound plate below it. Catch it in the cup again while it flies, and finally put it into a cart that slides back and forth on a rail, where it must rest while the cart is still moving.
 
 **Slowdown: S = 2.** The world runs at 1/S of real speed: one control step (10 ms of robot time) every
 S x 10 ms = 20 ms of wall-clock time (this simulator cannot keep up with real time on the service's CPUs; S is

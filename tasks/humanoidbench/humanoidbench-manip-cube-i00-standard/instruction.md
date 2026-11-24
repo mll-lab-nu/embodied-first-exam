@@ -2,9 +2,7 @@
 
 You control a simulated Unitree H1 humanoid with two Shadow dexterous hands (HumanoidBench / MuJoCo) **as if
 it were real hardware**: the simulator runs in a service you cannot open, and you reach it only through a
-client. **Task:** a cube starts just above and in front of each palm. Rotate both cubes, without dropping
-them, to the goal orientation: that of the translucent cube with the same faces floating above and between the
-hands.
+client. **Task:** a cube starts just above and in front of each palm. Rotate both cubes, without dropping them, until each matches the orientation of the translucent cube with the same faces that floats above and between the hands.
 
 ## Rules (real-robot rules)
 - **Episodes and resets.** The episode starts when the service comes up. It ends when the task succeeds, when

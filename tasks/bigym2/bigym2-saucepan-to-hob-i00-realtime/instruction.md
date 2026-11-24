@@ -5,7 +5,7 @@ hardware**: the simulator runs in a service you cannot open, and you reach it on
 it does not wait for you: once the episode is running, the robot moves in real time while you think. NVIDIA's GR00T
 whole-body controller, a learned policy that runs inside every control step, drives the legs and waist and keeps the
 robot balanced: you command where it walks, how high its pelvis is, how far its torso leans forward, its arm joints and its grippers.
-**Task:** Take the saucepan out of the cabinet and gently set it on the hob.
+**Task:** Take the saucepan out of the cabinet under the counter and set it on the hob. Then let go, with both grippers off the saucepan.
 
 At the start the saucepan is inside the closed cabinet under the counter, about 0.6 m away, 12° to your left, 0.48 m above the floor; the cabinet door's handle is about 0.5 m away, 30° to your left, 0.67 m above the floor; the hob is on the counter top, about 0.7 m away, straight ahead, 0.85 m above the floor. (Distances are from your pelvis along the floor, directions from the way you face,
 heights above the floor; measured on this scene.)

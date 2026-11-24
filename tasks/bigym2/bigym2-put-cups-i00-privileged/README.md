@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:bigym2-0.1.1` |
 
 ## Task
-Take the cups from the counter and gently put them away in the wall cabinet. (BiGym 2.0 `put_cups`, a Unitree G1 humanoid whose legs and waist NVIDIA's GR00T whole-body controller drives.)
+Take both cups from the counter and put them on the bottom shelf of the wall cabinet. Then let go, with both grippers off the cups. (BiGym 2.0 `put_cups`, a Unitree G1 humanoid whose legs and waist NVIDIA's GR00T whole-body controller drives.)
 
 ## Difficulty
 Two stages: open the wall cabinet's glass door, then place two cups on its bottom shelf, released.

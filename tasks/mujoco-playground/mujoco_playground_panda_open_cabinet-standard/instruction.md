@@ -2,7 +2,7 @@
 
 A **Franka Panda** arm stands in front of a **green handle** mounted on a slide (it moves only along x, from x = 0.5 m
 towards the robot), with a shelf behind a barrier. A **red target sphere** marks where the handle should end up.
-**Task:** grasp the handle and **pull it along its slide to the target**. This is MuJoCo Playground's
+**Task:** grasp the green handle and **pull it along its slide to the red target sphere**. This is MuJoCo Playground's
 `PandaOpenCabinet`, run here in plain MuJoCo; the target and the arm's start posture are randomized as in Playground,
 with a fixed seed.
 

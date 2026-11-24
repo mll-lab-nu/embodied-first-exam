@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/bigym2-move-two-plates-i00-privileged"
-description = "BiGym 2.0 move-two-plates (Unitree G1 with GR00T-WBC, MuJoCo 3.8.1) in privileged mode: produce one replayable trajectory. Take both plates out of the left dish rack and gently stand them in the right dish rack. Frozen instance: upstream task move_two_plates, seed 0."
+description = "BiGym 2.0 move-two-plates (Unitree G1 with GR00T-WBC, MuJoCo 3.8.1) in privileged mode: produce one replayable trajectory. Take both plates out of the left dish rack and stand them on edge in slots of the right dish rack, facing the same way as they do now and clear of the table. Then let go, with both grippers off the plates. Frozen instance: upstream task move_two_plates, seed 0."
 keywords = ["robotics", "bigym2", "mujoco", "unitree-g1", "humanoid", "loco-manipulation", "trajectory", "move-two-plates"]
 
 [metadata]

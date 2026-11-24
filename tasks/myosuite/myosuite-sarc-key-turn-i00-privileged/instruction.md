@@ -2,7 +2,7 @@
 
 You control the **MyoHand**, a musculoskeletal model of a human forearm and hand (MyoSuite 2.12.2 on MuJoCo), via Python, through its actuators — 39
 muscles: there is no joint-level controller.
-**Task:** Turn the key held between the thumb and the index finger by more than 3.14 rad (half a turn). Success: the key's hinge angle above 3.14 rad for 50 consecutive control steps (1.0 s). The episode ends in failure if the index fingertip or the thumb tip moves more than about a hand's width away from the key head. The muscles are sarcopenic: MyoSuite's sarcopenia condition halves every muscle's maximum isometric force.
+**Task:** Turn the key held between the thumb and the index finger by more than half a turn, and keep it past half a turn for a full second. The episode ends in failure if the index fingertip or the thumb tip moves more than about a hand's width away from the key head. The muscles are sarcopenic: MyoSuite's sarcopenia condition halves every muscle's maximum isometric force.
 
 As key_turn: the key sits in a lock in front of the palm, its head between the thumb and the index finger. `s.state()` gives the task's observation dict (privileged): `hand_qpos`, `hand_qvel`, `key_qpos`, `key_qvel`, `IFtip_approach`, `THtip_approach`, `act`.
 MyoSuite's reward code (from `/usr/local/lib/python3.11/site-packages/myosuite/envs/myo/myobase/key_turn_v0.py`; `solved` is the goal test,

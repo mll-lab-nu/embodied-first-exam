@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:bigym2-0.1.1` |
 
 ## Task
-Open both doors of the wall cabinet. (BiGym 2.0 `wall_cupboard_open`; the robot as a service: its three onboard cameras and its proprioception only, one
+Open both doors of the wall cabinet all the way. (BiGym 2.0 `wall_cupboard_open`; the robot as a service: its three onboard cameras and its proprioception only, one
 episode.)
 
 ## Difficulty

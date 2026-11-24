@@ -2,7 +2,7 @@
 
 You control the **MyoHand**, a musculoskeletal model of a human forearm and hand, **as if it were real**: the simulator (MyoSuite 2.12.2 on MuJoCo) runs in a service
 you cannot open. You get one client and up to 11 episodes, and you act only through its actuators (39 muscles).
-**Task:** Hold the object at the goal: its centre within 0.010 m of the goal site for 50 consecutive control steps (1.0 s). Failure (the episode ends): the object more than 0.30 m from the goal (dropped). The object starts resting in the hand and falls if the hand does not grip it.
+**Task:** Hold the object at the goal, with its centre within about 1 cm of the goal site, for a full second. The episode ends in failure if the object gets more than about 30 cm from the goal, that is, if it is dropped. The object starts resting in the hand and falls if the hand does not grip it.
 
 A small object rests in the palm of the upturned hand; the goal site is right above it.
 

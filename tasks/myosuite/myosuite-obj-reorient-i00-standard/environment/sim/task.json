@@ -1,5 +1,5 @@
 {
- "task_text": "Reorient the object held in the hand to the target orientation: the cosine between the object's orientation vector and the target's above 0.95, with the object within 0.075 m of the target position, for 100 consecutive control steps (1.0 s). Failure (the episode ends): the object more than 0.075 m from the target position (dropped).",
+ "task_text": "Turn the object held in the hand until its orientation vector points within about 15 degrees of the target's, and hold it there for a full second without dropping it. The episode ends in failure, as a drop, if the object gets more than about 7 cm from the target position.",
  "default_cameras": [
   "hand_top"
  ],

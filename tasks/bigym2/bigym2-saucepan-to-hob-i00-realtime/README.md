@@ -13,7 +13,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:bigym2-0.1.1` |
 
 ## Task
-Take the saucepan out of the cabinet and gently set it on the hob. (BiGym 2.0 `saucepan_to_hob`; the robot as a service on a clock that does not stop: its three onboard cameras and
+Take the saucepan out of the cabinet under the counter and set it on the hob. Then let go, with both grippers off the saucepan. (BiGym 2.0 `saucepan_to_hob`; the robot as a service on a clock that does not stop: its three onboard cameras and
 its proprioception only, one episode.)
 
 ## Difficulty

@@ -1,9 +1,7 @@
 # window — instance 00
 
 You control a simulated Unitree H1 humanoid with two Shadow dexterous hands (HumanoidBench / MuJoCo)
-via Python. **Task:** grasp the wiping tool — it starts in the air just in front of the hands and
-falls within the first second unless it is held — and wipe the window with it, moving steadily up
-and down.
+via Python. **Task:** grasp the wiping tool and wipe the window with it, moving it steadily up and down. The tool starts in the air just in front of the hands and falls within the first second unless it is held.
 
 This is a *fixed scene instance*: the window, the tool and the robot's initial pose never change
 between resets. You may reset and retry as many times as you want. Your deliverable is **one

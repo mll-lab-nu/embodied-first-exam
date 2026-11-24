@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:myosuite-0.1.1` |
 
 ## Task
-MyoSuite `myoHandReorient8-v0` (MyoHand, a musculoskeletal model of a human forearm and hand, 39 muscles): Reorient the object held in the hand to the target orientation: the cosine between the object's orientation vector and the target's above 0.95, with the object within 0.075 m of the target position, for 100 consecutive control steps (1.0 s). Failure (the episode ends): the object more than 0.075 m from the target position (dropped).
+MyoSuite `myoHandReorient8-v0` (MyoHand, a musculoskeletal model of a human forearm and hand, 39 muscles): Turn the object held in the hand until its orientation vector points within about 15 degrees of the target's, and hold it there for a full second without dropping it. The episode ends in failure, as a drop, if the object gets more than about 7 cm from the target position.
 An object (one of eight shapes; this instance fixes one) rests on the fingers of the upturned hand; a translucent copy shows the target orientation. The deliverable is one replayable trajectory of actuator commands (`/app/output/trajectory.npz`, `(T, 39)`, one row per 10 ms control step).
 
 ## Difficulty

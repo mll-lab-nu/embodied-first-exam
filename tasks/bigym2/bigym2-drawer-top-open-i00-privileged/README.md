@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:bigym2-0.1.1` |
 
 ## Task
-Open the top drawer of the kitchen cabinet. (BiGym 2.0 `drawer_top_open`, a Unitree G1 humanoid whose legs and waist NVIDIA's GR00T whole-body controller drives.)
+Pull the top drawer of the kitchen cabinet all the way open. (BiGym 2.0 `drawer_top_open`, a Unitree G1 humanoid whose legs and waist NVIDIA's GR00T whole-body controller drives.)
 
 ## Difficulty
 Grasp a drawer handle and pull the drawer at least 90% open while the controller keeps the robot standing against the pull.

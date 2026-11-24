@@ -23,7 +23,7 @@ services:
     environment:
       RCB_TASK: bookshelf_simple
       RCB_INSTANCE: /srv/instance.npz
-      RCB_TASK_TEXT: "Put each of the five red-tinted objects (the other seven are grey) onto its place on the bookshelf, shown as a translucent copy of it in the same colour, one at a time, palest first and darkest last."
+      RCB_TASK_TEXT: "Put each of the five red-tinted objects onto its place on the bookshelf, one at a time, palest first and darkest last. Each place is shown as a translucent copy of its object in the same colour, and the other seven objects are grey."
       RCB_EPISODE: "Ends when the summed reward reaches the pass mark (success), when the robot falls (its pelvis drops too low), when the object being placed goes below about half a metre, once all five are placed, after 1000 control steps, when your time is up (timeout), or on a simulator error."
       RCB_WALL_CLOCK_S: "3600.0"
       # Knobs: ${NAME:-default} takes NAME from the shell that runs harbor. The defaults are the standard

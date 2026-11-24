@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/bigym2-drawer-top-open-i00-privileged"
-description = "BiGym 2.0 drawer-top-open (Unitree G1 with GR00T-WBC, MuJoCo 3.8.1) in privileged mode: produce one replayable trajectory. Open the top drawer of the kitchen cabinet. Frozen instance: upstream task drawer_top_open, seed 0."
+description = "BiGym 2.0 drawer-top-open (Unitree G1 with GR00T-WBC, MuJoCo 3.8.1) in privileged mode: produce one replayable trajectory. Pull the top drawer of the kitchen cabinet all the way open. Frozen instance: upstream task drawer_top_open, seed 0."
 keywords = ["robotics", "bigym2", "mujoco", "unitree-g1", "humanoid", "loco-manipulation", "trajectory", "drawer-top-open"]
 
 [metadata]

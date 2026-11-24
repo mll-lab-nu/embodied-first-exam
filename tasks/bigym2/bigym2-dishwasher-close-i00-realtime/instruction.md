@@ -5,7 +5,7 @@ hardware**: the simulator runs in a service you cannot open, and you reach it on
 it does not wait for you: once the episode is running, the robot moves in real time while you think. NVIDIA's GR00T
 whole-body controller, a learned policy that runs inside every control step, drives the legs and waist and keeps the
 robot balanced: you command where it walks, how high its pelvis is, how far its torso leans forward, its arm joints and its grippers.
-**Task:** Push the dishwasher racks in and close the door.
+**Task:** Push both dishwasher racks all the way in and close the dishwasher door.
 
 At the start the dishwasher stands on a plinth with its door open and both racks pulled out; the middle of the open door is about 0.9 m away, 66° to your left, 0.48 m above the floor, the upper rack about 1.0 m away, 54° to your left, 0.85 m above the floor and the lower rack about 0.9 m away, 60° to your left, 0.60 m above the floor. (Distances are from your pelvis along the floor, directions from the way you face,
 heights above the floor; measured on this scene.)

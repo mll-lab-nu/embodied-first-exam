@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:myosuite-0.1.1` |
 
 ## Task
-MyoSuite `myoChallengeSoccerP1-v0` (MyoLegs, 290 muscles) on the same frozen instance as `myosuite-soccer-i00-privileged`: Score a goal: kick the ball into the goal, past the goalkeeper, within 10 s of simulated time (MyoChallenge 2025 Soccer P1: the ball's centre crosses the goal line between the posts and under the bar). Failure (the episode ends): the pelvis below 0.2 m (fallen), or the time limit.
+MyoSuite `myoChallengeSoccerP1-v0` (MyoLegs, 290 muscles) on the same frozen instance as `myosuite-soccer-i00-privileged`: Score a goal within 10 s: kick the ball past the goalkeeper so that its centre crosses the goal line between the posts and under the bar, as MyoChallenge 2025 Soccer P1 judges it. The episode ends in failure if you fall, with your pelvis dropping below about 20 cm, or at the time limit.
 A musculoskeletal body with two legs stands on a soccer pitch; a ball lies in front of it and a goalkeeper guards the goal. Standard mode (eai-standard/2.2): the agent drives the body through a client, with only its own proprioception and the scene's cameras, and 10 resets (only the last episode is graded).
 
 ## Difficulty

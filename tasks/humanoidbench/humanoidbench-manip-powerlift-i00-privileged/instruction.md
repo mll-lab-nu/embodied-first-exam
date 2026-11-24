@@ -1,8 +1,7 @@
 # powerlift — instance 00
 
 You control a simulated Unitree H1 humanoid with two Shadow dexterous hands (HumanoidBench / MuJoCo)
-via Python. **Task:** lift the dumbbell from the floor to overhead — close to two metres up — and
-hold it there.
+via Python. **Task:** lift the dumbbell from the floor to overhead, about two metres up, and hold it there.
 
 This is a *fixed scene instance*: the dumbbell, its weight and the robot's initial pose never change
 between resets. You may reset and retry as many times as you want. Your deliverable is **one

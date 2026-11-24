@@ -2,7 +2,7 @@
 
 You control the **MyoLegs**, a free-standing musculoskeletal model of a human torso and both legs (MyoSuite 2.12.2 on MuJoCo), via Python, through its actuators — 290
 muscles: there is no joint-level controller.
-**Task:** Score a goal: kick the ball into the goal, past the goalkeeper, within 10 s of simulated time (MyoChallenge 2025 Soccer P1: the ball's centre crosses the goal line between the posts and under the bar). Failure (the episode ends): the pelvis below 0.2 m (fallen), or the time limit.
+**Task:** Score a goal within 10 s: kick the ball past the goalkeeper so that its centre crosses the goal line between the posts and under the bar, as MyoChallenge 2025 Soccer P1 judges it. The episode ends in failure if you fall, with your pelvis dropping below about 20 cm, or at the time limit.
 
 A musculoskeletal body with two legs stands on a soccer pitch; a ball lies in front of it and a goalkeeper guards the goal. `s.state()` gives the task's observation dict (privileged): `internal_qpos`, `internal_qvel`, `grf`, `torso_angle`, `pelvis_angle`, `muscle_length`, `muscle_velocity`, `muscle_force`, `r_toe_pos`, `l_toe_pos`, `act`, `ball_pos`, `goal_bounds`, `model_root_pos`, `model_root_vel`, `goalkeeper_pos`.
 MyoSuite's reward code (from `/usr/local/lib/python3.11/site-packages/myosuite/envs/myo/myochallenge/soccer_v0.py`; `solved` is the goal test,

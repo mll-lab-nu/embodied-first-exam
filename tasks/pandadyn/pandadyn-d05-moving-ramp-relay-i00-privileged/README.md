@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0` |
 
 ## Task
-An orange ball rests in the left Panda's cup, and the right Panda holds a straight channel that is open at both ends. The left arm must pass the ball into the inlet part of the channel. The ball must then leave the channel by its outlet end while the outlet is moving (at least 0.10 m/s) and be caught again in free flight by the left cup. The relay is then repeated with the channel held at a clearly different orientation from the first time. After the second catch, the left cup must deliver the ball into a fixed basin, where it must come to rest. The deliverable is one replayable trajectory of 100 Hz joint-target actions (`/app/output/trajectory.npz`,
+An orange ball rests in the left Panda's cup, and the right Panda holds a straight channel that is open at both ends. The left arm must pass the ball into the inlet part of the channel. The ball must then leave the channel by its outlet end while the outlet is moving at 10 cm per second or more, and be caught again in free flight by the left cup. The relay is then repeated with the channel held at a clearly different orientation from the first time. After the second catch, the left cup must deliver the ball into a fixed basin, where it must come to rest. The deliverable is one replayable trajectory of 100 Hz joint-target actions (`/app/output/trajectory.npz`,
 16 values per row), graded by the task's own staged success check: 6 phases (`first_channel_entry`, `first_moving_exit`, `first_catch`, `second_channel_entry`, `second_moving_exit`, `second_catch_and_delivery`), in order,
 with no failure event and no safety-limit violation, within the task's horizon of 25 s.
 

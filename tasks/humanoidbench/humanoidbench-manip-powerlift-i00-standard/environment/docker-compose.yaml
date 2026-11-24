@@ -23,7 +23,7 @@ services:
     environment:
       RCB_TASK: powerlift
       RCB_INSTANCE: /srv/instance.npz
-      RCB_TASK_TEXT: "Lift the dumbbell from the floor to overhead — close to two metres up — and hold it there."
+      RCB_TASK_TEXT: "Lift the dumbbell from the floor to overhead, about two metres up, and hold it there."
       RCB_EPISODE: "Ends when the summed reward reaches the pass mark (success), when the robot falls (its pelvis drops near the ground), after 1000 control steps, when your time is up (timeout), or on a simulator error."
       RCB_WALL_CLOCK_S: "3600.0"
       # Knobs: ${NAME:-default} takes NAME from the shell that runs harbor. The defaults are the standard

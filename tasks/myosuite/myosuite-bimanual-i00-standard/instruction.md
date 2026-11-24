@@ -2,7 +2,7 @@
 
 You control the **MyoArm + MPL**, a musculoskeletal right arm and hand next to a motorized prosthetic left arm (the Modular Prosthetic Limb), **as if it were real**: the simulator (MyoSuite 2.12.2 on MuJoCo) runs in a service
 you cannot open. You get one client and up to 11 episodes, and you act only through its actuators (63 muscles and 17 other actuators).
-**Task:** Hand the object over: pick it up with the MyoHand, pass it to the prosthetic hand, and place it on the goal pillar. Success: the object within 0.17 m of the pillar top after touching only the pillar for 10 control steps, and MyoChallenge 2024's contact check on its whole history passes (held by the MyoHand for at least 100 control steps, by the prosthesis for at least 100, only the pillar at the end, never the table or the floor). Failure (the episode ends): the object below 0.3 m (dropped), or 10 s of simulated time.
+**Task:** Pick up the object with the MyoHand, pass it to the prosthetic hand, and place it on the goal pillar. Success needs the object within about 15 cm of the pillar top after it has touched only the pillar for a tenth of a second, and MyoChallenge 2024's contact check on the object's whole history: the MyoHand held it for at least 1 s, the prosthetic hand held it for at least 1 s, it touches only the pillar at the end, and it never touched the table or the floor. The episode ends in failure if the object is dropped below a height of about 30 cm, or after 10 s.
 
 The MyoArm (right, muscles) and a prosthetic MPL arm (left, motors) stand at a table; an object lies in front of the MyoHand and a pillar marks the goal on the far side.
 

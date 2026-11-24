@@ -1,6 +1,6 @@
 # MuJoCo Playground · SpotJoystickGaitTracking — STANDARD MODE (robot as a service, eai-standard/2.2)
 
-**Task:** Make Boston Dynamics Spot follow the joystick command schedule for the whole 20 s episode with the commanded gait (the feet's swing pattern, frequency and height) without falling over.
+**Task:** Make Boston Dynamics Spot follow the joystick command schedule for the whole 20 s episode without falling over. Move its feet in the commanded gait, matching its swing pattern, rhythm and foot height.
 
 You control the Boston Dynamics Spot quadruped — **as if it were real hardware** — in MuJoCo Playground's
 `SpotJoystickGaitTracking` environment (plain MuJoCo 3.3.7 with Playground's scene, commit 4057c14). The simulator runs in a service you

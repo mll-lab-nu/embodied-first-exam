@@ -2,7 +2,7 @@
 
 A **Franka Panda** arm stands in front of a **green box** (4 × 4 × 6 cm) on the floor. A **translucent red target box**
 floats above, tilted.
-**Task:** pick up the green box and hold it **at the target, in the target's orientation**. This is MuJoCo Playground's
+**Task:** pick up the green box and hold it **at the translucent red target box, tilted the same way as the target box**. This is MuJoCo Playground's
 `PandaPickCubeOrientation`, run here in plain MuJoCo; the box and target poses are randomized as in Playground, with
 a fixed seed.
 

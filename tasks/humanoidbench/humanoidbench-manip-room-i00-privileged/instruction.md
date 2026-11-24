@@ -1,9 +1,7 @@
 # room — instance 00
 
 You control a simulated Unitree H1 humanoid with two Shadow dexterous hands (HumanoidBench / MuJoCo)
-via Python. **Task:** six loose objects — a chair, a trophy, a pair of headphones, two packages and
-a snow globe — are scattered around the room (the table and the bookshelf are fixed). Tidy up:
-gather them together, so they end up close to one another rather than spread out.
+via Python. **Task:** gather the six loose objects scattered around the room so that they end up close together: the chair, the trophy, the pair of headphones, the two packages and the snow globe. The table and the bookshelf are fixed.
 
 This is a *fixed scene instance*: the objects' starting positions and the robot's initial pose never
 change between resets. You may reset and retry as many times as you want. Your deliverable is **one

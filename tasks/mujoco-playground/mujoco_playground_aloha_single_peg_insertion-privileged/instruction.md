@@ -2,8 +2,7 @@
 
 An **ALOHA 2** bimanual robot (two ViperX 300s arms facing each other across a table) has a **blue socket** (a square
 tube, open on one end, red wall at the back) and a **red peg** in front of it.
-**Task:** pick up the socket with one arm and the peg with the other, lift both, and **insert the peg's end into the
-socket's open end**. This is MuJoCo Playground's `AlohaSinglePegInsertion`, run here in plain MuJoCo; the peg and socket
+**Task:** pick up the blue socket with one arm and the red peg with the other, lift both, and **push the peg's end well into the socket's open end**. This is MuJoCo Playground's `AlohaSinglePegInsertion`, run here in plain MuJoCo; the peg and socket
 positions are randomized as in Playground, with a fixed seed.
 
 ## What you hand in

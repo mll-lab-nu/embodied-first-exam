@@ -1,8 +1,7 @@
 # DexToolBench · claw hammer · swing_down (MuJoCo) — STANDARD MODE (robot as a service)
 
 A KUKA iiwa 14 arm with a 22-joint **Sharpa HA4** dexterous hand stands next to a table with a **claw hammer** on it.
-**Task:** pick up the hammer and move it through the demonstrated *swing-down* motion: bring it to each of the
-**37 goal poses in order** (the green ghost hammer shows the current goal). This is task `hammer / claw_hammer /
+**Task:** pick up the claw hammer and swing it down along the demonstrated motion: bring it to each of the **37 goal poses in order**. A green ghost hammer shows the current goal. This is task `hammer / claw_hammer /
 swing_down` of DexToolBench (SimToolReal), run here in plain MuJoCo.
 
 You control the robot **as if it were real hardware**: the simulator runs in a service you cannot open. You get one

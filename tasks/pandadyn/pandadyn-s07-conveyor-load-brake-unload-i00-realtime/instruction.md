@@ -3,7 +3,7 @@
 You control one simulated **Franka Panda** arm (7 joints, its standard hand, and the task's tool where it has one) **as if it were real hardware**: the simulator (ManiSkill 3 / SAPIEN, rigid-body physics at
 1000 Hz) runs in a service you cannot open, you reach it only through a client, and like the real world it does not wait
 for you: once an episode is running, the scene and the robot move while you think.
-**Task:** At the start a small cube (the part) rides along a powered roller conveyor, and a shallow carriage is already coasting along a frictionless rail. Grasp the part with the gripper while it is moving and lift it; set it on the moving carriage and let go while the carriage is still moving; then grip the carriage's vertical handle with both fingers and bring the carriage to a stop, with the part still on it, before it reaches the end of its rail; grasp the part again and lift it off the carriage; finally set it down in a fixed dock and leave it there at rest.
+**Task:** At the start a small cube, the part, rides along a powered roller conveyor, and a shallow carriage is already coasting along a frictionless rail. Grasp the part with the gripper while it is moving and lift it. Set it on the moving carriage and let go while the carriage is still moving. Then grip the carriage's vertical handle with both fingers and bring the carriage to a stop, with the part still on it, before it reaches the end of its rail. Grasp the part again and lift it off the carriage. Finally set it down in a fixed dock and leave it there at rest.
 
 **Slowdown: S = 4.** The world runs at 1/S of real speed: one control step (10 ms of robot time) every
 S x 10 ms = 40 ms of wall-clock time (this simulator cannot keep up with real time on the service's CPUs; S is

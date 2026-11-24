@@ -3,7 +3,7 @@
 You control one simulated **Franka Panda** arm (7 joints, its standard hand, and the task's tool where it has one) **as if it were real hardware**: the simulator (ManiSkill 3 / SAPIEN, rigid-body physics at
 1000 Hz) runs in a service you cannot open, you reach it only through a client, and like the real world it does not wait
 for you: once an episode is running, the scene and the robot move while you think.
-**Task:** A square puck slides toward the robot over an almost frictionless table at the start. First touch it with the paddle; then strike it so that, sliding free of the paddle, it hits a sliding blocker bar that obstructs the way to the goal fast enough to push it aside along its rail. Let the puck slide back across a recovery line by itself, strike it a second time, and make it bank off the rail designated for this episode (one of two rails, coloured green; the other is grey) without touching the other rail, and then cross the goal line while the blocker is still pushed aside.
+**Task:** A square puck slides toward the robot over an almost frictionless table at the start. First touch it with the paddle. Then strike it so that, sliding free of the paddle, it hits the sliding blocker bar that blocks the way to the goal fast enough to push it aside along its rail. Let the puck slide back across a recovery line by itself and strike it a second time. Make it bank off the green rail designated for this episode, without touching the other, grey rail, and then cross the goal line while the blocker is still pushed aside.
 
 **Slowdown: S = 2.** The world runs at 1/S of real speed: one control step (10 ms of robot time) every
 S x 10 ms = 20 ms of wall-clock time (this simulator cannot keep up with real time on the service's CPUs; S is

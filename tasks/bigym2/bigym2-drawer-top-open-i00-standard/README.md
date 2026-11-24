@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:bigym2-0.1.1` |
 
 ## Task
-Open the top drawer of the kitchen cabinet. (BiGym 2.0 `drawer_top_open`; the robot as a service: its three onboard cameras and its proprioception only, one
+Pull the top drawer of the kitchen cabinet all the way open. (BiGym 2.0 `drawer_top_open`; the robot as a service: its three onboard cameras and its proprioception only, one
 episode.)
 
 ## Difficulty

@@ -1,8 +1,7 @@
 # DexToolBench · claw hammer · swing_side (MuJoCo)
 
 A KUKA iiwa 14 arm with a 22-joint **Sharpa HA4** dexterous hand stands next to a table with a **claw hammer** on it.
-**Task:** pick up the claw hammer and move it through the demonstrated motion (a sideways hammer swing): bring it to each
-of the **40 goal poses in order** (the green ghost tool shows the current goal). This is task `hammer / claw_hammer /
+**Task:** pick up the claw hammer and swing it sideways along the demonstrated motion: bring it to each of the **40 goal poses in order**. A green ghost hammer shows the current goal. This is task `hammer / claw_hammer /
 swing_side` of DexToolBench (SimToolReal), run here in plain MuJoCo.
 
 ## What you hand in

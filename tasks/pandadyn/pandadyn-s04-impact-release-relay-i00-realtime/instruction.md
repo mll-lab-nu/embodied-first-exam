@@ -3,7 +3,7 @@
 You control one simulated **Franka Panda** arm (7 joints, its standard hand, and the task's tool where it has one) **as if it were real hardware**: the simulator (ManiSkill 3 / SAPIEN, rigid-body physics at
 1000 Hz) runs in a service you cannot open, you reach it only through a client, and like the real world it does not wait
 for you: once an episode is running, the scene and the robot move while you think.
-**Task:** A small block (the cue) slides along a raised deck toward the robot side at the start. Strike it with the paddle so that it hits a spring-held gate latch and swings the gate open, releasing a ball (the payload) that waits behind the gate on an inclined chute; within 1 s of the cue's impact the ball must be past the gate and rolling down the chute. Intercept the ball with the paddle after it has left the chute, send it through a narrow passage between two walls, then touch it again and bring it to rest in a target zone on the table beyond the passage.
+**Task:** A small block, the cue, slides along a raised deck toward the robot at the start. Strike it with the paddle so that it hits a spring-held gate latch and swings the gate open. This releases a ball, the payload, that waits behind the gate on an inclined chute: within a second of the cue's impact the ball must be past the gate and rolling down the chute. Intercept the ball with the paddle after it has left the chute and send it through a narrow passage between two walls. Then touch it again and bring it to rest in a target zone on the table beyond the passage.
 
 **Slowdown: S = 2.** The world runs at 1/S of real speed: one control step (10 ms of robot time) every
 S x 10 ms = 20 ms of wall-clock time (this simulator cannot keep up with real time on the service's CPUs; S is

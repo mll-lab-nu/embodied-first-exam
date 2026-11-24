@@ -1,8 +1,7 @@
 # DexToolBench · handle eraser · wipe_smile (MuJoCo)
 
 A KUKA iiwa 14 arm with a 22-joint **Sharpa HA4** dexterous hand stands next to a table with a **handle eraser** on it.
-**Task:** pick up the handle eraser and move it through the demonstrated motion (wiping a smiley face): bring it to each
-of the **29 goal poses in order** (the green ghost tool shows the current goal). This is task `eraser / handle_eraser /
+**Task:** pick up the handle eraser and move it through the demonstrated motion of wiping a smiley face: bring it to each of the **29 goal poses in order**. A green ghost eraser shows the current goal. This is task `eraser / handle_eraser /
 wipe_smile` of DexToolBench (SimToolReal), run here in plain MuJoCo.
 
 ## What you hand in

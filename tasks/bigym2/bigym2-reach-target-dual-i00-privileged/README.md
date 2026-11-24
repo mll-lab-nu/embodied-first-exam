@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:bigym2-0.1.1` |
 
 ## Task
-Touch the red sphere with your left hand and the green sphere with your right hand at the same time. (BiGym 2.0 `reach_target_dual`, a Unitree G1 humanoid whose legs and waist NVIDIA's GR00T whole-body controller drives.)
+Reach into the red sphere with your left gripper and into the green sphere with your right gripper at the same time, so that the gap between each gripper's fingers is inside its sphere. (BiGym 2.0 `reach_target_dual`, a Unitree G1 humanoid whose legs and waist NVIDIA's GR00T whole-body controller drives.)
 
 ## Difficulty
 Both arms at once, each to its own 5 cm ball, while the controller balances the body; the shortest task (14 s).

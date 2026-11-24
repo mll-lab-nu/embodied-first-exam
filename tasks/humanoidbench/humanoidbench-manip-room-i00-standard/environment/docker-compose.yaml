@@ -23,7 +23,7 @@ services:
     environment:
       RCB_TASK: room
       RCB_INSTANCE: /srv/instance.npz
-      RCB_TASK_TEXT: "Six loose objects — a chair, a trophy, a pair of headphones, two packages and a snow globe — are scattered around the room (the table and the bookshelf are fixed). Tidy up: gather them together, so they end up close to one another rather than spread out."
+      RCB_TASK_TEXT: "Gather the six loose objects scattered around the room so that they end up close together: the chair, the trophy, the pair of headphones, the two packages and the snow globe. The table and the bookshelf are fixed."
       RCB_EPISODE: "Ends when the summed reward reaches the pass mark (success), when the robot falls (its pelvis drops near the ground), after 1000 control steps, when your time is up (timeout), or on a simulator error."
       RCB_WALL_CLOCK_S: "3600.0"
       # Knobs: ${NAME:-default} takes NAME from the shell that runs harbor. The defaults are the standard

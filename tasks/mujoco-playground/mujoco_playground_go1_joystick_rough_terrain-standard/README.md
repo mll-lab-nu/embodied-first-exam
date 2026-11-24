@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:mujoco-0.1.3` |
 
 ## Task
-MuJoCo Playground `Go1JoystickRoughTerrain` (Unitree Go1) on the same frozen instance as `mujoco_playground_go1_joystick_rough_terrain-privileged`: Make the Unitree Go1 follow the joystick command schedule on rough terrain (a 20 x 20 m heightfield, up to 5 cm high) for the whole 20 s episode without falling over.
+MuJoCo Playground `Go1JoystickRoughTerrain` (Unitree Go1) on the same frozen instance as `mujoco_playground_go1_joystick_rough_terrain-privileged`: Make the Unitree Go1 follow the joystick command schedule on rough, bumpy ground for the whole 20 s episode without falling over.
 For 20 s the robot gets a joystick command schedule (7 segments: planar velocity and yaw rate in its own frame) and must track it without falling over. The ground is a 20 x 20 m heightfield with bumps up to 5 cm. Standard mode (eai-standard/2.2): the agent drives the robot through a client, with 10 resets (only
 the last episode is graded), the robot's own sensors and the cameras that follow it.
 

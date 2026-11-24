@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:myosuite-0.1.1` |
 
 ## Task
-MyoSuite `myoChallengeChaseTagP1-v0` (MyoLegs, 80 muscles) on the same frozen instance as `myosuite-chase-tag-i00-privileged`: Tag the opponent: bring your pelvis within 0.5 m of it (horizontal distance) within 20 s of simulated time (MyoChallenge 2023 ChaseTag P1, task CHASE). Failure (the episode ends): the time limit, leaving the 13 x 13 m arena, or the pelvis below 0.5 m (fallen).
+MyoSuite `myoChallengeChaseTagP1-v0` (MyoLegs, 80 muscles) on the same frozen instance as `myosuite-chase-tag-i00-privileged`: Tag the opponent within 20 s: bring your pelvis within about half a metre of it, measured along the ground. This is MyoChallenge 2023 ChaseTag P1, task CHASE. The episode ends in failure at the time limit, if you leave the arena, or if you fall, with your pelvis dropping below about half a metre.
 A musculoskeletal body with two legs stands in a square arena; an opponent stands somewhere in it (in this frozen instance it does not move). Standard mode (eai-standard/2.2): the agent drives the body through a client, with only its own proprioception and the scene's cameras, and 10 resets (only the last episode is graded).
 
 ## Difficulty

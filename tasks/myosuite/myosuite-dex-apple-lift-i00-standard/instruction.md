@@ -2,7 +2,7 @@
 
 You control the **MyoHand**, a musculoskeletal model of a human forearm and hand, **as if it were real**: the simulator (MyoSuite 2.12.2 on MuJoCo) runs in a service
 you cannot open. You get one client and up to 11 episodes, and you act only through its actuators (39 muscles and 6 other actuators).
-**Task:** Move the apple along MyoDex's recorded lift motion: a reference of the object's pose over 57 control steps (1.14 s), from GRAB motion capture (TCDM / MyoDex). The episode lasts exactly those 57 steps. Success: the object's motion follows the reference's: its centre of mass's displacement since the start within 0.03 m of the reference's displacement since the reference's start, at at least 90% of the control steps and at the last one, with the displacement error never above 0.05 m. Failure (the episode ends early): MyoDex's termination, the object more than 0.25 m from the reference or from the wrist.
+**Task:** Move the apple along MyoDex's recorded lift motion. The reference is the apple's pose over 57 control steps, from GRAB motion capture (TCDM / MyoDex), and the episode lasts exactly those 57 steps. At the last control step and at nine in ten or more of all control steps, the apple's centre of mass must have moved since the start to within about 3 cm of how the reference has moved since its start. That position error must never go above about 5 cm. The episode ends early in failure, by MyoDex's own termination rule, if the apple gets more than about 25 cm from the reference or from the wrist.
 
 An apple lies on the table; the MyoHand (with a 6-DoF positioned wrist) is at its pre-grasp pose next to it.
 

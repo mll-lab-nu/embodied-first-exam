@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:myosuite-0.1.1` |
 
 ## Task
-MyoSuite `myoArmReachFixed-v0` (MyoArm, 34 muscles) on the same frozen instance as `myosuite-arm-reach-i00-privileged`: Bring the index fingertip to the target point in space: its distance below 0.0125 m for 50 consecutive control steps (1.0 s). Failure (the episode ends, from the third control step on): the distance above 1.00 m.
+MyoSuite `myoArmReachFixed-v0` (MyoArm, 34 muscles) on the same frozen instance as `myosuite-arm-reach-i00-privileged`: Bring the index fingertip to the target point in space and hold it within about 1 cm of the target for a full second. Once the first two control steps have passed, the episode ends in failure if the fingertip gets more than about a metre from the target.
 The arm hangs at the side; a small sphere in front of the body marks the target for the index fingertip. Standard mode (eai-standard/2.2): the agent drives the body through a client, with only its own proprioception and the scene's cameras, and 10 resets (only the last episode is graded).
 
 ## Difficulty

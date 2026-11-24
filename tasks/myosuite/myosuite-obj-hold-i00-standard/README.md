@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:myosuite-0.1.1` |
 
 ## Task
-MyoSuite `myoHandObjHoldFixed-v0` (MyoHand, 39 muscles) on the same frozen instance as `myosuite-obj-hold-i00-privileged`: Hold the object at the goal: its centre within 0.010 m of the goal site for 50 consecutive control steps (1.0 s). Failure (the episode ends): the object more than 0.30 m from the goal (dropped). The object starts resting in the hand and falls if the hand does not grip it.
+MyoSuite `myoHandObjHoldFixed-v0` (MyoHand, 39 muscles) on the same frozen instance as `myosuite-obj-hold-i00-privileged`: Hold the object at the goal, with its centre within about 1 cm of the goal site, for a full second. The episode ends in failure if the object gets more than about 30 cm from the goal, that is, if it is dropped. The object starts resting in the hand and falls if the hand does not grip it.
 A small object rests in the palm of the upturned hand; the goal site is right above it. Standard mode (eai-standard/2.2): the agent drives the body through a client, with only its own proprioception and the scene's cameras, and 10 resets (only the last episode is graded).
 
 ## Difficulty

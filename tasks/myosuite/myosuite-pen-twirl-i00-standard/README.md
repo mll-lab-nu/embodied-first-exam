@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:myosuite-0.1.1` |
 
 ## Task
-MyoSuite `myoHandPenTwirlFixed-v0` (MyoHand, 39 muscles) on the same frozen instance as `myosuite-pen-twirl-i00-privileged`: Rotate the pen in the hand until its axis points along the target orientation: the cosine between the pen's axis (bottom to top) and the target's axis above 0.95, with the pen within 0.075 m of its desired position, for 100 consecutive control steps (1.0 s). Failure (the episode ends): the pen more than 0.075 m from its desired position (dropped).
+MyoSuite `myoHandPenTwirlFixed-v0` (MyoHand, 39 muscles) on the same frozen instance as `myosuite-pen-twirl-i00-privileged`: Rotate the pen in the hand until its axis, from bottom to top, points within about 15 degrees of the target axis, and hold it there for a full second without dropping it. The episode ends in failure, as a drop, if the pen gets more than about 7 cm from its desired position.
 A pen lies across the fingers of the upturned hand; a translucent target pen shows the goal orientation. Standard mode (eai-standard/2.2): the agent drives the body through a client, with only its own proprioception and the scene's cameras, and 10 resets (only the last episode is graded).
 
 ## Difficulty

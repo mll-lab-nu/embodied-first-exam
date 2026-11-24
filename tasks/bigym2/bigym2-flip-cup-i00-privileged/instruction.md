@@ -3,7 +3,7 @@
 You control a simulated Unitree G1 humanoid robot with two-finger grippers (BiGym 2.0, MuJoCo) via Python. NVIDIA's
 GR00T whole-body controller, a learned policy that runs inside every simulator step, drives its legs and waist and
 keeps it balanced: you command where it walks, how high its pelvis is, how far its torso leans forward, its arm joints and its grippers.
-**Task:** Turn the upside-down cup the right way up and gently set it back down.
+**Task:** Turn the upside-down cup over and stand it the right way up on the counter. Then let go, with both grippers off the cup.
 
 At the start the cup stands upside down on the counter in front of you, about 0.6 m away, straight ahead, 0.96 m above the floor. (Distances are from your pelvis along the floor, directions from the way you face,
 heights above the floor; measured on this scene.)

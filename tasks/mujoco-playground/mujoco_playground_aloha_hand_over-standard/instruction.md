@@ -2,8 +2,7 @@
 
 An **ALOHA 2** bimanual robot (two ViperX 300s arms facing each other across a table) has a **red box** on the left
 arm's side of the table and a **translucent red target box** floating on the right arm's side.
-**Task:** pick up the box with the **left** arm, **hand it over** to the **right** arm, and have the right arm hold it
-at the target. This is MuJoCo Playground's `AlohaHandOver`, run here in plain MuJoCo; the box and target positions are
+**Task:** pick up the red box with the **left** arm, **hand it over** to the **right** arm, and have the right arm hold it at the translucent red target box. Then take the left arm off the box. This is MuJoCo Playground's `AlohaHandOver`, run here in plain MuJoCo; the box and target positions are
 randomized as in Playground, with a fixed seed.
 
 You control the robot **as if it were real hardware**: the simulator runs in a service you cannot open. You get one

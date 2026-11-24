@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0` |
 
 ## Task
-At the start a small cube slides along a raised, slippery lane toward its open end. Receive it in the shallow tray the Panda holds (open on one side) once it has left the lane and let it settle; then, keeping the tray level, make the cube slide inside the tray by moving the tray (tilting is not allowed) until it rests at a staging point; carry it through two waypoints; bring the tray to a pose at a fixed offset from a platform that slides slowly back and forth on a rail while matching its velocity; finally get the cube onto that platform, where it must ride along at rest without touching the tray. The deliverable is one replayable trajectory of 100 Hz joint-target actions (`/app/output/trajectory.npz`,
+At the start a small cube slides along a raised, slippery lane toward its open end. Once it has left the lane, receive it in the shallow tray the Panda holds, which is open on one side, and let it settle. Then keep the tray level and move it, without tilting it, so that the cube slides inside the tray until it rests at a staging point. Carry the cube through two waypoints. Bring the tray to a pose at a fixed offset from a platform that slides slowly back and forth on a rail, matching the platform's velocity. Finally get the cube onto that platform, where it must ride along at rest without touching the tray. The deliverable is one replayable trajectory of 100 Hz joint-target actions (`/app/output/trajectory.npz`,
 8 values per row), graded by the task's own staged success check: 5 phases (`source_to_tray`, `inertial_staging`, `transport_turn`, `match_receiver`, `support_transfer`), in order,
 with no failure event and no safety-limit violation, within the task's horizon of 25 s.
 

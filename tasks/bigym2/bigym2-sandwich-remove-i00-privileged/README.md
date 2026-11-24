@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:bigym2-0.1.1` |
 
 ## Task
-Use the spatula to move the sandwich from the frying pan onto the chopping board. (BiGym 2.0 `sandwich_remove`, a Unitree G1 humanoid whose legs and waist NVIDIA's GR00T whole-body controller drives.)
+Use the spatula to move the sandwich from the frying pan onto the chopping board and leave it lying flat there. Never touch the sandwich with a gripper. (BiGym 2.0 `sandwich_remove`, a Unitree G1 humanoid whose legs and waist NVIDIA's GR00T whole-body controller drives.)
 
 ## Difficulty
 Tool use: the sandwich may only be moved with the spatula (a gripper on it fails the episode), and must end flat on the board.

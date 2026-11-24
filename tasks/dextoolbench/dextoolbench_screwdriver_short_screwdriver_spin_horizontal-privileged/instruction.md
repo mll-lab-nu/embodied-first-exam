@@ -1,8 +1,7 @@
 # DexToolBench · short screwdriver · spin_horizontal (MuJoCo)
 
 A KUKA iiwa 14 arm with a 22-joint **Sharpa HA4** dexterous hand stands next to a table with a **short screwdriver** on it.
-**Task:** pick up the short screwdriver and move it through the demonstrated motion (spinning it about a horizontal axis): bring it to each
-of the **38 goal poses in order** (the green ghost tool shows the current goal). This is task `screwdriver / short_screwdriver /
+**Task:** pick up the short screwdriver and spin it about a horizontal axis along the demonstrated motion: bring it to each of the **38 goal poses in order**. A green ghost screwdriver shows the current goal. This is task `screwdriver / short_screwdriver /
 spin_horizontal` of DexToolBench (SimToolReal), run here in plain MuJoCo.
 
 ## What you hand in

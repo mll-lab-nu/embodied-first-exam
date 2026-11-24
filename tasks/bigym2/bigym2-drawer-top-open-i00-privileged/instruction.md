@@ -3,7 +3,7 @@
 You control a simulated Unitree G1 humanoid robot with two-finger grippers (BiGym 2.0, MuJoCo) via Python. NVIDIA's
 GR00T whole-body controller, a learned policy that runs inside every simulator step, drives its legs and waist and
 keeps it balanced: you command where it walks, how high its pelvis is, its arm joints and its grippers.
-**Task:** Open the top drawer of the kitchen cabinet.
+**Task:** Pull the top drawer of the kitchen cabinet all the way open.
 
 At the start the kitchen cabinet is in front of you; the handle of its top drawer is about 0.5 m away, straight ahead, 0.73 m above the floor. (Distances are from your pelvis along the floor, directions from the way you face,
 heights above the floor; measured on this scene.)

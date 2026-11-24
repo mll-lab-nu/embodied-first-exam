@@ -2,7 +2,7 @@
 
 You control the **MyoLegs**, a free-standing musculoskeletal model of a human torso and both legs, **as if it were real**: the simulator (MyoSuite 2.12.2 on MuJoCo) runs in a service
 you cannot open. You get one client and up to 11 episodes, and you act only through its actuators (80 muscles).
-**Task:** Tag the opponent: bring your pelvis within 0.5 m of it (horizontal distance) within 20 s of simulated time (MyoChallenge 2023 ChaseTag P1, task CHASE). Failure (the episode ends): the time limit, leaving the 13 x 13 m arena, or the pelvis below 0.5 m (fallen).
+**Task:** Tag the opponent within 20 s: bring your pelvis within about half a metre of it, measured along the ground. This is MyoChallenge 2023 ChaseTag P1, task CHASE. The episode ends in failure at the time limit, if you leave the arena, or if you fall, with your pelvis dropping below about half a metre.
 
 A musculoskeletal body with two legs stands in a square arena; an opponent stands somewhere in it (in this frozen instance it does not move).
 

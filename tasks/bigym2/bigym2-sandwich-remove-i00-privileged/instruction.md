@@ -3,7 +3,7 @@
 You control a simulated Unitree G1 humanoid robot with two-finger grippers (BiGym 2.0, MuJoCo) via Python. NVIDIA's
 GR00T whole-body controller, a learned policy that runs inside every simulator step, drives its legs and waist and
 keeps it balanced: you command where it walks, how high its pelvis is, how far its torso leans forward, its arm joints and its grippers.
-**Task:** Use the spatula to move the sandwich from the frying pan onto the chopping board.
+**Task:** Use the spatula to move the sandwich from the frying pan onto the chopping board and leave it lying flat there. Never touch the sandwich with a gripper.
 
 At the start the frying pan, with the sandwich in it and the spatula resting on it, is about 0.7 m away, straight ahead, 0.87 m above the floor; the chopping board is about 1.1 m away, 52° to your right, 0.86 m above the floor. (Distances are from your pelvis along the floor, directions from the way you face,
 heights above the floor; measured on this scene.)

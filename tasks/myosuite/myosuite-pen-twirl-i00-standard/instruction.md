@@ -2,7 +2,7 @@
 
 You control the **MyoHand**, a musculoskeletal model of a human forearm and hand, **as if it were real**: the simulator (MyoSuite 2.12.2 on MuJoCo) runs in a service
 you cannot open. You get one client and up to 11 episodes, and you act only through its actuators (39 muscles).
-**Task:** Rotate the pen in the hand until its axis points along the target orientation: the cosine between the pen's axis (bottom to top) and the target's axis above 0.95, with the pen within 0.075 m of its desired position, for 100 consecutive control steps (1.0 s). Failure (the episode ends): the pen more than 0.075 m from its desired position (dropped).
+**Task:** Rotate the pen in the hand until its axis, from bottom to top, points within about 15 degrees of the target axis, and hold it there for a full second without dropping it. The episode ends in failure, as a drop, if the pen gets more than about 7 cm from its desired position.
 
 A pen lies across the fingers of the upturned hand; a translucent target pen shows the goal orientation.
 

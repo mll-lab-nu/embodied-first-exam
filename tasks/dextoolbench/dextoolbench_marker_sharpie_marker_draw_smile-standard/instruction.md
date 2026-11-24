@@ -1,8 +1,7 @@
 # DexToolBench · sharpie marker · draw_smile (MuJoCo) — STANDARD MODE (robot as a service)
 
 A KUKA iiwa 14 arm with a 22-joint **Sharpa HA4** dexterous hand stands next to a table with a **sharpie marker** on it.
-**Task:** pick up the sharpie marker and move it through the demonstrated motion (drawing a smiley face): bring it to each
-of the **36 goal poses in order** (the green ghost tool shows the current goal). This is task `marker / sharpie_marker /
+**Task:** pick up the sharpie marker and move it through the demonstrated motion of drawing a smiley face: bring it to each of the **36 goal poses in order**. A green ghost marker shows the current goal. This is task `marker / sharpie_marker /
 draw_smile` of DexToolBench (SimToolReal), run here in plain MuJoCo.
 
 You control the robot **as if it were real hardware**: the simulator runs in a service you cannot open. You get one

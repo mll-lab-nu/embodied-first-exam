@@ -22,7 +22,7 @@ services:
     restart: on-failure:6                               # a crash resumes the same episode, never a reset (rcb_service.py)
     environment:
       RCB_INSTANCE: /srv/instance.json
-      RCB_TASK_TEXT: "Take the plates from the dish rack and gently slot them into the dishwasher's lower rack."
+      RCB_TASK_TEXT: "Take both plates from the dish rack and stand them on edge in the dishwasher's lower rack, each facing left or right as seen from where you started. Then let go, with both grippers off the plates."
       RCB_EPISODE: "one episode, no reset: it succeeds when this has held for 1 s (50 control steps): each of the two plates stands on edge in the dishwasher's lower rack: its face toward your left or right (its axis within 20 degrees of the robot's left or right at the start), touching the lower rack, held by neither gripper; both plates at once (held = a finger of the gripper touching the object); a plate touching the floor ends the episode as a failure; a fall (pelvis tilted beyond ~53 degrees or below 0.30 m) fails it without ending it; it ends at the success, a failure, the pelvis 10 m from the scene's origin, a simulator error, or after 3150 control steps"
       RCB_WALL_CLOCK_S: "3600"
       # Knobs: ${NAME:-default} takes NAME from the shell that runs harbor. The defaults are the standard

@@ -2,7 +2,7 @@
 
 You control the **MyoHand**, a musculoskeletal model of a human forearm and hand (MyoSuite 2.12.2 on MuJoCo), via Python, through its actuators — 39
 muscles: there is no joint-level controller.
-**Task:** Rotate the die in the hand to the target pose: its position within 0.025 m of the target and the norm of its Euler-angle error below 0.262 rad, for 100 consecutive control steps (1.0 s). Failure (the episode ends): the die more than 0.2 m from the target (dropped).
+**Task:** Rotate the die in the hand to the target pose and hold it there for a full second, with its position within about 2.5 cm of the target and its orientation within about 15 degrees of the target's, measured as the norm of the Euler-angle error. The episode ends in failure if the die gets more than about 20 cm from the target, that is, if it is dropped.
 
 A die rests in the palm of the upturned hand; a translucent target die shows the goal orientation. `s.state()` gives the task's observation dict (privileged): `hand_qpos_noMD5`, `hand_qpos`, `hand_qvel`, `obj_pos`, `goal_pos`, `pos_err`, `obj_rot`, `goal_rot`, `rot_err`, `act`.
 MyoSuite's reward code (from `/usr/local/lib/python3.11/site-packages/myosuite/envs/myo/myochallenge/reorient_v0.py`; `solved` is the goal test,

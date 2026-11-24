@@ -4,7 +4,7 @@ You control a simulated Unitree G1 humanoid robot with two-finger grippers (BiGy
 hardware**: the simulator runs in a service you cannot open, and you reach it only through a client. NVIDIA's GR00T
 whole-body controller, a learned policy that runs inside every control step, drives the legs and waist and keeps the
 robot balanced: you command where it walks, how high its pelvis is, how far its torso leans forward, its arm joints and its grippers.
-**Task:** Open both doors of the wall cabinet.
+**Task:** Open both doors of the wall cabinet all the way.
 
 At the start the wall cabinet hangs above the counter in front of you; the handles of its two doors, on either side of the middle seam, are about 0.5 m away, straight ahead, 1.24 m above the floor and about 0.5 m away, straight ahead, 1.24 m above the floor. (Distances are from your pelvis along the floor, directions from the way you face,
 heights above the floor; measured on this scene.)

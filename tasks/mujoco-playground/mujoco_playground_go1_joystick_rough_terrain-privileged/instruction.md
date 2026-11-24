@@ -1,6 +1,6 @@
 # MuJoCo Playground · Go1JoystickRoughTerrain — frozen episode
 
-**Task:** Make the Unitree Go1 follow the joystick command schedule on rough terrain (a 20 x 20 m heightfield, up to 5 cm high) for the whole 20 s episode without falling over.
+**Task:** Make the Unitree Go1 follow the joystick command schedule on rough, bumpy ground for the whole 20 s episode without falling over.
 
 You control the Unitree Go1 quadruped in one episode of MuJoCo Playground's `Go1JoystickRoughTerrain` environment, rebuilt in plain
 MuJoCo 3.3.7 from Playground's own scene files (Apache-2.0, commit 4057c14) and the robot from MuJoCo Menagerie. The

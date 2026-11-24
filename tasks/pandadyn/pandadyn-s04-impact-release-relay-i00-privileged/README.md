@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0` |
 
 ## Task
-A small block (the cue) slides along a raised deck toward the robot side at the start. Strike it with the paddle so that it hits a spring-held gate latch and swings the gate open, releasing a ball (the payload) that waits behind the gate on an inclined chute; within 1 s of the cue's impact the ball must be past the gate and rolling down the chute. Intercept the ball with the paddle after it has left the chute, send it through a narrow passage between two walls, then touch it again and bring it to rest in a target zone on the table beyond the passage. The deliverable is one replayable trajectory of 100 Hz joint-target actions (`/app/output/trajectory.npz`,
+A small block, the cue, slides along a raised deck toward the robot at the start. Strike it with the paddle so that it hits a spring-held gate latch and swings the gate open. This releases a ball, the payload, that waits behind the gate on an inclined chute: within a second of the cue's impact the ball must be past the gate and rolling down the chute. Intercept the ball with the paddle after it has left the chute and send it through a narrow passage between two walls. Then touch it again and bring it to rest in a target zone on the table beyond the passage. The deliverable is one replayable trajectory of 100 Hz joint-target actions (`/app/output/trajectory.npz`,
 8 values per row), graded by the task's own staged success check: 5 phases (`cue_strike`, `mechanical_unlatch`, `payload_interception`, `passage_redirection`, `payload_braking`), in order,
 with no failure event and no safety-limit violation, within the task's horizon of 25 s.
 

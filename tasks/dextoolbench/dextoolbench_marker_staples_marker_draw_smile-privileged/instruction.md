@@ -1,8 +1,7 @@
 # DexToolBench · staples marker · draw_smile (MuJoCo)
 
 A KUKA iiwa 14 arm with a 22-joint **Sharpa HA4** dexterous hand stands next to a table with a **staples marker** on it.
-**Task:** pick up the staples marker and move it through the demonstrated motion (drawing a smiley face): bring it to each
-of the **49 goal poses in order** (the green ghost tool shows the current goal). This is task `marker / staples_marker /
+**Task:** pick up the staples marker and move it through the demonstrated motion of drawing a smiley face: bring it to each of the **49 goal poses in order**. A green ghost marker shows the current goal. This is task `marker / staples_marker /
 draw_smile` of DexToolBench (SimToolReal), run here in plain MuJoCo.
 
 ## What you hand in

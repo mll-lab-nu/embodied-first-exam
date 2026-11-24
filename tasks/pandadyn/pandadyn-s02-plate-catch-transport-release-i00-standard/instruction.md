@@ -3,7 +3,7 @@
 You control one simulated **Franka Panda** arm (7 joints, its standard hand, and the task's tool where it has one) **as if it were real hardware**: the simulator (ManiSkill 3 / SAPIEN, rigid-body physics at
 1000 Hz) runs in a service you cannot open, and you reach it only through a client. You get one client, one episode at a
 time and 3 resets.
-**Task:** A ball is tossed up next to the robot when the episode starts. Catch it on the flat, rimless plate the Panda holds, settle it at the plate's centre, carry it through two waypoints (a turn) without letting it roll off, settle it again, then tip it off the plate into a basin that slides back and forth along a rail, where it must come to rest while the basin is moving.
+**Task:** A ball is tossed up next to the robot when the episode starts. Catch it on the flat, rimless plate the Panda holds and settle it at the plate's centre. Carry it through two waypoints that make a turn without letting it roll off, and settle it again. Then tip it off the plate into a basin that slides back and forth along a rail, where it must come to rest while the basin is moving.
 
 ## Scene
 One Panda, base at (-0.55, 0, 0) facing +x. Its hand carries a rigid square plate with no rim, 0.22 m x 0.22 m at this instance (2 x `tool_half`), 8 mm thick, mounted under the hand by a fixed adapter; the tool frame is the centre of the plate's top surface (z up out of the plate). At the start the plate is level, its centre at (0.01, -0.055, 0.22). The tool's adapter runs between the gripper's fingertips: closing the gripper to less than about 12 mm of aperture makes the fingers touch the adapter, which ends the episode as `self_collision` (the gripper starts fully open, at 0.08 m).

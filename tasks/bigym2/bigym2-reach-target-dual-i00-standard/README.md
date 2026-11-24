@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:bigym2-0.1.1` |
 
 ## Task
-Touch the red sphere with your left hand and the green sphere with your right hand at the same time. (BiGym 2.0 `reach_target_dual`; the robot as a service: its three onboard cameras and its proprioception only, one
+Reach into the red sphere with your left gripper and into the green sphere with your right gripper at the same time, so that the gap between each gripper's fingers is inside its sphere. (BiGym 2.0 `reach_target_dual`; the robot as a service: its three onboard cameras and its proprioception only, one
 episode.)
 
 ## Difficulty

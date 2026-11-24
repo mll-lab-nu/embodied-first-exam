@@ -5,7 +5,7 @@ hardware**: the simulator runs in a service you cannot open, and you reach it on
 it does not wait for you: once the episode is running, the robot moves in real time while you think. NVIDIA's GR00T
 whole-body controller, a learned policy that runs inside every control step, drives the legs and waist and keeps the
 robot balanced: you command where it walks, how high its pelvis is, how far its torso leans forward, its arm joints and its grippers.
-**Task:** Take the plates from the dish rack and gently slot them into the dishwasher's lower rack.
+**Task:** Take both plates from the dish rack and stand them on edge in the dishwasher's lower rack, each facing left or right as seen from where you started. Then let go, with both grippers off the plates.
 
 At the start the two plates stand in a dish rack on the counter, about 0.7 m away, straight ahead, 0.98 m above the floor; the dishwasher's door is open and its lower rack is pulled out, about 0.7 m away, 66° to your left, 0.35 m above the floor. (Distances are from your pelvis along the floor, directions from the way you face,
 heights above the floor; measured on this scene.)

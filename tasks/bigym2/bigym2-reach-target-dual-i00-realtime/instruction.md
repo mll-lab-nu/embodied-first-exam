@@ -5,7 +5,7 @@ hardware**: the simulator runs in a service you cannot open, and you reach it on
 it does not wait for you: once the episode is running, the robot moves in real time while you think. NVIDIA's GR00T
 whole-body controller, a learned policy that runs inside every control step, drives the legs and waist and keeps the
 robot balanced: you command where it walks, how high its pelvis is, its arm joints and its grippers.
-**Task:** Touch the red sphere with your left hand and the green sphere with your right hand at the same time.
+**Task:** Reach into the red sphere with your left gripper and into the green sphere with your right gripper at the same time, so that the gap between each gripper's fingers is inside its sphere.
 
 At the start the red sphere is about 0.6 m away, 25° to your left, 0.82 m above the floor and the green sphere about 0.6 m away, 22° to your right, 0.83 m above the floor. (Distances are from your pelvis along the floor, directions from the way you face,
 heights above the floor; measured on this scene.)

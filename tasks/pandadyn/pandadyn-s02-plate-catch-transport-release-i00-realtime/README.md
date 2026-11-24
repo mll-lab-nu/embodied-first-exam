@@ -16,7 +16,7 @@
 Realtime twin of `pandadyn-s02-plate-catch-transport-release-i00-privileged` (same frozen instance and success check as it and as `pandadyn-s02-plate-catch-transport-release-i00-standard`): the agent gets only
 the realtime client (`eai-standard/2.3`, docs/protocol/standard_mode.md Part 3); the simulator runs in the `sim` sidecar on a clock
 that does not stop, at slowdown **S = 2** (one 10 ms control step every 20 ms of wall-clock time), with
-3 resets (only the last episode is graded). A ball is tossed up next to the robot when the episode starts. Catch it on the flat, rimless plate the Panda holds, settle it at the plate's centre, carry it through two waypoints (a turn) without letting it roll off, settle it again, then tip it off the plate into a basin that slides back and forth along a rail, where it must come to rest while the basin is moving.
+3 resets (only the last episode is graded). A ball is tossed up next to the robot when the episode starts. Catch it on the flat, rimless plate the Panda holds and settle it at the plate's centre. Carry it through two waypoints that make a turn without letting it roll off, and settle it again. Then tip it off the plate into a basin that slides back and forth along a rail, where it must come to rest while the basin is moving.
 
 ## Difficulty
 That of `pandadyn-s02-plate-catch-transport-release-i00-standard`, but the scene does not wait between calls: once an episode's clock starts, the moving objects and

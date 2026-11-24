@@ -2,7 +2,7 @@
 
 You control the **MyoHand**, a musculoskeletal model of a human forearm and hand, **as if it were real**: the simulator (MyoSuite 2.12.2 on MuJoCo) runs in a service
 you cannot open. You get one client and up to 11 episodes, and you act only through its actuators (39 muscles).
-**Task:** Rotate the die in the hand to the target pose: its position within 0.025 m of the target and the norm of its Euler-angle error below 0.262 rad, for 100 consecutive control steps (1.0 s). Failure (the episode ends): the die more than 0.2 m from the target (dropped).
+**Task:** Rotate the die in the hand to the target pose and hold it there for a full second, with its position within about 2.5 cm of the target and its orientation within about 15 degrees of the target's, measured as the norm of the Euler-angle error. The episode ends in failure if the die gets more than about 20 cm from the target, that is, if it is dropped.
 
 A die rests in the palm of the upturned hand; a translucent target die shows the goal orientation.
 

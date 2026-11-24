@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:myosuite-0.1.1` |
 
 ## Task
-MyoSuite `myoChallengeRelocateP1-v0` (MyoArm, a musculoskeletal model of a human shoulder, arm and hand, 63 muscles): Pick up the object from the table and put it in the target receptacle: the object's position within 0.1 m of the target (rotation is ignored) for 100 consecutive control steps (1.0 s). Failure (the episode ends): the palm more than 0.5 m from the object.
+MyoSuite `myoChallengeRelocateP1-v0` (MyoArm, a musculoskeletal model of a human shoulder, arm and hand, 63 muscles): Pick up the object from the table and put it in the target receptacle, with its position within about 10 cm of the target for a full second. Its rotation does not matter. The episode ends in failure if the palm gets more than about half a metre from the object.
 An object stands on the table in front of the arm; a receptacle marks the target position. The deliverable is one replayable trajectory of actuator commands (`/app/output/trajectory.npz`, `(T, 63)`, one row per 10 ms control step).
 
 ## Difficulty

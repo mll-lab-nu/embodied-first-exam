@@ -1,7 +1,7 @@
 # Panda Dynamic Scenes · Cup catch, route pour, rebound recatch and cart delivery (S01) — frozen instance i00
 
 You control one simulated **Franka Panda** arm (7 joints, its standard hand, and the task's tool where it has one) in a simulated scene (ManiSkill 3 / SAPIEN, rigid-body CPU PhysX at 1000 Hz) via Python.
-**Task:** An orange ball is thrown upward at the start and comes back down near the robot. Catch it in the open cup the Panda holds, pour it into the designated one of two raised gravity channels, let it roll down that channel by itself, drop off its end and bounce off the tilted rebound plate below it, catch it in the cup again while it flies, and finally put it into a cart that slides back and forth on a rail, where it must rest while the cart is still moving.
+**Task:** An orange ball is thrown upward at the start and comes back down near the robot. Catch it in the open cup the Panda holds and pour it into the designated one of the two raised gravity channels. Let it roll down that channel by itself, drop off its end and bounce off the tilted rebound plate below it. Catch it in the cup again while it flies, and finally put it into a cart that slides back and forth on a rail, where it must rest while the cart is still moving.
 
 This is a *fixed scene instance*: everything starts the same way after every reset, and you may reset and retry as many
 times as you want. Your deliverable is **one replayable trajectory** of the robot's low-level actions, not a general

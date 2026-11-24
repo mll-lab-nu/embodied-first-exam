@@ -2,7 +2,7 @@
 
 You control the **MyoArm**, a musculoskeletal model of a human shoulder, arm and hand (MyoSuite 2.12.2 on MuJoCo), via Python, through its actuators — 34
 muscles: there is no joint-level controller.
-**Task:** Bring the index fingertip to the target point in space: its distance below 0.0125 m for 50 consecutive control steps (1.0 s). Failure (the episode ends, from the third control step on): the distance above 1.00 m.
+**Task:** Bring the index fingertip to the target point in space and hold it within about 1 cm of the target for a full second. Once the first two control steps have passed, the episode ends in failure if the fingertip gets more than about a metre from the target.
 
 The arm hangs at the side; a small sphere in front of the body marks the target for the index fingertip. `s.state()` gives the task's observation dict (privileged): `qpos`, `qvel`, `act`, `tip_pos`, `target_pos`, `reach_err`.
 MyoSuite's reward code (from `/usr/local/lib/python3.11/site-packages/myosuite/envs/myo/myobase/reach_v0.py`; `solved` is the goal test,

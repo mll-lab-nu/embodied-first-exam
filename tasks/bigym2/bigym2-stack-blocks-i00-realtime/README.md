@@ -13,7 +13,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:bigym2-0.1.1` |
 
 ## Task
-Move the blocks to the other table and stack them on the green pad. (BiGym 2.0 `stack_blocks`; the robot as a service on a clock that does not stop: its three onboard cameras and
+Move all three blocks to the other table and stack them into one tower on the green pad. Then let go, with both grippers off the blocks. (BiGym 2.0 `stack_blocks`; the robot as a service on a clock that does not stop: its three onboard cameras and
 its proprioception only, one episode.)
 
 ## Difficulty

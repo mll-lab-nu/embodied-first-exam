@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:bigym2-0.1.1` |
 
 ## Task
-Move the blocks to the other table and stack them on the green pad. (BiGym 2.0 `stack_blocks`, a Unitree G1 humanoid whose legs and waist NVIDIA's GR00T whole-body controller drives.)
+Move all three blocks to the other table and stack them into one tower on the green pad. Then let go, with both grippers off the blocks. (BiGym 2.0 `stack_blocks`, a Unitree G1 humanoid whose legs and waist NVIDIA's GR00T whole-body controller drives.)
 
 ## Difficulty
 Loco-manipulation over the longest horizon (175 s): carry three blocks from one table to a pad on another and stack them within 5 cm; a block on the floor ends the episode.

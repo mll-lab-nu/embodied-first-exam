@@ -22,7 +22,7 @@ services:
     restart: on-failure:6                               # a crash resumes the same episode, never a reset (rcb_service.py)
     environment:
       RCB_INSTANCE: /srv/instance.json
-      RCB_TASK_TEXT: "Push the dishwasher racks in and close the door."
+      RCB_TASK_TEXT: "Push both dishwasher racks all the way in and close the dishwasher door."
       RCB_EPISODE: "one episode, no reset: it succeeds when this has held for 1 s (50 control steps): the door and both racks are closed to within 5% of their travel: the door within about 4.5 degrees of shut, the lower rack within 0.025 m and the upper rack within 0.0225 m of fully in; a fall (pelvis tilted beyond ~53 degrees or below 0.30 m) fails it without ending it; it ends at the success, a failure, the pelvis 10 m from the scene's origin, a simulator error, or after 4650 control steps"
       RCB_WALL_CLOCK_S: "3600"
       # Knobs: ${NAME:-default} takes NAME from the shell that runs harbor. The defaults are the standard

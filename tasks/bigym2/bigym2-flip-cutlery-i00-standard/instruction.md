@@ -4,7 +4,7 @@ You control a simulated Unitree G1 humanoid robot with two-finger grippers (BiGy
 hardware**: the simulator runs in a service you cannot open, and you reach it only through a client. NVIDIA's GR00T
 whole-body controller, a learned policy that runs inside every control step, drives the legs and waist and keeps the
 robot balanced: you command where it walks, how high its pelvis is, how far its torso leans forward, its arm joints and its grippers.
-**Task:** Take the spoon from the mug, flip it, and place it back.
+**Task:** Take the spoon out of the mug and put it back the other way round, so that the end that pointed up now points down. Then let go, with both grippers off the spoon and the mug.
 
 At the start the mug, with the spoon standing in it, is on the counter in front of you, about 0.6 m away, straight ahead, 0.86 m above the floor. (Distances are from your pelvis along the floor, directions from the way you face,
 heights above the floor; measured on this scene.)

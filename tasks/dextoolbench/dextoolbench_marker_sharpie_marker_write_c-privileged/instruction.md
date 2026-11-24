@@ -1,8 +1,7 @@
 # DexToolBench · sharpie marker · write_c (MuJoCo)
 
 A KUKA iiwa 14 arm with a 22-joint **Sharpa HA4** dexterous hand stands next to a table with a **sharpie marker** on it.
-**Task:** pick up the sharpie marker and move it through the demonstrated motion (writing the letter C): bring it to each
-of the **25 goal poses in order** (the green ghost tool shows the current goal). This is task `marker / sharpie_marker /
+**Task:** pick up the sharpie marker and move it through the demonstrated motion of writing the letter C: bring it to each of the **25 goal poses in order**. A green ghost marker shows the current goal. This is task `marker / sharpie_marker /
 write_c` of DexToolBench (SimToolReal), run here in plain MuJoCo.
 
 ## What you hand in

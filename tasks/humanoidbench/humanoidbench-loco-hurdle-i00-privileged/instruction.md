@@ -1,8 +1,6 @@
 # hurdle — instance 00
 
-You control a simulated Unitree H1 humanoid (HumanoidBench / MuJoCo) via Python. **Task:** run the
-robot forward down the walled track, past the hurdles, without touching the side or back walls and
-without falling.
+You control a simulated Unitree H1 humanoid (HumanoidBench / MuJoCo) via Python. **Task:** run the robot forward down the walled track and over the hurdles, without touching the side or back walls and without falling.
 
 This is a *fixed scene instance*: the hurdles and the robot's initial pose never change between
 resets. You may reset and retry as many times as you want. Your deliverable is **one replayable

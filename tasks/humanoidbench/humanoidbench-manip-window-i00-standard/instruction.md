@@ -2,8 +2,7 @@
 
 You control a simulated Unitree H1 humanoid with two Shadow dexterous hands (HumanoidBench / MuJoCo) **as if
 it were real hardware**: the simulator runs in a service you cannot open, and you reach it only through a
-client. **Task:** grasp the wiping tool — it starts in the air just in front of the hands and falls within the
-first second unless it is held — and wipe the window with it, moving steadily up and down.
+client. **Task:** grasp the wiping tool and wipe the window with it, moving it steadily up and down. The tool starts in the air just in front of the hands and falls within the first second unless it is held.
 
 ## Rules (real-robot rules)
 - **Episodes and resets.** The episode starts when the service comes up. It ends when the task succeeds, when

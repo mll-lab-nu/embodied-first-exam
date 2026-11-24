@@ -2,7 +2,7 @@
 
 You control the **MyoHand**, a musculoskeletal model of a human forearm and hand (MyoSuite 2.12.2 on MuJoCo), via Python, through its actuators — 39
 muscles: there is no joint-level controller.
-**Task:** Rotate the pen in the hand until its axis points along the target orientation: the cosine between the pen's axis (bottom to top) and the target's axis above 0.95, with the pen within 0.075 m of its desired position, for 100 consecutive control steps (1.0 s). Failure (the episode ends): the pen more than 0.075 m from its desired position (dropped).
+**Task:** Rotate the pen in the hand until its axis, from bottom to top, points within about 15 degrees of the target axis, and hold it there for a full second without dropping it. The episode ends in failure, as a drop, if the pen gets more than about 7 cm from its desired position.
 
 A pen lies across the fingers of the upturned hand; a translucent target pen shows the goal orientation. `s.state()` gives the task's observation dict (privileged): `hand_jnt`, `obj_pos`, `obj_des_pos`, `obj_vel`, `obj_rot`, `obj_des_rot`, `obj_err_pos`, `obj_err_rot`, `act`.
 MyoSuite's reward code (from `/usr/local/lib/python3.11/site-packages/myosuite/envs/myo/myobase/pen_v0.py`; `solved` is the goal test,

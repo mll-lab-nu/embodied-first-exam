@@ -3,9 +3,7 @@
 You control a simulated Unitree H1 humanoid with two Shadow dexterous hands (HumanoidBench / MuJoCo) **as if
 it were real hardware**: the simulator runs in a service you cannot open, and you reach it only through a
 client. Like real hardware, it does not wait for you: once an episode is running, the robot moves in real time
-while you think. **Task:** put each of the five red-tinted objects (the other seven are grey) onto its place
-on the bookshelf, shown as a translucent copy of it in the same colour, one at a time, palest first and
-darkest last.
+while you think. **Task:** put each of the five red-tinted objects onto its place on the bookshelf, one at a time, palest first and darkest last. Each place is shown as a translucent copy of its object in the same colour, and the other seven objects are grey.
 
 ## Rules (real-robot rules)
 - **Time does not stop.** An episode starts paused, on the frozen starting state, its servos holding their

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0` |
 
 ## Task
-A cube rests on a raised launch surface. With a short push from the pusher blade, tip it over so that the face that initially faces the robot (-x) ends up on top, the cube completing the tip by its own momentum after the blade has let go, and let it settle. Then push the flipped cube onto an inclined chute, let it slide down by itself, meet it with the blade on its downhill side near the chute's lower end, and bring it to rest in the pocket at the bottom of the chute with the same face still on top. The deliverable is one replayable trajectory of 100 Hz joint-target actions (`/app/output/trajectory.npz`,
+A cube rests on a raised launch surface. With a short push from the pusher blade, tip it over so that the face that faces the robot at the start, its -x face, ends up on top. The cube must complete the tip by its own momentum after the blade has let go, and then settle. Then push the flipped cube onto an inclined chute and let it slide down by itself. Meet it with the blade on its downhill side near the chute's lower end, and bring it to rest in the pocket at the bottom of the chute with the same face still on top. The deliverable is one replayable trajectory of 100 Hz joint-target actions (`/app/output/trajectory.npz`,
 8 values per row), graded by the task's own staged success check: 4 phases (`momentum_face_flip`, `oriented_chute_entry`, `downstream_intercept`, `pocket_delivery`), in order,
 with no failure event and no safety-limit violation, within the task's horizon of 25 s.
 

@@ -1,8 +1,7 @@
 # DexToolBench · short screwdriver · spin_horizontal (MuJoCo) — STANDARD MODE (robot as a service)
 
 A KUKA iiwa 14 arm with a 22-joint **Sharpa HA4** dexterous hand stands next to a table with a **short screwdriver** on it.
-**Task:** pick up the short screwdriver and move it through the demonstrated motion (spinning it about a horizontal axis): bring it to each
-of the **38 goal poses in order** (the green ghost tool shows the current goal). This is task `screwdriver / short_screwdriver /
+**Task:** pick up the short screwdriver and spin it about a horizontal axis along the demonstrated motion: bring it to each of the **38 goal poses in order**. A green ghost screwdriver shows the current goal. This is task `screwdriver / short_screwdriver /
 spin_horizontal` of DexToolBench (SimToolReal), run here in plain MuJoCo.
 
 You control the robot **as if it were real hardware**: the simulator runs in a service you cannot open. You get one

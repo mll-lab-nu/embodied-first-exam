@@ -1,7 +1,7 @@
 # Panda Dynamic Scenes · Inertial cube flip, chute run and pocket recovery (S06) — frozen instance i00
 
 You control one simulated **Franka Panda** arm (7 joints, its standard hand, and the task's tool where it has one) in a simulated scene (ManiSkill 3 / SAPIEN, rigid-body CPU PhysX at 1000 Hz) via Python.
-**Task:** A cube rests on a raised launch surface. With a short push from the pusher blade, tip it over so that the face that initially faces the robot (-x) ends up on top, the cube completing the tip by its own momentum after the blade has let go, and let it settle. Then push the flipped cube onto an inclined chute, let it slide down by itself, meet it with the blade on its downhill side near the chute's lower end, and bring it to rest in the pocket at the bottom of the chute with the same face still on top.
+**Task:** A cube rests on a raised launch surface. With a short push from the pusher blade, tip it over so that the face that faces the robot at the start, its -x face, ends up on top. The cube must complete the tip by its own momentum after the blade has let go, and then settle. Then push the flipped cube onto an inclined chute and let it slide down by itself. Meet it with the blade on its downhill side near the chute's lower end, and bring it to rest in the pocket at the bottom of the chute with the same face still on top.
 
 This is a *fixed scene instance*: everything starts the same way after every reset, and you may reset and retry as many
 times as you want. Your deliverable is **one replayable trajectory** of the robot's low-level actions, not a general

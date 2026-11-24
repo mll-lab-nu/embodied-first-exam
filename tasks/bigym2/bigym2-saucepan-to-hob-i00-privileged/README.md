@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:bigym2-0.1.1` |
 
 ## Task
-Take the saucepan out of the cabinet and gently set it on the hob. (BiGym 2.0 `saucepan_to_hob`, a Unitree G1 humanoid whose legs and waist NVIDIA's GR00T whole-body controller drives.)
+Take the saucepan out of the cabinet under the counter and set it on the hob. Then let go, with both grippers off the saucepan. (BiGym 2.0 `saucepan_to_hob`, a Unitree G1 humanoid whose legs and waist NVIDIA's GR00T whole-body controller drives.)
 
 ## Difficulty
 Two stages low and high: open the cabinet under the counter, take the saucepan out, set it on the hob, released.

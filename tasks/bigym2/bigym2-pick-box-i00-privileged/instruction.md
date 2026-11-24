@@ -3,7 +3,7 @@
 You control a simulated Unitree G1 humanoid robot with two-finger grippers (BiGym 2.0, MuJoCo) via Python. NVIDIA's
 GR00T whole-body controller, a learned policy that runs inside every simulator step, drives its legs and waist and
 keeps it balanced: you command where it walks, how high its pelvis is, how far its torso leans forward, its arm joints and its grippers.
-**Task:** Pick the cardboard box up from the side table and gently set it down on the kitchen counter.
+**Task:** Pick up the cardboard box from the side table and set it down on top of the kitchen counter. Then let go, with both grippers off the box.
 
 At the start the cardboard box stands on a low side table, about 1.3 m away, 52° to your right, 0.62 m above the floor; the front edge of the kitchen counter's top is about 0.7 m away, straight ahead, 0.71 m above the floor. (Distances are from your pelvis along the floor, directions from the way you face,
 heights above the floor; measured on this scene.)

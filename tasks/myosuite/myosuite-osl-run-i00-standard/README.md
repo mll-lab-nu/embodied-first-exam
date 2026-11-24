@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:myosuite-0.1.1` |
 
 ## Task
-MyoSuite `myoChallengeOslRunFixed-v0` (MyoLeg + OSL, 54 muscles) on the same frozen instance as `myosuite-osl-run-i00-privileged`: Run the track: move forward 29 m along it to the finish (MyoChallenge 2024 OSL Run, its own win condition), staying within 1 m of the track's centre line and on your feet; the right leg is the prosthesis (`osl_knee_angle_r`, `osl_ankle_angle_r`), driven by its own controller, so you command only the 54 muscles. Failure (the episode ends): falling, leaving the track sideways, or moving 2 m backwards. There is no time limit.
+MyoSuite `myoChallengeOslRunFixed-v0` (MyoLeg + OSL, 54 muscles) on the same frozen instance as `myosuite-osl-run-i00-privileged`: Run forward along the track for 29 m to the finish, MyoChallenge 2024 OSL Run's own win condition, staying on your feet and within about a metre of the track's centre line. The right leg is the prosthesis (`osl_knee_angle_r`, `osl_ankle_angle_r`) and is driven by its own controller, so you command only the 54 muscles. The episode ends in failure if you fall, leave the track sideways, or move about 2 m backwards. There is no time limit.
 A musculoskeletal body whose right leg is an Open-Source Leg prosthesis (knee and ankle motors driven by its own controller) stands at the start of a straight, flat running track. Standard mode (eai-standard/2.2): the agent drives the body through a client, with only its own proprioception and the scene's cameras, and 10 resets (only the last episode is graded).
 
 ## Difficulty
