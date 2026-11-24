@@ -13,7 +13,7 @@
 
 ## Task
 HumanCLAW find-navigate (TV), standard mode: the same frozen
-episode and success rule as `humanclaw-nav-tv-i16-privileged`, with the head camera only, one episode and no reset. Find the TV and move until your body is touching the target, with zero distance to the target object.
+episode and success rule as `humanclaw-nav-tv-i16-privileged`, with the head camera only, one episode and no reset. Find the TV and move until your body is touching the target, with zero distance to the target object. In plain words: walk up to a TV until you are within about 20 cm of it, then stop.
 Modes and rules: `tasks/humanclaw/README.md`.
 
 ## Difficulty

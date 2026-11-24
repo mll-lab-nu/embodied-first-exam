@@ -14,7 +14,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/humanclaw-sit-couch-i124-standard"
-description = "HumanCLAW find-navigate-interact (couch), standard mode: Find the couch and move until your body is touching the target, with zero distance to the target object. Finally, sit on the couch. A client with the head camera, actions used / left and the pelvis height change; one episode, no reset; graded by the live episode."
+description = "HumanCLAW find-navigate-interact (couch), standard mode: Find the couch and move until your body is touching the target, with zero distance to the target object. Finally, sit on the couch. In plain words: walk up to a couch, sit down on it, and stop while you are still sitting on it. A client with the head camera, actions used / left and the pelvis height change; one episode, no reset; graded by the live episode."
 keywords = ["robotics", "humanclaw", "habitat-sim", "humanoid", "navigation", "standard-mode", "trajectory", "couch"]
 
 [metadata]

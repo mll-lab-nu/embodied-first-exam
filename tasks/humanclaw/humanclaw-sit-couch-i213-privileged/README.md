@@ -13,7 +13,7 @@
 
 ## Task
 HumanCLAW find-navigate-interact (couch), privileged mode: one frozen episode,
-delivered as one trajectory of at most 100 motion skills. Find the couch and move until your body is touching the target, with zero distance to the target object. Finally, sit on the couch. Modes, rules and what differs from
+delivered as one trajectory of at most 100 motion skills. Find the couch and move until your body is touching the target, with zero distance to the target object. Finally, sit on the couch. In plain words: walk up to a couch, sit down on it, and stop while you are still sitting on it. Modes, rules and what differs from
 HumanCLAW's own evaluator: `tasks/humanclaw/README.md`.
 
 ## Difficulty

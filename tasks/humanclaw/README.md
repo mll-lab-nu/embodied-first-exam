@@ -18,7 +18,8 @@ Half-Physics.
 One task = one frozen episode of HumanCLAW's full validation set: the scene, the body's start pose (HumanCLAW's own
 spawn values), the target category and its goal objects, HumanCLAW's instruction word for word ("Find the chair and
 move until your body is touching the target, with zero distance to the target object.", plus "Finally, sit on the
-bed." for an interaction category). An action is a row `[action_id, value]`, one motion skill of 0.5 s (15 frames at
+bed." for an interaction category), then the same goal in plain words (stop within about 20 cm of a target, or stop
+while sitting on one: HumanCLAW's own words ask for zero distance, its success rule does not). An action is a row `[action_id, value]`, one motion skill of 0.5 s (15 frames at
 30 Hz), mapped to HumanCLAW's skill calls by its own planner code (`_chooser_action`, so its clamps apply). An episode
 allows 100 actions, the stop included, and has no reset; success needs an explicit stop (HumanCLAW's active stop).
 

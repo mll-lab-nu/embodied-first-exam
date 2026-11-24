@@ -1,6 +1,6 @@
 # MetaWorld+ · stick-pull
 
-A **Sawyer** arm stands at a table: Meta-World's `stick-pull-v3` environment (MuJoCo). **Task: Use the stick to pull the target object.**
+A **Sawyer** arm stands at a table: Meta-World's `stick-pull-v3` environment (MuJoCo). **Task: Hook the stick into the thermos's handle and pull the thermos to the target, leaving the stick in the handle at the end.**
 The scene is one frozen instance of Meta-World's own randomization (object and goal positions; seed 1).
 
 ## What you hand in

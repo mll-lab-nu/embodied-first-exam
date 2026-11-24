@@ -13,7 +13,7 @@
 
 ## Task
 HumanCLAW find-navigate-interact (bed), standard mode: the same frozen
-episode and success rule as `humanclaw-sit-bed-i72-privileged`, with the head camera only, one episode and no reset. Find the bed and move until your body is touching the target, with zero distance to the target object. Finally, sit on the bed.
+episode and success rule as `humanclaw-sit-bed-i72-privileged`, with the head camera only, one episode and no reset. Find the bed and move until your body is touching the target, with zero distance to the target object. Finally, sit on the bed. In plain words: walk up to a bed, sit down on it, and stop while you are still sitting on it.
 Modes and rules: `tasks/humanclaw/README.md`.
 
 ## Difficulty

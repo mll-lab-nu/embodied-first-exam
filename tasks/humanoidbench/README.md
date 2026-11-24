@@ -31,7 +31,7 @@ Every image is public: Harbor pulls it.
 | | slide | h1 | ⬜ | stair's reward, byte for byte, easier |
 | | pole | h1 | ⬜ | holding still earns 71% of the bar |
 | C3 stabilisation | balance_simple | h1 | ⬜ | balance_hard is upstream's hard version |
-| | balance_hard | h1 | ✅ | same reward on a rolling cylinder |
+| | balance_hard | h1 | ✅ | same reward on a rolling sphere |
 | | sit_simple | h1 | ✅ | fixture, the pipeline check: holding still earns 77% |
 | C4 navigation | door | h1 | ✅ | moves 1 object (the door) |
 | | maze | h1 | ⬜ | moves no object |

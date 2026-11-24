@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/metaworldplus-basketball-i00-privileged"
-description = "MetaWorld+ (Meta-World v3 basketball, Sawyer arm): Pick up the ball and place it through the basketball hoop. Produce one replayable trajectory of Meta-World's native actions on a frozen instance; graded on the state after the last action."
+description = "MetaWorld+ (Meta-World v3 basketball, Sawyer arm): Pick up the ball and hold it in the basketball hoop's ring at the end (a ball that drops through the hoop does not count). Produce one replayable trajectory of Meta-World's native actions on a frozen instance; graded on the state after the last action."
 keywords = ["robotics", "mujoco", "metaworld", "sawyer", "code-as-policy", "trajectory", "privileged"]
 
 [metadata]

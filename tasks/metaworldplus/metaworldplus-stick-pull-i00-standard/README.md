@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:metaworld-0.1.0` |
 
 ## Task
-Standard-mode twin of `metaworldplus-stick-pull-i00-privileged`: the same instance and success check (Use the stick to pull the target object.), served
+Standard-mode twin of `metaworldplus-stick-pull-i00-privileged`: the same instance and success check (Hook the stick into the thermos's handle and pull the thermos to the target, leaving the stick in the handle at the end.), served
 as a robot service (`images/metaworld/standard/server_mw.py`, protocol eai-standard/2.1, tool module `mw_tool`). The
 agent sees camera RGB-D, the robot's own state and the target point; no object poses, no reset; one episode.
 

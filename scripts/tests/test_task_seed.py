@@ -54,7 +54,7 @@ def pinned_pair() -> None:
             with_seeds(toml, "[0, 5]")
         compose = (std / "environment" / "docker-compose.yaml").read_text()
         start = re.search(r'RCB_START_SHA: "([0-9a-f]+)"', compose).group(1)
-        line = "Pick up the ball and place it through the basketball hoop."   # in both instructions
+        line = "(a ball that drops through the hoop does not count)"   # in both instructions
         d = priv / "tests" / "seeds" / "5"
         (d / "solution").mkdir(parents=True)
         (d / "instance.npz").write_bytes(b"seed 5 instance")

@@ -1,6 +1,6 @@
 # MetaWorld+ · stick-pull — STANDARD MODE (robot as a service)
 
-A **Sawyer** arm stands at a table: Meta-World's `stick-pull-v3` environment (MuJoCo). **Task: Use the stick to pull the target object.**
+A **Sawyer** arm stands at a table: Meta-World's `stick-pull-v3` environment (MuJoCo). **Task: Hook the stick into the thermos's handle and pull the thermos to the target, leaving the stick in the handle at the end.**
 The scene is one frozen instance of Meta-World's own randomization.
 
 You control the robot **as if it were real hardware**: the simulator runs in a service you cannot open. You get one

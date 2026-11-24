@@ -13,7 +13,7 @@
 
 ## Task
 HumanCLAW find-navigate-interact (bed), privileged mode: one frozen episode,
-delivered as one trajectory of at most 100 motion skills. Find the bed and move until your body is touching the target, with zero distance to the target object. Finally, sit on the bed. Modes, rules and what differs from
+delivered as one trajectory of at most 100 motion skills. Find the bed and move until your body is touching the target, with zero distance to the target object. Finally, sit on the bed. In plain words: walk up to a bed, sit down on it, and stop while you are still sitting on it. Modes, rules and what differs from
 HumanCLAW's own evaluator: `tasks/humanclaw/README.md`.
 
 ## Difficulty

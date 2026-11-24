@@ -13,7 +13,7 @@
 
 ## Task
 HumanCLAW find-navigate-interact (toilet), standard mode: the same frozen
-episode and success rule as `humanclaw-sit-toilet-i04-privileged`, with the head camera only, one episode and no reset. Find the toilet and move until your body is touching the target, with zero distance to the target object. Finally, sit on the toilet.
+episode and success rule as `humanclaw-sit-toilet-i04-privileged`, with the head camera only, one episode and no reset. Find the toilet and move until your body is touching the target, with zero distance to the target object. Finally, sit on the toilet. In plain words: walk up to a toilet, sit down on it, and stop while you are still sitting on it.
 Modes and rules: `tasks/humanclaw/README.md`.
 
 ## Difficulty

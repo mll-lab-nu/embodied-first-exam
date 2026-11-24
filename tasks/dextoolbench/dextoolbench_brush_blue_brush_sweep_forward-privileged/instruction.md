@@ -1,7 +1,7 @@
 # DexToolBench · blue brush · sweep_forward (MuJoCo)
 
-A KUKA iiwa 14 arm with a 22-joint **Sharpa HA4** dexterous hand stands next to a table with a **blue brush** on it.
-**Task:** pick up the blue brush and move it through the demonstrated motion (a forward sweep): bring it to each
+A KUKA iiwa 14 arm with a 22-joint **Sharpa HA4** dexterous hand stands next to a table with a **brush** on it (DexToolBench's `blue_brush`; it is grey in this scene).
+**Task:** pick up the brush and move it through the demonstrated motion (a forward sweep): bring it to each
 of the **34 goal poses in order** (the green ghost tool shows the current goal). This is task `brush / blue_brush /
 sweep_forward` of DexToolBench (SimToolReal), run here in plain MuJoCo.
 

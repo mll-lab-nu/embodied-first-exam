@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/metaworldplus-stick-pull-i00-privileged"
-description = "MetaWorld+ (Meta-World v3 stick-pull, Sawyer arm): Use the stick to pull the target object. Produce one replayable trajectory of Meta-World's native actions on a frozen instance; graded on the state after the last action."
+description = "MetaWorld+ (Meta-World v3 stick-pull, Sawyer arm): Hook the stick into the thermos's handle and pull the thermos to the target, leaving the stick in the handle at the end. Produce one replayable trajectory of Meta-World's native actions on a frozen instance; graded on the state after the last action."
 keywords = ["robotics", "mujoco", "metaworld", "sawyer", "code-as-policy", "trajectory", "privileged"]
 
 [metadata]

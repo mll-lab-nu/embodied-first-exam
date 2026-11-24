@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/humanclaw-sit-bed-i24-privileged"
-description = "HumanCLAW find-navigate-interact (bed), one frozen HSSD episode: produce one replayable trajectory of at most 100 motion skills for a simulated human body. Find the bed and move until your body is touching the target, with zero distance to the target object. Finally, sit on the bed."
+description = "HumanCLAW find-navigate-interact (bed), one frozen HSSD episode: produce one replayable trajectory of at most 100 motion skills for a simulated human body. Find the bed and move until your body is touching the target, with zero distance to the target object. Finally, sit on the bed. In plain words: walk up to a bed, sit down on it, and stop while you are still sitting on it."
 keywords = ["robotics", "humanclaw", "habitat-sim", "humanoid", "navigation", "code-as-policy", "trajectory", "bed"]
 
 [metadata]

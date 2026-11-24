@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:myosuite-0.1.1` |
 
 ## Task
-MyoSuite `myoSarcHandKeyTurnFixed-v0` (MyoHand, a musculoskeletal model of a human forearm and hand, 39 muscles): Turn the key held between the thumb and the index finger by more than 3.14 rad (half a turn). Success: the key's hinge angle above 3.14 rad for 50 consecutive control steps (1.0 s). Failure (the episode ends): the index or thumb tip more than 0.10 m from the key head. The muscles are sarcopenic: MyoSuite's sarcopenia condition halves every muscle's maximum isometric force.
+MyoSuite `myoSarcHandKeyTurnFixed-v0` (MyoHand, a musculoskeletal model of a human forearm and hand, 39 muscles): Turn the key held between the thumb and the index finger by more than 3.14 rad (half a turn). Success: the key's hinge angle above 3.14 rad for 50 consecutive control steps (1.0 s). Failure (the episode ends): the index or thumb tip more than 0.13 m from the key head. The muscles are sarcopenic: MyoSuite's sarcopenia condition halves every muscle's maximum isometric force.
 As key_turn: the key sits in a lock in front of the palm, its head between the thumb and the index finger. The deliverable is one replayable trajectory of actuator commands (`/app/output/trajectory.npz`, `(T, 39)`, one row per 20 ms control step).
 
 ## Difficulty

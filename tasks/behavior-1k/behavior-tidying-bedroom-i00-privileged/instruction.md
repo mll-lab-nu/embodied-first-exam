@@ -1,7 +1,7 @@
 # BEHAVIOR-1K · tidying_bedroom — frozen instance
 
 You control a simulated **R1Pro** mobile manipulator (BEHAVIOR-1K v3.9.2: OmniGibson on Isaac Sim, the 2026 BEHAVIOR
-Challenge stack) via Python. **Task:** Tidy the bedroom. The two sandals lie on the bedroom floor and the book lies on the bed. Put one sandal next to the bed and the other sandal next to the first one, and put the book on top of a table in the bedroom.
+Challenge stack) via Python. **Task:** Tidy the bedroom. The two sandals lie on the bedroom floor and the book lies on the bed. Put both sandals next to the bed, side by side, and put the book on top of a table in the bedroom.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest (`## Conventions`):
 - the first sandal (`sandal.n.01_1`) is next to the bed (`bed.n.01_1`)

@@ -2,7 +2,7 @@
 
 You control a simulated adult human body in a furnished house (HumanCLAW: Habitat-Sim with Half-Physics, an HSSD
 scene). The body moves only by **motion skills**: walk, turn, side step, step back, steps up or down, sit, and stop.
-**Task (HumanCLAW's own words):** Find the chair and move until your body is touching the target, with zero distance to the target object.
+**Task (HumanCLAW's own words):** Find the chair and move until your body is touching the target, with zero distance to the target object. In plain words: walk up to a chair until you are within about 20 cm of it, then stop.
 
 ## Scoring
 HumanCLAW's NavSR@20cm: the episode ends with a **stop** while the body is within **0.2 m** of the bounding box of a chair (the nearest one; any chair in the scene counts). Ending without a stop (running out of the 100 actions) fails.

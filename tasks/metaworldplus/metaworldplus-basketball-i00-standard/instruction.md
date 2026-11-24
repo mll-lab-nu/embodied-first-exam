@@ -1,6 +1,6 @@
 # MetaWorld+ · basketball — STANDARD MODE (robot as a service)
 
-A **Sawyer** arm stands at a table: Meta-World's `basketball-v3` environment (MuJoCo). **Task: Pick up the ball and place it through the basketball hoop.**
+A **Sawyer** arm stands at a table: Meta-World's `basketball-v3` environment (MuJoCo). **Task: Pick up the ball and hold it in the basketball hoop's ring at the end (a ball that drops through the hoop does not count).**
 The scene is one frozen instance of Meta-World's own randomization.
 
 You control the robot **as if it were real hardware**: the simulator runs in a service you cannot open. You get one

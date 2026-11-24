@@ -1,6 +1,6 @@
 # MetaWorld+ · stick-push — STANDARD MODE (robot as a service)
 
-A **Sawyer** arm stands at a table: Meta-World's `stick-push-v3` environment (MuJoCo). **Task: Use the stick to push the target object.**
+A **Sawyer** arm stands at a table: Meta-World's `stick-push-v3` environment (MuJoCo). **Task: Use the stick to push the thermos to the target, and keep holding the stick up off the table at the end.**
 The scene is one frozen instance of Meta-World's own randomization.
 
 You control the robot **as if it were real hardware**: the simulator runs in a service you cannot open. You get one

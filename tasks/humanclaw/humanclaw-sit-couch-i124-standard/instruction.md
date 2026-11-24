@@ -2,7 +2,7 @@
 
 You control a simulated adult human body in a furnished house (HumanCLAW: Habitat-Sim with Half-Physics, an HSSD
 scene) **as if it were a real body**: the simulator runs in a service you cannot open, and you reach it only
-through a client. The body moves only by **motion skills**. **Task (HumanCLAW's own words):** Find the couch and move until your body is touching the target, with zero distance to the target object. Finally, sit on the couch.
+through a client. The body moves only by **motion skills**. **Task (HumanCLAW's own words):** Find the couch and move until your body is touching the target, with zero distance to the target object. Finally, sit on the couch. In plain words: walk up to a couch, sit down on it, and stop while you are still sitting on it.
 
 ## Rules
 - **One episode, no reset.** It starts when the service comes up and ends at your **stop** action (the only way

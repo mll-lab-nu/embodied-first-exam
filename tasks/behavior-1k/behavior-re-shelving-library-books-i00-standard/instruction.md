@@ -2,7 +2,7 @@
 
 You drive an **R1Pro** mobile bimanual robot around a house **as if it were real hardware**: the simulator (BEHAVIOR-1K
 v3.9.2, the 2026 BEHAVIOR Challenge stack) runs in a service you cannot open. You get one client and one episode.
-**Task:** Reshelve the library books. Three books lie on the table in the living room; put every one of them inside a bookcase in the living room (the books may go into different bookcases). Success means all of the following hold at the same time: (1) every book is inside some bookcase (`bookcase.n.01_*`; different bookcases are fine). How the simulator judges them: inside(A, B): the centre of A's axis-aligned bounding box lies within B's bounding box and within B's interior (container) volume. The service checks the goal; it counts once it has held for 1 s, released and at rest (Rules).
+**Task:** Reshelve the library books. Three books lie on the table in the living room; put every one of them inside a bookcase in the living room (the books may go into different bookcases). Success means all of the following hold at the same time: (1) every book is inside some bookcase (different bookcases are fine). How the simulator judges them: inside(A, B): the centre of A's axis-aligned bounding box lies within B's bounding box and within B's interior (container) volume. The service checks the goal; it counts once it has held for 1 s, released and at rest (Rules).
 
 ## Rules (real-robot rules)
 - **No reset.** The episode starts when the service comes up and ends on success, when the robot has fallen over, when
