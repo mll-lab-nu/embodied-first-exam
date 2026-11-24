@@ -10,7 +10,7 @@ Use `from control_public.client import Client, artifact`; `Client().describe()` 
 `seal(round_id, summary)` selects a completed round. No held-out feedback is returned. At agent exit the evaluator uses the sealed round or the latest round completed before cutoff; no eligible round scores zero. Hidden simulation runs in a separate container and accepts data-only policies. Network endpoint: `http://127.0.0.1:8000`. No reset or privileged-state endpoint exists.
 
 ## Verification and score
-Success requires four ordered alternating crossings, clearance >=0.16 m, no pole/body-ground collision, final x beyond last pole +0.35 m; score combines crossing fraction and tracking quality, unsuccessful capped at 49.
+Success requires four ordered alternating crossings, clearance >=0.16 m, no pole/body-ground collision, final x beyond last pole +0.35 m; the score is the share of poles passed correctly, capped at 49 when unsuccessful.
 The selected policy is tested on 10 disjoint cases in two fresh processes. Binary success requires all cases to pass; `final_reward` reports the continuous mean score. Evaluation dynamics, seeds, true state, contacts and grades are never returned during adaptation.
 
 ## Modeling limitations

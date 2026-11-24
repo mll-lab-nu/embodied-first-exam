@@ -2,7 +2,7 @@
 
 You control a bimanual robot -- two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each) side by side at the near edge of a table, facing +x (the left arm is the one at +y) -- **as if it were real**: the simulator (ABC Sim on MuJoCo 3.6.0) runs in a
 service you cannot open. You get one client and one episode, and you act only through the robot's joint targets.
-**Task:** Get all four plastic bottles into the bin -- throw them in or put them in. Success: all 4 bottles are inside the bin at the same time: each bottle's centre of mass within the bin's inner wall radius of the bin's axis, not below the bin's floor, and at most about one bottle length (~0.11 m) above its rim (a bottle may still be held). The goal must hold for 30 consecutive control steps (1.02 s); the episode then ends in success.
+**Task:** Get all four plastic bottles into the bin -- throw them in or put them in. Success: all 4 bottles are inside the bin at the same time: each bottle's centre of mass within the bin's inner wall radius of the bin's axis, not below the bin's floor, and at most about 0.11 m (a little over half a bottle length) above its rim (a bottle may still be held). The goal must hold for 30 consecutive control steps (1.02 s); the episode then ends in success.
 
 Four empty plastic bottles lie on the table; a round bin stands on the table (it is a loose object, not fixed).
 

@@ -1,7 +1,7 @@
 # ABC Sim · put bottles in the bin -- frozen instance
 
 You control a bimanual robot -- two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each) side by side at the near edge of a table, facing +x (the left arm is the one at +y) -- via Python (ABC Sim, `abc_sim` on MuJoCo 3.6.0).
-**Task:** Put the 2 plastic bottles into the bin. Success: all 2 bottles are inside the bin at the same time: each bottle's centre of mass within the bin's inner radius of its axis (the bin widens towards the top), not below its floor, and at most about one bottle length above its rim (a bottle may still be held). The goal must hold for 30 consecutive control steps (1.02 s); the episode then ends in success.
+**Task:** Put the 2 plastic bottles into the bin. Success: all 2 bottles are inside the bin at the same time: each bottle's centre of mass within the bin's inner radius of its axis (the bin widens towards the top), not below its floor, and at most a little over half a bottle length above its rim (a bottle may still be held). The goal must hold for 30 consecutive control steps (1.02 s); the episode then ends in success.
 
 2 plastic bottles stand or lie on the table next to a tub-shaped bin (a loose object). The task's directive, as the scene states it: "put the plastic bottles in the bin".
 

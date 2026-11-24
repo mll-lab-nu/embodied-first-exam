@@ -11,6 +11,7 @@ Use `from control_public.client import Client, artifact`; `Client().describe()` 
 
 ## Verification and score
 Ordered completion and time-indexed position/heading/speed accuracy. Safety violation gives zero. No nearest-waypoint score.
+A case passes only if the car crosses every gate of the lap in order, near the centre line, without a collision, rollover or leaving the course, and keeps close to the moving target over the lap: position error below 0.30 m (root mean square), heading error below 0.18 rad and speed error below 0.25 m/s (both averaged over the lap), and less than 0.35 m from the target at the end.
 The selected policy is tested on 10 disjoint cases in two fresh processes. Binary success requires all cases to pass; `final_reward` reports the continuous mean score. Evaluation dynamics, seeds, true state, contacts and grades are never returned during adaptation.
 
 ## Modeling limitations

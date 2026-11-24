@@ -7,7 +7,7 @@ An NVIDIA GPU is available. Your job: write a program that completes the task be
 
 ## The task
 
-A raised work board lies on the table in front of you, with three shape cutouts sunk into it: a T, a cross, and an L, their recess floors coloured dark red, dark blue, and dark amber. Three flat coloured blocks rest on the board, each some distance behind the cutout of its own shape: a red T, a blue cross, and an amber L.
+A raised work board lies on the table in front of you, with three shape cutouts sunk into it: a T, a cross, and an L, their recess floors coloured dark red, dark blue, and dark amber. Three flat coloured blocks rest on the board, each some distance from the cutout of its own shape, on your side of it: a red T, a blue cross, and an amber L.
 Each block starts rotated away from its cutout's orientation.
 Goal: slide every block across the board into the cutout of its own shape so that it drops in and lies flat inside its recess, matching the recess outline in position and rotation. The blocks can only be pushed; lifting them does not solve the task. A block that arrives misaligned will catch on the recess rim instead of dropping in, and a wedged block is hard to recover — align each block before it reaches its cutout.
 

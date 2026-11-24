@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-match-0.1.0@sha256:99255569bf68bcf27f4e4867b58bad55c1d54fe73281920882e97c310836b6c7` |
 
 ## Task
-The privileged twin of `embodied-olympics-match-soccerssl-match-i01-realtime`: wheeled robot soccer 5 v 5 (RoboCup SSL Division B): you command the blue team (five omnidirectional SSL robots, the skills move / kick / dribble / substitute) against the scripted yellow team; level 4, seed 7, S = 10.
+The privileged twin of `embodied-olympics-match-soccerssl-match-i01-realtime`: wheeled robot soccer 5 v 5 (RoboCup SSL Division B): you command the blue team (five omnidirectional SSL robots, the skills move / kick / dribble / substitute) against the yellow opponent team at level 4 (the reinforcement-learned tier); level 4, seed 7, S = 10.
 
 ## Difficulty
 Same frozen sport and instance as the twin; full-simulator development and the full state instead of camera images.

@@ -8,11 +8,11 @@ An NVIDIA GPU is available. Your job: write a program that completes the task be
 ## The task
 
 A work table holds a colourful spread of fruits, vegetables and household items, with an open blue plastic crate on one side and a round serving tray on the other.
-Goal: bus the table, SORTED. Move every fruit and vegetable that sits in the front working row — a lemon, and another lemon — into the blue crate, and move the non-food items from that row — a lime, and another lime — onto the round tray. Items further back on the table are part of the scene and stay where they are. The job is done when each listed item rests in its correct destination and nothing that is not food has been put in the crate.
+Goal: bus the table, SORTED. Move the two yellow lemons that sit in the front working row into the blue crate, and move the two green limes from that row onto the round tray. Items further back on the table are part of the scene and stay where they are. The job is done when each listed item rests in its correct destination and nothing that is not food has been put in the crate.
 
 A Unitree G1 humanoid with three-finger hands, fixed at the pelvis (legs locked), a stationary upper-body manipulator. Control mode 'pink_ik': 17 arm+waist joints driven by the Pink IK solver (absolute wrist poses), plus 14 hand joints by direct position target. Action dim 28.
 
-To be precise about the sort, since the wording above calls the limes non-food: the two lemons go into the blue
+To be precise about the sort: the two lemons go into the blue
 crate and the two limes onto the round tray; nothing else is moved.
 
 The task is complete when `env.scene.success()` is true for the env (a `(num_envs,)` bool tensor) at the end of the

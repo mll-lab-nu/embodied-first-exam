@@ -3,7 +3,7 @@
 The task of `embodiedswe-puzzle-push-shapes-g1-pink-ik-i00-privileged`, on the same frozen scene. You drive a Unitree G1 humanoid with three-finger hands, its pelvis fixed, its arms and waist under EmbodiedSWE's Pink IK, as if it were real hardware: the simulator runs in a service you cannot open, and you get its client, one episode and no reset. The client's docstring is its manual (`/opt/tools/rcb_client.py`); `r.spec()` gives the numbers.
 
 ## The task
-A raised work board lies on the table in front of you, with three shape cutouts sunk into it: a T, a cross, and an L, their recess floors coloured dark red, dark blue, and dark amber. Three flat coloured blocks rest on the board, each some distance behind the cutout of its own shape: a red T, a blue cross, and an amber L.
+A raised work board lies on the table in front of you, with three shape cutouts sunk into it: a T, a cross, and an L, their recess floors coloured dark red, dark blue, and dark amber. Three flat coloured blocks rest on the board, each some distance from the cutout of its own shape, on your side of it: a red T, a blue cross, and an amber L.
 Each block starts rotated away from its cutout's orientation.
 Goal: slide every block across the board into the cutout of its own shape so that it drops in and lies flat inside its recess, matching the recess outline in position and rotation. The blocks can only be pushed; lifting them does not solve the task. A block that arrives misaligned will catch on the recess rim instead of dropping in, and a wedged block is hard to recover — align each block before it reaches its cutout.
 
