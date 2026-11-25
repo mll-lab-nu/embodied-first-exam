@@ -9,8 +9,6 @@ Success: all six cans of soda are inside the bucket. It counts only once the sce
 When your session ends with the episode still running, the robot is held still for a few seconds more (your last
 command, the base at 0), and a success that settles in that time counts.
 
-Keep the script that drives the robot at `/app/output/gen.py`.
-
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
   benchmark's demonstrations, trained policies); trials are reviewed.

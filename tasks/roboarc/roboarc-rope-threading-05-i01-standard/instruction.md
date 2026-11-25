@@ -10,8 +10,6 @@ Success: counted from that end, the rope goes through G1, then A, then G2, then 
 exactly once and the right way: G1 away from V's side, A toward G2's side, G2 toward V's side, V toward G1's side; the
 rope is intact and still. The episode ends, as a success, as soon as all of this has held for half a second.
 
-Keep the script that drives the robot at `/app/output/gen.py`.
-
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
   benchmark's demonstrations, trained policies); trials are reviewed.

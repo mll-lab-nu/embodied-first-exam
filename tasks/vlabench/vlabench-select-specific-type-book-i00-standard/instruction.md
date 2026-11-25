@@ -6,8 +6,6 @@ Take the history book out of the bookshelf.
 ## Goal
 Success: the history book is out of the bookshelf. The episode ends as soon as the task is done.
 
-Keep the script that drives the robot at `/app/output/gen.py`.
-
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions,
   VLABench's expert solutions, trained policies); trials are reviewed.

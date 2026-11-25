@@ -6,8 +6,6 @@ Take the tube of CuCl2 solution out of the tube stand.
 ## Goal
 Success: the tube of CuCl2 solution is out of the tube stand. The episode ends as soon as the task is done.
 
-Keep the script that drives the robot at `/app/output/gen.py`.
-
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions,
   VLABench's expert solutions, trained policies); trials are reviewed.

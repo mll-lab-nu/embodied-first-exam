@@ -7,8 +7,6 @@ Take the egg and the butter from the fridge and put them on the counter by the b
 Success: the egg and the butter are both on the counter close by the bowl, and the hand has let go and moved well away
 from both. What counts is how things stand at the end of the episode.
 
-Keep the script that drives the robot at `/app/output/gen.py`.
-
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
   benchmark's demonstrations, trained policies); trials are reviewed.

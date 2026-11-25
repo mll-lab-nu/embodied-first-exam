@@ -8,8 +8,6 @@ your hand away.
 Success: the drumstick, the shrimp and the steak are all on the serving tray, the tray is on the dining counter, and the
 hand has let go and moved well away from all three. What counts is how things stand at the end of the episode.
 
-Keep the script that drives the robot at `/app/output/gen.py`.
-
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
   benchmark's demonstrations, trained policies); trials are reviewed.

@@ -13,12 +13,12 @@ while you think. **Task:** a cube starts just above and in front of each palm. R
   robot runs at 50 Hz in real time, one control step every 0.02 s of wall-clock time, whether or not you send
   anything, until the episode ends. Between your commands it executes what you planned, then holds the last
   servo targets you sent; nothing pauses for you, not your thinking, not your tool calls.
-- **You are far too slow to steer it turn by turn.** One turn of yours (a model response, a tool call) takes
-  seconds, and the robot falls within a few seconds of robot time without active balance. Drive it with a
-  program: a controller of your own (Python in your container, with numpy and the client) that runs a loop at
-  the control rate, reads the proprioception and sends targets, started in the background
-  (`nohup python /app/output/gen.py > /app/output/run.log 2>&1 &`) so that your session is free while it runs.
-  Use your turns to start episodes, read what happened, and improve the program.
+- **You are far too slow to steer it turn by turn.** One turn of yours (a model response, a tool call) takes seconds,
+  and the robot falls within a few seconds of robot time without active balance. Drive it with a program: a controller
+  of your own (Python in your container, with numpy and the client) that runs a loop at the control rate, reads the
+  proprioception and sends targets, started in the background (`nohup python /app/ctrl.py > /app/ctrl.log 2>&1 &`) so
+  that your session is free while it runs. Use your turns to start episodes, read what happened, and improve the
+  program.
 - **Episodes and resets.** An episode ends when the task succeeds, when the robot falls (its pelvis drops too
   low), when either cube drops, after 500 control steps (10 s after its clock started), when your time is up,
   or on a simulator error. Nothing else ends it: a robot that has fallen without meeting one of these (lying
@@ -38,9 +38,7 @@ while you think. **Task:** a cube starts just above and in front of each palm. R
   `"error"` after a simulator error, else `"failed"`). `spec()` gives the robot's own facts, as its URDF
   would: each actuator's range, each joint's axis and position, each link's mass and centre of mass, the
   feet's collision boxes, the IMU's frame, each camera's field of view and pose.
-- There is nothing to hand in: the service records every control step it ran and grades the last episode as it
-  ran. Keep the controller that drives the robot at `/app/output/gen.py` for the record: save it early and
-  keep it current.
+- There is nothing to hand in: the service records every control step it ran and grades the last episode as it ran.
 - Wall-clock budget: the time limit (`## Time limit`). It ends without warning, and ending your session
   earlier ends the run the same way (and stops your background programs), so do not stop early: while the
   episode runs, or a reset is left, the run can still pass.

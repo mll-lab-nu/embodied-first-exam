@@ -19,10 +19,9 @@ client and **20 resets**: at most 21 episodes, of which the last is graded.
   graded, so do not reset away a good episode late. Resetting does not stop or restore the clock.
 - **No privileged state.** You see what the cameras see (RGB, optional depth, with each camera's calibration) plus the
   robot's own joint positions, velocities and targets. No object poses, no success predicate.
-- Your only budget is the time limit (`## Time limit`). `meta["time_left_s"]` is the service's count of it, from your first
-  request to the service: it never runs out before your time does, so plan by it. There is nothing to hand in: the
-  service records every episode, and grades the last one as the trajectory. Leave your script at `/app/output/gen.py` for the
-  record.
+- Your only budget is the time limit (`## Time limit`). `meta["time_left_s"]` is the service's count of it, from your
+  first request to the service: it never runs out before your time does, so plan by it. There is nothing to hand in: the
+  service records every episode, and grades the last one as the trajectory.
 - Images come back as arrays in a Python object; what you look at and where you store it is up to your code.
 
 ## Scoring

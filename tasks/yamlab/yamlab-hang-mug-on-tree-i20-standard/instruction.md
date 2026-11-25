@@ -24,8 +24,7 @@ stay counted once reached. The episode **ends by itself** at the first control s
   are reported as cost. One technical cap: the episode ends after **100,000 control steps** (55.6 min of simulated time;
   `spec["max_control_steps"]`, reason `step_guard`) and is graded as it stands. The service steps faster than real time
   (60-120 control steps/s), so long watches and far-away `ee_pose` targets can reach it: `meta["control_steps"]` counts.
-- Leave your script at `/app/output/gen.py` for the record. The episode is graded as it stands when your time is up:
-  keep working until it has succeeded.
+- The episode is graded as it stands when your time is up: keep working until it has succeeded.
 - **If the service crashes**, a call fails with a connection error: the simulator restarts and resumes the SAME episode
   (never a reset) in the state after the last call it completed, which you may not have received. `r.wait_ready()` waits
   until it answers again (resuming replays the episode so far, which can take minutes; the wall clock keeps running), then

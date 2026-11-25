@@ -1176,8 +1176,8 @@ V2_MODE_LINE = {
     "standard-mcp-shell": ("The robot runs as a service you reach through the `efe-robot` MCP tools, their Python client "
                            "`efe_robot` or the service's own client, as if it were real hardware: one live episode."),
 }
-# owner 11-24: the fixed grading words carry each rule once (what is graded and when, who ends the episode, the gen.py
-# path), no restatement. V2_FINAL_STATE is for a grader that judges the end state; an agent-ended episode whose grader
+# owner 11-24: the fixed grading words carry each rule once (what is graded and when, who ends the episode), no
+# restatement. V2_FINAL_STATE is for a grader that judges the end state; an agent-ended episode whose grader
 # latches the success (RoboDojo: the reward reached 1 at some action counts) says so instead (V2_AGENT_END_LATCHED).
 V2_FINAL_STATE = {
     "privileged": "What counts is how things stand after the last action of your {deliverable}, replayed from the fixed start.",
@@ -1186,8 +1186,7 @@ V2_FINAL_STATE = {
 V2_AGENT_END_LATCHED = ("The episode succeeds if the goal is reached before it ends; it ends when you call finish (Robot "
                         "Interface), at the step limit (Limits) or when your session ends. The robot never tells you "
                         "whether you have succeeded.")
-V2_HAND_IN = {
-    "standard": "Keep the script that drives the robot at `/app/output/gen.py`.",
+V2_HAND_IN = {   # owner 11-24: a standard mode hands nothing in and is not asked for a script (no `/app/output/gen.py`)
     "standard-mcp": "The tool server records your calls.",
 }
 V2_RULES_HEAD = "Rules:"

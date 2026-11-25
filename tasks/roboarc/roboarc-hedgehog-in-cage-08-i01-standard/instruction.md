@@ -10,8 +10,6 @@ the goal than at the start. Do not force pieces into each other: a success with 
 reviewed instead of credited automatically. Dropping a piece off the table ends the episode as a failure. The episode
 ends, as a success, as soon as all of this has held for two seconds.
 
-Keep the script that drives the robot at `/app/output/gen.py`.
-
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
   benchmark's demonstrations, trained policies); trials are reviewed.

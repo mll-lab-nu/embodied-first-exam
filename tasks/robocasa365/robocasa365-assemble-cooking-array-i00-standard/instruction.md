@@ -9,8 +9,6 @@ Success: the shrimp is in the pan, the syrup bottle and the broccoli are on the 
 plate is, and the hand has let go and moved well away from all three. What counts is how things stand at the end of the
 episode.
 
-Keep the script that drives the robot at `/app/output/gen.py`.
-
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
   benchmark's demonstrations, trained policies); trials are reviewed.

@@ -28,12 +28,12 @@ the episode then running is the one graded. The wall clock is the run's and neve
 `meta["control_steps_total"]` all of them).
 
 ## Robot service
-The simulator runs in a separate service. You receive camera RGB, optional calibrated depth, and the robot's own
-joint positions, velocities, actuator efforts, wrist pose and current targets; the rack's joint angles and pose are not
+The simulator runs in a separate service. You receive camera RGB, optional calibrated depth, and the robot's own joint
+positions, velocities, actuator efforts, wrist pose and current targets; the rack's joint angles and pose are not
 published, so you judge the rack from the cameras. An episode ends at the first success or the first failure (see
 `## Success and failure`); after that the service accepts no more actions until a reset (see `## Episodes and resets`).
-The service records every action and watch step, then judges the graded episode as it ran
-(that is the verdict; nothing is replayed). Leave your controller at `/app/output/gen.py`; no trajectory hand-in is needed.
+The service records every action and watch step, then judges the graded episode as it ran (that is the verdict; nothing
+is replayed).
 
 ```python
 from rcb_client import Robot

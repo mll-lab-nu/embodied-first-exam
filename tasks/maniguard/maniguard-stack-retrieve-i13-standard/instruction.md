@@ -25,7 +25,7 @@ after every control step but never tells you their state: watch your robot and t
 - There is no step budget: the time limit (`## Time limit`) is your only budget (`meta["time_left_s"]`), and the
   only step limit is the cap above (`meta["control_steps"]` counts towards it; holding and watching with
   `get_obs(seconds=...)` count too: 20 control steps per second). Actions and simulated time are reported as cost.
-- Leave your script at `/app/output/gen.py` for the record. The episode is graded as it stands when your time is up.
+- The episode is graded as it stands when your time is up.
 - **If the service crashes** (a connection error or a 5xx answer), it restarts and resumes the SAME episode (never a
   reset) in the state after the last call it completed, which you may not have received: call `r.wait_ready()`, then check
   `r.status()` (`calls`, `control_steps`) before you continue. A call that runs longer than `spec["max_call_wall_s"]`

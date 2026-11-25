@@ -30,8 +30,7 @@ door, press the handle, pull the door open towards the robot, and walk through i
   simulator error, else `"failed"`). `spec()` gives the robot's own facts, as its URDF would: each actuator's
   range, each joint's axis and position, each link's mass and centre of mass, the feet's collision boxes, the
   IMU's frame, each camera's field of view and pose.
-- There is nothing to hand in: the service records every episode and grades the last one as it ran. Keep the
-  script that drives the robot at `/app/output/gen.py` for the record: save it early and keep it current.
+- There is nothing to hand in: the service records every episode and grades the last one as it ran.
 - Wall-clock budget: the time limit (`## Time limit`). It ends without warning, and ending your session
   earlier ends the run the same way, so do not stop early: while the episode runs, or a reset is left, the run
   can still pass.

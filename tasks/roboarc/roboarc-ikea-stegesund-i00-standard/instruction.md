@@ -12,8 +12,6 @@ each other breaks the simulation and ends the episode at once, without success. 
 checks it once more after holding your last command for a second more (on a copy: the robot does not move); if it still
 holds, the episode ends as a success, and if not, the episode goes on and you can still fix it.
 
-Keep the script that drives the robot at `/app/output/gen.py`.
-
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
   benchmark's demonstrations, trained policies); trials are reviewed.

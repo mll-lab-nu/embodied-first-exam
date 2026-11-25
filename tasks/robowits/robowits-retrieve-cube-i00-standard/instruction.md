@@ -48,7 +48,6 @@ not give: keeping clear of the table's edges satisfies it).
   that watches counts too). The call that reaches it stops there and the episode ends (`reason` "step_guard"); no
   settle window runs after the cap, so such an episode is graded without one, as a failure. Use the time: ending your
   session before the task is done ends the episode as a failure.
-- Leave your script at `/app/output/gen.py` for the record.
 - **Nothing is put into your context automatically.** Images and videos come back as arrays/bytes in a Python object;
   what you look at and where you store it is your code's decision.
 - **A busy service has not crashed.** The service answers one request at a time: while a call runs, every other

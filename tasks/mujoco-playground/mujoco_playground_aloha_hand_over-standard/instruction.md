@@ -15,8 +15,7 @@ client and one episode.
 - **No privileged state.** You see what the cameras see (RGB, optional depth, with each camera's calibration) plus the
   robot's own joint positions, velocities and targets. No object poses, no success predicate.
 - Your only budget is the time limit (`## Time limit`). `meta["time_left_s"]` is the service's count of it, from your
-  first request to the service: it never runs out before your time does, so plan by it. Leave your script at
-  `/app/output/gen.py` for the record.
+  first request to the service: it never runs out before your time does, so plan by it.
 - Images come back as arrays in a Python object; what you look at and where you store it is up to your code.
 
 ## Scoring

@@ -42,7 +42,6 @@ the last command.
 - **A malformed request is refused with a 400 and nothing is executed** (a wrong type or shape, a value out of range,
   a `dt` that is not a whole number of control periods, `video_fps` outside 1-30, a call over the image budget below): fix it and send it again.
 - One call returns at most 300 images (`max_frames_per_call`, PROTOCOL §3 "Images per call").
-- Leave your script at `/app/output/gen.py` for the record.
 - **Nothing is put into your context automatically.** Images and videos come back as arrays/bytes in a Python object;
   what you look at and where you store it is your code's decision.
 - **If the service crashes** (a connection error or a 5xx answer), it restarts and resumes the SAME episode (never a

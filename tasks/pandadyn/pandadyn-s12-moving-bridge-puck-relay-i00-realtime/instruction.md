@@ -71,8 +71,8 @@ most 1.05 x 13 m/s² and 1.05 x 25 rad/s²; motor torques at most (87, 87, 87, 8
 - **You are far too slow to steer it turn by turn.** One turn of yours (a model response, a tool call) takes seconds of
   wall-clock time, which is many control steps here. Drive the robot with a program: a controller of your own (Python in
   your container, with numpy and the client) that plans or streams the targets, started in the background
-  (`nohup python /app/output/gen.py > /app/output/run.log 2>&1 &`) or in the foreground if it ends with the episode. Use
-  your turns to start episodes, read what happened, and improve the program.
+  (`nohup python /app/ctrl.py > /app/ctrl.log 2>&1 &`) or in the foreground if it ends with the episode. Use your turns
+  to start episodes, read what happened, and improve the program.
 - **Episodes and resets.** An episode ends on success, on a failure, when your time is up, or on a simulator error. You
   have **3 resets** (`spec()["budget"]["reset"]`, which is authoritative: if it says 0, there is no reset and the one
   episode is the run). `r.reset()` puts the robot and the scene back on the same frozen starting state (the scene is
@@ -85,8 +85,7 @@ most 1.05 x 13 m/s² and 1.05 x 25 rad/s²; motor torques at most (87, 87, 87, 8
   (joints, fingers, hand TCP and tool poses, velocities, motor torques, the targets in force). No object poses, no success
   signal before the end: the service tells you that an episode ended and why (`meta["done"]`, `meta["reason"]`:
   `"success"`, `"error"` after a simulator error, else `"failed"`).
-- There is nothing to hand in: the service records every control step it ran and grades the last episode as it ran.
-  Keep the program that drives the robot at `/app/output/gen.py` for the record: save it early and keep it current. Do
+- There is nothing to hand in: the service records every control step it ran and grades the last episode as it ran. Do
   not stop early: while the episode runs, or a reset is left, the run can still pass.
 - **If the service crashes**, a call fails with a connection error: it restarts and resumes the SAME episode, paused
   (never a reset). `r.status()` answers again once it is back; check `control_steps` before you continue.

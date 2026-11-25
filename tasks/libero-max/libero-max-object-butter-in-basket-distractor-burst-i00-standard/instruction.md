@@ -6,8 +6,6 @@ Put the butter in the basket.
 ## Goal
 Success: the butter is in the basket. The episode ends as soon as the task is done.
 
-Keep the script that drives the robot at `/app/output/gen.py`.
-
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
   benchmark's demonstrations, trained policies); trials are reviewed.

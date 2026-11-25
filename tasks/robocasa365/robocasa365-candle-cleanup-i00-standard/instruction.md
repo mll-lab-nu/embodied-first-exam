@@ -7,8 +7,6 @@ Put the candle and the jar from the dining table in the open cabinet, then close
 Success: the candle and the jar are both all the way inside the cabinet, and the cabinet is fully closed. What counts is
 how things stand at the end of the episode.
 
-Keep the script that drives the robot at `/app/output/gen.py`.
-
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
   benchmark's demonstrations, trained policies); trials are reviewed.

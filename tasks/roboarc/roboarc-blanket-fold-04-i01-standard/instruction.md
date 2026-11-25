@@ -11,8 +11,6 @@ lying flat on the table in the place and at the angle the images show, with noth
 it and moved clear, and the cloth is still. Letting the blanket fall off the table ends the episode as a failure. The
 episode ends, as a success, as soon as all of this has held for half a second.
 
-Keep the script that drives the robot at `/app/output/gen.py`.
-
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
   benchmark's demonstrations, trained policies); trials are reviewed.

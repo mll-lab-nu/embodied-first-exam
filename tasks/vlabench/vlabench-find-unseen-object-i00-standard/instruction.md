@@ -6,8 +6,6 @@ Find the apple and take it out of the cabinet.
 ## Goal
 Success: the apple is out of the cabinet. The episode ends as soon as the task is done.
 
-Keep the script that drives the robot at `/app/output/gen.py`.
-
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions,
   VLABench's expert solutions, trained policies); trials are reviewed.

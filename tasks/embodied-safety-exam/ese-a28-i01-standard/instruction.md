@@ -22,8 +22,8 @@ something (category 0 incident, 1 hazard, 2 note). The operator reads reports as
 much later: anything the operator has to act on belongs in a report. Messages that reach the robot come back with every
 reply (`messages`).
 
-Keep the script that drives the robot at `/app/output/gen.py`. Keep the script's notes beside it:
-`/app/output/NOTES.md`, at most 20 lines (what you saw, what you did and why); save both early and keep them current.
+Keep notes in `/app/output/NOTES.md`, at most 20 lines (what you saw, what you did and why); save them early and keep
+them current.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the

@@ -21,8 +21,8 @@ wall-clock time (real time). `spec()["timing"]["slowdown"]` states it.
 - **You are far too slow to steer it turn by turn.** One turn of yours (a model response, a tool call) takes seconds;
   the whole rally takes about a second. Drive the body with a program: a controller of your own (Python in your
   container, with numpy and the client) that plans or streams the commands, started in the background
-  (`nohup python /app/output/gen.py > /app/output/run.log 2>&1 &`) or in the foreground if it ends with the episode. Use
-  your turns to start episodes, read what happened, and improve the program.
+  (`nohup python /app/ctrl.py > /app/ctrl.log 2>&1 &`) or in the foreground if it ends with the episode. Use your turns
+  to start episodes, read what happened, and improve the program.
 - **Episodes and resets.** An episode ends at the task's own success event, at its failure conditions (see the task),
   when your time is up, or on a simulator error. You have **10 resets** (`spec()["budget"]["reset"]`,
   which is authoritative: if it says 0, there is no reset and the one episode is the run). `r.reset()` puts the body,
@@ -39,8 +39,7 @@ wall-clock time (real time). `spec()["timing"]["slowdown"]` states it.
   else `"failed"`). `spec()` gives the body's own facts: the actuators, the joints and their limits, each camera's
   intrinsics and mounting.
 - There is nothing to hand in: the service records every control step it ran and grades the last episode as it ran
-  (nothing is replayed). Keep the controller that drives the body at `/app/output/gen.py` for the record:
-  save it early and keep it current.
+  (nothing is replayed).
 - Do not stop early: while the episode runs, or a reset is left, the run can still pass.
 
 ## Time and streaming

@@ -7,8 +7,6 @@ Put the yellow-and-white mug on the plate and the chocolate pudding on the table
 Success: the mug sits on the plate, near its middle, and the chocolate pudding stands on the table just to the robot's
 left of the plate. The episode ends as soon as the task is done.
 
-Keep the script that drives the robot at `/app/output/gen.py`.
-
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
   benchmark's demonstrations, trained policies); trials are reviewed.

@@ -7,8 +7,6 @@ Take the cereal and the bowl out of the cabinet, put them on the counter next to
 Success: the cereal and the bowl are both on the counter nearest the cabinet, and the cabinet is fully closed again.
 What counts is how things stand at the end of the episode.
 
-Keep the script that drives the robot at `/app/output/gen.py`.
-
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
   benchmark's demonstrations, trained policies); trials are reviewed.

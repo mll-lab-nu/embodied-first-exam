@@ -28,7 +28,6 @@ The robot starts standing at Playground's `home` pose with a random base velocit
 - Your only budget is the time limit (`## Time limit`). Simulated time only advances with your commands (and
   `get_obs(seconds=...)`, which holds the current targets). `meta["time_left_s"]` is the service's count of the limit,
   from your first request to the service: it never runs out before your time does, so plan by it.
-- Leave your script at `/app/output/gen.py`.
 - **If the service crashes**, a call fails with a connection error: it restarts and resumes the SAME episode (a crash
   is never a reset and costs none) in the state after the last call it completed. `r.wait_ready()` waits for it; then check `r.status()`.
 - Nothing is put into your context automatically: images come back as arrays in Python objects.

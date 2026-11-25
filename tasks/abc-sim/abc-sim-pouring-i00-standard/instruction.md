@@ -18,7 +18,6 @@ Ten small beads lie in a mug on the table; an empty cup stands nearby.
 - Steps are unlimited; your only budget is the time limit (`## Time limit`; `meta["time_left_s"]` is the service's count
   of it). Simulated time only advances with your commands (and `get_obs(seconds=...)`, which holds the last command),
   so the scene waits while you think. Do not stop early: while the episode runs, the run can still pass.
-- Leave your script at `/app/output/gen.py`.
 - **If the service crashes**, a call fails with a connection error: it restarts and resumes the SAME episode in the
   state after the last call it completed. `r.wait_ready()` waits for it; then check `r.status()`.
 - **Nothing is put into your context automatically.** Images and videos come back as arrays/bytes in a Python object.

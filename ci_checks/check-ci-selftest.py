@@ -249,6 +249,9 @@ MUTATIONS = [
      "does not state the Network line"),
     ("the instruction brings back retired rule wording (owner 11-24: \"Write your own controller.\", a \"real-robot rules\" heading)",
      STD, "instruction.md", sub(r"^Rules:$", "Real-robot rules:"), RESOURCES, "still has retired rule wording"),
+    ("the standard instruction asks for a script at /app/output/gen.py again (owner 11-24: no deliverable in standard)",
+     STD, "instruction.md", append("\nKeep the script that drives the robot at `/app/output/gen.py`.\n"), INSTRUCTION,
+     "asks for no script"),
     ("... a privileged \"Only the actions count\" line",
      PRIV, "instruction.md", sub(r"trials are reviewed\.", "trials are reviewed. Only the actions count: changing the simulator's "
                                  "state while you develop changes nothing in the replay."), RESOURCES, "still has retired rule wording"),

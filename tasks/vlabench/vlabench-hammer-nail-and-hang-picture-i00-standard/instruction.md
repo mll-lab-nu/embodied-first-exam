@@ -7,8 +7,6 @@ Hammer the nail into the wall, then bring the 本所立川 painting right up to 
 Success: the nail is hammered into the wall, far enough but not too far, and the 本所立川 painting has been brought right up
 to the nail. The episode ends as soon as the task is done.
 
-Keep the script that drives the robot at `/app/output/gen.py`.
-
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions,
   VLABench's expert solutions, trained policies); trials are reviewed.

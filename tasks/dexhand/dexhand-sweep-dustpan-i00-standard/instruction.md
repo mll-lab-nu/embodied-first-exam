@@ -42,10 +42,10 @@ the episode then running is the one graded. The wall clock is the run's and neve
 
 ## Robot service
 The simulator runs in a separate service. You receive camera RGB, optional calibrated depth, and the robot's own joint
-positions, velocities, actuator efforts, both palm poses (`l_hand_palm`, `r_hand_palm`) and current targets. Object poses, contacts and the predicate
-state are not published. A failure ends the episode; a reset starts a new one (see `## Episodes and resets`). The
-service records every executed row and judges the graded episode as it ran (that is the verdict; nothing is replayed). Leave your controller at `/app/output/gen.py`; no trajectory
-hand-in is needed.
+positions, velocities, actuator efforts, both palm poses (`l_hand_palm`, `r_hand_palm`) and current targets. Object
+poses, contacts and the predicate state are not published. A failure ends the episode; a reset starts a new one (see
+`## Episodes and resets`). The service records every executed row and judges the graded episode as it ran (that is the
+verdict; nothing is replayed).
 
 ```python
 from rcb_client import Robot

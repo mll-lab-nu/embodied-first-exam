@@ -8,8 +8,6 @@ Success: the bell stands near the middle of the scale, and the left gripper is o
 end of each of your calls, and the episode ends at the first success; it also ends when your time is up or on a
 simulator error.
 
-Keep the script that drives the robot at `/app/output/gen.py`.
-
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
   benchmark's demonstrations, trained policies); trials are reviewed.

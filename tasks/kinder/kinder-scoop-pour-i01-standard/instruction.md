@@ -18,7 +18,6 @@ and you reach it only through a client. **Task:** move all 50 small dark-red cub
   `meta["reason"]`: `"success"`, `"failed"` when its control steps ran out, or `"error"` after a simulator error).
   `spec()` gives the robot's own facts, as its documentation would: each arm joint's axis, position and limits, the
   gripper's grasp point, each camera's field of view and pose.
-- Keep the script that drives the robot at `/app/output/gen.py` for the record: save it early and keep it current.
 - Wall-clock budget: the time limit (`## Time limit`). It ends without warning, and ending your session earlier ends the run
   the same way, so do not stop early: while the episode runs, the run can still pass.
 

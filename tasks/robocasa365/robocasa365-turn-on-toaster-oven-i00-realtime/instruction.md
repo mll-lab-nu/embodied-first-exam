@@ -7,8 +7,6 @@ Turn on the toaster oven by setting its timer.
 Success: the toaster oven's timer is set, its knob turned well up from zero. The episode ends as soon as the task is
 done.
 
-Keep the script that drives the robot at `/app/output/gen.py`.
-
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
   benchmark's demonstrations, trained policies); trials are reviewed.
@@ -77,8 +75,8 @@ back decoded: `res.meta` (the counters, `done`, `reason`, `proprio["now"]`, `cli
 - The kitchen moves on too: the timer knob, once set, slowly turns back by itself.
 - One turn of yours (a model response, a tool call) takes seconds: write a controller (Python in your container, with
   numpy and the client) that plans or streams the commands, in the background
-  (`nohup python /app/output/gen.py > /app/output/run.log 2>&1 &`) or in the foreground; use your turns to read what
-  happened and improve the program while the episode runs.
+  (`nohup python /app/ctrl.py > /app/ctrl.log 2>&1 &`) or in the foreground; use your turns to read what happened and
+  improve the program while the episode runs.
 - Do not end your session early: while the episode runs, it can still succeed.
 
 ## Limits

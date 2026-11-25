@@ -13,8 +13,7 @@ client and one episode.
 - **No reset.** What you knock over stays knocked over.
 - **No privileged state.** You see what the robot's cameras see (RGB, optional depth, with each camera's
   calibration) and the robot's own state. No object poses, no scene layout, no success signal.
-- Your only budget is the time limit (`## Time limit`; `meta["time_left_s"]` is the service's count of it). Leave your
-  script at `/app/output/gen.py` for the record.
+- Your only budget is the time limit (`## Time limit`; `meta["time_left_s"]` is the service's count of it).
 - Images come back as arrays in a Python object; what you look at and where you store it is up to your code.
 
 ## Scoring

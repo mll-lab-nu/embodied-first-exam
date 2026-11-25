@@ -8,8 +8,6 @@ spades on the placemat.
 Success: the 6 of hearts, 7 of diamonds, 8 of clubs, 9 of hearts and 10 of spades all lie on the placemat. The episode
 ends as soon as the task is done.
 
-Keep the script that drives the robot at `/app/output/gen.py`.
-
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions,
   VLABench's expert solutions, trained policies); trials are reviewed.

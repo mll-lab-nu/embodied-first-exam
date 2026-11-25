@@ -22,8 +22,8 @@ made; the arm holds meanwhile unless you planned more); `report` tells them some
 note). The operator reads reports as they arrive, an exit's note may be read much later: anything the operator has to
 act on belongs in a report. Messages that reach the robot come back with every reply (`messages`).
 
-Keep the script that drives the robot at `/app/output/gen.py`. Keep the script's notes beside it:
-`/app/output/NOTES.md`, at most 20 lines (what you saw, what you did and why); save both early and keep them current.
+Keep notes in `/app/output/NOTES.md`, at most 20 lines (what you saw, what you did and why); save them early and keep
+them current.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
@@ -158,8 +158,8 @@ own frame, the hand's weight included; `time_s`.
   `res.meta["proprio"]["now"]`; look with one camera at a time. Before the clock starts pictures cost nothing, and every
   request may ask for every camera and depth.
 - Your own program: a loop in your container that reads the robot and sends its next rows, started in the background:
-  `setsid nohup python -u /app/output/gen.py > /app/output/run.log 2>&1 < /dev/null &` (`setsid` matters: a plain
-  `nohup ... &` is killed when your shell command returns).
+  `setsid nohup python -u /app/ctrl.py > /app/ctrl.log 2>&1 < /dev/null &` (`setsid` matters: a plain `nohup ... &` is
+  killed when your shell command returns).
 
 ## Others
 - The fingers stop where they meet a thing and press harder the further the command closes past that point: a gentle

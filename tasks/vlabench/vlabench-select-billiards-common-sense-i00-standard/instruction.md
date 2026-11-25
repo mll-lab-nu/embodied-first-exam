@@ -7,8 +7,6 @@ Put the snooker ball worth 7 points into the middle pocket on the robot's right 
 Success: the snooker ball worth 7 points is in the middle pocket on the robot's right. The episode ends as soon as the
 task is done.
 
-Keep the script that drives the robot at `/app/output/gen.py`.
-
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions,
   VLABench's expert solutions, trained policies); trials are reviewed.

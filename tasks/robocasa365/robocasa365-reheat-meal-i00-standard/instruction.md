@@ -9,8 +9,6 @@ Success: the tupperware, with the shrimp and the carrot still in it, is all the 
 fully closed, the microwave is running, and the hand has let go of the tupperware and moved well away. What counts is
 how things stand at the end of the episode.
 
-Keep the script that drives the robot at `/app/output/gen.py`.
-
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
   benchmark's demonstrations, trained policies); trials are reviewed.

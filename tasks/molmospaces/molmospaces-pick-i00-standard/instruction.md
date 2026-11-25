@@ -20,7 +20,6 @@ client and one episode.
 - Your only budget is the time limit (`## Time limit`), from your start (the service's `time_s` and `time_left_s`
   count from your first request to it, so `time_left_s` never reaches 0 before your time is up: plan by it).
   Simulated time only advances with your commands (and `get_obs(seconds=...)`).
-- Leave your script at `/app/output/gen.py`.
 - **If the service crashes**, a call fails with a connection error: it restarts and resumes the SAME episode (never a
   reset) in the state after the last call it completed. `r.wait_ready()` waits for it; then check `r.status()`.
 - Nothing is put into your context automatically: images come back as arrays in Python objects.

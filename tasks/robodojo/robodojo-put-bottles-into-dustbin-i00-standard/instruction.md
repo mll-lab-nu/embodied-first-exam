@@ -9,8 +9,6 @@ Success: all four bottles are in the dustbin, wholly below its rim, and both arm
 The episode succeeds if the goal is reached before it ends; it ends when you call finish (Robot Interface), at the step
 limit (Limits) or when your session ends. The robot never tells you whether you have succeeded.
 
-Keep the script that drives the robot at `/app/output/gen.py`.
-
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
   benchmark's demonstrations, trained policies); trials are reviewed.

@@ -20,9 +20,9 @@ wall-clock time (real time). `spec()["timing"]["slowdown"]` states it.
   pauses for you, not your thinking, not your tool calls.
 - **You are far too slow to steer it turn by turn.** One turn of yours (a model response, a tool call) takes seconds.
   Drive the robot with a program: a controller of your own (Python in your container, with numpy and the client) that
-  plans or streams the targets, started in the background (`nohup python /app/output/gen.py > /app/output/run.log 2>&1 &`)
-  or in the foreground if it ends with the episode. Use your turns to read what happened and improve the program while
-  the episode runs.
+  plans or streams the targets, started in the background (`nohup python /app/ctrl.py > /app/ctrl.log 2>&1 &`) or in the
+  foreground if it ends with the episode. Use your turns to read what happened and improve the program while the episode
+  runs.
 - **One episode, no reset.** The episode ends on success, on the task's failure, when your time is up, or on a
   simulator error. There is no reset (`spec()["budget"]["reset"]` is 0): the one episode is the run, and it is graded.
   Once it has ended, `submit` raises `EpisodeOver`.
@@ -31,7 +31,6 @@ wall-clock time (real time). `spec()["timing"]["slowdown"]` states it.
   success check: the service judges the episode and only tells you that it ended and why (`meta["done"]`,
   `meta["reason"]`: `"success"`, `"error"` after a simulator error, else `"failed"`). `spec()` gives the robot's own
   facts: the action layout and limits, the joints, each camera's intrinsics and mounting.
-- Keep the controller that drives the robot at `/app/output/gen.py` for the record: save it early and keep it current.
 - Do not stop early: while the episode runs, the run can still pass.
 
 ## Time and streaming

@@ -15,7 +15,6 @@ The spray bottle stands on the table to the robot's right-front, the potted plan
   `meta["done"]` / `meta["reason"]` tell you when the episode is over and why.
 - Steps are unlimited; your only budget is the time limit (`## Time limit`; `meta["time_left_s"]` is the service's count of it). Actions and
   simulated time are reported as cost. Do not stop before the task is solved.
-- Leave your script at `/app/output/gen.py` for the record (save it early, update it as you go).
 - **Nothing is put into your context automatically.** Images and videos come back as arrays/bytes in a Python object;
   what you look at and where you store it is your code's decision.
 

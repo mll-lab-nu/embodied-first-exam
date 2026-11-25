@@ -8,8 +8,6 @@ Success: when you stop, you are sitting on a bed. The episode ends with your sto
 are done: how things stand at that moment is what counts, and only a stop can succeed. Ending without a stop fails: the
 100th action ends the episode whatever it is.
 
-Keep the script that drives the robot at `/app/output/gen.py`.
-
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
   benchmark's demonstrations, trained policies); trials are reviewed.

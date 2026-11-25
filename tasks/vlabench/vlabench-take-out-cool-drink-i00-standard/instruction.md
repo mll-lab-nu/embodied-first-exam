@@ -7,8 +7,6 @@ I'm thirsty after sport and want a cool, healthy drink: take it out of the small
 Success: the cool, healthy drink is out of the small fridge and the fridge door is closed. The episode ends as soon as
 the task is done.
 
-Keep the script that drives the robot at `/app/output/gen.py`.
-
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions,
   VLABench's expert solutions, trained policies); trials are reviewed.

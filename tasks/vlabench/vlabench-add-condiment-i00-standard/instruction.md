@@ -7,8 +7,6 @@ Hold the BBQ sauce bottle over the pan and tip it past level, as if pouring sauc
 Success: the BBQ sauce bottle is over the pan and tipped past level, its top lower than its bottom. The episode ends as
 soon as the task is done.
 
-Keep the script that drives the robot at `/app/output/gen.py`.
-
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions,
   VLABench's expert solutions, trained policies); trials are reviewed.

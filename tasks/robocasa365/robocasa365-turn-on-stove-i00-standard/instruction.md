@@ -6,8 +6,6 @@ Turn on the stove's rear left burner.
 ## Goal
 Success: the rear left burner is on. What counts is how things stand at the end of the episode.
 
-Keep the script that drives the robot at `/app/output/gen.py`.
-
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
   benchmark's demonstrations, trained policies); trials are reviewed.

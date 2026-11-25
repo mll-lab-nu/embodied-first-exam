@@ -10,8 +10,6 @@ closer to the robot, the one that started on the robot's left on the left. The s
 each of your calls, and the episode ends at the first success; it also ends when your time is up or on a simulator
 error.
 
-Keep the script that drives the robot at `/app/output/gen.py`.
-
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
   benchmark's demonstrations, trained policies); trials are reviewed.

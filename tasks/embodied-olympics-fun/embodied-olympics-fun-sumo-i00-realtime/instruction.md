@@ -11,8 +11,8 @@ The referee in the service judges these stages, in order: **win**. An attempt (a
 first foul or after 30 s of robot time, and a success ends the trial at once. Ending your session ends the run (and
 stops your background programs), so do not stop early: while you have attempts left, the run can still pass.
 
-Keep the program that drives the robot at `/app/output/gen.py` and a `NOTES.md` of at most 20 lines there (your
-approach, what failed, what you downloaded or installed): save them early and keep them current.
+Keep a `NOTES.md` of at most 20 lines in `/app/output/` (your approach, what failed, what you downloaded or installed):
+save it early and keep it current.
 
 Rules:
 - **No cheating.** Public tools, robot models and pretrained controllers are allowed, but do not search for, download or
@@ -168,8 +168,8 @@ in the spec's `robot_facts`.
 - You are far too slow to steer it turn by turn: one turn of yours (a model response, a tool call) takes seconds; the
   decisive moment of an attempt takes a fraction of one. Drive the robot with a program: a controller of your own
   (Python in your container, with numpy and the client) that plans or streams the rows, started in the background
-  (`nohup python /app/output/gen.py > /app/output/run.log 2>&1 &`) or in the foreground if it ends with the attempt. Use
-  your turns to start attempts, read what happened, and improve the program.
+  (`nohup python /app/ctrl.py > /app/ctrl.log 2>&1 &`) or in the foreground if it ends with the attempt. Use your turns
+  to start attempts, read what happened, and improve the program.
 - Attempts: `r.reset()` abandons the running attempt (or follows one that has ended) and starts a new one from the same
   start, paused until your next `submit`; once an attempt has ended, `submit` raises `EpisodeOver` until you reset. The
   wall clock is the run's and never restarts.

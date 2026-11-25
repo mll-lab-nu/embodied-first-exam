@@ -19,7 +19,6 @@ On the bench in front of the arm: a grey cabinet with a white top, about 67 cm d
   needs 5 to 10 minutes to come up** (Isaac Sim prepares the stage for its renderer once; longer on a busy host):
   `Robot()` waits for it (it prints its progress to stderr), and that wait is part of your budget. Simulated time only advances with your commands (and `get_obs(seconds=...)`, which
   holds the last targets). Do not stop early.
-- Leave your script at `/app/output/gen.py`.
 - **If the service crashes**, a call fails with a connection error: it restarts and resumes the SAME episode (never a
   reset) in the state after the last call it completed. `r.wait_ready()` waits for it; then check `r.status()`.
 - **Nothing is put into your context automatically.** Images and videos come back as arrays/bytes in a Python object.

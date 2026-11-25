@@ -7,8 +7,6 @@ Put the bread and the cheese on the cutting board, and move your hand away.
 Success: the bread and the cheese are both on the cutting board, and the hand has let go and moved well away from the
 bread. What counts is how things stand at the end of the episode.
 
-Keep the script that drives the robot at `/app/output/gen.py`.
-
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
   benchmark's demonstrations, trained policies); trials are reviewed.

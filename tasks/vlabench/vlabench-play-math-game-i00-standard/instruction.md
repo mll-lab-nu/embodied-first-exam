@@ -11,8 +11,6 @@ repair any truck tires. How much more revenue did the mechanic earn on the day w
 Success: the number cubes that spell the answer lie side by side on the placemat, reading from the robot's left to its
 right. The episode ends as soon as the task is done.
 
-Keep the script that drives the robot at `/app/output/gen.py`.
-
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions,
   VLABench's expert solutions, trained policies); trials are reviewed.

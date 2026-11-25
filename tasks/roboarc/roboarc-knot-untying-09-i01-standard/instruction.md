@@ -12,8 +12,6 @@ clear gap between parts of it that are not neighbours along the rope, all of it 
 let go of it and moved clear, and the rope is still. The episode ends, as a success, as soon as all of this has held for
 half a second.
 
-Keep the script that drives the robot at `/app/output/gen.py`.
-
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
   benchmark's demonstrations, trained policies); trials are reviewed.

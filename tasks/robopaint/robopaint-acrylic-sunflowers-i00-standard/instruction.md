@@ -15,8 +15,6 @@ Paint with brush strokes, the way a person paints: each stroke is one sweep of t
 areas with a thin line, zigzag or serpentine fills, and fills that circle round and round inside an area fail the task,
 even when the sheet matches the picture. The exact checks are under Process rules in Robot Interface.
 
-Keep the script that drives the robot at `/app/output/gen.py`.
-
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
   benchmark's demonstrations, trained policies); trials are reviewed.

@@ -6,8 +6,6 @@ Put the seventh mahjong tile from the robot's left on the placemat.
 ## Goal
 Success: the seventh tile from the robot's left is on the placemat. The episode ends as soon as the task is done.
 
-Keep the script that drives the robot at `/app/output/gen.py`.
-
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions,
   VLABench's expert solutions, trained policies); trials are reviewed.

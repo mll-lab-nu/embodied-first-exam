@@ -7,8 +7,6 @@ Pick up the lowest card (aces count high) and hold it at least a hand's length a
 Success: the lowest card is in the gripper, at least a hand's length above the table. The episode ends as soon as the
 task is done.
 
-Keep the script that drives the robot at `/app/output/gen.py`.
-
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions,
   VLABench's expert solutions, trained policies); trials are reviewed.

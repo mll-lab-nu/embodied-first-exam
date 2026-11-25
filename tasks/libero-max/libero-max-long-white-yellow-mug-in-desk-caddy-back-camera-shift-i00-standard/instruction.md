@@ -8,8 +8,6 @@ Success: the mug rests in the caddy's back compartment, the narrow cell along it
 down into it, so resting on its opening, touching the caddy, counts; any other cell does not. The episode ends as soon
 as the task is done.
 
-Keep the script that drives the robot at `/app/output/gen.py`.
-
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
   benchmark's demonstrations, trained policies); trials are reviewed.

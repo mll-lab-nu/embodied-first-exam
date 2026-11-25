@@ -32,9 +32,9 @@ The same schedule is `spec["command_schedule"]`; the proprioception's `cmd_vx`, 
   executes what you planned, then holds the last joint targets you sent; nothing pauses for you, not your thinking, not
   your tool calls.
 - **You are far too slow to steer it turn by turn.** One turn of yours (a model response, a tool call) takes seconds,
-  and a walking robot that is not balanced step by step falls within a second. Drive it with a program: a controller of your own
-  (Python in your container, with numpy and the client) that runs a loop at the control rate, reads the proprioception
-  and sends targets, started in the background (`nohup python /app/output/gen.py > /app/output/run.log 2>&1 &`) so
+  and a walking robot that is not balanced step by step falls within a second. Drive it with a program: a controller of
+  your own (Python in your container, with numpy and the client) that runs a loop at the control rate, reads the
+  proprioception and sends targets, started in the background (`nohup python /app/ctrl.py > /app/ctrl.log 2>&1 &`) so
   that your session is free while it runs. Use your turns to start episodes, read what happened, and improve the
   program.
 - **The episode ends** after 1000 control steps, the whole schedule (`spec["max_control_steps"]`, counted by `meta["control_steps"]`), when the robot meets its termination rule (the trunk's up axis pointing below the horizon, a joint outside its box (abduction [-0.7, 0.52], hip [-1.0, 2.1], knee [0.05, 2.1] rad) or the torso lower than 0.18 m: a failure), or when your time is up (before the end of the schedule, a failure).
@@ -52,8 +52,6 @@ The same schedule is `spec["command_schedule"]`; the proprioception's `cmd_vx`, 
   the episode and only tells you that it ended and why (`meta["done"]`, `meta["reason"]`: `"success"`, `"error"` after
   a simulator error, else `"failed"`).
 - There is nothing to hand in: the service records every control step it ran and grades the last episode as it ran.
-  Keep the controller that drives the robot at `/app/output/gen.py` for the record:
-  save it early and keep it current.
 - Do not stop early: while the episode runs, or a reset is left, the run can still pass.
 
 ## Time and streaming

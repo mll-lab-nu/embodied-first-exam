@@ -7,8 +7,6 @@ Move the two desserts from the plates onto the tray, and move your hand away.
 Success: both desserts are on the tray, and the hand has let go and moved well away from the tray. What counts is how
 things stand at the end of the episode.
 
-Keep the script that drives the robot at `/app/output/gen.py`.
-
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
   benchmark's demonstrations, trained policies); trials are reviewed.

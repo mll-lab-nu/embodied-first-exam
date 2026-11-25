@@ -19,7 +19,6 @@ On the bench: a thermal cycler (a Bio-Rad C1000 model) with its lid closed and l
 - Steps are unlimited; your only budget is the time limit (`## Time limit`; `meta["time_left_s"]` is the service's count of it).
   Simulated time only advances with your commands (and `get_obs(seconds=...)`, which holds the last targets). Do not stop early.
 - `r.submit("done", [])` ends the episode in its current state; before the goal is reached that is a failure.
-- Leave your script at `/app/output/gen.py`.
 - **If the service crashes**, a call fails with a connection error: it restarts and resumes the SAME episode (never a
   reset) in the state after the last call it completed. `r.wait_ready()` waits for it; then check `r.status()`.
 - **Nothing is put into your context automatically.** Images and videos come back as arrays/bytes in a Python object.

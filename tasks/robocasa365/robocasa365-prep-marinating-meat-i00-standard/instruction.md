@@ -9,8 +9,6 @@ Success: the shrimp is on the cutting board, the board and the condiment bottle 
 and the hand has let go and moved well away from the shrimp and the bottle. What counts is how things stand at the end
 of the episode.
 
-Keep the script that drives the robot at `/app/output/gen.py`.
-
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
   benchmark's demonstrations, trained policies); trials are reviewed.

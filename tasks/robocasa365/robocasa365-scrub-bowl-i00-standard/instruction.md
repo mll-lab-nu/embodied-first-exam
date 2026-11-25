@@ -7,8 +7,6 @@ Scrub the bowl in the sink with the sponge for a while, then move your hand away
 Success: the sponge has been rubbed back and forth on the bowl for a second or more in all, and at the end the hand has
 moved well away from the bowl. What counts is how things stand at the end of the episode.
 
-Keep the script that drives the robot at `/app/output/gen.py`.
-
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
   benchmark's demonstrations, trained policies); trials are reviewed.

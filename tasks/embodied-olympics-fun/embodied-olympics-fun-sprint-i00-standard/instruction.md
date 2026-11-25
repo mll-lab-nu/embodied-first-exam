@@ -11,8 +11,8 @@ The referee in the service judges these stages, in order: **start → finish**. 
 success, at the first foul or after 34.2 s of robot time, and a success ends the trial at once. Ending your session ends
 the run, so do not stop early: while you have attempts left, the run can still pass.
 
-Keep the script that drives the robot at `/app/output/gen.py`. Keep your scripts and a `NOTES.md` of at most 20 lines in
-`/app/output/` (your approach, what failed, what you downloaded or installed): save them early and keep them current.
+Keep a `NOTES.md` of at most 20 lines in `/app/output/` (your approach, what failed, what you downloaded or installed):
+save it early and keep it current.
 
 Rules:
 - **No cheating.** Public tools, robot models and pretrained controllers are allowed, but do not search for, download or

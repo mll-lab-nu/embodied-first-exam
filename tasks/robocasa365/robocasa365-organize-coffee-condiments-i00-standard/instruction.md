@@ -7,8 +7,6 @@ Put the syrup bottle and the honey bottle from the cabinet on the counter next t
 Success: the syrup bottle and the honey bottle both stand on the counter under the coffee machine, close to the mug, and
 the hand has let go and moved well away from both. What counts is how things stand at the end of the episode.
 
-Keep the script that drives the robot at `/app/output/gen.py`.
-
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
   benchmark's demonstrations, trained policies); trials are reviewed.

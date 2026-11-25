@@ -7,8 +7,6 @@ Take the fifth tube from the robot's left in the row nearest the robot out of th
 Success: the fifth tube from the robot's left in the row nearest the robot is out of the tube stand. The episode ends as
 soon as the task is done.
 
-Keep the script that drives the robot at `/app/output/gen.py`.
-
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions,
   VLABench's expert solutions, trained policies); trials are reviewed.

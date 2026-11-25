@@ -17,8 +17,7 @@ hardware**: the simulator runs in a service you cannot open. You get one client 
   are reported as cost. One technical cap: the episode ends after 100,000 control steps (1.9 h of simulated time;
   `spec["max_control_steps"]`, reason `step_guard`) and is graded as it stands; at this service's speed (3-15 control
   steps/s) your time runs out long before.
-- Leave your script at `/app/output/gen.py` for the record. The episode is graded as it stands when your time is up:
-  keep working until it has succeeded.
+- The episode is graded as it stands when your time is up: keep working until it has succeeded.
 - **Grading.** Your episode is graded as it ran: the service judges the live episode itself, with no replay.
   It scores 1 if RoboLab's success term held at a control step of it, including the hold of your last
   command for 30 more control steps after your time is up, else 0.

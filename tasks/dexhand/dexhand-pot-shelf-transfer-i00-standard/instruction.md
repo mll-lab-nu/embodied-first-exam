@@ -102,9 +102,8 @@ the episode then running is the one graded. The wall clock is the run's and neve
 
 ## Robot service
 The simulator runs in a separate service. You receive camera RGB, optional calibrated depth, and the robot's own joint
-positions, velocities, actuator efforts, both wrist poses and current targets. The service records every executed
-step and judges the graded episode as it ran (that is the verdict; nothing is replayed). Leave your
-controller at `/app/output/gen.py`; no trajectory hand-in is needed.
+positions, velocities, actuator efforts, both wrist poses and current targets. The service records every executed step
+and judges the graded episode as it ran (that is the verdict; nothing is replayed).
 
 ```python
 from rcb_client import Robot

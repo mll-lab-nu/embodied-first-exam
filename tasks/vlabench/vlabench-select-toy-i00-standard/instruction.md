@@ -6,8 +6,6 @@ Put the Mickey Mouse toy in the gift box.
 ## Goal
 Success: the Mickey Mouse toy is in the gift box. The episode ends as soon as the task is done.
 
-Keep the script that drives the robot at `/app/output/gen.py`.
-
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions,
   VLABench's expert solutions, trained policies); trials are reviewed.

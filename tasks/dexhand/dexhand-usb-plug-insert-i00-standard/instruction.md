@@ -51,14 +51,12 @@ the episode then running is the one graded. The wall clock is the run's and neve
 `meta["control_steps_total"]` all of them).
 
 ## Robot service
-The simulator runs in a separate service. You receive camera RGB, optional calibrated depth, and the robot's own
-joint positions, velocities, actuator efforts, wrist pose (`wrist_stage`, the right hand's mount on the arm flange) and current targets; object
-poses, contacts and the verdict state are not observable (`r.status()` only reports whether the episode ended and
-whether it succeeded). An episode ends at the first success
-or the first failure (see the task text); after that the service accepts no more actions until a reset (see
-`## Episodes and resets`). The service records every action and watch step, then judges the graded episode as it ran
-(that is the verdict; nothing is replayed). Leave your controller at `/app/output/gen.py`; no trajectory hand-in is
-needed.
+The simulator runs in a separate service. You receive camera RGB, optional calibrated depth, and the robot's own joint
+positions, velocities, actuator efforts, wrist pose (`wrist_stage`, the right hand's mount on the arm flange) and
+current targets; object poses, contacts and the verdict state are not observable (`r.status()` only reports whether the
+episode ended and whether it succeeded). An episode ends at the first success or the first failure (see the task text);
+after that the service accepts no more actions until a reset (see `## Episodes and resets`). The service records every
+action and watch step, then judges the graded episode as it ran (that is the verdict; nothing is replayed).
 
 ```python
 from rcb_client import Robot

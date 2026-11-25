@@ -28,7 +28,7 @@ The socket's pose, the wall's tilt and the opening's size are not given, nor is 
 - **Simulated time only moves when you move the robot** (`submit`, or `get_obs(seconds=...)`): between your calls the
   world is frozen, and the episode lasts at most 20 s of simulated time. There is no step budget otherwise:
   the time limit (`## Time limit`) is your only budget (`meta["time_left_s"]`).
-- Leave your script at `/app/output/gen.py` for the record. The episode is graded as it stands when your time is up.
+- The episode is graded as it stands when your time is up.
 - **If the service crashes**, a call fails with a connection error: the simulator restarts and resumes the SAME episode
   (never a reset) in the state after the last call it completed (to the last bits: a rare GPU race
   can leave those different), which you may not have received. `r.wait_ready()` waits

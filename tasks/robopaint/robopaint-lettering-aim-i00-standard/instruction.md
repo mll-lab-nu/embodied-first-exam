@@ -17,8 +17,6 @@ going over a stroke again is fine. Colouring in or filling the letters' shapes, 
 that go round and round inside a shape fail the task, even when the sheet matches the picture. The exact checks are
 under Process rules in Robot Interface.
 
-Keep the script that drives the robot at `/app/output/gen.py`.
-
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
   benchmark's demonstrations, trained policies); trials are reviewed.

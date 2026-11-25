@@ -7,8 +7,6 @@ Push the drawer closed.
 Success: the drawer is pushed closed, its handle at the target point. What counts is how things stand at the end of the
 episode.
 
-Keep the script that drives the robot at `/app/output/gen.py`.
-
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions,
   Meta-World's scripted policies, trained policies); trials are reviewed.
