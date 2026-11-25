@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/embodied-olympics-fun-volleyball-serve-i00-privileged"
-description = "Embodied Olympics volleyball-serve (one Unitree H1-2 on the Embodied Olympics simulator, MuJoCo 3.3.7, CPU) in privileged mode: produce one replayable trajectory. Serve: toss the ball off your left palm and hit it with one hand over the net into the opponent's court, within 8 seconds. A referee of events, geometry and contact rules decides the success."
+description = "Embodied Olympics volleyball-serve (one Unitree H1-2 on the Embodied Olympics simulator, MuJoCo 3.3.7, CPU) in privileged mode: produce one replayable trajectory. Serve: toss the ball off your left palm and hit it with one hand over the net into the opponent's court, within 8 s. A referee of events, geometry and contact rules decides the success."
 keywords = ["robotics", "embodied-olympics", "sports", "mujoco", "unitree-h1-2", "humanoid", "trajectory", "volleyball-serve"]
 
 [metadata]

@@ -1,8 +1,8 @@
 # Embodied Olympics · balance board (privileged)
 
 ## Task
-Stay balanced on the roller board for 30 seconds, touching only the deck, with your feet, and keeping both ends of the
-deck off the floor.
+Stay balanced on the roller board for 30 s, touching only the deck, with your feet, and keeping both ends of the deck
+off the floor.
 
 ## Goal
 Success: you stay on the board for 30 s, only your feet touching the deck, and neither end of the deck touches the
@@ -25,13 +25,13 @@ log, `rcb_session_log.jsonl`, to `/app/output/`: leave it there and do not set `
 Save a trajectory as soon as you have one and overwrite it (with `gen.py` and `NOTES.md` to match) whenever you have a
 better one; a run that ends with no file scores zero. Do not stop early.
 
-Rules: **No cheating.** Public tools, robot models and pretrained controllers are allowed, but do not search for,
-download or use an existing solution to this task (published or reference solutions); trials are reviewed.
+Rules: **No cheating.** Do not search for, download or use an existing solution to this exact task (published or
+reference solutions, the benchmark's demonstrations, policies trained for it); trials are reviewed.
 
 The attempt fails at once if:
 - an end or a stop of the deck touches the floor
 - any part of you touches the floor or the roller, or anything but a foot touches the deck
-- neither foot has touched the deck for more than a second (you have left the board)
+- neither foot has touched the deck for more than 1 s (you have left the board)
 
 ## Robot Interface
 You control a simulated Unitree G1 humanoid robot (29 joints, 1.32 m tall, 33 kg; the Embodied Olympics simulator on
@@ -143,8 +143,8 @@ in `/app/instance.json` (`t0.robot`).
   failure: "the simulation became unstable".
 
 ## Others
-- The board starts tilted a little, its left end low; left alone, it tips further and rolls out from under you within a
-  second.
+- The board starts tilted a little, its left end low; left alone, it tips further and rolls out from under you almost at
+  once.
 
 ## Limits
 - Time: 7200 s of wall-clock time from the start of your session; everything counts (the simulator's start-up too). At

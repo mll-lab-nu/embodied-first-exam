@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Standard-mode twin of `robodojo-solve-equation-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/solve_equation_0.json`). An arithmetic equation (a op b = result) is laid out on pads with exactly one number or operator missing; pick the correct missing digit or operator tile from the loose tiles on the table, place it on the empty pad, and bring the arms home. (RoboDojo's `solve_equation`). The agent drives the
+Standard-mode twin of `robodojo-solve-equation-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/solve_equation_0.json`). Complete the equation on the pads: put the loose tile that makes it true on the empty pad, face up and the same way round as the tiles already there. Then move both arms back to where they started. (RoboDojo's `solve_equation`). The agent drives the
 robot only through the eai-standard/2.2 client (the simulator runs in the `sim` sidecar), which owns the scene and records
 the episode as a (T, 14) trajectory of RoboDojo's own joint action at 25 Hz.
 

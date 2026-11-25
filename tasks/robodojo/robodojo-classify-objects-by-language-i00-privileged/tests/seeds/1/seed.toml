@@ -25,3 +25,7 @@ new = "sha256 `c0a5b2c6e7c63872`"
 [[replace]]
 old = "\"Put car objects into the left basket, watch objects into the middle basket, and wooden_toy objects into the right basket,"
 new = "\"Put pepper objects into the left basket, watch objects into the middle basket, and chocolate_bar objects into the right basket,"
+
+[[replace]]
+old = "Put the cars in the left basket, the watches in the middle basket and the wooden toys in the right basket. Then move both arms back to where they started."
+new = "Put the peppers in the left basket, the watches in the middle basket and the chocolate bars in the right basket. Then move both arms back to where they started."

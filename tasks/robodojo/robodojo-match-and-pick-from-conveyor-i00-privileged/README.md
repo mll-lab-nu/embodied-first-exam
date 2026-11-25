@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Watch the first object that appears on the conveyor, then pick up the identical object when it shows up again and lift it about a hand's length. (RoboDojo's `match_and_pick_from_conveyor`). RoboDojo capability dimension: Memory. Instance i00 is RoboDojo's own evaluation layout
+Remember the first object on the belt, then pick up its identical copy when it comes by later and lift it about a hand's length. (RoboDojo's `match_and_pick_from_conveyor`). RoboDojo capability dimension: Memory. Instance i00 is RoboDojo's own evaluation layout
 `arx_x5/0/match_and_pick_from_conveyor_0.json` (sha256 `9c89a282516bae73`), frozen in `instance.json`. The deliverable is one replayable trajectory of
 RoboDojo's 14-D joint action at 25 Hz (`/app/output/trajectory.npz`), graded by RoboDojo's own reward check for the task,
 with no step cap (RoboDojo's own evaluation gives a policy 700 actions; PROTOCOL §3).

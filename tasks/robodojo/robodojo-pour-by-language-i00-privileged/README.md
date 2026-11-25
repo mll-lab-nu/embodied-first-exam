@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Pour each bottle named in the instruction into the bowl it names, in the order first, second, third. (RoboDojo's `pour_by_language`). RoboDojo capability dimension: Open. Instance i00 is RoboDojo's own evaluation layout
+Pour the violet bottle into the black bowl, then the red bottle into the white bowl, then the turquoise bottle into the brown bowl, in that order. (RoboDojo's `pour_by_language`). RoboDojo capability dimension: Open. Instance i00 is RoboDojo's own evaluation layout
 `arx_x5/0/pour_by_language_0.json` (sha256 `a37dd2812e564278`), frozen in `instance.json`. The deliverable is one replayable trajectory of
 RoboDojo's 14-D joint action at 25 Hz (`/app/output/trajectory.npz`), graded by RoboDojo's own reward check for the task,
 with no step cap (RoboDojo's own evaluation gives a policy 800 actions; PROTOCOL §3).

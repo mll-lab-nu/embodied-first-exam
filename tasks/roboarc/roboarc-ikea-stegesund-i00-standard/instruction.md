@@ -9,7 +9,7 @@ rod into the two crotches. Then let go of everything and move both arms clear.
 Success: the stand is assembled and upright: half B on half A at both crossings, the shelf in, all four bolts driven
 home and the top rod lying in the two crotches; no arm touches any part and everything is still. Forcing parts deep into
 each other breaks the simulation and ends the episode at once, without success. When all of this holds, the service
-checks it once more after holding your last command for a second more (on a copy: the robot does not move); if it still
+checks it once more after holding your last command for 1 s more (on a copy: the robot does not move); if it still
 holds, the episode ends as a success, and if not, the episode goes on and you can still fix it.
 
 Rules:

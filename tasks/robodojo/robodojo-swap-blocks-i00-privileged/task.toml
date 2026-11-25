@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/robodojo-swap-blocks-i00-privileged"
-description = "RoboDojo swap_blocks (Memory; two ARX X5 arms with parallel grippers, Isaac Sim 5.1 / Isaac Lab): produce one replayable trajectory of RoboDojo's 14-D joint actions. Task: Swap the two cubes in three moves, using the empty third mat as a parking spot, and after each move pull the spring button's cap up from its slightly sunk rest and press the button once. Then leave the cap pulled up and bring both arms back to where they started. Frozen scene instance: RoboDojo's own evaluation layout arx_x5/0/swap_blocks_0.json; graded by RoboDojo's own reward check."
+description = "RoboDojo swap_blocks (Memory; two ARX X5 arms with parallel grippers, Isaac Sim 5.1 / Isaac Lab): produce one replayable trajectory of RoboDojo's 14-D joint actions. Task: Swap the two cubes in three moves, lifting each cube and using the empty mat as a parking spot. After each move, pull the button's cap up and press it once. Finish with the cap pulled up while both arms are back where they started. Frozen scene instance: RoboDojo's own evaluation layout arx_x5/0/swap_blocks_0.json; graded by RoboDojo's own reward check."
 keywords = ["robotics", "robodojo", "isaac-lab", "isaac-sim", "bimanual", "arx-x5", "code-as-policy", "trajectory", "privileged"]
 
 [metadata]

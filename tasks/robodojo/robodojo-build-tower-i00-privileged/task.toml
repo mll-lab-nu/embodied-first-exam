@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/robodojo-build-tower-i00-privileged"
-description = "RoboDojo build_tower (Precision; two ARX X5 arms with parallel grippers, Isaac Sim 5.1 / Isaac Lab): produce one replayable trajectory of RoboDojo's 14-D joint actions. Task: Stack the wooden blocks and boards into a three-level tower: two white pillar blocks (one of the two that start on the left, one of the two that start on the right) with the long board across them, the other two pillars standing on that board with the short board on top, then the thin plank on the short board and the green roof piece on the plank; then send both arms home. Frozen scene instance: RoboDojo's own evaluation layout arx_x5/0/build_tower_0.json; graded by RoboDojo's own reward check."
+description = "RoboDojo build_tower (Precision; two ARX X5 arms with parallel grippers, Isaac Sim 5.1 / Isaac Lab): produce one replayable trajectory of RoboDojo's 14-D joint actions. Task: Build a three-level tower: the long board across two pillars, one from each side; the other two pillars on it, under the short board; then the thin plank along the short board and the roof piece on the middle of the plank, ridge across it. Keep every piece the way up it is now. Then move both arms back to where they started. Frozen scene instance: RoboDojo's own evaluation layout arx_x5/0/build_tower_0.json; graded by RoboDojo's own reward check."
 keywords = ["robotics", "robodojo", "isaac-lab", "isaac-sim", "bimanual", "arx-x5", "code-as-policy", "trajectory", "privileged"]
 
 [metadata]

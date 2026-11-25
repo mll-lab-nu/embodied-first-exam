@@ -2,13 +2,12 @@
 
 ## Task
 Put the car, the toothbrush, the hammer and the shoe in the box, each lying lengthwise with its front end pointing left,
-and keep the box upright where it is. Then move both arms back to where they started.
+and keep the box upright without turning it. Then move both arms back to where they started.
 
 ## Goal
-Success: the car, the toothbrush, the hammer and the shoe lie wholly inside the box, in its middle away from the short
-end walls, each lengthwise with its front end pointing left (for the car, the end that pointed right at the start; the
-toothbrush's brush head, the hammer's head, the shoe's toe); the box still stands upright and is not turned; and both
-arms are back where they started.
+Success: the car, the toothbrush, the hammer and the shoe lie inside the box, each lengthwise with its front end
+pointing left (for the car, the end that pointed right at the start; the toothbrush's brush head, the hammer's head, the
+shoe's toe); the box still stands upright and is not turned; and both arms are back where they started.
 
 The episode succeeds if the goal is reached before it ends; it ends when you call finish (Robot Interface), at the step
 limit (Limits) or when your session ends. The robot never tells you whether you have succeeded.

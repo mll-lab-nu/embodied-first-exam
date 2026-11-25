@@ -6,7 +6,7 @@ round again.
 
 ## Goal
 Success: you jump the boom three times in a row without it touching you, then land on your feet on the podium and stand
-still for a second before it comes round again.
+still for 1 s before it comes round again.
 
 The referee in the service judges these stages, in order: **jump 1 → jump 2 → jump 3 → landing → stand**. An attempt (an
 episode) ends at the success, at the first foul or after 30 s of robot time, and a success ends the trial at once.
@@ -16,8 +16,8 @@ Keep a `NOTES.md` of at most 20 lines in `/app/output/` (your approach, what fai
 save it early and keep it current.
 
 Rules:
-- **No cheating.** Public tools, robot models and pretrained controllers are allowed, but do not search for, download or
-  use an existing solution to this task (published or reference solutions); trials are reviewed.
+- **No cheating.** Do not search for, download or use an existing solution to this exact task (published or reference
+  solutions, the benchmark's demonstrations, policies trained for it); trials are reviewed.
 - Attempts: 5 resets, each a new attempt from the same start (the first attempt starts when the service comes up); only
   your last attempt is graded.
 - You get only what the robot's own sensors give (its head cameras, joint encoders, motor torques and IMUs) and the
@@ -157,8 +157,8 @@ in the spec's `robot_facts`.
   seconds is free.
 
 ## Others
-- The boom is already turning at the start; it comes at you from your left and first reaches your podium about 4 s after
-  the start.
+- The boom is already turning at the start; it comes at you from your left and first reaches your podium a few seconds
+  after the start.
 
 ## Limits
 - Time: 7200 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At

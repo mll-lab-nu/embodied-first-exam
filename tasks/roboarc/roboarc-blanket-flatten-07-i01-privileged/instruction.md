@@ -7,8 +7,8 @@ go of it and move both arms clear of it.
 ## Goal
 Success: the blanket lies fully unfolded and flat on the table, with no part over another, nothing stretched and no
 corner raised; both arms have let go of it and moved clear, and the cloth is still. Letting the blanket fall off the
-table ends the episode as a failure. A replay ends, as a success, as soon as all of this has held for half a second;
-later rows are not run.
+table ends the episode as a failure. A replay ends, as a success, as soon as all of this has held for 0.5 s; later rows
+are not run.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, path)`: the (T, 14) actions, one row
 per control step (1/40 s), at most 27000 rows (a longer trajectory is invalid). Leave the script that produced it at

@@ -7,8 +7,8 @@ post, the stopper ball and the base behind, no closer to the goal than they were
 ## Goal
 Success: all of the cord and its handle are inside the green dashed goal square and still, the cord loop still closed at
 its middle tie, and the post, stopper ball and base are no closer to the goal than at the start. Breaking the cord loop
-at its middle tie ends the episode as a failure. The episode ends, as a success, as soon as all of this has held for
-half a second.
+at its middle tie ends the episode as a failure. The episode ends, as a success, as soon as all of this has held for 0.5
+s.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the

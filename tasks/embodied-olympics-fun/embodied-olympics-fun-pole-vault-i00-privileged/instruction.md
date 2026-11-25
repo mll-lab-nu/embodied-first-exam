@@ -4,8 +4,8 @@
 Pole vault: run up, plant the pole in the box, swing up on it and clear the bar without knocking it off.
 
 ## Goal
-Success: you plant the pole in the box, swing up on it, clear the bar between the uprights, and the bar is still up two
-seconds after you land.
+Success: you plant the pole in the box, swing up on it, clear the bar between the uprights, and the bar is still up 2 s
+after you land.
 
 The referee judges these stages, in order: **plant → take-off → clearance → bar stays**. An attempt ends at the success,
 at the first foul or after 60 s (6000 control steps) of robot time.
@@ -24,8 +24,8 @@ log, `rcb_session_log.jsonl`, to `/app/output/`: leave it there and do not set `
 Save a trajectory as soon as you have one and overwrite it (with `gen.py` and `NOTES.md` to match) whenever you have a
 better one; a run that ends with no file scores zero. Do not stop early.
 
-Rules: **No cheating.** Public tools, robot models and pretrained controllers are allowed, but do not search for,
-download or use an existing solution to this task (published or reference solutions); trials are reviewed.
+Rules: **No cheating.** Do not search for, download or use an existing solution to this exact task (published or
+reference solutions, the benchmark's demonstrations, policies trained for it); trials are reviewed.
 
 The attempt fails at once if:
 - the bar drops, whether you or the pole knocked it, or your hands steady it

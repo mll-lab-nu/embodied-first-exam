@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Pick up all four bottles from the table and throw/put them into the dustbin standing beside the table (use a handover between the two hands when a bottle is out of reach), then return the arms to their start pose. (RoboDojo's `put_bottles_into_dustbin`). RoboDojo capability dimension: Long-Horizon. Instance i00 is RoboDojo's own evaluation layout
+Put all four bottles into the dustbin beside the table. Then move both arms back to where they started. (RoboDojo's `put_bottles_into_dustbin`). RoboDojo capability dimension: Long-Horizon. Instance i00 is RoboDojo's own evaluation layout
 `arx_x5/0/put_bottles_into_dustbin_0.json` (sha256 `3c2168f460d48dde`), frozen in `instance.json`. The deliverable is one replayable trajectory of
 RoboDojo's 14-D joint action at 25 Hz (`/app/output/trajectory.npz`), graded by RoboDojo's own reward check for the task,
 with no step cap (RoboDojo's own evaluation gives a policy 700 actions; PROTOCOL §3).

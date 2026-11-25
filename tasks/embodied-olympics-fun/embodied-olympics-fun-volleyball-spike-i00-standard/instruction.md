@@ -6,7 +6,7 @@ without touching the net and stand.
 
 ## Goal
 Success: in a jump you hit the set ball with a hand above net height down into the opponent's court, then land on your
-feet and stand still for a second.
+feet and stand still for 1 s.
 
 The referee in the service judges these stages, in order: **spike → over the net → in the court → landing**. An attempt
 (an episode) ends at the success, at the first foul or after 12 s of robot time, and a success ends the trial at once.
@@ -16,8 +16,8 @@ Keep a `NOTES.md` of at most 20 lines in `/app/output/` (your approach, what fai
 save it early and keep it current.
 
 Rules:
-- **No cheating.** Public tools, robot models and pretrained controllers are allowed, but do not search for, download or
-  use an existing solution to this task (published or reference solutions); trials are reviewed.
+- **No cheating.** Do not search for, download or use an existing solution to this exact task (published or reference
+  solutions, the benchmark's demonstrations, policies trained for it); trials are reviewed.
 - Attempts: 5 resets, each a new attempt from the same start (the first attempt starts when the service comes up); only
   your last attempt is graded.
 - You get only what the robot's own sensors give (its head cameras, joint encoders, motor torques and IMUs) and the
@@ -141,7 +141,7 @@ Joint order everywhere (Unitree's SDK order): `left_hip_yaw`, `left_hip_pitch`, 
   seconds is free.
 
 ## Others
-- A machine at the net sets the ball to you about 3 s after the start.
+- A machine at the net sets the ball to you a few seconds after the start.
 
 ## Limits
 - Time: 7200 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At

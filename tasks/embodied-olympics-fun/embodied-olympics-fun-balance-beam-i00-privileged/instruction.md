@@ -4,7 +4,7 @@
 Walk along the balance beam to its far, yellow end and stand there, touching the beam only with your feet.
 
 ## Goal
-Success: you walk to the far end of the beam and stand still there for two seconds, both feet on its yellow end.
+Success: you walk to the far end of the beam and stand still there for 2 s, both feet on its yellow end.
 
 The referee judges these stages, in order: **half way → far end → stand**. An attempt ends at the success, at the first
 foul or after 90 s (9000 control steps) of robot time.
@@ -23,8 +23,8 @@ log, `rcb_session_log.jsonl`, to `/app/output/`: leave it there and do not set `
 Save a trajectory as soon as you have one and overwrite it (with `gen.py` and `NOTES.md` to match) whenever you have a
 better one; a run that ends with no file scores zero. Do not stop early.
 
-Rules: **No cheating.** Public tools, robot models and pretrained controllers are allowed, but do not search for,
-download or use an existing solution to this task (published or reference solutions); trials are reviewed.
+Rules: **No cheating.** Do not search for, download or use an existing solution to this exact task (published or
+reference solutions, the benchmark's demonstrations, policies trained for it); trials are reviewed.
 
 The attempt fails at once if:
 - any part of you touches the floor or the beam's supports (you fall off the beam)

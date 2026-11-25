@@ -10,7 +10,7 @@ region is not drawn on the table. Then let go of it and move both arms clear of 
 Success: the rope lies untangled and flat on the table, with no crossing, overlap or fold-back seen from above and a
 clear gap between parts of it that are not neighbours along the rope, all of it inside the goal region; both arms have
 let go of it and moved clear, and the rope is still. The episode ends, as a success, as soon as all of this has held for
-half a second.
+0.5 s.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the

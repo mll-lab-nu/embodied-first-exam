@@ -60,8 +60,8 @@ class Task(TaskBase):
                   stand_s=1.0, stand_tilt_deg=20.0,
                   stand_still_m_s=0.35, fall_pelvis_m=0.25, area_m=12.0)
 
-    sentence = ("Do a handstand: get up onto your hands, hold a straight handstand still for two seconds, then come "
-                "back down onto your feet and stand.")
+    sentence = ("Do a handstand: get up onto your hands, hold a straight handstand still for 2 s, then come back "
+                "down onto your feet and stand.")
     rules = ("A handstand is: only your hands on the floor (nothing else of you touches it), your pelvis above your "
              "hands and your ankles above your pelvis, and both lines of your body, from the middle of where your "
              "hands touch the floor to your pelvis and from your pelvis to the middle of your ankles, within "

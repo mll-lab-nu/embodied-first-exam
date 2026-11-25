@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Standard-mode twin of `robodojo-put-bottles-into-dustbin-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/put_bottles_into_dustbin_0.json`). Pick up all four bottles from the table and throw/put them into the dustbin standing beside the table (use a handover between the two hands when a bottle is out of reach), then return the arms to their start pose. (RoboDojo's `put_bottles_into_dustbin`). The agent drives the
+Standard-mode twin of `robodojo-put-bottles-into-dustbin-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/put_bottles_into_dustbin_0.json`). Put all four bottles into the dustbin beside the table. Then move both arms back to where they started. (RoboDojo's `put_bottles_into_dustbin`). The agent drives the
 robot only through the eai-standard/2.2 client (the simulator runs in the `sim` sidecar), which owns the scene and records
 the episode as a (T, 14) trajectory of RoboDojo's own joint action at 25 Hz.
 

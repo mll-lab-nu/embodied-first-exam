@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Watch the support (opponent) arm place five objects into the far basket one after another, then place your five matching objects into your basket in that same order, and finish with both arms back at their start pose. (RoboDojo's `imitate_sorting_sequence`). RoboDojo capability dimension: Memory. Instance i00 is RoboDojo's own evaluation layout
+Watch the opponent's arm put five objects into the far basket one at a time, then put your five matching objects into your basket in the same order. Then move both arms back to where they started. (RoboDojo's `imitate_sorting_sequence`). RoboDojo capability dimension: Memory. Instance i00 is RoboDojo's own evaluation layout
 `arx_x5/0/imitate_sorting_sequence_0.json` (sha256 `3f49325bc7198569`), frozen in `instance.json`. The deliverable is one replayable trajectory of
 RoboDojo's 14-D joint action at 25 Hz (`/app/output/trajectory.npz`), graded by RoboDojo's own reward check for the task,
 with no step cap (RoboDojo's own evaluation gives a policy 1600 actions; PROTOCOL §3).

@@ -9,7 +9,7 @@ green ring (A), then the purple grommet in the wall (G2), then the amber ring (T
 Success: counted from that end, the rope goes through G1, then A, then G2, then T, then G3, then C in that order,
 through each hole exactly once and the right way: G1 toward C's side, A away from C's side, G2 toward T's side, T away
 from G2's side, G3 toward A's side, C away from A's side; the rope is intact and still. A replay ends, as a success, as
-soon as all of this has held for half a second; later rows are not run.
+soon as all of this has held for 0.5 s; later rows are not run.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, path)`: the (T, 14) actions, one row
 per control step (1/25 s), at most 40000 rows (a longer trajectory is invalid). Leave the script that produced it at

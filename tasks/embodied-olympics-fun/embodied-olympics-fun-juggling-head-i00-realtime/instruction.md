@@ -17,8 +17,8 @@ Keep a `NOTES.md` of at most 20 lines in `/app/output/` (your approach, what fai
 save it early and keep it current.
 
 Rules:
-- **No cheating.** Public tools, robot models and pretrained controllers are allowed, but do not search for, download or
-  use an existing solution to this task (published or reference solutions); trials are reviewed.
+- **No cheating.** Do not search for, download or use an existing solution to this exact task (published or reference
+  solutions, the benchmark's demonstrations, policies trained for it); trials are reviewed.
 - Attempts: 5 resets, each a new attempt from the same start, paused until your next command; only your last attempt is
   graded.
 - You get only what the robot's own sensors give (its head cameras, joint encoders, motor torques and IMUs) and the
@@ -192,7 +192,7 @@ in the spec's `robot_facts`.
   what the cameras saw meanwhile. `r.status()` shows `running` and `lag_s`.
 
 ## Others
-- The machine lobs the ball onto your head about 1 s after the start.
+- The machine lobs the ball onto your head right after the start.
 
 ## Limits
 - Time: 7200 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At

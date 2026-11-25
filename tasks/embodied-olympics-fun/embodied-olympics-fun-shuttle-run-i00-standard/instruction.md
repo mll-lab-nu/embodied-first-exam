@@ -1,12 +1,11 @@
 # Embodied Olympics · 4 x 10 m shuttle run (standard)
 
 ## Task
-Run the 4 x 10 m shuttle: to the far line and back twice, putting a foot beyond the line at each turn, within 30
-seconds.
+Run the 4 x 10 m shuttle: to the far line and back twice, putting a foot beyond the line at each turn.
 
 ## Goal
 Success: you run to the far line, back, to the far line again and back over the start line between its cones, with a
-foot beyond the line at each turn, within 30 s.
+foot beyond the line at each turn.
 
 The referee in the service judges these stages, in order: **turn 1 → turn 2 → turn 3 → finish**. An attempt (an episode)
 ends at the success, at the first foul or after 30 s of robot time, and a success ends the trial at once. Ending your
@@ -16,8 +15,8 @@ Keep a `NOTES.md` of at most 20 lines in `/app/output/` (your approach, what fai
 save it early and keep it current.
 
 Rules:
-- **No cheating.** Public tools, robot models and pretrained controllers are allowed, but do not search for, download or
-  use an existing solution to this task (published or reference solutions); trials are reviewed.
+- **No cheating.** Do not search for, download or use an existing solution to this exact task (published or reference
+  solutions, the benchmark's demonstrations, policies trained for it); trials are reviewed.
 - Attempts: 5 resets, each a new attempt from the same start (the first attempt starts when the service comes up); only
   your last attempt is graded.
 - You get only what the robot's own sensors give (its head cameras, joint encoders, motor torques and IMUs) and the

@@ -1,12 +1,11 @@
 # Embodied Olympics · jump rope (standard)
 
 ## Task
-Skip rope: turn the rope forwards and jump it with both feet together 17 times within a minute, then land on your feet
-and stand.
+Skip rope: turn the rope forwards and jump it with both feet together 17 times, then land on your feet and stand.
 
 ## Goal
 Success: you jump the forward-turning rope with both feet together 17 times, then land on your feet and stand still for
-a second.
+1 s.
 
 The referee in the service judges these stages, in order: **each of the 17 jumps, the stand**. An attempt (an episode)
 ends at the success, at the first foul or after 60 s of robot time, and a success ends the trial at once. Ending your
@@ -16,8 +15,8 @@ Keep a `NOTES.md` of at most 20 lines in `/app/output/` (your approach, what fai
 save it early and keep it current.
 
 Rules:
-- **No cheating.** Public tools, robot models and pretrained controllers are allowed, but do not search for, download or
-  use an existing solution to this task (published or reference solutions); trials are reviewed.
+- **No cheating.** Do not search for, download or use an existing solution to this exact task (published or reference
+  solutions, the benchmark's demonstrations, policies trained for it); trials are reviewed.
 - Attempts: 5 resets, each a new attempt from the same start (the first attempt starts when the service comes up); only
   your last attempt is graded.
 - You get only what the robot's own sensors give (its head cameras, joint encoders, motor torques and IMUs) and the

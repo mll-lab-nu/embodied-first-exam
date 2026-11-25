@@ -23,9 +23,9 @@ old = "sha256 `d04495ad79faf3f3`"
 new = "sha256 `57202a3a3660f8a8`"
 
 [[replace]]
-old = "Pick up the broom, hand it to the right arm, sweep the toy brick, the two earbuds and the two paper balls into the dustpan, which stays on the table, and leave the broom on the dustpan's open right side. Then bring both arms back to where they started."
-new = "Pick up the broom, hand it to the right arm, sweep the two toy bricks, the two earbuds and the two paper balls into the dustpan, which stays on the table, and leave the broom on the dustpan's open right side. Then bring both arms back to where they started."
-
-[[replace]]
 old = "the toy brick, the two earbuds"
 new = "the two toy bricks, the two earbuds"
+
+[[replace]]
+old = "Sweep the toy brick, the two earbuds and the two paper balls into the dustpan, keeping the dustpan flat on the table, and leave the broom well to the right of the dustpan. Then move both arms back to where they started."
+new = "Sweep the two toy bricks, the two earbuds and the two paper balls into the dustpan, keeping the dustpan flat on the table, and leave the broom well to the right of the dustpan. Then move both arms back to where they started."

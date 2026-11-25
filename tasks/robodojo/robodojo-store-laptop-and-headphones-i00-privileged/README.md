@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Hang the headphones by their headband on the stand's hanger, with the ear cup now on the right still on the right and the side now lying on the table facing away from you, then close the laptop and stand it in the rack on its front edge with the hinge edge up. Then bring both arms back to where they started. (RoboDojo's `store_laptop_and_headphones`). RoboDojo capability dimension: Generalization. Instance i00 is RoboDojo's own evaluation layout
+Hang the headphones by their headband on the headphone stand, the ear cup now on the right still on the right and the side now on the table facing away from you. Close the laptop and stand it in the laptop rack, hinge edge up. Then move both arms back to where they started. (RoboDojo's `store_laptop_and_headphones`). RoboDojo capability dimension: Generalization. Instance i00 is RoboDojo's own evaluation layout
 `arx_x5/0/store_laptop_and_headphones_0.json` (sha256 `36c256352ba18218`), frozen in `instance.json`. The deliverable is one replayable trajectory of
 RoboDojo's 14-D joint action at 25 Hz (`/app/output/trajectory.npz`), graded by RoboDojo's own reward check for the task,
 with no step cap (RoboDojo's own evaluation gives a policy 800 actions; PROTOCOL §3).

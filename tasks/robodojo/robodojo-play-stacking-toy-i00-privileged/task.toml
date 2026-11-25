@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/robodojo-play-stacking-toy-i00-privileged"
-description = "RoboDojo play_stacking_toy (Long-Horizon; two ARX X5 arms with parallel grippers, Isaac Sim 5.1 / Isaac Lab): produce one replayable trajectory of RoboDojo's 14-D joint actions. Task: Put all ten stacking-toy blocks onto the correct pegs of the base, exactly centred on the pegs, then return both arms to the start pose. Frozen scene instance: RoboDojo's own evaluation layout arx_x5/0/play_stacking_toy_0.json; graded by RoboDojo's own reward check."
+description = "RoboDojo play_stacking_toy (Long-Horizon; two ARX X5 arms with parallel grippers, Isaac Sim 5.1 / Isaac Lab): produce one replayable trajectory of RoboDojo's 14-D joint actions. Task: Put all ten blocks of the stacking toy on their matching pegs of the base, all blocks of one kind on the same peg, each block slid down its peg and sitting straight on the one below. Then move both arms back to where they started. Frozen scene instance: RoboDojo's own evaluation layout arx_x5/0/play_stacking_toy_0.json; graded by RoboDojo's own reward check."
 keywords = ["robotics", "robodojo", "isaac-lab", "isaac-sim", "bimanual", "arx-x5", "code-as-policy", "trajectory", "privileged"]
 
 [metadata]

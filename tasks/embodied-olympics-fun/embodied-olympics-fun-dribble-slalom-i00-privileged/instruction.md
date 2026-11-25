@@ -2,7 +2,7 @@
 
 ## Task
 Dribble the football out through the six cones, passing each on the side of its yellow mark, round the last one and back
-the other way over the start line, keeping the ball within 2 m and touching no cone.
+the other way over the start line, keeping the ball within 2 m of you and touching no cone.
 
 ## Goal
 Success: you and the ball weave out past each cone on its yellow-mark side, round the last one, back past each on its
@@ -25,8 +25,8 @@ log, `rcb_session_log.jsonl`, to `/app/output/`: leave it there and do not set `
 Save a trajectory as soon as you have one and overwrite it (with `gen.py` and `NOTES.md` to match) whenever you have a
 better one; a run that ends with no file scores zero. Do not stop early.
 
-Rules: **No cheating.** Public tools, robot models and pretrained controllers are allowed, but do not search for,
-download or use an existing solution to this task (published or reference solutions); trials are reviewed.
+Rules: **No cheating.** Do not search for, download or use an existing solution to this exact task (published or
+reference solutions, the benchmark's demonstrations, policies trained for it); trials are reviewed.
 
 The attempt fails at once if:
 - the ball or you pass a cone on the wrong side

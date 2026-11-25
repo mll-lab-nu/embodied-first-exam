@@ -6,7 +6,7 @@ hold it still until the down signal.
 
 ## Goal
 Success: you lift the bar with both hands to rest at your shoulders, then drive it overhead and hold it still on
-straight arms and legs, feet in line, until the down signal two seconds later.
+straight arms and legs, feet in line, until the down signal 2 s later.
 
 The referee judges these stages, in order: **lift-off → clean → overhead → down signal**. An attempt ends at the
 success, at the first foul or after 60 s (6000 control steps) of robot time.
@@ -25,8 +25,8 @@ log, `rcb_session_log.jsonl`, to `/app/output/`: leave it there and do not set `
 Save a trajectory as soon as you have one and overwrite it (with `gen.py` and `NOTES.md` to match) whenever you have a
 better one; a run that ends with no file scores zero. Do not stop early.
 
-Rules: **No cheating.** Public tools, robot models and pretrained controllers are allowed, but do not search for,
-download or use an existing solution to this task (published or reference solutions); trials are reviewed.
+Rules: **No cheating.** Do not search for, download or use an existing solution to this exact task (published or
+reference solutions, the benchmark's demonstrations, policies trained for it); trials are reviewed.
 
 The attempt fails at once if:
 - the bar leaves its blocks while fewer than two hands hold it

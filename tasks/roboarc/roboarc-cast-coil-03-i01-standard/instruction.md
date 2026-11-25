@@ -8,7 +8,7 @@ go of them and move both arms clear of them.
 Success: the gold and silver pieces are fitted together exactly the way they are made to fit, resting on the table, with
 both arms clear of them and both pieces still. Do not force pieces into each other: a success with pieces pushed into
 each other is reviewed instead of credited automatically. Dropping a piece off the table ends the episode as a failure.
-The episode ends, as a success, as soon as all of this has held for half a second.
+The episode ends, as a success, as soon as all of this has held for 0.5 s.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the

@@ -24,8 +24,8 @@ log, `rcb_session_log.jsonl`, to `/app/output/`: leave it there and do not set `
 Save a trajectory as soon as you have one and overwrite it (with `gen.py` and `NOTES.md` to match) whenever you have a
 better one; a run that ends with no file scores zero. Do not stop early.
 
-Rules: **No cheating.** Public tools, robot models and pretrained controllers are allowed, but do not search for,
-download or use an existing solution to this task (published or reference solutions); trials are reviewed.
+Rules: **No cheating.** Do not search for, download or use an existing solution to this exact task (published or
+reference solutions, the benchmark's demonstrations, policies trained for it); trials are reviewed.
 
 The attempt fails at once if:
 - you touch the ball before it is passed, or the pass touches the floor before you catch it
@@ -133,7 +133,7 @@ Joint order everywhere (Unitree's SDK order): `left_hip_yaw`, `left_hip_pitch`, 
   failure: "the simulation became unstable".
 
 ## Others
-- The machine passes the ball to you about 2 s after the start.
+- The machine passes the ball to you shortly after the start.
 
 ## Limits
 - Time: 7200 s of wall-clock time from the start of your session; everything counts (the simulator's start-up too). At

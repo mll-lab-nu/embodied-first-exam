@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Standard-mode twin of `robodojo-plug-in-charger-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/plug_in_charger_0.json`). Pick up the charger and plug it into the socket of the power strip so that it sits upright and fully inserted, then return the arms to their start pose. (RoboDojo's `plug_in_charger`). The agent drives the
+Standard-mode twin of `robodojo-plug-in-charger-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/plug_in_charger_0.json`). Plug the charger into the power strip, upright and pushed all the way in. Then move both arms back to where they started. (RoboDojo's `plug_in_charger`). The agent drives the
 robot only through the eai-standard/2.2 client (the simulator runs in the `sim` sidecar), which owns the scene and records
 the episode as a (T, 14) trajectory of RoboDojo's own joint action at 25 Hz.
 

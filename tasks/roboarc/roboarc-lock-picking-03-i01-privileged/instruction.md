@@ -8,7 +8,7 @@ only through the plates' slots.
 Success: the key goes through all three rotor plates and the END plate at once, far enough that its leading tab is clear
 past the END plate, and neither the shaft nor a tab was ever forced through solid plate. Turning a rotor past one of its
 stops ends the episode as a failure. Dropping the key off the table ends the episode as a failure. A replay ends, as a
-success, as soon as all of this has held for half a second; later rows are not run.
+success, as soon as all of this has held for 0.5 s; later rows are not run.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, path)`: the (T, 8) actions, one row
 per control step (1/40 s), at most 163000 rows (a longer trajectory is invalid). Leave the script that produced it at

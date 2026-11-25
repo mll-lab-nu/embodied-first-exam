@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Sort the small objects on the table by category into the three baskets, one category per basket. Then bring both arms back to where they started. (RoboDojo's `classify_objects`). RoboDojo capability dimension: Long-Horizon. Instance i00 is RoboDojo's own evaluation layout
+Sort the objects on the table into the three baskets by category, one category per basket. Then move both arms back to where they started. (RoboDojo's `classify_objects`). RoboDojo capability dimension: Long-Horizon. Instance i00 is RoboDojo's own evaluation layout
 `arx_x5/0/classify_objects_0.json` (sha256 `5ceb9e18e6d8490a`), frozen in `instance.json`. The deliverable is one replayable trajectory of
 RoboDojo's 14-D joint action at 25 Hz (`/app/output/trajectory.npz`), graded by RoboDojo's own reward check for the task,
 with no step cap (RoboDojo's own evaluation gives a policy 1100 actions; PROTOCOL §3).

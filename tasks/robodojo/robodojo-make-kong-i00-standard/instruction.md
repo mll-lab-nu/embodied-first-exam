@@ -8,8 +8,8 @@ grippers.
 ## Goal
 Success: the three tiles in your row that match the discarded tile are face up and the other nine tiles of your four
 sets of three still stand; then the tile from the front stack stands on its short end at the right end of your row, its
-right end up; and both grippers are open. Moving one of your arms far from where it started while the opponent's arm is
-out ends the episode as a failure.
+right end up; and both grippers are open. Leave the front stack untouched until all three matching tiles are face up.
+Moving one of your arms far from where it started while the opponent's arm is out ends the episode as a failure.
 
 The episode succeeds if the goal is reached before it ends; it ends when you call finish (Robot Interface), at the step
 limit (Limits) or when your session ends. The robot never tells you whether you have succeeded.

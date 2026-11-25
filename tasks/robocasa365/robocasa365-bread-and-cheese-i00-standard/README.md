@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:robocasa365-0.1.0` |
 
 ## Task
+Put the bread and the cheese on the cutting board, and move your hand away.
+
 Standard mode (robot as a service, `eai-standard/2.1`) of `robocasa365-bread-and-cheese-i00-privileged`: the same frozen instance and success check, served by the `sim` sidecar (`embodied_first_exam/benchmarks/robocasa/sim/server_casa.py`, tool module `casa_tool`), which records the episode and judges it live (nothing is replayed); the verifier grades the sidecar's record in a container of its own. The agent sees the robot's cameras (RGB-D, calibrated), its own joints and end effector, and the instruction.
 
 ## Difficulty

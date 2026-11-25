@@ -6,7 +6,7 @@ round again.
 
 ## Goal
 Success: you jump the boom three times in a row without it touching you, then land on your feet on the podium and stand
-still for a second before it comes round again.
+still for 1 s before it comes round again.
 
 The referee judges these stages, in order: **jump 1 → jump 2 → jump 3 → landing → stand**. An attempt ends at the
 success, at the first foul or after 30 s (3000 control steps) of robot time.
@@ -25,8 +25,8 @@ log, `rcb_session_log.jsonl`, to `/app/output/`: leave it there and do not set `
 Save a trajectory as soon as you have one and overwrite it (with `gen.py` and `NOTES.md` to match) whenever you have a
 better one; a run that ends with no file scores zero. Do not stop early.
 
-Rules: **No cheating.** Public tools, robot models and pretrained controllers are allowed, but do not search for,
-download or use an existing solution to this task (published or reference solutions); trials are reviewed.
+Rules: **No cheating.** Do not search for, download or use an existing solution to this exact task (published or
+reference solutions, the benchmark's demonstrations, policies trained for it); trials are reviewed.
 
 The attempt fails at once if:
 - the boom touches any part of you (grabbing or holding it is a hit too), or passes through a foot that is not above it
@@ -144,8 +144,8 @@ in `/app/instance.json` (`t0.robot`).
   failure: "the simulation became unstable".
 
 ## Others
-- The boom is already turning at the start; it comes at you from your left and first reaches your podium about 4 s after
-  the start.
+- The boom is already turning at the start; it comes at you from your left and first reaches your podium a few seconds
+  after the start.
 
 ## Limits
 - Time: 7200 s of wall-clock time from the start of your session; everything counts (the simulator's start-up too). At

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Standard-mode twin of `robodojo-insert-key-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/insert_key_0.json`). Push the key into the keyhole blade first and ring up, with its teeth toward the right-hand end of the slit. Then give it about a sixth of a turn clockwise as seen from above and leave it standing straight in the keyhole. (RoboDojo's `insert_key`). The agent drives the
+Standard-mode twin of `robodojo-insert-key-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/insert_key_0.json`). Push the key into the keyhole, ring up, with its teeth toward the right-hand end of the slit, then turn it about a sixth of a turn clockwise as seen from above, leaving it standing straight. (RoboDojo's `insert_key`). The agent drives the
 robot only through the eai-standard/2.2 client (the simulator runs in the `sim` sidecar), which owns the scene and records
 the episode as a (T, 14) trajectory of RoboDojo's own joint action at 25 Hz.
 

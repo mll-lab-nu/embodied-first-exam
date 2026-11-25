@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Pick up the cup containing 7 balls, pour all the balls into the vase, put the cup back upright and bring the arms home. (RoboDojo's `pour_balls_into_vase`). RoboDojo capability dimension: Precision. Instance i00 is RoboDojo's own evaluation layout
+Pour all seven balls from the cup into the vase and stand the cup upright again. Then move both arms back to where they started. (RoboDojo's `pour_balls_into_vase`). RoboDojo capability dimension: Precision. Instance i00 is RoboDojo's own evaluation layout
 `arx_x5/0/pour_balls_into_vase_0.json` (sha256 `171eb88834b95ede`), frozen in `instance.json`. The deliverable is one replayable trajectory of
 RoboDojo's 14-D joint action at 25 Hz (`/app/output/trajectory.npz`), graded by RoboDojo's own reward check for the task,
 with no step cap (RoboDojo's own evaluation gives a policy 600 actions; PROTOCOL §3).

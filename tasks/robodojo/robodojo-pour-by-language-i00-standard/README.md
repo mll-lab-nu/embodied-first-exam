@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Standard-mode twin of `robodojo-pour-by-language-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/pour_by_language_0.json`). Pour each bottle named in the instruction into the bowl it names, in the order first, second, third. (RoboDojo's `pour_by_language`). The agent drives the
+Standard-mode twin of `robodojo-pour-by-language-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/pour_by_language_0.json`). Pour the violet bottle into the black bowl, then the red bottle into the white bowl, then the turquoise bottle into the brown bowl, in that order. (RoboDojo's `pour_by_language`). The agent drives the
 robot only through the eai-standard/2.2 client (the simulator runs in the `sim` sidecar), which owns the scene and records
 the episode as a (T, 14) trajectory of RoboDojo's own joint action at 25 Hz.
 

@@ -4,8 +4,8 @@
 Win a sumo bout: make your opponent step out of the ring or touch down with anything but its feet before you do.
 
 ## Goal
-Success: within 30 s the opponent touches the ground outside the ring, or the clay or the bales with anything but its
-feet, before that happens to you.
+Success: the opponent touches the ground outside the ring, or the clay or the bales with anything but its feet, before
+that happens to you.
 
 The referee judges these stages, in order: **win**. An attempt ends at the success, at the first foul or after 30 s
 (3000 control steps) of robot time.
@@ -24,15 +24,15 @@ log, `rcb_session_log.jsonl`, to `/app/output/`: leave it there and do not set `
 Save a trajectory as soon as you have one and overwrite it (with `gen.py` and `NOTES.md` to match) whenever you have a
 better one; a run that ends with no file scores zero. Do not stop early.
 
-Rules: **No cheating.** Public tools, robot models and pretrained controllers are allowed, but do not search for,
-download or use an existing solution to this task (published or reference solutions); trials are reviewed.
+Rules: **No cheating.** Do not search for, download or use an existing solution to this exact task (published or
+reference solutions, the benchmark's demonstrations, policies trained for it); trials are reviewed.
 
 The attempt fails at once if:
 - that happens to you first: any part of you on the ground outside the ring, anything but your feet on the clay or the
   bales, or your hips sink close to the clay
 - it happens to both of you at the same instant (no decision)
 - you kick the opponent's trunk
-- there is no decision within 30 s
+- there is no decision in time
 
 ## Robot Interface
 You control a simulated Unitree G1 humanoid robot (29 joints, 1.32 m tall, 33 kg; the Embodied Olympics simulator on
@@ -145,7 +145,7 @@ in `/app/instance.json` (`t0.robot`).
   failure: "the simulation became unstable".
 
 ## Others
-- The opponent charges half a second after the start and keeps pushing into you, turning to face you.
+- The opponent charges right after the start and keeps pushing into you, turning to face you.
 
 ## Limits
 - Time: 7200 s of wall-clock time from the start of your session; everything counts (the simulator's start-up too). At

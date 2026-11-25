@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Put the four digit blocks on the four mats, one block per mat, so that the row reads the largest possible number from left to right, with each block still flat, face up and turned as it is now. Then bring both arms back to where they started. (RoboDojo's `arrange_largest_number`). RoboDojo capability dimension: Generalization. Instance i00 is RoboDojo's own evaluation layout
+Put the four digit blocks on the four mats, one per mat, so that they read the largest possible number from left to right. Keep each block face up and turned as it is now. Then move both arms back to where they started. (RoboDojo's `arrange_largest_number`). RoboDojo capability dimension: Generalization. Instance i00 is RoboDojo's own evaluation layout
 `arx_x5/0/arrange_largest_number_0.json` (sha256 `8d45b23010c950c3`), frozen in `instance.json`. The deliverable is one replayable trajectory of
 RoboDojo's 14-D joint action at 25 Hz (`/app/output/trajectory.npz`), graded by RoboDojo's own reward check for the task,
 with no step cap (RoboDojo's own evaluation gives a policy 1050 actions; PROTOCOL §3).

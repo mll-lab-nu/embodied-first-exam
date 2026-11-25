@@ -2,7 +2,7 @@
 
 ## Task
 Dribble the football out through the six cones, passing each on the side of its yellow mark, round the last one and back
-the other way over the start line, keeping the ball within 2 m and touching no cone.
+the other way over the start line, keeping the ball within 2 m of you and touching no cone.
 
 ## Goal
 Success: you and the ball weave out past each cone on its yellow-mark side, round the last one, back past each on its
@@ -17,8 +17,8 @@ Keep a `NOTES.md` of at most 20 lines in `/app/output/` (your approach, what fai
 save it early and keep it current.
 
 Rules:
-- **No cheating.** Public tools, robot models and pretrained controllers are allowed, but do not search for, download or
-  use an existing solution to this task (published or reference solutions); trials are reviewed.
+- **No cheating.** Do not search for, download or use an existing solution to this exact task (published or reference
+  solutions, the benchmark's demonstrations, policies trained for it); trials are reviewed.
 - Attempts: 5 resets, each a new attempt from the same start (the first attempt starts when the service comes up); only
   your last attempt is graded.
 - You get only what the robot's own sensors give (its head cameras, joint encoders, motor torques and IMUs) and the

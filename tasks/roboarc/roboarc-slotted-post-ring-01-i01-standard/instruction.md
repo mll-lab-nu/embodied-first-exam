@@ -7,7 +7,7 @@ cord, beads and end discs behind, no closer to the goal than they were at the st
 ## Goal
 Success: all of the removable metal ring is inside the green dashed goal square and still, and the post, cord, beads and
 end discs are no closer to the goal than at the start. The episode ends, as a success, as soon as all of this has held
-for half a second.
+for 0.5 s.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the

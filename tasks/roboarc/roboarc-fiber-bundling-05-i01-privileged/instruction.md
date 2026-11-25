@@ -8,7 +8,7 @@ sheath with the gripper. Leave the rear terminal anchored where it is.
 Success: every fine fiber has gone through the ring tip first, all the way to its root, the front of the sheath has come
 out clear on the far side, the rear terminal is still anchored and no fiber is sharply bent. Any touch of a fine fiber
 by the gripper ends the episode as a failure, however light. Letting the fibers fall off the table ends the episode as a
-failure. A replay ends, as a success, as soon as all of this has held for half a second; later rows are not run.
+failure. A replay ends, as a success, as soon as all of this has held for 0.5 s; later rows are not run.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, path)`: the (T, 8) actions, one row
 per control step (1/40 s), at most 49000 rows (a longer trajectory is invalid). Leave the script that produced it at

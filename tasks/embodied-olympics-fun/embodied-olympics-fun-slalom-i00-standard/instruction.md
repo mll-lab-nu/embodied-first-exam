@@ -2,11 +2,10 @@
 
 ## Task
 Run the Illinois agility course without touching a cone: round the far-left cone, back round the cone on the start line,
-weave up and back through the centre cones, round the far-right cone and back over the finish line, within 60 seconds.
+weave up and back through the centre cones, round the far-right cone and back over the finish line.
 
 ## Goal
-Success: you run the course in its order and are back over the finish line in under 60 s of robot time, touching no
-cone.
+Success: you run the course in its order and are back over the finish line, touching no cone.
 
 The referee in the service judges these stages, in order: **far-left cone → bottom cone, first time → up 1-2 → up 2-3 →
 up 3-4 → top cone → down 3-4 → down 2-3 → down 1-2 → bottom cone, second time → far-right cone → finish**. An attempt
@@ -17,8 +16,8 @@ Keep a `NOTES.md` of at most 20 lines in `/app/output/` (your approach, what fai
 save it early and keep it current.
 
 Rules:
-- **No cheating.** Public tools, robot models and pretrained controllers are allowed, but do not search for, download or
-  use an existing solution to this task (published or reference solutions); trials are reviewed.
+- **No cheating.** Do not search for, download or use an existing solution to this exact task (published or reference
+  solutions, the benchmark's demonstrations, policies trained for it); trials are reviewed.
 - Attempts: 5 resets, each a new attempt from the same start (the first attempt starts when the service comes up); only
   your last attempt is graded.
 - You get only what the robot's own sensors give (its head cameras, joint encoders, motor torques and IMUs) and the

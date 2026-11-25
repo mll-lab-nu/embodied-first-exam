@@ -1,12 +1,12 @@
 # Embodied Olympics · handstand (privileged)
 
 ## Task
-Do a handstand: get up onto your hands, hold a straight handstand still for two seconds, then come back down onto your
-feet and stand.
+Do a handstand: get up onto your hands, hold a straight handstand still for 2 s, then come back down onto your feet and
+stand.
 
 ## Goal
-Success: you get onto your hands, hold a straight handstand still for two seconds, then come down onto your feet and
-stand still.
+Success: you get onto your hands, hold a straight handstand still for 2 s, then come down onto your feet and stand
+still.
 
 The referee judges these stages, in order: **handstand → held 2 s → on the feet → stand**. An attempt ends at the
 success, at the first foul or after 30 s (3000 control steps) of robot time.
@@ -25,8 +25,8 @@ log, `rcb_session_log.jsonl`, to `/app/output/`: leave it there and do not set `
 Save a trajectory as soon as you have one and overwrite it (with `gen.py` and `NOTES.md` to match) whenever you have a
 better one; a run that ends with no file scores zero. Do not stop early.
 
-Rules: **No cheating.** Public tools, robot models and pretrained controllers are allowed, but do not search for,
-download or use an existing solution to this task (published or reference solutions); trials are reviewed.
+Rules: **No cheating.** Do not search for, download or use an existing solution to this exact task (published or
+reference solutions, the benchmark's demonstrations, policies trained for it); trials are reviewed.
 
 The attempt fails at once if:
 - any part of you but your hands and feet touches the floor, or your hips drop close to the floor (a fall)

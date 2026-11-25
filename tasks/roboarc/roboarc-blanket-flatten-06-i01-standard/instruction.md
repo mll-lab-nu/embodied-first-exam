@@ -8,7 +8,7 @@ on the table, not on the fence. Then let go of it and move both arms clear of it
 Success: the blanket lies fully unfolded and flat on the table, with no part over another, nothing stretched and no
 corner raised, none of it resting on the fence; both arms have let go of it and moved clear, and the cloth is still.
 Letting the blanket fall off the table ends the episode as a failure. The episode ends, as a success, as soon as all of
-this has held for half a second.
+this has held for 0.5 s.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the

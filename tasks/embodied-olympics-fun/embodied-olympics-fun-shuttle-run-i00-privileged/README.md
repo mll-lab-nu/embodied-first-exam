@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Run the 4 x 10 m shuttle: to the far line and back twice, putting a foot beyond the line at each turn, within 30 seconds. (Embodied Olympics `shuttle-run`: one Unitree G1 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
+Run the 4 x 10 m shuttle: to the far line and back twice, putting a foot beyond the line at each turn. (Embodied Olympics `shuttle-run`: one Unitree G1 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
 
 ## Difficulty
 Forty metres with three reversals in 30 s: the walking gait covers 19 m in that time, and the running gait turns slowly, needs metres to stop, and falls when it is handed over to another gait at speed, so every leg has to be braked and reversed without losing seconds.

@@ -6,7 +6,7 @@ and hold it.
 
 ## Goal
 Success: from behind the line you hit the target circle with the ball, catch the rebound in a hand before it touches the
-ground and hold it for a second.
+ground and hold it for 1 s.
 
 The referee judges these stages, in order: **release → target → catch → hold**. An attempt ends at the success, at the
 first foul or after 15 s (1500 control steps) of robot time.
@@ -25,8 +25,8 @@ log, `rcb_session_log.jsonl`, to `/app/output/`: leave it there and do not set `
 Save a trajectory as soon as you have one and overwrite it (with `gen.py` and `NOTES.md` to match) whenever you have a
 better one; a run that ends with no file scores zero. Do not stop early.
 
-Rules: **No cheating.** Public tools, robot models and pretrained controllers are allowed, but do not search for,
-download or use an existing solution to this task (published or reference solutions); trials are reviewed.
+Rules: **No cheating.** Do not search for, download or use an existing solution to this exact task (published or
+reference solutions, the benchmark's demonstrations, policies trained for it); trials are reviewed.
 
 The attempt fails at once if:
 - any part of you touches the ground on or beyond the line

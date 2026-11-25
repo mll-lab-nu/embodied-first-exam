@@ -186,7 +186,7 @@ class Task(TaskBase):
                   touch_gap_s=0.03, fall_z_m=0.35)
 
     sentence = ("Shoot a free throw: from behind the free-throw line, shoot the ball into the basket, releasing it "
-                "within 5 seconds.")
+                "within 5 s.")
     rules = ("The official basket: a rigid ring of {ring_inner_diameter_m} m inner diameter ({ring_metal_m} m metal), "
              "its top edge {ring_height_m} m above the floor, its centre {ring_centre_to_board_m} m in front of a "
              "backboard {board_width_m} m wide and {board_height_m} m high whose lower edge is {board_bottom_m} m "

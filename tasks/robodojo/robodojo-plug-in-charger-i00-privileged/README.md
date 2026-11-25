@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Pick up the charger and plug it into the socket of the power strip so that it sits upright and fully inserted, then return the arms to their start pose. (RoboDojo's `plug_in_charger`). RoboDojo capability dimension: Precision. Instance i00 is RoboDojo's own evaluation layout
+Plug the charger into the power strip, upright and pushed all the way in. Then move both arms back to where they started. (RoboDojo's `plug_in_charger`). RoboDojo capability dimension: Precision. Instance i00 is RoboDojo's own evaluation layout
 `arx_x5/0/plug_in_charger_0.json` (sha256 `0fb33f8293090054`), frozen in `instance.json`. The deliverable is one replayable trajectory of
 RoboDojo's 14-D joint action at 25 Hz (`/app/output/trajectory.npz`), graded by RoboDojo's own reward check for the task,
 with no step cap (RoboDojo's own evaluation gives a policy 400 actions; PROTOCOL §3).

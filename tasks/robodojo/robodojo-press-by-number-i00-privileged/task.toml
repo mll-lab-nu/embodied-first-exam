@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/robodojo-press-by-number-i00-privileged"
-description = "RoboDojo press_by_number (Memory; two ARX X5 arms with parallel grippers, Isaac Sim 5.1 / Isaac Lab): produce one replayable trajectory of RoboDojo's 14-D joint actions. Task: Read the two number cards, press the first red button as many times as the first card says, then press the blue button, then press the second red button as many times as the second card says, then press the blue button again, and bring the arms home. Frozen scene instance: RoboDojo's own evaluation layout arx_x5/0/press_by_number_0.json; graded by RoboDojo's own reward check."
+description = "RoboDojo press_by_number (Memory; two ARX X5 arms with parallel grippers, Isaac Sim 5.1 / Isaac Lab): produce one replayable trajectory of RoboDojo's 14-D joint actions. Task: Press the left red button as many times as the left card shows, then the blue button once, then the middle red button as many times as the middle card shows, then the blue button once more. Release that last blue press with both arms back where they started. Frozen scene instance: RoboDojo's own evaluation layout arx_x5/0/press_by_number_0.json; graded by RoboDojo's own reward check."
 keywords = ["robotics", "robodojo", "isaac-lab", "isaac-sim", "bimanual", "arx-x5", "code-as-policy", "trajectory", "privileged"]
 
 [metadata]

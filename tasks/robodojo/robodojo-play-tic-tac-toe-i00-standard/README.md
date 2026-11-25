@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Standard-mode twin of `robodojo-play-tic-tac-toe-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/play_tic_tac_toe_0.json`). Play tic-tac-toe against the opponent arm, moving first: each turn, put one of your gold rings on an empty cell, then bring both arms back to where they started and keep them there until the opponent has placed its cross. Repeat until all nine cells are filled. (RoboDojo's `play_tic_tac_toe`). The agent drives the
+Standard-mode twin of `robodojo-play-tic-tac-toe-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/play_tic_tac_toe_0.json`). Play tic-tac-toe against the opponent arm and go first: put one of your gold rings in an empty cell, then move both arms back to where they started and keep them there until the opponent has placed its cross. Repeat until all nine cells are filled. (RoboDojo's `play_tic_tac_toe`). The agent drives the
 robot only through the eai-standard/2.2 client (the simulator runs in the `sim` sidecar), which owns the scene and records
 the episode as a (T, 14) trajectory of RoboDojo's own joint action at 25 Hz.
 

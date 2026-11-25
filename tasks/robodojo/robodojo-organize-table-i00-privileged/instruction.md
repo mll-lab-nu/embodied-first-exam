@@ -1,15 +1,14 @@
 # RoboDojo · organize_table (privileged)
 
 ## Task
-Put the alarm clock on the drawer, stand the cactus toy on the small grey square pad, put the mouse on the mouse pad and
-push the keyboard into its frame, each kept the way up and the way round it started. Then move both arms back to where
-they started.
+Stand the alarm clock on the drawer and the cactus toy on the small grey square pad, put the mouse on the mouse pad and
+push the keyboard into its frame without turning either of them round. Then move both arms back to where they started.
 
 ## Goal
 Success: the alarm clock stands upright on the drawer, the cactus toy stands upright on the small grey square pad, the
-mouse lies on the mouse pad and the keyboard lies over the middle of its frame, each the way up and the way round it
-started; all four have come to rest; and both arms are back where they started. A replay ends as soon as the task is
-done; later rows are not run.
+mouse lies on the mouse pad and the keyboard lies keys up over the middle of its frame, both the way round they started;
+all four have come to rest; and both arms are back where they started. A replay ends as soon as the task is done; later
+rows are not run.
 
 Deliverable: `/app/output/trajectory.npz` with `task` and `actions`, a (T, 14) float array of at most 15,000 rows, one
 per action (1/25 s); write it with `s.save_trajectory()`. Anything else (another shape, NaN, more rows) scores 0. Leave

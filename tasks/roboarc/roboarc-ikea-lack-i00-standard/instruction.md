@@ -7,7 +7,7 @@ clear.
 ## Goal
 Success: the tabletop lies studs up with a leg screwed fully onto each stud, each leg straight; no arm touches any part
 and everything is still. Forcing parts deep into each other breaks the simulation and ends the episode at once, without
-success. When all of this holds, the service checks it once more after holding your last command for a second more (on a
+success. When all of this holds, the service checks it once more after holding your last command for 1 s more (on a
 copy: the robot does not move); if it still holds, the episode ends as a success, and if not, the episode goes on and
 you can still fix it.
 

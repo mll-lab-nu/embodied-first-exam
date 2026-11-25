@@ -13,6 +13,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:robocasa365-0.1.0` |
 
 ## Task
+Turn on the toaster oven by setting its timer.
+
 Realtime mode (`eai-standard/2.3`, slowdown S = 2) of `robocasa365-turn-on-toaster-oven-i00-privileged`: the same frozen instance and success check, served by the `sim` sidecar on a clock that does not stop (the shared realtime layer of HumanoidBench, BiGym 2.0 and RoboOlympics with `environment/sim/server.py`, this benchmark's adapter on `casa_tool`). The scene is dynamic: the timer knob, once set, turns back by itself (1/3000 of its range per simulated second). The agent sees the robot's cameras (RGB-D; intrinsics, and each camera's pose in every proprioception row), its own joints and end effector, and the instruction; one episode, no reset.
 
 ## Difficulty

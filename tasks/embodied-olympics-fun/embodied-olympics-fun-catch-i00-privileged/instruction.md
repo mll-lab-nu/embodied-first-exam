@@ -5,7 +5,7 @@ Catch the fly ball in one hand before it touches the ground or your body, and ke
 
 ## Goal
 Success: you catch the ball in one hand after it has passed the top of its arc, before it touches the ground or your
-body, and hold it in that hand alone for a second.
+body, and hold it in that hand alone for 1 s.
 
 The referee judges these stages, in order: **catch → hold**. An attempt ends at the success, at the first foul or after
 9 s (900 control steps) of robot time.
@@ -24,8 +24,8 @@ log, `rcb_session_log.jsonl`, to `/app/output/`: leave it there and do not set `
 Save a trajectory as soon as you have one and overwrite it (with `gen.py` and `NOTES.md` to match) whenever you have a
 better one; a run that ends with no file scores zero. Do not stop early.
 
-Rules: **No cheating.** Public tools, robot models and pretrained controllers are allowed, but do not search for,
-download or use an existing solution to this task (published or reference solutions); trials are reviewed.
+Rules: **No cheating.** Do not search for, download or use an existing solution to this exact task (published or
+reference solutions, the benchmark's demonstrations, policies trained for it); trials are reviewed.
 
 The attempt fails at once if:
 - the ball touches the ground, or any part of you but a hand or a forearm, before the catch
@@ -132,7 +132,7 @@ Joint order everywhere (Unitree's SDK order): `left_hip_yaw`, `left_hip_pitch`, 
   failure: "the simulation became unstable".
 
 ## Others
-- The machine throws the ball high about 1 s after the start, to come down near you.
+- The machine throws the ball high right after the start, to come down near you.
 
 ## Limits
 - Time: 7200 s of wall-clock time from the start of your session; everything counts (the simulator's start-up too). At

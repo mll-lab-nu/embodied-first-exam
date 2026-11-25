@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Pick up the named target object from the table and lift it about a hand's length off the table. (RoboDojo's `general_pickup`). RoboDojo capability dimension: Open. Instance i00 is RoboDojo's own evaluation layout
+Lift the mint green scissors about a hand's length off the table. (RoboDojo's `general_pickup`). RoboDojo capability dimension: Open. Instance i00 is RoboDojo's own evaluation layout
 `arx_x5/0/general_pickup_0.json` (sha256 `7a3ecf189e248f99`), frozen in `instance.json`. The deliverable is one replayable trajectory of
 RoboDojo's 14-D joint action at 25 Hz (`/app/output/trajectory.npz`), graded by RoboDojo's own reward check for the task,
 with no step cap (RoboDojo's own evaluation gives a policy 200 actions; PROTOCOL §3).

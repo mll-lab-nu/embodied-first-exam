@@ -1,8 +1,8 @@
 # Embodied Olympics · balance board (standard)
 
 ## Task
-Stay balanced on the roller board for 30 seconds, touching only the deck, with your feet, and keeping both ends of the
-deck off the floor.
+Stay balanced on the roller board for 30 s, touching only the deck, with your feet, and keeping both ends of the deck
+off the floor.
 
 ## Goal
 Success: you stay on the board for 30 s, only your feet touching the deck, and neither end of the deck touches the
@@ -16,8 +16,8 @@ Keep a `NOTES.md` of at most 20 lines in `/app/output/` (your approach, what fai
 save it early and keep it current.
 
 Rules:
-- **No cheating.** Public tools, robot models and pretrained controllers are allowed, but do not search for, download or
-  use an existing solution to this task (published or reference solutions); trials are reviewed.
+- **No cheating.** Do not search for, download or use an existing solution to this exact task (published or reference
+  solutions, the benchmark's demonstrations, policies trained for it); trials are reviewed.
 - Attempts: 5 resets, each a new attempt from the same start (the first attempt starts when the service comes up); only
   your last attempt is graded.
 - You get only what the robot's own sensors give (its head cameras, joint encoders, motor torques and IMUs) and the
@@ -27,7 +27,7 @@ Rules:
 The attempt fails at once if:
 - an end or a stop of the deck touches the floor
 - any part of you touches the floor or the roller, or anything but a foot touches the deck
-- neither foot has touched the deck for more than a second (you have left the board)
+- neither foot has touched the deck for more than 1 s (you have left the board)
 
 ## Robot Interface
 You control a simulated Unitree G1 humanoid robot (29 joints, 1.32 m tall, 33 kg; the Embodied Olympics simulator on
@@ -156,8 +156,8 @@ in the spec's `robot_facts`.
   seconds is free.
 
 ## Others
-- The board starts tilted a little, its left end low; left alone, it tips further and rolls out from under you within a
-  second.
+- The board starts tilted a little, its left end low; left alone, it tips further and rolls out from under you almost at
+  once.
 
 ## Limits
 - Time: 7200 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At

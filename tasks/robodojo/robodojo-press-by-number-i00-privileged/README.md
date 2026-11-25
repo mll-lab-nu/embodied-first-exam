@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Read the two number cards, press the first red button as many times as the first card says, then press the blue button, then press the second red button as many times as the second card says, then press the blue button again, and bring the arms home. (RoboDojo's `press_by_number`). RoboDojo capability dimension: Memory. Instance i00 is RoboDojo's own evaluation layout
+Press the left red button as many times as the left card shows, then the blue button once, then the middle red button as many times as the middle card shows, then the blue button once more. Release that last blue press with both arms back where they started. (RoboDojo's `press_by_number`). RoboDojo capability dimension: Memory. Instance i00 is RoboDojo's own evaluation layout
 `arx_x5/0/press_by_number_0.json` (sha256 `a7dc98bf795083bb`), frozen in `instance.json`. The deliverable is one replayable trajectory of
 RoboDojo's 14-D joint action at 25 Hz (`/app/output/trajectory.npz`), graded by RoboDojo's own reward check for the task,
 with no step cap (RoboDojo's own evaluation gives a policy 700 actions; PROTOCOL §3).

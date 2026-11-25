@@ -9,8 +9,8 @@ tray. Then let go of everything and move both arms clear.
 Success: all 23 snap connections are made in that order and fully seated; the unit stands upright on its feet on the
 bench, no arm touches any part and everything is still. Forcing parts deep into each other breaks the simulation and
 ends the episode at once, without success. What counts is how things stand after the last action of your trajectory,
-replayed from the fixed start. After your last row the grader holds it for a second more and requires all of this again:
-end your rows with the parts released, the arms clear of them and everything at rest.
+replayed from the fixed start. After your last row the grader holds it for 1 s more and requires all of this again: end
+your rows with the parts released, the arms clear of them and everything at rest.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory()`: `ctrl` (N, 16) float64, `substeps` = 4,
 `timestep` = 0.000625, at most 990,000 rows (a longer one is refused). Leave the script that produced it at

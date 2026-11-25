@@ -1,8 +1,7 @@
 # Embodied Olympics · volleyball serve (standard)
 
 ## Task
-Serve: toss the ball off your left palm and hit it with one hand over the net into the opponent's court, within 8
-seconds.
+Serve: toss the ball off your left palm and hit it with one hand over the net into the opponent's court, within 8 s.
 
 ## Goal
 Success: from behind the end line, within 8 s, you toss the ball and hit it with one hand or arm over the net, and it
@@ -16,8 +15,8 @@ Keep a `NOTES.md` of at most 20 lines in `/app/output/` (your approach, what fai
 save it early and keep it current.
 
 Rules:
-- **No cheating.** Public tools, robot models and pretrained controllers are allowed, but do not search for, download or
-  use an existing solution to this task (published or reference solutions); trials are reviewed.
+- **No cheating.** Do not search for, download or use an existing solution to this exact task (published or reference
+  solutions, the benchmark's demonstrations, policies trained for it); trials are reviewed.
 - Attempts: 5 resets, each a new attempt from the same start (the first attempt starts when the service comes up); only
   your last attempt is graded.
 - You get only what the robot's own sensors give (its head cameras, joint encoders, motor torques and IMUs) and the

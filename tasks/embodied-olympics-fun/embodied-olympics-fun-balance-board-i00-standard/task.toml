@@ -18,7 +18,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/embodied-olympics-fun-balance-board-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.1): Embodied Olympics balance-board on the same frozen instance as embodied-olympics-fun-balance-board-i00-privileged. Stay balanced on the roller board for 30 seconds, touching only the deck, with your feet, and keeping both ends of the deck off the floor. The agent only gets a client: the robot's two head cameras (depth on one), its joint sensors and IMUs, the venue's fixed camera, and action chunks (walking, running, joint targets, Unitree LowCmd, the hands' grip). 5 resets, the last attempt graded; no object state, no referee state during an attempt. The sim service records the attempt and grades it live with the family's referee (no grading replay)."
+description = "STANDARD MODE (robot as a service, eai-standard/2.1): Embodied Olympics balance-board on the same frozen instance as embodied-olympics-fun-balance-board-i00-privileged. Stay balanced on the roller board for 30 s, touching only the deck, with your feet, and keeping both ends of the deck off the floor. The agent only gets a client: the robot's two head cameras (depth on one), its joint sensors and IMUs, the venue's fixed camera, and action chunks (walking, running, joint targets, Unitree LowCmd, the hands' grip). 5 resets, the last attempt graded; no object state, no referee state during an attempt. The sim service records the attempt and grades it live with the family's referee (no grading replay)."
 keywords = ["robotics", "embodied-olympics", "sports", "mujoco", "unitree-g1", "humanoid", "standard-mode", "trajectory", "balance-board"]
 
 [metadata]

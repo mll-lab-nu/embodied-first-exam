@@ -9,7 +9,7 @@ tool.
 Success: all of the star is inside the green dashed goal square and still, and the cage parts are no closer to the goal
 than at the start. Do not force pieces into each other: a success with pieces pushed into each other is reviewed instead
 of credited automatically. Dropping a piece off the table, the rod included, ends the episode as a failure. The episode
-ends, as a success, as soon as all of this has held for two seconds.
+ends, as a success, as soon as all of this has held for 2 s.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the

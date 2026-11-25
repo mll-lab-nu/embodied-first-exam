@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Standard-mode twin of `robodojo-imitate-sorting-sequence-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/imitate_sorting_sequence_0.json`). Watch the support (opponent) arm place five objects into the far basket one after another, then place your five matching objects into your basket in that same order, and finish with both arms back at their start pose. (RoboDojo's `imitate_sorting_sequence`). The agent drives the
+Standard-mode twin of `robodojo-imitate-sorting-sequence-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/imitate_sorting_sequence_0.json`). Watch the opponent's arm put five objects into the far basket one at a time, then put your five matching objects into your basket in the same order. Then move both arms back to where they started. (RoboDojo's `imitate_sorting_sequence`). The agent drives the
 robot only through the eai-standard/2.2 client (the simulator runs in the `sim` sidecar), which owns the scene and records
 the episode as a (T, 14) trajectory of RoboDojo's own joint action at 25 Hz.
 

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Standard-mode twin of `robodojo-cover-blocks-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/cover_blocks_0.json`). Cover the three coloured blocks with the three cups, one at a time from left to right, and afterwards lift the cups one at a time to uncover the red block first, the green block second and the blue block last. Then bring both arms back to where they started. (RoboDojo's `cover_blocks`). The agent drives the
+Standard-mode twin of `robodojo-cover-blocks-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/cover_blocks_0.json`). Cover the three blocks with the three cups one at a time from left to right, then lift the cups off one at a time to uncover the red block first, then the green one, then the blue one. Then move both arms back to where they started. (RoboDojo's `cover_blocks`). The agent drives the
 robot only through the eai-standard/2.2 client (the simulator runs in the `sim` sidecar), which owns the scene and records
 the episode as a (T, 14) trajectory of RoboDojo's own joint action at 25 Hz.
 

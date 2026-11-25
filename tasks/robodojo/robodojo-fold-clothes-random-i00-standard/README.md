@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Standard-mode twin of `robodojo-fold-clothes-random-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/fold_clothes_random_0.json`). Fold the long-sleeve shirt lying flat on the table: first fold both sleeves in across the chest, then fold the bottom hem up to the shoulders, using both arms, and finish with both arms back home with grippers open. (RoboDojo's `fold_clothes_random`). The agent drives the
+Standard-mode twin of `robodojo-fold-clothes-random-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/fold_clothes_random_0.json`). Fold the shirt: first both sleeves in across the chest, then the bottom hem up to the shoulders. Then move both arms back to where they started, with both grippers open. (RoboDojo's `fold_clothes_random`). The agent drives the
 robot only through the eai-standard/2.2 client (the simulator runs in the `sim` sidecar), which owns the scene and records
 the episode as a (T, 14) trajectory of RoboDojo's own joint action at 25 Hz.
 

@@ -8,8 +8,8 @@ below.
 ## Goal
 Success: counted from that end, the rope goes through G1, then A, then G2, then V in that order, through each hole
 exactly once and the right way: G1 away from V's side, A toward G2's side, G2 toward V's side, V toward G1's side; the
-rope is intact and still. A replay ends, as a success, as soon as all of this has held for half a second; later rows are
-not run.
+rope is intact and still. A replay ends, as a success, as soon as all of this has held for 0.5 s; later rows are not
+run.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, path)`: the (T, 14) actions, one row
 per control step (1/25 s), at most 41000 rows (a longer trajectory is invalid). Leave the script that produced it at

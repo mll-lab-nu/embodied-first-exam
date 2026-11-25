@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/embodied-olympics-fun-dribble-slalom-i00-privileged"
-description = "Embodied Olympics dribble-slalom (one Unitree G1 on the Embodied Olympics simulator, MuJoCo 3.3.7, CPU) in privileged mode: produce one replayable trajectory. Dribble the football out through the six cones, passing each on the side of its yellow mark, round the last one and back the other way over the start line, keeping the ball within 2 m and touching no cone. A referee of events, geometry and contact rules decides the success."
+description = "Embodied Olympics dribble-slalom (one Unitree G1 on the Embodied Olympics simulator, MuJoCo 3.3.7, CPU) in privileged mode: produce one replayable trajectory. Dribble the football out through the six cones, passing each on the side of its yellow mark, round the last one and back the other way over the start line, keeping the ball within 2 m of you and touching no cone. A referee of events, geometry and contact rules decides the success."
 keywords = ["robotics", "embodied-olympics", "sports", "mujoco", "unitree-g1", "humanoid", "trajectory", "dribble-slalom"]
 
 [metadata]

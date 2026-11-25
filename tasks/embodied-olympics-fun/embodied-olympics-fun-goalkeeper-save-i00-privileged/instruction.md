@@ -23,8 +23,8 @@ log, `rcb_session_log.jsonl`, to `/app/output/`: leave it there and do not set `
 Save a trajectory as soon as you have one and overwrite it (with `gen.py` and `NOTES.md` to match) whenever you have a
 better one; a run that ends with no file scores zero. Do not stop early.
 
-Rules: **No cheating.** Public tools, robot models and pretrained controllers are allowed, but do not search for,
-download or use an existing solution to this task (published or reference solutions); trials are reviewed.
+Rules: **No cheating.** Do not search for, download or use an existing solution to this exact task (published or
+reference solutions, the benchmark's demonstrations, policies trained for it); trials are reviewed.
 
 The attempt fails at once if:
 - at a kick you are not on your feet with part of a foot on or above the goal line between the posts, or you touch a
@@ -122,7 +122,7 @@ Joint order everywhere (Unitree's SDK order): `left_hip_yaw`, `left_hip_pitch`, 
   failure: "the simulation became unstable".
 
 ## Others
-- The machines shoot one after another at different spots, the first at 6 s and then every 9 s.
+- The machines shoot one after another at different spots, several seconds apart, the first soon after the start.
 
 ## Limits
 - Time: 7200 s of wall-clock time from the start of your session; everything counts (the simulator's start-up too). At

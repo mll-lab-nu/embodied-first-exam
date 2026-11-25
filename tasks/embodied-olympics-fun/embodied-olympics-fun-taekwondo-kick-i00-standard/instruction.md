@@ -5,7 +5,7 @@ Kick the dummy's trunk protector once, hard, with a foot, then stand clear of it
 
 ## Goal
 Success: you kick the trunk protector once with a foot, hard enough to score, then stand still on both feet, clear of
-the dummy, for two seconds.
+the dummy, for 2 s.
 
 The referee in the service judges these stages, in order: **kick → stand**. An attempt (an episode) ends at the success,
 at the first foul or after 15 s of robot time, and a success ends the trial at once. Ending your session ends the run,
@@ -15,8 +15,8 @@ Keep a `NOTES.md` of at most 20 lines in `/app/output/` (your approach, what fai
 save it early and keep it current.
 
 Rules:
-- **No cheating.** Public tools, robot models and pretrained controllers are allowed, but do not search for, download or
-  use an existing solution to this task (published or reference solutions); trials are reviewed.
+- **No cheating.** Do not search for, download or use an existing solution to this exact task (published or reference
+  solutions, the benchmark's demonstrations, policies trained for it); trials are reviewed.
 - Attempts: 5 resets, each a new attempt from the same start (the first attempt starts when the service comes up); only
   your last attempt is graded.
 - You get only what the robot's own sensors give (its head cameras, joint encoders, motor torques and IMUs) and the

@@ -14,7 +14,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/robodojo-play-stacking-toy-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.2): RoboDojo play_stacking_toy (Long-Horizon) on the same frozen layout as the privileged task (arx_x5/0/play_stacking_toy_0.json). Task: Put all ten stacking-toy blocks onto the correct pegs of the base, exactly centred on the pegs, then return both arms to the start pose. The agent only gets a client: get_obs (RGB, depth + proprioception of both arms), submit (joint_position or ee_pose chunks). No reset, no privileged state; the sim service records the episode as a trajectory and grades the live episode."
+description = "STANDARD MODE (robot as a service, eai-standard/2.2): RoboDojo play_stacking_toy (Long-Horizon) on the same frozen layout as the privileged task (arx_x5/0/play_stacking_toy_0.json). Task: Put all ten blocks of the stacking toy on their matching pegs of the base, all blocks of one kind on the same peg, each block slid down its peg and sitting straight on the one below. Then move both arms back to where they started. The agent only gets a client: get_obs (RGB, depth + proprioception of both arms), submit (joint_position or ee_pose chunks). No reset, no privileged state; the sim service records the episode as a trajectory and grades the live episode."
 keywords = ["robotics", "robodojo", "isaac-lab", "isaac-sim", "bimanual", "arx-x5", "standard-mode", "trajectory"]
 
 [metadata]

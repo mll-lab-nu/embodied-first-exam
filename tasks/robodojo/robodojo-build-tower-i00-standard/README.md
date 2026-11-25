@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Standard-mode twin of `robodojo-build-tower-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/build_tower_0.json`). Stack the wooden blocks and boards into a three-level tower: two white pillar blocks (one of the two that start on the left, one of the two that start on the right) with the long board across them, the other two pillars standing on that board with the short board on top, then the thin plank on the short board and the green roof piece on the plank; then send both arms home. (RoboDojo's `build_tower`). The agent drives the
+Standard-mode twin of `robodojo-build-tower-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/build_tower_0.json`). Build a three-level tower: the long board across two pillars, one from each side; the other two pillars on it, under the short board; then the thin plank along the short board and the roof piece on the middle of the plank, ridge across it. Keep every piece the way up it is now. Then move both arms back to where they started. (RoboDojo's `build_tower`). The agent drives the
 robot only through the eai-standard/2.2 client (the simulator runs in the `sim` sidecar), which owns the scene and records
 the episode as a (T, 14) trajectory of RoboDojo's own joint action at 25 Hz.
 

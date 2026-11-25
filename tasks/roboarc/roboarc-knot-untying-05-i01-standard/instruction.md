@@ -7,7 +7,7 @@ let go of it and move both arms clear of it.
 ## Goal
 Success: the rope lies untangled and flat on the table, with no crossing, overlap or fold-back seen from above and a
 clear gap between parts of it that are not neighbours along the rope; both arms have let go of it and moved clear, and
-the rope is still. The episode ends, as a success, as soon as all of this has held for half a second.
+the rope is still. The episode ends, as a success, as soon as all of this has held for 0.5 s.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the

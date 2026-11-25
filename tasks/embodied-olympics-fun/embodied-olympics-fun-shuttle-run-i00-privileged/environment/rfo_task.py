@@ -63,7 +63,7 @@ class Task(TaskBase):
                   court_half_m=4.0)
 
     sentence = ("Run the 4 x 10 m shuttle: to the far line and back twice, putting a foot beyond the line at each "
-                "turn, within 30 seconds.")
+                "turn.")
     rules = ("Two lines cross the floor: the start line x = 0 and the far line x = {distance_m} m (the planes meant "
              "are the edges of the painted lines that face each other). The clock starts at t = 0. You run four "
              "legs: to the far line, back to the start line, to the far line, back to the start line. At each of the "

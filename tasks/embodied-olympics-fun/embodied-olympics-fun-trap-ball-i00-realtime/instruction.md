@@ -4,8 +4,8 @@
 Trap the pass: take the ball rolling past you with a foot and bring it to rest close to you within three seconds.
 
 ## Goal
-Success: your first touch is with a foot, and within 3 s of it the ball is at rest within about a metre of you while you
-stand on your feet.
+Success: your first touch is with a foot, and within 3 s of it the ball is at rest within 1 m of you while you stand on
+your feet.
 
 The referee in the service judges these stages, in order: **first touch → control**. An attempt (an episode) ends at the
 success, at the first foul or after 10 s of robot time, and a success ends the trial at once. Ending your session ends
@@ -16,8 +16,8 @@ Keep a `NOTES.md` of at most 20 lines in `/app/output/` (your approach, what fai
 save it early and keep it current.
 
 Rules:
-- **No cheating.** Public tools, robot models and pretrained controllers are allowed, but do not search for, download or
-  use an existing solution to this task (published or reference solutions); trials are reviewed.
+- **No cheating.** Do not search for, download or use an existing solution to this exact task (published or reference
+  solutions, the benchmark's demonstrations, policies trained for it); trials are reviewed.
 - Attempts: 5 resets, each a new attempt from the same start, paused until your next command; only your last attempt is
   graded.
 - You get only what the robot's own sensors give (its head cameras, joint encoders, motor torques and IMUs) and the
@@ -26,9 +26,8 @@ Rules:
 
 The attempt fails at once if:
 - the ball's first touch on you is not a foot or an ankle, or a hand or an arm touches it
-- the ball is not under control three seconds after the first touch
-- you get close to the ball machine (within about 9 m) before the pass has left it, or touch the machine or the waiting
-  ball
+- the ball is not under control 3 s after the first touch
+- you come within 9.15 m of the ball machine before the pass has left it, or touch the machine or the waiting ball
 - you fall: anything but your feet touches the floor, or your hips sink close to it
 
 ## Robot Interface
@@ -171,7 +170,7 @@ Joint order everywhere (Unitree's SDK order): `left_hip_yaw`, `left_hip_pitch`, 
   what the cameras saw meanwhile. `r.status()` shows `running` and `lag_s`.
 
 ## Others
-- The machine 15 m ahead drives the ball along the grass to you about 3 s after the start.
+- The machine ahead of you drives the ball along the grass to you a few seconds after the start.
 
 ## Limits
 - Time: 7200 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At

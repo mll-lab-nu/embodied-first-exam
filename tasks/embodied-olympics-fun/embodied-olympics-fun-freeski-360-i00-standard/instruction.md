@@ -1,8 +1,8 @@
 # Embodied Olympics · freeski 360 (standard)
 
 ## Task
-Ski down the in-run, jump off the kicker and do a 360 in the air, then land on your skis and ride away over the finish
-line.
+Ski down the in-run, jump off the kicker and spin one full turn in the air, then land on your skis and ride away over
+the finish line.
 
 ## Goal
 Success: you jump off the kicker, spin one full turn with no flip, land on your skis facing down the hill and ride over
@@ -16,8 +16,8 @@ Keep a `NOTES.md` of at most 20 lines in `/app/output/` (your approach, what fai
 save it early and keep it current.
 
 Rules:
-- **No cheating.** Public tools, robot models and pretrained controllers are allowed, but do not search for, download or
-  use an existing solution to this task (published or reference solutions); trials are reviewed.
+- **No cheating.** Do not search for, download or use an existing solution to this exact task (published or reference
+  solutions, the benchmark's demonstrations, policies trained for it); trials are reviewed.
 - Attempts: 5 resets, each a new attempt from the same start (the first attempt starts when the service comes up); only
   your last attempt is graded.
 - You get only what the robot's own sensors give (its head cameras, joint encoders, motor torques and IMUs) and the

@@ -8,7 +8,7 @@ Fold the blanket in half, the far half over the near half, so that it matches th
 Success: the blanket is folded in half as the target images show, its layers in that order, lying flat on the table in
 the place and at the angle the images show, with nothing stretched; both arms have let go of it and moved clear, and the
 cloth is still. Letting the blanket fall off the table ends the episode as a failure. The episode ends, as a success, as
-soon as all of this has held for half a second.
+soon as all of this has held for 0.5 s.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the

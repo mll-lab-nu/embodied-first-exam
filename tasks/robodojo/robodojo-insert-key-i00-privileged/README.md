@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Push the key into the keyhole blade first and ring up, with its teeth toward the right-hand end of the slit. Then give it about a sixth of a turn clockwise as seen from above and leave it standing straight in the keyhole. (RoboDojo's `insert_key`). RoboDojo capability dimension: Precision. Instance i00 is RoboDojo's own evaluation layout
+Push the key into the keyhole, ring up, with its teeth toward the right-hand end of the slit, then turn it about a sixth of a turn clockwise as seen from above, leaving it standing straight. (RoboDojo's `insert_key`). RoboDojo capability dimension: Precision. Instance i00 is RoboDojo's own evaluation layout
 `arx_x5/0/insert_key_0.json` (sha256 `2e8349f7073e2f0c`), frozen in `instance.json`. The deliverable is one replayable trajectory of
 RoboDojo's 14-D joint action at 25 Hz (`/app/output/trajectory.npz`), graded by RoboDojo's own reward check for the task,
 with no step cap (RoboDojo's own evaluation gives a policy 300 actions; PROTOCOL §3).

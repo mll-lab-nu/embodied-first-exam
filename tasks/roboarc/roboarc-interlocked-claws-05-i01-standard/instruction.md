@@ -7,7 +7,7 @@ Pull the two claw pieces completely apart and keep both still for a moment.
 Success: the two pieces are completely apart, with a clear gap between them, and both are still. Do not force pieces
 into each other: a success with pieces pushed into each other is reviewed instead of credited automatically. Dropping a
 piece off the table ends the episode as a failure. The episode ends, as a success, as soon as all of this has held for
-half a second.
+0.5 s.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the

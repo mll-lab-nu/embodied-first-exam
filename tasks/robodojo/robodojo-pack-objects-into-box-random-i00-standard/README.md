@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Standard-mode twin of `robodojo-pack-objects-into-box-random-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/pack_objects_into_box_random_0.json`). Put the car, electric toothbrush, hammer and shoe into the box, each oriented with its front facing the same way (left), with the box upright and aligned, then return both arms to the start pose. (RoboDojo's `pack_objects_into_box_random`). The agent drives the
+Standard-mode twin of `robodojo-pack-objects-into-box-random-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/pack_objects_into_box_random_0.json`). Put the car, the toothbrush, the hammer and the shoe in the box, each lying lengthwise with its front end pointing left, and keep the box upright without turning it. Then move both arms back to where they started. (RoboDojo's `pack_objects_into_box_random`). The agent drives the
 robot only through the eai-standard/2.2 client (the simulator runs in the `sim` sidecar), which owns the scene and records
 the episode as a (T, 14) trajectory of RoboDojo's own joint action at 25 Hz.
 

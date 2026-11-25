@@ -8,8 +8,8 @@ the ring and drive its two screws, and set the tray on the ring. Then let go of 
 Success: the tray table is assembled: frame B, the ring and all four screws are seated on frame A (the ring's two screws
 in two different holes) and the tray rests loose on the ring; no arm touches any part and everything is still. Forcing
 parts deep into each other breaks the simulation and ends the episode at once, without success. When all of this holds,
-the service checks it once more after holding your last command for a second more (on a copy: the robot does not move);
-if it still holds, the episode ends as a success, and if not, the episode goes on and you can still fix it.
+the service checks it once more after holding your last command for 1 s more (on a copy: the robot does not move); if it
+still holds, the episode ends as a success, and if not, the episode goes on and you can still fix it.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the

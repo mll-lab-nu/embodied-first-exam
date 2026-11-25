@@ -9,7 +9,7 @@ Success: the loop has gone along the whole wire from its starting end to its fin
 skipping a branch, and the tool now lies on the finish support the way it lay at the start, with the arm clear of it and
 the tool still. If the loop comes off the wire before the end, start again from the beginning. Any touch of the tool's
 metal on the wire ends the episode as a failure, however light. Dropping the tool off the table ends the episode as a
-failure. The episode ends, as a success, as soon as all of this has held for a second.
+failure. The episode ends, as a success, as soon as all of this has held for 1 s.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the

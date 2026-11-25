@@ -7,8 +7,7 @@ let go of it and move both arms clear of it.
 ## Goal
 Success: the rope lies untangled and flat on the table, with no crossing, overlap or fold-back seen from above and a
 clear gap between parts of it that are not neighbours along the rope; both arms have let go of it and moved clear, and
-the rope is still. A replay ends, as a success, as soon as all of this has held for half a second; later rows are not
-run.
+the rope is still. A replay ends, as a success, as soon as all of this has held for 0.5 s; later rows are not run.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, path)`: the (T, 14) actions, one row
 per control step (1/40 s), at most 11000 rows (a longer trajectory is invalid). Leave the script that produced it at

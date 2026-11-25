@@ -6,7 +6,7 @@ your feet and stand.
 
 ## Goal
 Success: from a standstill behind the line you jump off both feet, land on your feet at least 1.32 m past the line and
-stand still for a second (you may step after landing).
+stand still for 1 s (you may step after landing).
 
 The referee judges these stages, in order: **take-off → landing → stand**. An attempt ends at the success, at the first
 foul or after 20 s (2000 control steps) of robot time.
@@ -25,8 +25,8 @@ log, `rcb_session_log.jsonl`, to `/app/output/`: leave it there and do not set `
 Save a trajectory as soon as you have one and overwrite it (with `gen.py` and `NOTES.md` to match) whenever you have a
 better one; a run that ends with no file scores zero. Do not stop early.
 
-Rules: **No cheating.** Public tools, robot models and pretrained controllers are allowed, but do not search for,
-download or use an existing solution to this task (published or reference solutions); trials are reviewed.
+Rules: **No cheating.** Do not search for, download or use an existing solution to this exact task (published or
+reference solutions, the benchmark's demonstrations, policies trained for it); trials are reviewed.
 
 The attempt fails at once if:
 - a foot is on or over the line, you step or shuffle before the take-off, or one foot leaves the ground before the other

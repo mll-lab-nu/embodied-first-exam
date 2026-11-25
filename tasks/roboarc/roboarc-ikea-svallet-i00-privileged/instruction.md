@@ -8,8 +8,8 @@ Leave the lamp standing upright. Then let go of everything and move both arms cl
 Success: the shade is snapped onto the stand and the bulb screwed fully into the shade; the lamp stands upright on the
 bench as it started, no arm touches it and everything is still. Forcing parts deep into each other breaks the simulation
 and ends the episode at once, without success. What counts is how things stand after the last action of your trajectory,
-replayed from the fixed start. After your last row the grader holds it for a second more and requires all of this again:
-end your rows with the parts released, the arms clear of them and everything at rest.
+replayed from the fixed start. After your last row the grader holds it for 1 s more and requires all of this again: end
+your rows with the parts released, the arms clear of them and everything at rest.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory()`: `ctrl` (N, 14) float64, `substeps` = 4,
 `timestep` = 0.000625, at most 449,000 rows (a longer one is refused). Leave the script that produced it at

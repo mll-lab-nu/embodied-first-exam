@@ -45,7 +45,7 @@ Caps per container (PROTOCOL §6).
 ## Details
 
 ### Goal
-Feed every fine fiber, tip first, and the front of the sheath through the fixed copper ring, touching only the thick sheath with the gripper. Leave the rear terminal anchored where it is. Route the sheath past the peg with the peg on its left (looking from the rear terminal toward the ring). The red fiber has to come out at about 7:20 on the ring, read as a clock face from the side the fibers go in.
+Feed every fine fiber, tip first, and the front of the sheath through the fixed copper ring, touching only the thick sheath with the gripper. Leave the rear terminal anchored where it is. Route the sheath past the peg with the peg on its left (looking from the rear terminal toward the ring). The red fiber has to come out at 7:20 on the ring (within 15°), read as a clock face from the side the fibers go in.
 
 ### Success requirements
 - Pass every fiber tip first, then successive material points through to its root. The actual crossing history must be observed; placing fibers on the far side or passing only the tips is not completion.

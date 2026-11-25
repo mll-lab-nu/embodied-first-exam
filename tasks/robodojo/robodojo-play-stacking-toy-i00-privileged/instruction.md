@@ -1,12 +1,13 @@
 # RoboDojo · play_stacking_toy (privileged)
 
 ## Task
-Put all ten blocks of the stacking toy on their matching pegs of the base, all blocks of one kind on the same peg,
-pushed down. Then move both arms back to where they started.
+Put all ten blocks of the stacking toy on their matching pegs of the base, all blocks of one kind on the same peg, each
+block slid down its peg and sitting straight on the one below. Then move both arms back to where they started.
 
 ## Goal
-Success: every block is pushed down onto its matching peg of the base, all blocks of one kind on the same peg, and both
-arms are back where they started. A replay ends as soon as the task is done; later rows are not run.
+Success: every block has slid down its matching peg of the base and sits straight on the one below, all blocks of one
+kind on the same peg, and both arms are back where they started. A replay ends as soon as the task is done; later rows
+are not run.
 
 Deliverable: `/app/output/trajectory.npz` with `task` and `actions`, a (T, 14) float array of at most 15,000 rows, one
 per action (1/25 s); write it with `s.save_trajectory()`. Anything else (another shape, NaN, more rows) scores 0. Leave

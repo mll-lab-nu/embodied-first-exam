@@ -24,16 +24,15 @@ log, `rcb_session_log.jsonl`, to `/app/output/`: leave it there and do not set `
 Save a trajectory as soon as you have one and overwrite it (with `gen.py` and `NOTES.md` to match) whenever you have a
 better one; a run that ends with no file scores zero. Do not stop early.
 
-Rules: **No cheating.** Public tools, robot models and pretrained controllers are allowed, but do not search for,
-download or use an existing solution to this task (published or reference solutions); trials are reviewed.
+Rules: **No cheating.** Do not search for, download or use an existing solution to this exact task (published or
+reference solutions, the benchmark's demonstrations, policies trained for it); trials are reviewed.
 
 The attempt fails at once if:
 - the ball touches the ground before your strike
 - any part of you but a foot or an ankle touches the ball, or the strike lingers or is too weak
 - you touch the ball again after the strike
 - the ball crosses the goal line outside the goal, or comes to a stop
-- you get close to the ball machine (within about 9 m) before the cross has left it, or touch the machine or the waiting
-  ball
+- you come within 9.15 m of the ball machine before the cross has left it, or touch the machine or the waiting ball
 - you fall: anything but your feet touches the floor, or your hips sink close to it
 
 ## Robot Interface
@@ -126,7 +125,7 @@ Joint order everywhere (Unitree's SDK order): `left_hip_yaw`, `left_hip_pitch`, 
   failure: "the simulation became unstable".
 
 ## Others
-- The machine on your left crosses the ball about 3 s after the start; it comes down steeply in front of you.
+- The machine on your left crosses the ball a few seconds after the start; it comes down steeply in front of you.
 
 ## Limits
 - Time: 7200 s of wall-clock time from the start of your session; everything counts (the simulator's start-up too). At

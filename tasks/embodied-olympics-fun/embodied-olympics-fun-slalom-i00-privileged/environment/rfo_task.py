@@ -64,7 +64,7 @@ class Task(TaskBase):
 
     sentence = ("Run the Illinois agility course without touching a cone: round the far-left cone, back round the "
                 "cone on the start line, weave up and back through the centre cones, round the far-right cone and "
-                "back over the finish line, within 60 seconds.")
+                "back over the finish line.")
     rules = ("The course is {length_m} m long (x from 0 to {length_m} m) and {width_m} m wide, centred on y = 0: its "
              "left side line is half that width to the left of the centre line (y > 0), its right side line as far "
              "to the right. Corner cones stand where the side lines meet the start line x = 0 (the start cone on "

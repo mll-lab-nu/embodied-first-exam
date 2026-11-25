@@ -4,8 +4,8 @@
 Win a sumo bout: make your opponent step out of the ring or touch down with anything but its feet before you do.
 
 ## Goal
-Success: within 30 s the opponent touches the ground outside the ring, or the clay or the bales with anything but its
-feet, before that happens to you.
+Success: the opponent touches the ground outside the ring, or the clay or the bales with anything but its feet, before
+that happens to you.
 
 The referee in the service judges these stages, in order: **win**. An attempt (an episode) ends at the success, at the
 first foul or after 30 s of robot time, and a success ends the trial at once. Ending your session ends the run, so do
@@ -15,8 +15,8 @@ Keep a `NOTES.md` of at most 20 lines in `/app/output/` (your approach, what fai
 save it early and keep it current.
 
 Rules:
-- **No cheating.** Public tools, robot models and pretrained controllers are allowed, but do not search for, download or
-  use an existing solution to this task (published or reference solutions); trials are reviewed.
+- **No cheating.** Do not search for, download or use an existing solution to this exact task (published or reference
+  solutions, the benchmark's demonstrations, policies trained for it); trials are reviewed.
 - Attempts: 5 resets, each a new attempt from the same start (the first attempt starts when the service comes up); only
   your last attempt is graded.
 - You get only what the robot's own sensors give (its head cameras, joint encoders, motor torques and IMUs) and the
@@ -28,7 +28,7 @@ The attempt fails at once if:
   bales, or your hips sink close to the clay
 - it happens to both of you at the same instant (no decision)
 - you kick the opponent's trunk
-- there is no decision within 30 s
+- there is no decision in time
 
 ## Robot Interface
 You control a simulated Unitree G1 humanoid robot (29 joints, 1.32 m tall, 33 kg; the Embodied Olympics simulator on
@@ -157,7 +157,7 @@ in the spec's `robot_facts`.
   seconds is free.
 
 ## Others
-- The opponent charges half a second after the start and keeps pushing into you, turning to face you.
+- The opponent charges right after the start and keeps pushing into you, turning to face you.
 
 ## Limits
 - Time: 7200 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At

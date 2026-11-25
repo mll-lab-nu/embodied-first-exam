@@ -25,15 +25,15 @@ log, `rcb_session_log.jsonl`, to `/app/output/`: leave it there and do not set `
 Save a trajectory as soon as you have one and overwrite it (with `gen.py` and `NOTES.md` to match) whenever you have a
 better one; a run that ends with no file scores zero. Do not stop early.
 
-Rules: **No cheating.** Public tools, robot models and pretrained controllers are allowed, but do not search for,
-download or use an existing solution to this task (published or reference solutions); trials are reviewed.
+Rules: **No cheating.** Do not search for, download or use an existing solution to this exact task (published or
+reference solutions, the benchmark's demonstrations, policies trained for it); trials are reviewed.
 
 The attempt fails at once if:
 - you travel at the start
 - while the ball is in your hands it touches the floor or any part of you but a hand
 - once you dribble, a hand holds the ball too long or carries it from below, both hands touch it at once, or one hand
   touches it twice without a bounce in between
-- the ball touches any part of you but a hand, or gets more than about 2 m away from you
+- the ball touches any part of you but a hand, or gets more than 2 m away from you
 - the ball or any part of you touches the floor on or outside a boundary line
 - you fall: anything but your feet touches the floor, or your hips sink close to it
 

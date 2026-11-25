@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/robodojo-match-and-pick-from-conveyor-i00-privileged"
-description = "RoboDojo match_and_pick_from_conveyor (Memory; two ARX X5 arms with parallel grippers, Isaac Sim 5.1 / Isaac Lab): produce one replayable trajectory of RoboDojo's 14-D joint actions. Task: Watch the first object that appears on the conveyor, then pick up the identical object when it shows up again and lift it about a hand's length. Frozen scene instance: RoboDojo's own evaluation layout arx_x5/0/match_and_pick_from_conveyor_0.json; graded by RoboDojo's own reward check."
+description = "RoboDojo match_and_pick_from_conveyor (Memory; two ARX X5 arms with parallel grippers, Isaac Sim 5.1 / Isaac Lab): produce one replayable trajectory of RoboDojo's 14-D joint actions. Task: Remember the first object on the belt, then pick up its identical copy when it comes by later and lift it about a hand's length. Frozen scene instance: RoboDojo's own evaluation layout arx_x5/0/match_and_pick_from_conveyor_0.json; graded by RoboDojo's own reward check."
 keywords = ["robotics", "robodojo", "isaac-lab", "isaac-sim", "bimanual", "arx-x5", "code-as-policy", "trajectory", "privileged"]
 
 [metadata]

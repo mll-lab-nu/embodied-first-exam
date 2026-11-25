@@ -233,7 +233,7 @@ class Task(TaskBase):
                   strike_max_s=0.10, clear_s=0.03, fall_z_m=0.35)
 
     sentence = ("Serve: toss the ball off your left palm and hit it with one hand over the net into the opponent's "
-                "court, within 8 seconds.")
+                "court, within 8 s.")
     rules = ("You stand behind the end line of an official volleyball court ({court_half_length_m} m by "
              "{court_width_m} m on each side of the net), facing the net, midway between the side lines; the end "
              "line's outer edge is {end_line_m} m ahead of your pelvis and the net is {court_half_length_m} m beyond "

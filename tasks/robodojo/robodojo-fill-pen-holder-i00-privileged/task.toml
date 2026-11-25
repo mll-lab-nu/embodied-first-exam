@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/robodojo-fill-pen-holder-i00-privileged"
-description = "RoboDojo fill_pen_holder (Long-Horizon; two ARX X5 arms with parallel grippers, Isaac Sim 5.1 / Isaac Lab): produce one replayable trajectory of RoboDojo's 14-D joint actions. Task: Use one arm to steady the pen holder and the other arm to drop all four pens into it: the white ballpoint writing tip down, and the black-and-gold pen and both markers cap end up. Then leave the holder upright on the table and bring both arms back to where they started. Frozen scene instance: RoboDojo's own evaluation layout arx_x5/0/fill_pen_holder_0.json; graded by RoboDojo's own reward check."
+description = "RoboDojo fill_pen_holder (Long-Horizon; two ARX X5 arms with parallel grippers, Isaac Sim 5.1 / Isaac Lab): produce one replayable trajectory of RoboDojo's 14-D joint actions. Task: Put all four pens in the pen holder: the white ballpoint tip down, the other three cap end up. Then make sure the holder stands upright and move both arms back to where they started. Frozen scene instance: RoboDojo's own evaluation layout arx_x5/0/fill_pen_holder_0.json; graded by RoboDojo's own reward check."
 keywords = ["robotics", "robodojo", "isaac-lab", "isaac-sim", "bimanual", "arx-x5", "code-as-policy", "trajectory", "privileged"]
 
 [metadata]

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Insert all three test tubes into the tube rack and return the arms to their start pose. (RoboDojo's `insert_tubes`). RoboDojo capability dimension: Precision. Instance i00 is RoboDojo's own evaluation layout
+Put the three test tubes into the holes of the tube rack, cap up and pushed well down. Then move both arms back to where they started. (RoboDojo's `insert_tubes`). RoboDojo capability dimension: Precision. Instance i00 is RoboDojo's own evaluation layout
 `arx_x5/0/insert_tubes_0.json` (sha256 `7a385171c850978e`), frozen in `instance.json`. The deliverable is one replayable trajectory of
 RoboDojo's 14-D joint action at 25 Hz (`/app/output/trajectory.npz`), graded by RoboDojo's own reward check for the task,
 with no step cap (RoboDojo's own evaluation gives a policy 500 actions; PROTOCOL §3).

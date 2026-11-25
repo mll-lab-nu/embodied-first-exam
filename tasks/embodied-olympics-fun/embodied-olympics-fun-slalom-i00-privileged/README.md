@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Run the Illinois agility course without touching a cone: round the far-left cone, back round the cone on the start line, weave up and back through the centre cones, round the far-right cone and back over the finish line, within 60 seconds. (Embodied Olympics `slalom`: one Unitree G1 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
+Run the Illinois agility course without touching a cone: round the far-left cone, back round the cone on the start line, weave up and back through the centre cones, round the far-right cone and back over the finish line. (Embodied Olympics `slalom`: one Unitree G1 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
 
 ## Difficulty
 About 60 m of path with five turns round a cone and six changes of side between cones 3.3 m apart, in 60 s: the walking gait covers 38 m in that time, and the running gait turns at most half a radian per second, so at speed it cannot follow the weave or round a cone.

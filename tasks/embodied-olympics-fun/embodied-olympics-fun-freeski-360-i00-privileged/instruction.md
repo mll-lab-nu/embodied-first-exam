@@ -1,8 +1,8 @@
 # Embodied Olympics · freeski 360 (privileged)
 
 ## Task
-Ski down the in-run, jump off the kicker and do a 360 in the air, then land on your skis and ride away over the finish
-line.
+Ski down the in-run, jump off the kicker and spin one full turn in the air, then land on your skis and ride away over
+the finish line.
 
 ## Goal
 Success: you jump off the kicker, spin one full turn with no flip, land on your skis facing down the hill and ride over
@@ -25,8 +25,8 @@ log, `rcb_session_log.jsonl`, to `/app/output/`: leave it there and do not set `
 Save a trajectory as soon as you have one and overwrite it (with `gen.py` and `NOTES.md` to match) whenever you have a
 better one; a run that ends with no file scores zero. Do not stop early.
 
-Rules: **No cheating.** Public tools, robot models and pretrained controllers are allowed, but do not search for,
-download or use an existing solution to this task (published or reference solutions); trials are reviewed.
+Rules: **No cheating.** Do not search for, download or use an existing solution to this exact task (published or
+reference solutions, the benchmark's demonstrations, policies trained for it); trials are reviewed.
 
 The attempt fails at once if:
 - you do any other trick (more or less rotation, a flip, a take-off riding backwards) or no jump at all

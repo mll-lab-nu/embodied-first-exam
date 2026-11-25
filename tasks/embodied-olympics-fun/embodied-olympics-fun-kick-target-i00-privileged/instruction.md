@@ -5,7 +5,7 @@ Kick the heavy bag once, hard, with your right foot or shin on the marked band, 
 
 ## Goal
 Success: you kick the bag once, hard, with your right foot or shin on the marked band, then stand still on both feet for
-two seconds.
+2 s.
 
 The referee judges these stages, in order: **strike → stand**. An attempt ends at the success, at the first foul or
 after 15 s (1500 control steps) of robot time.
@@ -24,8 +24,8 @@ log, `rcb_session_log.jsonl`, to `/app/output/`: leave it there and do not set `
 Save a trajectory as soon as you have one and overwrite it (with `gen.py` and `NOTES.md` to match) whenever you have a
 better one; a run that ends with no file scores zero. Do not stop early.
 
-Rules: **No cheating.** Public tools, robot models and pretrained controllers are allowed, but do not search for,
-download or use an existing solution to this task (published or reference solutions); trials are reviewed.
+Rules: **No cheating.** Do not search for, download or use an existing solution to this exact task (published or
+reference solutions, the benchmark's demonstrations, policies trained for it); trials are reviewed.
 
 The attempt fails at once if:
 - anything but your right foot or shin touches the bag

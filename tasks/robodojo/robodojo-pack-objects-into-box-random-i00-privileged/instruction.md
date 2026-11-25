@@ -2,13 +2,13 @@
 
 ## Task
 Put the car, the toothbrush, the hammer and the shoe in the box, each lying lengthwise with its front end pointing left,
-and keep the box upright where it is. Then move both arms back to where they started.
+and keep the box upright without turning it. Then move both arms back to where they started.
 
 ## Goal
-Success: the car, the toothbrush, the hammer and the shoe lie wholly inside the box, in its middle away from the short
-end walls, each lengthwise with its front end pointing left (the car's nose, the toothbrush's brush head, the hammer's
-head, the shoe's toe); the box still stands upright and is not turned; and both arms are back where they started. A
-replay ends as soon as the task is done; later rows are not run.
+Success: the car, the toothbrush, the hammer and the shoe lie inside the box, each lengthwise with its front end
+pointing left (the car's nose, the toothbrush's brush head, the hammer's head, the shoe's toe); the box still stands
+upright and is not turned; and both arms are back where they started. A replay ends as soon as the task is done; later
+rows are not run.
 
 Deliverable: `/app/output/trajectory.npz` with `task` and `actions`, a (T, 14) float array of at most 15,000 rows, one
 per action (1/25 s); write it with `s.save_trajectory()`. Anything else (another shape, NaN, more rows) scores 0. Leave

@@ -4,7 +4,7 @@
 Walk along the balance beam to its far, yellow end and stand there, touching the beam only with your feet.
 
 ## Goal
-Success: you walk to the far end of the beam and stand still there for two seconds, both feet on its yellow end.
+Success: you walk to the far end of the beam and stand still there for 2 s, both feet on its yellow end.
 
 The referee in the service judges these stages, in order: **half way → far end → stand**. An attempt (an episode) ends
 at the success, at the first foul or after 90 s of robot time, and a success ends the trial at once. Ending your session
@@ -14,8 +14,8 @@ Keep a `NOTES.md` of at most 20 lines in `/app/output/` (your approach, what fai
 save it early and keep it current.
 
 Rules:
-- **No cheating.** Public tools, robot models and pretrained controllers are allowed, but do not search for, download or
-  use an existing solution to this task (published or reference solutions); trials are reviewed.
+- **No cheating.** Do not search for, download or use an existing solution to this exact task (published or reference
+  solutions, the benchmark's demonstrations, policies trained for it); trials are reviewed.
 - Attempts: 5 resets, each a new attempt from the same start (the first attempt starts when the service comes up); only
   your last attempt is graded.
 - You get only what the robot's own sensors give (its head cameras, joint encoders, motor torques and IMUs) and the

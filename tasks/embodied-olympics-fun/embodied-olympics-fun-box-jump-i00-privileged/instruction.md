@@ -5,7 +5,7 @@ Jump onto the box in front of you from both feet, land on top with both feet and
 
 ## Goal
 Success: you jump from both feet onto the top of the box, land on it with both feet and stand up straight and still on
-it for two seconds.
+it for 2 s.
 
 The referee judges these stages, in order: **take-off → landing → stand**. An attempt ends at the success, at the first
 foul or after 20 s (2000 control steps) of robot time.
@@ -24,8 +24,8 @@ log, `rcb_session_log.jsonl`, to `/app/output/`: leave it there and do not set `
 Save a trajectory as soon as you have one and overwrite it (with `gen.py` and `NOTES.md` to match) whenever you have a
 better one; a run that ends with no file scores zero. Do not stop early.
 
-Rules: **No cheating.** Public tools, robot models and pretrained controllers are allowed, but do not search for,
-download or use an existing solution to this task (published or reference solutions); trials are reviewed.
+Rules: **No cheating.** Do not search for, download or use an existing solution to this exact task (published or
+reference solutions, the benchmark's demonstrations, policies trained for it); trials are reviewed.
 
 The attempt fails at once if:
 - the jump is not a two-foot take-off and a two-foot landing on the box's top

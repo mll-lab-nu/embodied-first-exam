@@ -1,12 +1,12 @@
 # Embodied Olympics · handstand (standard)
 
 ## Task
-Do a handstand: get up onto your hands, hold a straight handstand still for two seconds, then come back down onto your
-feet and stand.
+Do a handstand: get up onto your hands, hold a straight handstand still for 2 s, then come back down onto your feet and
+stand.
 
 ## Goal
-Success: you get onto your hands, hold a straight handstand still for two seconds, then come down onto your feet and
-stand still.
+Success: you get onto your hands, hold a straight handstand still for 2 s, then come down onto your feet and stand
+still.
 
 The referee in the service judges these stages, in order: **handstand → held 2 s → on the feet → stand**. An attempt (an
 episode) ends at the success, at the first foul or after 30 s of robot time, and a success ends the trial at once.
@@ -16,8 +16,8 @@ Keep a `NOTES.md` of at most 20 lines in `/app/output/` (your approach, what fai
 save it early and keep it current.
 
 Rules:
-- **No cheating.** Public tools, robot models and pretrained controllers are allowed, but do not search for, download or
-  use an existing solution to this task (published or reference solutions); trials are reviewed.
+- **No cheating.** Do not search for, download or use an existing solution to this exact task (published or reference
+  solutions, the benchmark's demonstrations, policies trained for it); trials are reviewed.
 - Attempts: 5 resets, each a new attempt from the same start (the first attempt starts when the service comes up); only
   your last attempt is graded.
 - You get only what the robot's own sensors give (its head cameras, joint encoders, motor torques and IMUs) and the

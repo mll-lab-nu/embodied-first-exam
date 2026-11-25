@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Standard-mode twin of `robodojo-push-t-random-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/push_T_random_0.json`). Push the T-shaped block (without lifting it) until it lies exactly on top of the gray T-shaped pad, with the same position and orientation, then return the arms to their start pose. (RoboDojo's `push_T_random`). The agent drives the
+Standard-mode twin of `robodojo-push-t-random-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/push_T_random_0.json`). Push the T-shaped block, without lifting it, until it lies exactly on the gray T-shaped pad, the same way round. Then move both arms back to where they started. (RoboDojo's `push_T_random`). The agent drives the
 robot only through the eai-standard/2.2 client (the simulator runs in the `sim` sidecar), which owns the scene and records
 the episode as a (T, 14) trajectory of RoboDojo's own joint action at 25 Hz.
 

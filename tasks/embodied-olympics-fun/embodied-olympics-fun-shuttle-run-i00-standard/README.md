@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Run the 4 x 10 m shuttle: to the far line and back twice, putting a foot beyond the line at each turn, within 30 seconds. (Embodied Olympics `shuttle-run`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Run the 4 x 10 m shuttle: to the far line and back twice, putting a foot beyond the line at each turn. (Embodied Olympics `shuttle-run`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
 
 ## Difficulty
 Forty metres with three reversals in 30 s: the walking gait covers 19 m in that time, and the running gait turns slowly, needs metres to stop, and falls when it is handed over to another gait at speed, so every leg has to be braked and reversed without losing seconds. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 5 resets (only the last attempt is graded).

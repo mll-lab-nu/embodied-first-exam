@@ -9,8 +9,8 @@ tray. Then let go of everything and move both arms clear.
 Success: all 23 snap connections are made in that order and fully seated; the unit stands upright on its feet on the
 bench, no arm touches any part and everything is still. Forcing parts deep into each other breaks the simulation and
 ends the episode at once, without success. When all of this holds, the service checks it once more after holding your
-last command for a second more (on a copy: the robot does not move); if it still holds, the episode ends as a success,
-and if not, the episode goes on and you can still fix it.
+last command for 1 s more (on a copy: the robot does not move); if it still holds, the episode ends as a success, and if
+not, the episode goes on and you can still fix it.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the

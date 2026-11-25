@@ -7,7 +7,7 @@ then the purple ring (R3), in that order, each the way given below.
 ## Goal
 Success: counted from that end, the rope goes through R1, then R2, then R3 in that order, through each hole exactly once
 and the right way: R1 toward R2's side, R2 away from R1's side, R3 away from R2's side; the rope is intact and still.
-The episode ends, as a success, as soon as all of this has held for half a second.
+The episode ends, as a success, as soon as all of this has held for 0.5 s.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the

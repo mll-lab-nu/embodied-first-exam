@@ -14,8 +14,8 @@ Keep a `NOTES.md` of at most 20 lines in `/app/output/` (your approach, what fai
 save it early and keep it current.
 
 Rules:
-- **No cheating.** Public tools, robot models and pretrained controllers are allowed, but do not search for, download or
-  use an existing solution to this task (published or reference solutions); trials are reviewed.
+- **No cheating.** Do not search for, download or use an existing solution to this exact task (published or reference
+  solutions, the benchmark's demonstrations, policies trained for it); trials are reviewed.
 - Attempts: 5 resets, each a new attempt from the same start (the first attempt starts when the service comes up); only
   your last attempt is graded.
 - You get only what the robot's own sensors give (its head cameras, joint encoders, motor torques and IMUs) and the
@@ -27,8 +27,7 @@ The attempt fails at once if:
 - the ball touches you anywhere but your head, or the header lingers or is too weak
 - you touch the ball again after the header
 - the ball crosses the goal line outside the goal, or comes to a stop
-- you get close to the ball machine (within about 9 m) before the cross has left it, or touch the machine or the waiting
-  ball
+- you come within 9.15 m of the ball machine before the cross has left it, or touch the machine or the waiting ball
 - you fall: anything but your feet touches the floor, or your hips sink close to it
 
 ## Robot Interface
@@ -138,7 +137,7 @@ Joint order everywhere (Unitree's SDK order): `left_hip_yaw`, `left_hip_pitch`, 
   seconds is free.
 
 ## Others
-- The machine on your left crosses the ball about 3 s after the start; it passes in front of you at head height.
+- The machine on your left crosses the ball a few seconds after the start; it passes in front of you at head height.
 
 ## Limits
 - Time: 7200 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At

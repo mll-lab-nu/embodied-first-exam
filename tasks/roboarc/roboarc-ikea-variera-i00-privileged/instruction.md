@@ -9,8 +9,8 @@ Success: the four screws are screwed in (turned, not just pushed) through the sh
 the frames and seated; the frames stand lined up under the shelf, the insert stands on the bench on its own, no arm
 touches it and everything is still. Forcing parts deep into each other breaks the simulation and ends the episode at
 once, without success. What counts is how things stand after the last action of your trajectory, replayed from the fixed
-start. After your last row the grader holds it for a second more and requires all of this again: end your rows with the
-parts released, the arms clear of them and everything at rest.
+start. After your last row the grader holds it for 1 s more and requires all of this again: end your rows with the parts
+released, the arms clear of them and everything at rest.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory()`: `ctrl` (N, 16) float64, `substeps` = 4,
 `timestep` = 0.000625, at most 463,000 rows (a longer one is refused). Leave the script that produced it at

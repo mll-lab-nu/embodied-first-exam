@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Standard-mode twin of `robodojo-press-by-number-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/press_by_number_0.json`). Read the two number cards, press the first red button as many times as the first card says, then press the blue button, then press the second red button as many times as the second card says, then press the blue button again, and bring the arms home. (RoboDojo's `press_by_number`). The agent drives the
+Standard-mode twin of `robodojo-press-by-number-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/press_by_number_0.json`). Press the left red button as many times as the left card shows, then the blue button once, then the middle red button as many times as the middle card shows, then the blue button once more. Release that last blue press with both arms back where they started. (RoboDojo's `press_by_number`). The agent drives the
 robot only through the eai-standard/2.2 client (the simulator runs in the `sim` sidecar), which owns the scene and records
 the episode as a (T, 14) trajectory of RoboDojo's own joint action at 25 Hz.
 

@@ -1,8 +1,7 @@
 # Embodied Olympics · volleyball serve (privileged)
 
 ## Task
-Serve: toss the ball off your left palm and hit it with one hand over the net into the opponent's court, within 8
-seconds.
+Serve: toss the ball off your left palm and hit it with one hand over the net into the opponent's court, within 8 s.
 
 ## Goal
 Success: from behind the end line, within 8 s, you toss the ball and hit it with one hand or arm over the net, and it
@@ -25,8 +24,8 @@ log, `rcb_session_log.jsonl`, to `/app/output/`: leave it there and do not set `
 Save a trajectory as soon as you have one and overwrite it (with `gen.py` and `NOTES.md` to match) whenever you have a
 better one; a run that ends with no file scores zero. Do not stop early.
 
-Rules: **No cheating.** Public tools, robot models and pretrained controllers are allowed, but do not search for,
-download or use an existing solution to this task (published or reference solutions); trials are reviewed.
+Rules: **No cheating.** Do not search for, download or use an existing solution to this exact task (published or
+reference solutions, the benchmark's demonstrations, policies trained for it); trials are reviewed.
 
 The attempt fails at once if:
 - you do not hit the ball within 8 s

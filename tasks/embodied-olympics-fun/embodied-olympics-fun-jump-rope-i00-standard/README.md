@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Skip rope: turn the rope forwards and jump it with both feet together 17 times within a minute, then land on your feet and stand. (Embodied Olympics `jump-rope`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Skip rope: turn the rope forwards and jump it with both feet together 17 times, then land on your feet and stand. (Embodied Olympics `jump-rope`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
 
 ## Difficulty
 Every jump needs two skills at once. The arms must keep a light, floppy rope turning at a steady speed through hands that hold it only by friction. The legs must make a two-footed hop, about 0.1 m high and timed to within a tenth of a second, to the rope coming under the feet. Then the robot must land and do it again 17 times without falling. Neither built-in gait can hop, and a rope that stops on a shin or a toe has to be started again from behind. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 5 resets (only the last attempt is graded).

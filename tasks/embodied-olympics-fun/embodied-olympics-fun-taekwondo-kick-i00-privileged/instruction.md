@@ -5,7 +5,7 @@ Kick the dummy's trunk protector once, hard, with a foot, then stand clear of it
 
 ## Goal
 Success: you kick the trunk protector once with a foot, hard enough to score, then stand still on both feet, clear of
-the dummy, for two seconds.
+the dummy, for 2 s.
 
 The referee judges these stages, in order: **kick → stand**. An attempt ends at the success, at the first foul or after
 15 s (1500 control steps) of robot time.
@@ -24,8 +24,8 @@ log, `rcb_session_log.jsonl`, to `/app/output/`: leave it there and do not set `
 Save a trajectory as soon as you have one and overwrite it (with `gen.py` and `NOTES.md` to match) whenever you have a
 better one; a run that ends with no file scores zero. Do not stop early.
 
-Rules: **No cheating.** Public tools, robot models and pretrained controllers are allowed, but do not search for,
-download or use an existing solution to this task (published or reference solutions); trials are reviewed.
+Rules: **No cheating.** Do not search for, download or use an existing solution to this exact task (published or
+reference solutions, the benchmark's demonstrations, policies trained for it); trials are reviewed.
 
 The attempt fails at once if:
 - any part of you but a foot touches the dummy

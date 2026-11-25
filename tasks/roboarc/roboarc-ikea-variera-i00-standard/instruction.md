@@ -8,9 +8,9 @@ through the shelf holes into the frames until they seat. Then let go of everythi
 Success: the four screws are screwed in (turned, not just pushed) through the shelf holes into four different holes in
 the frames and seated; the frames stand lined up under the shelf, the insert stands on the bench on its own, no arm
 touches it and everything is still. Forcing parts deep into each other breaks the simulation and ends the episode at
-once, without success. When all of this holds, the service checks it once more after holding your last command for a
-second more (on a copy: the robot does not move); if it still holds, the episode ends as a success, and if not, the
-episode goes on and you can still fix it.
+once, without success. When all of this holds, the service checks it once more after holding your last command for 1 s
+more (on a copy: the robot does not move); if it still holds, the episode ends as a success, and if not, the episode
+goes on and you can still fix it.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the

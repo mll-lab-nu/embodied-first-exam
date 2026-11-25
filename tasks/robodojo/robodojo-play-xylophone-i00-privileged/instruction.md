@@ -6,8 +6,9 @@ keys between strikes.
 
 ## Goal
 Success: the mallet head has struck all eight keys in order from left to right, staying on each key long enough to be
-seen (a quick tap can be missed), with the head itself lifted clear of the keys between strikes. A replay ends as soon
-as the task is done; later rows are not run.
+seen (a quick tap can be missed). The head need not touch a key; bringing it down close over the key counts as a strike.
+Between strikes, lift the head well clear, about a hand's width above the keys. A replay ends as soon as the task is
+done; later rows are not run.
 
 Deliverable: `/app/output/trajectory.npz` with `task` and `actions`, a (T, 14) float array of at most 15,000 rows, one
 per action (1/25 s); write it with `s.save_trajectory()`. Anything else (another shape, NaN, more rows) scores 0. Leave

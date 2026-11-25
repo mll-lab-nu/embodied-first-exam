@@ -16,8 +16,8 @@ Keep a `NOTES.md` of at most 20 lines in `/app/output/` (your approach, what fai
 save it early and keep it current.
 
 Rules:
-- **No cheating.** Public tools, robot models and pretrained controllers are allowed, but do not search for, download or
-  use an existing solution to this task (published or reference solutions); trials are reviewed.
+- **No cheating.** Do not search for, download or use an existing solution to this exact task (published or reference
+  solutions, the benchmark's demonstrations, policies trained for it); trials are reviewed.
 - Attempts: 5 resets, each a new attempt from the same start (the first attempt starts when the service comes up); only
   your last attempt is graded.
 - You get only what the robot's own sensors give (its head cameras, joint encoders, motor torques and IMUs) and the
@@ -29,7 +29,7 @@ The attempt fails at once if:
 - while the ball is in your hands it touches the floor or any part of you but a hand
 - once you dribble, a hand holds the ball too long or carries it from below, both hands touch it at once, or one hand
   touches it twice without a bounce in between
-- the ball touches any part of you but a hand, or gets more than about 2 m away from you
+- the ball touches any part of you but a hand, or gets more than 2 m away from you
 - the ball or any part of you touches the floor on or outside a boundary line
 - you fall: anything but your feet touches the floor, or your hips sink close to it
 

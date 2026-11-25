@@ -7,7 +7,7 @@ then the purple ring (R3), in that order, each the way given below.
 ## Goal
 Success: counted from that end, the rope goes through R1, then R2, then R3 in that order, through each hole exactly once
 and the right way: R1 toward R2's side, R2 away from R1's side, R3 away from R2's side; the rope is intact and still. A
-replay ends, as a success, as soon as all of this has held for half a second; later rows are not run.
+replay ends, as a success, as soon as all of this has held for 0.5 s; later rows are not run.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, path)`: the (T, 14) actions, one row
 per control step (1/25 s), at most 38000 rows (a longer trajectory is invalid). Leave the script that produced it at

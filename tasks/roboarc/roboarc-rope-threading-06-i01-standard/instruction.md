@@ -9,7 +9,7 @@ green ring (A), then the purple grommet in the wall (G2), then the amber ring (B
 Success: counted from that end, the rope goes through G1, then A, then G2, then B, then G3 in that order, through each
 hole exactly once and the right way: G1 toward A's side, A away from G3's side, G2 toward B's side, B toward G3's side,
 G3 toward A's side; the rope is intact and still. The episode ends, as a success, as soon as all of this has held for
-half a second.
+0.5 s.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the

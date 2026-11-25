@@ -9,7 +9,7 @@ Success: the loop has gone along the whole wire from its starting end to its fin
 skipping a branch, and the tool now lies on the finish support the way it lay at the start, with the arm clear of it and
 the tool still. If the loop comes off the wire before the end, start again from the beginning. Any touch of the tool's
 metal on the wire ends the episode as a failure, however light. Dropping the tool off the table ends the episode as a
-failure. A replay ends, as a success, as soon as all of this has held for a second; later rows are not run.
+failure. A replay ends, as a success, as soon as all of this has held for 1 s; later rows are not run.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, path)`: the (T, 8) actions, one row
 per control step (1/40 s), at most 200000 rows (a longer trajectory is invalid). Leave the script that produced it at

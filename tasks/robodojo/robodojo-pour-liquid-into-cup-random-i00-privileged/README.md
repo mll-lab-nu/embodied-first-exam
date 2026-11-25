@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Pick up the bottle and pour its liquid into the cup, then stand the bottle upright again. (RoboDojo's `pour_liquid_into_cup_random`). RoboDojo capability dimension: Generalization (randomised variant: other models, clutter). Instance i00 is RoboDojo's own evaluation layout
+Pour the liquid from the bottle into the cup, then stand the bottle upright again. (RoboDojo's `pour_liquid_into_cup_random`). RoboDojo capability dimension: Generalization (randomised variant: other models, clutter). Instance i00 is RoboDojo's own evaluation layout
 `arx_x5/0/pour_liquid_into_cup_random_0.json` (sha256 `17aa3d03d67f2a17`), frozen in `instance.json`. The deliverable is one replayable trajectory of
 RoboDojo's 14-D joint action at 25 Hz (`/app/output/trajectory.npz`), graded by RoboDojo's own reward check for the task,
 with no step cap (RoboDojo's own evaluation gives a policy 400 actions; PROTOCOL §3).

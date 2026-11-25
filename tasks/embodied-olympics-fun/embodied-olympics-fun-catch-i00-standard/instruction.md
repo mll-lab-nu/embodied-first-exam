@@ -5,7 +5,7 @@ Catch the fly ball in one hand before it touches the ground or your body, and ke
 
 ## Goal
 Success: you catch the ball in one hand after it has passed the top of its arc, before it touches the ground or your
-body, and hold it in that hand alone for a second.
+body, and hold it in that hand alone for 1 s.
 
 The referee in the service judges these stages, in order: **catch → hold**. An attempt (an episode) ends at the success,
 at the first foul or after 9 s of robot time, and a success ends the trial at once. Ending your session ends the run, so
@@ -15,8 +15,8 @@ Keep a `NOTES.md` of at most 20 lines in `/app/output/` (your approach, what fai
 save it early and keep it current.
 
 Rules:
-- **No cheating.** Public tools, robot models and pretrained controllers are allowed, but do not search for, download or
-  use an existing solution to this task (published or reference solutions); trials are reviewed.
+- **No cheating.** Do not search for, download or use an existing solution to this exact task (published or reference
+  solutions, the benchmark's demonstrations, policies trained for it); trials are reviewed.
 - Attempts: 5 resets, each a new attempt from the same start (the first attempt starts when the service comes up); only
   your last attempt is graded.
 - You get only what the robot's own sensors give (its head cameras, joint encoders, motor torques and IMUs) and the
@@ -147,7 +147,7 @@ Joint order everywhere (Unitree's SDK order): `left_hip_yaw`, `left_hip_pitch`, 
   seconds is free.
 
 ## Others
-- The machine throws the ball high about 1 s after the start, to come down near you.
+- The machine throws the ball high right after the start, to come down near you.
 
 ## Limits
 - Time: 7200 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At

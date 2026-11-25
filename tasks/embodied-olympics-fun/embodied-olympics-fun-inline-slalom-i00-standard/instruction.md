@@ -2,11 +2,11 @@
 
 ## Task
 Skate the speed slalom: from the start box, skate on one foot through the 20 cones, passing them alternately left and
-right, and over the end line, within a minute.
+right, and over the end line.
 
 ## Goal
-Success: within 60 s you skate from the start box through all 20 cones on one foot, passing them alternately left and
-right, and cross the end line on that foot, with at most four kicked cones or missed passes.
+Success: you skate from the start box through all 20 cones on one foot, passing them alternately left and right, and
+cross the end line on that foot, with at most four kicked cones or missed passes.
 
 The referee in the service judges these stages, in order: **start → cone line → cone 5 → cone 10 → cone 15 → cone 20 →
 finish**. An attempt (an episode) ends at the success, at the first foul or after 60 s of robot time, and a success ends
@@ -17,8 +17,8 @@ Keep a `NOTES.md` of at most 20 lines in `/app/output/` (your approach, what fai
 save it early and keep it current.
 
 Rules:
-- **No cheating.** Public tools, robot models and pretrained controllers are allowed, but do not search for, download or
-  use an existing solution to this task (published or reference solutions); trials are reviewed.
+- **No cheating.** Do not search for, download or use an existing solution to this exact task (published or reference
+  solutions, the benchmark's demonstrations, policies trained for it); trials are reviewed.
 - Attempts: 5 resets, each a new attempt from the same start (the first attempt starts when the service comes up); only
   your last attempt is graded.
 - You get only what the robot's own sensors give (its head cameras, joint encoders, motor torques and IMUs) and the
