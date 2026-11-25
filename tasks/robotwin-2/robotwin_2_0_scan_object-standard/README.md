@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:robotwin-0.1.2` |
 
 ## Task
+Pick up the scanner with one arm and the tea box with the other, and keep holding both, with the scanner's head pointed straight at the middle of the box and almost touching it.
+
 Standard-mode twin of `robotwin_2_0_scan_object-privileged` (same frozen instance, RoboTwin seed 60417): the agent gets
 only the `eai-standard/2.1` client (docs/protocol/standard_mode.md); the simulator runs in the `sim` sidecar
 (`environment/docker-compose.yaml`, GPU on the sidecar), which owns the seed, judges the live episode, records it as a

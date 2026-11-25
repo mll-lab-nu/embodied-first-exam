@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:embodiedswe-0.3.0` |
 
 ## Task
+Pick up the light bulb and screw it into the lamp socket.
+
 Screw a light bulb into its socket (Franka, operational-space control): the scene, frozen instance and success predicate of `embodiedswe-assembly-bulb-franka-osc-i00-privileged`, with a Franka Panda arm with its parallel gripper, under EmbodiedSWE's operational-space (torque) controller, in standard mode
 (tasks/embodiedswe/README.md "Standard mode").
 

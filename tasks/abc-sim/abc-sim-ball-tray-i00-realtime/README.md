@@ -13,7 +13,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:abc-sim-0.2.0` |
 
 ## Task
-ABC Sim `ball_tray_balancing` (two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each) side by side at the near edge of a table, facing +x (the left arm is the one at +y)): Hold the tray by both handle bars, the left gripper on one bar and the right gripper on the other, and keep the ball on the tray. The moment the fingers of each gripper touch their bar, an 11-second countdown starts, and every half second the ball gets a light push of up to about 0.2 m/s along the tray, in a direction that drifts from push to push. Success: the countdown completes with the ball on the tray throughout and both handles held throughout (each bar touched by its arm's fingers within the last 0.1 s at every control step). Failure, which ends the episode: the ball leaves the tray (its centre outside the tray floor's central ~0.26 x 0.25 m area, or lower than 8 mm above the floor), or a handle is let go during the countdown.
+ABC Sim `ball_tray_balancing` (two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each) side by side at the near edge of a table, facing +x (the left arm is the one at +y)): Hold the tray by both handles, one gripper on each, and keep the ball on the tray until the episode ends.
 A flat tray with a handle bar along each side lies on the table with a small ball on it. The robot is a service; the episode it runs is graded.
 
 ## Difficulty

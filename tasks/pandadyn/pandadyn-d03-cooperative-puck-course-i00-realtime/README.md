@@ -16,7 +16,7 @@
 Realtime twin of `pandadyn-d03-cooperative-puck-course-i00-privileged` (same frozen instance and success check as it and as `pandadyn-d03-cooperative-puck-course-i00-standard`): the agent gets only
 the realtime client (`eai-standard/2.3`, docs/protocol/standard_mode.md Part 3); the simulator runs in the `sim` sidecar on a clock
 that does not stop, at slowdown **S = 3** (one 10 ms control step every 30 ms of wall-clock time), with
-3 resets (only the last episode is graded). A low-friction puck is already sliding across the table toward the left arm when the episode starts. The two Pandas each hold a paddle and must hit the same puck in turn: left, right, left, right. After each of the first three hits the puck must pass through a different gap in a row of posts standing across the table between the arms. First it goes toward the right arm through the gap at the -y end. Then it goes back toward the left arm through the gap at the +y end, next to a side rail. Then it goes toward the right arm again through the middle gap. The right arm's final hit must send the puck across a goal line in front of a backstop wall on the right arm's side.
+3 resets (only the last episode is graded). Hit the sliding puck with the paddles in turn, left, right, left, right: first through the end gap of the row of posts away from the side rail, then back through the end gap next to the side rail, then through the middle gap, and with the last hit across the goal line in front of the middle of the backstop.
 
 ## Difficulty
 That of `pandadyn-d03-cooperative-puck-course-i00-standard`, but the scene does not wait between calls: once an episode's clock starts, the moving objects and

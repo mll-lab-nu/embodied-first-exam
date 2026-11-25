@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/embodiedswe-assembly-so101-bimanual-franka-osc-i00-privileged"
-description = "EmbodiedSWE assembly.so101.bimanual_franka.osc (robobench at 67f44e8a2ca5, Isaac Lab 2.3.2 / Isaac Sim 5.1, GPU PhysX): deliver a program, solution/solve.py with solve(env), that completes the task when the verifier runs it against a fresh simulator built from the frozen instance (seed 0)."
+description = "EmbodiedSWE assembly.so101.bimanual_franka.osc (robobench at 67f44e8a2ca5, Isaac Lab 2.3.2 / Isaac Sim 5.1, GPU PhysX): Put the SO101 arm's elbow together with the screwdriver: seat the servo in the upper arm and fasten it with the four small screws, then fit the forearm onto the servo and fasten it with the eight larger screws. Deliver a program, solution/solve.py with solve(env), that completes the task when the verifier runs it against a fresh simulator built from the frozen instance (seed 0)."
 keywords = ["robotics", "embodiedswe", "isaac-lab", "isaac-sim", "code-as-policy", "program", "assembly", "screwing", "power-tool", "bimanual", "franka", "assembly.so101.bimanual_franka.osc"]
 
 [metadata]

@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/abc-sim-turn-mug-i00-privileged"
-description = "ABC Sim turn a mug right side up (two I2RT YAM arms, MuJoCo): Turn every mug right side up and set it back down. Frozen scene instance; one replayable trajectory, graded by two fresh-process replays."
+description = "ABC Sim turn a mug right side up (two I2RT YAM arms, MuJoCo): Turn both mugs right side up and set them down. Frozen scene instance; one replayable trajectory, graded by two fresh-process replays."
 keywords = ["robotics", "abc-sim", "mujoco", "yam", "bimanual", "turn_mug", "privileged"]
 
 [metadata]

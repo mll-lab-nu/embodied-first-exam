@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0` |
 
 ## Task
-A ball starts in the right arm's cup. The right arm must load it into the small basket of a passive see-saw launcher and move its cup away. The left arm, holding a mallet, must strike the lever so that the ball is flung up into free flight, and the right arm must catch it in its cup. The right arm then loads the ball into the basket a second time and clears away, and the left arm launches it again. In the end the ball must come to rest inside an open box that slides back and forth on a rail, while the box is moving. The left arm's mallet must never touch the ball. The deliverable is one replayable trajectory of 100 Hz joint-target actions (`/app/output/trajectory.npz`,
+Load the ball from the right cup into the launcher's basket and move the cup well clear; strike the lever with the left mallet so that the ball flies up, and catch it in the right cup. Do it a second time, then get the ball into the sliding box while the box is moving. The mallet must never touch the ball. The deliverable is one replayable trajectory of 100 Hz joint-target actions (`/app/output/trajectory.npz`,
 16 values per row), graded by the task's own staged success check: 6 phases (`physical_loading`, `first_launch`, `right_catch`, `reload_and_clear`, `second_launch`, `moving_receptacle_retention`), in order,
 with no failure event and no safety-limit violation, within the task's horizon of 25 s.
 

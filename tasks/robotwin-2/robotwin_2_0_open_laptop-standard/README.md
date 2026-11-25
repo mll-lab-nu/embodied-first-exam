@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:robotwin-0.1.2` |
 
 ## Task
+With the left arm, open the laptop lid at least twice as far as it is now, and keep the left gripper at the lid.
+
 Standard-mode twin of `robotwin_2_0_open_laptop-privileged` (same frozen instance, RoboTwin seed 60417): the agent gets
 only the `eai-standard/2.1` client (docs/protocol/standard_mode.md); the simulator runs in the `sim` sidecar
 (`environment/docker-compose.yaml`, GPU on the sidecar), which owns the seed, judges the live episode, records it as a

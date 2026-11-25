@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, { source
 
 [task]
 name = "embodied-first-exam/abc-sim-turn-mug-i00-standard"
-description = "ABC Sim turn a mug right side up (two I2RT YAM arms, MuJoCo): Turn every mug right side up and set it back down. The robot as a service (eai-standard/2.2); graded by the live episode."
+description = "ABC Sim turn a mug right side up (two I2RT YAM arms, MuJoCo): Turn both mugs right side up and set them down. The robot as a service (eai-standard/2.2); graded by the live episode."
 keywords = ["robotics", "abc-sim", "mujoco", "yam", "bimanual", "turn_mug", "standard"]
 
 [metadata]

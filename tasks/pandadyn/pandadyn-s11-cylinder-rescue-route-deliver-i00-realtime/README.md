@@ -16,7 +16,7 @@
 Realtime twin of `pandadyn-s11-cylinder-rescue-route-deliver-i00-privileged` (same frozen instance and success check as it and as `pandadyn-s11-cylinder-rescue-route-deliver-i00-standard`): the agent gets only
 the realtime client (`eai-standard/2.3`, docs/protocol/standard_mode.md Part 3); the simulator runs in the `sim` sidecar on a clock
 that does not stop, at slowdown **S = 3** (one 10 ms control step every 30 ms of wall-clock time), with
-3 resets (only the last episode is graded). A short round-ended cylinder is rolling along a raised lane when the episode starts and will run off its end. Intercept it in the open-sided tray the Panda holds. Bring it to rest in the tray with its long axis along the world's y axis. Put it into a gently sloping guide channel near the channel's entry, and let it travel out past the far end without the tray touching it at that moment. Catch it again in the tray at the exit, aligned and settled. Finally, deliver it lying along y into a pocket that slides back and forth on a rail, where it must rest while the pocket is moving.
+3 resets (only the last episode is graded). Catch the rolling cylinder in the tray as it comes off the lane and settle it lying left to right. Put it into the guide channel near its entry, let it run out past the far end by itself, catch it again in the tray, and lay it, still left to right, into the sliding pocket while the pocket is moving.
 
 ## Difficulty
 That of `pandadyn-s11-cylinder-rescue-route-deliver-i00-standard`, but the scene does not wait between calls: once an episode's clock starts, the moving objects and

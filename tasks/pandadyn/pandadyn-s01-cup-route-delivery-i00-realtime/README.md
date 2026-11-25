@@ -16,7 +16,7 @@
 Realtime twin of `pandadyn-s01-cup-route-delivery-i00-privileged` (same frozen instance and success check as it and as `pandadyn-s01-cup-route-delivery-i00-standard`): the agent gets only
 the realtime client (`eai-standard/2.3`, docs/protocol/standard_mode.md Part 3); the simulator runs in the `sim` sidecar on a clock
 that does not stop, at slowdown **S = 2** (one 10 ms control step every 20 ms of wall-clock time), with
-3 resets (only the last episode is graded). An orange ball is thrown upward at the start and comes back down near the robot. Catch it in the open cup the Panda holds and pour it into the designated one of the two raised gravity channels. Let it roll down that channel by itself, drop off its end and bounce off the tilted rebound plate below it. Catch it in the cup again while it flies, and finally put it into a cart that slides back and forth on a rail, where it must rest while the cart is still moving.
+3 resets (only the last episode is graded). Catch the falling ball in the cup and pour it into the channel farther from you. Let it roll down by itself and bounce off the plate below its end, catch it again in flight, and put it into the sliding cart while the cart is moving.
 
 ## Difficulty
 That of `pandadyn-s01-cup-route-delivery-i00-standard`, but the scene does not wait between calls: once an episode's clock starts, the moving objects and

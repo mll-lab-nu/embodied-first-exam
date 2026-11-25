@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0` |
 
 ## Task
-Each arm holds a level scoop, a shallow square tray that is open on the side facing the other arm. A cube on a very slippery surface starts on the left scoop. Without tilting the scoops, the left arm must make the cube slide out over its open edge onto the right scoop, which must be moving in step with the left scoop, at 20 cm per second or more, when the cube arrives and then brake to rest with the cube on it within a second and a half. The right arm then carries it to a new place and makes it slide back the same way onto the left scoop, which must likewise be moving in step when it arrives and then brake to rest. Finally the cube must be set down on a fixed output platform and left there at rest. Until that final deposit begins, the scoops may not tilt by more than about 2 degrees, and the cube may never be without scoop contact for more than about a tenth of a second. The deliverable is one replayable trajectory of 100 Hz joint-target actions (`/app/output/trajectory.npz`,
+Without tilting the scoops, slide the cube from the left scoop onto the right scoop, which must be moving along with the left one when the cube arrives and then stop with the cube on it. Carry it to a new place, slide it back the same way onto the left scoop, and set it down on the output platform. The deliverable is one replayable trajectory of 100 Hz joint-target actions (`/app/output/trajectory.npz`,
 16 values per row), graded by the task's own staged success check: 5 phases (`left_inertial_slip`, `right_receive_and_brake`, `reverse_geometry`, `left_receive_and_brake`, `final_support_deposit`), in order,
 with no failure event and no safety-limit violation, within the task's horizon of 25 s.
 

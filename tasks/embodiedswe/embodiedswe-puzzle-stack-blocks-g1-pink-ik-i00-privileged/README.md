@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:embodiedswe-0.3.0` |
 
 ## Task
+Stack the four blocks into one tower on the square pad.
+
 Stack the blocks (Unitree G1, fixed pelvis, Pink IK). EmbodiedSWE's `puzzle.stack_blocks.g1.pink_ik` task (robobench at commit `67f44e8a2ca5`), privileged mode, with a program as the
 deliverable: `solution/solve.py` exposing `solve(env)`.
 

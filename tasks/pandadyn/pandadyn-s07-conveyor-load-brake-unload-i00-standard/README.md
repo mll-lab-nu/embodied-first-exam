@@ -18,7 +18,7 @@ client (docs/protocol/standard_mode.md Part 1, with the optional reset capabilit
 live and records every control step it ran. Between the agent's calls the world is frozen; 3 resets, only the last
 episode graded. The sidecar's adapter (`environment/sim/server.py`) is the benchmark's realtime twins', code for code,
 on the same shared service layer, so where a family has that twin the two modes differ only in the clock. Compare against the
-privileged task to measure the cost of losing privileged state, free resets and self-replay. At the start a small cube, the part, rides along a powered roller conveyor, and a shallow carriage is already coasting along a frictionless rail. Grasp the part with the gripper while it is moving and lift it. Set it on the moving carriage and let go while the carriage is still moving. Then grip the carriage's vertical handle with both fingers and bring the carriage to a stop, with the part still on it, before it reaches the end of its rail. Grasp the part again and lift it off the carriage. Finally set it down in a fixed dock and leave it there at rest.
+privileged task to measure the cost of losing privileged state, free resets and self-replay. Grasp the part from the moving conveyor, lift it about a hand's length and set it on the coasting carriage, letting go while the carriage is moving. Then grip the carriage's handle and stop it, with the part still on it, before it reaches the end of its rail; finally lift the part off and set it down in the dock.
 
 ## Difficulty
 That of `pandadyn-s07-conveyor-load-brake-unload-i00-privileged` (its README), without object poses or the success signal and with 3 resets: the moving objects

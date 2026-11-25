@@ -16,7 +16,7 @@
 Realtime twin of `pandadyn-d10-moving-grasp-handover-i00-privileged` (same frozen instance and success check as it and as `pandadyn-d10-moving-grasp-handover-i00-standard`): the agent gets only
 the realtime client (`eai-standard/2.3`, docs/protocol/standard_mode.md Part 3); the simulator runs in the `sim` sidecar on a clock
 that does not stop, at slowdown **S = 6** (one 10 ms control step every 60 ms of wall-clock time), with
-3 resets (only the last episode is graded). A long bar-shaped part is already riding a powered roller conveyor when the episode starts. The left arm must grasp it with its gripper while it is still moving and lift it, then carry it, still moving, through a presentation point. It then hands the part over to the right arm while the part keeps moving: both grippers hold it at the same time, then the left gripper opens wide and lets go while the right one keeps holding it. Finally the right arm must lay the part into a long open slot that slides back and forth on a rail and let go of it while the slot is moving, so that the part lies in the slot while the slot is moving.
+3 resets (only the last episode is graded). Grasp the part with the left gripper while it rides the conveyor, lift it about a hand's length and carry it, still moving, through the presentation point. Hand it to the right gripper while it keeps moving, then lay it into the sliding slot and let go while the slot is moving.
 
 ## Difficulty
 That of `pandadyn-d10-moving-grasp-handover-i00-standard`, but the scene does not wait between calls: once an episode's clock starts, the moving objects and

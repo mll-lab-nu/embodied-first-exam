@@ -16,7 +16,7 @@
 Realtime twin of `pandadyn-s04-impact-release-relay-i00-privileged` (same frozen instance and success check as it and as `pandadyn-s04-impact-release-relay-i00-standard`): the agent gets only
 the realtime client (`eai-standard/2.3`, docs/protocol/standard_mode.md Part 3); the simulator runs in the `sim` sidecar on a clock
 that does not stop, at slowdown **S = 2** (one 10 ms control step every 20 ms of wall-clock time), with
-3 resets (only the last episode is graded). A small block, the cue, slides along a raised deck toward the robot at the start. Strike it with the paddle so that it hits a spring-held gate latch and swings the gate open. This releases a ball, the payload, that waits behind the gate on an inclined chute: within a second of the cue's impact the ball must be past the gate and rolling down the chute. Intercept the ball with the paddle after it has left the chute and send it through a narrow passage between two walls. Then touch it again and bring it to rest in a target zone on the table beyond the passage.
+3 resets (only the last episode is graded). Strike the sliding block with the paddle so that it hits the gate's latch and releases the ball on the chute. Once the ball has left the chute, hit it through the passage between the two walls, then touch it again and stop it in the target zone beyond the passage.
 
 ## Difficulty
 That of `pandadyn-s04-impact-release-relay-i00-standard`, but the scene does not wait between calls: once an episode's clock starts, the moving objects and

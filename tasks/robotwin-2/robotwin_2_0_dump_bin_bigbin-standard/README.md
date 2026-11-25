@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:robotwin-0.1.2` |
 
 ## Task
+Pick up the small bin, pour all five balls into the big bin on the floor at the robot's left, and keep holding the small bin up high, about a forearm's length above the table.
+
 Standard-mode twin of `robotwin_2_0_dump_bin_bigbin-privileged` (same frozen instance, RoboTwin seed 60417): the agent gets
 only the `eai-standard/2.1` client (docs/protocol/standard_mode.md); the simulator runs in the `sim` sidecar
 (`environment/docker-compose.yaml`, GPU on the sidecar), which owns the seed, judges the live episode, records it as a

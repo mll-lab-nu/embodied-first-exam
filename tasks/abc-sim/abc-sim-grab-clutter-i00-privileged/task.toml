@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/abc-sim-grab-clutter-i00-privileged"
-description = "ABC Sim grab from clutter (two I2RT YAM arms, MuJoCo): Follow the directive 'grab the ketchup and place it in the box'. Frozen scene instance; one replayable trajectory, graded by two fresh-process replays."
+description = "ABC Sim grab from clutter (two I2RT YAM arms, MuJoCo): Find the ketchup among the things on the table and put it in the box. Frozen scene instance; one replayable trajectory, graded by two fresh-process replays."
 keywords = ["robotics", "abc-sim", "mujoco", "yam", "bimanual", "grab_clutter", "privileged"]
 
 [metadata]

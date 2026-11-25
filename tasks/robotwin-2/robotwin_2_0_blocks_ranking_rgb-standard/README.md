@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:robotwin-0.1.2` |
 
 ## Task
+Line up the three blocks in a row, close together: red on the robot's left, green in the middle and blue on its right. Then let go.
+
 Standard-mode twin of `robotwin_2_0_blocks_ranking_rgb-privileged` (same frozen instance, RoboTwin seed 60417): the agent gets
 only the `eai-standard/2.1` client (docs/protocol/standard_mode.md); the simulator runs in the `sim` sidecar
 (`environment/docker-compose.yaml`, GPU on the sidecar), which owns the seed, judges the live episode, records it as a

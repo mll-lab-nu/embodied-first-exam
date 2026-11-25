@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robolab-0.2.2` |
 
 ## Task
+Put the Rubik's cube on the table behind the bowl, on its far side from the robot.
+
 Standard-mode twin of `robolab-rubiks-cube-behind-bowl-i00-privileged` (same frozen instance, the state after RoboLab's canonical seed-0 reset):
 the agent gets only the `eai-standard/2.2` client (docs/protocol/standard_mode.md); the simulator runs in the `sim` sidecar
 (`environment/docker-compose.yaml`, GPU on the sidecar), which owns the scene and records the episode as a (T, 8)

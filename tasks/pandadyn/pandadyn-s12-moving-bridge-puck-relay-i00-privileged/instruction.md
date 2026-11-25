@@ -1,71 +1,45 @@
-# Panda Dynamic Scenes · Spinning bridge puck relay and goal (S12) — frozen instance i00
+# Panda Dynamic Scenes · Spinning bridge puck relay and goal (S12) (privileged)
 
-You control one simulated **Franka Panda** arm (7 joints, its standard hand, and the task's tool where it has one) in a simulated scene (ManiSkill 3 / SAPIEN, rigid-body CPU PhysX at 1000 Hz) via Python.
-**Task:** At the start a square puck slides fast along a raised source lane towards the Panda, and the paddle hangs just above its path. Strike the puck while it is still sliding at 25 cm per second or more, so that it slides onto the bridge, a platform that turns continuously about a vertical axis, and from the bridge onto an exit lane. Intercept it there with the paddle, let it separate, and strike it again. Send it along the exit lane through the doorway of a swinging gate that opens and closes by itself, without touching the gate, and on across a goal line, with the paddle not touching it as it crosses and the gate still open.
+## Task
+Strike the incoming puck with the paddle while it is still sliding fast, so that it slides over the turning bridge onto
+the exit lane. Stop it there, then strike it again through the doorway of the swinging gate while the gate is wide open,
+without touching the gate, and across the goal line in front of the backstop.
 
-This is a *fixed scene instance*: everything starts the same way after every reset, and you may reset and retry as many
-times as you want. Your deliverable is **one replayable trajectory** of the robot's low-level actions, not a general
-policy. Things move by themselves from the first control step on: the scene does not wait for the robot.
+## Goal
+Success: the paddle's first touch strikes the puck while it still slides fast, so that it slides onto the turning bridge
+and from the bridge onto the exit lane; the paddle intercepts it there, lets it separate and strikes it again; the puck
+slides along the exit lane through the doorway of the swinging gate while the gate is wide open, never touching the
+gate, and on across the goal line in front of the backstop, not touching the paddle and with the gate still open.
 
-## Scene
-One Panda, base at (-0.55, 0, 0) facing +x (yaw 0). Its hand carries a paddle: a flat rigid plate 12 mm thick, 0.10 m wide (2 x `tool_half`) and 50 mm tall, whose face normal is the tool frame's x axis. The tool frame is the paddle's centre. A rigid grey adapter behind the paddle (tool -x side) joins it to the hand: a horizontal bar 0.035 m above the tool origin (tool x from -0.132 to -0.038), a vertical post at tool x = -0.05 (z from -0.005 to 0.035) and a 12 mm square bridge from the post to the paddle's back face (x from -0.044 to -0.006, z from 0.009 to 0.021); paddle and adapter form one rigid tool link. In the tool frame the hand's TCP is at (-0.12, 0, +0.04). At the start the paddle is upright with identity orientation (faces along world x, width along world y), centre at (-0.08, -0.15, 0.10): its lower edge, at z = 0.075, is above the incoming puck's path. The tool's adapter runs between the gripper's fingertips: closing the gripper to less than about 12 mm of aperture makes the fingers touch the adapter, which ends the episode as `self_collision` (the gripper starts fully open, at 0.08 m).
+The steps count only in this order, and a step once done stays done. The replay ends as soon as the task is done or has
+failed; the task also fails at once when:
+- the first touch comes when the puck has already slowed down;
+- the puck touches the gate;
+- the puck passes the doorway while the gate is not wide open;
+- the puck crosses the goal line touching the paddle or with the gate closed;
+- the task's horizon is reached before the task is done (Robot Interface);
+- an object leaves the workspace (falls well below the table top or flies far away);
+- a robot part touches what it may not: only the paddle may touch anything, and only the puck;
+- an arm touches itself, a robot part touches the table or the floor, or a contact presses deep into anything;
+- an arm goes beyond the Franka Panda's own safety limits (Robot Interface, Safety).
 
-The puck is an orange square block 44 mm x 44 mm x 24 mm thick, quite bouncy. At t = 0 it is sliding fast towards the robot on the source lane, a low, very slippery orange slab, and passes under the parked paddle. If nothing touches it, it slows down and stops on the lane within about a second, beyond the paddle's start position. Next to the lane's end, a blue rectangular platform (the bridge, 0.20 m x 0.10 m, 20 mm thick) turns continuously about a vertical axis through its centre at a steady slow rate, clockwise seen from above. Its top is 2 mm lower than the source lane. Beyond it lies the exit lane, a second slippery orange slab 2 mm lower again. Near the exit lane's far end a motor-driven gate swings on a vertical hinge at one side edge of the lane: an amber blade 0.12 m long and 55 mm tall with a small knob on its free end, its lower edge just clear of the lane. Closed, the blade spans the whole lane. The motor swings it open (its free end moving downstream), holds it open briefly and swings it closed again, on a fixed cycle of a few seconds, open for about a second each time. Past the end of the exit lane, on the table, is the goal line, with a static orange wall (the backstop, 0.14 m wide, 8 cm tall) behind it. The table top is the world's z = 0 plane.
+Deliverable: `/app/output/trajectory.npz`, written with `Session.save_trajectory(...)`: it holds `task` and `actions`, a
+(T, 8) float array of at most 4,500 rows (one per control step); anything else (another shape, NaN, more rows, a file
+that is not such an npz) scores 0. It is replayed open-loop from the fixed start and scores 1 if the task succeeds in
+the replay, else 0. Keep the script that produced it at `/app/output/gen.py`. Save a valid one early and overwrite it
+when you have a better one.
 
-Exactly (privileged information, also readable through the tooling): Puck: box with half extents (0.022, 0.022, 0.012), mass `object_mass` (0.035 kg), friction 0.15, restitution 0.5. At reset it is at (0.06, -0.13 + dy, 0.0465) with velocity (-`incoming_speed`, 0, 0) = -0.55 m/s along x; dy ~ U(-`incoming_lateral`, `incoming_lateral`) = U(-0.012, 0.012) is the first draw at reset. On the source lane it decelerates at about 0.73 m/s^2: in an idle run it passed under the paddle without touching it and stopped at x of about -0.147 after about 0.76 s, so it is faster than `strike_min_speed` = 0.25 m/s only during its first 0.41 s (0.16 m) of sliding. Source lane `source_lane`: static slab 0.28 x 0.145 x 0.024 m centred at (-0.08, -0.1175, 0.022), top z = 0.034, spanning x -0.22 to 0.06 and y -0.19 to -0.045, friction 0.025. Bridge `bridge`: revolute fixture with a vertical axis through (0.18, -0.05). The platform 0.20 x 0.10 x 0.02 m is centred on the axis, top at z = 0.032, mass 0.20 kg; at q = 0 its long side is along world x. At reset q0 ~ U(-`bridge_angle_spread`, `bridge_angle_spread`) = U(-0.15, 0.15) (second draw), with angular velocity -`bridge_rate` = -0.35 rad/s. It is then driven at a constant rate: target q0 - 0.35 t rad, target velocity -0.35 rad/s (PD, kp 80, kd 8, at most 0.5 N m); positive q is counterclockwise from above, so the bridge turns clockwise, period about 17.95 s. Exit lane `exit_lane`: static slab 0.32 x 0.11 x 0.028 m centred at (0.25, 0.12, 0.016), top z = 0.030, spanning x 0.09 to 0.41 and y 0.065 to 0.175, friction 0.04. Gate `gate`: hinge at (0.37, 0.18, 0.0315) about world z, limits [0, 1.5] rad. The blade is 0.012 x 0.12 x 0.055 m (density 220 kg/m^3, friction 0.2, restitution 0.35), running from the hinge towards -y at q = 0 (closed: across the whole lane, y 0.06 to 0.18 on the line x = 0.37), its bottom edge at z = 0.0315, 1.5 mm above the lane; a knob 0.032 x 0.024 x 0.024 m sits over the blade tip, centred at z of about 0.10. Positive q swings the free end toward +x (downstream). A finite-torque motor (PD kp 2.0 N m/rad, kd 0.03 N m s/rad, at most `gate_torque` = 0.2 N m; measured tracking error at most 0.006 rad) follows a periodic profile of period `gate_period` = 2.6 s. In each period, counted from t = 0 (clock offset U(0, 1) x `gate_phase_spread` x `gate_period` = 0 at this instance; this third draw is the last), the target opens along a cosine ramp from 0 to `gate_open_angle` = 1.45 rad in `gate_ramp` = 0.3 s, holds 1.45 rad for `gate_hold` = 0.6 s, closes along a cosine ramp to 0 in `gate_close` = 0.6 s and stays at 0 for the remaining 1.1 s. The target is at least `gate_pass_angle` = 1.0 rad from about 0.19 s to 1.13 s of each period, and above 0.20 rad from about 0.07 s to 1.36 s. At reset the gate is at the profile's start (q = 0, at rest). Backstop `goal_backstop`: static box 0.02 x 0.14 x 0.08 m centred at (0.54, 0.12, 0.04). Table friction `table_friction` (0.015 in this task). Paddle: `tool_half` 0.05, `tool_mass` 0.2 kg, `tool_friction` 0.3. Horizon `horizon` = 32 s. `goal` = (0.48, 0.12, 0.043) (fixed).
+Rules: **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+benchmark's demonstrations, trained policies); trials are reviewed.
 
-The instance's parameters (`s.params()`, SI units): `horizon` = 32, `object_mass` = 0.035, `tool_mass` = 0.2, `tool_half` = 0.05, `incoming_speed` = 0.55, `incoming_lateral` = 0.012, `strike_min_speed` = 0.25, `bridge_rate` = 0.35, `bridge_angle_spread` = 0.15, `gate_period` = 2.6, `gate_open_angle` = 1.45, `gate_ramp` = 0.3, `gate_hold` = 0.6, `gate_close` = 0.6, `gate_phase_spread` = 0, `gate_pass_angle` = 1, `gate_torque` = 0.2, `table_friction` = 0.015, `tool_friction` = 0.3.
+## Robot Interface
+One simulated Franka Panda arm (7 joints, its standard hand, and the task's tool where it has one) on a table (ManiSkill
+3 / SAPIEN, rigid-body physics at 1000 Hz). The scene is one fixed instance: everything starts the same way after every
+reset. Things move by themselves from the first control step on: the scene does not wait for the robot. You have the
+full simulator to develop with; you hand in a trajectory of robot actions.
 
-**Goal geometry.** Doorway line: x = 0.37 (world), crossed towards +x with the puck's centre within 0.055 m of y = 0.12, with the gate at 1.0 rad or more. Gate angle threshold at the goal crossing: more than 0.20 rad. Goal line: x = 0.48 (world), crossed towards +x with the puck's centre within 0.045 m of y = 0.12, after the doorway, announced at reset as `goal_goal` = (0.48, 0.12, 0.043).
-
-## Success (the task's own check)
-The task has 5 phases. They are checked after every physics step (1 ms) and must be completed **in this order**
-(a phase is checked only once the previous one is complete, and a completed phase stays complete):
-1. **incoming_strike**: The paddle touches the puck for the first time while the puck still slides fast: its horizontal speed on the physics step before that first contact must be at least `strike_min_speed` = 0.25 m/s. A first contact with a slower puck fails the task (strike_on_slow_puck).
-2. **physical_bridge_transfer**: During this phase the puck touches the bridge platform at least once. After that, at some step, the puck touches the exit lane while not touching the bridge.
-3. **exit_interception**: The paddle touches the puck.
-4. **second_strike**: In this phase the puck first loses contact with the paddle, at time t_s (the first step of the phase without paddle contact; t_s is not reset afterwards). Later the paddle touches the puck again at a time more than 0.035 s after t_s.
-5. **closing_gate_goal**: During this phase the puck must not touch the gate at all: any contact fails the task (puck_touched_gate). When the puck's centre crosses the doorway line x = 0.37 (world) moving towards +x between two consecutive physics steps within 0.055 m of y = 0.12, the gate's angle must be at least `gate_pass_angle` = 1.0 rad; otherwise the task fails (gate_not_open_at_doorway). The phase completes when the puck's centre then crosses the goal line x = 0.48 moving towards +x within 0.045 m of y = 0.12, after such a passage through the doorway, while the puck does not touch the paddle and the gate's angle is more than 0.20 rad. This completes the task. A goal-line crossing that fails any of these checks ends the task as a failure (closed_gate_or_carried_puck).
-
-The episode **ends by itself** at the first control step where the last phase is complete (success; rows after it are
-never executed) or where the task has failed. `s.status()` reports the phase you are in and the failure, if any.
-
-**The task fails** (the episode ends, reward 0) as soon as any of these happens:
-- in incoming_strike, the paddle's first contact with the puck comes when the puck's horizontal speed (on the physics step before) is below 0.25 m/s (`strike_on_slow_puck`);
-- in closing_gate_goal, the puck touches the gate (`puck_touched_gate`);
-- in closing_gate_goal, the puck crosses the doorway line (x = 0.37 towards +x, |y - 0.12| < 0.055 m) while the gate's angle is below 1.0 rad (`gate_not_open_at_doorway`);
-- in closing_gate_goal, the puck crosses the goal line (as defined there) while touching the paddle, or while the gate's angle is 0.20 rad or less, or without having passed the doorway with the gate open (`closed_gate_or_carried_puck`);
-- the task's horizon is reached: 32 s of simulated time (`timeout`);
-- an object leaves the workspace: its centre falls below z = -0.2 m or gets more than 1.8 m from the world's z axis
-  (`out_of_bounds`);
-- a forbidden contact or a deep interpenetration (below);
-- a safety limit is exceeded (`limit_violation`, below).
-
-**Contacts.** Only the paddle may touch the puck, and the paddle may touch nothing but the puck: not the lanes, the bridge, the gate, the backstop or the table. No other part of the robot (fingers, hand, links, base) may touch anything. In every task: the two arms (and their tools) never touch each other
-(`arm_arm_or_tool_collision`), an arm never touches itself (`self_collision`), no robot part touches the table or the floor
-(`forbidden_collision`, `tool_table_collision`), a robot link other than an allowed one touches no object or fixture
-(`forbidden_arm_object_contact`, `forbidden_arm_scene_contact`, `forbidden_arm_fixture_contact`), a tool touches only the
-task's objects and the fixtures the task allows (`forbidden_tool_fixture_contact`), and no contact penetrates deeper than
-4 mm (`excessive_penetration`).
-
-**Safety limits** (the Franka Panda's own limits, checked every 1 ms on each arm; `s.robot_spec()["safety_limits"]`):
-measured joint positions within the joint limits (+0.002 rad); measured joint speeds at most 1.01 x (2.175, 2.175, 2.175,
-2.175, 2.61, 2.61, 2.61) rad/s; finger speeds at most 0.051 m/s; the hand's TCP at most 1.01 x 1.7 m/s and 1.01 x
-2.5 rad/s; joint accelerations (measured over every 20 ms window) at most 1.05 x (15, 7.5, 10, 12.5, 15, 20, 20) rad/s²
-and jerks at most 1.05 x (7500, 3750, 5000, 6250, 7500, 10000, 10000) rad/s³; the TCP's acceleration (20 ms windows) at
-most 1.05 x 13 m/s² and 1.05 x 25 rad/s²; motor torques at most (87, 87, 87, 87, 12, 12, 12) N m, changing at most
-1000 N m/s. The servo's own reference motion is checked against the same speed, acceleration and jerk limits. A contact
-(a catch, a strike) moves the arm too: what is measured counts, whatever was commanded.
-
-## Deliverable
-Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below). It is replayed
-open-loop from the same initial state in one fresh process and scored 1 if the task succeeds in the replay,
-else 0. Also leave the script that produced it at `/app/output/gen.py`. Save a working trajectory
-as soon as you have one and overwrite it as you improve it: whatever is in `/app/output/` when the time is up is graded.
-The file holds `task` and `actions`, a (T, 8) float array of at most **4,500 rows** (one per control step);
-anything else (another shape, NaN, more rows, a file that is not such an npz) scores 0.
-
-## Tooling (already installed; run `python` from any directory)
+### Session
+`rcb_pandadyn`, already installed (run `python` from any directory):
 ```python
 from rcb_pandadyn import Session
 s = Session(instance="/app/instance.json")   # ~5-15 s: builds the scene and resets it to the frozen instance
@@ -87,39 +61,66 @@ s.camera_info()                    # per camera: intrinsic_cv, extrinsic_cv (wor
 s.render_video(actions, "/app/output/check.mp4")   # replays from the frozen state while filming the overview camera
 s.u                                # the ManiSkill environment itself (`panda_dynamics` in /opt/pandadyn: read-only reference)
 ```
-The tooling is deliberately thin: joint targets, kinematics and state. Catching, striking, carrying and timing are yours to
-build. The environment's source, the task included, is in `/opt/pandadyn/panda_dynamics` (`tasks/single/moving_bridge_puck_relay.py`).
 
-The grader replays once, in a fresh process; it is exactly this CLI (a fresh process, so run it to self-check):
-`python /opt/tools/rcb_pandadyn.py replay --instance /app/instance.json --traj /app/output/trajectory.npz`
+The tooling is deliberately thin: joint targets, kinematics and state. Catching, striking, carrying and timing are yours
+to build. The environment's source is in `/opt/pandadyn/panda_dynamics`. Check a trajectory as the grader replays it:
+`python /opt/tools/rcb_pandadyn.py replay --instance /app/instance.json --traj /app/output/trajectory.npz`. One
+`Session` per process. Stepping runs at roughly 40-150 control steps per second; rendering happens only when a frame is
+asked for and never moves anything. Do not call `s.close()` before writing every output.
 
-## Conventions
-- World frame: metres, z up, the table top is the plane z = 0; quaternions are **wxyz**. Each arm's base pose is in the robot spec (`arms`).
+### Actions
 - Action row (8 values per control step): `[joint1..7, aperture]`. Each arm's 8 values are its 7 absolute joint-position
-  targets (rad, `panda_joint1..7`) and its total gripper aperture target (m, 0 = closed .. 0.08 = open; each finger moves at
-  most 0.025 m/s). Values outside the joint limits (`s.robot_spec()`) are clipped to them before they are executed, and the
-  trajectory records the clipped row.
+  targets (rad, `panda_joint1..7`) and its total gripper aperture target (m, 0 = closed .. 0.08 = open; each finger
+  moves at most 0.025 m/s). Values outside the joint limits (`s.robot_spec()`) are clipped to them before they are
+  executed, and the trajectory records the clipped row.
 - The servo: every control step, each arm's latest target is turned into a smooth reference motion by a jerk-limited
-  trajectory generator (Ruckig, the joints synchronised to arrive together) within 65 % (speed), 55 % (acceleration) and 5 % (jerk) of the Panda's joint
-  speed, acceleration and jerk limits, and the arm tracks that reference with torque control (PD + inverse dynamics, the
-  Panda's torque and torque-rate limits). A new target replans from the current reference motion, so a target far away is
-  reached smoothly, not in one step. `s.robot_spec()["servo"]` has the exact limits and gains.
-- Control runs at 100 Hz (10 ms per row), physics at 1000 Hz. There is no step budget: the time limit (`## Time limit`) is
-  your only budget. A simulated episode ends at the latest at the task's horizon (32 s, 3200 rows).
-- One `Session` per process. Stepping runs at roughly 40-150 control steps per second; rendering happens only when a frame
-  is asked for and never moves anything. Do not call `s.close()` before writing every output.
+  trajectory generator (Ruckig, the joints synchronised to arrive together) within 65 % (speed), 55 % (acceleration) and
+  5 % (jerk) of the Panda's joint speed, acceleration and jerk limits, and the arm tracks that reference with torque
+  control (PD + inverse dynamics, the Panda's torque and torque-rate limits). A new target replans from the current
+  reference motion, so a target far away is reached smoothly, not in one step. `s.robot_spec()["servo"]` has the exact
+  limits and gains.
+- Control runs at 100 Hz (10 ms per row), physics at 1000 Hz. A simulated episode ends at the latest at the task's
+  horizon (32 s, 3200 rows).
 
-## Rules
-- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
-  benchmark's demonstrations, trained policies); trials are reviewed.
+### Observations
+- World frame: metres, z up, the table top is the plane z = 0; quaternions are wxyz. Each arm's base pose is in the
+  robot spec (`arms`).
+- Cameras: `s.render_frame("overview")` (the whole workspace) or `s.render_frame("closeup")` (the working area), RGB 640
+  x 480; `s.camera_info()` has their calibration. `s.proprio()` and `s.state()` (above) give the robot's and the scene's
+  state.
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+### Arms and tools
+One Panda, base at (-0.55, 0, 0) facing +x (yaw 0). Its hand carries a paddle: a flat rigid plate 12 mm thick, 0.10 m
+wide and 50 mm tall, whose face normal is the tool frame's x axis. The tool frame is the paddle's centre. A rigid grey
+adapter behind the paddle (tool -x side) joins it to the hand: a horizontal bar 0.035 m above the tool origin (tool x
+from -0.132 to -0.038), a vertical post at tool x = -0.05 (z from -0.005 to 0.035) and a 12 mm square bridge from the
+post to the paddle's back face (x from -0.044 to -0.006, z from 0.009 to 0.021); paddle and adapter form one rigid tool
+link. In the tool frame the hand's TCP is at (-0.12, 0, +0.04). At the start the paddle is upright with identity
+orientation (faces along world x, width along world y), centre at (-0.08, -0.15, 0.10): its lower edge, at z = 0.075, is
+above the incoming puck's path. The tool's adapter runs between the gripper's fingertips: closing the gripper to less
+than about 12 mm of aperture makes the fingers touch the adapter, which ends the episode as a collision with its own
+tool (the gripper starts fully open, at 0.08 m).
 
-## Resources
-Your container: **5 CPUs**, **10 GiB of memory**, **1024 processes and threads**, **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`) and **one GPU, 3 GiB of its memory**. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
+### Safety
+The task fails when an arm goes beyond the Franka Panda's own safety limits on joint positions, joint and finger speeds,
+the hand's speed and acceleration, joint accelerations and jerks, and motor torques and how fast they change (the
+numbers: the robot spec's `safety_limits`). They count on the motion as measured, whatever was commanded (a catch or a
+strike moves the arm too), and the servo's own reference motion is held to the same speed, acceleration and jerk limits.
 
-## Time limit
-You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+## Others
+- State labels (`s.objects()`, `s.fixtures()`): `puck` is the puck; `bridge` and `gate` (in `s.fixtures()`) the turning
+  bridge and the swinging gate.
+- The puck is fast enough for the first strike only during the first fraction of a second.
 
-This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+## Limits
+- Time: 3600 s of wall-clock time from the start of your session; everything counts (the simulator's start-up too). At
+  the end you are stopped without warning and only what is in `/app/output/` at that moment is graded. Time left:
+  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`). Calls into a long-running process can block for their
+  whole wait time: use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, the simulator's and the benchmark's source included.
+- Resources: 5 CPUs, 10 GiB memory, 1024 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`),
+  one GPU (3 GiB of its memory). Over a cap a process can be killed (the CPU cap only slows you down); usage:
+  `/run/rcb-limits/usage.json`.
+- Resets: as many as you like (`s.reset()`).

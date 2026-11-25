@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0` |
 
 ## Task
-A low-friction puck is already sliding across the table toward the left arm when the episode starts. The two Pandas each hold a paddle and must hit the same puck in turn: left, right, left, right. After each of the first three hits the puck must pass through a different gap in a row of posts standing across the table between the arms. First it goes toward the right arm through the gap at the -y end. Then it goes back toward the left arm through the gap at the +y end, next to a side rail. Then it goes toward the right arm again through the middle gap. The right arm's final hit must send the puck across a goal line in front of a backstop wall on the right arm's side. The deliverable is one replayable trajectory of 100 Hz joint-target actions (`/app/output/trajectory.npz`,
+Hit the sliding puck with the paddles in turn, left, right, left, right: first through the end gap of the row of posts away from the side rail, then back through the end gap next to the side rail, then through the middle gap, and with the last hit across the goal line in front of the middle of the backstop. The deliverable is one replayable trajectory of 100 Hz joint-target actions (`/app/output/trajectory.npz`,
 16 values per row), graded by the task's own staged success check: 4 phases (`left_first_pass`, `right_return_route`, `left_diagonal_pass`, `right_terminal_shot`), in order,
 with no failure event and no safety-limit violation, within the task's horizon of 25 s.
 

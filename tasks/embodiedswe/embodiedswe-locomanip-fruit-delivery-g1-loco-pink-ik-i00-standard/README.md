@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:embodiedswe-0.3.0` |
 
 ## Task
+Put every fruit on the table onto the clay plate on the far side of the table; nothing else goes on the plate.
+
 Deliver the fruit to the plate (Unitree G1, walking, Pink IK): the scene, frozen instance and success predicate of `embodiedswe-locomanip-fruit-delivery-g1-loco-pink-ik-i00-privileged`, with a Unitree G1 humanoid with three-finger hands, walking under EmbodiedSWE's frozen locomotion policy, its arms and waist under its Pink IK, in standard mode
 (tasks/embodiedswe/README.md "Standard mode").
 

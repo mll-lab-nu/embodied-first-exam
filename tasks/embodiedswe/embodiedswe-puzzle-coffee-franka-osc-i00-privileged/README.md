@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:embodiedswe-0.3.0` |
 
 ## Task
+Make a cup of coffee with the machine, using the capsule and the green mug, then stand the filled mug upright on the serving tray.
+
 Make and serve a capsule coffee (Franka, operational-space control). EmbodiedSWE's `puzzle.coffee.franka.osc` task (robobench at commit `67f44e8a2ca5`), privileged mode, with a program as the
 deliverable: `solution/solve.py` exposing `solve(env)`.
 

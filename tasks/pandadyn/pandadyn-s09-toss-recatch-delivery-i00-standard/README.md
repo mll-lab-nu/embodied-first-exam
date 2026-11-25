@@ -18,7 +18,7 @@ client (docs/protocol/standard_mode.md Part 1, with the optional reset capabilit
 live and records every control step it ran. Between the agent's calls the world is frozen; 3 resets, only the last
 episode graded. The sidecar's adapter (`environment/sim/server.py`) is the benchmark's realtime twins', code for code,
 on the same shared service layer, so where a family has that twin the two modes differ only in the clock. Compare against the
-privileged task to measure the cost of losing privileged state, free resets and self-replay. A ball is thrown high into the air when the episode starts and comes down near the robot. Catch it in the shallow cup the Panda holds, which has one open side. Bring the cup to a launch region and toss the ball straight up out of the cup with a real throw: it must leave the cup floor while rising. Move the cup sideways and catch the ball again. Finally, release it into an open box that slides back and forth along a rail, where it must settle while the box is moving.
+privileged task to measure the cost of losing privileged state, free resets and self-replay. Catch the falling ball in the cup, bring the cup to the launch point and toss the ball straight up out of it. Move the cup sideways, catch the ball again, and drop it into the sliding box while the box is moving.
 
 ## Difficulty
 That of `pandadyn-s09-toss-recatch-delivery-i00-privileged` (its README), without object poses or the success signal and with 3 resets: the moving objects

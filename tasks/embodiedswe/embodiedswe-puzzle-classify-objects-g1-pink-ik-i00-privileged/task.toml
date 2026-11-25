@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/embodiedswe-puzzle-classify-objects-g1-pink-ik-i00-privileged"
-description = "EmbodiedSWE puzzle.classify_objects.g1.pink_ik (robobench at 67f44e8a2ca5, Isaac Lab 2.3.2 / Isaac Sim 5.1, GPU PhysX): deliver a program, solution/solve.py with solve(env), that completes the task when the verifier runs it against a fresh simulator built from the frozen instance (seed 0)."
+description = "EmbodiedSWE puzzle.classify_objects.g1.pink_ik (robobench at 67f44e8a2ca5, Isaac Lab 2.3.2 / Isaac Sim 5.1, GPU PhysX): Put each of the three blocks on the zone of its own colour. Deliver a program, solution/solve.py with solve(env), that completes the task when the verifier runs it against a fresh simulator built from the frozen instance (seed 0)."
 keywords = ["robotics", "embodiedswe", "isaac-lab", "isaac-sim", "code-as-policy", "program", "sorting", "pick-and-place", "humanoid", "unitree-g1", "puzzle.classify_objects.g1.pink_ik"]
 
 [metadata]

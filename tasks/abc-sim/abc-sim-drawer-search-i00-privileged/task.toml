@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/abc-sim-drawer-search-i00-privileged"
-description = "ABC Sim multi-drawer search (two I2RT YAM arms, MuJoCo): Find the measuring cup and put it in the bin, then find the dish brush and put it in the bin. Frozen scene instance; one replayable trajectory, graded by two fresh-process replays."
+description = "ABC Sim multi-drawer search (two I2RT YAM arms, MuJoCo): Find the measuring cup in the drawers and put it in the bin, then do the same with the dish brush. Frozen scene instance; one replayable trajectory, graded by two fresh-process replays."
 keywords = ["robotics", "abc-sim", "mujoco", "yam", "bimanual", "drawer_search", "privileged"]
 
 [metadata]

@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:embodiedswe-0.3.0` |
 
 ## Task
+Screw the four loose legs onto the studs of the tabletop.
+
 Screw the four legs onto a side table (two Frankas, operational-space control): the scene, frozen instance and success predicate of `embodiedswe-assembly-ikea-table-bimanual-franka-osc-i00-privileged`, with two Franka Panda arms with parallel grippers, each under EmbodiedSWE's operational-space (torque) controller, in standard mode
 (tasks/embodiedswe/README.md "Standard mode").
 

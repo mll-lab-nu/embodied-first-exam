@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0` |
 
 ## Task
-An orange ball is thrown upward at the start and comes back down near the robot. Catch it in the open cup the Panda holds and pour it into the designated one of the two raised gravity channels. Let it roll down that channel by itself, drop off its end and bounce off the tilted rebound plate below it. Catch it in the cup again while it flies, and finally put it into a cart that slides back and forth on a rail, where it must rest while the cart is still moving. The deliverable is one replayable trajectory of 100 Hz joint-target actions (`/app/output/trajectory.npz`,
+Catch the falling ball in the cup and pour it into the channel farther from you. Let it roll down by itself and bounce off the plate below its end, catch it again in flight, and put it into the sliding cart while the cart is moving. The deliverable is one replayable trajectory of 100 Hz joint-target actions (`/app/output/trajectory.npz`,
 8 values per row), graded by the task's own staged success check: 5 phases (`incoming_catch`, `selected_route_entry`, `track_and_rebound`, `downstream_catch`, `moving_cart_delivery`), in order,
 with no failure event and no safety-limit violation, within the task's horizon of 25 s.
 

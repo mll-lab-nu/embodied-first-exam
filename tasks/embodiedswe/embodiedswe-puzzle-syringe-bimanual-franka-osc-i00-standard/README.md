@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:embodiedswe-0.3.0` |
 
 ## Task
+Fill the syringe from the beaker, put about a third of a syringe into each of the three test tubes, then lay the syringe back down where it was on the shelf.
+
 Draw and dose liquid with a syringe (two Frankas, operational-space control): the scene, frozen instance and success predicate of `embodiedswe-puzzle-syringe-bimanual-franka-osc-i00-privileged`, with two Franka Panda arms with parallel grippers, each under EmbodiedSWE's operational-space (torque) controller, in standard mode
 (tasks/embodiedswe/README.md "Standard mode").
 

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0` |
 
 ## Task
-The left gripper starts around the handle of a free, hand-held fixture: a short channel with a ball inside, closed at its front by a spring-loaded latch gate, with a square socket on its side above the latch's push button. The left arm must grip the fixture and move it off its stand. While the fixture is still moving, the right arm must insert its peg into the socket, press the latch button down with the peg until the gate opens, and then pull the peg back out while the left hand keeps holding the fixture. The ball must then leave the fixture through its outlet while the outlet is lined up with the top of a fixed inclined chute, run down the chute and come to rest in a basin at the chute's foot. The fixture must never be dropped. The deliverable is one replayable trajectory of 100 Hz joint-target actions (`/app/output/trajectory.npz`,
+Grip the fixture with the left hand and lift it off its stand, keeping it moving. While it moves, push the right arm's peg into the socket, press the latch button down until the gate opens and pull the peg out; then let the ball run out of the outlet into the top of the chute and down into the basin. The deliverable is one replayable trajectory of 100 Hz joint-target actions (`/app/output/trajectory.npz`,
 16 values per row), graded by the task's own staged success check: 5 phases (`moving_fixture_presentation`, `relative_pin_insertion`, `mechanical_latch_open`, `follow_and_withdraw`, `gravity_delivery`), in order,
 with no failure event and no safety-limit violation, within the task's horizon of 25 s.
 

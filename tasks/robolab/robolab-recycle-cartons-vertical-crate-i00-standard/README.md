@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robolab-0.2.2` |
 
 ## Task
+Put the milk carton and the orange juice carton in the vertical crate.
+
 Standard-mode twin of `robolab-recycle-cartons-vertical-crate-i00-privileged` (same frozen instance, the state after RoboLab's canonical seed-0 reset):
 the agent gets only the `eai-standard/2.2` client (docs/protocol/standard_mode.md); the simulator runs in the `sim` sidecar
 (`environment/docker-compose.yaml`, GPU on the sidecar), which owns the scene and records the episode as a (T, 8)

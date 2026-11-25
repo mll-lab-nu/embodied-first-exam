@@ -18,7 +18,7 @@ client (docs/protocol/standard_mode.md Part 1, with the optional reset capabilit
 live and records every control step it ran. Between the agent's calls the world is frozen; 3 resets, only the last
 episode graded. The sidecar's adapter (`environment/sim/server.py`) is the benchmark's realtime twins', code for code,
 on the same shared service layer, so where a family has that twin the two modes differ only in the clock. Compare against the
-privileged task to measure the cost of losing privileged state, free resets and self-replay. A short round-ended cylinder is rolling along a raised lane when the episode starts and will run off its end. Intercept it in the open-sided tray the Panda holds. Bring it to rest in the tray with its long axis along the world's y axis. Put it into a gently sloping guide channel near the channel's entry, and let it travel out past the far end without the tray touching it at that moment. Catch it again in the tray at the exit, aligned and settled. Finally, deliver it lying along y into a pocket that slides back and forth on a rail, where it must rest while the pocket is moving.
+privileged task to measure the cost of losing privileged state, free resets and self-replay. Catch the rolling cylinder in the tray as it comes off the lane and settle it lying left to right. Put it into the guide channel near its entry, let it run out past the far end by itself, catch it again in the tray, and lay it, still left to right, into the sliding pocket while the pocket is moving.
 
 ## Difficulty
 That of `pandadyn-s11-cylinder-rescue-route-deliver-i00-privileged` (its README), without object poses or the success signal and with 3 resets: the moving objects

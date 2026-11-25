@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:robotwin-0.1.2` |
 
 ## Task
+Pick up the microphone with the right arm and hand it to the left arm. The left arm holds it up, at least a hand's length above the table on the robot's left, and the right arm lets go.
+
 Standard-mode twin of `robotwin_2_0_handover_mic-privileged` (same frozen instance, RoboTwin seed 28831): the agent gets
 only the `eai-standard/2.1` client (docs/protocol/standard_mode.md); the simulator runs in the `sim` sidecar
 (`environment/docker-compose.yaml`, GPU on the sidecar), which owns the seed, judges the live episode, records it as a

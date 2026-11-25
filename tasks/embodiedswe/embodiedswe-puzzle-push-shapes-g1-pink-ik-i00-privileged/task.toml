@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/embodiedswe-puzzle-push-shapes-g1-pink-ik-i00-privileged"
-description = "EmbodiedSWE puzzle.push_shapes.g1.pink_ik (robobench at 67f44e8a2ca5, Isaac Lab 2.3.2 / Isaac Sim 5.1, GPU PhysX): deliver a program, solution/solve.py with solve(env), that completes the task when the verifier runs it against a fresh simulator built from the frozen instance (seed 0)."
+description = "EmbodiedSWE puzzle.push_shapes.g1.pink_ik (robobench at 67f44e8a2ca5, Isaac Lab 2.3.2 / Isaac Sim 5.1, GPU PhysX): Slide each block into the cutout of its own shape on the board, so that it drops in and lies flat in it. Deliver a program, solution/solve.py with solve(env), that completes the task when the verifier runs it against a fresh simulator built from the frozen instance (seed 0)."
 keywords = ["robotics", "embodiedswe", "isaac-lab", "isaac-sim", "code-as-policy", "program", "pushing", "non-prehensile", "humanoid", "unitree-g1", "puzzle.push_shapes.g1.pink_ik"]
 
 [metadata]

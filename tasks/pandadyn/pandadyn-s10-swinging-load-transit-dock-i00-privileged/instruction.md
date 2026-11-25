@@ -1,70 +1,44 @@
-# Panda Dynamic Scenes · Swinging load transit and dock (S10) — frozen instance i00
+# Panda Dynamic Scenes · Swinging load transit and dock (S10) (privileged)
 
-You control one simulated **Franka Panda** arm (7 joints, its standard hand, and the task's tool where it has one) in a simulated scene (ManiSkill 3 / SAPIEN, rigid-body CPU PhysX at 1000 Hz) via Python.
-**Task:** A carrier rests on two small ledges between the gripper's open fingers. It is a short bar with a pendulum (a rod ending in a ball) hanging from a hinge under it, and the pendulum is already swinging. Grip the bar with both fingers and damp the swing. Carry the carrier, still gripped, through two waypoints without letting the carrier or its pendulum touch a block obstacle, brake to rest at the second waypoint, and damp the residual swing again. Finally lower it slowly until the pendulum's ball rests centred in a dock, with the swing settled and the bar still gripped.
+## Task
+Grip the carrier's bar and damp the swinging pendulum. Carry it through the two waypoints without touching the obstacle
+block, stop at the second and damp the swing again, then lower it slowly until the pendulum's ball rests in the dock,
+still holding the bar.
 
-This is a *fixed scene instance*: everything starts the same way after every reset, and you may reset and retry as many
-times as you want. Your deliverable is **one replayable trajectory** of the robot's low-level actions, not a general
-policy. Things move by themselves from the first control step on: the scene does not wait for the robot.
+## Goal
+Success: both fingers grip the bar and damp the swing until the pendulum hangs nearly still; still gripped, the bar's
+centre is carried past waypoint A and to waypoint B, where it brakes to rest; the leftover swing is damped again;
+finally the carrier is lowered slowly until the pendulum's ball rests centred in the dock, the swing settled and the bar
+still gripped.
 
-## Scene
-One Panda, base at (-0.55, 0, 0) facing +x (yaw 0). No tool: the stock Panda hand with its two fingers. The tool frame (the reported tool pose) is the hand's TCP, the point between the fingertips, with its z axis pointing out of the hand along the fingers. At the start the TCP is at (-0.03, -0.14, 0.36), exactly at the carrier bar's centre, with the gripper pointing straight down (orientation wxyz (0, 1, 0, 0)). The fingers close along world y and start partly open, at 0.016 m each (aperture 0.032 m), straddling the 30 mm wide bar. The action's last component is the total aperture, 0 to 0.08 m. In this task the finger servo is stiffer (kp 800, kd 8), and finger motion is not time-synchronised with the arm joints.
+The steps count only in this order, and a step once done stays done. The replay ends as soon as the task is done or has
+failed; the task also fails at once when:
+- the carrier or its pendulum touches the obstacle block;
+- the carrier drops out of the grip;
+- the pendulum's ball comes into the dock too fast;
+- the task's horizon is reached before the task is done (Robot Interface);
+- an object leaves the workspace (falls well below the table top or flies far away);
+- a robot part touches what it may not: only the fingers may touch anything, and only the carrier's bar;
+- an arm touches itself, a robot part touches the table or the floor, or a contact presses deep into anything;
+- an arm goes beyond the Franka Panda's own safety limits (Robot Interface, Safety).
 
-The carrier is a free rigid assembly, not attached to the robot or the scene. Its bar is blue-grey, 0.12 m long (along world x at the start), 0.03 m wide and 18 mm thick. A pendulum hangs from a hinge just under the bar's middle: a grey 12 mm square rod, 0.15 m long (`length`), ending in an orange ball (the bob) of radius 22 mm. The hinge lets the pendulum swing only in the vertical plane along the bar's length, with almost no friction. At t = 0 the bar rests on two thin static ledges (on posts), and the pendulum is let go from an angle, so it is already swinging. A static orange block obstacle (0.08 m x 0.12 m x 0.11 m tall) stands on the table. A static blue open box (the dock: 0.104 m x 0.10 m inside, walls 55 mm high) is placed low over the table. The table top is the world's z = 0 plane.
+Deliverable: `/app/output/trajectory.npz`, written with `Session.save_trajectory(...)`: it holds `task` and `actions`, a
+(T, 8) float array of at most 4,500 rows (one per control step); anything else (another shape, NaN, more rows, a file
+that is not such an npz) scores 0. It is replayed open-loop from the fixed start and scores 1 if the task succeeds in
+the replay, else 0. Keep the script that produced it at `/app/output/gen.py`. Save a valid one early and overwrite it
+when you have a better one.
 
-Exactly (privileged information, also readable through the tooling): Carrier: free articulation whose root link `carrier` (the bar, box 0.12 x 0.03 x 0.018 m, mass 0.055 kg) starts with its centre at (-0.03, -0.14, 0.36), level, resting on the two ledges. The ledges `reset_handle_stand_-1/1` are static plates 0.008 x 0.09 x 0.006 m centred at (-0.083, -0.177, 0.348) and (0.023, -0.177, 0.348), with posts to the table. The pendulum link `load` (mass 0.06 kg) hangs from a revolute hinge 0.012 m below the bar's centre (z = 0.348 at the start). The hinge axis is the bar's y axis (world y at the start), limits +-1.3 rad, joint friction 0.00001, damping 0.00003. The rod is 0.012 x 0.012 x `length` (0.15 m); the bob (radius 0.022, friction 0.4) is centred `length` below the hinge. q is the hinge angle relative to the bar; q > 0 displaces the bob towards -x by `length` sin q. At reset q = `initial_angle` + e, with e ~ U(-0.02, 0.02) the only seeded draw (nominal 0.25 rad, i.e. the bob about 3.7 cm towards -x). The pendulum is released at rest. Idle, it keeps swinging at about +-0.25 rad with a period of about 1 s and practically no decay. Obstacle: static box 0.08 x 0.12 x 0.11 m centred at (0.08, 0, 0.055). Dock: static open box (inner half 0.052 x 0.05, walls 0.055 m, 5 mm floor) whose floor top is at (0.07, 0.19, 0.015). The load_dock predicate tests the bob centre against the world point (0.07, 0.19) and the height z = 0.037. The slow-entry zone of dock_entry_too_fast: bob centre within 0.057 + 0.022 = 0.079 m (x) and 0.055 + 0.022 = 0.077 m (y) of (0.07, 0.19) (the dock's outer half-extents plus the bob radius) and bob centre below z = 0.07 + 0.022 = 0.092 m (the rim at z = 0.07). `goal` = (0.07, 0.19, `length` + 0.049) = (0.07, 0.19, 0.199), the bar-centre position when the bob rests in the dock. Waypoints are fixed (see world_goals_fixed).
+Rules: **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+benchmark's demonstrations, trained policies); trials are reviewed.
 
-The instance's parameters (`s.params()`, SI units): `horizon` = 25, `object_mass` = 0.06, `table_friction` = 0.08, `length` = 0.15, `initial_angle` = 0.25, `brake_speed` = 0.025, `dock_entry_speed` = 0.05.
+## Robot Interface
+One simulated Franka Panda arm (7 joints, its standard hand, and the task's tool where it has one) on a table (ManiSkill
+3 / SAPIEN, rigid-body physics at 1000 Hz). The scene is one fixed instance: everything starts the same way after every
+reset. Things move by themselves from the first control step on: the scene does not wait for the robot. You have the
+full simulator to develop with; you hand in a trajectory of robot actions.
 
-**Goal geometry.** Waypoint A (-0.05, 0.04, 0.38) and waypoint B (0.0, 0.15, 0.37), each with radius 3.5 cm, for the bar's centre (announced at reset as `goal_waypoints`). Bar-centre floor: z = 0.16 m. Nothing goal-related is seeded. `goal_goal` (announced at reset) is fixed, but it gives the dock's position (the bar-centre point with the bob resting in the dock), so it is privileged mode only.
-
-## Success (the task's own check)
-The task has 5 phases. They are checked after every physics step (1 ms) and must be completed **in this order**
-(a phase is checked only once the previous one is complete, and a completed phase stays complete):
-1. **grasp_settle_and_damp**: Both fingers grip the bar (bilateral grip: the left finger or its pad and the right finger or its pad both in contact with the bar at that step), and the swing is settled: the pendulum's hinge angle relative to the bar is less than 0.07 rad in magnitude and its hinge rate is below 0.18 rad/s. This must hold for 0.35 s without interruption.
-2. **obstacle_transit**: With the bar gripped by both fingers, the bar's centre (the carrier's root origin) comes within 3.5 cm of waypoint A = (-0.05, 0.04, 0.38).
-3. **turn_and_brake**: With the bar gripped by both fingers, the bar's centre is within 3.5 cm of waypoint B = (0.0, 0.15, 0.37) and the bar moves slower than `brake_speed` = 0.025 m/s, for 0.2 s without interruption. The bar's speed here is its centre's displacement over the last 50 ms divided by that time.
-4. **residual_swing_cancel**: Bar gripped by both fingers and swing settled (|hinge angle| < 0.07 rad, |hinge rate| < 0.18 rad/s), for 0.5 s without interruption.
-5. **load_dock**: Bar gripped by both fingers and swing settled (as above). The pendulum (rod or bob) has touched the dock within the last 10 ms. The bob's centre is within 3.5 cm horizontally of the dock's centre, and within 3 mm of the height at which the bob rests on the dock floor (bob centre 22 mm above the floor's top surface). All of this must hold for 0.5 s without interruption. This completes the task.
-
-The episode **ends by itself** at the first control step where the last phase is complete (success; rows after it are
-never executed) or where the task has failed. `s.status()` reports the phase you are in and the failure, if any.
-
-**The task fails** (the episode ends, reward 0) as soon as any of these happens:
-- at any time the carrier bar or the pendulum (rod or bob) touches the obstacle block (`obstacle_collision`);
-- at any time the bar's centre drops below z = 0.16 m (with the bob resting in the dock and the bar held above it, the bar's centre is at about 0.199 m) (`carrier_grasp_lost`);
-- until the task has succeeded, at a step where the ball's lowest point is below the dock's rim and its centre is within the dock's outer walls plus the ball's radius horizontally (|dx| < 0.079 m, |dy| < 0.077 m from the dock's centre), the ball's speed (its centre's displacement over the last 50 ms divided by that time) is above `dock_entry_speed` = 0.05 m/s (`dock_entry_too_fast`);
-- the task's horizon is reached: 25 s of simulated time (`timeout`);
-- an object leaves the workspace: its centre falls below z = -0.2 m or gets more than 1.8 m from the world's z axis
-  (`out_of_bounds`);
-- a forbidden contact or a deep interpenetration (below);
-- a safety limit is exceeded (`limit_violation`, below).
-
-**Contacts.** No tool is mounted. Only the finger links (fingers and finger pads) may touch anything, and only the carrier bar. Touching the pendulum (rod or bob) with a finger is forbidden. So is touching the ledges, the obstacle, the dock or the table. No other part of the robot (hand, links, base) may touch anything. The pendulum is expected to touch the dock; neither the bar nor the pendulum may touch the obstacle. In every task: the two arms (and their tools) never touch each other
-(`arm_arm_or_tool_collision`), an arm never touches itself (`self_collision`), no robot part touches the table or the floor
-(`forbidden_collision`, `tool_table_collision`), a robot link other than an allowed one touches no object or fixture
-(`forbidden_arm_object_contact`, `forbidden_arm_scene_contact`, `forbidden_arm_fixture_contact`), a tool touches only the
-task's objects and the fixtures the task allows (`forbidden_tool_fixture_contact`), and no contact penetrates deeper than
-4 mm (`excessive_penetration`).
-
-**Safety limits** (the Franka Panda's own limits, checked every 1 ms on each arm; `s.robot_spec()["safety_limits"]`):
-measured joint positions within the joint limits (+0.002 rad); measured joint speeds at most 1.01 x (2.175, 2.175, 2.175,
-2.175, 2.61, 2.61, 2.61) rad/s; finger speeds at most 0.051 m/s; the hand's TCP at most 1.01 x 1.7 m/s and 1.01 x
-2.5 rad/s; joint accelerations (measured over every 20 ms window) at most 1.05 x (15, 7.5, 10, 12.5, 15, 20, 20) rad/s²
-and jerks at most 1.05 x (7500, 3750, 5000, 6250, 7500, 10000, 10000) rad/s³; the TCP's acceleration (20 ms windows) at
-most 1.05 x 13 m/s² and 1.05 x 25 rad/s²; motor torques at most (87, 87, 87, 87, 12, 12, 12) N m, changing at most
-1000 N m/s. The servo's own reference motion is checked against the same speed, acceleration and jerk limits. A contact
-(a catch, a strike) moves the arm too: what is measured counts, whatever was commanded.
-
-## Deliverable
-Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below). It is replayed
-open-loop from the same initial state in one fresh process and scored 1 if the task succeeds in the replay,
-else 0. Also leave the script that produced it at `/app/output/gen.py`. Save a working trajectory
-as soon as you have one and overwrite it as you improve it: whatever is in `/app/output/` when the time is up is graded.
-The file holds `task` and `actions`, a (T, 8) float array of at most **4,500 rows** (one per control step);
-anything else (another shape, NaN, more rows, a file that is not such an npz) scores 0.
-
-## Tooling (already installed; run `python` from any directory)
+### Session
+`rcb_pandadyn`, already installed (run `python` from any directory):
 ```python
 from rcb_pandadyn import Session
 s = Session(instance="/app/instance.json")   # ~5-15 s: builds the scene and resets it to the frozen instance
@@ -86,39 +60,66 @@ s.camera_info()                    # per camera: intrinsic_cv, extrinsic_cv (wor
 s.render_video(actions, "/app/output/check.mp4")   # replays from the frozen state while filming the overview camera
 s.u                                # the ManiSkill environment itself (`panda_dynamics` in /opt/pandadyn: read-only reference)
 ```
-The tooling is deliberately thin: joint targets, kinematics and state. Catching, striking, carrying and timing are yours to
-build. The environment's source, the task included, is in `/opt/pandadyn/panda_dynamics` (`tasks/single/swinging_load_transit_dock.py`).
 
-The grader replays once, in a fresh process; it is exactly this CLI (a fresh process, so run it to self-check):
-`python /opt/tools/rcb_pandadyn.py replay --instance /app/instance.json --traj /app/output/trajectory.npz`
+The tooling is deliberately thin: joint targets, kinematics and state. Catching, striking, carrying and timing are yours
+to build. The environment's source is in `/opt/pandadyn/panda_dynamics`. Check a trajectory as the grader replays it:
+`python /opt/tools/rcb_pandadyn.py replay --instance /app/instance.json --traj /app/output/trajectory.npz`. One
+`Session` per process. Stepping runs at roughly 40-150 control steps per second; rendering happens only when a frame is
+asked for and never moves anything. Do not call `s.close()` before writing every output.
 
-## Conventions
-- World frame: metres, z up, the table top is the plane z = 0; quaternions are **wxyz**. Each arm's base pose is in the robot spec (`arms`).
+### Actions
 - Action row (8 values per control step): `[joint1..7, aperture]`. Each arm's 8 values are its 7 absolute joint-position
-  targets (rad, `panda_joint1..7`) and its total gripper aperture target (m, 0 = closed .. 0.08 = open; each finger moves at
-  most 0.025 m/s). Values outside the joint limits (`s.robot_spec()`) are clipped to them before they are executed, and the
-  trajectory records the clipped row.
+  targets (rad, `panda_joint1..7`) and its total gripper aperture target (m, 0 = closed .. 0.08 = open; each finger
+  moves at most 0.025 m/s). Values outside the joint limits (`s.robot_spec()`) are clipped to them before they are
+  executed, and the trajectory records the clipped row.
 - The servo: every control step, each arm's latest target is turned into a smooth reference motion by a jerk-limited
-  trajectory generator (Ruckig, the joints synchronised to arrive together) within 65 % (speed), 55 % (acceleration) and 5 % (jerk) of the Panda's joint
-  speed, acceleration and jerk limits, and the arm tracks that reference with torque control (PD + inverse dynamics, the
-  Panda's torque and torque-rate limits). A new target replans from the current reference motion, so a target far away is
-  reached smoothly, not in one step. `s.robot_spec()["servo"]` has the exact limits and gains.
-- Control runs at 100 Hz (10 ms per row), physics at 1000 Hz. There is no step budget: the time limit (`## Time limit`) is
-  your only budget. A simulated episode ends at the latest at the task's horizon (25 s, 2500 rows).
-- One `Session` per process. Stepping runs at roughly 40-150 control steps per second; rendering happens only when a frame
-  is asked for and never moves anything. Do not call `s.close()` before writing every output.
+  trajectory generator (Ruckig, the joints synchronised to arrive together) within 65 % (speed), 55 % (acceleration) and
+  5 % (jerk) of the Panda's joint speed, acceleration and jerk limits, and the arm tracks that reference with torque
+  control (PD + inverse dynamics, the Panda's torque and torque-rate limits). A new target replans from the current
+  reference motion, so a target far away is reached smoothly, not in one step. `s.robot_spec()["servo"]` has the exact
+  limits and gains.
+- Control runs at 100 Hz (10 ms per row), physics at 1000 Hz. A simulated episode ends at the latest at the task's
+  horizon (25 s, 2500 rows).
 
-## Rules
-- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
-  benchmark's demonstrations, trained policies); trials are reviewed.
+### Observations
+- World frame: metres, z up, the table top is the plane z = 0; quaternions are wxyz. Each arm's base pose is in the
+  robot spec (`arms`).
+- Cameras: `s.render_frame("overview")` (the whole workspace) or `s.render_frame("closeup")` (the working area), RGB 640
+  x 480; `s.camera_info()` has their calibration. `s.proprio()` and `s.state()` (above) give the robot's and the scene's
+  state.
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+### Arms and tools
+One Panda, base at (-0.55, 0, 0) facing +x (yaw 0). No tool: the stock Panda hand with its two fingers. The tool frame
+(the reported tool pose) is the hand's TCP, the point between the fingertips, with its z axis pointing out of the hand
+along the fingers. At the start the TCP is at (-0.03, -0.14, 0.36), exactly at the carrier bar's centre, with the
+gripper pointing straight down (orientation wxyz (0, 1, 0, 0)). The fingers close along world y and start partly open,
+at 0.016 m each (aperture 0.032 m), straddling the 30 mm wide bar. The action's last component is the total aperture, 0
+to 0.08 m. In this task the finger servo is stiffer (kp 800, kd 8), and finger motion is not time-synchronised with the
+arm joints.
 
-## Resources
-Your container: **5 CPUs**, **10 GiB of memory**, **1024 processes and threads**, **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`) and **one GPU, 3 GiB of its memory**. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
+### Safety
+The task fails when an arm goes beyond the Franka Panda's own safety limits on joint positions, joint and finger speeds,
+the hand's speed and acceleration, joint accelerations and jerks, and motor torques and how fast they change (the
+numbers: the robot spec's `safety_limits`). They count on the motion as measured, whatever was commanded (a catch or a
+strike moves the arm too), and the servo's own reference motion is held to the same speed, acceleration and jerk limits.
 
-## Time limit
-You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+### Goal points
+- The waypoints are not marked. They are for the bar's centre, in the world frame: A (-0.05, 0.04, 0.38), then B (0.0,
+  0.15, 0.37), each within a few centimetres.
 
-This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+## Others
+- State labels (`s.objects()`, `s.fixtures()`): `carrier` is the bar and `load` the pendulum's ball; `carrier` in
+  `s.fixtures()` is the pendulum's hinge.
+
+## Limits
+- Time: 3600 s of wall-clock time from the start of your session; everything counts (the simulator's start-up too). At
+  the end you are stopped without warning and only what is in `/app/output/` at that moment is graded. Time left:
+  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`). Calls into a long-running process can block for their
+  whole wait time: use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, the simulator's and the benchmark's source included.
+- Resources: 5 CPUs, 10 GiB memory, 1024 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`),
+  one GPU (3 GiB of its memory). Over a cap a process can be killed (the CPU cap only slows you down); usage:
+  `/run/rcb-limits/usage.json`.
+- Resets: as many as you like (`s.reset()`).

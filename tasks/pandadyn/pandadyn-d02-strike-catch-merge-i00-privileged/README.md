@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0` |
 
 ## Task
-Two small balls wait behind closed shutters near the top of two parallel inclined lanes. The shutters open by themselves, the first shortly after the start and the second a few seconds later, and each released ball rolls down its lane and flies off the open lower end. The left Panda's paddle must touch each ball after the ball has flown free. The right Panda's cup must catch the first ball and carry it away from the catch point without losing it. The cup must then catch the second ball while still holding the first, and finally put both balls into a fixed basin, where they must come to rest with the cup no longer touching them. The deliverable is one replayable trajectory of 100 Hz joint-target actions (`/app/output/trajectory.npz`,
+Two balls roll down two lanes, one after the other. Touch each one with the left paddle once it has flown off its lane, catch the first in the right cup and carry it away, then catch the second in the same cup and put both balls into the basin. The deliverable is one replayable trajectory of 100 Hz joint-target actions (`/app/output/trajectory.npz`,
 16 values per row), graded by the task's own staged success check: 6 phases (`first_redirect`, `first_catch`, `loaded_cup_relocation`, `second_redirect`, `second_catch`, `both_delivery`), in order,
 with no failure event and no safety-limit violation, within the task's horizon of 25 s.
 

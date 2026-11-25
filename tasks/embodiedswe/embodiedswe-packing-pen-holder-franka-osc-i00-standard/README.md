@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:embodiedswe-0.3.0` |
 
 ## Task
+Put every pencil in the pen holder, writing tip up, and leave the holder standing upright on the table.
+
 Fill the pen holder with pencils, tips up (Franka, operational-space control): the scene, frozen instance and success predicate of `embodiedswe-packing-pen-holder-franka-osc-i00-privileged`, with a Franka Panda arm with its parallel gripper, under EmbodiedSWE's operational-space (torque) controller, in standard mode
 (tasks/embodiedswe/README.md "Standard mode").
 

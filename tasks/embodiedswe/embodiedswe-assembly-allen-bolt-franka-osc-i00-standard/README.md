@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:embodiedswe-0.3.0` |
 
 ## Task
+Use the allen key to screw the bolt in the steel platform all the way down.
+
 Drive an allen bolt home with an L-key (Franka, operational-space control): the scene, frozen instance and success predicate of `embodiedswe-assembly-allen-bolt-franka-osc-i00-privileged`, with a Franka Panda arm with its parallel gripper, under EmbodiedSWE's operational-space (torque) controller, in standard mode
 (tasks/embodiedswe/README.md "Standard mode").
 

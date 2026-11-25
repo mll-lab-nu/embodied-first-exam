@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:embodiedswe-0.3.0` |
 
 ## Task
+Install the graphics card in the PC: press it fully into the motherboard's PCIe x16 slot.
+
 Install a graphics card in a PC case (Franka, operational-space control): the scene, frozen instance and success predicate of `embodiedswe-assembly-pc-gpu-franka-osc-i00-privileged`, with a Franka Panda arm with its parallel gripper, under EmbodiedSWE's operational-space (torque) controller, in standard mode
 (tasks/embodiedswe/README.md "Standard mode").
 

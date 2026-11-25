@@ -16,7 +16,7 @@
 Realtime twin of `pandadyn-s10-swinging-load-transit-dock-i00-privileged` (same frozen instance and success check as it and as `pandadyn-s10-swinging-load-transit-dock-i00-standard`): the agent gets only
 the realtime client (`eai-standard/2.3`, docs/protocol/standard_mode.md Part 3); the simulator runs in the `sim` sidecar on a clock
 that does not stop, at slowdown **S = 2** (one 10 ms control step every 20 ms of wall-clock time), with
-3 resets (only the last episode is graded). A carrier rests on two small ledges between the gripper's open fingers. It is a short bar with a pendulum (a rod ending in a ball) hanging from a hinge under it, and the pendulum is already swinging. Grip the bar with both fingers and damp the swing. Carry the carrier, still gripped, through two waypoints without letting the carrier or its pendulum touch a block obstacle, brake to rest at the second waypoint, and damp the residual swing again. Finally lower it slowly until the pendulum's ball rests centred in a dock, with the swing settled and the bar still gripped.
+3 resets (only the last episode is graded). Grip the carrier's bar and damp the swinging pendulum. Carry it through the two waypoints without touching the obstacle block, stop at the second and damp the swing again, then lower it slowly until the pendulum's ball rests in the dock, still holding the bar.
 
 ## Difficulty
 That of `pandadyn-s10-swinging-load-transit-dock-i00-standard`, but the scene does not wait between calls: once an episode's clock starts, the moving objects and

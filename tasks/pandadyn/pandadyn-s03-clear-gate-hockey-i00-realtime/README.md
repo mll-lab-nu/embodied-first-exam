@@ -16,7 +16,7 @@
 Realtime twin of `pandadyn-s03-clear-gate-hockey-i00-privileged` (same frozen instance and success check as it and as `pandadyn-s03-clear-gate-hockey-i00-standard`): the agent gets only
 the realtime client (`eai-standard/2.3`, docs/protocol/standard_mode.md Part 3); the simulator runs in the `sim` sidecar on a clock
 that does not stop, at slowdown **S = 2** (one 10 ms control step every 20 ms of wall-clock time), with
-3 resets (only the last episode is graded). A square puck slides toward the robot over an almost frictionless table at the start. First touch it with the paddle. Then strike it so that, sliding free of the paddle, it hits the sliding blocker bar that blocks the way to the goal fast enough to push it aside along its rail. Let the puck slide back across a recovery line by itself and strike it a second time. Make it bank off the green rail designated for this episode, without touching the other, grey rail, and then cross the goal line while the blocker is still pushed aside.
+3 resets (only the last episode is graded). Touch the incoming puck with the paddle, then strike it into the blue blocker bar hard enough to push the bar aside. Let the puck slide back toward you, then strike it again so that it banks off the green rail, without touching the grey one, and crosses the goal line in front of the middle of the backstop while the bar is still pushed aside.
 
 ## Difficulty
 That of `pandadyn-s03-clear-gate-hockey-i00-standard`, but the scene does not wait between calls: once an episode's clock starts, the moving objects and

@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/abc-sim-conveyor-pick-i00-privileged"
-description = "ABC Sim conveyor pick (two I2RT YAM arms, MuJoCo): Pick the three objects off the moving belt and put them in the bin. Frozen scene instance; one replayable trajectory, graded by two fresh-process replays."
+description = "ABC Sim conveyor pick (two I2RT YAM arms, MuJoCo): Pick the three objects off the moving conveyor belt and put them in the bin. Frozen scene instance; one replayable trajectory, graded by two fresh-process replays."
 keywords = ["robotics", "abc-sim", "mujoco", "yam", "bimanual", "conveyor_pick", "privileged"]
 
 [metadata]

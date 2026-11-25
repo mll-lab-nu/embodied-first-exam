@@ -16,7 +16,7 @@
 Realtime twin of `pandadyn-d04-shared-tray-transport-discharge-i00-privileged` (same frozen instance and success check as it and as `pandadyn-d04-shared-tray-transport-discharge-i00-standard`): the agent gets only
 the realtime client (`eai-standard/2.3`, docs/protocol/standard_mode.md Part 3); the simulator runs in the `sim` sidecar on a clock
 that does not stop, at slowdown **S = 4** (one 10 ms control step every 40 ms of wall-clock time), with
-3 resets (only the last episode is graded). The two Pandas hold one tray between them. Each arm's small open fork cradles a tab on one end of the tray, and an orange ball lies loose in the tray. Working together, the arms must first hold the tray steadily. They then carry it through two waypoints that make a turn. When the environment pushes the ball, they must bring it back to rest near the tray centre. Next they bring the tray to an exit position beside a fixed basin, and finally they tip the ball out so that it settles in the basin. Both forks must support the tray during the transport phases, the ball must not leave the tray before the discharge, and the tray must never drop low.
+3 resets (only the last episode is graded). Hold the tray with the ball in it between the two forks and carry it through the two waypoints. When the ball gets pushed, bring it back to rest in the middle of the tray; then bring the tray to the exit position beside the basin and tip the ball into the basin.
 
 ## Difficulty
 That of `pandadyn-d04-shared-tray-transport-discharge-i00-standard`, but the scene does not wait between calls: once an episode's clock starts, the moving objects and

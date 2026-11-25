@@ -16,7 +16,7 @@
 Realtime twin of `pandadyn-s05-sliding-receive-align-deliver-i00-privileged` (same frozen instance and success check as it and as `pandadyn-s05-sliding-receive-align-deliver-i00-standard`): the agent gets only
 the realtime client (`eai-standard/2.3`, docs/protocol/standard_mode.md Part 3); the simulator runs in the `sim` sidecar on a clock
 that does not stop, at slowdown **S = 2** (one 10 ms control step every 20 ms of wall-clock time), with
-3 resets (only the last episode is graded). At the start a small cube slides along a raised, slippery lane toward its open end. Once it has left the lane, receive it in the shallow tray the Panda holds, which is open on one side, and let it settle. Then keep the tray level and move it, without tilting it, so that the cube slides inside the tray until it rests at a staging point. Carry the cube through two waypoints. Bring the tray to a pose at a fixed offset from a platform that slides slowly back and forth on a rail, matching the platform's velocity. Finally get the cube onto that platform, where it must ride along at rest without touching the tray.
+3 resets (only the last episode is graded). Receive the cube that slides off the lane in the tray and slide it, keeping the tray level, to the staging point in the tray. Carry it through the two waypoints, bring the tray to the match point beside the sliding platform, moving with it, and put the cube onto the platform.
 
 ## Difficulty
 That of `pandadyn-s05-sliding-receive-align-deliver-i00-standard`, but the scene does not wait between calls: once an episode's clock starts, the moving objects and

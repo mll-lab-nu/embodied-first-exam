@@ -18,7 +18,7 @@ client (docs/protocol/standard_mode.md Part 1, with the optional reset capabilit
 live and records every control step it ran. Between the agent's calls the world is frozen; 3 resets, only the last
 episode graded. The sidecar's adapter (`environment/sim/server.py`) is the benchmark's realtime twins', code for code,
 on the same shared service layer, so where a family has that twin the two modes differ only in the clock. Compare against the
-privileged task to measure the cost of losing privileged state, free resets and self-replay. A square puck slides toward the robot over an almost frictionless table at the start. First touch it with the paddle. Then strike it so that, sliding free of the paddle, it hits the sliding blocker bar that blocks the way to the goal fast enough to push it aside along its rail. Let the puck slide back across a recovery line by itself and strike it a second time. Make it bank off the green rail designated for this episode, without touching the other, grey rail, and then cross the goal line while the blocker is still pushed aside.
+privileged task to measure the cost of losing privileged state, free resets and self-replay. Touch the incoming puck with the paddle, then strike it into the blue blocker bar hard enough to push the bar aside. Let the puck slide back toward you, then strike it again so that it banks off the green rail, without touching the grey one, and crosses the goal line in front of the middle of the backstop while the bar is still pushed aside.
 
 ## Difficulty
 That of `pandadyn-s03-clear-gate-hockey-i00-privileged` (its README), without object poses or the success signal and with 3 resets: the moving objects

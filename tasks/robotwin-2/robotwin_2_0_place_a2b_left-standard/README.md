@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:robotwin-0.1.2` |
 
 ## Task
+Put the toy car about a hand's length to the left of the bell, in line with it, neither in front of it nor behind it. Then let go.
+
 Standard-mode twin of `robotwin_2_0_place_a2b_left-privileged` (same frozen instance, RoboTwin seed 28831): the agent gets
 only the `eai-standard/2.1` client (docs/protocol/standard_mode.md); the simulator runs in the `sim` sidecar
 (`environment/docker-compose.yaml`, GPU on the sidecar), which owns the seed, judges the live episode, records it as a

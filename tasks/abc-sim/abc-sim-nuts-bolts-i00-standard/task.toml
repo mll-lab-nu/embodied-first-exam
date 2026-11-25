@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, { source
 
 [task]
 name = "embodied-first-exam/abc-sim-nuts-bolts-i00-standard"
-description = "ABC Sim sort nuts and bolts (two I2RT YAM arms, MuJoCo): Put all the nuts into one bin and all the bolts into the other. The robot as a service (eai-standard/2.2); graded by the live episode."
+description = "ABC Sim sort nuts and bolts (two I2RT YAM arms, MuJoCo): Put all the nuts in one bin and all the bolts in the other. The robot as a service (eai-standard/2.2); graded by the live episode."
 keywords = ["robotics", "abc-sim", "mujoco", "yam", "bimanual", "nuts_bolts", "standard"]
 
 [metadata]

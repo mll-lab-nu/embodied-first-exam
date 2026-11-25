@@ -16,7 +16,7 @@
 Realtime twin of `pandadyn-d02-strike-catch-merge-i00-privileged` (same frozen instance and success check as it and as `pandadyn-d02-strike-catch-merge-i00-standard`): the agent gets only
 the realtime client (`eai-standard/2.3`, docs/protocol/standard_mode.md Part 3); the simulator runs in the `sim` sidecar on a clock
 that does not stop, at slowdown **S = 3** (one 10 ms control step every 30 ms of wall-clock time), with
-3 resets (only the last episode is graded). Two small balls wait behind closed shutters near the top of two parallel inclined lanes. The shutters open by themselves, the first shortly after the start and the second a few seconds later, and each released ball rolls down its lane and flies off the open lower end. The left Panda's paddle must touch each ball after the ball has flown free. The right Panda's cup must catch the first ball and carry it away from the catch point without losing it. The cup must then catch the second ball while still holding the first, and finally put both balls into a fixed basin, where they must come to rest with the cup no longer touching them.
+3 resets (only the last episode is graded). Two balls roll down two lanes, one after the other. Touch each one with the left paddle once it has flown off its lane, catch the first in the right cup and carry it away, then catch the second in the same cup and put both balls into the basin.
 
 ## Difficulty
 That of `pandadyn-d02-strike-catch-merge-i00-standard`, but the scene does not wait between calls: once an episode's clock starts, the moving objects and

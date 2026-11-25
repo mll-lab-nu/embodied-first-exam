@@ -16,7 +16,7 @@
 Realtime twin of `pandadyn-s09-toss-recatch-delivery-i00-privileged` (same frozen instance and success check as it and as `pandadyn-s09-toss-recatch-delivery-i00-standard`): the agent gets only
 the realtime client (`eai-standard/2.3`, docs/protocol/standard_mode.md Part 3); the simulator runs in the `sim` sidecar on a clock
 that does not stop, at slowdown **S = 2** (one 10 ms control step every 20 ms of wall-clock time), with
-3 resets (only the last episode is graded). A ball is thrown high into the air when the episode starts and comes down near the robot. Catch it in the shallow cup the Panda holds, which has one open side. Bring the cup to a launch region and toss the ball straight up out of the cup with a real throw: it must leave the cup floor while rising. Move the cup sideways and catch the ball again. Finally, release it into an open box that slides back and forth along a rail, where it must settle while the box is moving.
+3 resets (only the last episode is graded). Catch the falling ball in the cup, bring the cup to the launch point and toss the ball straight up out of it. Move the cup sideways, catch the ball again, and drop it into the sliding box while the box is moving.
 
 ## Difficulty
 That of `pandadyn-s09-toss-recatch-delivery-i00-standard`, but the scene does not wait between calls: once an episode's clock starts, the moving objects and

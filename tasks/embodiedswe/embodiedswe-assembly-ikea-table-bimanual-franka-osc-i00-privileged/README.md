@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:embodiedswe-0.3.0` |
 
 ## Task
+Screw the four loose legs onto the studs of the tabletop.
+
 Screw the four legs onto a side table (two Frankas, operational-space control). EmbodiedSWE's `assembly.ikea_table.bimanual_franka.osc` task (robobench at commit `67f44e8a2ca5`), privileged mode, with a program as the
 deliverable: `solution/solve.py` exposing `solve(env)`.
 

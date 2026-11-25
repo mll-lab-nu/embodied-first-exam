@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:embodiedswe-0.3.0` |
 
 ## Task
+Slide each block into the cutout of its own shape on the board, so that it drops in and lies flat in it.
+
 Push the shapes onto their pads (Unitree G1, fixed pelvis, Pink IK): the scene, frozen instance and success predicate of `embodiedswe-puzzle-push-shapes-g1-pink-ik-i00-privileged`, with a Unitree G1 humanoid with three-finger hands, its pelvis fixed, its arms and waist under EmbodiedSWE's Pink IK, in standard mode
 (tasks/embodiedswe/README.md "Standard mode").
 

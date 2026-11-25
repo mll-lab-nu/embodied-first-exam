@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:embodiedswe-0.3.0` |
 
 ## Task
+Put each of the three blocks on the zone of its own colour.
+
 Sort the blocks by colour (Unitree G1, fixed pelvis, Pink IK). EmbodiedSWE's `puzzle.classify_objects.g1.pink_ik` task (robobench at commit `67f44e8a2ca5`), privileged mode, with a program as the
 deliverable: `solution/solve.py` exposing `solve(env)`.
 

@@ -18,7 +18,7 @@ client (docs/protocol/standard_mode.md Part 1, with the optional reset capabilit
 live and records every control step it ran. Between the agent's calls the world is frozen; 3 resets, only the last
 episode graded. The sidecar's adapter (`environment/sim/server.py`) is the benchmark's realtime twins', code for code,
 on the same shared service layer, so where a family has that twin the two modes differ only in the clock. Compare against the
-privileged task to measure the cost of losing privileged state, free resets and self-replay. A ball is thrown high into the air when the episode starts and comes down near the left Panda. The left arm catches it in its cup and throws it through the air to the right arm, whose cup must be moving when the ball enters it. The right arm carries the ball to a second transfer region and throws it back from there. The left arm catches it again and delivers it into an open box that slides back and forth along a rail, where the ball must settle while the box is moving.
+privileged task to measure the cost of losing privileged state, free resets and self-replay. Catch the falling ball in the left cup and throw it high through the air to the right cup, which must be moving as it catches it. Carry it with the right cup to the second transfer point and throw it back from there; catch it again in the left cup and drop it into the sliding cart while the cart is moving.
 
 ## Difficulty
 That of `pandadyn-d01-reciprocal-cup-relay-i00-privileged` (its README), without object poses or the success signal and with 3 resets: the moving objects

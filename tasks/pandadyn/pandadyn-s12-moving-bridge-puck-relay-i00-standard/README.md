@@ -18,7 +18,7 @@ client (docs/protocol/standard_mode.md Part 1, with the optional reset capabilit
 live and records every control step it ran. Between the agent's calls the world is frozen; 3 resets, only the last
 episode graded. The sidecar's adapter (`environment/sim/server.py`) is the benchmark's realtime twins', code for code,
 on the same shared service layer, so where a family has that twin the two modes differ only in the clock. Compare against the
-privileged task to measure the cost of losing privileged state, free resets and self-replay. At the start a square puck slides fast along a raised source lane towards the Panda, and the paddle hangs just above its path. Strike the puck while it is still sliding at 25 cm per second or more, so that it slides onto the bridge, a platform that turns continuously about a vertical axis, and from the bridge onto an exit lane. Intercept it there with the paddle, let it separate, and strike it again. Send it along the exit lane through the doorway of a swinging gate that opens and closes by itself, without touching the gate, and on across a goal line, with the paddle not touching it as it crosses and the gate still open.
+privileged task to measure the cost of losing privileged state, free resets and self-replay. Strike the incoming puck with the paddle while it is still sliding fast, so that it slides over the turning bridge onto the exit lane. Stop it there, then strike it again through the doorway of the swinging gate while the gate is wide open, without touching the gate, and across the goal line in front of the backstop.
 
 ## Difficulty
 That of `pandadyn-s12-moving-bridge-puck-relay-i00-privileged` (its README), without object poses or the success signal and with 3 resets: the moving objects

@@ -1,60 +1,66 @@
-# RoboCasa-GR1 · PosttrainPnPNovelFromPlateToPlateSplitA
+# RoboCasa-GR1 · PosttrainPnPNovelFromPlateToPlateSplitA (privileged)
 
-A **Fourier GR1 humanoid** (arms, waist and two dexterous six-command Fourier hands; fixed base) works at a kitchen counter: RoboCasa's GR1 tabletop `PosttrainPnPNovelFromPlateToPlateSplitA` task (robosuite, MuJoCo).
-**Task: Move the sweet potato from its plate to the empty plate, and move both hands away.**
-The scene is one frozen instance: the initial state of one of the benchmark's official demonstrations (kitchen
-layout, style, fixtures, objects and their poses).
+## Task
+Move the sweet potato from its plate to the empty plate, and move both hands away.
 
-## What you hand in
-`/app/output/trajectory.npz` with key `actions`: the robot's native controller commands, shape `(T, 24)` with
-1 ≤ T ≤ 3000, one row per control step (1/20 s). Write it with `s.save_trajectory()` so the format is right.
-Leave the script that produced it at `/app/output/gen.py`.
+## Goal
+Success: the sweet potato is on the empty plate, not touching the counter, with that plate still upright and both hands
+moved away from the sweet potato and that plate. What counts is how things stand after the last action of your
+trajectory, replayed from the fixed start.
 
-## Success
-The verifier replays your actions from the frozen start in a separate sandbox (once, in a fresh process; MuJoCo on the
-CPU is bit-exact) and applies the environment's own success check for `PosttrainPnPNovelFromPlateToPlateSplitA` (`_check_success`) to the state **after
-the last action**. A success reached earlier and then lost does not count: end the trajectory while the task is
-achieved. `s.check()` returns the check's latest result.
+Deliverable: `/app/output/trajectory.npz` with key `actions`: the robot's native controller commands, shape `(T, 24)`
+with 1 ≤ T ≤ 3000, one row per control step (1/20 s). Write it with `s.save_trajectory()` so the format is right. Leave
+the script that produced it at `/app/output/gen.py`. Save a valid one early and overwrite it when you have a better one.
 
-All of these hold on the graded state (upstream `_check_success`, `tabletop_24dc.py`):
-- the sweet potato is on the other plate (the empty one it does not start on): touching that plate, with its centre horizontally within 0.7 x the plate's horizontal radius of the plate's centre;
-- the sweet potato does not touch the counter;
-- that plate is upright (its z axis has a world-z component above 0.8);
-- **both hands are clear**: each grip site (left and right) is more than 0.25 m from the sweet potato's origin and more than 0.25 m from that plate's origin (`any_gripper_obj_far`, th = 0.25) -- release the sweet potato and move both hands away before the end.
+Rules: **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+benchmark's demonstrations, trained policies); trials are reviewed.
 
-## Tooling (`/opt/tools/casa_tool.py`, importable as `casa_tool`)
+## Robot Interface
+A Fourier GR1 humanoid (arms, waist and two dexterous six-command Fourier hands, on a fixed base), at a simulated
+kitchen counter (RoboCasa GR1 tabletop, robosuite / MuJoCo). The scene is one fixed instance. You have the full
+simulator to develop with; you hand in a trajectory of robot actions.
+
+### Session
+`/opt/tools/casa_tool.py`, importable as `casa_tool`:
 ```python
 import numpy as np, casa_tool
 s = casa_tool.Session("/app/instance.npz")  # the frozen instance; s.env is the robosuite env, s.model / s.data MuJoCo
 s.action_spec        # every channel: name, unit, kind (delta | absolute | grip | mode), lower / upper; frames
-st = s.state()       # instruction, qpos, qvel, joint_names, bodies {name: pos, quat_wxyz}, objects, proprio, success
+st = s.state()       # qpos, qvel, joint_names, bodies {name: pos, quat_wxyz}, objects, proprio, success
 r = s.step(action)   # one control step -> {"success": ..., "control_steps": ..., ...}
 s.check()            # the success check's latest result
 s.save_trajectory()  # the actions since the last reset -> /app/output/trajectory.npz
-s.replay(A)          # reset, then replay A (what the verifier does) -> {"success": ..., "state_sha": ...}
+s.replay(A)          # reset, then replay A (as the grader does) -> {"success": ..., "state_sha": ...}
 s.reset()            # back to the frozen start, as often as you like (it takes a few seconds)
-img = s.render("robot0_agentview_center")   # RGB (240, 320, 3); views in s.camera_views; s.render_grid()
+img = s.render("robot0_agentview_center")   # RGB (240, 320, 3); views in s.camera_views
 ```
-- Actions: 24 channels, in order: the right then the left hand's grip-site pose target `x, y, z, rx, ry, rz` -- absolute, in the robot's base frame (metres, axis-angle radians), reached by the whole-body inverse-kinematics controller (mink), limits [-10, 10]; then six commands per hand (right, then left) in the finger order `little, ring, middle, index, thumb_flexion, thumb_rotation` -- unscaled Fourier hand commands in [-3, 3], not a binary grip. The GR1 has no mobile base. Values are clipped to the limits.
-- The success check runs twice after every control step and once at reset, in your session exactly as in the
-  verifier. Some checks count consecutive successful steps, so calling `s.env._check_success()` yourself changes the
-  state of the run you are recording; use `s.check()`.
+
+### Actions
+- An action has 24 channels, in order: the right then the left hand's grip-site pose target `x, y, z, rx, ry, rz` --
+  absolute, in the robot's base frame (metres, axis-angle radians), reached by the whole-body inverse-kinematics
+  controller (mink), limits [-10, 10]; then six commands per hand (right, then left) in the finger order
+  `little, ring, middle, index, thumb_flexion, thumb_rotation` -- unscaled Fourier hand commands in [-3, 3], not a
+  binary grip. The GR1 has no mobile base. Values are clipped to the limits.
 - World frame: metres, z up; `s.state()["bodies"]` gives every body's position and orientation (quaternions w x y z).
-  The action's pose targets are in the robot's base frame. The robot's base frame (body `robot0_base`, fixed in the world) has its origin at world (2.66859, -2.14823, 0.90329) m and is turned +90.0 deg about z (quaternion w x y z (0.70711, 0, 0, 0.70711)): `p_world = R @ p_base + t` with R = [[0, -1, 0], [1, 0, 0], [0, 0, 1]].
+  The action's pose targets are in the robot's base frame. The robot's base frame (body `robot0_base`, fixed in the
+  world) has its origin at world (2.66859, -2.14823, 0.90329) m and is turned +90.0 deg about z (quaternion w x y z
+  (0.70711, 0, 0, 0.70711)): `p_world = R @ p_base + t` with R = [[0, -1, 0], [1, 0, 0], [0, 0, 1]].
 - Everything in `s.env`, `s.model` and `s.data` is readable (privileged mode).
 
-## Rules
-- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
-  benchmark's demonstrations, trained policies); trials are reviewed.
-- Save a working trajectory early, then improve it; do not stop early.
+## Others
+- Labels in `s.state()` (`objects` and body names such as `obj_main`): `obj` is the sweet potato, `container` the empty
+  plate and `obj_container` the plate it starts on.
+- Read success with `s.check()`: the check runs after every step in your session as it does in the grader, and calling
+  the environment's own check yourself changes the run you are recording.
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
-
-## Resources
-Your container: **4 CPUs**, **20 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
-
-## Time limit
-You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
-
-This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+## Limits
+- Time: 3600 s of wall-clock time from the start of your session; everything counts (the simulator's start-up too). At
+  the end you are stopped without warning and only what is in `/app/output/` at that moment is graded. Time left:
+  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`). Calls into a long-running process can block for their
+  whole wait time: use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, the simulator's and the benchmark's source included.
+- Resources: 4 CPUs, 20 GiB memory, 1024 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`),
+  no GPU. Over a cap a process can be killed (the CPU cap only slows you down); usage: `/run/rcb-limits/usage.json`.
+- Resets: as many as you like (`s.reset()`).

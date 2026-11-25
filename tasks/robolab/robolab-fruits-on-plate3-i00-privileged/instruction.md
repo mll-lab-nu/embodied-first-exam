@@ -1,46 +1,35 @@
-# RoboLab · fruits_on_plate3 — frozen instance
+# RoboLab · fruits_on_plate3 (privileged)
 
-You control a simulated **Franka Panda arm with a Robotiq 2F-85 gripper** (NVIDIA RoboLab's DROID setup on Isaac Lab 2.3 /
-Isaac Sim 5.1, PhysX physics) via Python. **Task:** Add fruit (not the pumpkins) to the plate until exactly 3 fruits are on it, then let go; the orange already there counts.
+## Task
+Add fruit (not the pumpkins) to the plate until exactly 3 fruits are on it, then let go; the orange already there
+counts.
 
-The scene objects are the env's rigid objects (`s.objects()`: `lemon_01`, `lemon_02`, `lime01`, `lime01_01`, `orange_01`, `orange_02`, `pomegranate01`, `pumpkinlarge`, `pumpkinsmall`, `redonion`, `serving_bowl`, `clay_plates`, `wooden_spoons`, `spatula`, `storage_box`, `table`; see
-`/opt/robolab/robolab/tasks/benchmark/fruits_to_plate_3.py`); at the start `orange_02` already lies on `clay_plates`. RoboLab's success predicate is the `success` termination
-term in that file (`object_on_top` in `/opt/robolab/robolab/core/task/conditionals.py`); it also ends the episode:
-```python
-class FruitsOnPlate3Terminations:
-    """Termination configuration for banana task."""
-    time_out = DoneTerm(func=mdp.time_out, time_out=True)
-    success = DoneTerm(
-        func=object_on_top,
-        params={"object": ["lemon_01", "lemon_02", "lime01", "lime01_01", "orange_01", "orange_02", "pomegranate01"], "reference_object": "clay_plates", "logical": "choose", "K": 3, "require_gripper_detached": True}
-    )
-```
-`logical="choose"` with `K=3` means exactly 3 of the listed objects (`evaluate_logicals` in `/opt/robolab/robolab/core/task/predicate_logic.py`): more than 3 fails as well.
+## Goal
+Success: exactly three fruits lie on the plate (no more, no fewer), the orange already there included, and neither
+gripper finger touches any of them. The replay of your trajectory ends as soon as the task is done (later rows are never
+executed).
 
-This is a *fixed scene instance*: object poses and the robot's start pose never change between resets. You may reset
-and retry as many times as you want. Your deliverable is **one replayable trajectory**, not a general policy.
+Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, "/app/output/trajectory.npz")`:
+`task` and `actions`, a (T, 8) float array of at most 100,000 rows (one per control step, 1.9 h of robot time); anything
+else (another shape, NaN, more rows, a file that is not such an npz) scores 0. It is replayed open-loop from the fixed
+start (`s.replay(actions)` and the replay CLI do the same); a replay can end slightly differently from your run, so
+leave a margin. Leave the script that produced it at `/app/output/gen.py`. Save a valid one early and overwrite it when
+you have a better one.
 
-## Deliverable
-Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below).
-It is replayed open-loop from the same initial state up to 3 times, each in a fresh process, and scored 1 if RoboLab's success predicate
-holds in any replay (the predicate is checked after every control step and the first step where it holds ends the
-episode: later rows are never executed), else 0 (fresh replays can end slightly differently: leave a margin). After the last row the replay holds that
-row's command for 30 more control steps (2 s) while the predicate is still checked, so a release in the last rows
-completes (`s.replay` does the same); a trajectory that ends with an object in the gripper goes on holding it. "The
-gripper" in the predicate (`require_gripper_detached`, `gripper_detached`, `in_contact(..., "gripper")`) is both Robotiq
-fingers: an object touching either finger is held (RoboLab's DROID setup watched the left inner finger alone; this
-task's tooling sets `contact_gripper` to both, with RoboLab's own alias group). Also leave the script that produced it at
-`/app/output/gen.py`. Save a working trajectory as soon as you have one and overwrite it as you improve it: whatever is in
-`/app/output/` when the time is up is graded. The file holds `task` and `actions`, a (T, 8) float array of at most
-**100,000 rows** (one per control step, 1.9 h of robot time); anything else (another shape, NaN, more rows, a file that is
-not such an npz) scores 0. Each replay has max(1800 s, 900 s + 1 s per 7.5 rows) of wall clock, about twice what a replay
-takes here.
+Rules: **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+benchmark's demonstrations, trained policies); trials are reviewed.
 
-## Tooling (already installed; run `python` from any directory)
+## Robot Interface
+A Franka Panda arm with a Robotiq 2F-85 gripper at a table (NVIDIA RoboLab's DROID setup, Isaac Sim / PhysX). The scene
+is one fixed instance: the objects and the robot start the same way after every reset. You have the full simulator to
+develop with; you hand in one replayable trajectory of robot actions, not a general policy.
+
+### Session
+`/opt/tools/rcb_robolab.py`, importable as `rcb_robolab` (run `python` from any directory):
 ```python
 from rcb_robolab import Session
 s = Session("fruits_on_plate3", instance="/app/instance.json")   # ~1-2 min: launches Isaac Sim, builds the scene, restores the frozen state
-s.reset()                          # back to the frozen initial state, as often as you like (not every PhysX internal: see Conventions)
+s.reset()                          # back to the frozen initial state, as often as you like (not every PhysX internal: see Others)
 p = s.primitives()                 # thin wrappers of the low-level action; each has a docstring: help(p["move_ee"])
 s.objects()                        # objects: name -> position, orientation_wxyz, bounds, size, velocity (env-local frame)
 p["move_ee"](pos, quat_wxyz, speed=0.2)   # straight-line fingertip move, one differential-IK update per control step
@@ -62,45 +51,52 @@ p["get_object_points"](name); p["get_object_pose"](name)          # an object's 
 p["set_joint_targets"](a8, steps=1); p["get_joint_targets"]()     # raw 8-D targets for `steps` control steps; the targets in force
 s.start_video("/app/output/try.mp4"); ...; s.stop_video()          # film the steps in between; s.state_sha(): the state's hash
 ```
-The primitives are deliberately thin (IK moves, joint moves, gripper, hold): grasping, placing and every other skill
-are yours to build from them.
+- The scene's objects (`s.objects()`, the names the primitives take): `lemon_01`, `lemon_02`, `lime01`, `lime01_01`,
+  `orange_01`, `orange_02`, `pomegranate01`, `pumpkinlarge`, `pumpkinsmall`, `redonion`, `serving_bowl`, `clay_plates`,
+  `wooden_spoons`, `spatula`, `storage_box`, `table`.
+- The primitives are deliberately thin (IK moves, joint moves, gripper, hold): grasping, placing and every other skill
+  are yours to build from them.
+- The replay CLI does what the grader does; run it to check yourself:
+  `python /opt/tools/rcb_robolab.py replay --task fruits_on_plate3 --instance /app/instance.json --traj /app/output/trajectory.npz`
 
-Each graded replay is a fresh process running exactly this CLI (so run it to self-check; the grader stops at the first success):
-`python /opt/tools/rcb_robolab.py replay --task fruits_on_plate3 --instance /app/instance.json --traj /app/output/trajectory.npz`
-
-## Conventions
-- Frame: env-local = the robot's root frame (Franka base at the origin, x forward towards the table, z up). Quaternions
-  are **WXYZ**. `s.objects()["table"]["bounds"][1][2]` is the table-top height.
-- Action (8): panda_joint1..7 absolute joint-position targets (rad, PD-tracked) + gripper command (0 = open, 1 = close; the
-  Robotiq action is binary). `s.hold_action()` is the no-op.
-- Control runs at 15 Hz (sim dt 1/120 s, decimation 8). There is no step budget: the time limit (`## Time limit`) is your only
-  budget (a runaway guard ends an episode after 100,000 control steps, the most a trajectory may hold). The episode
-  **ends by itself the moment the success predicate holds**: after that `s.step` raises and the primitives become
-  no-ops, so stop recording there.
-- `s.ee_pose()` and every primitive use the **fingertip-centre tool frame**: RoboLab's `eef_frame` (the gripper flange,
-  `s.eef_frame_pose()`) moved 0.162 m along the approach axis to the ends of the closed fingertips (the pads extend ~5.7 cm
-  back from there, so for a low object the frame goes almost down to the table). `p["top_down_quat"](yaw)` is its
+### Actions
+- Frame: env-local = the robot's root frame (the Franka base at the origin, x forward towards the table, z up).
+  Quaternions are WXYZ. `s.objects()["table"]["bounds"][1][2]` is the table-top height.
+- An action has 8 entries: panda_joint1..7 absolute joint-position targets (rad, PD-tracked) and the gripper command (0
+  = open, 1 = close; the Robotiq action is binary). `s.hold_action()` is the no-op. Control runs at 15 Hz (sim dt 1/120
+  s, decimation 8). There is no step budget; a runaway guard ends an episode after 100,000 control steps, the most a
+  trajectory may hold.
+- `s.ee_pose()` and every primitive use the fingertip-centre tool frame: RoboLab's `eef_frame` (the gripper flange,
+  `s.eef_frame_pose()`) moved 0.162 m along the approach axis to the ends of the closed fingertips (the pads extend ~5.7
+  cm back from there, so for a low object the frame goes almost down to the table). `p["top_down_quat"](yaw)` is its
   orientation for a vertical approach whose finger-closing direction is rotated by `yaw` (rad, about z) from the reset
   pose; at yaw 0 the fingers close along `p["get_finger_closing_dir"]()` (world y at the reset pose), and
   `p["yaw_for_closing_dir"]([dx, dy])` gives the yaw for any horizontal closing direction. The Robotiq opens to 8.5 cm.
-- One `Session` per process (Isaac Sim launches once, ~70 s; the scene ~30 s more). Physics is PhysX on the **CPU**,
-  rendering on the GPU; ~15 control steps/s. The first episode of a process (a live run before any `s.reset()`, or the
-  first `s.replay()`) ends in the same state as the grader's fresh-process replay of the same actions. After `s.reset()`
-  the state is restored but not every PhysX internal: a live run recorded after a reset, and later in-process replays,
-  can end differently (in recorded trials a success after a few resets failed the fresh replay), so record the final
-  trajectory from the first episode of a fresh process and check it with the CLI replay below, which runs in one. Do not call `s.close()` before writing every output.
+- One `Session` per process (Isaac Sim launches once, ~70 s; the scene ~30 s more). Physics is PhysX on the CPU,
+  rendering on the GPU; ~15 control steps/s.
 
-## Rules
-- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
-  benchmark's demonstrations, trained policies); trials are reviewed.
+After your last row that row's command is held for about two seconds more, so a release in the last rows completes; a
+trajectory that ends with an object in the gripper goes on holding it.
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+## Others
+- The episode ends by itself the moment the task is done: after that `s.step` raises and the primitives become no-ops,
+  so stop recording there.
+- Do not call `s.close()` before you have written every output.
+- The first episode of a process (a live run before any `s.reset()`, or the first `s.replay()`) ends in the same state
+  as the grader's replay of the same actions. After `s.reset()` the state is restored but not every PhysX internal: a
+  live run recorded after a reset, and later replays in the same process, can end differently (a success after a few
+  resets has failed the grader's replay), so record the final trajectory from the first episode of a new process and
+  check it with the replay CLI, which runs in one.
 
-## Resources
-Your container: **8 CPUs**, **29 GiB of memory**, **4096 processes and threads**, **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`) and **one GPU, 22 GiB of its memory**. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
-
-## Time limit
-You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
-
-This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+## Limits
+- Time: 3600 s of wall-clock time from the start of your session; everything counts (the simulator's start-up too). At
+  the end you are stopped without warning and only what is in `/app/output/` at that moment is graded. Time left:
+  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`). Calls into a long-running process can block for their
+  whole wait time: use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, the simulator's and the benchmark's source included.
+- Resources: 8 CPUs, 29 GiB memory, 4096 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`),
+  one GPU (22 GiB of its memory). Over a cap a process can be killed (the CPU cap only slows you down); usage:
+  `/run/rcb-limits/usage.json`.
+- Resets: as many as you like (`s.reset()`).

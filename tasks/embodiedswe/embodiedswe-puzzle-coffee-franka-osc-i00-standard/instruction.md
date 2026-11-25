@@ -1,33 +1,62 @@
-# Make and serve a capsule coffee (Franka, operational-space control) — standard mode
+# EmbodiedSWE · make and serve a capsule coffee, Franka (standard)
 
-The task of `embodiedswe-puzzle-coffee-franka-osc-i00-privileged`, on the same frozen scene. You drive a Franka Panda arm with its parallel gripper, under EmbodiedSWE's operational-space (torque) controller, as if it were real hardware: the simulator runs in a service you cannot open, and you get its client, one episode and no reset. The client's docstring is its manual (`/opt/tools/rcb_client.py`); `r.spec()` gives the numbers.
+## Task
+Make a cup of coffee with the machine, using the capsule and the green mug, then stand the filled mug upright on the
+serving tray.
 
-## The task
-A capsule coffee machine (0.17 x 0.64 x 0.40 m: a brew tower in front, its water tank behind) stands on a sturdy table with its spout facing -y. On its top: a SLIDING pod-bay cover with a raised grip ridge at its front edge (slide it toward the spout side to open — about 12 cm of travel), and behind the cover a green-capped START key that presses straight DOWN. Under the spout: a built-in cup platform. A green run lamp sits on the top's front rim. On the serving tray to the right: an empty green mug and a coffee capsule (burgundy dome, silver flange).
-The machine runs itself by strict rules: it only brews with the cover CLOSED, a capsule seated in the bay, and the mug standing centred under the spout (within 5 cm of its axis) — otherwise START refuses. The brew then runs ~5 s while the run lamp glows and coffee streams into the mug; sliding the cover open mid-brew ABORTS it, and so does removing the mug (a spill) — start over. Pressing START mid-brew stops it. When the brew completes, the mug is filled — its contents turn dark.
-Do the full service: open the bay, drop the capsule in, close the bay, stand the mug under the spout, press START, wait for the brew to finish, then set the filled mug back down upright on the serving tray.
-Goal: the mug, filled by a completed brew, stands upright on the serving tray. The cover ridge, the capsule and the mug rim hold in a firm pinch: close the fingers across them and the grip locks; open wide to release.
+## Goal
+Success: a brew ran to completion (the pod-bay cover closed, capsule in the bay, mug under the spout, left undisturbed
+until it finished), and the filled mug now stands upright on the serving tray, at rest. The episode ends as soon as the
+task is done, at the end of the first call after which it holds (judged on the live simulator).
 
-Success, exactly: a brew has completed at some point in the run — after START was accepted (cover closed, capsule seated, mug under the spout), 600 physics substeps (5.0 s) elapsed with the cover never more than 10 mm open and the mug never leaving the spout spot (centre within 50 mm horizontally of the spout axis, bottom within 20 mm of the cup platform top, tilt <= 20 deg) and without a second START press — and now the green mug stands on the serving tray: centre within 159 mm horizontally of the tray centre, mug axis within 20 deg of vertical, mug bottom within 15 mm of the tray dish floor (20 mm above the table top), mug moving slower than 0.05 m/s. Not true at the start.
-
-## This robot
-- Action: `ee_pose` only, 9 values: the world pose of `panda_hand` (`x y z qw qx qy qz`) and the two finger position targets (m, 0 closed, 0.04 open). Rows are streamed at the 15 Hz control rate with your `dt`; `spec["action_types"]["ee_pose"]` has the layout, the controller and the joint limits. Coordinates are the simulator's world frame (metres, z up; `spec["world"]`).
-- Cameras (RGB 640×480, depth on request): `overview` (static) and `wrist` (on the hand). One call returns at most 240 images (`max_frames_per_call`, PROTOCOL §3 "Images per call": cameras × the frames captured, the first, one every round(15 / `video_fps`) control steps and the last, a per-frame depth one more image; `video="none"` captures only the first and the last); a larger request is refused (400) before anything runs. A call that names no cameras gets `overview`, `wrist` at 4 frames per second, so every call up to `max_chunk_s` / `max_watch_s` fits.
-- The episode ends after the first call at whose end the success condition holds (judged on the live simulator), when your time is up, on a simulator error, or after 400,000 control steps (7.4 h of simulated time, reason `step_guard`); it is graded as it stands then. Simulated time advances only inside your calls.
-- The service answers one request at a time: while a long call runs, every other request waits, so a client-side timeout means "busy", not "crashed".
-- Leave your scripts in `/app/output/` for the record.
-
-## Rules
+Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
   benchmark's demonstrations, trained policies); trials are reviewed.
+- One episode, no reset: what you knock over stays knocked over.
+- You get only the cameras and the robot's own sensor readings: no object poses, no scene layout; the episode ends when
+  the task is done.
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+## Robot Interface
+A Franka Panda arm with its parallel gripper, under EmbodiedSWE's operational-space (torque) controller. The robot runs
+as a service you reach only through its client, as if it were real hardware: one live episode.
 
-## Resources
-Your container: **8 CPUs**, **24 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
+### Client
+`/opt/tools/rcb_client.py`: its docstring is its manual; `r.spec()` gives the numbers. The service answers one request
+at a time: while a long call runs, every other request waits, so a client-side timeout means "busy", not "crashed".
+Simulated time advances only inside your calls. One call returns at most 240 images (cameras × the frames captured: the
+first, one every round(15 / `video_fps`) control steps and the last; a per-frame depth one more image; `video="none"`
+captures only the first and the last); a larger request is refused (400) before anything runs. A call that names no
+cameras gets `overview`, `wrist` at 4 frames per second, so every call up to `max_chunk_s` / `max_watch_s` fits.
 
-## Time limit
-You have 14400 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+### Actions
+The action is `ee_pose` only, 9 values: the world pose of `panda_hand` (`x y z qw qx qy qz`) and the two finger position
+targets (m, 0 closed, 0.04 open). Rows are streamed at the 15 Hz control rate with your `dt`;
+`spec["action_types"]["ee_pose"]` has the layout, the controller and the joint limits. Coordinates are the simulator's
+world frame (metres, z up; `spec["world"]`).
 
-This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` counts the same limit from your first request to the service, so it never runs out before your time does: your real time left is `time_left_s` minus the time you spent before that request. Plan by it. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+### Observations
+Cameras (RGB 640×480, depth on request): `overview` (static) and `wrist` (on the hand).
+
+## Others
+- The pod-bay cover on top slides open toward the spout; the START key behind it presses straight down.
+- The machine brews only with the cover closed, a capsule in the bay and the mug centred under the spout; otherwise
+  START does nothing. A brew takes a few seconds, while the run lamp glows; opening the cover or moving the mug during
+  it aborts it, and pressing START again stops it. A finished brew turns the mug's contents dark.
+- The cover ridge, the capsule and the mug rim hold in a firm pinch: close the fingers across them and the grip locks;
+  open wide to release.
+
+## Limits
+- Time: 14400 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
+  the end you are stopped without warning and the episode is graded as it stands. Time left:
+  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`); the service's `time_left_s` (in every reply) starts at
+  your first request, so the file is the one to trust. Calls into a long-running process can block for their whole wait
+  time: use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, the simulator's and the benchmark's source included.
+- Resources: 8 CPUs, 24 GiB memory, 1024 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`),
+  no GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap
+  only slows you down); usage: `/run/rcb-limits/usage.json`.
+- Resets: none: one episode.
+- Steps: at most 400,000 control steps (7.4 h of simulated time, reason `step_guard`); then the episode ends and is
+  graded as it stands.

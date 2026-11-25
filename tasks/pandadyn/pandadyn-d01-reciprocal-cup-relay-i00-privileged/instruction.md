@@ -1,70 +1,46 @@
-# Panda Dynamic Scenes · Reciprocal two-cup air relay (D01) — frozen instance i00
+# Panda Dynamic Scenes · Reciprocal two-cup air relay (D01) (privileged)
 
-You control two simulated **Franka Panda** arms (`panda-0` on the left, `panda-1` on the right; each with its standard hand and the task's tool where it has one) in a simulated scene (ManiSkill 3 / SAPIEN, rigid-body CPU PhysX at 1000 Hz) via Python.
-**Task:** A ball is thrown high into the air when the episode starts and comes down near the left Panda. The left arm catches it in its cup and throws it through the air to the right arm, whose cup must be moving when the ball enters it. The right arm carries the ball to a second transfer region and throws it back from there. The left arm catches it again and delivers it into an open box that slides back and forth along a rail, where the ball must settle while the box is moving.
+## Task
+Catch the falling ball in the left cup and throw it high through the air to the right cup, which must be moving as it
+catches it. Carry it with the right cup to the second transfer point and throw it back from there; catch it again in the
+left cup and drop it into the sliding cart while the cart is moving.
 
-This is a *fixed scene instance*: everything starts the same way after every reset, and you may reset and retry as many
-times as you want. Your deliverable is **one replayable trajectory** of the robot's low-level actions, not a general
-policy. Things move by themselves from the first control step on: the scene does not wait for the robot.
+## Goal
+Success: the left cup catches the falling ball and throws it in a high arc, well above the cups, to the right cup, which
+is moving, away from where it started, as the ball drops into it; the right cup carries the ball to the second transfer
+point and throws it back from there in a high arc; the left cup catches it again and drops it into the cart, where it
+settles, clear of the cup, and rides along while the cart moves. A catch means the ball drops into the cup from above
+after flying free and stays there.
 
-## Scene
-Two Pandas. panda-0 (left): base at (-0.55, -0.22, 0), yaw 0 (facing +x). panda-1 (right): base at (0.74, 0.22, 0), yaw pi (facing -x). Each hand carries a closed square cup: 0.12 m x 0.12 m inside (2 x `tool_half`), walls 28 mm high (`tool_height`) and 5 mm thick, floor 5 mm thick. The tool frame is the centre of the floor's top surface, z up out of the cup. A fixed adapter bar joins the cup's -x wall (tool frame) to the hand; in the tool frame the hand's TCP is at (-0.12, 0, +0.04). At the start the left cup is level with identity orientation, centre at (0.02, -0.18, 0.22). The right cup is level and turned 180 deg about z (orientation wxyz (0, 0, 0, 1), so its adapter side faces +x, towards its own base), centre at (0.19, 0.18, 0.22). Role labels by phase (panda-0, panda-1): left_initial_catch (catcher, preparing_receiver); left_to_right_flight (donor, moving_receiver); right_catch (clearing_donor, catcher); second_region (preparing_receiver, loaded_carrier); right_to_left_flight (moving_receiver, donor); left_catch_and_deliver (catcher_deliverer, cleared_partner). On both arms the tool's adapter runs between the fingertips: closing a gripper to less than about 12 mm of aperture makes its fingers touch the adapter, which ends the episode as `self_collision` (both grippers start fully open, at 0.08 m).
+The steps count only in this order, and a step once done stays done. The replay ends as soon as the task is done or has
+failed; the task also fails at once when:
+- the right cup catches the ball while (nearly) standing still;
+- the throw back does not leave from the second transfer point;
+- the task's horizon is reached before the task is done (Robot Interface);
+- an object leaves the workspace (falls well below the table top or flies far away);
+- a robot part touches what it may not: each cup may touch only the ball, no other robot part may touch anything, and
+  the two arms must never touch each other;
+- an arm touches itself, a robot part touches the table or the floor, or a contact presses deep into anything;
+- an arm goes beyond the Franka Panda's own safety limits (Robot Interface, Safety).
 
-A small orange ball (radius 18 mm) is thrown upwards and towards the left arm at t = 0. It rises high and falls back down near the left cup within about the first second. A blue open box (the cart: 0.15 m x 0.15 m inside, 0.06 m deep) is the moving link of a straight rail along the world's y axis, on the left arm's side. It is driven back and forth the whole episode, slowly, and slowest where it turns around. There are no other objects. The table top is the world's z = 0 plane.
+Deliverable: `/app/output/trajectory.npz`, written with `Session.save_trajectory(...)`: it holds `task` and `actions`, a
+(T, 16) float array of at most 4,500 rows (one per control step); anything else (another shape, NaN, more rows, a file
+that is not such an npz) scores 0. It is replayed open-loop from the fixed start and scores 1 if the task succeeds in
+the replay, else 0. Keep the script that produced it at `/app/output/gen.py`. Save a valid one early and overwrite it
+when you have a better one.
 
-Exactly (privileged information, also readable through the tooling): Ball: radius `radius` (0.018 m), mass `object_mass` (0.035 kg), restitution `restitution` (0.1), friction 0.2. At t = 0 it is at (0.03 + `incoming_speed` x `preview`, y0, 0.39) = (0.2575, y0, 0.39) with velocity (-`incoming_speed`, 0, (0.22 + 0.028 + `radius` - 0.39 + 4.905 x `preview`^2) / `preview`) = (-0.35, 0, about 2.998) m/s. It peaks at about z = 0.85 m (t of about 0.31 s) and passes through (0.03, y0, 0.248 + `radius`) = (0.03, y0, 0.266) at t = `preview` (0.65 s). y0 ~ U(-0.11, -0.07) is drawn at reset (first draw). Cart: moving link of a prismatic fixture whose rail origin is (-0.10, -0.29, 0.05), axis +y, limits +-0.5 m. It is an open box (inner half 0.075, walls 0.06 m) whose floor's top surface is the link origin (z = 0.05), mass 0.3 kg. At reset it is placed at q0 ~ U(-0.02, 0.02) (second draw) with velocity `fixture_speed`. It is then driven (PD, kp 80, kd 8, at most 8 N) to the target q0 + 0.20 sin((`fixture_speed`/0.20) t), with target velocity `fixture_speed` cos((`fixture_speed`/0.20) t). That is an oscillation of 0.20 m amplitude with peak speed `fixture_speed` (0.04 m/s) and period 31.4 s. It reverses at t = 7.85 s and t = 23.6 s, and its speed exceeds 0.02 m/s only for t < 5.2 s and 10.5 s < t < 20.9 s within the 25 s horizon (confirmed in an idle run). Cups: `tool_half` 0.06, `tool_height` 0.028, `tool_mass` 0.2 kg, `tool_friction` 0.3, restitution 0.05. Table friction `table_friction` (0.08). The right cup's start position (0.19, 0.18, 0.22) is stored as `right_start` and used by right_catch.
+Rules: **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+benchmark's demonstrations, trained policies); trials are reviewed.
 
-The instance's parameters (`s.params()`, SI units): `horizon` = 25, `object_mass` = 0.035, `tool_mass` = 0.2, `tool_half` = 0.06, `radius` = 0.018, `preview` = 0.65, `incoming_speed` = 0.35, `fixture_speed` = 0.04, `restitution` = 0.1, `table_friction` = 0.08, `tool_friction` = 0.3, `tool_height` = 0.028, `receiver_min_speed` = 0.15, `release_radius` = 0.035.
+## Robot Interface
+Two simulated Franka Panda arms (`panda-0` on the left, `panda-1` on the right; each with its standard hand and the
+task's tool where it has one) on a table (ManiSkill 3 / SAPIEN, rigid-body physics at 1000 Hz). The scene is one fixed
+instance: everything starts the same way after every reset. Things move by themselves from the first control step on:
+the scene does not wait for the robot. You have the full simulator to develop with; you hand in a trajectory of robot
+actions.
 
-**Goal geometry.** Second transfer region: the point (0.13, 0.15, 0.24) for panda-1's tool frame, radius 0.035 m. Flight heights: ball centre above z = 0.30 m (left to right) and z = 0.31 m (right to left). Right-cup relocation: more than 0.04 m from its start (0.19, 0.18, 0.22) at the right catch. Throw-back start: the ball's last right-cup contact within 0.035 m (horizontal) of (0.13, 0.15). `goal_target` = (0.03, y0, 0.22), the point under the ball's first crossing point, is announced at reset. It reveals the ball's seeded y0, so it is privileged mode only. Further flags (`left_start`, `right_start`) are stored but not exported as goal_* observations.
-
-## Success (the task's own check)
-The task has 6 phases. They are checked after every physics step (1 ms) and must be completed **in this order**
-(a phase is checked only once the previous one is complete, and a completed phase stays complete):
-1. **left_initial_catch**: panda-0's cup catches the ball. First the ball flies free (touching nothing) for at least 25 ms. It then enters the cup from above: its centre crosses downwards through the plane `tool_height` + `radius` = 0.046 m above the cup floor (cup frame) while within `tool_half` - `radius` = 0.042 m of the cup centre in both x and y of the cup frame. After that entry the ball stays in the cup for 0.18 s without interruption. In the cup frame: |x| and |y| < `tool_half` - 0.45 x `radius` = 0.0519 m; centre between `radius` - 4 mm = 0.014 m and `tool_height` - 0.12 x `radius` = 0.02584 m above the floor; touched by that cup within the last 25 ms; speed relative to the cup < 0.09 m/s.
-2. **left_to_right_flight**: The ball has touched nothing for more than 0.045 s (counted within this phase) and its centre is above z = 0.30 m.
-3. **right_catch**: panda-1's cup catches the ball by the same test as left_initial_catch (a fresh entry from above after at least 25 ms of free flight, then retention for 0.18 s without interruption). The right cup must be moving at the catch: its horizontal speed (its tool body's velocity in the world x-y plane) at the step the ball's entry is registered must be at least `receiver_min_speed` = 0.15 m/s; a catch that holds after a slower entry fails the task (right_cup_not_moving_at_catch). At a step where the catch holds, the right cup's tool frame must also be more than 0.04 m (3-D distance) from its start position (0.19, 0.18, 0.22).
-4. **second_region**: panda-1's tool frame is within 0.035 m of (0.13, 0.15, 0.24) while the ball is retained in the right cup. Retention uses the same test as above but needs no hold time.
-5. **right_to_left_flight**: The ball has touched nothing for more than 0.045 s (counted within this phase) and its centre is above z = 0.31 m. The throw-back must start from the second transfer region: the ball's last contact before this flight must be with panda-1's cup alone (no other body touching the ball at that step), with the ball's centre then within `release_radius` = 0.035 m (horizontal distance) of (0.13, 0.15). Otherwise the task fails when the flight condition is met (throw_back_outside_second_region).
-6. **left_catch_and_deliver**: panda-0's cup first catches the ball again (fresh entry from above after at least 25 ms of free flight, then retention for 0.18 s, as in left_initial_catch). After that catch is registered, the ball rests in the cart. In the cart's frame: |x| and |y| < 0.075 - 0.45 x `radius` = 0.0669 m; centre between 0.014 m and 0.06 - 0.12 x `radius` = 0.05784 m above the cart floor; touched by the cart within the last 25 ms; speed relative to the cart < 0.09 m/s. At the same time the ball does not touch the left cup and the cart moves faster than 0.02 m/s, for 0.7 s without interruption. This completes the task.
-
-The episode **ends by itself** at the first control step where the last phase is complete (success; rows after it are
-never executed) or where the task has failed. `s.status()` reports the phase you are in and the failure, if any.
-
-**The task fails** (the episode ends, reward 0) as soon as any of these happens:
-- during right_catch, the right cup's catch holds after an entry at which the cup's horizontal speed was below `receiver_min_speed` = 0.15 m/s (`right_cup_not_moving_at_catch`);
-- during right_to_left_flight, when the flight condition is met, the ball's last contact before the flight was not with the right cup alone, or was more than `release_radius` = 0.035 m (horizontal distance) from (0.13, 0.15) (`throw_back_outside_second_region`);
-- the task's horizon is reached: 25 s of simulated time (`timeout`);
-- an object leaves the workspace: its centre falls below z = -0.2 m or gets more than 1.8 m from the world's z axis
-  (`out_of_bounds`);
-- a forbidden contact or a deep interpenetration (below);
-- a safety limit is exceeded (`limit_violation`, below).
-
-**Contacts.** Each cup may touch only the ball. Neither cup may touch the cart, its rail or base, or the table. The two arms must never touch each other: any contact between any parts of panda-0 and panda-1, cups included, is a failure. No other robot part (fingers, hands, links, bases) may touch anything, including the ball. In every task: the two arms (and their tools) never touch each other
-(`arm_arm_or_tool_collision`), an arm never touches itself (`self_collision`), no robot part touches the table or the floor
-(`forbidden_collision`, `tool_table_collision`), a robot link other than an allowed one touches no object or fixture
-(`forbidden_arm_object_contact`, `forbidden_arm_scene_contact`, `forbidden_arm_fixture_contact`), a tool touches only the
-task's objects and the fixtures the task allows (`forbidden_tool_fixture_contact`), and no contact penetrates deeper than
-4 mm (`excessive_penetration`).
-
-**Safety limits** (the Franka Panda's own limits, checked every 1 ms on each arm; `s.robot_spec()["safety_limits"]`):
-measured joint positions within the joint limits (+0.002 rad); measured joint speeds at most 1.01 x (2.175, 2.175, 2.175,
-2.175, 2.61, 2.61, 2.61) rad/s; finger speeds at most 0.051 m/s; the hand's TCP at most 1.01 x 1.7 m/s and 1.01 x
-2.5 rad/s; joint accelerations (measured over every 20 ms window) at most 1.05 x (15, 7.5, 10, 12.5, 15, 20, 20) rad/s²
-and jerks at most 1.05 x (7500, 3750, 5000, 6250, 7500, 10000, 10000) rad/s³; the TCP's acceleration (20 ms windows) at
-most 1.05 x 13 m/s² and 1.05 x 25 rad/s²; motor torques at most (87, 87, 87, 87, 12, 12, 12) N m, changing at most
-1000 N m/s. The servo's own reference motion is checked against the same speed, acceleration and jerk limits. A contact
-(a catch, a strike) moves the arm too: what is measured counts, whatever was commanded.
-
-## Deliverable
-Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below). It is replayed
-open-loop from the same initial state in one fresh process and scored 1 if the task succeeds in the replay,
-else 0. Also leave the script that produced it at `/app/output/gen.py`. Save a working trajectory
-as soon as you have one and overwrite it as you improve it: whatever is in `/app/output/` when the time is up is graded.
-The file holds `task` and `actions`, a (T, 16) float array of at most **4,500 rows** (one per control step);
-anything else (another shape, NaN, more rows, a file that is not such an npz) scores 0.
-
-## Tooling (already installed; run `python` from any directory)
+### Session
+`rcb_pandadyn`, already installed (run `python` from any directory):
 ```python
 from rcb_pandadyn import Session
 s = Session(instance="/app/instance.json")   # ~5-15 s: builds the scene and resets it to the frozen instance
@@ -86,39 +62,69 @@ s.camera_info()                    # per camera: intrinsic_cv, extrinsic_cv (wor
 s.render_video(actions, "/app/output/check.mp4")   # replays from the frozen state while filming the overview camera
 s.u                                # the ManiSkill environment itself (`panda_dynamics` in /opt/pandadyn: read-only reference)
 ```
-The tooling is deliberately thin: joint targets, kinematics and state. Catching, striking, carrying and timing are yours to
-build. The environment's source, the task included, is in `/opt/pandadyn/panda_dynamics` (`tasks/dual/reciprocal_cup_relay.py`).
 
-The grader replays once, in a fresh process; it is exactly this CLI (a fresh process, so run it to self-check):
-`python /opt/tools/rcb_pandadyn.py replay --instance /app/instance.json --traj /app/output/trajectory.npz`
+The tooling is deliberately thin: joint targets, kinematics and state. Catching, striking, carrying and timing are yours
+to build. The environment's source is in `/opt/pandadyn/panda_dynamics`. Check a trajectory as the grader replays it:
+`python /opt/tools/rcb_pandadyn.py replay --instance /app/instance.json --traj /app/output/trajectory.npz`. One
+`Session` per process. Stepping runs at roughly 40-150 control steps per second; rendering happens only when a frame is
+asked for and never moves anything. Do not call `s.close()` before writing every output.
 
-## Conventions
-- World frame: metres, z up, the table top is the plane z = 0; quaternions are **wxyz**. Each arm's base pose is in the robot spec (`arms`).
-- Action row (16 values per control step): `[panda-0 joint1..7, panda-0 aperture, panda-1 joint1..7, panda-1 aperture]`. Each arm's 8 values are its 7 absolute joint-position
-  targets (rad, `panda_joint1..7`) and its total gripper aperture target (m, 0 = closed .. 0.08 = open; each finger moves at
-  most 0.025 m/s). Values outside the joint limits (`s.robot_spec()`) are clipped to them before they are executed, and the
-  trajectory records the clipped row.
+### Actions
+- Action row (16 values per control step): `[panda-0 joint1..7, panda-0 aperture, panda-1 joint1..7, panda-1 aperture]`.
+  Each arm's 8 values are its 7 absolute joint-position targets (rad, `panda_joint1..7`) and its total gripper aperture
+  target (m, 0 = closed .. 0.08 = open; each finger moves at most 0.025 m/s). Values outside the joint limits
+  (`s.robot_spec()`) are clipped to them before they are executed, and the trajectory records the clipped row.
 - The servo: every control step, each arm's latest target is turned into a smooth reference motion by a jerk-limited
-  trajectory generator (Ruckig, the joints synchronised to arrive together) within 65 % (speed), 55 % (acceleration) and 5 % (jerk) of the Panda's joint
-  speed, acceleration and jerk limits, and the arm tracks that reference with torque control (PD + inverse dynamics, the
-  Panda's torque and torque-rate limits). A new target replans from the current reference motion, so a target far away is
-  reached smoothly, not in one step. `s.robot_spec()["servo"]` has the exact limits and gains.
-- Control runs at 100 Hz (10 ms per row), physics at 1000 Hz. There is no step budget: the time limit (`## Time limit`) is
-  your only budget. A simulated episode ends at the latest at the task's horizon (25 s, 2500 rows).
-- One `Session` per process. Stepping runs at roughly 40-150 control steps per second; rendering happens only when a frame
-  is asked for and never moves anything. Do not call `s.close()` before writing every output.
+  trajectory generator (Ruckig, the joints synchronised to arrive together) within 65 % (speed), 55 % (acceleration) and
+  5 % (jerk) of the Panda's joint speed, acceleration and jerk limits, and the arm tracks that reference with torque
+  control (PD + inverse dynamics, the Panda's torque and torque-rate limits). A new target replans from the current
+  reference motion, so a target far away is reached smoothly, not in one step. `s.robot_spec()["servo"]` has the exact
+  limits and gains.
+- Control runs at 100 Hz (10 ms per row), physics at 1000 Hz. A simulated episode ends at the latest at the task's
+  horizon (25 s, 2500 rows).
 
-## Rules
-- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
-  benchmark's demonstrations, trained policies); trials are reviewed.
+### Observations
+- World frame: metres, z up, the table top is the plane z = 0; quaternions are wxyz. Each arm's base pose is in the
+  robot spec (`arms`).
+- Cameras: `s.render_frame("overview")` (the whole workspace) or `s.render_frame("closeup")` (the working area), RGB 640
+  x 480; `s.camera_info()` has their calibration. `s.proprio()` and `s.state()` (above) give the robot's and the scene's
+  state.
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+### Arms and tools
+Two Pandas. panda-0 (left): base at (-0.55, -0.22, 0), yaw 0 (facing +x). panda-1 (right): base at (0.74, 0.22, 0), yaw
+pi (facing -x). Each hand carries a closed square cup: 0.12 m x 0.12 m inside, walls 28 mm high and 5 mm thick, floor 5
+mm thick. The tool frame is the centre of the floor's top surface, z up out of the cup. A fixed adapter bar joins the
+cup's -x wall (tool frame) to the hand; in the tool frame the hand's TCP is at (-0.12, 0, +0.04). At the start the left
+cup is level with identity orientation, centre at (0.02, -0.18, 0.22). The right cup is level and turned 180 deg about z
+(orientation wxyz (0, 0, 0, 1), so its adapter side faces +x, towards its own base), centre at (0.19, 0.18, 0.22). On
+both arms the tool's adapter runs between the fingertips: closing a gripper to less than about 12 mm of aperture makes
+its fingers touch the adapter, which ends the episode as a collision with its own tool (both grippers start fully open,
+at 0.08 m).
 
-## Resources
-Your container: **5 CPUs**, **10 GiB of memory**, **1024 processes and threads**, **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`) and **one GPU, 3 GiB of its memory**. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
+### Safety
+The task fails when an arm goes beyond the Franka Panda's own safety limits on joint positions, joint and finger speeds,
+the hand's speed and acceleration, joint accelerations and jerks, and motor torques and how fast they change (the
+numbers: the robot spec's `safety_limits`). They count on the motion as measured, whatever was commanded (a catch or a
+strike moves the arm too), and the servo's own reference motion is held to the same speed, acceleration and jerk limits.
 
-## Time limit
-You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+### Goal points
+- The second transfer point is not marked: it is at (0.13, 0.15, 0.24) in the world frame, for the right cup's tool
+  frame. The cup must get within a few centimetres of it, and the throw back must leave from within a few centimetres of
+  it across the table.
 
-This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+## Others
+- State labels (`s.objects()`, `s.fixtures()`): `ball` is the ball; `cart` (in `s.fixtures()`) the cart.
+- The ball is already in flight when the episode starts and comes down within about a second.
+
+## Limits
+- Time: 3600 s of wall-clock time from the start of your session; everything counts (the simulator's start-up too). At
+  the end you are stopped without warning and only what is in `/app/output/` at that moment is graded. Time left:
+  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`). Calls into a long-running process can block for their
+  whole wait time: use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, the simulator's and the benchmark's source included.
+- Resources: 5 CPUs, 10 GiB memory, 1024 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`),
+  one GPU (3 GiB of its memory). Over a cap a process can be killed (the CPU cap only slows you down); usage:
+  `/run/rcb-limits/usage.json`.
+- Resets: as many as you like (`s.reset()`).

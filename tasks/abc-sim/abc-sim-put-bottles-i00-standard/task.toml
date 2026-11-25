@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, { source
 
 [task]
 name = "embodied-first-exam/abc-sim-put-bottles-i00-standard"
-description = "ABC Sim put bottles in the bin (two I2RT YAM arms, MuJoCo): Put both plastic bottles into the bin. The robot as a service (eai-standard/2.2); graded by the live episode."
+description = "ABC Sim put bottles in the bin (two I2RT YAM arms, MuJoCo): Put both plastic bottles in the bin. The robot as a service (eai-standard/2.2); graded by the live episode."
 keywords = ["robotics", "abc-sim", "mujoco", "yam", "bimanual", "put_bottles", "standard"]
 
 [metadata]

@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:robotwin-0.1.2` |
 
 ## Task
+Put both shoes in the shoebox, sole down with the toe pointing to the robot's left: the shoe that starts on the left in the half nearer the robot, the other in the far half. Then let go.
+
 Standard-mode twin of `robotwin_2_0_place_dual_shoes-privileged` (same frozen instance, RoboTwin seed 60417): the agent gets
 only the `eai-standard/2.1` client (docs/protocol/standard_mode.md); the simulator runs in the `sim` sidecar
 (`environment/docker-compose.yaml`, GPU on the sidecar), which owns the seed, judges the live episode, records it as a

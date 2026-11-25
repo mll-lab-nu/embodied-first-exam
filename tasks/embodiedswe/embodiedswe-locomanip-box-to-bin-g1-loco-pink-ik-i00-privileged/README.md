@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:embodiedswe-0.3.0` |
 
 ## Task
+Take the box off the shelf in front of you, carry it to the blue bin on the table to your right, and leave it in the bin.
+
 Carry the box from the shelf to the bin (Unitree G1, walking, Pink IK). EmbodiedSWE's `locomanip.box_to_bin.g1.loco_pink_ik` task (robobench at commit `67f44e8a2ca5`), privileged mode, with a program as the
 deliverable: `solution/solve.py` exposing `solve(env)`.
 

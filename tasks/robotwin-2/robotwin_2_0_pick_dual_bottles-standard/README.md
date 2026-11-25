@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:robotwin-0.1.2` |
 
 ## Task
+Pick up both bottles, one in each hand, and hold them up at least a hand's length above the table, side by side near the middle and a little closer to the robot, with the bottle that started on the robot's left still on the left.
+
 Standard-mode twin of `robotwin_2_0_pick_dual_bottles-privileged` (same frozen instance, RoboTwin seed 60417): the agent gets
 only the `eai-standard/2.1` client (docs/protocol/standard_mode.md); the simulator runs in the `sim` sidecar
 (`environment/docker-compose.yaml`, GPU on the sidecar), which owns the seed, judges the live episode, records it as a

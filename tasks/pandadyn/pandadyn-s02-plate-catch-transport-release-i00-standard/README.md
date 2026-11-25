@@ -18,7 +18,7 @@ client (docs/protocol/standard_mode.md Part 1, with the optional reset capabilit
 live and records every control step it ran. Between the agent's calls the world is frozen; 3 resets, only the last
 episode graded. The sidecar's adapter (`environment/sim/server.py`) is the benchmark's realtime twins', code for code,
 on the same shared service layer, so where a family has that twin the two modes differ only in the clock. Compare against the
-privileged task to measure the cost of losing privileged state, free resets and self-replay. A ball is tossed up next to the robot when the episode starts. Catch it on the flat, rimless plate the Panda holds and settle it at the plate's centre. Carry it through two waypoints that make a turn without letting it roll off, and settle it again. Then tip it off the plate into a basin that slides back and forth along a rail, where it must come to rest while the basin is moving.
+privileged task to measure the cost of losing privileged state, free resets and self-replay. Catch the ball on the flat plate and settle it in the middle. Carry it through the two waypoints without letting it roll off, settle it again, and tip it into the sliding basin while the basin is moving.
 
 ## Difficulty
 That of `pandadyn-s02-plate-catch-transport-release-i00-privileged` (its README), without object poses or the success signal and with 3 resets: the moving objects

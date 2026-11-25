@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:abc-sim-0.2.0` |
 
 ## Task
-ABC Sim `grab_specific_object_from_clutter` (two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each) side by side at the near edge of a table, facing +x (the left arm is the one at +y)): Follow the directive **"grab the ketchup and place it in the box"**. Success: the named object's centre is inside the box: within 0.06 m x 0.055 m of the box's centre along the box's own horizontal axes and at most 0.29 m above the box's floor (it may still be held). Other objects in the box do not matter. The goal must hold for 30 consecutive control steps (1.02 s); the episode then ends in success.
+ABC Sim `grab_specific_object_from_clutter` (two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each) side by side at the near edge of a table, facing +x (the left arm is the one at +y)): Find the ketchup among the things on the table and put it in the box.
 Many household objects crowd the table; a box (a loose object, turned at some angle) stands near one side. The robot is a service; the episode it runs is graded.
 
 ## Difficulty

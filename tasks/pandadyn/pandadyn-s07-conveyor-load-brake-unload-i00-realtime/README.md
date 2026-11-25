@@ -16,7 +16,7 @@
 Realtime twin of `pandadyn-s07-conveyor-load-brake-unload-i00-privileged` (same frozen instance and success check as it and as `pandadyn-s07-conveyor-load-brake-unload-i00-standard`): the agent gets only
 the realtime client (`eai-standard/2.3`, docs/protocol/standard_mode.md Part 3); the simulator runs in the `sim` sidecar on a clock
 that does not stop, at slowdown **S = 4** (one 10 ms control step every 40 ms of wall-clock time), with
-3 resets (only the last episode is graded). At the start a small cube, the part, rides along a powered roller conveyor, and a shallow carriage is already coasting along a frictionless rail. Grasp the part with the gripper while it is moving and lift it. Set it on the moving carriage and let go while the carriage is still moving. Then grip the carriage's vertical handle with both fingers and bring the carriage to a stop, with the part still on it, before it reaches the end of its rail. Grasp the part again and lift it off the carriage. Finally set it down in a fixed dock and leave it there at rest.
+3 resets (only the last episode is graded). Grasp the part from the moving conveyor, lift it about a hand's length and set it on the coasting carriage, letting go while the carriage is moving. Then grip the carriage's handle and stop it, with the part still on it, before it reaches the end of its rail; finally lift the part off and set it down in the dock.
 
 ## Difficulty
 That of `pandadyn-s07-conveyor-load-brake-unload-i00-standard`, but the scene does not wait between calls: once an episode's clock starts, the moving objects and

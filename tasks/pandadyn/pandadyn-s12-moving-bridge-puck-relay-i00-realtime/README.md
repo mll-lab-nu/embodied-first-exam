@@ -16,7 +16,7 @@
 Realtime twin of `pandadyn-s12-moving-bridge-puck-relay-i00-privileged` (same frozen instance and success check as it and as `pandadyn-s12-moving-bridge-puck-relay-i00-standard`): the agent gets only
 the realtime client (`eai-standard/2.3`, docs/protocol/standard_mode.md Part 3); the simulator runs in the `sim` sidecar on a clock
 that does not stop, at slowdown **S = 3** (one 10 ms control step every 30 ms of wall-clock time), with
-3 resets (only the last episode is graded). At the start a square puck slides fast along a raised source lane towards the Panda, and the paddle hangs just above its path. Strike the puck while it is still sliding at 25 cm per second or more, so that it slides onto the bridge, a platform that turns continuously about a vertical axis, and from the bridge onto an exit lane. Intercept it there with the paddle, let it separate, and strike it again. Send it along the exit lane through the doorway of a swinging gate that opens and closes by itself, without touching the gate, and on across a goal line, with the paddle not touching it as it crosses and the gate still open.
+3 resets (only the last episode is graded). Strike the incoming puck with the paddle while it is still sliding fast, so that it slides over the turning bridge onto the exit lane. Stop it there, then strike it again through the doorway of the swinging gate while the gate is wide open, without touching the gate, and across the goal line in front of the backstop.
 
 ## Difficulty
 That of `pandadyn-s12-moving-bridge-puck-relay-i00-standard`, but the scene does not wait between calls: once an episode's clock starts, the moving objects and

@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robolab-0.2.2` |
 
 ## Task
+Stack the red, blue, green and yellow blocks into one tower, in any order.
+
 Standard-mode twin of `robolab-block-stacking-order-agnostic-i00-privileged` (same frozen instance, the state after RoboLab's canonical seed-0 reset):
 the agent gets only the `eai-standard/2.2` client (docs/protocol/standard_mode.md); the simulator runs in the `sim` sidecar
 (`environment/docker-compose.yaml`, GPU on the sidecar), which owns the scene and records the episode as a (T, 8)

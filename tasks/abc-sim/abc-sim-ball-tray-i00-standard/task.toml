@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, { source
 
 [task]
 name = "embodied-first-exam/abc-sim-ball-tray-i00-standard"
-description = "ABC Sim ball-tray balancing (two I2RT YAM arms, MuJoCo): Grab the tray by both handles -- the left gripper on one handle bar, the right gripper on the other -- and keep the ball on the tray. The robot as a service (eai-standard/2.2); graded by the live episode."
+description = "ABC Sim ball-tray balancing (two I2RT YAM arms, MuJoCo): Hold the tray by both handles, one gripper on each, and keep the ball on the tray until the episode ends. The robot as a service (eai-standard/2.2); graded by the live episode."
 keywords = ["robotics", "abc-sim", "mujoco", "yam", "bimanual", "ball_tray", "standard"]
 
 [metadata]

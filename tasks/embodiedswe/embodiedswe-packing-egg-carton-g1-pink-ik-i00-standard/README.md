@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:embodiedswe-0.3.0` |
 
 ## Task
+Put three of the eggs upright in three different pockets of the egg carton, then close its lid. The fourth egg can stay on the table.
+
 Put three eggs in the carton and close the lid (Unitree G1, fixed pelvis, Pink IK): the scene, frozen instance and success predicate of `embodiedswe-packing-egg-carton-g1-pink-ik-i00-privileged`, with a Unitree G1 humanoid with three-finger hands, its pelvis fixed, its arms and waist under EmbodiedSWE's Pink IK, in standard mode
 (tasks/embodiedswe/README.md "Standard mode").
 

@@ -18,7 +18,7 @@ client (docs/protocol/standard_mode.md Part 1, with the optional reset capabilit
 live and records every control step it ran. Between the agent's calls the world is frozen; 3 resets, only the last
 episode graded. The sidecar's adapter (`environment/sim/server.py`) is the benchmark's realtime twins', code for code,
 on the same shared service layer, so where a family has that twin the two modes differ only in the clock. Compare against the
-privileged task to measure the cost of losing privileged state, free resets and self-replay. At the start a small cube slides along a raised, slippery lane toward its open end. Once it has left the lane, receive it in the shallow tray the Panda holds, which is open on one side, and let it settle. Then keep the tray level and move it, without tilting it, so that the cube slides inside the tray until it rests at a staging point. Carry the cube through two waypoints. Bring the tray to a pose at a fixed offset from a platform that slides slowly back and forth on a rail, matching the platform's velocity. Finally get the cube onto that platform, where it must ride along at rest without touching the tray.
+privileged task to measure the cost of losing privileged state, free resets and self-replay. Receive the cube that slides off the lane in the tray and slide it, keeping the tray level, to the staging point in the tray. Carry it through the two waypoints, bring the tray to the match point beside the sliding platform, moving with it, and put the cube onto the platform.
 
 ## Difficulty
 That of `pandadyn-s05-sliding-receive-align-deliver-i00-privileged` (its README), without object poses or the success signal and with 3 resets: the moving objects

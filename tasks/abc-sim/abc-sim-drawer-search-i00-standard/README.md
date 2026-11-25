@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:abc-sim-0.2.0` |
 
 ## Task
-ABC Sim `multi_drawer_search` (two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each) side by side at the near edge of a table, facing +x (the left arm is the one at +y)): Find the measuring cup and put it in the bin, then find the dish brush and put it in the bin. Each target counts when its centre is inside the bin (within 0.056 m x 0.052 m of the bin's centre along the bin's horizontal axes and at most 0.26 m above its floor) while it is the current target: first the measuring cup, then the dish brush. Success: every target has counted (a counted target may leave the bin again). Distractors in the bin do not matter. The goal must hold for 30 consecutive control steps (1.02 s); the episode then ends in success.
+ABC Sim `multi_drawer_search` (two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each) side by side at the near edge of a table, facing +x (the left arm is the one at +y)): Find the measuring cup in the drawers and put it in the bin, then do the same with the dish brush.
 A stack of three closed drawers stands on the table; kitchen tools are hidden in its drawers (some drawers hold more than one, one is empty). A small bin stands on the table on the right. The robot is a service; the episode it runs is graded.
 
 ## Difficulty

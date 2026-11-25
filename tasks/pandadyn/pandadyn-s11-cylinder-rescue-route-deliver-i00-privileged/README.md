@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0` |
 
 ## Task
-A short round-ended cylinder is rolling along a raised lane when the episode starts and will run off its end. Intercept it in the open-sided tray the Panda holds. Bring it to rest in the tray with its long axis along the world's y axis. Put it into a gently sloping guide channel near the channel's entry, and let it travel out past the far end without the tray touching it at that moment. Catch it again in the tray at the exit, aligned and settled. Finally, deliver it lying along y into a pocket that slides back and forth on a rail, where it must rest while the pocket is moving. The deliverable is one replayable trajectory of 100 Hz joint-target actions (`/app/output/trajectory.npz`,
+Catch the rolling cylinder in the tray as it comes off the lane and settle it lying left to right. Put it into the guide channel near its entry, let it run out past the far end by itself, catch it again in the tray, and lay it, still left to right, into the sliding pocket while the pocket is moving. The deliverable is one replayable trajectory of 100 Hz joint-target actions (`/app/output/trajectory.npz`,
 8 values per row), graded by the task's own staged success check: 5 phases (`rolling_interception`, `axial_alignment`, `guide_rail_traverse`, `exit_reception`, `oriented_moving_delivery`), in order,
 with no failure event and no safety-limit violation, within the task's horizon of 25 s.
 

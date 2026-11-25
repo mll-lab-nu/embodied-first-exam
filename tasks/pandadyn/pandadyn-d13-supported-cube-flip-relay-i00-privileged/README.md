@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0` |
 
 ## Task
-The left arm holds a large shallow tray with a cube on it, and the right arm holds a small flat pusher. The left arm must first bring the tray to a presentation point. The right arm must then tip the cube over onto an adjacent face while the left arm keeps the tray moving. It does so with a short push that sets the cube rotating and ends before the cube is half-way over, so that the cube completes the tip on its own momentum and settles on the tray. The left arm then moves the cube, on the tray, to a new place, and the pusher tips it a second time in the same way, again with the tray moving, so that the cube's original bottom face ends up on top. Finally the tray must carry the correctly oriented cube to an output point and hold it there. The cube must never leave the tray. The deliverable is one replayable trajectory of 100 Hz joint-target actions (`/app/output/trajectory.npz`,
+Bring the tray with the cube to the presentation point and, while the tray keeps moving, tip the cube over with a short push of the pusher, so that the face toward the right arm ends up on top. Move it on the tray to a new place, tip it once more the same way so that its original bottom face ends up on top, and bring it to the output point. The deliverable is one replayable trajectory of 100 Hz joint-target actions (`/app/output/trajectory.npz`,
 16 values per row), graded by the task's own staged success check: 5 phases (`support_presentation`, `first_inertial_flip`, `second_contact_geometry`, `second_inertial_flip`, `oriented_output`), in order,
 with no failure event and no safety-limit violation, within the task's horizon of 25 s.
 

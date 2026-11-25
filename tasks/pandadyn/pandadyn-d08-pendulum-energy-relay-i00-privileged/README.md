@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0` |
 
 ## Task
-A passive pendulum (a rod with a ball-shaped bob) hangs between the two arms, each of which holds a flat paddle. The left arm must actively push the pendulum so that it swings out toward the right arm. The right arm must catch it while it is still swinging fast and brake it, taking at least 60 % of its swing energy out, then actively drive it back so that it swings out toward the left arm, no longer touching it. The left arm must then touch it again, and the pendulum must end up hanging almost straight down and almost still, and stay that way for one second without the right paddle touching it. The deliverable is one replayable trajectory of 100 Hz joint-target actions (`/app/output/trajectory.npz`,
+Push the hanging pendulum with the left paddle so that it swings toward the right arm. Catch it with the right paddle while it still swings fast, brake most of its swing and push it back toward the left arm; touch it again with the left paddle and bring it to hang still, straight down. The deliverable is one replayable trajectory of 100 Hz joint-target actions (`/app/output/trajectory.npz`,
 16 values per row), graded by the task's own staged success check: 5 phases (`left_excitation`, `right_braking`, `right_return_impulse`, `left_recovery`, `low_energy_hold`), in order,
 with no failure event and no safety-limit violation, within the task's horizon of 25 s.
 
