@@ -1,8 +1,7 @@
 # Embodied Olympics · trapping the ball (standard)
 
 ## Task
-Trap the pass: take the football that is passed along the ground past you with a foot, and bring it to rest within a
-metre of you inside three seconds.
+Trap the pass: take the ball rolling past you with a foot and bring it to rest close to you within three seconds.
 
 ## Goal
 Success: your first touch is with a foot, and within 3 s of it the ball is at rest within about a metre of you while you

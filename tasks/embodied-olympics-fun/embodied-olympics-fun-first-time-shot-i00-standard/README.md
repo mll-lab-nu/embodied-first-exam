@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Shoot first time: the football rolls down a ramp and across in front of you; with one touch of a foot send it into the official goal 11 m away. (Embodied Olympics `first-time-shot`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Shoot first time: with one touch of a foot, send the ball rolling across in front of you into the goal. (Embodied Olympics `first-time-shot`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
 
 ## Difficulty
 The ball crosses the width of a foot in a few hundredths of a second and at right angles to the goal: the foot has to arrive with a swing or a run of its own at that moment, angled so that the pass's sideways speed is turned towards the goal, faster than the ball came, by a 33 kg robot that has no kicking skill and has to stay on its feet. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 5 resets (only the last attempt is graded).

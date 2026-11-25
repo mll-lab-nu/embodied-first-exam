@@ -2,7 +2,7 @@
 
 You control the **MyoArm with torso**, a musculoskeletal model of a human torso, right arm and hand on a pelvis that slides on the floor (MyoSuite 2.12.2 on MuJoCo), via Python, through its actuators — 273
 muscles and 2 non-muscle actuators: there is no joint-level controller.
-**Task:** Return the served ball: hit it with the paddle so that it lands on the opponent's half of the table (MyoChallenge 2025 TableTennis P1's own success test on the ball's contact history: after the serve's bounce on your half, the paddle touches it once, then it touches the opponent's half, with no second paddle touch and no further bounce on your half). Failure (the episode ends): any other outcome of the rally, the ball falling below 0.3 m, or 3 s of simulated time.
+**Task:** Return the served ball: after it bounces once on your half, hit it once with the paddle so that it lands on the opponent's half, with no second paddle touch and no second bounce on your half. Any other outcome of the rally, the ball falling below 0.3 m, or 3 s passing ends the episode in failure.
 
 You stand at a table-tennis table holding a paddle in the right hand; a ball is served toward you from the far side. `s.state()` gives the task's observation dict (privileged): `pelvis_pos`, `body_qpos`, `body_qvel`, `ball_pos`, `ball_vel`, `paddle_pos`, `paddle_vel`, `paddle_ori`, `padde_ori_err`, `reach_err`, `palm_pos`, `palm_err`, `touching_info`, `act`.
 MyoSuite's reward code (from `/usr/local/lib/python3.11/site-packages/myosuite/envs/myo/myochallenge/tabletennis_v0.py`; `solved` is the goal test,

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Set the pass: with one overhead contact of your hands, send the volleyball that comes down above you at least a metre above the net and into the outside hitter's target along the net. (Embodied Olympics `volleyball-set`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Set the ball: with one overhead touch of your hands, send it high above the net and into the hitter's target along the net. (Embodied Olympics `volleyball-set`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
 
 ## Difficulty
 The hands (rubber fists) have to meet a 7 m/s ball above the head and drive it away faster than it came, up to nearly 4 m and 5 m along the net into a 2 m circle, in a contact of a few hundredths of a second: the angle and the speed both have to be right, and arms that are only held up return the ball too slowly. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 5 resets (only the last attempt is graded).

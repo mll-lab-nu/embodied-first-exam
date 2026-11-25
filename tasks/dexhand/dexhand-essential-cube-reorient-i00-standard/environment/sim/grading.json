@@ -1,1 +1,1 @@
-{"collect_timeout_s": 3220, "instance_sha256": {"catalog.json": "a7abab4f2612bab7eedf704ebbfcbe8e9193b28d86b64e8c632e8474a3c45611", "instance.json": "e936049924bd4405ba7be9a0b82aa3fe5caf276907863368736a11be141a2693"}, "video_timeout_s": 2800}
+{"collect_timeout_s": 3220, "instance_sha256": {"catalog.json": "697848d5c3173193efa762ffd4f199f0d9faac72529ed6b5d1b83b85ffc61000", "instance.json": "d636ab6fd5124a61634df9b56c0b060c2c18fbe5497fe2abf90a26bb751783cc"}, "video_timeout_s": 2800}

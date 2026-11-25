@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Keep the table tennis ball that is dropped in front of you bouncing on the paddle held in your right hand: 20 bounces in a row, each back up to the height the ball was dropped from, without letting go of the paddle. (Embodied Olympics `paddle-bounce`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Bounce the table-tennis ball on the paddle in your right hand 20 times in a row, each time back up to the height it was dropped from, without letting go of the paddle. (Embodied Olympics `paddle-bounce`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
 
 ## Difficulty
 Every bounce needs an upward hit of the right strength at the right instant, with the blade level and under a 40 mm ball: a tilt of a degree sends the ball off the 15 cm blade within a few bounces, and the arm that holds the blade gives way a little at every hit. The paddle sits in a three-finger hand with small finger motors, so the blade is where the fingers hold it, not where the arm was told to put it, and it has to go right twenty times in a row. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 5 resets (only the last attempt is graded).

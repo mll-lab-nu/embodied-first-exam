@@ -1,8 +1,7 @@
 # Embodied Olympics · volleyball bump (realtime)
 
 ## Task
-Receive the serve: pass the volleyball that is served over the net to you with your forearms, in one contact, above net
-height and into the setter's target at the net.
+Pass the serve: with one forearm pass, send the ball up above net height and down onto the setter's target.
 
 ## Goal
 Success: with one forearm pass you send the served ball higher than the net and down into the setter's target.

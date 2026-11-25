@@ -1,8 +1,8 @@
 # Embodied Olympics · three-ball juggling (standard)
 
 ## Task
-Juggle three balls in a cascade: throw each ball from one hand in an arc to the other, the hands in turn, catching each
-in the hand, until 10 catches have been made in a row.
+Juggle 3 balls in a cascade, throwing each from one hand to the other and catching it there, until you have made 10
+catches in a row.
 
 ## Goal
 Success: you juggle the three balls in a cascade, each thrown from one hand and caught in the other, until ten catches

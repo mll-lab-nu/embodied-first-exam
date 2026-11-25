@@ -1,8 +1,7 @@
 # Embodied Olympics · long rope (privileged)
 
 ## Task
-Jump the long rope: standing in the middle of a rope turned by two rope-turning machines, jump it 10 times in a row, the
-rope passing under both your feet while you are in the air, without the rope ever touching you.
+Jump the long rope 10 times in a row without the rope touching you, then land on your feet and stand still.
 
 ## Goal
 Success: you jump the turning rope ten times in a row without it touching you, then land on your feet and stand still

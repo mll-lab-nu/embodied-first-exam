@@ -1,8 +1,8 @@
 # Embodied Olympics · table tennis return (standard)
 
 ## Task
-Return the service: after the table tennis ball has bounced once on your court, strike it with the paddle held in your
-right hand so that it touches the opponent's court, without letting go of the paddle.
+Return the serve: after it bounces once on your side, hit it with the paddle in your right hand onto the opponent's
+side, without letting go of the paddle.
 
 ## Goal
 Success: after the serve bounces once on your court, you hit it with the paddle in your right hand, it lands on the

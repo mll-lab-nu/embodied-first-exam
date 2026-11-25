@@ -13,7 +13,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Catch and shoot: catch the chest pass that comes to you from the left wing with your two hands, then shoot from where you stand so that the ball enters the basket from above. (Embodied Olympics `catch-and-shoot`; the robot as a service on a clock that does not stop, slowdown S = 1: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Catch the pass with both hands, then shoot it into the basket from where you stand, without travelling. (Embodied Olympics `catch-and-shoot`; the robot as a service on a clock that does not stop, slowdown S = 1: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
 
 ## Difficulty
 The pass arrives at 8.4 m/s and hands smaller than the ball cannot close around it: the two palms have to meet the ball from opposite sides as it arrives, squeeze it to a stop and close the fingers over it, before it bounces out or touches the body. Then a 0.62 kg ball must leave the two palms at about 9 m/s on a steep arc towards a ring 5.8 m away, from a body that may not take a step. The built-in walking gait steps on the spot even at a zero command, so while the ball is in your hands its steps are counted like any others. The scene is dynamic (A machine throws the chest pass at a fixed time.), and in realtime mode time does not stop: once an attempt's clock starts the venue's timed events happen whatever the agent does, so it has to plan or stream the robot's rows from a program of its own, with no simulator and no state, and 5 resets (only the last attempt is graded).

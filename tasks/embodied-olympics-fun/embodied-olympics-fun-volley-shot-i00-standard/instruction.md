@@ -1,8 +1,8 @@
 # Embodied Olympics · volley shot (standard)
 
 ## Task
-Volley the cross: strike the football that is crossed to you from the wing with a foot before it touches the ground,
-into the official goal 11 m away, past the goalkeeper dummy.
+Volley the cross into the goal: strike it with a foot before it touches the ground and send it past the goalkeeper
+dummy.
 
 ## Goal
 Success: you strike the cross with a foot before it touches the ground and it goes past the dummy into the goal.

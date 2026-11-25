@@ -771,8 +771,8 @@ class Task(TaskBase):
                   launch_azimuth_deg=180.001, launch_topspin_rad_s=35.0,
                   arrive_s=2.0, arrive_speed_m_s=6.0)
 
-    sentence = ("Trap the pass: take the football that is passed along the ground past you with a foot, and bring it "
-                "to rest within a metre of you inside three seconds.")
+    sentence = (("Trap the pass: take the ball rolling past you with a foot and bring it to rest close to you "
+                 "within three seconds."))
     rules = ("A size-5 football (0.22 m across, 0.43 kg) waits in a ball machine {pass_distance_m} m ahead of you and "
              "{pass_side_m} m to your right; about {launch_time_s} s after the start the machine plays it along the "
              "ground at about {pass_speed_m_s} m/s, parallel to the way you face, so that it goes by {pass_side_m} m "

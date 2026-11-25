@@ -1,8 +1,7 @@
 # Embodied Olympics · fly-ball catch (standard)
 
 ## Task
-Catch the fly ball: close one of your hands on the baseball before it touches the ground or your body, and keep it
-there.
+Catch the fly ball in one hand before it touches the ground or your body, and keep it in that hand.
 
 ## Goal
 Success: you catch the ball in one hand after it has passed the top of its arc, before it touches the ground or your

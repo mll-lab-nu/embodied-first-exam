@@ -162,8 +162,7 @@ class Task(TaskBase):
                   keeper_mass_kg=Keeper.MASS, keeper_force_n=Keeper.F_MAX, keeper_delay_s=0.25,
                   keeper_speed_m_s=Keeper.V_MAX, kick_max_s=0.15, rest_speed_m_s=0.1, rest_s=1.0, fall_z_m=0.35)
 
-    sentence = ("Take a penalty kick: with one kick of a foot, send the ball that lies on the penalty mark into the "
-                "official goal 11 m away, past the goalkeeper dummy.")
+    sentence = (("Take a penalty kick: with one kick, send the ball past the goalkeeper dummy into the goal."))
     rules = ("A size-5 football (0.22 m across, 0.43 kg, in air) lies at rest on the penalty mark, {run_up_m} m "
              "straight ahead of you; the goal line is {mark_distance_m} m beyond the mark. The goal is "
              "{goal_width_m} m wide between the posts and {goal_height_m} m high under the crossbar (posts and bar "

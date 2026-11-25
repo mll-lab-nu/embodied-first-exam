@@ -1,8 +1,8 @@
 # Embodied Olympics · volleyball set (realtime)
 
 ## Task
-Set the pass: with one overhead contact of your hands, send the volleyball that comes down above you at least a metre
-above the net and into the outside hitter's target along the net.
+Set the ball: with one overhead touch of your hands, send it high above the net and into the hitter's target along the
+net.
 
 ## Goal
 Success: with one overhead contact of your hands you send the tossed ball at least a metre above the net and into the

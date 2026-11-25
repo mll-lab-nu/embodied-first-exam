@@ -1,8 +1,7 @@
 # Embodied Olympics · dodgeball (privileged)
 
 ## Task
-Dodge: five cloth dodgeballs are thrown at you by ball machines that aim at you; do not let a live ball touch you, stay
-inside your court and on your feet.
+Dodge the 5 balls the machines throw at you: do not let a live ball touch you, and stay on your feet inside your court.
 
 ## Goal
 Success: none of the five balls touches you while it is live, and you stay in your court and on your feet until all five

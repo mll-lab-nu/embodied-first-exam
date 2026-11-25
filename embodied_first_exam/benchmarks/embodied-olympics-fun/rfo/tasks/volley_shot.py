@@ -962,8 +962,8 @@ class Task(TaskBase):
                   launch_azimuth_deg=-105.873, launch_wx_rad_s=-28.85, launch_wy_rad_s=8.21,
                   keeper_mass_kg=80.0, keeper_force_n=800.0)
 
-    sentence = ("Volley the cross: strike the football that is crossed to you from the wing with a foot before it "
-                "touches the ground, into the official goal 11 m away, past the goalkeeper dummy.")
+    sentence = (("Volley the cross into the goal: strike it with a foot before it touches the ground and send it "
+                 "past the goalkeeper dummy."))
     rules = ("You stand on the penalty mark, facing the goal; the goal line is {mark_distance_m} m ahead of you. The "
              "goal is {goal_width_m} m wide between the posts and {goal_height_m} m high under the crossbar (posts and "
              "bar {post_m} m thick), centred on the line you face along. A goalkeeper dummy, a board "

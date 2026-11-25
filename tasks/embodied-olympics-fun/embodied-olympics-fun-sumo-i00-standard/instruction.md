@@ -1,8 +1,7 @@
 # Embodied Olympics · sumo (standard)
 
 ## Task
-Win a sumo bout: force the opponent robot out of the ring, or make any part of it other than its feet touch the ground,
-before the same happens to you.
+Win a sumo bout: make your opponent step out of the ring or touch down with anything but its feet before you do.
 
 ## Goal
 Success: within 30 s the opponent touches the ground outside the ring, or the clay or the bales with anything but its

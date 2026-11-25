@@ -1,8 +1,8 @@
 # Embodied Olympics · juggling on the head (standard)
 
 ## Task
-Juggle the football on your head: a ball machine in front of you lobs it onto your head; keep it in the air with ten
-headers in a row, touching it with nothing but your head, without it touching the ground.
+Keep the football in the air with 10 headers in a row, touching it only with your head and never letting it touch the
+ground.
 
 ## Goal
 Success: you keep the ball the machine lobs to you up with ten headers in a row, touching it only with your head,

@@ -13,7 +13,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Jump Double Dutch: enter the two ropes turning in opposite directions and jump them 10 times in a row, one rope per jump, without a rope ever touching you, then land on your feet. (Embodied Olympics `double-dutch`; the robot as a service on a clock that does not stop, slowdown S = 1: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Jump Double Dutch: get into the two turning ropes and jump them 10 times in a row, one rope per jump, without a rope touching you, then land on your feet. (Embodied Olympics `double-dutch`; the robot as a service on a clock that does not stop, slowdown S = 1: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
 
 ## Difficulty
 Neither built-in gait can jump: the robot has to get in between two ropes that sweep the floor in turn every half second, then hop again and again in that rhythm, feet off the ground at the very moment each rope passes and back on balance for the next. A drift out of the middle or a toe left behind catches a rope. The scene is dynamic (Two rope-turning machines turn two ropes in opposite directions from t = 0 at tempo_rev_s.), and in realtime mode time does not stop: once an attempt's clock starts the venue's timed events happen whatever the agent does, so it has to plan or stream the robot's rows from a program of its own, with no simulator and no state, and 5 resets (only the last attempt is graded).

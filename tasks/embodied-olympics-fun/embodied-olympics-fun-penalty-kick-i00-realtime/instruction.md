@@ -1,8 +1,7 @@
 # Embodied Olympics · penalty kick (realtime)
 
 ## Task
-Take a penalty kick: with one kick of a foot, send the ball that lies on the penalty mark into the official goal 11 m
-away, past the goalkeeper dummy.
+Take a penalty kick: with one kick, send the ball past the goalkeeper dummy into the goal.
 
 ## Goal
 Success: with one kick from the penalty mark you send the ball past the dummy into the goal.

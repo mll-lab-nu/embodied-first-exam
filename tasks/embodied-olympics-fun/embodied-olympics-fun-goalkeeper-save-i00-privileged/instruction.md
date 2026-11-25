@@ -1,8 +1,7 @@
 # Embodied Olympics · goalkeeper save (privileged)
 
 ## Task
-Keep goal: three penalty kicks are shot at the official goal you stand in; keep every ball out, with a foot on the goal
-line at each kick.
+Keep goal: stop all 3 penalty kicks, with a foot on the goal line at each kick, and stay inside the goal area.
 
 ## Goal
 Success: you keep all three shots out of the goal, on your feet with a foot on the goal line at each kick.

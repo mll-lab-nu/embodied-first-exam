@@ -875,8 +875,8 @@ class Task(TaskBase):
                   gate_time_s=2.79, machine_x_m=15.6, machine_y_m=1.5, machine_z_m=2.6, launch_speed_m_s=13.8513,
                   launch_elevation_deg=24.9917, launch_azimuth_deg=-177.257)
 
-    sentence = ("Receive the serve: pass the volleyball that is served over the net to you with your forearms, in one "
-                "contact, above net height and into the setter's target at the net.")
+    sentence = (("Pass the serve: with one forearm pass, send the ball up above net height and down onto the "
+                 "setter's target."))
     rules = ("You stand in your own half of an official volleyball court ({court_half_length_m} m by {court_width_m} m "
              "on each side of the net), facing the net, {net_distance_m} m from it, midway between the side lines. "
              "The net's top is {net_height_m} m high. A volleyball (0.21 m across, 0.27 kg, in air) is served over "

@@ -1,8 +1,7 @@
 # Embodied Olympics · catch and shoot (privileged)
 
 ## Task
-Catch and shoot: catch the chest pass that comes to you from the left wing with your two hands, then shoot from where
-you stand so that the ball enters the basket from above.
+Catch the pass with both hands, then shoot it into the basket from where you stand, without travelling.
 
 ## Goal
 Success: you catch the pass with both hands before it touches the floor and, without travelling, shoot it down through

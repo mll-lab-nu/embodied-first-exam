@@ -807,8 +807,8 @@ class Task(TaskBase):
                   retouch_grace_s=0.10, catch_window_s=0.15,
                   clamp_s=0.05, release_s=0.02, fall_pelvis_m=0.35)
 
-    sentence = ("Juggle three balls in a cascade: throw each ball from one hand in an arc to the other, the hands in "
-                "turn, catching each in the hand, until {catches} catches have been made in a row.")
+    sentence = (("Juggle 3 balls in a cascade, throwing each from one hand to the other and catching it there, "
+                 "until you have made 10 catches in a row."))
     rules = ("Three balls ({ball_diameter_m} m across, {ball_mass_kg} kg). Both your hands are three-finger hands (a "
              "thumb, an index and a middle finger) that hold things only by contact and friction. At the start your "
              "forearms point forwards, your palms up; the blue ball is held in your left hand, the yellow ball in "

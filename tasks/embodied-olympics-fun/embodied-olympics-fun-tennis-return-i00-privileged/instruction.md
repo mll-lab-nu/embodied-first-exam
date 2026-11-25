@@ -1,8 +1,8 @@
 # Embodied Olympics · tennis return (privileged)
 
 ## Task
-Return the serve: after the tennis ball has bounced once in your service box, hit it with the racket held in your right
-hand back over the net so that it lands in the singles court on the far side, without letting go of the racket.
+Return the serve: after it bounces once, hit it with the racket in your right hand over the net into the singles court,
+without letting go of the racket.
 
 ## Goal
 Success: after the serve bounces once in your service box, you hit it with the racket in your right hand over the net

@@ -1,8 +1,7 @@
 # Embodied Olympics · first-time shot (realtime)
 
 ## Task
-Shoot first time: the football rolls down a ramp and across in front of you; with one touch of a foot send it into the
-official goal 11 m away.
+Shoot first time: with one touch of a foot, send the ball rolling across in front of you into the goal.
 
 ## Goal
 Success: with one touch of a foot, while the ball rolls between the lines of the posts, you shoot it into the goal.

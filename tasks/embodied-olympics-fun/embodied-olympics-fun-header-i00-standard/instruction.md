@@ -1,8 +1,7 @@
 # Embodied Olympics · header (standard)
 
 ## Task
-Head the cross: meet the football that is crossed to you from the wing with your head and send it into the official goal
-5.5 m away, past the goalkeeper dummy.
+Head the cross from the wing into the goal, past the goalkeeper dummy.
 
 ## Goal
 Success: you head the cross before it touches the ground and it goes past the dummy into the goal.

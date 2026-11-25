@@ -3,7 +3,7 @@
   "description": "Reorient a free spherical object with three asymmetric direction markers through two different axes and return.",
   "difficulty": "hard",
   "id": "essential_cube_reorient",
-  "instruction": "With the wrist fixed, rotate the free marked sphere +90 degrees around palm-local Y, then +90 degrees around palm-local X from that pose, then return to its exact initial orientation. Maintain hand contact and avoid any external support throughout; stabilize each ordered checkpoint with at least two fingertips.",
+  "instruction": "Keep the wrist fixed. Turn the marked sphere +90 degrees about palm-local Y, then +90 degrees about palm-local X, then back to its starting orientation. Keep the hand on the sphere and nothing else supporting it the whole time, and hold it still with at least 2 fingertips at each of the 3 poses.",
   "invariants": {
     "force": [
       0,

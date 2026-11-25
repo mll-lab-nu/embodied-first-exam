@@ -1,8 +1,8 @@
 # Embodied Olympics · volleyball spike (realtime)
 
 ## Task
-Spike the set: jump and strike the volleyball that comes down near the net with a hand, above the height of the net,
-down into the opponent's court, and land on your feet without touching the net.
+Spike the set: jump and hit the ball with a hand above the net down into the opponent's court, then land on your feet
+without touching the net and stand.
 
 ## Goal
 Success: in a jump you hit the set ball with a hand above net height down into the opponent's court, then land on your

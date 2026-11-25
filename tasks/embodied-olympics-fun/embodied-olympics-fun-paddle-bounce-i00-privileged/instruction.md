@@ -1,8 +1,8 @@
 # Embodied Olympics · paddle bounce (privileged)
 
 ## Task
-Keep the table tennis ball that is dropped in front of you bouncing on the paddle held in your right hand: 20 bounces in
-a row, each back up to the height the ball was dropped from, without letting go of the paddle.
+Bounce the table-tennis ball on the paddle in your right hand 20 times in a row, each time back up to the height it was
+dropped from, without letting go of the paddle.
 
 ## Goal
 Success: you hit the dropped ball up 20 times in a row on the blade, each time to at least the height it was dropped

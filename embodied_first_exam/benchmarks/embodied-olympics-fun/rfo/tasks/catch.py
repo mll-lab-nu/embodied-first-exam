@@ -806,8 +806,8 @@ class Task(TaskBase):
                   catch_window_s=0.5, hold_gap_s=0.02, opposed_deg=90.0, fall_pelvis_m=0.50,
                   machine_speed_m_s=21.17, machine_elevation_deg=45.0, machine_azimuth_deg=1.20, feed_lead_s=0.106)
 
-    sentence = ("Catch the fly ball: close one of your hands on the baseball before it touches the ground or your "
-                "body, and keep it there.")
+    sentence = (("Catch the fly ball in one hand before it touches the ground or your body, and keep it in that "
+                 "hand."))
     rules = ("A baseball (" + f"{2 * BALL['radius']:.3f} m across, {BALL['mass']:.3f} kg" + ", it flies in air with "
              "drag) is thrown by a two-wheel pitching machine {launch_distance_m} m in front of you: it leaves the "
              "machine's wheels {launch_height_m} m above the ground at about t = {launch_time_s} s, at about "
