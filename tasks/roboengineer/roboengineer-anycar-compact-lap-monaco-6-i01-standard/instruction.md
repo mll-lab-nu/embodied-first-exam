@@ -1,33 +1,68 @@
-# anycar-compact-lap-monaco-6
+# roboEngineer · anycar-compact-lap-monaco-6 (standard)
 
-Drive the car round one lap of the small F1-style track, keeping up with the moving target that sets the pace, without a collision or leaving the track.
+## Task
+Drive the car round one lap of the small F1-style track, keeping up with the moving target that sets the pace, without a
+collision or leaving the track.
 
-## Train, deploy, inspect and revise
-Use the public nominal model and write fitting/optimization code locally. Submit the documented numeric controller parameters. This track evaluates adaptation within a fixed controller ABI; it does not deploy arbitrary controller Python. Run `python -m scripts.control_transfer.control_public.anycar_nominal --out /app/output/nominal` for local nominal rollouts. The public controller ABI is in `control_public.anycar`. Use `--track monaco-6 --compact-30s` for nominal training. The public route is a compact 45 m F1-inspired approximation, targeted at a 28 s lap with a hard 30 s episode. Every ordered gate and the finish must be crossed. Feedback includes all 301 noisy rows and 31 one-second images covering 0 through 30 s; operator videos retain all 301 frames. Smoothing and aspect widening can remove sharp turns and crossovers; the original F1 outline is not preserved.
+## Goal
+Success: the car passes every gate of the lap in order near the centre line and keeps close to the moving target the
+whole lap, at its heading and speed, and ends close to it. A collision, a rollover or leaving the track fails. The
+evaluator runs the policy you select on 10 held-out cases (new episodes of the same hidden plant, never shown to you):
+success needs every case to pass, and `final_reward` reports the mean score (0-100).
 
-Use `from control_public.client import Client, artifact`; `Client().describe()` provides the public defaults and bounds. Call `deploy(policy, diagnosis)` for up to three rounds. A deployment can take minutes: if your tool call times out and the response is lost, `result(round_id)` returns that completed round's stored response again (it runs nothing). An episode that crashes, leaves its course or arena, or makes the simulation diverge ends at that moment: its telemetry and frames stop there. Each round reuses the same 3 development cases. Diagnose failures from the returned video frames and noisy telemetry, then revise. Preserve code, training logs, policies and exact feedback under `/app/output/`. The client saves the exact response and image bytes. A diagnosis should briefly state the observed failure, proposed change and expected effect.
+Deliverable: the policy of one completed deployment round. `seal(round_id, summary)` selects it (once; it ends
+adaptation). If you seal none, the latest round completed before the cutoff counts; with no completed round the score is
+zero. Preserve code, training logs, policies and exact feedback under `/app/output/`. The client saves the exact
+response and image bytes.
 
-`seal(round_id, summary)` selects a completed round. No held-out feedback is returned. At agent exit the evaluator uses the sealed round or the latest round completed before cutoff; no eligible round scores zero. Hidden simulation runs in a separate container and accepts data-only policies. Network endpoint: `http://127.0.0.1:8000`. No reset or privileged-state endpoint exists.
+Rules:
+- **No cheating.** Write your own fitting, training and analysis code. Do not search for, download or use any existing
+  solution (published or reference solutions, trained policies for this task) or hidden evaluator information; trials
+  are reviewed.
+- No reset: deployments are your only runs on the hidden evaluator, at most three rounds, each on the same 3 development
+  cases from their start; no reset or privileged-state endpoint exists.
+- A deployment returns noisy telemetry and camera frames only; the evaluation dynamics, seeds, true state, contacts and
+  grades are never returned, and nothing about the held-out cases.
 
-## Verification and score
-Ordered completion and time-indexed position/heading/speed accuracy. Safety violation gives zero. No nearest-waypoint score.
-A case passes only if the car crosses every gate of the lap in order, near the centre line, without a collision, rollover or leaving the course, and keeps close to the moving target over the lap: position error below 0.30 m (root mean square), heading error below 0.18 rad and speed error below 0.25 m/s (both averaged over the lap), and less than 0.35 m from the target at the end.
-The selected policy is tested on 10 disjoint cases in two fresh processes. Binary success requires all cases to pass; `final_reward` reports the continuous mean score. Evaluation dynamics, seeds, true state, contacts and grades are never returned during adaptation.
+## Robot Interface
+A simulated AnyCar racing car (an RC car; MuJoCo). You tune its numeric controller on the public nominal model in your
+container and deploy it to a hidden evaluator whose dynamics differ in ways you are not told; the evaluator runs as a
+service you reach only through its client.
 
-## Modeling limitations
-Procedural chassis with retained contact-wheel mechanism. Rigid Coulomb friction is not deformable sand. No learned vehicle model is evaluated. F1-inspired: periodic smoothing and minor-axis widening, then 45m normalization. Not exact scaled circuit outlines; tight corners/crossovers may be removed.
+### Client
+- `from control_public.client import Client, artifact`; `Client().describe()` provides the public defaults and bounds.
+- `deploy(policy, diagnosis)` for one deployment round: it runs your policy on the development cases and returns their
+  feedback. A diagnosis should briefly state the observed failure, proposed change and expected effect.
+- A deployment can take minutes: if your tool call times out and the response is lost, `result(round_id)` returns that
+  completed round's stored response again (it runs nothing).
+- `seal(round_id, summary)` selects a completed round for grading.
+- The service: `http://127.0.0.1:8000`; it accepts data-only policies.
 
-## Rules
-- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
-  benchmark's demonstrations, trained policies); trials are reviewed.
+### Training
+Use the public nominal model and write fitting/optimization code locally. Submit the documented numeric controller
+parameters. This track evaluates adaptation within a fixed controller ABI; it does not deploy arbitrary controller
+Python. Run `python -m scripts.control_transfer.control_public.anycar_nominal --out /app/output/nominal` for local
+nominal rollouts. The public controller ABI is in `control_public.anycar`. Use `--track monaco-6 --compact-30s` for
+nominal training. The public route is a compact 45 m F1-inspired approximation, targeted at a 28 s lap with a hard 30 s
+episode.
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+### Feedback
+Each round reuses the same 3 development cases. Feedback includes all 301 noisy rows and 31 one-second images covering 0
+through 30 s. An episode that crashes, leaves its course or arena, or makes the simulation diverge ends at that moment:
+its telemetry and frames stop there. Diagnose failures from the returned video frames and noisy telemetry, then revise.
 
-## Resources
-Your container: **2 CPUs**, **6 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
-
-## Time limit
-You have 14400 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
-
-This is wall-clock time from the start of your session; the time you wait for the deployment service counts, deployments included. When it is up you are stopped without warning and the evaluator takes the round you sealed or, if you sealed none, the latest deployment that completed before that moment; a deployment still running then is not graded. The service's own deadline counts the same limit from your first request to it, so it never runs out before your time does. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+## Limits
+- Time: 14400 s of wall-clock time from the start of your session; everything counts (waiting for the deployment service
+  too, deployments included). At the end you are stopped without warning and the evaluator takes the round you sealed
+  or, if you sealed none, the latest deployment that completed before then; a deployment still running is not graded.
+  Time left: `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`); the service's own deadline counts the same
+  limit from your first request to it. Calls into a long-running process can block for their whole wait time: use short
+  waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, the simulator's and the benchmark's source included.
+- Resources: 2 CPUs, 6 GiB memory, 1024 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`), no
+  GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap only
+  slows you down); usage: `/run/rcb-limits/usage.json`.
+- Resets: none: deployments are your only runs, each starting its development cases afresh.
+- Rounds: at most three deployment rounds (`Client().describe()` has what is left).

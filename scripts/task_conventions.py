@@ -1216,7 +1216,8 @@ V2_SUITES = frozenset({
     "embodied-olympics-fun", "embodied-olympics-match", "embodied-safety-exam", "embodiedswe", "humanclaw",
     "humanoidbench", "ispatialgym", "kinder", "labutopia", "libero-max", "maniguard", "metaworldplus",
     "molmospaces", "mujoco-playground", "myosuite", "pandadyn", "roboarc", "robocasa", "robocasa-gr1",
-    "robocasa365", "robodojo", "robolab", "robopaint", "robotwin-2", "robowits", "vlabench", "yamlab",
+    "robocasa365", "robodojo", "roboengineer", "robolab", "robopaint", "robotwin-2", "robowits", "vlabench",
+    "yamlab",
 })
 
 

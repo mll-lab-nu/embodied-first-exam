@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, { source
 
 [task]
 name = "embodied-first-exam/roboengineer-landing-random-pad-i01-standard"
-description = "Learn a safe, fast random-pad landing policy from noisy deployment feedback over bounded adaptation rounds."
+description = "Learn a safe, fast random-pad landing policy from noisy deployment feedback over bounded adaptation rounds. Task: Land the drone gently near the centre of the round pad as quickly as you safely can, and keep it there, level and still, until the end."
 keywords = ["robotics", "mujoco", "quadrotor", "policy", "system-identification", "standard-mode"]
 
 [metadata]
