@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/dexjoco-bimanual-unlock-ipad-i00-privileged"
-description = "DexJoCo bimanual_unlock_ipad (two Franka Panda arms, each with a 16-DoF Allegro hand, MuJoCo): produce one replayable trajectory. Enter the passcode 1-2-3 on the iPad's screen. You may pick the iPad up, but you do not have to. Frozen scene instance (the initial state of a DexJoCo human demonstration)."
+description = "DexJoCo bimanual_unlock_ipad (two Franka Panda arms, each with a 16-DoF Allegro hand, MuJoCo): produce one replayable trajectory. Unlock the iPad by typing the passcode 1-2-3 on its screen with the right hand's fingertips; touches by the left hand do not count. Frozen scene instance (the initial state of a DexJoCo human demonstration)."
 keywords = ["robotics", "dexjoco", "mujoco", "allegro", "dexterous-manipulation", "code-as-policy", "trajectory", "bimanual_unlock_ipad"]
 
 [metadata]

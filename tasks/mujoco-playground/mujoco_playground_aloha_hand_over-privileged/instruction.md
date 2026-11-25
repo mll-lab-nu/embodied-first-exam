@@ -1,21 +1,28 @@
-# MuJoCo Playground · ALOHA hand-over
+# MuJoCo Playground · ALOHA hand-over (privileged)
 
-An **ALOHA 2** bimanual robot (two ViperX 300s arms facing each other across a table) has a **red box** on the left
-arm's side of the table and a **translucent red target box** floating on the right arm's side.
-**Task:** pick up the red box with the **left** arm, **hand it over** to the **right** arm, and have the right arm hold it at the translucent red target box. Then take the left arm off the box. This is MuJoCo Playground's `AlohaHandOver`, run here in plain MuJoCo; the box and target positions are
-randomized as in Playground, with a fixed seed.
+## Task
+Pick up the red box with the left arm, pass it to the right arm, and hold it at the see-through target box. Then take
+the left arm off the box.
 
-## What you hand in
-`/app/output/trajectory.npz` — actuator targets, shape `(T, 14)` (T ≤ 3000), one row per control step (1/50 s), each
-held for 4 physics steps. Record it with the tooling so the layout is right. The verifier replays it from the frozen
-start in a separate sandbox (MuJoCo on CPU is bit-exact). Leave the script that produced it at `/app/output/gen.py`.
+## Goal
+Success: the right gripper holds the box at the target box, off the table, and no part of the left arm touches the box.
+What counts is how things stand after the last action of your trajectory, replayed from the fixed start.
 
-## Success
-At the **end of the trajectory** the box's centre is within **3 cm** of the target's centre (`s.target_pos`), the box
-touches the **right** gripper's fingers and **nothing of the left arm**, and it is off the table (z ≥ 0.05 m).
-`s.check()` computes exactly this.
+Deliverable: `/app/output/trajectory.npz`: actuator targets, shape `(T, 14)` (T at most 3000), one row per control step
+(1/50 s), each held for 4 physics steps; record it with the tooling so the layout is right. It is replayed from the
+frozen start. Leave the script that produced it at `/app/output/gen.py`. Save a valid one early and overwrite it when
+you have a better one.
 
-## Tooling (`/opt/tools/rcb_aloha.py`, importable as `rcb_aloha`)
+Rules: **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+benchmark's demonstrations, trained policies); trials are reviewed.
+
+## Robot Interface
+An ALOHA 2 bimanual robot (two ViperX 300s arms facing each other across a table; MuJoCo Playground's scene, in MuJoCo).
+The scene is one fixed instance. You have the full simulator to develop with; you hand in a trajectory of actuator
+targets.
+
+### Session
+`/opt/tools/rcb_aloha.py` (importable as `rcb_aloha`):
 ```python
 import numpy as np, rcb_aloha as ra
 s = ra.Session("/app/instance.json")    # the frozen instance; s.model / s.data are MuJoCo objects
@@ -24,27 +31,34 @@ st = s.state()      # qpos, qvel, targets, box_pos, box_quat_wxyz, target_pos, s
 s.record_start()
 r = s.step(targets) # (14,) actuator targets for one control step -> {success, box_to_target_m, right_holds, left_touches, box_z, time_s}
 A = s.record_stop(); s.save_trajectory(A)          # -> /app/output/trajectory.npz
-s.replay(A)         # fresh replay from the start (what the verifier does)
+s.replay(A)         # replay from the start, as graded
 s.reset()           # back to the start (as often as you like)
 img = s.render("overhead_cam")                      # also teleoperator_pov, collaborator_pov, worms_eye_cam, wrist_cam_left/right
 ```
-Actuators `rcb_aloha.ACTUATOR_NAMES`: per arm (`left/`, `right/`) `waist, shoulder, elbow, forearm_roll, wrist_angle,
-wrist_rotate` (joint position targets, rad) and `gripper` (finger position, 0.002 = closed … 0.037 = open). Limits:
-`s.lower`, `s.upper`. The arms are position-controlled **without gravity compensation**: a joint settles where the
-actuator force kp·(target − q) balances gravity. Everything in `s.model` / `s.data` is readable (privileged mode),
-e.g. for inverse kinematics with `mujoco.mj_jacSite` on the `left/gripper` / `right/gripper` sites.
 
-## Rules
-- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
-  benchmark's demonstrations, trained policies); trials are reviewed.
+Everything in `s.model` / `s.data` is readable (privileged mode), e.g. for inverse kinematics with `mujoco.mj_jacSite`
+on the `left/gripper` / `right/gripper` sites. `s.check()` checks success on the current state.
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+### Actions
+Actuators `rcb_aloha.ACTUATOR_NAMES`: per arm (`left/`, `right/`)
+`waist, shoulder, elbow, forearm_roll, wrist_angle, wrist_rotate` (joint position targets, rad) and `gripper` (finger
+position, 0.002 = closed … 0.037 = open). Limits: `s.lower`, `s.upper`. The arms are position-controlled without gravity
+compensation: a joint settles where the actuator force kp·(target − q) balances gravity.
 
-## Resources
-Your container: **4 CPUs**, **5 GiB of memory**, **8192 processes and threads**, **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`) and **one GPU, 6 GiB of its memory**. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
+### Observations
+`s.state()`: qpos, qvel, targets, box_pos, box_quat_wxyz, target_pos, sites (box_top, box_bottom, left/gripper,
+right/gripper), plus the success check fields. Cameras (`s.render(cam)`): `overhead_cam`, also teleoperator_pov,
+collaborator_pov, worms_eye_cam, wrist_cam_left/right.
 
-## Time limit
-You have 1800 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
-
-This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+## Limits
+- Time: 1800 s of wall-clock time from the start of your session; everything counts (the simulator's start-up too). At
+  the end you are stopped without warning and only what is in `/app/output/` at that moment is graded. Time left:
+  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`). Calls into a long-running process can block for their
+  whole wait time: use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, the simulator's and the benchmark's source included.
+- Resources: 4 CPUs, 5 GiB memory, 8192 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`),
+  one GPU (6 GiB of its memory). Over a cap a process can be killed (the CPU cap only slows you down); usage:
+  `/run/rcb-limits/usage.json`.
+- Resets: as many as you like (`s.reset()`).

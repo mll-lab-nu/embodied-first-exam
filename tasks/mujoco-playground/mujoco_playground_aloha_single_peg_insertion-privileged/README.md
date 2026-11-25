@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:mujoco-0.1.2` |
 
 ## Task
+Push the red peg well into the open end of the blue socket.
+
 MuJoCo Playground's `AlohaSinglePegInsertion` ported to plain MuJoCo (CPU, deterministic) for this benchmark.
 
 ## Difficulty

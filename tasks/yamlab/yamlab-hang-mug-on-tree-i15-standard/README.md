@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:yamlab-0.2.1` |
 
 ## Task
+Pick up the mug with the left arm, pass it to the right arm in the air, and hang it on the mug tree.
+
 Standard-mode twin of `yamlab-hang-mug-on-tree-i15-privileged` (same frozen instance: YAMLab's objects `mug` = `Mug/mug_015` and `mug_tree` = `MugTree/mug_tree_015` as placed in teleoperation
 demonstration `hangmug_015.hdf5 demo_0`, both arms at the home pose): the agent gets only the `eai-standard/2.2` client
 (docs/protocol/standard_mode.md); the simulator runs in the `sim` sidecar (`environment/docker-compose.yaml`, GPU on the

@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:mujoco-0.1.2` |
 
 ## Task
+Pick up the green box and hold it at the see-through red box, tilted the same way.
+
 MuJoCo Playground's `PandaPickCubeOrientation` ported to plain MuJoCo (CPU, deterministic) for this benchmark.
 
 ## Difficulty

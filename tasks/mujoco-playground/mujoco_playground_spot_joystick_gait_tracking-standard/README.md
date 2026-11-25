@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:mujoco-0.1.3` |
 
 ## Task
-MuJoCo Playground `SpotJoystickGaitTracking` (Boston Dynamics Spot) on the same frozen instance as `mujoco_playground_spot_joystick_gait_tracking-privileged`: Make Boston Dynamics Spot follow the joystick command schedule for the whole 20 s episode without falling over. Move its feet in the commanded gait, matching its swing pattern, rhythm and foot height.
+MuJoCo Playground `SpotJoystickGaitTracking` (Boston Dynamics Spot) on the same frozen instance as `mujoco_playground_spot_joystick_gait_tracking-privileged`: Make the robot follow the joystick's commands for the whole schedule without falling over, moving its feet in the commanded gait: the same stepping pattern, rhythm and foot height.
 For 20 s the robot gets a joystick command schedule (5 segments: planar velocity and yaw rate in its own frame) and must track it without falling over. Its feet must follow a pace gait. Standard mode (eai-standard/2.2): the agent drives the robot through a client, with 10 resets (only
 the last episode is graded), the robot's own sensors and the cameras that follow it.
 

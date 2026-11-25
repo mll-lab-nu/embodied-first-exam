@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:humanoidbench-0.2.0` |
 
 ## Task
+Sit down on the chair right behind you and stay seated, upright and still.
+
 HumanoidBench sit_simple: produce one replayable trajectory that sits the Unitree H1 on the chair, frozen scene instance 00.
 
 ## Difficulty

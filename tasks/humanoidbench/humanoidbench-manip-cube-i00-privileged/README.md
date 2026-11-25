@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:humanoidbench-0.2.0` |
 
 ## Task
+Turn the two cubes on your palms until each sits the same way round as the see-through cube floating above your hands, without dropping either.
+
 HumanoidBench cube: produce one replayable trajectory that reorients two cubes in the Unitree H1's hands, frozen scene instance 00.
 
 ## Difficulty

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:mujoco-0.1.3` |
 
 ## Task
-MuJoCo Playground `SpotFlatTerrainJoystick` (Boston Dynamics Spot), rebuilt in plain MuJoCo from Playground's scene files: Make Boston Dynamics Spot follow the joystick command schedule on flat ground for the whole 20 s episode without falling over.
+MuJoCo Playground `SpotFlatTerrainJoystick` (Boston Dynamics Spot), rebuilt in plain MuJoCo from Playground's scene files: Make the robot follow the joystick's commands for the whole schedule without falling over.
 For 20 s the robot gets a joystick command schedule (5 segments: planar velocity and yaw rate in its own frame) and must track it without falling over. The deliverable is one replayable trajectory of joint position targets
 (`/app/output/trajectory.npz`, `(T, 12)`, T = 1000 (the whole schedule)).
 

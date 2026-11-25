@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:humanoidbench-0.2.0` |
 
 ## Task
+Put the five red objects on the bookshelf one at a time, palest first and darkest last, each on the see-through copy of itself.
+
 Standard mode (robot as a service, `eai-standard/2.1`) of
 `humanoidbench-manip-bookshelf-simple-i00-privileged`: the same frozen instance and the same success rule.
 HumanoidBench runs in the `sim` sidecar (`environment/docker-compose.yaml`, GPU on the sidecar for rendering),

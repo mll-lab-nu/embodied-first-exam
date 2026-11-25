@@ -169,7 +169,7 @@
    ]
   }
  ],
- "text": "Make Google's Barkour quadruped follow the joystick command schedule for the whole 10 s episode, through random pushes, without falling over.",
+ "text": "Make the robot follow the joystick's commands for the whole schedule without falling over, even when it gets pushed.",
  "facts": {
   "start_xy_m": [
    0.0,

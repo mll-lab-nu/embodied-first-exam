@@ -1,164 +1,29 @@
-# RoboWits · ball_into_bottle — frozen instance
+# RoboWits · ball_into_bottle (privileged)
 
-You control a simulated **bimanual Marvin** robot (two 7-DoF arms with Pika parallel grippers; RoboWits on Genesis
-0.4.7 physics) via Python. **Task:** Move the small ball from the blue container down to the bottom of the red bottle.
+## Task
+Move the small ball from the blue container down to the bottom of the red bottle.
 
-The red bottle's base is thin in the simulator (its collision shape is about 3.5 mm thick, and the bottle is fixed to the table): a ball that falls fast down the bottle can pass through the base onto the table, which fails the task. In one measured case about half of the pours did (16 replays of one pouring trajectory with tiny noise, 9 balls through the base): let the ball in slowly.
+## Goal
+Success: the ball rests deep inside the red bottle, at its bottom (not caught near the mouth, not fallen through the
+base), and the robot does not touch it; neither the ball nor the bottle has fallen off the table. What counts is how
+things stand after the last action of your trajectory, replayed from the fixed start. After your last row the grader
+holds its command for about three seconds (a second, then two seconds in which all of this must keep holding, with
+nothing moving).
 
-The scene objects are the env's entities (`s.objects()`: `red bottle`, `funnel`, `ball container`, `small ball`; see
-`/opt/robowits/gs_gym/envs/robowits/12_ball_into_bottle.py`). RoboWits' success predicate is `_check_success` in that file:
-```python
-def _check_success(self) -> torch.Tensor:
-        """Check if task is successful: ball inside bottle."""
-        objs_info = self.collect_objs_info()
+Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, path)`: the (T, 16) actions, one row
+per control step (1/30 s), at most 200,000 rows (more score 0). It is replayed once from the fixed start, settle check
+included. Leave the script that produced it at `/app/output/gen.py`. Save a trajectory as soon as one replays
+successfully, and overwrite it when you have a better one.
 
-        if not isinstance(objs_info, dict):
-            return torch.tensor([False], dtype=torch.bool, device=self._device)
-        ball = objs_info.get("small ball")
-        bottle = objs_info.get("red bottle")
-        if ball is None or bottle is None:
-            return torch.tensor([False], dtype=torch.bool, device=self._device)
+Rules: **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+benchmark's demonstrations, trained policies); trials are reviewed.
 
-        table_z = 0.76
-        safe_margin = 0.002
-        top_margin = 0.11
+## Robot Interface
+A simulated bimanual Marvin robot (two 7-DoF arms with Pika parallel grippers; RoboWits on Genesis 0.4.7 physics). The
+scene is one fixed instance. You have the full simulator to develop with; you hand in a trajectory of robot actions.
 
-        def f(v):
-            try:
-                return float(v)
-            except Exception:
-                return None
-
-        def point_in_polygon(px, py, poly):
-            n = len(poly)
-            if n < 3:
-                return False
-            inside = False
-            for i in range(n):
-                x1, y1 = poly[i]
-                x2, y2 = poly[(i + 1) % n]
-                if (y1 > py) != (y2 > py):
-                    x_int = (x2 - x1) * (py - y1) / (y2 - y1 + 1e-12) + x1
-                    if px < x_int:
-                        inside = not inside
-            return inside
-
-        def not_fallen(obj):
-            b = obj.get("bounds")
-            if b is not None:
-                zmin = f(b[0][2])
-            else:
-                pos = obj.get("pos")
-                zmin = f(pos[2]) if pos is not None else None
-            if zmin is None:
-                return False
-            return zmin >= (table_z - 0.05)
-
-        ball_pos = ball.get("pos")
-        if ball_pos is None:
-            return torch.tensor([False], dtype=torch.bool, device=self._device)
-        bx, by, bz = f(ball_pos[0]), f(ball_pos[1]), f(ball_pos[2])
-        if bx is None or by is None or bz is None:
-            return torch.tensor([False], dtype=torch.bool, device=self._device)
-
-        ball_bounds = ball.get("bounds")
-        ball_radius = None
-        if ball_bounds is not None:
-            try:
-                dx = f(ball_bounds[1][0]) - f(ball_bounds[0][0])
-                dy = f(ball_bounds[1][1]) - f(ball_bounds[0][1])
-                dz = f(ball_bounds[1][2]) - f(ball_bounds[0][2])
-                ball_radius = 0.5 * min(abs(dx), abs(dy), abs(dz))
-            except Exception:
-                ball_radius = None
-        if ball_radius is None or ball_radius <= 0:
-            ball_radius = 0.01
-
-        ball_bottom_z = bz - ball_radius
-        if ball_bottom_z <= (table_z + safe_margin):
-            return torch.tensor([False], dtype=torch.bool, device=self._device)
-
-        bottle_poly = bottle.get("convex_hull_2d")
-        if bottle_poly is not None:
-            poly = [(f(p[0]), f(p[1])) for p in bottle_poly]
-            poly = [(x, y) for (x, y) in poly if x is not None and y is not None]
-        else:
-            bnd = bottle.get("bounds")
-            if bnd is None:
-                return torch.tensor([False], dtype=torch.bool, device=self._device)
-            x0, y0 = f(bnd[0][0]), f(bnd[0][1])
-            x1, y1 = f(bnd[1][0]), f(bnd[1][1])
-            if None in (x0, y0, x1, y1):
-                return torch.tensor([False], dtype=torch.bool, device=self._device)
-            poly = [(x0, y0), (x1, y0), (x1, y1), (x0, y1)]
-
-        bottle_bounds = bottle.get("bounds")
-        if bottle_bounds is None:
-            return torch.tensor([False], dtype=torch.bool, device=self._device)
-        bottle_zmin = f(bottle_bounds[0][2])
-        bottle_zmax = f(bottle_bounds[1][2])
-        if bottle_zmin is None or bottle_zmax is None:
-            return torch.tensor([False], dtype=torch.bool, device=self._device)
-
-        inside_xy = point_in_polygon(bx, by, poly)
-
-        ball_top_z = bz + ball_radius
-        fully_below_mouth = ball_top_z < (bottle_zmax - top_margin)
-        above_bottle_base = ball_bottom_z > (bottle_zmin + safe_margin)
-
-        if not (not_fallen(ball) and not_fallen(bottle)):
-            return torch.tensor([False], dtype=torch.bool, device=self._device)
-
-        return torch.tensor(
-            [inside_xy and fully_below_mouth and above_bottle_base], dtype=torch.bool, device=self._device
-        )
-```
-
-This is a *fixed scene instance*: object poses and the robot's start pose never change between resets. You may reset
-and retry as many times as you want. Your deliverable is **one replayable trajectory**, not a general policy.
-
-## Success criterion (as graded)
-This is exactly what the grader checks, written from the predicate above (RoboWits' `_check_success`, which the grader
-runs) and the release and rest condition the grader adds (the last item). Where the task text says something else,
-this section and the code are what count. After the last action of your trajectory the grader holds that action's
-command for a settle window: 1 s (30 control steps) with nothing checked, then 2 s (60 control steps) in which every
-condition below must hold at every 6th control step and at the last one, with each graded object staying within 2 mm
-of where it was when those 2 s began (the *check window*). It must pass in the grader's replay. `s.replay(actions)` runs
-exactly this and returns the verdict as `success` (and why in `settle`); `s.status()["success"]` is the same
-conditions at one instant, without the window (`predicate`: RoboWits' alone).
-
-- The ball's centre (x, y) lies inside the red bottle's footprint.
-- The ball is deep in the bottle: its top (centre z + r, r = half the smallest extent of its bounding box: 5 mm for
-  this 1 cm ball) is more than 11 cm below the top of the bottle's bounding box. In this scene the bottle's box spans
-  z 0.767-0.994 m, so the ball's top must be below z = 0.884 m.
-- The ball's bottom (centre z - r) is more than 2 mm above the table top (z = 0.762 m) and more than 2 mm above the
-  bottom of the bottle's bounding box (z = 0.769 m here).
-- Neither the ball nor the bottle has fallen: the bottom of each bounding box is no lower than 5 cm below the table
-  top (z >= 0.71 m).
-- Released and at rest: no part of the robot touches the ball, and it moves at most 2 mm during the check window (a
-  ball still falling down the bottle does not count).
-
-Not checked: how the ball got there (the blue container and the funnel are not referenced), and whether a gripper
-holds the container or the funnel.
-
-Task text vs grader ("Move the small ball from the blue container down to the bottom of the red bottle."): "Into the red bottle" means
-deep inside it: seen from above inside the bottle's outline, with the ball's top more than 11 cm below the bottle's
-top and the ball off the bottle's base. "From the blue container" is not checked.
-
-Terms: a *footprint* is an object's outline seen from above (the 2D convex hull of its collision mesh in the x-y
-plane); *not held* means that neither gripper tip (`Gripper_Tip_R` / `Gripper_Tip_L`, the frames of `s.ee_pose`) is
-inside the object's axis-aligned bounding box grown by 3 cm on every side; the *table bounds* are the rectangle x
-0.21-1.00 m, |y| <= 0.69 m on the table top (z = 0.76 m).
-
-## Deliverable
-Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below).
-It is replayed open-loop once from the same initial state in a fresh process and scored 1 if the task is
-completed after the replay (the settle window of the success criterion above), else 0.
-Also leave the script that produced it at `/app/output/gen.py`.
-Save a trajectory as soon as one replays successfully (you can overwrite it later), and do not stop before you have
-one.
-
-## Tooling (already installed; run `python` from any directory)
+### Session
+`/opt/tools/rcb_robowits.py`, importable as `rcb_robowits`:
 ```python
 from rcb_robowits import Session
 s = Session("ball_into_bottle", instance="/app/instance.json")   # ~60 s: builds the frozen scene (object poses in instance.json)
@@ -168,7 +33,7 @@ s.objects()                        # objects: name -> position, orientation_wxyz
 p["move_ee"]("left", pos, quat_wxyz, linear=3)   # IK (RoboWits' own) to a gripper-tip pose, then joint interpolation
 p["move_joints"]("left", q7); p["set_gripper"]("left", 0.0); p["open_gripper"]("left"); p["hold"](10)
 s.ee_pose("left"); s.joint_positions(); s.ik("left", pos, quat_wxyz)    # kinematics helpers
-s.render_frame("ego")              # RGB uint8 (480, 848, 3) from one camera (s.VIDEO_CAMERAS); s.render_grid()
+s.render_frame("ego")              # RGB uint8 (480, 848, 3) from one camera (s.VIDEO_CAMERAS)
 s.render_depth("ego")              # float32 (480, 848) z-depth in metres (0 = no reading), pixel-aligned with render_frame("ego")
 s.camera_info()                    # per camera: intrinsic_cv, extrinsic_cv (world -> camera, OpenCV axes), cam2world_gl, mount
 s.robot_spec()                     # joints (position / velocity / effort limits), grippers, PD gains, tool frames Gripper_Tip_R/L
@@ -183,37 +48,39 @@ s.replay(actions)                  # resets, replays open-loop, then the settle 
 s.save_trajectory(actions, "/app/output/trajectory.npz")
 s.render_video(actions, "/app/output/check.mp4")   # replays from the frozen state and writes a tiled camera video
 ```
-The primitives are deliberately thin (IK moves, joint moves, gripper, hold): grasping, placing and every other skill
-are yours to build from them.
 
-CLI equivalent of the grader:
+The primitives are deliberately thin (IK moves, joint moves, gripper, hold): grasping, placing and every other skill are
+yours to build from them. `s.replay(actions)` runs exactly what the grader runs, settle check included, and returns the
+verdict as `success` (why it failed in `settle`); `s.status()["success"]` is the same conditions at one instant, without
+the settle check. One `Session` per process (Genesis initialises once). The physics runs on Genesis' bit-deterministic
+CPU backend at ~700 control steps/s; the GPU only renders camera images. Do not call `s.close()` before writing every
+output. The grader replays with this command; run it to self-check:
 `python /opt/tools/rcb_robowits.py replay --task ball_into_bottle --instance /app/instance.json --traj /app/output/trajectory.npz`
 
-## Conventions
-- World frame: robot base at (0, 0, 1.08), table top at z = 0.76, x points away from the robot, y to its left (the left
-  arm works at y > 0). Quaternions are **WXYZ**.
+### Actions
 - Action (16): right arm 7 joint targets (rad), right gripper width (m, 0 closed .. 0.1 open), left arm 7 joint targets,
   left gripper width; absolute position targets tracked by PD controllers. `s.hold_action()` is the no-op.
-- Control runs at 30 Hz (4 physics substeps). There is no step budget: the time limit (`## Time limit`) is your only budget.
-  One technical cap: a trajectory, and a `Session` between two resets, has at most 200000 control steps (about
-  1.85 h of simulated time). `s.step` returns `True` on the step that reaches it and raises after it until
-  `s.reset()`; the grader scores a trajectory with more rows 0 (`bad_trajectory`).
-- Grippers open to 10 cm. The gripper tip frame's +z axis is the approach direction and +x the finger-closing
-  direction; `p["top_down_quat"](yaw)` builds a vertical-approach orientation whose fingers close along `yaw`.
-- One `Session` per process (Genesis initialises once). The physics runs on Genesis' bit-deterministic CPU backend at
-  ~700 control steps/s; the GPU only renders camera images. Do not call `s.close()` before writing every output.
+- Control runs at 30 Hz (4 physics substeps). A `Session` between two resets has at most 200,000 control steps. `s.step`
+  returns `True` on the step that reaches it and raises after it until `s.reset()`.
+- Grippers open to 10 cm. The gripper tip frame's +z axis is the approach direction and +x the finger-closing direction;
+  `p["top_down_quat"](yaw)` builds a vertical-approach orientation whose fingers close along `yaw`.
+- World frame: robot base at (0, 0, 1.08), table top at z = 0.76, x points away from the robot, y to its left (the left
+  arm works at y > 0). Quaternions are **WXYZ**.
 
-## Rules
-- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
-  benchmark's demonstrations, trained policies); trials are reviewed.
+## Others
+- Labels in `s.objects()`: `small ball` (the ball), `ball container` (the blue container), `red bottle`, `funnel`.
+- The red bottle's base is thin in the simulator: a ball that drops fast down the bottle can fall through the base onto
+  the table, which fails the task. Let the ball in slowly.
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
-
-## Resources
-Your container: **4 CPUs**, **13 GiB of memory**, **1024 processes and threads**, **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`) and **one GPU, 5 GiB of its memory**. `blenderkit` runs in its own container: 1 CPU, 4 GiB of memory and 1024 processes and threads. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
-
-## Time limit
-You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
-
-This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+## Limits
+- Time: 3600 s of wall-clock time from the start of your session; everything counts (the simulator's start-up too). At
+  the end you are stopped without warning and only what is in `/app/output/` at that moment is graded. Time left:
+  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`). Calls into a long-running process can block for their
+  whole wait time: use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, the simulator's and the benchmark's source included.
+- Resources: 4 CPUs, 13 GiB memory, 1024 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`),
+  one GPU (5 GiB of its memory); `blenderkit` runs in its own container (1 CPU, 4 GiB memory). Over a cap a process can
+  be killed (the CPU cap only slows you down); usage: `/run/rcb-limits/usage.json`.
+- Resets: as many as you like (`s.reset()`, an exact snapshot restore).

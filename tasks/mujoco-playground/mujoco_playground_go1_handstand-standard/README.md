@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:mujoco-0.1.3` |
 
 ## Task
-MuJoCo Playground `Go1Handstand` (Unitree Go1) on the same frozen instance as `mujoco_playground_go1_handstand-privileged`: Make the Unitree Go1 do a handstand: balance on its front legs, nose down, hind legs in the air, for 2 s.
+MuJoCo Playground `Go1Handstand` (Unitree Go1) on the same frozen instance as `mujoco_playground_go1_handstand-privileged`: Make the robot do a handstand: balance on its front legs, nose down and hind legs in the air, for 2 s.
 From standing, it has 10 s to get into a handstand on its front legs and hold it for 2 s (Playground's handstand reward aims at the IMU 0.55 m high). Standard mode (eai-standard/2.2): the agent drives the robot through a client, with 10 resets (only
 the last episode is graded), the robot's own sensors and the cameras that follow it.
 

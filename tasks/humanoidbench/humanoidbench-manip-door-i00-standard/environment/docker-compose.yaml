@@ -23,7 +23,7 @@ services:
     environment:
       RCB_TASK: door
       RCB_INSTANCE: /srv/instance.npz
-      RCB_TASK_TEXT: "Walk to the door, press the handle, pull the door open towards the robot, and walk through it."
+      RCB_TASK_TEXT: "Open the door by pressing the handle and pulling it towards you, then walk through the doorway."
       RCB_EPISODE: "Ends when the summed reward reaches the pass mark (success), when the robot falls (its pelvis drops too low), after 1000 control steps, when your time is up (timeout), or on a simulator error."
       RCB_WALL_CLOCK_S: "3600.0"
       # Knobs: ${NAME:-default} takes NAME from the shell that runs harbor. The defaults are the standard

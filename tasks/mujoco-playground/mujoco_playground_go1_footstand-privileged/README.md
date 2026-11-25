@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:mujoco-0.1.3` |
 
 ## Task
-MuJoCo Playground `Go1Footstand` (Unitree Go1), rebuilt in plain MuJoCo from Playground's scene files: Make the Unitree Go1 stand up on its hind legs, nose up, front legs in the air, and balance there for 2 s.
+MuJoCo Playground `Go1Footstand` (Unitree Go1), rebuilt in plain MuJoCo from Playground's scene files: Make the robot stand up on its hind legs, nose up and front legs in the air, and balance there for 2 s.
 From standing, it has 10 s to get into a footstand on its hind legs and hold it for 2 s (Playground's footstand reward aims at the IMU 0.53 m high). The deliverable is one replayable trajectory of joint position targets
 (`/app/output/trajectory.npz`, `(T, 12)`, 1 <= T <= 500).
 

@@ -13,6 +13,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:humanoidbench-0.2.0` |
 
 ## Task
+Sit down on the chair right behind you and stay seated, upright and still.
+
 Realtime mode (robot as a service on a clock that does not stop, `eai-standard/2.3`, PROTOCOL §3) of
 `humanoidbench-loco-sit-simple-i00-privileged`: the same frozen instance and the same success rule as it and
 as `humanoidbench-loco-sit-simple-i00-standard`, but time does not stop. Once an episode's clock starts (its

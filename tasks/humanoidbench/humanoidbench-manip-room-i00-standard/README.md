@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:humanoidbench-0.2.0` |
 
 ## Task
+Gather the six loose things in the room (the chair, the trophy, the headphones, the two packages and the snow globe) close together, anywhere you like.
+
 Standard mode (robot as a service, `eai-standard/2.1`) of `humanoidbench-manip-room-i00-privileged`: the same
 frozen instance and the same success rule. HumanoidBench runs in the `sim` sidecar
 (`environment/docker-compose.yaml`, GPU on the sidecar for rendering), which holds the reward, judges the

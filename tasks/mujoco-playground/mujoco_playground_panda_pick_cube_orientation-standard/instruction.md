@@ -1,29 +1,24 @@
-# MuJoCo Playground · Panda pick cube with orientation — STANDARD MODE (robot as a service)
+# MuJoCo Playground · Panda pick cube with orientation (standard)
 
-A **Franka Panda** arm stands in front of a **green box** (4 × 4 × 6 cm) on the floor. A **translucent red target box**
-floats above, tilted.
-**Task:** pick up the green box and hold it **at the translucent red target box, tilted the same way as the target box**. This is MuJoCo Playground's
-`PandaPickCubeOrientation`, run here in plain MuJoCo; the box and target poses are randomized as in Playground, with
-a fixed seed.
+## Task
+Pick up the green box and hold it at the see-through red box, tilted the same way.
 
-You control the robot **as if it were real hardware**: the simulator runs in a service you cannot open. You get one
-client and one episode.
+## Goal
+Success: the green box is at the see-through red box, tilted the same way as it. What counts is how things stand at the
+end of the episode. The episode runs until your time is up.
 
-## Rules
+Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
   benchmark's demonstrations, trained policies); trials are reviewed.
-- **No reset.** Knocked-over objects stay knocked over.
-- **No privileged state.** You see what the cameras see (RGB, optional depth, with each camera's calibration) plus the
-  robot's own joint positions, velocities and targets. No object poses, no success predicate.
-- Your only budget is the time limit (`## Time limit`). `meta["time_left_s"]` is the service's count of it, from your
-  first request to the service: it never runs out before your time does, so plan by it.
-- Images come back as arrays in a Python object; what you look at and where you store it is up to your code.
+- One episode, no reset: what you knock over stays knocked over.
+- You get only the cameras and the robot's own sensor readings: no object poses, no scene layout, no success signal.
 
-## Scoring
-At the **end of the trajectory** the box's centre is within **2 cm** of the target's centre (`meta["task"]["target_pos"]`) and its
-orientation within **15°** of the target's (`meta["task"]["target_quat_wxyz"]`, w x y z). The service applies exactly this rule.
+## Robot Interface
+A Franka Panda arm (MuJoCo Playground's scene, in MuJoCo). The robot runs as a service you reach only through its
+client, as if it were real hardware: one live episode.
 
-## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`)
+### Client
+`/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`:
 ```python
 from rcb_client import Robot
 r = Robot()                                   # connects (waits while the service starts)
@@ -38,25 +33,31 @@ res = r.submit("joint_position", A, dt=spec["control_dt"], cameras=cams[:1], vid
 res.meta["done"], res.meta["reason"], res.meta["task"], res.meta["control_steps"]
 res.video[cam]; res.frames[cam]; res.last[cam]; res.proprio; res.save("/app/runs/003")
 ```
-- Actions `joint_position` (8: `actuator1..7` joint targets (rad), `actuator8` finger opening (0..0.04 m)); rows are `dt` apart (a multiple of `control_dt`), each held
-  (`interpolate="hold"`) or ramped from the previous row (`"linear"`, default) over its control steps; clipped to the
-  limits in the spec. A chunk covers at most 10 s.
-- `meta["task"]` = the task's target (`target_pos`, and `target_quat_wxyz` where it has one). The episode runs until your
-time is up; the **final state** is graded (so end in the pose you want graded, and keep it).
-- Calibration: `meta["cameras"][cam]` holds `intrinsic_cv` (pinhole, pixels) and `cam2world_gl` (4x4 camera-to-world,
-  OpenGL axes: x right, y up, the camera looks along -z; the viewpoint the image is rendered from), for the state at the
-  **end** of that call (the `last` image and the last frame of every stack). Depth is the distance along the viewing
-  axis, in metres. The four cameras are fixed.
 
-One call returns at most 3000 images (`max_frames_per_call`, PROTOCOL §3 "Images per call").
+One call returns at most 3000 images.
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+### Actions
+Action type `joint_position` (8): `actuator1..7` joint targets (rad), `actuator8` finger opening (0..0.04 m); rows are
+`dt` apart (a multiple of `control_dt`), each held (`interpolate="hold"`) or ramped from the previous row (`"linear"`,
+default) over its control steps; clipped to the limits in the spec. A chunk covers at most 10 s.
 
-## Resources
-Your container: **4 CPUs**, **16 GiB of memory**, **8192 processes and threads** and **20 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
+### Observations
+`meta["proprio"]` (`layout`, `now`): the joint positions, velocities and current targets. `meta["task"]` is the task's
+target (`target_pos`, and `target_quat_wxyz` where it has one). Calibration: `meta["cameras"][cam]` holds `intrinsic_cv`
+(pinhole, pixels) and `cam2world_gl` (4x4 camera-to-world, OpenGL axes: x right, y up, the camera looks along -z; the
+viewpoint the image is rendered from), for the state at the end of that call (the `last` image and the last frame of
+every stack). Depth is the distance along the viewing axis, in metres. The four cameras are fixed.
 
-## Time limit
-You have 1800 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
-
-This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` counts the same limit from your first request to the service, so it never runs out before your time does: your real time left is `time_left_s` minus the time you spent before that request. Plan by it. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+## Limits
+- Time: 1800 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
+  the end you are stopped without warning and the episode is graded as it stands. Time left:
+  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`); the service's `time_left_s` (in every reply) starts at
+  your first request, so the file is the one to trust. Calls into a long-running process can block for their whole wait
+  time: use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, the simulator's and the benchmark's source included.
+- Resources: 4 CPUs, 16 GiB memory, 8192 processes and threads, 20 GiB disk (new files under `/app`, `/tmp`, `/root`),
+  no GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap
+  only slows you down); usage: `/run/rcb-limits/usage.json`.
+- Resets: none: one episode.

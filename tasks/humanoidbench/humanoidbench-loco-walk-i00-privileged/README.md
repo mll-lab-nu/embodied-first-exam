@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:humanoidbench-0.2.0` |
 
 ## Task
+Walk forward and keep walking, without falling.
+
 HumanoidBench walk: produce one replayable trajectory that walks the Unitree H1 forward and keeps it walking, frozen scene instance 00.
 
 ## Difficulty

@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:mujoco-0.1.2` |
 
 ## Task
+Pick up the red box with the left arm, pass it to the right arm, and hold it at the see-through target box. Then take the left arm off the box.
+
 Standard-mode twin of `mujoco_playground_aloha_hand_over-privileged` (see its README): the same scene, instance and scoring, served as a robot service (`images/mujoco/limited/server_mj.py`, protocol eai-standard/2.1, tooling `rcb_aloha`). The agent sees camera RGB-D and proprioception only.
 
 ## Difficulty

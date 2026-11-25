@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:mujoco-0.1.3` |
 
 ## Task
-MuJoCo Playground `SpotGetup` (Boston Dynamics Spot) on the same frozen instance as `mujoco_playground_spot_getup-privileged`: Boston Dynamics Spot has fallen over. Make it get up and stand upright at its standing height.
+MuJoCo Playground `SpotGetup` (Boston Dynamics Spot) on the same frozen instance as `mujoco_playground_spot_getup-privileged`: The robot has fallen over. Get it back up, standing upright at its normal height.
 It starts lying with its trunk tilted 128.4 deg (Playground's random drop, then a 0.5 s settle) and has 6 s to stand upright at its standing height. Standard mode (eai-standard/2.2): the agent drives the robot through a client, with 10 resets (only
 the last episode is graded), the robot's own sensors and the cameras that follow it.
 

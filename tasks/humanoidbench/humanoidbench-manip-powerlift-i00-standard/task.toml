@@ -18,7 +18,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/humanoidbench-manip-powerlift-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.1): HumanoidBench powerlift on the same frozen instance as humanoidbench-manip-powerlift-i00-privileged. The agent only gets a client: /observe, /submit and /reset (head-camera RGB, joint proprioception, a pelvis IMU, a fixed room camera; joint-position chunks). Up to 50 resets (each a new episode from the frozen start), no privileged state, no reward; the sim service records the episodes and grades the last one as it ran (the live episode; nothing is replayed)."
+description = "STANDARD MODE (robot as a service, eai-standard/2.1): HumanoidBench powerlift on the same frozen instance as humanoidbench-manip-powerlift-i00-privileged. Task: Lift the dumbbell off the floor to overhead and hold it there. The agent only gets a client: /observe, /submit and /reset (head-camera RGB, joint proprioception, a pelvis IMU, a fixed room camera; joint-position chunks). Up to 50 resets (each a new episode from the frozen start), no privileged state, no reward; the sim service records the episodes and grades the last one as it ran (the live episode; nothing is replayed)."
 keywords = ["robotics", "humanoidbench", "mujoco", "h1hand", "manipulation", "standard-mode", "trajectory", "powerlift"]
 
 [metadata]

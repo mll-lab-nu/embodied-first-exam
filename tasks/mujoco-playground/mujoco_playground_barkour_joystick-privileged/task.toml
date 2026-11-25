@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/mujoco_playground_barkour_joystick-privileged"
-description = "MuJoCo Playground BarkourJoystick in plain MuJoCo (Google Barkour vB, joint position control every 0.01 s): Make Google's Barkour quadruped follow the joystick command schedule for the whole 10 s episode, through random pushes, without falling over. Produce one replayable trajectory of joint position targets on a frozen instance (Playground's reset with seed 2); graded by velocity tracking over the whole 10 s schedule without a fall (two fresh-process replays)."
+description = "MuJoCo Playground BarkourJoystick in plain MuJoCo (Google Barkour vB, joint position control every 0.01 s): Make the robot follow the joystick's commands for the whole schedule without falling over, even when it gets pushed. Produce one replayable trajectory of joint position targets on a frozen instance (Playground's reset with seed 2); graded by velocity tracking over the whole 10 s schedule without a fall (two fresh-process replays)."
 keywords = ["robotics", "mujoco", "mujoco-playground", "google-barkour-vb", "quadruped", "locomotion", "joystick", "code-as-policy", "trajectory", "privileged"]
 
 [metadata]

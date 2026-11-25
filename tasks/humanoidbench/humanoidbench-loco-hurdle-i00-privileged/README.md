@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:humanoidbench-0.2.0` |
 
 ## Task
+Sprint forward down the track and over the hurdles, without touching the walls.
+
 HumanoidBench hurdle: produce one replayable trajectory that runs the Unitree H1 down a walled track past a line of hurdles, frozen scene instance 00.
 
 ## Difficulty

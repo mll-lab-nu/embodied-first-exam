@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:dexjoco-0.1.2` |
 
 ## Task
-DexJoCo `pick_bucket` (a Franka Panda arm with a 16-DoF Allegro hand) on the same frozen instance as `dexjoco-pick-bucket-i00-privileged`: Put the boxed food into the bucket, then lift the bucket with the food still inside. Success: the boxed food's centre is inside the bounding box of the bucket's eight reference corners AND the bucket's bottom is at least 0.15 m above where it started, at the same control step.
+DexJoCo `pick_bucket` (a Franka Panda arm with a 16-DoF Allegro hand) on the same frozen instance as `dexjoco-pick-bucket-i00-privileged`: Put the boxed food into the bucket, then lift the bucket, with the food still inside, about a hand's length off the table.
 Standard mode (eai-standard/2.2): the agent drives the robot through a client in one episode, with the robot's own
 sensors, calibrated cameras (RGB, optional depth) and the robot's kinematics.
 

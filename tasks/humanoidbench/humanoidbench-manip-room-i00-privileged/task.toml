@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/humanoidbench-manip-room-i00-privileged"
-description = "HumanoidBench room: produce one replayable trajectory that tidies six objects scattered around a room with the Unitree H1, frozen scene instance 00."
+description = "HumanoidBench room: produce one replayable trajectory that tidies six objects scattered around a room with the Unitree H1, frozen scene instance 00. Task: Gather the six loose things in the room (the chair, the trophy, the headphones, the two packages and the snow globe) close together, anywhere you like."
 keywords = ["robotics", "humanoidbench", "code-as-policy", "trajectory", "h1hand", "manipulation", "room"]
 
 [metadata]

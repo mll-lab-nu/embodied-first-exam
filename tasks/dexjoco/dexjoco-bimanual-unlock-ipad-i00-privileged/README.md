@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:dexjoco-0.1.2` |
 
 ## Task
-DexJoCo `bimanual_unlock_ipad` (two Franka Panda arms, each with a 16-DoF Allegro hand): Enter the passcode 1-2-3 on the iPad's screen. You may pick the iPad up, but you do not have to. A digit counts as pressed when a fingertip of the right hand touches its button, and touches by the left hand do not count. Pressing any digit other than the next one in 1-2-3 ends the episode as a failure. Success: the screen is unlocked (1, 2, 3 in order) and stays unlocked for 10 consecutive control steps.
+DexJoCo `bimanual_unlock_ipad` (two Franka Panda arms, each with a 16-DoF Allegro hand): Unlock the iPad by typing the passcode 1-2-3 on its screen with the right hand's fingertips; touches by the left hand do not count.
 Privileged mode: the agent works in the simulator's container with live object poses, unlimited resets and thin motion
 primitives, and hands in one trajectory replayed open-loop from the frozen instance.
 

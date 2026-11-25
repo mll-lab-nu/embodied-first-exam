@@ -13,6 +13,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:humanoidbench-0.2.0` |
 
 ## Task
+Sprint forward down the track and over the hurdles, without touching the walls.
+
 Realtime mode (robot as a service on a clock that does not stop, `eai-standard/2.3`, PROTOCOL §3) of
 `humanoidbench-loco-hurdle-i00-privileged`: the same frozen instance and the same success rule as it and as
 `humanoidbench-loco-hurdle-i00-standard`, but time does not stop. Once an episode's clock starts (its first

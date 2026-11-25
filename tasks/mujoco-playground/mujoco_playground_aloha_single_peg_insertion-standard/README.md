@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:mujoco-0.1.2` |
 
 ## Task
+Push the red peg well into the open end of the blue socket.
+
 Standard-mode twin of `mujoco_playground_aloha_single_peg_insertion-privileged` (see its README): the same scene, instance and scoring, served as a robot service (`images/mujoco/limited/server_mj.py`, protocol eai-standard/2.1, tooling `rcb_aloha`). The agent sees camera RGB-D and proprioception only.
 
 ## Difficulty

@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:mujoco-0.1.2` |
 
 ## Task
+Pull the green handle along its slide until it is at the red ball.
+
 Standard-mode twin of `mujoco_playground_panda_open_cabinet-privileged` (see its README): the same scene, instance and scoring, served as a robot service (`images/mujoco/limited/server_mj.py`, protocol eai-standard/2.1, tooling `rcb_panda`). The agent sees camera RGB-D and proprioception only.
 
 ## Difficulty

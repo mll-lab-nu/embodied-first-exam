@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:humanoidbench-0.2.0` |
 
 ## Task
+Open the door by pressing the handle and pulling it towards you, then walk through the doorway.
+
 HumanoidBench door: produce one replayable trajectory that walks the Unitree H1 through a closed door, frozen scene instance 00.
 
 ## Difficulty

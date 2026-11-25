@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:dexjoco-0.1.2` |
 
 ## Task
-DexJoCo `bimanual_microwave_cook` (two Franka Panda arms, each with a 16-DoF Allegro hand) on the same frozen instance as `dexjoco-bimanual-microwave-cook-i00-privileged`: Open the microwave door, put the hot dog inside, close the door and press the start button. Success, at one control step: the hot dog is inside the cavity (1 cm margin), the door hinge is within 0.01 rad of closed, and the start button is in contact with something.
+DexJoCo `bimanual_microwave_cook` (two Franka Panda arms, each with a 16-DoF Allegro hand) on the same frozen instance as `dexjoco-bimanual-microwave-cook-i00-privileged`: Put the hot dog in the microwave, close the door and press the start button.
 Standard mode (eai-standard/2.2): the agent drives the robot through a client in one episode, with the robot's own
 sensors, calibrated cameras (RGB, optional depth) and the robot's kinematics.
 

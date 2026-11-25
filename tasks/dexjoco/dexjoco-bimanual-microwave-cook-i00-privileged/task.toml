@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/dexjoco-bimanual-microwave-cook-i00-privileged"
-description = "DexJoCo bimanual_microwave_cook (two Franka Panda arms, each with a 16-DoF Allegro hand, MuJoCo): produce one replayable trajectory. Open the microwave door, put the hot dog inside, close the door and press the start button. Frozen scene instance (the initial state of a DexJoCo human demonstration)."
+description = "DexJoCo bimanual_microwave_cook (two Franka Panda arms, each with a 16-DoF Allegro hand, MuJoCo): produce one replayable trajectory. Put the hot dog in the microwave, close the door and press the start button. Frozen scene instance (the initial state of a DexJoCo human demonstration)."
 keywords = ["robotics", "dexjoco", "mujoco", "allegro", "dexterous-manipulation", "code-as-policy", "trajectory", "bimanual_microwave_cook"]
 
 [metadata]

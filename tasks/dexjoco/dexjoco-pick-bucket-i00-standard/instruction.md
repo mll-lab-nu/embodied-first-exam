@@ -1,24 +1,27 @@
-# DexJoCo · pick_bucket — STANDARD MODE (robot as a service, eai-standard/2.2)
+# DexJoCo · pick_bucket (standard)
 
-You control a Franka Panda arm with a 16-DoF Allegro hand, **as if it were real hardware**: the simulator runs in a service you cannot open. You get
-one client and one episode. **Task:** Put the boxed food into the bucket, then lift the bucket with the food still inside. Success: the boxed food's centre is inside the bounding box of the bucket's eight reference corners AND the bucket's bottom is at least 0.15 m above where it started, at the same control step.
+## Task
+Put the boxed food into the bucket, then lift the bucket, with the food still inside, about a hand's length off the
+table.
 
-The bucket stands on the table with a hinged handle over it; the boxed food lies next to it. The handle swings on a hinge (`bucket_handle`).
+## Goal
+Success: the boxed food is inside the bucket while the bucket is lifted about a hand's length or more above where it
+stood. The episode ends as soon as the task is done.
 
-## Rules
+Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
   benchmark's demonstrations, trained policies); trials are reviewed.
-- **No reset.** The episode starts when the service comes up and ends on success, on a task failure (see the task), when
-  your time is up, or on a simulator error. Knocked-over objects stay knocked over.
-- **No privileged state.** You see what the cameras see (RGB, and depth on request, with each camera's calibration) plus
-  the robot's own proprioception (joints, tcp poses, the current targets). No object poses, no success check:
-  `meta["done"]` / `meta["reason"]` tell you when the episode is over and why.
-- Steps are unlimited; your only budget is the time limit (`## Time limit`; `meta["time_left_s"]` is the service's count of it). Actions and
-  simulated time are reported as cost. Do not stop before the task is solved.
-- **Nothing is put into your context automatically.** Images and videos come back as arrays/bytes in a Python object;
-  what you look at and where you store it is your code's decision.
+- One episode, no reset: what you knock over stays knocked over.
+- You get only the robot's camera images (RGB, depth on request, with their calibration) and its own proprioception
+  (joints, tcp poses, the current targets): no object poses, no scene layout, no score; the episode ends when the task
+  is done, and the service tells you that it ended and why.
 
-## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`)
+## Robot Interface
+A Franka Panda arm with a 16-joint Allegro hand (DexJoCo, MuJoCo). The robot runs as a service you reach only through
+its client, as if it were real hardware: one live episode.
+
+### Client
+`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
 ```python
 from rcb_client import Robot
 r = Robot()                                   # connects (waits while the service starts)
@@ -33,47 +36,54 @@ res = r.submit("ee_pose", rows, dt=0.1)       # rows: (T, 23) targets dt seconds
 res = r.submit("joint_position", q_rows, dt=0.1)   # (T, 23) joint targets instead (see below)
 res.meta["done"], res.meta["reason"], res.meta["clipped"], res.meta["control_steps_chunk"]
 res.video["front"]; res.last["front"]; res.proprio   # mp4 of the chunk, last frame, float32 (N, P) proprio per frame
-res.save("/app/runs/003")                     # meta.json, <cam>.mp4, last/<cam>.jpg, proprio.npy, ...
 r.fk(q); r.ik({"tcp": pose}, seed=q)  # kinematics of the robot (stateless: no physics, no time)
 r.status()                                    # calls, control steps, done, reason, elapsed time
 ```
-Cameras: `front`, `back`, `left`, `right`, `top0` (static), `handcam_rgb` (on the hand mount; they move,
-so use the calibration that comes with each response; `spec["cameras"][cam]["mount"]` gives the static pose or the mount
-link). Resolution 640x480. Rendering runs on the CPU: ask only for the cameras you need; `video="none"` makes a chunk
-fastest. One call returns at most 1000 images (`max_frames_per_call`, PROTOCOL §3 "Images per call"). If a call fails with a connection error the service may have crashed: it resumes the same episode;
-`r.wait_ready()`, then check `r.status()` (`spec["on_service_error"]`).
+One call returns at most 1000 images. If a call fails with a connection error the service may have crashed: it resumes
+the same episode; `r.wait_ready()`, then check `r.status()` (`spec["on_service_error"]`).
 
-### Action type `ee_pose` (23) — DexJoCo's own action
-tcp target position (3, metres, world frame), tcp target orientation (4, quaternion wxyz), 16
-Allegro joint targets (rad). The arm tracks the target through DexJoCo's operational-space controller (it lags a moving
-target and stops where contact blocks it); the hand joints are position-controlled. Rows are `dt` apart (a whole multiple
-of 1/50 s, at most 0.5 s); between rows positions and joints move linearly and orientations by slerp
-(`interpolate="linear"`) or jump (`"hold"`); a chunk may cover at most 10 s. Hand targets outside the ranges
-(`spec["action_types"]["ee_pose"]["hand_limits"]`) are clamped by the simulator and listed in `meta["clipped"]`. Build
-the next row from the `tcp_target` and `hand_target` proprio groups to move smoothly.
+### Actions
+- `ee_pose` (23 numbers, DexJoCo's own action): tcp target position (3, metres, world frame), tcp target orientation (4,
+  quaternion wxyz), 16 Allegro joint targets (rad). The arm tracks the target through DexJoCo's operational-space
+  controller (it lags a moving target and stops where contact blocks it); the hand joints are position-controlled. Rows
+  are `dt` apart (a whole multiple of 1/50 s, at most 0.5 s); between rows positions and joints move linearly and
+  orientations by slerp (`interpolate="linear"`) or jump (`"hold"`); a chunk may cover at most 10 s. Hand targets
+  outside the ranges (`spec["action_types"]["ee_pose"]["hand_limits"]`) are clamped by the simulator and listed in
+  `meta["clipped"]`. Build the next row from the `tcp_target` and `hand_target` proprio groups to move smoothly.
+- `joint_position` (23 numbers): 7 Panda joint targets, then the 16 Allegro joint targets (rad). The service turns the
+  arm's targets into a tcp target by forward kinematics and the same controller tracks it: the tcp reaches FK(q), but
+  the measured arm joints may differ from q in the arm's redundant direction (the controller's null space pulls towards
+  a home posture). Out-of-limit values are clipped and reported.
+- Control runs at 50 Hz (10 physics substeps of 2 ms).
 
-### Action type `joint_position` (23)
-7 Panda joint targets, then the 16 Allegro joint targets (rad). The service turns the arm's targets
-into a tcp target by forward kinematics and the same controller tracks it: the tcp reaches FK(q), but the measured arm
-joints may differ from q in the arm's redundant direction (the controller's null space pulls towards a home posture).
-Out-of-limit values are clipped and reported.
+### Observations
+- Cameras: `front`, `back`, `left`, `right`, `top0` (static), `handcam_rgb` (on the hand mount; they move, so use the
+  calibration that comes with each response; `spec["cameras"][cam]["mount"]` gives the static pose or the mount link).
+  Resolution 640x480. Rendering runs on the CPU: ask only for the cameras you need; `video="none"` makes a chunk
+  fastest.
+- Proprioception (`obs.meta["proprio"]`, its layout in `spec()["proprio_layout"]`): the joints, the tcp poses
+  (`tcp_pose`), the current targets (`tcp_target`, `hand_target`).
+- When the episode has ended, `meta["done"]` is set and `meta["reason"]` says why.
 
-## Conventions
-- World frame, metres, z up; the robot stands at low x and reaches towards +x; each
-  arm's base pose is in `spec["robot_spec"]["base"]`. No other world coordinates are given (D7: the cameras are
-  calibrated, depth is available). Quaternions are **WXYZ**.
-- The tcp (`tcp`) is the hand's mounting flange (`spec["robot_spec"]["tcp"]`), not the fingertips. Allegro joint
-  order: index finger 0-3, middle 4-7, ring 8-11, thumb 12-15 (joint 0 of a finger = spread, 1-3 = flexion
+### Frames and joint order
+- World frame, metres, z up; the robot stands at low x and reaches towards +x; each arm's base pose is in
+  `spec["robot_spec"]["base"]`. No other world coordinates are given (the cameras are calibrated, depth is available).
+  Quaternions are WXYZ.
+- The tcp (`tcp`) is the hand's mounting flange (`spec["robot_spec"]["tcp"]`), not the fingertips.
+- Allegro joint order: index finger 0-3, middle 4-7, ring 8-11, thumb 12-15 (joint 0 of a finger = spread, 1-3 = flexion
   from the knuckle out; thumb 12 = opposition).
-- Control runs at 50 Hz (10 physics substeps of 2 ms). There is no step budget: your wall-clock time is the limit.
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
-
-## Resources
-Your container: **4 CPUs**, **10 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
-
-## Time limit
-You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
-
-This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` counts the same limit from your first request to the service, so it never runs out before your time does: your real time left is `time_left_s` minus the time you spent before that request. Plan by it. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+## Limits
+- Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
+  the end you are stopped without warning and the episode is graded as it stands. Time left:
+  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`); the service's `time_left_s` (in every reply) starts at
+  your first request, so the file is the one to trust. Calls into a long-running process can block for their whole wait
+  time: use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, the simulator's and the benchmark's source included.
+- Resources: 4 CPUs, 10 GiB memory, 1024 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`),
+  no GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap
+  only slows you down); usage: `/run/rcb-limits/usage.json`.
+- Resets: none: one episode.
+- Steps: no limit; actions and simulated time are reported, as cost.

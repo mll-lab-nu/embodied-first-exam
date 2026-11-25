@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:dexjoco-0.1.2` |
 
 ## Task
-DexJoCo `bimanual_hanoi` (two Franka Panda arms, each with a 16-DoF Allegro hand) on the same frozen instance as `dexjoco-bimanual-hanoi-i00-privileged`: This is a Tower of Hanoi with three disks on three upright posts in a row along y. The small disk starts on post A, at y > 0 on the left arm's side, the medium disk on post B in the middle, and the large disk on post C, at y < 0. Build the full tower on post C: large at the bottom, then medium, then small, posts A and B empty, every disk at rest and seated on the post (horizontally within 4 cm of it, at its stacking height within 1.2 cm), held for 20 consecutive control steps. A larger disk resting on a smaller one, or a disk resting on the table, for 10 consecutive steps ends the episode as a failure.
+DexJoCo `bimanual_hanoi` (two Franka Panda arms, each with a 16-DoF Allegro hand) on the same frozen instance as `dexjoco-bimanual-hanoi-i00-privileged`: Stack all three disks on the post on the right arm's side, as in a Tower of Hanoi: the large disk at the bottom, then the medium one, then the small one on top.
 Standard mode (eai-standard/2.2): the agent drives the robot through a client in one episode, with the robot's own
 sensors, calibrated cameras (RGB, optional depth) and the robot's kinematics.
 

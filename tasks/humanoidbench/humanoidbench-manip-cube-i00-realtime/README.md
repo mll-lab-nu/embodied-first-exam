@@ -13,6 +13,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:humanoidbench-0.2.0` |
 
 ## Task
+Turn the two cubes on your palms until each sits the same way round as the see-through cube floating above your hands, without dropping either.
+
 Realtime mode (robot as a service on a clock that does not stop, `eai-standard/2.3`, PROTOCOL §3) of
 `humanoidbench-manip-cube-i00-privileged`: the same frozen instance and the same success rule as it and as
 `humanoidbench-manip-cube-i00-standard`, but time does not stop. Once an episode's clock starts (its first

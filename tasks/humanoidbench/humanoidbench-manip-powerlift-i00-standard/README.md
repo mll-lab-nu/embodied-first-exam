@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:humanoidbench-0.2.0` |
 
 ## Task
+Lift the dumbbell off the floor to overhead and hold it there.
+
 Standard mode (robot as a service, `eai-standard/2.1`) of `humanoidbench-manip-powerlift-i00-privileged`: the
 same frozen instance and the same success rule. HumanoidBench runs in the `sim` sidecar
 (`environment/docker-compose.yaml`, GPU on the sidecar for rendering), which holds the reward, judges the

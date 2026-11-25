@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:dexjoco-0.1.2` |
 
 ## Task
-DexJoCo `pinch_tongs` (a Franka Panda arm with a 16-DoF Allegro hand): Pick up the tongs, open and close them three times while holding them up, then keep holding them up. A pinch counts each time the tongs' hinge goes from open (>= 0.1 rad) to closed (<= -0.07 rad). Success: at least three pinches counted and the tongs at least 0.10 m above the table, held for 30 consecutive control steps.
+DexJoCo `pinch_tongs` (a Franka Panda arm with a 16-DoF Allegro hand): Pick up the tongs, open them wide and squeeze them shut three times, then hold them up, a hand's width or more above the table.
 Privileged mode: the agent works in the simulator's container with live object poses, unlimited resets and thin motion
 primitives, and hands in one trajectory replayed open-loop from the frozen instance.
 

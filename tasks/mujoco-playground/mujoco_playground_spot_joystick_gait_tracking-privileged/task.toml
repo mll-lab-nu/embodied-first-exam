@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/mujoco_playground_spot_joystick_gait_tracking-privileged"
-description = "MuJoCo Playground SpotJoystickGaitTracking in plain MuJoCo (Boston Dynamics Spot, joint position control every 0.02 s): Make Boston Dynamics Spot follow the joystick command schedule for the whole 20 s episode without falling over. Move its feet in the commanded gait, matching its swing pattern, rhythm and foot height. Produce one replayable trajectory of joint position targets on a frozen instance (Playground's reset with seed 0); graded by velocity tracking over the whole 20 s schedule without a fall (two fresh-process replays)."
+description = "MuJoCo Playground SpotJoystickGaitTracking in plain MuJoCo (Boston Dynamics Spot, joint position control every 0.02 s): Make the robot follow the joystick's commands for the whole schedule without falling over, moving its feet in the commanded gait: the same stepping pattern, rhythm and foot height. Produce one replayable trajectory of joint position targets on a frozen instance (Playground's reset with seed 0); graded by velocity tracking over the whole 20 s schedule without a fall (two fresh-process replays)."
 keywords = ["robotics", "mujoco", "mujoco-playground", "boston-dynamics-spot", "quadruped", "locomotion", "joystick", "code-as-policy", "trajectory", "privileged"]
 
 [metadata]

@@ -1,51 +1,33 @@
-# MuJoCo Playground · Go1JoystickRoughTerrain — frozen episode
+# MuJoCo Playground · Go1JoystickRoughTerrain (privileged)
 
-**Task:** Make the Unitree Go1 follow the joystick command schedule on rough, bumpy ground for the whole 20 s episode without falling over.
+## Task
+Make the robot follow the joystick's commands for the whole schedule on the bumpy ground without falling over.
 
-You control the Unitree Go1 quadruped in one episode of MuJoCo Playground's `Go1JoystickRoughTerrain` environment, rebuilt in plain
-MuJoCo 3.3.7 from Playground's own scene files (Apache-2.0, commit 4057c14) and the robot from MuJoCo Menagerie. The
-episode is frozen: it starts the same way after every reset (Playground's `reset` with seed 1), and you may reset
-as often as you like. Your deliverable is **one open-loop trajectory**, not a general policy.
+## Goal
+Success: the robot never falls, and through every command of the schedule its speed and turning follow that command
+closely on average. A fall (the trunk tipping over) at any step is a failure.
 
-## The episode
-The robot starts at Playground's `home` pose, its base moved to (-0.096, 0.049) m and turned to a yaw of 118.2 deg, with a random base velocity (Playground's reset). The ground is Playground's rough terrain: a 20 x 20 m heightfield (`hfield.png`, up to 5 cm high) centred on the world origin, with nothing beyond its edge.
-For 20 s (1000 control steps) it is given this command schedule, drawn by Playground's command process (a new draw after Exp(1) x 5 s; a draw may keep a component). A command is a velocity in the robot's own frame: vx forward, vy to the left (the trunk's planar velocity), and the yaw rate:
+Deliverable: `/app/output/trajectory.npz` with `actions`: float64 (T, 12), one row per control step, T = 1000;
+`s.save_trajectory(rows)` writes it. It is replayed from the frozen start. Leave the script that produced it at
+`/app/output/gen.py`. Save a valid one early and overwrite it when you have a better one.
 
-| from (s) | vx (m/s) | vy (m/s) | yaw rate (rad/s) |
-|---:|---:|---:|---:|
-| 0.00 | +1.137 | +0.168 | -0.703 |
-| 0.34 | +1.137 | +0.000 | -0.703 |
-| 2.76 | -1.078 | -0.702 | +0.000 |
-| 10.96 | -1.078 | +0.000 | +0.787 |
-| 11.88 | +0.000 | -0.359 | +0.787 |
-| 12.22 | +0.000 | -0.359 | +0.000 |
-| 13.48 | -0.036 | +0.000 | -0.087 |
+Rules: **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+benchmark's demonstrations, trained policies); trials are reviewed.
 
-`s.commands` holds the schedule per control step; `s.state()["command"]` is the current one.
+## Robot Interface
+The Unitree Go1 quadruped (MuJoCo Playground's scene, in MuJoCo), driven by 12 joint position actuators: there is no
+walking or balance controller. The scene is one fixed instance. You have the full simulator to develop with; you hand in
+a trajectory of joint targets.
 
-## Success
-The episode lasts exactly 1000 control steps: the trajectory must have T = 1000 rows. Success iff
-1. the robot never meets Playground's termination rule for this environment: the trunk's up axis pointing below the horizon (the z component of the IMU frame's z axis negative); and
-2. in every command segment, over its control steps after the first 25 (0.5 s): the mean planar velocity error |v_xy - cmd_xy| is at most 0.2 m/s, with v the IMU's velocimeter (`local_linvel`, trunk frame), and the mean yaw-rate error |w_z - cmd_wz| at most 0.3 rad/s, with w the IMU's gyro.
-
-`s.check()` reports `fell_at`, each segment's errors and `success`.
-
-## Deliverable
-`/app/output/trajectory.npz` with `actions`: float64 (T, 12), one row per control step (0.02 s): absolute targets of
-the 12 joint position actuators, in `s.joint_names` order (FR, FL, RR, RL legs, each hip (abduction), thigh (hip pitch), calf (knee)), in radians; T = 1000 (the whole schedule). Values
-outside the actuator ranges (`s.lower`, `s.upper`) are clipped. `s.save_trajectory(rows)` writes it. Also leave the
-script that produced it at `/app/output/gen.py`. Save a working trajectory as soon as you have one and overwrite it as
-you improve it: whatever is in `/app/output/` when your time is up is graded. The tooling logs your sessions and
-resets (cost accounting, not graded).
-
-## Tooling (installed; `python` from any directory)
+### Session
+`rcb_quadruped` (installed; run `python` from any directory):
 ```python
 from rcb_quadruped import Session
 s = Session("/app/instance.json")    # the frozen episode at t = 0 (checked against the instance's state hash)
 s.joint_names; s.lower; s.upper      # the actuator order and ranges (rad)
-s.home                               # Playground's standing pose (its `home` keyframe), in that order
+s.home                               # the standing pose (its `home` keyframe), in that order
 s.step(row)                          # one control step: 12 joint targets, 5 physics steps of 0.004 s; returns s.check()
-s.check()                            # the task's check on the steps so far (see Success)
+s.check()                            # the task's check on the steps so far
 s.state()                            # qpos, qvel, IMU (local_linvel, gyro, gravity, accelerometer, pose), feet, contacts, command
 s.sensor(name); s.gravity()          # one MuJoCo sensor; gravity's direction in the IMU frame
 s.model, s.data                      # the live MuJoCo model and data (read them; changing them is not part of the replay)
@@ -55,26 +37,43 @@ s.replay(rows)                       # reset, run the rows, return the check and
 s.render_video(rows, "/app/output/try.mp4")
 s.save_trajectory(rows, "/app/output/trajectory.npz")
 ```
-The grader runs exactly this CLI in a fresh process, so run it to check yourself:
-`python /opt/tools/rcb_quadruped.py replay --instance /app/instance.json --traj /app/output/trajectory.npz`
 
-## Conventions
-- Joint position actuators (PD): kp = 35 N m/rad, joint damping 0.5 N m s/rad, as Playground's environment sets them; the physics step is 0.004 s,
-  the control step 0.02 s (5 physics steps); a row holds until the next one.
-- World frame z up, metres; quaternions **wxyz**. The IMU frame is the trunk's: x forward, y left, z up.
-- Physics is MuJoCo on the CPU: the same rows from the same start give the same result in every fresh process.
+`s.check()` reports `fell_at`, each segment's errors and `success`.
 
-## Rules
-- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
-  benchmark's demonstrations, trained policies); trials are reviewed.
+### Actions
+12 absolute joint targets per control step, in `s.joint_names` order (FR, FL, RR, RL legs, each hip (abduction), thigh
+(hip pitch), calf (knee)), in radians; values outside the actuator ranges (`s.lower`, `s.upper`) are clipped. Joint
+position actuators (PD): kp = 35 N m/rad, joint damping 0.5 N m s/rad; the physics step is 0.004 s, the control step
+0.02 s (5 physics steps); a row holds until the next one.
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+### Observations
+`s.state()`: qpos, qvel, the IMU (`local_linvel`, `gyro`, `gravity`, `accelerometer`, pose), the feet and their
+contacts, the command; `s.sensor(name)` reads one MuJoCo sensor. The cameras follow the robot.
 
-## Resources
-Your container: **4 CPUs**, **10 GiB of memory**, **2048 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
+### Commands
+A command is a velocity in the robot's own frame: vx forward, vy to the left (the trunk's planar velocity), and the yaw
+rate. `s.commands` holds the schedule per control step; `s.state()["command"]` is the current one.
 
-## Time limit
-You have 1800 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+### World frame
+The world frame is z up, in metres; quaternions wxyz. The IMU frame is the trunk's: x forward, y left, z up.
 
-This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+### Episode
+The robot starts at its `home` pose, its base moved to (-0.096, 0.049) m and turned to a yaw of 118.2 deg, with a random
+base velocity. The ground is Playground's rough terrain: a 20 x 20 m heightfield (`hfield.png`, up to 5 cm high) centred
+on the world origin, with nothing beyond its edge.
+
+## Others
+- To check a trajectory the way it is graded, replay it from the command line:
+  `python /opt/tools/rcb_quadruped.py replay --instance /app/instance.json --traj /app/output/trajectory.npz`.
+
+## Limits
+- Time: 1800 s of wall-clock time from the start of your session; everything counts (the simulator's start-up too). At
+  the end you are stopped without warning and only what is in `/app/output/` at that moment is graded. Time left:
+  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`). Calls into a long-running process can block for their
+  whole wait time: use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, the simulator's and the benchmark's source included.
+- Resources: 4 CPUs, 10 GiB memory, 2048 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`),
+  no GPU. Over a cap a process can be killed (the CPU cap only slows you down); usage: `/run/rcb-limits/usage.json`.
+- Resets: as many as you like (`s.reset()`).

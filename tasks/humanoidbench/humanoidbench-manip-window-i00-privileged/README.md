@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:humanoidbench-0.2.0` |
 
 ## Task
+Take hold of the wiping tool and wipe the window with it, moving it up and down.
+
 HumanoidBench window: produce one replayable trajectory that wipes a window with a tool held by the Unitree H1, frozen scene instance 00.
 
 ## Difficulty

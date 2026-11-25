@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:dexjoco-0.1.2` |
 
 ## Task
-DexJoCo `fold_glasses` (a Franka Panda arm with a 16-DoF Allegro hand): Fold both temples of the glasses and put the glasses into the open case. Success: both temple hinges past 1.1 rad AND the glasses' centre inside the case (within 0.145 m of the case centre in x and y, between 0.045 m below and 0.0275 m above it), held for 50 consecutive control steps.
+DexJoCo `fold_glasses` (a Franka Panda arm with a 16-DoF Allegro hand): Fold the glasses and put them in the open case.
 Privileged mode: the agent works in the simulator's container with live object poses, unlimited resets and thin motion
 primitives, and hands in one trajectory replayed open-loop from the frozen instance.
 

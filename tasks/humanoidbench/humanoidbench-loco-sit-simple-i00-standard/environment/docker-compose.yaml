@@ -23,7 +23,7 @@ services:
     environment:
       RCB_TASK: sit_simple
       RCB_INSTANCE: /srv/instance.npz
-      RCB_TASK_TEXT: "Sit the robot down on the chair and keep it seated, upright and still."
+      RCB_TASK_TEXT: "Sit down on the chair right behind you and stay seated, upright and still."
       RCB_EPISODE: "Ends when the summed reward reaches the pass mark (success), when the robot falls (its pelvis drops below about half its standing height, not far below its height when seated), after 1000 control steps, when your time is up (timeout), or on a simulator error."
       RCB_WALL_CLOCK_S: "3600.0"
       # Knobs: ${NAME:-default} takes NAME from the shell that runs harbor. The defaults are the standard

@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/humanoidbench-loco-sit-simple-i00-privileged"
-description = "HumanoidBench sit_simple: produce one replayable trajectory that sits the Unitree H1 on the chair, frozen scene instance 00."
+description = "HumanoidBench sit_simple: produce one replayable trajectory that sits the Unitree H1 on the chair, frozen scene instance 00. Task: Sit down on the chair right behind you and stay seated, upright and still."
 keywords = ["robotics", "humanoidbench", "code-as-policy", "trajectory", "h1", "locomotion", "sit_simple"]
 
 [metadata]

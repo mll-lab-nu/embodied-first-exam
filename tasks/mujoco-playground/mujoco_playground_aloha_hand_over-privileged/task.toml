@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/mujoco_playground_aloha_hand_over-privileged"
-description = "MuJoCo Playground AlohaHandOver in plain MuJoCo: ALOHA 2 bimanual; produce one replayable trajectory in which the left arm picks up the box, hands it to the right arm, and the right arm holds it at the target, frozen instance (seed 60417)."
+description = "MuJoCo Playground AlohaHandOver in plain MuJoCo: ALOHA 2 bimanual; produce one replayable trajectory in which the left arm picks up the box, hands it to the right arm, and the right arm holds it at the target, frozen instance (seed 60417). Task: Pick up the red box with the left arm, pass it to the right arm, and hold it at the see-through target box. Then take the left arm off the box."
 keywords = ["robotics", "mujoco", "mujoco-playground", "aloha", "bimanual", "handover", "code-as-policy", "trajectory"]
 
 [metadata]

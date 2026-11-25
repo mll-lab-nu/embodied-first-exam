@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:yamlab-0.2.1` |
 
 ## Task
+Lift the pot with both grippers and set it down on the cooktop.
+
 Standard-mode twin of `yamlab-put-pot-on-cooktop-i08-privileged` (same frozen instance: YAMLab's objects `pot` = `Pot/pot_008` and `cooktop` = `Cooktop/cooktop_008` as placed in teleoperation
 demonstration `putpot_008.hdf5 demo_8`, both arms at the home pose): the agent gets only the `eai-standard/2.2` client
 (docs/protocol/standard_mode.md); the simulator runs in the `sim` sidecar (`environment/docker-compose.yaml`, GPU on the

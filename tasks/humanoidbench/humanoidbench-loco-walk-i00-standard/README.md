@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:humanoidbench-0.2.0` |
 
 ## Task
+Walk forward and keep walking, without falling.
+
 Standard mode (robot as a service, `eai-standard/2.1`) of `humanoidbench-loco-walk-i00-privileged`: the same
 frozen instance and the same success rule. HumanoidBench runs in the `sim` sidecar
 (`environment/docker-compose.yaml`, GPU on the sidecar for rendering), which holds the reward, judges the

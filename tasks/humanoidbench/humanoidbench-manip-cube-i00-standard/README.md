@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:humanoidbench-0.2.0` |
 
 ## Task
+Turn the two cubes on your palms until each sits the same way round as the see-through cube floating above your hands, without dropping either.
+
 Standard mode (robot as a service, `eai-standard/2.1`) of `humanoidbench-manip-cube-i00-privileged`: the same
 frozen instance and the same success rule. HumanoidBench runs in the `sim` sidecar
 (`environment/docker-compose.yaml`, GPU on the sidecar for rendering), which holds the reward, judges the
