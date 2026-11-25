@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:myosuite-0.1.1` |
 
 ## Task
-MyoSuite `myoChallengeTableTennisP1-v0` (MyoArm with torso, a musculoskeletal model of a human torso, right arm and hand on a pelvis that slides on the floor, 273 muscles and 2 other actuators): Return the served ball: after it bounces once on your half, hit it once with the paddle so that it lands on the opponent's half, with no second paddle touch and no second bounce on your half. Any other outcome of the rally, the ball falling below 0.3 m, or 3 s passing ends the episode in failure.
+MyoSuite `myoChallengeTableTennisP1-v0` (MyoArm with torso, a musculoskeletal model of a human torso, right arm and hand on a pelvis that slides on the floor, 273 muscles and 2 other actuators): Return the served ball: after it bounces once on your half, hit it once with the paddle so that it lands on the opponent's half, with no second paddle touch and no second bounce on your half.
 You stand at a table-tennis table holding a paddle in the right hand; a ball is served toward you from the far side. The deliverable is one replayable trajectory of actuator commands (`/app/output/trajectory.npz`, `(T, 275)`, one row per 10 ms control step).
 
 ## Difficulty

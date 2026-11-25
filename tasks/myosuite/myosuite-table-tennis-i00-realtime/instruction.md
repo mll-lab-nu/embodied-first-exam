@@ -3,7 +3,9 @@
 You control the **MyoArm with torso**, a musculoskeletal model of a human torso, right arm and hand on a pelvis that slides on the floor, **as if it were real**: the simulator (MyoSuite 2.12.2 on MuJoCo) runs in a service
 you cannot open, you reach it only through a client, and like the real world it does not wait for you: once an episode
 is running, the body and the ball move while you think. You act only through its actuators (273 muscles and 2 other actuators).
-**Task:** Return the served ball: after it bounces once on your half, hit it once with the paddle so that it lands on the opponent's half, with no second paddle touch and no second bounce on your half. Any other outcome of the rally, the ball falling below 0.3 m, or 3 s passing ends the episode in failure.
+**Task:** Return the served ball: after it bounces once on your half, hit it once with the paddle so that it lands on the opponent's half, with no second paddle touch and no second bounce on your half.
+
+The episode ends in failure on any other outcome of the rally, when the ball falls below 0.3 m, or after 3 s.
 
 You stand at a table-tennis table holding a paddle in the right hand; a ball is served toward you from the far side. Here the rally is fast: the serve reaches you and the rally is decided within about 1.2 s of robot time after the clock starts (an episode that does nothing ends after 121 control steps).
 

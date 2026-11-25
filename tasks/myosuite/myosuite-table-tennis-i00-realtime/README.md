@@ -13,7 +13,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:myosuite-0.1.1` |
 
 ## Task
-MyoSuite `myoChallengeTableTennisP1-v0` (MyoArm with torso, 273 muscles) on the same frozen instance as `myosuite-table-tennis-i00-privileged`: Return the served ball: after it bounces once on your half, hit it once with the paddle so that it lands on the opponent's half, with no second paddle touch and no second bounce on your half. Any other outcome of the rally, the ball falling below 0.3 m, or 3 s passing ends the episode in failure.
+MyoSuite `myoChallengeTableTennisP1-v0` (MyoArm with torso, 273 muscles) on the same frozen instance as `myosuite-table-tennis-i00-privileged`: Return the served ball: after it bounces once on your half, hit it once with the paddle so that it lands on the opponent's half, with no second paddle touch and no second bounce on your half.
 You stand at a table-tennis table holding a paddle in the right hand; a ball is served toward you from the far side. Realtime mode (eai-standard/2.3, slowdown S = 1): once an episode's clock starts the body and the ball move whatever the agent does; it drives the body through the realtime client from a program of its own, with only its own proprioception and the scene's cameras, and 10 resets (only the last episode is graded).
 
 ## Difficulty

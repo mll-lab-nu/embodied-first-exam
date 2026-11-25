@@ -1,5 +1,5 @@
 {
- "task_text": "Return the served ball: after it bounces once on your half, hit it once with the paddle so that it lands on the opponent's half, with no second paddle touch and no second bounce on your half. Any other outcome of the rally, the ball falling below 0.3 m, or 3 s passing ends the episode in failure.",
+ "task_text": "Return the served ball: after it bounces once on your half, hit it once with the paddle so that it lands on the opponent's half, with no second paddle touch and no second bounce on your half.",
  "default_cameras": [
   "default"
  ],

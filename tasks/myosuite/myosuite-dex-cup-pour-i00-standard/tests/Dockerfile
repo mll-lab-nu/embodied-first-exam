@@ -1,7 +1,7 @@
 # Separate verifier sandbox: grades the sim service's own artifacts; needs nothing but python (the shared client base).
 FROM docker.io/library/python:3.12.14-slim@sha256:f77ac9e44ae96ef2c90b8053ea08c31f8be030f824196b0ae4db6d462c84e51f
 COPY test.sh /tests/test.sh
-COPY --from=ghcr.io/mll-lab-nu/efe:myosuite-files-0.5.2@sha256:ff1c778d018c9678233759e13ff8f8ac581c7cffc55a94f98d39b6e602b1a56c /standard/tests/grade.py /tests/grade.py
+COPY --from=ghcr.io/mll-lab-nu/efe:myosuite-files-0.5.3@sha256:3a0980b27b8125767ad3305e80acffeefad1d012dcdd4585c7cef23e3f5cbfcd /standard/tests/grade.py /tests/grade.py
 RUN chmod +x /tests/test.sh
 # resources (PROTOCOL §6) # rcb-monitor
 COPY --from=ghcr.io/mll-lab-nu/efe:monitor-0.5.0@sha256:ecc5f24f1516ca11711d7c2d3ac07c89f79cd9220812c1244498ec71e352402a /opt/rcb_monitor/rcb_limits.py /tests/rcb_limits.py
