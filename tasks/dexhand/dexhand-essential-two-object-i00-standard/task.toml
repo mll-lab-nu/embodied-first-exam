@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/dexhand-essential-two-object-i00-standard"
-description = "Rotate and selectively release walnut A while independently retaining walnut B. Both walnuts use authentic closed-shell scan geometry with non-spherical convex-hull collision and the same material properties."
+description = "Rotate and selectively release walnut A while independently retaining walnut B. Task: Keep the wrist still. Holding walnut A in the fingers, turn it a quarter turn so that its top moves toward the fingertips, turn it back, then drop only A so it comes to rest near the middle of the catch tray. Keep walnut B held in the hand, unmoved and unturned, the whole time, and never let the two walnuts touch. Both walnuts use authentic closed-shell scan geometry with non-spherical convex-hull collision and the same material properties."
 keywords = ["robotics", "dexterous-hand", "mujoco", "sharpa-wave", "wuji-hand-2.2", "multi_object"]
 
 [metadata]

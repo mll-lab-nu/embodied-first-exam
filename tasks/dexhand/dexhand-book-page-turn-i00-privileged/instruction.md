@@ -1,61 +1,38 @@
-# DexHand: Turn one page of a board book
+# DexHand · Turn one page of a board book (privileged)
 
-Turn one page of the board book lying open on the desk in front of the robot. The book shows pages 4 (left) and 5 (right). Turn the next right-hand board, leaf 2 (printed pages 5 and 6), over onto the left stack so that the book shows pages 6 and 7, then move the robot clear of the book. Every board starts flat on its stack (0.2 mm apart), so the robot has to separate the top board from the board under it itself. Progress is measured by leaf 2's binding hinge angle (joint `leaf_2_binding`: 0 = flat on the right-hand stack, pi = flat on the left-hand stack; it starts at about -0.005 rad, resting on leaf 3). The stages must happen in this order: lifted (angle above 30 degrees), past vertical (above 90 degrees), laid. Laid means, all at the same control: angle above 170 degrees, leaf 2 in physical contact with the left-hand stack (leaf 0, leaf 1 or the left cover), leaf-2 hinge speed at most 0.2 rad/s, every other leaf and both covers within 5 degrees of their start angles, and no contact between the robot (either hand, either arm or the stand) and any part of the book. The laid condition must then hold for 50 consecutive controls (1 s); the episode ends with success at that moment. A partly turned page never counts. The episode ends immediately with failure, checked after every 2 ms physics substep, when the book's spine body moves more than 3 cm or rotates more than 10 degrees from its start pose (book shoved or lifted), when any other leaf moves more than 30 degrees from its start angle (a second page turned), when either cover moves more than 30 degrees (the book closing), when the centre of mass of any book part is more than 2 mm below the desk top (z = 0.78 m), or when the physics becomes unstable; later actions cannot undo a failure. Only robot actuator targets are allowed; no object teleports, welds, scripted page motion or direct forces on the book. The book is free on the desk: eight rigid 1.2 mm laminated boards and two covers on passive binding hinges with friction and damping and a small vertical binding compliance. The episode allows at most 3000 controls at 50 Hz; reaching that limit without success is a failure.
+## Task
+Turn one page of the board book lying open on the desk in front of the robot.
 
-The robot is a fixed Tianji Marvin stand (at the world origin, facing +x; shoulders at (0, +-0.2215, 1.121)) with
-two 7-joint arms and a dexterous hand on each wrist; both arms and both hands may be used. Every arm and finger joint
-is a position servo in the physics engine under native force bounds (arm servos: stiffness 700 N m/rad, damping
-48 N m s/rad, the arms' own torque limits and **no gravity compensation**, so a held target sags slightly under the
-arm's weight unless your targets account for it). Lifting, carrying and laying the page down require physical
-contact. The controller runs at 50 Hz, with ten 2 ms physics substeps. The book is not attached to anything: it rests
-on the desk under gravity and friction, and a push on its pages moves it unless something holds it.
+## Goal
+Success: the next right-hand page is turned over and laid on the left-hand stack, so that the book shows pages 6 and 7
+instead of 4 and 5; every other page and both covers stay as they started, no part of the robot touches the book, and
+the turned page lies still for a second. A replay ends as soon as the task is done; later rows are not run.
 
-## Scene
-World frame: z up, metres and radians, +x forward from the robot stand, +y to the robot's left. The desk top is the
-plane z = 0.78 m (desk x in [0.22, 0.82] m, y in [-0.26, 0.26] m). The board book lies open on the desk as one free
-body (`book_spine`, nothing anchors it): its spine runs along the world x axis through y = 0, from x = 0.434 to
-x = 0.586 (centre x = 0.51). Every board is a 0.1524 m x 0.1524 m (6 x 6 in), 1.2 mm thick laminated board of 16 g;
-the right-hand boards extend from the spine toward -y (the robot's right; fore-edge at y = -0.152), the left-hand
-boards toward +y (fore-edge at y = +0.152). Boards hinge at the spine about the world x axis (`<board>_binding`,
-passive friction 0.002 N m and damping 0.006 N m s/rad) on a small vertical binding compliance
-(`<board>_binding_compliance`, 200 N/m). Hinge-root heights above the desk top: leaf 0 2.0 mm, leaf 1 3.4 mm (left
-stack, leaf 1 on top), leaf 2 9.0 mm, leaf 3 7.6 mm, leaf 4 6.2 mm, leaf 5 4.8 mm, leaf 6 3.4 mm, leaf 7 2.0 mm
-(right stack, leaf 2 on top), both covers 0.6 mm. **Every board lies flat on its stack, 0.2 mm above the board below
-it**: the top board's fore-edge face (1.2 mm tall, at y = -0.152, top at z = 0.7884) sits directly above leaf 3's.
-Covers are glued to the spine (hinge spring 0.5 N m/rad). Leaf hinge angles are measured from the flat right-hand
-position for right-hand boards (0 = flat right, pi = flat left) and from the flat left-hand position for left-hand
-boards (negative = lifted toward the right). At the start the right hand (frame `wrist_stage` / `right_hand_C_MC`,
-palm up, index straight) is at about (0.47, -0.44, 0.93) and the left arm hangs parked beside the stand.
+Any of these ends the episode at once as a failure, which later actions cannot undo:
+- The book is shoved, lifted or turned on the desk.
+- A second page turns.
+- A cover swings up (the book closing).
+- A part of the book drops below the desk top.
+- The physics becomes unstable.
 
-## Hands
-Two genuine manufacturer hand models are available: `sharpa` (Sharpa Wave, 22 finger actuators; the default) and `wuji` (Wuji Hand 2.2, 20 finger actuators). The task, scene, mount, objects and success predicate are the same for both; only one hand is used per episode.
-Each row starts with the 14 Marvin arm joint targets (left arm J1-J7, then right arm J1-J7), followed by the left hand's finger targets and then the right hand's (22 per hand for `sharpa`, 20 per hand for `wuji`). The robot stands at the world origin facing +x; at the start the left arm is parked and the right hand is palm up beside the book; both arms may be used.
-Choose the hand with `Session(..., hand="wuji")` or the environment variable `DEXHAND_HAND=wuji` (default `sharpa`). Action rows are `58` wide for `sharpa` and `54` wide for `wuji`; `s.actuator_names` gives the exact order. `s.save_trajectory(actions, path)` records the hand in the archive (`hand` member). The verifier rebuilds the scene with the recorded hand (default `sharpa` when the member is absent) and rejects a trajectory whose width does not match that hand; rows are never padded, truncated or converted between hands.
+Deliverable: `/app/output/trajectory.npz` with a finite numeric `actions` array of shape `(T, 58)` for `sharpa` or
+`(T, 54)` for `wuji`, at most 3000 rows, plus the `hand` member (`s.save_trajectory` writes both), and
+`/app/output/gen.py`, the script that produced it. Save it compressed (`numpy.savez_compressed`; `s.save_trajectory`
+does): an archive larger than 64 MB is rejected. Save a valid one early and overwrite it when you have a better one.
 
-## Action layout
-Each row is one 50 Hz control of all 58 (`sharpa`) or 54 (`wuji`) actuator targets, in radians.
-Row layout, `sharpa` (58): 0-6 left arm `SHOULDER_PITCH_L_J1, SHOULDER_ROLL_L_J2, ELBOW_PITCH_L_J3, ELBOW_YAW_L_J4,
-WRIST_PITCH_L_J5, WRIST_YAW_L_J6, WRIST_ROLL_L_J7` (actuators `<joint>_target`); 7-13 the same right-arm joints
-(`..._R_J1` to `..._R_J7`); 14-35 the left Sharpa Wave fingers `left_thumb_CMC_FE, left_thumb_CMC_AA,
-left_thumb_MCP_FE, left_thumb_MCP_AA, left_thumb_IP, left_index_MCP_FE, left_index_MCP_AA, left_index_PIP,
-left_index_DIP`, the same four for middle and ring, then `left_pinky_CMC, left_pinky_MCP_FE, left_pinky_MCP_AA,
-left_pinky_PIP, left_pinky_DIP`; 36-57 the right Sharpa Wave fingers in the same order (`right_...`).
-Row layout, `wuji` (54): 0-13 the same arm targets; 14-33 the left Wuji fingers `l_wuji_l_THJ0..THJ3` (thumb),
-`l_wuji_l_FFJ0..FFJ3` (index), `l_wuji_l_MFJ0..MFJ3` (middle), `l_wuji_l_RFJ0..RFJ3` (ring), `l_wuji_l_LFJ0..LFJ3`
-(little); 34-53 the right Wuji fingers in the same order (`r_wuji_r_...`). The frozen start row of each hand variant
-(arm targets and finger targets) is in `task.json` (`initial_targets`).
+Rules: **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+benchmark's demonstrations, trained policies); trials are reviewed.
 
-Every target must lie within `s.model.actuator_ctrlrange`.
+Only the robot's actuator targets act on the scene: no object teleports, grasp welds, scripted object motion or applied
+forces.
 
-## Deliverable
-Save `/app/output/trajectory.npz` with a finite numeric `actions` array of shape `(T, 58)` for `sharpa` or `(T, 54)`
-for `wuji`, at most 3000 rows, plus the `hand` member (`s.save_trajectory` writes both), and
-`/app/output/gen.py`, the script that produced it. The separate verifier rebuilds the frozen scene with the recorded
-hand and replays only these motor targets in one fresh process, which must succeed. A replay stops at the first success or the first failure; later rows are not executed. Object poses,
-configuration overrides, pickled arrays and success claims are not deliverables and are never read.
-Save the archive compressed (`numpy.savez_compressed`; `s.save_trajectory` does): an archive file larger than 64 MB is rejected with reward 0.
+## Robot Interface
+A fixed Tianji Marvin robot with two 7-joint arms and a dexterous hand on each wrist (both arms may be used), at a desk
+(DexHand, MuJoCo). The scene is one fixed instance. You have the full simulator to develop with; you hand in a
+trajectory of motor targets.
 
-## Tooling
+### Session
+`/opt/tools/rcb_dexhand.py`, importable as `rcb_dexhand`:
 ```python
 from rcb_dexhand import Session
 s = Session("book_page_turn")               # default hand: DEXHAND_HAND or "sharpa"
@@ -73,24 +50,71 @@ s.reset()                                   # exact frozen reset (includes a fix
 s.replay(actions)                           # reset, run rows until the episode ends, return status()
 s.save_trajectory(actions, "/app/output/trajectory.npz")
 ```
-Read `/opt/tools/task.json`, `scene.py`, `checker.py`, `runtime.py` and `arm_rig.py` for the complete geometry,
-robot, failure checks and predicate. The world frame has z up; lengths are in metres and angles in radians. The desk
-top is at z = 0.78 m; the book's spine runs along the world x axis through y = 0, the right-hand pages extend toward
--y and the left-hand pages toward +y. Leaf bodies are `leaf_0` ... `leaf_7` (leaf 0 and 1 on the left, 2 to 7 on the
-right, leaf 2 on top), `left_cover`, `right_cover` and the spine `book_spine`. No inverse-kinematics helper is
-supplied.
+The world frame has z up; lengths are in metres and angles in radians. The desk top is at z = 0.78 m; the book's spine
+runs along the world x axis through y = 0, the right-hand pages extend toward -y and the left-hand pages toward +y. Leaf
+bodies are `leaf_0` ... `leaf_7` (leaf 0 and 1 on the left, 2 to 7 on the right, leaf 2 on top), `left_cover`,
+`right_cover` and the spine `book_spine`. No inverse-kinematics helper is supplied.
 
-## Rules
-- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
-  benchmark's demonstrations, trained policies); trials are reviewed.
+### Actions
+Each row is one 50 Hz control of all 58 (`sharpa`) or 54 (`wuji`) actuator targets, in radians. Row layout, `sharpa`
+(58): 0-6 left arm
+`SHOULDER_PITCH_L_J1, SHOULDER_ROLL_L_J2, ELBOW_PITCH_L_J3, ELBOW_YAW_L_J4, WRIST_PITCH_L_J5, WRIST_YAW_L_J6, WRIST_ROLL_L_J7`
+(actuators `<joint>_target`); 7-13 the same right-arm joints (`..._R_J1` to `..._R_J7`); 14-35 the left Sharpa Wave
+fingers
+`left_thumb_CMC_FE, left_thumb_CMC_AA, left_thumb_MCP_FE, left_thumb_MCP_AA, left_thumb_IP, left_index_MCP_FE, left_index_MCP_AA, left_index_PIP, left_index_DIP`,
+the same four for middle and ring, then
+`left_pinky_CMC, left_pinky_MCP_FE, left_pinky_MCP_AA, left_pinky_PIP, left_pinky_DIP`; 36-57 the right Sharpa Wave
+fingers in the same order (`right_...`). Row layout, `wuji` (54): 0-13 the same arm targets; 14-33 the left Wuji fingers
+`l_wuji_l_THJ0..THJ3` (thumb), `l_wuji_l_FFJ0..FFJ3` (index), `l_wuji_l_MFJ0..MFJ3` (middle), `l_wuji_l_RFJ0..RFJ3`
+(ring), `l_wuji_l_LFJ0..LFJ3` (little); 34-53 the right Wuji fingers in the same order (`r_wuji_r_...`). The frozen
+start row of each hand variant (arm targets and finger targets) is in `task.json` (`initial_targets`).
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+Every target must lie within `s.model.actuator_ctrlrange`.
 
-## Resources
-Your container: **2 CPUs**, **10 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
+### Hands
+Two hand models: `sharpa` (Sharpa Wave, 22 finger actuators; the default) and `wuji` (Wuji Hand 2.2, 20 finger
+actuators); the task is the same for both. Choose the hand with `Session(..., hand="wuji")` or the environment variable
+`DEXHAND_HAND=wuji` (default `sharpa`). `s.save_trajectory(actions, path)` records the hand in the archive (`hand`
+member, `sharpa` when absent); a trajectory whose row width does not match its hand is rejected. Action rows are `58`
+wide for `sharpa` and `54` wide for `wuji`; `s.actuator_names` gives the exact order.
 
-## Time limit
-You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+### Robot
+The robot is a fixed Tianji Marvin stand (at the world origin, facing +x; shoulders at (0, +-0.2215, 1.121)) with two
+7-joint arms and a dexterous hand on each wrist; both arms and both hands may be used. Every arm and finger joint is a
+position servo in the physics engine under native force bounds (arm servos: stiffness 700 N m/rad, damping 48 N m s/rad,
+the arms' own torque limits and no gravity compensation, so a held target sags slightly under the arm's weight unless
+your targets account for it). Lifting, carrying and laying the page down require physical contact. The controller runs
+at 50 Hz, with ten 2 ms physics substeps. The book is not attached to anything: it rests on the desk under gravity and
+friction, and a push on its pages moves it unless something holds it.
 
-This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+The robot stands at the world origin facing +x; at the start the left arm is parked and the right hand is palm up beside
+the book; both arms may be used.
+
+### Scene
+World frame: z up, metres and radians, +x forward from the robot stand, +y to the robot's left. The desk top is the
+plane z = 0.78 m (desk x in [0.22, 0.82] m, y in [-0.26, 0.26] m). The board book lies open on the desk as one free body
+(`book_spine`, nothing anchors it): its spine runs along the world x axis through y = 0, from x = 0.434 to x = 0.586
+(centre x = 0.51). Every board is a 0.1524 m x 0.1524 m (6 x 6 in), 1.2 mm thick laminated board of 16 g; the right-hand
+boards extend from the spine toward -y (the robot's right; fore-edge at y = -0.152), the left-hand boards toward +y
+(fore-edge at y = +0.152). Boards hinge at the spine about the world x axis (`<board>_binding`, passive friction 0.002 N
+m and damping 0.006 N m s/rad) on a small vertical binding compliance (`<board>_binding_compliance`, 200 N/m).
+Hinge-root heights above the desk top: leaf 0 2.0 mm, leaf 1 3.4 mm (left stack, leaf 1 on top), leaf 2 9.0 mm, leaf 3
+7.6 mm, leaf 4 6.2 mm, leaf 5 4.8 mm, leaf 6 3.4 mm, leaf 7 2.0 mm (right stack, leaf 2 on top), both covers 0.6 mm.
+Every board lies flat on its stack, 0.2 mm above the board below it: the top board's fore-edge face (1.2 mm tall, at y =
+-0.152, top at z = 0.7884) sits directly above leaf 3's. Covers are glued to the spine (hinge spring 0.5 N m/rad). Leaf
+hinge angles are measured from the flat right-hand position for right-hand boards (0 = flat right, pi = flat left) and
+from the flat left-hand position for left-hand boards (negative = lifted toward the right). At the start the right hand
+(frame `wrist_stage` / `right_hand_C_MC`, palm up, index straight) is at about (0.47, -0.44, 0.93) and the left arm
+hangs parked beside the stand.
+
+## Limits
+- Time: 3600 s of wall-clock time from the start of your session; everything counts (the simulator's start-up too). At
+  the end you are stopped without warning and only what is in `/app/output/` at that moment is graded. Time left:
+  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`). Calls into a long-running process can block for their
+  whole wait time: use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, the simulator's and the benchmark's source included.
+- Resources: 2 CPUs, 10 GiB memory, 1024 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`),
+  no GPU. Over a cap a process can be killed (the CPU cap only slows you down); usage: `/run/rcb-limits/usage.json`.
+- Resets: as many as you like (`s.reset()`).

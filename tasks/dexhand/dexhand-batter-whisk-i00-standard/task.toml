@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/dexhand-batter-whisk-i00-standard"
-description = "Pick a balloon whisk up off the rim of a steel bowl with a dexterous hand on a Tianji Marvin arm (Sharpa Wave by default, or Wuji Hand 2.2; the second arm and hand may steady the bowl), whisk the batter with at least five revolutions, lift the whisk out to drain over the bowl and lay it down on the counter; the bowl must not tip or slide."
+description = "Pick a balloon whisk up off the rim of a steel bowl with a dexterous hand on a Tianji Marvin arm (Sharpa Wave by default, or Wuji Hand 2.2; the second arm and hand may steady the bowl), whisk the batter with at least five revolutions, lift the whisk out to drain over the bowl and lay it down on the counter; the bowl must not tip or slide. Task: Pick up the balloon whisk, whisk the batter in the steel bowl, drain the whisk over the bowl and lay it down on the counter."
 keywords = ["robotics", "dexterous-hand", "mujoco", "sharpa-wave", "wuji-hand-2.2", "tool_use", "tool-use", "whisking", "kitchen", "free-object", "pick-up", "bimanual", "arm", "set-down"]
 
 [metadata]

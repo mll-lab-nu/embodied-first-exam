@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/dexhand-grinder-crank-i00-standard"
-description = "With a fixed dual-arm robot (Tianji Marvin, a dexterous hand on each arm: two Sharpa Wave hands by default, or two Wuji Hand 2.2), counterhold a free-standing manual coffee grinder with one hand and turn its passive, friction-loaded crank two full turns clockwise by the knob with the other, then let go and leave it standing; tipping, sliding, spinning or reversing the crank fails at once."
+description = "With a fixed dual-arm robot (Tianji Marvin, a dexterous hand on each arm: two Sharpa Wave hands by default, or two Wuji Hand 2.2), counterhold a free-standing manual coffee grinder with one hand and turn its passive, friction-loaded crank two full turns clockwise by the knob with the other, then let go and leave it standing; tipping, sliding, spinning or reversing the crank fails at once. Task: Hold the coffee grinder steady with one hand, turn its crank by the knob two full turns clockwise (seen from above) with the other, then let go of the grinder."
 keywords = ["robotics", "dexterous-hand", "mujoco", "sharpa-wave", "wuji-hand-2.2", "tool_mechanism", "bimanual", "dual-arm", "tool-mechanism", "crank", "counterhold", "passive-mechanism"]
 
 [metadata]

@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/dexhand-stool-brace-insert-i00-standard"
-description = "With one dexterous hand (Sharpa Wave by default, or Wuji Hand 2.2) on a six-axis wrist stage, pick up the loose cross brace of an ODDVAR-style pine stool dry frame, stand it in the empty bore of the lower side frame, then lift the opposite side frame onto all four upper dowels so both brace dowels are seated in their legs; drops, knocked rails or a displaced frame fail at once."
+description = "With one dexterous hand (Sharpa Wave by default, or Wuji Hand 2.2) on a six-axis wrist stage, pick up the loose cross brace of an ODDVAR-style pine stool dry frame, stand it in the empty bore of the lower side frame, then lift the opposite side frame onto all four upper dowels so both brace dowels are seated in their legs; drops, knocked rails or a displaced frame fail at once. Task: Assemble the cross brace of a pine stool dry frame."
 keywords = ["robotics", "dexterous-hand", "mujoco", "sharpa-wave", "wuji-hand-2.2", "furniture_assembly", "furniture-assembly", "dowel-insertion", "peg-in-hole", "multi-object", "in-hand-regrasp"]
 
 [metadata]

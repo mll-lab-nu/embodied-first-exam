@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/dexhand-essential-pen-regrasp-i00-standard"
-description = "Advance and reorient a real pen mesh with a fitted shaft, physical writing tip and tail into a marked three-finger grip."
+description = "Advance and reorient a real pen mesh with a fitted shaft, physical writing tip and tail into a marked three-finger grip. Task: Keep the wrist fixed and never let go of the pen. Slide it about 3 cm along its length toward the fingertips, then swing its length about 45 degrees away from where it pointed, and hold it still by its marked grip band with the tips of the thumb, index and middle fingers, clear of the palm."
 keywords = ["robotics", "dexterous-hand", "mujoco", "sharpa-wave", "wuji-hand-2.2", "in_hand"]
 
 [metadata]

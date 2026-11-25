@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:dexhand-0.2.0@sha256:0d42994b83d95ab5301c592b35586550c9ee426490115e4b43f3b8cf8cc43350` |
 
 ## Task
+Keep the wrist fixed and never let go of the knob. Turn the knob two full turns clockwise, as seen looking at its face (which faces the thumb side), passing it from finger to finger at least four times, each new set of touching fingers keeping one finger of the set before; then turn it one full turn back and hold it still.
+
 Keep the wrist fixed. Turn the rotary encoder knob two full turns clockwise, as seen looking at its face, then one full turn back, and hold it still. The real encoder cap has its actual rounded outer profile, normal surface friction and bearing resistance, and a passive unlimited-turn hinge. There is no task-object actuator or powered turning assistance. Maintain load-bearing hand contact throughout and perform at least four contact handoffs involving overlapping fingers.
 
 ## Difficulty

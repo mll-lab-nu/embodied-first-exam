@@ -1,74 +1,46 @@
-# DexHand: Independent walnut rotation and selective release
+# DexHand · Independent walnut rotation and selective release (privileged)
 
-Keep the wrist still. Holding walnut A in the fingers, turn it a quarter turn so that its top moves toward the fingertips, turn it back, then drop only A so it comes to rest near the middle of the catch tray. Keep walnut B held in the hand, unmoved and unturned, the whole time, and never let the two walnuts touch. The walnuts, standardized to the same maximum dimension, must never contact one another. Before selective release, keep both objects unsupported by the environment and in load-bearing hand contact. Finally let A settle in the tray while continuing to hold B. If walnut A drops toward the table (center below 0.135 m) or leaves the tray footprint (more than 0.10 m horizontally from the tray center), or walnut B slips, the episode fails immediately.
+## Task
+Keep the wrist still. Holding walnut A in the fingers, turn it a quarter turn so that its top moves toward the
+fingertips, turn it back, then drop only A so it comes to rest near the middle of the catch tray. Keep walnut B held in
+the hand, unmoved and unturned, the whole time, and never let the two walnuts touch.
 
-Palm-local axes belong to a frame fixed to the palm; with the wrist locked it is aligned with the world axes: +X points from the wrist toward the fingertips (world +x), +Y points across the palm from the thumb side toward the little-finger side (world +y), and +Z points out of the palm, which faces up (world +z). In the simulator it has the orientation of the `wrist_stage` body (the identity quaternion while the wrist is locked), not that of the palm link `right_hand_C_MC`, whose own axes are rotated relative to it. A turn about a palm-local axis is about that palm-fixed axis (it does not turn with the object), and a positive angle follows the right-hand rule: counterclockwise when seen from the positive end of the axis looking back toward the palm. So +90 degrees about Y carries the side of walnut A that faces up toward the fingertips.
+## Goal
+Success: in this order, walnut A is turned a quarter turn with its top moving toward the fingertips and then back to how
+it started, held by the fingers and resting on nothing else; A is then let go into the catch tray and comes to rest on
+the tray floor near its middle while the fingers still hold B; everything is still at the end. Walnut B stays where it
+started and the two walnuts never touch. A replay ends as soon as the task is done; later rows are not run.
 
-You control one dexterous hand on a six-DoF wrist positioning stage: a Sharpa Wave hand with 22 independently
-actuated finger joints (the default) or a Wuji Hand 2.2 with 20 (see Hands).
-The wrist stage is position actuated in the physics engine; grasping and manipulating require physical contact.
-The five fingers are thumb, index, middle, ring and pinky. The controller runs at 50 Hz, with ten 2 ms physics substeps.
+Any of these ends the episode at once as a failure, which later actions cannot undo:
+- Walnut A drops toward the table or lands outside the tray.
+- Before it is let go, A moves away from its place in the hand or rests on anything.
+- Walnut B slips, turns, rests on anything or leaves the fingers.
+- The two walnuts touch.
+- The fingers squeeze hard, or a walnut is jerked violently.
+- The palm moves.
+- The physics becomes unstable.
 
-This is a fixed-wrist essential dexterity task. Native equality constraints lock all six wrist joints.
-The first six entries of every action MUST remain [-0.08, 0, 0.29, 0, 0, 0].
-Float32 wire-format rounding is accepted and normalized to those exact fixed targets before physics runs.
-Use the declared target values rather than copying measured wrist joint positions. Only the finger targets may
-change. Objects have no actuators, scripted motion or grasp attachments; they move through contact and normal gravity.
+Deliverable: `/app/output/trajectory.npz` with a numeric `actions` array of shape `(T, 28)` for Sharpa or `(T, 26)` for
+Wuji (at most 50,000 rows) and the `hand` it was made for, as written by `s.save_trajectory` (an archive without `hand`
+is replayed as Sharpa), and `/app/output/gen.py`, the script that produced it. Each row is one control step: wrist x/y/z
+targets in metres, wrist XYZ Euler joint targets in radians, then the finger targets in `s.actuator_names` order. NaN,
+infinity, object arrays and malformed or oversized trajectories are rejected. Save it compressed
+(`numpy.savez_compressed`; `s.save_trajectory` does): an archive larger than 64 MB is rejected. Save a valid one early
+and overwrite it when you have a better one.
 
-## Hands
-Two genuine manufacturer hand models are available: `sharpa` (Sharpa Wave, 22 finger actuators; the default) and `wuji` (Wuji Hand 2.2, 20 finger actuators). The task, scene, mount, objects and success predicate are the same for both; only one hand is used per episode.
-Sharpa rows: the six wrist targets, then `right_thumb_CMC_FE, right_thumb_CMC_AA, right_thumb_MCP_FE, right_thumb_MCP_AA, right_thumb_IP`, `right_<index|middle|ring>_MCP_FE, _MCP_AA, _PIP, _DIP` and `right_pinky_CMC, _MCP_FE, _MCP_AA, _PIP, _DIP`. Wuji rows: the same six wrist targets, then `r_wuji_r_THJ0..3` (thumb CMC flexion, CMC abduction, MCP, IP) and `r_wuji_r_FFJ0..3`, `MFJ0..3`, `RFJ0..3`, `LFJ0..3` (index, middle, ring, pinky: MCP flexion, MCP abduction, PIP, DIP). Both hands are mounted in the same wrist frame; Sharpa fingers use the dissipative velocity coefficient declared in the frozen instance, Wuji fingers the manufacturer's position servos. Sharpa starts from the instance's declared finger pose; Wuji starts from the pose in `wuji_reset.json` (neutral fingers when the file is absent), an authoring choice that keeps the object held at reset, not a policy. The wrist, fixtures and predicate are identical for both hands; where a Wuji grasp cannot hold an object at the Sharpa start pose, `wuji_reset.json` also declares the held objects' start poses in the Wuji grasp, and every reset-relative quantity is measured from the post-reset pose.
-Choose the hand with `Session(..., hand="wuji")` or the environment variable `DEXHAND_HAND=wuji` (default `sharpa`). Action rows are `28` wide for `sharpa` and `26` wide for `wuji`; `s.actuator_names` gives the exact order. `s.save_trajectory(actions, path)` records the hand in the archive (`hand` member). The verifier rebuilds the scene with the recorded hand (default `sharpa` when the member is absent) and rejects a trajectory whose width does not match that hand; rows are never padded, truncated or converted between hands.
+Rules: **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+benchmark's demonstrations, trained policies); trials are reviewed.
 
-## Success predicate
-The verifier evaluates these conditions on features it computes from simulator state (values rounded to six significant digits here; the exact numbers are in `catalog.json` in `/opt/tools`). A stage or the terminal condition counts a control sample only if its bounds held at every 2 ms physics substep of that control interval; stages are completed in order and each starts after the previous one.
+Only the robot's actuator targets act on the scene: no object teleports, grasp welds, scripted object motion or applied
+forces.
 
-1. Stage `rotate_a_keep_b`: `0 <= a_quarter_turn_error <= 0.16`, `1 <= a_finger_contacts <= 5`, `0 <= speed <= 0.25`, for 5 consecutive control samples.
-   While this stage is active (fail-fast): `a_hand_contacts >= 1`, `a_support == 0`, `0 <= a_position_error <= 0.035`, `0 <= speed <= 12`.
-2. Stage `return_a_keep_b`: `0 <= a_orientation_error <= 0.16`, `1 <= a_finger_contacts <= 5`, `0 <= speed <= 0.25`, for 5 consecutive control samples.
-   While this stage is active (fail-fast): `a_hand_contacts >= 1`, `a_support == 0`, `0 <= a_position_error <= 0.035`, `0 <= speed <= 12`.
-3. Stage `release_a_only`: `a_hand_contacts == 0`, `deposit_support_a >= 1`, `0 <= a_deposit_distance <= 0.04`, for 5 consecutive control samples.
-   While this stage is active (fail-fast): `0 <= a_linear_speed <= 2.5`, `0 <= a_angular_speed <= 80`.
-4. Terminal hold after the last stage: `a_hand_contacts == 0`, `deposit_support_a >= 1`, `0 <= a_deposit_distance <= 0.04`, `1 <= b_finger_contacts <= 5`, `0 <= speed <= 0.06`, for 25 consecutive control samples.
+## Robot Interface
+One dexterous hand on a six-axis wrist stage, the wrist locked (no arm), holding two walnuts, A and B, above a catch
+tray (DexHand, MuJoCo). The scene is one fixed instance. You have the full simulator to develop with; you hand in a
+trajectory of motor targets.
 
-Invariants, checked at every physics substep for the whole episode (fail-fast): `0 <= force <= 80`, `0 <= palm_drift <= 0.003`, `0 <= wrist_rotation <= 0.01`, `ball_pair_contacts == 0`, `0 <= b_position_error <= 0.015`, `0 <= b_orientation_error <= 0.2`, `b_support == 0`, `b_hand_contacts >= 1`, `1 <= b_finger_contacts <= 5`, `0 <= a_linear_speed <= 2.5`, `0 <= a_angular_speed <= 80`, `0.135 <= a_height <= 0.6`, `0 <= a_deposit_distance <= 0.1`.
-
-The first violated invariant or guard, a non-finite feature or unstable physics fails the episode immediately and permanently: the episode ends there and later rows are not executed, so a dropped, slipped or knocked-away object can never be recovered. Success is reached when the terminal hold completes; the episode ends there too. Completing only some stages is a failure.
-
-Feature definitions:
-- `a_quarter_turn_error`: rotation between walnut A and its +90 degree target about the declared axis, rad
-- `a_finger_contacts`: fingers touching walnut A (> 0.005 N)
-- `speed`: largest absolute velocity of any task-object degree of freedom, m/s or rad/s (peak over the substeps)
-- `a_hand_contacts`: contacts (> 0.005 N) between walnut A and the hand
-- `a_support`: contacts (> 0.005 N) between walnut A and the environment
-- `a_position_error`: walnut A displacement from its reset position in the palm frame, m
-- `a_orientation_error`: walnut A rotation from its reset orientation in the palm frame, rad
-- `deposit_support_a`: contacts between walnut A and the catch-tray floor
-- `a_deposit_distance`: horizontal distance of walnut A from the catch-tray centre, m
-- `a_linear_speed`: walnut A linear speed, m/s
-- `a_angular_speed`: walnut A angular speed, rad/s
-- `b_finger_contacts`: fingers touching walnut B (> 0.005 N)
-- `force`: largest contact force on any task object, N (peak over the 2 ms substeps)
-- `palm_drift`: palm displacement from its reset position, m
-- `wrist_rotation`: palm rotation from its reset orientation, rad
-- `ball_pair_contacts`: contacts between the two walnuts
-- `b_position_error`: walnut B displacement from its reset position in the palm frame, m
-- `b_orientation_error`: walnut B rotation from its reset orientation in the palm frame, rad
-- `b_support`: contacts (> 0.005 N) between walnut B and the environment
-- `b_hand_contacts`: contacts (> 0.005 N) between walnut B and the hand
-- `a_height`: height of walnut A's centre, m (the tray floor is at about 0.155 m, the table top at 0.10 m)
-
-## Deliverable
-Save `/app/output/trajectory.npz` with a numeric `actions` array of shape `(T, 28)` for Sharpa or `(T, 26)`
-for Wuji (at most 50,000 rows) and the `hand` it was made for, as written by `s.save_trajectory` (an archive
-without `hand` is replayed as Sharpa), and `/app/output/gen.py`, the script that produced it. Each row is one
-control step: wrist x/y/z targets in metres, wrist XYZ Euler joint targets in radians, then the finger targets in
-`s.actuator_names` order. Do not save object
-states as the deliverable: the verifier executes the actions from the frozen start in one fresh process.
-NaN, infinity, object arrays and malformed or oversized trajectories are rejected.
-Save the archive compressed (`numpy.savez_compressed`; `s.save_trajectory` does): an archive file larger than 64 MB is rejected with reward 0.
-
-## Tooling
+### Session
+`/opt/tools/rcb_dexhand.py`, importable as `rcb_dexhand`:
 ```python
 from rcb_dexhand import Session
 s = Session("essential_two_object")      # or Session("essential_two_object", hand="wuji")
@@ -80,23 +52,56 @@ s.render_frame("overview")    # uint8 RGB 480 x 640; cameras: s.cameras()
 s.reset()                     # exact frozen reset; unlimited during development
 s.step(row)                   # execute one position-target row
 s.save_trajectory(actions, "/app/output/trajectory.npz")
-s.replay(actions)             # reset, execute rows and recompute the predicate
+s.replay(actions)             # reset, execute rows and check the task
 ```
-Tooling lives in `/opt/tools`. Read `catalog.json`, `scene.py` and `checker.py` for the physical scene and exact
-predicate. Wrist XYZ targets are positions of the stage joints in the world frame, metres, z up; the rotational
-targets are serial XYZ revolute joints, not a quaternion. Finger position targets are in radians.
+Wrist XYZ targets are positions of the stage joints in the world frame, metres, z up; the rotational targets are serial
+XYZ revolute joints, not a quaternion. Finger position targets are in radians.
 
-## Rules
-- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
-  benchmark's demonstrations, trained policies); trials are reviewed.
+### Actions
+Sharpa rows: the six wrist targets, then
+`right_thumb_CMC_FE, right_thumb_CMC_AA, right_thumb_MCP_FE, right_thumb_MCP_AA, right_thumb_IP`,
+`right_<index|middle|ring>_MCP_FE, _MCP_AA, _PIP, _DIP` and `right_pinky_CMC, _MCP_FE, _MCP_AA, _PIP, _DIP`. Wuji rows:
+the same six wrist targets, then `r_wuji_r_THJ0..3` (thumb CMC flexion, CMC abduction, MCP, IP) and `r_wuji_r_FFJ0..3`,
+`MFJ0..3`, `RFJ0..3`, `LFJ0..3` (index, middle, ring, pinky: MCP flexion, MCP abduction, PIP, DIP).
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+### Hands
+Two hand models: `sharpa` (Sharpa Wave, 22 finger actuators; the default) and `wuji` (Wuji Hand 2.2, 20 finger
+actuators); the task is the same for both. Choose the hand with `Session(..., hand="wuji")` or the environment variable
+`DEXHAND_HAND=wuji` (default `sharpa`). `s.save_trajectory(actions, path)` records the hand in the archive (`hand`
+member, `sharpa` when absent); a trajectory whose row width does not match its hand is rejected. Action rows are `28`
+wide for `sharpa` and `26` wide for `wuji`; `s.actuator_names` gives the exact order. Both hands are mounted in the same
+wrist frame. Each hand starts from its own finger pose (Wuji: `wuji_reset.json`), with the object held as at the Sharpa
+start.
 
-## Resources
-Your container: **2 CPUs**, **4 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
+### Robot
+Palm-local axes belong to a frame fixed to the palm; with the wrist locked it is aligned with the world axes: +X points
+from the wrist toward the fingertips (world +x), +Y points across the palm from the thumb side toward the little-finger
+side (world +y), and +Z points out of the palm, which faces up (world +z). In the simulator it has the orientation of
+the `wrist_stage` body (the identity quaternion while the wrist is locked), not that of the palm link `right_hand_C_MC`,
+whose own axes are rotated relative to it. A turn about a palm-local axis is about that palm-fixed axis (it does not
+turn with the object), and a positive angle follows the right-hand rule: counterclockwise when seen from the positive
+end of the axis looking back toward the palm. So +90 degrees about Y carries the side of walnut A that faces up toward
+the fingertips.
 
-## Time limit
-You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+You control one dexterous hand on a six-DoF wrist positioning stage: a Sharpa Wave hand with 22 independently actuated
+finger joints (the default) or a Wuji Hand 2.2 with 20 (see Hands). The wrist stage is position actuated in the physics
+engine; grasping and manipulating require physical contact. The five fingers are thumb, index, middle, ring and pinky.
+The controller runs at 50 Hz, with ten 2 ms physics substeps.
 
-This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+This is a fixed-wrist essential dexterity task. Native equality constraints lock all six wrist joints. The first six
+entries of every action must remain [-0.08, 0, 0.29, 0, 0, 0]. Float32 wire-format rounding is accepted and normalized
+to those exact fixed targets before physics runs. Use the declared target values rather than copying measured wrist
+joint positions. Only the finger targets may change. Objects have no actuators, scripted motion or grasp attachments;
+they move through contact and normal gravity.
+
+## Limits
+- Time: 3600 s of wall-clock time from the start of your session; everything counts (the simulator's start-up too). At
+  the end you are stopped without warning and only what is in `/app/output/` at that moment is graded. Time left:
+  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`). Calls into a long-running process can block for their
+  whole wait time: use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, the simulator's and the benchmark's source included.
+- Resources: 2 CPUs, 4 GiB memory, 1024 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`), no
+  GPU. Over a cap a process can be killed (the CPU cap only slows you down); usage: `/run/rcb-limits/usage.json`.
+- Resets: as many as you like (`s.reset()`).

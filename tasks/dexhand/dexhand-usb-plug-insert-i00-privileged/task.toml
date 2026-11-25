@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/dexhand-usb-plug-insert-i00-privileged"
-description = "Pick up a USB-A plug lying on its side on a desk with a dexterous hand (Sharpa Wave by default, or Wuji Hand 2.2) on the right arm of a Tianji Marvin robot, turn it polarity-up, insert it at least 90% deep into the rightmost port of a free four-port hub resting at the desk edge, release it and leave it seated for one second; a dropped plug, a displaced hub or an arm collision fails the episode at once."
+description = "Pick up a USB-A plug lying on its side on a desk with a dexterous hand (Sharpa Wave by default, or Wuji Hand 2.2) on the right arm of a Tianji Marvin robot, turn it polarity-up, insert it at least 90% deep into the rightmost port of a free four-port hub resting at the desk edge, release it and leave it seated for one second; a dropped plug, a displaced hub or an arm collision fails the episode at once. Task: Pick up the cable's plug and lift it at least 3 cm off the desk, then plug it into the hub's rightmost port (seen from the front) with its top face up, and let go."
 keywords = ["robotics", "dexterous-hand", "mujoco", "sharpa-wave", "wuji-hand-2.2", "connector_insertion", "connector-insertion", "in-hand-reorientation", "precision-alignment", "cable", "release"]
 
 [metadata]

@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/dexhand-remote-battery-swap-i00-privileged"
-description = "With a dexterous hand (Sharpa Wave by default, or Wuji Hand 2.2) on a Tianji Marvin arm, press the latch tab and slide open a remote's battery door, move the old gray AA cell from its slot into a receiving tray, seat a new green AA cell with correct polarity and slide the door shut until it latches; drops, knock-offs and a displaced remote fail the episode at once."
+description = "With a dexterous hand (Sharpa Wave by default, or Wuji Hand 2.2) on a Tianji Marvin arm, press the latch tab and slide open a remote's battery door, move the old gray AA cell from its slot into a receiving tray, seat a new green AA cell with correct polarity and slide the door shut until it latches; drops, knock-offs and a displaced remote fail the episode at once. Task: Replace the battery of a TV remote that lies on the table."
 keywords = ["robotics", "dexterous-hand", "mujoco", "sharpa-wave", "wuji-hand-2.2", "articulated_assembly", "battery-replacement", "sliding-door", "pick-and-place", "polarity", "articulated"]
 
 [metadata]
