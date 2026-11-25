@@ -3,7 +3,7 @@
   "description": "Stabilize a real Joy-Con mesh while independently steering and releasing its passive spring-centered two-axis thumbstick.",
   "difficulty": "hard",
   "id": "essential_held_joystick",
-  "instruction": "With the wrist locked, keep the controller steady and move the joystick through left, front, right, back, then center, holding each checkpoint. Checkpoints are joint angles relative to the shell, not world tilt.",
+  "instruction": "Keep the wrist locked and hold the controller steady with your other fingers. Tilt the joystick about halfway (not to its stop) toward the wrist, then toward the little-finger side, then toward the fingertips, then toward the thumb side, then bring it back to the center, pausing at each position and holding it still at the center. Checkpoints are joint angles relative to the shell, not world tilt.",
   "invariants": {
     "body_drift": [
       0,

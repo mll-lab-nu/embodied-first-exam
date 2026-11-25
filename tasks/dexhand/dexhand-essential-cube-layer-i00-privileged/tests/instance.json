@@ -3,7 +3,7 @@
   "description": "Keep a free cube body steady while independently turning its top layer through an ordered quarter-turn reversal.",
   "difficulty": "hard",
   "id": "essential_cube_layer",
-  "instruction": "With the wrist locked, turn only the top layer +90 degrees, return it to zero, and turn it +90 degrees again. Stabilize the free cube body with other fingers; no external support or object actuation is allowed.",
+  "instruction": "Keep the wrist locked and hold the cube body steady with your other fingers. Turn only the top layer a quarter turn counter-clockwise, as seen from above, then back to where it started, then a quarter turn counter-clockwise again, and hold it still. Stabilize the free cube body with other fingers; no external support or object actuation is allowed.",
   "invariants": {
     "body_drift": [
       0,
