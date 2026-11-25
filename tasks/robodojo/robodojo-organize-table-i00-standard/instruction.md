@@ -9,7 +9,7 @@ Success: the alarm clock stands upright on the drawer, the cactus toy stands upr
 mouse lies on the mouse pad and the keyboard lies keys up over the middle of its frame, both the way round they started;
 all four have come to rest; and both arms are back where they started.
 
-The episode succeeds if the goal is reached before it ends; it ends when you call finish (Robot Interface), at the step
+Success is judged on how things stand when the episode ends. It ends when you call finish (Robot Interface), at the step
 limit (Limits) or when your session ends. The robot never tells you whether you have succeeded.
 
 Rules:

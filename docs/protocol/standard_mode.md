@@ -202,10 +202,12 @@ task's instruction). The wire:
   and `/finish` are 409, `/observe` still answers.
 - The collect hook's signal at the end of the agent's session ends the episode with `reason = "timeout"`.
 - The verdict: the task's own rule on the state the episode ended in, with its settle or hold window run from there on
-  the live simulator (a hold window counts the steps already held). A success reached and then undone is 0. A success
-  the task latches as an event (a referee's call, a completed stage sequence) is part of the state: the task's failure
-  rules keep running after it and still end the episode, but do not take it away. A simulator error is judged as
-  without the feature.
+  the live simulator (a hold window counts the steps already held). A success reached and then undone is 0. A goal the
+  task judges as events (a referee's call, moments in a sequence such as key strikes, a check at a trigger) is judged on
+  them as they happened; the task says which (RoboDojo: `rcb_robodojo.END_JUDGEMENT`, where an ordered stage sequence
+  is judged from the episode except its last stage, which must still hold at the end). The task's failure rules keep
+  running to the end: one that ends the episode gives 0, after a success too. A simulator error is judged as without
+  the feature.
 - `final.json` adds `success_signal = "hidden"`, `ended_by` (`finish`, `step_limit`, `session_end`, `failed`: the
   task's own failure rule, `error`), `hidden_success_seen`, `hidden_success_first_step`, `trial_hidden_success_seen`,
   `finish_time_s` and, with a step limit, `step_limit` and `steps_used`; `reward.json` adds `ended_finish`,

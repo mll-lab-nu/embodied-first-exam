@@ -9,8 +9,9 @@ Success: the cups, kept mouth-down, cover the blocks one at a time from left to 
 uncover the red, green and blue blocks in that order; all three blocks end uncovered, and both arms are back where they
 started. Pushing or dragging a block away from its place ends the episode as a failure.
 
-The episode succeeds if the goal is reached before it ends; it ends when you call finish (Robot Interface), at the step
-limit (Limits) or when your session ends. The robot never tells you whether you have succeeded.
+The covering and uncovering count as they happen, in order. Success is judged on how things stand when the episode ends.
+It ends when you call finish (Robot Interface), at the step limit (Limits) or when your session ends. The robot never
+tells you whether you have succeeded.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the

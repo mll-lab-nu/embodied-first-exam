@@ -21,9 +21,11 @@ RoboDojo specifics:
   or when the time is up. RoboDojo's per-task step limit (a policy's episode length in its evaluation; no check reads it)
   is not applied: no step caps (PROTOCOL D1), only a runaway guard. A task whose service sets RCB_AGENT_END and
   RCB_STEP_LIMIT (every RoboDojo standard task: PROTOCOL §3 "Agent-ended episodes", rcb_agent_end.py) ends it the
-  agent's way instead: after the task's step_lim actions, or when a check fails for good, or
+  agent's way instead: after the task's step_lim actions, or when a check fails for good (a 0), or
   at the agent's POST /finish or the end of its session; a success never ends it and is never shown, and the verdict is
-  RoboDojo's: whether the reward reached 1 in the episode;
+  the state's success after the episode's last action as rcb_robodojo.END_JUDGEMENT judges it: RoboDojo's staged reward
+  is 1 and, for a task judged on its end state, its last check stage holds on the final state (re-checked with RoboDojo's
+  own check function);
 - the episode is graded as it ran (no grading replay): when it ends the service writes
   /data/trajectory.npz (the deliverable) + /data/episode.json (the live result: RoboDojo's check after every action; the
   end-state hash), the collect hook's SIGUSR1 makes it exit, and environment/sim/finalize.sh writes final.json from it;
@@ -108,9 +110,9 @@ def dump() -> None:
 def finish(reason: str) -> None:
     if E["done"]: return
     E["done"] = True; E["reason"] = reason; E["t_end"] = time.time(); E["episode_control_steps"] = ctrl_steps()
-    if AE.ENABLED:       # agent-ended episode: RoboDojo's reward is a latch: its verdict at an end-state end, a failed check
-        # and a simulator error alike (an error is judged as in a task without the feature: the check still runs)
-        try: E["success"] = reason in AE.END_STATE_REASONS + ("failed_check", "error") and S.latched()
+    if AE.ENABLED:       # agent-ended episode: the state it ends in, judged as rcb_robodojo.END_JUDGEMENT says (S.success()
+        # after the last action); a failed check is a 0; a simulator error is judged as in a task without the feature
+        try: E["success"] = reason in AE.END_STATE_REASONS + ("error",) and S.success()
         except Exception: E["success"] = False
     elif not E["success"]:
         try: E["success"] = check_success()

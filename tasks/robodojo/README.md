@@ -76,14 +76,20 @@ as RoboDojo's evaluator does), evaluated after every action; stages count in ord
 query ends the episode as a failure. The episode ends at the first action where every stage has passed. No task of the 54
 registers an end-of-episode check: RoboDojo's per-task `step_lim` only ends a policy's episode in its evaluation.
 
-Standard mode grades as RoboDojo's evaluation does: its tasks' episodes are agent-ended (PROTOCOL §3 "Agent-ended
-episodes"; `RCB_AGENT_END`, and `RCB_STEP_LIMIT` = the task's `step_lim`, in each sim service). RoboDojo's evaluator never
-shows a policy the reward; it ends the episode at the first action where the reward reaches 1 or after `step_lim` actions
-(one step = one 14-D action at 25 Hz, the unit of `take_action_cnt`). Here the agent sees no success either, the episode
-ends after `step_lim` steps (or at the agent's `/finish`, its time limit or token budget, or a failed check), and the
-verdict is RoboDojo's: whether the reward reached 1 in the episode (RoboDojo's stages are latched, so this equals its
-"success within `step_lim` actions"). Privileged mode applies no step limit; a technical cap ends an episode after 15,000
-actions (10 min of simulated time; reason `step_guard`), the most a trajectory may hold.
+Standard mode follows RoboDojo's evaluation, except that its tasks' episodes are agent-ended (PROTOCOL §3 "Agent-ended
+episodes"; `RCB_AGENT_END`, and `RCB_STEP_LIMIT` = the task's `step_lim`, in each sim service). RoboDojo's evaluator
+never shows a policy the reward; it ends the episode at the first action where the reward reaches 1 or after `step_lim`
+actions (one step = one 14-D action at 25 Hz, the unit of `take_action_cnt`). Here the agent sees no success either, the
+episode ends after `step_lim` steps (or at the agent's `/finish`, its time limit or token budget, or a failed check,
+which is a 0), and it is judged on how things stand when it ends (owner 11-25). RoboDojo's stages are latched (a stage
+that has passed is popped and never checked again), so for the 47 tasks judged on their end state the task's last check
+stage is checked again, with RoboDojo's own check function, after every action once it has passed, and must still hold
+after the last one (for a one-stage task: the whole goal; the earlier stages of an ordered task count as they happened).
+The 7 tasks whose goal is a sequence of moments (`play_Xylophone`, `press_by_number`) or is judged at a trigger (the
+three pouring tasks, the two folding tasks) keep RoboDojo's verdict as the episode ran. `rcb_robodojo.py`
+`END_JUDGEMENT` lists all 54 with the reason; each task's Goal says the same in plain words. Privileged mode applies no
+step limit; a technical cap ends an episode after 15,000 actions (10 min of simulated time; reason `step_guard`), the
+most a trajectory may hold.
 
 ## Oracle
 None: RoboDojo releases no expert or planner script, and its training demonstrations (Hugging Face, `data/`) record no
@@ -154,8 +160,9 @@ Frozen on one RTX 4090. Across GPU models (L40S, L40, L4) the frozen layouts reb
   recorded, not compared. Measured on one host, the physics of 48 of the 54 tasks replays bit for bit, and of the six
   above it does not; graded replays run on other hosts and GPU models too, hence up to 3 for every task.
 - standard: graded by the **live episode**, with no grading replay (PROTOCOL H.4), the same rule for every task:
-  `success = live_success`, RoboDojo's check as the service ran it after every action of the episode the agent ran (no
-  end-of-episode hold: RoboDojo has none). The service writes `trajectory.npz` (the deliverable) and `episode.json` on
+  `success = live_success`, RoboDojo's check as the service ran it after every action of the episode the agent ran, the
+  task's last check stage checked again on the final state where `END_JUDGEMENT` says "end" (no hold window: RoboDojo
+  has none). The service writes `trajectory.npz` (the deliverable) and `episode.json` on
   the collect hook's signal and exits; `finalize.sh` writes `final.json` from it (`graded_by` "live", `replays` 0)
   before anything else. `no-network`. A missing, unreadable or unfinalized `final.json`, no `episode.json`, a give-up
   after crashes between calls and the episode never ending for the hook are `infra_error`; a crash inside the agent's

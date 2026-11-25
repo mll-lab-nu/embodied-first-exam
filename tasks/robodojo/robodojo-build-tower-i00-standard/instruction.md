@@ -10,7 +10,7 @@ Success: the long board lies across two pillars, one from each side; the other t
 board, centred over it; the thin plank lies along the middle of the short board with the roof piece on its middle, ridge
 across it; every piece lies flat the way up it started; and both arms are back where they started.
 
-The episode succeeds if the goal is reached before it ends; it ends when you call finish (Robot Interface), at the step
+Success is judged on how things stand when the episode ends. It ends when you call finish (Robot Interface), at the step
 limit (Limits) or when your session ends. The robot never tells you whether you have succeeded.
 
 Rules:

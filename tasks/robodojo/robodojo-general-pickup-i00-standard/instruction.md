@@ -6,7 +6,7 @@ Lift the mint green scissors about a hand's length off the table.
 ## Goal
 Success: the mint green scissors are about a hand's length above where they lay on the table.
 
-The episode succeeds if the goal is reached before it ends; it ends when you call finish (Robot Interface), at the step
+Success is judged on how things stand when the episode ends. It ends when you call finish (Robot Interface), at the step
 limit (Limits) or when your session ends. The robot never tells you whether you have succeeded.
 
 Rules:

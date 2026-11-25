@@ -8,7 +8,7 @@ back to where they started.
 Success: the three cubes stand in one tower, blue at the bottom, yellow in the middle and orange on top, each nearly
 centred on the one below, and both arms are back where they started.
 
-The episode succeeds if the goal is reached before it ends; it ends when you call finish (Robot Interface), at the step
+Success is judged on how things stand when the episode ends. It ends when you call finish (Robot Interface), at the step
 limit (Limits) or when your session ends. The robot never tells you whether you have succeeded.
 
 Rules:

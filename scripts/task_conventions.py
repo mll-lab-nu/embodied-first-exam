@@ -1138,7 +1138,7 @@ LIMITS_TIME = {   # mode -> (what counts and what is graded at the end, the serv
 LIMITS_TIME["realtime"] = LIMITS_TIME["standard"]
 LIMITS_TIME["standard-mcp-shell"] = LIMITS_TIME["standard"]
 assert set(MODE_REGISTRY) <= set(LIMITS_TIME), "every mode of MODE_REGISTRY needs its LIMITS_TIME (PROTOCOL §5)"
-LIMITS_TIME_OWN = {("RoboDojo", "standard"): (   # agent-ended, latched success (V2_AGENT_END_LATCHED): not "as it stands"
+LIMITS_TIME_OWN = {("RoboDojo", "standard"): (   # agent-ended, judged per task (V2_AGENT_END_*): Goal says how
     "everything counts (waiting for the service too). At the end you are stopped without warning and the episode ends.",
     LIMITS_TIME["standard"][1]), ("roboEngineer", "standard"): (
     "everything counts (waiting for the deployment service too, deployments included). At the end you are stopped "
@@ -1177,15 +1177,20 @@ V2_MODE_LINE = {
                            "`efe_robot` or the service's own client, as if it were real hardware: one live episode."),
 }
 # owner 11-24: the fixed grading words carry each rule once (what is graded and when, who ends the episode), no
-# restatement. V2_FINAL_STATE is for a grader that judges the end state; an agent-ended episode whose grader
-# latches the success (RoboDojo: the reward reached 1 at some action counts) says so instead (V2_AGENT_END_LATCHED).
+# restatement. V2_FINAL_STATE is for a grader that judges the end state. An agent-ended episode (RoboDojo standard)
+# closes its Goal with what is judged and when the episode ends (owner 11-25, board 0309 D216 / 0611 D1=B): a task
+# judged on its end state says V2_AGENT_END_STATE (an ordered task first says which steps count as they happen), a task
+# whose goal is moments or a trigger (rcb_robodojo.END_JUDGEMENT "history") says what counts as it happens; then
+# V2_AGENT_END_ENDS (ci_checks/benchmarks/robodojo/advisory-end-judgement.py checks each task against END_JUDGEMENT).
 V2_FINAL_STATE = {
     "privileged": "What counts is how things stand after the last action of your {deliverable}, replayed from the fixed start.",
     "standard": "What counts is how things stand at the end of the episode.",
 }
-V2_AGENT_END_LATCHED = ("The episode succeeds if the goal is reached before it ends; it ends when you call finish (Robot "
-                        "Interface), at the step limit (Limits) or when your session ends. The robot never tells you "
-                        "whether you have succeeded.")
+V2_AGENT_END_STATE = "Success is judged on how things stand when the episode ends."
+V2_AGENT_END_ENDS = ("ends when you call finish (Robot Interface), at the step limit (Limits) or when your session ends. "
+                     "The robot never tells you whether you have succeeded.")
+# the latched wording of 11-24, retired with D216: no RoboDojo standard Goal may carry it
+V2_AGENT_END_RETIRED = ("The episode succeeds if the goal is reached before it ends", "once done, stays counted")
 V2_HAND_IN = {   # owner 11-24: a standard mode hands nothing in and is not asked for a script (no `/app/output/gen.py`)
     "standard-mcp": "The tool server records your calls.",
 }

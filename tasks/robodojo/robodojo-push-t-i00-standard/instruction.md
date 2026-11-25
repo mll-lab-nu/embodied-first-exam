@@ -8,7 +8,7 @@ move both arms back to where they started.
 Success: the block lies flat exactly over the pad, the same way round, and both arms are back where they started.
 Picking up the block, tipping it onto an edge or letting it hop ends the episode at once as a failure.
 
-The episode succeeds if the goal is reached before it ends; it ends when you call finish (Robot Interface), at the step
+Success is judged on how things stand when the episode ends. It ends when you call finish (Robot Interface), at the step
 limit (Limits) or when your session ends. The robot never tells you whether you have succeeded.
 
 Rules:

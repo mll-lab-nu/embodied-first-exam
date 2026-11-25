@@ -6,12 +6,13 @@ brown bowl, in that order.
 
 ## Goal
 Success: the violet bottle has been poured into the black bowl, then the red bottle into the white bowl, then the
-turquoise bottle into the brown bowl, each bottle nearly emptied into its bowl with little spilled. Each pour is judged
-at the moment its bottle stands upright again, so finish pouring before you stand it up. If an arm comes back to where
-it started while a later bowl holds its liquid and an earlier one does not, the episode ends at once as a failure.
+turquoise bottle into the brown bowl, each bottle nearly emptied into its bowl with little spilled. Finish each pour
+before you stand its bottle up. If an arm comes back to where it started while a later bowl holds its liquid and an
+earlier one does not, the episode ends at once as a failure.
 
-The episode succeeds if the goal is reached before it ends; it ends when you call finish (Robot Interface), at the step
-limit (Limits) or when your session ends. The robot never tells you whether you have succeeded.
+Each pour counts as it happens, at the moment its bottle stands upright again. The episode ends when you call finish
+(Robot Interface), at the step limit (Limits) or when your session ends. The robot never tells you whether you have
+succeeded.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the

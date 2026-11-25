@@ -6,7 +6,8 @@ adapter the way an adapter uses the module (numpy only, CPU, about 20 s):
     (RCB_AGENT_END unset or "0"), /finish is a 404 and final.json has none of the feature's fields;
   - feature on: a success changes no answer (done, reason, executed rows, 409s); POST /finish ends the episode and every
     call after it but GET /spec and /status is a 409; the verdict is the end state's (a success undone is 0; a success at
-    /finish or at the session's end is 1); final.json records ended_by;
+    /finish or at the session's end is 1); /spec's success_signal is SUCCESS_SIGNAL_NOTE, which says so; final.json records
+    ended_by;
   - RCB_STEP_LIMIT: the episode ends by itself at the limit (reason step_limit, the chunk cut there), graded as it stands;
   - fail closed: an adapter without finish(), and RCB_STEP_LIMIT without RCB_AGENT_END, do not start.
 """
@@ -28,6 +29,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 STD = os.path.dirname(HERE)                         # embodied_first_exam/standard: rcb_limited.py, rcb1.py, toy_server.py
 sys.path.insert(0, STD)
 import rcb1  # noqa: E402
+sys.path.insert(0, HERE)
+import rcb_agent_end as AE  # noqa: E402   (only its SUCCESS_SIGNAL_NOTE: the adapters run in their own processes)
 
 VOLATILE = {"time_s", "time_left_s", "elapsed_s"}
 fails: list[str] = []
@@ -167,7 +170,10 @@ def main() -> None:
 
         on, fin = script(ae, {"RCB_AGENT_END": "1"})
         spec, st0, obs0, s1, f1, s2, st1, obs1, s3, k1, f2, s4, obs2, k2, st2 = on
-        check("success_signal" in spec["json"], "on: /spec has no success_signal")
+        check(spec["json"].get("success_signal") == AE.SUCCESS_SIGNAL_NOTE, f"on: /spec's success_signal: {spec['json']}")
+        check(all(w in AE.SUCCESS_SIGNAL_NOTE for w in ("how things stand at that moment", "count as they happen", "409")),
+              "the success_signal note no longer says what is judged at the end (the end state, steps that count as they "
+              "happen) or that every call after /finish is refused")
         check(f1["code"] == 200 and f1["json"]["done"] and f1["json"]["reason"] == "finished", f"on: the first /finish: {f1}")
         check(s2["code"] == 409 and obs1["code"] == 409 and k1["code"] == 409 and f2["code"] == 409 and st1["code"] == 200,
               f"on: calls after /finish: {s2['code']} {obs1['code']} {k1['code']} {f2['code']} {st1['code']}")

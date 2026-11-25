@@ -25,7 +25,7 @@ None (see the privileged twin): RoboDojo releases no expert or planner script, a
 initial state, so none replays on a frozen layout. The task is marked unvalidated (PROTOCOL §2 `validated`).
 
 ## Verification
-The sim service ends the episode on RoboDojo's own check (success), a failed check, the runaway guard or the time limit, and
+The sim service ends the episode at the agent's `/finish`, the step limit, a failed check or the time limit, judges it as the Episode row of Details says, and
 writes `/data/trajectory.npz` and `/data/episode.json` (the live result); the collect hook (`environment/sim/finalize.sh`)
 writes `final.json` from them (no replay) and encodes the video the service kept during the episode (`live.mp4`, a frame of
 `cam_head` at the actions the agent's calls rendered; a failed encode costs the video only); `tests/grade.py` scores 1 iff
@@ -48,7 +48,7 @@ Caps per container (PROTOCOL §6).
 ## Details
 | | |
 |---|---|
-| Episode | one episode, no reset: it ends at the first action where RoboDojo's check passes, when a check fails for good, when the agent's time is up, or on a simulator error; no step cap (RoboDojo's evaluation gives a policy 300 actions; a runaway guard at 15000) |
+| Episode | one episode, no reset, ended by the agent (PROTOCOL §3 "Agent-ended episodes"): at its `/finish`, after RoboDojo's own step limit of 300 steps (one 25 Hz action each), when its time is up, when a check fails for good (a 0) or on a simulator error; judged on how things stand when it ends: RoboDojo's check holds on the final state (`rcb_robodojo.py` `END_JUDGEMENT`) |
 | Action space | `submit` chunks of `joint_position` (14: RoboDojo's own action at 25 Hz, the agent's `dt` a multiple of 1/25 s) or `ee_pose` (16: both arms' link6 targets, IK per row); `observe` frames or a watch window; `/kinematics` (FK / IK of both arms, stateless); binary RCB1 responses |
 | Source | RoboDojo @ `cb2a37d` (MIT), its Isaac Lab 2.3 fork @ `afca7b0`, its cuRobo fork @ `d17b54c`; assets from `RoboDojo-Benchmark/RoboDojo` @ `35efbc7` (Apache-2.0) |
 | Benchmark notes | tasks/robodojo/README.md |

@@ -2,7 +2,9 @@
 episodes", docs/protocol/standard_mode.md "Agent-ended episodes"). A task opts in in its `sim` service's environment:
 
   RCB_AGENT_END: "1"     the service never shows the task's success, a success never ends the episode, POST /finish (JSON {})
-                         ends it, and the state the episode ends in is graded (with the task's settle or hold window)
+                         ends it, and the state the episode ends in is graded (with the task's settle or hold window); a
+                         goal made of moments (key strikes, button presses) or judged at a trigger is judged on those as
+                         they happened, as the task's instruction says; a failure rule that ends the episode gives 0
   RCB_STEP_LIMIT: "<N>"  (only with RCB_AGENT_END) the episode also ends by itself after N control steps (reason
                          "step_limit"), graded as it stands; what one step is, is the adapter's (its /spec and instruction)
 
@@ -33,8 +35,9 @@ END_STATE_REASONS = ("finished", "timeout", "step_limit")             # ends jud
 ENDED_BY = {"finished": "finish", "step_limit": "step_limit", "timeout": "session_end", "error": "error",
             "sim_crashed_on_call": "error"}   # any other end: "failed" (the task's own failure rule)
 SUCCESS_SIGNAL_NOTE = ("hidden: the service never tells you whether you have succeeded and a success does not end the "
-                       "episode; POST /finish (JSON {}) ends it and the state at that moment is graded (if you never "
-                       "call it, the state when your session ends); after /finish every call is refused (409)")
+                       "episode; POST /finish (JSON {}) ends it (if you never call it, the end of your session does) and "
+                       "the episode is judged then, as the instruction's Goal says: on how things stand at that moment, "
+                       "and on any steps the Goal says count as they happen; after /finish every call is refused (409)")
 
 
 def hidden_success(state: dict, ok, log: Callable | None = None, step: int | None = None) -> None:

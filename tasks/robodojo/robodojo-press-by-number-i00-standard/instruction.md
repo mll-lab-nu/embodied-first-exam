@@ -12,9 +12,9 @@ pushes the button all the way down and lets it spring all the way back up, long 
 missed). When the last blue press is released, both arms are back where they started. One press too many on any button
 ends the episode at once as a failure.
 
-The episode succeeds if the goal is reached before it ends; it ends when you call finish (Robot Interface), at the step
-limit (Limits) or when your session ends. The robot never tells you whether you have succeeded. A step of the task's
-sequence, once done, stays counted.
+The presses, and the arms' return at the last release, count as they happen. The episode ends when you call finish
+(Robot Interface), at the step limit (Limits) or when your session ends. The robot never tells you whether you have
+succeeded.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the

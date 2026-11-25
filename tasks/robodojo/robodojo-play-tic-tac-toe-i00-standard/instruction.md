@@ -10,7 +10,7 @@ Success: all nine cells hold one piece each, lying flat in the middle of its cel
 opponent's four crosses; no winner is needed. If one of your arms is away from where it started while the opponent arm
 is out, the episode ends at once as a failure.
 
-The episode succeeds if the goal is reached before it ends; it ends when you call finish (Robot Interface), at the step
+Success is judged on how things stand when the episode ends. It ends when you call finish (Robot Interface), at the step
 limit (Limits) or when your session ends. The robot never tells you whether you have succeeded.
 
 Rules:

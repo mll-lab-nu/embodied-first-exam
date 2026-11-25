@@ -1,7 +1,8 @@
 """Standard-mode verifier: reads what the sim service (which the agent could not touch) wrote: /data/final.json (the
 LIVE episode's result and the crash-recovery fields), /data/trajectory.npz, /data/live.mp4. The trial is graded by its
-live episode (no grading replay): success = the live episode's success (RoboDojo's
-check passed at an action of the episode the agent ran) and no infrastructure failure. The same rule for every task; a
+live episode (no grading replay): success = the live episode's success (the state it ended in, judged by the service
+as rcb_robodojo.END_JUDGEMENT says: RoboDojo's staged check, with the task's last stage re-checked on the final state
+where the task is judged on its end state) and no infrastructure failure. The same rule for every task; a
 task whose physics does not replay bit for bit (instance.json "determinism": "verdict", `determinism_verdict_mode`) is
 graded the same way. Numeric-only reward.json; a reward is written whatever final.json holds.
 

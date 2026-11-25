@@ -5,11 +5,11 @@ Pour the liquid from the bottle into the cup, then stand the bottle upright agai
 
 ## Goal
 Success: nearly all the liquid has left the bottle, almost all of it is in the cup with little spilled, and the bottle
-stands upright again. The pour is judged at the moment the bottle stands upright again, so finish pouring before you
-stand it up.
+stands upright again. Finish pouring before you stand the bottle up.
 
-The episode succeeds if the goal is reached before it ends; it ends when you call finish (Robot Interface), at the step
-limit (Limits) or when your session ends. The robot never tells you whether you have succeeded.
+The pour counts as it happens, at the moment the bottle stands upright again. The episode ends when you call finish
+(Robot Interface), at the step limit (Limits) or when your session ends. The robot never tells you whether you have
+succeeded.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the

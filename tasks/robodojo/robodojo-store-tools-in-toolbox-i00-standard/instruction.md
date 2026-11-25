@@ -8,7 +8,7 @@ side up as now. Then move both arms back to where they started.
 Success: the hammer, the pliers, the tape measure and the wrench each lie in their own matching slot in the toolbox, the
 same side up as at the start, and both arms are back where they started.
 
-The episode succeeds if the goal is reached before it ends; it ends when you call finish (Robot Interface), at the step
+Success is judged on how things stand when the episode ends. It ends when you call finish (Robot Interface), at the step
 limit (Limits) or when your session ends. The robot never tells you whether you have succeeded.
 
 Rules:

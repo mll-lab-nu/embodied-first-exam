@@ -8,7 +8,7 @@ right, a little apart. Then move both arms back to where they started.
 Success: the five yellow rubber ducks stand upright in a straight left-to-right row, smallest on the left to largest on
 the right, a little apart, and both arms are back where they started.
 
-The episode succeeds if the goal is reached before it ends; it ends when you call finish (Robot Interface), at the step
+Success is judged on how things stand when the episode ends. It ends when you call finish (Robot Interface), at the step
 limit (Limits) or when your session ends. The robot never tells you whether you have succeeded.
 
 Rules:

@@ -7,7 +7,7 @@ length.
 ## Goal
 Success: the identical copy of the first object on the belt is lifted about a hand's length above the belt.
 
-The episode succeeds if the goal is reached before it ends; it ends when you call finish (Robot Interface), at the step
+Success is judged on how things stand when the episode ends. It ends when you call finish (Robot Interface), at the step
 limit (Limits) or when your session ends. The robot never tells you whether you have succeeded.
 
 Rules:

@@ -10,9 +10,9 @@ button was pressed after each move, and both arms are back where they started wh
 button exactly three times in the whole episode: a fourth counted press ends the episode as a failure, and fewer than
 three means no success.
 
-The episode succeeds if the goal is reached before it ends; it ends when you call finish (Robot Interface), at the step
-limit (Limits) or when your session ends. The robot never tells you whether you have succeeded. A step of the task's
-sequence, once done, stays counted.
+The three moves and the button presses count as they happen, in order. The last step, both arms back where they started
+while the cap is pulled up, is judged on how things stand when the episode ends. It ends when you call finish (Robot
+Interface), at the step limit (Limits) or when your session ends. The robot never tells you whether you have succeeded.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the

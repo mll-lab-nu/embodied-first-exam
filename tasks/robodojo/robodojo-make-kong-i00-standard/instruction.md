@@ -11,8 +11,9 @@ sets of three still stand; then the tile from the front stack stands on its shor
 right end up; and both grippers are open. Leave the front stack untouched until all three matching tiles are face up.
 Moving one of your arms far from where it started while the opponent's arm is out ends the episode as a failure.
 
-The episode succeeds if the goal is reached before it ends; it ends when you call finish (Robot Interface), at the step
-limit (Limits) or when your session ends. The robot never tells you whether you have succeeded.
+Turning the three matching tiles face up before the front stack is touched counts as it happens. Success is judged on
+how things stand when the episode ends. It ends when you call finish (Robot Interface), at the step limit (Limits) or
+when your session ends. The robot never tells you whether you have succeeded.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the

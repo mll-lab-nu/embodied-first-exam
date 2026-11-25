@@ -8,7 +8,7 @@ started.
 Success: each of the three mugs hangs by its handle, handle above the mug, on a rack arm that points left or right;
 nothing holds the mugs; and both arms are back where they started.
 
-The episode succeeds if the goal is reached before it ends; it ends when you call finish (Robot Interface), at the step
+Success is judged on how things stand when the episode ends. It ends when you call finish (Robot Interface), at the step
 limit (Limits) or when your session ends. The robot never tells you whether you have succeeded.
 
 Rules:

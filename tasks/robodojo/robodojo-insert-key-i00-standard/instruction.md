@@ -8,7 +8,7 @@ of a turn clockwise as seen from above, leaving it standing straight.
 Success: the key stands straight in the keyhole, ring up and pushed well in, turned about a sixth of a turn clockwise
 (seen from above) from the slit, so that its teeth point toward you and to the right.
 
-The episode succeeds if the goal is reached before it ends; it ends when you call finish (Robot Interface), at the step
+Success is judged on how things stand when the episode ends. It ends when you call finish (Robot Interface), at the step
 limit (Limits) or when your session ends. The robot never tells you whether you have succeeded.
 
 Rules:

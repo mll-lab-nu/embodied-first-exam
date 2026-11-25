@@ -7,7 +7,7 @@ Stack the three blocks into one tower. Then move both arms back to where they st
 Success: the three blocks stand in one tower, each nearly centred on the one below, and both arms are back where they
 started.
 
-The episode succeeds if the goal is reached before it ends; it ends when you call finish (Robot Interface), at the step
+Success is judged on how things stand when the episode ends. It ends when you call finish (Robot Interface), at the step
 limit (Limits) or when your session ends. The robot never tells you whether you have succeeded.
 
 Rules:

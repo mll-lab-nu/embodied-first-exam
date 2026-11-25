@@ -10,8 +10,9 @@ at the end, and both arms are back where they started. Moving one of your arms f
 opponent's arm is out ends the episode as a failure. Letting go of an object in your basket while one that comes earlier
 in the order is still missing ends the episode as a failure.
 
-The episode succeeds if the goal is reached before it ends; it ends when you call finish (Robot Interface), at the step
-limit (Limits) or when your session ends. The robot never tells you whether you have succeeded.
+The order in which your objects go into your basket counts as it happens. Success is judged on how things stand when the
+episode ends. It ends when you call finish (Robot Interface), at the step limit (Limits) or when your session ends. The
+robot never tells you whether you have succeeded.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the

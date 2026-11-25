@@ -94,8 +94,9 @@ infrastructure, a reference implementation, one benchmark using it, CI support t
   stated in its instruction. The episode ends at whichever comes first: `/finish`, the step limit, the agent's time
   limit (its cutoff, §2), its token budget (the run's, running.md "Official runs"), the agent's own exit, or the task's
   failure rule or a simulator error as without the feature. The verdict is the task's success rule on the state at that
-  end, with the task's settle or hold window run from there; a success reached and undone is 0, a success the task
-  latches as an event stays. The instruction states the three limits with their values (`## Episode end`, rendered by
+  end, with the task's settle or hold window run from there; a success reached and undone is 0; a goal the task judges
+  as events (moments in a sequence, a check at a trigger) is judged on them as they happened; a failure rule that ends
+  the episode gives 0. The instruction states the three limits with their values (`## Episode end`, rendered by
   `normalize` from the task's step limit and the run's token budget; the time limit is `## Time limit`). `final.json`
   records `ended_by` (`finish`, `step_limit`, `session_end`: the time limit, the token budget or the agent's exit, which
   the runner's record tells apart; `failed`, `error`) and the counters (`steps_used`, `finish_time_s`).

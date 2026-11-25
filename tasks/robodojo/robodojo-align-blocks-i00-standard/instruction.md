@@ -9,7 +9,7 @@ Success: the three cubes stand in one straight row, each turned square to it, an
 Lifting, tipping or flipping a cube, or letting it ride up onto the set square or another cube, ends the episode as a
 failure.
 
-The episode succeeds if the goal is reached before it ends; it ends when you call finish (Robot Interface), at the step
+Success is judged on how things stand when the episode ends. It ends when you call finish (Robot Interface), at the step
 limit (Limits) or when your session ends. The robot never tells you whether you have succeeded.
 
 Rules:

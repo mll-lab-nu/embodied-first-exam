@@ -8,7 +8,7 @@ right. Keep each block face up and turned as it is now. Then move both arms back
 Success: each digit block lies on its own mat, the mats read the largest possible number from left to right, each block
 is face up and turned as at the start, and both arms are back where they started.
 
-The episode succeeds if the goal is reached before it ends; it ends when you call finish (Robot Interface), at the step
+Success is judged on how things stand when the episode ends. It ends when you call finish (Robot Interface), at the step
 limit (Limits) or when your session ends. The robot never tells you whether you have succeeded.
 
 Rules:

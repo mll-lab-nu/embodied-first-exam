@@ -6,12 +6,12 @@ back to where they started, with both grippers open.
 
 ## Goal
 Success: both sleeves are folded in across the chest, then the hem is folded straight up to the shoulders, and then both
-arms are back where they started with both grippers open. The fold is judged at the moment both arms arrive home with
-open grippers after having been away, so finish the folds first. An arm coming back to where it started while the hem is
-folded up and a sleeve is not folded in ends the episode as a failure.
+arms are back where they started with both grippers open. Finish the folds before both arms go home. An arm coming back
+to where it started while the hem is folded up and a sleeve is not folded in ends the episode as a failure.
 
-The episode succeeds if the goal is reached before it ends; it ends when you call finish (Robot Interface), at the step
-limit (Limits) or when your session ends. The robot never tells you whether you have succeeded.
+The fold counts as it happens, at the moment both arms arrive home with open grippers after having been away. The
+episode ends when you call finish (Robot Interface), at the step limit (Limits) or when your session ends. The robot
+never tells you whether you have succeeded.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
