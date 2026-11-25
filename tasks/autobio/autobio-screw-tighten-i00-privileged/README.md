@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:autobio-0.1.0` |
 
 ## Task
-AutoBio's `screw_tighten` (Screw on centrifuge tube cap), with two ALOHA arms (`arm1` and `arm2`; 6 joints and a parallel gripper each), fixed to the bench on either side of the rack: Screw the cap onto the 50 mL centrifuge tube. The tube stands open in the rack, and its cap lies on the bench. Success at the first control step where the cap is less than 0.123 m above the tube body's origin (fully screwed on: 0.1197 m), the cap's axis is within 5 mm of the tube's, and the cap's thread (geom `6/nut`) touches the tube's (geom `7/bolt`).
+AutoBio's `screw_tighten` (Screw on centrifuge tube cap), with two ALOHA arms (`arm1` and `arm2`; 6 joints and a parallel gripper each), fixed to the bench on either side of the rack: Screw the cap that lies on the bench onto the 50 mL tube in the rack.
 On the bench: a rack with an open 50 mL tube standing in it, and the tube's screw cap lying on the bench. The thread is a real one: the cap goes on only by turning it. AutoBio's prompt for this task: "one grips tube while the other twists cap". The deliverable is one replayable trajectory of joint position targets (`/app/output/trajectory.npz`, `(T, 14)`, one row per 2 ms control step).
 
 ## Difficulty

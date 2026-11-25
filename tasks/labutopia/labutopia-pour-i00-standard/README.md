@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:labutopia-0.1.0` |
 
 ## Task
-LabUtopia's `pour` (Pour (LabUtopia's level-2 PourLiquid is the same task)) on the same frozen instance as `labutopia-pour-i00-privileged`: Pick up the small glass beaker, pour it out over the large glass beaker and bring it back upright. There is no liquid in the simulation: the pour is judged by where the small beaker is and how far it is turned. Success the moment the last of these is met: (1) the small beaker's centre has been more than 12 cm above where it stood; then, counted only while its centre is within 7.76 cm (horizontally) of the large beaker's centre, (2) it has been turned more than 50 degrees from its orientation right after (1), (3) then turned back to within 30 degrees of that orientation, and (4) then is more than 5 cm above where it stood at 84 control steps (1.4 s in all; they need not be consecutive, and like (2) and (3) they count only while it is within that distance).
+LabUtopia's `pour` (Pour (LabUtopia's level-2 PourLiquid is the same task)) on the same frozen instance as `labutopia-pour-i00-privileged`: Pick up the small beaker and tip it over the large beaker as if pouring into it, then turn it back upright and hold it over the large beaker for a couple of seconds.
 On the bench in front of the arm: two glass beakers: a small one, about 11 cm across and 9.5 cm tall (the one to pour), and a large one, about 15.5 cm across and 13 cm tall (the one to pour into). Standard mode (eai-standard/2.2): the agent drives the robot through a client in one episode, with only its proprioception and the scene's cameras.
 
 ## Difficulty

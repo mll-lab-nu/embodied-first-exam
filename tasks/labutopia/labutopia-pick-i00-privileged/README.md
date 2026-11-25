@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:labutopia-0.1.0` |
 
 ## Task
-LabUtopia's `pick` (Pick), with a Franka Panda arm (7 joints) with its two-finger gripper, fixed to a laboratory bench: Pick up the conical flask that stands on the bench and hold it up. Success, at the first control step at which this has held for 60 consecutive control steps (1 s): the flask's centre is more than 0.10 m above where it started.
+LabUtopia's `pick` (Pick), with a Franka Panda arm (7 joints) with its two-finger gripper, fixed to a laboratory bench: Pick up the conical flask and hold it up, more than a hand's width off the bench, for a second.
 On the bench in front of the arm: one glass conical (Erlenmeyer) flask, about 9.5 cm across at its base and 17 cm tall. The deliverable is one replayable trajectory of joint targets (`/app/output/trajectory.npz`, `(T, 18)`, one row per 1/60 s control step: 9 position targets, then 9 velocity targets).
 
 ## Difficulty

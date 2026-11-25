@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/myosuite-dex-cup-pour-i00-privileged"
-description = "MyoSuite dex_cup_pour (MyoHand, 39 muscles, MuJoCo): produce one replayable trajectory of actuator commands. Move the cup along MyoDex's recorded pour (lift it and tilt it as if pouring) motion: a reference of the object's pose over 81 control steps (1.62 s), from GRAB motion capture (TCDM / MyoDex). Frozen scene instance (MyoHandCupPour-v0, reset seed 0); graded by two fresh-process replays."
+description = "MyoSuite dex_cup_pour (MyoHand, 39 muscles, MuJoCo): produce one replayable trajectory of actuator commands. Task: Pick up the cup and tilt it as if pouring, following the recorded reference motion. Move the cup along MyoDex's recorded pour (lift it and tilt it as if pouring) motion: a reference of the object's pose over 81 control steps (1.62 s), from GRAB motion capture (TCDM / MyoDex). Frozen scene instance (MyoHandCupPour-v0, reset seed 0); graded by two fresh-process replays."
 keywords = ["robotics", "myosuite", "mujoco", "musculoskeletal", "myohand", "code-as-policy", "trajectory", "dex_cup_pour", "privileged"]
 
 [metadata]

@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/kinder-scoop-pour-i01-privileged"
-description = "KinDER ScoopPour3D-o50 (privileged mode): produce one replayable trajectory that reaches the goal, frozen scene instance i01."
+description = "KinDER ScoopPour3D-o50 (privileged mode): produce one replayable trajectory that reaches the goal, frozen scene instance i01. Task: Move all 50 small cubes from the yellow bin into the green bin. There is a scoop you can use."
 keywords = ["robotics", "kinder", "mujoco", "tidybot", "mobile-manipulation", "physical-reasoning", "trajectory", "scoop-pour"]
 
 [metadata]

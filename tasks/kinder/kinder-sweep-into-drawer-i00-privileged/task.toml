@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/kinder-sweep-into-drawer-i00-privileged"
-description = "KinDER SweepIntoDrawer3D-o5 (privileged mode): produce one replayable trajectory that reaches the goal, frozen scene instance i00."
+description = "KinDER SweepIntoDrawer3D-o5 (privileged mode): produce one replayable trajectory that reaches the goal, frozen scene instance i00. Task: Get the five small cubes on top of the kitchen island into the middle drawer of the island's top row. There is a wiper you can use."
 keywords = ["robotics", "kinder", "mujoco", "tidybot", "mobile-manipulation", "physical-reasoning", "trajectory", "sweep-into-drawer"]
 
 [metadata]

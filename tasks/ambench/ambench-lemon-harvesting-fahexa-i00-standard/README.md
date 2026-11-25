@@ -13,7 +13,7 @@
 
 ## Task
 Standard-mode twin of `ambench-lemon-harvesting-fahexa-i00-privileged` (the same frozen instance: AM-Bench environment `LemonHarvesting-Am-FAHexa-Abs-PID-Direct-v0`, its seeded reset with seed
-0): One lemon and six limes are fixed to the front face of a wall in front of the hovering aerial manipulator, and a grey storage tote sits on a small table against the wall to the robot's left. Harvest the lemon: pull it off the wall, put it into the tote and open the gripper fully. Success needs the lemon's reference point (the base of the fruit) inside the tote's nominal box while the gripper is fully open. The agent gets only the `eai-standard/2.2` client (docs/protocol/standard_mode.md); the simulator runs in
+0): Pull the lemon off the wall, drop it into the grey tote on the table to your left and open the gripper all the way. The agent gets only the `eai-standard/2.2` client (docs/protocol/standard_mode.md); the simulator runs in
 the `sim` sidecar (`environment/docker-compose.yaml`, GPU on the sidecar), which owns the scene and records the episode as a
 (T, 8) trajectory of AM-Bench's own end-effector pose actions. The collect hook (`environment/sim/finalize.sh`) ends the
 episode, lets the service exit, writes `final.json` from the live episode's record (no replay) and then films the

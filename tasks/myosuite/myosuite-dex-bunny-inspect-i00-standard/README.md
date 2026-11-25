@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:myosuite-0.1.1` |
 
 ## Task
-MyoSuite `MyoHandStanfordbunnyInspect-v0` (MyoHand, 39 muscles) on the same frozen instance as `myosuite-dex-bunny-inspect-i00-privileged`: Move the Stanford bunny along MyoDex's recorded inspect motion, lifting it and turning it to look at it. The reference is the bunny's pose over 99 control steps, from GRAB motion capture (TCDM / MyoDex), and the episode lasts exactly those 99 steps. At the last control step and at nine in ten or more of all control steps, the bunny's centre of mass must have moved since the start to within about 3 cm of how the reference has moved since its start, and the bunny must have turned since the start to within about 25 degrees of how the reference has turned. That position error must never go above about 5 cm. The episode ends early in failure, by MyoDex's own termination rule, if the bunny gets more than about 25 cm from the reference or from the wrist.
+MyoSuite `MyoHandStanfordbunnyInspect-v0` (MyoHand, 39 muscles) on the same frozen instance as `myosuite-dex-bunny-inspect-i00-privileged`: Pick up the bunny and turn it to look it over, following the recorded reference motion.
 The Stanford bunny lies on the table; the MyoHand is at its pre-grasp pose. Standard mode (eai-standard/2.2): the agent drives the body through a client, with only its own proprioception and the scene's cameras, and 10 resets (only the last episode is graded).
 
 ## Difficulty

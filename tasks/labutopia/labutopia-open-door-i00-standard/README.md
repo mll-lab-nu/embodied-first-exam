@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:labutopia-0.1.0` |
 
 ## Task
-LabUtopia's `open_door` (Open Door) on the same frozen instance as `labutopia-open-door-i00-privileged`: Open the door of the drying oven and let go of it. Success the moment the door's handle has been more than 12 cm from where it started, with the gripper more than 4 cm away from the handle (measured from the point between the fingertips to the handle's centre), for one second (60 control steps in a row).
+LabUtopia's `open_door` (Open Door) on the same frozen instance as `labutopia-open-door-i00-privileged`: Open the drying oven's door, then let go of it and move the hand away.
 On the bench in front of the arm: a drying oven, a grey metal box about 58 cm deep, 74 cm wide and 63 cm high, with a blue door that has a window and a handle and is hinged on one side; a small control panel sits next to the door. The door is closed. Standard mode (eai-standard/2.2): the agent drives the robot through a client in one episode, with only its proprioception and the scene's cameras.
 
 ## Difficulty

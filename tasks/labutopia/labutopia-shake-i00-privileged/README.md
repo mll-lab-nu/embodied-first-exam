@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:labutopia-0.1.0` |
 
 ## Task
-LabUtopia's `shake` (Shake (LabUtopia's level-2 ShakeBeaker is the same task)), with a Franka Panda arm (7 joints) with its two-finger gripper, fixed to a laboratory bench: Pick up the beaker, shake it, then hold it still in the air. Nothing is counted at a control step at which the beaker's centre is less than 0.05 m above where it started. Success, at the first control step at which the second condition is met: (1) five times, the beaker's centre gets 0.05 m or more (horizontally) from where it was when that count began (each count begins at the next step); (2) after the fifth, its centre stays within 0.01 m in x and in y over 60 control steps (1 s).
+LabUtopia's `shake` (Shake (LabUtopia's level-2 ShakeBeaker is the same task)), with a Franka Panda arm (7 joints) with its two-finger gripper, fixed to a laboratory bench: Pick up the beaker and, holding it in the air, shake it sideways five times, each shake moving it a thumb's length or more; then hold it still for a second.
 On the bench in front of the arm: one small glass beaker, about 6.5 cm across and 10 cm tall. The deliverable is one replayable trajectory of joint targets (`/app/output/trajectory.npz`, `(T, 18)`, one row per 1/60 s control step: 9 position targets, then 9 velocity targets).
 
 ## Difficulty

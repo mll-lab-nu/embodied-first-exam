@@ -13,7 +13,7 @@
 
 ## Task
 Standard-mode twin of `ambench-ndt-fahexa-i00-privileged` (the same frozen instance: AM-Bench environment `NDT-Am-FAHexa-Abs-PID-Direct-v0`, its seeded reset with seed
-0): The hovering aerial manipulator starts outside a large warehouse building, facing one of its long walls, and high up on that wall a small rectangle is marked out with yellow-and-black hazard tape. Inspect the marked rectangle as a non-destructive test would: bring the end effector to the fixed inspection point in front of it, which the goal geometry gives, and hold it there for 100 control steps in a row. The agent gets only the `eai-standard/2.2` client (docs/protocol/standard_mode.md); the simulator runs in
+0): Hold the end effector at the inspection point (Robot Interface), in front of the taped rectangle high up on the warehouse wall ahead, for almost a second. The agent gets only the `eai-standard/2.2` client (docs/protocol/standard_mode.md); the simulator runs in
 the `sim` sidecar (`environment/docker-compose.yaml`, GPU on the sidecar), which owns the scene and records the episode as a
 (T, 8) trajectory of AM-Bench's own end-effector pose actions. The collect hook (`environment/sim/finalize.sh`) ends the
 episode, lets the service exit, writes `final.json` from the live episode's record (no replay) and then films the

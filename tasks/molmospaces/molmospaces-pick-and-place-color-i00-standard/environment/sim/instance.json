@@ -788,7 +788,7 @@
    "place_receptacle/2_1/408b385373564c16acda3224de7d2ec6"
   ],
   "language": {
-   "task_description": "Pick up the small dark bird and place it in or on the red bowl",
+   "task_description": "Put the small dark bird in the red bowl.",
    "referral_expressions": {
     "pickup_name": "small dark bird",
     "place_name": "place receptacl 0"
@@ -934,7 +934,7 @@
  "instance": "i00",
  "variant": "an Objaverse object",
  "facts": {
-  "goal": "Pick up the small dark bird and place it in or on the red bowl",
+  "goal": "Put the small dark bird in the red bowl.",
   "horizon_steps": 606,
   "horizon_s": 40,
   "control_hz": 15.152,

@@ -13,7 +13,7 @@
 
 ## Task
 Standard-mode twin of `ambench-open-door-fahexa-i00-privileged` (the same frozen instance: AM-Bench environment `OpenDoor-Am-FAHexa-Abs-PID-Direct-v0`, its seeded reset with seed
-0): A free-standing door stands ahead of the hovering aerial manipulator: an oak door panel in a metal frame, hinged on its left edge (as seen from the robot), with a metal lever handle near its right edge on the robot-facing side. Open the door: swing the panel on its hinge, away from the robot, by more than 20 degrees from closed. The agent gets only the `eai-standard/2.2` client (docs/protocol/standard_mode.md); the simulator runs in
+0): Push the door open, away from you, about a quarter of the way or more. The agent gets only the `eai-standard/2.2` client (docs/protocol/standard_mode.md); the simulator runs in
 the `sim` sidecar (`environment/docker-compose.yaml`, GPU on the sidecar), which owns the scene and records the episode as a
 (T, 8) trajectory of AM-Bench's own end-effector pose actions. The collect hook (`environment/sim/finalize.sh`) ends the
 episode, lets the service exit, writes `final.json` from the live episode's record (no replay) and then films the

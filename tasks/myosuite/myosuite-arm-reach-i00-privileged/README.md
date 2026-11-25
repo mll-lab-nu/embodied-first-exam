@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:myosuite-0.1.1` |
 
 ## Task
-MyoSuite `myoArmReachFixed-v0` (MyoArm, a musculoskeletal model of a human shoulder, arm and hand, 34 muscles): Bring the index fingertip to the target point in space and hold it within about 1 cm of the target for a full second. Once the first two control steps have passed, the episode ends in failure if the fingertip gets more than about a metre from the target.
+MyoSuite `myoArmReachFixed-v0` (MyoArm, a musculoskeletal model of a human shoulder, arm and hand, 34 muscles): Touch the small sphere in front of you with your index fingertip and hold it there for a second.
 The arm hangs at the side; a small sphere in front of the body marks the target for the index fingertip. The deliverable is one replayable trajectory of actuator commands (`/app/output/trajectory.npz`, `(T, 34)`, one row per 20 ms control step).
 
 ## Difficulty

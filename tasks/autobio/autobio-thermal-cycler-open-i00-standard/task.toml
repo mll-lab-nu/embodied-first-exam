@@ -13,7 +13,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/autobio-thermal-cycler-open-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.2): AutoBio thermal_cycler_open (Open thermal cycler lid) on the same frozen instance as autobio-thermal-cycler-open-i00-privileged: Open the lid of the thermal cycler, which starts closed and locked: turn the lever on the lid all the way back from its locked end and swing the lid fully open. The agent only gets a client: cameras (RGB, optional depth, calibration), the robot's proprioception, joint position chunks, arm kinematics; one episode, no reset, no object or instrument state; the sim service records the episode and grades the live episode (no grading replay)."
+description = "STANDARD MODE (robot as a service, eai-standard/2.2): AutoBio thermal_cycler_open (Open thermal cycler lid) on the same frozen instance as autobio-thermal-cycler-open-i00-privileged: Unlock the thermal cycler's lid with the lever on it and open the lid all the way. The agent only gets a client: cameras (RGB, optional depth, calibration), the robot's proprioception, joint position chunks, arm kinematics; one episode, no reset, no object or instrument state; the sim service records the episode and grades the live episode (no grading replay)."
 keywords = ["robotics", "autobio", "mujoco", "laboratory", "biology", "ur5e-robotiq-2f85", "code-as-policy", "trajectory", "thermal_cycler_open", "standard-mode"]
 
 [metadata]

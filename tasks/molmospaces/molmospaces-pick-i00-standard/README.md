@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:molmospaces-0.2.5` |
 
 ## Task
-Standard-mode twin of `molmospaces-pick-i00-privileged` (the same frozen MolmoSpaces episode): Pick up the pie. The agent gets only the
+Standard-mode twin of `molmospaces-pick-i00-privileged` (the same frozen MolmoSpaces episode): Pick up the pie and hold it up. The agent gets only the
 `eai-standard/2.2` client (docs/protocol/standard_mode.md); the simulator runs in the `sim` sidecar
 (`environment/docker-compose.yaml`), which owns the episode, serves cameras, proprioception and upstream's kinematic
 model, and records every executed row. The collect hook (`environment/sim/finalize.sh`) ends the episode, lets the

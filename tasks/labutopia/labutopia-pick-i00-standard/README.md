@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:labutopia-0.1.0` |
 
 ## Task
-LabUtopia's `pick` (Pick) on the same frozen instance as `labutopia-pick-i00-privileged`: Pick up the glass conical flask that stands on the bench and hold it up. Success the moment the flask's centre has been more than 10 cm above where it stood for one second (60 control steps in a row).
+LabUtopia's `pick` (Pick) on the same frozen instance as `labutopia-pick-i00-privileged`: Pick up the conical flask and hold it up, more than a hand's width off the bench, for a second.
 On the bench in front of the arm: one glass conical (Erlenmeyer) flask, about 9.5 cm across at its base and 17 cm tall. Standard mode (eai-standard/2.2): the agent drives the robot through a client in one episode, with only its proprioception and the scene's cameras.
 
 ## Difficulty

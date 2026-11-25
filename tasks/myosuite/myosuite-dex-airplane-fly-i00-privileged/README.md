@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:myosuite-0.1.1` |
 
 ## Task
-MyoSuite `MyoHandAirplaneFly-v0` (MyoHand, a musculoskeletal model of a human forearm and hand, 39 muscles and 6 other actuators): Move the toy airplane along MyoDex's recorded fly motion, lifting it and flying it through the air. The reference is the airplane's pose over 99 control steps, from GRAB motion capture (TCDM / MyoDex), and the episode lasts exactly those 99 steps. At the last control step and at nine in ten or more of all control steps, the airplane's centre of mass must have moved since the start to within about 3 cm of how the reference has moved since its start, and the airplane must have turned since the start to within about 25 degrees of how the reference has turned. That position error must never go above about 5 cm. The episode ends early in failure, by MyoDex's own termination rule, if the airplane gets more than about 25 cm from the reference or from the wrist.
+MyoSuite `MyoHandAirplaneFly-v0` (MyoHand, a musculoskeletal model of a human forearm and hand, 39 muscles and 6 other actuators): Pick up the toy airplane and fly it through the air, following the recorded reference motion.
 A toy airplane lies on the table; the MyoHand is at its pre-grasp pose. The deliverable is one replayable trajectory of actuator commands (`/app/output/trajectory.npz`, `(T, 45)`, one row per 20 ms control step).
 
 ## Difficulty

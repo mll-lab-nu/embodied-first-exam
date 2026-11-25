@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:autobio-0.1.0` |
 
 ## Task
-AutoBio's `screw_loose` (Unscrew centrifuge tube cap) on the same frozen instance as `autobio-screw-loose-i00-privileged`: Unscrew the cap of the 50 mL centrifuge tube and lift it off. Success the moment the cap, held by `arm1`'s gripper (the test looks for contact between the cap and that gripper's left finger), is more than 3.03 cm above where it sat when screwed on and its thread is clear of the tube's.
+AutoBio's `screw_loose` (Unscrew centrifuge tube cap) on the same frozen instance as `autobio-screw-loose-i00-privileged`: Unscrew the cap of the 50 mL tube and lift it off, holding the cap with `arm1`.
 On the bench: a rack with a 50 mL tube standing in it, its cap screwed on. The thread is a real one: the cap comes off only by turning it. AutoBio's prompt for this task: "one stabilizes tube while the other twists cap". Standard mode (eai-standard/2.2): the agent drives the robot through a client in one episode, with only its proprioception and the scene's cameras.
 
 ## Difficulty

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:myosuite-0.1.1` |
 
 ## Task
-MyoSuite `myoChallengeOslRunFixed-v0` (MyoLeg + OSL, a free-standing musculoskeletal model of a human whose right leg is an Open-Source Leg knee-ankle prosthesis, 54 muscles and 2 other actuators): Run forward along the track for 29 m to the finish, MyoChallenge 2024 OSL Run's own win condition, staying on your feet and within about a metre of the track's centre line. The right leg is the prosthesis (`osl_knee_angle_r`, `osl_ankle_angle_r`) and is driven by its own controller, so you command only the 54 muscles. The episode ends in failure if you fall, leave the track sideways, or move about 2 m backwards. There is no time limit.
+MyoSuite `myoChallengeOslRunFixed-v0` (MyoLeg + OSL, a free-standing musculoskeletal model of a human whose right leg is an Open-Source Leg knee-ankle prosthesis, 54 muscles and 2 other actuators): Run 29 m down the track to the finish, staying on your feet and within 1 m of the track's centre line.
 A musculoskeletal body whose right leg is an Open-Source Leg prosthesis (knee and ankle motors driven by its own controller) stands at the start of a straight, flat running track. The deliverable is one replayable trajectory of actuator commands (`/app/output/trajectory.npz`, `(T, 56)`, one row per 5 ms control step).
 
 ## Difficulty

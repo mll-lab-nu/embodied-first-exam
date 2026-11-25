@@ -17,7 +17,7 @@ Standard mode (robot as a service, `eai-standard/2.1`) of `kinder-sweep-into-dra
 cameras, joint encoders, the base's odometry -- and
 never the scene's state or the goal check. No reset: one episode, which is graded.
 
-Task: get the five small dark-red cubes on top of the kitchen island into the middle drawer of the island's upper row of drawers. The drawer starts closed, and a wiper lies next to the cubes. The task succeeds the moment all five cubes' centres are inside that drawer, each at least 2.5 cm from the drawer's two side walls.
+Task: Get the five small cubes on top of the kitchen island into the middle drawer of the island's top row. There is a wiper you can use.
 
 ## Difficulty
 Nonprehensile, tool use, dynamics: open a closed drawer, then sweep five small cubes off the counter into it with a wiper. KinDER's paper reports at most 0.14 success for its best method on this variant and 0.00 for sampling MPC on the true simulator.

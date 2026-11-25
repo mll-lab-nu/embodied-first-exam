@@ -1,4 +1,8 @@
 [[replace]]
+old = "## Task\nSet the thermal mixer to time 30 s, temperature 33 °C, mixing speed 600 rpm, with the buttons on its front panel."
+new = "## Task\nSet the thermal mixer to time 65 s, temperature 31 °C, mixing speed 1050 rpm, with the buttons on its front panel."
+
+[[replace]]
 old = "`reset(seed=0)`"
 new = "`reset(seed=2)`"
 
@@ -13,3 +17,7 @@ new = "/ seed 2 (allowed"
 [[replace]]
 old = "time 30 s, temperature 33 °C, mixing speed 600 rpm"
 new = "time 65 s, temperature 31 °C, mixing speed 1050 rpm"
+
+[[replace]]
+old = "Set the thermal mixer to time 30 s, temperature 33 °C, mixing speed 600 rpm, with the buttons on its front panel."
+new = "Set the thermal mixer to time 65 s, temperature 31 °C, mixing speed 1050 rpm, with the buttons on its front panel."

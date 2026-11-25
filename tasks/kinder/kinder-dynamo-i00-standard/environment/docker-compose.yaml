@@ -23,7 +23,7 @@ services:
     restart: on-failure:6                               # a crash resumes the same episode, never a reset (rcb_service.py)
     environment:
       RCB_INSTANCE: /srv/instance.json
-      RCB_TASK_TEXT: "Drive the robot into the translucent green square marked on the floor; three chairs stand in the way and can be pushed."
+      RCB_TASK_TEXT: "Drive into the green square marked on the floor, a few metres away ahead and slightly to your right. You may push the three chairs in the way."
       RCB_WALL_CLOCK_S: "1800.0"
       # Knobs: ${NAME:-default} takes NAME from the shell that runs harbor. The defaults are the standard
       # configuration; results under other settings are reported separately.

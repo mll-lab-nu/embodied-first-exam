@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:labutopia-0.1.0` |
 
 ## Task
-LabUtopia's `shake` (Shake (LabUtopia's level-2 ShakeBeaker is the same task)) on the same frozen instance as `labutopia-shake-i00-privileged`: Pick up the glass beaker, shake it, then hold it still in the air. Nothing is counted while the beaker's centre is less than 5 cm above where it stood. Success the moment the second of these is met: (1) five times, the beaker's centre moves 5 cm or more (horizontally) from where it was when that count began; (2) after the fifth, the centre stays within 1 cm in each horizontal direction over one second (60 control steps in a row).
+LabUtopia's `shake` (Shake (LabUtopia's level-2 ShakeBeaker is the same task)) on the same frozen instance as `labutopia-shake-i00-privileged`: Pick up the beaker and, holding it in the air, shake it sideways five times, each shake moving it a thumb's length or more; then hold it still for a second.
 On the bench in front of the arm: one small glass beaker, about 6.5 cm across and 10 cm tall. Standard mode (eai-standard/2.2): the agent drives the robot through a client in one episode, with only its proprioception and the scene's cameras.
 
 ## Difficulty

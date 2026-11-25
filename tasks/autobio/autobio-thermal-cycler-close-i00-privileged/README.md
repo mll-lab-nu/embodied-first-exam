@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:autobio-0.1.0` |
 
 ## Task
-AutoBio's `thermal_cycler_close` (Close thermal cycler lid), with a UR5e arm (6 joints) with a Robotiq 2F-85 gripper, fixed to the bench: Close the lid of the thermal cycler and lock it. Success at the first control step where the lid's hinge (`/thermal_cycler_biorad_c1000:lid`) is within 0.01 rad of -1.9 rad (fully closed; it starts open, at 0) and the lid's lever (`/thermal_cycler_biorad_c1000:lid-lever`) is within 0.01 rad of -0.94 rad (the locked end of its travel; it starts at 0).
+AutoBio's `thermal_cycler_close` (Close thermal cycler lid), with a UR5e arm (6 joints) with a Robotiq 2F-85 gripper, fixed to the bench: Close the thermal cycler's lid and lock it with the lever on the lid.
 On the bench: a thermal cycler (a Bio-Rad C1000 model) with its lid open. The lid carries a lever that locks it and a force knob. The deliverable is one replayable trajectory of joint position targets (`/app/output/trajectory.npz`, `(T, 7)`, one row per 2 ms control step).
 
 ## Difficulty

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:myosuite-0.1.1` |
 
 ## Task
-MyoSuite `MyoHandHammerUse-v0` (MyoHand, a musculoskeletal model of a human forearm and hand, 39 muscles and 6 other actuators): Move the hammer along MyoDex's recorded use motion, grasping it and swinging it. The reference is the hammer's pose over 99 control steps, from GRAB motion capture (TCDM / MyoDex), and the episode lasts exactly those 99 steps. At the last control step and at nine in ten or more of all control steps, the hammer's centre of mass must have moved since the start to within about 3 cm of how the reference has moved since its start, and the hammer must have turned since the start to within about 25 degrees of how the reference has turned. That position error must never go above about 5 cm. The episode ends early in failure, by MyoDex's own termination rule, if the hammer gets more than about 25 cm from the reference or from the wrist.
+MyoSuite `MyoHandHammerUse-v0` (MyoHand, a musculoskeletal model of a human forearm and hand, 39 muscles and 6 other actuators): Pick up the hammer and swing it, following the recorded reference motion.
 A hammer lies on the table; the MyoHand is at its pre-grasp pose. The deliverable is one replayable trajectory of actuator commands (`/app/output/trajectory.npz`, `(T, 45)`, one row per 20 ms control step).
 
 ## Difficulty

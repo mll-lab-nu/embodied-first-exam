@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:myosuite-0.1.1` |
 
 ## Task
-MyoSuite `MyoHandCylindersmallPass-v0` (MyoHand, 39 muscles) on the same frozen instance as `myosuite-dex-cylinder-pass-i00-privileged`: Move the small cylinder along MyoDex's recorded pass motion, picking it up and presenting it for a hand-over. The reference is the cylinder's pose over 86 control steps, from GRAB motion capture (TCDM / MyoDex), and the episode lasts exactly those 86 steps. At the last control step and at nine in ten or more of all control steps, the cylinder's centre of mass must have moved since the start to within about 3 cm of how the reference has moved since its start. That position error must never go above about 5 cm. The episode ends early in failure, by MyoDex's own termination rule, if the cylinder gets more than about 25 cm from the reference or from the wrist.
+MyoSuite `MyoHandCylindersmallPass-v0` (MyoHand, 39 muscles) on the same frozen instance as `myosuite-dex-cylinder-pass-i00-privileged`: Pick up the small cylinder and hold it out as if handing it over, following the recorded reference motion.
 A small cylinder lies on the table; the MyoHand is at its pre-grasp pose. Standard mode (eai-standard/2.2): the agent drives the body through a client, with only its own proprioception and the scene's cameras, and 10 resets (only the last episode is graded).
 
 ## Difficulty

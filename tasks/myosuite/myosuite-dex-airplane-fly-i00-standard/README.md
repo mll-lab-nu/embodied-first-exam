@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:myosuite-0.1.1` |
 
 ## Task
-MyoSuite `MyoHandAirplaneFly-v0` (MyoHand, 39 muscles) on the same frozen instance as `myosuite-dex-airplane-fly-i00-privileged`: Move the toy airplane along MyoDex's recorded fly motion, lifting it and flying it through the air. The reference is the airplane's pose over 99 control steps, from GRAB motion capture (TCDM / MyoDex), and the episode lasts exactly those 99 steps. At the last control step and at nine in ten or more of all control steps, the airplane's centre of mass must have moved since the start to within about 3 cm of how the reference has moved since its start, and the airplane must have turned since the start to within about 25 degrees of how the reference has turned. That position error must never go above about 5 cm. The episode ends early in failure, by MyoDex's own termination rule, if the airplane gets more than about 25 cm from the reference or from the wrist.
+MyoSuite `MyoHandAirplaneFly-v0` (MyoHand, 39 muscles) on the same frozen instance as `myosuite-dex-airplane-fly-i00-privileged`: Pick up the toy airplane and fly it through the air, following the recorded reference motion.
 A toy airplane lies on the table; the MyoHand is at its pre-grasp pose. Standard mode (eai-standard/2.2): the agent drives the body through a client, with only its own proprioception and the scene's cameras, and 10 resets (only the last episode is graded).
 
 ## Difficulty

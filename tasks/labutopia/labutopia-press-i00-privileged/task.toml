@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/labutopia-press-i00-privileged"
-description = "LabUtopia press (Press; a chemistry laboratory with a Franka Panda on Isaac Sim): produce one replayable trajectory of joint targets. Press the red button on the instrument's front panel and keep it pressed. Frozen scene instance (LabUtopia's reset, seed 0); graded by one fresh-process replay with a copy of LabUtopia's own success check."
+description = "LabUtopia press (Press; a chemistry laboratory with a Franka Panda on Isaac Sim): produce one replayable trajectory of joint targets. Press the red button on the instrument's front panel and hold it in for a second. Frozen scene instance (LabUtopia's reset, seed 0); graded by one fresh-process replay with a copy of LabUtopia's own success check."
 keywords = ["robotics", "labutopia", "isaac-sim", "laboratory", "chemistry", "franka-panda", "code-as-policy", "trajectory", "press", "privileged"]
 
 [metadata]

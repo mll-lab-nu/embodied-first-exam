@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:myosuite-0.1.1` |
 
 ## Task
-MyoSuite `myoChallengeRelocateP1-v0` (MyoArm, 63 muscles) on the same frozen instance as `myosuite-relocate-i00-privileged`: Pick up the object from the table and put it in the target receptacle, with its position within about 10 cm of the target for a full second. Its rotation does not matter. The episode ends in failure if the palm gets more than about half a metre from the object.
+MyoSuite `myoChallengeRelocateP1-v0` (MyoArm, 63 muscles) on the same frozen instance as `myosuite-relocate-i00-privileged`: Pick up the object on the table and put it in the receptacle.
 An object stands on the table in front of the arm; a receptacle marks the target position. Standard mode (eai-standard/2.2): the agent drives the body through a client, with only its own proprioception and the scene's cameras, and 10 resets (only the last episode is graded).
 
 ## Difficulty

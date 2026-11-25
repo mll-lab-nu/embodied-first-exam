@@ -13,7 +13,7 @@
 
 ## Task
 Standard-mode twin of `ambench-rotate-valve-fahexa-i00-privileged` (the same frozen instance: AM-Bench environment `RotateValve-Am-FAHexa-Abs-PID-Direct-v0`, its seeded reset with seed
-0): A valve is mounted on the front face of a wall in front of the hovering aerial manipulator: a large red wheel disc on a short shaft, with a handle bar sticking out of the disc's face toward the robot. Turn the valve: rotate the wheel clockwise, as seen from the robot's side of the wall, by at least 170 degrees from its starting angle. The agent gets only the `eai-standard/2.2` client (docs/protocol/standard_mode.md); the simulator runs in
+0): Turn the red valve wheel clockwise, as seen from you, by about half a turn or more. The agent gets only the `eai-standard/2.2` client (docs/protocol/standard_mode.md); the simulator runs in
 the `sim` sidecar (`environment/docker-compose.yaml`, GPU on the sidecar), which owns the scene and records the episode as a
 (T, 8) trajectory of AM-Bench's own end-effector pose actions. The collect hook (`environment/sim/finalize.sh`) ends the
 episode, lets the service exit, writes `final.json` from the live episode's record (no replay) and then films the

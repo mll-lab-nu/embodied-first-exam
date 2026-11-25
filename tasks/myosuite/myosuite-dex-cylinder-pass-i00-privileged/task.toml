@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/myosuite-dex-cylinder-pass-i00-privileged"
-description = "MyoSuite dex_cylinder_pass (MyoHand, 39 muscles, MuJoCo): produce one replayable trajectory of actuator commands. Move the small cylinder along MyoDex's recorded pass (pick it up and present it for a hand-over) motion: a reference of the object's pose over 86 control steps (1.72 s), from GRAB motion capture (TCDM / MyoDex). Frozen scene instance (MyoHandCylindersmallPass-v0, reset seed 0); graded by two fresh-process replays."
+description = "MyoSuite dex_cylinder_pass (MyoHand, 39 muscles, MuJoCo): produce one replayable trajectory of actuator commands. Task: Pick up the small cylinder and hold it out as if handing it over, following the recorded reference motion. Move the small cylinder along MyoDex's recorded pass (pick it up and present it for a hand-over) motion: a reference of the object's pose over 86 control steps (1.72 s), from GRAB motion capture (TCDM / MyoDex). Frozen scene instance (MyoHandCylindersmallPass-v0, reset seed 0); graded by two fresh-process replays."
 keywords = ["robotics", "myosuite", "mujoco", "musculoskeletal", "myohand", "code-as-policy", "trajectory", "dex_cylinder_pass", "privileged"]
 
 [metadata]

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:myosuite-0.1.1` |
 
 ## Task
-MyoSuite `MyoHandCylindersmallPass-v0` (MyoHand, a musculoskeletal model of a human forearm and hand, 39 muscles and 6 other actuators): Move the small cylinder along MyoDex's recorded pass motion, picking it up and presenting it for a hand-over. The reference is the cylinder's pose over 86 control steps, from GRAB motion capture (TCDM / MyoDex), and the episode lasts exactly those 86 steps. At the last control step and at nine in ten or more of all control steps, the cylinder's centre of mass must have moved since the start to within about 3 cm of how the reference has moved since its start. That position error must never go above about 5 cm. The episode ends early in failure, by MyoDex's own termination rule, if the cylinder gets more than about 25 cm from the reference or from the wrist.
+MyoSuite `MyoHandCylindersmallPass-v0` (MyoHand, a musculoskeletal model of a human forearm and hand, 39 muscles and 6 other actuators): Pick up the small cylinder and hold it out as if handing it over, following the recorded reference motion.
 A small cylinder lies on the table; the MyoHand is at its pre-grasp pose. The deliverable is one replayable trajectory of actuator commands (`/app/output/trajectory.npz`, `(T, 45)`, one row per 20 ms control step).
 
 ## Difficulty

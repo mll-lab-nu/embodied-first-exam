@@ -13,7 +13,7 @@
 
 ## Task
 Standard-mode twin of `ambench-peg-in-hole-fahexa-i00-privileged` (the same frozen instance: AM-Bench environment `PegInHole-Am-FAHexa-Abs-PID-Direct-v0`, its seeded reset with seed
-0): The hovering aerial manipulator starts holding a metal peg (a cylinder 15 cm long and 4 cm in diameter) in its gripper, pointing straight ahead. A wall stands ahead with a blue square socket mounted on its front face: a square frame whose square opening faces the robot and is closed at the back by a red plate. Insert the peg: push the centre of its front end, the end that points ahead at the start, into the square opening until it is more than two-thirds of the way to the red plate at the back. The agent gets only the `eai-standard/2.2` client (docs/protocol/standard_mode.md); the simulator runs in
+0): Push the peg you are holding, front end first, into the blue socket on the wall, most of the way to the red plate at its back. The agent gets only the `eai-standard/2.2` client (docs/protocol/standard_mode.md); the simulator runs in
 the `sim` sidecar (`environment/docker-compose.yaml`, GPU on the sidecar), which owns the scene and records the episode as a
 (T, 8) trajectory of AM-Bench's own end-effector pose actions. The collect hook (`environment/sim/finalize.sh`) ends the
 episode, lets the service exit, writes `final.json` from the live episode's record (no replay) and then films the

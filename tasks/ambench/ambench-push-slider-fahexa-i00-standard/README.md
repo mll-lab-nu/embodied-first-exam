@@ -13,7 +13,7 @@
 
 ## Task
 Standard-mode twin of `ambench-push-slider-fahexa-i00-privileged` (the same frozen instance: AM-Bench environment `PushSlider-Am-FAHexa-Abs-PID-Direct-v0`, its seeded reset with seed
-0): A wall stands in front of the hovering aerial manipulator, with a horizontal slider mounted on its front face: a straight rail about 1 m long and a red knob that slides along it. Push the red knob from the left end of the rail, as seen from the robot facing the wall, to its right end, stopping no more than 5 cm short of it. The agent gets only the `eai-standard/2.2` client (docs/protocol/standard_mode.md); the simulator runs in
+0): Push the red knob along the rail all the way to its right end, as seen from you. The agent gets only the `eai-standard/2.2` client (docs/protocol/standard_mode.md); the simulator runs in
 the `sim` sidecar (`environment/docker-compose.yaml`, GPU on the sidecar), which owns the scene and records the episode as a
 (T, 8) trajectory of AM-Bench's own end-effector pose actions. The collect hook (`environment/sim/finalize.sh`) ends the
 episode, lets the service exit, writes `final.json` from the live episode's record (no replay) and then films the

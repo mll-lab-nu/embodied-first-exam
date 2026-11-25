@@ -1,5 +1,5 @@
 {
- "task_text": "Screw the cap onto the 50 mL centrifuge tube. The tube stands open in the rack, and its cap lies on the bench. Success the moment the cap is on the tube's thread, its axis within 5 mm of the tube's, and screwed down to within 3.3 mm of fully on.",
+ "task_text": "Screw the cap that lies on the bench onto the 50 mL tube in the rack.",
  "default_cameras": [
   "table_cam_front",
   "arm1_wrist_cam",

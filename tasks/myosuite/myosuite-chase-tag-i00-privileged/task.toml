@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/myosuite-chase-tag-i00-privileged"
-description = "MyoSuite chase_tag (MyoLegs, 80 muscles, MuJoCo): produce one replayable trajectory of actuator commands. Tag the opponent: bring your pelvis within 0.5 m of it (horizontal distance) within 20 s of simulated time (MyoChallenge 2023 ChaseTag P1, task CHASE). Frozen scene instance (myoChallengeChaseTagP1-v0, reset seed 0); graded by two fresh-process replays."
+description = "MyoSuite chase_tag (MyoLegs, 80 muscles, MuJoCo): produce one replayable trajectory of actuator commands. Task: Tag the opponent: get your pelvis within 0.5 m of it. Tag the opponent: bring your pelvis within 0.5 m of it (horizontal distance) within 20 s of simulated time (MyoChallenge 2023 ChaseTag P1, task CHASE). Frozen scene instance (myoChallengeChaseTagP1-v0, reset seed 0); graded by two fresh-process replays."
 keywords = ["robotics", "myosuite", "mujoco", "musculoskeletal", "myolegs", "code-as-policy", "trajectory", "chase_tag", "privileged"]
 
 [metadata]

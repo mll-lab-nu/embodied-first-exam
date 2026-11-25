@@ -519,7 +519,7 @@
    "task_type": "nav_to_obj"
   },
   "language": {
-   "task_description": "Navigate to any tablelamp (2 available)",
+   "task_description": "Go to one of the two table lamps and stop close by, with the lamp in view of the head camera.",
    "referral_expressions": {
     "object_name": "Tablelamp 0409A12180D288F37C51B4C240Cf5F62 1 0 0"
    },
@@ -541,7 +541,7 @@
  "instance": "i00",
  "variant": "several objects of the target type (the nearest counts)",
  "facts": {
-  "goal": "Navigate to any tablelamp (2 available)",
+  "goal": "Go to one of the two table lamps and stop close by, with the lamp in view of the head camera.",
   "horizon_steps": 500,
   "horizon_s": 100,
   "control_hz": 5.0,

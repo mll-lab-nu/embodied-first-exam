@@ -558,7 +558,7 @@
    "task_type": "pick_and_place"
   },
   "language": {
-   "task_description": "Pick up the purple bottle with white cap and place it in or on the clear ashtray with notches",
+   "task_description": "Put the purple bottle in the clear ashtray.",
    "referral_expressions": {
     "pickup_name": "purple bottle with white cap",
     "place_name": "clear ashtray with notches"
@@ -674,7 +674,7 @@
  "instance": "i00",
  "variant": "an Objaverse object",
  "facts": {
-  "goal": "Pick up the purple bottle with white cap and place it in or on the clear ashtray with notches",
+  "goal": "Put the purple bottle in the clear ashtray.",
   "horizon_steps": 606,
   "horizon_s": 40,
   "control_hz": 15.152,

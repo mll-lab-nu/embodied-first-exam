@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:labutopia-0.1.0` |
 
 ## Task
-LabUtopia's `press` (Press), with a Franka Panda arm (7 joints) with its two-finger gripper, fixed to a laboratory bench: Press the red button on the instrument's front panel and keep it pressed. Success, at the first control step at which this has held for 60 consecutive control steps (1 s): the button's cap (`/World/target_button/button`) is beyond x = 0.405 m. It starts at x = 0.40 m and is pushed in along +x.
+LabUtopia's `press` (Press), with a Franka Panda arm (7 joints) with its two-finger gripper, fixed to a laboratory bench: Press the red button on the instrument's front panel and hold it in for a second.
 In front of the arm stands an instrument with a vertical front panel that carries three square buttons in a row, each 8 cm across: one red, two dark grey. The deliverable is one replayable trajectory of joint targets (`/app/output/trajectory.npz`, `(T, 18)`, one row per 1/60 s control step: 9 position targets, then 9 velocity targets).
 
 ## Difficulty

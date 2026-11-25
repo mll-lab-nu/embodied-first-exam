@@ -17,7 +17,7 @@ Standard mode (robot as a service, `eai-standard/2.1`) of `kinder-dynamo-i00-pri
 cameras, joint encoders, the base's odometry -- and
 never the scene's state or the goal check. No reset: one episode, which is graded.
 
-Task: drive the robot into the translucent green square marked on the floor. Three chairs stand in the way, and you may push them. The task succeeds the moment the centre of the robot's base is inside the square. The red, blue and yellow squares only mark where the chairs started.
+Task: Drive into the green square marked on the floor, a few metres away ahead and slightly to your right. You may push the three chairs in the way.
 
 ## Difficulty
 Nonprehensile: three chairs stand between the robot and the floor square, and the base can push them. The benchmark's fixture: the pipeline check, with an oracle in both modes.

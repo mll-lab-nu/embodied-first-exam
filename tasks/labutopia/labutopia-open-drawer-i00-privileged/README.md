@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:labutopia-0.1.0` |
 
 ## Task
-LabUtopia's `open_drawer` (Open Drawer), with a Franka Panda arm (7 joints) with its two-finger gripper, fixed to a laboratory bench: Open the top drawer of the cabinet and let go of it. Success, at the first control step at which this has held for 60 consecutive control steps (1 s): the drawer handle's centre (`/World/Cabinet_01/drawer_handle_top`) is more than 0.12 m from where it started and the hand (the point between the fingertips) is more than 0.04 m from the handle's centre.
+LabUtopia's `open_drawer` (Open Drawer), with a Franka Panda arm (7 joints) with its two-finger gripper, fixed to a laboratory bench: Pull the cabinet's top drawer open, then let go of it and move the hand away.
 On the bench in front of the arm: a grey cabinet with a white top, about 67 cm deep, 76 cm wide and 79 cm high: two drawers at the top, one above the other, each with a bar handle, and two doors below them. Everything is closed. The deliverable is one replayable trajectory of joint targets (`/app/output/trajectory.npz`, `(T, 18)`, one row per 1/60 s control step: 9 position targets, then 9 velocity targets).
 
 ## Difficulty

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:labutopia-0.1.0` |
 
 ## Task
-LabUtopia's `open_door` (Open Door), with a Franka Panda arm (7 joints) with its two-finger gripper, fixed to a laboratory bench: Open the door of the drying oven and let go of it. Success, at the first control step at which this has held for 60 consecutive control steps (1 s): the door handle's centre (`/World/DryingBox_01/handle`) is more than 0.12 m from where it started and the hand (the point between the fingertips) is more than 0.04 m from the handle's centre.
+LabUtopia's `open_door` (Open Door), with a Franka Panda arm (7 joints) with its two-finger gripper, fixed to a laboratory bench: Open the drying oven's door, then let go of it and move the hand away.
 On the bench in front of the arm: a drying oven, a grey metal box about 58 cm deep, 74 cm wide and 63 cm high, with a blue door that has a window and a handle and is hinged on one side; a small control panel sits next to the door. The door is closed. The deliverable is one replayable trajectory of joint targets (`/app/output/trajectory.npz`, `(T, 18)`, one row per 1/60 s control step: 9 position targets, then 9 velocity targets).
 
 ## Difficulty

@@ -13,7 +13,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/autobio-insert-centrifuge-5430-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.2): AutoBio insert_centrifuge_5430 (Load centrifuge rotor) on the same frozen instance as autobio-insert-centrifuge-5430-i00-privileged: Load a second 1.5 mL tube into the centrifuge's rotor, into the slot diametrically opposite the tube that is already in it (the rotor has 30 slots). The agent only gets a client: cameras (RGB, optional depth, calibration), the robot's proprioception, joint position chunks, arm kinematics; one episode, no reset, no object or instrument state; the sim service records the episode and grades the live episode (no grading replay)."
+description = "STANDARD MODE (robot as a service, eai-standard/2.2): AutoBio insert_centrifuge_5430 (Load centrifuge rotor) on the same frozen instance as autobio-insert-centrifuge-5430-i00-privileged: Put the 1.5 mL tube from the plate into the centrifuge's rotor, in the slot opposite the tube that is already there, without turning the rotor. The agent only gets a client: cameras (RGB, optional depth, calibration), the robot's proprioception, joint position chunks, arm kinematics; one episode, no reset, no object or instrument state; the sim service records the episode and grades the live episode (no grading replay)."
 keywords = ["robotics", "autobio", "mujoco", "laboratory", "biology", "ur5e-robotiq-2f85", "code-as-policy", "trajectory", "insert_centrifuge_5430", "standard-mode"]
 
 [metadata]

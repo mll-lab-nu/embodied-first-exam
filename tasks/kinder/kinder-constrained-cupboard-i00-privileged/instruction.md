@@ -1,33 +1,32 @@
-# constrained-cupboard — instance i00
+# KinDER · constrained-cupboard (privileged)
 
-You control a simulated TidyBot++ mobile manipulator (KinDER / MuJoCo) via Python: a holonomic base, a Kinova Gen3
-7-DoF arm and a Robotiq 2F-85 gripper. **Task:** put the six brown rods, each about 30 cm long, that lie on the floor into the tall compartments of six of the eleven narrow cupboards standing side by side in a row, one rod per cupboard, paired by their state names: rod `cuboid_i` goes into cupboard `cupboard_i`, for i = 0 to 5. The tall compartment is the upper one in `cupboard_0` to `cupboard_2` and the lower one in `cupboard_3` to `cupboard_5`. The task succeeds the moment every rod's centre is inside its compartment: above that compartment's shelf, below the shelf over it, and within the cupboard's 10 cm width and 30 cm depth.
+## Task
+Put the six brown rods lying on the floor into the row of narrow cupboards ahead of you, one rod in the tall compartment
+of each of six cupboards. Taking the rods in order of distance from where you start, nearest first, they go into the
+11th, 5th, 2nd, 8th, 4th and 1st cupboard of the row, counted from the left as you face it.
 
-This is a *fixed scene instance*: KinDER builds its scenes from a seed, and yours is pinned in `/app/instance.json`.
-You may reset and retry as many times as you want. Your deliverable is **one replayable trajectory**, not a general
-policy.
+## Goal
+Success: each rod is inside the tall compartment of its cupboard. A replay ends as soon as the task is done; later rows
+are not run.
 
-## Scoring
-You pass iff the goal above is reached within **1000 control steps** (100 s at 10 Hz). The judge
-is KinDER's own goal check -- the environment's `terminated`, which `s.step()` returns as `success` -- and the episode
-ends the moment it fires. Nothing else scores: there is no partial credit.
+Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(...)`, at most 1000 actions (`s.max_steps`,
+100 s at 10 Hz); it is replayed open-loop from the fixed start and passes if the task is done within it. Also leave
+`/app/output/gen.py`, the script that produced it, which must run and reproduce `trajectory.npz` reading nothing but
+`/app/instance.json` and files under `/app/output/`, and `/app/output/NOTES.md`, at most 20 lines: your final approach
+and why it works, and the approaches that failed and what each told you about the task. Only the trajectory is scored.
+Save a valid one early and overwrite it (with `gen.py` and `NOTES.md` to match) when you have a better one;
+`s.replay(...)` tells you whether a trajectory does the task.
 
-## Deliverable
-Leave three files under `/app/output/`. **Only the first is scored**; the other two are how a human reads your work
-afterwards, so keep them short and factual.
+Rules: **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+benchmark's demonstrations, trained policies); trials are reviewed.
 
-| file | what goes in it |
-|---|---|
-| `trajectory.npz` | the trajectory, written with `s.save_trajectory(...)` (below). Replayed open-loop from the same initial state in a fresh process, once; scored 1 if the replay reaches the goal within 1000 steps, else 0 |
-| `gen.py` | the script that produced it. It must **run and reproduce `trajectory.npz`**, reading nothing but `/app/instance.json` and files under `/app/output/` |
-| `NOTES.md` | **at most 20 lines**: your final approach and why it works, and the approaches that failed and what each told you about the task |
+## Robot Interface
+A TidyBot++ mobile manipulator (a holonomic base, a Kinova Gen3 7-joint arm and a Robotiq 2F-85 gripper), in a simulated
+scene (KinDER, MuJoCo). The scene is one fixed instance. You have the full simulator to develop with; you hand in a
+trajectory of actions.
 
-**Write `trajectory.npz` as soon as you have any trajectory at all, and overwrite it (with `gen.py` and `NOTES.md` to
-match) whenever you have a better one.** The time limit (`## Time limit`) ends without
-warning; a run that ends with no file scores zero. `s.replay(...)` tells you whether a trajectory reaches the goal:
-once the saved one does, you are done; until then, do not stop early -- keep working until the time is up.
-
-## Tooling (already installed; run `python` from any directory)
+### Session
+`/opt/tools/rcb_kinder.py`, importable as `rcb_kinder` (installed; run `python` from any directory):
 ```python
 from rcb_kinder import Session
 s = Session()                               # the instance in /app/instance.json
@@ -35,7 +34,7 @@ obs = s.reset()                             # back to the frozen scene; obs: Kin
 print(s.state().pretty_str())               # the same state with names: every object, every feature
 obs, success, done = s.step(action)         # one 10 Hz control step; action: (11,), see below
 s.max_steps                                 # 1000: the episode, and the longest trajectory that counts
-s.env                                       # the KinDER environment itself, state access on (get_state / set_state)
+s.env                                       # the KinDER environment itself (get_state / set_state)
 s.images(["task_view"])                     # RGB images, if you want to look (s.cameras lists the cameras)
 
 with s.recording() as rec:                  # capture every action you step
@@ -43,34 +42,37 @@ with s.recording() as rec:                  # capture every action you step
 s.replay(rec.actions)                       # from the frozen scene, open-loop: {"success", "success_step", "state_sha", ...}
 s.save_trajectory(rec.actions, "/app/output/trajectory.npz")
 ```
-CLI equivalent: `python /opt/tools/rcb_kinder.py replay --traj /app/output/trajectory.npz`
+The same replay from the shell: `python /opt/tools/rcb_kinder.py replay --traj /app/output/trajectory.npz`.
 
-## Actions
+### Actions
 Each action is 11 numbers, one 10 Hz control step, in KinDER's own order (`s.action_space`):
-- `[0:3]` base: how far to move the base in x and y (metres) and turn it (radians, + = counter-clockwise), in the world frame, each at most 0.1 a step; the base's position controller tracks the new pose.
-- `[3:10]` arm: radians to add to each of the 7 arm joints' measured angles, each at most 0.1 a step; the sums are the joints' new targets, which the arm's PD controller tracks.
+- `[0:3]` base: how far to move the base in x and y (metres) and turn it (radians, + = counter-clockwise), in the world
+  frame, each at most 0.1 a step; the base's position controller tracks the new pose.
+- `[3:10]` arm: radians to add to each of the 7 arm joints' measured angles, each at most 0.1 a step; the sums are the
+  joints' new targets, which the arm's PD controller tracks.
 - `[10]` gripper: 0 = open, 1 = closed (a command, not a change).
+World frame: metres, z up. Everything in `s.env` (KinDER's state, every object and feature) is readable.
 
-## What the deliverable does and does not constrain
-The trajectory is replayed **open-loop**, but nothing stops you from *generating* it closed-loop: replayed from
-`s.reset()`, KinDER on CPU is bit-exact, so actions recorded from a feedback controller reproduce exactly. Use whatever
-you like -- scripted motions, feedback control, search, optimisation. One 1000-step episode costs about
-9 s of one core, measured on a lightly loaded host (slower when the host is busy), and the container
-has 16. `s.env.unwrapped.set_state()` restores KinDER's
-object-centric state, not everything the physics carries, so a rollout continued from it can drift from the same actions
-replayed from the start: check the final trajectory with `s.replay`.
+### Speed
+- One 1000-step episode costs about 9 s of one core (more when the host is busy); the container has 16.
 
-## Rules
-- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
-  benchmark's demonstrations, trained policies); trials are reviewed.
+## Others
+- The trajectory is replayed open-loop, but you may generate it closed-loop: replayed from `s.reset()`, KinDER on the
+  CPU repeats exactly, so actions recorded from a feedback controller reproduce. Scripted motions, feedback control,
+  search and optimisation are all fine.
+- `s.env.unwrapped.set_state()` restores KinDER's object-centric state, not everything the physics carries, so a rollout
+  continued from it can drift from the same actions replayed from the start: check the final trajectory with `s.replay`.
+- In the state, the rods are `cuboid_0` to `cuboid_5` and the cupboards `cupboard_0` to `cupboard_10`; rod `cuboid_i`
+  goes into cupboard `cupboard_i`.
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
-
-## Resources
-Your container: **16 CPUs**, **7 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
-
-## Time limit
-You have 1800 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
-
-This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+## Limits
+- Time: 1800 s of wall-clock time from the start of your session; everything counts (the simulator's start-up too). At
+  the end you are stopped without warning and only what is in `/app/output/` at that moment is graded. Time left:
+  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`). Calls into a long-running process can block for their
+  whole wait time: use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, the simulator's and the benchmark's source included.
+- Resources: 16 CPUs, 7 GiB memory, 1024 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`),
+  no GPU. Over a cap a process can be killed (the CPU cap only slows you down); usage: `/run/rcb-limits/usage.json`.
+- Resets: as many as you like (`s.reset()`).

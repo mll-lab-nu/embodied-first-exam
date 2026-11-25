@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/kinder-constrained-cupboard-i00-privileged"
-description = "KinDER ConstrainedCupboard3D-o6 (privileged mode): produce one replayable trajectory that reaches the goal, frozen scene instance i00."
+description = "KinDER ConstrainedCupboard3D-o6 (privileged mode): produce one replayable trajectory that reaches the goal, frozen scene instance i00. Task: Put the six brown rods lying on the floor into the row of narrow cupboards ahead of you, one rod in the tall compartment of each of six cupboards. Taking the rods in order of distance from where you start, nearest first, they go into the 11th, 5th, 2nd, 8th, 4th and 1st cupboard of the row, counted from the left as you face it."
 keywords = ["robotics", "kinder", "mujoco", "tidybot", "mobile-manipulation", "physical-reasoning", "trajectory", "constrained-cupboard"]
 
 [metadata]

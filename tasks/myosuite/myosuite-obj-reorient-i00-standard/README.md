@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:myosuite-0.1.1` |
 
 ## Task
-MyoSuite `myoHandReorient8-v0` (MyoHand, 39 muscles) on the same frozen instance as `myosuite-obj-reorient-i00-privileged`: Turn the object held in the hand until its orientation vector points within about 15 degrees of the target's, and hold it there for a full second without dropping it. The episode ends in failure, as a drop, if the object gets more than about 7 cm from the target position.
+MyoSuite `myoHandReorient8-v0` (MyoHand, 39 muscles) on the same frozen instance as `myosuite-obj-reorient-i00-privileged`: Turn the object in your hand so that it points the same way as its see-through copy, and hold it there for a second without dropping it.
 An object (one of eight shapes; this instance fixes one) rests on the fingers of the upturned hand; a translucent copy shows the target orientation. Standard mode (eai-standard/2.2): the agent drives the body through a client, with only its own proprioception and the scene's cameras, and 10 resets (only the last episode is graded).
 
 ## Difficulty

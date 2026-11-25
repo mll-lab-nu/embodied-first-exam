@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:myosuite-0.1.1` |
 
 ## Task
-MyoSuite `myoHandPenTwirlFixed-v0` (MyoHand, a musculoskeletal model of a human forearm and hand, 39 muscles): Rotate the pen in the hand until its axis, from bottom to top, points within about 15 degrees of the target axis, and hold it there for a full second without dropping it. The episode ends in failure, as a drop, if the pen gets more than about 7 cm from its desired position.
+MyoSuite `myoHandPenTwirlFixed-v0` (MyoHand, a musculoskeletal model of a human forearm and hand, 39 muscles): Turn the pen in your hand until it points the same way as the see-through target pen, and hold it there for a second without dropping it.
 A pen lies across the fingers of the upturned hand; a translucent target pen shows the goal orientation. The deliverable is one replayable trajectory of actuator commands (`/app/output/trajectory.npz`, `(T, 39)`, one row per 10 ms control step).
 
 ## Difficulty

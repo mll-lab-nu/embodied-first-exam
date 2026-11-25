@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:autobio-0.1.0` |
 
 ## Task
-AutoBio's `insert_centrifuge_5430` (Load centrifuge rotor) on the same frozen instance as `autobio-insert-centrifuge-5430-i00-privileged`: Load a second 1.5 mL tube into the centrifuge's rotor, into the slot diametrically opposite the tube that is already in it (the rotor has 30 slots). The tube to load stands in the plate on the bench. Success the moment the tube is seated in that slot: its body within 5 mm of its seated position there, and its body's height within a fixed 6 mm window (AutoBio's test; standard mode gives no world heights). That seated position is computed when the episode starts: turning the rotor moves the slot away from it, so leave the rotor where it is. In this instance a tube that has been let go comes to rest just outside the 5 mm (5.0 to 5.1 mm away, AutoBio's own expert's tube included), so the test holds while the tube is still being lowered into the slot, held by the gripper; the episode ends in success at that moment.
+AutoBio's `insert_centrifuge_5430` (Load centrifuge rotor) on the same frozen instance as `autobio-insert-centrifuge-5430-i00-privileged`: Put the 1.5 mL tube from the plate into the centrifuge's rotor, in the slot opposite the tube that is already there, without turning the rotor.
 On the bench: a centrifuge (an Eppendorf 5430 model) with its lid open and a 30-slot rotor holding one 1.5 mL tube, and a well plate with a second 1.5 mL tube standing in it. Standard mode (eai-standard/2.2): the agent drives the robot through a client in one episode, with only its proprioception and the scene's cameras.
 
 ## Difficulty

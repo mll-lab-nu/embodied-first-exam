@@ -23,7 +23,7 @@ services:
     restart: on-failure:6                               # a crash resumes the same episode, never a reset (rcb_service.py)
     environment:
       RCB_INSTANCE: /srv/instance.json
-      RCB_TASK_TEXT: "Get the five small dark-red cubes on top of the kitchen island into the middle drawer of the island's upper row of drawers, which starts closed; a wiper lies next to the cubes."
+      RCB_TASK_TEXT: "Get the five small cubes on top of the kitchen island into the middle drawer of the island's top row. There is a wiper you can use."
       RCB_WALL_CLOCK_S: "1800.0"
       # Knobs: ${NAME:-default} takes NAME from the shell that runs harbor. The defaults are the standard
       # configuration; results under other settings are reported separately.

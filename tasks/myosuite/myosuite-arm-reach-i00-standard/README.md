@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:myosuite-0.1.1` |
 
 ## Task
-MyoSuite `myoArmReachFixed-v0` (MyoArm, 34 muscles) on the same frozen instance as `myosuite-arm-reach-i00-privileged`: Bring the index fingertip to the target point in space and hold it within about 1 cm of the target for a full second. Once the first two control steps have passed, the episode ends in failure if the fingertip gets more than about a metre from the target.
+MyoSuite `myoArmReachFixed-v0` (MyoArm, 34 muscles) on the same frozen instance as `myosuite-arm-reach-i00-privileged`: Touch the small sphere in front of you with your index fingertip and hold it there for a second.
 The arm hangs at the side; a small sphere in front of the body marks the target for the index fingertip. Standard mode (eai-standard/2.2): the agent drives the body through a client, with only its own proprioception and the scene's cameras, and 10 resets (only the last episode is graded).
 
 ## Difficulty

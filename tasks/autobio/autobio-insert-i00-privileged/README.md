@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:autobio-0.1.0` |
 
 ## Task
-AutoBio's `insert` (Transfer centrifuge tube), with a UR5e arm (6 joints) with a Robotiq 2F-85 gripper, fixed to the bench: Move the 50 mL centrifuge tube from the rack it stands in to the other rack, into the slot at row 0, column 4 (AutoBio's indices: `s.task.rack2.get_position(s.data, 0, 4, '50ml')`). Success at the first control step where the tube's body is within 15 mm (horizontally) of that slot's centre and its height is between 0.829 and 0.831 m (standing in a slot it is at 0.830 m).
+AutoBio's `insert` (Transfer centrifuge tube), with a UR5e arm (6 joints) with a Robotiq 2F-85 gripper, fixed to the bench: Move the 50 mL tube to the other rack, into the row farther from the robot, at the end next to the first rack.
 On the bench: two 10-slot tube racks (2 rows of 5 each) side by side, with one capped 50 mL tube standing in one of them. The deliverable is one replayable trajectory of joint position targets (`/app/output/trajectory.npz`, `(T, 7)`, one row per 2 ms control step).
 
 ## Difficulty

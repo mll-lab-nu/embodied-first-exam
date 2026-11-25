@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:ambench-0.3.1` |
 
 ## Task
-A valve is mounted on the front face of a wall in front of the hovering aerial manipulator: a large red wheel disc on a short shaft, with a handle bar sticking out of the disc's face toward the robot. Turn the valve: rotate the wheel clockwise, as seen from the robot's side of the wall, by at least 170 degrees from its starting angle. AM-Bench environment `RotateValve-Am-FAHexa-Abs-PID-Direct-v0` (the fully actuated hexarotor with the 4-joint arm, AM-Bench's PID
+Turn the red valve wheel clockwise, as seen from you, by about half a turn or more. AM-Bench environment `RotateValve-Am-FAHexa-Abs-PID-Direct-v0` (the fully actuated hexarotor with the 4-joint arm, AM-Bench's PID
 controller), its seeded reset with seed 0. The deliverable is one replayable trajectory of AM-Bench's absolute
 end-effector pose actions at 120 Hz (`/app/output/trajectory.npz`), graded by AM-Bench's own success check within the
 task's episode length of 20 s.

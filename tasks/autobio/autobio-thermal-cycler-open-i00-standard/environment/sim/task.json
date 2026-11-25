@@ -1,5 +1,5 @@
 {
- "task_text": "Open the lid of the thermal cycler, which starts closed and locked: turn the lever on the lid all the way back from its locked end and swing the lid fully open. Success the moment the lid and its lever are both within 0.003 rad of their fully open end positions.",
+ "task_text": "Unlock the thermal cycler's lid with the lever on it and open the lid all the way.",
  "default_cameras": [
   "table_cam_left",
   "wrist_cam"

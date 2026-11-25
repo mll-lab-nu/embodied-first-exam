@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:myosuite-0.1.1` |
 
 ## Task
-MyoSuite `myoChallengeSoccerP1-v0` (MyoLegs, a free-standing musculoskeletal model of a human torso and both legs, 290 muscles): Score a goal within 10 s: kick the ball past the goalkeeper so that its centre crosses the goal line between the posts and under the bar, as MyoChallenge 2025 Soccer P1 judges it. The episode ends in failure if you fall, with your pelvis dropping below about 20 cm, or at the time limit.
+MyoSuite `myoChallengeSoccerP1-v0` (MyoLegs, a free-standing musculoskeletal model of a human torso and both legs, 290 muscles): Score a goal: kick the ball past the goalkeeper into the goal.
 A musculoskeletal body with two legs stands on a soccer pitch; a ball lies in front of it and a goalkeeper guards the goal. The deliverable is one replayable trajectory of actuator commands (`/app/output/trajectory.npz`, `(T, 290)`, one row per 10 ms control step).
 
 ## Difficulty

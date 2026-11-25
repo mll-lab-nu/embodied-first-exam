@@ -388,7 +388,7 @@
    "task_type": "pick"
   },
   "language": {
-   "task_description": "Pick up the pie",
+   "task_description": "Pick up the pie and hold it up.",
    "referral_expressions": {
     "pickup_obj_name": "pie"
    },
@@ -456,7 +456,7 @@
  "instance": "i00",
  "variant": "an Objaverse object",
  "facts": {
-  "goal": "Pick up the pie",
+  "goal": "Pick up the pie and hold it up.",
   "horizon_steps": 303,
   "horizon_s": 20,
   "control_hz": 15.152,

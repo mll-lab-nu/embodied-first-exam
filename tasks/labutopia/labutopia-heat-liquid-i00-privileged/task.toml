@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/labutopia-heat-liquid-i00-privileged"
-description = "LabUtopia heat_liquid (HeatLiquid; a chemistry laboratory with a Franka Panda on Isaac Sim): produce one replayable trajectory of joint targets. Put the beaker on the heater's plate and leave it there, then press the heater's button. Frozen scene instance (LabUtopia's reset, seed 1); graded by one fresh-process replay with a copy of LabUtopia's own success check."
+description = "LabUtopia heat_liquid (HeatLiquid; a chemistry laboratory with a Franka Panda on Isaac Sim): produce one replayable trajectory of joint targets. Put the beaker in the middle of the heater's plate and leave it there, then press the heater's red button. Frozen scene instance (LabUtopia's reset, seed 1); graded by one fresh-process replay with a copy of LabUtopia's own success check."
 keywords = ["robotics", "labutopia", "isaac-sim", "laboratory", "chemistry", "franka-panda", "code-as-policy", "trajectory", "heat_liquid", "privileged"]
 
 [metadata]

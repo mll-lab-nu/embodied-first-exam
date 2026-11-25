@@ -1,93 +1,33 @@
-# MyoSuite · dex_bunny_inspect — frozen instance
+# MyoSuite · dex_bunny_inspect (privileged)
 
-You control the **MyoHand**, a musculoskeletal model of a human forearm and hand (MyoSuite 2.12.2 on MuJoCo), via Python, through its actuators — 39
-muscles and 6 non-muscle actuators: there is no joint-level controller.
-**Task:** Move the Stanford bunny along MyoDex's recorded inspect motion, lifting it and turning it to look at it. The reference is the bunny's pose over 99 control steps, from GRAB motion capture (TCDM / MyoDex), and the episode lasts exactly those 99 steps. At the last control step and at nine in ten or more of all control steps, the bunny's centre of mass must have moved since the start to within about 3 cm of how the reference has moved since its start, and the bunny must have turned since the start to within about 25 degrees of how the reference has turned. That position error must never go above about 5 cm. The episode ends early in failure, by MyoDex's own termination rule, if the bunny gets more than about 25 cm from the reference or from the wrist.
+## Task
+Pick up the bunny and turn it to look it over, following the recorded reference motion.
 
-The Stanford bunny lies on the table; the MyoHand is at its pre-grasp pose. `s.state()` gives the task's observation dict (privileged): `qp`, `qv`, `robot_err`, `curr_hand_qpos`, `curr_hand_qvel`, `targ_hand_qpos`, `targ_hand_qvel`, `curr_obj_com`, `curr_obj_rot`, `wrist_err`, `base_error`, `targ_obj_com`, `targ_obj_rot`, `hand_qpos_err`, `hand_qvel_err`, `obj_com_err`, `act`.
-MyoSuite's reward code (from `/usr/local/lib/python3.11/site-packages/myosuite/envs/myo/myodm/myodm_v0.py`; `solved` is the goal test,
-`done` the failure test):
-```python
-def get_reward_dict(self, obs_dict):
-    # get targets from reference object
-    tgt_obj_com = obs_dict["targ_obj_com"].flatten()
-    tgt_obj_rot = obs_dict["targ_obj_rot"].flatten()
+## Goal
+Success: the bunny follows the recorded reference motion closely, in where it goes and how it turns, nearly all the way
+and at the end, and never strays far from it. The episode lasts as long as the reference motion. It ends early, as a
+failure, if the bunny gets far from the reference motion or from your wrist.
 
-    # get real values from physics object
-    obj_com = obs_dict["curr_obj_com"].flatten()
-    obj_rot = obs_dict["curr_obj_rot"].flatten()
+Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, path)`. It is replayed open-loop
+from the same initial state and scores 1 if its episode ends in success. It holds at most 144,000 rows (one per control
+step: 360 s of replay at the control rate), and a longer file scores 0. Leave the script that produced it at
+`/app/output/gen.py`. Save a valid one early and overwrite it when you have a better one.
 
-    # calculate both object "matching"
-    obj_com_err = np.sqrt(self.norm2(tgt_obj_com - obj_com))
-    obj_rot_err = self.rotation_distance(obj_rot, tgt_obj_rot, False) / np.pi
-    obj_reward = np.exp(-self.obj_err_scale * (obj_com_err + 0.1 * obj_rot_err))
+Rules: **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+benchmark's demonstrations, trained policies); trials are reviewed.
 
-    # calculate lift bonus
-    lift_bonus = (tgt_obj_com[2] >= self._lift_z) and (obj_com[2] >= self._lift_z)
+## Robot Interface
+The MyoHand, a musculoskeletal model of a human forearm and hand (MyoSuite, MuJoCo), driven only through its actuators
+(39 muscles and 6 other actuators): there is no joint-level controller. The scene is one fixed instance. You have the
+full simulator to develop with; you hand in a trajectory of actuator commands.
 
-    # reward = obj_reward + self.lift_bonus_mag * float(lift_bonus)
-
-    # calculate reward terms
-    qpos_reward = np.exp(
-        -self.qpos_err_scale * self.norm2(obs_dict["hand_qpos_err"])
-    )
-    qvel_reward = (
-        np.array([0])
-        if obs_dict["hand_qvel_err"] is None
-        else np.exp(-self.qvel_err_scale * self.norm2(obs_dict["hand_qvel_err"]))
-    )
-
-    # weight and sum individual reward terms
-    pose_reward = self.qpos_reward_weight * qpos_reward
-    vel_reward = self.qvel_reward_weight * qvel_reward
-
-    # print(f"Time: {obs_dict['time']} Error Pose: {self.norm2(obs_dict['hand_qpos_err'])} {obs_dict['hand_qpos_err']}    Error Obj:{obs_dict['obj_com_err']}")
-
-    base_error = np.sqrt(self.norm2(obs_dict["base_error"]))
-    base_reward = np.exp(-self.base_err_scale * base_error)
-
-    # print(base_error, base_reward)
-
-    rwd_dict = collections.OrderedDict(
-        (
-            # Optional Keys
-            ("pose", float(pose_reward + vel_reward)),
-            ("object", float(obj_reward + base_reward)),
-            ("bonus", self.lift_bonus_mag * float(lift_bonus)),
-            ("penalty", float(self.check_termination(obs_dict))),
-            # Must keys
-            ("sparse", 0),
-            ("solved", 0),
-            ("done", self.initialized_pos and self.check_termination(obs_dict)),
-        )
-    )
-    rwd_dict["dense"] = np.sum(
-        [wt * rwd_dict[key] for key, wt in self.rwd_keys_wt.items()], axis=0
-    )
-
-    # print(rwd_dict['dense'], obj_com_err,rwd_dict['done'],rwd_dict['sparse'])
-    return rwd_dict
-```
-MyoDex's `solved` is always 0, so Embodied First Exam judges the tracking itself: the episode lasts 99 control steps (the reference) and succeeds as stated above; `done` (MyoDex's termination) ends it early as a failure. `s.status()['info']` reports the current errors (`track_pos_err`, `track_rot_err`) and the count of on-track steps (`track_ok`).
-
-The reference motion (the goal) is MyoDex's `s.base.ref` and, per control step, the observation's `targ_obj_com` / `targ_obj_rot`; `curr_obj_com` / `curr_obj_rot` are the object's.
-
-This is a *fixed scene instance*: the start pose, the objects and the goal never change between resets. You may reset and
-retry as many times as you want. Your deliverable is **one replayable trajectory**, not a general policy.
-
-## Deliverable
-Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below). It is replayed
-open-loop from the same initial state in a fresh process and scored 1 if the episode ends in success, else 0. It holds at most **144,000 rows** (one per control step: 360 s of replay at the rate under Conventions),
-and a longer file scores 0. Also leave the script that produced it at `/app/output/gen.py`.
-
-Save a trajectory as soon as you have one that works, improve it while time remains, and do not stop early.
-
-## Tooling (already installed; run `python` from any directory)
+### Session
+`rcb_myosuite` (installed; run `python` from any directory):
 ```python
 from rcb_myosuite import Session
 s = Session("dex_bunny_inspect", instance="/app/instance.npz")   # a few seconds
 s.reset()                          # back to the frozen initial state (unlimited; an exact snapshot restore)
-s.state()                          # the task's observation dict (privileged; see above)
+s.state()                          # the task's observation dict (privileged; see Observations)
 s.actuators(); s.muscles(); s.joints()   # 45 actuators (kind, command); muscles; hinge/slide joints (qpos/dof address, range)
 s.moment_arms()                    # (45, nv) actuator moment arms at the current pose
 s.model, s.data                    # MuJoCo model / data: read them freely; only the actions you record are replayed
@@ -96,33 +36,43 @@ s.step(a)                          # one control step (20 ms): 45 commands; Fals
 s.rest_action()                    # every command at -1 (muscles relaxed)
 s.status()                         # {'success', 'done', 'reason', 'steps', 'resets', 'solved_run', 'rule', 'state_sha', 'info', ...}
 s.record_start(); ...; actions = s.record_stop()   # (T, 45) commands, one row per control step
-s.replay(actions)                  # resets, replays open-loop until the episode ends, returns status -> self-check
+s.replay(actions)                  # resets, replays open-loop until the episode ends, returns status
 s.save_trajectory(actions, "/app/output/trajectory.npz")
 s.render_frame("center_cam")            # RGB uint8 (480, 640, 3); cameras: left_cam, right_cam, center_cam, hand_top, hand_bottom, hand_side_inter, hand_side_exter, plam_lookat
 s.render_video(actions, "/app/output/check.mp4", cameras=["center_cam"])
 ```
-There are no motion primitives: every skill is yours to build from actuator commands.
+There are no motion primitives: every skill is yours to build from actuator commands. Control step 20 ms (10 physics
+substeps). There is no step budget: your wall-clock time is the limit (~400 control steps/s here). An episode ends at
+success or failure; `s.step` then refuses further actions until `s.reset()`.
 
-CLI equivalent of the grader:
-`python /opt/tools/rcb_myosuite.py replay --instance /app/instance.npz --traj /app/output/trajectory.npz`
+### Actions
+An action has 45 real numbers per control step, one per actuator in order: 39 muscles and 6 non-muscle actuators. A
+muscle's command a maps to its excitation u = 1 / (1 + exp(-5 (a - 0.5))) and is not clipped (a = -1: u ~ 0.0006, a =
+0.5: 0.5, a = 1: 0.92, a = 2: 0.9994); activation follows excitation with a first-order delay (~10 ms up, ~40 ms down);
+muscles only pull; one muscle can cross several joints; its force also depends on its length and velocity. The
+non-muscle actuators: `A_ARTx` (index 0): position target of joint ARTx in [-0.75, 0.5]; `A_ARTy` (index 1): position
+target of joint ARTy in [-0.5, 0.5]; `A_ARTz` (index 2): position target of joint ARTz in [-0.5, 0.3]; `A_ARRx` (index
+3): position target of joint ARRx in [-1.75, 1.75]; `A_ARRy` (index 4): position target of joint ARRy in [-1.75, 1.75];
+`A_ARRz` (index 5): position target of joint ARRz in [-1.75, 1.75].
 
-## Conventions
-- Action: 45 real numbers per control step, one per actuator in order: 39 muscles and 6 non-muscle actuators. A muscle's command a maps to its excitation u = 1 / (1 + exp(-5 (a - 0.5))) and is not clipped (a = -1: u ~ 0.0006, a = 0.5: 0.5, a = 1: 0.92, a = 2: 0.9994); activation follows excitation with a first-order delay (~10 ms up, ~40 ms down); muscles only pull; one muscle can cross several joints; its force also depends on its length and velocity. The non-muscle actuators: `A_ARTx` (index 0): position target of joint ARTx in [-0.75, 0.5]; `A_ARTy` (index 1): position target of joint ARTy in [-0.5, 0.5]; `A_ARTz` (index 2): position target of joint ARTz in [-0.5, 0.3]; `A_ARRx` (index 3): position target of joint ARRx in [-1.75, 1.75]; `A_ARRy` (index 4): position target of joint ARRy in [-1.75, 1.75]; `A_ARRz` (index 5): position target of joint ARRz in [-1.75, 1.75].
-- Control step 20 ms (10 physics substeps). There is no step budget: your wall-clock time is the limit
-  (~400 control steps/s here). An episode ends at success or failure; `s.step` then refuses further
-  actions until `s.reset()`.
+### Observations
+`s.state()`: the task's observation dict: `qp`, `qv`, `robot_err`, `curr_hand_qpos`, `curr_hand_qvel`, `targ_hand_qpos`,
+`targ_hand_qvel`, `curr_obj_com`, `curr_obj_rot`, `wrist_err`, `base_error`, `targ_obj_com`, `targ_obj_rot`,
+`hand_qpos_err`, `hand_qvel_err`, `obj_com_err`, `act`. The reference motion (the goal) is MyoDex's `s.base.ref` and,
+per control step, the observation's `targ_obj_com` / `targ_obj_rot`; `curr_obj_com` / `curr_obj_rot` are the object's.
 
-## Rules
-- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
-  benchmark's demonstrations, trained policies); trials are reviewed.
+## Others
+- To check a trajectory the way it is graded, replay it from the command line:
+  `python /opt/tools/rcb_myosuite.py replay --instance /app/instance.npz --traj /app/output/trajectory.npz`.
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
-
-## Resources
-Your container: **4 CPUs**, **12 GiB of memory**, **4096 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
-
-## Time limit
-You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
-
-This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+## Limits
+- Time: 3600 s of wall-clock time from the start of your session; everything counts (the simulator's start-up too). At
+  the end you are stopped without warning and only what is in `/app/output/` at that moment is graded. Time left:
+  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`). Calls into a long-running process can block for their
+  whole wait time: use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, the simulator's and the benchmark's source included.
+- Resources: 4 CPUs, 12 GiB memory, 4096 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`),
+  no GPU. Over a cap a process can be killed (the CPU cap only slows you down); usage: `/run/rcb-limits/usage.json`.
+- Resets: as many as you like (`s.reset()`).

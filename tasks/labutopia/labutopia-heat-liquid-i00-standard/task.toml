@@ -13,7 +13,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/labutopia-heat-liquid-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.2): LabUtopia heat_liquid (HeatLiquid) on the same frozen instance as labutopia-heat-liquid-i00-privileged: Put the glass beaker on the heater's plate and leave it there, then press the heater's round red button. The agent only gets a client: cameras (RGB, optional depth, calibration), the robot's proprioception, joint target chunks, arm kinematics; one episode, no reset, no object or instrument state; the sim service records the episode and grades the live episode (no grading replay)."
+description = "STANDARD MODE (robot as a service, eai-standard/2.2): LabUtopia heat_liquid (HeatLiquid) on the same frozen instance as labutopia-heat-liquid-i00-privileged: Put the beaker in the middle of the heater's plate and leave it there, then press the heater's red button. The agent only gets a client: cameras (RGB, optional depth, calibration), the robot's proprioception, joint target chunks, arm kinematics; one episode, no reset, no object or instrument state; the sim service records the episode and grades the live episode (no grading replay)."
 keywords = ["robotics", "labutopia", "isaac-sim", "laboratory", "chemistry", "franka-panda", "code-as-policy", "trajectory", "heat_liquid", "standard-mode"]
 
 [metadata]

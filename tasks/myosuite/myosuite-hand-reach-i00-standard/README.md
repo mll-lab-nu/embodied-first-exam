@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:myosuite-0.1.1` |
 
 ## Task
-MyoSuite `myoHandReachFixed-v0` (MyoHand, 39 muscles) on the same frozen instance as `myosuite-hand-reach-i00-privileged`: Move all five fingertips onto their targets and hold them there for a full second, with the combined error, the norm of all five fingertip-to-target offsets stacked together, below about 6 cm. Once the first two control steps have passed, the episode ends in failure if that combined error goes above about 20 cm.
+MyoSuite `myoHandReachFixed-v0` (MyoHand, 39 muscles) on the same frozen instance as `myosuite-hand-reach-i00-privileged`: Put each of your five fingertips on its own small sphere and hold them all there for a second.
 The hand hangs relaxed; five small spheres mark where the thumb, index, middle, ring and little fingertips must go. Standard mode (eai-standard/2.2): the agent drives the body through a client, with only its own proprioception and the scene's cameras, and 10 resets (only the last episode is graded).
 
 ## Difficulty

@@ -17,7 +17,7 @@ Standard mode (robot as a service, `eai-standard/2.1`) of `kinder-sweep-simple-i
 cameras, joint encoders, the base's odometry -- and
 never the scene's state or the goal check. No reset: one episode, which is graded.
 
-Task: get the fifty small dark-red cubes scattered on the floor into the translucent grey box marked on the floor at the kitchen island's end nearest the robot. The kitchen island is the free-standing counter with the white top, and a wiper stands on the floor near the cubes. The task succeeds the moment all fifty cubes' centres are inside that box.
+Task: Get the 50 small cubes on the floor into the grey box marked on the floor right in front of you, at the near end of the kitchen island. There is a wiper you can use.
 
 ## Difficulty
 Nonprehensile, tool use: fifty small cubes spread over 2 m² of floor into a box marked at the kitchen island's end, with a wiper standing about 1.7 m from where the robot starts. The variant is upstream's o50 (both cube families use theirs, tasks/kinder/README.md); of its three goals, the one upstream's README gives as the family's example.
