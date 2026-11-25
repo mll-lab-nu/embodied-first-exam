@@ -105,10 +105,10 @@ most 3000 images.
 
 ## Others
 ### Exact numbers
-- The three buttons, each 6 cm across and 3 cm tall, stand in a row 15 cm apart. Each card is a 10 cm square showing one
-  digit from 1 to 9, 12 cm behind its red button.
-- A button's cap position, as the check measures it, is the fraction r of its travel from fully down (r = 0) to fully up
-  (r = 1); at rest the caps read r = 1.0.
+- The three buttons, each 6.1 cm across and 3 cm tall, stand in a row 15 cm apart. Each card is a 10 cm square showing
+  one digit from 1 to 9, 12 cm behind its red button.
+- A button's cap position, as the check measures it, is the fraction r of its 1.0 cm travel from fully down (r = 0) to
+  fully up (r = 1); at rest the caps read r = 1.0.
 - Pressed means r less than 0.5; released means r more than 0.9.
 - A press is counted when a cap goes from r more than 0.95 to r less than 0.5; readings in between keep the last of
   these two states.

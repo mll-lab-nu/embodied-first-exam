@@ -109,8 +109,8 @@ most 3000 images.
   0.02 m above the mat's centre, which leaves about 0.022 m horizontally.
 - Raised: a cube's centre more than 0.03 m higher than its reference: where it started, and after the first and the
   second move, where it was when that move was found done.
-- The button's cap position, as the check measures it, is the fraction r of its travel from fully down (r = 0) to fully
-  up (r = 1); at rest the cap reads r = 0.79.
+- The button's cap position, as the check measures it, is the fraction r of its 1.0 cm travel from fully down (r = 0) to
+  fully up (r = 1); at rest the cap reads r = 0.79, about 2 mm below fully up.
 - Pressed means r less than 0.5; up means r more than 0.9.
 - A press is counted when the cap goes from r more than 0.95 to r less than 0.5 (readings in between keep the last of
   these two states). Exactly 3 counted presses are needed; a 4th ends the episode at once as a failure.
