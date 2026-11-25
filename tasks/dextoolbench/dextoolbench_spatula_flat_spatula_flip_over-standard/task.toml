@@ -11,7 +11,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/dextoolbench_spatula_flat_spatula_flip_over-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.1): DexToolBench (SimToolReal) flat_spatula / flip_over in MuJoCo: KUKA iiwa 14 + Sharpa HA4 hand; produce one replayable joint-target trajectory that carries the flat spatula through the 45 demonstrated goal poses in order. The agent only gets a client: camera RGB-D + proprioception and joint-target chunks; 20 resets (only the last episode graded), no object poses; the sim service records every episode and grades the last one live (no grading replay)."
+description = "STANDARD MODE (robot as a service, eai-standard/2.1): DexToolBench (SimToolReal) flat_spatula / flip_over in MuJoCo: KUKA iiwa 14 + Sharpa HA4 hand; produce one replayable joint-target trajectory that carries the flat spatula through the 45 demonstrated goal poses in order. Task: Pick up the spatula and make a flipping motion, following the green ghost spatula through its poses in order. The agent only gets a client: camera RGB-D + proprioception and joint-target chunks; 20 resets (only the last episode graded), no object poses; the sim service records every episode and grades the last one live (no grading replay)."
 keywords = ["robotics", "dextoolbench", "simtoolreal", "mujoco", "dexterous", "tool-use", "iiwa", "sharpa", "code-as-policy", "trajectory", "standard-mode"]
 
 [metadata]

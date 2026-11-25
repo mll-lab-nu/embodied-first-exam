@@ -3,7 +3,7 @@
  "category": "screwdriver",
  "object": "short_screwdriver",
  "task": "spin_vertical",
- "text": "Pick up the short screwdriver and move it through the demonstrated motion (spinning it about a vertical axis): bring it to each goal pose in order (the green marker shows the current goal).",
+ "text": "Pick up the screwdriver and spin it around a vertical axis, following the green ghost screwdriver through its poses in order.",
  "start_pose": [
   -0.08124288503508437,
   0.06992222301753948,

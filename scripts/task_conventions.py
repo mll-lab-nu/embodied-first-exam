@@ -1212,9 +1212,10 @@ def _wrap_bullet(t: str) -> str:
 MCP_MODES = ("standard-mcp", "standard-mcp-shell")     # the MCP modes (their task dirs: branch standard-mcp)
 # the benchmarks (tasks/ folders) whose instructions are in the v2 form (the others keep the v1 form for now)
 V2_SUITES = frozenset({
-    "abc-sim", "behavior-1k", "embodied-olympics-fun", "embodied-safety-exam", "embodiedswe", "humanclaw",
-    "libero-max", "maniguard", "metaworldplus", "pandadyn", "roboarc", "robocasa", "robocasa-gr1", "robocasa365",
-    "robodojo", "robolab", "robopaint", "robotwin-2", "vlabench",
+    "abc-sim", "behavior-1k", "bigym2", "dextoolbench", "embodied-olympics-fun", "embodied-olympics-match",
+    "embodied-safety-exam", "embodiedswe", "humanclaw", "libero-max", "maniguard", "metaworldplus", "pandadyn",
+    "roboarc", "robocasa", "robocasa-gr1", "robocasa365", "robodojo", "robolab", "robopaint", "robotwin-2",
+    "vlabench",
 })
 
 

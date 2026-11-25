@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:mujoco-0.1.2` |
 
 ## Task
+Pick up the brush and sweep it forward, following the green ghost brush through its poses in order.
+
 DexToolBench task `brush / blue_brush / sweep_forward` (SimToolReal, MIT) ported to plain MuJoCo for this benchmark.
 
 ## Difficulty

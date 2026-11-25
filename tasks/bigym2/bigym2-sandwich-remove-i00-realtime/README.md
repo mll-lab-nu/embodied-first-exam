@@ -13,7 +13,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:bigym2-0.1.1` |
 
 ## Task
-Use the spatula to move the sandwich from the frying pan onto the chopping board and leave it lying flat there. Never touch the sandwich with a gripper. (BiGym 2.0 `sandwich_remove`; the robot as a service on a clock that does not stop: its three onboard cameras and
+Move the sandwich from the frying pan onto the chopping board with the spatula, so that it lies flat. Never touch the sandwich with a gripper. (BiGym 2.0 `sandwich_remove`; the robot as a service on a clock that does not stop: its three onboard cameras and
 its proprioception only, one episode.)
 
 ## Difficulty

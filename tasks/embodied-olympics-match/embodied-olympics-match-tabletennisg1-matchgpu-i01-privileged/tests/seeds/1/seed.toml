@@ -1,5 +1,6 @@
-# Seed 1 of this match (tests/match_instance.json under this directory: the privileged verifier's frozen settings); the text
-# that names the seed: compose RO_SEED, the privileged instruction, the full-simulator adapter's INSTANCES.
+[[replace]]
+old = "## Robot Interface\nTable tennis between two Unitree G1 humanoids (29 joints within Unitree's URDF limits and motor torque-speed curves,\njoint sensors' noise, self-collision, falls), each holding a real racket. You are seat `A` against the platform's G1 at\nlevel 4 of four (the BOSS), seed 4: the same fixed match as the realtime twin\n(`embodied-olympics-match-tabletennisg1-matchgpu-i01-realtime`, where you see only camera images and the world runs in\nreal time), with the same rules, referee, opponent and joint-level interface. The BOSS reads the ball's true state; here\nyou do too. You have the full simulator to develop with; you hand in a program that plays the match."
+new = "## Robot Interface\nTable tennis between two Unitree G1 humanoids (29 joints within Unitree's URDF limits and motor torque-speed curves,\njoint sensors' noise, self-collision, falls), each holding a real racket. You are seat `A` against the platform's G1 at\nlevel 4 of four (the BOSS), seed 1: the same fixed match as the realtime twin\n(`embodied-olympics-match-tabletennisg1-matchgpu-i01-realtime`, where you see only camera images and the world runs in\nreal time), with the same rules, referee, opponent and joint-level interface. The BOSS reads the ball's true state; here\nyou do too. You have the full simulator to develop with; you hand in a program that plays the match."
 
 [[replace]]
 old = "RO_SEED: \"4\""

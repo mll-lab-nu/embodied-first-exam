@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:mujoco-0.1.2` |
 
 ## Task
+Pick up the screwdriver and spin it around a vertical axis, following the green ghost screwdriver through its poses in order.
+
 Standard-mode twin of `dextoolbench_screwdriver_short_screwdriver_spin_vertical-privileged` (see its README): the same scene, instance and scoring, served as a robot service (`images/mujoco/limited/server_mj.py`, protocol eai-standard/2.1, tooling `rcb_dtb`). The agent sees camera RGB-D and proprioception only.
 
 ## Difficulty

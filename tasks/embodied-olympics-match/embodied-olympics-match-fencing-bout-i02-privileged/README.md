@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-match-0.1.0@sha256:99255569bf68bcf27f4e4867b58bad55c1d54fe73281920882e97c310836b6c7` |
 
 ## Task
+Win an epee bout to 15 touches against the scripted fencer.
+
 The privileged twin of `embodied-olympics-match-fencing-bout-i02-standard`: robot epee fencing (two Unitree G1 humanoids, one FIE direct-elimination bout fenced
 phrase by phrase, nine tactical intentions) against the scripted fencer; level 2, seed 35, a turn sport with a chess
 clock of 3600 s.

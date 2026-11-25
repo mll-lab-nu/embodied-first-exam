@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:mujoco-0.1.2` |
 
 ## Task
+Pick up the hammer and swing it sideways, following the green ghost hammer through its poses in order.
+
 Standard-mode twin of `dextoolbench_hammer_claw_hammer_swing_side-privileged` (see its README): the same scene, instance and scoring, served as a robot service (`images/mujoco/limited/server_mj.py`, protocol eai-standard/2.1, tooling `rcb_dtb`). The agent sees camera RGB-D and proprioception only.
 
 ## Difficulty

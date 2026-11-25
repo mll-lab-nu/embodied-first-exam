@@ -13,7 +13,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:bigym2-0.1.1` |
 
 ## Task
-Reach into the red sphere with your left gripper and into the green sphere with your right gripper at the same time, so that the gap between each gripper's fingers is inside its sphere. (BiGym 2.0 `reach_target_dual`; the robot as a service on a clock that does not stop: its three onboard cameras and
+Put your left gripper in the red sphere and your right gripper in the green sphere at the same time, with the gap between each gripper's fingers inside its sphere. (BiGym 2.0 `reach_target_dual`; the robot as a service on a clock that does not stop: its three onboard cameras and
 its proprioception only, one episode.)
 
 ## Difficulty

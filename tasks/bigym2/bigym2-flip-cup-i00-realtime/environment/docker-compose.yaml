@@ -22,7 +22,7 @@ services:
     restart: on-failure:6                               # a crash resumes the same episode, never a reset (rcb_service.py)
     environment:
       RCB_INSTANCE: /srv/instance.json
-      RCB_TASK_TEXT: "Turn the upside-down cup over and stand it the right way up on the counter. Then let go, with both grippers off the cup."
+      RCB_TASK_TEXT: "Turn the upside-down cup the right way up on the counter and let go."
       RCB_EPISODE: "one episode, no reset: it succeeds when this has held for 1 s (50 control steps): the cup stands the right way up (its axis within 5 degrees of vertical), touching the counter, held by neither gripper (held = a finger of the gripper touching the object); a fall (pelvis tilted beyond ~53 degrees or below 0.30 m) fails it without ending it; it ends at the success, a failure, the pelvis 10 m from the scene's origin, a simulator error, or after 1850 control steps"
       RCB_WALL_CLOCK_S: "3600"
       # Knobs: ${NAME:-default} takes NAME from the shell that runs harbor. The defaults are the standard

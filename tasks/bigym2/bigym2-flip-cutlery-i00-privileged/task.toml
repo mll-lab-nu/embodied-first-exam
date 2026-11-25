@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/bigym2-flip-cutlery-i00-privileged"
-description = "BiGym 2.0 flip-cutlery (Unitree G1 with GR00T-WBC, MuJoCo 3.8.1) in privileged mode: produce one replayable trajectory. Take the spoon out of the mug and put it back the other way round, so that the end that pointed up now points down. Then let go, with both grippers off the spoon and the mug. Frozen instance: upstream task flip_cutlery, seed 0."
+description = "BiGym 2.0 flip-cutlery (Unitree G1 with GR00T-WBC, MuJoCo 3.8.1) in privileged mode: produce one replayable trajectory. Take the spoon out of the mug, put it back in the other way round, and let go of the spoon and the mug. Frozen instance: upstream task flip_cutlery, seed 0."
 keywords = ["robotics", "bigym2", "mujoco", "unitree-g1", "humanoid", "loco-manipulation", "trajectory", "flip-cutlery"]
 
 [metadata]

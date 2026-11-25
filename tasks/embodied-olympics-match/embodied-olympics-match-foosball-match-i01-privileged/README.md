@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-match-0.1.0@sha256:99255569bf68bcf27f4e4867b58bad55c1d54fe73281920882e97c310836b6c7` |
 
 ## Task
+Win a game of foosball to 5 goals against the computer team.
+
 The privileged twin of `embodied-olympics-match-foosball-match-i01-realtime`: table football on a physical table (ITSF rules, one game to 5 goals): the four motorised rods of one team against the scripted computer team; level 3, seed 7, S = 20.
 
 ## Difficulty

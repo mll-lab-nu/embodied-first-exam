@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-match-tabletennisg1-0.1.0@sha256:8bc6d02f91aa5730bbf93bc5c1c4a477feee6f5846ff8c609aaa3a25e0eb36af` |
 
 ## Task
+Win a game of table tennis to 5 points against the other robot.
+
 Table tennis between two Unitree G1 humanoids (Embodied Olympics' sport `tabletennis_g1`), Engineer track: the agent's
 program drives all 29 joints of its G1 at 100 Hz (no walking service) from two cameras, against the platform's G1 at
 level 4 of 4, with the world in lockstep (standard mode: it advances only while the agent waits or a command takes effect; its realtime twin runs at x1). The benchmark README's "Table tennis on two Unitree G1s" says what was ported and

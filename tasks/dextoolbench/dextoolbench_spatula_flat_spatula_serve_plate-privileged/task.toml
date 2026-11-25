@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/dextoolbench_spatula_flat_spatula_serve_plate-privileged"
-description = "DexToolBench (SimToolReal) flat_spatula / serve_plate in MuJoCo: KUKA iiwa 14 + Sharpa HA4 hand; produce one replayable joint-target trajectory that carries the flat spatula through the 33 demonstrated goal poses in order."
+description = "DexToolBench (SimToolReal) flat_spatula / serve_plate in MuJoCo: KUKA iiwa 14 + Sharpa HA4 hand; produce one replayable joint-target trajectory that carries the flat spatula through the 33 demonstrated goal poses in order. Task: Pick up the spatula and make a serving motion onto the plate, following the green ghost spatula through its poses in order."
 keywords = ["robotics", "dextoolbench", "simtoolreal", "mujoco", "dexterous", "tool-use", "iiwa", "sharpa", "code-as-policy", "trajectory"]
 
 [metadata]

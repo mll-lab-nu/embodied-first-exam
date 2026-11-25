@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/bigym2-sandwich-remove-i00-privileged"
-description = "BiGym 2.0 sandwich-remove (Unitree G1 with GR00T-WBC, MuJoCo 3.8.1) in privileged mode: produce one replayable trajectory. Use the spatula to move the sandwich from the frying pan onto the chopping board and leave it lying flat there. Never touch the sandwich with a gripper. Frozen instance: upstream task sandwich_remove, seed 0."
+description = "BiGym 2.0 sandwich-remove (Unitree G1 with GR00T-WBC, MuJoCo 3.8.1) in privileged mode: produce one replayable trajectory. Move the sandwich from the frying pan onto the chopping board with the spatula, so that it lies flat. Never touch the sandwich with a gripper. Frozen instance: upstream task sandwich_remove, seed 0."
 keywords = ["robotics", "bigym2", "mujoco", "unitree-g1", "humanoid", "loco-manipulation", "trajectory", "sandwich-remove"]
 
 [metadata]

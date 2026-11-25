@@ -3,7 +3,7 @@
  "category": "spatula",
  "object": "flat_spatula",
  "task": "serve_plate",
- "text": "Pick up the flat spatula and move it through the demonstrated motion (serving onto a plate): bring it to each goal pose in order (the green marker shows the current goal).",
+ "text": "Pick up the spatula and make a serving motion onto the plate, following the green ghost spatula through its poses in order.",
  "start_pose": [
   0.1639509022680955,
   0.052446195016069064,

@@ -3,7 +3,7 @@
  "category": "eraser",
  "object": "handle_eraser",
  "task": "wipe_smile",
- "text": "Pick up the handle eraser and move it through the demonstrated motion (wiping a smiley face): bring it to each goal pose in order (the green marker shows the current goal).",
+ "text": "Pick up the eraser and wipe a smiley face, following the green ghost eraser through its poses in order.",
  "start_pose": [
   -0.007975596300357938,
   0.007902676303352507,

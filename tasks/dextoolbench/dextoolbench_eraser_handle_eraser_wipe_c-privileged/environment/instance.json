@@ -3,7 +3,7 @@
  "category": "eraser",
  "object": "handle_eraser",
  "task": "wipe_c",
- "text": "Pick up the handle eraser and move it through the demonstrated motion (wiping the letter C): bring it to each goal pose in order (the green marker shows the current goal).",
+ "text": "Pick up the eraser and wipe a letter C, following the green ghost eraser through its poses in order.",
  "start_pose": [
   0.01844867282930906,
   0.019646002376282112,

@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-match-0.1.0@sha256:99255569bf68bcf27f4e4867b58bad55c1d54fe73281920882e97c310836b6c7` |
 
 ## Task
+Win a game of singles badminton to 11 points against the scripted opponent, with a stroke skill you write yourself playing every stroke.
+
 The privileged twin of `embodied-olympics-match-badminton-matchlow-i01-realtime`: singles badminton on a 0.4-scale court (BWF Laws, one game to 11) at the LOW level: a Franka Panda with a racket on a gantry base, driven by your own joint-level commands (no act skill), against the scripted opponent; level 2, seed 8, S = 20.
 
 ## Difficulty

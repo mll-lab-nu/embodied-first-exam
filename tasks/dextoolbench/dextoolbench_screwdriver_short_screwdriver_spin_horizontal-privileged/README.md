@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:mujoco-0.1.2` |
 
 ## Task
+Pick up the screwdriver and spin it around a horizontal axis, following the green ghost screwdriver through its poses in order.
+
 DexToolBench task `screwdriver / short_screwdriver / spin_horizontal` (SimToolReal, MIT) ported to plain MuJoCo for this benchmark.
 
 ## Difficulty

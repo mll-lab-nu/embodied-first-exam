@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:mujoco-0.1.2` |
 
 ## Task
+Pick up the eraser and wipe a smiley face, following the green ghost eraser through its poses in order.
+
 Standard-mode twin of `dextoolbench_eraser_handle_eraser_wipe_smile-privileged` (see its README): the same scene, instance and scoring, served as a robot service (`images/mujoco/limited/server_mj.py`, protocol eai-standard/2.1, tooling `rcb_dtb`). The agent sees camera RGB-D and proprioception only.
 
 ## Difficulty

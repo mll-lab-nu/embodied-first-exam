@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-match-soccer-0.1.0@sha256:b6fbfae73399a7daee9c623eb34cfe18de63b458349b5a2b9d122c00e9f1602b` |
 
 ## Task
+Win a 2 v 2 robot soccer match against the other team.
+
 The privileged twin of `embodied-olympics-match-soccer-jointcpu-i01-realtime`: humanoid robot soccer 2 v 2 at the JOINT LEVEL (12 leg joint targets per Booster T1 every 20 ms, no walking policy, no kick skill), coach format, against the learned joint-level team (level 5), CPU-only resource tier; level 5, seed 101, S = 10.
 
 ## Difficulty

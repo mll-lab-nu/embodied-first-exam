@@ -3,7 +3,7 @@
  "category": "hammer",
  "object": "mallet_hammer",
  "task": "swing_down",
- "text": "Pick up the mallet hammer and move it through the demonstrated motion (a downward hammer swing): bring it to each goal pose in order (the green marker shows the current goal).",
+ "text": "Pick up the mallet and swing it down, following the green ghost mallet through its poses in order.",
  "start_pose": [
   0.10964212432374565,
   0.05731781420714077,

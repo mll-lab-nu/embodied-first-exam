@@ -1,43 +1,63 @@
-# Full-simulator fencing: develop a program against level 2
+# Embodied Olympics · robot epee fencing, bout against level 2 (privileged)
 
-Win one complete bout against the frozen sport's scripted level-2 fencer, seed 35: the same frozen instance as
-`embodied-olympics-match-fencing-bout-i02-standard` (its standard twin; there you see the phrase record and images only). The robots, the actions, the rules,
-the opponent and the chess clock are unchanged. It is a turn sport: the bout waits for your decision.
+## Task
+Win an epee bout to 15 touches against the scripted fencer.
 
-## Development and deliverable
-`from tools.fullsim.turn import TurnSession`; `TurnSession("fencing", level=2, seed=35)` gives `state()`, `world`,
-`spec()`, `act(command)` (plays your intention for the next phrase, and the opponent's answer, at once) and `reset()`.
-The simulator and its source are at `/opt/fullsim`. Reset rebuilds the WHOLE same-seed bout. You may inspect and change
-private bouts and develop and search with repeated resets within your resource and time limits; nothing of this
-reaches the formal bout. Read `/opt/fullsim/README.md` for the program API, the `truth` fields and the self-test.
+## Goal
+Success: your program wins the complete formal bout.
 
-Leave `/app/output/policy/program.py` and any helper or data files in that directory (512 regular files, 32 MiB;
-no links or special files). Define `make_policy(config)` returning an object with `act(view)`; it lives for the whole
-bout. `view` holds `state` (the twin's observation fields), `truth` (the full current state), `scores`. Return one
-original action, `{"type": "ready"}` during a review (after each of your phrases), or None. No model or API calls
-during the formal evaluation. Submit executable code, not a recorded list of intentions or a claimed score; save a
-valid program early and improve it.
+Deliverable: `/app/output/policy/program.py`, with any helper or data files in that directory (at most 512 regular files
+and 32 MiB; no links or special files; helpers are importable). It defines `make_policy(config)`, returning an object
+with `act(view)` that lives for the whole bout. `view` has `state` (the twin's observation), `truth` (the full current
+state) and `scores`; `act` returns one action of the twin's interface (e.g. `{"type": "phrase", "intention": "lunge"}`),
+`{"type": "ready"}` during the review after each of your phrases, or None. Save a valid program early and overwrite it
+when you have a better one.
 
-## Formal evaluation
-A separate verifier without network runs your final program as an unprivileged process against a fresh, unmodified
-bout; your program can read a public, read-only copy of the simulator (`/opt/dev`, the same as `/opt/fullsim`) for its
-own predictions, never the trusted copy that runs the bout, the referee or the logs.
-There is no formal reset. The twin's turn service runs the bout: on your turn your chess clock (3600 s in all, as in
-the twin) runs while your program computes, and each exchange with your program is limited to 5 s; out of time loses
-the bout. The service replays the trusted journal once in a fresh process; success is a complete win by the original
-referee with a matching replay. This fixed instance does not measure generalization to other instances.
+The formal bout: a separate verifier without network runs your final program as an unprivileged process against a fresh
+bout, with no reset. On your turn your chess clock (3600 s in all) runs while the program computes, and each exchange
+with it is limited to 5 s; out of time loses the bout.
 
-## Rules
-- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
-  benchmark's demonstrations, trained policies); trials are reviewed.
+Rules: **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+benchmark's demonstrations, trained policies); trials are reviewed. Hand in executable code, not a recorded list of
+intentions or a claimed score; no model or API calls during the formal bout. Your program may read the public, read-only
+copy of the simulator at `/opt/dev` for its own predictions, never the copy that runs the bout, the referee or the logs.
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+## Robot Interface
+Two simulated Unitree G1 humanoids fence one epee bout, phrase by phrase: before each phrase each fencer chooses one of
+nine tactical intentions. You are seat `A` against the scripted level-2 fencer, seed 35: the same fixed bout as the
+standard twin (`embodied-olympics-match-fencing-bout-i02-standard`), with the same robot, actions, rules, limits and
+opponent. It is turn-based: the bout waits for your decision. You have the full simulator to develop with; you hand in a
+program that plays the bout.
 
-## Resources
-Your container: **8 CPUs**, **16 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
+### Session
+```python
+from tools.fullsim.turn import TurnSession
+s = TurnSession("fencing", level=2, seed=35)
+s.spec()          # the action interface and the rules (as the twin's `game spec`)
+s.state()         # the observation
+s.world           # the whole mutable bout
+s.act(command)    # plays your intention for the next phrase and the opponent's answer, at once
+s.reset()         # rebuilds the whole same-seed bout
+```
+The simulator and its source are at `/opt/fullsim`; `/opt/fullsim/README.md` documents the program API, the `truth`
+fields, the units and a self-test of `program.py`.
 
-## Time limit
-You have 7200 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+### Actions
+The twin's actions (`s.spec()` gives their fields and ranges): `phrase` with one of the nine intentions, and
+`{"type": "ready"}` in the review after each of your phrases.
 
-This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+## Others
+- In development you may inspect and change private worlds and search with repeated resets; none of it reaches the
+  formal bout.
+
+## Limits
+- Time: 7200 s of wall-clock time from the start of your session; everything counts (the simulator's start-up too). At
+  the end you are stopped without warning and only what is in `/app/output/` at that moment is graded. Time left:
+  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`). Calls into a long-running process can block for their
+  whole wait time: use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, the simulator's and the benchmark's source included.
+- Resources: 8 CPUs, 16 GiB memory, 1024 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`),
+  no GPU. Over a cap a process can be killed (the CPU cap only slows you down); usage: `/run/rcb-limits/usage.json`.
+- Resets: as many as you like in development (`s.reset()`); none in the formal bout.

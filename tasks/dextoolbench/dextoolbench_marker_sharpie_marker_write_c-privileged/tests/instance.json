@@ -3,7 +3,7 @@
  "category": "marker",
  "object": "sharpie_marker",
  "task": "write_c",
- "text": "Pick up the sharpie marker and move it through the demonstrated motion (writing the letter C): bring it to each goal pose in order (the green marker shows the current goal).",
+ "text": "Pick up the marker and write a letter C, following the green ghost marker through its poses in order.",
  "start_pose": [
   -0.03046729191520903,
   0.043435827704974894,

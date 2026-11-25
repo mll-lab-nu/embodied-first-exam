@@ -1,5 +1,6 @@
-# Seed 212 of this match (tests/match_instance.json under this directory: the privileged verifier's frozen settings); the text
-# that names the seed: compose RO_SEED, the privileged instruction, the full-simulator adapter's INSTANCES.
+[[replace]]
+old = "## Robot Interface\nRobot singles badminton on a small court (the BWF court's lengths × 0.4, the net at its full height): each player is a\nFranka Panda arm with a racket, held to the real Panda's limits, on an x-y gantry base; the shuttle has the real\nshuttle's high drag and does not bounce. You are seat `A` against the scripted level-2 opponent, seed 8: the same fixed\nmatch as the realtime twin (`embodied-olympics-match-badminton-matchlow-i01-realtime`), with the same robot, actions,\nrules, limits and opponent. The world runs at 1/20 of real speed. The low level: the twin's skill in the loop without\nits plumbing. Your program returns the robot's low-level commands (`traj`, `move`, `toss`, `none`) itself; there is no\nact skill and no skill server (what the twin's skill computes, your program computes). The toolkit is under\n`sports/badminton/seat/`. `from tools.fullsim.session import Session`; `Session(\"badminton\", level=2, seed=8)` gives\n`state()`, `world`, `spec()`, `act(command)`, `step(n)`, `ready()` and `reset()`. You have the full simulator to develop\nwith; you hand in a program that plays the match."
+new = "## Robot Interface\nRobot singles badminton on a small court (the BWF court's lengths × 0.4, the net at its full height): each player is a\nFranka Panda arm with a racket, held to the real Panda's limits, on an x-y gantry base; the shuttle has the real\nshuttle's high drag and does not bounce. You are seat `A` against the scripted level-2 opponent, seed 212: the same fixed\nmatch as the realtime twin (`embodied-olympics-match-badminton-matchlow-i01-realtime`), with the same robot, actions,\nrules, limits and opponent. The world runs at 1/20 of real speed. The low level: the twin's skill in the loop without\nits plumbing. Your program returns the robot's low-level commands (`traj`, `move`, `toss`, `none`) itself; there is no\nact skill and no skill server (what the twin's skill computes, your program computes). The toolkit is under\n`sports/badminton/seat/`. `from tools.fullsim.session import Session`; `Session(\"badminton\", level=2, seed=212)` gives\n`state()`, `world`, `spec()`, `act(command)`, `step(n)`, `ready()` and `reset()`. You have the full simulator to develop\nwith; you hand in a program that plays the match."
 
 [[replace]]
 old = "RO_SEED: \"8\""
@@ -16,10 +17,6 @@ new = "level=2, seed=212)"
 [[replace]]
 old = "--seed 8 "
 new = "--seed 212 "
-
-[[replace]]
-old = ", seed 8:"
-new = ", seed 212:"
 
 [[replace]]
 old = ", seed 8,"

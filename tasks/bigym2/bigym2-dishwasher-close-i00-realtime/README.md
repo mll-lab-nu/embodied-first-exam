@@ -13,7 +13,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:bigym2-0.1.1` |
 
 ## Task
-Push both dishwasher racks all the way in and close the dishwasher door. (BiGym 2.0 `dishwasher_close`; the robot as a service on a clock that does not stop: its three onboard cameras and
+Close the dishwasher: push both racks in and shut the door. (BiGym 2.0 `dishwasher_close`; the robot as a service on a clock that does not stop: its three onboard cameras and
 its proprioception only, one episode.)
 
 ## Difficulty

@@ -1,5 +1,10 @@
-# Seed 2 of this match (tests/match_instance.json under this directory: the privileged verifier's frozen settings); the text
-# that names the seed: compose RO_SEED, the privileged instruction, the full-simulator adapter's INSTANCES.
+[[replace]]
+old = "## Robot Interface\nRobot singles badminton on a small court (the BWF court's lengths × 0.4, the net at its full height): each player is a\nFranka Panda arm with a racket, held to the real Panda's limits, on an x-y gantry base; the shuttle has the real\nshuttle's high drag and does not bounce. You are seat `A` against the built-in RL player (seat `B`), seed 1001: the same\nfixed match as the realtime twin (`embodied-olympics-match-badminton-duelrl-i01-realtime`), with the same robot,\nactions, rules, limits and opponent. The world runs at 1/20 of real speed. Seat `B` is the twin's built-in player\n(`builtin_players.RLOpponent`), in the service process; its code is in your copy of the simulator. You have the full\nsimulator to develop with; you hand in a program that plays the match."
+new = "## Robot Interface\nRobot singles badminton on a small court (the BWF court's lengths × 0.4, the net at its full height): each player is a\nFranka Panda arm with a racket, held to the real Panda's limits, on an x-y gantry base; the shuttle has the real\nshuttle's high drag and does not bounce. You are seat `A` against the built-in RL player (seat `B`), seed 2: the same\nfixed match as the realtime twin (`embodied-olympics-match-badminton-duelrl-i01-realtime`), with the same robot,\nactions, rules, limits and opponent. The world runs at 1/20 of real speed. Seat `B` is the twin's built-in player\n(`builtin_players.RLOpponent`), in the service process; its code is in your copy of the simulator. You have the full\nsimulator to develop with; you hand in a program that plays the match."
+
+[[replace]]
+old = "### Session\n```python\nfrom tools.fullsim.duel import DuelSession\ns = DuelSession(\"badminton\", seed=1001)\ns.spec()          # the action interface and the rules (as the twin's `game spec`)\ns.state()         # the observation\ns.world           # the whole mutable match\ns.act(command)    # one action of the twin's interface\ns.step(n)         # advances n control steps\ns.ready()         # ends a review\ns.reset()         # rebuilds the whole same-seed match\n```\nThe simulator and its source are at `/opt/fullsim`; `/opt/fullsim/README.md` documents the program API, the `truth`\nfields, the units and a self-test of `program.py`. `DuelSession` is a `Session` in which seat `B` plays as in the twin."
+new = "### Session\n```python\nfrom tools.fullsim.duel import DuelSession\ns = DuelSession(\"badminton\", seed=2)\ns.spec()          # the action interface and the rules (as the twin's `game spec`)\ns.state()         # the observation\ns.world           # the whole mutable match\ns.act(command)    # one action of the twin's interface\ns.step(n)         # advances n control steps\ns.ready()         # ends a review\ns.reset()         # rebuilds the whole same-seed match\n```\nThe simulator and its source are at `/opt/fullsim`; `/opt/fullsim/README.md` documents the program API, the `truth`\nfields, the units and a self-test of `program.py`. `DuelSession` is a `Session` in which seat `B` plays as in the twin."
 
 [[replace]]
 old = "RO_SEED: \"1001\""
@@ -16,10 +21,6 @@ new = "\", seed=2)"
 [[replace]]
 old = "--seed 1001 "
 new = "--seed 2 "
-
-[[replace]]
-old = ", seed 1001:"
-new = ", seed 2:"
 
 [[replace]]
 old = ", seed 1001,"

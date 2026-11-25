@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/bigym2-stack-blocks-i00-privileged"
-description = "BiGym 2.0 stack-blocks (Unitree G1 with GR00T-WBC, MuJoCo 3.8.1) in privileged mode: produce one replayable trajectory. Move all three blocks to the other table and stack them into one tower on the green pad. Then let go, with both grippers off the blocks. Frozen instance: upstream task stack_blocks, seed 0."
+description = "BiGym 2.0 stack-blocks (Unitree G1 with GR00T-WBC, MuJoCo 3.8.1) in privileged mode: produce one replayable trajectory. Move all three blocks to the other table, stack them into one tower on the green pad and let go. Frozen instance: upstream task stack_blocks, seed 0."
 keywords = ["robotics", "bigym2", "mujoco", "unitree-g1", "humanoid", "loco-manipulation", "trajectory", "stack-blocks"]
 
 [metadata]

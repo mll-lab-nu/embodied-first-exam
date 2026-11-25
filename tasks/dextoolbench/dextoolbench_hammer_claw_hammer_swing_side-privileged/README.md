@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:mujoco-0.1.2` |
 
 ## Task
+Pick up the hammer and swing it sideways, following the green ghost hammer through its poses in order.
+
 DexToolBench task `hammer / claw_hammer / swing_side` (SimToolReal, MIT) ported to plain MuJoCo for this benchmark.
 
 ## Difficulty
