@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:ispatialgym-0.2.2` |
 
 ## Task
+Make the scene look like the goal image /app/goal.png, the head camera's view once the task is done; the robot itself does not have to match it.
+
 iSpatialGym `configuration_matching_articulation_open_small_scale` (family `configuration_matching`), upstream subtask `configuration_matching_articulation_open_small_scale_blender`, instance 0 (house_single_floor): Open a small articulated object, such as a blender or carton, to the goal angle while the other arm braces it. The task is given
 only as the goal image (`/app/goal.png`, the head camera's view once it is done), as in iSpatialGym's own
 evaluation; the instruction names no object.

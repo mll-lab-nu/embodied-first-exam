@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:ispatialgym-0.2.2` |
 
 ## Task
+Make the scene look like the goal image /app/goal.png, the head camera's view once the task is done; the robot itself does not have to match it.
+
 iSpatialGym `alignment_axial` (family `alignment`), upstream subtask `alignment_axial_board_game`, instance 0 (house_single_floor): An object on a table or desk starts yawed 20–70° away; push it until its long axis lines up with the table edges. The task is given
 only as the goal image (`/app/goal.png`, the head camera's view once it is done), as in iSpatialGym's own
 evaluation; the instruction names no object.

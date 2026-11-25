@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:ispatialgym-0.2.2` |
 
 ## Task
+Make the scene look like the goal image /app/goal.png, the head camera's view once the task is done, and keep holding what the robot holds at the start; the rest of the robot does not have to match it.
+
 iSpatialGym `mental_rotation` (family `mental_rotation`), upstream subtask `mental_rotation_carving_knife`, instance 0 (house_single_floor): The object is held in the right hand; the goal is a new orientation with its position unchanged. The task is given
 only as the goal image (`/app/goal.png`, the head camera's view once it is done), as in iSpatialGym's own
 evaluation; the instruction names no object.

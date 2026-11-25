@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:ispatialgym-0.2.2` |
 
 ## Task
+Make the scene look like the goal image /app/goal.png, the head camera's view once the task is done; the robot itself does not have to match it.
+
 iSpatialGym `inter_object_relation_satisfaction_touching_small_scale` (family `inter_object_relation_satisfaction`), upstream subtask `inter_object_relation_satisfaction_touching_small_scale_box_of_sanitary_napkins_box_of_tissues`, instance 0 (house_single_floor): Set the target down beside the partner, then push it until the two touch without moving the partner. The task is given
 only as the goal image (`/app/goal.png`, the head camera's view once it is done), as in iSpatialGym's own
 evaluation; the instruction names no object.

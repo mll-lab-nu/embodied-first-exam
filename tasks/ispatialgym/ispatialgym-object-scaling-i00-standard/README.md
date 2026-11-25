@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:ispatialgym-0.2.2` |
 
 ## Task
+Make the scene look like the goal image /app/goal.png, the head camera's view once the task is done, and keep holding what the robot holds at the start; the rest of the robot does not have to match it.
+
 iSpatialGym `object_scaling` (family `object_scaling`), upstream subtask `object_scaling_apple`, instance 0 (house_double_floor_lower): The object is held in the right hand; the goal is a change of its depth along the head camera's optical axis. The task is given
 only as the goal image (`/app/goal.png`, the head camera's view once it is done), as in iSpatialGym's own
 evaluation; the instruction names no object.

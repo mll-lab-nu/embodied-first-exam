@@ -1213,10 +1213,10 @@ MCP_MODES = ("standard-mcp", "standard-mcp-shell")     # the MCP modes (their ta
 # the benchmarks (tasks/ folders) whose instructions are in the v2 form (the others keep the v1 form for now)
 V2_SUITES = frozenset({
     "abc-sim", "ambench", "autobio", "behavior-1k", "bigym2", "dexjoco", "dextoolbench", "embodied-olympics-fun",
-    "embodied-olympics-match", "embodied-safety-exam", "embodiedswe", "humanclaw", "humanoidbench", "kinder",
-    "labutopia", "libero-max", "maniguard", "metaworldplus", "molmospaces", "mujoco-playground", "myosuite",
-    "pandadyn", "roboarc", "robocasa", "robocasa-gr1", "robocasa365", "robodojo", "robolab", "robopaint",
-    "robotwin-2", "robowits", "vlabench", "yamlab",
+    "embodied-olympics-match", "embodied-safety-exam", "embodiedswe", "humanclaw", "humanoidbench", "ispatialgym",
+    "kinder", "labutopia", "libero-max", "maniguard", "metaworldplus", "molmospaces", "mujoco-playground",
+    "myosuite", "pandadyn", "roboarc", "robocasa", "robocasa-gr1", "robocasa365", "robodojo", "robolab",
+    "robopaint", "robotwin-2", "robowits", "vlabench", "yamlab",
 })
 
 
