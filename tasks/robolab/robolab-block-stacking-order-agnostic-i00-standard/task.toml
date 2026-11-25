@@ -14,7 +14,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/robolab-block-stacking-order-agnostic-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.2): NVIDIA RoboLab block_stacking_order_agnostic on the same frozen instance as the privileged task (the state after RoboLab's canonical seed-0 reset). Stack the blocks into a tower. The agent only gets a client: get_obs (RGB, depth + proprioception), submit (joint_position or ee_pose chunks). No reset, no privileged state; the sim service records the episode as a trajectory and grades the live episode."
+description = "STANDARD MODE (robot as a service, eai-standard/2.2): NVIDIA RoboLab block_stacking_order_agnostic on the same frozen instance as the privileged task (the state after RoboLab's canonical seed-0 reset). Stack the red, blue, green and yellow blocks into one tower, in any order. The agent only gets a client: get_obs (RGB, depth + proprioception), submit (joint_position or ee_pose chunks). No reset, no privileged state; the sim service records the episode as a trajectory and grades the live episode."
 keywords = ["robotics", "robolab", "isaac-lab", "isaac-sim", "franka", "standard-mode", "trajectory", "block_stacking_order_agnostic"]
 
 [metadata]

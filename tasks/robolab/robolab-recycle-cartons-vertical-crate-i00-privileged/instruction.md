@@ -1,7 +1,7 @@
 # RoboLab · recycle_cartons_vertical_crate — frozen instance
 
 You control a simulated **Franka Panda arm with a Robotiq 2F-85 gripper** (NVIDIA RoboLab's DROID setup on Isaac Lab 2.3 /
-Isaac Sim 5.1, PhysX physics) via Python. **Task:** Put the cartons that can be recycled in the vertical crate.
+Isaac Sim 5.1, PhysX physics) via Python. **Task:** Put the milk carton and the orange juice carton in the vertical crate.
 
 The scene objects are the env's rigid objects (`s.objects()`: `alphabet_soup_can`, `milk_carton`, `orange_juice_carton`, `smartphone`, `mug`, `container_a01`, `mayonnaise_bottle`, `ketchup_bottle`, `table`; see
 `/opt/robolab/robolab/tasks/benchmark/recycle_cartons_vertical_crate.py`). RoboLab's success predicate is the `success` termination

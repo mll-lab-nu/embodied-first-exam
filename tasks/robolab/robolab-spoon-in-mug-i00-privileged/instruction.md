@@ -1,7 +1,7 @@
 # RoboLab · spoon_in_mug — frozen instance
 
 You control a simulated **Franka Panda arm with a Robotiq 2F-85 gripper** (NVIDIA RoboLab's DROID setup on Isaac Lab 2.3 /
-Isaac Sim 5.1, PhysX physics) via Python. **Task:** Put the metal spoon that's in the wooden bowl in the mug.
+Isaac Sim 5.1, PhysX physics) via Python. **Task:** Put the metal spoon from the wooden bowl in the mug.
 
 The scene objects are the env's rigid objects (`s.objects()`: `ceramic_mug`, `glasses`, `keyboard`, `lizard_figurine`, `marker`, `remote_control`, `smartphone`, `wooden_bowl`, `spoon_big`, `computer_mouse`, `yogurt_cup`, `granola_bars`, `grey_bin`, `table`; see
 `/opt/robolab/robolab/tasks/benchmark/spoon_in_mug_task.py`). RoboLab's success predicate is the `success` termination

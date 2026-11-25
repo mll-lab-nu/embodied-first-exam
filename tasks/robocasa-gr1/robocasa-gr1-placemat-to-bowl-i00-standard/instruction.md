@@ -1,7 +1,7 @@
 # RoboCasa-GR1 · PosttrainPnPNovelFromPlacematToBowlSplitA — STANDARD MODE (robot as a service)
 
 A **Fourier GR1 humanoid** (arms, waist and two dexterous six-command Fourier hands; fixed base) works at a kitchen counter: RoboCasa's GR1 tabletop `PosttrainPnPNovelFromPlacematToBowlSplitA` task (robosuite, MuJoCo).
-**Task: Pick the can from the placemat and place it in the bowl.**
+**Task: Put the can from the placemat in the bowl, and move both hands away.**
 The scene is one frozen instance: the initial state of one of the benchmark's official demonstrations.
 
 You control the robot **as if it were real hardware**: the simulator runs in a service you cannot open. You get one

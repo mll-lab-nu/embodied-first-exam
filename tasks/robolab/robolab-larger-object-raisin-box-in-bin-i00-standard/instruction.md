@@ -1,7 +1,7 @@
 # RoboLab · larger_object_raisin_box_in_bin — STANDARD MODE (robot as a service, eai-standard/2.2)
 
 You control a **Franka Panda arm with a Robotiq 2F-85 gripper** (NVIDIA RoboLab's DROID setup) **as if it were real
-hardware**: the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Place the larger object in the grey bin. Success: The raisin box (the larger of the two boxes) must end inside the grey bin and the gripper must no longer touch it. "Inside" means the centre of the object's convex hull lies within the container's convex hull, extended without limit along the container's own up axis (the open side; straight up for a container standing normally).
+hardware**: the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Put the larger of the two boxes in the grey bin. Success: The raisin box (the larger of the two boxes) must end inside the grey bin and the gripper must no longer touch it. "Inside" means the centre of the object's convex hull lies within the container's convex hull, extended without limit along the container's own up axis (the open side; straight up for a container standing normally).
 
 ## Rules (real-robot rules)
 - **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or

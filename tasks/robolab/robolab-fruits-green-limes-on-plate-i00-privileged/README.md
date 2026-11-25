@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robolab-0.2.2` |
 
 ## Task
-Put all the green fruit on the plate.
+Put both limes on the plate.
 
 ## Difficulty
 RoboLab labels this task "simple" (2 subtasks; attributes: color); its success term (`object_on_top`) asks for 2 objects onto clay_plates. The tooling gives only thin primitives (move_ee on Isaac Lab's differential IK, joint moves, gripper, hold), so every grasp, transport and placement is the agent's to build. RoboLab ships no expert solution.

@@ -1,7 +1,7 @@
 # RoboLab · tools_picking_drill — frozen instance
 
 You control a simulated **Franka Panda arm with a Robotiq 2F-85 gripper** (NVIDIA RoboLab's DROID setup on Isaac Lab 2.3 /
-Isaac Sim 5.1, PhysX physics) via Python. **Task:** Select the cordless drill and put it on the table.
+Isaac Sim 5.1, PhysX physics) via Python. **Task:** Take the cordless drill out of its bin and put it on the table.
 
 The scene objects are the env's rigid objects (`s.objects()`: `clamp`, `cordless_drill`, `spring_clamp`, `clamp_01`, `right_bin`, `center_bin`, `left_bin`, `husky_hammer`, `wood_hammer`, `red_hammer`, `blue_hammer`, `table`; see
 `/opt/robolab/robolab/tasks/benchmark/tools_picking_drill.py`). RoboLab's success predicate is the `success` termination

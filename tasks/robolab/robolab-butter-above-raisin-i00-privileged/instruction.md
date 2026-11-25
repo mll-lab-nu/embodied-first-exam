@@ -1,7 +1,7 @@
 # RoboLab · butter_above_raisin — frozen instance
 
 You control a simulated **Franka Panda arm with a Robotiq 2F-85 gripper** (NVIDIA RoboLab's DROID setup on Isaac Lab 2.3 /
-Isaac Sim 5.1, PhysX physics) via Python. **Task:** Pick up the butter box and place it on top of the raisin box.
+Isaac Sim 5.1, PhysX physics) via Python. **Task:** Put the butter box on top of the raisin box.
 
 The scene objects are the env's rigid objects (`s.objects()`: `butter`, `raisin_box`, `table`; see
 `/opt/robolab/robolab/tasks/benchmark/butter_above_raisin_task.py`). RoboLab's success predicate is the `success` termination

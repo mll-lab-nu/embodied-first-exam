@@ -1,7 +1,7 @@
 # RoboLab · stack3_rubiks_cube — frozen instance
 
 You control a simulated **Franka Panda arm with a Robotiq 2F-85 gripper** (NVIDIA RoboLab's DROID setup on Isaac Lab 2.3 /
-Isaac Sim 5.1, PhysX physics) via Python. **Task:** Stack the rubiks cubes in a tower.
+Isaac Sim 5.1, PhysX physics) via Python. **Task:** Stack the 3 Rubik's cubes into one tower.
 
 The scene objects are the env's rigid objects (`s.objects()`: `rubiks_cube`, `rubiks_cube_1`, `rubiks_cube_2`, `table`; see
 `/opt/robolab/robolab/tasks/benchmark/rubiks_cube_stacking_task.py`). RoboLab's success predicate is the `success` termination

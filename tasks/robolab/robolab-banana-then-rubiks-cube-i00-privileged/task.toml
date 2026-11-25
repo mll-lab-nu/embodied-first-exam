@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/robolab-banana-then-rubiks-cube-i00-privileged"
-description = "NVIDIA RoboLab banana_then_rubiks_cube (Franka + Robotiq 2F-85, Isaac Lab 2.3 / Isaac Sim 5.1): produce one replayable trajectory. Put the banana then the cube in the bowl. Frozen scene instance (the state after RoboLab's canonical seed-0 reset)."
+description = "NVIDIA RoboLab banana_then_rubiks_cube (Franka + Robotiq 2F-85, Isaac Lab 2.3 / Isaac Sim 5.1): produce one replayable trajectory. Put the banana in the bowl, then the Rubik's cube. Frozen scene instance (the state after RoboLab's canonical seed-0 reset)."
 keywords = ["robotics", "robolab", "isaac-lab", "isaac-sim", "franka", "code-as-policy", "trajectory", "banana_then_rubiks_cube"]
 
 [metadata]

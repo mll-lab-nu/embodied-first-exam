@@ -1,7 +1,7 @@
 # RoboLab · food_packing3_cans — frozen instance
 
 You control a simulated **Franka Panda arm with a Robotiq 2F-85 gripper** (NVIDIA RoboLab's DROID setup on Isaac Lab 2.3 /
-Isaac Sim 5.1, PhysX physics) via Python. **Task:** Pack canned foods into the bin.
+Isaac Sim 5.1, PhysX physics) via Python. **Task:** Put the Spam, tomato soup and tuna cans in the dark grey bin.
 
 The scene objects are the env's rigid objects (`s.objects()`: `bin_a06`, `cheez_it`, `chocolate_pudding`, `mustard`, `spam_can`, `sugar_box`, `tomato_soup_can`, `tuna_can`, `table`; see
 `/opt/robolab/robolab/tasks/benchmark/foodpacking_1bin_3can.py`). RoboLab's success predicate is the `success` termination

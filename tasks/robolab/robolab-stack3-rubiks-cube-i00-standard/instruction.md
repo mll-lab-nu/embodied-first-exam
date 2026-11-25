@@ -1,7 +1,7 @@
 # RoboLab · stack3_rubiks_cube — STANDARD MODE (robot as a service, eai-standard/2.2)
 
 You control a **Franka Panda arm with a Robotiq 2F-85 gripper** (NVIDIA RoboLab's DROID setup) **as if it were real
-hardware**: the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Stack the rubiks cubes in a tower. Success: The three Rubik's cubes must form one tower, in any order: sorted by height, each one must touch the one below it, lie entirely above the bottom of that one and have its centre over that one's footprint, +/- 1 cm. Letting go is not required.
+hardware**: the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Stack the 3 Rubik's cubes into one tower. Success: The three Rubik's cubes must form one tower, in any order: sorted by height, each one must touch the one below it, lie entirely above the bottom of that one and have its centre over that one's footprint, +/- 1 cm. Letting go is not required.
 
 ## Rules (real-robot rules)
 - **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or

@@ -1,7 +1,7 @@
 # RoboLab · tools_picking_drill — STANDARD MODE (robot as a service, eai-standard/2.2)
 
 You control a **Franka Panda arm with a Robotiq 2F-85 gripper** (NVIDIA RoboLab's DROID setup) **as if it were real
-hardware**: the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Select the cordless drill and put it on the table. Success: The cordless drill, which starts in the right bin, must end out of the bins, resting on the table itself, and the gripper must no longer touch it. "On the table" means the table supports it (its contact force points upwards, within 45 deg of vertical).
+hardware**: the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Take the cordless drill out of its bin and put it on the table. Success: The cordless drill, which starts in the right bin, must end out of the bins, resting on the table itself, and the gripper must no longer touch it. "On the table" means the table supports it (its contact force points upwards, within 45 deg of vertical).
 
 ## Rules (real-robot rules)
 - **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or

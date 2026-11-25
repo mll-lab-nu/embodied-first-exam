@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robolab-0.2.2` |
 
 ## Task
-Put the two measuring cups outside of the plate.
+Take the orange measuring cup and the small blue measuring scoop off the plate and put them on the table.
 
 ## Difficulty
 RoboLab labels this task "moderate" (2 subtasks; attributes: color, sorting); its success term (`object_outside_of`) asks for 2 objects out of clay_plates. The tooling gives only thin primitives (move_ee on Isaac Lab's differential IK, joint moves, gripper, hold), so every grasp, transport and placement is the agent's to build. RoboLab ships no expert solution.

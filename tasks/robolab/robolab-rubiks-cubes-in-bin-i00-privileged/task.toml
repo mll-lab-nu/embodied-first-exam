@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/robolab-rubiks-cubes-in-bin-i00-privileged"
-description = "NVIDIA RoboLab rubiks_cubes_in_bin (Franka + Robotiq 2F-85, Isaac Lab 2.3 / Isaac Sim 5.1): produce one replayable trajectory. Sort all rubiks cubes into the bin. Frozen scene instance (the state after RoboLab's canonical seed-0 reset)."
+description = "NVIDIA RoboLab rubiks_cubes_in_bin (Franka + Robotiq 2F-85, Isaac Lab 2.3 / Isaac Sim 5.1): produce one replayable trajectory. Put the 3 Rubik's cubes in the grey bin. Frozen scene instance (the state after RoboLab's canonical seed-0 reset)."
 keywords = ["robotics", "robolab", "isaac-lab", "isaac-sim", "franka", "code-as-policy", "trajectory", "rubiks_cubes_in_bin"]
 
 [metadata]

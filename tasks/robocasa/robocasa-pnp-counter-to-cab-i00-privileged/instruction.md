@@ -1,7 +1,7 @@
 # RoboCasa · PnPCounterToCab
 
 A **Franka Panda arm on an Omron mobile base** (with a torso lift) works in a kitchen: RoboCasa's `PnPCounterToCab` kitchen task (robosuite, MuJoCo).
-**Task: Pick the cake from the counter and place it in the cabinet.**
+**Task: Put the cake from the counter in the cabinet, all the way in, and move your hand away.**
 The scene is one frozen instance: the initial state of one of the benchmark's official demonstrations (kitchen
 layout, style, fixtures, objects and their poses).
 

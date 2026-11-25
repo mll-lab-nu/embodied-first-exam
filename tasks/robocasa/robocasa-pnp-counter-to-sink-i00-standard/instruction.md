@@ -1,7 +1,7 @@
 # RoboCasa · PnPCounterToSink — STANDARD MODE (robot as a service)
 
 A **Franka Panda arm on an Omron mobile base** (with a torso lift) works in a kitchen: RoboCasa's `PnPCounterToSink` kitchen task (robosuite, MuJoCo).
-**Task: Pick the apple from the counter and place it in the sink.**
+**Task: Put the apple from the counter in the sink, and move your hand away.**
 The scene is one frozen instance: the initial state of one of the benchmark's official demonstrations.
 
 You control the robot **as if it were real hardware**: the simulator runs in a service you cannot open. You get one

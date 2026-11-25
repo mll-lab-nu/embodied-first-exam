@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robolab-0.2.2` |
 
 ## Task
-Put all plastic bottles away in the bin.
+Put the 3 plastic bottles (the small white bottle, the milk jug and the utility jug) in the blue bin.
 
 ## Difficulty
 RoboLab labels this task "moderate" (3 subtasks; attributes: semantics); its success term (`object_in_container`) asks for 3 objects into right_bin. The tooling gives only thin primitives (move_ee on Isaac Lab's differential IK, joint moves, gripper, hold), so every grasp, transport and placement is the agent's to build. RoboLab ships no expert solution.

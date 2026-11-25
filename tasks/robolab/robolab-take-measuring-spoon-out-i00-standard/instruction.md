@@ -1,7 +1,7 @@
 # RoboLab · take_measuring_spoon_out — STANDARD MODE (robot as a service, eai-standard/2.2)
 
 You control a **Franka Panda arm with a Robotiq 2F-85 gripper** (NVIDIA RoboLab's DROID setup) **as if it were real
-hardware**: the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Take the white colored measuring spoon out of the red bowl and put it on the table. Success: The white measuring spoon that lies in the red bowl must end outside the red bowl, and the gripper must no longer touch it. "Outside" means the centre of the object's convex hull is not within the container's convex hull extended along the container's own up axis. It must also rest on the table top: the contact force between the object and the table is at least 0.1 N and points upwards, within 45° of vertical. An object held in the air, resting only on other objects, or dropped on the floor does not count.
+hardware**: the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Take the white measuring spoon out of the red bowl and put it on the table. Success: The white measuring spoon that lies in the red bowl must end outside the red bowl, and the gripper must no longer touch it. "Outside" means the centre of the object's convex hull is not within the container's convex hull extended along the container's own up axis. It must also rest on the table top: the contact force between the object and the table is at least 0.1 N and points upwards, within 45° of vertical. An object held in the air, resting only on other objects, or dropped on the floor does not count.
 
 ## Rules (real-robot rules)
 - **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or

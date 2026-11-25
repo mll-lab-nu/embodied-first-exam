@@ -1,7 +1,7 @@
 # RoboLab · clutter_plastic — frozen instance
 
 You control a simulated **Franka Panda arm with a Robotiq 2F-85 gripper** (NVIDIA RoboLab's DROID setup on Isaac Lab 2.3 /
-Isaac Sim 5.1, PhysX physics) via Python. **Task:** Put all plastic bottles away in the bin.
+Isaac Sim 5.1, PhysX physics) via Python. **Task:** Put the 3 plastic bottles (the small white bottle, the milk jug and the utility jug) in the blue bin.
 
 The scene objects are the env's rigid objects (`s.objects()`: `lemon_01`, `lemon_02`, `lime01`, `lime01_01`, `orange_01`, `orange_02`, `pomegranate01`, `pumpkinlarge`, `pumpkinsmall`, `whitepackerbottle_a01`, `avocado01`, `crabbypenholder`, `milkjug_a01`, `serving_bowl`, `utilityjug_a03`, `right_bin`, `red_onion`, `table`; see
 `/opt/robolab/robolab/tasks/benchmark/clutter_plastic_task.py`). RoboLab's success predicate is the `success` termination

@@ -1,7 +1,7 @@
 # RoboLab · banana_in_bowl — frozen instance
 
 You control a simulated **Franka Panda arm with a Robotiq 2F-85 gripper** (NVIDIA RoboLab's DROID setup on Isaac Lab 2.3 /
-Isaac Sim 5.1, PhysX physics) via Python. **Task:** Pick up the banana and place it in the bowl.
+Isaac Sim 5.1, PhysX physics) via Python. **Task:** Put the banana in the bowl.
 
 The scene objects are the env's rigid objects (`s.objects()`: `banana`, `bowl`, `table`; see
 `/opt/robolab/robolab/tasks/benchmark/banana_in_bowl_task.py`). RoboLab's success predicate is the `success` termination

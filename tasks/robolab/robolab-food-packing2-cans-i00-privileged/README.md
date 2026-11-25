@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robolab-0.2.2` |
 
 ## Task
-Pack canned foods into the bin.
+Put the tomato soup can and the tuna can in the dark grey bin.
 
 ## Difficulty
 RoboLab labels this task "simple" (2 subtasks; attributes: semantics); its success term (`object_in_container`) asks for 2 objects into bin_a06. The tooling gives only thin primitives (move_ee on Isaac Lab's differential IK, joint moves, gripper, hold), so every grasp, transport and placement is the agent's to build. RoboLab ships no expert solution.

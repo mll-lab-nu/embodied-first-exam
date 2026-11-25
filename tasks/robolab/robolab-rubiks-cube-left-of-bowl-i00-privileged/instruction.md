@@ -1,7 +1,7 @@
 # RoboLab · rubiks_cube_left_of_bowl — frozen instance
 
 You control a simulated **Franka Panda arm with a Robotiq 2F-85 gripper** (NVIDIA RoboLab's DROID setup on Isaac Lab 2.3 /
-Isaac Sim 5.1, PhysX physics) via Python. **Task:** Put the rubiks cube to the left of the bowl.
+Isaac Sim 5.1, PhysX physics) via Python. **Task:** Put the Rubik's cube to the left of the bowl, as seen from the robot.
 
 The scene objects are the env's rigid objects (`s.objects()`: `rubiks_cube`, `banana`, `bowl`, `table`; see
 `/opt/robolab/robolab/tasks/benchmark/rubiks_cube_left_of_bowl.py`). RoboLab's success predicate is the `success` termination

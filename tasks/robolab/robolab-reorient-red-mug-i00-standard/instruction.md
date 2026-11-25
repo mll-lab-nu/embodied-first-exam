@@ -1,7 +1,7 @@
 # RoboLab · reorient_red_mug — STANDARD MODE (robot as a service, eai-standard/2.2)
 
 You control a **Franka Panda arm with a Robotiq 2F-85 gripper** (NVIDIA RoboLab's DROID setup) **as if it were real
-hardware**: the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Put the red mug upright so that the opening is facing upwards. Success: The red mug must stand upright (its own up axis within 0.1 rad, about 6 deg, of vertical), and the gripper must no longer touch it.
+hardware**: the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Stand the red mug upright, opening up. Success: The red mug must stand upright (its own up axis within 0.1 rad, about 6 deg, of vertical), and the gripper must no longer touch it.
 
 ## Rules (real-robot rules)
 - **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or

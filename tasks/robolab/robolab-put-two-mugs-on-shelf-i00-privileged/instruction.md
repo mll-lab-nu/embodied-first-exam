@@ -1,7 +1,7 @@
 # RoboLab · put_two_mugs_on_shelf — frozen instance
 
 You control a simulated **Franka Panda arm with a Robotiq 2F-85 gripper** (NVIDIA RoboLab's DROID setup on Isaac Lab 2.3 /
-Isaac Sim 5.1, PhysX physics) via Python. **Task:** Put two (2) mugs on the wire shelf.
+Isaac Sim 5.1, PhysX physics) via Python. **Task:** Put 2 of the mugs on the wire shelf.
 
 The scene objects are the env's rigid objects (`s.objects()`: `wireshelving_a01`, `spatula_01`, `plate_small`, `fork_big`, `fork_small`, `ceramic_mug`, `mug`, `mug_01`, `table`; see
 `/opt/robolab/robolab/tasks/benchmark/put_two_mugs_on_shelf.py`). RoboLab's success predicate is the `success` termination

@@ -1,7 +1,7 @@
 # RoboCasa · RestockPantry
 
 A **Franka Panda arm on an Omron mobile base** (with a torso lift) works in a kitchen: RoboCasa's `RestockPantry` kitchen task (robosuite, MuJoCo).
-**Task: Pick both cans from the counter and place them in the cabinet, on the same side as the can already there.**
+**Task: Put both cans from the counter in the cabinet, on the side where the other can already is, and move your hand away.**
 The scene is one frozen instance: the initial state of one of the benchmark's official demonstrations (kitchen
 layout, style, fixtures, objects and their poses).
 

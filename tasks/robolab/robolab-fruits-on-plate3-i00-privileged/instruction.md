@@ -1,7 +1,7 @@
 # RoboLab · fruits_on_plate3 — frozen instance
 
 You control a simulated **Franka Panda arm with a Robotiq 2F-85 gripper** (NVIDIA RoboLab's DROID setup on Isaac Lab 2.3 /
-Isaac Sim 5.1, PhysX physics) via Python. **Task:** One orange is already on the plate. Put fruits on the plate so that exactly three are on it at the end, then let go.
+Isaac Sim 5.1, PhysX physics) via Python. **Task:** Add fruit (not the pumpkins) to the plate until exactly 3 fruits are on it, then let go; the orange already there counts.
 
 The scene objects are the env's rigid objects (`s.objects()`: `lemon_01`, `lemon_02`, `lime01`, `lime01_01`, `orange_01`, `orange_02`, `pomegranate01`, `pumpkinlarge`, `pumpkinsmall`, `redonion`, `serving_bowl`, `clay_plates`, `wooden_spoons`, `spatula`, `storage_box`, `table`; see
 `/opt/robolab/robolab/tasks/benchmark/fruits_to_plate_3.py`); at the start `orange_02` already lies on `clay_plates`. RoboLab's success predicate is the `success` termination

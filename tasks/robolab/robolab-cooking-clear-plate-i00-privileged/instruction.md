@@ -1,7 +1,7 @@
 # RoboLab · cooking_clear_plate — frozen instance
 
 You control a simulated **Franka Panda arm with a Robotiq 2F-85 gripper** (NVIDIA RoboLab's DROID setup on Isaac Lab 2.3 /
-Isaac Sim 5.1, PhysX physics) via Python. **Task:** Put the two measuring cups outside of the plate.
+Isaac Sim 5.1, PhysX physics) via Python. **Task:** Take the orange measuring cup and the small blue measuring scoop off the plate and put them on the table.
 
 The scene objects are the env's rigid objects (`s.objects()`: `redonion`, `serving_bowl`, `clay_plates`, `wooden_spoons`, `spatula`, `storage_box`, `tomato_sauce_can`, `measuring_cups_1`, `pink_spaghetti_spoon`, `spoon_1`, `green_serving_spoon`, `storage_box_01`, `ladle`, `wooden_bowl`, `potato_masher`, `table`; see
 `/opt/robolab/robolab/tasks/benchmark/cooking_clear_plate_specific.py`). RoboLab declares the success predicate as the `success` termination term in that file (`object_outside_of` in

@@ -1,7 +1,7 @@
 # RoboCasa · PnPStoveToCounter
 
 A **Franka Panda arm on an Omron mobile base** (with a torso lift) works in a kitchen: RoboCasa's `PnPStoveToCounter` kitchen task (robosuite, MuJoCo).
-**Task: Pick the steak from the pan and place it on the plate.**
+**Task: Move the steak from the pan to the middle of the plate, and move your hand away.**
 The scene is one frozen instance: the initial state of one of the benchmark's official demonstrations (kitchen
 layout, style, fixtures, objects and their poses).
 

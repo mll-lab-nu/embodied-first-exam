@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robolab-0.2.2` |
 
 ## Task
-Put the white mug in the center of the table.
+Put the white mug in the centre of the table.
 
 ## Difficulty
 RoboLab labels this task "moderate" (3 subtasks; attributes: color, spatial); its success term (`object_on_center`) asks for the white mug set down within 5 cm (along x and y) of the table's centre. The tooling gives only thin primitives (move_ee on Isaac Lab's differential IK, joint moves, gripper, hold), so every grasp, transport and placement is the agent's to build. RoboLab ships no expert solution.

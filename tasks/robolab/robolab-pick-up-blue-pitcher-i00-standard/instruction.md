@@ -1,7 +1,7 @@
 # RoboLab · pick_up_blue_pitcher — STANDARD MODE (robot as a service, eai-standard/2.2)
 
 You control a **Franka Panda arm with a Robotiq 2F-85 gripper** (NVIDIA RoboLab's DROID setup) **as if it were real
-hardware**: the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Pick up the large blue pitcher. Success: The gripper must be holding the large blue pitcher (touching it) while the whole of it is lifted: every corner of its bounding box at least 5 cm above the table surface, with its centre still over the table's footprint (+/- 1 cm). The episode ends the moment this holds, so there is no need to put it down.
+hardware**: the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Pick up the large blue pitcher and lift it clear of the table. Success: The gripper must be holding the large blue pitcher (touching it) while the whole of it is lifted: every corner of its bounding box at least 5 cm above the table surface, with its centre still over the table's footprint (+/- 1 cm). The episode ends the moment this holds, so there is no need to put it down.
 
 ## Rules (real-robot rules)
 - **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or

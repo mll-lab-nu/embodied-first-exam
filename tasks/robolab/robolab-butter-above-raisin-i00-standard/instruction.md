@@ -1,7 +1,7 @@
 # RoboLab · butter_above_raisin — STANDARD MODE (robot as a service, eai-standard/2.2)
 
 You control a **Franka Panda arm with a Robotiq 2F-85 gripper** (NVIDIA RoboLab's DROID setup) **as if it were real
-hardware**: the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Pick up the butter box and place it on top of the raisin box. Success: The butter box must end on the raisin box, and the gripper must no longer touch it. "On" means the surface supports the object (the contact force it exerts on the object points upwards, within 45 deg of vertical) and the object's centre lies over the surface's bounding-box footprint, +/- 1 cm.
+hardware**: the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Put the butter box on top of the raisin box. Success: The butter box must end on the raisin box, and the gripper must no longer touch it. "On" means the surface supports the object (the contact force it exerts on the object points upwards, within 45 deg of vertical) and the object's centre lies over the surface's bounding-box footprint, +/- 1 cm.
 
 ## Rules (real-robot rules)
 - **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or

@@ -1,7 +1,7 @@
 # RoboLab · red_dishes_in_bin — frozen instance
 
 You control a simulated **Franka Panda arm with a Robotiq 2F-85 gripper** (NVIDIA RoboLab's DROID setup on Isaac Lab 2.3 /
-Isaac Sim 5.1, PhysX physics) via Python. **Task:** Put the red dishware in the grey bin.
+Isaac Sim 5.1, PhysX physics) via Python. **Task:** Put the red mug and the red bowl in the grey bin.
 
 The scene objects are the env's rigid objects (`s.objects()`: `bowl`, `rubiks_cube`, `banana`, `grey_bin`, `mug`, `table`; see
 `/opt/robolab/robolab/tasks/benchmark/red_dishes_in_bin.py`). RoboLab's success predicate is the `success` termination

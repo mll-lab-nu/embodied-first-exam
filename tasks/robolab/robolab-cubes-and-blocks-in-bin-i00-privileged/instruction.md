@@ -1,7 +1,7 @@
 # RoboLab · cubes_and_blocks_in_bin — frozen instance
 
 You control a simulated **Franka Panda arm with a Robotiq 2F-85 gripper** (NVIDIA RoboLab's DROID setup on Isaac Lab 2.3 /
-Isaac Sim 5.1, PhysX physics) via Python. **Task:** Put all the cubes and blocks in the bin.
+Isaac Sim 5.1, PhysX physics) via Python. **Task:** Put the 3 Rubik's cubes and the 4 coloured blocks in the grey bin.
 
 The scene objects are the env's rigid objects (`s.objects()`: `rubiks_cube`, `rubiks_cube_1`, `rubiks_cube_2`, `grey_bin`, `lizard_figurine`, `birdhouse`, `yellow_block`, `red_block`, `green_block`, `blue_block`, `lizard_figurine_01`, `table`; see
 `/opt/robolab/robolab/tasks/benchmark/cubes_and_blocks_in_bin.py`). RoboLab's success predicate is the `success` termination

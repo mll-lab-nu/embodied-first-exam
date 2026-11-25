@@ -1,7 +1,7 @@
 # RoboLab · take_spatula_off_shelf — STANDARD MODE (robot as a service, eai-standard/2.2)
 
 You control a **Franka Panda arm with a Robotiq 2F-85 gripper** (NVIDIA RoboLab's DROID setup) **as if it were real
-hardware**: the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Take the spatula off the shelf and put it on the table. Success: The spatula on the wire shelf must end outside the wire shelf and lying on the table, and the gripper must no longer touch it. "Outside" means the centre of the object's convex hull is not within the container's convex hull extended along the container's own up axis. "On the table" means the table supports it (its contact force points upwards, within 45 deg of vertical).
+hardware**: the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Take the spatula off the wire shelf and put it on the table. Success: The spatula on the wire shelf must end outside the wire shelf and lying on the table, and the gripper must no longer touch it. "Outside" means the centre of the object's convex hull is not within the container's convex hull extended along the container's own up axis. "On the table" means the table supports it (its contact force points upwards, within 45 deg of vertical).
 
 ## Rules (real-robot rules)
 - **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or

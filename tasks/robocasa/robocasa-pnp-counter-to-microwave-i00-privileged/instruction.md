@@ -1,7 +1,7 @@
 # RoboCasa · PnPCounterToMicrowave
 
 A **Franka Panda arm on an Omron mobile base** (with a torso lift) works in a kitchen: RoboCasa's `PnPCounterToMicrowave` kitchen task (robosuite, MuJoCo).
-**Task: Pick the corn from the counter and place it on the plate inside the microwave.**
+**Task: Put the corn from the counter on the plate in the microwave, and move your hand away.**
 The scene is one frozen instance: the initial state of one of the benchmark's official demonstrations (kitchen
 layout, style, fixtures, objects and their poses).
 

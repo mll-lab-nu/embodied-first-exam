@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robolab-0.2.2` |
 
 ## Task
-Put two (2) mugs on the wire shelf.
+Put 2 of the mugs on the wire shelf.
 
 ## Difficulty
 RoboLab labels this task "moderate" (2 subtasks; attributes: affordance, spatial, counting); its success term (`object_in_container`) asks for exactly 2 of 3 objects into wireshelving_a01. The tooling gives only thin primitives (move_ee on Isaac Lab's differential IK, joint moves, gripper, hold), so every grasp, transport and placement is the agent's to build. RoboLab ships no expert solution.

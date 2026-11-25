@@ -1,7 +1,7 @@
 # RoboLab · keyboard_out_of_bin — frozen instance
 
 You control a simulated **Franka Panda arm with a Robotiq 2F-85 gripper** (NVIDIA RoboLab's DROID setup on Isaac Lab 2.3 /
-Isaac Sim 5.1, PhysX physics) via Python. **Task:** Take the keyboard out of the bin and put it on the table.
+Isaac Sim 5.1, PhysX physics) via Python. **Task:** Take the keyboard out of the grey bin and put it on the table.
 
 The scene objects are the env's rigid objects (`s.objects()`: `ceramic_mug`, `glasses`, `keyboard`, `lizard_figurine`, `marker`, `remote_control`, `smartphone`, `wooden_bowl`, `spoon_big`, `computer_mouse`, `yogurt_cup`, `granola_bars`, `grey_bin`, `table`; see
 `/opt/robolab/robolab/tasks/benchmark/keyboard_out_of_bin_task.py`). RoboLab's success predicate is the `success` termination

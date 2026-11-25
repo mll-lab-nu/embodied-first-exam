@@ -336,66 +336,190 @@ def action_spec(env) -> dict:
     return out
 
 
-# -- task text errata -----------------------------------------------------------------------------------------
+# -- task text -------------------------------------------------------------------------------------------------
 # The frozen instance keeps the benchmark's own language string (ep_meta["lang"]); the instance file is pinned and is
-# not edited. Where that string is wrong or unclear for the instance, the text the agent is shown (Session.inst["text"]:
-# the privileged state()["instruction"], the service's spec task_text and task info) is the corrected sentence, the
-# same one as the task's instruction.md Task line. Keyed by env_name and the exact upstream string, so any other
-# instance of the family keeps its own text.
-#  - PnPCounterToMicrowave: the check needs the object on the plate inside the microwave (obj-container contact).
-#  - ArrangeVegetables: the two objects are a carrot and a lemon. PnPMicrowaveToCounter: grammar.
-#  - OpenDrawer: the target is the top drawer of the stack on the robot's right. MicrowaveThawing: the door starts
-#    closed and the microwave only turns on with the door shut.
-#  - GR1 tiered basket / shelf: only the top tier counts (get_highest_spawn_region). PlateToPlate: the target is the
-#    other, empty plate. "in the plate": grammar.
-#  - RestockPantry: "their designated side" is the side of the can already in the cabinet.
+# not edited. The text the agent is shown (Session.inst["text"]: the privileged state()["instruction"], the service's
+# spec task_text and task info) is a plain sentence written for the instance, the same one as the task's
+# instruction.md Task line: it names what the environment's own success check needs (the top drawer on your right,
+# the plate inside the microwave, the top tier, the empty plate, the side of the can already in the cabinet, the hand
+# moved away where the check has that term) and leaves out where things start. Keyed by env_name and the exact
+# upstream string (RoboCasa kitchen tasks first, then the GR1 tabletop tasks), so any other instance of a family
+# keeps its own text.
 TEXT_ERRATA = {
-    ("PnPCounterToMicrowave",
-     "pick the corn from the counter and place it in the microwave"):
-        "Pick the corn from the counter and place it on the plate inside the microwave.",
-    ("PnPMicrowaveToCounter",
-     "pick the onion from the microwave and place it on plate located on the counter"):
-        "Pick the onion from the microwave and place it on the plate located on the counter.",
     ("ArrangeVegetables",
      "Pick the vegetables from the sink and place them on the cutting board."):
-        "Pick the carrot and the lemon from the sink and place them on the cutting board.",
-    ("OpenDrawer",
-     "open the right drawer"):
-        "Open the top drawer on your right.",
+        "Put the carrot and the lemon from the sink on the cutting board, away from its edge, and move your hand "
+        "away.",
+    ("CloseDoubleDoor",
+     "close the cabinet doors"):
+        "Close both cabinet doors.",
+    ("CloseDrawer",
+     "close the left drawer"):
+        "Close the drawer on your left all the way.",
+    ("CloseSingleDoor",
+     "close the microwave door"):
+        "Close the microwave door.",
+    ("CoffeePressButton",
+     "press the button on the coffee machine to serve coffee"):
+        "Press the start button on the coffee machine, then move your hand away.",
+    ("CoffeeServeMug",
+     "pick the mug from under the coffee machine dispenser and place it on the counter"):
+        "Take the mug from under the coffee machine's spout and put it on the counter next to the machine, and "
+        "move your hand away.",
+    ("CoffeeSetupMug",
+     "pick the mug from the counter and place it under the coffee machine dispenser"):
+        "Put the mug from the counter under the coffee machine's spout, and move your hand away.",
     ("MicrowaveThawing",
      "Pick the squash from the counter and place it in the microwave. Then turn on the microwave."):
-        "Pick the squash from the counter and place it in the microwave. Then close the microwave door and turn on "
-        "the microwave.",
-    ("PosttrainPnPNovelFromCuttingboardToTieredbasketSplitA",
-     "pick the sweet potato from the cutting board and place it in the tiered basket"):
-        "pick the sweet potato from the cutting board and place it on the top tier of the tiered basket.",
-    ("PosttrainPnPNovelFromTrayToTieredbasketSplitA",
-     "pick the lemon from the tray and place it in the tiered basket"):
-        "pick the lemon from the tray and place it on the top tier of the tiered basket.",
-    ("PosttrainPnPNovelFromPlacematToTieredshelfSplitA",
-     "pick the tomato from the placemat and place it in the tiered shelf"):
-        "pick the tomato from the placemat and place it on the top tier of the tiered shelf.",
-    ("PosttrainPnPNovelFromTrayToTieredshelfSplitA",
-     "pick the bell pepper from the tray and place it in the tiered shelf"):
-        "pick the bell pepper from the tray and place it on the top tier of the tiered shelf.",
-    ("PosttrainPnPNovelFromPlateToPlateSplitA",
-     "pick the sweet potato from the plate and place it in the plate"):
-        "pick the sweet potato from its plate and place it on the empty plate.",
-    ("PosttrainPnPNovelFromPlacematToPlateSplitA",
-     "pick the tomato from the placemat and place it in the plate"):
-        "pick the tomato from the placemat and place it on the plate.",
-    ("PosttrainPnPNovelFromTrayToPlateSplitA",
-     "pick the cupcake from the tray and place it in the plate"):
-        "pick the cupcake from the tray and place it on the plate.",
+        "Put the squash from the counter in the microwave, close the door and turn the microwave on, and move "
+        "your hand away.",
+    ("OpenDoubleDoor",
+     "open the cabinet doors"):
+        "Open both cabinet doors all the way.",
+    ("OpenDrawer",
+     "open the right drawer"):
+        "Open the top drawer on your right all the way.",
+    ("OpenSingleDoor",
+     "open the cabinet door"):
+        "Open the cabinet door all the way.",
+    ("PnPCabToCounter",
+     "pick the hot dog from the cabinet and place it on the counter"):
+        "Take the hot dog out of the cabinet and put it on the counter below it, and move your hand away.",
+    ("PnPCounterToCab",
+     "pick the cake from the counter and place it in the cabinet"):
+        "Put the cake from the counter in the cabinet, all the way in, and move your hand away.",
+    ("PnPCounterToMicrowave",
+     "pick the corn from the counter and place it in the microwave"):
+        "Put the corn from the counter on the plate in the microwave, and move your hand away.",
+    ("PnPCounterToSink",
+     "pick the apple from the counter and place it in the sink"):
+        "Put the apple from the counter in the sink, and move your hand away.",
+    ("PnPCounterToStove",
+     "pick the potato from the plate and place it in the pan"):
+        "Move the potato from the plate to the middle of the pan, and move your hand away.",
+    ("PnPMicrowaveToCounter",
+     "pick the onion from the microwave and place it on plate located on the counter"):
+        "Take the onion out of the microwave and put it on the plate on the counter, away from the plate's edge, "
+        "and move your hand away.",
+    ("PnPSinkToCounter",
+     "pick the tomato from the sink and place it on the plate located on the counter"):
+        "Take the tomato out of the sink and put it on the plate on the counter, away from the plate's edge, and "
+        "move your hand away.",
+    ("PnPStoveToCounter",
+     "pick the steak from the pan and place it on the plate"):
+        "Move the steak from the pan to the middle of the plate, and move your hand away.",
+    ("PreSoakPan",
+     "Pick the pan and sponge and place them into the sink. Then turn on the water."):
+        "Put the pan and the sponge in the sink, turn the water fully on, and move your hand away.",
+    ("PrepareCoffee",
+     "Pick the mug from the cabinet, place it under the coffee machine dispenser, and press the start button."):
+        "Take the mug from the cabinet, put it under the coffee machine's spout, press the start button, and move"
+        " your hand away.",
     ("RestockPantry",
      "Pick the cans from the counter and place them in their designated side in the cabinet."):
-        "Pick both cans from the counter and place them in the cabinet, on the same side as the can already there.",
+        "Put both cans from the counter in the cabinet, on the side where the other can already is, and move your"
+        " hand away.",
+    ("TurnOffMicrowave",
+     "press the stop button on the microwave"):
+        "Press the stop button on the microwave, then move your hand away.",
+    ("TurnOffSinkFaucet",
+     "turn off the sink faucet"):
+        "Turn off the sink faucet.",
+    ("TurnOffStove",
+     "turn off the front right burner of the stove"):
+        "Turn off the front right burner of the stove.",
+    ("TurnOnMicrowave",
+     "press the start button on the microwave"):
+        "Press the start button on the microwave, then move your hand away.",
+    ("TurnOnSinkFaucet",
+     "turn on the sink faucet"):
+        "Turn the sink faucet fully on.",
+    ("TurnOnStove",
+     "turn on the front left burner of the stove"):
+        "Turn on the front left burner of the stove.",
+    ("TurnSinkSpout",
+     "turn the sink spout to the right"):
+        "Swing the sink spout well over to your right.",
+    ("PnPBottleToCabinetClose",
+     "pick up the bottled water, place it into the cabinet and close the cabinet"):
+        "Put the bottled water in the cabinet and close the cabinet door.",
+    ("PnPCanToDrawerClose",
+     "pick up the can, place it into the drawer and close the drawer"):
+        "Put the can in the drawer and close the drawer.",
+    ("PnPCupToDrawerClose",
+     "pick up the cup, place it into the drawer and close the drawer"):
+        "Put the cup in the drawer and close the drawer.",
+    ("PnPMilkToMicrowaveClose",
+     "pick up the milk, place it into the microwave and close the microwave"):
+        "Put the milk in the microwave and close the microwave door.",
+    ("PnPPotatoToMicrowaveClose",
+     "pick up the potato, place it into the microwave and close the microwave"):
+        "Put the potato in the microwave and close the microwave door.",
+    ("PnPWineToCabinetClose",
+     "pick up the wine, place it into the cabinet and close the cabinet"):
+        "Put the wine in the cabinet and close the cabinet door.",
+    ("PosttrainPnPNovelFromCuttingboardToBasketSplitA",
+     "pick the croissant from the cutting board and place it in the basket"):
+        "Put the croissant from the cutting board in the basket, and move both hands away.",
+    ("PosttrainPnPNovelFromCuttingboardToCardboardboxSplitA",
+     "pick the squash from the cutting board and place it in the cardboard box"):
+        "Put the squash from the cutting board in the cardboard box, and move both hands away.",
+    ("PosttrainPnPNovelFromCuttingboardToPanSplitA",
+     "pick the bell pepper from the cutting board and place it in the pan"):
+        "Put the bell pepper from the cutting board in the pan, and move both hands away.",
+    ("PosttrainPnPNovelFromCuttingboardToPotSplitA",
+     "pick the bell pepper from the cutting board and place it in the pot"):
+        "Put the bell pepper from the cutting board in the pot, and move both hands away.",
+    ("PosttrainPnPNovelFromCuttingboardToTieredbasketSplitA",
+     "pick the sweet potato from the cutting board and place it in the tiered basket"):
+        "Put the sweet potato from the cutting board on the top tier of the tiered basket, and move both hands "
+        "away.",
+    ("PosttrainPnPNovelFromPlacematToBasketSplitA",
+     "pick the croissant from the placemat and place it in the basket"):
+        "Put the croissant from the placemat in the basket, and move both hands away.",
+    ("PosttrainPnPNovelFromPlacematToBowlSplitA",
+     "pick the can from the placemat and place it in the bowl"):
+        "Put the can from the placemat in the bowl, and move both hands away.",
+    ("PosttrainPnPNovelFromPlacematToPlateSplitA",
+     "pick the tomato from the placemat and place it in the plate"):
+        "Put the tomato from the placemat on the plate, and move both hands away.",
+    ("PosttrainPnPNovelFromPlacematToTieredshelfSplitA",
+     "pick the tomato from the placemat and place it in the tiered shelf"):
+        "Put the tomato from the placemat on the top tier of the tiered shelf, and move both hands away.",
+    ("PosttrainPnPNovelFromPlateToBowlSplitA",
+     "pick the bell pepper from the plate and place it in the bowl"):
+        "Put the bell pepper from the plate in the bowl, and move both hands away.",
+    ("PosttrainPnPNovelFromPlateToCardboardboxSplitA",
+     "pick the lemon from the plate and place it in the cardboard box"):
+        "Put the lemon from the plate in the cardboard box, and move both hands away.",
+    ("PosttrainPnPNovelFromPlateToPanSplitA",
+     "pick the pear from the plate and place it in the pan"):
+        "Put the pear from the plate in the pan, and move both hands away.",
+    ("PosttrainPnPNovelFromPlateToPlateSplitA",
+     "pick the sweet potato from the plate and place it in the plate"):
+        "Move the sweet potato from its plate to the empty plate, and move both hands away.",
+    ("PosttrainPnPNovelFromTrayToCardboardboxSplitA",
+     "pick the squash from the tray and place it in the cardboard box"):
+        "Put the squash from the tray in the cardboard box, and move both hands away.",
+    ("PosttrainPnPNovelFromTrayToPlateSplitA",
+     "pick the cupcake from the tray and place it in the plate"):
+        "Put the cupcake from the tray on the plate, and move both hands away.",
+    ("PosttrainPnPNovelFromTrayToPotSplitA",
+     "pick the lemon from the tray and place it in the pot"):
+        "Put the lemon from the tray in the pot, and move both hands away.",
+    ("PosttrainPnPNovelFromTrayToTieredbasketSplitA",
+     "pick the lemon from the tray and place it in the tiered basket"):
+        "Put the lemon from the tray on the top tier of the tiered basket, and move both hands away.",
+    ("PosttrainPnPNovelFromTrayToTieredshelfSplitA",
+     "pick the bell pepper from the tray and place it in the tiered shelf"):
+        "Put the bell pepper from the tray on the top tier of the tiered shelf, and move both hands away.",
 }
 
 
 def task_text(env_name: str, lang: str) -> str:
-    """The task sentence the agent is shown: the instance's own language string, or its erratum (TEXT_ERRATA), as a
-    sentence (capital first letter, final period, no trailing space), the same as the task's instruction.md Task line."""
+    """The task sentence the agent is shown: the instance's plain sentence (TEXT_ERRATA), else its own language
+    string, as a sentence (capital first letter, final period, no trailing space), the same as the task's
+    instruction.md Task line."""
     s = TEXT_ERRATA.get((env_name, lang), lang).strip()
     s = s[:1].upper() + s[1:]
     return s if s.endswith((".", "?", "!")) else s + "."

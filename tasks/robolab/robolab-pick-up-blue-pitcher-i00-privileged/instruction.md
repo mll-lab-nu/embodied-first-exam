@@ -1,7 +1,7 @@
 # RoboLab · pick_up_blue_pitcher — frozen instance
 
 You control a simulated **Franka Panda arm with a Robotiq 2F-85 gripper** (NVIDIA RoboLab's DROID setup on Isaac Lab 2.3 /
-Isaac Sim 5.1, PhysX physics) via Python. **Task:** Pick up the large blue pitcher.
+Isaac Sim 5.1, PhysX physics) via Python. **Task:** Pick up the large blue pitcher and lift it clear of the table.
 
 The scene objects are the env's rigid objects (`s.objects()`: `plasticjerrican_a02`, `plasticpail_a02`, `pitcher`, `table`; see
 `/opt/robolab/robolab/tasks/benchmark/pick_up_blue_pitcher.py`). RoboLab's success predicate is the `success` termination

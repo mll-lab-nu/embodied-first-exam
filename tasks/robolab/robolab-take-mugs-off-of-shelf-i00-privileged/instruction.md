@@ -1,7 +1,7 @@
 # RoboLab · take_mugs_off_of_shelf — frozen instance
 
 You control a simulated **Franka Panda arm with a Robotiq 2F-85 gripper** (NVIDIA RoboLab's DROID setup on Isaac Lab 2.3 /
-Isaac Sim 5.1, PhysX physics) via Python. **Task:** Take the mugs off the shelf.
+Isaac Sim 5.1, PhysX physics) via Python. **Task:** Take both mugs off the shelf and put them on the table.
 
 The scene objects are the env's rigid objects (`s.objects()`: `ceramic_mug`, `mug`, `rack_l04`, `serving_bowl`, `utilityjug_a01`, `table`; see
 `/opt/robolab/robolab/tasks/benchmark/take_mugs_off_of_shelf.py`). RoboLab's success predicate is the `success` termination

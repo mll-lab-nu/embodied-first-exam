@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robolab-0.2.2` |
 
 ## Task
-Unstack the rubiks cube tower.
+Unstack the Rubik's cube tower and set each cube on the table.
 
 ## Difficulty
 RoboLab labels this task "moderate" (2 subtasks; attributes: stacking); its success term (`object_outside_of_and_on_surface`) asks for 3 objects out of grey_bin. The tooling gives only thin primitives (move_ee on Isaac Lab's differential IK, joint moves, gripper, hold), so every grasp, transport and placement is the agent's to build. RoboLab ships no expert solution.

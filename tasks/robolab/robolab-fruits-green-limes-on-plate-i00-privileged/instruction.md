@@ -1,7 +1,7 @@
 # RoboLab · fruits_green_limes_on_plate — frozen instance
 
 You control a simulated **Franka Panda arm with a Robotiq 2F-85 gripper** (NVIDIA RoboLab's DROID setup on Isaac Lab 2.3 /
-Isaac Sim 5.1, PhysX physics) via Python. **Task:** Put all the green fruit on the plate.
+Isaac Sim 5.1, PhysX physics) via Python. **Task:** Put both limes on the plate.
 
 The scene objects are the env's rigid objects (`s.objects()`: `lemon_01`, `lemon_02`, `lime01`, `lime01_01`, `orange_01`, `orange_02`, `pomegranate01`, `pumpkinlarge`, `pumpkinsmall`, `redonion`, `serving_bowl`, `clay_plates`, `wooden_spoons`, `spatula`, `storage_box`, `table`; see
 `/opt/robolab/robolab/tasks/benchmark/fruits_green_limes_on_plate.py`). RoboLab's success predicate is the `success` termination

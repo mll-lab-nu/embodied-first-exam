@@ -1,7 +1,7 @@
 # RoboCasa · MicrowaveThawing — STANDARD MODE (robot as a service)
 
 A **Franka Panda arm on an Omron mobile base** (with a torso lift) works in a kitchen: RoboCasa's `MicrowaveThawing` kitchen task (robosuite, MuJoCo).
-**Task: Pick the squash from the counter and place it in the microwave. Then close the microwave door and turn on the microwave.**
+**Task: Put the squash from the counter in the microwave, close the door and turn the microwave on, and move your hand away.**
 The scene is one frozen instance: the initial state of one of the benchmark's official demonstrations.
 
 You control the robot **as if it were real hardware**: the simulator runs in a service you cannot open. You get one

@@ -1,7 +1,7 @@
 # RoboLab · white_mug_in_center_of_table — STANDARD MODE (robot as a service, eai-standard/2.2)
 
 You control a **Franka Panda arm with a Robotiq 2F-85 gripper** (NVIDIA RoboLab's DROID setup) **as if it were real
-hardware**: the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Put the white mug in the center of the table. Success: The centre of the white mug's bounding box (handle included) must end within 5 cm of the table's centre along x and within 5 cm along y. (x and y: the robot's base-frame axes, x forward away from the robot, y to its left.) The white mug must also touch the table, and the gripper must no longer touch it.
+hardware**: the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Put the white mug in the centre of the table. Success: The centre of the white mug's bounding box (handle included) must end within 5 cm of the table's centre along x and within 5 cm along y. (x and y: the robot's base-frame axes, x forward away from the robot, y to its left.) The white mug must also touch the table, and the gripper must no longer touch it.
 
 ## Rules (real-robot rules)
 - **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or

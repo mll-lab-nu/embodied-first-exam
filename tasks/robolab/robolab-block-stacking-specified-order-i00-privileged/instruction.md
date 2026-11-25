@@ -1,7 +1,7 @@
 # RoboLab · block_stacking_specified_order — frozen instance
 
 You control a simulated **Franka Panda arm with a Robotiq 2F-85 gripper** (NVIDIA RoboLab's DROID setup on Isaac Lab 2.3 /
-Isaac Sim 5.1, PhysX physics) via Python. **Task:** Stack the blocks in the order from bottom to top: red, blue, green, yellow.
+Isaac Sim 5.1, PhysX physics) via Python. **Task:** Stack the blocks into one tower: red at the bottom, then blue, green, and yellow on top.
 
 The scene objects are the env's rigid objects (`s.objects()`: `blue_block`, `green_block`, `red_block`, `yellow_block`, `table`; see
 `/opt/robolab/robolab/tasks/benchmark/block_stacking_specified_order_task.py`). RoboLab's success predicate is the `success` termination

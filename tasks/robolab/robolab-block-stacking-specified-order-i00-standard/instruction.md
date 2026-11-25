@@ -1,7 +1,7 @@
 # RoboLab · block_stacking_specified_order — STANDARD MODE (robot as a service, eai-standard/2.2)
 
 You control a **Franka Panda arm with a Robotiq 2F-85 gripper** (NVIDIA RoboLab's DROID setup) **as if it were real
-hardware**: the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Stack the blocks in the order from bottom to top: red, blue, green, yellow. Success: The red, blue, green and yellow blocks must form one tower, from bottom to top: red, blue, green, yellow. Each block must touch the one below it, lie entirely above the bottom of that one and have its centre over that one's footprint, +/- 1 cm. Letting go is not required.
+hardware**: the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Stack the blocks into one tower: red at the bottom, then blue, green, and yellow on top. Success: The red, blue, green and yellow blocks must form one tower, from bottom to top: red, blue, green, yellow. Each block must touch the one below it, lie entirely above the bottom of that one and have its centre over that one's footprint, +/- 1 cm. Letting go is not required.
 
 ## Rules (real-robot rules)
 - **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or

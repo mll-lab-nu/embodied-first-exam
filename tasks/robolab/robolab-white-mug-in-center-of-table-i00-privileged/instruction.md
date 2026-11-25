@@ -1,7 +1,7 @@
 # RoboLab · white_mug_in_center_of_table — frozen instance
 
 You control a simulated **Franka Panda arm with a Robotiq 2F-85 gripper** (NVIDIA RoboLab's DROID setup on Isaac Lab 2.3 /
-Isaac Sim 5.1, PhysX physics) via Python. **Task:** Put the white mug in the center of the table.
+Isaac Sim 5.1, PhysX physics) via Python. **Task:** Put the white mug in the centre of the table.
 
 The scene objects are the env's rigid objects (`s.objects()`: `bowl`, `banana`, `alphabet_soup_can`, `milk_carton`, `orange_juice_carton`, `smartphone`, `rubiks_cube`, `mug`, `table`; see
 `/opt/robolab/robolab/tasks/benchmark/white_mug_in_center_of_table.py`). RoboLab's success predicate is the `success` termination

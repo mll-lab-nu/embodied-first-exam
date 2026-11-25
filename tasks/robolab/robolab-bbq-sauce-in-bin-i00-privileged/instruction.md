@@ -1,7 +1,7 @@
 # RoboLab · bbq_sauce_in_bin — frozen instance
 
 You control a simulated **Franka Panda arm with a Robotiq 2F-85 gripper** (NVIDIA RoboLab's DROID setup on Isaac Lab 2.3 /
-Isaac Sim 5.1, PhysX physics) via Python. **Task:** Put the red BBQ sauce bottles in the grey bin.
+Isaac Sim 5.1, PhysX physics) via Python. **Task:** Put the 2 red BBQ sauce bottles in the grey bin.
 
 The scene objects are the env's rigid objects (`s.objects()`: `grey_bin`, `mug`, `mustard`, `bowl`, `ranch_dressing`, `bbq_sauce_bottle`, `oatmeal_raisin_cookies`, `canned_tuna`, `soft_scrub`, `wood_block`, `coffee_pot`, `bbq_sauce_bottle_01`, `table`; see
 `/opt/robolab/robolab/tasks/benchmark/bbq_sauce_in_bin_task.py`). RoboLab's success predicate is the `success` termination

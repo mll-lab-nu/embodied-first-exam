@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robolab-0.2.2` |
 
 ## Task
-Put the banana then the cube in the bowl.
+Put the banana in the bowl, then the Rubik's cube.
 
 ## Difficulty
 RoboLab labels this task "simple" (2 subtasks; attributes: conjunction); its success term (`objects_placed_in_container_in_order`) asks for 2 objects into bowl in a given order. The tooling gives only thin primitives (move_ee on Isaac Lab's differential IK, joint moves, gripper, hold), so every grasp, transport and placement is the agent's to build. RoboLab ships no expert solution.

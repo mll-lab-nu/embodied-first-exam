@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robolab-0.2.2` |
 
 ## Task
-Take the mugs off the shelf.
+Take both mugs off the shelf and put them on the table.
 
 ## Difficulty
 RoboLab labels this task "moderate" (2 subtasks; attributes: semantics, affordance); its success term (`object_outside_of_and_on_surface`) asks for 2 objects out of rack_l04. The tooling gives only thin primitives (move_ee on Isaac Lab's differential IK, joint moves, gripper, hold), so every grasp, transport and placement is the agent's to build. RoboLab ships no expert solution.

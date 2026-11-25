@@ -1,7 +1,7 @@
 # RoboCasa-GR1 · PnPCupToDrawerClose
 
 A **Fourier GR1 humanoid** (arms, waist and two dexterous six-command Fourier hands; fixed base) works at a kitchen counter: RoboCasa's GR1 tabletop `PnPCupToDrawerClose` task (robosuite, MuJoCo).
-**Task: Pick up the cup, place it into the drawer and close the drawer.**
+**Task: Put the cup in the drawer and close the drawer.**
 The scene is one frozen instance: the initial state of one of the benchmark's official demonstrations (kitchen
 layout, style, fixtures, objects and their poses).
 

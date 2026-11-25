@@ -1,7 +1,7 @@
 # RoboLab · bananas_out_of_bin — frozen instance
 
 You control a simulated **Franka Panda arm with a Robotiq 2F-85 gripper** (NVIDIA RoboLab's DROID setup on Isaac Lab 2.3 /
-Isaac Sim 5.1, PhysX physics) via Python. **Task:** Take the bananas out.
+Isaac Sim 5.1, PhysX physics) via Python. **Task:** Take both bananas out of the grey bin.
 
 The scene objects are the env's rigid objects (`s.objects()`: `banana`, `banana_01`, `banana_02`, `banana_03`, `banana_04`, `grey_bin`, `table`; see
 `/opt/robolab/robolab/tasks/benchmark/bananas_out_of_bin.py`). RoboLab's success predicate is the `success` termination

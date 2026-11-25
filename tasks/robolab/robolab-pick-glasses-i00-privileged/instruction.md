@@ -1,7 +1,7 @@
 # RoboLab · pick_glasses — frozen instance
 
 You control a simulated **Franka Panda arm with a Robotiq 2F-85 gripper** (NVIDIA RoboLab's DROID setup on Isaac Lab 2.3 /
-Isaac Sim 5.1, PhysX physics) via Python. **Task:** Pick up the eye glasses.
+Isaac Sim 5.1, PhysX physics) via Python. **Task:** Pick up the eyeglasses and lift them clear of the table.
 
 The scene objects are the env's rigid objects (`s.objects()`: `ceramic_mug`, `glasses`, `keyboard`, `lizard_figurine`, `marker`, `remote_control`, `rubiks_cube`, `smartphone`, `wooden_bowl`, `spoon_big`, `computer_mouse`, `yogurt_cup`, `oatmeal_raisin_cookies`, `granola_bars`, `table`; see
 `/opt/robolab/robolab/tasks/benchmark/pick_glasses_task.py`). RoboLab's success predicate is the `success` termination

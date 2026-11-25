@@ -1,7 +1,7 @@
 # RoboLab · plastic_bottles_in_square_pail — frozen instance
 
 You control a simulated **Franka Panda arm with a Robotiq 2F-85 gripper** (NVIDIA RoboLab's DROID setup on Isaac Lab 2.3 /
-Isaac Sim 5.1, PhysX physics) via Python. **Task:** Put all the small plastic bottles in the square pail.
+Isaac Sim 5.1, PhysX physics) via Python. **Task:** Put the 3 small white plastic bottles in the square pail.
 
 The scene objects are the env's rigid objects (`s.objects()`: `whitepackerbottle_a01`, `whitepackerbottle_a02`, `utilityjug_a01`, `utilityjug_a02`, `squarepail_a01`, `plasticpail_a02`, `whitepackerbottle_a03`, `table`; see
 `/opt/robolab/robolab/tasks/benchmark/bottles_on_shelf_task.py`). RoboLab's success predicate is the `success` termination

@@ -1,7 +1,7 @@
 # RoboCasa · TurnOnSinkFaucet — STANDARD MODE (robot as a service)
 
 A **Franka Panda arm on an Omron mobile base** (with a torso lift) works in a kitchen: RoboCasa's `TurnOnSinkFaucet` kitchen task (robosuite, MuJoCo).
-**Task: Turn on the sink faucet.**
+**Task: Turn the sink faucet fully on.**
 The scene is one frozen instance: the initial state of one of the benchmark's official demonstrations.
 
 You control the robot **as if it were real hardware**: the simulator runs in a service you cannot open. You get one

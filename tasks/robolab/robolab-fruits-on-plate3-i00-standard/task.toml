@@ -14,7 +14,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/robolab-fruits-on-plate3-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.2): NVIDIA RoboLab fruits_on_plate3 on the same frozen instance as the privileged task (the state after RoboLab's canonical seed-0 reset). One orange is already on the plate. Put fruits on the plate so that exactly three are on it at the end, then let go. The agent only gets a client: get_obs (RGB, depth + proprioception), submit (joint_position or ee_pose chunks). No reset, no privileged state; the sim service records the episode as a trajectory and grades the live episode."
+description = "STANDARD MODE (robot as a service, eai-standard/2.2): NVIDIA RoboLab fruits_on_plate3 on the same frozen instance as the privileged task (the state after RoboLab's canonical seed-0 reset). Add fruit (not the pumpkins) to the plate until exactly 3 fruits are on it, then let go; the orange already there counts. The agent only gets a client: get_obs (RGB, depth + proprioception), submit (joint_position or ee_pose chunks). No reset, no privileged state; the sim service records the episode as a trajectory and grades the live episode."
 keywords = ["robotics", "robolab", "isaac-lab", "isaac-sim", "franka", "standard-mode", "trajectory", "fruits_on_plate3"]
 
 [metadata]

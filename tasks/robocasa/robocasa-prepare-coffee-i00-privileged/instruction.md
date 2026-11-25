@@ -1,7 +1,7 @@
 # RoboCasa · PrepareCoffee
 
 A **Franka Panda arm on an Omron mobile base** (with a torso lift) works in a kitchen: RoboCasa's `PrepareCoffee` kitchen task (robosuite, MuJoCo).
-**Task: Pick the mug from the cabinet, place it under the coffee machine dispenser, and press the start button.**
+**Task: Take the mug from the cabinet, put it under the coffee machine's spout, press the start button, and move your hand away.**
 The scene is one frozen instance: the initial state of one of the benchmark's official demonstrations (kitchen
 layout, style, fixtures, objects and their poses).
 

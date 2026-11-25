@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:robocasa-0.1.0` |
 
 ## Task
-RoboCasa's `MicrowaveThawing` kitchen task with a Franka Panda arm on an Omron mobile base (with a torso lift): Pick the squash from the counter and place it in the microwave. Then close the microwave door and turn on the microwave. Produce one replayable trajectory of the robot's native controller commands on one frozen instance; graded on the state after the last action. Benchmark notes in `tasks/robocasa/README.md`.
+RoboCasa's `MicrowaveThawing` kitchen task with a Franka Panda arm on an Omron mobile base (with a torso lift): Put the squash from the counter in the microwave, close the door and turn the microwave on, and move your hand away. Produce one replayable trajectory of the robot's native controller commands on one frozen instance; graded on the state after the last action. Benchmark notes in `tasks/robocasa/README.md`.
 
 ## Difficulty
 Full privileged state, unlimited resets and self-replay; a mobile manipulator in a cluttered kitchen, long-horizon contact-rich manipulation with a 20 Hz controller. The standard twin removes the privileged state.

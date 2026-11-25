@@ -1,7 +1,7 @@
 # RoboCasa · TurnSinkSpout
 
 A **Franka Panda arm on an Omron mobile base** (with a torso lift) works in a kitchen: RoboCasa's `TurnSinkSpout` kitchen task (robosuite, MuJoCo).
-**Task: Turn the sink spout to the right.**
+**Task: Swing the sink spout well over to your right.**
 The scene is one frozen instance: the initial state of one of the benchmark's official demonstrations (kitchen
 layout, style, fixtures, objects and their poses).
 

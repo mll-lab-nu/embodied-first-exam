@@ -1,7 +1,7 @@
 # RoboLab · banana_in_bowl — STANDARD MODE (robot as a service, eai-standard/2.2)
 
 You control a **Franka Panda arm with a Robotiq 2F-85 gripper** (NVIDIA RoboLab's DROID setup) **as if it were real
-hardware**: the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Pick up the banana and place it in the bowl. Success: The banana must end up inside the bowl, in contact with it, and the gripper must have let go of it.
+hardware**: the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Put the banana in the bowl. Success: The banana must end up inside the bowl, in contact with it, and the gripper must have let go of it.
 
 ## Rules (real-robot rules)
 - **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or

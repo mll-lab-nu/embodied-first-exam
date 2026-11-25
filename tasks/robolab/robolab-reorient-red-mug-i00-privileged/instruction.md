@@ -1,7 +1,7 @@
 # RoboLab · reorient_red_mug — frozen instance
 
 You control a simulated **Franka Panda arm with a Robotiq 2F-85 gripper** (NVIDIA RoboLab's DROID setup on Isaac Lab 2.3 /
-Isaac Sim 5.1, PhysX physics) via Python. **Task:** Put the red mug upright so that the opening is facing upwards.
+Isaac Sim 5.1, PhysX physics) via Python. **Task:** Stand the red mug upright, opening up.
 
 The scene objects are the env's rigid objects (`s.objects()`: `bowl`, `ceramic_mug`, `red_mug`, `measuring_cup`, `cordless_drill`, `sideways_white_mug`, `upright_white_mug`, `table`; see
 `/opt/robolab/robolab/tasks/benchmark/reorient_red_mugs_task.py`). RoboLab's success predicate is the `success` termination

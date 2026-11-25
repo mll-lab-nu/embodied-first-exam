@@ -1,7 +1,7 @@
 # RoboLab · apple_and_yogurt_in_bowl — frozen instance
 
 You control a simulated **Franka Panda arm with a Robotiq 2F-85 gripper** (NVIDIA RoboLab's DROID setup on Isaac Lab 2.3 /
-Isaac Sim 5.1, PhysX physics) via Python. **Task:** Put the apple and yogurt in the bowl.
+Isaac Sim 5.1, PhysX physics) via Python. **Task:** Put the apple and the yogurt cup in the wooden bowl.
 
 The scene objects are the env's rigid objects (`s.objects()`: `ceramic_mug`, `glasses`, `keyboard`, `marker`, `remote_control`, `smartphone`, `wooden_bowl`, `spoon_big`, `computer_mouse`, `yogurt_cup`, `pitcher`, `plasticpail_a02`, `apple_01`, `table`; see
 `/opt/robolab/robolab/tasks/benchmark/apple_and_yogurt_in_bowl_task.py`). RoboLab's success predicate is the `success` termination

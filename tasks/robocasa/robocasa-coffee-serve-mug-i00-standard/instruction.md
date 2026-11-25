@@ -1,7 +1,7 @@
 # RoboCasa · CoffeeServeMug — STANDARD MODE (robot as a service)
 
 A **Franka Panda arm on an Omron mobile base** (with a torso lift) works in a kitchen: RoboCasa's `CoffeeServeMug` kitchen task (robosuite, MuJoCo).
-**Task: Pick the mug from under the coffee machine dispenser and place it on the counter.**
+**Task: Take the mug from under the coffee machine's spout and put it on the counter next to the machine, and move your hand away.**
 The scene is one frozen instance: the initial state of one of the benchmark's official demonstrations.
 
 You control the robot **as if it were real hardware**: the simulator runs in a service you cannot open. You get one

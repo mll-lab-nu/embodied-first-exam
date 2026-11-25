@@ -1,7 +1,7 @@
 # RoboCasa · TurnOnSinkFaucet
 
 A **Franka Panda arm on an Omron mobile base** (with a torso lift) works in a kitchen: RoboCasa's `TurnOnSinkFaucet` kitchen task (robosuite, MuJoCo).
-**Task: Turn on the sink faucet.**
+**Task: Turn the sink faucet fully on.**
 The scene is one frozen instance: the initial state of one of the benchmark's official demonstrations (kitchen
 layout, style, fixtures, objects and their poses).
 

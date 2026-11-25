@@ -1,7 +1,7 @@
 # RoboLab · take_measuring_spoon_out — frozen instance
 
 You control a simulated **Franka Panda arm with a Robotiq 2F-85 gripper** (NVIDIA RoboLab's DROID setup on Isaac Lab 2.3 /
-Isaac Sim 5.1, PhysX physics) via Python. **Task:** Take the white colored measuring spoon out of the red bowl and put it on the table.
+Isaac Sim 5.1, PhysX physics) via Python. **Task:** Take the white measuring spoon out of the red bowl and put it on the table.
 
 The scene objects are the env's rigid objects (`s.objects()`: `bowl`, `ceramic_mug`, `red_mug`, `measuring_cup`, `cordless_drill`, `upright_white_mug`, `sideways_white_mug`, `table`; see
 `/opt/robolab/robolab/tasks/benchmark/take_measuring_spoon_out.py`). RoboLab declares the success predicate as the `success` termination term in that file (`object_outside_of` in

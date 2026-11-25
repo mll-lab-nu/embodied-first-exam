@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/robocasa-restock-pantry-i00-privileged"
-description = "RoboCasa (RestockPantry, a Franka Panda arm on an Omron mobile base (with a torso lift)): Pick both cans from the counter and place them in the cabinet, on the same side as the can already there. Produce one replayable trajectory of the robot's native controller commands on a frozen instance; graded on the state after the last action."
+description = "RoboCasa (RestockPantry, a Franka Panda arm on an Omron mobile base (with a torso lift)): Put both cans from the counter in the cabinet, on the side where the other can already is, and move your hand away. Produce one replayable trajectory of the robot's native controller commands on a frozen instance; graded on the state after the last action."
 keywords = ["robotics", "robosuite", "robocasa", "mobile-manipulation", "code-as-policy", "trajectory", "privileged"]
 
 [metadata]

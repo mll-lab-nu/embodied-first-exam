@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robolab-0.2.2` |
 
 ## Task
-Put the cartons that can be recycled in the vertical crate.
+Put the milk carton and the orange juice carton in the vertical crate.
 
 ## Difficulty
 RoboLab labels this task "moderate" (2 subtasks; attributes: semantics, spatial); its success term (`object_inside`) asks for 2 objects into container_a01. The tooling gives only thin primitives (move_ee on Isaac Lab's differential IK, joint moves, gripper, hold), so every grasp, transport and placement is the agent's to build. RoboLab ships no expert solution.

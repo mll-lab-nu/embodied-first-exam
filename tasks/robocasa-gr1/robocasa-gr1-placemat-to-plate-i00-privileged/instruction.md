@@ -1,7 +1,7 @@
 # RoboCasa-GR1 · PosttrainPnPNovelFromPlacematToPlateSplitA
 
 A **Fourier GR1 humanoid** (arms, waist and two dexterous six-command Fourier hands; fixed base) works at a kitchen counter: RoboCasa's GR1 tabletop `PosttrainPnPNovelFromPlacematToPlateSplitA` task (robosuite, MuJoCo).
-**Task: Pick the tomato from the placemat and place it on the plate.**
+**Task: Put the tomato from the placemat on the plate, and move both hands away.**
 The scene is one frozen instance: the initial state of one of the benchmark's official demonstrations (kitchen
 layout, style, fixtures, objects and their poses).
 

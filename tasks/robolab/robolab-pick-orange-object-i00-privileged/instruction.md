@@ -1,7 +1,7 @@
 # RoboLab · pick_orange_object — frozen instance
 
 You control a simulated **Franka Panda arm with a Robotiq 2F-85 gripper** (NVIDIA RoboLab's DROID setup on Isaac Lab 2.3 /
-Isaac Sim 5.1, PhysX physics) via Python. **Task:** Pick up the orange measuring cup.
+Isaac Sim 5.1, PhysX physics) via Python. **Task:** Pick up the orange measuring cup and lift it clear of the table.
 
 The scene objects are the env's rigid objects (`s.objects()`: `redonion`, `serving_bowl`, `clay_plates`, `wooden_spoons`, `spatula`, `storage_box`, `tomato_sauce_can`, `measuring_cups_1`, `pink_spaghetti_spoon`, `spoon_1`, `green_serving_spoon`, `storage_box_01`, `ladle`, `wooden_bowl`, `potato_masher`, `table`; see
 `/opt/robolab/robolab/tasks/benchmark/cooking_orange_object.py`). RoboLab's success predicate is the `success` termination

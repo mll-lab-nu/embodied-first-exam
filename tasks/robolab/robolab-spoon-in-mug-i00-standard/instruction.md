@@ -1,7 +1,7 @@
 # RoboLab · spoon_in_mug — STANDARD MODE (robot as a service, eai-standard/2.2)
 
 You control a **Franka Panda arm with a Robotiq 2F-85 gripper** (NVIDIA RoboLab's DROID setup) **as if it were real
-hardware**: the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Put the metal spoon that's in the wooden bowl in the mug. Success: The metal spoon that lies in the wooden bowl must end inside the ceramic mug and the gripper must no longer touch it. "Inside" means the centre of the object's convex hull lies within the container's convex hull, extended without limit along the container's own up axis (the open side; straight up for a container standing normally).
+hardware**: the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Put the metal spoon from the wooden bowl in the mug. Success: The metal spoon that lies in the wooden bowl must end inside the ceramic mug and the gripper must no longer touch it. "Inside" means the centre of the object's convex hull lies within the container's convex hull, extended without limit along the container's own up axis (the open side; straight up for a container standing normally).
 
 ## Rules (real-robot rules)
 - **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or

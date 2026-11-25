@@ -1,7 +1,7 @@
 # RoboLab · larger_object_raisin_box_in_bin — frozen instance
 
 You control a simulated **Franka Panda arm with a Robotiq 2F-85 gripper** (NVIDIA RoboLab's DROID setup on Isaac Lab 2.3 /
-Isaac Sim 5.1, PhysX physics) via Python. **Task:** Place the larger object in the grey bin.
+Isaac Sim 5.1, PhysX physics) via Python. **Task:** Put the larger of the two boxes in the grey bin.
 
 The scene objects are the env's rigid objects (`s.objects()`: `butter`, `raisin_box`, `grey_bin`, `table`; see
 `/opt/robolab/robolab/tasks/benchmark/bigger_object.py`). RoboLab's success predicate is the `success` termination
