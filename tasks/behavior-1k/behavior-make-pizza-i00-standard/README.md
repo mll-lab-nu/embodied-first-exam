@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Standard-mode twin of `behavior-make-pizza-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Make a pizza in the kitchen. The pizza dough lies on the cookie sheet on the countertop; in the refrigerator are three tupperwares, one filled with grated cheese, one holding four pepperoni slices and one holding two mushrooms; a Vidalia onion lies on the chopping board, and a carving knife and a bowl lie on the countertop. Top the dough with the cheese, the pepperoni, the mushrooms cut in half and the diced onion, and bake it in the oven until it turns into a pizza; leave the pizza on the cookie sheet.
+Standard-mode twin of `behavior-make-pizza-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Top the dough with the cheese, the pepperoni, the halved mushrooms and the diced onion, and bake it into a pizza on the cookie sheet.
 
 ## Difficulty
 Same scene, frozen instance and success rule as `behavior-make-pizza-i00-privileged` (see its Difficulty). In standard mode the agent has no reset, no privileged state and no planning primitives: it sees the robot's cameras (RGB, depth on request) and its proprioception only, acts through the client, and gets one episode.

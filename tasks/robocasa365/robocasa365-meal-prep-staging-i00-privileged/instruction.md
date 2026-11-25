@@ -1,7 +1,7 @@
 # RoboCasa365 · MealPrepStaging (privileged)
 
 ## Task
-Place both pans onto different burners. Then place the corn and the steak on different pans.
+Put the two pans on two different burners, then put the corn in one pan and the steak in the other.
 
 ## Goal
 Success: the two pans are on two different burners of the stove, and the corn and the steak are in different pans. What

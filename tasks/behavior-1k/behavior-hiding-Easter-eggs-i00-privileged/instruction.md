@@ -1,8 +1,7 @@
 # BEHAVIOR-1K · hiding_Easter_eggs (privileged)
 
 ## Task
-Hide the Easter eggs in the garden. The three eggs are inside the wicker basket on the lawn; take all three out and lay
-them on the lawn next to one tree (any tree in the garden, but the same tree for all three).
+Take the three Easter eggs out of the basket and lay them on the lawn next to the same tree.
 
 ## Goal
 Success: all three Easter eggs lie on the lawn, out of the basket, next to one and the same tree. It counts only once

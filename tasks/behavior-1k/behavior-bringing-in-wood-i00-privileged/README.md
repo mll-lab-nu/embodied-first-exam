@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Bring the wood in. Three sheets of plywood lie on the ground in the garden; put all three on the corridor floor.
+Bring the three plywood sheets in from the garden and put them on the corridor floor.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - every plywood sheet (`plywood.n.01_1` to `_3`) is on top of the corridor floor (`floor.n.01_2`)

@@ -1,8 +1,7 @@
 # BEHAVIOR-1K · rearranging_kitchen_furniture (standard)
 
 ## Task
-Put the toaster, the food processor and the French press, which stand on the kitchen countertop, away into one kitchen
-cabinet, and close that cabinet.
+Put the toaster, the food processor and the French press into one cabinet and close it.
 
 ## Goal
 Success: the toaster, the food processor and the French press are inside one and the same cabinet, and that cabinet is

@@ -1,7 +1,7 @@
 # RoboCasa365 · OrganizeCoffeeCondiments (privileged)
 
 ## Task
-Pick the syrup bottle and honey bottle from the cabinet and place them next to the mug.
+Put the syrup bottle and the honey bottle from the cabinet on the counter next to the mug, and move your hand away.
 
 ## Goal
 Success: the syrup bottle and the honey bottle both stand on the counter under the coffee machine, close to the mug, and

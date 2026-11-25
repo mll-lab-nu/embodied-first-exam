@@ -1,8 +1,7 @@
 # BEHAVIOR-1K · cook_hot_dogs (privileged)
 
 ## Task
-Cook the hot dogs. Two hot dogs are inside the kitchen refrigerator and a microwave stands in the kitchen; cook both hot
-dogs.
+Cook both hot dogs.
 
 ## Goal
 Success: both hot dogs are cooked. It counts only once the scene has settled: nothing the task names (a tool included)

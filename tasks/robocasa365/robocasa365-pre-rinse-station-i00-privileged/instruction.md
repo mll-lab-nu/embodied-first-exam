@@ -1,7 +1,7 @@
 # RoboCasa365 · PreRinseStation (privileged)
 
 ## Task
-Place the glass cup in the left basin and the kettle in the right basin of the sink.
+Put the glass cup in the sink's left basin and the kettle in its right basin, and move your hand away.
 
 ## Goal
 Success: the glass cup is in the sink's left basin and the kettle in its right basin, and the hand has let go and moved

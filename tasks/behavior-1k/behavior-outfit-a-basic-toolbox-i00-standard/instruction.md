@@ -1,9 +1,7 @@
 # BEHAVIOR-1K · outfit_a_basic_toolbox (standard)
 
 ## Task
-Pack the toolbox in the utility room. The drill, the pliers, the flashlight, the allen wrench and the screwdriver lie on
-the table there, next to the toolbox. Put all five tools inside the toolbox, keep the toolbox on the table, and close
-it.
+Put all five tools into the toolbox, keep it on the table, and close it.
 
 ## Goal
 Success: the drill, the pliers, the flashlight, the allen wrench and the screwdriver are inside the toolbox, and the

@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/robocasa365-make-ice-lemonade-i00-privileged"
-description = "RoboCasa365 (MakeIceLemonade, a Franka Panda arm on an Omron mobile base (with a torso lift)): Grab a lemon wedge from the fridge and one ice cube from the ice bowl, and put them in the glass of lemonade. Produce one replayable trajectory of the robot's native controller commands on a frozen instance; graded on the state after the last action."
+description = "RoboCasa365 (MakeIceLemonade, a Franka Panda arm on an Omron mobile base (with a torso lift)): Put the lemon wedge from the fridge and an ice cube from the ice bowl in the glass of lemonade, and move your hand away. Produce one replayable trajectory of the robot's native controller commands on a frozen instance; graded on the state after the last action."
 keywords = ["robotics", "robosuite", "robocasa365", "mobile-manipulation", "code-as-policy", "trajectory", "privileged"]
 
 [metadata]

@@ -1,9 +1,8 @@
 # BEHAVIOR-1K · setting_the_fire (standard)
 
 ## Task
-Light a fire in the living-room fireplace. Two pieces of firewood lie on the floor, and a newspaper and a cigar lighter
-lie on the table; put the newspaper inside the fireplace with both pieces of firewood on top of it, set the newspaper
-and both pieces of firewood on fire, and switch the lighter off again.
+Build a fire in the fireplace with both pieces of firewood on the newspaper, set them all burning, and switch the
+lighter off.
 
 ## Goal
 Success: both pieces of firewood are burning inside the fireplace, on top of the burning newspaper, and the cigar

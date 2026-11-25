@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Standard-mode twin of `behavior-tidying-bathroom-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Tidy the bathroom. The bar of soap, the soap dish and a cork lie on the sink; the tissue dispenser, a roll of toilet tissue and the wastebasket stand on the bathroom floor. Put the bar of soap on the soap dish, the tissue dispenser on the sink, the toilet tissue on the toilet, and the cork inside the wastebasket.
+Standard-mode twin of `behavior-tidying-bathroom-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Put the soap on its dish, the tissue dispenser on the sink, the toilet roll on the toilet, and the cork into the wastebasket.
 
 ## Difficulty
 Same scene, frozen instance and success rule as `behavior-tidying-bathroom-i00-privileged` (see its Difficulty). In standard mode the agent has no reset, no privileged state and no planning primitives: it sees the robot's cameras (RGB, depth on request) and its proprioception only, acts through the client, and gets one episode.

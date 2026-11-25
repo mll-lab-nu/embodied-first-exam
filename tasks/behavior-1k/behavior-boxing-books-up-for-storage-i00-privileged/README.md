@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Box up the books for storage. Six books stand in the four bookcases of the living room, and an empty box stands on the living-room floor; put all six books inside the box.
+Put all six books into the box.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - every book (`book.n.02_1` to `_6`) is inside the box (`box.n.01_1`)

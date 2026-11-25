@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Pack the school things in the bedroom. A pencil, a book and a folder lie on the bed; a pen, a calculator and the carryall are on the floor. Put all five things into the carryall and put the carryall on the bed.
+Pack the five school things into the carryall and put it on the bed.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - the folder (`folder.n.02_1`), the book (`book.n.02_1`), the pencil (`pencil.n.01_1`), the pen (`pen.n.01_1`) and the calculator (`calculator.n.02_1`) are inside the carryall (`carryall.n.01_1`)

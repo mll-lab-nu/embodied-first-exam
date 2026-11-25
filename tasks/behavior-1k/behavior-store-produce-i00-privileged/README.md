@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Store the produce. Two mangos and two pomegranates are in the wicker basket on the kitchen floor; put all four into one of the two kitchen refrigerators, all into the same one.
+Put the mangos and the pomegranates into the same fridge.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - both pomegranates (`pomegranate.n.02_1`, `pomegranate.n.02_2`) and both mangos (`mango.n.02_1`, `mango.n.02_2`) are inside one and the same refrigerator (`electric_refrigerator.n.01_1` or `electric_refrigerator.n.01_2`)

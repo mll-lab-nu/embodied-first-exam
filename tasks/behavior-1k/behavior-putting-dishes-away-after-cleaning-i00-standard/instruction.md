@@ -1,8 +1,7 @@
 # BEHAVIOR-1K · putting_dishes_away_after_cleaning (standard)
 
 ## Task
-Put the clean dishes away. Eight plates lie on the two kitchen countertops, four on each; put all eight inside one and
-the same kitchen cabinet, and leave every kitchen cabinet closed.
+Put all eight plates into the same cabinet and keep every kitchen cabinet closed.
 
 ## Goal
 Success: all eight plates are inside one and the same cabinet, and every kitchen cabinet is closed. It counts only once

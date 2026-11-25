@@ -1,9 +1,7 @@
 # BEHAVIOR-1K · turning_out_all_lights_before_sleep (privileged)
 
 ## Task
-Turn out all the lights before sleep. Three light switches (in the kitchen, the utility room and the dining room) and
-two table lamps (one on the coffee table in the living room, one on the countertop in the utility room) are all switched
-on; switch every one of them off.
+Switch off all three light switches and both table lamps.
 
 ## Goal
 Success: all three light switches and both table lamps are switched off. It counts only once the scene has settled:

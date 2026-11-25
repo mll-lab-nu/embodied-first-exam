@@ -1,8 +1,7 @@
 # BEHAVIOR-1K · clean_a_keyboard (standard)
 
 ## Task
-Clean the keyboard. A dusty keyboard and a pipe cleaner lie on the desk in the private office; remove every bit of dust
-from the keyboard.
+Clean all the dust off the keyboard.
 
 ## Goal
 Success: no dust is left on the keyboard. It counts only once the scene has settled: nothing the task names (a tool

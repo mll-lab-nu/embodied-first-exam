@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Clean the keyboard. A dusty keyboard and a pipe cleaner lie on the desk in the private office; remove every bit of dust from the keyboard.
+Clean all the dust off the keyboard.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - no dust (`dust.n.01_1`) is left on the keyboard (`keyboard.n.01_1`)

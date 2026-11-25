@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Collect the six soda cans in the bedroom, three lying on the bed and three on the floor, into the bucket that stands on the bedroom floor.
+Collect all six soda cans into the bucket.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - all six cans of soda (`can__of__soda.n.01_1`, `can__of__soda.n.01_2`, `can__of__soda.n.01_3`, `can__of__soda.n.01_4`, `can__of__soda.n.01_5`, `can__of__soda.n.01_6`) are inside the bucket (`bucket.n.01_1`)

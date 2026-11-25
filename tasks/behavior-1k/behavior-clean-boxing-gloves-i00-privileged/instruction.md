@@ -1,8 +1,7 @@
 # BEHAVIOR-1K · clean_boxing_gloves (privileged)
 
 ## Task
-Clean the boxing gloves. Two dusty boxing gloves lie on the countertop in the utility room, where a washer stands; get
-both gloves clean, so that no dust is left on either of them.
+Clean the dust off both boxing gloves.
 
 ## Goal
 Success: no dust is left on either boxing glove. It counts only once the scene has settled: nothing the task names (a

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Standard-mode twin of `behavior-preparing-lunch-box-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Pack the lunch box on the kitchen countertop. The two apple halves, the club sandwich and the chocolate chip cookie lie on the chopping board on the countertop; the bottle of tea is inside the kitchen refrigerator. Put all five into the packing box and leave the refrigerator closed.
+Standard-mode twin of `behavior-preparing-lunch-box-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Pack both apple halves, the club sandwich, the cookie and the bottle of tea from the fridge into the packing box, and close the fridge.
 
 ## Difficulty
 Same scene, frozen instance and success rule as `behavior-preparing-lunch-box-i00-privileged` (see its Difficulty). In standard mode the agent has no reset, no privileged state and no planning primitives: it sees the robot's cameras (RGB, depth on request) and its proprioception only, acts through the client, and gets one episode.

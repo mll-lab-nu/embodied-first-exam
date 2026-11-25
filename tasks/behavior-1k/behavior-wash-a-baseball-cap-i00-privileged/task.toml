@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/behavior-wash-a-baseball-cap-i00-privileged"
-description = "BEHAVIOR-1K v3.9.2 (2026 BEHAVIOR Challenge) wash_a_baseball_cap (R1Pro mobile manipulator, OmniGibson / Isaac Sim): produce one replayable trajectory. Wash the baseball caps. Two dirty baseball caps lie on the countertop in the utility room, where a washer stands; get both caps clean, so that no dirt is left on either of them. Frozen scene instance (challenge public_test instance 301)."
+description = "BEHAVIOR-1K v3.9.2 (2026 BEHAVIOR Challenge) wash_a_baseball_cap (R1Pro mobile manipulator, OmniGibson / Isaac Sim): produce one replayable trajectory. Wash the dirt off both baseball caps. Frozen scene instance (challenge public_test instance 301)."
 keywords = ["robotics", "behavior", "omnigibson", "isaac-sim", "r1pro", "mobile-manipulation", "code-as-policy", "trajectory", "wash_a_baseball_cap"]
 
 [metadata]

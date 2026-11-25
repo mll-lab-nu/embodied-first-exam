@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Standard-mode twin of `behavior-putting-up-Christmas-decorations-inside-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Decorate the house for Christmas. In the living room stand a Christmas tree, three gift boxes and a wicker basket holding a wreath, three candy canes and two pillar candles. Put the gift boxes by the tree, both candles on one dining-room table, one candy cane on a table, and the wreath and the two other candy canes on a sofa.
+Standard-mode twin of `behavior-putting-up-Christmas-decorations-inside-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Put the gift boxes by the tree, both candles on one table, one candy cane alone on a table, and the wreath and the other two candy canes on a sofa.
 
 ## Difficulty
 Same scene, frozen instance and success rule as `behavior-putting-up-Christmas-decorations-inside-i00-privileged` (see its Difficulty). In standard mode the agent has no reset, no privileged state and no planning primitives: it sees the robot's cameras (RGB, depth on request) and its proprioception only, acts through the client, and gets one episode.

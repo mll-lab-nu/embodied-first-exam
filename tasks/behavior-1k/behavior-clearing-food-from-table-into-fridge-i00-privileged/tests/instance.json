@@ -3,7 +3,7 @@
  "challenge_task": "clearing_food_from_table_into_fridge",
  "instance_id": 301,
  "mode": "public_test",
- "text": "Clear the leftovers from the kitchen breakfast table into the fridge. A half chicken and a half apple pie lie on two plates on the table, and two empty tupperwares stand on the countertop; put the chicken and the pie into tupperwares, put both tupperwares into the refrigerator, and leave it closed.",
+ "text": "Put the chicken and the pie into tupperwares, put both tupperwares into the fridge and close it.",
  "robot_config": "r1pro_primitives_eval.yaml",
  "robot_config_sha": "d9d0c8bceea2",
  "state_sha": "bf0c3a2424384424",

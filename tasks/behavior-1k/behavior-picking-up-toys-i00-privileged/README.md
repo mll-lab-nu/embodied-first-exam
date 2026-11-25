@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Pick up the toys in the child's room. Two board games lie on the bed; the third board game, two jigsaw puzzles, a tennis ball and the toy box are on the table. Put all six toys inside the toy box.
+Put all six toys into the toy box.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - all three board games (`board_game.n.01_1` to `_3`), both jigsaw puzzles (`jigsaw_puzzle.n.01_1`, `_2`) and the tennis ball (`tennis_ball.n.01_1`) are inside the toy box (`toy_box.n.01_1`)

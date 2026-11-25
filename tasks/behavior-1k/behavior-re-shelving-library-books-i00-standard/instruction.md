@@ -1,8 +1,7 @@
 # BEHAVIOR-1K · re_shelving_library_books (standard)
 
 ## Task
-Reshelve the library books. Three books lie on the table in the living room; put every one of them inside a bookcase in
-the living room (the books may go into different bookcases).
+Put the three books into the bookcases.
 
 ## Goal
 Success: each of the three books is inside a bookcase. It counts only once the scene has settled: nothing the task names

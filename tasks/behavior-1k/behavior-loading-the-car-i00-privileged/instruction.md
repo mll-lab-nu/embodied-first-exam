@@ -1,9 +1,7 @@
 # BEHAVIOR-1K · loading_the_car (privileged)
 
 ## Task
-Load the car. The car stands in the garage; in the living room a container stands on the floor and a tennis racket and a
-digital camera lie on the table. Put the camera into the container, and the container and the tennis racket into the
-car.
+Put the camera into the container, then the container and the tennis racket into the car.
 
 ## Goal
 Success: the digital camera is inside the container, and the container and the tennis racket are inside the car. It

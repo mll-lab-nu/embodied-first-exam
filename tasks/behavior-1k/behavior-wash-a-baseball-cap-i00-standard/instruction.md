@@ -1,8 +1,7 @@
 # BEHAVIOR-1K · wash_a_baseball_cap (standard)
 
 ## Task
-Wash the baseball caps. Two dirty baseball caps lie on the countertop in the utility room, where a washer stands; get
-both caps clean, so that no dirt is left on either of them.
+Wash the dirt off both baseball caps.
 
 ## Goal
 Success: no dirt is left on either baseball cap. It counts only once the scene has settled: nothing the task names (a

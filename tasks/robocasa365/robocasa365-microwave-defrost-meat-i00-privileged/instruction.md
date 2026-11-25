@@ -1,8 +1,8 @@
 # RoboCasa365 · MicrowaveDefrostMeat (privileged)
 
 ## Task
-Take the tupperware containing the frozen chicken drumstick out of the freezer and place it in the microwave. Close the
-microwave door and press the start button to defrost the meat.
+Take the tupperware with the frozen chicken drumstick out of the freezer, put it in the microwave, close the door and
+press start, then move your hand away.
 
 ## Goal
 Success: the tupperware, with the drumstick still in it, is all the way inside the microwave, the door is fully closed,

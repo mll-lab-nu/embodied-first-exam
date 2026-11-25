@@ -1,8 +1,8 @@
 # RoboCasa365 · AssembleCookingArray (standard)
 
 ## Task
-Move the shrimp onto the pan on the stove. Then move the syrup bottle and broccoli from the cabinet to the counter where
-the plate is.
+Put the shrimp in the pan on the stove, and move the syrup bottle and the broccoli from the cabinet to the counter where
+the plate is, and move your hand away.
 
 ## Goal
 Success: the shrimp is in the pan, the syrup bottle and the broccoli are on the counter next to the stove where the

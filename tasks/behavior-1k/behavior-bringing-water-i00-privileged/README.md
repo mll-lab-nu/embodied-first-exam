@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Take both bottles out of the kitchen refrigerator, put them on the coffee table in the living room, and leave the refrigerator closed.
+Take both bottles from the fridge to the living-room coffee table, and close the fridge.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - both bottles (`bottle.n.01_1`, `bottle.n.01_2`) are on top of the living-room coffee table (`coffee_table.n.01_1`)

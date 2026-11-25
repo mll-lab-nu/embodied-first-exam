@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Standard-mode twin of `behavior-store-batteries-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Store the batteries. Three batteries lie around the house, two on the coffee table in the living room and one on the kitchen countertop; put all three inside one of the two cabinets in the living room (all in the same one).
+Standard-mode twin of `behavior-store-batteries-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Put all three batteries into the same cabinet.
 
 ## Difficulty
 Same scene, frozen instance and success rule as `behavior-store-batteries-i00-privileged` (see its Difficulty). In standard mode the agent has no reset, no privileged state and no planning primitives: it sees the robot's cameras (RGB, depth on request) and its proprioception only, acts through the client, and gets one episode.

@@ -1,8 +1,7 @@
 # BEHAVIOR-1K · store_batteries (privileged)
 
 ## Task
-Store the batteries. Three batteries lie around the house, two on the coffee table in the living room and one on the
-kitchen countertop; put all three inside one of the two cabinets in the living room (all in the same one).
+Put all three batteries into the same cabinet.
 
 ## Goal
 Success: all three batteries are inside one and the same cabinet. It counts only once the scene has settled: nothing the

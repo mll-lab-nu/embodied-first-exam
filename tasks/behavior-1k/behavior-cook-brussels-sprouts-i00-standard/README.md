@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Standard-mode twin of `behavior-cook-brussels-sprouts-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Roast the halved brussels sprouts. Four brussels sprouts are in a tupperware inside the kitchen refrigerator; a chopping board with a carving knife on it and a cookie sheet lie on the countertop, and there is an oven in the kitchen. Cut every sprout in half, cook all eight halves in the oven and leave them inside it, and close the oven and the refrigerator.
+Standard-mode twin of `behavior-cook-brussels-sprouts-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Cut the brussels sprouts in half, roast all the halves in the oven and leave them there, and close the oven and the fridge.
 
 ## Difficulty
 Same scene, frozen instance and success rule as `behavior-cook-brussels-sprouts-i00-privileged` (see its Difficulty). In standard mode the agent has no reset, no privileged state and no planning primitives: it sees the robot's cameras (RGB, depth on request) and its proprioception only, acts through the client, and gets one episode.

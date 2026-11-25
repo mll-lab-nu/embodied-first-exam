@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Pack the lunch box on the kitchen countertop. The two apple halves, the club sandwich and the chocolate chip cookie lie on the chopping board on the countertop; the bottle of tea is inside the kitchen refrigerator. Put all five into the packing box and leave the refrigerator closed.
+Pack both apple halves, the club sandwich, the cookie and the bottle of tea from the fridge into the packing box, and close the fridge.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - both apple halves (`half__apple.n.01_1`, `half__apple.n.01_2`) are inside the packing box (`packing_box.n.02_1`)

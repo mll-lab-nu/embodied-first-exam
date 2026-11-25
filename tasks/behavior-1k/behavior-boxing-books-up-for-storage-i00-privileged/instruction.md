@@ -1,8 +1,7 @@
 # BEHAVIOR-1K · boxing_books_up_for_storage (privileged)
 
 ## Task
-Box up the books for storage. Six books stand in the four bookcases of the living room, and an empty box stands on the
-living-room floor; put all six books inside the box.
+Put all six books into the box.
 
 ## Goal
 Success: all six books are inside the box. It counts only once the scene has settled: nothing the task names (a tool

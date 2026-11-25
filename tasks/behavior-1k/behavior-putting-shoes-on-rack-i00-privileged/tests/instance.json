@@ -95,5 +95,5 @@
  },
  "omnigibson_version": "3.9.2",
  "challenge_max_steps": 11589,
- "text": "Put both pairs of shoes on the hall tree in the corridor."
+ "text": "Put both pairs of shoes on the hall tree, off the floor, each pair side by side."
 }

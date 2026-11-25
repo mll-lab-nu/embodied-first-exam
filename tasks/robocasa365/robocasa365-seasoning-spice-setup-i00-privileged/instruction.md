@@ -1,7 +1,7 @@
 # RoboCasa365 · SeasoningSpiceSetup (privileged)
 
 ## Task
-Move the condiment bottle and ketchup from the cabinet to the dining counter.
+Move the condiment bottle and the ketchup from the cabinet to the dining counter, and move your hand away.
 
 ## Goal
 Success: both bottles stand on the dining counter, and the hand has let go and moved well away from both. What counts is

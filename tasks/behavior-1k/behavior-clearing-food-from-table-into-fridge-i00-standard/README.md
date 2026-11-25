@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Standard-mode twin of `behavior-clearing-food-from-table-into-fridge-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Clear the leftovers from the kitchen breakfast table into the fridge. A half chicken and a half apple pie lie on two plates on the table, and two empty tupperwares stand on the countertop; put the chicken and the pie into tupperwares, put both tupperwares into the refrigerator, and leave it closed.
+Standard-mode twin of `behavior-clearing-food-from-table-into-fridge-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Put the chicken and the pie into tupperwares, put both tupperwares into the fridge and close it.
 
 ## Difficulty
 Same scene, frozen instance and success rule as `behavior-clearing-food-from-table-into-fridge-i00-privileged` (see its Difficulty). In standard mode the agent has no reset, no privileged state and no planning primitives: it sees the robot's cameras (RGB, depth on request) and its proprioception only, acts through the client, and gets one episode.

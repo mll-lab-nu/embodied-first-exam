@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Reshelve the library books. Three books lie on the table in the living room; put every one of them inside a bookcase in the living room (the books may go into different bookcases).
+Put the three books into the bookcases.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - every book (`book.n.02_1` to `_3`) is inside some bookcase (`bookcase.n.01_*`; different bookcases are fine)

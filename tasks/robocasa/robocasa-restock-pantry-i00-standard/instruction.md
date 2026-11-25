@@ -1,7 +1,7 @@
 # RoboCasa · RestockPantry — STANDARD MODE (robot as a service)
 
 A **Franka Panda arm on an Omron mobile base** (with a torso lift) works in a kitchen: RoboCasa's `RestockPantry` kitchen task (robosuite, MuJoCo).
-**Task: Pick the cans from the counter and place them in their designated side in the cabinet.**
+**Task: Pick both cans from the counter and place them in the cabinet, on the same side as the can already there.**
 The scene is one frozen instance: the initial state of one of the benchmark's official demonstrations.
 
 You control the robot **as if it were real hardware**: the simulator runs in a service you cannot open. You get one

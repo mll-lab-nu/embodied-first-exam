@@ -1,7 +1,7 @@
 # RoboCasa365 · ChooseMeasuringCup (privileged)
 
 ## Task
-Open the top drawer on your left and place the smaller measuring cup on the counter.
+Take the smaller measuring cup out of the drawer and put it on the counter next to that drawer, and move your hand away.
 
 ## Goal
 Success: the smaller measuring cup is on the counter next to the drawer it came from and the larger one is not, and the

@@ -1,7 +1,7 @@
 # BEHAVIOR-1K · attach_a_camera_to_a_tripod (privileged)
 
 ## Task
-Attach the digital camera to the camera tripod. Both lie on the bedroom floor.
+Attach the camera to the tripod.
 
 ## Goal
 Success: the digital camera is attached to the camera tripod. It counts only once the scene has settled: nothing the

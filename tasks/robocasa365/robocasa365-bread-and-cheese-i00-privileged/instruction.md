@@ -1,7 +1,7 @@
 # RoboCasa365 · BreadAndCheese (privileged)
 
 ## Task
-Place the bread and cheese on the cutting board.
+Put the bread and the cheese on the cutting board, and move your hand away.
 
 ## Goal
 Success: the bread and the cheese are both on the cutting board, and the hand has let go and moved well away from the

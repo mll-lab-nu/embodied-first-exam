@@ -1,9 +1,8 @@
 # BEHAVIOR-1K · thawing_frozen_food (privileged)
 
 ## Task
-Thaw the frozen food. A frozen chicken breast and a frozen slice of bread lie on two plates inside the kitchen
-refrigerator. Put the chicken breast, on a plate, into the microwave oven, close the microwave and switch it on; put the
-bread slice, on a plate, on the countertop; close the refrigerator; neither food may still be frozen.
+Thaw the chicken on a plate in the closed, running microwave and the bread on a plate on the countertop, and close the
+fridge.
 
 ## Goal
 Success: the chicken breast is thawed and lies on a plate inside the microwave oven, which is closed and switched on;

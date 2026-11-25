@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Standard-mode twin of `behavior-turning-out-all-lights-before-sleep-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Turn out all the lights before sleep. Three light switches (in the kitchen, the utility room and the dining room) and two table lamps (one on the coffee table in the living room, one on the countertop in the utility room) are all switched on; switch every one of them off.
+Standard-mode twin of `behavior-turning-out-all-lights-before-sleep-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Switch off all three light switches and both table lamps.
 
 ## Difficulty
 Same scene, frozen instance and success rule as `behavior-turning-out-all-lights-before-sleep-i00-privileged` (see its Difficulty). In standard mode the agent has no reset, no privileged state and no planning primitives: it sees the robot's cameras (RGB, depth on request) and its proprioception only, acts through the client, and gets one episode.

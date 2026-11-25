@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/behavior-picking-up-toys-i00-privileged"
-description = "BEHAVIOR-1K v3.9.2 (2026 BEHAVIOR Challenge) picking_up_toys (R1Pro mobile manipulator, OmniGibson / Isaac Sim): produce one replayable trajectory. Pick up the toys in the child's room. Two board games lie on the bed; the third board game, two jigsaw puzzles, a tennis ball and the toy box are on the table. Put all six toys inside the toy box. Frozen scene instance (challenge public_test instance 301)."
+description = "BEHAVIOR-1K v3.9.2 (2026 BEHAVIOR Challenge) picking_up_toys (R1Pro mobile manipulator, OmniGibson / Isaac Sim): produce one replayable trajectory. Put all six toys into the toy box. Frozen scene instance (challenge public_test instance 301)."
 keywords = ["robotics", "behavior", "omnigibson", "isaac-sim", "r1pro", "mobile-manipulation", "code-as-policy", "trajectory", "picking_up_toys"]
 
 [metadata]

@@ -1,8 +1,7 @@
 # BEHAVIOR-1K · make_microwave_popcorn (privileged)
 
 ## Task
-Make microwave popcorn. A bag of popcorn kernels lies on the kitchen countertop and there is a microwave in the kitchen;
-heat the bag in the microwave until the popcorn is cooked, so that the cooked (popped) popcorn ends up inside the bag.
+Pop the popcorn in the microwave, inside its bag.
 
 ## Goal
 Success: the kernels have popped, and the popped popcorn is inside the popcorn bag. It counts only once the scene has

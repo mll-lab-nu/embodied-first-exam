@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/behavior-make-microwave-popcorn-i00-privileged"
-description = "BEHAVIOR-1K v3.9.2 (2026 BEHAVIOR Challenge) make_microwave_popcorn (R1Pro mobile manipulator, OmniGibson / Isaac Sim): produce one replayable trajectory. Make microwave popcorn. A bag of popcorn kernels lies on the kitchen countertop and there is a microwave in the kitchen; heat the bag in the microwave until the popcorn is cooked, so that the cooked (popped) popcorn ends up inside the bag. Frozen scene instance (challenge public_test instance 301)."
+description = "BEHAVIOR-1K v3.9.2 (2026 BEHAVIOR Challenge) make_microwave_popcorn (R1Pro mobile manipulator, OmniGibson / Isaac Sim): produce one replayable trajectory. Pop the popcorn in the microwave, inside its bag. Frozen scene instance (challenge public_test instance 301)."
 keywords = ["robotics", "behavior", "omnigibson", "isaac-sim", "r1pro", "mobile-manipulation", "code-as-policy", "trajectory", "make_microwave_popcorn"]
 
 [metadata]

@@ -1,8 +1,7 @@
 # BEHAVIOR-1K · chopping_wood (standard)
 
 ## Task
-Chop the firewood. Four logs, an axe and a chopping block lie on the driveway in the garden; split all four logs in
-half.
+Split all four logs in half.
 
 ## Goal
 Success: all four logs have been split in half. It counts only once the scene has settled: nothing the task names (a

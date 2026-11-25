@@ -3,7 +3,7 @@
  "challenge_task": "setting_mousetraps",
  "instance_id": 301,
  "mode": "public_test",
- "text": "Set the four mousetraps, which lie on the bathroom cabinet, on the bathroom floor, with exactly two of them under or next to one of the bathroom sinks.",
+ "text": "Put the four mousetraps on the floor of one room, exactly two of them under or next to the same sink.",
  "robot_config": "r1pro_primitives_eval.yaml",
  "robot_config_sha": "d9d0c8bceea2",
  "state_sha": "047770f838b7272d",

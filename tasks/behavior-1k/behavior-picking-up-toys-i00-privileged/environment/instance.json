@@ -3,7 +3,7 @@
  "challenge_task": "picking_up_toys",
  "instance_id": 301,
  "mode": "public_test",
- "text": "Pick up the toys in the child's room. Two board games lie on the bed; the third board game, two jigsaw puzzles, a tennis ball and the toy box are on the table. Put all six toys inside the toy box.",
+ "text": "Put all six toys into the toy box.",
  "robot_config": "r1pro_primitives_eval.yaml",
  "robot_config_sha": "d9d0c8bceea2",
  "state_sha": "f25955234083dbcf",

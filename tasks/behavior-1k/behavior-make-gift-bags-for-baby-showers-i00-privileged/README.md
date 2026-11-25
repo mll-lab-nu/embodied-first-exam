@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Make two gift bags in the living room. The two sacks lie on the breakfast table, the two toy dice stand on the cabinet, and the two wafers are inside that cabinet. Move both sacks onto the coffee table and put one toy die and one wafer into each sack.
+Put both sacks on the coffee table with one toy die and one wafer in each.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - both sacks (`sack.n.01_1`, `sack.n.01_2`) are on top of the coffee table (`coffee_table.n.01_1`)

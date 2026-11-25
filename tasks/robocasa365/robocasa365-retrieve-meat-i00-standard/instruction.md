@@ -1,7 +1,7 @@
 # RoboCasa365 · RetrieveMeat (standard)
 
 ## Task
-Retrieve the fish from the fridge and place it on the cutting board.
+Take the fish from the fridge and put it on the cutting board, and move your hand away.
 
 ## Goal
 Success: the fish is on the cutting board, and the hand has let go of it and moved well away. What counts is how things

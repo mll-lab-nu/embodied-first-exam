@@ -1,7 +1,7 @@
 # BEHAVIOR-1K · make_cabinet_doors (privileged)
 
 ## Task
-Make the cabinet door. A cabinet base and a cabinet door lie on the living-room floor; attach the door to the base.
+Attach the cabinet door to the cabinet base.
 
 ## Goal
 Success: the cabinet door is attached to the cabinet base. It counts only once the scene has settled: nothing the task

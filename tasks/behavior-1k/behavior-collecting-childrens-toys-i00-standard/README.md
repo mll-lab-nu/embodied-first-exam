@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Standard-mode twin of `behavior-collecting-childrens-toys-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Collect the children's toys in the child's room. Two dice and a board game lie on the bed, two teddy bears on the floor, and a train set and another board game on the desk; put all seven toys inside one and the same bookcase of the child's room.
+Standard-mode twin of `behavior-collecting-childrens-toys-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Put all seven toys into the same bookcase.
 
 ## Difficulty
 Same scene, frozen instance and success rule as `behavior-collecting-childrens-toys-i00-privileged` (see its Difficulty). In standard mode the agent has no reset, no privileged state and no planning primitives: it sees the robot's cameras (RGB, depth on request) and its proprioception only, acts through the client, and gets one episode.

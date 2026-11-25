@@ -1,8 +1,7 @@
 # BEHAVIOR-1K · sweeping_garage (standard)
 
 ## Task
-Sweep the garage. The garage floor is covered with sand and dust, and a broom and a bucket lie on it; remove all the
-sand and all the dust from the floor.
+Sweep all the sand and dust off the garage floor.
 
 ## Goal
 Success: no sand and no dust is left on the garage floor. It counts only once the scene has settled: nothing the task

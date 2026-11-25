@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Set up a coffee station on the kitchen countertop. The coffee maker stays on the countertop; bring the bottle of coffee from the kitchen shelf to stand next to it, put the paper coffee filter on top of the coffee maker, stand the saucer next to the coffee maker with the coffee cup on the saucer, and stand the electric kettle next to the coffee maker.
+Set up a coffee station: the filter on the coffee maker, the cup on the saucer, and the coffee, the saucer and the kettle next to the coffee maker, which stays on the countertop.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - the coffee maker (`coffee_maker.n.01_1`) is on top of the countertop (`countertop.n.01_1`)

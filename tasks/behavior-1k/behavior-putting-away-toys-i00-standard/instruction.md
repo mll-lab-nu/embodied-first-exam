@@ -1,9 +1,7 @@
 # BEHAVIOR-1K · putting_away_toys (standard)
 
 ## Task
-Put the toys away. Eight toy figures lie on the floor, four in the living room and four in the dining room; one toy box
-stands on the living-room floor and another on the dining-room table. Put every toy figure inside a toy box (either
-box).
+Put every toy figure into a toy box.
 
 ## Goal
 Success: every toy figure is inside a toy box. It counts only once the scene has settled: nothing the task names (a tool

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Standard-mode twin of `behavior-getting-organized-for-work-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Organize the bedroom desk for work. The monitor and the mouse stand on the desk, the keyboard lies on a notebook on the desk, the computer stands under the desk, and a folder with a pen on it lies on the swivel chair. Leave the computer under the desk and the monitor on it; put the keyboard on the desk next to the monitor and the mouse on the desk next to the keyboard; put the folder next to the mouse, the notebook on the folder and the pen on the notebook; and put the swivel chair next to the desk.
+Standard-mode twin of `behavior-getting-organized-for-work-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Set up the desk for work: the keyboard next to the monitor, the mouse next to the keyboard, the folder next to the mouse with the notebook on it and the pen on that, and the chair next to the desk.
 
 ## Difficulty
 Same scene, frozen instance and success rule as `behavior-getting-organized-for-work-i00-privileged` (see its Difficulty). In standard mode the agent has no reset, no privileged state and no planning primitives: it sees the robot's cameras (RGB, depth on request) and its proprioception only, acts through the client, and gets one episode.

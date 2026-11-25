@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/behavior-setting-mousetraps-i00-privileged"
-description = "BEHAVIOR-1K v3.9.2 (2026 BEHAVIOR Challenge) setting_mousetraps (R1Pro mobile manipulator, OmniGibson / Isaac Sim): produce one replayable trajectory. Set the four mousetraps, which lie on the bathroom cabinet, on the bathroom floor, with exactly two of them under or next to one of the bathroom sinks. Frozen scene instance (challenge public_test instance 301)."
+description = "BEHAVIOR-1K v3.9.2 (2026 BEHAVIOR Challenge) setting_mousetraps (R1Pro mobile manipulator, OmniGibson / Isaac Sim): produce one replayable trajectory. Put the four mousetraps on the floor of one room, exactly two of them under or next to the same sink. Frozen scene instance (challenge public_test instance 301)."
 keywords = ["robotics", "behavior", "omnigibson", "isaac-sim", "r1pro", "mobile-manipulation", "code-as-policy", "trajectory", "setting_mousetraps"]
 
 [metadata]

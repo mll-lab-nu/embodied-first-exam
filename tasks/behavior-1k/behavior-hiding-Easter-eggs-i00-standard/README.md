@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Standard-mode twin of `behavior-hiding-Easter-eggs-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Hide the Easter eggs in the garden. The three eggs are inside the wicker basket on the lawn; take all three out and lay them on the lawn next to one tree (any tree in the garden, but the same tree for all three).
+Standard-mode twin of `behavior-hiding-Easter-eggs-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Take the three Easter eggs out of the basket and lay them on the lawn next to the same tree.
 
 ## Difficulty
 Same scene, frozen instance and success rule as `behavior-hiding-Easter-eggs-i00-privileged` (see its Difficulty). In standard mode the agent has no reset, no privileged state and no planning primitives: it sees the robot's cameras (RGB, depth on request) and its proprioception only, acts through the client, and gets one episode.

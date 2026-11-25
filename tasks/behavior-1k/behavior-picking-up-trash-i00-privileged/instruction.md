@@ -1,7 +1,7 @@
 # BEHAVIOR-1K · picking_up_trash (privileged)
 
 ## Task
-Put the three cans of soda from the living room inside the trash can in the kitchen.
+Put the three soda cans into the kitchen trash can.
 
 ## Goal
 Success: all three cans of soda are inside the kitchen's trash can. It counts only once the scene has settled: nothing

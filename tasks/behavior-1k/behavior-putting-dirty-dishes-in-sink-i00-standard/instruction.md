@@ -1,8 +1,7 @@
 # BEHAVIOR-1K · putting_dirty_dishes_in_sink (standard)
 
 ## Task
-Clear the dirty dishes. Two bowls and two plates stand on the booth in the dining room; put all four into the sink in
-the kitchen (the dirt on them does not matter).
+Put both bowls and both plates into the kitchen sink.
 
 ## Goal
 Success: both bowls and both plates are in the kitchen sink. It counts only once the scene has settled: nothing the task

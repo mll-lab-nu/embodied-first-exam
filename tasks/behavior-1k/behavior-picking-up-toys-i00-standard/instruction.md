@@ -1,8 +1,7 @@
 # BEHAVIOR-1K · picking_up_toys (standard)
 
 ## Task
-Pick up the toys in the child's room. Two board games lie on the bed; the third board game, two jigsaw puzzles, a tennis
-ball and the toy box are on the table. Put all six toys inside the toy box.
+Put all six toys into the toy box.
 
 ## Goal
 Success: all three board games, both jigsaw puzzles and the tennis ball are inside the toy box. It counts only once the

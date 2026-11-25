@@ -1,8 +1,7 @@
 # BEHAVIOR-1K · store_produce (privileged)
 
 ## Task
-Store the produce. Two mangos and two pomegranates are in the wicker basket on the kitchen floor; put all four into one
-of the two kitchen refrigerators, all into the same one.
+Put the mangos and the pomegranates into the same fridge.
 
 ## Goal
 Success: both mangos and both pomegranates are inside one and the same refrigerator. It counts only once the scene has

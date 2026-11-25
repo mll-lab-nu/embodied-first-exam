@@ -3,7 +3,7 @@
  "challenge_task": "sorting_bottles_cans_and_paper",
  "instance_id": 301,
  "mode": "public_test",
- "text": "Sort the recycling in the kitchen. Three buckets stand on the kitchen floor; two wine bottles, two cans of soda, a newspaper and a magazine lie around the kitchen, some on the countertop and some on the floor. Sort them into the buckets: both wine bottles into one bucket, both cans into a second one, and the newspaper and the magazine into the third, with nothing of another kind in any of them.",
+ "text": "Sort the wine bottles, the cans and the paper into the three buckets, one kind per bucket.",
  "robot_config": "r1pro_primitives_eval.yaml",
  "robot_config_sha": "d9d0c8bceea2",
  "state_sha": "47691d1e32e078a4",

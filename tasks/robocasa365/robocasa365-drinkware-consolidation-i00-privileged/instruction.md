@@ -1,7 +1,7 @@
 # RoboCasa365 · DrinkwareConsolidation (privileged)
 
 ## Task
-Pick the bottled water from the counter and place it in the open cabinet.
+Put the bottled water from the counter in the open cabinet, and move your hand away.
 
 ## Goal
 Success: the bottled water is all the way inside the cabinet, and the hand has let go of it and moved well away. What

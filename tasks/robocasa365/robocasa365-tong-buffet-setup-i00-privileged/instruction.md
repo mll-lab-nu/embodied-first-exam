@@ -1,8 +1,8 @@
 # RoboCasa365 · TongBuffetSetup (privileged)
 
 ## Task
-Take the tongs from the top drawer on your right and place them on the dining counter next to the tray containing the
-hot dog.
+Take the tongs from the drawer and put them on the dining counter next to the tray with the hot dog, and move your hand
+away.
 
 ## Goal
 Success: the tongs and the tray with the hot dog are both on the dining counter, near each other, and the hand has let

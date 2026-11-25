@@ -1,9 +1,7 @@
 # BEHAVIOR-1K · freeze_fruit (standard)
 
 ## Task
-Put the fruit into the refrigerator. Two apples lie in a bowl and two strawberries on a tray on the kitchen countertop,
-and two tupperwares are inside a kitchen cabinet. Put one apple and one strawberry into each tupperware, put both
-tupperwares into the refrigerator, and close it.
+Put one apple and one strawberry into each tupperware, put both tupperwares into the fridge and close it.
 
 ## Goal
 Success: each tupperware holds one apple and one strawberry, both tupperwares are inside the refrigerator, and the

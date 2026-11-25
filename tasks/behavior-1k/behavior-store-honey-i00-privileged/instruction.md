@@ -1,7 +1,7 @@
 # BEHAVIOR-1K · store_honey (privileged)
 
 ## Task
-Put the jar of honey, which stands on the kitchen countertop, inside the cabinet in the entryway.
+Put the honey jar into the entryway cabinet.
 
 ## Goal
 Success: the jar of honey is inside the entryway cabinet. It counts only once the scene has settled: nothing the task

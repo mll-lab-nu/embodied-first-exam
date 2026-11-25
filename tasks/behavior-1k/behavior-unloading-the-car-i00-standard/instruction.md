@@ -1,8 +1,7 @@
 # BEHAVIOR-1K · unloading_the_car (standard)
 
 ## Task
-Unload the car. The briefcase and the satchel are inside the car in the garage; take both out and put them next to the
-sofa in the living room.
+Take the briefcase and the satchel out of the car and put them next to the sofa.
 
 ## Goal
 Success: the briefcase and the satchel are both next to the living-room sofa. It counts only once the scene has settled:

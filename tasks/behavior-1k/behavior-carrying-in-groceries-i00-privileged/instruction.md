@@ -1,9 +1,7 @@
 # BEHAVIOR-1K · carrying_in_groceries (privileged)
 
 ## Task
-Bring the groceries in from the car. In the garage the car stands open with a sack inside it holding a beefsteak tomato
-and a carton of milk; put the tomato and the milk into a refrigerator in the kitchen, then close the car and the
-refrigerator.
+Put the tomato and the milk from the car into one fridge, then close the car and every kitchen fridge.
 
 ## Goal
 Success: the tomato and the carton of milk are both inside one and the same refrigerator, the car is closed, and every

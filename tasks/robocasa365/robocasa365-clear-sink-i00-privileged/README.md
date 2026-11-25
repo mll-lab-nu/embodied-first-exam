@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:robocasa365-0.1.0` |
 
 ## Task
-RoboCasa365's `ClearSink` kitchen task with a Franka Panda arm on an Omron mobile base (with a torso lift): Remove the corn and carrot from the sink. Then move the bowl and cup from the counter to the sink for washing. Produce one replayable trajectory of the robot's native controller commands on one frozen instance; graded on the state after the last action. Benchmark notes in `tasks/robocasa365/README.md`.
+RoboCasa365's `ClearSink` kitchen task with a Franka Panda arm on an Omron mobile base (with a torso lift): Take the corn and the carrot out of the sink and put the bowl and the cup from the counter in it, and move your hand away. Produce one replayable trajectory of the robot's native controller commands on one frozen instance; graded on the state after the last action. Benchmark notes in `tasks/robocasa365/README.md`.
 
 ## Difficulty
 Full privileged state, unlimited resets and self-replay; a mobile manipulator in one of RoboCasa365's large, cluttered kitchens, long-horizon contact-rich manipulation with a 20 Hz controller. The standard twin removes the privileged state.

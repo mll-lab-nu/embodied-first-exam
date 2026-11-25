@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Tidy the bathroom. The bar of soap, the soap dish and a cork lie on the sink; the tissue dispenser, a roll of toilet tissue and the wastebasket stand on the bathroom floor. Put the bar of soap on the soap dish, the tissue dispenser on the sink, the toilet tissue on the toilet, and the cork inside the wastebasket.
+Put the soap on its dish, the tissue dispenser on the sink, the toilet roll on the toilet, and the cork into the wastebasket.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - the bar of soap (`bar_soap.n.01_1`) is on top of the soap dish (`soap_dish.n.01_1`)

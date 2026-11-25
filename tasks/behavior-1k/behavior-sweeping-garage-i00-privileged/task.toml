@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/behavior-sweeping-garage-i00-privileged"
-description = "BEHAVIOR-1K v3.9.2 (2026 BEHAVIOR Challenge) sweeping_garage (R1Pro mobile manipulator, OmniGibson / Isaac Sim): produce one replayable trajectory. Sweep the garage. The garage floor is covered with sand and dust, and a broom and a bucket lie on it; remove all the sand and all the dust from the floor. Frozen scene instance (challenge public_test instance 301)."
+description = "BEHAVIOR-1K v3.9.2 (2026 BEHAVIOR Challenge) sweeping_garage (R1Pro mobile manipulator, OmniGibson / Isaac Sim): produce one replayable trajectory. Sweep all the sand and dust off the garage floor. Frozen scene instance (challenge public_test instance 301)."
 keywords = ["robotics", "behavior", "omnigibson", "isaac-sim", "r1pro", "mobile-manipulation", "code-as-policy", "trajectory", "sweeping_garage"]
 
 [metadata]

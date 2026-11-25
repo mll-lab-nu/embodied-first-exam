@@ -1,7 +1,7 @@
 # RoboCasa365 · ThawInSink (standard)
 
 ## Task
-Pick the orange from the counter and place it in the sink. Then turn on the sink faucet.
+Put the orange from the counter in the sink and turn on the water.
 
 ## Goal
 Success: the orange is in the sink and the water is running. What counts is how things stand at the end of the episode:

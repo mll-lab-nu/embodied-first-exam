@@ -1,8 +1,8 @@
 # RoboCasa365 · PrepMarinatingMeat (standard)
 
 ## Task
-Pick the shrimp from the plate and place it on the cutting board. Then pick the condiment bottle from the cabinet and
-place it next to the cutting board.
+Put the shrimp from the plate on the cutting board, then put the condiment bottle from the cabinet next to the board,
+and move your hand away.
 
 ## Goal
 Success: the shrimp is on the cutting board, the board and the condiment bottle are on the counter nearest the cabinet,

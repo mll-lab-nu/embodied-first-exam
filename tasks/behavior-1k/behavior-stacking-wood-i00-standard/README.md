@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Standard-mode twin of `behavior-stacking-wood-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Six logs lie spread out on the driveway in the garden; stack them so that every log touches at least one other log.
+Standard-mode twin of `behavior-stacking-wood-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Stack the six logs so that each one touches another.
 
 ## Difficulty
 Same scene, frozen instance and success rule as `behavior-stacking-wood-i00-privileged` (see its Difficulty). In standard mode the agent has no reset, no privileged state and no planning primitives: it sees the robot's cameras (RGB, depth on request) and its proprioception only, acts through the client, and gets one episode.

@@ -1,7 +1,8 @@
 # RoboCasa365 · BeverageSorting (privileged)
 
 ## Task
-Sort all alcoholic drinks to one cabinet, and non-alcoholic drinks to the other.
+Put the two alcoholic drinks in one of the two open cabinets and the two non-alcoholic drinks in the other, and move
+your hand away.
 
 ## Goal
 Success: both alcoholic drinks are all the way inside one of the two cabinets and both non-alcoholic drinks inside the

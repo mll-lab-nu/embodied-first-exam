@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Can the food in the kitchen. The steak and the pineapple are inside the refrigerator, two bowls are inside a kitchen cabinet, and a carving knife lies on the chopping board on the countertop. Dice the steak and the pineapple, fill one bowl with diced steak only and the other with diced pineapple only, put both bowls back inside that cabinet, and leave the refrigerator and the cabinet closed.
+Dice the steak and the pineapple, fill one bowl with the steak and the other with the pineapple, put both bowls back in the cabinet they came from, and close the fridge and that cabinet.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - diced steak (`diced__steak.n.01_1`) and diced pineapple (`diced__pineapple.n.01_1`) exist (the steak and the pineapple have been diced)

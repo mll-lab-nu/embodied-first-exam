@@ -1,9 +1,7 @@
 # BEHAVIOR-1K · can_meat (privileged)
 
 ## Task
-Can the sausages. The four cooked bratwursts lie on the chopping board on the kitchen countertop, and the two hinged
-jars are inside the kitchen cabinet. Put exactly two bratwursts into each jar, close both jars, have both jars inside
-that cabinet at the end, and leave the cabinet closed.
+Put two bratwursts into each jar, close both jars, put them back in the cabinet they came from and close that cabinet.
 
 ## Goal
 Success: each hinged jar holds exactly two of the four bratwursts, both jars are closed and inside the cabinet, and the

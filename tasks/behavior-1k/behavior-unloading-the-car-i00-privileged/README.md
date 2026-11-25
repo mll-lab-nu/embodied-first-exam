@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Unload the car. The briefcase and the satchel are inside the car in the garage; take both out and put them next to the sofa in the living room.
+Take the briefcase and the satchel out of the car and put them next to the sofa.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - the briefcase (`briefcase.n.01_1`) is next to the sofa (`sofa.n.01_1`)

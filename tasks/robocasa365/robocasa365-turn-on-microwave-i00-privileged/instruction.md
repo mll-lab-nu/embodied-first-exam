@@ -1,7 +1,7 @@
 # RoboCasa365 · TurnOnMicrowave (privileged)
 
 ## Task
-Press the start button on the microwave.
+Press the microwave's start button, then move your hand away.
 
 ## Goal
 Success: the microwave is running, and the hand has moved well away from the start button. What counts is how things

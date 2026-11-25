@@ -1,7 +1,8 @@
 # RoboCasa365 · PortionInTupperware (standard)
 
 ## Task
-Place one cooked food and one vegetable from the large plate to each tupperware container.
+Put one cooked food and one vegetable from the large plate in each of the two tupperware containers, and move your hand
+away.
 
 ## Goal
 Success: each tupperware holds exactly one of the two cooked foods and exactly one of the two vegetables, and the hand

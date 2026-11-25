@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Standard-mode twin of `behavior-laying-tile-floors-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Lay the tiles. The four tiles lie on the corridor floor; put all four on the bathroom floor, each tile next to at least one of the other tiles.
+Standard-mode twin of `behavior-laying-tile-floors-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Lay the four tiles on the bathroom floor, each next to at least one other tile.
 
 ## Difficulty
 Same scene, frozen instance and success rule as `behavior-laying-tile-floors-i00-privileged` (see its Difficulty). In standard mode the agent has no reset, no privileged state and no planning primitives: it sees the robot's cameras (RGB, depth on request) and its proprioception only, acts through the client, and gets one episode.

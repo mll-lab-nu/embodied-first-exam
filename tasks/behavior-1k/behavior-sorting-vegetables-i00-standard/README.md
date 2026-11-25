@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Standard-mode twin of `behavior-sorting-vegetables-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Sort the vegetables in the kitchen. Two wicker baskets stand on the kitchen floor, one with three bok choy and three ears of sweet corn, the other with two broccoli, two leeks and three Vidalia onions; three mixing bowls stand on the countertop. Put the bok choy and the onions together into one mixing bowl, the leeks and the broccoli together into a second one, and the sweet corn into a third.
+Standard-mode twin of `behavior-sorting-vegetables-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Put the bok choy with the onions, the leeks with the broccoli, and the corn into the mixing bowls, each group together in one bowl.
 
 ## Difficulty
 Same scene, frozen instance and success rule as `behavior-sorting-vegetables-i00-privileged` (see its Difficulty). In standard mode the agent has no reset, no privileged state and no planning primitives: it sees the robot's cameras (RGB, depth on request) and its proprioception only, acts through the client, and gets one episode.

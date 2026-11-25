@@ -1,8 +1,7 @@
 # BEHAVIOR-1K · collecting_aluminum_cans (standard)
 
 ## Task
-Collect the six soda cans in the bedroom, three lying on the bed and three on the floor, into the bucket that stands on
-the bedroom floor.
+Collect all six soda cans into the bucket.
 
 ## Goal
 Success: all six cans of soda are inside the bucket. It counts only once the scene has settled: nothing the task names

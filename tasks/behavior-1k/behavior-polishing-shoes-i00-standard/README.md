@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Standard-mode twin of `behavior-polishing-shoes-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Polish the shoes in the bedroom. Two dusty shoes lie on the bedroom floor and a scrub brush lies on the stand; there are two footstools in the room. Brush all the dust off both shoes, set them next to each other and next to the same footstool, and leave the scrub brush on the stand.
+Standard-mode twin of `behavior-polishing-shoes-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Brush the dust off both shoes, set them side by side next to one footstool, and leave the brush on the stand.
 
 ## Difficulty
 Same scene, frozen instance and success rule as `behavior-polishing-shoes-i00-privileged` (see its Difficulty). In standard mode the agent has no reset, no privileged state and no planning primitives: it sees the robot's cameras (RGB, depth on request) and its proprioception only, acts through the client, and gets one episode.

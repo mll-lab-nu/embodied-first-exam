@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Standard-mode twin of `behavior-outfit-a-basic-toolbox-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Pack the toolbox in the utility room. The drill, the pliers, the flashlight, the allen wrench and the screwdriver lie on the table there, next to the toolbox. Put all five tools inside the toolbox, keep the toolbox on the table, and close it.
+Standard-mode twin of `behavior-outfit-a-basic-toolbox-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Put all five tools into the toolbox, keep it on the table, and close it.
 
 ## Difficulty
 Same scene, frozen instance and success rule as `behavior-outfit-a-basic-toolbox-i00-privileged` (see its Difficulty). In standard mode the agent has no reset, no privileged state and no planning primitives: it sees the robot's cameras (RGB, depth on request) and its proprioception only, acts through the client, and gets one episode.

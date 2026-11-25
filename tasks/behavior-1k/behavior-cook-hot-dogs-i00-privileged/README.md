@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Cook the hot dogs. Two hot dogs are inside the kitchen refrigerator and a microwave stands in the kitchen; cook both hot dogs.
+Cook both hot dogs.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - both hot dogs (`hotdog.n.02_1`, `_2`) are cooked

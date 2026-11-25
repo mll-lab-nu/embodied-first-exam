@@ -1,8 +1,7 @@
 # BEHAVIOR-1K · make_rose_centerpieces (privileged)
 
 ## Task
-Make a centerpiece. The vase and three roses lie on the cabinet in the living room; put all three roses into the vase
-and stand the vase on the living-room coffee table.
+Put the three roses into the vase and stand it on the coffee table.
 
 ## Goal
 Success: all three roses are inside the vase, and the vase stands on the coffee table. It counts only once the scene has

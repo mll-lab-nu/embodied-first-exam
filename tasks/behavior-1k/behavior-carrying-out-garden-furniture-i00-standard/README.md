@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Standard-mode twin of `behavior-carrying-out-garden-furniture-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Carry the garden furniture out of the house. The lawn chair and the wheelbarrow stand on the living-room floor; put the lawn chair on the garden floor and the wheelbarrow on a lawn.
+Standard-mode twin of `behavior-carrying-out-garden-furniture-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Take the lawn chair out to the garden floor and the wheelbarrow out onto a lawn.
 
 ## Difficulty
 Same scene, frozen instance and success rule as `behavior-carrying-out-garden-furniture-i00-privileged` (see its Difficulty). In standard mode the agent has no reset, no privileged state and no planning primitives: it sees the robot's cameras (RGB, depth on request) and its proprioception only, acts through the client, and gets one episode.

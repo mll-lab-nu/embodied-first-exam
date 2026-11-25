@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/behavior-polishing-shoes-i00-privileged"
-description = "BEHAVIOR-1K v3.9.2 (2026 BEHAVIOR Challenge) polishing_shoes (R1Pro mobile manipulator, OmniGibson / Isaac Sim): produce one replayable trajectory. Polish the shoes in the bedroom. Two dusty shoes lie on the bedroom floor and a scrub brush lies on the stand; there are two footstools in the room. Brush all the dust off both shoes, set them next to each other and next to the same footstool, and leave the scrub brush on the stand. Frozen scene instance (challenge public_test instance 301)."
+description = "BEHAVIOR-1K v3.9.2 (2026 BEHAVIOR Challenge) polishing_shoes (R1Pro mobile manipulator, OmniGibson / Isaac Sim): produce one replayable trajectory. Brush the dust off both shoes, set them side by side next to one footstool, and leave the brush on the stand. Frozen scene instance (challenge public_test instance 301)."
 keywords = ["robotics", "behavior", "omnigibson", "isaac-sim", "r1pro", "mobile-manipulation", "code-as-policy", "trajectory", "polishing_shoes"]
 
 [metadata]

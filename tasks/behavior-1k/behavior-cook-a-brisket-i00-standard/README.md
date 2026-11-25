@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Standard-mode twin of `behavior-cook-a-brisket-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Cook the brisket. It is raw, inside the kitchen refrigerator; a chopping board and a frying pan are on the countertop and there is an oven in the kitchen. Cook the brisket and put it on the chopping board; the frying pan must end up on the countertop.
+Standard-mode twin of `behavior-cook-a-brisket-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Cook the brisket and put it on the chopping board, and leave the frying pan on the countertop.
 
 ## Difficulty
 Same scene, frozen instance and success rule as `behavior-cook-a-brisket-i00-privileged` (see its Difficulty). In standard mode the agent has no reset, no privileged state and no planning primitives: it sees the robot's cameras (RGB, depth on request) and its proprioception only, acts through the client, and gets one episode.

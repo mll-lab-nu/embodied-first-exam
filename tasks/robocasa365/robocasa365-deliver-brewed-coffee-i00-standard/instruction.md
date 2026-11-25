@@ -1,7 +1,8 @@
 # RoboCasa365 · DeliverBrewedCoffee (standard)
 
 ## Task
-Pick up the brewed coffee from the coffee machine and place it next to the breakfast plate on the dining counter.
+Take the coffee from the coffee machine and put it on the dining counter next to the breakfast plate, and move your hand
+away.
 
 ## Goal
 Success: the coffee and the breakfast plate both stand on the dining counter right next to each other, and the hand has

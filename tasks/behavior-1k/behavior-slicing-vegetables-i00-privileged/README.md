@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Dice the vegetables in the kitchen. Two bell peppers, two beets and a zucchini are inside the refrigerator; a paring knife and two chopping boards lie on the countertop. Dice all five vegetables, so that none of them is left whole, and leave the refrigerator closed.
+Dice all five vegetables and close the fridge.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - diced bell pepper (`diced__bell_pepper.n.01_1`), diced beet (`diced__beet.n.01_1`) and diced zucchini (`diced__zucchini.n.01_1`) exist

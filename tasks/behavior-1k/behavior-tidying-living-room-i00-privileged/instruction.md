@@ -1,8 +1,7 @@
 # BEHAVIOR-1K · tidying_living_room (privileged)
 
 ## Task
-Tidy the living room. Put the potted plant and the newspaper, which lie on the floor, on the coffee table; put the
-hardback book from the coffee table inside a bookcase; and put the notebook from the coffee table on the desk.
+Put the plant and the newspaper on the coffee table, the hardback into a bookcase, and the notebook on the desk.
 
 ## Goal
 Success: the potted plant and the newspaper are on the coffee table, the hardback is inside a bookcase, and the notebook

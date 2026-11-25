@@ -1,8 +1,7 @@
 # BEHAVIOR-1K · composting_waste (standard)
 
 ## Task
-Put the half banana and the half pomegranate, which lie on the kitchen countertop, inside the trash can that stands on
-the kitchen floor.
+Put the half banana and the half pomegranate into the trash can.
 
 ## Goal
 Success: the half banana and the half pomegranate are both inside the trash can. It counts only once the scene has

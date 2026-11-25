@@ -1,7 +1,7 @@
 # RoboCasa365 · MakeIceLemonade (privileged)
 
 ## Task
-Grab a lemon wedge from the fridge and one ice cube from the ice bowl, and put them in the glass of lemonade.
+Put the lemon wedge from the fridge and an ice cube from the ice bowl in the glass of lemonade, and move your hand away.
 
 ## Goal
 Success: the lemon wedge and at least one ice cube are in the glass, and the hand has let go and moved well away from

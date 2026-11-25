@@ -1,8 +1,8 @@
 # RoboCasa365 · SweetenCoffee (privileged)
 
 ## Task
-Take a sugar cube from the saucer and place it inside the coffee. Then, grab milk from the fridge and place it next to
-the coffee on the counter to sweeten the coffee.
+Put a sugar cube from the saucer in the coffee, and put the milk from the fridge on the counter next to the coffee, and
+move your hand away.
 
 ## Goal
 Success: the sugar cube is in the coffee, the milk and the coffee stand on the counter right next to each other, and the

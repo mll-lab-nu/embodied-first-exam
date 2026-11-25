@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Organize the bedroom desk for work. The monitor and the mouse stand on the desk, the keyboard lies on a notebook on the desk, the computer stands under the desk, and a folder with a pen on it lies on the swivel chair. Leave the computer under the desk and the monitor on it; put the keyboard on the desk next to the monitor and the mouse on the desk next to the keyboard; put the folder next to the mouse, the notebook on the folder and the pen on the notebook; and put the swivel chair next to the desk.
+Set up the desk for work: the keyboard next to the monitor, the mouse next to the keyboard, the folder next to the mouse with the notebook on it and the pen on that, and the chair next to the desk.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - the monitor (`monitor.n.04_1`) is on top of the desk (`desk.n.01_1`) and the computer (`computer.n.01_1`) is under the desk

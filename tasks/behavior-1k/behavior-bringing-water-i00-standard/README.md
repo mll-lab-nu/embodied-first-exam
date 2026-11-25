@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Standard-mode twin of `behavior-bringing-water-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Take both bottles out of the kitchen refrigerator, put them on the coffee table in the living room, and leave the refrigerator closed.
+Standard-mode twin of `behavior-bringing-water-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Take both bottles from the fridge to the living-room coffee table, and close the fridge.
 
 ## Difficulty
 Same scene, frozen instance and success rule as `behavior-bringing-water-i00-privileged` (see its Difficulty). In standard mode the agent has no reset, no privileged state and no planning primitives: it sees the robot's cameras (RGB, depth on request) and its proprioception only, acts through the client, and gets one episode.

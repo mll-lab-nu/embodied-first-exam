@@ -1,7 +1,7 @@
 # BEHAVIOR-1K · dispose_of_glass (privileged)
 
 ## Task
-Four water glasses stand on the bathroom sink; put all four inside the trash can that stands on the bedroom floor.
+Throw the four water glasses into the trash can in the bedroom.
 
 ## Goal
 Success: all four water glasses are inside the trash can. It counts only once the scene has settled: nothing the task

@@ -1,9 +1,7 @@
 # BEHAVIOR-1K · cook_a_brisket (standard)
 
 ## Task
-Cook the brisket. It is raw, inside the kitchen refrigerator; a chopping board and a frying pan are on the countertop
-and there is an oven in the kitchen. Cook the brisket and put it on the chopping board; the frying pan must end up on
-the countertop.
+Cook the brisket and put it on the chopping board, and leave the frying pan on the countertop.
 
 ## Goal
 Success: the brisket is cooked and lies on the chopping board, and the frying pan is on the countertop. It counts only

@@ -1,7 +1,7 @@
 # BEHAVIOR-1K · hanging_pictures (standard)
 
 ## Task
-Hang the poster, which lies on the kitchen countertop, on one of the wall nails in the kitchen.
+Hang the poster on a wall nail in the kitchen.
 
 ## Goal
 Success: the poster hangs on one of the kitchen's wall nails. It counts only once the scene has settled: nothing the

@@ -1,9 +1,7 @@
 # BEHAVIOR-1K · cook_cabbage (standard)
 
 ## Task
-Cook diced cabbage with chili. The head cabbage and the chili are inside the kitchen refrigerator; a frying pan, a
-plate, a chopping board and a carving knife lie on the countertop, and there is a stove in the kitchen. Dice the cabbage
-and the chili and cook them in the frying pan, so that the pan holds cooked diced cabbage and cooked diced chili.
+Dice the cabbage and the chili and cook them together in the frying pan.
 
 ## Goal
 Success: the cabbage and the chili have been diced and cooked, and the frying pan holds both. It counts only once the

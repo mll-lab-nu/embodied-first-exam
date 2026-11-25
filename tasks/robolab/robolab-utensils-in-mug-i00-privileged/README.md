@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robolab-0.2.2` |
 
 ## Task
-Put the fork and spoon in the ceramicmug.
+Put the fork and the spoon in the ceramic mug.
 
 ## Difficulty
 RoboLab labels this task "moderate" (2 subtasks; attributes: semantics, affordance); its success term (`object_in_container`) asks for 2 objects into ceramic_mug. The tooling gives only thin primitives (move_ee on Isaac Lab's differential IK, joint moves, gripper, hold), so every grasp, transport and placement is the agent's to build. RoboLab ships no expert solution.

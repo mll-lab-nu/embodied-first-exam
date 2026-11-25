@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Store the food in the kitchen cabinets. Two boxes of oatmeal, two bags of chips, two bottles of olive oil and two jars of sugar stand on the kitchen countertop; put all eight inside kitchen cabinets (any cabinet, they need not all go into the same one).
+Put all eight food items into the kitchen cabinets.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - every box of oatmeal (`box__of__oatmeal.n.01_1`, `_2`), bag of chips (`bag__of__chips.n.01_1`, `_2`), bottle of olive oil (`bottle__of__olive_oil.n.01_1`, `_2`) and jar of sugar (`jar__of__sugar.n.01_1`, `_2`) is inside a kitchen cabinet (`cabinet.n.01_*`: any of them)

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Load the car. The car stands in the garage; in the living room a container stands on the floor and a tennis racket and a digital camera lie on the table. Put the camera into the container, and the container and the tennis racket into the car.
+Put the camera into the container, then the container and the tennis racket into the car.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - the container (`container.n.01_1`) is inside the car (`car.n.01_1`)

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Standard-mode twin of `behavior-storing-food-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Store the food in the kitchen cabinets. Two boxes of oatmeal, two bags of chips, two bottles of olive oil and two jars of sugar stand on the kitchen countertop; put all eight inside kitchen cabinets (any cabinet, they need not all go into the same one).
+Standard-mode twin of `behavior-storing-food-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Put all eight food items into the kitchen cabinets.
 
 ## Difficulty
 Same scene, frozen instance and success rule as `behavior-storing-food-i00-privileged` (see its Difficulty). In standard mode the agent has no reset, no privileged state and no planning primitives: it sees the robot's cameras (RGB, depth on request) and its proprioception only, acts through the client, and gets one episode.

@@ -1,8 +1,7 @@
 # BEHAVIOR-1K · installing_a_modem (standard)
 
 ## Task
-Install the modem. A modem, switched off, sits on the coffee table in the living room; the room also has two cabinets
-and a television. Switch the modem on and put it on the same cabinet as the television, next to it.
+Switch the modem on and put it next to the television, on the same cabinet.
 
 ## Goal
 Success: the modem is switched on and stands next to the television, on the same cabinet as the television. It counts

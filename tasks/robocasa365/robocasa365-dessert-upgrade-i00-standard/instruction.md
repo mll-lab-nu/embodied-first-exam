@@ -1,7 +1,7 @@
 # RoboCasa365 · DessertUpgrade (standard)
 
 ## Task
-Move the dessert items from the plates to the tray.
+Move the two desserts from the plates onto the tray, and move your hand away.
 
 ## Goal
 Success: both desserts are on the tray, and the hand has let go and moved well away from the tray. What counts is how

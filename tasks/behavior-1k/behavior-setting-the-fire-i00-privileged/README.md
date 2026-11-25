@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Light a fire in the living-room fireplace. Two pieces of firewood lie on the floor, and a newspaper and a cigar lighter lie on the table; put the newspaper inside the fireplace with both pieces of firewood on top of it, set the newspaper and both pieces of firewood on fire, and switch the lighter off again.
+Build a fire in the fireplace with both pieces of firewood on the newspaper, set them all burning, and switch the lighter off.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - both pieces of firewood (`firewood.n.01_1`, `_2`) are on fire, on top of the newspaper (`newspaper.n.03_1`) and inside the fireplace (`wood_fireplace.n.01_1`)

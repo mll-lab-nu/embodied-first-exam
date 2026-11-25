@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/behavior-bringing-water-i00-privileged"
-description = "BEHAVIOR-1K v3.9.2 (2026 BEHAVIOR Challenge) bringing_water (R1Pro mobile manipulator, OmniGibson / Isaac Sim): produce one replayable trajectory. Take both bottles out of the kitchen refrigerator, put them on the coffee table in the living room, and leave the refrigerator closed. Frozen scene instance (challenge public_test instance 301)."
+description = "BEHAVIOR-1K v3.9.2 (2026 BEHAVIOR Challenge) bringing_water (R1Pro mobile manipulator, OmniGibson / Isaac Sim): produce one replayable trajectory. Take both bottles from the fridge to the living-room coffee table, and close the fridge. Frozen scene instance (challenge public_test instance 301)."
 keywords = ["robotics", "behavior", "omnigibson", "isaac-sim", "r1pro", "mobile-manipulation", "code-as-policy", "trajectory", "bringing_water"]
 
 [metadata]

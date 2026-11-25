@@ -1,7 +1,7 @@
 # RoboCasa365 · TurnOnToasterOven (realtime)
 
 ## Task
-Turn on the toaster oven by setting the timer.
+Turn on the toaster oven by setting its timer.
 
 ## Goal
 Success: the toaster oven's timer is set, its knob turned well up from zero. The episode ends as soon as the task is

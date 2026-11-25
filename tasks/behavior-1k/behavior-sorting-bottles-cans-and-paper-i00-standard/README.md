@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Standard-mode twin of `behavior-sorting-bottles-cans-and-paper-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Sort the recycling in the kitchen. Three buckets stand on the kitchen floor; two wine bottles, two cans of soda, a newspaper and a magazine lie around the kitchen, some on the countertop and some on the floor. Sort them into the buckets: both wine bottles into one bucket, both cans into a second one, and the newspaper and the magazine into the third, with nothing of another kind in any of them.
+Standard-mode twin of `behavior-sorting-bottles-cans-and-paper-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Sort the wine bottles, the cans and the paper into the three buckets, one kind per bucket.
 
 ## Difficulty
 Same scene, frozen instance and success rule as `behavior-sorting-bottles-cans-and-paper-i00-privileged` (see its Difficulty). In standard mode the agent has no reset, no privileged state and no planning primitives: it sees the robot's cameras (RGB, depth on request) and its proprioception only, acts through the client, and gets one episode.

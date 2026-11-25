@@ -1,8 +1,7 @@
 # BEHAVIOR-1K · organizing_school_stuff (standard)
 
 ## Task
-Pack the school things in the bedroom. A pencil, a book and a folder lie on the bed; a pen, a calculator and the
-carryall are on the floor. Put all five things into the carryall and put the carryall on the bed.
+Pack the five school things into the carryall and put it on the bed.
 
 ## Goal
 Success: the folder, the book, the pencil, the pen and the calculator are inside the carryall, and the carryall is on

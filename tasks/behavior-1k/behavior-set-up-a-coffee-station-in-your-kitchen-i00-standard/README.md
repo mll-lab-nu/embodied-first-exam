@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Standard-mode twin of `behavior-set-up-a-coffee-station-in-your-kitchen-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Set up a coffee station on the kitchen countertop. The coffee maker stays on the countertop; bring the bottle of coffee from the kitchen shelf to stand next to it, put the paper coffee filter on top of the coffee maker, stand the saucer next to the coffee maker with the coffee cup on the saucer, and stand the electric kettle next to the coffee maker.
+Standard-mode twin of `behavior-set-up-a-coffee-station-in-your-kitchen-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Set up a coffee station: the filter on the coffee maker, the cup on the saucer, and the coffee, the saucer and the kettle next to the coffee maker, which stays on the countertop.
 
 ## Difficulty
 Same scene, frozen instance and success rule as `behavior-set-up-a-coffee-station-in-your-kitchen-i00-privileged` (see its Difficulty). In standard mode the agent has no reset, no privileged state and no planning primitives: it sees the robot's cameras (RGB, depth on request) and its proprioception only, acts through the client, and gets one episode.

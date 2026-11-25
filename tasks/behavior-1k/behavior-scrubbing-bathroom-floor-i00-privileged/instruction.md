@@ -1,8 +1,7 @@
 # BEHAVIOR-1K · scrubbing_bathroom_floor (privileged)
 
 ## Task
-Scrub the bathroom floor. The bathroom floor is covered with dirt and a scrub brush lies on it; remove every bit of dirt
-from the floor.
+Scrub all the dirt off the bathroom floor.
 
 ## Goal
 Success: no dirt is left on the bathroom floor. It counts only once the scene has settled: nothing the task names (a

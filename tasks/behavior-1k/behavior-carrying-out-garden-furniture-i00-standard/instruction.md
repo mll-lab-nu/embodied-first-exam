@@ -1,8 +1,7 @@
 # BEHAVIOR-1K · carrying_out_garden_furniture (standard)
 
 ## Task
-Carry the garden furniture out of the house. The lawn chair and the wheelbarrow stand on the living-room floor; put the
-lawn chair on the garden floor and the wheelbarrow on a lawn.
+Take the lawn chair out to the garden floor and the wheelbarrow out onto a lawn.
 
 ## Goal
 Success: the lawn chair stands on the garden floor and the wheelbarrow on a lawn. It counts only once the scene has

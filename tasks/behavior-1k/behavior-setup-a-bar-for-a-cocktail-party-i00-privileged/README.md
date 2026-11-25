@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Set up the bar. On the cabinet in the bar stand three cans of soda, a tray with six ice cubes, an ice bucket, a corkscrew, a wine bottle and two wine glasses. Put the wine bottle on the bar countertop; put the three cans on that countertop, each next to another can; put all six ice cubes inside the bucket and the bucket on the countertop; put both wine glasses on the countertop next to each other, at least one of them next to the wine bottle; and put the corkscrew on the countertop next to the wine bottle.
+Set up the bar countertop: the wine bottle with the corkscrew and a wine glass next to it, the two glasses side by side, the three cans next to one another, and the ice bucket holding all six ice cubes.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - the wine bottle (`wine_bottle.n.01_1`) is on top of the bar countertop (`countertop.n.01_1`)

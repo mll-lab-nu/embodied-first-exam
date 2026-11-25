@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Standard-mode twin of `behavior-setup-a-bar-for-a-cocktail-party-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Set up the bar. On the cabinet in the bar stand three cans of soda, a tray with six ice cubes, an ice bucket, a corkscrew, a wine bottle and two wine glasses. Put the wine bottle on the bar countertop; put the three cans on that countertop, each next to another can; put all six ice cubes inside the bucket and the bucket on the countertop; put both wine glasses on the countertop next to each other, at least one of them next to the wine bottle; and put the corkscrew on the countertop next to the wine bottle.
+Standard-mode twin of `behavior-setup-a-bar-for-a-cocktail-party-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Set up the bar countertop: the wine bottle with the corkscrew and a wine glass next to it, the two glasses side by side, the three cans next to one another, and the ice bucket holding all six ice cubes.
 
 ## Difficulty
 Same scene, frozen instance and success rule as `behavior-setup-a-bar-for-a-cocktail-party-i00-privileged` (see its Difficulty). In standard mode the agent has no reset, no privileged state and no planning primitives: it sees the robot's cameras (RGB, depth on request) and its proprioception only, acts through the client, and gets one episode.

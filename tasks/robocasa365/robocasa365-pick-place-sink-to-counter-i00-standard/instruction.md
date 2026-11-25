@@ -1,7 +1,7 @@
 # RoboCasa365 · PickPlaceSinkToCounter (standard)
 
 ## Task
-Pick the egg from the sink and place it on the plate located on the counter.
+Take the egg out of the sink and put it on the plate on the counter, and move your hand away.
 
 ## Goal
 Success: the egg is on the plate, the plate is on the counter next to the sink, and the hand has let go of the egg and

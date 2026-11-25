@@ -1,9 +1,7 @@
 # BEHAVIOR-1K · clearing_food_from_table_into_fridge (standard)
 
 ## Task
-Clear the leftovers from the kitchen breakfast table into the fridge. A half chicken and a half apple pie lie on two
-plates on the table, and two empty tupperwares stand on the countertop; put the chicken and the pie into tupperwares,
-put both tupperwares into the refrigerator, and leave it closed.
+Put the chicken and the pie into tupperwares, put both tupperwares into the fridge and close it.
 
 ## Goal
 Success: the half chicken and the half apple pie are each inside a tupperware, both tupperwares are inside the

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Four water glasses stand on the bathroom sink; put all four inside the trash can that stands on the bedroom floor.
+Throw the four water glasses into the trash can in the bedroom.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - each of the four water glasses (`water_glass.n.02_1` to `_4`) is inside the trash can (`ashcan.n.01_1`)

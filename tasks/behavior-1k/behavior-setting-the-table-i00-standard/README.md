@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Standard-mode twin of `behavior-setting-the-table-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Set the dining-room breakfast table for two. The two plates are inside a kitchen cabinet, the two cupcakes inside the kitchen refrigerator, and two forks and two table knives lie on the kitchen sink. Put both plates on the breakfast table, one cupcake on each plate, and one fork and one knife next to each plate.
+Standard-mode twin of `behavior-setting-the-table-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Set the breakfast table for two: both plates on it, a cupcake on each, and a fork and a knife next to each.
 
 ## Difficulty
 Same scene, frozen instance and success rule as `behavior-setting-the-table-i00-privileged` (see its Difficulty). In standard mode the agent has no reset, no privileged state and no planning primitives: it sees the robot's cameras (RGB, depth on request) and its proprioception only, acts through the client, and gets one episode.

@@ -287,7 +287,7 @@ TASKS: dict[str, dict] = {
     ),
     "fruits_on_plate3": dict(
         robolab_task="FruitsOnPlate3Task",
-        text="Put three (3) fruits on the plate.",
+        text="One orange is already on the plate. Put fruits on the plate so that exactly three are on it at the end, then let go.",
         objects=["lemon_01", "lemon_02", "lime01", "lime01_01", "orange_01", "orange_02", "pomegranate01", "pumpkinlarge", "pumpkinsmall", "redonion", "serving_bowl", "clay_plates", "wooden_spoons", "spatula", "storage_box"],
         simulator="robolab", robot="franka-robotiq-2f85", image="robolab",
     ),
@@ -449,7 +449,7 @@ TASKS: dict[str, dict] = {
     ),
     "utensils_in_mug": dict(
         robolab_task="UtensilsInMugTask",
-        text="Put the fork and spoon in the ceramicmug.",
+        text="Put the fork and the spoon in the ceramic mug.",
         objects=["bowl", "banana", "bagel_07", "coffee_can", "banana_01", "yogurt_cup", "coffee_pot", "ceramic_mug", "pitcher", "fork_big", "spoon_big", "apple_01", "orange2", "milk_carton", "orange_juice_carton", "bagel_01", "bagel_02", "plate_small", "plate_large"],
         simulator="robolab", robot="franka-robotiq-2f85", image="robolab",
     ),
@@ -509,7 +509,7 @@ TASKS: dict[str, dict] = {
     ),
     "bananas_in_bin_one_more": dict(
         robolab_task="BananasInBinOneMoreTask",
-        text="Put one (1) more bananas in the grey bin.",
+        text="Put one more banana in the grey bin.",
         objects=["banana", "banana_01", "banana_02", "banana_03", "banana_04", "grey_bin"],
         simulator="robolab", robot="franka-robotiq-2f85", image="robolab",
     ),

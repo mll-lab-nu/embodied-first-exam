@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Move the two storage containers, which stand on the living-room floor, to the garage: put one on the garage floor and stack the other on top of it (either order).
+Stack the two storage containers on the garage floor.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - one storage container (`storage_container.n.01_1` or `_2`) is on top of the garage floor (`floor.n.01_2`) and the other one is on top of it

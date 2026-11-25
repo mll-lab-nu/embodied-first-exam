@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Thaw the frozen food. A frozen chicken breast and a frozen slice of bread lie on two plates inside the kitchen refrigerator. Put the chicken breast, on a plate, into the microwave oven, close the microwave and switch it on; put the bread slice, on a plate, on the countertop; close the refrigerator; neither food may still be frozen.
+Thaw the chicken on a plate in the closed, running microwave and the bread on a plate on the countertop, and close the fridge.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - the chicken breast (`chicken_breast.n.02_1`) is not frozen and lies on top of a plate (`plate.n.04_1` or `_2`) that is itself inside the microwave oven (`microwave.n.02_1`)

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Cook diced cabbage with chili. The head cabbage and the chili are inside the kitchen refrigerator; a frying pan, a plate, a chopping board and a carving knife lie on the countertop, and there is a stove in the kitchen. Dice the cabbage and the chili and cook them in the frying pan, so that the pan holds cooked diced cabbage and cooked diced chili.
+Dice the cabbage and the chili and cook them together in the frying pan.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - cooked diced cabbage (`cooked__diced__head_cabbage.n.01_1`) and cooked diced chili (`cooked__diced__chili.n.01_1`) exist

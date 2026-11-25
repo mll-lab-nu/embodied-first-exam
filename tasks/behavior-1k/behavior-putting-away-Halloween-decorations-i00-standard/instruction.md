@@ -1,9 +1,8 @@
 # BEHAVIOR-1K · putting_away_Halloween_decorations (standard)
 
 ## Task
-Put the Halloween decorations away. Two pumpkins, three candles and a cauldron stand on the living-room floor. Put the
-pumpkins and the candles inside the living-room cabinets (any of them), close every living-room cabinet, and leave the
-cauldron next to a living-room table.
+Put the pumpkins and the candles away in the living-room cabinets, close every cabinet, and leave the cauldron next to a
+living-room table.
 
 ## Goal
 Success: both pumpkins and all three candles are inside living-room cabinets, every living-room cabinet is closed, and

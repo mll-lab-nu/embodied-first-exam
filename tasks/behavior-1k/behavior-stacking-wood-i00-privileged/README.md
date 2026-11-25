@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Six logs lie spread out on the driveway in the garden; stack them so that every log touches at least one other log.
+Stack the six logs so that each one touches another.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - every log (`log.n.01_1` to `_6`) is touching at least one other log

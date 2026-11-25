@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Freeze the pies. Two apple pies lie on two plates on the kitchen countertop, and two tupperwares are inside a kitchen cabinet. Put each pie into its own tupperware, put both tupperwares into the refrigerator, close it, and wait until both pies are frozen.
+Put each pie into its own tupperware, put both into the fridge, close it, and wait until both pies are frozen.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - each apple pie (`apple_pie.n.01_1`, `_2`) is inside a different tupperware (`tupperware.n.01_1`, `_2`)

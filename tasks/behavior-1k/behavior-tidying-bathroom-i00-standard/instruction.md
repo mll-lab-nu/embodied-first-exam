@@ -1,9 +1,8 @@
 # BEHAVIOR-1K · tidying_bathroom (standard)
 
 ## Task
-Tidy the bathroom. The bar of soap, the soap dish and a cork lie on the sink; the tissue dispenser, a roll of toilet
-tissue and the wastebasket stand on the bathroom floor. Put the bar of soap on the soap dish, the tissue dispenser on
-the sink, the toilet tissue on the toilet, and the cork inside the wastebasket.
+Put the soap on its dish, the tissue dispenser on the sink, the toilet roll on the toilet, and the cork into the
+wastebasket.
 
 ## Goal
 Success: the bar of soap lies on the soap dish, the tissue dispenser stands on the sink, the toilet tissue is on the

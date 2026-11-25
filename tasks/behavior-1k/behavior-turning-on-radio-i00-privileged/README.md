@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Switch on the radio receiver that stands on the table in the living room.
+Switch on the radio.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - the radio receiver (`radio_receiver.n.01_1`) is switched on

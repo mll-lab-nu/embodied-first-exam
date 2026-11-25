@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Standard-mode twin of `behavior-setting-the-fire-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Light a fire in the living-room fireplace. Two pieces of firewood lie on the floor, and a newspaper and a cigar lighter lie on the table; put the newspaper inside the fireplace with both pieces of firewood on top of it, set the newspaper and both pieces of firewood on fire, and switch the lighter off again.
+Standard-mode twin of `behavior-setting-the-fire-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Build a fire in the fireplace with both pieces of firewood on the newspaper, set them all burning, and switch the lighter off.
 
 ## Difficulty
 Same scene, frozen instance and success rule as `behavior-setting-the-fire-i00-privileged` (see its Difficulty). In standard mode the agent has no reset, no privileged state and no planning primitives: it sees the robot's cameras (RGB, depth on request) and its proprioception only, acts through the client, and gets one episode.

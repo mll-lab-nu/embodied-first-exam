@@ -1,9 +1,7 @@
 # BEHAVIOR-1K · make_gift_bags_for_baby_showers (privileged)
 
 ## Task
-Make two gift bags in the living room. The two sacks lie on the breakfast table, the two toy dice stand on the cabinet,
-and the two wafers are inside that cabinet. Move both sacks onto the coffee table and put one toy die and one wafer into
-each sack.
+Put both sacks on the coffee table with one toy die and one wafer in each.
 
 ## Goal
 Success: both sacks are on the coffee table, and each sack holds one toy die and one wafer. It counts only once the

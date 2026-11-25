@@ -3,7 +3,7 @@
  "challenge_task": "tidying_bathroom",
  "instance_id": 301,
  "mode": "public_test",
- "text": "Tidy the bathroom. The bar of soap, the soap dish and a cork lie on the sink; the tissue dispenser, a roll of toilet tissue and the wastebasket stand on the bathroom floor. Put the bar of soap on the soap dish, the tissue dispenser on the sink, the toilet tissue on the toilet, and the cork inside the wastebasket.",
+ "text": "Put the soap on its dish, the tissue dispenser on the sink, the toilet roll on the toilet, and the cork into the wastebasket.",
  "robot_config": "r1pro_primitives_eval.yaml",
  "robot_config_sha": "d9d0c8bceea2",
  "state_sha": "fb2a91e926827be5",

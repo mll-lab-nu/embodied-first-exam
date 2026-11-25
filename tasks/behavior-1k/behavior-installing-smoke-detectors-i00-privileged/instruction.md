@@ -1,8 +1,7 @@
 # BEHAVIOR-1K · installing_smoke_detectors (privileged)
 
 ## Task
-Install the smoke detector. A fire alarm lies on the table in the living room; attach it to the wall nail in the living
-room.
+Attach the fire alarm to the wall nail.
 
 ## Goal
 Success: the fire alarm is attached to the wall nail. It counts only once the scene has settled: nothing the task names

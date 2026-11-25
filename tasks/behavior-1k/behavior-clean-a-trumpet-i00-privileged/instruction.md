@@ -1,8 +1,7 @@
 # BEHAVIOR-1K · clean_a_trumpet (privileged)
 
 ## Task
-Clean the trumpet. A cornet (a trumpet) covered with dust and a scrub brush lie on the desk in the bedroom; remove every
-bit of dust from the cornet.
+Clean all the dust off the trumpet.
 
 ## Goal
 Success: no dust is left on the cornet. It counts only once the scene has settled: nothing the task names (a tool

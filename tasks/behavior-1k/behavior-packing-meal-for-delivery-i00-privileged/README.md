@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Pack three hamburgers for delivery. The three wrapped hamburgers lie on a tray on the kitchen countertop, next to three sacks and a storage container; put each hamburger into its own sack and stand all three sacks on top of the storage container.
+Put each hamburger into its own sack and stand all three sacks on the storage container.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - each wrapped hamburger (`wrapped_hamburger.n.01_1` to `_3`) is inside a different sack (`sack.n.01_1` to `_3`): one hamburger per sack

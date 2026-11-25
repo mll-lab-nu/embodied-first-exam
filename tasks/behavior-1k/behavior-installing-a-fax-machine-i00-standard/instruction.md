@@ -1,8 +1,7 @@
 # BEHAVIOR-1K · installing_a_fax_machine (standard)
 
 ## Task
-Install the fax machine. A fax machine, switched off, stands on the floor of the shared office; put it on top of one of
-the carrels (cubicle desks) there and switch it on.
+Put the fax machine on one of the carrels and switch it on.
 
 ## Goal
 Success: the fax machine is switched on and stands on one of the carrels. It counts only once the scene has settled:

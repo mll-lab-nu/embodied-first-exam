@@ -1,8 +1,7 @@
 # BEHAVIOR-1K · cook_broccolini (privileged)
 
 ## Task
-Cook the broccolini with garlic. Three broccolini and two garlic cloves lie on a plate on the kitchen countertop, next
-to a frying pan; put all of them into the frying pan, put the pan on the stove, and cook them.
+Cook the broccolini and the garlic in the frying pan on the stove.
 
 ## Goal
 Success: all three broccolini and both garlic cloves lie in the frying pan, cooked, and the pan stands on the stove. It

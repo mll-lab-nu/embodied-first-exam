@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Scrub the bathroom floor. The bathroom floor is covered with dirt and a scrub brush lies on it; remove every bit of dirt from the floor.
+Scrub all the dirt off the bathroom floor.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - no dirt (`dirt.n.02_1`) is left on the bathroom floor (`floor.n.01_1`)

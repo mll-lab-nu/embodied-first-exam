@@ -1,8 +1,7 @@
 # BEHAVIOR-1K · spraying_fruit_trees (standard)
 
 ## Task
-Spray the fruit trees. A pesticide atomizer lies on the garden floor near two trees; spray pesticide onto both trees
-until each of them is covered with it.
+Spray both trees until they are covered with pesticide.
 
 ## Goal
 Success: both trees are covered with pesticide. It counts only once the scene has settled: nothing the task names (a

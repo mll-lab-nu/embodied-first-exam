@@ -1,8 +1,7 @@
 # BEHAVIOR-1K · put_together_a_basic_pruning_kit (standard)
 
 ## Task
-In the garage, put the pruner and the shears, which lie on the floor, inside the toolbox, which also stands on the
-floor, and close the toolbox; the toolbox stays on the floor.
+Put the pruner and the shears into the toolbox, close it, and leave it on the garage floor.
 
 ## Goal
 Success: the pruner and the shears are inside the toolbox, the toolbox is closed, and it stands on the garage floor. It

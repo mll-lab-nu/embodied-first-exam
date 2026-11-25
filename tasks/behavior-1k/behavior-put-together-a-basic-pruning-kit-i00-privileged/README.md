@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-In the garage, put the pruner and the shears, which lie on the floor, inside the toolbox, which also stands on the floor, and close the toolbox; the toolbox stays on the floor.
+Put the pruner and the shears into the toolbox, close it, and leave it on the garage floor.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - the toolbox (`toolbox.n.01_1`) is on top of the garage floor (`floor.n.01_1`)

@@ -1,7 +1,7 @@
 # BEHAVIOR-1K · bringing_in_wood (standard)
 
 ## Task
-Bring the wood in. Three sheets of plywood lie on the ground in the garden; put all three on the corridor floor.
+Bring the three plywood sheets in from the garden and put them on the corridor floor.
 
 ## Goal
 Success: all three plywood sheets lie on the corridor floor. It counts only once the scene has settled: nothing the task

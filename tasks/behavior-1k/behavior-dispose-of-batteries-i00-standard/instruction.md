@@ -1,9 +1,7 @@
 # BEHAVIOR-1K · dispose_of_batteries (standard)
 
 ## Task
-Dispose of the batteries. Two batteries lie on the desk in the private office and one on the cabinet in the copy room;
-put all three inside the wastebasket that stands on the copy-room floor, and leave the wastebasket standing on the
-floor.
+Put all three batteries into the copy-room wastebasket and leave it standing on the floor.
 
 ## Goal
 Success: all three batteries are inside the wastebasket, and the wastebasket stands on the copy-room floor. It counts

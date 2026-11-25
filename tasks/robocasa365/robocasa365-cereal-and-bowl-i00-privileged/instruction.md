@@ -1,8 +1,7 @@
 # RoboCasa365 · CerealAndBowl (privileged)
 
 ## Task
-Open the cabinet. Pick the cereal and bowl from the cabinet and place them on the counter next to the milk. Then close
-the cabinet.
+Take the cereal and the bowl out of the cabinet, put them on the counter next to it, and close the cabinet again.
 
 ## Goal
 Success: the cereal and the bowl are both on the counter nearest the cabinet, and the cabinet is fully closed again.

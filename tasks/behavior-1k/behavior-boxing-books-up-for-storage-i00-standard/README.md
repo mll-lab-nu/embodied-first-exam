@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Standard-mode twin of `behavior-boxing-books-up-for-storage-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Box up the books for storage. Six books stand in the four bookcases of the living room, and an empty box stands on the living-room floor; put all six books inside the box.
+Standard-mode twin of `behavior-boxing-books-up-for-storage-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Put all six books into the box.
 
 ## Difficulty
 Same scene, frozen instance and success rule as `behavior-boxing-books-up-for-storage-i00-privileged` (see its Difficulty). In standard mode the agent has no reset, no privileged state and no planning primitives: it sees the robot's cameras (RGB, depth on request) and its proprioception only, acts through the client, and gets one episode.

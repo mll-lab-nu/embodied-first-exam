@@ -1,10 +1,8 @@
 # BEHAVIOR-1K · cook_brussels_sprouts (standard)
 
 ## Task
-Roast the halved brussels sprouts. Four brussels sprouts are in a tupperware inside the kitchen refrigerator; a chopping
-board with a carving knife on it and a cookie sheet lie on the countertop, and there is an oven in the kitchen. Cut
-every sprout in half, cook all eight halves in the oven and leave them inside it, and close the oven and the
-refrigerator.
+Cut the brussels sprouts in half, roast all the halves in the oven and leave them there, and close the oven and the
+fridge.
 
 ## Goal
 Success: every sprout has been cut in half, all eight halves are cooked and inside the oven, and the oven and the

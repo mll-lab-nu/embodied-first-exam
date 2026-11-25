@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Tidy the bedroom. The two sandals lie on the bedroom floor and the book lies on the bed. Put both sandals next to the bed, side by side, and put the book on top of a table in the bedroom.
+Put both sandals side by side next to the bed and the book on a table.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - the first sandal (`sandal.n.01_1`) is next to the bed (`bed.n.01_1`)

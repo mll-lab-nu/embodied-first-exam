@@ -1,8 +1,7 @@
 # BEHAVIOR-1K · rearrange_your_room (privileged)
 
 ## Task
-Rearrange the bedroom. Move the tissue dispenser from the armchair onto one of the stands, and put the two pillows that
-lie on the floor onto the two beds, one pillow on each bed.
+Put the tissue dispenser on a stand and one pillow on each bed.
 
 ## Goal
 Success: the tissue dispenser stands on one of the stands, and each bed has one of the two pillows on it. It counts only

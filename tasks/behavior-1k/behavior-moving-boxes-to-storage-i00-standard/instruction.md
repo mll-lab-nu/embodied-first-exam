@@ -1,8 +1,7 @@
 # BEHAVIOR-1K · moving_boxes_to_storage (standard)
 
 ## Task
-Move the two storage containers, which stand on the living-room floor, to the garage: put one on the garage floor and
-stack the other on top of it (either order).
+Stack the two storage containers on the garage floor.
 
 ## Goal
 Success: one storage container stands on the garage floor and the other on top of it. It counts only once the scene has

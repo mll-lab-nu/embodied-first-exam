@@ -1,7 +1,7 @@
 # RoboCasa-GR1 · PosttrainPnPNovelFromCuttingboardToPotSplitA
 
 A **Fourier GR1 humanoid** (arms, waist and two dexterous six-command Fourier hands; fixed base) works at a kitchen counter: RoboCasa's GR1 tabletop `PosttrainPnPNovelFromCuttingboardToPotSplitA` task (robosuite, MuJoCo).
-**Task: pick the bell pepper from the cutting board and place it in the pot.**
+**Task: Pick the bell pepper from the cutting board and place it in the pot.**
 The scene is one frozen instance: the initial state of one of the benchmark's official demonstrations (kitchen
 layout, style, fixtures, objects and their poses).
 

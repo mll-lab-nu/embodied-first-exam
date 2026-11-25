@@ -1,7 +1,7 @@
 # RoboCasa-GR1 · PosttrainPnPNovelFromCuttingboardToCardboardboxSplitA — STANDARD MODE (robot as a service)
 
 A **Fourier GR1 humanoid** (arms, waist and two dexterous six-command Fourier hands; fixed base) works at a kitchen counter: RoboCasa's GR1 tabletop `PosttrainPnPNovelFromCuttingboardToCardboardboxSplitA` task (robosuite, MuJoCo).
-**Task: pick the squash from the cutting board and place it in the cardboard box.**
+**Task: Pick the squash from the cutting board and place it in the cardboard box.**
 The scene is one frozen instance: the initial state of one of the benchmark's official demonstrations.
 
 You control the robot **as if it were real hardware**: the simulator runs in a service you cannot open. You get one

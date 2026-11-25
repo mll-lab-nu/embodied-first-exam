@@ -1,11 +1,8 @@
 # BEHAVIOR-1K · getting_organized_for_work (standard)
 
 ## Task
-Organize the bedroom desk for work. The monitor and the mouse stand on the desk, the keyboard lies on a notebook on the
-desk, the computer stands under the desk, and a folder with a pen on it lies on the swivel chair. Leave the computer
-under the desk and the monitor on it; put the keyboard on the desk next to the monitor and the mouse on the desk next to
-the keyboard; put the folder next to the mouse, the notebook on the folder and the pen on the notebook; and put the
-swivel chair next to the desk.
+Set up the desk for work: the keyboard next to the monitor, the mouse next to the keyboard, the folder next to the mouse
+with the notebook on it and the pen on that, and the chair next to the desk.
 
 ## Goal
 Success: the monitor is on the desk and the computer under it, the keyboard is on the desk next to the monitor, the

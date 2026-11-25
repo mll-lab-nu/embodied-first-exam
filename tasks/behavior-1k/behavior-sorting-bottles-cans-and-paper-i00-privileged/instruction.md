@@ -1,10 +1,7 @@
 # BEHAVIOR-1K · sorting_bottles_cans_and_paper (privileged)
 
 ## Task
-Sort the recycling in the kitchen. Three buckets stand on the kitchen floor; two wine bottles, two cans of soda, a
-newspaper and a magazine lie around the kitchen, some on the countertop and some on the floor. Sort them into the
-buckets: both wine bottles into one bucket, both cans into a second one, and the newspaper and the magazine into the
-third, with nothing of another kind in any of them.
+Sort the wine bottles, the cans and the paper into the three buckets, one kind per bucket.
 
 ## Goal
 Success: both wine bottles are in one bucket, both cans of soda in a second and the newspaper and the magazine in a

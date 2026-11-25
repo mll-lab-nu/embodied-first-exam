@@ -1,7 +1,7 @@
 # BEHAVIOR-1K · stacking_wood (standard)
 
 ## Task
-Six logs lie spread out on the driveway in the garden; stack them so that every log touches at least one other log.
+Stack the six logs so that each one touches another.
 
 ## Goal
 Success: every log touches at least one other log. It counts only once the scene has settled: nothing the task names (a

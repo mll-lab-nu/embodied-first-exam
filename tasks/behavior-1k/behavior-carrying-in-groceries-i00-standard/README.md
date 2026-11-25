@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Standard-mode twin of `behavior-carrying-in-groceries-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Bring the groceries in from the car. In the garage the car stands open with a sack inside it holding a beefsteak tomato and a carton of milk; put the tomato and the milk into a refrigerator in the kitchen, then close the car and the refrigerator.
+Standard-mode twin of `behavior-carrying-in-groceries-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Put the tomato and the milk from the car into one fridge, then close the car and every kitchen fridge.
 
 ## Difficulty
 Same scene, frozen instance and success rule as `behavior-carrying-in-groceries-i00-privileged` (see its Difficulty). In standard mode the agent has no reset, no privileged state and no planning primitives: it sees the robot's cameras (RGB, depth on request) and its proprioception only, acts through the client, and gets one episode.

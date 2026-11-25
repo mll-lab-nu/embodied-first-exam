@@ -1,7 +1,7 @@
 # BEHAVIOR-1K · turning_on_radio (standard)
 
 ## Task
-Switch on the radio receiver that stands on the table in the living room.
+Switch on the radio.
 
 ## Goal
 Success: the radio receiver is switched on. It counts only once the scene has settled: nothing the task names (a tool

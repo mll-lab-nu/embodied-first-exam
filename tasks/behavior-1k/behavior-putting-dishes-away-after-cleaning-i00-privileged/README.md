@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Put the clean dishes away. Eight plates lie on the two kitchen countertops, four on each; put all eight inside one and the same kitchen cabinet, and leave every kitchen cabinet closed.
+Put all eight plates into the same cabinet and keep every kitchen cabinet closed.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - all eight plates (`plate.n.04_1`, `plate.n.04_2`, `plate.n.04_3`, `plate.n.04_4`, `plate.n.04_5`, `plate.n.04_6`, `plate.n.04_7`, `plate.n.04_8`) are inside one and the same cabinet (`cabinet.n.01_1` or any other of the kitchen's `cabinet.n.01_*`)

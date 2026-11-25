@@ -1,8 +1,7 @@
 # BEHAVIOR-1K · tidying_bedroom (privileged)
 
 ## Task
-Tidy the bedroom. The two sandals lie on the bedroom floor and the book lies on the bed. Put one sandal next to the bed
-and the other sandal next to the first one, and put the book on top of a table in the bedroom.
+Put both sandals side by side next to the bed and the book on a table.
 
 ## Goal
 Success: both sandals are next to the bed and next to each other, and the book lies on a table. It counts only once the

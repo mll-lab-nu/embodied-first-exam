@@ -1,9 +1,7 @@
 # BEHAVIOR-1K · wash_dog_toys (standard)
 
 ## Task
-Wash the dog toys. Two teddy bears, a tennis ball and a softball are inside the cabinet in the utility room: one teddy
-is dirty and the other dusty, the tennis ball is covered with debris and the softball with dirt. Clean all four; a
-washing machine stands in the utility room.
+Clean the dirt, dust and debris off all four dog toys.
 
 ## Goal
 Success: no dirt or dust is left on either teddy bear, no debris on the tennis ball, and no dirt on the softball. It

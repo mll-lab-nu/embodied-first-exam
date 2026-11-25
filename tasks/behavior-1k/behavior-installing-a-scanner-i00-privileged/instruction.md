@@ -1,8 +1,7 @@
 # BEHAVIOR-1K · installing_a_scanner (privileged)
 
 ## Task
-On the table in the private office stand a scanner (switched off) and a laptop; stand the scanner next to the laptop and
-switch the scanner on.
+Put the scanner next to the laptop and switch it on.
 
 ## Goal
 Success: the scanner is switched on and stands next to the laptop. It counts only once the scene has settled: nothing

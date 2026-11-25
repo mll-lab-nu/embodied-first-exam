@@ -1,8 +1,8 @@
 # RoboCasa365 · SearingMeat (standard)
 
 ## Task
-Grab the pan from the cabinet and place it on the rear right burner on the stove. Then place the chicken drumstick in
-the pan and turn the burner on.
+Put the pan from the cabinet on the stove's rear right burner, put the chicken drumstick in the pan and turn that burner
+on, then move your hand away.
 
 ## Goal
 Success: the pan is on the stove's rear right burner, that burner is on, the drumstick is in the pan (not just on the

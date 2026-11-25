@@ -1,8 +1,8 @@
 # RoboCasa365 · SanitizePrepCuttingBoard (standard)
 
 ## Task
-Grab the spray bottle from the cabinet, then place it next to the cutting board for sanitizing. Then grab the dish brush
-from the countertop next to the sink and place it next to the cutting board.
+Put the spray bottle from the cabinet and the dish brush from beside the sink next to the cutting board, and move your
+hand away.
 
 ## Goal
 Success: the spray bottle and the dish brush are both on the counter close to the cutting board, the board is still on a

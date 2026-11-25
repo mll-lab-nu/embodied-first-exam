@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Standard-mode twin of `behavior-cook-broccolini-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Cook the broccolini with garlic. Three broccolini and two garlic cloves lie on a plate on the kitchen countertop, next to a frying pan; put all of them into the frying pan, put the pan on the stove, and cook them.
+Standard-mode twin of `behavior-cook-broccolini-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Cook the broccolini and the garlic in the frying pan on the stove.
 
 ## Difficulty
 Same scene, frozen instance and success rule as `behavior-cook-broccolini-i00-privileged` (see its Difficulty). In standard mode the agent has no reset, no privileged state and no planning primitives: it sees the robot's cameras (RGB, depth on request) and its proprioception only, acts through the client, and gets one episode.

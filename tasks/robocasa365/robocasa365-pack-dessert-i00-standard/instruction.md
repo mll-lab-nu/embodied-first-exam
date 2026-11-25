@@ -1,7 +1,7 @@
 # RoboCasa365 · PackDessert (standard)
 
 ## Task
-Add the marshmallow to the tupperware that contains the hot dog.
+Put the marshmallow in the tupperware with the hot dog, and move your hand away.
 
 ## Goal
 Success: the hot dog and the marshmallow are both in the tupperware, and the hand has let go of the marshmallow and

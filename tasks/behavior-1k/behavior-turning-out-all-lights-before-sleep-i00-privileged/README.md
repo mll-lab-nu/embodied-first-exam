@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Turn out all the lights before sleep. Three light switches (in the kitchen, the utility room and the dining room) and two table lamps (one on the coffee table in the living room, one on the countertop in the utility room) are all switched on; switch every one of them off.
+Switch off all three light switches and both table lamps.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - all three light switches (`switch.n.01_1` to `_3`) are switched off

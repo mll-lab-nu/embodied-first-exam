@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Lay the tiles. The four tiles lie on the corridor floor; put all four on the bathroom floor, each tile next to at least one of the other tiles.
+Lay the four tiles on the bathroom floor, each next to at least one other tile.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - all four tiles (`tile.n.01_1`, `tile.n.01_2`, `tile.n.01_3`, `tile.n.01_4`) are on top of the bathroom floor (`floor.n.01_2`)

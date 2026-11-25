@@ -1,8 +1,7 @@
 # BEHAVIOR-1K · setting_mousetraps (privileged)
 
 ## Task
-Set the four mousetraps, which lie on the bathroom cabinet, on the bathroom floor, with exactly two of them under or
-next to one of the bathroom sinks.
+Put the four mousetraps on the floor of one room, exactly two of them under or next to the same sink.
 
 ## Goal
 Success: all four mousetraps are on the floor of one room, and exactly two of them are under or next to one of the

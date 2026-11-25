@@ -1,9 +1,7 @@
 # BEHAVIOR-1K · chop_an_onion (privileged)
 
 ## Task
-Chop an onion in the kitchen. A Vidalia onion is in the sink; a bowl, a chopping board and a paring knife lie on the
-countertop. Dice the onion on the chopping board with the knife, put the diced onion into the bowl, then put both the
-knife and the chopping board into the sink.
+Dice the onion into the bowl, then put the knife and the chopping board into the sink.
 
 ## Goal
 Success: the onion has been diced, the bowl holds the diced onion, and the paring knife and the chopping board are both

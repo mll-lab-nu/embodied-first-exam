@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/behavior-unloading-the-car-i00-privileged"
-description = "BEHAVIOR-1K v3.9.2 (2026 BEHAVIOR Challenge) unloading_the_car (R1Pro mobile manipulator, OmniGibson / Isaac Sim): produce one replayable trajectory. Unload the car. The briefcase and the satchel are inside the car in the garage; take both out and put them next to the sofa in the living room. Frozen scene instance (challenge public_test instance 301)."
+description = "BEHAVIOR-1K v3.9.2 (2026 BEHAVIOR Challenge) unloading_the_car (R1Pro mobile manipulator, OmniGibson / Isaac Sim): produce one replayable trajectory. Take the briefcase and the satchel out of the car and put them next to the sofa. Frozen scene instance (challenge public_test instance 301)."
 keywords = ["robotics", "behavior", "omnigibson", "isaac-sim", "r1pro", "mobile-manipulation", "code-as-policy", "trajectory", "unloading_the_car"]
 
 [metadata]

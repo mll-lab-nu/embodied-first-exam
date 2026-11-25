@@ -1,9 +1,7 @@
 # BEHAVIOR-1K · assembling_gift_baskets (standard)
 
 ## Task
-Assemble four gift baskets in the living room. The four wicker baskets stand on the floor; four candles, four butter
-cookies, four pieces of Swiss cheese and four bows lie on the table. Put one candle, one butter cookie, one piece of
-Swiss cheese and one bow into each basket.
+Put one candle, one cookie, one piece of cheese and one bow into each of the four gift baskets.
 
 ## Goal
 Success: each of the four wicker baskets holds one candle, one butter cookie, one piece of Swiss cheese and one bow. It

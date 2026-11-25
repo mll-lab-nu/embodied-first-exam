@@ -1,9 +1,7 @@
 # BEHAVIOR-1K · storing_food (privileged)
 
 ## Task
-Store the food in the kitchen cabinets. Two boxes of oatmeal, two bags of chips, two bottles of olive oil and two jars
-of sugar stand on the kitchen countertop; put all eight inside kitchen cabinets (any cabinet, they need not all go into
-the same one).
+Put all eight food items into the kitchen cabinets.
 
 ## Goal
 Success: both boxes of oatmeal, both bags of chips, both bottles of olive oil and both jars of sugar are inside kitchen

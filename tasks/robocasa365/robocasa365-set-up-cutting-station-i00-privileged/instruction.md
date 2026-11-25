@@ -1,8 +1,7 @@
 # RoboCasa365 · SetUpCuttingStation (privileged)
 
 ## Task
-Pick up the knife from the drawer and place it on the cutting board. Then place the meat from the plate to the cutting
-board.
+Put the knife from the drawer and the meat from the plate on the cutting board, and move your hand away.
 
 ## Goal
 Success: the knife and the meat are both on the cutting board, and the hand has let go and moved well away from the

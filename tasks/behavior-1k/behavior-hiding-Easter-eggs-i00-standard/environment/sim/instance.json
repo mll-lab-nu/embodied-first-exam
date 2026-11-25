@@ -3,7 +3,7 @@
  "challenge_task": "hiding_Easter_eggs",
  "instance_id": 301,
  "mode": "public_test",
- "text": "Hide the Easter eggs in the garden. The three eggs are inside the wicker basket on the lawn; take all three out and lay them on the lawn next to one tree (any tree in the garden, but the same tree for all three).",
+ "text": "Take the three Easter eggs out of the basket and lay them on the lawn next to the same tree.",
  "robot_config": "r1pro_primitives_eval.yaml",
  "robot_config_sha": "d9d0c8bceea2",
  "state_sha": "7bf04c5bdf1f5b3a",

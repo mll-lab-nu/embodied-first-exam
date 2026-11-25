@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Standard-mode twin of `behavior-freeze-fruit-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Put the fruit into the refrigerator. Two apples lie in a bowl and two strawberries on a tray on the kitchen countertop, and two tupperwares are inside a kitchen cabinet. Put one apple and one strawberry into each tupperware, put both tupperwares into the refrigerator, and close it.
+Standard-mode twin of `behavior-freeze-fruit-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Put one apple and one strawberry into each tupperware, put both tupperwares into the fridge and close it.
 
 ## Difficulty
 Same scene, frozen instance and success rule as `behavior-freeze-fruit-i00-privileged` (see its Difficulty). In standard mode the agent has no reset, no privileged state and no planning primitives: it sees the robot's cameras (RGB, depth on request) and its proprioception only, acts through the client, and gets one episode.

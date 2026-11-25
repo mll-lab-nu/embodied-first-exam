@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Standard-mode twin of `behavior-put-together-a-basic-pruning-kit-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): In the garage, put the pruner and the shears, which lie on the floor, inside the toolbox, which also stands on the floor, and close the toolbox; the toolbox stays on the floor.
+Standard-mode twin of `behavior-put-together-a-basic-pruning-kit-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Put the pruner and the shears into the toolbox, close it, and leave it on the garage floor.
 
 ## Difficulty
 Same scene, frozen instance and success rule as `behavior-put-together-a-basic-pruning-kit-i00-privileged` (see its Difficulty). In standard mode the agent has no reset, no privileged state and no planning primitives: it sees the robot's cameras (RGB, depth on request) and its proprioception only, acts through the client, and gets one episode.

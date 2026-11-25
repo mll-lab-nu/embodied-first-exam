@@ -1,10 +1,8 @@
 # BEHAVIOR-1K · sorting_vegetables (privileged)
 
 ## Task
-Sort the vegetables in the kitchen. Two wicker baskets stand on the kitchen floor, one with three bok choy and three
-ears of sweet corn, the other with two broccoli, two leeks and three Vidalia onions; three mixing bowls stand on the
-countertop. Put the bok choy and the onions together into one mixing bowl, the leeks and the broccoli together into a
-second one, and the sweet corn into a third.
+Put the bok choy with the onions, the leeks with the broccoli, and the corn into the mixing bowls, each group together
+in one bowl.
 
 ## Goal
 Success: one mixing bowl holds all three bok choy and all three onions, one holds both leeks and both broccoli, and one

@@ -1,8 +1,8 @@
 # RoboCasa365 · DivideBasins (privileged)
 
 ## Task
-Move any existing items from the left basin to the right basin for drying. Then move the cup from the counter to the
-left basin of the sink for washing.
+Move the item in the sink's left basin to the right basin, then put the cup from the counter in the left basin, and move
+your hand away.
 
 ## Goal
 Success: the item that was in the left basin is now in the right basin, the cup is in the left basin, and the hand has

@@ -1,9 +1,7 @@
 # BEHAVIOR-1K · collecting_childrens_toys (standard)
 
 ## Task
-Collect the children's toys in the child's room. Two dice and a board game lie on the bed, two teddy bears on the floor,
-and a train set and another board game on the desk; put all seven toys inside one and the same bookcase of the child's
-room.
+Put all seven toys into the same bookcase.
 
 ## Goal
 Success: both dice, both teddy bears, both board games and the train set are inside one and the same bookcase. It counts

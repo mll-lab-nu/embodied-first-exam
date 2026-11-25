@@ -1,8 +1,7 @@
 # BEHAVIOR-1K · cleaning_up_branches_and_twigs (standard)
 
 ## Task
-Clean up the garden. Four branches lie on the ground in the garden, where the recycling bin also stands; put all four
-inside the recycling bin and leave the bin standing on the ground.
+Put the four branches into the recycling bin and leave the bin standing on the ground.
 
 ## Goal
 Success: all four branches are inside the recycling bin, and the bin stands on the garden floor. It counts only once the

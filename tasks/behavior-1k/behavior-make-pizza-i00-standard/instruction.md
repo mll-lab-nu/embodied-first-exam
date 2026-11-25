@@ -1,11 +1,8 @@
 # BEHAVIOR-1K · make_pizza (standard)
 
 ## Task
-Make a pizza in the kitchen. The pizza dough lies on the cookie sheet on the countertop; in the refrigerator are three
-tupperwares, one filled with grated cheese, one holding four pepperoni slices and one holding two mushrooms; a Vidalia
-onion lies on the chopping board, and a carving knife and a bowl lie on the countertop. Top the dough with the cheese,
-the pepperoni, the mushrooms cut in half and the diced onion, and bake it in the oven until it turns into a pizza; leave
-the pizza on the cookie sheet.
+Top the dough with the cheese, the pepperoni, the halved mushrooms and the diced onion, and bake it into a pizza on the
+cookie sheet.
 
 ## Goal
 Success: the topped dough has been baked into a pizza, which lies on the cookie sheet. It counts only once the scene has

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Standard-mode twin of `behavior-make-microwave-popcorn-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Make microwave popcorn. A bag of popcorn kernels lies on the kitchen countertop and there is a microwave in the kitchen; heat the bag in the microwave until the popcorn is cooked, so that the cooked (popped) popcorn ends up inside the bag.
+Standard-mode twin of `behavior-make-microwave-popcorn-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Pop the popcorn in the microwave, inside its bag.
 
 ## Difficulty
 Same scene, frozen instance and success rule as `behavior-make-microwave-popcorn-i00-privileged` (see its Difficulty). In standard mode the agent has no reset, no privileged state and no planning primitives: it sees the robot's cameras (RGB, depth on request) and its proprioception only, acts through the client, and gets one episode.

@@ -1,7 +1,7 @@
 # RoboCasa365 · TurnOnStove (standard)
 
 ## Task
-Turn on the rear left burner of the stove.
+Turn on the stove's rear left burner.
 
 ## Goal
 Success: the rear left burner is on. What counts is how things stand at the end of the episode: a success reached

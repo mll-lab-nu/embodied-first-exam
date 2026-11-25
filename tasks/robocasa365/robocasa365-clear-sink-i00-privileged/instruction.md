@@ -1,7 +1,8 @@
 # RoboCasa365 · ClearSink (privileged)
 
 ## Task
-Remove the corn and carrot from the sink. Then move the bowl and cup from the counter to the sink for washing.
+Take the corn and the carrot out of the sink and put the bowl and the cup from the counter in it, and move your hand
+away.
 
 ## Goal
 Success: the corn and the carrot are out of the sink, the bowl and the cup are in it, and the hand has let go and moved

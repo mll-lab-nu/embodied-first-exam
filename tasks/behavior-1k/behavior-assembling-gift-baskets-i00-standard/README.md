@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Standard-mode twin of `behavior-assembling-gift-baskets-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Assemble four gift baskets in the living room. The four wicker baskets stand on the floor; four candles, four butter cookies, four pieces of Swiss cheese and four bows lie on the table. Put one candle, one butter cookie, one piece of Swiss cheese and one bow into each basket.
+Standard-mode twin of `behavior-assembling-gift-baskets-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Put one candle, one cookie, one piece of cheese and one bow into each of the four gift baskets.
 
 ## Difficulty
 Same scene, frozen instance and success rule as `behavior-assembling-gift-baskets-i00-privileged` (see its Difficulty). In standard mode the agent has no reset, no privileged state and no planning primitives: it sees the robot's cameras (RGB, depth on request) and its proprioception only, acts through the client, and gets one episode.

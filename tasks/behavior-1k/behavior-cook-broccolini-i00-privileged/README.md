@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Cook the broccolini with garlic. Three broccolini and two garlic cloves lie on a plate on the kitchen countertop, next to a frying pan; put all of them into the frying pan, put the pan on the stove, and cook them.
+Cook the broccolini and the garlic in the frying pan on the stove.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - both cloves (`clove.n.03_1`, `_2`) are on top of the frying pan (`frying_pan.n.01_1`) and cooked

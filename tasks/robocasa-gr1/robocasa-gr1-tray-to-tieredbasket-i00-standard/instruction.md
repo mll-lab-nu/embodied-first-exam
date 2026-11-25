@@ -1,7 +1,7 @@
 # RoboCasa-GR1 · PosttrainPnPNovelFromTrayToTieredbasketSplitA — STANDARD MODE (robot as a service)
 
 A **Fourier GR1 humanoid** (arms, waist and two dexterous six-command Fourier hands; fixed base) works at a kitchen counter: RoboCasa's GR1 tabletop `PosttrainPnPNovelFromTrayToTieredbasketSplitA` task (robosuite, MuJoCo).
-**Task: pick the lemon from the tray and place it on the top tier of the tiered basket.**
+**Task: Pick the lemon from the tray and place it on the top tier of the tiered basket.**
 The scene is one frozen instance: the initial state of one of the benchmark's official demonstrations.
 
 You control the robot **as if it were real hardware**: the simulator runs in a service you cannot open. You get one

@@ -1,7 +1,7 @@
 # RoboCasa365 · TurnOffMicrowave (privileged)
 
 ## Task
-Press the stop button on the microwave.
+Press the microwave's stop button, then move your hand away.
 
 ## Goal
 Success: the microwave is off, and the hand has moved well away from the stop button. What counts is how things stand

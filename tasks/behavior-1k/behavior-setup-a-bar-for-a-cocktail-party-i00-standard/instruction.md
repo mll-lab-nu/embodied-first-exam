@@ -1,11 +1,8 @@
 # BEHAVIOR-1K · setup_a_bar_for_a_cocktail_party (standard)
 
 ## Task
-Set up the bar. On the cabinet in the bar stand three cans of soda, a tray with six ice cubes, an ice bucket, a
-corkscrew, a wine bottle and two wine glasses. Put the wine bottle on the bar countertop; put the three cans on that
-countertop, each next to another can; put all six ice cubes inside the bucket and the bucket on the countertop; put both
-wine glasses on the countertop next to each other, at least one of them next to the wine bottle; and put the corkscrew
-on the countertop next to the wine bottle.
+Set up the bar countertop: the wine bottle with the corkscrew and a wine glass next to it, the two glasses side by side,
+the three cans next to one another, and the ice bucket holding all six ice cubes.
 
 ## Goal
 Success: on the bar countertop stand the wine bottle, the three cans of soda (each next to another can), the ice bucket

@@ -1,8 +1,7 @@
 # RoboCasa365 · CandleCleanup (privileged)
 
 ## Task
-Pick the candle and jar from the dining table and place them in the open cabinet. Close the cabinet after placing the
-objects.
+Put the candle and the jar from the dining table in the open cabinet, then close that cabinet.
 
 ## Goal
 Success: the candle and the jar are both all the way inside the cabinet, and the cabinet is fully closed. What counts is

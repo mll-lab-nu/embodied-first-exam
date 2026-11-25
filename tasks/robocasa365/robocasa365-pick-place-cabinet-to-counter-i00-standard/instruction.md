@@ -1,7 +1,7 @@
 # RoboCasa365 · PickPlaceCabinetToCounter (standard)
 
 ## Task
-Pick the ice cube from the cabinet and place it on the counter.
+Take the ice cube out of the cabinet and put it on the counter next to it, and move your hand away.
 
 ## Goal
 Success: the ice cube is on the counter nearest the cabinet, and the hand has let go of it and moved well away. What

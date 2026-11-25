@@ -3,7 +3,7 @@
  "challenge_task": "clean_up_your_desk",
  "instance_id": 301,
  "mode": "public_test",
- "text": "Clean up the desk in the child's room. A folder, a pencil, two pens, two paperback books and a pencil box lie on the desk; the other folder lies on the chair, the stapler is inside the bookcase, and the open laptop lies on the bed. Put both folders and both paperback books into the bookcase and the pencil and both pens into the pencil box, which stays on the desk; take the stapler out of the bookcase and put it on the desk; and put the laptop on the desk, closed.",
+ "text": "Tidy the desk: the folders and paperbacks into the bookcase, the pencil and pens into the pencil box, and the pencil box, the stapler and the closed laptop on the desk.",
  "robot_config": "r1pro_primitives_eval.yaml",
  "robot_config_sha": "d9d0c8bceea2",
  "state_sha": "ad46e381cf8b0e1d",

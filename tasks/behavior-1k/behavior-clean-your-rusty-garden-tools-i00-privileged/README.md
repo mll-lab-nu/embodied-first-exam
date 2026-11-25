@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Clean the rusty garden tools. A rusty trowel and a rusty scraper lie on the driveway in the garden, next to a toolbox with steel wool inside; remove all the rust from both tools, put them inside the toolbox and close it.
+Clean the rust off both garden tools, put them into the toolbox and close it.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - no rust (`rust.n.01_1`) is left on the trowel (`trowel.n.01_1`) or on the scraper (`scraper.n.01_1`)

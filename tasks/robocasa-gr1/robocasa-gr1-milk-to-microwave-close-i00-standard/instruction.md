@@ -1,7 +1,7 @@
 # RoboCasa-GR1 · PnPMilkToMicrowaveClose — STANDARD MODE (robot as a service)
 
 A **Fourier GR1 humanoid** (arms, waist and two dexterous six-command Fourier hands; fixed base) works at a kitchen counter: RoboCasa's GR1 tabletop `PnPMilkToMicrowaveClose` task (robosuite, MuJoCo).
-**Task: pick up the milk, place it into the microwave and close the microwave.**
+**Task: Pick up the milk, place it into the microwave and close the microwave.**
 The scene is one frozen instance: the initial state of one of the benchmark's official demonstrations.
 
 You control the robot **as if it were real hardware**: the simulator runs in a service you cannot open. You get one

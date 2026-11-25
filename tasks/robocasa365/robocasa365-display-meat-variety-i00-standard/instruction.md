@@ -1,8 +1,8 @@
 # RoboCasa365 · DisplayMeatVariety (standard)
 
 ## Task
-Retrieve the chicken drumstick, shrimp, and steak from the fridge and place them on the serving tray on the dining
-counter.
+Put the chicken drumstick, the shrimp and the steak from the fridge on the serving tray on the dining counter, and move
+your hand away.
 
 ## Goal
 Success: the drumstick, the shrimp and the steak are all on the serving tray, the tray is on the dining counter, and the

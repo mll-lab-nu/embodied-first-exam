@@ -1,9 +1,8 @@
 # BEHAVIOR-1K · preparing_lunch_box (privileged)
 
 ## Task
-Pack the lunch box on the kitchen countertop. The two apple halves, the club sandwich and the chocolate chip cookie lie
-on the chopping board on the countertop; the bottle of tea is inside the kitchen refrigerator. Put all five into the
-packing box and leave the refrigerator closed.
+Pack both apple halves, the club sandwich, the cookie and the bottle of tea from the fridge into the packing box, and
+close the fridge.
 
 ## Goal
 Success: both apple halves, the club sandwich, the chocolate chip cookie and the bottle of tea are inside the packing

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-On the table in the private office stand a scanner (switched off) and a laptop; stand the scanner next to the laptop and switch the scanner on.
+Put the scanner next to the laptop and switch it on.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - the scanner (`scanner.n.02_1`) is switched on

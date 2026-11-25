@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Assemble four gift baskets in the living room. The four wicker baskets stand on the floor; four candles, four butter cookies, four pieces of Swiss cheese and four bows lie on the table. Put one candle, one butter cookie, one piece of Swiss cheese and one bow into each basket.
+Put one candle, one cookie, one piece of cheese and one bow into each of the four gift baskets.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - each wicker basket (`wicker_basket.n.01_1` to `_4`) holds a different candle (`candle.n.01_1` to `_4`): one candle per basket

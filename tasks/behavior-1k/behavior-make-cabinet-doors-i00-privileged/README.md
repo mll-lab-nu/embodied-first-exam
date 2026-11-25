@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Make the cabinet door. A cabinet base and a cabinet door lie on the living-room floor; attach the door to the base.
+Attach the cabinet door to the cabinet base.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - the cabinet door (`cabinet_door.n.01_1`) is attached to the cabinet base (`cabinet_base.n.01_1`)

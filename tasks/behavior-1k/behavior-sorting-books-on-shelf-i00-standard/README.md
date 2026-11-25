@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Standard-mode twin of `behavior-sorting-books-on-shelf-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Sort the books in the living-room bookcase into stacks by kind. There are three comic books, two notebooks and two hardbacks; some are inside the bookcase and some are lying on top of books of another kind. Keep all seven inside the bookcase, stack the three comic books together, lay one notebook on the other, and lay one hardback on the other.
+Standard-mode twin of `behavior-sorting-books-on-shelf-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Stack the books in the bookcase by kind: the three comics in one pile, one notebook on the other and one hardback on the other.
 
 ## Difficulty
 Same scene, frozen instance and success rule as `behavior-sorting-books-on-shelf-i00-privileged` (see its Difficulty). In standard mode the agent has no reset, no privileged state and no planning primitives: it sees the robot's cameras (RGB, depth on request) and its proprioception only, acts through the client, and gets one episode.

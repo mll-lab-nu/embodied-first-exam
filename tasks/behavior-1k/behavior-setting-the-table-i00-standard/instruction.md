@@ -1,9 +1,7 @@
 # BEHAVIOR-1K · setting_the_table (standard)
 
 ## Task
-Set the dining-room breakfast table for two. The two plates are inside a kitchen cabinet, the two cupcakes inside the
-kitchen refrigerator, and two forks and two table knives lie on the kitchen sink. Put both plates on the breakfast
-table, one cupcake on each plate, and one fork and one knife next to each plate.
+Set the breakfast table for two: both plates on it, a cupcake on each, and a fork and a knife next to each.
 
 ## Goal
 Success: both plates are on the breakfast table, each with one cupcake on it and one fork and one knife next to it. It

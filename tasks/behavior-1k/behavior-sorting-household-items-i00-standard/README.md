@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Standard-mode twin of `behavior-sorting-household-items-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Sort the household items into the bathroom. Two baskets stand on the bedroom floor: one holds two bottles of detergent and a box of sanitary napkins, the other a soap dispenser, a tube of toothpaste and a toothbrush; a cup stands on the bathroom sink. Put both detergent bottles under the bathroom sink, next to each other; the box of sanitary napkins on the bathroom shelf; the soap dispenser on the sink; the toothbrush into the cup, which stays on the sink; and the toothpaste next to the cup.
+Standard-mode twin of `behavior-sorting-household-items-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Put the detergent bottles side by side under the sink, the napkins on the shelf, the soap dispenser and the cup on the sink, the toothbrush into the cup and the toothpaste next to it.
 
 ## Difficulty
 Same scene, frozen instance and success rule as `behavior-sorting-household-items-i00-privileged` (see its Difficulty). In standard mode the agent has no reset, no privileged state and no planning primitives: it sees the robot's cameras (RGB, depth on request) and its proprioception only, acts through the client, and gets one episode.

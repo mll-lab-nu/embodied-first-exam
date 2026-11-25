@@ -1,7 +1,7 @@
 # BEHAVIOR-1K · putting_shoes_on_rack (privileged)
 
 ## Task
-Put both pairs of shoes on the hall tree in the corridor.
+Put both pairs of shoes on the hall tree, off the floor, each pair side by side.
 
 ## Goal
 Success: all four shoes are on the hall tree, none touching the floor, with the two gym shoes next to each other and the

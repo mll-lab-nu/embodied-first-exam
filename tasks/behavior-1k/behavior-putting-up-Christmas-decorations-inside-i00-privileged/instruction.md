@@ -1,9 +1,8 @@
 # BEHAVIOR-1K · putting_up_Christmas_decorations_inside (privileged)
 
 ## Task
-Decorate the house for Christmas. In the living room stand a Christmas tree, three gift boxes and a wicker basket
-holding a wreath, three candy canes and two pillar candles. Put the gift boxes by the tree, both candles on one
-dining-room table, one candy cane on a table, and the wreath and the two other candy canes on a sofa.
+Put the gift boxes by the tree, both candles on one table, one candy cane alone on a table, and the wreath and the other
+two candy canes on a sofa.
 
 ## Goal
 Success: every gift box is next to, under or touching the Christmas tree, both pillar candles are on one and the same

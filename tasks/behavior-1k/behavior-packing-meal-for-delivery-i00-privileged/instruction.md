@@ -1,9 +1,7 @@
 # BEHAVIOR-1K · packing_meal_for_delivery (privileged)
 
 ## Task
-Pack three hamburgers for delivery. The three wrapped hamburgers lie on a tray on the kitchen countertop, next to three
-sacks and a storage container; put each hamburger into its own sack and stand all three sacks on top of the storage
-container.
+Put each hamburger into its own sack and stand all three sacks on the storage container.
 
 ## Goal
 Success: each hamburger is inside its own sack, and all three sacks stand on the storage container. It counts only once

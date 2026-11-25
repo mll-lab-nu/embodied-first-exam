@@ -1,8 +1,8 @@
 # RoboCasa365 · PlateSteakMeal (privileged)
 
 ## Task
-Create a steak meal by picking up the steak and asparagus from the tray and placing them on the plate. Leave the chili
-pepper on the tray.
+Move the steak and the asparagus from the tray to the plate and leave the chili pepper on the tray, and move your hand
+away.
 
 ## Goal
 Success: the steak and the asparagus are on the plate, the chili pepper is still on the tray, and the hand has let go

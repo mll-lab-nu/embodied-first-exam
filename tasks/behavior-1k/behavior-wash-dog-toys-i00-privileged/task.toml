@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/behavior-wash-dog-toys-i00-privileged"
-description = "BEHAVIOR-1K v3.9.2 (2026 BEHAVIOR Challenge) wash_dog_toys (R1Pro mobile manipulator, OmniGibson / Isaac Sim): produce one replayable trajectory. Wash the dog toys. Two teddy bears, a tennis ball and a softball are inside the cabinet in the utility room: one teddy is dirty and the other dusty, the tennis ball is covered with debris and the softball with dirt. Clean all four; a washing machine stands in the utility room. Frozen scene instance (challenge public_test instance 301)."
+description = "BEHAVIOR-1K v3.9.2 (2026 BEHAVIOR Challenge) wash_dog_toys (R1Pro mobile manipulator, OmniGibson / Isaac Sim): produce one replayable trajectory. Clean the dirt, dust and debris off all four dog toys. Frozen scene instance (challenge public_test instance 301)."
 keywords = ["robotics", "behavior", "omnigibson", "isaac-sim", "r1pro", "mobile-manipulation", "code-as-policy", "trajectory", "wash_dog_toys"]
 
 [metadata]

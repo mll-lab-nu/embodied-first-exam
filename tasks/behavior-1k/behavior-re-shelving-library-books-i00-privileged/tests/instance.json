@@ -3,7 +3,7 @@
  "challenge_task": "re_shelving_library_books",
  "instance_id": 301,
  "mode": "public_test",
- "text": "Reshelve the library books. Three books lie on the table in the living room; put every one of them inside a bookcase in the living room (the books may go into different bookcases).",
+ "text": "Put the three books into the bookcases.",
  "robot_config": "r1pro_primitives_eval.yaml",
  "robot_config_sha": "d9d0c8bceea2",
  "state_sha": "0334c77c3c270f35",

@@ -1,8 +1,7 @@
 # BEHAVIOR-1K · bringing_paper_to_recycling (standard)
 
 ## Task
-Take the paper out to recycling. A sack stands on the kitchen floor and a newspaper lies on the kitchen countertop; put
-both inside the recycling bin that stands on the garden floor, and close the bin.
+Put the sack and the newspaper into the recycling bin in the garden and close the bin.
 
 ## Goal
 Success: the sack and the newspaper are both inside the recycling bin, and the bin is closed. It counts only once the

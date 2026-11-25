@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Decorate the house for Christmas. In the living room stand a Christmas tree, three gift boxes and a wicker basket holding a wreath, three candy canes and two pillar candles. Put the gift boxes by the tree, both candles on one dining-room table, one candy cane on a table, and the wreath and the two other candy canes on a sofa.
+Put the gift boxes by the tree, both candles on one table, one candy cane alone on a table, and the wreath and the other two candy canes on a sofa.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - every gift box (`gift_box.n.01_1` to `_3`) is next to, under or touching the Christmas tree (`christmas_tree.n.05_1`)

@@ -1,9 +1,8 @@
 # BEHAVIOR-1K · boxing_food_after_dinner (standard)
 
 ## Task
-Box up the leftovers. Two tacos lie on two plates on the kitchen countertop and an empty tupperware is inside a kitchen
-cabinet; put both tacos into the tupperware, the tupperware into the refrigerator, and both plates into the sink, and
-leave the refrigerator closed.
+Put both tacos into the tupperware and the tupperware into the fridge, put both plates into the sink, and close the
+fridge.
 
 ## Goal
 Success: both tacos are inside the tupperware, the tupperware is inside the refrigerator, both plates are in the sink,

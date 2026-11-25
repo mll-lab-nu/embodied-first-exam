@@ -1,7 +1,7 @@
 # BEHAVIOR-1K · vacuuming_floors (standard)
 
 ## Task
-The bedroom floor is covered with dust and a vacuum cleaner stands on it; remove every bit of dust from the floor.
+Vacuum all the dust off the bedroom floor.
 
 ## Goal
 Success: no dust is left on the bedroom floor. It counts only once the scene has settled: nothing the task names (a tool

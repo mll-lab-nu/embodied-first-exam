@@ -1,8 +1,7 @@
 # BEHAVIOR-1K · organizing_art_supplies (standard)
 
 ## Task
-In the bedroom, pack the art supplies lying on the desk (a glue stick, a rubber eraser, a paintbrush and a marker) into
-the carryall, which stands on the floor, and put the carryall on the desk.
+Pack the four art supplies into the carryall and put it on the desk.
 
 ## Goal
 Success: the glue stick, the rubber eraser, the paintbrush and the marker are inside the carryall, and the carryall

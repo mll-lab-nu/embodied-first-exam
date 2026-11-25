@@ -1,8 +1,7 @@
 # BEHAVIOR-1K · cook_a_frozen_pie (privileged)
 
 ## Task
-Cook the frozen pie. A frozen apple pie is inside the refrigerator in the kitchen, a tray lies on the countertop and
-there is an oven in the kitchen; cook the pie and put it on the tray.
+Cook the pie and put it on the tray.
 
 ## Goal
 Success: the apple pie is cooked and lies on the tray. It counts only once the scene has settled: nothing the task names

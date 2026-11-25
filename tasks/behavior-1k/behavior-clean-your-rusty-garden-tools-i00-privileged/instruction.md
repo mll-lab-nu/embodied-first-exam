@@ -1,8 +1,7 @@
 # BEHAVIOR-1K · clean_your_rusty_garden_tools (privileged)
 
 ## Task
-Clean the rusty garden tools. A rusty trowel and a rusty scraper lie on the driveway in the garden, next to a toolbox
-with steel wool inside; remove all the rust from both tools, put them inside the toolbox and close it.
+Clean the rust off both garden tools, put them into the toolbox and close it.
 
 ## Goal
 Success: no rust is left on the trowel or the scraper, both tools are inside the toolbox, and the toolbox is closed. It

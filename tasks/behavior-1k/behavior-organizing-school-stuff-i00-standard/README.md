@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Standard-mode twin of `behavior-organizing-school-stuff-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Pack the school things in the bedroom. A pencil, a book and a folder lie on the bed; a pen, a calculator and the carryall are on the floor. Put all five things into the carryall and put the carryall on the bed.
+Standard-mode twin of `behavior-organizing-school-stuff-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Pack the five school things into the carryall and put it on the bed.
 
 ## Difficulty
 Same scene, frozen instance and success rule as `behavior-organizing-school-stuff-i00-privileged` (see its Difficulty). In standard mode the agent has no reset, no privileged state and no planning primitives: it sees the robot's cameras (RGB, depth on request) and its proprioception only, acts through the client, and gets one episode.

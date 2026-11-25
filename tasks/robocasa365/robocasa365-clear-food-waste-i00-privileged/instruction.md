@@ -1,7 +1,7 @@
 # RoboCasa365 · ClearFoodWaste (privileged)
 
 ## Task
-Move the food items out of the sink and into the colander.
+Move the two food items from the sink into the colander, and move your hand away.
 
 ## Goal
 Success: both food items are in the colander, and the hand has let go and moved well away from them. What counts is how

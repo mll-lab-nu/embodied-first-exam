@@ -1,7 +1,7 @@
 # RoboCasa365 · CookieDoughPrep (privileged)
 
 ## Task
-Pick the egg and butter from the fridge and place them by the bowl for mixing.
+Take the egg and the butter from the fridge and put them on the counter by the bowl, and move your hand away.
 
 ## Goal
 Success: the egg and the butter are both on the counter close by the bowl, and the hand has let go and moved well away

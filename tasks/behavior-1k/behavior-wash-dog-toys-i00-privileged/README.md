@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Wash the dog toys. Two teddy bears, a tennis ball and a softball are inside the cabinet in the utility room: one teddy is dirty and the other dusty, the tennis ball is covered with debris and the softball with dirt. Clean all four; a washing machine stands in the utility room.
+Clean the dirt, dust and debris off all four dog toys.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - neither teddy bear (`teddy.n.01_1`, `_2`) has any dirt (`dirt.n.02_1`) or dust (`dust.n.01_1`) on it

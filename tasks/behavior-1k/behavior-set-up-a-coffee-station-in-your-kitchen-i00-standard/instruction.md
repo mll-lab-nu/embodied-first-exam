@@ -1,9 +1,8 @@
 # BEHAVIOR-1K · set_up_a_coffee_station_in_your_kitchen (standard)
 
 ## Task
-Set up a coffee station on the kitchen countertop. The coffee maker stays on the countertop; bring the bottle of coffee
-from the kitchen shelf to stand next to it, put the paper coffee filter on top of the coffee maker, stand the saucer
-next to the coffee maker with the coffee cup on the saucer, and stand the electric kettle next to the coffee maker.
+Set up a coffee station: the filter on the coffee maker, the cup on the saucer, and the coffee, the saucer and the
+kettle next to the coffee maker, which stays on the countertop.
 
 ## Goal
 Success: the coffee maker is on the countertop with the paper filter on top of it; the bottle of coffee, the saucer and

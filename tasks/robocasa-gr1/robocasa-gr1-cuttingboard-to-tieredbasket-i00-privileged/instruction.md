@@ -1,7 +1,7 @@
 # RoboCasa-GR1 · PosttrainPnPNovelFromCuttingboardToTieredbasketSplitA
 
 A **Fourier GR1 humanoid** (arms, waist and two dexterous six-command Fourier hands; fixed base) works at a kitchen counter: RoboCasa's GR1 tabletop `PosttrainPnPNovelFromCuttingboardToTieredbasketSplitA` task (robosuite, MuJoCo).
-**Task: pick the sweet potato from the cutting board and place it on the top tier of the tiered basket.**
+**Task: Pick the sweet potato from the cutting board and place it on the top tier of the tiered basket.**
 The scene is one frozen instance: the initial state of one of the benchmark's official demonstrations (kitchen
 layout, style, fixtures, objects and their poses).
 

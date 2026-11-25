@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Sort the books in the living-room bookcase into stacks by kind. There are three comic books, two notebooks and two hardbacks; some are inside the bookcase and some are lying on top of books of another kind. Keep all seven inside the bookcase, stack the three comic books together, lay one notebook on the other, and lay one hardback on the other.
+Stack the books in the bookcase by kind: the three comics in one pile, one notebook on the other and one hardback on the other.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - every comic book (`comic_book.n.01_1` to `_3`), notebook (`notebook.n.01_1`, `_2`) and hardback (`hardback.n.01_1`, `_2`) is inside the bookcase (`bookcase.n.01_1`)

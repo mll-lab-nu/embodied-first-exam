@@ -1,8 +1,8 @@
 # RoboCasa365 · ReheatMeal (privileged)
 
 ## Task
-Take the tupperware containing the shrimp and carrot meal out of the fridge and place it in the microwave. Close the
-microwave door and press the start button to reheat the meal.
+Take the tupperware with the shrimp and carrot meal out of the fridge, put it in the microwave, close the door and press
+start, then move your hand away.
 
 ## Goal
 Success: the tupperware, with the shrimp and the carrot still in it, is all the way inside the microwave, the door is

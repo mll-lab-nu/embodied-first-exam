@@ -1,8 +1,8 @@
 # RoboCasa365 · DrainVeggies (privileged)
 
 ## Task
-Dump the lettuce from the pot into the sink. Then turn on the water and wash the lettuce. Then turn off the water and
-put the lettuce back in the pot.
+Dump the lettuce from the pot into the sink, rinse it under running water, then turn the water off and put the lettuce
+back in the pot.
 
 ## Goal
 Success: the lettuce has been in the sink under running water for a moment, and at the end it is back in the pot and the

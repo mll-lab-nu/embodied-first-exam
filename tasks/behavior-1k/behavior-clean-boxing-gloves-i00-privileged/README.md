@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Clean the boxing gloves. Two dusty boxing gloves lie on the countertop in the utility room, where a washer stands; get both gloves clean, so that no dust is left on either of them.
+Clean the dust off both boxing gloves.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - neither boxing glove (`boxing_glove.n.01_1`, `_2`) is covered with dust (`dust.n.01_1`)

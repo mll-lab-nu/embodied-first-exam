@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Standard-mode twin of `behavior-canning-food-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Can the food in the kitchen. The steak and the pineapple are inside the refrigerator, two bowls are inside a kitchen cabinet, and a carving knife lies on the chopping board on the countertop. Dice the steak and the pineapple, fill one bowl with diced steak only and the other with diced pineapple only, put both bowls back inside that cabinet, and leave the refrigerator and the cabinet closed.
+Standard-mode twin of `behavior-canning-food-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Dice the steak and the pineapple, fill one bowl with the steak and the other with the pineapple, put both bowls back in the cabinet they came from, and close the fridge and that cabinet.
 
 ## Difficulty
 Same scene, frozen instance and success rule as `behavior-canning-food-i00-privileged` (see its Difficulty). In standard mode the agent has no reset, no privileged state and no planning primitives: it sees the robot's cameras (RGB, depth on request) and its proprioception only, acts through the client, and gets one episode.

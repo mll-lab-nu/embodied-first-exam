@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/robocasa365-pick-place-cabinet-to-counter-i00-privileged"
-description = "RoboCasa365 (PickPlaceCabinetToCounter, a Franka Panda arm on an Omron mobile base (with a torso lift)): Pick the ice cube from the cabinet and place it on the counter. Produce one replayable trajectory of the robot's native controller commands on a frozen instance; graded on the state after the last action."
+description = "RoboCasa365 (PickPlaceCabinetToCounter, a Franka Panda arm on an Omron mobile base (with a torso lift)): Take the ice cube out of the cabinet and put it on the counter next to it, and move your hand away. Produce one replayable trajectory of the robot's native controller commands on a frozen instance; graded on the state after the last action."
 keywords = ["robotics", "robosuite", "robocasa365", "mobile-manipulation", "code-as-policy", "trajectory", "privileged"]
 
 [metadata]

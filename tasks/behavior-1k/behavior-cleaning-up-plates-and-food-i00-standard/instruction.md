@@ -1,9 +1,8 @@
 # BEHAVIOR-1K · cleaning_up_plates_and_food (standard)
 
 ## Task
-Clean up after the meal in the kitchen. On the breakfast table stand two plates, each with a pizza on it, and two bowls.
-Put both pizzas, each still on its own plate, into the same refrigerator, put both bowls into the same sink, and leave
-every kitchen refrigerator closed.
+Put both pizzas, each on its own plate, into the same fridge and both bowls into the same sink, and keep every kitchen
+fridge closed.
 
 ## Goal
 Success: each pizza lies on its own plate, both pizzas are inside the same refrigerator, both bowls are in the same

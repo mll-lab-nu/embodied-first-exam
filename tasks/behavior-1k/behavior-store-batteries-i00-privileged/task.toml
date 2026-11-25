@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/behavior-store-batteries-i00-privileged"
-description = "BEHAVIOR-1K v3.9.2 (2026 BEHAVIOR Challenge) store_batteries (R1Pro mobile manipulator, OmniGibson / Isaac Sim): produce one replayable trajectory. Store the batteries. Three batteries lie around the house, two on the coffee table in the living room and one on the kitchen countertop; put all three inside one of the two cabinets in the living room (all in the same one). Frozen scene instance (challenge public_test instance 301)."
+description = "BEHAVIOR-1K v3.9.2 (2026 BEHAVIOR Challenge) store_batteries (R1Pro mobile manipulator, OmniGibson / Isaac Sim): produce one replayable trajectory. Put all three batteries into the same cabinet. Frozen scene instance (challenge public_test instance 301)."
 keywords = ["robotics", "behavior", "omnigibson", "isaac-sim", "r1pro", "mobile-manipulation", "code-as-policy", "trajectory", "store_batteries"]
 
 [metadata]

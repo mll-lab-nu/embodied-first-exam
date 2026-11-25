@@ -1,7 +1,7 @@
 # RoboCasa365 · OvenBroilFish (standard)
 
 ## Task
-Place the fish on the bottom rack of the oven, and slide the rack back inside. Close the oven door.
+Put the fish on the oven's bottom rack, slide the rack back in and close the oven door.
 
 ## Goal
 Success: the fish is on the oven's bottom rack and the oven door is fully closed, and both have stayed that way for a

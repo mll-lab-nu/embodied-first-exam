@@ -3,7 +3,7 @@
  "challenge_task": "thawing_frozen_food",
  "instance_id": 301,
  "mode": "public_test",
- "text": "Thaw the frozen food. A frozen chicken breast and a frozen slice of bread lie on two plates inside the kitchen refrigerator. Put the chicken breast, on a plate, into the microwave oven, close the microwave and switch it on; put the bread slice, on a plate, on the countertop; close the refrigerator; neither food may still be frozen.",
+ "text": "Thaw the chicken on a plate in the closed, running microwave and the bread on a plate on the countertop, and close the fridge.",
  "robot_config": "r1pro_primitives_eval.yaml",
  "robot_config_sha": "d9d0c8bceea2",
  "state_sha": "4c655fc77ae255ea",

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Make a centerpiece. The vase and three roses lie on the cabinet in the living room; put all three roses into the vase and stand the vase on the living-room coffee table.
+Put the three roses into the vase and stand it on the coffee table.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - each of the three roses (`rose.n.01_1`, `rose.n.01_2`, `rose.n.01_3`) is inside the vase (`vase.n.01_1`)

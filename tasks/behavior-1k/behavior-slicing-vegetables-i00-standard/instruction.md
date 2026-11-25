@@ -1,9 +1,7 @@
 # BEHAVIOR-1K · slicing_vegetables (standard)
 
 ## Task
-Dice the vegetables in the kitchen. Two bell peppers, two beets and a zucchini are inside the refrigerator; a paring
-knife and two chopping boards lie on the countertop. Dice all five vegetables, so that none of them is left whole, and
-leave the refrigerator closed.
+Dice all five vegetables and close the fridge.
 
 ## Goal
 Success: both bell peppers, both beets and the zucchini have been diced, none of them is left whole, and the

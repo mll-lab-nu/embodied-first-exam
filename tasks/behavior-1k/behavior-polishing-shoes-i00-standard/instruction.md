@@ -1,9 +1,7 @@
 # BEHAVIOR-1K · polishing_shoes (standard)
 
 ## Task
-Polish the shoes in the bedroom. Two dusty shoes lie on the bedroom floor and a scrub brush lies on the stand; there are
-two footstools in the room. Brush all the dust off both shoes, set them next to each other and next to the same
-footstool, and leave the scrub brush on the stand.
+Brush the dust off both shoes, set them side by side next to one footstool, and leave the brush on the stand.
 
 ## Goal
 Success: no dust is left on either shoe, the two shoes stand next to each other and next to the same footstool, and the

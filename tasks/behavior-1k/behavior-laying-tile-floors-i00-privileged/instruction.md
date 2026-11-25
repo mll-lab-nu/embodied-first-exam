@@ -1,8 +1,7 @@
 # BEHAVIOR-1K · laying_tile_floors (privileged)
 
 ## Task
-Lay the tiles. The four tiles lie on the corridor floor; put all four on the bathroom floor, each tile next to at least
-one of the other tiles.
+Lay the four tiles on the bathroom floor, each next to at least one other tile.
 
 ## Goal
 Success: all four tiles lie on the bathroom floor, each next to at least one of the others. It counts only once the

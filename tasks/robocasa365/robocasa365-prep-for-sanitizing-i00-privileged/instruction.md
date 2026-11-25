@@ -1,7 +1,7 @@
 # RoboCasa365 · PrepForSanitizing (privileged)
 
 ## Task
-Pick the bar soap and dish brush from the cabinet and place them on the counter.
+Take the bar soap and the dish brush out of the cabinet and put them on the counter next to it, and move your hand away.
 
 ## Goal
 Success: the bar soap and the dish brush are both on the counter nearest the cabinet, and the hand has let go and moved

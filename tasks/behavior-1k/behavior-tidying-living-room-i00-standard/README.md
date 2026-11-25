@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Standard-mode twin of `behavior-tidying-living-room-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Tidy the living room. Put the potted plant and the newspaper, which lie on the floor, on the coffee table; put the hardback book from the coffee table inside a bookcase; and put the notebook from the coffee table on the desk.
+Standard-mode twin of `behavior-tidying-living-room-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Put the plant and the newspaper on the coffee table, the hardback into a bookcase, and the notebook on the desk.
 
 ## Difficulty
 Same scene, frozen instance and success rule as `behavior-tidying-living-room-i00-privileged` (see its Difficulty). In standard mode the agent has no reset, no privileged state and no planning primitives: it sees the robot's cameras (RGB, depth on request) and its proprioception only, acts through the client, and gets one episode.

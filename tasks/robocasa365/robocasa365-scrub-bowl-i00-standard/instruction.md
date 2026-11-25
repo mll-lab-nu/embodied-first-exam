@@ -1,7 +1,7 @@
 # RoboCasa365 · ScrubBowl (standard)
 
 ## Task
-Use the sponge to scrub the bowl inside the sink.
+Scrub the bowl in the sink with the sponge for a while, then move your hand away.
 
 ## Goal
 Success: the sponge has been rubbed back and forth on the bowl for a second or more in all, and at the end the hand has

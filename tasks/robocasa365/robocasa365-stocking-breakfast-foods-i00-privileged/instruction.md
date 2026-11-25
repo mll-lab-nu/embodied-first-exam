@@ -1,7 +1,7 @@
 # RoboCasa365 · StockingBreakfastFoods (privileged)
 
 ## Task
-Pick the canned food and bar from the counter and place them in the cabinets closest to them.
+Put the canned food and the bar from the counter each in the cabinet closest to it, and move your hand away.
 
 ## Goal
 Success: the canned food and the bar are each all the way inside the cabinet closest to where it started, and the hand

@@ -1,9 +1,7 @@
 # BEHAVIOR-1K · halve_an_egg (standard)
 
 ## Task
-Halve the egg. A hard-boiled egg is inside the kitchen refrigerator; a chopping board with a carving knife on it and a
-plate lie on the countertop, and there is a sink in the kitchen. Cut the egg in half, put both halves on the plate and
-put the carving knife into the sink.
+Cut the egg in half, put both halves on the plate, and put the knife into the sink.
 
 ## Goal
 Success: the egg has been cut in half, both halves lie on the plate, and the carving knife is in the sink. It counts

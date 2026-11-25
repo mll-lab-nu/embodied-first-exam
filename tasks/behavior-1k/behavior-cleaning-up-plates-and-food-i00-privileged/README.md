@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Clean up after the meal in the kitchen. On the breakfast table stand two plates, each with a pizza on it, and two bowls. Put both pizzas, each still on its own plate, into the same refrigerator, put both bowls into the same sink, and leave every kitchen refrigerator closed.
+Put both pizzas, each on its own plate, into the same fridge and both bowls into the same sink, and keep every kitchen fridge closed.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - each pizza (`pizza.n.01_1`, `_2`) is on top of a different plate (`plate.n.04_1`, `_2`)

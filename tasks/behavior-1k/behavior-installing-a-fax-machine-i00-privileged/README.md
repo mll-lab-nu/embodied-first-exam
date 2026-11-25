@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Install the fax machine. A fax machine, switched off, stands on the floor of the shared office; put it on top of one of the carrels (cubicle desks) there and switch it on.
+Put the fax machine on one of the carrels and switch it on.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - the fax machine (`facsimile.n.02_1`) is switched on

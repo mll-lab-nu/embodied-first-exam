@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Put both pairs of shoes on the hall tree in the corridor.
+Put both pairs of shoes on the hall tree, off the floor, each pair side by side.
 
 ## Difficulty
 The second BEHAVIOR task next to `behavior-picking-up-trash-i00-privileged`: placement with a **pairwise spatial relation** instead of containment. BDDL goal: every gym shoe and sandal touches the hall tree and not the floor, the two gym shoes are `nextto` each other and so are the two sandals. OmniGibson's `nextto` = the gap between the two AABBs is at most one sixth of the mean of their summed extents (6.3 cm for these gym shoes, 5.3 cm for the sandals) and nothing lies between them along a horizontal axis. OmniGibson's own `place_on_top` samples a random spot, so it cannot satisfy `nextto`: the agent has to choose where each shoe lands (the tooling's primitives are thin: joint, base, IK and gripper moves). The four shoes lie on the corridor floor 3-5 m from the hall tree, an open white shoe cabinet (flat top at 0.553 m, two inner shelves) under a back panel with two floating shelves, set in an alcove.

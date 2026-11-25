@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Put the toaster, the food processor and the French press, which stand on the kitchen countertop, away into one kitchen cabinet, and close that cabinet.
+Put the toaster, the food processor and the French press into one cabinet and close it.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - the toaster (`toaster.n.02_1`), the food processor (`food_processor.n.01_1`) and the French press (`french_press.n.01_1`) are all inside one and the same cabinet

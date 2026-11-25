@@ -1,7 +1,7 @@
 # BEHAVIOR-1K · clean_a_patio (privileged)
 
 ## Task
-Clean the patio. The garden floor is covered with mud and a broom lies on it; remove every bit of mud from the floor.
+Clean all the mud off the garden floor.
 
 ## Goal
 Success: no mud is left on the garden floor. It counts only once the scene has settled: nothing the task names (a tool

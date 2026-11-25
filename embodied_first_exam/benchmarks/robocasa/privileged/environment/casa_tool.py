@@ -336,6 +336,71 @@ def action_spec(env) -> dict:
     return out
 
 
+# -- task text errata -----------------------------------------------------------------------------------------
+# The frozen instance keeps the benchmark's own language string (ep_meta["lang"]); the instance file is pinned and is
+# not edited. Where that string is wrong or unclear for the instance, the text the agent is shown (Session.inst["text"]:
+# the privileged state()["instruction"], the service's spec task_text and task info) is the corrected sentence, the
+# same one as the task's instruction.md Task line. Keyed by env_name and the exact upstream string, so any other
+# instance of the family keeps its own text.
+#  - PnPCounterToMicrowave: the check needs the object on the plate inside the microwave (obj-container contact).
+#  - ArrangeVegetables: the two objects are a carrot and a lemon. PnPMicrowaveToCounter: grammar.
+#  - OpenDrawer: the target is the top drawer of the stack on the robot's right. MicrowaveThawing: the door starts
+#    closed and the microwave only turns on with the door shut.
+#  - GR1 tiered basket / shelf: only the top tier counts (get_highest_spawn_region). PlateToPlate: the target is the
+#    other, empty plate. "in the plate": grammar.
+#  - RestockPantry: "their designated side" is the side of the can already in the cabinet.
+TEXT_ERRATA = {
+    ("PnPCounterToMicrowave",
+     "pick the corn from the counter and place it in the microwave"):
+        "Pick the corn from the counter and place it on the plate inside the microwave.",
+    ("PnPMicrowaveToCounter",
+     "pick the onion from the microwave and place it on plate located on the counter"):
+        "Pick the onion from the microwave and place it on the plate located on the counter.",
+    ("ArrangeVegetables",
+     "Pick the vegetables from the sink and place them on the cutting board."):
+        "Pick the carrot and the lemon from the sink and place them on the cutting board.",
+    ("OpenDrawer",
+     "open the right drawer"):
+        "Open the top drawer on your right.",
+    ("MicrowaveThawing",
+     "Pick the squash from the counter and place it in the microwave. Then turn on the microwave."):
+        "Pick the squash from the counter and place it in the microwave. Then close the microwave door and turn on "
+        "the microwave.",
+    ("PosttrainPnPNovelFromCuttingboardToTieredbasketSplitA",
+     "pick the sweet potato from the cutting board and place it in the tiered basket"):
+        "pick the sweet potato from the cutting board and place it on the top tier of the tiered basket.",
+    ("PosttrainPnPNovelFromTrayToTieredbasketSplitA",
+     "pick the lemon from the tray and place it in the tiered basket"):
+        "pick the lemon from the tray and place it on the top tier of the tiered basket.",
+    ("PosttrainPnPNovelFromPlacematToTieredshelfSplitA",
+     "pick the tomato from the placemat and place it in the tiered shelf"):
+        "pick the tomato from the placemat and place it on the top tier of the tiered shelf.",
+    ("PosttrainPnPNovelFromTrayToTieredshelfSplitA",
+     "pick the bell pepper from the tray and place it in the tiered shelf"):
+        "pick the bell pepper from the tray and place it on the top tier of the tiered shelf.",
+    ("PosttrainPnPNovelFromPlateToPlateSplitA",
+     "pick the sweet potato from the plate and place it in the plate"):
+        "pick the sweet potato from its plate and place it on the empty plate.",
+    ("PosttrainPnPNovelFromPlacematToPlateSplitA",
+     "pick the tomato from the placemat and place it in the plate"):
+        "pick the tomato from the placemat and place it on the plate.",
+    ("PosttrainPnPNovelFromTrayToPlateSplitA",
+     "pick the cupcake from the tray and place it in the plate"):
+        "pick the cupcake from the tray and place it on the plate.",
+    ("RestockPantry",
+     "Pick the cans from the counter and place them in their designated side in the cabinet."):
+        "Pick both cans from the counter and place them in the cabinet, on the same side as the can already there.",
+}
+
+
+def task_text(env_name: str, lang: str) -> str:
+    """The task sentence the agent is shown: the instance's own language string, or its erratum (TEXT_ERRATA), as a
+    sentence (capital first letter, final period, no trailing space), the same as the task's instruction.md Task line."""
+    s = TEXT_ERRATA.get((env_name, lang), lang).strip()
+    s = s[:1].upper() + s[1:]
+    return s if s.endswith((".", "?", "!")) else s + "."
+
+
 # -- the session ----------------------------------------------------------------------------------------------
 def scene_option() -> mujoco.MjvOption:
     """What robosuite's own cameras draw (its defaults render_collision_mesh=False, render_visual_mesh=True): the visual
@@ -354,7 +419,8 @@ class Session:
         self.instance_path = Path(instance)
         self.frozen, self.instance_sha = load_instance(self.instance_path)
         self.meta = json.loads(str(self.frozen["ep_meta"]))
-        self.inst = {"text": self.meta.get("lang", ""), "env_name": json.loads(str(self.frozen["config"]))["env_name"]}
+        env_name = json.loads(str(self.frozen["config"]))["env_name"]
+        self.inst = {"text": task_text(env_name, self.meta.get("lang", "")), "env_name": env_name}
         self.env = None
         self._renderers: dict = {}
         self.reset()

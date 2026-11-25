@@ -3,7 +3,7 @@
  "challenge_task": "assembling_gift_baskets",
  "instance_id": 301,
  "mode": "public_test",
- "text": "Assemble four gift baskets in the living room. The four wicker baskets stand on the floor; four candles, four butter cookies, four pieces of Swiss cheese and four bows lie on the table. Put one candle, one butter cookie, one piece of Swiss cheese and one bow into each basket.",
+ "text": "Put one candle, one cookie, one piece of cheese and one bow into each of the four gift baskets.",
  "robot_config": "r1pro_primitives_eval.yaml",
  "robot_config_sha": "d9d0c8bceea2",
  "state_sha": "027f9ad1981c65fa",

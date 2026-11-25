@@ -1,10 +1,8 @@
 # BEHAVIOR-1K · canning_food (standard)
 
 ## Task
-Can the food in the kitchen. The steak and the pineapple are inside the refrigerator, two bowls are inside a kitchen
-cabinet, and a carving knife lies on the chopping board on the countertop. Dice the steak and the pineapple, fill one
-bowl with diced steak only and the other with diced pineapple only, put both bowls back inside that cabinet, and leave
-the refrigerator and the cabinet closed.
+Dice the steak and the pineapple, fill one bowl with the steak and the other with the pineapple, put both bowls back in
+the cabinet they came from, and close the fridge and that cabinet.
 
 ## Goal
 Success: the steak and the pineapple have been diced, one bowl is filled with diced steak and no pineapple, the other

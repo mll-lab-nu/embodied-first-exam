@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Standard-mode twin of `behavior-halve-an-egg-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Halve the egg. A hard-boiled egg is inside the kitchen refrigerator; a chopping board with a carving knife on it and a plate lie on the countertop, and there is a sink in the kitchen. Cut the egg in half, put both halves on the plate and put the carving knife into the sink.
+Standard-mode twin of `behavior-halve-an-egg-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Cut the egg in half, put both halves on the plate, and put the knife into the sink.
 
 ## Difficulty
 Same scene, frozen instance and success rule as `behavior-halve-an-egg-i00-privileged` (see its Difficulty). In standard mode the agent has no reset, no privileged state and no planning primitives: it sees the robot's cameras (RGB, depth on request) and its proprioception only, acts through the client, and gets one episode.

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Standard-mode twin of `behavior-putting-dishes-away-after-cleaning-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Put the clean dishes away. Eight plates lie on the two kitchen countertops, four on each; put all eight inside one and the same kitchen cabinet, and leave every kitchen cabinet closed.
+Standard-mode twin of `behavior-putting-dishes-away-after-cleaning-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Put all eight plates into the same cabinet and keep every kitchen cabinet closed.
 
 ## Difficulty
 Same scene, frozen instance and success rule as `behavior-putting-dishes-away-after-cleaning-i00-privileged` (see its Difficulty). In standard mode the agent has no reset, no privileged state and no planning primitives: it sees the robot's cameras (RGB, depth on request) and its proprioception only, acts through the client, and gets one episode.

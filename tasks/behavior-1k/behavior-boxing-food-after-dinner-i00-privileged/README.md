@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Box up the leftovers. Two tacos lie on two plates on the kitchen countertop and an empty tupperware is inside a kitchen cabinet; put both tacos into the tupperware, the tupperware into the refrigerator, and both plates into the sink, and leave the refrigerator closed.
+Put both tacos into the tupperware and the tupperware into the fridge, put both plates into the sink, and close the fridge.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - both tacos (`taco.n.02_1`, `_2`) are inside the tupperware (`tupperware.n.01_1`)

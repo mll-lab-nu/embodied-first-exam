@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Standard-mode twin of `behavior-bringing-paper-to-recycling-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Take the paper out to recycling. A sack stands on the kitchen floor and a newspaper lies on the kitchen countertop; put both inside the recycling bin that stands on the garden floor, and close the bin.
+Standard-mode twin of `behavior-bringing-paper-to-recycling-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Put the sack and the newspaper into the recycling bin in the garden and close the bin.
 
 ## Difficulty
 Same scene, frozen instance and success rule as `behavior-bringing-paper-to-recycling-i00-privileged` (see its Difficulty). In standard mode the agent has no reset, no privileged state and no planning primitives: it sees the robot's cameras (RGB, depth on request) and its proprioception only, acts through the client, and gets one episode.

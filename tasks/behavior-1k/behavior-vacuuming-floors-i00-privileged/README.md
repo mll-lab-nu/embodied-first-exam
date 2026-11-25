@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-The bedroom floor is covered with dust and a vacuum cleaner stands on it; remove every bit of dust from the floor.
+Vacuum all the dust off the bedroom floor.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - no dust (`dust.n.01_1`) is left on the bedroom floor (`floor.n.01_1`)

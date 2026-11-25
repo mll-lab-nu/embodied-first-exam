@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Standard-mode twin of `behavior-putting-away-toys-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Put the toys away. Eight toy figures lie on the floor, four in the living room and four in the dining room; one toy box stands on the living-room floor and another on the dining-room table. Put every toy figure inside a toy box (either box).
+Standard-mode twin of `behavior-putting-away-toys-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Put every toy figure into a toy box.
 
 ## Difficulty
 Same scene, frozen instance and success rule as `behavior-putting-away-toys-i00-privileged` (see its Difficulty). In standard mode the agent has no reset, no privileged state and no planning primitives: it sees the robot's cameras (RGB, depth on request) and its proprioception only, acts through the client, and gets one episode.

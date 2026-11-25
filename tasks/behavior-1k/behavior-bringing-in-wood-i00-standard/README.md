@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Standard-mode twin of `behavior-bringing-in-wood-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Bring the wood in. Three sheets of plywood lie on the ground in the garden; put all three on the corridor floor.
+Standard-mode twin of `behavior-bringing-in-wood-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Bring the three plywood sheets in from the garden and put them on the corridor floor.
 
 ## Difficulty
 Same scene, frozen instance and success rule as `behavior-bringing-in-wood-i00-privileged` (see its Difficulty). In standard mode the agent has no reset, no privileged state and no planning primitives: it sees the robot's cameras (RGB, depth on request) and its proprioception only, acts through the client, and gets one episode.

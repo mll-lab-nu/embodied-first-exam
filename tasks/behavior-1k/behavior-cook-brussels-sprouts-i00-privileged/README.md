@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Roast the halved brussels sprouts. Four brussels sprouts are in a tupperware inside the kitchen refrigerator; a chopping board with a carving knife on it and a cookie sheet lie on the countertop, and there is an oven in the kitchen. Cut every sprout in half, cook all eight halves in the oven and leave them inside it, and close the oven and the refrigerator.
+Cut the brussels sprouts in half, roast all the halves in the oven and leave them there, and close the oven and the fridge.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - all eight half brussels sprouts (`half__brussels_sprouts.n.01_1` to `_8`) exist (every sprout has been cut in half)

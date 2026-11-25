@@ -1,9 +1,7 @@
 # BEHAVIOR-1K · freeze_pies (standard)
 
 ## Task
-Freeze the pies. Two apple pies lie on two plates on the kitchen countertop, and two tupperwares are inside a kitchen
-cabinet. Put each pie into its own tupperware, put both tupperwares into the refrigerator, close it, and wait until both
-pies are frozen.
+Put each pie into its own tupperware, put both into the fridge, close it, and wait until both pies are frozen.
 
 ## Goal
 Success: each apple pie is inside its own tupperware, both tupperwares are inside the refrigerator, the refrigerator is

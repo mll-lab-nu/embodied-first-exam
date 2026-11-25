@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Pack the toolbox in the utility room. The drill, the pliers, the flashlight, the allen wrench and the screwdriver lie on the table there, next to the toolbox. Put all five tools inside the toolbox, keep the toolbox on the table, and close it.
+Put all five tools into the toolbox, keep it on the table, and close it.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - the drill (`drill.n.01_1`) is inside the toolbox (`toolbox.n.01_1`)

@@ -1,8 +1,7 @@
 # BEHAVIOR-1K · bringing_water (privileged)
 
 ## Task
-Take both bottles out of the kitchen refrigerator, put them on the coffee table in the living room, and leave the
-refrigerator closed.
+Take both bottles from the fridge to the living-room coffee table, and close the fridge.
 
 ## Goal
 Success: both bottles stand on the living-room coffee table, and the refrigerator is closed. It counts only once the

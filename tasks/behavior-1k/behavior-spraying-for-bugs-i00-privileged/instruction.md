@@ -1,8 +1,7 @@
 # BEHAVIOR-1K · spraying_for_bugs (privileged)
 
 ## Task
-Spray the potted plants against bugs. An insectifuge atomizer and two potted plants stand on the garden floor; spray
-insectifuge onto both plants until each of them is covered with it.
+Spray both potted plants until they are covered with insectifuge.
 
 ## Goal
 Success: both potted plants are covered with insectifuge. It counts only once the scene has settled: nothing the task

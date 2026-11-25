@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Sort the vegetables in the kitchen. Two wicker baskets stand on the kitchen floor, one with three bok choy and three ears of sweet corn, the other with two broccoli, two leeks and three Vidalia onions; three mixing bowls stand on the countertop. Put the bok choy and the onions together into one mixing bowl, the leeks and the broccoli together into a second one, and the sweet corn into a third.
+Put the bok choy with the onions, the leeks with the broccoli, and the corn into the mixing bowls, each group together in one bowl.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - one mixing bowl (`mixing_bowl.n.01_1` to `_3`) holds all three bok choy (`bok_choy.n.02_1` to `_3`) and all three Vidalia onions (`vidalia_onion.n.01_1` to `_3`)

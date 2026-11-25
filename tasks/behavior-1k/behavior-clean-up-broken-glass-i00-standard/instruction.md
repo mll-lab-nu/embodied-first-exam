@@ -1,8 +1,7 @@
 # BEHAVIOR-1K · clean_up_broken_glass (standard)
 
 ## Task
-Three pieces of broken glass lie on the dining-room floor; put all of them inside the trash can that stands on the
-corridor floor.
+Put the three pieces of broken glass into the trash can in the corridor.
 
 ## Goal
 Success: all three pieces of broken glass are inside the trash can. It counts only once the scene has settled: nothing

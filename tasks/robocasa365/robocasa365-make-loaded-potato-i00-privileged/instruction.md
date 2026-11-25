@@ -1,7 +1,8 @@
 # RoboCasa365 · MakeLoadedPotato (privileged)
 
 ## Task
-Retrieve the reheated potato from the microwave, then place the potato, cheese, and condiment on the cutting board.
+Take the potato out of the microwave and put it, the cheese and the condiment on the cutting board, and move your hand
+away.
 
 ## Goal
 Success: the potato, the cheese and the condiment are all on the cutting board, and the hand has let go and moved well
