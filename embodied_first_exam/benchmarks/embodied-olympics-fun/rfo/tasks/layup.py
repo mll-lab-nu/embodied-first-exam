@@ -303,8 +303,8 @@ class Task(TaskBase):
                   layup_radius_m=1.25, max_steps=2, step_gap_s=0.03, foot_slide_m=0.20, air_min_s=0.05,
                   takeoff_speed_m_s=0.5, retouch_grace_s=0.05, touch_gap_s=0.03)
 
-    sentence = ("Make a layup: holding the basketball in your two hands, take at most two steps towards the basket, "
-                "jump, and let go of the ball in the air close to the ring so that it enters the basket from above.")
+    sentence = ("Make a layup: with at most two steps, jump and let go of the ball close to the ring so that it "
+                "drops into the basket.")
     rules = ("The official basket: a rigid ring of {ring_inner_diameter_m} m inner diameter ({ring_metal_m} m metal), "
              "its top edge {ring_height_m} m above the floor, its centre {ring_centre_to_board_m} m in front of a "
              "backboard {board_width_m} m wide and {board_height_m} m high whose lower edge is {board_bottom_m} m "

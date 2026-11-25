@@ -94,8 +94,8 @@ class Task(TaskBase):
                   bag_top_m=1.75, bag_distance_m=0.80, zone_low_m=0.95, zone_high_m=1.25, min_impulse_n_s=20.0,
                   max_contact_s=0.15, touch_gap_s=0.03, stand_s=2.0, fall_pelvis_m=0.50)
 
-    sentence = ("Kick the heavy bag once with your {leg} foot or shin, on the marked band at trunk height, hard "
-                "enough to give it an impulse of at least {min_impulse_n_s:g} N s. Then stand on both feet.")
+    sentence = ("Kick the heavy bag once, hard, with your right foot or shin on the marked band, then stand on both "
+                "feet.")
     rules = ("A heavy bag ({bag_mass_kg} kg, {bag_length_m} m long, {bag_diameter_m} m across) hangs by a "
              "{chain_length_m} m chain from a hook, free to swing in every direction; its top is {bag_top_m} m above "
              "the floor and its axis {bag_distance_m} m in front of you. The marked band runs round the bag from "

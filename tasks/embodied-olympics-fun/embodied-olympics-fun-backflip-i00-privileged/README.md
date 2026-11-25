@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Do a standing backflip: jump, turn backwards through a full turn in the air, land on your feet and stand. (Embodied Olympics `backflip`: one Unitree G1 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
+Do a standing backflip: jump, turn a full backward somersault in the air, land on your feet and stand still. (Embodied Olympics `backflip`: one Unitree G1 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
 
 ## Difficulty
 A full backward turn needs about 0.6 s of flight with a fast rotation, from legs whose motors give 88 to 139 N m, and a landing on the feet that stops the rotation. No built-in action jumps at all.

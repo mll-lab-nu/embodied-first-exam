@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Skate the speed slalom: from the start box, skate up to the 20 cones and through them on one foot, passing them alternately on the left and the right, then cross the end line on that foot, all within one minute. (Embodied Olympics `inline-slalom`: one Unitree G1 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
+Skate the speed slalom: from the start box, skate on one foot through the 20 cones, passing them alternately left and right, and over the end line, within a minute. (Embodied Olympics `inline-slalom`: one Unitree G1 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
 
 ## Difficulty
 Skating is pushing against wheels that only grip sideways: the robot has no skating gait and no balance on one foot, and on one skate it stands on a line of wheels, so it can only stay up by steering the skate under its weight while weaving through cones 0.8 m apart.

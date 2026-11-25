@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Walk along the balance beam from the end you stand on to the far end, marked yellow, and stand there, touching the beam only with your feet and never touching the floor. (Embodied Olympics `balance-beam`: one Unitree G1 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
+Walk along the balance beam to its far, yellow end and stand there, touching the beam only with your feet. (Embodied Olympics `balance-beam`: one Unitree G1 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
 
 ## Difficulty
 The beam is 0.1 m wide and the robot's built-in stance and gait keep the feet 0.24 m apart, so neither can be used: every step is a single-leg balance on a sole 0.07 m wide, 1.25 m above the floor, for 5.0 m.

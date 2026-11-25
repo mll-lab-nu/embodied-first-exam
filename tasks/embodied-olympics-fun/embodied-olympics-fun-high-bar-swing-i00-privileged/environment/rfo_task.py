@@ -234,8 +234,8 @@ class Task(BarGrip, TaskBase):
     params = dict(bar_height_m=2.80, bar_length_m=2.40, bar_diameter_m=0.028, circle_deg=360.0, min_radius_m=0.59,
                   reversal_deg=5.0, off_bar_s=0.05, block_top_m=1.1, block_x_m=-0.30, grip_scale=GRIP_SCALE)
 
-    sentence = ("Standing on the block behind the high bar, jump up and catch the bar with both hands, then do one "
-                "giant swing: take your extended body in a full circle around the bar, without letting go.")
+    sentence = ("Jump from the block, catch the high bar with both hands and swing one full circle round it with "
+                "your body straight, without letting go.")
     rules = ("The bar is a competition horizontal bar: {bar_diameter_m} m thick, {bar_height_m} m above the floor, "
              "{bar_length_m} m long between its two uprights, along the y axis; it is fixed and does not turn. Your "
              "hands are three-finger hands (a thumb, an index and a middle finger; each hand's drives {grip_scale} "

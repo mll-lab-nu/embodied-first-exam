@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/embodied-olympics-fun-rugby-conversion-i00-privileged"
-description = "Embodied Olympics rugby-conversion (one Unitree G1 on the Embodied Olympics simulator, MuJoCo 3.3.7, CPU) in privileged mode: produce one replayable trajectory. Kick a conversion: with one place kick of a foot, send the rugby ball standing on its tee over the crossbar and between the posts. A referee of events, geometry and contact rules decides the success."
+description = "Embodied Olympics rugby-conversion (one Unitree G1 on the Embodied Olympics simulator, MuJoCo 3.3.7, CPU) in privileged mode: produce one replayable trajectory. Kick the conversion: with one kick, send the ball from its tee over the crossbar between the posts. A referee of events, geometry and contact rules decides the success."
 keywords = ["robotics", "embodied-olympics", "sports", "mujoco", "unitree-g1", "humanoid", "trajectory", "rugby-conversion"]
 
 [metadata]

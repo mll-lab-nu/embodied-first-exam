@@ -62,8 +62,8 @@ class Task(TaskBase):
     params = dict(distance_m=10.0, toe_gap_m=0.02, down_z_m=0.40, down_limit_s=10.0, line_half_m=3.0,
                   court_half_m=4.0)
 
-    sentence = ("Run the 4 x 10 m shuttle: to the far line, back to the start line, to the far line again and back "
-                "through the start line, putting a foot on the ground beyond the line at each turn, as fast as you can.")
+    sentence = ("Run the 4 x 10 m shuttle: to the far line and back twice, putting a foot beyond the line at each "
+                "turn, within 30 seconds.")
     rules = ("Two lines cross the floor: the start line x = 0 and the far line x = {distance_m} m (the planes meant "
              "are the edges of the painted lines that face each other). The clock starts at t = 0. You run four "
              "legs: to the far line, back to the start line, to the far line, back to the start line. At each of the "

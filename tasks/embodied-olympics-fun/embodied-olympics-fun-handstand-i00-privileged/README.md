@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Do a handstand: from your stance, get up onto your hands and hold a straight handstand still for two seconds with only your hands on the floor. Then come back down onto your feet and stand. (Embodied Olympics `handstand`: one Unitree G1 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
+Do a handstand: get up onto your hands, hold a straight handstand still for two seconds, then come back down onto your feet and stand. (Embodied Olympics `handstand`: one Unitree G1 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
 
 ## Difficulty
 Your whole 33 kg rests on two small fists and arms whose shoulders give 25 N m: the body has to be balanced over a support a few centimetres long, actively, as an inverted pendulum, and no built-in action does that. Getting from standing onto the hands, and from the hands back onto the feet, are as hard as the hold.

@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/embodied-olympics-fun-vault-i00-privileged"
-description = "Embodied Olympics vault (one Unitree H1-2 on the Embodied Olympics simulator, MuJoCo 3.3.7, CPU) in privileged mode: produce one replayable trajectory. Vault over the vault table at the end of the run-up: go over it with at least one hand on its top and nothing but your hands touching it, then land on your feet on the landing mat and stand. A referee of events, geometry and contact rules decides the success."
+description = "Embodied Olympics vault (one Unitree H1-2 on the Embodied Olympics simulator, MuJoCo 3.3.7, CPU) in privileged mode: produce one replayable trajectory. Vault over the vaulting table: run up, push off it with your hands only, land on your feet on the mat and stand. A referee of events, geometry and contact rules decides the success."
 keywords = ["robotics", "embodied-olympics", "sports", "mujoco", "unitree-h1-2", "humanoid", "trajectory", "vault"]
 
 [metadata]

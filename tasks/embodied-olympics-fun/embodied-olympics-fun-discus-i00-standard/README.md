@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Throw the discus that lies on your right palm, your fingers curled over its rim, from inside the circle so that it lands inside the sector at least 15 m from the circle. Then leave the circle from its rear half and stand. (Embodied Olympics `discus`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Throw the discus from the circle so that it lands inside the sector at least 15 m out, then leave the circle from its back half and stand. (Embodied Olympics `discus`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
 
 ## Difficulty
 15.0 m needs a release at about 12 m/s near 35 to 40 degrees with the discus flat to its flight and spinning, or the air turns it over. The H1-2's arm motors give 40 N m at the shoulder, so the speed has to come from the trunk's turn, inside a circle of 2.5 m that the robot may not leave until the discus is down. At that speed the discus pulls on the hand with some 300 N, held only by fingertips curled over its rim and the palm under it: the hand's path has to keep the discus pressed into the palm and the fingers until the release. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 5 resets (only the last attempt is graded).

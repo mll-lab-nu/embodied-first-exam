@@ -221,8 +221,8 @@ class Task(BarGrip, TaskBase):
     params = dict(bar_height_m=2.80, bar_length_m=2.40, bar_diameter_m=0.028, reps=5, hang_feet_below_bar_m=1.40,
                   off_bar_s=0.05, grip_scale=GRIP_SCALE)
 
-    sentence = ("Hanging from the high bar by your two hands, do five toes-to-bar: bring both feet up to touch the bar "
-                "between your hands, and come back to the full hang each time, without letting go.")
+    sentence = ("Do five toes-to-bar: hanging from the bar, bring both feet up to touch it between your hands and "
+                "go back to a full hang, without letting go.")
     rules = ("The bar is {bar_diameter_m} m thick, {bar_height_m} m above the floor, {bar_length_m} m long between its "
              "two uprights, along the y axis; it is fixed and does not turn. Your hands are three-finger hands (a "
              "thumb, an index and a middle finger; their drives {grip_scale} times the stock hand's torques), and at the start each is closed round the bar; they hold it by "

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Run the Illinois agility course without touching a cone: go up the left side and round the far-left cone, back round the centre cone on the start line, and weave up through the four centre cones and back down. Then go up the right side, round the far-right cone, and back over the finish line. (Embodied Olympics `slalom`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Run the Illinois agility course without touching a cone: round the far-left cone, back round the cone on the start line, weave up and back through the centre cones, round the far-right cone and back over the finish line, within 60 seconds. (Embodied Olympics `slalom`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
 
 ## Difficulty
 About 60 m of path with five turns round a cone and six changes of side between cones 3.3 m apart, in 60 s: the walking gait covers 38 m in that time, and the running gait turns at most half a radian per second, so at speed it cannot follow the weave or round a cone. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 5 resets (only the last attempt is graded).

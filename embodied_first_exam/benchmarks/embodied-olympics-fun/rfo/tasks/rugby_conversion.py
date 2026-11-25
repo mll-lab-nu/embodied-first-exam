@@ -83,8 +83,8 @@ class Task(TaskBase):
                   kick_max_s=0.15, beyond_m=0.4, instep_z_m=0.12, heel_x_m=0.08, toe_x_m=0.15, fall_z_m=0.35,
                   fall_after_kick_fails=0)
 
-    sentence = ("Kick a conversion: with one place kick of a foot, send the rugby ball standing on its tee over the "
-                "crossbar and between the posts.")
+    sentence = ("Kick the conversion: with one kick, send the ball from its tee over the crossbar between the "
+                "posts.")
     rules = ("A size-5 rugby ball (an oval 0.29 m long and 0.19 m across, 0.435 kg, in air) stands upright on a "
              "kicking tee ({tee_height_m} m high to its cup, {tee_kg} kg, standing free) on the grass in front of "
              "your right foot, on the 5-metre "

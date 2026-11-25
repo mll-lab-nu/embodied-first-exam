@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Do a standing backflip: jump, turn backwards through a full turn in the air, land on your feet and stand. (Embodied Olympics `backflip`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Do a standing backflip: jump, turn a full backward somersault in the air, land on your feet and stand still. (Embodied Olympics `backflip`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
 
 ## Difficulty
 A full backward turn needs about 0.6 s of flight with a fast rotation, from legs whose motors give 88 to 139 N m, and a landing on the feet that stops the rotation. No built-in action jumps at all. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 5 resets (only the last attempt is graded).

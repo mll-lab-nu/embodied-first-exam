@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/embodied-olympics-fun-balance-board-i00-privileged"
-description = "Embodied Olympics balance-board (one Unitree G1 on the Embodied Olympics simulator, MuJoCo 3.3.7, CPU) in privileged mode: produce one replayable trajectory. Stay balanced on the roller board for 30 seconds. Touch only the deck, and only with your feet, and keep both ends of the deck off the floor. A referee of events, geometry and contact rules decides the success."
+description = "Embodied Olympics balance-board (one Unitree G1 on the Embodied Olympics simulator, MuJoCo 3.3.7, CPU) in privileged mode: produce one replayable trajectory. Stay balanced on the roller board for 30 seconds, touching only the deck, with your feet, and keeping both ends of the deck off the floor. A referee of events, geometry and contact rules decides the success."
 keywords = ["robotics", "embodied-olympics", "sports", "mujoco", "unitree-g1", "humanoid", "trajectory", "balance-board"]
 
 [metadata]

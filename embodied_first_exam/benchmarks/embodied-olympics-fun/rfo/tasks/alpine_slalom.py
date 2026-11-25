@@ -1036,8 +1036,7 @@ class Task(AlpineRace):
                   n_gates=32, first_gate_m=12.0, gate_spacing_m=9.6, offset_m=0.8, gate_width_m=4.0, first_side=1.0,
                   course_m=320.0, finish_width_m=12.0, fall_h_m=0.35, stop_speed_m_s=0.10, stop_s=1.5)
 
-    sentence = ("Ski the slalom in one run down the course: take both ski tips and both feet through each of the "
-                "{n_gates} gates in order, then cross the finish line.")
+    sentence = ("Ski down the slalom course in one run, through all 32 gates in order, and cross the finish line.")
     rules = ("FIS alpine slalom, one run (a course of the U16-U14 minimum vertical drop). The course is a groomed slope falling at "
              "{slope_deg} degrees along +x (the fall line), {course_width_m} m wide, centred on y = 0. Each of your "
              "feet is bound to a slalom ski. You stand on your skis on the level start platform at the top of the course, your boots "

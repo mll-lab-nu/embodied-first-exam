@@ -42,8 +42,7 @@ class Task(TaskBase):
                   pit_width_m=3.66, pit_depth_m=0.50, pit_deep_length_m=1.20, side_top_tol_m=0.05, stand_s=1.0,
                   stand_tilt_deg=20.0, still_m_s=0.35)
 
-    sentence = ("Go over the steeplechase hurdle in front of you and over or through the water pit behind it, get out "
-                "beyond the pit's far edge and stand on your feet.")
+    sentence = ("Go over the steeplechase barrier and across the water pit behind it, then stand beyond the pit.")
     rules = ("The hurdle is fixed (it does not move or topple): its top bar is {bar_m} m square, {hurdle_width_m} m "
              "wide, with its top {hurdle_height_m} m above the track, on a post at each end. Its near face is "
              "{approach_m} m ahead of where your pelvis starts. The water jump is {water_jump_length_m} m long "

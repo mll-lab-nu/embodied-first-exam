@@ -99,8 +99,7 @@ class Task(TaskBase):
                   pit_width_m=2.75, **SAND_CONTACT, min_air_s=0.05, rise_min_m=0.05,
                   mark_window_s=2.0)
 
-    sentence = ("Do a long jump: run up, take off behind the take-off line, fly over the metre of runway beyond it "
-                "and land in the sand pit.")
+    sentence = ("Do a long jump: run up, take off behind the take-off line and land in the sand pit.")
     rules = ("World Athletics rules for the long jump. The runway is {runway_m} m long and {runway_width_m} m wide "
              "along +x. The take-off line is x = 0, the edge of the white take-off board ({board_length_m} m long, "
              "level with the runway) that is nearer the pit. The landing area is a pit of sand, level with the "

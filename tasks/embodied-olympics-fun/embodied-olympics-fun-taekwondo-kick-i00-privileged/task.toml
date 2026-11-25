@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/embodied-olympics-fun-taekwondo-kick-i00-privileged"
-description = "Embodied Olympics taekwondo-kick (one Unitree G1 on the Embodied Olympics simulator, MuJoCo 3.3.7, CPU) in privileged mode: produce one replayable trajectory. Kick the trunk protector of the dummy in front of you once with a foot, hard enough to score, then land and stand still for two seconds. A referee of events, geometry and contact rules decides the success."
+description = "Embodied Olympics taekwondo-kick (one Unitree G1 on the Embodied Olympics simulator, MuJoCo 3.3.7, CPU) in privileged mode: produce one replayable trajectory. Kick the dummy's trunk protector once, hard, with a foot, then stand clear of it. A referee of events, geometry and contact rules decides the success."
 keywords = ["robotics", "embodied-olympics", "sports", "mujoco", "unitree-g1", "humanoid", "trajectory", "taekwondo-kick"]
 
 [metadata]

@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/embodied-olympics-fun-high-bar-swing-i00-privileged"
-description = "Embodied Olympics high-bar-swing (one Unitree G1 on the Embodied Olympics simulator, MuJoCo 3.3.7, CPU) in privileged mode: produce one replayable trajectory. Standing on the block behind the high bar, jump up and catch the bar with both hands, then do one giant swing: take your extended body in a full circle around the bar, without letting go. A referee of events, geometry and contact rules decides the success."
+description = "Embodied Olympics high-bar-swing (one Unitree G1 on the Embodied Olympics simulator, MuJoCo 3.3.7, CPU) in privileged mode: produce one replayable trajectory. Jump from the block, catch the high bar with both hands and swing one full circle round it with your body straight, without letting go. A referee of events, geometry and contact rules decides the success."
 keywords = ["robotics", "embodied-olympics", "sports", "mujoco", "unitree-g1", "humanoid", "trajectory", "high-bar-swing"]
 
 [metadata]

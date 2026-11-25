@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Do a vertical jump: from a standstill, jump off both feet without a step, touch the vane above you with a hand at the top of the jump, land on your feet and stand. (Embodied Olympics `vertical-jump`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Jump straight up from both feet without a step, touch the vane above you with a hand, land on your feet and stand. (Embodied Olympics `vertical-jump`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
 
 ## Difficulty
 Neither built-in gait can jump. The robot has to raise its hand 0.30 m beyond its reach: a take-off at more than 2 m/s straight up from legs with real torque limits, an arm that is over the right place at the top, and a landing from that height that ends standing. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 5 resets (only the last attempt is graded).

@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/embodied-olympics-fun-clean-and-jerk-i00-privileged"
-description = "Embodied Olympics clean-and-jerk (one Unitree H1-2 on the Embodied Olympics simulator, MuJoCo 3.3.7, CPU) in privileged mode: produce one replayable trajectory. Clean and jerk the barbell: lift it from its blocks to your shoulders, then to locked arms overhead, and hold it there motionless until the down signal. A referee of events, geometry and contact rules decides the success."
+description = "Embodied Olympics clean-and-jerk (one Unitree H1-2 on the Embodied Olympics simulator, MuJoCo 3.3.7, CPU) in privileged mode: produce one replayable trajectory. Clean and jerk the barbell: lift it from its blocks with both hands to your shoulders, then overhead on locked arms, and hold it still until the down signal. A referee of events, geometry and contact rules decides the success."
 keywords = ["robotics", "embodied-olympics", "sports", "mujoco", "unitree-h1-2", "humanoid", "trajectory", "clean-and-jerk"]
 
 [metadata]

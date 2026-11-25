@@ -1203,7 +1203,9 @@ def _wrap_bullet(t: str) -> str:
 
 MCP_MODES = ("standard-mcp", "standard-mcp-shell")     # the MCP modes (their task dirs: branch standard-mcp)
 # the benchmarks (tasks/ folders) whose instructions are in the v2 form (the others keep the v1 form for now)
-V2_SUITES = frozenset({"robodojo"})
+V2_SUITES = frozenset({
+    "behavior-1k", "embodied-olympics-fun", "libero-max", "roboarc", "robocasa365", "robodojo", "robotwin-2",
+})
 
 
 def is_v2(text: str) -> bool:

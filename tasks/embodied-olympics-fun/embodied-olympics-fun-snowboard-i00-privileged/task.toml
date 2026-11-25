@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/embodied-olympics-fun-snowboard-i00-privileged"
-description = "Embodied Olympics snowboard (one Unitree G1 on the Embodied Olympics simulator, MuJoCo 3.3.7, CPU) in privileged mode: produce one replayable trajectory. Ride the parallel slalom on your snowboard: one run down the course, the board and both feet through each of the 18 gates in order, then over the finish line. A referee of events, geometry and contact rules decides the success."
+description = "Embodied Olympics snowboard (one Unitree G1 on the Embodied Olympics simulator, MuJoCo 3.3.7, CPU) in privileged mode: produce one replayable trajectory. Snowboard down the parallel-slalom course in one run, through all 18 gates in order, and cross the finish line. A referee of events, geometry and contact rules decides the success."
 keywords = ["robotics", "embodied-olympics", "sports", "mujoco", "unitree-g1", "humanoid", "trajectory", "snowboard"]
 
 [metadata]

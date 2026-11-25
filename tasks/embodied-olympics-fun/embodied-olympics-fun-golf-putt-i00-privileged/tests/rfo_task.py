@@ -203,8 +203,8 @@ class Task(TaskBase):
         super().configure(params)
         self.fall_z = self.p["fall_height_m"]
 
-    sentence = ("Hole the {putt_distance_m:g} m putt: with one stroke of the putter held in your right hand, roll the "
-                "golf ball that lies on the green into the hole, without letting go of the putter.")
+    sentence = ("Hole the putt: with one stroke of the putter in your right hand, roll the ball into the hole "
+                "without letting go of the putter.")
     rules = ("The ball (42.67 mm, 45.9 g) lies at rest on a flat green of stimp {stimp_ft} (a ball that starts rolling "
              "at 1.83 m/s stops after 3.05 m). The hole is cut into the green {putt_distance_m} m from the ball: "
              "{hole_diameter_m} m across and {hole_depth_m} m deep, with no flagstick in it. A putter ("

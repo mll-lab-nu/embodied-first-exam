@@ -297,9 +297,8 @@ class Task(Dive, TaskBase):
                   somersault_deg=180.0, somersault_tol_deg=45.0, entry_near_m=0.5, entry_far_m=3.0, line_tol_m=0.5,
                   platform_friction=1.0)
 
-    sentence = ("Do dive 101A, a forward dive straight, from the 10 m platform: take off from your standing start at "
-                "its front end, turn half a somersault forwards in the straight position, and enter the water head "
-                "first and vertical, with your arms stretched beyond your head.")
+    sentence = ("Dive from the 10 m platform: take off from both feet, do a forward half somersault with your body "
+                "straight, and go into the water head first, straight and vertical.")
     rules = ("You stand on the 10 m platform's front end facing the water (+x). The dive: take off from the "
              "platform (both feet stay on it until the take-off: a foot off it for more than {two_foot_window_s} s "
              "while the other is on it, or any flight of {min_air_s} s or more that lands on the platform again, "

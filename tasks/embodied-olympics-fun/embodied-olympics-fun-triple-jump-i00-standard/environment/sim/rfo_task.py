@@ -109,8 +109,8 @@ class Task(TaskBase):
                   pit_width_m=2.75, **SAND_CONTACT, min_air_s=0.05,
                   rise_min_m=0.05, single_support_s=0.05, foot_move_m=0.30, mark_window_s=2.0)
 
-    sentence = ("Do a triple jump: run up, hop from behind the take-off line and land on the same foot, step onto "
-                "the other foot, and jump from it into the sand pit.")
+    sentence = ("Do a triple jump: run up, then hop, step and jump into the sand pit, landing at least 7 m from the "
+                "take-off line.")
     rules = ("World Athletics rules for the triple jump. The runway is {runway_m} m long and {runway_width_m} m "
              "wide along +x and goes on to the pit. The take-off line is x = 0, the edge of the white take-off "
              "board ({board_length_m} m long) that is nearer the pit. The landing area is a pit of sand, level with "

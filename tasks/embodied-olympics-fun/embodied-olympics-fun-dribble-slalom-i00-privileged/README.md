@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Dribble the football out through the six cones, passing each on the side of its yellow mark, round the last cone and back through them, then over the start line. Keep the ball within 2 m of you and touch no cone. (Embodied Olympics `dribble-slalom`: one Unitree G1 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
+Dribble the football out through the six cones, passing each on the side of its yellow mark, round the last one and back the other way over the start line, keeping the ball within 2 m and touching no cone. (Embodied Olympics `dribble-slalom`: one Unitree G1 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
 
 ## Difficulty
 About 30 m of path with a tight turn in 90 s leaves little slack for a robot that walks at 0.6 m/s, and its running policy does not know the ball. Every step that meets the ball kicks it, a 0.43 kg ball kicked at walking speed rolls metres, and it has to be steered through gaps of 2 m without the feet or the ball touching a cone.

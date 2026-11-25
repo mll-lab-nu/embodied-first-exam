@@ -30,7 +30,8 @@ class Task(TaskBase):
     params = dict(turn_deg=300.0, min_air_s=0.20, stand_s=2.0, fall_pelvis_m=0.20, stand_tilt_deg=20.0,
                   still_m_s=0.35, area_m=12.0)
 
-    sentence = "Do a standing backflip: jump, turn backwards through a full turn in the air, land on your feet and stand."
+    sentence = ("Do a standing backflip: jump, turn a full backward somersault in the air, land on your feet and "
+                "stand still.")
     rules = ("The flip is one flight phase (nothing of you touches the ground) of at least {min_air_s} s that starts "
              "from your feet (at lift-off the last things on the ground were your feet, nothing else); shorter hops "
              "are ignored, and your first flight of at least {min_air_s} s is your attempt. The turn is measured on "

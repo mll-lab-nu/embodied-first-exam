@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Do a long jump: run up, take off behind the take-off line, fly over the metre of runway beyond it and land in the sand pit. (Embodied Olympics `long-jump`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Do a long jump: run up, take off behind the take-off line and land in the sand pit. (Embodied Olympics `long-jump`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
 
 ## Difficulty
 The sand begins a metre beyond the line: with the foot kept behind the line the robot has to fly about 1.2 m. Its running strides are in the air for less than 0.1 s and 0.4 m, its best published standing jump is 0.9 m. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 5 resets (only the last attempt is graded).

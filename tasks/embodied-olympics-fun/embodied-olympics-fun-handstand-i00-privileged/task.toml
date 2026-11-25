@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/embodied-olympics-fun-handstand-i00-privileged"
-description = "Embodied Olympics handstand (one Unitree G1 on the Embodied Olympics simulator, MuJoCo 3.3.7, CPU) in privileged mode: produce one replayable trajectory. Do a handstand: from your stance, get up onto your hands and hold a straight handstand still for two seconds with only your hands on the floor. Then come back down onto your feet and stand. A referee of events, geometry and contact rules decides the success."
+description = "Embodied Olympics handstand (one Unitree G1 on the Embodied Olympics simulator, MuJoCo 3.3.7, CPU) in privileged mode: produce one replayable trajectory. Do a handstand: get up onto your hands, hold a straight handstand still for two seconds, then come back down onto your feet and stand. A referee of events, geometry and contact rules decides the success."
 keywords = ["robotics", "embodied-olympics", "sports", "mujoco", "unitree-g1", "humanoid", "trajectory", "handstand"]
 
 [metadata]

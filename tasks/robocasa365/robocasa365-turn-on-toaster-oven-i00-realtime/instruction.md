@@ -1,61 +1,32 @@
-# RoboCasa365 · TurnOnToasterOven — REALTIME MODE (robot as a service; time does not stop)
+# RoboCasa365 · TurnOnToasterOven (realtime)
 
-A **Franka Panda arm on an Omron mobile base** (with a torso lift) works in a kitchen: RoboCasa365's `TurnOnToasterOven` kitchen task (robosuite, MuJoCo).
-**Task: Turn on the toaster oven by setting the timer.**
-The scene is one frozen instance: the initial state of one of the benchmark's official demonstrations.
+## Task
+Turn on the toaster oven by setting the timer.
 
-You control the robot **as if it were real hardware**: the simulator runs in a service you cannot open, you reach it
-only through a client, and like real hardware it does not wait for you: once an episode is running, the robot (and the
-kitchen: the timer knob, once set, turns back by itself (1/3000 of its range per simulated second)) moves on while you think.
+## Goal
+Success: the toaster oven's timer is set, its knob turned well up from zero. The episode ends as soon as the task is
+done, and that episode, as it ran, is graded.
 
-**Slowdown: S = 2.** The world runs at 1/S of real speed: one control step (0.05 s of robot time) every
-S x 0.05 s = 0.1 s of wall-clock time. `spec()["timing"]["slowdown"]` states it.
+Nothing to hand in: the service records and grades the episode. Keep the script that drives the robot at
+`/app/output/gen.py`.
 
-## Rules (real-robot rules)
+Real-robot rules:
 - **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
   reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
-- **Time does not stop.** The episode starts paused, on the frozen starting state, holding still. Its clock starts at
-  your first `submit` (or `get_obs(seconds=s)`) and from then on the robot runs one control step every 0.1 s of
-  wall-clock time, whether or not you send anything, until the episode ends. Between your commands it executes what you
-  planned; when the plan runs out it holds still (velocity channels zero, targets, grip and mode kept). Nothing pauses
-  for you, not your thinking, not your tool calls.
-- **Drive it with a program.** One turn of yours (a model response, a tool call) takes seconds: write a controller (Python
-  in your container, with numpy and the client) that plans or streams the commands, in the background
-  (`nohup python /app/output/gen.py > /app/output/run.log 2>&1 &`) or in the foreground; use your turns to read what
-  happened and improve the program while the episode runs.
-- **One episode, no reset.** The episode ends at the first control step after which the environment's success check
-  holds (success), after 3000 control steps (150 s of robot time; failed), when your time is up, or on a simulator
-  error. There is no reset (`spec()["budget"]["reset"]` is 0): the one episode is the run, and it is graded. Once it
-  has ended, `submit` raises `EpisodeOver`.
-- **No privileged state.** You see what the robot's cameras see (RGB, optional depth) and the robot's own state:
-  joints, end effector, the command in force, and each camera's current pose. No object poses, no scene layout, no
-  success signal: the service judges the episode and only tells you that it ended and why (`meta["done"]`,
-  `meta["reason"]`: `"success"`, `"failed"`, `"error"`).
-- There is nothing to hand in: the service records every control step it ran and grades the episode as it ran
-  (nothing is replayed). Keep the controller at `/app/output/gen.py` for the record.
-- Do not stop early: while the episode runs, the run can still pass.
+- One episode, no reset: it ends as soon as the task is done, after 3000 control steps (150 s of robot time), when your
+  time is up or on a simulator error; what you knock over stays knocked over.
+- No privileged state: you get the robot's camera images (with their calibration) and its own sensor readings; no object
+  poses, no scene layout; the service only tells you that the episode ended and why (`meta["done"]`, `meta["reason"]`:
+  `"success"`, `"failed"`, `"error"`).
 
-## Scoring
-The episode is graded by the environment's own success check for `TurnOnToasterOven` (`_check_success`, run twice after every
-control step, as in the privileged verifier) on the state after its last control step; the episode ends the moment it
-holds. The live episode is the verdict: the episode the service ran, as it ran; nothing is replayed.
+## Robot Interface
+A Franka Panda arm on an Omron mobile base with a torso lift, in a simulated kitchen (RoboCasa365, robosuite / MuJoCo).
+The robot runs as a service you reach only through its client, as if it were real hardware, on a clock that does not
+stop while you think: one live episode.
 
-The check for `TurnOnToasterOven` requires that the timer knob is at 0.1 or more of its range (normalised) at the end; a set timer slowly runs down.
-
-## Time and streaming
-- `submit` answers at once, with the robot as it is now: the rows you sent have not run yet. They become the plan from
-  control step `at` (an episode step number; by default the next step), replacing whatever was planned from `at` on.
-  `res.meta["control_steps"]` is the number of steps run so far in this episode, `res.meta["plan_end_step"]` where the
-  plan now ends. A chunk covers at most 10 s of robot time; `at` may be up to `spec()["timing"]["max_ahead_steps"]`
-  steps ahead, so plan a longer movement in several chunks (`at=0`, `at=200`, ...).
-- A row whose step has already run when the request arrives is dropped (`res.meta["late_steps"]`); in a gap before
-  `at` the last row in force is repeated, velocity channels included.
-- `get_obs()` reads the robot now; `get_obs(seconds=s)` (at most 30) waits while s seconds of robot time run and
-  returns what the cameras saw meanwhile. `cameras=[]` skips the images (the fastest call); rendering takes about 0.12
-  s a camera on the service's CPU and the robot does not wait for it.
-
-## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.3`, realtime mode)
-Its docstring is the full reference (`python -c "import rcb_client; help(rcb_client)"`).
+### Client
+`/opt/tools/rcb_client.py`, protocol `eai-standard/2.3`, realtime mode. Its docstring is the full reference
+(`python -c "import rcb_client; help(rcb_client)"`).
 
 | call | endpoint | what it does |
 |---|---|---|
@@ -65,24 +36,63 @@ Its docstring is the full reference (`python -c "import rcb_client; help(rcb_cli
 | `r.submit("joint_position", A, dt=0.05, interpolate="linear", at=None, cameras=None)` | `POST /submit` | plans `A`, rows of 13 channels `dt` apart, from step `at`; answers at once; the first one starts the clock |
 | `r.get_obs(cameras=None, seconds=0, include_depth=False, video="frames")` | `POST /observe` | the robot now, or what the cameras saw over the next `seconds` |
 
-One call returns at most 3000 images (`max_frames_per_call`, PROTOCOL §3 "Images per call"). A watch is refused with a 429 while the images in flight (pending watches and answers not read yet) would exceed it or 8 of them are outstanding; a `submit` or a `get_obs()` without seconds is never refused for its images: its answer then comes without its frames and `meta["frames_skipped"]` is set.
+One call returns at most 3000 images. A watch is refused with a 429 while the images in flight (pending watches and
+answers not read yet) would exceed it or 8 of them are outstanding; a `submit` or a `get_obs()` without seconds is never
+refused for its images: its answer then comes without its frames and `meta["frames_skipped"]` is set. The answers come
+back decoded: `res.meta` (the counters, `done`, `reason`, `proprio["now"]`, `clipped`), `res.last[camera]`, `res.frames`
+/ `res.video`, `res.depth`, `res.proprio`. Once the episode has ended, `submit` raises `EpisodeOver`.
 
-The answers come back decoded: `res.meta` (the counters, `done`, `reason`, `proprio["now"]`, `clipped`), `res.last[camera]`,
-`res.frames` / `res.video`, `res.depth`, `res.proprio`.
-- Action `joint_position`: the robot's native controller command, one row per control step (`control_dt` = 0.05 s).
-  13 channels, in order: `arm_joint1 .. arm_joint7` -- absolute joint position targets (rad, within the joint limits in `spec["action_types"]["joint_position"]` (`lower` / `upper`, from `r.spec()`)); `grip` (+1 closes, -1 opens); `base_x, base_y, base_yaw` -- the mobile base's velocities in its own frame (normalised, [-1, 1]); `torso` -- the torso lift's velocity; `hybrid_mode` (> 0: base mode; <= 0: arm mode, the default -1). Values are clipped to the limits.
-- Cameras: robot0_agentview_center, robot0_agentview_left, robot0_agentview_right, robot0_eye_in_hand (320 x 240, mounted on the robot; intrinsics in `spec()["cameras"]`). Each proprioception row ends with
-  every camera's current pose, `cam_<camera>_x, _y, _z` (position, m) and `_r00 .. _r22` (the camera-to-world rotation,
-  row by row; OpenGL axes: x right, y up, looking along -z).
+### Actions
+- Action `joint_position`: the robot's native controller command, one row per control step (`control_dt` = 0.05 s). 13
+  channels, in order: `arm_joint1 .. arm_joint7` -- absolute joint position targets (rad, within the joint limits in
+  `spec["action_types"]["joint_position"]` (`lower` / `upper`, from `r.spec()`)); `grip` (+1 closes, -1 opens);
+  `base_x, base_y, base_yaw` -- the mobile base's velocities in its own frame (normalised, [-1, 1]); `torso` -- the
+  torso lift's velocity; `hybrid_mode` (> 0: base mode; <= 0: arm mode, the default -1). Values are clipped to the
+  limits.
+
+### Observations
+- Cameras: robot0_agentview_center, robot0_agentview_left, robot0_agentview_right, robot0_eye_in_hand (320 x 240,
+  mounted on the robot; intrinsics in `spec()["cameras"]`). Each proprioception row ends with every camera's current
+  pose, `cam_<camera>_x, _y, _z` (position, m) and `_r00 .. _r22` (the camera-to-world rotation, row by row; OpenGL
+  axes: x right, y up, looking along -z).
 - World frame: metres, z up.
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+### Time and streaming
+- Slowdown: S = 2. The world runs at 1/S of real speed: one control step (0.05 s of robot time) every S × 0.05 s = 0.1 s
+  of wall-clock time. `spec()["timing"]["slowdown"]` states it.
+- The episode starts paused, on the starting state, holding still. Its clock starts at your first `submit` (or
+  `get_obs(seconds=s)`) and from then on the robot runs one control step every 0.1 s of wall-clock time, whether or not
+  you send anything, until the episode ends. Between your commands it executes what you planned; when the plan runs out
+  it holds still (velocity channels zero, targets, grip and mode kept). Nothing pauses for you.
+- `submit` answers at once, with the robot as it is now: the rows you sent have not run yet. They become the plan from
+  control step `at` (an episode step number; by default the next step), replacing whatever was planned from `at` on.
+  `res.meta["control_steps"]` is the number of steps run so far in this episode, `res.meta["plan_end_step"]` where the
+  plan now ends. A chunk covers at most 10 s of robot time; `at` may be up to `spec()["timing"]["max_ahead_steps"]`
+  steps ahead, so plan a longer movement in several chunks (`at=0`, `at=200`, ...).
+- A row whose step has already run when the request arrives is dropped (`res.meta["late_steps"]`); in a gap before `at`
+  the last row in force is repeated, velocity channels included.
+- `get_obs()` reads the robot now; `get_obs(seconds=s)` (at most 30) waits while s seconds of robot time run and returns
+  what the cameras saw meanwhile. `cameras=[]` skips the images (the fastest call); rendering takes about 0.12 s a
+  camera on the service's CPU and the robot does not wait for it.
 
-## Resources
-Your container: **4 CPUs**, **16 GiB of memory**, **8192 processes and threads** and **20 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
+## Others
+- The kitchen moves on too: the timer knob, once set, slowly turns back by itself.
+- One turn of yours (a model response, a tool call) takes seconds: write a controller (Python in your container, with
+  numpy and the client) that plans or streams the commands, in the background
+  (`nohup python /app/output/gen.py > /app/output/run.log 2>&1 &`) or in the foreground; use your turns to read what
+  happened and improve the program while the episode runs.
+- Do not end your session early: while the episode runs, it can still succeed.
 
-## Time limit
-You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
-
-This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` counts the same limit from your first request to the service, so it never runs out before your time does: your real time left is `time_left_s` minus the time you spent before that request. Plan by it. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+## Limits
+- Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
+  the end you are stopped without warning and the episode is graded as it stands. Time left:
+  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`); the service's `time_left_s` (in every reply) starts at
+  your first request, so the file is the one to trust. Calls into a long-running process can block for their whole wait
+  time: use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, the simulator's and the benchmark's source included.
+- Resources: 4 CPUs, 16 GiB memory, 8192 processes and threads, 20 GiB disk (new files under `/app`, `/tmp`, `/root`),
+  no GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap
+  only slows you down); usage: `/run/rcb-limits/usage.json`.
+- Resets: none: one episode.

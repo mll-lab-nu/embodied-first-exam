@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-From behind the line, throw the tennis ball held in your right hand at the target circle on the wall, then catch the rebound in a hand before it touches the ground and keep hold of it. (Embodied Olympics `wall-ball`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+From behind the line, throw the ball at the target circle on the wall, then catch the rebound in a hand before it lands and hold it. (Embodied Olympics `wall-ball`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
 
 ## Difficulty
 To come back five metres through the air the ball has to hit the wall at about 16 m/s or more, inside a circle half a metre across, and it then returns in under half a second at about 10 m/s. The ball, 67 mm across, has to arrive in an open hand, and the fingers (260 deg/s) and the slower thumb have to close round it before it bounces out of the palm. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 5 resets (only the last attempt is graded).

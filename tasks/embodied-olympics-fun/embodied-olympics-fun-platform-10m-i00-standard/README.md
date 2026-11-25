@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Do dive 101A, a forward dive straight, from the 10 m platform: take off from your standing start at its front end, turn half a somersault forwards in the straight position, and enter the water head first and vertical, with your arms stretched beyond your head. (Embodied Olympics `platform-10m`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Dive from the 10 m platform: take off from both feet, do a forward half somersault with your body straight, and go into the water head first, straight and vertical. (Embodied Olympics `platform-10m`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
 
 ## Difficulty
 A dive needs a take-off that is high enough and gives exactly the right forward rotation, then a straight body with the legs drawn together, the toes pointed and the short arms stretched overhead through a 1.4 s fall. A small error at the take-off becomes a short or over-rotated entry, and nothing can be corrected once it is in the air. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 5 resets (only the last attempt is graded).

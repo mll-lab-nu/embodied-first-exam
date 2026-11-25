@@ -80,8 +80,7 @@ class Task(TaskBase):
                   hogu_w_m=0.32, hogu_t_m=0.04, hogu_contact_s=0.026, hogu_damping=0.5, min_impulse_n_s=7.2,
                   max_contact_s=0.05, touch_gap_s=0.03, stand_s=2.0, heel_x_m=0.08, toe_x_m=0.15, fall_z_m=0.35)
 
-    sentence = ("Kick the trunk protector of the dummy in front of you once with a foot, hard enough to score, then "
-                "land and stand still for two seconds.")
+    sentence = ("Kick the dummy's trunk protector once, hard, with a foot, then stand clear of it.")
     rules = ("A body-opponent dummy stands free on the floor in front of you: a heavy round base ({base_d_m} m across, "
              "{base_h_m} m high, {base_kg} kg, friction {base_mu} on the floor) carrying on a stem a torso "
              "({torso_w_m} m wide, {torso_d_m} m deep, from {torso_low_m} m up, {torso_kg} kg) and a head, "

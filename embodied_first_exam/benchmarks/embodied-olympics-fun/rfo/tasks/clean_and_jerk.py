@@ -113,8 +113,8 @@ class Task(TaskBase):
                   upright_cos=0.94, bar_centre_m=0.25, bar_align_deg=20.0,
                   hold_s=2.0, off_bar_s=0.05, block_height_m=0.35, block_y_m=0.80)
 
-    sentence = ("Clean and jerk the barbell: lift it from its blocks to your shoulders, then to locked arms "
-                "overhead, and hold it there motionless until the down signal.")
+    sentence = ("Clean and jerk the barbell: lift it from its blocks with both hands to your shoulders, then "
+                "overhead on locked arms, and hold it still until the down signal.")
     rules = ("The barbell is an aluminium technique bar ({bar_mass_kg} kg, {bar_length_m} m long; the grip section "
              "between the inner collars is {grip_length_m} m long and {grip_diameter_m} m thick; the sleeves are "
              "{sleeve_length_m} m long and {sleeve_diameter_m} m thick and revolve on the bar), without discs or "

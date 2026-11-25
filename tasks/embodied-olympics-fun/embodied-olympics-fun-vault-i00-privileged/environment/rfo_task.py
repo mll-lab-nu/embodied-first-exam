@@ -46,8 +46,8 @@ class Task(TaskBase):
                   mat_length_m=6.0, mat_width_m=2.5, mat_thickness_m=0.20, mat_contact_s=0.04,
                   top_tol_m=0.02, stand_s=1.0, stand_tilt_deg=20.0, still_m_s=0.35)
 
-    sentence = ("Vault over the vault table at the end of the run-up: go over it with at least one hand on its top "
-                "and nothing but your hands touching it, then land on your feet on the landing mat and stand.")
+    sentence = ("Vault over the vaulting table: run up, push off it with your hands only, land on your feet on the "
+                "mat and stand.")
     rules = ("The vault table's top is {table_height_m} m above the floor, {table_length_m} m long (along +x, the way "
              "you face) and {table_width_m} m wide, on a pedestal; its near edge is {runup_m} m ahead of where your "
              "pelvis starts, centred on your line. A springboard stands before it: a board {board_length_m} m long "

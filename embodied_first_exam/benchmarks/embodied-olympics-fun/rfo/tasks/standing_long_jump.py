@@ -47,8 +47,8 @@ class Task(TaskBase):
     params = dict(qualifying_mark_m=1.32, toe_gap_m=0.05, two_foot_window_s=0.05, foot_shift_m=0.03, min_air_s=0.10,
                   rise_min_m=0.05, stand_s=1.0, fall_z_m=0.35)
 
-    sentence = ("Do a standing long jump: from a standstill behind the take-off line, take off from both feet "
-                "without a step, land on your feet at least your own height beyond the line, and stand.")
+    sentence = ("Do a standing long jump: from both feet, without a step, jump at least your own height (1.32 m) "
+                "past the line, land on your feet and stand.")
     rules = ("The take-off line is x = 0; you jump towards +x. Your jump is your first flight (nothing of you touches "
              "the ground) of at least {min_air_s} s. Until then: no part of a foot that is on the ground may be on or "
              "over the line (the whole foot counts, also the parts of it that are in the air); no run-up and no "

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Juggle the football: drop it from between your palms and keep it in the air for ten touches in a row with your feet, legs or head, without it touching the ground or a hand again. (Embodied Olympics `juggling`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Drop the football from your hands and keep it up for ten touches in a row with your feet, legs or head, without it touching the ground. (Embodied Olympics `juggling`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
 
 ## Difficulty
 Each touch is an upward strike by a leg or the head, timed to a falling 0.43 kg ball and aimed so that the ball comes down within reach again, ten times in a row; the robot has to stand on one leg to use a foot or a thigh, which neither built-in gait does, and a ball that merely bounces on a still limb loses a quarter of its height each time and wanders off. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 5 resets (only the last attempt is graded).

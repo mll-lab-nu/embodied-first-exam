@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/embodied-olympics-fun-freeski-straight-air-i00-privileged"
-description = "Embodied Olympics freeski-straight-air (one Unitree G1 on the Embodied Olympics simulator, MuJoCo 3.3.7, CPU) in privileged mode: produce one replayable trajectory. Drop in from the start platform and ride the in-run. Take off from the kicker and do a straight air, then land on your skis and ride away past the finish line. A referee of events, geometry and contact rules decides the success."
+description = "Embodied Olympics freeski-straight-air (one Unitree G1 on the Embodied Olympics simulator, MuJoCo 3.3.7, CPU) in privileged mode: produce one replayable trajectory. Ski down the in-run, jump off the kicker with no spin or flip, then land on your skis and ride away over the finish line. A referee of events, geometry and contact rules decides the success."
 keywords = ["robotics", "embodied-olympics", "sports", "mujoco", "unitree-g1", "humanoid", "trajectory", "freeski-straight-air"]
 
 [metadata]

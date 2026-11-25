@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Do a round-off: go from your feet onto your hands, turn half round through the handstand and come down onto both feet together facing back the way you came, then stand. (Embodied Olympics `round-off`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Do a round-off: go over onto your hands with a half turn, land on both feet together facing back the way you came, and stand. (Embodied Olympics `round-off`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
 
 ## Difficulty
 The round-off passes your whole weight over two small fists while the body turns half round in the air above them, and ends in a two-foot landing that must stop the rotation: there is no built-in action for any of it and the arms' motors give 25 N m. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 5 resets (only the last attempt is graded).

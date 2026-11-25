@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Ride the parallel slalom on your snowboard: one run down the course, the board and both feet through each of the 18 gates in order, then over the finish line. (Embodied Olympics `snowboard`: one Unitree G1 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
+Snowboard down the parallel-slalom course in one run, through all 18 gates in order, and cross the finish line. (Embodied Olympics `snowboard`: one Unitree G1 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
 
 ## Difficulty
 A snowboard turns on its toe edge and its heel edge: the robot must tip the board by leaning forwards or back over it, its feet locked to one plank, with no walking policy; toe-side turns ask it to balance over the narrow board's front edge at speed, heel-side turns to sit back without falling.

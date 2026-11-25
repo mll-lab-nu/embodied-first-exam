@@ -172,9 +172,8 @@ class Task(TaskBase):
                   touch_window_s=0.5, blame_recent_s=0.1, support_n=100.0,
                   strike_s=0.15, beside_m=0.10, down_z_m=0.40, down_limit_s=10.0)
 
-    sentence = ("Run the 50 m hurdles: go over each of the four free-standing hurdles in your lane, never beside or "
-                "under it and never after pushing it out of the way, then bring your torso to the finish line. Leave "
-                "at least one hurdle standing in its place.")
+    sentence = ("Run the 50 m hurdles: go over each of the four hurdles in your lane and reach the finish line, "
+                "leaving at least one hurdle standing.")
     rules = ("World Athletics rules for the hurdles, at the indoor distance of 50 m. The lane runs along +x, "
              "{lane_width_m} m wide, centred on y = 0; the start line ({start_line_m} m wide) has its far edge at "
              "x = 0, the finish line is x = {distance_m} m. {hurdles} hurdles stand across the lane, the face of "

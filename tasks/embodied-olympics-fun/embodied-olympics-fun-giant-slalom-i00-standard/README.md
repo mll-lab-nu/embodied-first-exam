@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Ski the giant slalom in one run down the course: take both ski tips and both feet through each of the 26 gates in order, then cross the finish line. (Embodied Olympics `giant-slalom`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Ski down the giant-slalom course in one run, through all 26 gates in order, and cross the finish line. (Embodied Olympics `giant-slalom`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
 
 ## Difficulty
 Giant-slalom skis carve long arcs: to turn, the robot must roll them onto their edges and lean its body into the turn so that the snow's force passes through its centre of mass, with no walking or running policy to help. The gates are far apart, so speed builds between them, and a lean that does not match the turn throws it on the snow. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 5 resets (only the last attempt is graded).

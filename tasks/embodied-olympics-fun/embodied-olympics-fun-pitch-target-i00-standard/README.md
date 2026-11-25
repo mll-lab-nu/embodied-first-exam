@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Pitch a strike: from the pitcher's plate on the mound, with a foot on the plate, throw the baseball held in your right hand through the strike zone over home plate, on the fly. (Embodied Olympics `pitch-target`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Pitch a strike: with a foot on the pitcher's plate, throw the baseball through the strike zone over home plate on the fly. (Embodied Olympics `pitch-target`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
 
 ## Difficulty
 From 18.44 m the ball needs more than 13 m/s even on a high arc, and the zone is 0.43 m wide: a release direction right to about one degree. The H1-2 has no throwing motion; the speed has to come from the trunk and the whole arm while a foot stays on the plate and the body on the mound, and fingers that open no faster than 260 deg/s have to let the ball go at the right hundredth of a second. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 5 resets (only the last attempt is graded).
