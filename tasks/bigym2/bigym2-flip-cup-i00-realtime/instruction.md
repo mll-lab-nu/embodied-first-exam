@@ -10,14 +10,14 @@ robot balanced: you command where it walks, how high its pelvis is, how far its 
 At the start the cup stands upside down on the counter in front of you, about 0.6 m away, straight ahead, 0.96 m above the floor. (Distances are from your pelvis along the floor, directions from the way you face,
 heights above the floor; measured on this scene.)
 
-## Rules (real-robot rules)
-- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
-  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
+## Rules
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+  benchmark's demonstrations, trained policies); trials are reviewed.
 - **Time does not stop.** The episode starts paused, on a fixed starting state, the robot standing still. Its clock starts at your first `submit` (or `get_obs(seconds=s)`) and from then on the robot runs at 50 Hz in real time, one control step every 0.02 s of wall-clock time, whether or not you send anything, until the episode ends. Between your commands it executes what you planned, then holds your last command with zero walking and turning velocity (it stands still where it is); nothing pauses for you, not your thinking, not your tool calls.
 - **You are far too slow to steer it turn by turn.** One turn of yours takes seconds. Drive it with a program: a controller of your own (Python in your container, with numpy and the client) that runs a loop, reads the robot and sends commands, started in the background (`setsid nohup python -u /app/output/gen.py > /app/output/run.log 2>&1 < /dev/null &`: `setsid` matters, a plain `nohup ... &` is killed when your shell command returns) so that your session is free while it runs.
 - **One episode, no reset.** `spec()["budget"]["reset"]` is authoritative: it is 0 here, so the one episode is the run.
 - **No privileged state, no score.** You see what the robot's three cameras see (RGB, 84×84: `head`, `left_wrist`, `right_wrist`) and its own proprioception (below). Not where any object is now (only the start sentence above), not the success check: the service judges the episode and only tells you that it ended and why (`meta["done"]`, `meta["reason"]`). `spec()` gives the robot's facts: the action slots and their bounds, each camera's field of view and its pose at the start.
-- There is nothing to hand in: the service records every control step it ran and grades the episode as it ran. Keep the controller at `/app/output/gen.py` for the record: save it early and keep it current.
+- Keep the controller at `/app/output/gen.py` for the record: save it early and keep it current.
 - Wall-clock budget: the time limit (`## Time limit`). It ends without warning, and ending your session earlier ends the run the same way (and stops your background programs), so do not stop early.
 
 ## Success

@@ -17,9 +17,8 @@ one of another shape or one that cannot be read scores 0. It is replayed open-lo
 margin. Leave the script that produced it at `/app/output/gen.py`. Save a valid one early and overwrite it when you have
 a better one.
 
-Rules: **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published
-or reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed. Only the trajectory
-counts: changing the simulator's state while you develop changes nothing in the grading.
+Rules: **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+benchmark's demonstrations, trained policies); trials are reviewed.
 
 ## Robot Interface
 An R1Pro mobile bimanual robot in a simulated house (BEHAVIOR-1K: OmniGibson on Isaac Sim). The scene is one fixed

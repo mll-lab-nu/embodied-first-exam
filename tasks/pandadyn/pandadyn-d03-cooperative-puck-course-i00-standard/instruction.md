@@ -55,9 +55,9 @@ most 1.05 x 13 m/s² and 1.05 x 25 rad/s²; motor torques at most (87, 87, 87, 8
 1000 N m/s. The servo's own reference motion is checked against the same speed, acceleration and jerk limits. A contact
 (a catch, a strike) moves the arm too: what is measured counts, whatever was commanded.
 
-## Rules (real-robot rules)
-- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
-  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
+## Rules
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+  benchmark's demonstrations, trained policies); trials are reviewed.
 - **Episodes and resets.** The first episode starts when the service comes up. An episode ends on success, on a failure,
   when your time is up, or on a simulator error. You have **3 resets** (`spec()["budget"]["reset"]`, which is
   authoritative: if it says 0, there is no reset and the one episode is the run). `r.reset()` puts the robot and the scene

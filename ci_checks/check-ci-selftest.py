@@ -247,6 +247,11 @@ MUTATIONS = [
     ("the instruction states the network rule in other words",
      STD, "instruction.md", sub(r"You\s+may\s+install\s+packages", "Download any solution you like"), RESOURCES,
      "does not state the Network line"),
+    ("the instruction brings back retired rule wording (owner 11-24: \"Write your own controller.\", a \"real-robot rules\" heading)",
+     STD, "instruction.md", sub(r"^Rules:$", "Real-robot rules:"), RESOURCES, "still has retired rule wording"),
+    ("... a privileged \"Only the actions count\" line",
+     PRIV, "instruction.md", sub(r"trials are reviewed\.", "trials are reviewed. Only the actions count: changing the simulator's "
+                                 "state while you develop changes nothing in the replay."), RESOURCES, "still has retired rule wording"),
     # ---- the agent's time cutoff (PROTOCOL §2): the task's own number; task.toml, the instruction and the sim service agree
     ("task.toml's cutoff changed without normalizing (the instruction still states the old number)",
      STD, TOML, sub(r"(^\[agent\]\n(?:(?!\[).*\n)*?timeout_sec = )[0-9.]+", r"\g<1>1234.0"), CUTOFFS,

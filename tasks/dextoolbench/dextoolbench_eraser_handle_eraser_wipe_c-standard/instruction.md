@@ -7,9 +7,9 @@ wipe_c` of DexToolBench (SimToolReal), run here in plain MuJoCo.
 You control the robot **as if it were real hardware**: the simulator runs in a service you cannot open. You get one
 client and **20 resets**: at most 21 episodes, of which the last is graded.
 
-## Rules (real-robot rules)
-- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
-  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
+## Rules
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+  benchmark's demonstrations, trained policies); trials are reviewed.
 - **Episodes and resets.** You have **20 resets** (`spec()["budget"]["reset"]`, which is authoritative: if it says 0,
   there is no reset and the one episode is the run). `r.reset()` puts the robot, the tool and the goals back to the same
   starting state and starts a new episode, either abandoning the running one or after one has ended. Within an episode

@@ -5,9 +5,9 @@ one client and one episode. **Task:** Hold the tray with one hand and insert the
 
 The tray with a round socket and the 8 mm round peg lie on the table in front of the robots.
 
-## Rules (real-robot rules)
-- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
-  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
+## Rules
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+  benchmark's demonstrations, trained policies); trials are reviewed.
 - **No reset.** The episode starts when the service comes up and ends on success, on a task failure (see the task), when
   your time is up, or on a simulator error. Knocked-over objects stay knocked over.
 - **No privileged state.** You see what the cameras see (RGB, and depth on request, with each camera's calibration) plus
@@ -15,8 +15,7 @@ The tray with a round socket and the 8 mm round peg lie on the table in front of
   `meta["done"]` / `meta["reason"]` tell you when the episode is over and why.
 - Steps are unlimited; your only budget is the time limit (`## Time limit`; `meta["time_left_s"]` is the service's count of it). Actions and
   simulated time are reported as cost. Do not stop before the task is solved.
-- There is nothing to hand in: the service records your episode as the trajectory and grades it. Leave your script at
-  `/app/output/gen.py` for the record (save it early, update it as you go).
+- Leave your script at `/app/output/gen.py` for the record (save it early, update it as you go).
 - **Nothing is put into your context automatically.** Images and videos come back as arrays/bytes in a Python object;
   what you look at and where you store it is your code's decision.
 

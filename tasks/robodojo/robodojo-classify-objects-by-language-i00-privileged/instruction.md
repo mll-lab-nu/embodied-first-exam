@@ -14,9 +14,8 @@ the script that produced it at `/app/output/gen.py`. It is replayed from the fix
 task succeeds in any replay. Replays can end slightly differently: leave a margin. Save a valid one early and overwrite
 it when you have a better one.
 
-Rules: **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published
-or reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed. Only the actions count:
-changing the simulator's state while you develop changes nothing in the replay.
+Rules: **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+benchmark's demonstrations, trained policies); trials are reviewed.
 
 ## Robot Interface
 Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /

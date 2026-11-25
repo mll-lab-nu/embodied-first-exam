@@ -4,9 +4,9 @@ You control a simulated TidyBot++ mobile manipulator (KinDER / MuJoCo) -- a holo
 arm and a Robotiq 2F-85 gripper -- **as if it were real hardware**: the simulator runs in a service you cannot open,
 and you reach it only through a client. **Task:** drive the robot into the translucent green square marked on the floor. Three chairs stand in the way, and you may push them. The task succeeds the moment the centre of the robot's base is inside the square. The red, blue and yellow squares only mark where the chairs started. Measured at the start, in the odometry frame (below): the green square's centre is at x = 5.12 m, y = -2.48 m, 5.7 m from the centre of the base and 26° to the right of the way it faces; it is 0.85 m along x by 0.85 m along y, its sides turned about 7° counter-clockwise (seen from above) from the frame's axes.
 
-## Rules (real-robot rules)
-- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
-  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
+## Rules
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+  benchmark's demonstrations, trained policies); trials are reviewed.
 - **No reset: one episode.** The episode starts when the service comes up. It ends when the task succeeds, after
   1000 control steps (100 s of robot time), when your time is up, or on a simulator error; nothing else ends it.
   No other episode follows (`spec()["budget"]["reset"]` is 0, and it is authoritative), and **this episode is graded**: a success ends the run at once, and when your time is up it is graded as it stands. Once it has ended, `submit` raises `EpisodeOver`.
@@ -18,8 +18,7 @@ and you reach it only through a client. **Task:** drive the robot into the trans
   `meta["reason"]`: `"success"`, `"failed"` when its control steps ran out, or `"error"` after a simulator error).
   `spec()` gives the robot's own facts, as its documentation would: each arm joint's axis, position and limits, the
   gripper's grasp point, each camera's field of view and pose.
-- There is nothing to hand in: the service records the episode and grades it as it ran. Keep the script
-  that drives the robot at `/app/output/gen.py` for the record: save it early and keep it current.
+- Keep the script that drives the robot at `/app/output/gen.py` for the record: save it early and keep it current.
 - Wall-clock budget: the time limit (`## Time limit`). It ends without warning, and ending your session earlier ends the run
   the same way, so do not stop early: while the episode runs, the run can still pass.
 

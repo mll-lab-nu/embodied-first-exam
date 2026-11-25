@@ -5,18 +5,15 @@ Take the bar soap and the dish brush out of the cabinet and put them on the coun
 
 ## Goal
 Success: the bar soap and the dish brush are both on the counter nearest the cabinet, and the hand has let go and moved
-well away from both. What counts is how things stand at the end of the episode: a success reached earlier and lost by
-the end does not count, so finish in the state you want graded and stop sending commands.
+well away from both. What counts is how things stand at the end of the episode.
 
-Nothing to hand in: the service records and grades the episode. Keep the script that drives the robot at
-`/app/output/gen.py`.
+Keep the script that drives the robot at `/app/output/gen.py`.
 
-Real-robot rules:
-- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
-  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
+Rules:
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+  benchmark's demonstrations, trained policies); trials are reviewed.
 - One episode, no reset: what you knock over stays knocked over.
-- No privileged state: you get the robot's camera images (with their calibration) and its own sensor readings; no object
-  poses, no scene layout, no success signal.
+- You get only the cameras and the robot's own sensor readings: no object poses, no scene layout, no success signal.
 
 ## Robot Interface
 A Franka Panda arm on an Omron mobile base with a torso lift, in a simulated kitchen (RoboCasa365, robosuite / MuJoCo).

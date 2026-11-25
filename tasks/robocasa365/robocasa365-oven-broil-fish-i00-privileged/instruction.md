@@ -5,16 +5,14 @@ Put the fish on the oven's bottom rack, slide the rack back in and close the ove
 
 ## Goal
 Success: the fish is on the oven's bottom rack and the oven door is fully closed, and both have stayed that way for a
-moment. What counts is how things stand after the last action of your trajectory, replayed from the fixed start: a
-success reached earlier and lost by the end does not count.
+moment. What counts is how things stand after the last action of your trajectory, replayed from the fixed start.
 
 Deliverable: `/app/output/trajectory.npz` with key `actions`: the robot's native controller commands, shape `(T, 13)`
 with 1 ≤ T ≤ 3000, one row per control step (1/20 s). Write it with `s.save_trajectory()` so the format is right. Leave
 the script that produced it at `/app/output/gen.py`. Save a valid one early and overwrite it when you have a better one.
 
-Rules: **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published
-or reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed. Only the actions count:
-changing `s.data` or the environment while you develop changes nothing in the replay.
+Rules: **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+benchmark's demonstrations, trained policies); trials are reviewed.
 
 ## Robot Interface
 A Franka Panda arm on an Omron mobile base with a torso lift, in a simulated kitchen (RoboCasa365, robosuite / MuJoCo).

@@ -7,16 +7,15 @@ bin up high, about a forearm's length above the table.
 ## Goal
 Success: all five balls are in the big bin on the floor, and the small bin is still held up about a forearm's length or
 more above the table. What counts is how things stand after the last action of your trajectory, replayed from the fixed
-start: a success reached earlier and lost by the end does not count.
+start.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, "/app/output/trajectory.npz")`: the
 recorded actions, (T, 34), one row per physics step (1/250 s); at most 200,000 rows are graded. It is replayed open-loop
 from the fixed start (`s.replay(actions)` and the replay CLI do the same). Leave the script that produced it at
 `/app/output/gen.py`. Save a valid one early and overwrite it when you have a better one.
 
-Rules: **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published
-or reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed. Only the trajectory
-counts: changing the simulator's state while you develop changes nothing in the grading.
+Rules: **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+benchmark's demonstrations, trained policies); trials are reviewed.
 
 ## Robot Interface
 A dual-arm ALOHA-AgileX robot at a table (RoboTwin 2.0, SAPIEN / PhysX). CuRobo plans the arms' motions. The scene is

@@ -34,9 +34,9 @@ points of your proprioception) is inside the object's bounding box grown by 3 cm
 a fixed rectangle slightly inside the edges of the table top (its corners are world positions, which this mode does
 not give: keeping clear of the table's edges satisfies it).
 
-## Rules (real-robot rules)
-- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
-  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
+## Rules
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+  benchmark's demonstrations, trained policies); trials are reviewed.
 - **No reset.** The episode starts when the service comes up and ends on success, when your time is up, on a
   simulator error, or at the technical step cap below. Knocked-over objects stay knocked over.
 - **No privileged state.** You see what the cameras see (RGB, and depth when you ask for it) plus the robot's own state:
@@ -49,8 +49,7 @@ not give: keeping clear of the table's edges satisfies it).
   that watches counts too). The call that reaches it stops there and the episode ends (`reason` "step_guard"); no
   settle window runs after the cap, so such an episode is graded without one, as a failure. Use the time: ending your
   session before the task is done ends the episode as a failure.
-- There is nothing to hand in: the service records your episode as the trajectory and grades it. Leave your script
-  at `/app/output/gen.py` for the record.
+- Leave your script at `/app/output/gen.py` for the record.
 - **Nothing is put into your context automatically.** Images and videos come back as arrays/bytes in a Python object;
   what you look at and where you store it is your code's decision.
 - **A busy service has not crashed.** The service answers one request at a time: while a call runs, every other

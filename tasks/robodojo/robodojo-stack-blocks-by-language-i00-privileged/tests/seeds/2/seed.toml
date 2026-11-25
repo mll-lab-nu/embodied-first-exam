@@ -7,8 +7,8 @@ old = "## Goal\nSuccess: the three cubes stand in one tower, blue at the bottom,
 new = "## Goal\nSuccess: the three cubes stand in one tower, yellow at the bottom, green in the middle and red on top, each nearly\ncentred on the one below, and both arms are back where they started. A replay ends as soon as the task is done; later\nrows are not run."
 
 [[replace]]
-old = "## Goal\nSuccess: the three cubes stand in one tower, blue at the bottom, yellow in the middle and orange on top, each nearly\ncentred on the one below, and both arms are back where they started. What counts is how things stand at the end of the\nepisode: a success reached earlier and lost by the end does not count, so finish in the state you want graded and stop\nsending commands."
-new = "## Goal\nSuccess: the three cubes stand in one tower, yellow at the bottom, green in the middle and red on top, each nearly\ncentred on the one below, and both arms are back where they started. What counts is how things stand at the end of the\nepisode: a success reached earlier and lost by the end does not count, so finish in the state you want graded and stop\nsending commands."
+old = "## Goal\nSuccess: the three cubes stand in one tower, blue at the bottom, yellow in the middle and orange on top, each nearly\ncentred on the one below, and both arms are back where they started."
+new = "## Goal\nSuccess: the three cubes stand in one tower, yellow at the bottom, green in the middle and red on top, each nearly\ncentred on the one below, and both arms are back where they started."
 
 [[replace]]
 old = "arx_x5/0/stack_blocks_by_language_0.json"

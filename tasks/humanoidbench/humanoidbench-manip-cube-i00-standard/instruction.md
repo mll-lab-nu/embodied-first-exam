@@ -4,9 +4,9 @@ You control a simulated Unitree H1 humanoid with two Shadow dexterous hands (Hum
 it were real hardware**: the simulator runs in a service you cannot open, and you reach it only through a
 client. **Task:** a cube starts just above and in front of each palm. Rotate both cubes, without dropping them, until each matches the orientation of the translucent cube with the same faces that floats above and between the hands.
 
-## Rules (real-robot rules)
-- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
-  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
+## Rules
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+  benchmark's demonstrations, trained policies); trials are reviewed.
 - **Episodes and resets.** The episode starts when the service comes up. It ends when the task succeeds, when
   the robot falls (its pelvis drops too low), when either cube drops, after 500 control steps (10 s of robot
   time), when your time is up, or on a simulator error. Nothing else ends it: a robot that has fallen without

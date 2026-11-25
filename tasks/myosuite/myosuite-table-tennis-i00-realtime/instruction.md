@@ -11,8 +11,8 @@ You stand at a table-tennis table holding a paddle in the right hand; a ball is 
 wall-clock time (real time). `spec()["timing"]["slowdown"]` states it.
 
 ## Rules (real-world rules)
-- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
-  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+  benchmark's demonstrations, trained policies); trials are reviewed.
 - **Time does not stop.** An episode starts paused, on the frozen starting state, with every command at -1 (muscles
   relaxed). Its clock starts at your first `submit` (or `get_obs(seconds=s)`) and from then on the simulator runs at
   100 Hz of robot time (S = 1), one control step every 10 ms of wall-clock time, whether or not you send anything, until

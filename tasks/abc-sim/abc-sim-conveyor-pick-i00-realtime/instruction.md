@@ -11,8 +11,8 @@ A conveyor belt runs across the table in front of the arms, along y, between two
 wall-clock time (real time). `spec()["timing"]["slowdown"]` states it.
 
 ## Rules (real-world rules)
-- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
-  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+  benchmark's demonstrations, trained policies); trials are reviewed.
 - **Time does not stop.** The episode starts paused, on the frozen starting state, with the robot holding its starting
   pose. Its clock starts at your first `submit` (or `get_obs(seconds=s)`) and from then on the simulator runs at 29.4 Hz
   of robot time (S = 1), one control step every 0.034 s of wall-clock time, whether or not you send anything, until the
@@ -31,9 +31,7 @@ wall-clock time (real time). `spec()["timing"]["slowdown"]` states it.
   success check: the service judges the episode and only tells you that it ended and why (`meta["done"]`,
   `meta["reason"]`: `"success"`, `"error"` after a simulator error, else `"failed"`). `spec()` gives the robot's own
   facts: the action layout and limits, the joints, each camera's intrinsics and mounting.
-- There is nothing to hand in: the service records every control step it ran and grades the episode as it ran
-  (nothing is replayed). Keep the controller that drives the robot at `/app/output/gen.py` for the record: save it early
-  and keep it current.
+- Keep the controller that drives the robot at `/app/output/gen.py` for the record: save it early and keep it current.
 - Do not stop early: while the episode runs, the run can still pass.
 
 ## Time and streaming

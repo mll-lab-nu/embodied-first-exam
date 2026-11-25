@@ -50,8 +50,8 @@ trajectory**, not a general policy.
   scores the resulting sheet, so a call after a long episode takes as long as that replay.
 
 ## Process rules
-- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
-  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+  benchmark's demonstrations, trained policies); trials are reviewed.
 
 Write the character with brush strokes, the way a person writes it: each stroke of the exemplar is written along its length,
 with the brush pressed for the stroke's width (vary the press where the width changes); going over a stroke again is fine.

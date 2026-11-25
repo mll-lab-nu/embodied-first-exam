@@ -11,18 +11,16 @@ Success: these steps were done in that order, and at the end the screw is seated
 across member A, and the stand is upside down on the bench with the bowl on it, standing firmly on its own; no arm
 touches any part and everything is still. Forcing parts deep into each other breaks the simulation and ends the episode
 at once, without success. What counts is how things stand after the last action of your trajectory, replayed from the
-fixed start: a success reached earlier and lost by the end does not count. After your last row the grader holds it for a
-second more and requires all of this again: end your rows with the parts released, the arms clear of them and everything
-at rest.
+fixed start. After your last row the grader holds it for a second more and requires all of this again: end your rows
+with the parts released, the arms clear of them and everything at rest.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory()`: `ctrl` (N, 16) float64, `substeps` = 4,
 `timestep` = 0.000625, at most 495,000 rows (a longer one is refused). Leave the script that produced it at
 `/app/output/gen.py`. It is replayed once from the fixed start; `s.final_check()` gives the grader's verdict on the
 state now. Save a valid one early and overwrite it when you have a better one.
 
-Rules: **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published
-or reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed. Only the actions count:
-changing the simulator's state, the model or the scene files while you develop changes nothing in the replay.
+Rules: **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+benchmark's demonstrations, trained policies); trials are reviewed.
 
 ## Robot Interface
 Two 7-DoF Franka Panda arms, each with the MuJoCo Menagerie Panda hand (two-finger, tendon-coupled), at a table

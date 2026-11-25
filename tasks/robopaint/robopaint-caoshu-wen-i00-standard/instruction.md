@@ -5,9 +5,9 @@ a dynamic model of a real brush) **as if it were real hardware**: the simulator 
 client and one episode. **Task (臨帖):** copy the exemplar character **文** in cursive script (草书), shown in the picture
 `/app/target.png`, onto the main sheet with brush and ink, **in at most 2 strokes**.
 
-## Rules (real-robot rules)
-- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
-  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
+## Rules
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+  benchmark's demonstrations, trained policies); trials are reviewed.
 - **No reset.** The episode starts when the service comes up and ends when your time is up (or on a simulator error). Ink is
   permanent: every stroke you make stays on the paper.
 - **No privileged state.** You see what the cameras see (RGB; depth on request) plus the robot's own joint positions, velocities and

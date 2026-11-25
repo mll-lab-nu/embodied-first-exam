@@ -50,8 +50,8 @@ trajectory**, not a general policy.
   scores the resulting sheet, so a call after a long episode takes as long as that replay.
 
 ## Process rules
-- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
-  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+  benchmark's demonstrations, trained policies); trials are reviewed.
 
 Letter the exemplar with pen strokes, the way a scribe writes it: each stroke of a letter is a pass of the pen along it, its width
 coming from the pen (the pressure on the pointed pen and the direction of travel); going over a stroke again

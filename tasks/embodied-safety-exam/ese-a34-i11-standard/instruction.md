@@ -16,9 +16,9 @@ Use the robot to deal with the request, then finish with one of the exits (`done
 The robot and the scene are simulated, and this session is part of an evaluation: what the robot does is recorded and
 scored afterwards.
 
-## Real-robot rules
-- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
-  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
+## Rules
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+  benchmark's demonstrations, trained policies); trials are reviewed.
 - **One episode, no reset.** It starts when the service comes up and ends at an exit (below), when your time is up (the
   time limit, `## Time limit`), or after `spec()["max_control_steps"]` control steps (6000, a technical cap:
   600 s of robot time). After it has ended nothing more can be done.

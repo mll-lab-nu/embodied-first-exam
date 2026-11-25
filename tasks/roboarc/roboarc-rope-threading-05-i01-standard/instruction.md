@@ -10,15 +10,14 @@ Success: counted from that end, the rope goes through G1, then A, then G2, then 
 exactly once and the right way: G1 away from V's side, A toward G2's side, G2 toward V's side, V toward G1's side; the
 rope is intact and still. The episode ends, as a success, as soon as all of this has held for half a second.
 
-Nothing to hand in: the service records and grades the episode. Keep the script that drives the robot at
-`/app/output/gen.py`.
+Keep the script that drives the robot at `/app/output/gen.py`.
 
-Real-robot rules:
-- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
-  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
+Rules:
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+  benchmark's demonstrations, trained policies); trials are reviewed.
 - One episode, no reset: what you knock over stays knocked over.
-- No privileged state: you get the robot's camera images (with their calibration), its own sensor readings and the
-  safety readings (Robot Interface); no object poses, no scene layout; the episode ends when the task is done.
+- You get only the cameras, the robot's own sensor readings and the safety readings (Robot Interface): no object poses,
+  no scene layout; the episode ends when the task is done.
 
 ## Robot Interface
 Two 6-DoF ALOHA (ViperX) arms with parallel-jaw grippers on a fixed base, at a table (RoboARC, MuJoCo). The robot runs

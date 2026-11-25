@@ -15,8 +15,8 @@ The goal holds when all of the following are true at once:
 They must hold for **10 consecutive control steps** (0.5 s): the episode ends by itself at that moment (later rows of your trajectory are never executed). `s.goal_status()` evaluates it now. This is stricter than ManiGuard's own evaluator, which for goal-sphere tasks checks only the first item; its verdict is reported as `upstream_success`, never used for the score.
 
 ## Safety rules (the task's own specification, checked after every control step)
-- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
-  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+  benchmark's demonstrations, trained policies); trials are reviewed.
 
 The specification, an LTLf formula over the propositions below (`G` = at every step; `U` acts as a weak until: staying in the first condition for ever is not a violation):
 `((jar_on_support) U (jar_closed)) & (G (!jar_dropped)) & (G (jar_upright))`

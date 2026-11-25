@@ -207,11 +207,17 @@ EXTERNAL_TEXT_OPEN = (
 # (RULES_HEADING_RE; a task without one gets a `## Rules` section of its own). Rendered by normalize
 # (place_no_cheating): edit it here, never in a task. The same words as the v2 rule (V2_RULE_OWN). An open-network task
 # may use existing work (pretrained controllers too), so its rule names only a solution to this exact task.
-NO_CHEATING = ("**No cheating.** Write your own controller. Do not search for, download or use any existing solution "
-               "(published or reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.")
+NO_CHEATING = ("**No cheating.** Do not search for, download or use any existing solution (published or reference "
+               "solutions, the benchmark's demonstrations, trained policies); trials are reviewed.")
 NO_CHEATING_OPEN = ("**No cheating.** Do not search for, download or use an existing solution to this exact task "
                     "(published or reference solutions, the benchmark's demonstrations, policies trained for it); "
                     "trials are reviewed.")
+# owner 11-24: wording no task may carry any more (ci_checks/check-resources.py): "Write your own controller." in the No
+# cheating rule, a privileged "Only the actions count: ... changes nothing in the replay." line, and "real-robot rules"
+# as a rules heading (the rules section is `## Rules` / "Rules:"; Robot Interface says the robot is reached as if it
+# were real hardware)
+RETIRED_RULES_RE = re.compile(r"\*\*No cheating\.\*\* Write your own controller\.|changes nothing in the (?:replay|grading)\."
+                              r"|(?i:real-robot rules)")
 RULES_HEADING_RE = re.compile(r"(?m)^## (?:\d+\. )?(?:Rules|The rules|Real-robot rules|Safety rules|Process rules)\b.*$")
 NO_CHEATING_RE = re.compile(r"(?m)^- \*\*No cheating\.\*\*.*\n(?:  \S.*\n)*\n?")
 
@@ -1132,7 +1138,9 @@ LIMITS_TIME = {   # mode -> (what counts and what is graded at the end, the serv
 LIMITS_TIME["realtime"] = LIMITS_TIME["standard"]
 LIMITS_TIME["standard-mcp-shell"] = LIMITS_TIME["standard"]
 assert set(MODE_REGISTRY) <= set(LIMITS_TIME), "every mode of MODE_REGISTRY needs its LIMITS_TIME (PROTOCOL §5)"
-LIMITS_TIME_OWN = {("roboEngineer", "standard"): (
+LIMITS_TIME_OWN = {("RoboDojo", "standard"): (   # agent-ended, latched success (V2_AGENT_END_LATCHED): not "as it stands"
+    "everything counts (waiting for the service too). At the end you are stopped without warning and the episode ends.",
+    LIMITS_TIME["standard"][1]), ("roboEngineer", "standard"): (
     "everything counts (waiting for the deployment service too, deployments included). At the end you are stopped "
     "without warning and the evaluator takes the round you sealed or, if you sealed none, the latest deployment that "
     "completed before then; a deployment still running is not graded.", "; the service's own deadline counts the same "
@@ -1168,26 +1176,27 @@ V2_MODE_LINE = {
     "standard-mcp-shell": ("The robot runs as a service you reach through the `efe-robot` MCP tools, their Python client "
                            "`efe_robot` or the service's own client, as if it were real hardware: one live episode."),
 }
+# owner 11-24: the fixed grading words carry each rule once (what is graded and when, who ends the episode, the gen.py
+# path), no restatement. V2_FINAL_STATE is for a grader that judges the end state; an agent-ended episode whose grader
+# latches the success (RoboDojo: the reward reached 1 at some action counts) says so instead (V2_AGENT_END_LATCHED).
 V2_FINAL_STATE = {
-    "privileged": ("What counts is how things stand after the last action of your {deliverable}, replayed from the fixed "
-                   "start: a success reached earlier and lost by the end does not count."),
-    "standard": ("What counts is how things stand at the end of the episode: a success reached earlier and lost by the "
-                 "end does not count, so finish in the state you want graded and stop sending commands."),
+    "privileged": "What counts is how things stand after the last action of your {deliverable}, replayed from the fixed start.",
+    "standard": "What counts is how things stand at the end of the episode.",
 }
+V2_AGENT_END_LATCHED = ("The episode succeeds if the goal is reached before it ends; it ends when you call finish (Robot "
+                        "Interface), at the step limit (Limits) or when your session ends. The robot never tells you "
+                        "whether you have succeeded.")
 V2_HAND_IN = {
-    "standard": ("Nothing to hand in: the service records and grades the episode. Keep the script that drives the robot "
-                 "at `/app/output/gen.py`."),
-    "standard-mcp": ("Nothing to hand in: the service records and grades the episode, and the tool server records your "
-                     "calls."),
+    "standard": "Keep the script that drives the robot at `/app/output/gen.py`.",
+    "standard-mcp": "The tool server records your calls.",
 }
-V2_RULES_HEAD = "Real-robot rules:"
+V2_RULES_HEAD = "Rules:"
 V2_RULE_NO_RESET = "One episode, no reset: what you knock over stays knocked over."
-V2_RULE_NO_PRIV = ("No privileged state: you get the robot's camera images (with their calibration) and its own sensor "
-                   "readings; no object poses, no scene layout, no success signal.")
-# the one anti-cheating rule (owner 11-24), first in Goal's rules (standard: the first of the real-robot rules; privileged:
+V2_RULE_NO_PRIV = ("You get only the cameras and the robot's own sensor readings: no object poses, no scene layout, no "
+                   "success signal.")
+# the one anti-cheating rule (owner 11-24), first in Goal's rules (standard: the first bullet under "Rules:"; privileged:
 # its "Rules:" paragraph); Limits' Network line says only what can be reached, read and installed
-V2_RULE_OWN = ("**No cheating.** Write your own controller. Do not search for, download or use any existing solution "
-               "(published or reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.")
+V2_RULE_OWN = NO_CHEATING
 V2_RULE_TOOLS = ("Tools only: you may write and run code to compute, but every robot command and observation is an "
                  "`efe-robot` tool call you make yourself; no script starts or calls the tool server, and code must not "
                  "contact the simulator (the service's request log is checked against the server's).")

@@ -23,9 +23,9 @@ The torso is pushed 12 times at moments you are not told (Playground's kicks: ha
 
 The same schedule is `spec["command_schedule"]`; the proprioception's `cmd_vx`, `cmd_vy`, `cmd_wz` are the command in force.
 
-## Rules (real-robot rules)
-- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
-  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
+## Rules
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+  benchmark's demonstrations, trained policies); trials are reviewed.
 - **Time does not stop.** An episode starts paused, on the frozen starting state, the joints holding their starting
   targets. Its clock starts at your first `submit` (or `get_obs(seconds=s)`) and from then on the robot runs at
   100 Hz of robot time, whether or not you send anything, until the episode ends. Between your commands it

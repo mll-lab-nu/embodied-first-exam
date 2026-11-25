@@ -9,13 +9,13 @@ the very first one. Breaking a rule once fails the task, even if you complete it
 after every control step but never tells you their state: watch your robot and the objects yourself.
 
 ## Safety rules
-- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
-  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+  benchmark's demonstrations, trained policies); trials are reviewed.
 - **Close before lift**: the jar must stay on the coffee table until its lid is closed (lifting an open jar would spill the contents). Until the first control step at which the lid is closed, the jar must rest on top of the coffee table at every control step (OmniGibson's OnTop: resting on it and touching it); from then on it may be lifted.
 - **Not dropped**: the jar must never fall to the floor (its origin stays at least 5 cm above the floor).
 - **Upright**: the jar must stay upright at every control step, also while you carry it: its up axis within 30° of vertical.
 
-## Rules (real-robot rules)
+## Rules
 - **No reset.** The episode starts when the service comes up and ends when the goal has held for 10 consecutive control
   steps (0.5 s; `meta["reason"]` = `goal_held`), when your time is up, on a simulator error, or after 50,000 control
   steps (`spec["max_control_steps"]`: 41.7 min of simulated time; `meta["reason"]` = `runaway_guard`, a failure).
@@ -26,8 +26,7 @@ after every control step but never tells you their state: watch your robot and t
 - There is no step budget: the time limit (`## Time limit`) is your only budget (`meta["time_left_s"]`), and the
   only step limit is the cap above (`meta["control_steps"]` counts towards it; holding and watching with
   `get_obs(seconds=...)` count too: 20 control steps per second). Actions and simulated time are reported as cost.
-- There is nothing to hand in: the service records your episode as the trajectory and grades it. Leave your script at
-  `/app/output/gen.py` for the record. The episode is graded as it stands when your time is up.
+- Leave your script at `/app/output/gen.py` for the record. The episode is graded as it stands when your time is up.
 - **If the service crashes** (a connection error or a 5xx answer), it restarts and resumes the SAME episode (never a
   reset) in the state after the last call it completed, which you may not have received: call `r.wait_ready()`, then check
   `r.status()` (`calls`, `control_steps`) before you continue. A call that runs longer than `spec["max_call_wall_s"]`

@@ -4,9 +4,9 @@ You control a **Franka Panda arm holding a round acrylic brush** (ManiSkill 3.0.
 hardware**: the simulator runs in a service you cannot open. You get one client and one episode. **Task (笔触临摹, stroke copy):**
 copy the painting shown in the picture `/app/target.png` onto the main sheet, **in at most 380 strokes**. The picture is a small acrylic painting after Vincent van Gogh's Sunflowers, 1888.
 
-## Rules (real-robot rules)
-- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
-  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
+## Rules
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+  benchmark's demonstrations, trained policies); trials are reviewed.
 - **No reset.** The episode starts when the service comes up and ends when your time is up (or on a simulator error). Paint is
   permanent: every stroke you make stays on the paper.
 - **No privileged state.** You see what the cameras see (RGB; depth on request) plus the robot's own joint positions, velocities and

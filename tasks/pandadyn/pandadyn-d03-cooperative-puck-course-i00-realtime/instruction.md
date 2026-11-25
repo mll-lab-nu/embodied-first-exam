@@ -61,9 +61,9 @@ most 1.05 x 13 m/s² and 1.05 x 25 rad/s²; motor torques at most (87, 87, 87, 8
 1000 N m/s. The servo's own reference motion is checked against the same speed, acceleration and jerk limits. A contact
 (a catch, a strike) moves the arm too: what is measured counts, whatever was commanded.
 
-## Rules (real-robot rules)
-- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
-  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
+## Rules
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+  benchmark's demonstrations, trained policies); trials are reviewed.
 - **You are far too slow to steer it turn by turn.** One turn of yours (a model response, a tool call) takes seconds of
   wall-clock time, which is many control steps here. Drive the robot with a program: a controller of your own (Python in
   your container, with numpy and the client) that plans or streams the targets, started in the background

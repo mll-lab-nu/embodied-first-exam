@@ -9,15 +9,13 @@ Success: all five balls are in the big bin on the floor, and the small bin is st
 more above the table. The service judges the scene at the end of each of your calls, and the episode ends at the first
 success; it also ends when your time is up or on a simulator error.
 
-Nothing to hand in: the service records and grades the episode. Keep the script that drives the robot at
-`/app/output/gen.py`.
+Keep the script that drives the robot at `/app/output/gen.py`.
 
-Real-robot rules:
-- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
-  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
+Rules:
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+  benchmark's demonstrations, trained policies); trials are reviewed.
 - One episode, no reset: what you knock over stays knocked over.
-- No privileged state: you get the robot's camera images (with their calibration) and its own sensor readings; no object
-  poses, no scene layout, no success signal.
+- You get only the cameras and the robot's own sensor readings: no object poses, no scene layout, no success signal.
 
 ## Robot Interface
 A dual-arm ALOHA-AgileX robot at a table (RoboTwin 2.0, SAPIEN / PhysX). The robot runs as a service you reach only

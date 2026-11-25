@@ -22,9 +22,9 @@ For 20 s (1000 control steps) it is given this command schedule, drawn by Playgr
 
 The same schedule is `spec["command_schedule"]`; every response's `meta["command_now"]` is the current command.
 
-## Rules (real-robot rules)
-- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
-  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
+## Rules
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+  benchmark's demonstrations, trained policies); trials are reviewed.
 - **Episodes and resets.** You have **10 resets** (`spec["budget"]["reset"]`, which is authoritative: if it
   says 0, there is no reset and the one episode is the run). A reset (`POST /reset`, below) puts the robot back on the
   same frozen starting state and starts a new episode, either abandoning the running one or after one has ended; it
@@ -41,7 +41,7 @@ The same schedule is `spec["command_schedule"]`; every response's `meta["command
 - Your only budget is the time limit (`## Time limit`). Simulated time only advances with your commands (and
   `get_obs(seconds=...)`, which holds the current targets). `meta["time_left_s"]` is the service's count of the limit,
   from your first request to the service: it never runs out before your time does, so plan by it.
-- Nothing to hand in: the service records the episode and grades it. Leave your script at `/app/output/gen.py`.
+- Leave your script at `/app/output/gen.py`.
 - **If the service crashes**, a call fails with a connection error: it restarts and resumes the SAME episode (a crash
   is never a reset and costs none) in the state after the last call it completed. `r.wait_ready()` waits for it; then check `r.status()`.
 - Nothing is put into your context automatically: images come back as arrays in Python objects.

@@ -5,19 +5,17 @@ Turn on the toaster oven by setting its timer.
 
 ## Goal
 Success: the toaster oven's timer is set, its knob turned well up from zero. The episode ends as soon as the task is
-done, and that episode, as it ran, is graded.
+done.
 
-Nothing to hand in: the service records and grades the episode. Keep the script that drives the robot at
-`/app/output/gen.py`.
+Keep the script that drives the robot at `/app/output/gen.py`.
 
-Real-robot rules:
-- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
-  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
+Rules:
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+  benchmark's demonstrations, trained policies); trials are reviewed.
 - One episode, no reset: it ends as soon as the task is done, after 3000 control steps (150 s of robot time), when your
   time is up or on a simulator error; what you knock over stays knocked over.
-- No privileged state: you get the robot's camera images (with their calibration) and its own sensor readings; no object
-  poses, no scene layout; the service only tells you that the episode ended and why (`meta["done"]`, `meta["reason"]`:
-  `"success"`, `"failed"`, `"error"`).
+- You get only the cameras and the robot's own sensor readings: no object poses, no scene layout; the service only tells
+  you that the episode ended and why (`meta["done"]`, `meta["reason"]`: `"success"`, `"failed"`, `"error"`).
 
 ## Robot Interface
 A Franka Panda arm on an Omron mobile base with a torso lift, in a simulated kitchen (RoboCasa365, robosuite / MuJoCo).

@@ -14,9 +14,8 @@ per control step (1/25 s), at most 41000 rows (a longer trajectory is invalid). 
 `/app/output/gen.py`. It is replayed once from the fixed start and passes if the task gets done within your rows. Save a
 valid one early and overwrite it when you have a better one.
 
-Rules: **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published
-or reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed. Only the actions count:
-changing the simulator's state while you develop changes nothing in the replay.
+Rules: **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+benchmark's demonstrations, trained policies); trials are reviewed.
 
 ## Robot Interface
 Two 6-DoF ALOHA (ViperX) arms with parallel-jaw grippers on a fixed base, at a table (RoboARC, MuJoCo). The scene is one

@@ -34,8 +34,8 @@ trajectory**, not a general policy.
 - The grader compares the main sheet with the picture: both blurred (σ = 1 mm); **ΔE** = the CIELAB colour difference (ΔE*ab) per pixel over the region where either has paint (dilated by 2 mm): its mean and 90th percentile; **SSIM** of the lightness L* (σ 1.5 mm windows); **edge correlation** = the correlation of the lightness-gradient magnitudes of the two blurred pictures over that region; **paint IoU** of the painted areas (paint coverage ≥ 0.5); the **number of strokes** on the main sheet (painted contacts). **Success iff, after the best single shift of the sheet, at most 5 mm along each axis, mean ΔE ≤ 2.0, p90 ΔE ≤ 6.0, SSIM ≥ 0.92, edge correlation ≥ 0.8, paint IoU ≥ 0.95 and at most 384 strokes.** `final_reward` = max(0, 1 - mean ΔE / 20) (scaled by 384 / strokes above 384). Reported as well: the mean ΔE after a 4 mm blur, the SSIM at a 0.5 mm blur, and per colour region of the picture (the connected areas nearest to one paint, at least 30 mm²) the fraction within ΔE 10: the minimum and the area-weighted mean. `s.score()` returns exactly these metrics for the current sheet: a scoring service (a separate container) replays the actions you have executed since your last `s.reset()` and scores the resulting sheet.
 
 ## Process rules
-- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
-  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+  benchmark's demonstrations, trained policies); trials are reviewed.
 
 Paint with brush strokes, the way a person paints: each stroke is one sweep of the loaded brush, pressed for the width you want.
 Colouring in or filling areas with a thin line, zigzag or serpentine fills, and contour-offset fills (paths that circle round and

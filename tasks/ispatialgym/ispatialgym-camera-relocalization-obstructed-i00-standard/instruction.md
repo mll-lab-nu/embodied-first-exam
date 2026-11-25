@@ -28,9 +28,9 @@ only while you submit rows or watch: first send a row with the base command at 0
 command until the next row), then submit rows that hold still, or watch with `r.get_obs(seconds=...)`, which holds
 the last command.
 
-## Rules (real-robot rules)
-- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
-  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
+## Rules
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+  benchmark's demonstrations, trained policies); trials are reviewed.
 - **One episode, no reset.** The episode starts when the service is up. It ends on success; after **1324 control
   steps** (44.1 s of simulated time, `spec["max_control_steps"]`; the reason is
   "failed: the episode's control steps ran out"); when your time runs out; or on a simulator error.
@@ -42,8 +42,7 @@ the last command.
 - **A malformed request is refused with a 400 and nothing is executed** (a wrong type or shape, a value out of range,
   a `dt` that is not a whole number of control periods, `video_fps` outside 1-30, a call over the image budget below): fix it and send it again.
 - One call returns at most 300 images (`max_frames_per_call`, PROTOCOL §3 "Images per call").
-- **Nothing to hand in.** The service records your episode as the trajectory and grades it. Leave your script at
-  `/app/output/gen.py` for the record.
+- Leave your script at `/app/output/gen.py` for the record.
 - **Nothing is put into your context automatically.** Images and videos come back as arrays/bytes in a Python object;
   what you look at and where you store it is your code's decision.
 - **If the service crashes** (a connection error or a 5xx answer), it restarts and resumes the SAME episode (never a

@@ -16,9 +16,9 @@ length of **30 s** of simulated time runs out (a failure: AM-Bench's time-out en
 
 The fruits' positions, which fruit is the lemon, the tote's and table's poses and whether the lemon is still attached are not given: the yellow lemon has to be told from the green limes and located on the concrete wall with the onboard cameras, and the tote found on the table. The gripper width comes from proprioception; whether the lemon is in the tote can only be judged visually. Success is reported only by the episode's end (reason `success`).
 
-## Rules (real-robot rules)
-- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
-  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
+## Rules
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+  benchmark's demonstrations, trained policies); trials are reviewed.
 - **No reset.** The episode starts when the service comes up and ends on success, at the time-out above, when your time
   is up, or on a simulator error. Whatever you knock over or push stays that way.
 - **No privileged state.** You see what the two onboard cameras see (RGB, and depth if you ask) plus the robot's own
@@ -28,8 +28,7 @@ The fruits' positions, which fruit is the lemon, the tote's and table's poses an
 - **Simulated time only moves when you move the robot** (`submit`, or `get_obs(seconds=...)`): between your calls the
   world is frozen, and the episode lasts at most 30 s of simulated time. There is no step budget otherwise:
   the time limit (`## Time limit`) is your only budget (`meta["time_left_s"]`).
-- There is nothing to hand in: the service records your episode as the trajectory and grades it. Leave your script at
-  `/app/output/gen.py` for the record. The episode is graded as it stands when your time is up.
+- Leave your script at `/app/output/gen.py` for the record. The episode is graded as it stands when your time is up.
 - **If the service crashes**, a call fails with a connection error: the simulator restarts and resumes the SAME episode
   (never a reset) in the state after the last call it completed (to the last bits: a rare GPU race
   can leave those different), which you may not have received. `r.wait_ready()` waits

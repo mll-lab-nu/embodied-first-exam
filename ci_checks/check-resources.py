@@ -188,6 +188,9 @@ def check(task: Path) -> list[str]:
         return errs
     # instruction.md: `## External material`, then `## Resources`, before the closing `## Time limit`
     ins = (task / "instruction.md").read_text() if (task / "instruction.md").is_file() else ""
+    if m := tconv.RETIRED_RULES_RE.search(" ".join(ins.split())):   # owner 11-24: wording that is gone from every task
+        errs.append(f"instruction.md still has retired rule wording ({m.group(0)[:60]!r}; scripts/task_conventions.py "
+                    "RETIRED_RULES_RE): drop it, the No cheating rule and the rules heading are rendered words")
     if tconv.is_v2(ins):      # instructions v2: the Network and Resources lines of `## Limits`, rendered
         lim = tconv.render_limits(task, ins)
         for lab, text in (("Network", tconv.limits_network(task, dict(tconv.limits_lines(ins)).get("Network"))),

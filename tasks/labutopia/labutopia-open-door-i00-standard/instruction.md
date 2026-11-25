@@ -7,8 +7,8 @@ Sim) runs in a service you cannot open. You get one client and one episode.
 On the bench in front of the arm: a drying oven, a grey metal box about 58 cm deep, 74 cm wide and 63 cm high, with a blue door that has a window and a handle and is hinged on one side; a small control panel sits next to the door. The door is closed.
 
 ## Rules
-- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
-  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+  benchmark's demonstrations, trained policies); trials are reviewed.
 - **No reset.** The episode starts when the service comes up and ends the moment the goal is reached (success), when
   your time is up, or on a simulator error.
 - **No privileged state.** You see what the cameras see (RGB, and depth on request, with each camera's calibration) and
@@ -19,7 +19,7 @@ On the bench in front of the arm: a drying oven, a grey metal box about 58 cm de
   needs 5 to 10 minutes to come up** (Isaac Sim prepares the stage for its renderer once; longer on a busy host):
   `Robot()` waits for it (it prints its progress to stderr), and that wait is part of your budget. Simulated time only advances with your commands (and `get_obs(seconds=...)`, which
   holds the last targets). Do not stop early.
-- Nothing to hand in: the service records your episode and grades it. Leave your script at `/app/output/gen.py`.
+- Leave your script at `/app/output/gen.py`.
 - **If the service crashes**, a call fails with a connection error: it restarts and resumes the SAME episode (never a
   reset) in the state after the last call it completed. `r.wait_ready()` waits for it; then check `r.status()`.
 - **Nothing is put into your context automatically.** Images and videos come back as arrays/bytes in a Python object.

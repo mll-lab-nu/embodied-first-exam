@@ -4,9 +4,9 @@ You control a simulated Unitree H1 humanoid with two Shadow dexterous hands (Hum
 it were real hardware**: the simulator runs in a service you cannot open, and you reach it only through a
 client. **Task:** put each of the five red-tinted objects onto its place on the bookshelf, one at a time, palest first and darkest last. Each place is shown as a translucent copy of its object in the same colour, and the other seven objects are grey.
 
-## Rules (real-robot rules)
-- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
-  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
+## Rules
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+  benchmark's demonstrations, trained policies); trials are reviewed.
 - **Episodes and resets.** The episode starts when the service comes up. It ends when the task succeeds, when
   the robot falls (its pelvis drops too low), when the object being placed goes below about half a metre, once
   all five are placed, after 1000 control steps (20 s of robot time), when your time is up, or on a simulator

@@ -11,8 +11,8 @@ old = "## Others\n- Labels in `s.objects()`: `target` (the mint green scissors).
 new = "## Others\n- Labels in `s.objects()`: `target` (the brown headphones).\n- RoboDojo's own reset settles the scene again from where it is, so after actions a reset gives the same layout and\n  start pose but not bit-for-bit the same state; a replay after such a reset can end slightly differently from the\n  grader's. Each graded replay runs the first episode of a newly started Session (nothing stepped before it): test on\n  that."
 
 [[replace]]
-old = "## Goal\nSuccess: the mint green scissors are about a hand's length above where they lay on the table. What counts is how things\nstand at the end of the episode: a success reached earlier and lost by the end does not count, so finish in the state\nyou want graded and stop sending commands."
-new = "## Goal\nSuccess: the brown headphones are about a hand's length above where they lay on the table. What counts is how things\nstand at the end of the episode: a success reached earlier and lost by the end does not count, so finish in the state\nyou want graded and stop sending commands."
+old = "## Goal\nSuccess: the mint green scissors are about a hand's length above where they lay on the table."
+new = "## Goal\nSuccess: the brown headphones are about a hand's length above where they lay on the table."
 
 [[replace]]
 old = "arx_x5/0/general_pickup_0.json"

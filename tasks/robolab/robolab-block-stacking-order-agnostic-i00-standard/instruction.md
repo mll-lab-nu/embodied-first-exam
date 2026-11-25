@@ -3,9 +3,9 @@
 You control a **Franka Panda arm with a Robotiq 2F-85 gripper** (NVIDIA RoboLab's DROID setup) **as if it were real
 hardware**: the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Stack the red, blue, green and yellow blocks into one tower, in any order. Success: The red, blue, green and yellow blocks must form one tower, in any order: sorted by height, each one must touch the one below it, lie entirely above the bottom of that one and have its centre over that one's footprint, +/- 1 cm. Letting go is not required.
 
-## Rules (real-robot rules)
-- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
-  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
+## Rules
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+  benchmark's demonstrations, trained policies); trials are reviewed.
 - **No reset.** The episode starts when the service comes up and ends on success (at the first control step where the
   success condition holds), when your time is up, or on a simulator error. Knocked-over objects stay knocked over. When
   your session ends the service holds your last command for 30 more control steps (2 s) while it checks the condition,
@@ -17,9 +17,8 @@ hardware**: the simulator runs in a service you cannot open. You get one client 
   are reported as cost. One technical cap: the episode ends after 100,000 control steps (1.9 h of simulated time;
   `spec["max_control_steps"]`, reason `step_guard`) and is graded as it stands; at this service's speed (3-15 control
   steps/s) your time runs out long before.
-- There is nothing to hand in: the service records your episode as the trajectory and grades it. Leave your script
-  at `/app/output/gen.py` for the record. The episode is graded as it stands when your time is up: keep working until it
-  has succeeded.
+- Leave your script at `/app/output/gen.py` for the record. The episode is graded as it stands when your time is up:
+  keep working until it has succeeded.
 - **Grading.** Your episode is graded as it ran: the service judges the live episode itself, with no replay.
   It scores 1 if RoboLab's success term held at a control step of it, including the hold of your last
   command for 30 more control steps after your time is up, else 0.

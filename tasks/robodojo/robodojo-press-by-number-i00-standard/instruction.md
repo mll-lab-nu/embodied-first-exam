@@ -10,22 +10,19 @@ Success: the left red button has been pressed exactly as many times as the left 
 then the middle red button exactly as many times as the middle card shows, then the blue button once more. Each press
 pushes the button all the way down and lets it spring all the way back up, long enough to be seen (a quick tap can be
 missed). When the last blue press is released, both arms are back where they started. One press too many on any button
-ends the episode at once as a failure. What counts is how things stand at the end of the episode: a success reached
-earlier and lost by the end does not count, so finish in the state you want graded and stop sending commands.
+ends the episode at once as a failure.
 
-You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
-you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
-when your session ends. A step of the task's sequence, once done, stays counted.
+The episode succeeds if the goal is reached before it ends; it ends when you call finish (Robot Interface), at the step
+limit (Limits) or when your session ends. The robot never tells you whether you have succeeded. A step of the task's
+sequence, once done, stays counted.
 
-Nothing to hand in: the service records and grades the episode. Keep the script that drives the robot at
-`/app/output/gen.py`.
+Keep the script that drives the robot at `/app/output/gen.py`.
 
-Real-robot rules:
-- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
-  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
+Rules:
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+  benchmark's demonstrations, trained policies); trials are reviewed.
 - One episode, no reset: what you knock over stays knocked over.
-- No privileged state: you get the robot's camera images (with their calibration) and its own sensor readings; no object
-  poses, no scene layout, no success signal.
+- You get only the cameras and the robot's own sensor readings: no object poses, no scene layout, no success signal.
 
 ## Robot Interface
 Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). The robot
@@ -105,10 +102,9 @@ most 3000 images.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
-  the end you are stopped without warning and the episode is graded as it stands. Time left:
-  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`); the service's `time_left_s` (in every reply) starts at
-  your first request, so the file is the one to trust. Calls into a long-running process can block for their whole wait
-  time: use short waits or one-shot scripts.
+  the end you are stopped without warning and the episode ends. Time left: `/run/rcb-limits/usage.json` (`time_left_s`,
+  `deadline_utc`); the service's `time_left_s` (in every reply) starts at your first request, so the file is the one to
+  trust. Calls into a long-running process can block for their whole wait time: use short waits or one-shot scripts.
 - Tokens: no separate limit.
 - Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
   and read anything in your container, the simulator's and the benchmark's source included.
@@ -120,4 +116,4 @@ most 3000 images.
   and everything that lets simulated time pass uses steps: a `joint_position` row with `dt` = k/25 s uses k, an
   `ee_pose` row as many as its move takes at 0.25 m/s (at least one), holding still to watch for s seconds s x 25;
   observing without waiting, the spec, the status and the kinematics use none. Every reply gives `steps_left`; at the
-  700th step the episode ends by itself and is graded as it stands.
+  700th step the episode ends by itself.

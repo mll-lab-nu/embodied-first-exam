@@ -7,8 +7,8 @@ you cannot open. You get one client and up to 11 episodes, and you act only thro
 An apple lies on the table; the MyoHand (with a 6-DoF positioned wrist) is at its pre-grasp pose next to it.
 
 ## Rules
-- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
-  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+  benchmark's demonstrations, trained policies); trials are reviewed.
 - **Episodes and resets.** The episode starts when the service comes up and ends after 57 control steps (the reference motion; then it is judged), early at MyoDex's termination, when your time is up, or on
   a simulator error. You have **10 resets** (`spec["budget"]["reset"]`, which is authoritative: if it says
   0, there is no reset and the one episode is the run). A reset (`POST /reset`, below) puts the body and the scene back
@@ -26,7 +26,7 @@ An apple lies on the table; the MyoHand (with a 6-DoF positioned wrist) is at it
 - Steps are unlimited; your only budget is the time limit (`## Time limit`; `meta["time_left_s"]` is the service's count of it).
   Simulated time only advances with your commands (and `get_obs(seconds=...)`, which holds the last command). Do not stop early: while
   the episode runs, or a reset is left, the run can still pass.
-- Nothing to hand in: the service records your episode and grades it. Leave your script at `/app/output/gen.py`.
+- Leave your script at `/app/output/gen.py`.
 - **If the service crashes**, a call fails with a connection error: it restarts and resumes the SAME episode (never a
   reset) in the state after the last call it completed. `r.wait_ready()` waits for it; then check `r.status()`.
 - **Nothing is put into your context automatically.** Images and videos come back as arrays/bytes in a Python object.

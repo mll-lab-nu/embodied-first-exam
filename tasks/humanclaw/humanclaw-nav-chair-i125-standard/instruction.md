@@ -5,8 +5,8 @@ scene) **as if it were a real body**: the simulator runs in a service you cannot
 through a client. The body moves only by **motion skills**. **Task (HumanCLAW's own words):** Find the chair and move until your body is touching the target, with zero distance to the target object. In plain words: walk up to a chair and stop right next to it, about 20 cm away or closer.
 
 ## Rules
-- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
-  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+  benchmark's demonstrations, trained policies); trials are reviewed.
 - **One episode, no reset.** It starts when the service comes up and ends at your **stop** action (the only way
   to succeed), at the 100th action whatever it is, when your time is up, or on a simulator error.
 - **Time moves only inside calls.** Each action is one 0.5 s motion; between calls the body waits while you
@@ -16,8 +16,7 @@ through a client. The body moves only by **motion skills**. **Task (HumanCLAW's 
   feel how many actions are used and left and how far your pelvis is above (or below) its starting height. Not
   where you are, not where the target is, not a map: the service judges the episode and only tells you that it
   ended (`meta["done"]`, `meta["reason"]`).
-- There is nothing to hand in: the service records the episode and grades it as it ran. Keep the script that
-  drives the body at `/app/output/gen.py` for the record.
+- Keep the script that drives the body at `/app/output/gen.py` for the record.
 
 ## Scoring
 HumanCLAW's NavSR@20cm: the episode ends with a **stop** while the body is within **0.2 m** of the bounding box of a chair (the nearest one; any chair in the scene counts). Ending without a stop fails.

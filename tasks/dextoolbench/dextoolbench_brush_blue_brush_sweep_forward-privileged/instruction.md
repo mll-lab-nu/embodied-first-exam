@@ -39,11 +39,9 @@ z = 0.53 m; the robot base is at (0, 0.8, 0). Everything in `s.model` / `s.data`
 tier), e.g. for inverse kinematics with `mujoco.mj_jacBody`.
 
 ## Rules
-- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
-  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+  benchmark's demonstrations, trained policies); trials are reviewed.
 - The network reaches only the model API and the package registries (PyPI, Debian / Ubuntu archives).
-- Only the joint targets count: editing `s.data` (e.g. moving the tool by hand) while debugging changes nothing in
-  the replay.
 
 ## External material
 You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.

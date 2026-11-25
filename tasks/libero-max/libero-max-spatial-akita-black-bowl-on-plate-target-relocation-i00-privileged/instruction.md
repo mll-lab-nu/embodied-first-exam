@@ -13,9 +13,8 @@ with the gripper open, already part of the fixed start). Write it with `s.save_t
 Leave the script that produced it at `/app/output/gen.py`. Save a valid one early and overwrite it when you have a
 better one.
 
-Rules: **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published
-or reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed. Only the actions count:
-changing the simulator state while you develop changes nothing in the replay.
+Rules: **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+benchmark's demonstrations, trained policies); trials are reviewed.
 
 ## Robot Interface
 A Franka Panda arm at a table (LIBERO on robosuite / MuJoCo). The scene is one fixed instance, and it changes once while

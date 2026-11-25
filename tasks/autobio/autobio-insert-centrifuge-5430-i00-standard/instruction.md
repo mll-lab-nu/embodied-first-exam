@@ -7,8 +7,8 @@ in a service you cannot open. You get one client and one episode.
 On the bench: a centrifuge (an Eppendorf 5430 model) with its lid open and a 30-slot rotor holding one 1.5 mL tube, and a well plate with a second 1.5 mL tube standing in it.
 
 ## Rules
-- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
-  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+  benchmark's demonstrations, trained policies); trials are reviewed.
 - **No reset.** The episode starts when the service comes up and ends the moment the goal is reached (success), when your time is up, or on a simulator
   error. A MuJoCo physics warning (an unstable simulation, for instance after the robot was driven hard into
   something) also ends it at once, as a failure: `meta["reason"]` is then `"failure: simulator warning (unstable state)"`.
@@ -19,7 +19,7 @@ On the bench: a centrifuge (an Eppendorf 5430 model) with its lid open and a 30-
 - Steps are unlimited; your only budget is the time limit (`## Time limit`; `meta["time_left_s"]` is the service's count of it).
   Simulated time only advances with your commands (and `get_obs(seconds=...)`, which holds the last targets). Do not stop early.
 - `r.submit("done", [])` ends the episode in its current state; before the goal is reached that is a failure.
-- Nothing to hand in: the service records your episode and grades it. Leave your script at `/app/output/gen.py`.
+- Leave your script at `/app/output/gen.py`.
 - **If the service crashes**, a call fails with a connection error: it restarts and resumes the SAME episode (never a
   reset) in the state after the last call it completed. `r.wait_ready()` waits for it; then check `r.status()`.
 - **Nothing is put into your context automatically.** Images and videos come back as arrays/bytes in a Python object.

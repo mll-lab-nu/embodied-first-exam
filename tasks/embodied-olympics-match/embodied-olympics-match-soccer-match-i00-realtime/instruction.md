@@ -37,8 +37,8 @@ Errors: 400 = an invalid action (nothing happens), 409 = not now (not your turn,
 action in flight, or more than 20 requests per second or 4 open requests from your seat (empty body: retry more slowly).
 
 ## Rules
-- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
-  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+  benchmark's demonstrations, trained policies); trials are reviewed.
 - robot soccer 2 v 2 under the RoboCup Humanoid Soccer League rules: four simulated Booster T1 humanoids (lower bodies on the released walking policy, held to the real robot's joint limits) and one ball on a boarded 10 x 7 m pitch with two goals, two halves of 5 minutes of game time, a penalty shoot-out when level; each robot takes a walk velocity command, stand or a swing-leg kick, and you see the game only through your robots' head cameras; in the `match` format you command both robots of team A against a scripted team, in the `duel` format another player commands team B, in the `team` format each robot has its own player and teammates talk only through the team channel, in the `team_match` format each robot of team A has its own player against the scripted team; `match_overhead` and `duel_overhead` are match and duel seen through fixed overhead cameras instead of the head cameras.
 - `frame`: metres, seconds; your team's frame: you attack the goal at x = +5 and defend the goal at x = -5, y to the left when facing +x, z up, yaw counter-clockwise from +x (both teams see the pitch this way in their own frame)
 - `pitch`: field of play 10 x 7 m (|x| <= 5, |y| <= 3.5), halfway line x = 0, centre circle radius 1.0 m, penalty areas 2.0 m deep and 4.0 m wide, goal areas 1.0 x 3.0 m, penalty marks 1.5 m in front of each goal line; boards 0.3 m high on the touchlines and goal lines except the goal mouths; goals 2.6 m wide (|y| < 1.3), 1.8 m high, 0.6 m deep with nets

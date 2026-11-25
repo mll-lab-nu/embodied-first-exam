@@ -8,8 +8,8 @@ Your goal is to win by developing, operating and continuously improving your rob
 You are encouraged to study your opponent: observe how it plays, find its patterns and weaknesses, anticipate what it will do, and adapt your tactics to gain an advantage.
 
 ## 2. Rules & Scoring
-- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
-  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+  benchmark's demonstrations, trained policies); trials are reviewed.
 
 `game rules` is the authority: the complete rules of this match and every deviation from the ITTF Laws of Table Tennis (ITTF Statutes 2025, chapter 2). Read it before you plan your approach; this chapter does not replace it.
 - How a match is won: The winner: a player's third undue-delay fault loses it the match; else the first player to 5 points with a lead of 2, or the first to 7, wins the game (the match); a let scores no point (at most 2 service lets in a row); if 16 points (lets included) are played, the player ahead wins and at a level score the player who won the last point (last resort, not from the rulebook); there are no draws.

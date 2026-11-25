@@ -9,13 +9,13 @@ robot balanced: you command where it walks, how high its pelvis is, its arm join
 At the start the red sphere is about 0.6 m away, 25° to your left, 0.82 m above the floor and the green sphere about 0.6 m away, 22° to your right, 0.83 m above the floor. (Distances are from your pelvis along the floor, directions from the way you face,
 heights above the floor; measured on this scene.)
 
-## Rules (real-robot rules)
-- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
-  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
+## Rules
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+  benchmark's demonstrations, trained policies); trials are reviewed.
 - **One episode, no reset.** The episode starts when the service comes up, from a fixed starting state; what ends it is under Success below. `spec()["budget"]["reset"]` is authoritative: it is 0 here, so the one episode is the run. Once it has ended, the run is over and `submit` raises `EpisodeOver`.
 - **Time moves only inside calls.** `submit` runs your commands and `get_obs(seconds=s)` stands still for s seconds; both use up the episode's control steps. Between calls the robot waits, frozen, while you think; `get_obs()` with no seconds is free.
 - **No privileged state, no score.** You see what the robot's three cameras see (RGB, 84×84: `head`, `left_wrist`, `right_wrist`) and its own proprioception (below). Not where any object is now (only the start sentence above), not the success check: the service judges the episode and only tells you that it ended and why (`meta["done"]`, `meta["reason"]`). `spec()` gives the robot's facts: the action slots and their bounds, each camera's field of view and its pose at the start.
-- There is nothing to hand in: the service records the episode and grades it as it ran. Keep the script that drives the robot at `/app/output/gen.py` for the record: save it early and keep it current.
+- Keep the script that drives the robot at `/app/output/gen.py` for the record: save it early and keep it current.
 - Wall-clock budget: the time limit (`## Time limit`). It ends without warning, and ending your session earlier ends the run the same way, so do not stop early: while the episode runs, the run can still pass.
 
 ## Success

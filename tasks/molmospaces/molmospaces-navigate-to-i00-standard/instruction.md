@@ -6,9 +6,9 @@ You control a Rainbow Robotics RB-Y1 mobile manipulator: holonomic base, 6-joint
 The simulator (upstream's own code: molmo-spaces 0.2.9, MuJoCo 3.5.0) runs in a service you cannot open. You get one
 client and one episode.
 
-## Rules (real-robot rules)
-- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
-  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
+## Rules
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+  benchmark's demonstrations, trained policies); trials are reviewed.
 - **No reset.** One episode. You see the robot's cameras (RGB, depth if you ask) and its proprioception (joints,
   grippers, tool poses, velocities, efforts). No object poses, no success check.
 - **The episode ends** after **500 control steps** (the benchmark's 100 s horizon at
@@ -20,7 +20,7 @@ client and one episode.
 - Your only budget is the time limit (`## Time limit`), from your start (the service's `time_s` and `time_left_s`
   count from your first request to it, so `time_left_s` never reaches 0 before your time is up: plan by it).
   Simulated time only advances with your commands (and `get_obs(seconds=...)`).
-- Nothing to hand in: the service records the episode and grades it. Leave your script at `/app/output/gen.py`.
+- Leave your script at `/app/output/gen.py`.
 - **If the service crashes**, a call fails with a connection error: it restarts and resumes the SAME episode (never a
   reset) in the state after the last call it completed. `r.wait_ready()` waits for it; then check `r.status()`.
 - Nothing is put into your context automatically: images come back as arrays in Python objects.

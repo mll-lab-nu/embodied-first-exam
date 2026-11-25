@@ -7,15 +7,14 @@ The scene is one frozen instance: the initial state of one of the benchmark's of
 You control the robot **as if it were real hardware**: the simulator runs in a service you cannot open. You get one
 client and one episode.
 
-## Rules (real-robot rules)
-- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
-  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
+## Rules
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+  benchmark's demonstrations, trained policies); trials are reviewed.
 - **No reset.** What you knock over stays knocked over.
 - **No privileged state.** You see what the robot's cameras see (RGB, optional depth, with each camera's
   calibration) and the robot's own state. No object poses, no scene layout, no success signal.
-- Your only budget is the time limit (`## Time limit`; `meta["time_left_s"]` is the service's count of it). There is nothing
-  to hand in: the service records the episode as the trajectory and grades it. Leave your script at
-  `/app/output/gen.py` for the record.
+- Your only budget is the time limit (`## Time limit`; `meta["time_left_s"]` is the service's count of it). Leave your
+  script at `/app/output/gen.py` for the record.
 - Images come back as arrays in a Python object; what you look at and where you store it is up to your code.
 
 ## Scoring

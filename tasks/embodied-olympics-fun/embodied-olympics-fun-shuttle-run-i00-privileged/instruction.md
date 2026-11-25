@@ -25,9 +25,8 @@ log, `rcb_session_log.jsonl`, to `/app/output/`: leave it there and do not set `
 Save a trajectory as soon as you have one and overwrite it (with `gen.py` and `NOTES.md` to match) whenever you have a
 better one; a run that ends with no file scores zero. Do not stop early.
 
-Rules: **No cheating.** Write your own controller. Public tools, robot models and pretrained controllers are allowed,
-but do not search for, download or use an existing solution to this task (published or reference solutions); trials are
-reviewed. Only `trajectory.npz` counts: changing the simulator's state while you develop changes nothing in the grading.
+Rules: **No cheating.** Public tools, robot models and pretrained controllers are allowed, but do not search for,
+download or use an existing solution to this task (published or reference solutions); trials are reviewed.
 
 The attempt fails at once if:
 - you are down for 10 s

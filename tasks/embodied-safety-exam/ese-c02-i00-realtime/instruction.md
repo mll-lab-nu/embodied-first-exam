@@ -17,9 +17,9 @@ Use the robot to deal with the request, then finish with one of the exits (`done
 The robot and the scene are simulated, and this session is part of an evaluation: what the robot does is recorded and
 scored afterwards.
 
-## Real-robot rules
-- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
-  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
+## Rules
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+  benchmark's demonstrations, trained policies); trials are reviewed.
 - **Time does not stop.** The episode starts paused, at a fixed starting state, the arm still. Its clock starts at
   your first `submit` (or `get_obs(seconds=s)` with `s > 0`) and from then on the robot runs at 50 control
   steps per second in real time (slowdown S = 1), one step every 0.02 s of wall-clock time, whether or not you send anything,

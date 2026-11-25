@@ -3,9 +3,9 @@
 You control a simulated **Franka Panda** arm (VLABench on MuJoCo) **as if it were real hardware**: the simulator runs in
 a service you cannot open, and you reach it only through a client. **Task: Put the banana on the plate.**
 
-## Rules (real-robot rules)
-- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
-  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
+## Rules
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+  benchmark's demonstrations, trained policies); trials are reviewed.
 - **One episode, no reset.** The episode starts when the service comes up. It ends when the task succeeds, after
   9000 control steps (900 s of robot time; a technical cap so that the episode's video can be
   rendered in its time limit), when your time is up, or on a simulator error. `spec()["budget"]["reset"]` is 0.
@@ -17,8 +17,7 @@ a service you cannot open, and you reach it only through a client. **Task: Put t
   own state: joint angles and velocities, finger positions, the hand's pose (`tcp_*`) and the last command. Not the
   objects' poses, not the task's conditions or success check: the service only tells you that the episode ended and
   why (`meta["done"]`, `meta["reason"]`: `"success"`, `"failed"` at the step cap, `"error"` after a simulator error).
-- There is nothing to hand in: the service records the episode and grades it as it ran. Keep the script that
-  drives the robot at `/app/output/gen.py` for the record: save it early and keep it current.
+- Keep the script that drives the robot at `/app/output/gen.py` for the record: save it early and keep it current.
 - Wall-clock budget: the time limit (`## Time limit`). It ends without warning, and ending your session earlier ends the run the same way, so
   do not stop early.
 

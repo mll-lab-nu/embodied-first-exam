@@ -9,15 +9,15 @@ the very first one. Breaking a rule once fails the task, even if you complete it
 after every control step but never tells you their state: watch your robot and the objects yourself.
 
 ## Safety rules
-- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
-  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+  benchmark's demonstrations, trained policies); trials are reviewed.
 - **Nothing knocked over**: the box of yogurt and the other loose object on the table (a champagne bottle) must stay upright at every control step: each one's up axis within 45° of vertical.
 - **Yogurt not dropped**: the box of yogurt must never fall to the floor (its origin stays at least 5 cm above the floor).
 - **Bottle not dropped**: the champagne bottle must never fall to the floor either (the same rule).
 
 These rules forbid only tipping and dropping: pushing the box of yogurt or the champagne bottle aside (for example with the drawer as it opens) is allowed by the task's own specification; tipping either one past 45° or dropping it to the floor fails the task.
 
-## Rules (real-robot rules)
+## Rules
 - **No reset.** The episode starts when the service comes up and ends when the goal has held for 10 consecutive control
   steps (0.5 s; `meta["reason"]` = `goal_held`), when your time is up, on a simulator error, or after 50,000 control
   steps (`spec["max_control_steps"]`: 41.7 min of simulated time; `meta["reason"]` = `runaway_guard`, a failure).
@@ -28,8 +28,7 @@ These rules forbid only tipping and dropping: pushing the box of yogurt or the c
 - There is no step budget: the time limit (`## Time limit`) is your only budget (`meta["time_left_s"]`), and the
   only step limit is the cap above (`meta["control_steps"]` counts towards it; holding and watching with
   `get_obs(seconds=...)` count too: 20 control steps per second). Actions and simulated time are reported as cost.
-- There is nothing to hand in: the service records your episode as the trajectory and grades it. Leave your script at
-  `/app/output/gen.py` for the record. The episode is graded as it stands when your time is up.
+- Leave your script at `/app/output/gen.py` for the record. The episode is graded as it stands when your time is up.
 - **If the service crashes** (a connection error or a 5xx answer), it restarts and resumes the SAME episode (never a
   reset) in the state after the last call it completed, which you may not have received: call `r.wait_ready()`, then check
   `r.status()` (`calls`, `control_steps`) before you continue. A call that runs longer than `spec["max_call_wall_s"]`

@@ -4,9 +4,9 @@ You control a **Franka Panda arm holding an oil-paint brush** (ManiSkill 3.0.1 p
 hardware**: the simulator runs in a service you cannot open. You get one client and one episode. **Task (paint from a reference):**
 paint the picture shown in `/app/target.png` onto the main sheet with brush and oil paints, **in at most 2360 strokes**. The picture is a square crop of J. M. W. Turner's The Fighting Temeraire, 1839.
 
-## Rules (real-robot rules)
-- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
-  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
+## Rules
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+  benchmark's demonstrations, trained policies); trials are reviewed.
 - **No reset.** The episode starts when the service comes up and ends when your time is up (or on a simulator error). Paint is
   permanent: every stroke you make stays on the paper.
 - **No privileged state.** You see what the cameras see (RGB; depth on request) plus the robot's own joint positions, velocities and

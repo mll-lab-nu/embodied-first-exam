@@ -9,15 +9,13 @@ Success: the apple pie is cooked and lies on the tray. It counts only once the s
 When your session ends with the episode still running, the robot is held still for a few seconds more (your last
 command, the base at 0), and a success that settles in that time counts.
 
-Nothing to hand in: the service records and grades the episode. Keep the script that drives the robot at
-`/app/output/gen.py`.
+Keep the script that drives the robot at `/app/output/gen.py`.
 
-Real-robot rules:
-- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
-  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
+Rules:
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+  benchmark's demonstrations, trained policies); trials are reviewed.
 - One episode, no reset: what you knock over stays knocked over.
-- No privileged state: you get the robot's camera images (with their calibration) and its own sensor readings; no object
-  poses, no scene layout, no success signal.
+- You get only the cameras and the robot's own sensor readings: no object poses, no scene layout, no success signal.
 - The robot can fall over: a fall ends the episode as a failure, and so does a simulator breakdown (a runaway or
   non-finite state of the robot or of an object, e.g. after the robot tumbles).
 

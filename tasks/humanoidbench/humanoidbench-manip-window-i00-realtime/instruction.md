@@ -5,9 +5,9 @@ it were real hardware**: the simulator runs in a service you cannot open, and yo
 client. Like real hardware, it does not wait for you: once an episode is running, the robot moves in real time
 while you think. **Task:** grasp the wiping tool and wipe the window with it, moving it steadily up and down. The tool starts in the air just in front of the hands and falls within the first second unless it is held.
 
-## Rules (real-robot rules)
-- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
-  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
+## Rules
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+  benchmark's demonstrations, trained policies); trials are reviewed.
 - **Time does not stop.** An episode starts paused, on the frozen starting state, its servos holding their
   starting targets. Its clock starts at your first `submit` (or `get_obs(seconds=s)`) and from then on the
   robot runs at 50 Hz in real time, one control step every 0.02 s of wall-clock time, whether or not you send

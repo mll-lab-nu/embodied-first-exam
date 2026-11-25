@@ -45,9 +45,8 @@ img = s.render("robot0_agentview_center")   # RGB (240, 320, 3); views in s.came
 - Everything in `s.env`, `s.model` and `s.data` is readable (privileged mode).
 
 ## Rules
-- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
-  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
-- Only the actions count: editing `s.data` or the environment while debugging changes nothing in the replay.
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+  benchmark's demonstrations, trained policies); trials are reviewed.
 - Save a working trajectory early, then improve it; do not stop early.
 
 ## External material

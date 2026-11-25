@@ -12,15 +12,14 @@ the tool still. If the loop comes off the wire before the end, start again from 
 metal on the bare wire ends the episode as a failure, however light. Dropping the tool off the table ends the episode as
 a failure. The episode ends, as a success, as soon as all of this has held for a second.
 
-Nothing to hand in: the service records and grades the episode. Keep the script that drives the robot at
-`/app/output/gen.py`.
+Keep the script that drives the robot at `/app/output/gen.py`.
 
-Real-robot rules:
-- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
-  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
+Rules:
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+  benchmark's demonstrations, trained policies); trials are reviewed.
 - One episode, no reset: what you knock over stays knocked over.
-- No privileged state: you get the robot's camera images (with their calibration), its own sensor readings and the
-  safety readings (Robot Interface); no object poses, no scene layout; the episode ends when the task is done.
+- You get only the cameras, the robot's own sensor readings and the safety readings (Robot Interface): no object poses,
+  no scene layout; the episode ends when the task is done.
 
 ## Robot Interface
 A 7-DoF Franka Panda arm with a Robotiq 2F-85 parallel gripper on a fixed base, at a table (RoboARC, MuJoCo). The robot

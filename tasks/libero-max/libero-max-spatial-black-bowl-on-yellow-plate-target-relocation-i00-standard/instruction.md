@@ -4,18 +4,16 @@
 Pick up the black bowl between the plate and the ramekin and put it on the plate.
 
 ## Goal
-Success: that bowl sits on the plate, near its middle. The episode ends as soon as the task is done, and that episode,
-as it ran, is graded.
+Success: that bowl sits on the plate, near its middle. The episode ends as soon as the task is done.
 
-Nothing to hand in: the service records and grades the episode. Keep the script that drives the robot at
-`/app/output/gen.py`.
+Keep the script that drives the robot at `/app/output/gen.py`.
 
-Real-robot rules:
-- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
-  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
+Rules:
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+  benchmark's demonstrations, trained policies); trials are reviewed.
 - One episode, no reset: what you knock over stays knocked over.
-- No privileged state: you get the robot's camera images (with their calibration) and its own sensor readings; no object
-  poses, no scene layout; the episode ends when the task is done.
+- You get only the cameras and the robot's own sensor readings: no object poses, no scene layout; the episode ends when
+  the task is done.
 
 ## Robot Interface
 A Franka Panda arm at a table (LIBERO on robosuite / MuJoCo). The robot runs as a service you reach only through its

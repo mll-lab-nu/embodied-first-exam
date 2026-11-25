@@ -5,9 +5,9 @@ simulator runs in a service you cannot open, and you reach it only through a cli
 does not wait for you: once an episode is running, the robot moves in real time while you think. **Task:** sit
 the robot down on the chair and keep it seated, upright and still.
 
-## Rules (real-robot rules)
-- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
-  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
+## Rules
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+  benchmark's demonstrations, trained policies); trials are reviewed.
 - **Time does not stop.** An episode starts paused, on the frozen starting state, its servos holding their
   starting targets. Its clock starts at your first `submit` (or `get_obs(seconds=s)`) and from then on the
   robot runs at 50 Hz in real time, one control step every 0.02 s of wall-clock time, whether or not you send

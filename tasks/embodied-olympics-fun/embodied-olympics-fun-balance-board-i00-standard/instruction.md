@@ -12,20 +12,17 @@ The referee in the service judges these stages, in order: **10 s → 20 s → 30
 success, at the first foul or after 30.5 s of robot time, and a success ends the trial at once. Ending your session ends
 the run, so do not stop early: while you have attempts left, the run can still pass.
 
-Nothing to hand in: the service records and grades the episode. Keep the script that drives the robot at
-`/app/output/gen.py`. Keep your scripts and a `NOTES.md` of at most 20 lines in `/app/output/` (your approach, what
-failed, what you downloaded or installed): save them early and keep them current.
+Keep the script that drives the robot at `/app/output/gen.py`. Keep your scripts and a `NOTES.md` of at most 20 lines in
+`/app/output/` (your approach, what failed, what you downloaded or installed): save them early and keep them current.
 
-Real-robot rules:
-- **No cheating.** Write your own controller. Public tools, robot models and pretrained controllers are allowed, but do
-  not search for, download or use an existing solution to this task (published or reference solutions); trials are
-  reviewed.
+Rules:
+- **No cheating.** Public tools, robot models and pretrained controllers are allowed, but do not search for, download or
+  use an existing solution to this task (published or reference solutions); trials are reviewed.
 - Attempts: 5 resets, each a new attempt from the same start (the first attempt starts when the service comes up); only
   your last attempt is graded.
-- No privileged state: you get what the robot's own sensors give (its head cameras, joint encoders, motor torques and
-  IMUs) and the venue's fixed cameras; not where you or any object is, not the referee's state. Once an attempt is over,
-  every reply carries the referee's call: the outcome (`"success"` or the rule that ended it) and how many of the stages
-  it reached.
+- You get only what the robot's own sensors give (its head cameras, joint encoders, motor torques and IMUs) and the
+  venue's fixed cameras: not where you or any object is, not the referee's state. Once an attempt is over, every reply
+  carries the referee's call: the outcome (`"success"` or the rule that ended it) and how many of the stages it reached.
 
 The attempt fails at once if:
 - an end or a stop of the deck touches the floor

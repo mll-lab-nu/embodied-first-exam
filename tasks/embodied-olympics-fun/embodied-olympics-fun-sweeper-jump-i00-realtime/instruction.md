@@ -13,20 +13,17 @@ episode) ends at the success, at the first foul or after 30 s of robot time, and
 Ending your session ends the run (and stops your background programs), so do not stop early: while you have attempts
 left, the run can still pass.
 
-Nothing to hand in: the service records and grades the episode. Keep the program that drives the robot at
-`/app/output/gen.py` and a `NOTES.md` of at most 20 lines there (your approach, what failed, what you downloaded or
-installed): save them early and keep them current.
+Keep the program that drives the robot at `/app/output/gen.py` and a `NOTES.md` of at most 20 lines there (your
+approach, what failed, what you downloaded or installed): save them early and keep them current.
 
-Real-robot rules:
-- **No cheating.** Write your own controller. Public tools, robot models and pretrained controllers are allowed, but do
-  not search for, download or use an existing solution to this task (published or reference solutions); trials are
-  reviewed.
+Rules:
+- **No cheating.** Public tools, robot models and pretrained controllers are allowed, but do not search for, download or
+  use an existing solution to this task (published or reference solutions); trials are reviewed.
 - Attempts: 5 resets, each a new attempt from the same start, paused until your next command; only your last attempt is
   graded.
-- No privileged state: you get what the robot's own sensors give (its head cameras, joint encoders, motor torques and
-  IMUs) and the venue's fixed cameras; not where you or any object is, not the referee's state. Once an attempt is over,
-  every reply carries the referee's call: the outcome (`"success"` or the rule that ended it) and how many of the stages
-  it reached.
+- You get only what the robot's own sensors give (its head cameras, joint encoders, motor torques and IMUs) and the
+  venue's fixed cameras: not where you or any object is, not the referee's state. Once an attempt is over, every reply
+  carries the referee's call: the outcome (`"success"` or the rule that ended it) and how many of the stages it reached.
 
 The attempt fails at once if:
 - the boom touches any part of you (grabbing or holding it is a hit too), or passes through a foot that is not above it
