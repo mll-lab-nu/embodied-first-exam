@@ -616,7 +616,7 @@
     "policy_abi": "go2-controller/1 bounded JSON; validated numeric parameters, 17x12 offsets and 12x6 feedback gains",
     "protocol": "eai-policy/1.1",
     "schema": "control-transfer/1",
-    "score": "Success requires four ordered alternating crossings, clearance >=0.16 m, no pole/body-ground collision, final x beyond last pole +0.35 m; score combines crossing fraction and tracking quality, unsuccessful capped at 49.",
+    "score": "Success requires four ordered alternating crossings, clearance >=0.16 m, no pole/body-ground collision, final x beyond last pole +0.35 m; the score is the share of poles passed correctly, capped at 49 when unsuccessful.",
     "training_backend": "nominal MuJoCo CPU; GPU training may export the same bounded numeric artifact",
     "units": [
       "rad",
