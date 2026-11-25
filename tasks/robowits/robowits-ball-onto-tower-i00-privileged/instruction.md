@@ -1,7 +1,7 @@
 # RoboWits · ball_onto_tower — frozen instance
 
 You control a simulated **bimanual Marvin** robot (two 7-DoF arms with Pika parallel grippers; RoboWits on Genesis
-0.4.7 physics) via Python. **Task:** Place the ball stably on top of the tower.
+0.4.7 physics) via Python. **Task:** Put the ball on top of the tower and leave it resting there.
 
 The scene objects are the env's entities (`s.objects()`: `tower base`, `large ring`, `medium ring`, `small ring`, `ball`; see
 `/opt/robowits/gs_gym/envs/robowits/17_ball_onto_tower.py`). RoboWits' success predicate is `_check_success` in that file:
@@ -115,7 +115,7 @@ conditions at one instant, without the window (`predicate`: RoboWits' alone).
 
 Not checked: the rings (where they are, whether they are on the tower).
 
-Task text vs grader ("Place the ball stably on top of the tower."): "The tower" is the tower base alone: the rings are
+Task text vs grader ("Put the ball on top of the tower and leave it resting there."): "The tower" is the tower base alone: the rings are
 not referenced. "Stably" is the check window: the conditions above for 2 s, the ball at rest.
 
 Terms: a *footprint* is an object's outline seen from above (the 2D convex hull of its collision mesh in the x-y

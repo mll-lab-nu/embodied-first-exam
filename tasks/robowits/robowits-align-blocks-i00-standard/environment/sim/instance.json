@@ -3,7 +3,7 @@
  "robowits_task": "robowits/01-align-blocks-v0",
  "eval_json": "dataset/robowits/eval_dataset_50/01.json",
  "eval_index": 0,
- "text": "Align the three cubes perfectly in a straight line.",
+ "text": "Line up the three cubes on the table in a perfectly straight line.",
  "scene": {
   "third target cube": {
    "pos": [

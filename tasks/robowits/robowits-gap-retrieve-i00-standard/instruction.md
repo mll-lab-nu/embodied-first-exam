@@ -1,8 +1,7 @@
 # RoboWits · gap_retrieve — STANDARD MODE (robot as a service, eai-standard/2.2)
 
 You control a bimanual **Marvin** robot (two 7-DoF arms with Pika parallel grippers) **as if it were real hardware**:
-the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Place the lemon on the
-green target area.
+the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Put the lemon on the green target area.
 
 ## Success criterion (as graded)
 This is exactly what the grader checks (RoboWits' success predicate, stated in words, and the release and rest
@@ -23,7 +22,7 @@ simulator is the verdict: nothing is replayed to grade it.
 
 Not checked: the boundary blocks (where they end up).
 
-Task text vs grader ("Place the lemon on the green target area."): The text and the grader agree; the grader adds the
+Task text vs grader ("Put the lemon on the green target area."): The text and the grader agree; the grader adds the
 thresholds above (the lemon on the table, 80 % over the target, released, at rest).
 
 Terms: a *footprint* is an object's outline seen from above; *not held* means that neither gripper tip (the `tcp_pose`

@@ -1,8 +1,7 @@
 # RoboWits · raise_platform — STANDARD MODE (robot as a service, eai-standard/2.2)
 
 You control a bimanual **Marvin** robot (two 7-DoF arms with Pika parallel grippers) **as if it were real hardware**:
-the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Place the book on the
-cup supports.
+the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Lay the book across the two cups so that it rests on top of them.
 
 ## Success criterion (as graded)
 This is exactly what the grader checks (RoboWits' success predicate, stated in words, and the release and rest
@@ -26,7 +25,7 @@ simulator is the verdict: nothing is replayed to grade it.
 Not checked: the support cubes, contact or load (the book may rest on anything at the right height), and the table
 bounds.
 
-Task text vs grader ("Place the book on the cup supports."): "On the cup supports" means the book's bottom within
+Task text vs grader ("Lay the book across the two cups so that it rests on top of them."): "On the cup supports" means the book's bottom within
 3.5 cm of both cups' tops, with both cups under (or within 5 cm of) its outline; the cups need not carry it.
 
 Terms: a *footprint* is an object's outline seen from above; *not held* means that neither gripper tip (the `tcp_pose`

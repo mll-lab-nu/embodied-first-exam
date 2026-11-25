@@ -1,7 +1,7 @@
 # RoboWits · cover_with_lid — frozen instance
 
 You control a simulated **bimanual Marvin** robot (two 7-DoF arms with Pika parallel grippers; RoboWits on Genesis
-0.4.7 physics) via Python. **Task:** Cover the pot precisely using one lid.
+0.4.7 physics) via Python. **Task:** Put the lid that fits onto the pot, neatly centred.
 
 The scene objects are the env's entities (`s.objects()`: `pot without lid`, `small lid`, `lid medium`, `lid large`; see
 `/opt/robowits/gs_gym/envs/robowits/13_cover_with_lid.py`). RoboWits' success predicate is `_check_success` in that file:
@@ -127,7 +127,7 @@ conditions at one instant, without the window (`predicate`: RoboWits' alone).
 Not checked: whether the lid touches the pot, any height beyond the one above, and where the other two lids are (they
 never qualify).
 
-Task text vs grader ("Cover the pot precisely using one lid."): "Using one lid" means exactly one qualifying lid: the
+Task text vs grader ("Put the lid that fits onto the pot, neatly centred."): "Using one lid" means exactly one qualifying lid: the
 wrong-size lids never qualify, so putting them on the pot as well costs nothing. "Cover" means the large lid released
 and at rest over the pot within the overlap and height tests (in practice: lying on its rim); holding it above the pot
 does not count.

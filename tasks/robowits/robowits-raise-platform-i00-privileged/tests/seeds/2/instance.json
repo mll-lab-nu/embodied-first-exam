@@ -3,7 +3,7 @@
  "robowits_task": "robowits/24-raise-platform-v0",
  "eval_json": "dataset/robowits/eval_dataset_50/24.json",
  "eval_index": 2,
- "text": "Place the book on the cup supports.",
+ "text": "Lay the book across the two cups so that it rests on top of them.",
  "scene": {
   "support cube 2": {
    "pos": [

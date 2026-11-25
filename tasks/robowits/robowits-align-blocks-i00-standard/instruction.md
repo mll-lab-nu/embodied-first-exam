@@ -1,8 +1,7 @@
 # RoboWits · align_blocks — STANDARD MODE (robot as a service, eai-standard/2.2)
 
 You control a bimanual **Marvin** robot (two 7-DoF arms with Pika parallel grippers) **as if it were real hardware**:
-the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Align the three cubes
-perfectly in a straight line.
+the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Line up the three cubes on the table in a perfectly straight line.
 
 ## Success criterion (as graded)
 This is exactly what the grader checks (RoboWits' success predicate, stated in words, and the release and rest
@@ -24,7 +23,7 @@ simulator is the verdict: nothing is replayed to grade it.
 
 Not checked: the cubes' orientation, whether they touch each other, and how the ruler is used.
 
-Task text vs grader ("Align the three cubes perfectly in a straight line."): "Perfectly in a straight line" means
+Task text vs grader ("Line up the three cubes on the table in a perfectly straight line."): "Perfectly in a straight line" means
 within 1.0 cm of the line through the two outermost cubes, seen from above. The grader also requires what the text
 does not say: the cubes resting on the table, at least 3 cm between the outermost two, and every object over the
 table.

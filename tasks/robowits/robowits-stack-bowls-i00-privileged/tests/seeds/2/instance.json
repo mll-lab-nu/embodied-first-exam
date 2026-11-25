@@ -3,7 +3,7 @@
  "robowits_task": "robowits/19-stack-bowls-v0",
  "eval_json": "dataset/robowits/eval_dataset_50/19.json",
  "eval_index": 2,
- "text": "Nest the smaller bowl concentrically inside the larger one.",
+ "text": "Put the smaller bowl inside the larger one, centred.",
  "scene": {
   "medium bowl": {
    "pos": [

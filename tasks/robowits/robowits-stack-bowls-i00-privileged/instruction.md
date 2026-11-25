@@ -1,7 +1,7 @@
 # RoboWits · stack_bowls — frozen instance
 
 You control a simulated **bimanual Marvin** robot (two 7-DoF arms with Pika parallel grippers; RoboWits on Genesis
-0.4.7 physics) via Python. **Task:** Nest the smaller bowl concentrically inside the larger one.
+0.4.7 physics) via Python. **Task:** Put the smaller bowl inside the larger one, centred.
 
 The scene objects are the env's entities (`s.objects()`: `large bowl`, `medium bowl`; see
 `/opt/robowits/gs_gym/envs/robowits/19_stack_bowls.py`). RoboWits' success predicate is `_check_success` in that file:
@@ -98,7 +98,7 @@ conditions at one instant, without the window (`predicate`: RoboWits' alone).
 Not checked: heights and nesting order (the medium bowl need not be inside the large one: the large bowl set
 concentrically on top of it also passes).
 
-Task text vs grader ("Nest the smaller bowl concentrically inside the larger one."): "Nest inside" is not checked:
+Task text vs grader ("Put the smaller bowl inside the larger one, centred."): "Nest inside" is not checked:
 only that the two bowls, released and at rest, are concentric seen from above, within 1.1 cm.
 
 Terms: a *footprint* is an object's outline seen from above (the 2D convex hull of its collision mesh in the x-y

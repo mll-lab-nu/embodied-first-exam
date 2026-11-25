@@ -1,8 +1,7 @@
 # RoboWits · ball_onto_tower — STANDARD MODE (robot as a service, eai-standard/2.2)
 
 You control a bimanual **Marvin** robot (two 7-DoF arms with Pika parallel grippers) **as if it were real hardware**:
-the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Place the ball stably
-on top of the tower.
+the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Put the ball on top of the tower and leave it resting there.
 
 ## Success criterion (as graded)
 This is exactly what the grader checks (RoboWits' success predicate, stated in words, and the release and rest
@@ -24,7 +23,7 @@ simulator is the verdict: nothing is replayed to grade it.
 
 Not checked: the rings (where they are, whether they are on the tower).
 
-Task text vs grader ("Place the ball stably on top of the tower."): "The tower" is the tower base alone: the rings are
+Task text vs grader ("Put the ball on top of the tower and leave it resting there."): "The tower" is the tower base alone: the rings are
 not referenced. "Stably" is the check window: the conditions above for 2 s, the ball at rest.
 
 Terms: a *footprint* is an object's outline seen from above; *not held* means that neither gripper tip (the `tcp_pose`

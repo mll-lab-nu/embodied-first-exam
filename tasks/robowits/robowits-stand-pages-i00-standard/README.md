@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:robowits-0.1.1` |
 
 ## Task
-Stand the two pages up on the table so that they brace each other. They start joined like an open book: the
+Stand the two pages upright on the table and let go of them and the bar so they stay standing. They start joined like an open book: the
 stabilizing bar already runs through the eyelets of both pages as a hinge pin, so nothing has to be inserted. The same
 frozen instance as `robowits-stand-pages-i00-privileged`, as a robot service (`eai-standard/2.2`): the simulator runs
 in the `sim` sidecar, which the agent cannot open; the agent gets one episode, no reset and no privileged state, only

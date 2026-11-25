@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:robowits-0.1.1` |
 
 ## Task
-Stand the tall object with curved bottom stably within the green target area. One replayable trajectory from the
+Stand the tall object with the curved bottom upright on the green target area, so that it stays standing. One replayable trajectory from the
 frozen instance (evaluation scene 0 of RoboWits task 16), with the privileged tooling (`rcb_robowits.py`: the scene's
 state, resets, thin primitives, replay); the success criterion as graded is in `instruction.md`.
 

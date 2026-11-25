@@ -3,7 +3,7 @@
  "robowits_task": "robowits/16-stand-bulb-v0",
  "eval_json": "dataset/robowits/eval_dataset_50/16.json",
  "eval_index": 0,
- "text": "Stand the tall object with curved bottom stably within the green target area.",
+ "text": "Stand the tall object with the curved bottom upright on the green target area, so that it stays standing.",
  "scene": {
   "target patch": {
    "pos": [

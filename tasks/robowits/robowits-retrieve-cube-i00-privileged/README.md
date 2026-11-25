@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:robowits-0.1.1` |
 
 ## Task
-Retrieve the cube from the container and place it on the green target area. One replayable trajectory from the frozen
+Take the small cube out of the container and put it on the green target area. One replayable trajectory from the frozen
 instance (evaluation scene 0 of RoboWits task 2), with the privileged tooling (`rcb_robowits.py`: the scene's state,
 resets, thin primitives, replay); the success criterion as graded is in `instruction.md`.
 

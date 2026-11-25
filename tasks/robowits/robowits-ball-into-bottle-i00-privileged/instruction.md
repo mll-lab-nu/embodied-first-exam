@@ -1,7 +1,7 @@
 # RoboWits · ball_into_bottle — frozen instance
 
 You control a simulated **bimanual Marvin** robot (two 7-DoF arms with Pika parallel grippers; RoboWits on Genesis
-0.4.7 physics) via Python. **Task:** Transfer the ball from the blue container into the red bottle.
+0.4.7 physics) via Python. **Task:** Move the small ball from the blue container down to the bottom of the red bottle.
 
 The red bottle's base is thin in the simulator (its collision shape is about 3.5 mm thick, and the bottle is fixed to the table): a ball that falls fast down the bottle can pass through the base onto the table, which fails the task. In one measured case about half of the pours did (16 replays of one pouring trajectory with tiny noise, 9 balls through the base): let the ball in slowly.
 
@@ -141,7 +141,7 @@ conditions at one instant, without the window (`predicate`: RoboWits' alone).
 Not checked: how the ball got there (the blue container and the funnel are not referenced), and whether a gripper
 holds the container or the funnel.
 
-Task text vs grader ("Transfer the ball from the blue container into the red bottle."): "Into the red bottle" means
+Task text vs grader ("Move the small ball from the blue container down to the bottom of the red bottle."): "Into the red bottle" means
 deep inside it: seen from above inside the bottle's outline, with the ball's top more than 11 cm below the bottle's
 top and the ball off the bottle's base. "From the blue container" is not checked.
 

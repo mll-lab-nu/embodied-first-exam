@@ -1,7 +1,7 @@
 # RoboWits · retrieve_cube — frozen instance
 
 You control a simulated **bimanual Marvin** robot (two 7-DoF arms with Pika parallel grippers; RoboWits on Genesis
-0.4.7 physics) via Python. **Task:** Retrieve the cube from the container and place it on the green target area.
+0.4.7 physics) via Python. **Task:** Take the small cube out of the container and put it on the green target area.
 
 The scene objects are the env's entities (`s.objects()`: `deep narrow container`, `cube`, `target area`; see
 `/opt/robowits/gs_gym/envs/robowits/02_retrieve_cube.py`). RoboWits' success predicate is `_check_success` in that file:
@@ -207,7 +207,7 @@ conditions at one instant, without the window (`predicate`: RoboWits' alone).
 
 Not checked: where the container ends up.
 
-Task text vs grader ("Retrieve the cube from the container and place it on the green target area."): The text and the
+Task text vs grader ("Take the small cube out of the container and put it on the green target area."): The text and the
 grader agree; the grader makes "out of the container" and "on the target" precise (half of the cube's footprint) and
 requires the cube at table height.
 

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:robowits-0.1.1` |
 
 ## Task
-Build a stable two-layer stack so the red cube's center is above the green colored dot. One replayable trajectory from
+Set the two grey cubes side by side, touching, and put the red cube on top of them, right above the green dot. One replayable trajectory from
 the frozen instance (evaluation scene 0 of RoboWits task 14), with the privileged tooling (`rcb_robowits.py`: the
 scene's state, resets, thin primitives, replay); the success criterion as graded is in `instruction.md`.
 

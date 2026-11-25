@@ -1,8 +1,7 @@
 # RoboWits · stack_cubes — STANDARD MODE (robot as a service, eai-standard/2.2)
 
 You control a bimanual **Marvin** robot (two 7-DoF arms with Pika parallel grippers) **as if it were real hardware**:
-the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Build a stable
-two-layer stack so the red cube's center is above the green colored dot.
+the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Set the two grey cubes side by side, touching, and put the red cube on top of them, right above the green dot.
 
 ## Success criterion (as graded)
 This is exactly what the grader checks (RoboWits' success predicate, stated in words, and the release and rest
@@ -28,7 +27,7 @@ simulator is the verdict: nothing is replayed to grade it.
 Not checked: whether the red cube rests on both grey cubes (only its height against one of them is tested), and where
 the grey cubes are relative to the dot.
 
-Task text vs grader ("Build a stable two-layer stack so the red cube's center is above the green colored dot."): "A
+Task text vs grader ("Set the two grey cubes side by side, touching, and put the red cube on top of them, right above the green dot."): "A
 stable two-layer stack" is the check window: the conditions above for 2 s with the cubes released and at rest; the red
 cube must be high enough and over the dot, nothing more.
 

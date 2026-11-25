@@ -1,7 +1,7 @@
 # RoboWits · collect_screws — frozen instance
 
 You control a simulated **bimanual Marvin** robot (two 7-DoF arms with Pika parallel grippers; RoboWits on Genesis
-0.4.7 physics) via Python. **Task:** Collect the screw into the container
+0.4.7 physics) via Python. **Task:** Put the screw into the container.
 
 The scene objects are the env's entities (`s.objects()`: `container`, `dustpan`, `screw`; see
 `/opt/robowits/gs_gym/envs/robowits/10_collect_screws.py`). RoboWits' success predicate is `_check_success` in that file:
@@ -86,7 +86,7 @@ conditions at one instant, without the window (`predicate`: RoboWits' alone).
 
 Not checked: the rest of the screw, whether the dustpan still holds it, and where the dustpan is.
 
-Task text vs grader ("Collect the screw into the container"): "Into the container" is a single point inside the
+Task text vs grader ("Put the screw into the container."): "Into the container" is a single point inside the
 container's box, with 2 cm allowed above the rim: a screw lying on the rim also counts, but not one held in or above
 the opening (the robot must not touch it).
 

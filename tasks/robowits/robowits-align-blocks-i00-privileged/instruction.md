@@ -1,7 +1,7 @@
 # RoboWits · align_blocks — frozen instance
 
 You control a simulated **bimanual Marvin** robot (two 7-DoF arms with Pika parallel grippers; RoboWits on Genesis
-0.4.7 physics) via Python. **Task:** Align the three cubes perfectly in a straight line.
+0.4.7 physics) via Python. **Task:** Line up the three cubes on the table in a perfectly straight line.
 
 The scene objects are the env's entities (`s.objects()`: `first target cube`, `second target cube`, `third target cube`, `long rigid ruler`; see
 `/opt/robowits/gs_gym/envs/robowits/01_align_blocks.py`). RoboWits' success predicate is `_check_success` in that file:
@@ -119,7 +119,7 @@ conditions at one instant, without the window (`predicate`: RoboWits' alone).
 
 Not checked: the cubes' orientation, whether they touch each other, and how the ruler is used.
 
-Task text vs grader ("Align the three cubes perfectly in a straight line."): "Perfectly in a straight line" means
+Task text vs grader ("Line up the three cubes on the table in a perfectly straight line."): "Perfectly in a straight line" means
 within 1.0 cm of the line through the two outermost cubes, seen from above. The grader also requires what the text
 does not say: the cubes resting on the table, at least 3 cm between the outermost two, and every object over the
 table.

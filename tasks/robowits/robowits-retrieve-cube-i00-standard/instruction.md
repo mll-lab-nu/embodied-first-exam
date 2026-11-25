@@ -1,8 +1,7 @@
 # RoboWits · retrieve_cube — STANDARD MODE (robot as a service, eai-standard/2.2)
 
 You control a bimanual **Marvin** robot (two 7-DoF arms with Pika parallel grippers) **as if it were real hardware**:
-the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Retrieve the cube from
-the container and place it on the green target area.
+the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Take the small cube out of the container and put it on the green target area.
 
 ## Success criterion (as graded)
 This is exactly what the grader checks (RoboWits' success predicate, stated in words, and the release and rest
@@ -24,7 +23,7 @@ simulator is the verdict: nothing is replayed to grade it.
 
 Not checked: where the container ends up.
 
-Task text vs grader ("Retrieve the cube from the container and place it on the green target area."): The text and the
+Task text vs grader ("Take the small cube out of the container and put it on the green target area."): The text and the
 grader agree; the grader makes "out of the container" and "on the target" precise (half of the cube's footprint) and
 requires the cube at table height.
 

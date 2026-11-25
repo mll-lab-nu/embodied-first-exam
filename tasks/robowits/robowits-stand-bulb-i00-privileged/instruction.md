@@ -1,7 +1,7 @@
 # RoboWits · stand_bulb — frozen instance
 
 You control a simulated **bimanual Marvin** robot (two 7-DoF arms with Pika parallel grippers; RoboWits on Genesis
-0.4.7 physics) via Python. **Task:** Stand the tall object with curved bottom stably within the green target area.
+0.4.7 physics) via Python. **Task:** Stand the tall object with the curved bottom upright on the green target area, so that it stays standing.
 
 The scene objects are the env's entities (`s.objects()`: `target patch`, `stabilizing ring`, `tall object with curved bottom`; see
 `/opt/robowits/gs_gym/envs/robowits/16_stand_bulb.py`). RoboWits' success predicate is `_check_success` in that file:
@@ -176,7 +176,7 @@ conditions at one instant, without the window (`predicate`: RoboWits' alone).
 Not checked: the stabilizing ring, and any tilt the bounding-box test lets through (for this 21.6 x 12 cm object,
 tilts up to roughly 45 degrees can pass).
 
-Task text vs grader ("Stand the tall object with curved bottom stably within the green target area."): "Stand ...
+Task text vs grader ("Stand the tall object with the curved bottom upright on the green target area, so that it stays standing."): "Stand ...
 stably" means the bounding-box test above held for the 2 s check window, the object released and at rest.
 
 Terms: a *footprint* is an object's outline seen from above (the 2D convex hull of its collision mesh in the x-y

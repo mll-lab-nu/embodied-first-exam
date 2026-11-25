@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:robowits-0.1.1` |
 
 ## Task
-Stand the two pages up on the table so that they brace each other. They start joined like an open book: the
+Stand the two pages upright on the table and let go of them and the bar so they stay standing. They start joined like an open book: the
 stabilizing bar already runs through the eyelets of both pages as a hinge pin, so nothing has to be inserted. One
 replayable trajectory from the frozen instance (evaluation scene 0 of RoboWits task 7), with the privileged tooling
 (`rcb_robowits.py`: the scene's state, resets, thin primitives, replay); the success criterion as graded is in

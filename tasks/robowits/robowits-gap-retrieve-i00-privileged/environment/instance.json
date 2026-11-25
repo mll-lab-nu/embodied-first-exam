@@ -3,7 +3,7 @@
  "robowits_task": "robowits/03-gap-retrieve-v0",
  "eval_json": "dataset/robowits/eval_dataset_50/03.json",
  "eval_index": 0,
- "text": "Place the lemon on the green target area.",
+ "text": "Put the lemon on the green target area.",
  "scene": {
   "left boundary block": {
    "pos": [

@@ -1,8 +1,7 @@
 # RoboWits · collect_screws — STANDARD MODE (robot as a service, eai-standard/2.2)
 
 You control a bimanual **Marvin** robot (two 7-DoF arms with Pika parallel grippers) **as if it were real hardware**:
-the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Collect the screw into
-the container
+the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Put the screw into the container.
 
 ## Success criterion (as graded)
 This is exactly what the grader checks (RoboWits' success predicate, stated in words, and the release and rest
@@ -23,7 +22,7 @@ simulator is the verdict: nothing is replayed to grade it.
 
 Not checked: the rest of the screw, whether the dustpan still holds it, and where the dustpan is.
 
-Task text vs grader ("Collect the screw into the container"): "Into the container" is a single point inside the
+Task text vs grader ("Put the screw into the container."): "Into the container" is a single point inside the
 container's box, with 2 cm allowed above the rim: a screw lying on the rim also counts, but not one held in or above
 the opening (the robot must not touch it).
 

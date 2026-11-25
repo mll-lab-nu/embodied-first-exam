@@ -1,8 +1,7 @@
 # RoboWits · dominos — STANDARD MODE (robot as a service, eai-standard/2.2)
 
 You control a bimanual **Marvin** robot (two 7-DoF arms with Pika parallel grippers) **as if it were real hardware**:
-the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Push the red block onto
-the green target area. White blocks 3, 2 and 1 and the red block stand upright in a row, a domino chain that ends just short of the green target area. White block 4 stands on its own, closer to the robot.
+the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Get the red block onto the green target area. White blocks 3, 2 and 1 and the red block stand upright in a row, a domino chain that ends just short of the green target area. White block 4 stands on its own, closer to the robot.
 
 ## Success criterion (as graded)
 This is exactly what the grader checks (RoboWits' success predicate, stated in words, and the release and rest
@@ -21,7 +20,7 @@ simulator is the verdict: nothing is replayed to grade it.
 Not checked: anything else: the red block's height, orientation, whether it rests on the table, the white blocks, and
 the table bounds.
 
-Task text vs grader ("Push the red block onto the green target area."): Only where the red block is, seen from above,
+Task text vs grader ("Get the red block onto the green target area."): Only where the red block is, seen from above,
 is checked, once it is released and at rest: how it got there is not. RoboWits' docstring says 30 %; the code requires
 50 %.
 

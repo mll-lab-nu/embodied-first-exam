@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:robowits-0.1.1` |
 
 ## Task
-Build a stable two-layer stack so the red cube's center is above the green colored dot. The same frozen instance as
+Set the two grey cubes side by side, touching, and put the red cube on top of them, right above the green dot. The same frozen instance as
 `robowits-stack-cubes-i00-privileged`, as a robot service (`eai-standard/2.2`): the simulator runs in the `sim`
 sidecar, which the agent cannot open; the agent gets one episode, no reset and no privileged state, only the client
 (calibrated RGB-D cameras, proprioception, `joint_position` / `ee_pose` chunks, stateless kinematics). The sidecar

@@ -12,12 +12,12 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:robowits-0.1.1` |
 
 ## Task
-Place the ball stably on top of the tower. One replayable trajectory from the frozen instance (evaluation scene 0 of
+Put the ball on top of the tower and leave it resting there. One replayable trajectory from the frozen instance (evaluation scene 0 of
 RoboWits task 17), with the privileged tooling (`rcb_robowits.py`: the scene's state, resets, thin primitives,
 replay); the success criterion as graded is in `instruction.md`.
 
 ## Difficulty
-Place the ball stably on top of the tower. The tower pole alone cannot support the ball as it would roll off. The base
+Put the ball on top of the tower and leave it resting there. The tower pole alone cannot support the ball as it would roll off. The base
 can only fit 2.5 rings inside its height, so stacking all three rings causes the top ring to protrude above the pole,
 creating a hollow cup-like surface where the ball can rest stably in the center. The tooling's primitives are thin (IK
 moves, joint moves, gripper, hold).

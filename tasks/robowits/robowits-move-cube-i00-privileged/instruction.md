@@ -1,7 +1,7 @@
 # RoboWits · move_cube — frozen instance
 
 You control a simulated **bimanual Marvin** robot (two 7-DoF arms with Pika parallel grippers; RoboWits on Genesis
-0.4.7 physics) via Python. **Task:** Move any one of the three cubes past the yellow goal line, to the side away from the robot, and leave it on the table there.
+0.4.7 physics) via Python. **Task:** Move one of the three cubes across the goal line, to the side away from the robot, and leave it on the table there.
 
 The scene objects are the env's entities (`s.objects()`: `cube 1`, `cube 2`, `cube 3`, `goal line`, `smooth slope`, `rough slope`; see
 `/opt/robowits/gs_gym/envs/robowits/28_move_cube.py`). RoboWits' success predicate is `_check_success` in that file:
@@ -54,7 +54,7 @@ conditions at one instant, without the window (`predicate`: RoboWits' alone).
 Not checked: anything else: whether the cube is on the table top or still on a slope, its height and orientation, and
 the other two cubes (except that neither may become a counted cube during the check window).
 
-Task text vs grader: RoboWits' own task text is "Move any of the three cubes to the left of the goal line." There, "to the left of the goal line" means beyond the line, farther from the robot, not to the left as the robot sees it.
+Task text vs grader: RoboWits' own task text is "Move one of the three cubes across the goal line, to the side away from the robot, and leave it on the table there." There, "to the left of the goal line" means beyond the line, farther from the robot, not to the left as the robot sees it.
 
 Terms: a *footprint* is an object's outline seen from above (the 2D convex hull of its collision mesh in the x-y
 plane); *not held* means that neither gripper tip (`Gripper_Tip_R` / `Gripper_Tip_L`, the frames of `s.ee_pose`) is

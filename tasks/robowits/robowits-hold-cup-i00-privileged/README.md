@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:robowits-0.1.1` |
 
 ## Task
-Put the cup on the green target area on the slope without sliding down. One replayable trajectory from the frozen
+Stand the cup upright on the green target area on the slope, so that it stays there without sliding down. One replayable trajectory from the frozen
 instance (evaluation scene 0 of RoboWits task 9), with the privileged tooling (`rcb_robowits.py`: the scene's state,
 resets, thin primitives, replay); the success criterion as graded is in `instruction.md`.
 

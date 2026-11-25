@@ -1,8 +1,7 @@
 # RoboWits · stack_bowls — STANDARD MODE (robot as a service, eai-standard/2.2)
 
 You control a bimanual **Marvin** robot (two 7-DoF arms with Pika parallel grippers) **as if it were real hardware**:
-the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Nest the smaller bowl
-concentrically inside the larger one.
+the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Put the smaller bowl inside the larger one, centred.
 
 ## Success criterion (as graded)
 This is exactly what the grader checks (RoboWits' success predicate, stated in words, and the release and rest
@@ -22,7 +21,7 @@ simulator is the verdict: nothing is replayed to grade it.
 Not checked: heights and nesting order (the medium bowl need not be inside the large one: the large bowl set
 concentrically on top of it also passes).
 
-Task text vs grader ("Nest the smaller bowl concentrically inside the larger one."): "Nest inside" is not checked:
+Task text vs grader ("Put the smaller bowl inside the larger one, centred."): "Nest inside" is not checked:
 only that the two bowls, released and at rest, are concentric seen from above, within 1.1 cm.
 
 Terms: a *footprint* is an object's outline seen from above; *not held* means that neither gripper tip (the `tcp_pose`

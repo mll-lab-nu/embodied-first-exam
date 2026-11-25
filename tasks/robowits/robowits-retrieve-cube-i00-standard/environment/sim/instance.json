@@ -3,7 +3,7 @@
  "robowits_task": "robowits/02-retrieve-cube-v0",
  "eval_json": "dataset/robowits/eval_dataset_50/02.json",
  "eval_index": 0,
- "text": "Retrieve the cube from the container and place it on the green target area.",
+ "text": "Take the small cube out of the container and put it on the green target area.",
  "scene": {
   "target area": {
    "pos": [

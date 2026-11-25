@@ -3,7 +3,7 @@
  "robowits_task": "robowits/13-cover-with-lid-v0",
  "eval_json": "dataset/robowits/eval_dataset_50/13.json",
  "eval_index": 1,
- "text": "Cover the pot precisely using one lid.",
+ "text": "Put the lid that fits onto the pot, neatly centred.",
  "scene": {
   "lid medium": {
    "pos": [

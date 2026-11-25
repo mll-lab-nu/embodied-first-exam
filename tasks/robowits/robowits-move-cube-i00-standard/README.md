@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:robowits-0.1.1` |
 
 ## Task
-Move any one of the three cubes past the yellow goal line, to the side away from the robot, and leave it on the table there. The same frozen instance as
+Move one of the three cubes across the goal line, to the side away from the robot, and leave it on the table there. The same frozen instance as
 `robowits-move-cube-i00-privileged`, as a robot service (`eai-standard/2.2`): the simulator runs in the `sim` sidecar,
 which the agent cannot open; the agent gets one episode, no reset and no privileged state, only the client (calibrated
 RGB-D cameras, proprioception, `joint_position` / `ee_pose` chunks, stateless kinematics). The sidecar judges the live

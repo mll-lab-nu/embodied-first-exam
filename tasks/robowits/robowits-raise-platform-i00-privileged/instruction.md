@@ -1,7 +1,7 @@
 # RoboWits · raise_platform — frozen instance
 
 You control a simulated **bimanual Marvin** robot (two 7-DoF arms with Pika parallel grippers; RoboWits on Genesis
-0.4.7 physics) via Python. **Task:** Place the book on the cup supports.
+0.4.7 physics) via Python. **Task:** Lay the book across the two cups so that it rests on top of them.
 
 The scene objects are the env's entities (`s.objects()`: `heavy book`, `cup support 1`, `cup support 2`, `support cube 1`, `support cube 2`; see
 `/opt/robowits/gs_gym/envs/robowits/24_raise_platform.py`). RoboWits' success predicate is `_check_success` in that file:
@@ -149,7 +149,7 @@ conditions at one instant, without the window (`predicate`: RoboWits' alone).
 Not checked: the support cubes, contact or load (the book may rest on anything at the right height), and the table
 bounds.
 
-Task text vs grader ("Place the book on the cup supports."): "On the cup supports" means the book's bottom within
+Task text vs grader ("Lay the book across the two cups so that it rests on top of them."): "On the cup supports" means the book's bottom within
 3.5 cm of both cups' tops, with both cups under (or within 5 cm of) its outline; the cups need not carry it.
 
 Terms: a *footprint* is an object's outline seen from above (the 2D convex hull of its collision mesh in the x-y

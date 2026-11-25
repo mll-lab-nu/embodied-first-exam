@@ -3,7 +3,7 @@
  "robowits_task": "robowits/06-dominos-v0",
  "eval_json": "dataset/robowits/eval_dataset_50/06.json",
  "eval_index": 1,
- "text": "Push the red block onto the green target area.",
+ "text": "Get the red block onto the green target area.",
  "scene": {
   "red block": {
    "pos": [

@@ -1,7 +1,7 @@
 # RoboWits · hold_cup — frozen instance
 
 You control a simulated **bimanual Marvin** robot (two 7-DoF arms with Pika parallel grippers; RoboWits on Genesis
-0.4.7 physics) via Python. **Task:** Put the cup on the green target area on the slope without sliding down.
+0.4.7 physics) via Python. **Task:** Stand the cup upright on the green target area on the slope, so that it stays there without sliding down.
 
 The green target area is hard to see: it lies on the slope's inclined face, mostly inside the slope's mesh, so the cameras show little or none of it (none at the start). It covers the middle of that face, about 13 cm by 17 cm, its centre within about 2 cm of the slope's centre seen from above (`s.objects()` gives its pose and bounds).
 
@@ -185,7 +185,7 @@ conditions at one instant, without the window (`predicate`: RoboWits' alone).
 
 Not checked: the coaster (where it is, whether the cup stands on it).
 
-Task text vs grader ("Put the cup on the green target area on the slope without sliding down."): "Without sliding
+Task text vs grader ("Stand the cup upright on the green target area on the slope, so that it stays there without sliding down."): "Without sliding
 down" is the check window: the conditions above for 2 s, with the cup at rest (at most 2 mm in 2 s), not one speed
 sample.
 

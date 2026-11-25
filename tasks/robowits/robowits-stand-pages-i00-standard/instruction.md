@@ -1,8 +1,7 @@
 # RoboWits · stand_pages — STANDARD MODE (robot as a service, eai-standard/2.2)
 
 You control a bimanual **Marvin** robot (two 7-DoF arms with Pika parallel grippers) **as if it were real hardware**:
-the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Stand the two pages up
-on the table so that they brace each other. They start joined like an open book: the stabilizing bar already runs
+the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Stand the two pages upright on the table and let go of them and the bar so they stay standing. They start joined like an open book: the stabilizing bar already runs
 through the eyelets of both pages as a hinge pin, so nothing has to be inserted.
 
 ## Success criterion (as graded)
@@ -26,7 +25,7 @@ simulator is the verdict: nothing is replayed to grade it.
 
 Not checked: any connection between the pages (the hinge) and where the bar ends up.
 
-Task text vs grader ("Stand the two pages up on the table so that they brace each other."): The hinge is not checked:
+Task text vs grader ("Stand the two pages upright on the table and let go of them and the bar so they stay standing."): The hinge is not checked:
 two pages standing upright on the table, released and at rest, pass with or without the bar through their eyelets. In
 this scene the bar already runs through the eyelets of both pages at the start (they lie open like a book): nothing
 has to be inserted.

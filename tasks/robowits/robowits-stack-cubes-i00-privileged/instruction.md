@@ -1,8 +1,7 @@
 # RoboWits · stack_cubes — frozen instance
 
 You control a simulated **bimanual Marvin** robot (two 7-DoF arms with Pika parallel grippers; RoboWits on Genesis
-0.4.7 physics) via Python. **Task:** Build a stable two-layer stack so the red cube's center is above the green
-colored dot.
+0.4.7 physics) via Python. **Task:** Set the two grey cubes side by side, touching, and put the red cube on top of them, right above the green dot.
 
 The scene objects are the env's entities (`s.objects()`: `base cube 1`, `base cube 2`, `apex cube`, `apex target`; see
 `/opt/robowits/gs_gym/envs/robowits/14_stack_cubes.py`). RoboWits' success predicate is `_check_success` in that file:
@@ -75,7 +74,7 @@ conditions at one instant, without the window (`predicate`: RoboWits' alone).
 Not checked: whether the apex cube rests on both base cubes (only its height against base cube 1 is tested), and where
 the base cubes are relative to the dot.
 
-Task text vs grader ("Build a stable two-layer stack so the red cube's center is above the green colored dot."): "A
+Task text vs grader ("Set the two grey cubes side by side, touching, and put the red cube on top of them, right above the green dot."): "A
 stable two-layer stack" is the check window: the conditions above for 2 s with the cubes released and at rest; the
 apex must be high enough relative to base cube 1 and over the dot, nothing more.
 

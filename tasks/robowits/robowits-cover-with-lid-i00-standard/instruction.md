@@ -1,8 +1,7 @@
 # RoboWits · cover_with_lid — STANDARD MODE (robot as a service, eai-standard/2.2)
 
 You control a bimanual **Marvin** robot (two 7-DoF arms with Pika parallel grippers) **as if it were real hardware**:
-the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Cover the pot precisely
-using one lid.
+the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Put the lid that fits onto the pot, neatly centred.
 
 ## Success criterion (as graded)
 This is exactly what the grader checks (RoboWits' success predicate, stated in words, and the release and rest
@@ -28,7 +27,7 @@ simulator is the verdict: nothing is replayed to grade it.
 Not checked: whether the lid touches the pot, any height beyond the one above, and where the other two lids are (they
 never qualify).
 
-Task text vs grader ("Cover the pot precisely using one lid."): "Using one lid" means exactly one qualifying lid: the
+Task text vs grader ("Put the lid that fits onto the pot, neatly centred."): "Using one lid" means exactly one qualifying lid: the
 wrong-size lids never qualify, so putting them on the pot as well costs nothing. "Cover" means the large lid released
 and at rest over the pot within the overlap and height tests (in practice: lying on its rim); holding it above the pot
 does not count.

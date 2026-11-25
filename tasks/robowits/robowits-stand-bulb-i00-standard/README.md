@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:robowits-0.1.1` |
 
 ## Task
-Stand the tall object with curved bottom stably within the green target area. The same frozen instance as
+Stand the tall object with the curved bottom upright on the green target area, so that it stays standing. The same frozen instance as
 `robowits-stand-bulb-i00-privileged`, as a robot service (`eai-standard/2.2`): the simulator runs in the `sim`
 sidecar, which the agent cannot open; the agent gets one episode, no reset and no privileged state, only the client
 (calibrated RGB-D cameras, proprioception, `joint_position` / `ee_pose` chunks, stateless kinematics). The sidecar

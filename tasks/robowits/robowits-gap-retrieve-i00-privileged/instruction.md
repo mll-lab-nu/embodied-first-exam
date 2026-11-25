@@ -1,7 +1,7 @@
 # RoboWits · gap_retrieve — frozen instance
 
 You control a simulated **bimanual Marvin** robot (two 7-DoF arms with Pika parallel grippers; RoboWits on Genesis
-0.4.7 physics) via Python. **Task:** Place the lemon on the green target area.
+0.4.7 physics) via Python. **Task:** Put the lemon on the green target area.
 
 The scene objects are the env's entities (`s.objects()`: `left boundary block`, `right boundary block`, `target area`, `lemon`; see
 `/opt/robowits/gs_gym/envs/robowits/03_gap_retrieve.py`). RoboWits' success predicate is `_check_success` in that file:
@@ -173,7 +173,7 @@ conditions at one instant, without the window (`predicate`: RoboWits' alone).
 
 Not checked: the boundary blocks (where they end up).
 
-Task text vs grader ("Place the lemon on the green target area."): The text and the grader agree; the grader adds the
+Task text vs grader ("Put the lemon on the green target area."): The text and the grader agree; the grader adds the
 thresholds above (the lemon on the table, 80 % over the target, released, at rest).
 
 Terms: a *footprint* is an object's outline seen from above (the 2D convex hull of its collision mesh in the x-y

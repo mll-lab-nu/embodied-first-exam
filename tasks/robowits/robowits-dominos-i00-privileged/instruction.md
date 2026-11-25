@@ -1,7 +1,7 @@
 # RoboWits · dominos — frozen instance
 
 You control a simulated **bimanual Marvin** robot (two 7-DoF arms with Pika parallel grippers; RoboWits on Genesis
-0.4.7 physics) via Python. **Task:** Push the red block onto the green target area.
+0.4.7 physics) via Python. **Task:** Get the red block onto the green target area.
 
 The scene objects are the env's entities (`s.objects()`: `white block 1`, `white block 2`, `white block 3`, `white block 4`, `red block`, `target area`; see
 `/opt/robowits/gs_gym/envs/robowits/06_dominos.py`). RoboWits' success predicate is `_check_success` in that file:
@@ -138,7 +138,7 @@ conditions at one instant, without the window (`predicate`: RoboWits' alone).
 Not checked: anything else: the red block's height, orientation, whether it rests on the table, the white blocks, and
 the table bounds.
 
-Task text vs grader ("Push the red block onto the green target area."): Only where the red block is, seen from above,
+Task text vs grader ("Get the red block onto the green target area."): Only where the red block is, seen from above,
 is checked, once it is released and at rest: how it got there is not. RoboWits' docstring says 30 %; the code requires
 50 %.
 

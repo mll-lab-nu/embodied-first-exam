@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/robowits-stack-cubes-i00-privileged"
-description = "RoboWits stack_cubes (bimanual Marvin, Genesis): produce one replayable trajectory. Build a stable two-layer stack so the red cube's center is above the green colored dot. Frozen scene instance (RoboWits evaluation scene 0 of task 14)."
+description = "RoboWits stack_cubes (bimanual Marvin, Genesis): produce one replayable trajectory. Set the two grey cubes side by side, touching, and put the red cube on top of them, right above the green dot. Frozen scene instance (RoboWits evaluation scene 0 of task 14)."
 keywords = ["robotics", "robowits", "genesis", "marvin-bimanual", "dual-arm", "code-as-policy", "trajectory", "stack_cubes"]
 
 [metadata]

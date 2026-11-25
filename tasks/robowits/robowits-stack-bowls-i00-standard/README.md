@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:robowits-0.1.1` |
 
 ## Task
-Nest the smaller bowl concentrically inside the larger one. The same frozen instance as
+Put the smaller bowl inside the larger one, centred. The same frozen instance as
 `robowits-stack-bowls-i00-privileged`, as a robot service (`eai-standard/2.2`): the simulator runs in the `sim`
 sidecar, which the agent cannot open; the agent gets one episode, no reset and no privileged state, only the client
 (calibrated RGB-D cameras, proprioception, `joint_position` / `ee_pose` chunks, stateless kinematics). The sidecar

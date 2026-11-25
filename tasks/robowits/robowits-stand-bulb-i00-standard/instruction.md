@@ -1,8 +1,7 @@
 # RoboWits · stand_bulb — STANDARD MODE (robot as a service, eai-standard/2.2)
 
 You control a bimanual **Marvin** robot (two 7-DoF arms with Pika parallel grippers) **as if it were real hardware**:
-the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Stand the tall object
-with curved bottom stably within the green target area.
+the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Stand the tall object with the curved bottom upright on the green target area, so that it stays standing.
 
 ## Success criterion (as graded)
 This is exactly what the grader checks (RoboWits' success predicate, stated in words, and the release and rest
@@ -26,7 +25,7 @@ simulator is the verdict: nothing is replayed to grade it.
 Not checked: the stabilizing ring, and any tilt the bounding-box test lets through (for this 21.6 x 12 cm object,
 tilts up to roughly 45 degrees can pass).
 
-Task text vs grader ("Stand the tall object with curved bottom stably within the green target area."): "Stand ...
+Task text vs grader ("Stand the tall object with the curved bottom upright on the green target area, so that it stays standing."): "Stand ...
 stably" means the bounding-box test above held for the 2 s check window, the object released and at rest.
 
 Terms: a *footprint* is an object's outline seen from above; *not held* means that neither gripper tip (the `tcp_pose`

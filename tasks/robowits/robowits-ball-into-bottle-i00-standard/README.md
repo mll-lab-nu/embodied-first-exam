@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:robowits-0.1.1` |
 
 ## Task
-Transfer the ball from the blue container into the red bottle. The same frozen instance as
+Move the small ball from the blue container down to the bottom of the red bottle. The same frozen instance as
 `robowits-ball-into-bottle-i00-privileged`, as a robot service (`eai-standard/2.2`): the simulator runs in the `sim`
 sidecar, which the agent cannot open; the agent gets one episode, no reset and no privileged state, only the client
 (calibrated RGB-D cameras, proprioception, `joint_position` / `ee_pose` chunks, stateless kinematics). The sidecar
