@@ -6,11 +6,12 @@ drive the four bolts through the legs into the shelf's rail ends with the hex ke
 rod into the two crotches. Then let go of everything and move both arms clear.
 
 ## Goal
-Success: the stand is assembled and upright: half B on half A at both crossings, the shelf in, all four bolts driven
-home and the top rod lying in the two crotches; no arm touches any part and everything is still. Forcing parts deep into
-each other breaks the simulation and ends the episode at once, without success. When all of this holds, the service
-checks it once more after holding your last command for 1 s more (on a copy: the robot does not move); if it still
-holds, the episode ends as a success, and if not, the episode goes on and you can still fix it.
+Success: the stand is assembled and upright: one half pressed onto the other at both crossings (the two halves are
+alike, so either one may go onto the other), the shelf in, all four bolts driven home and the top rod lying in the two
+crotches; no arm touches any part and everything is still. Forcing parts deep into each other breaks the simulation and
+ends the episode at once, without success. When all of this holds, the service checks it once more after holding your
+last command for 1 s more (on a copy: the robot does not move); if it still holds, the episode ends as a success, and if
+not, the episode goes on and you can still fix it.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
