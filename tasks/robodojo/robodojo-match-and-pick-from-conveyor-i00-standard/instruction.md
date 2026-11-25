@@ -99,6 +99,14 @@ most 3000 images.
   and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
   pose in this frame.
 
+## Others
+### Exact numbers
+- Besides the first object, four objects come along the belt later: its identical copy and three others that each look
+  different.
+- The copy's position, as the check measures it, is its centre, the middle of its bounding box.
+- Lifted: the copy's centre more than 0.1 m higher than at the start of the episode.
+- The 700-step limit is 28 s of simulated time.
+
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
   the end you are stopped without warning and the episode is graded as it stands. Time left:

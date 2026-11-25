@@ -105,6 +105,24 @@ most 3000 images.
 ## Others
 - The opponent's arm starts after your first action and moves only while your actions run, in lock-step with them.
 
+### Exact numbers
+- The two baskets are the same model, 30 × 20 cm and 8 cm tall.
+- In a basket: the object's centre, seen from above, inside the basket's 30 × 20 cm outline and above the basket's
+  underside; the centre is the object's middle, but the middle of the base for the action camera and, for the phone, the
+  middle of the end that is away from you at the start.
+- Five stages, k = 1 to 5, passed in order, at most one per action: stage k needs the first k objects of the order in
+  your basket, the other 5 − k not in it, and all five opponent objects in the far basket; stage 5 also needs the arms
+  back.
+- Arms out: the episode fails at once if one of your arms' end-effector is more than 0.3 m from its start position along
+  x, y or z, or turned more than 30°, while the opponent's arm is more than 0.3 m from its start along any axis or
+  turned more than 40°.
+- Wrong order: the episode fails at once if both grippers are open to at least 0.8 of full opening while one of the 2nd
+  to 5th objects of the order is in your basket, moved at most 0.004 m since this check last looked, and an earlier one
+  is missing.
+- Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
+  starting orientation.
+- The 1,600-step limit is 64 s of simulated time.
+
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
   the end you are stopped without warning and the episode is graded as it stands. Time left:

@@ -100,6 +100,25 @@ most 3000 images.
   and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
   pose in this frame.
 
+## Others
+### Exact numbers
+- The dustpan is 18 cm wide and 28 cm long with its short handle. The broom is 25.0 cm long. The three small cubes are 2
+  cm on each edge.
+- At the start the broom's centre is 17 cm to the left of the dustpan's centre.
+- The dustpan's position, as the check measures it, is the middle of its bounding box: on its centre line, 14 cm behind
+  its front lip and 2.4 cm above its underside.
+- The broom's position is the middle of its bounding box, halfway along its length; each cube's is the cube's middle.
+- Broom: its centre more than 0.1 m to the right (along x) of the dustpan's centre.
+- Dustpan on the table: its centre at most 0.01 m higher than at the start.
+- Dustpan flat: its up axis less than 5° from straight up.
+- In the dustpan: all cubes must pass the same one of two tests. Test 1: each cube's centre, seen from above, less than
+  0.081 m from a point on the dustpan's centre line 8.7 cm behind its front lip.
+- Test 2: each cube's centre, seen from above, inside the rectangle reaching 8.5 cm either side of the dustpan's centre
+  line and from 1.6 to 9.0 cm behind its front lip, edges included.
+- Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
+  starting orientation.
+- The 1,000-step limit is 40 s of simulated time.
+
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
   the end you are stopped without warning and the episode is graded as it stands. Time left:

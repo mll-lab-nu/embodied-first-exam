@@ -99,6 +99,18 @@ most 3000 images.
   and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
   pose in this frame.
 
+## Others
+### Exact numbers
+- The three test tubes are the same model, 14 cm long and 3.3 cm across; they lie with their caps pointing away from
+  you, turned up to 36° to either side. The rack is 20.5 cm wide, 9.6 cm deep and 6 cm tall, with two rows of five
+  holes.
+- A tube's position, as the check measures it, is the middle of its closed bottom end, on its axis.
+- Deep in the rack: each tube's lowest point more than 0.045 m below the top of the rack.
+- Upright: each tube's axis, from its closed bottom to its cap, less than 30° from straight up.
+- Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
+  starting orientation.
+- The 500-step limit is 20 s of simulated time.
+
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
   the end you are stopped without warning and the episode is graded as it stands. Time left:

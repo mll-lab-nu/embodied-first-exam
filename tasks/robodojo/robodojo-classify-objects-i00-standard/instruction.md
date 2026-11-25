@@ -99,6 +99,18 @@ most 3000 images.
   and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
   pose in this frame.
 
+## Others
+### Exact numbers
+- The three baskets are open-top bins, 25.2 × 16.8 cm and 7.7 cm high.
+- The objects are two pens, 18.5 cm (black and gold) and 14.5 cm (white) long, two watches, and three identical bunny
+  figurines, 12.2 cm long, lying on their sides.
+- In a basket: an object's centre (about the middle of its bounding box), seen from above, is inside the basket's 25.2 ×
+  16.8 cm outline and higher than the basket's underside.
+- Released: every object's centre less than 0.01 m above the basket rims, which are all 7.7 cm above the table.
+- Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
+  starting orientation.
+- The 1,100-step limit is 44 s of simulated time.
+
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
   the end you are stopped without warning and the episode is graded as it stands. Time left:

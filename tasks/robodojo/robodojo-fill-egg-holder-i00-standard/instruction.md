@@ -99,6 +99,19 @@ most 3000 images.
   and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
   pose in this frame.
 
+## Others
+### Exact numbers
+- The four eggs are the same model, 5.8 cm long and 4.1 to 4.2 cm thick. The egg holder, with four cups, is 9 cm wide.
+- An egg's position, as the check measures it, is its centre, the middle of the egg.
+- In the holder: each egg's centre, seen from above, inside a 9 × 17.7 cm rectangle that moves with the holder; it spans
+  the holder's width and runs from 1.6 cm in front of the holder's front edge to 4 cm behind the back of the open lid.
+- Seated: each egg's centre more than 0.01 m and less than 0.04 m above the holder's floor point, which is 5 mm above
+  the bottom of the holder.
+- Lid closed: the lid's hinge more than 90% of the way along its range toward closed.
+- Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
+  starting orientation.
+- The 700-step limit is 28 s of simulated time.
+
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
   the end you are stopped without warning and the episode is graded as it stands. Time left:

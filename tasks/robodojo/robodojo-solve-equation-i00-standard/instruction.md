@@ -100,6 +100,19 @@ most 3000 images.
   and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
   pose in this frame.
 
+## Others
+### Exact numbers
+- The five pads are 8 cm across, in a left-to-right row with their centres 8.5 cm apart.
+- Loose tiles: four operator tiles, discs 6.0 cm across and 0.8 cm thick, starting in a row 27 cm nearer to you than the
+  pads, and ten digit tiles, 0 to 9.
+- On the empty pad: the tile's centre (the middle of its bounding box) less than 0.018 m horizontally from the centre of
+  the empty pad.
+- Same way round: the tile's left-to-right direction (as read from the arms' side) less than 45° from world +x and its
+  bottom-to-top direction less than 45° from world +y, each measured in 3-D.
+- Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
+  starting orientation.
+- The 300-step limit is 12 s of simulated time.
+
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
   the end you are stopped without warning and the episode is graded as it stands. Time left:

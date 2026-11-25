@@ -100,6 +100,19 @@ most 3000 images.
   and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
   pose in this frame.
 
+## Others
+### Exact numbers
+- The nuts are hexagonal, about 4 cm across the corners and 2 cm thick. The bolts are 5.25 cm tall.
+- A nut's position, as the check measures it, is its centre: on the axis of its hole, 0.9 cm above its underside. A
+  bolt's position is the middle of its base, on its axis, at table level.
+- Nut flat: each nut's axis less than 10° from straight up, with the same face up as at the start.
+- Nut centred: each nut's centre less than 0.001 m horizontally from the axis of the bolt of its colour.
+- Nut down: the bolt's tip (its highest point) more than 0.009 m higher than the lowest point of the nut on it.
+- Grippers open: each gripper at least 0.9 of its full opening.
+- Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
+  starting orientation.
+- The 1,900-step limit is 76 s of simulated time.
+
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
   the end you are stopped without warning and the episode is graded as it stands. Time left:

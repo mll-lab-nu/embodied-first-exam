@@ -100,6 +100,16 @@ most 3000 images.
   and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
   pose in this frame.
 
+## Others
+### Exact numbers
+- The three cubes are the same size, 3.5 cm on each edge. At the start each is turned 15° to 24° about the vertical.
+- A cube's position, as the check measures it, is its centre, the middle of the cube.
+- Tower in order: the yellow cube's centre at most 0.0175 m horizontally from the blue cube's centre and at least 0.005
+  m higher, and the orange cube's centre the same way relative to the yellow cube's.
+- Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
+  starting orientation.
+- The 400-step limit is 16 s of simulated time.
+
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
   the end you are stopped without warning and the episode is graded as it stands. Time left:

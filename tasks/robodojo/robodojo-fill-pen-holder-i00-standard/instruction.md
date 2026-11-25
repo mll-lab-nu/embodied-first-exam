@@ -102,6 +102,20 @@ most 3000 images.
 ## Others
 - The black-and-gold pen's cap end is the end with the clip.
 
+### Exact numbers
+- The pen holder is a hexagonal cup 8 cm across and 12 cm tall. The black-and-gold pen is 18.5 cm long, the white
+  ballpoint 14.5 cm, the light-blue marker 14 cm and the purple marker 15 cm.
+- Measured points: the holder's centre is the middle of its base, and its axis runs through it along the cup. A pen's
+  centre is the middle of the pen; its end point is on its axis, a few millimetres in from the end that must be lowest.
+- In the cup: each pen's end point less than 0.035 m from the holder's axis, measured at right angles to the axis.
+- Down in the cup: the top of the holder (12 cm above its base when upright) more than 0.035 m higher than each pen's
+  lowest point.
+- Right way up: each pen's end point no higher than the pen's centre (tolerance 0.000001 m).
+- Holder upright: its axis less than 15° from straight up.
+- Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
+  starting orientation.
+- The 1,100-step limit is 44 s of simulated time.
+
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
   the end you are stopped without warning and the episode is graded as it stands. Time left:

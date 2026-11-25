@@ -102,6 +102,27 @@ most 3000 images.
   and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
   pose in this frame.
 
+## Others
+### Exact numbers
+- Sizes: the keyboard is 32 × 15 cm, the frame outline on the table 24 × 10 cm, the mouse pad 24 × 19 cm and the small
+  square pad 5 × 5 cm; the drawer's top is 0.227 m above the table.
+- Measured points: the mouse, keyboard, cactus toy and alarm clock are each measured at the middle of their bounding
+  box, which is about 9 cm above the bottom of the pot for the cactus toy and 4 cm above the base for the alarm clock.
+- At rest: each of the four items moved at most 0.002 m (in 3-D) since the previous action at which the check tested it.
+- Mouse: its centre, seen from above, inside the mouse pad's outline and higher than the pad's underside; the direction
+  that pointed along +x at the start less than 45° from +x (in 3-D).
+- Keyboard placed: seen from above, its outline (its box as turned) covers the whole rectangle x 0.0 to 0.2 m, y -0.03
+  to 0.03 m, edges included; unturned, that means its centre at x 0.04 to 0.16 m and y -0.046 to 0.046 m.
+- Keyboard way round and flat: the direction that pointed along +y at the start less than 45° from +y (in 3-D), and its
+  top face less than 15° from facing straight up.
+- Cactus toy: its up axis less than 15° from straight up; its centre more than 0.005 m and less than 0.1 m higher than
+  the square pad's top surface, and less than 0.02 m from the pad's centre horizontally.
+- Alarm clock: its up axis less than 15° from straight up; its centre more than 0.225 m and less than 0.3 m higher than
+  the drawer's base (the table top); standing on the drawer's top it is 0.267 m higher.
+- Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
+  starting orientation.
+- The 1,000-step limit is 40 s of simulated time.
+
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
   the end you are stopped without warning and the episode is graded as it stands. Time left:

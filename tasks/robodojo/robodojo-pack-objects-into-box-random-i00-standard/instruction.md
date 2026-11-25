@@ -101,6 +101,26 @@ most 3000 images.
   and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
   pose in this frame.
 
+## Others
+### Exact numbers
+- Sizes: the box is 29 cm long, 17 cm deep and 18 cm tall; the car is 13.5 cm long, the toothbrush 17 cm, the hammer 18
+  cm and the shoe 18 cm.
+- At the start, seen from above, the box's long side is turned about 17° from left-right, its left end nearer to you;
+  the front ends point this far from left: car about 21°, toothbrush about 57°, hammer about 101°, shoe about 147°.
+- At the start, seen from above, the car's front-to-back line is about 4° and the toothbrush's about 74° from the box's
+  long side.
+- In the box: each item's centre (the middle of its bounding box), seen from above, on or inside the check's floor area:
+  the box's full 17 cm depth by 19.5 cm of its length, about 4 to 4.5 cm in from its left end and 5 to 5.5 cm from its
+  right end.
+- Lengthwise: seen from above, each item's front-to-back line less than 45° from the box's long side, either way round.
+- Front end left: seen from above, each item's direction from its back end to its front end less than 60° from left
+  (-x).
+- Box: its up axis less than 15° from straight up, and its long side less than 40° from the left-right direction, either
+  way round (both measured in 3-D).
+- Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
+  starting orientation.
+- The 1,300-step limit is 52 s of simulated time.
+
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
   the end you are stopped without warning and the episode is graded as it stands. Time left:

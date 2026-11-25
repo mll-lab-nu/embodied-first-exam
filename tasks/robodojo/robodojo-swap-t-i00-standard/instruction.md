@@ -100,6 +100,21 @@ most 3000 images.
   and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
   pose in this frame.
 
+## Others
+### Exact numbers
+- The two T-shaped blocks are the same shape: 8 cm long, 6 cm across the crossbar and 1.5 cm thick.
+- At the start, seen from above: the red T's stem points along world -x, turned 3° toward you; the blue T lies about 16
+  cm to its right (centre to centre), its stem pointing toward you, turned 40° toward +x.
+- Seen from above, the blue T's start heading is about 127° counter-clockwise from the red T's (233° clockwise).
+- A T's position, as the check measures it, is the middle of its 8 × 6 cm bounding rectangle: on the stem's centre line,
+  4 cm from the stem's tip, half-way up its thickness.
+- Places: each T's centre less than 0.02 m, measured horizontally, from where the other T's centre was at the start.
+- Headings: each T's full 3-D orientation less than 3° from the other T's orientation at the start (the angle of the one
+  rotation between them).
+- Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
+  starting orientation.
+- The 400-step limit is 16 s of simulated time.
+
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
   the end you are stopped without warning and the episode is graded as it stands. Time left:

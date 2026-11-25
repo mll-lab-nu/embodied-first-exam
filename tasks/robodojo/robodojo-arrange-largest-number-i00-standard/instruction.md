@@ -100,6 +100,20 @@ most 3000 images.
   and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
   pose in this frame.
 
+## Others
+### Exact numbers
+- The four digit blocks are 3.5 to 4.5 cm wide, 4.9 to 5.3 cm tall and about 1.5 cm thick. At the start each lies face
+  up, turned less than 45° from upright as read from the arms' side.
+- The four mats are 8 cm across and 0.5 cm thick, in a left-to-right row with their centres about 8.5 cm apart.
+- On its mat: each block's centre (the middle of its bounding box) less than 0.02 m horizontally from the centre of its
+  mat.
+- Face up and turned as at the start: each numeral's bottom-to-top direction less than 45° from world +y, measured in
+  3-D (for a 0 the reverse also counts), and, except for 0 and 8, its left-to-right direction less than 45° from world
+  +x.
+- Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
+  starting orientation.
+- The 1,050-step limit is 42 s of simulated time.
+
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
   the end you are stopped without warning and the episode is graded as it stands. Time left:

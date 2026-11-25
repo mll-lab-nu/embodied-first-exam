@@ -102,6 +102,25 @@ most 3000 images.
   and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
   pose in this frame.
 
+## Others
+### Exact numbers
+- The shirt is about 61 cm across the spread sleeves and 32 cm from hem to collar, turned about 14° anticlockwise seen
+  from above.
+- Measured points: eight vertices of the cloth mesh, which move with the cloth; on each side a sleeve point, a chest
+  point, a shoulder point (where the sleeve joins the body at the top) and a hem point (the bottom corner of the body).
+- Directions: offsets between two points are measured along two fixed directions, across (world +x turned 14°
+  anticlockwise) and along (world +y turned the same 14°, from hem toward collar at the start).
+- Sleeves folded in: each sleeve point minus the chest point of the other side is strictly between -0.125 and +0.14 m
+  along, and across strictly between -0.125 and +0.14 m for one sleeve and between -0.14 and +0.125 m for the other.
+- Hem folded up: on each side, the hem point minus the shoulder point of the same side is strictly between -0.095 and
+  +0.17 m along and strictly between -0.12 and +0.12 m across.
+- Hem parallel: seen from above, the line from one hem point to the other and the line between the shoulder points of
+  the same sides, taken in the same order, are less than 45° apart.
+- Grippers open, when the fold is judged: each gripper at least 0.7 of its full opening.
+- Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
+  starting orientation. The failure rule uses the same limits for a single arm coming back.
+- The 500-step limit is 20 s of simulated time.
+
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
   the end you are stopped without warning and the episode is graded as it stands. Time left:

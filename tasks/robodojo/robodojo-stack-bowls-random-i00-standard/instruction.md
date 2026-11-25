@@ -98,6 +98,19 @@ most 3000 images.
   and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
   pose in this frame.
 
+## Others
+### Exact numbers
+- The three bowls are the same model, 16.0 cm across and 6.0 cm tall. At the start their centres are 0.28 to 0.71 m
+  apart.
+- A bowl's position, as the check measures it, is its centre: on its axis, 3.0 cm above the bottom of its foot.
+- Upright: each bowl's axis less than 45° from straight up, and the lowest bowl's (the one whose centre is lowest) less
+  than 7°.
+- One stack: taking the bowls in order of the height of their centres, each centre is at most 0.04 m horizontally from
+  the centre of the bowl below it and at least 0.005 m higher.
+- Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
+  starting orientation.
+- The 800-step limit is 32 s of simulated time.
+
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
   the end you are stopped without warning and the episode is graded as it stands. Time left:

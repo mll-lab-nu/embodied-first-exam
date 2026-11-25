@@ -100,6 +100,21 @@ most 3000 images.
   and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
   pose in this frame.
 
+## Others
+### Exact numbers
+- The key is 6.3 cm long, 2.3 cm wide and 1.0 cm thick. The keyhole block is round, 10.0 cm across and 5.5 cm tall.
+- At the start the key lies flat with its teeth pointing about 6° clockwise from world +x (seen from above); the block's
+  own x direction points 15° anticlockwise from world +x.
+- The key's centre, as the check measures it, is inside its ring, 1.0 cm from the ring's outer end and 5.3 cm from the
+  blade's tip; the block's centre is the middle of its round footprint.
+- Deep enough: the bottom of the key's bounding box more than 0.025 m below the block's top face; with the key upright
+  that box bottom is 0.1 cm below the blade's tip.
+- Centred: the key's centre less than 0.007 m from the block's centre horizontally (world x, y).
+- Upright, ring up: the key's long direction, from the blade's tip to the ring, less than 7° from straight up.
+- Turned: the direction across the key's blade toward the side its teeth stick out less than 30° (3-D angle) from the
+  block's x direction turned 60° clockwise seen from above, which here points 45° clockwise from world +x.
+- The 300-step limit is 12 s of simulated time.
+
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
   the end you are stopped without warning and the episode is graded as it stands. Time left:

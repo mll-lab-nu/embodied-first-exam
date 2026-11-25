@@ -105,6 +105,25 @@ most 3000 images.
 - The opponent arm moves only while you keep sending actions (holding still counts), and it waits while a piece sits
   near a cell without being centred in it.
 
+### Exact numbers
+- The board is a square 22.3 cm across and 1.6 cm thick; the centres of its nine cells are 7.4 cm apart.
+- Your gold rings are 5.0 cm across and 1.0 cm thick; the opponent's crosses are 5.0 cm across and 1.0 cm thick.
+- A piece's centre, as the checks measure it, is the middle of its underside (for a ring, the middle of its hole);
+  heights count from the board's underside, 1.6 cm below its top.
+- Board full: each of the nine pieces has its centre less than 0.015 m horizontally from the centre of some cell and
+  more than 0 and less than 0.02 m above the board's underside.
+- Arms out: the episode fails at once if one of your arms' end-effector is more than 0.3 m from its start position along
+  x, y or z, or turned more than 30°, while the opponent's arm is more than 0.3 m from its start along any axis or
+  turned more than 40°.
+- For the opponent's turn a cell is occupied when a piece's centre is less than 0.018 m from its centre horizontally and
+  more than 0 and less than 0.02 m above the board's underside, and empty when no such piece's centre is less than 0.05
+  m from it horizontally.
+- The opponent starts its next cross when exactly 2n + 1 cells are occupied, n being the number of crosses it has placed
+  so far (so 1, 3, 5 or 7 occupied cells), a cell is empty, and each of your arms is within 0.3 m of its start along
+  each of x, y and z and within 30° of its start orientation.
+- The opponent makes at most 4 moves, each into an empty cell picked at random.
+- The 1,100-step limit is 44 s of simulated time.
+
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
   the end you are stopped without warning and the episode is graded as it stands. Time left:

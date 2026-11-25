@@ -99,6 +99,22 @@ most 3000 images.
   and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
   pose in this frame.
 
+## Others
+### Exact numbers
+- The balls are 1.0 cm across. The cup is 7.2 cm across and 7.2 cm tall. The vase's opening is 14.8 cm above the table.
+- A ball's position, as the check measures it, is a point on its surface 0.5 cm from its middle.
+- In the vase: a ball counts when, seen from above, its measured point is strictly inside a six-sided outline around the
+  vase, and it is above z = 0.680 m (0.085 m below the table top); there is no upper limit.
+- The outline's frame: origin on the vase's axis, x and y axes turned 12.9° counter-clockwise from world x and y (seen
+  from above). In it the outline spans x from -0.147 to +0.126 m and y from -0.123 to +0.119 m, so it is not centred on
+  the vase.
+- The outline's six corners in that frame: (-0.147, -0.026), (-0.048, -0.123), (0.066, -0.103), (0.126, 0.022), (0.027,
+  0.119) and (-0.087, 0.099) m.
+- Cup upright: the cup's axis, from its bottom to its opening, less than 15° from straight up.
+- Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
+  starting orientation.
+- The 600-step limit is 24 s of simulated time.
+
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
   the end you are stopped without warning and the episode is graded as it stands. Time left:

@@ -98,6 +98,13 @@ most 3000 images.
   and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
   pose in this frame.
 
+## Others
+### Exact numbers
+- The scissors are 23.2 cm long. Eight other objects lie on the table; the check ignores them.
+- The scissors' position, as the check measures it, is their centre, halfway along the scissors.
+- Lifted: that centre more than 0.10 m higher than it was at the start.
+- The 200-step limit is 8 s of simulated time.
+
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
   the end you are stopped without warning and the episode is graded as it stands. Time left:

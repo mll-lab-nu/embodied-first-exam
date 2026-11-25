@@ -99,6 +99,21 @@ most 3000 images.
   and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
   pose in this frame.
 
+## Others
+### Exact numbers
+- The coin is 2.9 cm across and 0.2 cm thick.
+- The piggy bank is 21.0 cm long (its body runs left-right), 15 cm deep and 11.5 cm tall; its slot, on top and running
+  along the body, is about 11 cm above the table.
+- Coin inside: the check uses a square box around the coin, 2.85 cm on a side and 0.2 cm thick, in the coin's plane,
+  with its corners 2.0 cm from the coin's middle.
+- Inside the bank: seen from above, that box lies entirely inside the bank's bounding box as it is turned, about 21.5 ×
+  15.0 cm.
+- Height: all of that box at least 0.8 cm above the table (the floor inside the bank) and at most 5.8 cm above it (about
+  half-way up the body, under the slot).
+- Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
+  starting orientation.
+- The 300-step limit is 12 s of simulated time.
+
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
   the end you are stopped without warning and the episode is graded as it stands. Time left:

@@ -101,6 +101,25 @@ most 3000 images.
   and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
   pose in this frame.
 
+## Others
+### Exact numbers
+- The three mats are 8 cm across and 0.5 cm thick, in a row 11.5 cm apart; the cubes are 3.5 cm on a side; the spring
+  button is 6.1 cm across and 3 cm tall.
+- On a mat: the cube's centre less than 0.03 m (in 3-D) from the mat's centre. A cube resting on a mat has its centre
+  0.02 m above the mat's centre, which leaves about 0.022 m horizontally.
+- Raised: a cube's centre more than 0.03 m higher than its reference: where it started, and after the first and the
+  second move, where it was when that move was found done.
+- The button's cap position, as the check measures it, is the fraction r of its travel from fully down (r = 0) to fully
+  up (r = 1); at rest the cap reads r = 0.79.
+- Pressed means r less than 0.5; up means r more than 0.9.
+- A press is counted when the cap goes from r more than 0.95 to r less than 0.5 (readings in between keep the last of
+  these two states). Exactly 3 counted presses are needed; a 4th ends the episode at once as a failure.
+- Order: the check runs 12 stages, at most one per action: for each of the three moves a cube raised, then set on its
+  new mat, then the cap pressed, then up; at the last 'up', both arms must also be back.
+- Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
+  starting orientation.
+- The 700-step limit is 28 s of simulated time.
+
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
   the end you are stopped without warning and the episode is graded as it stands. Time left:

@@ -100,6 +100,20 @@ most 3000 images.
   and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
   pose in this frame.
 
+## Others
+### Exact numbers
+- The five nesting dolls are 5, 7, 9, 11 and 13 cm tall. Seen from above, the smallest is 3.5 × 3.4 cm and the largest
+  9.0 × 8.7 cm.
+- A doll's position, as the check measures it, is its centre: the middle of its bounding box, half its height above its
+  base.
+- Order: going from the smallest doll to the largest, each next doll's centre is more than 0.03 m further right (along
+  x) than the one before; only these four neighbouring pairs are compared.
+- Straight row: the y values of the five centres span at most 0.035 m (largest minus smallest).
+- Upright: each doll's up axis less than 15° from straight up.
+- Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
+  starting orientation.
+- The 1,050-step limit is 42 s of simulated time.
+
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
   the end you are stopped without warning and the episode is graded as it stands. Time left:

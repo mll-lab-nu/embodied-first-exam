@@ -98,6 +98,22 @@ most 3000 images.
   and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
   pose in this frame.
 
+## Others
+### Exact numbers
+- The bottle is 8.2 cm across and 21.8 cm tall. The cup, a mug, is 10.5 cm across with its handle, 7.5 cm the other way
+  and 8.2 cm tall.
+- The pour is judged at an action at which the bottle's axis, from its base up through its neck, is less than 30° from
+  straight up, having been 30° or more at the previous action.
+- Still in the bottle: a liquid particle inside the bottle's box, 8.2 × 8.2 × 21.8 cm around the whole bottle, turning
+  with it.
+- In the cup: a particle inside the cup's box (10.5 × 7.5 × 8.2 cm, the cup's own outer box with its handle, from base
+  to rim, turning with the cup), at least 0.001 m above the box's bottom and not in the bottle's box.
+- Stray droplets: particles in neither box are grouped, seen from above, wherever two are at most 0.0065 m apart; groups
+  of fewer than 7 particles are left out. If those left out are more than 20% of all the particles, the check fails.
+- The pour passes when, of the particles not left out, at most 15% are still in the bottle's box and at least 97% of the
+  rest are in the cup's box.
+- The 400-step limit is 16 s of simulated time.
+
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
   the end you are stopped without warning and the episode is graded as it stands. Time left:

@@ -98,6 +98,26 @@ most 3000 images.
   and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
   pose in this frame.
 
+## Others
+### Exact numbers
+- The block is a T 8 cm long, 6 cm across its crossbar and 1.5 cm thick. The pad is a flat T, 8.4 × 6.8 cm, drawn on the
+  table.
+- At the start, seen from above: the block's stem points 17° counter-clockwise from world +x (turned away from you); the
+  pad lies about 30 cm to the right of the block and 8 cm closer to you, its stem pointing 136° counter-clockwise from
+  world +x.
+- Seen from above, the pad's heading is about 120° counter-clockwise from the block's start heading.
+- The block's and the pad's positions, as the check measures them, are the middles of their bounding rectangles:
+  half-way from the crossbar's outer edge to the stem's tip and half-way across the crossbar, at mid-thickness for the
+  block.
+- Same heading: the block's full 3-D orientation less than 7° from the pad's (the angle of the one rotation between
+  them).
+- Same place: the block's centre less than 0.007 m from the pad's centre, measured horizontally.
+- Never lifted: if after any action the block's centre is more than 0.01 m higher than at the start, the episode ends at
+  once as a failure.
+- Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
+  starting orientation.
+- The 600-step limit is 24 s of simulated time.
+
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
   the end you are stopped without warning and the episode is graded as it stands. Time left:
