@@ -20,7 +20,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/roboarc-hedgehog-in-cage-04-i01-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.4): RoboARC hedgehog_in_cage on the same frozen instance as the privileged task. Separate the hedgehog ball from the cage and put the whole of it, every spike included, inside the green dashed goal region. Leave all the cage parts behind, no closer to the goal region than they were at the start. The agent only gets a client: get_obs (RGB, optional depth, proprioception, calibrated cameras), submit (joint_position or ee_pose chunks), stateless kinematics. No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
+description = "STANDARD MODE (robot as a service, eai-standard/2.4): RoboARC hedgehog_in_cage on the same frozen instance as the privileged task. Take the hedgehog ball out of the cage and put all of it, every spike included, inside the green dashed goal square. Leave the cage parts behind, no closer to the goal than they were at the start. The agent only gets a client: get_obs (RGB, optional depth, proprioception, calibrated cameras), submit (joint_position or ee_pose chunks), stateless kinematics. No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
 keywords = ["robotics", "roboarc", "mujoco", "panda_robotiq", "standard-mode", "trajectory", "hedgehog_in_cage"]
 
 [metadata]

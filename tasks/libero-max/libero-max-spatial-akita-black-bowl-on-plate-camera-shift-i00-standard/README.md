@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:libero-max-0.1.1` |
 
 ## Task
-LIBERO-MAX case `pro-task-spatial-t03-i03-camera_shift-d1-p195` as a robot service: a Franka Panda arm at a table, instructed **"Pick up the black bowl on top of the cabinet and place it on the plate."**, on
+LIBERO-MAX case `pro-task-spatial-t03-i03-camera_shift-d1-p195` as a robot service: a Franka Panda arm at a table, instructed **"Pick up the black bowl on top of the cabinet and put it on the plate."**, on
 the same frozen instance as `libero-max-spatial-akita-black-bowl-on-plate-camera-shift-i00-privileged`, with the same online event (camera shift: the `agentview` camera moves by (-0.06, 0.03, 0) m, turns -22° and its field of view changes by -12°, the
 first time the gripper comes within 0.18 m of `akita_black_bowl_2`). The simulator runs in the `sim` sidecar
 (`environment/sim/server.py` on main's `rcb_service.py`); the agent only has the client: two cameras (RGB

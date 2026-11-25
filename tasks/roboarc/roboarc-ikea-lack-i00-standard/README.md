@@ -14,7 +14,7 @@
 ## Task
 IKEA LACK side table (AA-207276-4, four legs) in plain MuJoCo 3.14.0 (CPU, float64) with two 7-DoF Franka Panda arms, each with the MuJoCo Menagerie Panda hand (two-finger, tendon-coupled), through the robot service (eai-standard/2.4; 2.1 / 2.2
 requests are served unchanged): RGB from four ALOHA-style cameras (optional depth), proprioception, `joint_position`
-chunks, stateless kinematics, every pose in the robot's frame; no reset and no privileged state. Screw all four legs onto the four threaded studs of the tabletop.
+chunks, stateless kinematics, every pose in the robot's frame; no reset and no privileged state. Screw the four legs onto the four studs of the tabletop, one leg per stud. Then let go of everything and move both arms clear.
 
 ## Difficulty
 The privileged twin's bimanual assembly with physical grasps, from cameras and proprioception only, in one episode
@@ -77,7 +77,7 @@ episode with reason `timeout` when it runs out; that count never runs out before
   verifier.
 
 ### Goal
-Screw all four legs onto the four threaded studs of the tabletop.
+Screw the four legs onto the four studs of the tabletop, one leg per stud. Then let go of everything and move both arms clear.
 
 ### Success requirements
 - The tabletop lies studs up. Each leg (nut end down) is screwed onto a stud; any leg may go on any stud, one leg per stud.

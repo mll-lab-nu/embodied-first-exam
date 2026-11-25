@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/roboarc-fiber-bundling-10-i01-privileged"
-description = "RoboARC fiber_bundling (Franka Panda + Robotiq 2F-85, MuJoCo): produce one replayable trajectory. Pass every fine fiber, tip first, and the front sheath through the fixed copper ring, touching only the thick sheath with the gripper. Leave the rear terminal anchored where it is. Frozen scene instance (variation fiber_bundling_rd_hard, seed 0)."
+description = "RoboARC fiber_bundling (Franka Panda + Robotiq 2F-85, MuJoCo): produce one replayable trajectory. Feed every fine fiber, tip first, and the front of the sheath through the fixed copper ring, touching only the thick sheath with the gripper. Leave the rear terminal anchored where it is. Route the sheath past the two pegs, the first from the cradle on its right and the second on its left (looking from the rear terminal toward the ring). The red fiber has to come out at about 7:40 on the ring, read as a clock face from the side the fibers go in. Frozen scene instance (variation fiber_bundling_rd_hard, seed 0)."
 keywords = ["robotics", "roboarc", "mujoco", "panda_robotiq", "code-as-policy", "trajectory", "fiber_bundling"]
 
 [metadata]

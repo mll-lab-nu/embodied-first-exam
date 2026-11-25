@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:robopaint-0.2.0` |
 
 ## Task
+Copy the character 真 (cursive script, 草书) in `/app/target.png` onto the main sheet with brush and ink, in at most 3 strokes.
+
 **Process rules** (tasks/robopaint/README.md) on top of the picture rule, so that the exemplar has to be made with strokes rather
 than coloured in: colouring in fails: a brush-tip path on the main sheet (`path_mm`) longer than 1610 mm (3 × the reference
 solution's 534 mm) made of marks narrower than 1.75 mm on average (`mark_width_mm`: each stroke's own

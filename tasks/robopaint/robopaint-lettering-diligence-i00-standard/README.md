@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:robopaint-0.2.0` |
 
 ## Task
+Copy the line "Diligence in youth is commendable." (English round hand) in `/app/target.png` onto the main sheet with pen and ink, in at most 11 strokes.
+
 **Process rules** (tasks/robopaint/README.md) on top of the picture rule, so that the exemplar has to be made with strokes rather
 than coloured in: colouring in fails: a pen-tip path on the main sheet (`path_mm`) longer than 4040 mm (3 × the reference
 solution's 1343 mm) made of marks narrower than 0.10 mm on average (`mark_width_mm`: each stroke's own

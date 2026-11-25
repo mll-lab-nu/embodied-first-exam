@@ -4,9 +4,9 @@
 Put the bell in the middle of the scale, then let go of it.
 
 ## Goal
-Success: the bell stands near the middle of the scale, and the gripper of the arm on the side where the bell started is
-open. The service judges the scene at the end of each of your calls, and the episode ends at the first success; it also
-ends when your time is up or on a simulator error.
+Success: the bell stands near the middle of the scale, and the left gripper is open. The service judges the scene at the
+end of each of your calls, and the episode ends at the first success; it also ends when your time is up or on a
+simulator error.
 
 Keep the script that drives the robot at `/app/output/gen.py`.
 

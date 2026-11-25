@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:libero-max-0.1.1` |
 
 ## Task
-LIBERO-MAX case `pro-semantic-goal-t07-i02-illumination_switch-d0-p195` as a robot service: a Franka Panda arm at a table, instructed **"Switch on the stove."**, on
+LIBERO-MAX case `pro-semantic-goal-t07-i02-illumination_switch-d0-p195` as a robot service: a Franka Panda arm at a table, instructed **"Turn on the stove."**, on
 the same frozen instance as `libero-max-goal-flat-stove-on-illumination-switch-i00-privileged`, with the same online event (illumination switch: the lighting is scaled by 0.2, the
 first time the gripper comes within 0.18 m of `flat_stove_1`). The simulator runs in the `sim` sidecar
 (`environment/sim/server.py` on main's `rcb_service.py`); the agent only has the client: two cameras (RGB

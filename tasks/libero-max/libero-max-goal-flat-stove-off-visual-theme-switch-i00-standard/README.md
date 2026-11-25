@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:libero-max-0.1.1` |
 
 ## Task
-LIBERO-MAX case `pro-task-goal-t07-i02-visual_theme_switch-d1-p195` as a robot service: a Franka Panda arm at a table, instructed **"The stove is already off. Turn its knob further in the off direction, as far as it will go."**, on
+LIBERO-MAX case `pro-task-goal-t07-i02-visual_theme_switch-d1-p195` as a robot service: a Franka Panda arm at a table, instructed **"The stove is already off: turn its knob further toward off, as far as it will go."**, on
 the same frozen instance as `libero-max-goal-flat-stove-off-visual-theme-switch-i00-privileged`, with the same online event (visual-theme switch: the image colours change (channels permuted (1, 2, 0), scaled (1.25, 0.7, 1.1)), the
 first time the gripper comes within 0.18 m of `flat_stove_1`). The simulator runs in the `sim` sidecar
 (`environment/sim/server.py` on main's `rcb_service.py`); the agent only has the client: two cameras (RGB

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:metaworld-0.1.0` |
 
 ## Task
-A Sawyer arm at a table, Meta-World's `stick-push-v3` (reward v2) on one frozen instance: Grasp the stick and use it to push the thermos to the target. At the end, still hold the stick in the gripper, lifted off the table. The agent writes a
+A Sawyer arm at a table, Meta-World's `stick-push-v3` (reward v2) on one frozen instance: Use the stick to push the thermos to the target. At the end, still hold the stick, lifted off the table. The agent writes a
 trajectory of Meta-World's native actions with full privileged state and unlimited resets; it is graded by replay on
 the state after the last action. Benchmark notes in
 `tasks/metaworldplus/README.md`.

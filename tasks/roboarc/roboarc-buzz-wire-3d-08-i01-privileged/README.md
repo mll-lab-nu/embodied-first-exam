@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:roboarc-0.2.0` |
 
 ## Task
-RoboARC buzz_wire_3d (Franka Panda + Robotiq 2F-85, MuJoCo): produce one replayable trajectory. Guide the metal loop along the whole wire from start to finish, with no metal part of the tool touching the wire. Then lay the tool on the finish support the way it lay at the start, let go of it, and move the robot clear of it. The black rubber sleeves on the wire are insulated, so the loop may touch them. The final bend and the post at the finish are insulated as well. Frozen scene instance (variation buzz_wire_3d_rd_easy, seed 0).
+RoboARC buzz_wire_3d (Franka Panda + Robotiq 2F-85, MuJoCo): produce one replayable trajectory. Guide the metal loop along the whole wire from start to finish without any metal part of the tool touching the wire. Then lay the tool on the finish support the way it lay at the start, let go of it and move the arm clear of it. The black rubber sleeves on the wire, the final bend and the post at the finish are insulated, so the loop may touch them. Frozen scene instance (variation buzz_wire_3d_rd_easy, seed 0).
 
 ## Difficulty
 A 7-dof franka panda arm with a robotiq 2f-85 parallel gripper on a fixed base with a 8-D joint-target action space at 40 Hz; success needs the task's predicate (above) held for 1 s. Grasping: assisted grasping (contact_weld_v1).
@@ -49,7 +49,7 @@ Caps per container (PROTOCOL §6).
 | Success rule | task-native success (goal_complete True; frozen parameters; terminal revision terminal_v4_traversal_then_deck_release) |
 
 ### Goal
-Guide the metal loop along the whole wire from start to finish, with no metal part of the tool touching the wire. Then lay the tool on the finish support the way it lay at the start, let go of it, and move the robot clear of it. The black rubber sleeves on the wire are insulated, so the loop may touch them. The final bend and the post at the finish are insulated as well.
+Guide the metal loop along the whole wire from start to finish without any metal part of the tool touching the wire. Then lay the tool on the finish support the way it lay at the start, let go of it and move the arm clear of it. The black rubber sleeves on the wire, the final bend and the post at the finish are insulated, so the loop may touch them.
 
 ### Success requirements
 - Start within 10 mm along the wire from its starting end and traverse continuously until within 10 mm of its finishing end. Keep one unambiguous wire crossing inside the loop. Skipping branches or taking the loop off the route before completing traversal does not count; restart from the beginning if tracking is lost.

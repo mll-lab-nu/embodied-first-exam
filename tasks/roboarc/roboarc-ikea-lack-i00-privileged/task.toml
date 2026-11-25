@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/roboarc-ikea-lack-i00-privileged"
-description = "IKEA MuJoCo LACK side table (dual Franka Panda + Menagerie Panda hand, MuJoCo 3.14.0 CPU): produce one replayable trajectory. Screw all four legs onto the four threaded studs of the tabletop. Frozen scene (the scene's keyframe 'home'); physical grasps, no assist."
+description = "IKEA MuJoCo LACK side table (dual Franka Panda + Menagerie Panda hand, MuJoCo 3.14.0 CPU): produce one replayable trajectory. Screw the four legs onto the four studs of the tabletop, one leg per stud. Then let go of everything and move both arms clear. Frozen scene (the scene's keyframe 'home'); physical grasps, no assist."
 keywords = ["robotics", "roboarc", "ikea", "furniture-assembly", "mujoco", "panda", "bimanual", "code-as-policy", "trajectory"]
 
 [metadata]

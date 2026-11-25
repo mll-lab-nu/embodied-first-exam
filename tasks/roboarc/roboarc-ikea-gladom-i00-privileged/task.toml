@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/roboarc-ikea-gladom-i00-privileged"
-description = "IKEA MuJoCo GLADOM tray table (dual Franka Panda + Menagerie Panda hand, MuJoCo 3.14.0 CPU): produce one replayable trajectory. Build the GLADOM tray table: cross frame B into frame A, drive the long screw and the bottom screw, place the ring and drive its two screws, and set the tray on the ring. Frozen scene (the scene's keyframe 'home'); physical grasps, no assist."
+description = "IKEA MuJoCo GLADOM tray table (dual Franka Panda + Menagerie Panda hand, MuJoCo 3.14.0 CPU): produce one replayable trajectory. Build the GLADOM tray table: fit frame B crosswise into frame A, drive in the long screw and the bottom screw, put on the ring and drive its two screws, and set the tray on the ring. Then let go of everything and move both arms clear. Frozen scene (the scene's keyframe 'home'); physical grasps, no assist."
 keywords = ["robotics", "roboarc", "ikea", "furniture-assembly", "mujoco", "panda", "bimanual", "code-as-policy", "trajectory"]
 
 [metadata]

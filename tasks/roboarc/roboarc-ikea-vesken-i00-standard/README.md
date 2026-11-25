@@ -14,7 +14,7 @@
 ## Task
 IKEA VESKEN shelf unit (AA-1842283-5), body steps 1-8 in plain MuJoCo 3.14.0 (CPU, float64) with two 7-DoF Franka Panda arms, each with the MuJoCo Menagerie Panda hand (two-finger, tendon-coupled), through the robot service (eai-standard/2.4; 2.1 / 2.2
 requests are served unchanged): RGB from four ALOHA-style cameras (optional depth), proprioception, `joint_position`
-chunks, stateless kinematics, every pose in the robot's frame; no reset and no privileged state. Build the VESKEN shelf unit body: snap the four feet into the bottom tray from below, the four columns into the bottom tray, the second tray onto the columns, four columns and a tray for each of the two upper levels, and the four caps into the top tray.
+chunks, stateless kinematics, every pose in the robot's frame; no reset and no privileged state. Build the VESKEN shelf unit: snap the four feet into the bottom tray from below, then four columns into the bottom tray, the second tray onto them, four columns and a tray for each of the two upper levels, and last the four caps into the top tray. Then let go of everything and move both arms clear.
 
 ## Difficulty
 The privileged twin's bimanual assembly with physical grasps, from cameras and proprioception only, in one episode
@@ -77,7 +77,7 @@ episode with reason `timeout` when it runs out; that count never runs out before
   verifier.
 
 ### Goal
-Build the VESKEN shelf unit body: snap the four feet into the bottom tray from below, the four columns into the bottom tray, the second tray onto the columns, four columns and a tray for each of the two upper levels, and the four caps into the top tray.
+Build the VESKEN shelf unit: snap the four feet into the bottom tray from below, then four columns into the bottom tray, the second tray onto them, four columns and a tray for each of the two upper levels, and last the four caps into the top tray. Then let go of everything and move both arms clear.
 
 ### Success requirements
 - All 23 snap connections are made in the source order (each depends on the previous: feet, columns, tray, columns, tray, columns, tray, caps) and, at the end, each connector is within its gates (axial gap 0.6 mm, lateral 0.8 mm, outward-axis tilt 2 degrees).

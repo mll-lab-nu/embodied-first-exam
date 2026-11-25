@@ -21,7 +21,7 @@ services:
     shm_size: "4gb"
     environment:
       RCB_INSTANCE: /srv/instance.json
-      RCB_TASK_TEXT: "Find the chair and move until your body is touching the target, with zero distance to the target object. In plain words: walk up to a chair and stop right next to it, about 20 cm away or closer."
+      RCB_TASK_TEXT: "Walk up to any chair in the house and stop right next to it, about a hand's length away or closer."
       RCB_EPISODE: "Ends at your stop action (the only way to succeed), at the 100th action whatever it is, when your time is up (timeout), or on a simulator error."
       RCB_WALL_CLOCK_S: "3600"
       RCB_STARTUP_TIMEOUT_S: "900"

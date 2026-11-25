@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:libero-max-0.1.1` |
 
 ## Task
-LIBERO-MAX case `pro-object-texture-goal-t09-i08-obstacle_insertion-d0-p195` as a robot service: a Franka Panda arm at a table, instructed **"Put the wine bottle on the rack."**, on
+LIBERO-MAX case `pro-object-texture-goal-t09-i08-obstacle_insertion-d0-p195` as a robot service: a Franka Panda arm at a table, instructed **"Put the wine bottle on top of the wine rack."**, on
 the same frozen instance as `libero-max-goal-wine-bottle-on-wine-rack-top-obstacle-insertion-i00-privileged`, with the same online event (obstacle insertion: `akita_black_bowl_1` appears as an obstacle, offset (0.14, 0, 0) m from `wine_bottle_1`, the
 first time the gripper comes within 0.18 m of `wine_bottle_1`). The simulator runs in the `sim` sidecar
 (`environment/sim/server.py` on main's `rcb_service.py`); the agent only has the client: two cameras (RGB

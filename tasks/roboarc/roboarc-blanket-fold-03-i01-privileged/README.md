@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:roboarc-0.2.0` |
 
 ## Task
-RoboARC blanket_fold (ALOHA 2, MuJoCo): produce one replayable trajectory. Fold the blanket on the table into the shape the target images show, then let go of it and move the robot clear of it. The blanket starts folded over on itself. Fold it in half along the middle line parallel to its long edges: turn the far half over onto the near half so that the far long edge lies on the near long edge and each far corner lies on the near corner on the same side. The folded blanket is two layers thick, as long as before and half as deep, with the far half upside down on top. The target images show how the folded blanket must look and where on the table it must lie. Near, far, left and right are as seen in the overhead camera cam_high, where near is the bottom of its image. Frozen scene instance (variation blanket_fold_easy, seed 0).
+RoboARC blanket_fold (ALOHA 2, MuJoCo): produce one replayable trajectory. Fold the blanket in half, the far half over the near half, so that it matches the target images `/app/goal/target_cam_high.png` and `/app/goal/target_cam_low.png`. Then let go of it and move both arms clear of it. Frozen scene instance (variation blanket_fold_easy, seed 0).
 The target images: `/app/goal/target_cam_high.png` (seen from the overhead camera cam_high) and `/app/goal/target_cam_low.png` (from the low oblique camera cam_low).
 
 ## Difficulty
@@ -50,7 +50,7 @@ Caps per container (PROTOCOL §6).
 | Success rule | task-native success (goal_complete True; frozen parameters; terminal revision release_settling_v1) |
 
 ### Goal
-Fold the blanket on the table into the shape the target images show, then let go of it and move the robot clear of it. The blanket starts folded over on itself. Fold it in half along the middle line parallel to its long edges: turn the far half over onto the near half so that the far long edge lies on the near long edge and each far corner lies on the near corner on the same side. The folded blanket is two layers thick, as long as before and half as deep, with the far half upside down on top. The target images show how the folded blanket must look and where on the table it must lie. Near, far, left and right are as seen in the overhead camera cam_high, where near is the bottom of its image.
+Fold the blanket in half, the far half over the near half, so that it matches the target images `/app/goal/target_cam_high.png` and `/app/goal/target_cam_low.png`. Then let go of it and move both arms clear of it.
 
 ### Success requirements
 - Corners: each of the blanket's four corner points (the material point 12 mm in from both edges at each corner) must lie within 55 mm, in the top view, of its place in the target fold.

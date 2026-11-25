@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/robotwin_2_0_place_can_basket-privileged"
-description = "RoboTwin 2.0 place_can_basket (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Put the can into the basket with one arm. Then lift the basket a little off the table with the other arm and hold it upright, with the can still inside. Frozen scene instance (RoboTwin seed 60417)."
+description = "RoboTwin 2.0 place_can_basket (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Put the can into the basket. Then lift the basket a little off the table and hold it upright, with the can still inside. Frozen scene instance (RoboTwin seed 60417)."
 keywords = ["robotics", "robotwin", "sapien", "aloha-agilex", "dual-arm", "code-as-policy", "trajectory", "place_can_basket"]
 
 [metadata]

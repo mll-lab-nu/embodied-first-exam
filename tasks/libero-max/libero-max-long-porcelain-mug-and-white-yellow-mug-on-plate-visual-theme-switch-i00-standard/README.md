@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:libero-max-0.1.1` |
 
 ## Task
-LIBERO-MAX case `pro-position-10-t04-i00-visual_theme_switch-d1-p195` as a robot service: a Franka Panda arm at a table, instructed **"Put the white mug on the left plate and put the yellow and white mug on the right plate."**, on
+LIBERO-MAX case `pro-position-10-t04-i00-visual_theme_switch-d1-p195` as a robot service: a Franka Panda arm at a table, instructed **"Put the white mug on the plate on the robot's right and the yellow-and-white mug on the plate on the robot's left."**, on
 the same frozen instance as `libero-max-long-porcelain-mug-and-white-yellow-mug-on-plate-visual-theme-switch-i00-privileged`, with the same online event (visual-theme switch: the image colours change (channels permuted (1, 2, 0), scaled (1.25, 0.7, 1.1)), the
 first time the gripper comes within 0.18 m of `porcelain_mug_1`). The simulator runs in the `sim` sidecar
 (`environment/sim/server.py` on main's `rcb_service.py`); the agent only has the client: two cameras (RGB

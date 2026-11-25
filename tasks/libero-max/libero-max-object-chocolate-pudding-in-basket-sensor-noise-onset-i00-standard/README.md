@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:libero-max-0.1.1` |
 
 ## Task
-LIBERO-MAX case `pro-position-object-t08-i02-sensor_noise_onset-d0-p195` as a robot service: a Franka Panda arm at a table, instructed **"Pick up the chocolate pudding and place it in the basket."**, on
+LIBERO-MAX case `pro-position-object-t08-i02-sensor_noise_onset-d0-p195` as a robot service: a Franka Panda arm at a table, instructed **"Put the chocolate pudding in the basket."**, on
 the same frozen instance as `libero-max-object-chocolate-pudding-in-basket-sensor-noise-onset-i00-privileged`, with the same online event (sensor-noise onset: the camera images get noise (std 24 on 0..255) and a blocked patch (8% of the image), the
 first time the gripper comes within 0.18 m of `chocolate_pudding_1`). The simulator runs in the `sim` sidecar
 (`environment/sim/server.py` on main's `rcb_service.py`); the agent only has the client: two cameras (RGB

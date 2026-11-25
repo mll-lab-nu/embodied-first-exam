@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:ikea-mujoco-0.3.0` |
 
 ## Task
-IKEA GLADOM tray table (AA-1832218-3), full seven-operation scope in plain MuJoCo 3.14.0 (CPU, float64) with two 7-DoF Franka Panda arms, each with the MuJoCo Menagerie Panda hand (two-finger, tendon-coupled): produce one replayable trajectory. Build the GLADOM tray table: cross frame B into frame A, drive the long screw and the bottom screw, place the ring and drive its two screws, and set the tray on the ring.
+IKEA GLADOM tray table (AA-1832218-3), full seven-operation scope in plain MuJoCo 3.14.0 (CPU, float64) with two 7-DoF Franka Panda arms, each with the MuJoCo Menagerie Panda hand (two-finger, tendon-coupled): produce one replayable trajectory. Build the GLADOM tray table: fit frame B crosswise into frame A, drive in the long screw and the bottom screw, put on the ring and drive its two screws, and set the tray on the ring. Then let go of everything and move both arms clear.
 
 ## Difficulty
 Bimanual furniture assembly with physical grasps (no assist), 16-D actuator action at 400 Hz
@@ -51,7 +51,7 @@ Caps per container (PROTOCOL §6).
 | Initial state | sha256 `700c53dd5fd9fe2b…` of the mjSTATE_INTEGRATION vector |
 
 ### Goal
-Build the GLADOM tray table: cross frame B into frame A, drive the long screw and the bottom screw, place the ring and drive its two screws, and set the tray on the ring.
+Build the GLADOM tray table: fit frame B crosswise into frame A, drive in the long screw and the bottom screw, put on the ring and drive its two screws, and set the tray on the ring. Then let go of everything and move both arms clear.
 
 ### Success requirements
 - The retention joints of frame B, the ring and the four screws are all latched.

@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/robotwin_2_0_move_playingcard_away-privileged"
-description = "RoboTwin 2.0 move_playingcard_away (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Pick up the playing cards and set them down out toward the left edge of the table, roughly 25 cm or more from the middle. Then let go. Frozen scene instance (RoboTwin seed 60417)."
+description = "RoboTwin 2.0 move_playingcard_away (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Move the playing cards out toward one side edge of the table, at least a forearm's length from the middle. Then let go. Frozen scene instance (RoboTwin seed 60417)."
 keywords = ["robotics", "robotwin", "sapien", "aloha-agilex", "dual-arm", "code-as-policy", "trajectory", "move_playingcard_away"]
 
 [metadata]

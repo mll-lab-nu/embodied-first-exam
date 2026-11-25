@@ -45,7 +45,7 @@ Caps per container (PROTOCOL §6).
 ## Details
 
 ### Goal
-Separate the star from the cage and put the whole of it, every spike included, inside the green dashed goal region. Leave all the cage parts behind, no closer to the goal region than they were at the start. A thin rod with a box handle lies on the table, and you may use it as a tool. It counts as a task piece: if it falls off the table, the episode ends in failure.
+Take the star out of the cage and put all of it, every spike included, inside the green dashed goal square. Leave the cage parts behind, no closer to the goal than they were at the start. You may use the thin rod with the box handle as a tool.
 
 ### Success requirements
 - Put every part of the whole star, including every spike inside the fixed goal volume, leaving at least 1 mm inside its horizontal border. The centre alone is insufficient; no tip, spike, ring segment or cord segment may remain outside.

@@ -45,7 +45,7 @@ Caps per container (PROTOCOL §6).
 ## Details
 
 ### Goal
-Untie the rope and spread it out flat on the table so that, seen from above, it nowhere crosses or overlaps itself. Then let go of it and move the robot clear of it. One end of the rope is clamped to the table under a staple and stays clamped.
+Untie the rope and lay it out flat on the table so that, seen from above, it nowhere crosses or overlaps itself. One end is clamped to the table under a staple and stays clamped. Then let go of it and move both arms clear of it.
 
 ### Success requirements
 - Remove projected crossings, overlaps, collapsed projected segments and exact foldbacks. Nonlocal rope segments must be separated by at least one rope diameter in the top-down view; merely changing over/under order is insufficient.

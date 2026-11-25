@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:robopaint-0.2.0` |
 
 ## Task
+Copy the painting in `/app/target.png` (after Katsushika Hokusai's Kajikazawa in Kai Province) onto the main sheet in at most 377 strokes.
+
 **Process rules** (tasks/robopaint/README.md) on top of the picture rule, so that the exemplar has to be made with strokes rather
 than coloured in: the brush tip's path while it presses on the main sheet with paint (`path_mm`) is at most 44300 mm (3 ×
 the reference solution's 14746 mm), and at most 10 % of it lies in strokes longer than

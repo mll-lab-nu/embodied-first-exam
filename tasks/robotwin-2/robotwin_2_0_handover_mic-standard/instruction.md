@@ -1,13 +1,13 @@
 # RoboTwin 2.0 · handover_mic (standard)
 
 ## Task
-Pick up the microphone with the arm on its side of the table and hand it to the other arm. That arm holds it up, at
-least a hand's length above the table on its own side, and the first arm lets go.
+Pick up the microphone with the right arm and hand it to the left arm. The left arm holds it up, at least a hand's
+length above the table on the robot's left, and the right arm lets go.
 
 ## Goal
-Success: the arm on the side opposite to where the microphone started holds it, gripper closed, at least a hand's length
-above the table on that arm's side, and the other gripper is open. The service judges the scene at the end of each of
-your calls, and the episode ends at the first success; it also ends when your time is up or on a simulator error.
+Success: the left arm holds the microphone, gripper closed, at least a hand's length above the table on the robot's
+left, and the right gripper is open. The service judges the scene at the end of each of your calls, and the episode ends
+at the first success; it also ends when your time is up or on a simulator error.
 
 Keep the script that drives the robot at `/app/output/gen.py`.
 

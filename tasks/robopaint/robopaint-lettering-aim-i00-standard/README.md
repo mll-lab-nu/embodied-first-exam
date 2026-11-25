@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:robopaint-0.2.0` |
 
 ## Task
+Copy the line "Aim at improvement in every line." (English round hand) in `/app/target.png` onto the main sheet with pen and ink, in at most 11 strokes.
+
 **Process rules** (tasks/robopaint/README.md) on top of the picture rule, so that the exemplar has to be made with strokes rather
 than coloured in: colouring in fails: a pen-tip path on the main sheet (`path_mm`) longer than 3000 mm (3 × the reference
 solution's 998 mm) made of marks narrower than 0.12 mm on average (`mark_width_mm`: each stroke's own

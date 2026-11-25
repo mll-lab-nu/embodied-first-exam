@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:ikea-mujoco-0.3.0` |
 
 ## Task
-IKEA VARIERA shelf insert (AA-741461-4), step 1 in plain MuJoCo 3.14.0 (CPU, float64) with two 7-DoF Franka Panda arms, each with the MuJoCo Menagerie Panda hand (two-finger, tendon-coupled): produce one replayable trajectory. Assemble the VARIERA shelf insert: place the two side frames, lower the shelf onto them, and drive the four screws through the shelf holes into the frames' receivers until they seat.
+IKEA VARIERA shelf insert (AA-741461-4), step 1 in plain MuJoCo 3.14.0 (CPU, float64) with two 7-DoF Franka Panda arms, each with the MuJoCo Menagerie Panda hand (two-finger, tendon-coupled): produce one replayable trajectory. Assemble the VARIERA shelf insert: set up the two side frames, lower the shelf onto them, and screw the four screws through the shelf holes into the frames until they seat. Then let go of everything and move both arms clear.
 
 ## Difficulty
 Bimanual furniture assembly with physical grasps (no assist), 16-D actuator action at 400 Hz
@@ -51,7 +51,7 @@ Caps per container (PROTOCOL §6).
 | Initial state | sha256 `067105ad8f8329ec…` of the mjSTATE_INTEGRATION vector |
 
 ### Goal
-Assemble the VARIERA shelf insert: place the two side frames, lower the shelf onto them, and drive the four screws through the shelf holes into the frames' receivers until they seat.
+Assemble the VARIERA shelf insert: set up the two side frames, lower the shelf onto them, and screw the four screws through the shelf holes into the frames until they seat. Then let go of everything and move both arms clear.
 
 ### Success requirements
 - Four distinct receivers each hold a screw that was turned relative to that receiver (at least 0.4 measured turns, with a descent matching turns x pitch), its head seated at the shelf hole (axial 0.2 mm, lateral 0.6 mm, axis 1.5 degrees).

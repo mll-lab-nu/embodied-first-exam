@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:libero-max-0.1.1` |
 
 ## Task
-LIBERO-MAX case `pro-semantic-object-t08-i09-distractor_burst-d1-p195` as a robot service: a Franka Panda arm at a table, instructed **"Lift chocolate pudding and put it in basket."**, on
+LIBERO-MAX case `pro-semantic-object-t08-i09-distractor_burst-d1-p195` as a robot service: a Franka Panda arm at a table, instructed **"Put the chocolate pudding in the basket."**, on
 the same frozen instance as `libero-max-object-chocolate-pudding-in-basket-distractor-burst-i01-privileged`, with the same online event (distractor burst: 5 other objects appear on the table (`orange_juice_1`, `salad_dressing_1`, `bbq_sauce_1`, `ketchup_1`, `alphabet_soup_1`), the
 first time the gripper comes within 0.18 m of `chocolate_pudding_1`). The simulator runs in the `sim` sidecar
 (`environment/sim/server.py` on main's `rcb_service.py`); the agent only has the client: two cameras (RGB

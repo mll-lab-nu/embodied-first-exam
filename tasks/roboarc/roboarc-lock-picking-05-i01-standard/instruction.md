@@ -134,10 +134,9 @@ r.ik({"arm_tcp": pose}, seed=q)             # inverse kinematics -> {"ok", "q", 
   `lock_frame_1`, `lock_disc_2`, `lock_frame_2`, `lock_disc_3`, `lock_frame_3`, `key_tray`, `key_tray_post_0`,
   `key_cradle_0_0`, `key_cradle_0_1`, `key_tray_post_1`, `key_cradle_1_0`, `key_cradle_1_1`, `lock_goal_post`,
   `lock_goal`, `lock_key`.
-- Each rotor turns only between its stops, measured from its start angle, seen from the side the key enters, looking
-  along the key toward END (rotor 1 is the plate the key reaches first): rotor 1 2 degrees counterclockwise and 32
-  degrees clockwise; rotor 2 32 degrees counterclockwise and 2 degrees clockwise; rotor 3 2 degrees counterclockwise and
-  32 degrees clockwise; rotor 4 152 degrees counterclockwise and 2 degrees clockwise.
+- Each rotor turns between two stops: from where it starts, only slightly one way and much further the other. Seen from
+  the side the key enters, looking along the key toward END, the first and third rotors the key reaches turn further
+  clockwise, the second and fourth further counterclockwise.
 
 ## Limits
 - Time: 10800 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At

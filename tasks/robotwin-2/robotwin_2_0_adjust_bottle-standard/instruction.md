@@ -1,12 +1,12 @@
 # RoboTwin 2.0 · adjust_bottle (standard)
 
 ## Task
-Pick up the bottle and hold it up high, well out on the side of the table where it lies.
+Pick up the bottle and hold it up high, a little further out to the robot's right than where it lies.
 
 ## Goal
-Success: the bottle is held up high above the table, well out on the side of the table where it started. The service
-judges the scene at the end of each of your calls, and the episode ends at the first success; it also ends when your
-time is up or on a simulator error.
+Success: the bottle is held up high above the table, a little further out to the robot's right than where it started.
+The service judges the scene at the end of each of your calls, and the episode ends at the first success; it also ends
+when your time is up or on a simulator error.
 
 Keep the script that drives the robot at `/app/output/gen.py`.
 

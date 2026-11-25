@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:robotwin-0.1.2` |
 
 ## Task
-RoboTwin 2.0 stack_blocks_two (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory that stacks the green block on the red block, frozen scene instance (RoboTwin seed 60417).
+RoboTwin 2.0 stack_blocks_two (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory for the task "Stack the green block on top of the red block, then let go." on a frozen scene instance (RoboTwin seed 60417).
 
 ## Difficulty
 The red block starts on the robot's right (x ≈ +0.24) and the green block on its left (x ≈ -0.23), so the expert

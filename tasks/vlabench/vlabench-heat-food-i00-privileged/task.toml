@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/vlabench-heat-food-i00-privileged"
-description = "VLABench heat_food (Franka Panda): Heat the cooked food from the tray. Put it in the microwave, close the microwave door and press the start button. The food does not actually heat up in the simulation. Produce one replayable trajectory of joint-position control steps on a frozen scene instance; graded by VLABench's own success check at the trajectory's end."
+description = "VLABench heat_food (Franka Panda): Heat the cooked food from the tray in the microwave: put it inside, close the door and press the start button. Produce one replayable trajectory of joint-position control steps on a frozen scene instance; graded by VLABench's own success check at the trajectory's end."
 keywords = ["robotics", "vlabench", "mujoco", "franka-panda", "code-as-policy", "trajectory", "privileged"]
 
 [metadata]

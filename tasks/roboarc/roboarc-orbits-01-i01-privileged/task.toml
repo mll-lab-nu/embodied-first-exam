@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/roboarc-orbits-01-i01-privileged"
-description = "RoboARC orbits (ALOHA 2, MuJoCo): produce one replayable trajectory. Separate the cord and its wooden handle from the puzzle and put both, whole, inside the green dashed goal region. Leave the fixed post, the stopper ball and the base behind, no closer to the goal region than they were at the start. Frozen scene instance (variation orbits_very_easy, seed 0)."
+description = "RoboARC orbits (ALOHA 2, MuJoCo): produce one replayable trajectory. Take the cord with its wooden handle off the puzzle and put both, whole, inside the green dashed goal square. Leave the post, the stopper ball and the base behind, no closer to the goal than they were at the start. Frozen scene instance (variation orbits_very_easy, seed 0)."
 keywords = ["robotics", "roboarc", "mujoco", "aloha", "code-as-policy", "trajectory", "orbits"]
 
 [metadata]

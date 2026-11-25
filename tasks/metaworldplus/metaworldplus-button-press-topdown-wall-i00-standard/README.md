@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:metaworld-0.1.0` |
 
 ## Task
-Standard-mode twin of `metaworldplus-button-press-topdown-wall-i00-privileged`: the same instance and success check (Reach past the wall and press the button downward.), served
+Standard-mode twin of `metaworldplus-button-press-topdown-wall-i00-privileged`: the same instance and success check (Press down the button behind the wall.), served
 as a robot service (`images/metaworld/standard/server_mw.py`, protocol eai-standard/2.1, tool module `mw_tool`). The
 agent sees camera RGB-D, the robot's own state and the target point; no object poses, no reset; one episode.
 

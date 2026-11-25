@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/libero-max-spatial-akita-black-bowl-on-plate-camera-shift-i00-privileged"
-description = "LIBERO-MAX (libero_spatial, camera shift; Franka Panda): Pick up the black bowl on top of the cabinet and place it on the plate. Mid-task, once the gripper comes within 0.18 m of the akita_black_bowl_2, the scene changes (camera shift). Produce one replayable trajectory of LIBERO's native OSC control steps on a frozen instance; graded by LIBERO's success check at the trajectory's end."
+description = "LIBERO-MAX (libero_spatial, camera shift; Franka Panda): Pick up the black bowl on top of the cabinet and put it on the plate. Mid-task, once the gripper comes within 0.18 m of the akita_black_bowl_2, the scene changes (camera shift). Produce one replayable trajectory of LIBERO's native OSC control steps on a frozen instance; graded by LIBERO's success check at the trajectory's end."
 keywords = ["robotics", "libero", "libero-max", "robosuite", "franka-panda", "online-event", "code-as-policy", "trajectory", "privileged"]
 
 [metadata]

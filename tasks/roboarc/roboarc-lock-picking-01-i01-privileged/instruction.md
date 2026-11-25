@@ -110,9 +110,9 @@ s.render_video(actions, "/app/output/check.mp4")   # replays from the frozen sta
 - A replay's confirmation can end a few physics ticks later than in your own run, which stops at your success: append a
   few copies of the last row (holding still) before saving. `s.replay(actions, grading=True)` replays as the grader does
   and reports whether the goal was reached within your rows (`["grading"]["strict_success"]`).
-- Each rotor turns only between its stops, measured from its start angle, seen from the side the key enters, looking
-  along the key toward END (rotor 1 is the plate the key reaches first): rotor 1 4 degrees counterclockwise and 49
-  degrees clockwise; rotor 2 29 degrees counterclockwise and 4 degrees clockwise.
+- Each rotor turns between two stops: from where it starts, only slightly one way and much further the other. Seen from
+  the side the key enters, looking along the key toward END, the first rotor the key reaches turns further clockwise and
+  the second further counterclockwise.
 
 ## Limits
 - Time: 10800 s of wall-clock time from the start of your session; everything counts (the simulator's start-up too). At

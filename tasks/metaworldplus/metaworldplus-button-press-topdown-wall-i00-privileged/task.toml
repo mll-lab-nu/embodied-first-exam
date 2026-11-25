@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/metaworldplus-button-press-topdown-wall-i00-privileged"
-description = "MetaWorld+ (Meta-World v3 button-press-topdown-wall, Sawyer arm): Reach past the wall and press the button downward. Produce one replayable trajectory of Meta-World's native actions on a frozen instance; graded on the state after the last action."
+description = "MetaWorld+ (Meta-World v3 button-press-topdown-wall, Sawyer arm): Press down the button behind the wall. Produce one replayable trajectory of Meta-World's native actions on a frozen instance; graded on the state after the last action."
 keywords = ["robotics", "mujoco", "metaworld", "sawyer", "code-as-policy", "trajectory", "privileged"]
 
 [metadata]

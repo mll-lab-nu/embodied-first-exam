@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:libero-max-0.1.1` |
 
 ## Task
-LIBERO-MAX case `pro-visual-noise-glare-object-t01-i07-visual_theme_switch-d0-p195`: a Franka Panda arm at a table, instructed **"Pick up the cream cheese and place it in the basket."**, on a LIBERO-PRO variant
+LIBERO-MAX case `pro-visual-noise-glare-object-t01-i07-visual_theme_switch-d0-p195`: a Franka Panda arm at a table, instructed **"Put the cream cheese in the basket."**, on a LIBERO-PRO variant
 of a libero_object task (visual_noise_glare). Online event (visual-theme switch): the first time the gripper comes within
 0.18 m of `cream_cheese_1`, LIBERO-MAX changes the scene once (the image colours change (channels permuted (2, 0, 1), scaled (0.7, 1.15, 1.3))). The deliverable is one
 replayable trajectory of LIBERO's OSC control steps (`/app/output/trajectory.npz`, `(T, 7)`, T ≤ 280), graded by

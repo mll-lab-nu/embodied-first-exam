@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:libero-max-0.1.1` |
 
 ## Task
-LIBERO-MAX case `pro-object-texture-object-t09-i05-illumination_switch-d1-p195`: a Franka Panda arm at a table, instructed **"Pick up the orange juice and place it in the basket."**, on a LIBERO-PRO variant
+LIBERO-MAX case `pro-object-texture-object-t09-i05-illumination_switch-d1-p195`: a Franka Panda arm at a table, instructed **"Put the orange juice in the basket."**, on a LIBERO-PRO variant
 of a libero_object task (object_texture). Online event (illumination switch): the first time the gripper comes within
 0.18 m of `orange_juice_1`, LIBERO-MAX changes the scene once (the lighting is scaled by 1.8). The deliverable is one
 replayable trajectory of LIBERO's OSC control steps (`/app/output/trajectory.npz`, `(T, 7)`, T ≤ 280), graded by

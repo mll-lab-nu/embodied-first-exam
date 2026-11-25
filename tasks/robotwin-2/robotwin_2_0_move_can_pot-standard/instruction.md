@@ -1,13 +1,13 @@
 # RoboTwin 2.0 · move_can_pot (standard)
 
 ## Task
-Stand the can upright on the table right next to the pot, on the side of the pot where the can starts and in line with
-the pot, neither in front of it nor behind it. Then let go.
+Stand the can upright on the table right next to the pot, on the pot's right side and in line with the pot, neither in
+front of it nor behind it. Then let go.
 
 ## Goal
-Success: the can stands upright on the table right next to the pot, in line with it, on the side of the pot where the
-can started, and both grippers are open. The service judges the scene at the end of each of your calls, and the episode
-ends at the first success; it also ends when your time is up or on a simulator error.
+Success: the can stands upright on the table right next to the pot, on the pot's right side, in line with it, and both
+grippers are open. The service judges the scene at the end of each of your calls, and the episode ends at the first
+success; it also ends when your time is up or on a simulator error.
 
 Keep the script that drives the robot at `/app/output/gen.py`.
 

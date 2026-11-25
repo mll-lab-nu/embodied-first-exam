@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:roboarc-0.2.0` |
 
 ## Task
-RoboARC slotted_post_ring (ALOHA 2, MuJoCo): produce one replayable trajectory. Separate the removable metal ring from the puzzle and put the whole of it inside the green dashed goal region. Leave the post, cord, beads and end discs behind, no closer to the goal region than they were at the start. Frozen scene instance (variation slotted_post_ring_easy_chain, seed 0).
+RoboARC slotted_post_ring (ALOHA 2, MuJoCo): produce one replayable trajectory. Take the removable metal ring out of the puzzle and put all of it inside the green dashed goal square. Leave the post, cord, beads and end discs behind, no closer to the goal than they were at the start. Frozen scene instance (variation slotted_post_ring_easy_chain, seed 0).
 
 ## Difficulty
 Two 6-dof aloha (viperx) arms with parallel-jaw grippers on a fixed base with a 14-D joint-target action space at 40 Hz; success needs the task's predicate (above) held for 0.5 s. Grasping: assisted grasping (contact_weld_v1).
@@ -52,7 +52,7 @@ Caps per container (PROTOCOL §6).
 | Success rule | task-native success (goal_complete True; frozen parameters; terminal revision placement_region_v2_default_success) |
 
 ### Goal
-Separate the removable metal ring from the puzzle and put the whole of it inside the green dashed goal region. Leave the post, cord, beads and end discs behind, no closer to the goal region than they were at the start.
+Take the removable metal ring out of the puzzle and put all of it inside the green dashed goal square. Leave the post, cord, beads and end discs behind, no closer to the goal than they were at the start.
 
 ### Success requirements
 - Put every part of the entire removable metal ring inside the fixed goal volume, leaving at least 1 mm inside its horizontal border. The centre alone is insufficient; no tip, spike, ring segment or cord segment may remain outside.

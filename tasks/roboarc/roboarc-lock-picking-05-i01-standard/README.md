@@ -45,7 +45,7 @@ Caps per container (PROTOCOL §6).
 ## Details
 
 ### Goal
-Pick up the two-tab key from its rest. Insert the tabbed key through all four rotor plates and the final END plate, while respecting their slots and stops. The key's leading tab is longer than its second tab, which sits one plate spacing behind it.
+Pick up the two-tab key from its rest and push it through all four rotor plates and the END plate, passing its tabs only through the plates' slots.
 
 ### Success requirements
 - Keep the finite-length shaft passing through the full thickness of all five plates at once, facing the insertion direction. Reaching END with only the shaft tip is insufficient.

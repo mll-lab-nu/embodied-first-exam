@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:vlabench-0.2.0` |
 
 ## Task
-VLABench's `hammer_nail_and_hang_picture` as a robot service: a Franka Panda arm at a table, instructed **"Hang the 本所立川 painting on the wall. Drive the nail into the wall with the hammer until the nail's joint position is between 0.05 and 0.08, and bring the painting up to the nail, with the painting's grasp point less than 5 cm from the nail's."**
+VLABench's `hammer_nail_and_hang_picture` as a robot service: a Franka Panda arm at a table, instructed **"Hammer the nail into the wall, then bring the 本所立川 painting right up to the nail, as if to hang it there."**
 (a direct command), on the same frozen instance as `vlabench-hammer-nail-and-hang-picture-i00-privileged`. The simulator runs in the
 `sim` sidecar (`environment/sim/server.py` on main's `rcb_service.py`); the agent only has the client: four cameras
 (RGB 320×320, depth on request, calibrated), the robot's own state, and joint-position chunks. One episode, no reset,

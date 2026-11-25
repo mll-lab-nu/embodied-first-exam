@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/roboarc-lock-picking-05-i01-privileged"
-description = "RoboARC lock_picking (Franka Panda + Robotiq 2F-85, MuJoCo): produce one replayable trajectory. Pick up the two-tab key from its rest. Insert the tabbed key through all four rotor plates and the final END plate, while respecting their slots and stops. The key's leading tab is longer than its second tab, which sits one plate spacing behind it. Frozen scene instance (variation lock_picking_hard, seed 0)."
+description = "RoboARC lock_picking (Franka Panda + Robotiq 2F-85, MuJoCo): produce one replayable trajectory. Pick up the two-tab key from its rest and push it through all four rotor plates and the END plate, passing its tabs only through the plates' slots. Frozen scene instance (variation lock_picking_hard, seed 0)."
 keywords = ["robotics", "roboarc", "mujoco", "panda_robotiq", "code-as-policy", "trajectory", "lock_picking"]
 
 [metadata]

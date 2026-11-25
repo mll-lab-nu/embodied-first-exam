@@ -45,7 +45,7 @@ Caps per container (PROTOCOL §6).
 ## Details
 
 ### Goal
-Untie the rope and spread it out flat on the table so that, seen from above, it nowhere crosses or overlaps itself. Then let go of it and move the robot clear of it. One end of the rope is clamped to the table under a staple and stays clamped. Lay the rope inside the green dashed goal region. The goal region is not drawn in the scene: the region images `/app/goal/region_cam_high.png` (from the overhead camera cam_high) and `/app/goal/region_cam_low.png` (from the low oblique camera cam_low) show the start scene with the region's dashed line drawn in.
+Untie the rope and lay it out flat on the table so that, seen from above, it nowhere crosses or overlaps itself. One end is clamped to the table under a staple and stays clamped. Lay it inside the goal region marked in `/app/goal/region_cam_high.png` (overhead camera cam_high) and `/app/goal/region_cam_low.png` (low camera cam_low); the region is not drawn on the table. Then let go of it and move both arms clear of it.
 
 ### Success requirements
 - Remove projected crossings, overlaps, collapsed projected segments and exact foldbacks. Nonlocal rope segments must be separated by at least one rope diameter in the top-down view; merely changing over/under order is insufficient.

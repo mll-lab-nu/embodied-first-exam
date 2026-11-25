@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:libero-max-0.1.1` |
 
 ## Task
-LIBERO-MAX case `pro-view-occlusion-goal-t09-i07-visual_theme_switch-d1-p195` as a robot service: a Franka Panda arm at a table, instructed **"Put the wine bottle on the rack."**, on
+LIBERO-MAX case `pro-view-occlusion-goal-t09-i07-visual_theme_switch-d1-p195` as a robot service: a Franka Panda arm at a table, instructed **"Put the wine bottle on top of the wine rack."**, on
 the same frozen instance as `libero-max-goal-wine-bottle-on-wine-rack-top-visual-theme-switch-i00-privileged`, with the same online event (visual-theme switch: the image colours change (channels permuted (1, 2, 0), scaled (1.25, 0.7, 1.1)), the
 first time the gripper comes within 0.18 m of `wine_bottle_1`). The simulator runs in the `sim` sidecar
 (`environment/sim/server.py` on main's `rcb_service.py`); the agent only has the client: two cameras (RGB

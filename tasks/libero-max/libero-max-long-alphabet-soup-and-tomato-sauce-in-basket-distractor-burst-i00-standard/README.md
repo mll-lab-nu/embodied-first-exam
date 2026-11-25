@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:libero-max-0.1.1` |
 
 ## Task
-LIBERO-MAX case `pro-initial-pose-position-angle-10-t00-i01-distractor_burst-d0-p195` as a robot service: a Franka Panda arm at a table, instructed **"Put both the alphabet soup and the tomato sauce in the basket."**, on
+LIBERO-MAX case `pro-initial-pose-position-angle-10-t00-i01-distractor_burst-d0-p195` as a robot service: a Franka Panda arm at a table, instructed **"Put the alphabet soup and the tomato sauce in the basket."**, on
 the same frozen instance as `libero-max-long-alphabet-soup-and-tomato-sauce-in-basket-distractor-burst-i00-privileged`, with the same online event (distractor burst: 5 other objects appear on the table (`butter_1`, `ketchup_1`, `milk_1`, `cream_cheese_1`, `orange_juice_1`), the
 first time the gripper comes within 0.18 m of `alphabet_soup_1`). The simulator runs in the `sim` sidecar
 (`environment/sim/server.py` on main's `rcb_service.py`); the agent only has the client: two cameras (RGB

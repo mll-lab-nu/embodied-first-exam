@@ -45,7 +45,7 @@ Caps per container (PROTOCOL §6).
 ## Details
 
 ### Goal
-Completely separate the C ring from the AB plate and briefly hold both still.
+Pull the C ring completely off the AB plate and keep both still for a moment.
 
 ### Success requirements
 - Leave at least 10 mm between the complete pieces, with a plane separating all of their geometry; a gap inside the interlock is insufficient.

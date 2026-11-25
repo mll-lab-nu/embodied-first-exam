@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:roboarc-0.2.0` |
 
 ## Task
-RoboARC rope_threading (ALOHA 2, MuJoCo): produce one replayable trajectory. Thread the rope through the cyan ring (R1) then green ring (R2) then purple ring (R3), in that order along the rope from material start to material end. Frozen scene instance (variation rope_threading_hard, seed 0).
+RoboARC rope_threading (ALOHA 2, MuJoCo): produce one replayable trajectory. Thread the rope, from its end that started farther from the rings, through the cyan ring (R1), then the green ring (R2), then the purple ring (R3), in that order, each the way given below. Frozen scene instance (variation rope_threading_hard, seed 0).
 
 ## Difficulty
 Two 6-dof aloha (viperx) arms with parallel-jaw grippers on a fixed base with a 14-D joint-target action space at 25 Hz; success needs the task's predicate (above) held for 0.5 s. Grasping: assisted grasping (contact_weld_v1).
@@ -52,7 +52,7 @@ Caps per container (PROTOCOL §6).
 | Success rule | task-native success (goal_complete True; frozen parameters; terminal revision terminal_v3_default_success) |
 
 ### Goal
-Thread the rope through the cyan ring (R1) then green ring (R2) then purple ring (R3), in that order along the rope from material start to material end.
+Thread the rope, from its end that started farther from the rings, through the cyan ring (R1), then the green ring (R2), then the purple ring (R3), in that order, each the way given below.
 
 ### Success requirements
 - Required directions along that material order: cyan ring (R1): cross toward the side containing the green ring (R2); green ring (R2): cross away from the side containing the cyan ring (R1); purple ring (R3): cross away from the side containing the green ring (R2). Do not reverse the crossing directions.

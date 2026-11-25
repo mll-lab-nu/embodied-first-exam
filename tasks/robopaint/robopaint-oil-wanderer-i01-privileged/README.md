@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:robopaint-0.2.0` |
 
 ## Task
+Paint the picture in `/app/target.png` (a square crop of Caspar David Friedrich's Wanderer above the Sea of Fog) onto the main sheet with the oil paints, in at most 1974 strokes.
+
 **Process rules** (tasks/robopaint/README.md) on top of the picture rule, so that the exemplar has to be made with strokes rather
 than coloured in: the brush tip's path while it presses on the main sheet with paint (`path_mm`) is at most 64700 mm (3 ×
 the reference solution's 21539 mm), and at most 10 % of it lies in strokes longer than

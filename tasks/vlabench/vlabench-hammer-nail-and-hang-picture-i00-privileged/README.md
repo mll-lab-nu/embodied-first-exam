@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:vlabench-0.2.0` |
 
 ## Task
-VLABench's `hammer_nail_and_hang_picture`: a Franka Panda arm at a table, instructed **"Hang the 本所立川 painting on the wall. Drive the nail into the wall with the hammer until the nail's joint position is between 0.05 and 0.08, and bring the painting up to the nail, with the painting's grasp point less than 5 cm from the nail's."** (a direct command). One
+VLABench's `hammer_nail_and_hang_picture`: a Franka Panda arm at a table, instructed **"Hammer the nail into the wall, then bring the 本所立川 painting right up to the nail, as if to hang it there."** (a direct command). One
 frozen scene instance (VLABench's own episode configuration for the task, seed 0); the deliverable is one
 replayable trajectory of joint-position control steps (`/app/output/trajectory.npz`, `(T, 9)`, T ≤ 4000), graded by
 VLABench's own success check at its end.

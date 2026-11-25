@@ -45,7 +45,7 @@ Caps per container (PROTOCOL §6).
 ## Details
 
 ### Goal
-Thread the rope through the cyan grommet in the wall (G1) then green ring (A) then purple grommet in the wall (G2) then amber ring (V), in that order along the rope from material start to material end.
+Thread the rope, from its end that started farther from the rings, through the cyan grommet in the wall (G1), then the green ring (A), then the purple grommet in the wall (G2), then the amber ring (V), in that order, each the way given below.
 
 ### Success requirements
 - Required directions along that material order: cyan grommet in the wall (G1): cross away from the side containing the amber ring (V); green ring (A): cross toward the side containing the purple grommet in the wall (G2); purple grommet in the wall (G2): cross toward the side containing the amber ring (V); amber ring (V): cross toward the side containing the cyan grommet in the wall (G1). Do not reverse the crossing directions.

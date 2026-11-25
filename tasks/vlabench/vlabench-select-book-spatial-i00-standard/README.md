@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:vlabench-0.2.0` |
 
 ## Task
-VLABench's `select_book_spatial` as a robot service: a Franka Panda arm at a table, instructed **"Take the second book from the left on the top shelf out of the bookshelf. Count from the left as the robot sees the books."**
+VLABench's `select_book_spatial` as a robot service: a Franka Panda arm at a table, instructed **"Take the second book from the robot's left on the top shelf out of the bookshelf."**
 (a description of where the target is), on the same frozen instance as `vlabench-select-book-spatial-i00-privileged`. The simulator runs in the
 `sim` sidecar (`environment/sim/server.py` on main's `rcb_service.py`); the agent only has the client: four cameras
 (RGB 320×320, depth on request, calibrated), the robot's own state, and joint-position chunks. One episode, no reset,

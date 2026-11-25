@@ -4,8 +4,8 @@
 Put the bell in the middle of the scale, then let go of it.
 
 ## Goal
-Success: the bell stands near the middle of the scale, and the gripper of the arm on the side where the bell started is
-open. What counts is how things stand after the last action of your trajectory, replayed from the fixed start.
+Success: the bell stands near the middle of the scale, and the left gripper is open. What counts is how things stand
+after the last action of your trajectory, replayed from the fixed start.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, "/app/output/trajectory.npz")`: the
 recorded actions, (T, 34), one row per physics step (1/250 s); at most 200,000 rows are graded. It is replayed open-loop

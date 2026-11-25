@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/robotwin_2_0_hanging_mug-privileged"
-description = "RoboTwin 2.0 hanging_mug (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. With the left arm, pick up the mug, turn it and set it down in the middle of the table. Then pick it up with the right arm, hang it on the rack by its handle and let go. Frozen scene instance (RoboTwin seed 60417)."
+description = "RoboTwin 2.0 hanging_mug (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Hang the mug on the rack by its handle, then let go. Frozen scene instance (RoboTwin seed 60417)."
 keywords = ["robotics", "robotwin", "sapien", "aloha-agilex", "dual-arm", "code-as-policy", "trajectory", "hanging_mug"]
 
 [metadata]

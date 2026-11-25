@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:libero-max-0.1.1` |
 
 ## Task
-LIBERO-MAX case `pro-camera-view-angle-10-t04-i08-camera_shift-d1-p195` as a robot service: a Franka Panda arm at a table, instructed **"Put the white mug on the left plate and put the yellow and white mug on the right plate."**, on
+LIBERO-MAX case `pro-camera-view-angle-10-t04-i08-camera_shift-d1-p195` as a robot service: a Franka Panda arm at a table, instructed **"Put the white mug on the plate on the robot's right and the yellow-and-white mug on the plate on the robot's left."**, on
 the same frozen instance as `libero-max-long-porcelain-mug-and-white-yellow-mug-on-plate-camera-shift-i00-privileged`, with the same online event (camera shift: the `agentview` camera moves by (-0.06, 0.03, 0) m, turns -22° and its field of view changes by -12°, the
 first time the gripper comes within 0.18 m of `porcelain_mug_1`). The simulator runs in the `sim` sidecar
 (`environment/sim/server.py` on main's `rcb_service.py`); the agent only has the client: two cameras (RGB

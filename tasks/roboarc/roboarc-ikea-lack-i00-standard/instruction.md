@@ -86,8 +86,8 @@ became of a call.
 - Grasps are physical: only the friction of the finger contacts holds a part; nothing attaches it to a gripper.
 
 ## Others
-- A leg goes on only by being turned, about six turns from first thread contact to seated. A leg seated on a free stud
-  and lowered slowly locks to the tabletop.
+- A leg goes on only by being turned, several full turns from first thread contact until it is seated. A leg seated on a
+  free stud and lowered slowly locks to the tabletop.
 
 ## Limits
 - Time: 10800 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At

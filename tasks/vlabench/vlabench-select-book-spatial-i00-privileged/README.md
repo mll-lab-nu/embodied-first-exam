@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:vlabench-0.2.0` |
 
 ## Task
-VLABench's `select_book_spatial`: a Franka Panda arm at a table, instructed **"Take the second book from the left on the top shelf out of the bookshelf. Count from the left as the robot sees the books."** (a description of where the target is). One
+VLABench's `select_book_spatial`: a Franka Panda arm at a table, instructed **"Take the second book from the robot's left on the top shelf out of the bookshelf."** (a description of where the target is). One
 frozen scene instance (VLABench's own episode configuration for the task, seed 0); the deliverable is one
 replayable trajectory of joint-position control steps (`/app/output/trajectory.npz`, `(T, 9)`, T ≤ 4000), graded by
 VLABench's own success check at its end.

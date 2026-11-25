@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:libero-max-0.1.1` |
 
 ## Task
-LIBERO-MAX case `pro-initial-pose-position-angle-object-t00-i01-visual_theme_switch-d1-p195` as a robot service: a Franka Panda arm at a table, instructed **"Pick up the alphabet soup and place it in the basket."**, on
+LIBERO-MAX case `pro-initial-pose-position-angle-object-t00-i01-visual_theme_switch-d1-p195` as a robot service: a Franka Panda arm at a table, instructed **"Put the alphabet soup in the basket."**, on
 the same frozen instance as `libero-max-object-alphabet-soup-in-basket-visual-theme-switch-i00-privileged`, with the same online event (visual-theme switch: the image colours change (channels permuted (1, 2, 0), scaled (1.25, 0.7, 1.1)), the
 first time the gripper comes within 0.18 m of `alphabet_soup_1`). The simulator runs in the `sim` sidecar
 (`environment/sim/server.py` on main's `rcb_service.py`); the agent only has the client: two cameras (RGB

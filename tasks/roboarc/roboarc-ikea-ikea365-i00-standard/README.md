@@ -14,7 +14,7 @@
 ## Task
 IKEA 365+ serving stand (AA-2568481-2) in plain MuJoCo 3.14.0 (CPU, float64) with two 7-DoF Franka Panda arms, each with the MuJoCo Menagerie Panda hand (two-finger, tendon-coupled), through the robot service (eai-standard/2.4; 2.1 / 2.2
 requests are served unchanged): RGB from four ALOHA-style cameras (optional depth), proprioception, `joint_position`
-chunks, stateless kinematics, every pose in the robot's frame; no reset and no privileged state. To rebuild the IKEA 365+ serving stand, take the screw out of member A and set it down on its own, away from both members, lay member B across member A, hold the screw upright and still with its tip just inside the hole in member B, and screw it in through both members until it seats. Then lift the stand more than 10 cm off the bench, turn it upside down while it is in the air, set it down, and place the bowl on it.
+chunks, stateless kinematics, every pose in the robot's frame; no reset and no privileged state. Rebuild the IKEA 365+ serving stand: take the screw out of member A and set it down by itself, away from both members, lay member B across member A, and screw the screw back in through both members until it seats. After that, lift the stand about a hand's width off the bench, turn it upside down in the air, set it down and put the bowl on it. Then let go of everything and move both arms clear.
 
 ## Difficulty
 The privileged twin's bimanual assembly with physical grasps, from cameras and proprioception only, in one episode
@@ -77,7 +77,7 @@ episode with reason `timeout` when it runs out; that count never runs out before
   verifier.
 
 ### Goal
-To rebuild the IKEA 365+ serving stand, take the screw out of member A and set it down on its own, away from both members, lay member B across member A, hold the screw upright and still with its tip just inside the hole in member B, and screw it in through both members until it seats. Then lift the stand more than 10 cm off the bench, turn it upside down while it is in the air, set it down, and place the bowl on it.
+Rebuild the IKEA 365+ serving stand: take the screw out of member A and set it down by itself, away from both members, lay member B across member A, and screw the screw back in through both members until it seats. After that, lift the stand about a hand's width off the bench, turn it upside down in the air, set it down and put the bowl on it. Then let go of everything and move both arms clear.
 
 ### Success requirements
 - The seven operations are accepted in this order: remove the screw, park the screw, cross the members, return the screw, reinstall the screw, turn the stand, place the bowl.

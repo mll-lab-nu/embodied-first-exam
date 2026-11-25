@@ -45,7 +45,7 @@ Caps per container (PROTOCOL §6).
 ## Details
 
 ### Goal
-Unfold the blanket and spread it flat on the table, with no part folded over another and without stretching it. Then let go of it and move the robot clear of it.
+Unfold the blanket and spread it flat on the table, with no part folded over another and without stretching it. Then let go of it and move both arms clear of it.
 
 ### Success requirements
 - Cover at least 95% of the blanket's unfolded material area in top-down projection. Overlapping layers count only once, holes do not count, and a large outer bounding box is insufficient.

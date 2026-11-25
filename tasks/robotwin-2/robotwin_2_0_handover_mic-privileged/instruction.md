@@ -1,13 +1,13 @@
 # RoboTwin 2.0 · handover_mic (privileged)
 
 ## Task
-Pick up the microphone with the arm on its side of the table and hand it to the other arm. That arm holds it up, at
-least a hand's length above the table on its own side, and the first arm lets go.
+Pick up the microphone with the right arm and hand it to the left arm. The left arm holds it up, at least a hand's
+length above the table on the robot's left, and the right arm lets go.
 
 ## Goal
-Success: the arm on the side opposite to where the microphone started holds it, gripper closed, at least a hand's length
-above the table on that arm's side, and the other gripper is open. What counts is how things stand after the last action
-of your trajectory, replayed from the fixed start.
+Success: the left arm holds the microphone, gripper closed, at least a hand's length above the table on the robot's
+left, and the right gripper is open. What counts is how things stand after the last action of your trajectory, replayed
+from the fixed start.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, "/app/output/trajectory.npz")`: the
 recorded actions, (T, 34), one row per physics step (1/250 s); at most 200,000 rows are graded. It is replayed open-loop

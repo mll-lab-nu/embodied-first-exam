@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:metaworld-0.1.0` |
 
 ## Task
-Standard-mode twin of `metaworldplus-sweep-i00-privileged`: the same instance and success check (Sweep the object to the target position.), served
+Standard-mode twin of `metaworldplus-sweep-i00-privileged`: the same instance and success check (Sweep the object to the robot's right, to the target.), served
 as a robot service (`images/metaworld/standard/server_mw.py`, protocol eai-standard/2.1, tool module `mw_tool`). The
 agent sees camera RGB-D, the robot's own state and the target point; no object poses, no reset; one episode.
 

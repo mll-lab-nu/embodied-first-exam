@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:vlabench-0.2.0` |
 
 ## Task
-VLABench's `select_poker_semantic` as a robot service: a Franka Panda arm at a table, instructed **"Pick up the six of spades. Hold it in the gripper at least 15 cm above the table."**
+VLABench's `select_poker_semantic` as a robot service: a Franka Panda arm at a table, instructed **"Pick up the six of spades and hold it at least a hand's length above the table."**
 (a direct command), on the same frozen instance as `vlabench-select-poker-semantic-i00-privileged`. The simulator runs in the
 `sim` sidecar (`environment/sim/server.py` on main's `rcb_service.py`); the agent only has the client: four cameras
 (RGB 320×320, depth on request, calibrated), the robot's own state, and joint-position chunks. One episode, no reset,

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:libero-max-0.1.1` |
 
 ## Task
-LIBERO-MAX case `pro-task-spatial-t03-i03-camera_shift-d1-p195`: a Franka Panda arm at a table, instructed **"Pick up the black bowl on top of the cabinet and place it on the plate."**, on a LIBERO-PRO variant
+LIBERO-MAX case `pro-task-spatial-t03-i03-camera_shift-d1-p195`: a Franka Panda arm at a table, instructed **"Pick up the black bowl on top of the cabinet and put it on the plate."**, on a LIBERO-PRO variant
 of a libero_spatial task (task). Online event (camera shift): the first time the gripper comes within
 0.18 m of `akita_black_bowl_2`, LIBERO-MAX changes the scene once (the `agentview` camera moves by (-0.06, 0.03, 0) m, turns -22° and its field of view changes by -12°). The deliverable is one
 replayable trajectory of LIBERO's OSC control steps (`/app/output/trajectory.npz`, `(T, 7)`, T ≤ 220), graded by

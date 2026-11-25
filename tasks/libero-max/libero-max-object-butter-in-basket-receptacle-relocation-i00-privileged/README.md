@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:libero-max-0.1.1` |
 
 ## Task
-LIBERO-MAX case `pro-initial-pose-position-angle-object-t06-i08-receptacle_relocation-d0-p195`: a Franka Panda arm at a table, instructed **"Pick up the butter and place it in the basket."**, on a LIBERO-PRO variant
+LIBERO-MAX case `pro-initial-pose-position-angle-object-t06-i08-receptacle_relocation-d0-p195`: a Franka Panda arm at a table, instructed **"Put the butter in the basket."**, on a LIBERO-PRO variant
 of a libero_object task (initial_pose_position_angle). Online event (receptacle relocation): the first time the gripper comes within
 0.18 m of `butter_1`, LIBERO-MAX changes the scene once (the receptacle `basket_1` is moved 0.06 m, direction (-0.707, 0.707); it jumps there alone: what already rests in or on it stays where it was, and where it lands on another object the physics pushes the two apart). The deliverable is one
 replayable trajectory of LIBERO's OSC control steps (`/app/output/trajectory.npz`, `(T, 7)`, T ≤ 280), graded by

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:ikea-mujoco-0.3.0` |
 
 ## Task
-IKEA VESKEN shelf unit (AA-1842283-5), body steps 1-8 in plain MuJoCo 3.14.0 (CPU, float64) with two 7-DoF Franka Panda arms, each with the MuJoCo Menagerie Panda hand (two-finger, tendon-coupled): produce one replayable trajectory. Build the VESKEN shelf unit body: snap the four feet into the bottom tray from below, the four columns into the bottom tray, the second tray onto the columns, four columns and a tray for each of the two upper levels, and the four caps into the top tray.
+IKEA VESKEN shelf unit (AA-1842283-5), body steps 1-8 in plain MuJoCo 3.14.0 (CPU, float64) with two 7-DoF Franka Panda arms, each with the MuJoCo Menagerie Panda hand (two-finger, tendon-coupled): produce one replayable trajectory. Build the VESKEN shelf unit: snap the four feet into the bottom tray from below, then four columns into the bottom tray, the second tray onto them, four columns and a tray for each of the two upper levels, and last the four caps into the top tray. Then let go of everything and move both arms clear.
 
 ## Difficulty
 Bimanual furniture assembly with physical grasps (no assist), 16-D actuator action at 400 Hz
@@ -51,7 +51,7 @@ Caps per container (PROTOCOL §6).
 | Initial state | sha256 `66aaaacbc3da0fb3…` of the mjSTATE_INTEGRATION vector |
 
 ### Goal
-Build the VESKEN shelf unit body: snap the four feet into the bottom tray from below, the four columns into the bottom tray, the second tray onto the columns, four columns and a tray for each of the two upper levels, and the four caps into the top tray.
+Build the VESKEN shelf unit: snap the four feet into the bottom tray from below, then four columns into the bottom tray, the second tray onto them, four columns and a tray for each of the two upper levels, and last the four caps into the top tray. Then let go of everything and move both arms clear.
 
 ### Success requirements
 - All 23 snap connections are made in the source order (each depends on the previous: feet, columns, tray, columns, tray, columns, tray, caps) and, at the end, each connector is within its gates (axial gap 0.6 mm, lateral 0.8 mm, outward-axis tilt 2 degrees).

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:libero-max-0.1.1` |
 
 ## Task
-LIBERO-MAX case `pro-camera-view-angle-10-t07-i04-target_relocation-d1-p195` as a robot service: a Franka Panda arm at a table, instructed **"Put both the alphabet soup and the cream cheese box in the basket."**, on
+LIBERO-MAX case `pro-camera-view-angle-10-t07-i04-target_relocation-d1-p195` as a robot service: a Franka Panda arm at a table, instructed **"Put the alphabet soup and the cream cheese in the basket."**, on
 the same frozen instance as `libero-max-long-alphabet-soup-and-cream-cheese-in-basket-target-relocation-i00-privileged`, with the same online event (target relocation: `alphabet_soup_1` is moved 0.12 m across the table, direction (0, -1), the
 first time the gripper comes within 0.18 m of `alphabet_soup_1`). The simulator runs in the `sim` sidecar
 (`environment/sim/server.py` on main's `rcb_service.py`); the agent only has the client: two cameras (RGB

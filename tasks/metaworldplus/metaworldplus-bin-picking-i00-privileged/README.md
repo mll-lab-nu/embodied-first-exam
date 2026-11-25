@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:metaworld-0.1.0` |
 
 ## Task
-A Sawyer arm at a table, Meta-World's `bin-picking-v3` (reward v2) on one frozen instance: Pick up the object from its bin and move it to the target bin. The agent writes a
+A Sawyer arm at a table, Meta-World's `bin-picking-v3` (reward v2) on one frozen instance: Move the object from its bin into the other bin, at the target. The agent writes a
 trajectory of Meta-World's native actions with full privileged state and unlimited resets; it is graded by replay on
 the state after the last action. Benchmark notes in
 `tasks/metaworldplus/README.md`.

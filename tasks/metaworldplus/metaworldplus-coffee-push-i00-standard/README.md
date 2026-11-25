@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:metaworld-0.1.0` |
 
 ## Task
-Standard-mode twin of `metaworldplus-coffee-push-i00-privileged`: the same instance and success check (Push the mug into the target position at the coffee machine.), served
+Standard-mode twin of `metaworldplus-coffee-push-i00-privileged`: the same instance and success check (Push the mug up to the coffee machine, to the target.), served
 as a robot service (`images/metaworld/standard/server_mw.py`, protocol eai-standard/2.1, tool module `mw_tool`). The
 agent sees camera RGB-D, the robot's own state and the target point; no object poses, no reset; one episode.
 

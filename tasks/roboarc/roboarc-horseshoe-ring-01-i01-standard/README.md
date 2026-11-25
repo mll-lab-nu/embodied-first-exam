@@ -45,7 +45,7 @@ Caps per container (PROTOCOL §6).
 ## Details
 
 ### Goal
-Separate the removable ring from the puzzle and put the whole of it inside the green dashed goal region. Leave the horseshoes and chains behind, no closer to the goal region than they were at the start.
+Take the removable ring out of the puzzle and put all of it inside the green dashed goal square. Leave the horseshoes and chains behind, no closer to the goal than they were at the start. Keep every chain hooked in its horseshoe.
 
 ### Success requirements
 - Put every part of the entire removable ring inside the fixed goal volume, leaving at least 1 mm inside its horizontal border. The centre alone is insufficient; no tip, spike, ring segment or cord segment may remain outside.

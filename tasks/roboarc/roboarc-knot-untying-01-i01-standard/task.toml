@@ -20,7 +20,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/roboarc-knot-untying-01-i01-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.4): RoboARC knot_untying on the same frozen instance as the privileged task. Untie the rope and spread it out flat on the table so that, seen from above, it nowhere crosses or overlaps itself. Then let go of it and move the robot clear of it. The agent only gets a client: get_obs (RGB, optional depth, proprioception, calibrated cameras), submit (joint_position or ee_pose chunks), stateless kinematics. No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
+description = "STANDARD MODE (robot as a service, eai-standard/2.4): RoboARC knot_untying on the same frozen instance as the privileged task. Untie the rope and lay it out flat on the table so that, seen from above, it nowhere crosses or overlaps itself. Then let go of it and move both arms clear of it. The agent only gets a client: get_obs (RGB, optional depth, proprioception, calibrated cameras), submit (joint_position or ee_pose chunks), stateless kinematics. No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
 keywords = ["robotics", "roboarc", "mujoco", "aloha", "standard-mode", "trajectory", "knot_untying"]
 
 [metadata]

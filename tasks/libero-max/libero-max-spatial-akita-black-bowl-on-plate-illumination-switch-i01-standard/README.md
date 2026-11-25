@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:libero-max-0.1.1` |
 
 ## Task
-LIBERO-MAX case `pro-semantic-spatial-t05-i06-illumination_switch-d0-p195` as a robot service: a Franka Panda arm at a table, instructed **"Grab black bowl on ramekin and set it on plate."**, on
+LIBERO-MAX case `pro-semantic-spatial-t05-i06-illumination_switch-d0-p195` as a robot service: a Franka Panda arm at a table, instructed **"Pick up the black bowl on the ramekin and put it on the plate."**, on
 the same frozen instance as `libero-max-spatial-akita-black-bowl-on-plate-illumination-switch-i01-privileged`, with the same online event (illumination switch: the lighting is scaled by 0.2, the
 first time the gripper comes within 0.18 m of `akita_black_bowl_1`). The simulator runs in the `sim` sidecar
 (`environment/sim/server.py` on main's `rcb_service.py`); the agent only has the client: two cameras (RGB

@@ -45,7 +45,7 @@ Caps per container (PROTOCOL §6).
 ## Details
 
 ### Goal
-Completely separate the two interlocked pieces and briefly hold both still.
+Pull the two interlocked pieces completely apart and keep both still for a moment.
 
 ### Success requirements
 - Leave at least 10 mm between the complete pieces, with a plane separating all of their geometry; a gap inside the interlock is insufficient.

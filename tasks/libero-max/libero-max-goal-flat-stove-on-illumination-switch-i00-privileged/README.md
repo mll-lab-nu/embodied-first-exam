@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:libero-max-0.1.1` |
 
 ## Task
-LIBERO-MAX case `pro-semantic-goal-t07-i02-illumination_switch-d0-p195`: a Franka Panda arm at a table, instructed **"Switch on the stove."**, on a LIBERO-PRO variant
+LIBERO-MAX case `pro-semantic-goal-t07-i02-illumination_switch-d0-p195`: a Franka Panda arm at a table, instructed **"Turn on the stove."**, on a LIBERO-PRO variant
 of a libero_goal task (semantic). Online event (illumination switch): the first time the gripper comes within
 0.18 m of `flat_stove_1`, LIBERO-MAX changes the scene once (the lighting is scaled by 0.2). The deliverable is one
 replayable trajectory of LIBERO's OSC control steps (`/app/output/trajectory.npz`, `(T, 7)`, T ≤ 300), graded by
