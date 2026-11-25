@@ -137,7 +137,7 @@
       "steering_scale": 1.0
     },
     "evaluation_backend": "native MuJoCo CPU + OSMesa + NumPy CPU",
-    "goal": "Track one prescribed-time lap of a randomized ellipse across rigid traction patches; avoid barriers, rollover and offtrack excursions.",
+    "goal": "Drive the car round one timed lap of the oval track, over ground whose grip changes from patch to patch, keeping up with the moving target that sets the pace, without hitting a barrier or leaving the track.",
     "held_out_cases": 10,
     "image_interval_s": 1.0,
     "limitations": "Procedural chassis with retained contact-wheel mechanism. Rigid Coulomb friction is not deformable sand. No learned vehicle model is evaluated.",

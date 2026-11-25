@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:control-transfer-0.2.0` |
 
 ## Task
-Track public roll/pitch sinusoids after a 1 s acquisition interval while maintaining ground support.
+Make the Go2 tilt its body to follow the commanded roll and pitch while it stands in place with its feet on the ground.
 
 ## Difficulty
 Infer transfer failures from video and noisy sensors across bounded adaptation rounds.

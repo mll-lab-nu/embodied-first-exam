@@ -183,7 +183,7 @@
       "smoothing_sigma_samples": 192,
       "source_samples": 1024
     },
-    "goal": "Track a complete compact F1-inspired lap, targeted at 28 seconds within a 30-second episode, avoiding collisions/offtrack.",
+    "goal": "Drive the car round one lap of the small F1-style track, keeping up with the moving target that sets the pace, without a collision or leaving the track.",
     "held_out_cases": 10,
     "horizon_s": 30.0,
     "image_interval_s": 1.0,

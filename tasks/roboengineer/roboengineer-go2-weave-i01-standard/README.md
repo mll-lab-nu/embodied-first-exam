@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:control-transfer-0.2.0` |
 
 ## Task
-Execute a predeclared body velocity command schedule to pass four alternating poles without contact; no global-position feedback.
+Make the Go2 weave forward past the four poles ahead, passing to the left of the first, to the right of the next and so on, without touching any or falling.
 
 ## Difficulty
 Infer transfer failures from video and noisy sensors across bounded adaptation rounds.

@@ -1,6 +1,6 @@
 # anycar-tight-drift-park
 
-Follow the ordered U-bend, then execute a 180-degree drifting turn into a tight inside parallel-parking space between two stationary cars and hold a precise stop.
+Drive the car round the U-bend, then drift through a half turn into the tight parking space on the inside, between the two parked cars, and stop there.
 
 ## Train, deploy, inspect and revise
 Use the public nominal model and write fitting/optimization code locally. Submit the documented numeric controller parameters. This track evaluates adaptation within a fixed controller ABI; it does not deploy arbitrary controller Python. Run `python -m control_public.anycar_drift_v3_nominal --out /app/output/nominal` for local nominal rollouts. The controller entry point is `control_public.anycar_drift_v3`; ABI /3 coefficients are in `control_public.anycar_drift_feedback`, and legacy ABI /2 is also accepted. Each response preserves the public course in `feedback.command`, all 161 noisy telemetry rows and all 161 video frames at 10 Hz through 16 seconds. The course includes the public start position, target heading and fixed revision string.

@@ -17,7 +17,7 @@ def make_spec(index):
             schema="control-transfer/1",
             protocol="eai-policy/1.1",
             name="Drift to Park",
-            goal="Follow the ordered U-bend, then execute a 180-degree drifting turn into a tight inside parallel-parking space between two stationary cars and hold a precise stop.",
+            goal="Drive the car round the U-bend, then drift through a half turn into the tight parking space on the inside, between the two parked cars, and stop there.",
             course_revision="drift-park/3",
             nominal_bay_size_m=[0.69, 0.43],
             car_envelope_m=[0.49, 0.27],

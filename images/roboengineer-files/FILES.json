@@ -1,5 +1,5 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe:roboengineer-files-0.3.0@sha256:6d1e352b3c04c10b77cfe5d8afaa349a34678bca4f49259d82e6e093b6066a84",
+ "image": "ghcr.io/mll-lab-nu/efe:roboengineer-files-0.3.1@sha256:ec2520f7855f520bc032f24960306f290263adcf5c7d24e9083526d6584d2e7a",
  "source": "embodied_first_exam/benchmarks/roboengineer",
  "files": {
   "anycarbench/LICENSE.anycar": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
@@ -20,9 +20,9 @@
   "sim/quadrupedbench/assets.py": "4528cffdf8db8caca6d24fad4a1d7900cff5a73d250c5b175509021bed9574c5",
   "sim/quadrupedbench/simulation.py": "bda2ae54ed1b3481cec5d5da7853b7e08b916def54458e17003624b0a3c2427c",
   "sim/scripts/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-  "sim/scripts/control_transfer/anycar_drift_spec.py": "5bb779adb2fb83d088166d67a3929ce83ab90857a66fdea4f5150c5d46ce6dbe",
-  "sim/scripts/control_transfer/anycar_drift_v3_spec.py": "ecb6cc5cea4685f51e86d6c2b154c71fc633cb25b5b7a83b5b2f64ad47b35faf",
-  "sim/scripts/control_transfer/anycar_spec.py": "1cfa6c4f29c787ebe12852586553497fb5ea908c28c7fa4bc128997888b48d16",
+  "sim/scripts/control_transfer/anycar_drift_spec.py": "b89b3cdea93a92ba84f976c60c5a235f0c7426f9b50df225d8ec5484e10c3eda",
+  "sim/scripts/control_transfer/anycar_drift_v3_spec.py": "d211a1a86214de1e8d74ea115d2d4e090165351beb7372b0401049b5e373a909",
+  "sim/scripts/control_transfer/anycar_spec.py": "aab97153e4d6195880052b6634fc199da31fda4d8736a6c1f49267149944f816",
   "sim/scripts/control_transfer/components/sim2realbench/__init__.py": "10ec47f5f0055558646ce383ac740c9914faf0536d26dbe2793379c8b88d9495",
   "sim/scripts/control_transfer/components/sim2realbench/g1/__init__.py": "d285ae040f61d8e56f323cd6a9c69b321883d9fef23347c42f66b15c4b8281e5",
   "sim/scripts/control_transfer/components/sim2realbench/g1/actuator_abi.json": "954b819d521f8d742c5b3e97545f9af7eb0913164002f5f4e34ed40ad0848080",

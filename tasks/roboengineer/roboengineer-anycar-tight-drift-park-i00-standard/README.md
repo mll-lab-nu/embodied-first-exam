@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:control-transfer-0.2.0` |
 
 ## Task
-Follow the ordered U-bend, then execute a 180-degree drifting turn into a tight inside parallel-parking space between two stationary cars and hold a precise stop.
+Drive the car round the U-bend, then drift through a half turn into the tight parking space on the inside, between the two parked cars, and stop there.
 
 ## Difficulty
 Infer transfer failures from video and noisy sensors across bounded adaptation rounds.

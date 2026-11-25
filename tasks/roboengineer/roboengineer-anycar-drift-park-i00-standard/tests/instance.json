@@ -162,7 +162,7 @@
     },
     "evaluation_backend": "native MuJoCo CPU + OSMesa",
     "feedback": "Public course command, 14 noisy sensor/own-action values and 161 images at 10 Hz. No hidden state, plant parameters, seeds, contacts or scores.",
-    "goal": "Follow the ordered U-bend, then slide sideways into a parallel-parking space between two stationary cars and hold a precise stop.",
+    "goal": "Drive the car round the U-bend, then drift sideways into the parking space between the two parked cars and stop there.",
     "held_out_cases": 10,
     "horizon_s": 16.0,
     "image_interval_s": 0.1,

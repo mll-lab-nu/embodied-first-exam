@@ -1,6 +1,6 @@
 # anycar-tracking
 
-Track one prescribed-time lap of a randomized ellipse across rigid traction patches; avoid barriers, rollover and offtrack excursions.
+Drive the car round one timed lap of the oval track, over ground whose grip changes from patch to patch, keeping up with the moving target that sets the pace, without hitting a barrier or leaving the track.
 
 ## Train, deploy, inspect and revise
 Use the public nominal model and write fitting/optimization code locally. Submit the documented numeric controller parameters. This track evaluates adaptation within a fixed controller ABI; it does not deploy arbitrary controller Python. Run `python -m scripts.control_transfer.control_public.anycar_nominal --out /app/output/nominal` for local nominal rollouts. The public controller ABI is in `control_public.anycar`.

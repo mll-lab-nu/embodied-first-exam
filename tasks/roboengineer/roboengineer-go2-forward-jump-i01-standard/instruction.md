@@ -1,6 +1,6 @@
 # go2-forward-jump
 
-Jump a commanded 0.70–1.00 m forward distance with verified flight and stable touchdown; walking to the goal is rejected.
+Make the Go2 jump straight ahead the commanded distance in one real jump and land steadily.
 
 ## Train, deploy, inspect and revise
 Use the public nominal model and write fitting/optimization code locally. Submit the documented numeric controller parameters. This track evaluates adaptation within a fixed controller ABI; it does not deploy arbitrary controller Python. Run `python -m control_public.go2_train --assets /opt/control-assets/go2 --task forward-jump --out /app/output/nominal` for local nominal rollouts. The controller ABI and editable training helpers are in `control_public.go2`.

@@ -16,7 +16,7 @@ def make_spec(index):
             schema="control-transfer/1",
             protocol="eai-policy/1.1",
             name="Drift to Park",
-            goal="Follow the ordered U-bend, then slide sideways into a parallel-parking space between two stationary cars and hold a precise stop.",
+            goal="Drive the car round the U-bend, then drift sideways into the parking space between the two parked cars and stop there.",
             max_rounds=3,
             adaptation_cases=3,
             held_out_cases=10,

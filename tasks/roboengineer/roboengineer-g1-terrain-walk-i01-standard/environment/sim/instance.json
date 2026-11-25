@@ -173,7 +173,7 @@
     ],
     "evaluation_backend": "native MuJoCo CPU",
     "feedback": "Video frames and noisy measurements only; no deployment scores, contacts, parameters, seeds or true state. Diagnosis is a short observation/change/prediction, not private reasoning.",
-    "goal": "Train a blind 29-DoF Unitree G1 policy in mjlab/MuJoCo Warp and transfer to CPU MuJoCo over flat, sloped, rough and stepped terrain. Stand 2 s, then follow a public forward velocity command of 0.5\u20130.65 m/s for 18 s.",
+    "goal": "Make the G1 stand, then walk forward at its commanded speed over flat, sloped, rough or stepped ground without falling.",
     "held_out_cases": 12,
     "image_interval_s": 1.0,
     "limitations": "Simulation transfer only, not hardware. Fixed 98\u2192512\u2192256\u2192128\u219229 ELU actor and public PD wrapper. Coding-agent feedback is noisy joint angles, public commands and images.",

@@ -1,6 +1,6 @@
 # anycar-drift-park
 
-Follow the ordered U-bend, then slide sideways into a parallel-parking space between two stationary cars and hold a precise stop.
+Drive the car round the U-bend, then drift sideways into the parking space between the two parked cars and stop there.
 
 ## Train, deploy, inspect and revise
 Use the public nominal model and write fitting/optimization code locally. Submit the documented numeric controller parameters. This track evaluates adaptation within a fixed controller ABI; it does not deploy arbitrary controller Python. Run `python -m control_public.anycar_drift_nominal --out /app/output/nominal` for local nominal rollouts. The public numeric ABI is in `control_public.anycar_drift`. Each response preserves the public course in `feedback.command`, all 161 noisy telemetry rows and all 161 video frames at 10 Hz through 16 seconds. Use the course to distinguish changes in the parking target from changes in vehicle response.

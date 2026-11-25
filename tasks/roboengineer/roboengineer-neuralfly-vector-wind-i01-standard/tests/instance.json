@@ -201,7 +201,7 @@
     "dynamics_revision": "vector-wind/1",
     "evaluation_backend": "native MuJoCo CPU / NumPy CPU / OSMesa",
     "feedback": "Noisy telemetry and sampled images only; no scores, contacts, hidden parameters, true state or seeds.",
-    "goal": "Track six timed laps of a randomized figure eight: vertical, horizontal or inclined plane; yaw in [-pi,pi]; both traversal directions; half extents 0.9-1.5 m and 0.45-0.85 m; angular rate 0.8-1.1 rad/s; randomized phase, center and initial offset. Follow the provided world-frame position, velocity and acceleration commands.",
+    "goal": "Fly the drone through six timed laps of its figure eight in changing wind, keeping close to the moving target the whole time.",
     "held_out_cases": 10,
     "image_interval_s": 1.0,
     "limitations": "Flight-data quadratic force surrogate and approximate rigid-body/actuator dynamics; not a learned aerodynamics model or flight-stack simulation. Fixed 50-degree command tilt envelope; 2.2 thrust-to-weight limit. Synthetic world-frame vector wind with isotropic quadratic drag increment (0.045 kg/m); not calibrated directional aerodynamics. Per-axis residual force cap remains 12 N.",

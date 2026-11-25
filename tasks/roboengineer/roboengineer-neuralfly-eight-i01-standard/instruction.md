@@ -1,6 +1,6 @@
 # neuralfly-eight
 
-Track six timed vertical figure-eight laps: x=1.25 sin(t), y=0, z=1.8+0.75 sin(2t), with randomized phase, horizontal center and initial position offset.
+Fly the drone through six timed laps of a vertical figure eight, keeping close to the moving target the whole time.
 
 ## Train, deploy, inspect and revise
 Use the public nominal model and write fitting/optimization code locally. Submit the documented numeric controller parameters. This track evaluates adaptation within a fixed controller ABI; it does not deploy arbitrary controller Python. The reference and controller are in `control_public.fly`; a public nominal simulator is provided in `nominal_fly.py`.

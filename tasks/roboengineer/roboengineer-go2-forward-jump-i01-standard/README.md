@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:control-transfer-0.2.0` |
 
 ## Task
-Jump a commanded 0.70–1.00 m forward distance with verified flight and stable touchdown; walking to the goal is rejected.
+Make the Go2 jump straight ahead the commanded distance in one real jump and land steadily.
 
 ## Difficulty
 Infer transfer failures from video and noisy sensors across bounded adaptation rounds.

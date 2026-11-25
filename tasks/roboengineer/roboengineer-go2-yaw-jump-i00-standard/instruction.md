@@ -1,6 +1,6 @@
 # go2-yaw-jump
 
-Jump through a commanded 110–150 degree heading change with verified airborne rotation and stable touchdown; ground spinning is rejected.
+Make the Go2 jump and turn to its left in the air by the commanded angle, then land steadily in place.
 
 ## Train, deploy, inspect and revise
 Use the public nominal model and write fitting/optimization code locally. Submit the documented numeric controller parameters. This track evaluates adaptation within a fixed controller ABI; it does not deploy arbitrary controller Python. Run `python -m control_public.go2_train --assets /opt/control-assets/go2 --task yaw-jump --out /app/output/nominal` for local nominal rollouts. The controller ABI and editable training helpers are in `control_public.go2`.

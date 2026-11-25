@@ -169,7 +169,7 @@
     },
     "evaluation_backend": "native MuJoCo CPU / NumPy CPU / OSMesa",
     "feedback": "Noisy telemetry and sampled images only; no scores, contacts, hidden parameters, true state or seeds.",
-    "goal": "Track six timed vertical figure-eight laps: x=1.25 sin(t), y=0, z=1.8+0.75 sin(2t), with randomized phase, horizontal center and initial position offset.",
+    "goal": "Fly the drone through six timed laps of a vertical figure eight, keeping close to the moving target the whole time.",
     "held_out_cases": 10,
     "image_interval_s": 1.0,
     "limitations": "Flight-data quadratic force surrogate and approximate rigid-body/actuator dynamics; not a learned aerodynamics model or flight-stack simulation. Fixed 50-degree command tilt envelope; 2.2 thrust-to-weight limit.",

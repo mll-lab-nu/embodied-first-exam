@@ -1,6 +1,6 @@
 # neuralfly-general-skydio
 
-Track six timed laps of a randomized figure eight: vertical, horizontal or inclined plane; yaw in [-pi,pi]; both traversal directions; half extents 0.9-1.5 m and 0.45-0.85 m; angular rate 0.8-1.1 rad/s; randomized phase, center and initial offset. Follow the provided world-frame position, velocity and acceleration commands.
+Fly the drone through six timed laps of its figure eight, keeping close to the moving target the whole time.
 
 ## Train, deploy, inspect and revise
 Use the public nominal model and write fitting/optimization code locally. Submit the documented numeric controller parameters. This track evaluates adaptation within a fixed controller ABI; it does not deploy arbitrary controller Python. The reference and controller are in `control_public.fly`; a public nominal simulator is provided in `nominal_fly.py`. This observation revision uses Skydio X2 appearance at 960 by 720 pixels, with unchanged surrogate dynamics and noisy-sensor/controller interfaces. Public mesh assets are preinstalled; no download is required.

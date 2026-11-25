@@ -1,6 +1,6 @@
 # go2-weave
 
-Execute a predeclared body velocity command schedule to pass four alternating poles without contact; no global-position feedback.
+Make the Go2 weave forward past the four poles ahead, passing to the left of the first, to the right of the next and so on, without touching any or falling.
 
 ## Train, deploy, inspect and revise
 Use the public nominal model and write fitting/optimization code locally. Submit the documented numeric controller parameters. This track evaluates adaptation within a fixed controller ABI; it does not deploy arbitrary controller Python. Run `python -m control_public.go2_train --assets /opt/control-assets/go2 --task weave --out /app/output/nominal` for local nominal rollouts. The controller ABI and editable training helpers are in `control_public.go2`.

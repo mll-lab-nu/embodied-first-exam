@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:control-transfer-0.2.0` |
 
 ## Task
-Track one prescribed-time lap of a randomized ellipse across rigid traction patches; avoid barriers, rollover and offtrack excursions.
+Drive the car round one timed lap of the oval track, over ground whose grip changes from patch to patch, keeping up with the moving target that sets the pace, without hitting a barrier or leaving the track.
 
 ## Difficulty
 Infer transfer failures from video and noisy sensors across bounded adaptation rounds.

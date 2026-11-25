@@ -2,7 +2,7 @@
   "schema": "control-transfer/1",
   "protocol": "eai-policy/1.1",
   "name": "neural-fly",
-  "goal": "Track six timed vertical figure-eight laps: x=1.25 sin(t), y=0, z=1.8+0.75 sin(2t), with randomized phase, horizontal center and initial position offset.",
+  "goal": "Fly the drone through six timed laps of a vertical figure eight, keeping close to the moving target the whole time.",
   "score": "Crash or escape: 0. Otherwise 100 exp(-max(0,RMSE_m-0.03)/0.25). Success requires the full horizon and RMSE<0.25 m; acquisition is included.",
   "max_rounds": 3,
   "adaptation_cases": 5,

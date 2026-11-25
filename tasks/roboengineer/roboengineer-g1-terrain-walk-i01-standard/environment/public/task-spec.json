@@ -2,7 +2,7 @@
   "schema": "control-transfer/1",
   "protocol": "eai-policy/1.1",
   "name": "g1",
-  "goal": "Train a blind 29-DoF Unitree G1 policy in mjlab/MuJoCo Warp and transfer to CPU MuJoCo over flat, sloped, rough and stepped terrain. Stand 2 s, then follow a public forward velocity command of 0.5\u20130.65 m/s for 18 s.",
+  "goal": "Make the G1 stand, then walk forward at its commanded speed over flat, sloped, rough or stepped ground without falling.",
   "score": "100 * walking survival fraction * exp(-speed MAE/commanded speed) * clipped forward-progress fraction. Success requires full 20 s survival, speed MAE<0.25 m/s, forward travel>65% of commanded walking distance, lateral drift<2 m. Standing still scores zero.",
   "max_rounds": 3,
   "adaptation_cases": 4,

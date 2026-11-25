@@ -2,7 +2,7 @@
   "schema": "control-transfer/1",
   "protocol": "eai-policy/1.1",
   "name": "go2-attitude",
-  "goal": "Track public roll/pitch sinusoids after a 1 s acquisition interval while maintaining ground support.",
+  "goal": "Make the Go2 tilt its body to follow the commanded roll and pitch while it stands in place with its feet on the ground.",
   "score": "Success requires full horizon, roll/pitch RMSE <0.08 rad, base drift <0.25 m, supported fraction >=0.95, and no body-ground collision; unsuccessful score capped at 49.",
   "max_rounds": 3,
   "adaptation_cases": 3,

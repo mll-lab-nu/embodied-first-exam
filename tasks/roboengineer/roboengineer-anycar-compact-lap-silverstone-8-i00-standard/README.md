@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:control-transfer-0.2.0` |
 
 ## Task
-Track a complete compact F1-inspired lap, targeted at 28 seconds within a 30-second episode, avoiding collisions/offtrack.
+Drive the car round one lap of the small F1-style track, keeping up with the moving target that sets the pace, without a collision or leaving the track.
 
 ## Difficulty
 Infer transfer failures from video and noisy sensors across bounded adaptation rounds.
