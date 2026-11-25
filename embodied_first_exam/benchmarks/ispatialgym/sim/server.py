@@ -55,6 +55,18 @@ except BaseException as exc:            # Kit ends the process with exit code 0 
     log({"ev": "startup_error", "error": repr(exc)[:500]})
     sys.stdout.flush(); sys.stderr.flush()
     os._exit(1)
+
+# The served task sentence: task_text.txt's, or the family's own where the picture is not the whole goal (the head
+# camera's pose is graded; the start grasp must be kept). The family is upstream.json's `task_family` (Session.up).
+FAMILY_TEXT = {
+    "camera_relocalization": ("Move the robot until its head camera sees the scene as the goal image /app/goal.png shows it; "
+                              "its arms and grippers do not have to match it."),
+    "mental_rotation": ("Make the scene look like the goal image /app/goal.png, the head camera's view once the task is done, "
+                        "and keep holding what the robot holds at the start; the rest of the robot does not have to match it."),
+    "object_scaling": ("Make the scene look like the goal image /app/goal.png, the head camera's view once the task is done, "
+                       "and keep holding what the robot holds at the start; the rest of the robot does not have to match it."),
+}
+TASK_TEXT = FAMILY_TEXT.get((getattr(S, "up", None) or {}).get("task_family"), TASK_TEXT)
 if not S.instance_ok:                   # before the agent is served: the episode must start from the frozen instance
     EP.give_up(f"instance_mismatch: the frozen start state did not rebuild here (start {S.start_sha}, frozen {S.facts['start_sha']})", infra=True)
 assert S.action_dim == DIM, (S.action_dim, DIM)
@@ -156,8 +168,7 @@ SPEC = {
     "cameras": {c: cam_spec(c) for c in CAMS},
     "default_cameras": [S.head_camera],
     "goal_image": {"file": "/app/goal.png", "camera": S.head_camera,
-                   "note": "the head camera's view once the task is done (same camera, same resolution and intrinsics); the robot "
-                           "itself does not have to match it"},
+                   "note": "the head camera's view once the task is done (same camera, same resolution and intrinsics)"},
     "action_types": {
         "joint_position": {"dim": DIM, "layout": LAYOUT, "blocks": {k: [min(v), max(v) + 1] for k, v in IDX.items()},
                            "units": "base_0..2: a velocity command in [-1, 1] in the robot's own frame (forward, left, yaw rate; robot_spec.base); "

@@ -5,6 +5,8 @@ BEHAVIOR-1K's OmniGibson, Isaac Sim 5.1) runs in your own container: you can rea
 often as you like and plan with the full simulator. You hand in one trajectory, and a separate grader replays it.
 
 ## Your task: make the scene look like a picture
+**Task:** Move the robot until its head camera sees the scene as the goal image /app/goal.png shows it; its arms and grippers do not have to match it.
+
 `/app/goal.png` is what the robot's head camera (`robot_r1:zed_link:Camera:0`) sees once the task is done. It is the same
 camera, resolution and intrinsics as the robot's own head camera. Change the scene so that it looks like the picture. No
 sentence here names the objects that matter or what to do with them: the picture is the whole task. Drive and turn the robot until its head camera sees the scene as the picture shows it. Its arms and grippers may be anywhere, and nothing the picture does not show is judged.
