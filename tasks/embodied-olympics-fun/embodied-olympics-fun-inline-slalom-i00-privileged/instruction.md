@@ -12,6 +12,9 @@ You stand at the start facing +x on both skates, side by side, your pelvis at x 
 Units are metres. The venue text, the rules and `s.state()` all use the venue's frame. At the start, your pelvis is roughly above the point x = -0.2, y = 0, and you face +x, with +y to your left. +z is up. The floor is at z = 0. 
 
 ## The rules
+- **No cheating.** Do not search for, download or use an existing solution to this exact task (published or reference
+  solutions, the benchmark's demonstrations, policies trained for it); trials are reviewed.
+
 **Rule book:** World Skate Inline Freestyle Regulation (update of October 2025): 3.10 official cones (7.6-8.0 cm high, base 7.2-7.5 cm, top 2.4-2.7 cm); 4.2 the cone lines and their marking stickers (7.7 cm, a 0.7 cm centre point); 7 Speed Slalom (on one foot, as fast as possible): 7.1.1 20 cones 80 cm apart, 7.1.3 the start box (two start lines 40 cm apart), 7.1.5 the first cone 12 m from the start line and the end line 80 cm beyond the last cone, 7.3.1.1 the free start of the time trials (time starts when any part of the body crosses the gate beam, 40 cm above the ground), 7.3.2 the cone line entered on one foot, 7.3.3 the end line crossed by the supporting foot with a wheel on the ground, 7.4.2 first-cone penalties, 7.4.3 the free foot and changing foot, 7.4.4 end-line penalties, 7.4.5 +0.2 s per kicked cone or missed interval, more than 4 cone penalties void the run. Where this task departs from it:
 
 - 7.3.1.1 the start: "Ready" is t = 0 with the robot standing in the start box on both skates; it has 5.0 s to break the gate beam; a false start's warning and restart are not modelled (one run)
@@ -166,7 +169,7 @@ What the platform does and does not do for you:
   failure: "the simulation became unstable".
 
 ## External material
-The network is open. You may install packages (pip, apt), and you may search for, download and use public tools, robot models and pretrained controllers (for example a published Unitree G1 walking, jumping or whole-body policy): finding existing work and adapting it to this robot is encouraged. Say in your notes what you used. You may read anything installed in your container, this benchmark's own source code included. The one thing not to look up is a ready-made solution to this exact task, such as this benchmark's reference solutions. This is an honour rule; trials are reviewed.
+The network is open. You may install packages (pip, apt), and you may search for, download and use public tools, robot models and pretrained controllers (for example a published Unitree G1 walking, jumping or whole-body policy): finding existing work and adapting it to this robot is encouraged. Say in your notes what you used. You may read anything installed in your container, this benchmark's own source code included.
 
 ## Resources
 Your container: **8 CPUs**, **16 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.

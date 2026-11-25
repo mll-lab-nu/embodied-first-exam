@@ -25,6 +25,8 @@ The robot and the scene are simulated, and this session is part of an evaluation
 scored afterwards.
 
 ## Real-robot rules
+- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
+  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
 - **One episode, no reset.** It starts when the service comes up and ends at an exit (below), when your time is up (the
   time limit, `## Time limit`), or after `spec()["max_control_steps"]` control steps (90000, a technical cap:
   1800 s of robot time). After it has ended nothing more can be done.
@@ -179,7 +181,7 @@ the wrist flange in the flange's frame, the hand's own weight included; `time_s`
 The columns: `q_fr3_joint1`, `q_fr3_joint2`, `q_fr3_joint3`, `q_fr3_joint4`, `q_fr3_joint5`, `q_fr3_joint6`, `q_fr3_joint7`, `dq_fr3_joint1`, `dq_fr3_joint2`, `dq_fr3_joint3`, `dq_fr3_joint4`, `dq_fr3_joint5`, `dq_fr3_joint6`, `dq_fr3_joint7`, `gripper`, `gripper_opening_m`, `tcp_x`, `tcp_y`, `tcp_z`, `tcp_qw`, `tcp_qx`, `tcp_qy`, `tcp_qz`, `ft_fx`, `ft_fy`, `ft_fz`, `ft_tx`, `ft_ty`, `ft_tz`, `time_s`.
 
 ## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
 
 ## Resources
 Your container: **4 CPUs**, **8 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.

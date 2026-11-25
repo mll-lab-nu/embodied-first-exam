@@ -12,6 +12,9 @@ You stand on the runway facing the pit (+x), your pelvis 20 m before the take-of
 Units are metres. The venue text, the rules and `s.state()` all use the venue's frame. At the start, your pelvis is above the point x = -20, y = 0, and you face +x, with +y to your left. +z is up. The floor is at z = 0. 
 
 ## The rules
+- **No cheating.** Do not search for, download or use an existing solution to this exact task (published or reference
+  solutions, the benchmark's demonstrations, policies trained for it); trials are reviewed.
+
 **Rule book:** World Athletics Competition and Technical Rules, 2024 edition: TR 31 (31.1 the hop, step and jump in that order; 31.2 the hop lands on the take-off foot, the step on the other foot; the rules of the long jump apply: TR 29 the runway, the board, the landing area; TR 30.1.1, 30.1.2, 30.1.5 failures; TR 30.3 the measurement), TR 25.17 (one minute for a trial). Where this task departs from it:
 
 - TR 31.3 (the take-off line at least 13 m from the pit for men, 11 m for women in international competition; nearer boards for other levels): the board is 7.0 m before the pit, a school competition's board (FAMILIES.md)
@@ -167,7 +170,7 @@ What the platform does and does not do for you:
   failure: "the simulation became unstable".
 
 ## External material
-The network is open. You may install packages (pip, apt), and you may search for, download and use public tools, robot models and pretrained controllers (for example a published Unitree G1 walking, jumping or whole-body policy): finding existing work and adapting it to this robot is encouraged. Say in your notes what you used. You may read anything installed in your container, this benchmark's own source code included. The one thing not to look up is a ready-made solution to this exact task, such as this benchmark's reference solutions. This is an honour rule; trials are reviewed.
+The network is open. You may install packages (pip, apt), and you may search for, download and use public tools, robot models and pretrained controllers (for example a published Unitree G1 walking, jumping or whole-body policy): finding existing work and adapting it to this robot is encouraged. Say in your notes what you used. You may read anything installed in your container, this benchmark's own source code included.
 
 ## Resources
 Your container: **8 CPUs**, **16 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.

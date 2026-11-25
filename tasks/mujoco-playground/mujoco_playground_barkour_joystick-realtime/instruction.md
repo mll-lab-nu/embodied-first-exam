@@ -24,6 +24,8 @@ The torso is pushed 12 times at moments you are not told (Playground's kicks: ha
 The same schedule is `spec["command_schedule"]`; the proprioception's `cmd_vx`, `cmd_vy`, `cmd_wz` are the command in force.
 
 ## Rules (real-robot rules)
+- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
+  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
 - **Time does not stop.** An episode starts paused, on the frozen starting state, the joints holding their starting
   targets. Its clock starts at your first `submit` (or `get_obs(seconds=s)`) and from then on the robot runs at
   100 Hz of robot time, whether or not you send anything, until the episode ends. Between your commands it
@@ -112,7 +114,7 @@ of the 0.01 s control period), `interpolate="linear"` (default) or `"hold"` betw
 values outside the limits (`spec()["action_types"]["joint_position"]["lower"]` / `["upper"]`) are clipped.
 
 ## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
 
 ## Resources
 Your container: **2 CPUs**, **4 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.

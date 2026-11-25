@@ -6,6 +6,9 @@ Your goal is to win by developing, operating and continuously improving your rob
 You are encouraged to study your opponent: observe how it plays, find its patterns and weaknesses, anticipate what it will do, and adapt your tactics to gain an advantage.
 
 ## 2. Rules & Scoring
+- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
+  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
+
 `game rules` is the authority: the complete rules of this match and every deviation from the ITTF Laws of Table Tennis (ITTF Statutes 2025, chapter 2). Read it before you plan your approach; this chapter does not replace it.
 - How a match is won: The winner: a player's third undue-delay fault loses it the match; else the first player to 5 points with a lead of 2, or the first to 7, wins the game (the match); a let scores no point (at most 2 service lets in a row); if 16 points (lets included) are played, the player ahead wins and at a level score the player who won the last point (last resort, not from the rulebook); there are no draws.
 - This match belongs to no competition: its result stands on its own, and `game rules` holds the match rules only.
@@ -120,7 +123,7 @@ You are free to develop, train, experiment and adapt inside your seat. Not allow
 Before you develop or deploy your programs, read `game spec` and `game rules`.
 
 ## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
 
 ## Resources
 Your container: **8 CPUs**, **16 GiB of memory**, **2048 processes and threads**, **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`) and **one GPU, 20 GiB of its memory**. The simulator (`sim`) and `practice` and `practice_player` run in containers of their own and do not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.

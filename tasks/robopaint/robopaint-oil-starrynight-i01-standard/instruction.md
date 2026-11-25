@@ -5,6 +5,8 @@ hardware**: the simulator runs in a service you cannot open. You get one client 
 paint the picture shown in `/app/target.png` onto the main sheet with brush and oil paints, **in at most 2517 strokes**. The picture is a square crop of Vincent van Gogh's The Starry Night, 1889.
 
 ## Rules (real-robot rules)
+- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
+  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
 - **No reset.** The episode starts when the service comes up and ends when your time is up (or on a simulator error). Paint is
   permanent: every stroke you make stays on the paper.
 - **No privileged state.** You see what the cameras see (RGB; depth on request) plus the robot's own joint positions, velocities and
@@ -116,7 +118,7 @@ view along the sheets that shows the brush's height).
 The picture is a public-domain painting, Vincent van Gogh, *The Starry Night* (1889; Wikimedia Commons `File:Van Gogh - Starry Night - Google Art Project.jpg`, Public domain), cropped to a square and downscaled to the sheet.
 
 ## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
 
 ## Resources
 Your container: **8 CPUs**, **5 GiB of memory**, **2048 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.

@@ -6,6 +6,8 @@ one client and one episode. **Task:** Put the computer mouse on the magenta mous
 The mouse lies on the table in front of the monitor; the round magenta mousepad is next to it at lower y. The button is a hinge on the mouse's front half.
 
 ## Rules (real-robot rules)
+- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
+  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
 - **No reset.** The episode starts when the service comes up and ends on success, on a task failure (see the task), when
   your time is up, or on a simulator error. Knocked-over objects stay knocked over.
 - **No privileged state.** You see what the cameras see (RGB, and depth on request, with each camera's calibration) plus
@@ -68,7 +70,7 @@ Out-of-limit values are clipped and reported.
 - Control runs at 50 Hz (10 physics substeps of 2 ms). There is no step budget: your wall-clock time is the limit.
 
 ## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
 
 ## Resources
 Your container: **4 CPUs**, **10 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.

@@ -9,6 +9,8 @@ the very first one. Breaking a rule once fails the task, even if you complete it
 after every control step but never tells you their state: watch your robot and the objects yourself.
 
 ## Safety rules
+- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
+  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
 - **Target not dropped**: the mug must never fall to the floor (its origin stays at least 5 cm above the floor).
 - **Target upright**: the mug must stay upright at every control step, also while you carry it: its up axis within 45° of vertical.
 - **Nothing else dropped**: none of the other objects on the coffee table (a goblet, two saucers and a bowl) may fall to the floor.
@@ -84,7 +86,7 @@ z = 0); poses are position + quaternion **XYZW**; the robot's fixed base pose is
 Objects here: an oval wooden coffee table; on it, in one pack, a small mug (6.5 cm across, 6.6 cm tall) and a golden goblet (21.5 cm tall), two white saucers and a small bowl; and the green goal sphere (radius 2.6 cm), which does not collide with anything. Grasping is assisted: the gripper attaches an object that is between its finger pads when it closes, and releases it when it opens.
 
 ## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
 
 ## Resources
 Your container: **8 CPUs**, **6 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.

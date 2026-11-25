@@ -50,6 +50,9 @@ trajectory**, not a general policy.
   scores the resulting sheet, so a call after a long episode takes as long as that replay.
 
 ## Process rules
+- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
+  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
+
 Letter the exemplar with pen strokes, the way a scribe writes it: each stroke of a letter is a pass of the pen along it, its width
 coming from the pen (the pressure on the pointed pen and the direction of travel); going over a stroke again
 is fine. Colouring in or filling the letters' shapes, zigzag or serpentine fills (back-and-forth passes across a stroke), and
@@ -129,7 +132,7 @@ The grader replays once, in a fresh process, exactly this CLI (a fresh process, 
 - The exemplar comes from a public-domain engraved copybook plate (1741): `/app/NOTICE-exemplar.md`.
 
 ## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
 
 ## Resources
 Your container: **8 CPUs**, **12 GiB of memory**, **2048 processes and threads**, **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`) and **one GPU, 3 GiB of its memory**. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.

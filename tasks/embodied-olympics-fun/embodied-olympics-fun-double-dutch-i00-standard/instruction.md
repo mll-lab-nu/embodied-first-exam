@@ -11,6 +11,9 @@ The venue text and the rules use the venue's frame. At the start, your pelvis is
 
 
 ## The rules
+- **No cheating.** Do not search for, download or use an existing solution to this exact task (published or reference
+  solutions, the benchmark's demonstrations, policies trained for it); trials are reviewed.
+
 **Rule book:** IJRU Rule Book 5.0.0 (International Jump Rope Union, 2026): Competition Manual, event Double Dutch Single Freestyle (DDSF: three athletes, two turners and one jumper, one set of two ropes; a 12 x 12 m field); Judging Manual, Counting: 'Double Dutch ropes must be turned counter clockwise with the right hand and clockwise with the left hand'; Violations: a space violation is any part of an athlete touching the ground outside the field; ropes may be of any length. Where this task departs from it:
 
 - the turners are machines, not athletes: each is a post with two motor-driven cranks of 0.3 m (its right and left hands, 0.4 m apart, their axles 0.95 m high), each crank a position servo on a 90 W geared DC motor (14.0 N m at one turn per second, its maximum-power point: its torque-speed line from twice that at stall to no torque at two turns per second) following a steady 1.1 turns per second, right hands counter-clockwise and left hands clockwise as the turner sees them, the ropes half a turn apart; the turners' axles are 3.9 m apart; they never adapt to the jumper and do not stop when a rope is caught (the motor stalls at its limit)
@@ -178,7 +181,7 @@ sensor; angular velocity `gx, gy, gz`, rad/s; acceleration `ax, ay, az`, m/s², 
 real G1 has no sensor for its position in the venue, and neither do you: that is what the cameras are for.
 
 ## External material
-The network is open. You may install packages (pip, apt), and you may search for, download and use public tools, robot models and pretrained controllers (for example a published Unitree G1 walking, jumping or whole-body policy): finding existing work and adapting it to this robot is encouraged. Say in your notes what you used. You may read anything installed in your container, this benchmark's own source code included. The one thing not to look up is a ready-made solution to this exact task, such as this benchmark's reference solutions. This is an honour rule; trials are reviewed.
+The network is open. You may install packages (pip, apt), and you may search for, download and use public tools, robot models and pretrained controllers (for example a published Unitree G1 walking, jumping or whole-body policy): finding existing work and adapting it to this robot is encouraged. Say in your notes what you used. You may read anything installed in your container, this benchmark's own source code included.
 
 ## Resources
 Your container: **4 CPUs**, **10 GiB of memory**, **8192 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.

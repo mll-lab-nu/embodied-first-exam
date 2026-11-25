@@ -12,6 +12,8 @@ kitchen: the timer knob, once set, turns back by itself (1/3000 of its range per
 S x 0.05 s = 0.1 s of wall-clock time. `spec()["timing"]["slowdown"]` states it.
 
 ## Rules (real-robot rules)
+- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
+  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
 - **Time does not stop.** The episode starts paused, on the frozen starting state, holding still. Its clock starts at
   your first `submit` (or `get_obs(seconds=s)`) and from then on the robot runs one control step every 0.1 s of
   wall-clock time, whether or not you send anything, until the episode ends. Between your commands it executes what you
@@ -31,7 +33,6 @@ S x 0.05 s = 0.1 s of wall-clock time. `spec()["timing"]["slowdown"]` states it.
   `meta["reason"]`: `"success"`, `"failed"`, `"error"`).
 - There is nothing to hand in: the service records every control step it ran and grades the episode as it ran
   (nothing is replayed). Keep the controller at `/app/output/gen.py` for the record.
-- Do not use the benchmark's demonstrations, trained policies or any published solution; write your own controller.
 - Do not stop early: while the episode runs, the run can still pass.
 
 ## Scoring
@@ -76,7 +77,7 @@ The answers come back decoded: `res.meta` (the counters, `done`, `reason`, `prop
 - World frame: metres, z up.
 
 ## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
 
 ## Resources
 Your container: **4 CPUs**, **16 GiB of memory**, **8192 processes and threads** and **20 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.

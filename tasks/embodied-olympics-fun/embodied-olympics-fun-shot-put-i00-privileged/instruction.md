@@ -12,6 +12,9 @@ You stand in the rear half of the circle facing the sector (+x), your pelvis 0.4
 Units are metres. The venue text, the rules and `s.state()` all use the venue's frame. At the start, your pelvis is roughly above the point x = -0.5, y = 0, and you face +x, with +y to your left. +z is up. The floor is at z = 0. 
 
 ## The rules
+- **No cheating.** Do not search for, download or use an existing solution to this exact task (published or reference
+  solutions, the benchmark's demonstrations, policies trained for it); trials are reviewed.
+
 **Rule book:** World Athletics Competition and Technical Rules 2024: TR 32.5-32.8 (the circle), TR 32.12 (the sector), TR 32.13, 32.14, 32.16, 32.17 and 32.20 (throwing events: the start, failures, the landing, leaving the circle, the measurement), TR 33.1 (the put from the shoulder), TR 33.2 (the stop board), TR 33.4-33.5 (the men's shot). Where this task departs from it:
 
 - TR 33.1 ("the shot shall touch or be in close proximity to the neck or the chin"; the hand that holds it): the H1-2's hand is a flat rubber palm pad without fingers and nothing grips: the shot rests on the open right palm, which faces up and in towards the neck, and leans against the neck (the trunk's hull: the H1-2's trunk and head are one hull), held only by the palm's support, the neck and friction; it rolls or slides off when the palm does not carry it. The stance is given at the start (the shot's centre within 0.22 m of the line from the base of the neck to the chin). From then to the release the rule is judged on the shot's centre in the trunk's frame: "the hand shall not be dropped below this position" as not below the line of the two shoulder joints, "not behind the line of the shoulders" as not behind that line, and "put" (not thrown or slung) as: at the release (the right hand's last contact) the shot moves away from the putting shoulder's joint with at least 0.5 of its speed relative to that joint.
@@ -148,7 +151,7 @@ What the platform does and does not do for you:
   failure: "the simulation became unstable".
 
 ## External material
-The network is open. You may install packages (pip, apt), and you may search for, download and use public tools, robot models and pretrained controllers (for example a published Unitree G1 walking, jumping or whole-body policy): finding existing work and adapting it to this robot is encouraged. Say in your notes what you used. You may read anything installed in your container, this benchmark's own source code included. The one thing not to look up is a ready-made solution to this exact task, such as this benchmark's reference solutions. This is an honour rule; trials are reviewed.
+The network is open. You may install packages (pip, apt), and you may search for, download and use public tools, robot models and pretrained controllers (for example a published Unitree G1 walking, jumping or whole-body policy): finding existing work and adapting it to this robot is encouraged. Say in your notes what you used. You may read anything installed in your container, this benchmark's own source code included.
 
 ## Resources
 Your container: **8 CPUs**, **16 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.

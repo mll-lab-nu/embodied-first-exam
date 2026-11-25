@@ -245,7 +245,7 @@ MUTATIONS = [
      STD, "instruction.md", append("\nAlso required: mug_0 local +y within 45 deg of world +x (is_axis_aligned).\n"), INSTRUCTION,
      "an object-local axis 'local y'"),
     ("the instruction states the external-material rule in other words",
-     STD, "instruction.md", sub(r"This is an honour rule; trials are reviewed\.", "Do as you like."), RESOURCES,
+     STD, "instruction.md", sub(r"The network reaches your model's API and the package\s+registries", "Do as you like."), RESOURCES,
      "does not state `## External material`"),
     # ---- the agent's time cutoff (PROTOCOL §2): the task's own number; task.toml, the instruction and the sim service agree
     ("task.toml's cutoff changed without normalizing (the instruction still states the old number)",

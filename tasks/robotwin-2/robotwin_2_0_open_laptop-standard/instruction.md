@@ -4,6 +4,8 @@ You control a dual-arm **ALOHA-AgileX** robot **as if it were real hardware**: t
 cannot open. You get one client and one episode. **Task:** With the left arm, open the laptop lid much wider than it is now, and keep the left gripper on the lid at the end. The success check, run at the end of every call, passes when the lid's hinge is at 40 percent of its joint range or more (it starts at 20 percent) and, at that moment, the left arm's gripper centre (TCP) is within 10 cm of a grasp point on the lid.
 
 ## Rules (real-robot rules)
+- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
+  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
 - **No reset.** The episode starts when the service comes up and ends on success, when your time is up, or on a
   simulator error. Knocked-over objects stay knocked over.
 - **No privileged state.** You see what the cameras see (RGB, optional depth) plus the robot's own joint positions,
@@ -72,7 +74,7 @@ at every returned frame.
 Table top at z ≈ 0.74 m. The scene's objects are what the cameras show.
 
 ## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
 
 ## Resources
 Your container: **3 CPUs**, **4 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.

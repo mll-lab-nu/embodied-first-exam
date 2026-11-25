@@ -11,6 +11,9 @@ The venue text and the rules use the venue's frame. At the start, your pelvis is
 
 
 ## The rules
+- **No cheating.** Do not search for, download or use an existing solution to this exact task (published or reference
+  solutions, the benchmark's demonstrations, policies trained for it); trials are reviewed.
+
 **Rule book:** World Athletics Competition and Technical Rules 2024: TR 32.9 (the javelin runway and its arc), TR 32.12 (the sector), TR 32.14, 32.16, 32.17 and 32.20 (throwing events: failures, the landing, leaving the runway, the measurement), TR 38.1 (the throw), TR 38.3-38.6 (the javelin: the women's implement, its grip). Where this task departs from it:
 
 - TR 38.1(a) ("the javelin shall be held at the grip with one hand"): the hand is the H1-2's own Inspire five-finger hand (six drives: four fingers, the thumb's flexion and rotation; fingertip forces 20 N, the thumb 30 N, at 1.0 times these forces; one closure command for the whole hand); the cord lies across its palm and is held by its fingers' and thumb's contact and friction only. Held means the cord touching the hand's fingers and its thumb or palm; the hold may break for at most 0.02 s (contacts flicker); the release is the javelin's last contact with any part of you once the hold has ended, when it has then touched nothing of you for 0.02 s (between the end of the hold and the release only the right arm may touch it, for at most 0.2 s). "Over the shoulder or upper part of the throwing arm" is judged at the release: the javelin's centre of gravity must then be no lower than the throwing shoulder's joint.
@@ -165,7 +168,7 @@ sensor; angular velocity `gx, gy, gz`, rad/s; acceleration `ax, ay, az`, m/s², 
 real H1-2 has no sensor for its position in the venue, and neither do you: that is what the cameras are for.
 
 ## External material
-The network is open. You may install packages (pip, apt), and you may search for, download and use public tools, robot models and pretrained controllers (for example a published Unitree G1 walking, jumping or whole-body policy): finding existing work and adapting it to this robot is encouraged. Say in your notes what you used. You may read anything installed in your container, this benchmark's own source code included. The one thing not to look up is a ready-made solution to this exact task, such as this benchmark's reference solutions. This is an honour rule; trials are reviewed.
+The network is open. You may install packages (pip, apt), and you may search for, download and use public tools, robot models and pretrained controllers (for example a published Unitree G1 walking, jumping or whole-body policy): finding existing work and adapting it to this robot is encouraged. Say in your notes what you used. You may read anything installed in your container, this benchmark's own source code included.
 
 ## Resources
 Your container: **4 CPUs**, **10 GiB of memory**, **8192 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.

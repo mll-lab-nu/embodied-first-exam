@@ -11,6 +11,9 @@ The venue text and the rules use the venue's frame. At the start, your pelvis is
 
 
 ## The rules
+- **No cheating.** Do not search for, download or use an existing solution to this exact task (published or reference
+  solutions, the benchmark's demonstrations, policies trained for it); trials are reviewed.
+
 **Rule book:** WDBF Cloth Dodgeball Rules 2026 (World Dodgeball Federation): rule 1.1 (the playing court 18 m x 9 m), 1.3 (lines 5 cm wide, drawn inside the court; the centre line; the neutral zone lines 7 m from the back lines), 1.4 (fair territory, neutral zone), 2.1-2.3 (five balls of textured no-sting cloth over foam over a butyl bladder, 17.78 cm across, 110-125 mbar), 15.1 (a live player is out when hit by a live ball on any part of the body or clothing), 16.2 and 16.6 (a thrown ball is live from the throw until it touches a surface or a dead object that is not a ball), 26.1-26.5 (out of bounds: touching a boundary line, a surface outside them, the opponents' fair territory or the neutral zone line next to it: out). Where this task departs from it:
 
 - Rule 16 (the throwers): the five throws come from five two-wheel ball machines (the shared machine block, one ball each) standing in the opponents' fair territory 3.0 m beyond the centre line, their exits 1.2 m high, each on a turret (a yaw and a pitch joint driven by torque-limited servos, 20.0 and 30.0 N m) whose controller points it, until its feed, at where you are now: your pelvis, at a height of 0.8 m, with the elevation that the ball's drag needs for that distance; it does not lead a moving target. Each throws at 14.0 m/s with no spin, the first fed at 2.0 s and the others 2.5 s apart: an opposing team cannot be simulated.
@@ -177,7 +180,7 @@ sensor; angular velocity `gx, gy, gz`, rad/s; acceleration `ax, ay, az`, m/s², 
 real G1 has no sensor for its position in the venue, and neither do you: that is what the cameras are for.
 
 ## External material
-The network is open. You may install packages (pip, apt), and you may search for, download and use public tools, robot models and pretrained controllers (for example a published Unitree G1 walking, jumping or whole-body policy): finding existing work and adapting it to this robot is encouraged. Say in your notes what you used. You may read anything installed in your container, this benchmark's own source code included. The one thing not to look up is a ready-made solution to this exact task, such as this benchmark's reference solutions. This is an honour rule; trials are reviewed.
+The network is open. You may install packages (pip, apt), and you may search for, download and use public tools, robot models and pretrained controllers (for example a published Unitree G1 walking, jumping or whole-body policy): finding existing work and adapting it to this robot is encouraged. Say in your notes what you used. You may read anything installed in your container, this benchmark's own source code included.
 
 ## Resources
 Your container: **4 CPUs**, **10 GiB of memory**, **8192 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.

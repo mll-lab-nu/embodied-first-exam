@@ -4,6 +4,8 @@ You control a dual-arm **ALOHA-AgileX** robot **as if it were real hardware**: t
 cannot open. You get one client and one episode. **Task:** Stand the phone on the phone stand, with its bottom edge resting on the stand's ledge. Then let go. The success check, run at the end of every call, passes when the phone's reference point (the middle of its bottom edge [functional point 0]) is within 4.5 cm in x, 4 cm in y and 4 cm in z of the stand's support point (the middle of the stand's tray, the ledge the phone's bottom edge rests on, about 10 cm above the table [functional point 0]), i.e. the phone stands on the stand resting on its bottom edge, and both grippers are commanded open (above 0.8).
 
 ## Rules (real-robot rules)
+- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
+  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
 - **No reset.** The episode starts when the service comes up and ends on success, when your time is up, or on a
   simulator error. Knocked-over objects stay knocked over.
 - **No privileged state.** You see what the cameras see (RGB, optional depth) plus the robot's own joint positions,
@@ -72,7 +74,7 @@ at every returned frame.
 Table top at z ≈ 0.74 m. The scene's objects are what the cameras show.
 
 ## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
 
 ## Resources
 Your container: **3 CPUs**, **4 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.

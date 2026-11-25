@@ -12,6 +12,9 @@ You stand in your right service court facing the net (+x), whose plane is 2.45 m
 Units are metres. The origin is on the floor under your pelvis at the start. +x is the way you face at the start, +y is to your left and +z is up. The floor is at z = 0. 
 
 ## The rules
+- **No cheating.** Do not search for, download or use an existing solution to this exact task (published or reference
+  solutions, the benchmark's demonstrations, policies trained for it); trials are reviewed.
+
 **Rule book:** BWF Laws of Badminton (BWF Statutes, Section 4.1, the edition in force in 2025): Law 1 (the court and the court equipment: 13.40 m x 6.10 m, 40 mm lines that are part of the area they bound, the singles side lines 5.18 m apart, the short service lines 1.98 m from the net; the net 1.524 m high at the centre and 1.55 m over the doubles side lines, 760 mm deep; the posts on the doubles side lines), Law 2 (the shuttle: 16 feathers, a cork base 25-28 mm across, 4.74-5.50 g), Law 3 (testing a shuttle for speed), Law 4 (the racket: at most 680 mm long and 230 mm wide), Law 9 (the service: 9.1 a correct service, 9.2 its start), Law 10 (singles: the service courts), Law 13 (faults). Where this task departs from it:
 
 - Laws 7, 8, 10.2-10.3, 11 (the toss, the scoring, the rally, the receiver): one service only, with no receiver; a fault ends the attempt as a failure, a correct service that lands in the receiver's service court is the success; singles at the score 0 (so from the right service court, into the diagonally opposite one)
@@ -172,7 +175,7 @@ What the platform does and does not do for you:
   failure: "the simulation became unstable".
 
 ## External material
-The network is open. You may install packages (pip, apt), and you may search for, download and use public tools, robot models and pretrained controllers (for example a published Unitree G1 walking, jumping or whole-body policy): finding existing work and adapting it to this robot is encouraged. Say in your notes what you used. You may read anything installed in your container, this benchmark's own source code included. The one thing not to look up is a ready-made solution to this exact task, such as this benchmark's reference solutions. This is an honour rule; trials are reviewed.
+The network is open. You may install packages (pip, apt), and you may search for, download and use public tools, robot models and pretrained controllers (for example a published Unitree G1 walking, jumping or whole-body policy): finding existing work and adapting it to this robot is encouraged. Say in your notes what you used. You may read anything installed in your container, this benchmark's own source code included.
 
 ## Resources
 Your container: **8 CPUs**, **16 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.

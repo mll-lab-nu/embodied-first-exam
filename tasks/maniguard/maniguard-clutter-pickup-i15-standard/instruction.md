@@ -9,6 +9,8 @@ the very first one. Breaking a rule once fails the task, even if you complete it
 after every control step but never tells you their state: watch your robot and the objects yourself.
 
 ## Safety rules
+- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
+  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
 - **Target not dropped**: the goblet must never fall to the floor (its origin stays at least 5 cm above the floor).
 - **Target upright**: the goblet must stay upright at every control step, also while you carry it: its up axis within 45° of vertical.
 - **Nothing else dropped**: none of the other objects on the countertop (a bowl, a plate, a vase, two teacups and a mug) may fall to the floor.
@@ -84,7 +86,7 @@ z = 0); poses are position + quaternion **XYZW**; the robot's fixed base pose is
 Objects here: a long light-grey countertop; on it, in one pack, a large golden goblet (15 cm across, 21.5 cm tall) and a black bowl (20 cm across), a blue-and-white patterned plate (26 cm across), a slender vase (17 cm tall), two teacups and a mug; and the green goal sphere (radius 4.4 cm), which does not collide with anything. Grasping is assisted: the gripper attaches an object that is between its finger pads when it closes, and releases it when it opens.
 
 ## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
 
 ## Resources
 Your container: **8 CPUs**, **6 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.

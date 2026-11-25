@@ -140,6 +140,8 @@ Errors: 400 = an invalid action (nothing happens), 409 = not now (not your turn,
 action in flight, or more than 20 requests per second or 4 open requests from your seat (empty body: retry more slowly).
 
 ## Rules
+- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
+  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
 - robot soccer 2 v 2 under the RoboCup Humanoid Soccer League rules: four simulated Booster T1 humanoids (lower bodies: legs and trunk, held to the real robot's joint and motor limits) and one ball on a boarded 10 x 7 m pitch with two goals, two halves of 5 minutes of game time, a penalty shoot-out when level. At the joint level your robots take 12 leg joint targets every 20 ms (section "The joint level" above); the opponent's two robots are under joint control too: they walk and kick on a policy trained with reinforcement learning on the same joint interface, PD, motors and limits as yours; a learned strategy layer decides what each robot does.
 - `frame`: metres, seconds; your team's frame: you attack the goal at x = +5 and defend the goal at x = -5, y to the left when facing +x, z up, yaw counter-clockwise from +x (both teams see the pitch this way in their own frame)
 - `pitch`: field of play 10 x 7 m (|x| <= 5, |y| <= 3.5), halfway line x = 0, centre circle radius 1.0 m, penalty areas 2.0 m deep and 4.0 m wide, goal areas 1.0 x 3.0 m, penalty marks 1.5 m in front of each goal line; boards 0.3 m high on the touchlines and goal lines except the goal mouths; goals 2.6 m wide (|y| < 1.3), 1.8 m high, 0.6 m deep with nets
@@ -173,7 +175,7 @@ robots under joint control, the opponent's robots too (a walking policy learned 
 FIFA turf; robot-robot, robot-ball, goal and board contacts).
 
 ## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
 
 ## Resources
 Your container: **6 CPUs**, **16 GiB of memory**, **2048 processes and threads**, **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`) and **one GPU, 12 GiB of its memory**. The simulator (`sim`) and `practice` run in containers of their own and do not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.

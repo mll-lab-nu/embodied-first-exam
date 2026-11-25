@@ -12,6 +12,9 @@ You stand upright in the middle of the platform, facing +x, your soles 0.1 m abo
 Units are metres. The origin is on the floor under your pelvis at the start. +x is the way you face at the start, +y is to your left and +z is up. The floor is at z = 0. 
 
 ## The rules
+- **No cheating.** Do not search for, download or use an existing solution to this exact task (published or reference
+  solutions, the benchmark's demonstrations, policies trained for it); trials are reviewed.
+
 **Rule book:** IWF Technical and Competition Rules & Regulations (International Weightlifting Federation; 2020 edition, article numbers quoted from memory of the 2020s editions): 2.3 the clean and jerk, 2.5 incorrect movements, 3.1 the platform, 3.3 the barbell (the women's bar: 15 kg, 2.01 m, a 25 mm grip section 1.31 m long, sleeves 50 mm thick; collars 2.5 kg; the lightest barbell in competition, women: 21 kg = the bar, two collars and two 0.5 kg discs). Where this task departs from it:
 
 - 3.3 (the barbell): the barbell is an aluminium technique bar, American Barbell's ATB-5-E (5 kg, 1.835 m, a 25 mm grip section 1.31 m long as the women's bar's, sleeves 50 mm thick), training equipment, not a competition barbell (the women's bar is 15 kg, the lightest competition barbell 21.0 kg), without collars or discs. The reason is the robot's arms: with the women's 15 kg bar the turnover from the hang to the shoulders asks 1.08 to 1.17 times what the elbow and shoulder motors give, and with 10 kg the robot topples at the turnover, so neither a heavier bar nor a faster turnover is open. There is no choice of weight and no progression of attempts, because the task is one attempt
@@ -148,7 +151,7 @@ What the platform does and does not do for you:
   failure: "the simulation became unstable".
 
 ## External material
-The network is open. You may install packages (pip, apt), and you may search for, download and use public tools, robot models and pretrained controllers (for example a published Unitree G1 walking, jumping or whole-body policy): finding existing work and adapting it to this robot is encouraged. Say in your notes what you used. You may read anything installed in your container, this benchmark's own source code included. The one thing not to look up is a ready-made solution to this exact task, such as this benchmark's reference solutions. This is an honour rule; trials are reviewed.
+The network is open. You may install packages (pip, apt), and you may search for, download and use public tools, robot models and pretrained controllers (for example a published Unitree G1 walking, jumping or whole-body policy): finding existing work and adapting it to this robot is encouraged. Say in your notes what you used. You may read anything installed in your container, this benchmark's own source code included.
 
 ## Resources
 Your container: **8 CPUs**, **16 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.

@@ -12,6 +12,9 @@ You face the goal (+x) on level grass, 0.3 m behind the penalty mark, on the lin
 Units are metres. The origin is on the floor under your pelvis at the start. +x is the way you face at the start, +y is to your left and +z is up. The floor is at z = 0. 
 
 ## The rules
+- **No cheating.** Do not search for, download or use an existing solution to this exact task (published or reference
+  solutions, the benchmark's demonstrations, policies trained for it); trials are reviewed.
+
 **Rule book:** IFAB Laws of the Game 2025/26: Law 1 (the goal 7.32 m x 2.44 m with posts and crossbar 12 cm wide, the penalty mark 11 m from the goal line, the penalty area, the goal area), Law 2 (a size-5 ball: 68-70 cm round, 410-450 g), Law 10 (a goal: the whole ball over the goal line between the posts and under the bar), Law 12 (handball) and the glossary (a kick is a contact with the foot or the ankle). The drill itself, a square pass struck first time (one touch) at goal from the penalty mark, is a coaching exercise, not a rule-book event: the pass and the one-touch standard are the benchmark's. Where this task departs from it:
 
 - The pass comes from a ball ramp instead of a team-mate: the ball rests against a gate 1.2 m up a 20.0 degree wooden ramp whose foot is 4.0 m to your left on the pass line; at 2.0 s a servo (stall torque 4.1 N m) swings the gate open and gravity rolls the ball down and across, along the line through the penalty mark parallel to the goal line. The same pass in every attempt; the pitch is level and uniform (the official ball's rolling resistance, no bobble), no wind.
@@ -164,7 +167,7 @@ What the platform does and does not do for you:
   failure: "the simulation became unstable".
 
 ## External material
-The network is open. You may install packages (pip, apt), and you may search for, download and use public tools, robot models and pretrained controllers (for example a published Unitree G1 walking, jumping or whole-body policy): finding existing work and adapting it to this robot is encouraged. Say in your notes what you used. You may read anything installed in your container, this benchmark's own source code included. The one thing not to look up is a ready-made solution to this exact task, such as this benchmark's reference solutions. This is an honour rule; trials are reviewed.
+The network is open. You may install packages (pip, apt), and you may search for, download and use public tools, robot models and pretrained controllers (for example a published Unitree G1 walking, jumping or whole-body policy): finding existing work and adapting it to this robot is encouraged. Say in your notes what you used. You may read anything installed in your container, this benchmark's own source code included.
 
 ## Resources
 Your container: **8 CPUs**, **16 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.

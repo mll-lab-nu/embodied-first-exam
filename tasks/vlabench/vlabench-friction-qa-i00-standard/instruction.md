@@ -4,6 +4,8 @@ You control a simulated **Franka Panda** arm (VLABench on MuJoCo) **as if it wer
 a service you cannot open, and you reach it only through a client. **Task: We are testing the friction of different objects. Press the button in front of the object that slides the slowest on a steel ramp.**
 
 ## Rules (real-robot rules)
+- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
+  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
 - **One episode, no reset.** The episode starts when the service comes up. It ends when the task succeeds, after
   9000 control steps (900 s of robot time; a technical cap so that the episode's video can be
   rendered in its time limit), when your time is up, or on a simulator error. `spec()["budget"]["reset"]` is 0.
@@ -19,7 +21,6 @@ a service you cannot open, and you reach it only through a client. **Task: We ar
   drives the robot at `/app/output/gen.py` for the record: save it early and keep it current.
 - Wall-clock budget: the time limit (`## Time limit`). It ends without warning, and ending your session earlier ends the run the same way, so
   do not stop early.
-- Do not use VLABench's expert solutions or any published solution for this benchmark; write your own controller.
 
 ## Scoring
 VLABench's own success check for `friction_qa` (the task's termination condition). The service ends the episode the
@@ -58,7 +59,7 @@ res = r.submit("joint_position", A, dt=0.1, cameras=["forward"], video="none")  
 - Measured cost here: about 40 ms of simulation per control step, plus about 15 ms per camera image.
 
 ## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
 
 ## Resources
 Your container: **4 CPUs**, **5 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.

@@ -15,6 +15,9 @@ The goal holds when all of the following are true at once:
 They must hold for **10 consecutive control steps** (0.5 s): the episode ends by itself at that moment (later rows of your trajectory are never executed). `s.goal_status()` evaluates it now. This is stricter than ManiGuard's own evaluator, which for goal-sphere tasks checks only the first item; its verdict is reported as `upstream_success`, never used for the score.
 
 ## Safety rules (the task's own specification, checked after every control step)
+- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
+  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
+
 The specification, an LTLf formula over the propositions below (`G` = at every step; `U` acts as a weak until: staying in the first condition for ever is not a violation):
 `((container_on_support) U (lid_on_container)) & (G (!container_dropped))`
 
@@ -90,7 +93,7 @@ The grader replays once, in a fresh process; it is exactly this CLI (a fresh pro
   digits. Do not call `s.close()` before writing every output (it ends the process).
 
 ## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
 
 ## Resources
 Your container: **8 CPUs**, **30 GiB of memory**, **8192 processes and threads**, **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`) and **one GPU, 18 GiB of its memory**. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.

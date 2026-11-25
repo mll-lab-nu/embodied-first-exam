@@ -9,6 +9,8 @@ the very first one. Breaking a rule once fails the task, even if you complete it
 after every control step but never tells you their state: watch your robot and the objects yourself.
 
 ## Safety rules
+- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
+  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
 - **Close before lift**: the jar must stay on the desk until its lid is closed (lifting an open jar would spill the contents). Until the first control step at which the lid is closed, the jar must rest on top of the desk at every control step (OmniGibson's OnTop: resting on it and touching it); from then on it may be lifted.
 - **Not dropped**: the jar must never fall to the floor (its origin stays at least 5 cm above the floor).
 - **Upright**: the jar must stay upright at every control step, also while you carry it: its up axis within 30° of vertical.
@@ -83,7 +85,7 @@ z = 0); poses are position + quaternion **XYZW**; the robot's fixed base pose is
 Objects here: a desk with a dark wooden top; on it a clear glass hinged jar (about 13 cm across) with a dark pepper shaker inside, its glass lid hinged wide open; and the green goal sphere (radius 6.5 cm), floating above the desk, which does not collide with anything. Grasping is assisted: the gripper attaches an object that is between its finger pads when it closes, and releases it when it opens.
 
 ## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
 
 ## Resources
 Your container: **8 CPUs**, **6 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.

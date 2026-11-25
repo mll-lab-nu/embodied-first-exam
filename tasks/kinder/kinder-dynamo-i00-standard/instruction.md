@@ -5,6 +5,8 @@ arm and a Robotiq 2F-85 gripper -- **as if it were real hardware**: the simulato
 and you reach it only through a client. **Task:** drive the robot into the translucent green square marked on the floor. Three chairs stand in the way, and you may push them. The task succeeds the moment the centre of the robot's base is inside the square. The red, blue and yellow squares only mark where the chairs started. Measured at the start, in the odometry frame (below): the green square's centre is at x = 5.12 m, y = -2.48 m, 5.7 m from the centre of the base and 26° to the right of the way it faces; it is 0.85 m along x by 0.85 m along y, its sides turned about 7° counter-clockwise (seen from above) from the frame's axes.
 
 ## Rules (real-robot rules)
+- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
+  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
 - **No reset: one episode.** The episode starts when the service comes up. It ends when the task succeeds, after
   1000 control steps (100 s of robot time), when your time is up, or on a simulator error; nothing else ends it.
   No other episode follows (`spec()["budget"]["reset"]` is 0, and it is authoritative), and **this episode is graded**: a success ends the run at once, and when your time is up it is graded as it stands. Once it has ended, `submit` raises `EpisodeOver`.
@@ -60,7 +62,7 @@ Each row of a `delta` chunk is 11 numbers, one 10 Hz control step, in the order 
 - `gripper`: 0 = open, 1 = closed (a command, not a change).
 
 ## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
 
 ## Resources
 Your container: **4 CPUs**, **16 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.

@@ -15,6 +15,9 @@ Directions are taken from where you stand at the start: +x is the way you face, 
 
 
 ## The rules
+- **No cheating.** Do not search for, download or use an existing solution to this exact task (published or reference
+  solutions, the benchmark's demonstrations, policies trained for it); trials are reviewed.
+
 **Rule book:** The Asian Jump Rope Union's AC2026 Asian Long Rope Championship Rules (AJRU, IJRU's continental body): event #2 '8 Jumpers' (two turners turn one long rope, the jumpers jump it together; the rope must pass under the feet of the jumpers to score 1 point) with the turners 3.6 m apart, the distance event #1 'Figure 8' sets (event #2 sets none); the common rules (the rope remains still until the start signal; leaving the event area is a space violation); and the IJRU Judging Manual (show freestyle, long rope): a long rope is at least 6.0 m long. Where this task departs from it:
 
 - 8 Jumpers: one jumper (the robot) instead of eight, and a count of consecutive jumps, 10 in a row with no miss, instead of the jumps in 1 minute; the count is the benchmark's qualifying mark, a round number (school long-rope practice counts runs of consecutive jumps; no rule book sets this one)
@@ -212,7 +215,7 @@ sensor; angular velocity `gx, gy, gz`, rad/s; acceleration `ax, ay, az`, m/s², 
 real G1 has no sensor for its position in the venue, and neither do you: that is what the cameras are for.
 
 ## External material
-The network is open. You may install packages (pip, apt), and you may search for, download and use public tools, robot models and pretrained controllers (for example a published Unitree G1 walking, jumping or whole-body policy): finding existing work and adapting it to this robot is encouraged. Say in your notes what you used. You may read anything installed in your container, this benchmark's own source code included. The one thing not to look up is a ready-made solution to this exact task, such as this benchmark's reference solutions. This is an honour rule; trials are reviewed.
+The network is open. You may install packages (pip, apt), and you may search for, download and use public tools, robot models and pretrained controllers (for example a published Unitree G1 walking, jumping or whole-body policy): finding existing work and adapting it to this robot is encouraged. Say in your notes what you used. You may read anything installed in your container, this benchmark's own source code included.
 
 ## Resources
 Your container: **4 CPUs**, **10 GiB of memory**, **8192 processes and threads** and **20 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.

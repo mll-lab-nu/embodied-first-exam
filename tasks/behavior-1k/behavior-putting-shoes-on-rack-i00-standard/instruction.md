@@ -5,6 +5,8 @@ v3.9.2, the 2026 BEHAVIOR Challenge stack) runs in a service you cannot open. Yo
 **Task:** Put the two pairs of shoes on the hall tree. Two gym shoes and two sandals lie on the corridor floor; the hall tree stands in an alcove at one end of the corridor: a low open shoe cabinet with a flat top, under a tall back panel with two small shelves. Every shoe must touch the hall tree and not the floor, and the two gym shoes must be next to each other, and so must the two sandals: the gap between the two shoes' axis-aligned bounding boxes is at most one sixth of the mean of their summed box dimensions (about 6 cm for the gym shoes, 5 cm for the sandals), and nothing lies between them along a horizontal axis (BEHAVIOR's goal for putting_shoes_on_rack). The service checks the goal; it counts once it has held for 1 s, released and at rest (Rules).
 
 ## Rules (real-robot rules)
+- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
+  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
 - **No reset.** The episode starts when the service comes up and ends on success, when the robot has fallen over, when
   your time is up, on a simulator error or breakdown, or at the runaway guard. Whatever you knock over or push away stays where it ends up.
 - **Success is a settled scene**: the goal has held for 1 s of simulated time in a row (30 control steps) with no goal
@@ -101,7 +103,7 @@ position + quaternion **XYZW**.
 This is a long task: the reference solution takes about 6300 control steps (about 3.5 minutes of simulated time), four trips between the shoes and the hall tree, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta["done"]`.
 
 ## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
 
 ## Resources
 Your container: **8 CPUs**, **24 GiB of memory**, **8192 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.

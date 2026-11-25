@@ -87,6 +87,8 @@ Errors: 400 = an invalid action (nothing happens), 409 = not now (not your turn,
 action in flight, or more than 20 requests per second or 4 open requests from your seat (empty body: retry more slowly).
 
 ## Rules
+- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
+  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
 - robot table tennis in a continuous world slowed by a factor S (MuJoCo Franka Panda + paddle on an x-y rail base behind the end line, both held to the real robot's limits: the Panda's joint velocity, acceleration, jerk, torque and torque rate, the rail's speed, acceleration and jerk; DeepMind ball and table model), seen only through two cameras of four frames each; one game to 5 points (lead by 2 from 4:4, at 6:6 the next point wins); the players' robots serve by the ITTF service laws (a toss device on the robot projects the ball at least 16 cm up from a point you choose behind your end line, you strike it as it falls; 2 serves each, from 4:4 one each); format match: you against a scripted opponent (level 1-4; you serve first), format duel: two players.
 - `game_format`: first to 5 points; from 4:4 a lead of 2 is needed; at 6:6 the next point wins (7 at most)
 - `rules`: after exactly one bounce on your half, hit the ball once so that it lands on your opponent's half, directly or after touching the net (the upper table edges count, the vertical sides do not); the same holds for your opponent's returns. You lose the point for a volley, a double hit, two bounces, a miss, a ball that lands on your own half or out, the ball touching your arm or handle while it is over or travelling towards your half, or your robot or paddle touching the net assembly (touching the table is allowed). A shot that passes a player's half without touching it is out, even if it then hits that player's robot. The receiver's 13th good return in a rally wins it the point (expedite rule). At 40 points played (lets included) the player ahead wins, at a level score the player who won the last point
@@ -123,7 +125,7 @@ Everything you need is in `game spec`: the world frame, the release point, the c
 execution scatter. The physics engine is mujoco.
 
 ## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
 
 ## Resources
 Your container: **2 CPUs**, **5 GiB of memory**, **2048 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.

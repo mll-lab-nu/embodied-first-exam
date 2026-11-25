@@ -11,6 +11,9 @@ Directions are taken from where you stand at the start: +x is the way you face, 
 
 
 ## The rules
+- **No cheating.** Do not search for, download or use an existing solution to this exact task (published or reference
+  solutions, the benchmark's demonstrations, policies trained for it); trials are reviewed.
+
 **Rule book:** WDSF Breaking Rules and Regulations Manual (BRRM, version 4, January 2023, the rules of the Paris 2024 qualification): 2.2 'The elements of Breaking' (power moves: spinning moves driven by centrifugal force, the windmill family among the most frequent; in a pure power move set the feet seldom touch the ground); 4.6.4 (judging, the values affecting all domains): 'Crash' (slip, crash, wipe-out: non-intentional loss of physical control); 7.1 Field of Play: a 'Fast Break System Laminate' floor, at least 6.5 m x 6.5 m, advised 8.00 m x 8.00 m, a red line on the right side and a blue line on the left side. Where this task departs from it:
 
 - BRRM judging (Technique, Vocabulary, Originality, Execution, Musicality, compared head to head in a battle): a single power move is judged pass or fail: 3 consecutive windmill revolutions, because the task is one element without a judging panel or an opponent; the BRRM sets no number of revolutions, 3 is this benchmark's choice (a short set)
@@ -178,7 +181,7 @@ sensor; angular velocity `gx, gy, gz`, rad/s; acceleration `ax, ay, az`, m/s², 
 real G1 has no sensor for its position in the venue, and neither do you: that is what the cameras are for.
 
 ## External material
-The network is open. You may install packages (pip, apt), and you may search for, download and use public tools, robot models and pretrained controllers (for example a published Unitree G1 walking, jumping or whole-body policy): finding existing work and adapting it to this robot is encouraged. Say in your notes what you used. You may read anything installed in your container, this benchmark's own source code included. The one thing not to look up is a ready-made solution to this exact task, such as this benchmark's reference solutions. This is an honour rule; trials are reviewed.
+The network is open. You may install packages (pip, apt), and you may search for, download and use public tools, robot models and pretrained controllers (for example a published Unitree G1 walking, jumping or whole-body policy): finding existing work and adapting it to this robot is encouraged. Say in your notes what you used. You may read anything installed in your container, this benchmark's own source code included.
 
 ## Resources
 Your container: **4 CPUs**, **10 GiB of memory**, **8192 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.

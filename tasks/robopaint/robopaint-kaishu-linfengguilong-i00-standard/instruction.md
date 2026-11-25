@@ -5,6 +5,8 @@ a dynamic model of a real brush) **as if it were real hardware**: the simulator 
 client and one episode. **Task (臨帖):** copy the exemplar work **麟鳳龜龍**, shown in the picture `/app/target.png`, onto the main sheet with brush and ink, **in at most 71 strokes**. It is 4 characters in regular script (楷书), in two columns read right to left.
 
 ## Rules (real-robot rules)
+- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
+  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
 - **No reset.** The episode starts when the service comes up and ends when your time is up (or on a simulator error). Ink is
   permanent: every stroke you make stays on the paper.
 - **No privileged state.** You see what the cameras see (RGB; depth on request) plus the robot's own joint positions, velocities and
@@ -143,7 +145,7 @@ The exemplar derives from the fonts AR PL KaitiM GB / AR PL UKai (Arphic Public 
 `/app/NOTICE-exemplar.md`.
 
 ## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
 
 ## Resources
 Your container: **8 CPUs**, **5 GiB of memory**, **2048 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.

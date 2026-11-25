@@ -185,18 +185,16 @@ RTX_GPU_MODELS = ("L40S", "L40", "L4", "RTX 4090", "RTX 6000 Ada", "RTX PRO 6000
 ENFORCE_ENV = "RCB_LIMITS_ENFORCE"   # §6: run-time switch (compose default 0 = record only; 1 = the monitor's backstop)
 RESOURCES_HEADING = "## Resources"
 OLD_RESOURCES_HEADINGS = ("## Resource limits",)   # another name of the section (normalize replaces it)
-# PROTOCOL §5: an honour rule, the same words in every task's instruction.md, just before `## Resources` (rendered
-# by normalize: edit it here, never in a task;
-# ci_checks/check-resources.py compares). Installing packages and reading whatever is installed in the container (the
-# simulator's and the benchmark's own source included) are fine; searching the web for, or downloading, a ready-made
-# solution to the task is not. No threat: trials are reviewed, the maintainers decide.
+# PROTOCOL §5: what a task may use from outside, the same words in every task's instruction.md, just before
+# `## Resources` (rendered by normalize: edit it here, never in a task; ci_checks/check-resources.py compares).
+# Installing packages and reading whatever is installed in the container (the simulator's and the benchmark's own
+# source included) are fine. The prohibition (no existing solution) is not here: it is the first rule of the task's
+# rules section (NO_CHEATING, place_no_cheating).
 EXTERNAL_HEADING = "## External material"
 EXTERNAL_TEXT = (
     "You may install packages you need (pip, apt), and you may read anything installed in your container, the "
-    "simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web "
-    "for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, "
-    "or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and "
-    "the package registries (PyPI, Debian / Ubuntu archives) only.")
+    "simulator's and this benchmark's own source code included. The network reaches your model's API and the package "
+    "registries (PyPI, Debian / Ubuntu archives) only.")
 # Open network (PROTOCOL §2, Appendix H.6): the task author's choice, declared as
 # `[agent] network_mode = "public"` in task.toml (network_of). Such a task carries its own `## External material` paragraph (the author
 # says what may be used); normalize keeps it, and writes EXTERNAL_TEXT_OPEN where it has none.
@@ -204,8 +202,18 @@ EXTERNAL_TEXT_OPEN = (
     "The network is open. You may install packages (pip, apt), and you may search for, download and use public tools, "
     "robot models and pretrained controllers: finding existing work and adapting it to this task is encouraged. Say in "
     "your notes what you used. You may read anything installed in your container, this benchmark's own source code "
-    "included. The one thing not to look up is a ready-made solution to this exact task, such as this benchmark's "
-    "reference solutions. This is an honour rule; trials are reviewed.")
+    "included.")
+# PROTOCOL §5 (owner 11-24): the one anti-cheating rule, emphasized, as the first rule of the task's rules section
+# (RULES_HEADING_RE; a task without one gets a `## Rules` section of its own). Rendered by normalize
+# (place_no_cheating): edit it here, never in a task. The same words as the v2 rule (V2_RULE_OWN). An open-network task
+# may use existing work (pretrained controllers too), so its rule names only a solution to this exact task.
+NO_CHEATING = ("**No cheating.** Write your own controller. Do not search for, download or use any existing solution "
+               "(published or reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.")
+NO_CHEATING_OPEN = ("**No cheating.** Do not search for, download or use an existing solution to this exact task "
+                    "(published or reference solutions, the benchmark's demonstrations, policies trained for it); "
+                    "trials are reviewed.")
+RULES_HEADING_RE = re.compile(r"(?m)^## (?:\d+\. )?(?:Rules|The rules|Real-robot rules|Safety rules|Process rules)\b.*$")
+NO_CHEATING_RE = re.compile(r"(?m)^- \*\*No cheating\.\*\*.*\n(?:  \S.*\n)*\n?")
 
 # PROTOCOL §2, §5: the agent's time cutoff. Each task sets its own, in `[agent] timeout_sec` of its task.toml (its author
 # decides it in the pull request that adds or changes the task), as in Terminal-Bench. There is no table: normalize
@@ -883,6 +891,28 @@ def render_external(task: "Path | str" = "") -> str:
     return EXTERNAL_HEADING + "\n" + text + "\n"
 
 
+def no_cheating_rule(task: "Path | str" = "") -> str:
+    """The task's `**No cheating.**` rule (NO_CHEATING; NO_CHEATING_OPEN for an open-network task)."""
+    return NO_CHEATING_OPEN if isinstance(task, Path) and network_of(task) == "open" else NO_CHEATING
+
+
+def place_no_cheating(task: "Path | str", s: str) -> str:
+    """instruction.md (v1) with the `**No cheating.**` rule as the first bullet of its rules section (the first H2 that
+    RULES_HEADING_RE matches); a task without such a section gets `## Rules` with that one rule at its end, before the
+    sections normalize renders. Any earlier copy of the rule is replaced."""
+    s = NO_CHEATING_RE.sub("", s)
+    bullet = _wrap_bullet(no_cheating_rule(task)) + "\n"
+    m = RULES_HEADING_RE.search(s)
+    if not m:
+        return s.rstrip() + "\n\n## Rules\n" + bullet
+    at = m.end() + 1
+    while s[at:at + 1] == "\n":
+        at += 1
+    rest = s[at:]
+    sep = "" if rest.startswith("- ") else "\n"
+    return s[:m.end()] + "\n" + bullet + sep + rest
+
+
 def cutoff_for(task: Path) -> int | None:
     """The agent's time cutoff of a task in seconds: its own `[agent] timeout_sec` (PROTOCOL §2), the one source of the
     number. None when task.toml has none, or one that is not a whole positive number of seconds (ci_checks/check-cutoffs.py
@@ -1374,6 +1404,7 @@ def normalize_instruction(task: Path) -> None:
         s = strip_cutoff(s)
     for heading in (AGENT_END_HEADING, EXTERNAL_HEADING, RESOURCES_HEADING, *OLD_RESOURCES_HEADINGS):
         s = re.sub(rf"(?ms)^{re.escape(heading)}[ \t]*(?:\n.*?)?(?=^## |\Z)", "", s)
+    s = place_no_cheating(task, s)
     ae = render_agent_end(task)
     s = s.rstrip() + "\n\n" + (ae + "\n" if ae else "") + render_external(task) + "\n" + render_resources(task)
     if sec is not None:

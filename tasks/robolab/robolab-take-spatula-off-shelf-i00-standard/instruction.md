@@ -4,6 +4,8 @@ You control a **Franka Panda arm with a Robotiq 2F-85 gripper** (NVIDIA RoboLab'
 hardware**: the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Take the spatula off the shelf and put it on the table. Success: The spatula on the wire shelf must end outside the wire shelf and lying on the table, and the gripper must no longer touch it. "Outside" means the centre of the object's convex hull is not within the container's convex hull extended along the container's own up axis. "On the table" means the table supports it (its contact force points upwards, within 45 deg of vertical).
 
 ## Rules (real-robot rules)
+- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
+  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
 - **No reset.** The episode starts when the service comes up and ends on success (at the first control step where the
   success condition holds), when your time is up, or on a simulator error. Knocked-over objects stay knocked over. When
   your session ends the service holds your last command for 30 more control steps (2 s) while it checks the condition,
@@ -87,7 +89,7 @@ Cameras: `egocentric_mirrored_camera` (static, facing the robot across the table
 Objects here: a wire shelf, a spatula, a small plate, a large fork, a small fork, a white mug with a blue pattern, a white mug and a red mug. The spatula and a small fork lie on a level of the wire shelf, which stands on the table on the robot's left (+y); only the spatula counts. The Robotiq opens to 8.5 cm. The episode ends by itself the moment the success condition above holds.
 
 ## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
 
 ## Resources
 Your container: **8 CPUs**, **24 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.

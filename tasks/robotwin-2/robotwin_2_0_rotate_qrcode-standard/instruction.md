@@ -4,6 +4,8 @@ You control a dual-arm **ALOHA-AgileX** robot **as if it were real hardware**: t
 cannot open. You get one client and one episode. **Task:** Pick up the QR-code board and set it back down on the table standing upright, with the QR code facing straight toward you. Then let go. The success check, run at the end of every call, passes when the board is back on the table (its base below z = 0.75 m), stands upright with the QR code facing the robot (toward -y) (the check: the board's orientation quaternion in the world frame, in (w, x, y, z) order with its sign chosen so that w ≥ 0, differs from (0.707, 0.707, 0, 0) by less than 0.05 in every component; this holds whenever the board is within 5.5 degrees of that orientation and can fail from about 5.7 degrees on, depending on the axis of the deviation), and both grippers are commanded open (above 0.8).
 
 ## Rules (real-robot rules)
+- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
+  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
 - **No reset.** The episode starts when the service comes up and ends on success, when your time is up, or on a
   simulator error. Knocked-over objects stay knocked over.
 - **No privileged state.** You see what the cameras see (RGB, optional depth) plus the robot's own joint positions,
@@ -72,7 +74,7 @@ at every returned frame.
 Table top at z ≈ 0.74 m. The scene's objects are what the cameras show.
 
 ## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
 
 ## Resources
 Your container: **3 CPUs**, **4 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.

@@ -12,6 +12,9 @@ You stand at the top of the course on the level start platform, which is about 6
 Units are metres. The venue text, the rules and `s.state()` all use the venue's frame. At the start, your pelvis is roughly above the point x = -3.2, y = 0, and you face +x, with +y to your left. +z is up. The course is not level, and the snow is at z = 0 where x = 0. 
 
 ## The rules
+- **No cheating.** Do not search for, download or use an existing solution to this exact task (published or reference
+  solutions, the benchmark's demonstrations, policies trained for it); trials are reviewed.
+
 **Rule book:** FIS International Competition Rules (ICR), Book IV, Alpine, edition 2025: Art. 614.2 (gates, no continuing after a missed gate or a stop), 661.4.1 and 661.4.1.1 (a gate is passed when both ski tips and both feet cross the gate line, the shortest line on the snow between the inner poles of its two pole pairs), 680 (flex turning poles), 690 and 901.2.2 (panels of about 75 x 50 cm, their lower edge at least 1 m above the snow), 901 (giant slalom technical data: a gate of four poles and two panels, alternately red and blue, 4-8 m wide, at least 10 m between the nearest poles of consecutive gates, direction changes 11-15 % of the vertical drop), 902-903 (the course). Where this task departs from it:
 
 - ICR 901.1 (vertical drop 250-450 m, U16-U14 200-350 m): the course is 640.0 m long on a slope of 18.3 degrees, a vertical drop of about 200 m, the U16-U14 minimum (the category of racers the robot's size), with 26 gates: direction changes about 13 % of the vertical drop (901.2.4: 11-15 %).
@@ -167,7 +170,7 @@ What the platform does and does not do for you:
   failure: "the simulation became unstable".
 
 ## External material
-The network is open. You may install packages (pip, apt), and you may search for, download and use public tools, robot models and pretrained controllers (for example a published Unitree G1 walking, jumping or whole-body policy): finding existing work and adapting it to this robot is encouraged. Say in your notes what you used. You may read anything installed in your container, this benchmark's own source code included. The one thing not to look up is a ready-made solution to this exact task, such as this benchmark's reference solutions. This is an honour rule; trials are reviewed.
+The network is open. You may install packages (pip, apt), and you may search for, download and use public tools, robot models and pretrained controllers (for example a published Unitree G1 walking, jumping or whole-body policy): finding existing work and adapting it to this robot is encouraged. Say in your notes what you used. You may read anything installed in your container, this benchmark's own source code included.
 
 ## Resources
 Your container: **8 CPUs**, **16 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.

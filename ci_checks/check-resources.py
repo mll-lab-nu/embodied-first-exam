@@ -207,6 +207,10 @@ def check(task: Path) -> list[str]:
     elif not ins[: -len(want)].endswith("\n" + render_external(task) + "\n"):   # v1
         errs.append("instruction.md does not state `## External material` (PROTOCOL §5; scripts/task_conventions.py "
                     f"EXTERNAL_TEXT) just before `{RESOURCES_HEADING}`")
+    elif (task / "instruction.md").read_text().find(tconv._wrap_bullet(tconv.no_cheating_rule(task))) < 0 or \
+            tconv.place_no_cheating(task, ins) != ins:   # v1: the No cheating rule, first in the rules section
+        errs.append("instruction.md does not have the `**No cheating.**` rule (PROTOCOL §5; scripts/task_conventions.py "
+                    f"NO_CHEATING) as the first rule of its rules section (run python3 scripts/task_conventions.py {rel(task)})")
     readme = (task / "README.md").read_text() if (task / "README.md").is_file() else ""
     if "\n".join(readme_resources(task, readme)) not in readme:
         errs.append(f"README.md `{RESOURCES_HEADING}` does not match the caps (run python3 scripts/task_conventions.py "

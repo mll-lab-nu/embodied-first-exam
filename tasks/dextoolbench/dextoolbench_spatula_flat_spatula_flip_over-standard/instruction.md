@@ -8,6 +8,8 @@ You control the robot **as if it were real hardware**: the simulator runs in a s
 client and **20 resets**: at most 21 episodes, of which the last is graded.
 
 ## Rules (real-robot rules)
+- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
+  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
 - **Episodes and resets.** You have **20 resets** (`spec()["budget"]["reset"]`, which is authoritative: if it says 0,
   there is no reset and the one episode is the run). `r.reset()` puts the robot, the tool and the goals back to the same
   starting state and starts a new episode, either abandoning the running one or after one has ended. Within an episode
@@ -20,7 +22,6 @@ client and **20 resets**: at most 21 episodes, of which the last is graded.
   request to the service: it never runs out before your time does, so plan by it. There is nothing to hand in: the
   service records every episode, and grades the last one as the trajectory. Leave your script at `/app/output/gen.py` for the
   record.
-- Do not use pretrained manipulation policies or any published solution for this benchmark; write your own controller.
 - Images come back as arrays in a Python object; what you look at and where you store it is up to your code.
 
 ## Scoring
@@ -62,7 +63,7 @@ goal is reached or at the step limit (`spec["max_control_steps"]`); after that `
 One call returns at most 3000 images (`max_frames_per_call`, PROTOCOL §3 "Images per call").
 
 ## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
 
 ## Resources
 Your container: **3 CPUs**, **16 GiB of memory**, **1024 processes and threads** and **11 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.

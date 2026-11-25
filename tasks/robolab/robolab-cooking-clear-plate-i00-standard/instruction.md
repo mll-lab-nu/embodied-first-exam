@@ -4,6 +4,8 @@ You control a **Franka Panda arm with a Robotiq 2F-85 gripper** (NVIDIA RoboLab'
 hardware**: the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Put the two measuring cups outside of the plate. Success: The orange measuring cup and the small blue measuring scoop, which start on the clay plate, must end outside the clay plate, and, at that moment, the gripper must touch neither (let go of both at the end). "Outside" means the centre of the object's convex hull is not within the container's convex hull extended along the container's own up axis. Each of them must also rest on the table top: the contact force between the object and the table is at least 0.1 N and points upwards, within 45° of vertical. An object held in the air, resting only on other objects, or dropped on the floor does not count.
 
 ## Rules (real-robot rules)
+- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
+  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
 - **No reset.** The episode starts when the service comes up and ends on success (at the first control step where the
   success condition holds), when your time is up, or on a simulator error. Knocked-over objects stay knocked over. When
   your session ends the service holds your last command for 30 more control steps (2 s) while it checks the condition,
@@ -87,7 +89,7 @@ Cameras: `egocentric_mirrored_camera` (static, facing the robot across the table
 Objects here: a red onion, a serving bowl, a flat clay plate, a wooden spatula, a spatula, two utensil holders, a tomato sauce can, an orange measuring cup, a pink spaghetti spoon, a small blue measuring scoop, a green serving spoon, a ladle, a wooden bowl and a potato masher. The Robotiq opens to 8.5 cm. The episode ends by itself the moment the success condition above holds.
 
 ## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
 
 ## Resources
 Your container: **8 CPUs**, **24 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.

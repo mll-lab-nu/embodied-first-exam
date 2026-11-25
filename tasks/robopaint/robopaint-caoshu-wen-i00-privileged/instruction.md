@@ -52,6 +52,9 @@ trajectory**, not a general policy.
   scores the resulting sheet, so a call after a long episode takes as long as that replay.
 
 ## Process rules
+- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
+  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
+
 Write the character with brush strokes, the way a person writes it: each stroke of the exemplar is written along its length,
 with the brush pressed for the stroke's width (vary the press where the width changes); going over a stroke again is fine.
 Colouring in or filling the shapes, zigzag or serpentine fills, and contour-offset fills (paths that go round and round inside a
@@ -144,7 +147,7 @@ The grader replays once, in a fresh process, exactly this CLI (a fresh process, 
   public domain); rendered by Embodied First Exam (RoboPaint): `/app/NOTICE-exemplar.md`.
 
 ## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
 
 ## Resources
 Your container: **8 CPUs**, **12 GiB of memory**, **2048 processes and threads**, **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`) and **one GPU, 3 GiB of its memory**. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.

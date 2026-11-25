@@ -25,6 +25,8 @@ client and one episode. **Task:** Thread the rope through the cyan grommet in th
 - Grading: the live episode is the verdict: success needs it to succeed with the thresholds above (within its confirmation time); a live failure is final. Nothing is replayed to grade it: the video is rendered afterwards from the recorded rows and never changes the grade.
 
 ## Rules (real-robot rules)
+- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
+  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
 - **No reset.** The episode ends on success (all final conditions satisfied for
   0.5 s), when your time is up, on a simulator error, or when the task's own failure predicate fires (then `meta["reason"]` is `task_failed`). Knocked-over objects stay
   knocked over.
@@ -121,7 +123,7 @@ Grasping: assisted grasping (contact_weld_v1): a gripper whose command moves tow
 Objects here: `A`, `A_pedestal`, `G1`, `G2`, `G3`, `P1`, `P2`, `T`, `T_pedestal`, `bulkhead_corner00`, `bulkhead_corner01`, `bulkhead_corner02`, `bulkhead_corner03`, `bulkhead_corner10`, `bulkhead_corner11`, `bulkhead_corner12`, `bulkhead_corner13`, `bulkhead_corner20`, `bulkhead_corner21`, `bulkhead_corner22`, `bulkhead_corner23`, `bulkhead_lintel0`, `bulkhead_lintel1`, `bulkhead_lintel2`, `bulkhead_sill0`, `bulkhead_sill1`, `bulkhead_sill2`, `bulkhead_strip0`, `bulkhead_strip1`, `bulkhead_strip2`, `bulkhead_strip3`, `left_base_riser`, `right_base_riser`, `rope`.
 
 ## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
 
 ## Resources
 Your container: **4 CPUs**, **16 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.

@@ -11,6 +11,9 @@ Directions are taken from where you stand at the start: +x is the way you face, 
 
 
 ## The rules
+- **No cheating.** Do not search for, download or use an existing solution to this exact task (published or reference
+  solutions, the benchmark's demonstrations, policies trained for it); trials are reviewed.
+
 **Rule book:** IFAB Laws of the Game 2025/26: Law 1 (the goal 7.32 m x 2.44 m, posts and crossbar 12 cm wide; the penalty area 16.5 m deep), Law 2 (a size-5 ball: 68-70 cm round, 410-450 g), Law 10 (a goal: the whole ball passes over the goal line between the posts and under the crossbar), Law 13 (free kicks: a direct free kick, the ball stationary, in play when it is kicked and clearly moves; the kicker may not touch it again until it has touched another player; all opponents at least 9.15 m from the ball until it is in play) and the glossary (a kick: contact with the foot and/or the ankle). Where this task departs from it:
 
 - Law 13 (the opponents): the defensive wall is 4 free-standing training mannequins (FORZA senior free-kick mannequin size: 1.75 m tall, 0.5 m wide) on FORZA's 13.0 kg rubber base, side by side with their faces 9.15 m from the ball, covering the near post. They are free bodies standing on the grass (rubber on grass, friction 0.8: an estimate): a ball that hits one can rock, slide or topple it. They do not jump, and there is no goalkeeper and no other player: opponents cannot be simulated otherwise.
@@ -177,7 +180,7 @@ sensor; angular velocity `gx, gy, gz`, rad/s; acceleration `ax, ay, az`, m/s², 
 real G1 has no sensor for its position in the venue, and neither do you: that is what the cameras are for.
 
 ## External material
-The network is open. You may install packages (pip, apt), and you may search for, download and use public tools, robot models and pretrained controllers (for example a published Unitree G1 walking, jumping or whole-body policy): finding existing work and adapting it to this robot is encouraged. Say in your notes what you used. You may read anything installed in your container, this benchmark's own source code included. The one thing not to look up is a ready-made solution to this exact task, such as this benchmark's reference solutions. This is an honour rule; trials are reviewed.
+The network is open. You may install packages (pip, apt), and you may search for, download and use public tools, robot models and pretrained controllers (for example a published Unitree G1 walking, jumping or whole-body policy): finding existing work and adapting it to this robot is encouraged. Say in your notes what you used. You may read anything installed in your container, this benchmark's own source code included.
 
 ## Resources
 Your container: **4 CPUs**, **10 GiB of memory**, **8192 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.

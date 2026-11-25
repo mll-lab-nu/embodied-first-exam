@@ -17,6 +17,8 @@ The robot and the scene are simulated, and this session is part of an evaluation
 scored afterwards.
 
 ## Real-robot rules
+- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
+  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
 - **One episode, no reset.** It starts when the service comes up and ends at an exit (below), when your time is up (the
   time limit, `## Time limit`), or after `spec()["max_control_steps"]` control steps (45000, a technical cap:
   900 s of robot time). After it has ended nothing more can be done.
@@ -178,7 +180,7 @@ torque (N m) at the wrist flange in the flange's frame, the hand's own weight in
 The columns: `left_q_joint1`, `left_q_joint2`, `left_q_joint3`, `left_q_joint4`, `left_q_joint5`, `left_q_joint6`, `left_dq_joint1`, `left_dq_joint2`, `left_dq_joint3`, `left_dq_joint4`, `left_dq_joint5`, `left_dq_joint6`, `left_gripper`, `left_gripper_opening_m`, `left_tcp_x`, `left_tcp_y`, `left_tcp_z`, `left_tcp_qw`, `left_tcp_qx`, `left_tcp_qy`, `left_tcp_qz`, `left_ft_fx`, `left_ft_fy`, `left_ft_fz`, `left_ft_tx`, `left_ft_ty`, `left_ft_tz`, `right_q_joint1`, `right_q_joint2`, `right_q_joint3`, `right_q_joint4`, `right_q_joint5`, `right_q_joint6`, `right_dq_joint1`, `right_dq_joint2`, `right_dq_joint3`, `right_dq_joint4`, `right_dq_joint5`, `right_dq_joint6`, `right_gripper`, `right_gripper_opening_m`, `right_tcp_x`, `right_tcp_y`, `right_tcp_z`, `right_tcp_qw`, `right_tcp_qx`, `right_tcp_qy`, `right_tcp_qz`, `right_ft_fx`, `right_ft_fy`, `right_ft_fz`, `right_ft_tx`, `right_ft_ty`, `right_ft_tz`, `time_s`.
 
 ## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
 
 ## Resources
 Your container: **4 CPUs**, **8 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.

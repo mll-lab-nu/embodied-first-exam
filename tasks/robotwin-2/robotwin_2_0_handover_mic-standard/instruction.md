@@ -4,6 +4,8 @@ You control a dual-arm **ALOHA-AgileX** robot **as if it were real hardware**: t
 cannot open. You get one client and one episode. **Task:** Pick up the microphone with the arm on its side of the table and hand it over to the other arm. End with the other arm holding it up, roughly 20 cm above the table on its own side, and the first arm's gripper open. The success check, run at the end of every call, passes when the arm on the side opposite to where the microphone lies at the start has taken it over (if it starts on the right half of the table, x > 0, the left arm must hold it; if on the left half, the right arm): that arm's gripper is commanded closed (below 0.2), the other gripper is commanded open (above 0.8), a gripper is touching the microphone, and the microphone's reference point (the end of its handle, the end away from the round blue head [functional point 0]) is above z = 0.92 m (18 cm above the table top) on the holding arm's side of the centre line (x < 0 for the left arm, x > 0 for the right arm).
 
 ## Rules (real-robot rules)
+- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
+  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
 - **No reset.** The episode starts when the service comes up and ends on success, when your time is up, or on a
   simulator error. Knocked-over objects stay knocked over.
 - **No privileged state.** You see what the cameras see (RGB, optional depth) plus the robot's own joint positions,
@@ -72,7 +74,7 @@ at every returned frame.
 Table top at z ≈ 0.74 m. The scene's objects are what the cameras show.
 
 ## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
 
 ## Resources
 Your container: **3 CPUs**, **4 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.

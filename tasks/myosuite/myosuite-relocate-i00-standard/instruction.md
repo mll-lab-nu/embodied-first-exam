@@ -7,6 +7,8 @@ you cannot open. You get one client and up to 11 episodes, and you act only thro
 An object stands on the table in front of the arm; a receptacle marks the target position.
 
 ## Rules
+- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
+  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
 - **Episodes and resets.** The episode starts when the service comes up and ends on success (the goal held 100 control steps, 1.0 s), on the task's failure, when your time is up, or on
   a simulator error. You have **10 resets** (`spec["budget"]["reset"]`, which is authoritative: if it says
   0, there is no reset and the one episode is the run). A reset (`POST /reset`, below) puts the body and the scene back
@@ -56,7 +58,7 @@ previous command) or `"hold"`; the client sends them as float32. The control rat
 substeps); there is no step budget.
 
 ## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
 
 ## Resources
 Your container: **4 CPUs**, **7 GiB of memory**, **2048 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.

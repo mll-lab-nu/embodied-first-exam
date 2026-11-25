@@ -4,6 +4,8 @@ You control a **Franka Panda arm with a Robotiq 2F-85 gripper** (NVIDIA RoboLab'
 hardware**: the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Put the rubiks cube behind the bowl. Success: In the robot's base frame (the env-local frame the proprio end-effector pose uses: x forward, away from the robot; y to its left), the horizontal direction from the bowl's centre to the cube's reference point (a point on one face of the cube, described below) must lie within 45 deg of the robot's forward (+x) axis (behind the bowl: farther from the robot), the cube must touch the table, and the gripper must have let go of the cube. There is no distance limit. The cube's reference point [its asset origin] lies on one face of the cube, about 3 cm from its geometric centre (at the start, on the face towards the robot's right, -y), so leave a margin rather than aiming at the edge of the cone.
 
 ## Rules (real-robot rules)
+- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
+  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
 - **No reset.** The episode starts when the service comes up and ends on success (at the first control step where the
   success condition holds), when your time is up, or on a simulator error. Knocked-over objects stay knocked over. When
   your session ends the service holds your last command for 30 more control steps (2 s) while it checks the condition,
@@ -87,7 +89,7 @@ Cameras: `egocentric_mirrored_camera` (static, facing the robot across the table
 Objects here: a red bowl, a Rubik's cube and a banana. The Robotiq opens to 8.5 cm. The episode ends by itself the moment the success condition above holds.
 
 ## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
 
 ## Resources
 Your container: **8 CPUs**, **24 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.

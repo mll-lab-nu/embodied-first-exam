@@ -12,6 +12,9 @@ You stand on level grass in the middle of a 5.0 m x 5.0 m grid marked by white l
 Units are metres. The origin is on the floor under your pelvis at the start. +x is the way you face at the start, +y is to your left and +z is up. The floor is at z = 0. 
 
 ## The rules
+- **No cheating.** Do not search for, download or use an existing solution to this exact task (published or reference
+  solutions, the benchmark's demonstrations, policies trained for it); trials are reviewed.
+
 **Rule book:** Ontario Soccer, OPDL Player Technical Benchmark Exercises (2015): Ball Mastery, juggled on the instep (the exercise list's 'one attempt on each instep', the warm-up's 'instep right juggling' and 'instep left juggling'): the ball starts in the hands, the player works in a 5 m x 5 m grid and has 60 seconds, the maximum number of consecutive juggles is recorded, and the ground, another surface or stepping out of the grid stops the count; the test sets no pass mark, so the family's standard is 10 consecutive foot juggles (the first milestone of youth juggling ladders and the standard of the existing juggling family). IFAB Laws of the Game 2025/26 for the ball (Law 2: size 5, 68-70 cm round, 410-450 g) and for handling (Law 12: the hand or the arm). Where this task departs from it:
 
 - The test's either-instep attempts are one attempt here in which either foot may play, in any order.
@@ -165,7 +168,7 @@ What the platform does and does not do for you:
   failure: "the simulation became unstable".
 
 ## External material
-The network is open. You may install packages (pip, apt), and you may search for, download and use public tools, robot models and pretrained controllers (for example a published Unitree G1 walking, jumping or whole-body policy): finding existing work and adapting it to this robot is encouraged. Say in your notes what you used. You may read anything installed in your container, this benchmark's own source code included. The one thing not to look up is a ready-made solution to this exact task, such as this benchmark's reference solutions. This is an honour rule; trials are reviewed.
+The network is open. You may install packages (pip, apt), and you may search for, download and use public tools, robot models and pretrained controllers (for example a published Unitree G1 walking, jumping or whole-body policy): finding existing work and adapting it to this robot is encouraged. Say in your notes what you used. You may read anything installed in your container, this benchmark's own source code included.
 
 ## Resources
 Your container: **8 CPUs**, **16 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.

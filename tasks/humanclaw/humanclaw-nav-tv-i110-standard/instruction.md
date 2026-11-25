@@ -5,6 +5,8 @@ scene) **as if it were a real body**: the simulator runs in a service you cannot
 through a client. The body moves only by **motion skills**. **Task (HumanCLAW's own words):** Find the TV and move until your body is touching the target, with zero distance to the target object. In plain words: walk up to a TV and stop right next to it, about 20 cm away or closer.
 
 ## Rules
+- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
+  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
 - **One episode, no reset.** It starts when the service comes up and ends at your **stop** action (the only way
   to succeed), at the 100th action whatever it is, when your time is up, or on a simulator error.
 - **Time moves only inside calls.** Each action is one 0.5 s motion; between calls the body waits while you
@@ -55,7 +57,7 @@ res.last["ego"]                              # what the head camera sees after t
 One call returns at most 3000 images (`max_frames_per_call`, PROTOCOL §3 "Images per call").
 
 ## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
 
 ## Resources
 Your container: **4 CPUs**, **3 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.

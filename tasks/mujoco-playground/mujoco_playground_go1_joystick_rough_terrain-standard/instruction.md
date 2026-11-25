@@ -23,6 +23,8 @@ For 20 s (1000 control steps) it is given this command schedule, drawn by Playgr
 The same schedule is `spec["command_schedule"]`; every response's `meta["command_now"]` is the current command.
 
 ## Rules (real-robot rules)
+- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
+  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
 - **Episodes and resets.** You have **10 resets** (`spec["budget"]["reset"]`, which is authoritative: if it
   says 0, there is no reset and the one episode is the run). A reset (`POST /reset`, below) puts the robot back on the
   same frozen starting state and starts a new episode, either abandoning the running one or after one has ended; it
@@ -70,7 +72,7 @@ Rows are `dt` apart (a whole multiple of the 0.02 s control period, at most 0.5 
 means short chunks: each response tells you where the robot is now.
 
 ## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
 
 ## Resources
 Your container: **2 CPUs**, **4 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.

@@ -30,6 +30,8 @@ client and one episode. **Task:** Pick up the two-tab key from its rest. Insert 
 - Grading: the live episode is the verdict: success needs it to succeed with the thresholds above (within its confirmation time); a live failure is final. Nothing is replayed to grade it: the video is rendered afterwards from the recorded rows and never changes the grade.
 
 ## Rules (real-robot rules)
+- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
+  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
 - **No reset.** The episode ends on success (all final conditions satisfied for
   0.5 s), when your time is up, on a simulator error, or when the task's own failure predicate fires (then `meta["reason"]` is `task_failed`). Knocked-over objects stay
   knocked over.
@@ -126,7 +128,7 @@ Grasping: assisted grasping (contact_weld_v1): a gripper whose command moves tow
 Objects here: `lock_base`, `lock_disc_0`, `lock_frame_0`, `lock_disc_1`, `lock_frame_1`, `lock_disc_2`, `lock_frame_2`, `lock_disc_3`, `lock_frame_3`, `key_tray`, `key_tray_post_0`, `key_cradle_0_0`, `key_cradle_0_1`, `key_tray_post_1`, `key_cradle_1_0`, `key_cradle_1_1`, `lock_goal_post`, `lock_goal`, `lock_key`.
 
 ## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
 
 ## Resources
 Your container: **4 CPUs**, **16 GiB of memory**, **4096 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.

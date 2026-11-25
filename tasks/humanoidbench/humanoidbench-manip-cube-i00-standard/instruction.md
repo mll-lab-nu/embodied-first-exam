@@ -5,6 +5,8 @@ it were real hardware**: the simulator runs in a service you cannot open, and yo
 client. **Task:** a cube starts just above and in front of each palm. Rotate both cubes, without dropping them, until each matches the orientation of the translucent cube with the same faces that floats above and between the hands.
 
 ## Rules (real-robot rules)
+- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
+  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
 - **Episodes and resets.** The episode starts when the service comes up. It ends when the task succeeds, when
   the robot falls (its pelvis drops too low), when either cube drops, after 500 control steps (10 s of robot
   time), when your time is up, or on a simulator error. Nothing else ends it: a robot that has fallen without
@@ -91,7 +93,7 @@ and the scale is linear, so 0 is mid-range, not 0 rad. A constant action command
 whether the robot stays there depends on whether that pose is stable under gravity and contact.
 
 ## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
 
 ## Resources
 Your container: **3 CPUs**, **4 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.

@@ -43,12 +43,13 @@ img = s.render("agentview", 256)   # RGB, upright; cameras "agentview" and "wris
 - Everything in `s.env` (robosuite's LIBERO environment) and `s.sim` is readable (privileged mode).
 
 ## Rules
-- Write your own controller. Do not use LIBERO's demonstrations, LIBERO-MAX's policies or any published solution.
+- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
+  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
 - Only the actions count: editing the simulator state while debugging changes nothing in the replay.
 - Save a working trajectory early, then improve it; do not stop early.
 
 ## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
 
 ## Resources
 Your container: **4 CPUs**, **10 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.

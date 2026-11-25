@@ -12,6 +12,9 @@ You stand on the mat facing the dummy (+x); the front of its protector is 0.58 m
 Units are metres. The origin is on the floor under your pelvis at the start. +x is the way you face at the start, +y is to your left and +z is up. The floor is at z = 0. 
 
 ## The rules
+- **No cheating.** Do not search for, download or use an existing solution to this exact task (published or reference
+  solutions, the benchmark's demonstrations, policies trained for it); trials are reviewed.
+
 **Rule book:** World Taekwondo Competition Rules & Interpretation (2024): Article 5 (weight divisions: cadet male -33 kg, the robot's 33 kg), Article 11 (permitted techniques: a foot technique delivered with any part of the foot below the ankle bone; permitted area: the trunk, the area covered by the trunk protector), Article 12 (valid points: a valid kick to the trunk protector scores; the Protector and Scoring System (PSS) decides validity by the level of impact, set per weight division and gender), Article 21 (prohibited acts: falling down is a penalty). Where this task departs from it:
 
 - Article 12 (the PSS level): WT sets the impact level per division in its PSS's own units (KP&P men's levels 18-25 from -58 kg to +80 kg, Choi, Oh and Jeon 2021, BMC Sports Sci Med Rehabil 13:110); no conversion to physical units is published, nor a cadet level. The referee measures the impulse the protector receives during the kick and requires 7.2 N s: the mean minus one standard deviation of elite adult roundhouse kicks on an electronic protector (19.8 +- 4.5 N s input impulse, Chae et al. 2026, PLoS One 21:e0328749; athletes of 70 kg) scaled to a 33 kg athlete by body mass (a kick's impulse is its striking leg's momentum, which scales with body mass).
@@ -164,7 +167,7 @@ What the platform does and does not do for you:
   failure: "the simulation became unstable".
 
 ## External material
-The network is open. You may install packages (pip, apt), and you may search for, download and use public tools, robot models and pretrained controllers (for example a published Unitree G1 walking, jumping or whole-body policy): finding existing work and adapting it to this robot is encouraged. Say in your notes what you used. You may read anything installed in your container, this benchmark's own source code included. The one thing not to look up is a ready-made solution to this exact task, such as this benchmark's reference solutions. This is an honour rule; trials are reviewed.
+The network is open. You may install packages (pip, apt), and you may search for, download and use public tools, robot models and pretrained controllers (for example a published Unitree G1 walking, jumping or whole-body policy): finding existing work and adapting it to this robot is encouraged. Say in your notes what you used. You may read anything installed in your container, this benchmark's own source code included.
 
 ## Resources
 Your container: **8 CPUs**, **16 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.

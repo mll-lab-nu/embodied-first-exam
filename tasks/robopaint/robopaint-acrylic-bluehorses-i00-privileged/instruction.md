@@ -34,6 +34,9 @@ trajectory**, not a general policy.
 - The grader compares the main sheet with the picture: both blurred (σ = 1 mm); **ΔE** = the CIELAB colour difference (ΔE*ab) per pixel over the region where either has paint (dilated by 2 mm): its mean and 90th percentile; **SSIM** of the lightness L* (σ 1.5 mm windows); **edge correlation** = the correlation of the lightness-gradient magnitudes of the two blurred pictures over that region; **paint IoU** of the painted areas (paint coverage ≥ 0.5); the **number of strokes** on the main sheet (painted contacts). **Success iff, after the best single shift of the sheet, at most 5 mm along each axis, mean ΔE ≤ 2.0, p90 ΔE ≤ 6.0, SSIM ≥ 0.92, edge correlation ≥ 0.8, paint IoU ≥ 0.95 and at most 390 strokes.** `final_reward` = max(0, 1 - mean ΔE / 20) (scaled by 390 / strokes above 390). Reported as well: the mean ΔE after a 4 mm blur, the SSIM at a 0.5 mm blur, and per colour region of the picture (the connected areas nearest to one paint, at least 30 mm²) the fraction within ΔE 10: the minimum and the area-weighted mean. `s.score()` returns exactly these metrics for the current sheet: a scoring service (a separate container) replays the actions you have executed since your last `s.reset()` and scores the resulting sheet.
 
 ## Process rules
+- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
+  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
+
 Paint with brush strokes, the way a person paints: each stroke is one sweep of the loaded brush, pressed for the width you want.
 Colouring in or filling areas with a thin line, zigzag or serpentine fills, and contour-offset fills (paths that circle round and
 round inside an area) are not allowed and fail the task, even when the sheet matches the picture. The grader checks this on the
@@ -107,7 +110,7 @@ The grader replays once, in a fresh process, exactly this CLI (a fresh process, 
 - The exemplar is this robot's painting after Franz Marc, *The Large Blue Horses* (1911), a public-domain work (Wikimedia Commons `File:Franz Marc - Die großen blauen Pferde 1911.jpg`, Public domain); the exemplar picture is CC0; libmypaint is ISC, the mypaint-brushes presets CC0 (`/opt/mypaint`).
 
 ## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
 
 ## Resources
 Your container: **8 CPUs**, **12 GiB of memory**, **2048 processes and threads**, **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`) and **one GPU, 3 GiB of its memory**. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
