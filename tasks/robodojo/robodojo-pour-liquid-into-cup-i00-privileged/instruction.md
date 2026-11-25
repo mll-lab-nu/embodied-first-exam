@@ -15,8 +15,9 @@ task succeeds in any replay. Replays of this task can end in different states (t
 particles and does not replay exactly): leave a margin. Save a valid one early and overwrite it when you have a better
 one.
 
-Rules: write your own controller; do not use the benchmark's demonstrations, trained policies or any published solution.
-Only the actions count: changing the simulator's state while you develop changes nothing in the replay.
+Rules: **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published
+or reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed. Only the actions count:
+changing the simulator's state while you develop changes nothing in the replay.
 
 ## Robot Interface
 Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /
@@ -29,7 +30,7 @@ trajectory of robot actions.
 from rcb_robodojo import Session
 s = Session("pour_liquid_into_cup", instance="/app/instance.json")   # ~3-5 min: launches Isaac Sim, builds the scene, resets onto the layout
 s.reset()                          # back to the frozen layout (as often as you like; see the note below)
-s.instruction()                    # RoboDojo's language instruction for this layout (above)
+s.instruction()                    # RoboDojo's own language instruction for this layout
 s.objects()                        # label -> position, orientation_wxyz (env frame), bbox_corners
 s.step(action)                     # one action (14 values) = one control step (1/25 s): see Actions
 s.hold_action()                    # the action that keeps the current targets (what the robot does when idle)
@@ -80,9 +81,7 @@ with this command; run it to self-check (it stops at the first success):
   whole wait time: use short waits or one-shot scripts.
 - Tokens: no separate limit.
 - Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
-  and read anything in your container, the simulator's and the benchmark's source included. Do not search for or
-  download a ready-made solution (published or reference solutions, recorded demonstrations, trained policies); trials
-  are reviewed.
+  and read anything in your container, the simulator's and the benchmark's source included.
 - Resources: 8 CPUs, 39 GiB memory, 8192 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`),
   one GPU (16 GiB of its memory). Over a cap a process can be killed (the CPU cap only slows you down); usage:
   `/run/rcb-limits/usage.json`.

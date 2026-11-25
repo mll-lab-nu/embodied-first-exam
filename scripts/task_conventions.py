@@ -1112,14 +1112,12 @@ LIMITS_TIME_TASK = ("everything counts (waiting for the service too). At the end
 LIMITS_TIME_TASK_MCP = (LIMITS_TIME_TASK[0].replace("(waiting for the service too)", "(the time the tools take too)"),
                         LIMITS_TIME_TASK[1])
 LIMITS_NETWORK = ("your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install "
-                  "packages and read anything in your container{readable}. Do not search for or download a ready-made "
-                  "solution (published or reference solutions, recorded demonstrations, trained policies); trials are "
-                  "reviewed.")
+                  "packages and read anything in your container{readable}.")   # the no-cheating rule: Goal (V2_RULE_OWN)
 LIMITS_READABLE = ", the simulator's and the benchmark's source included"
 LIMITS_READABLE_MCP = ", the files the tools write included"
 LIMITS_NETWORK_OPEN = ("open. You may install packages and search for, download and use public tools, robot models and "
                        "pretrained controllers (say in your notes what you used); you may read anything in your "
-                       "container, the benchmark's source included. Do not look up a ready-made solution to this exact "
+                       "container, the benchmark's source included. Do not look up an existing solution to this exact "
                        "task, such as the benchmark's reference solutions; trials are reviewed.")
 LIMITS_STRICTER = " Additional rules for this task (stricter than the above): "
 LIMITS_OVER_CAP = ("Over a cap a process can be killed (the CPU cap only slows you down); usage: "
@@ -1156,8 +1154,10 @@ V2_RULES_HEAD = "Real-robot rules:"
 V2_RULE_NO_RESET = "One episode, no reset: what you knock over stays knocked over."
 V2_RULE_NO_PRIV = ("No privileged state: you get the robot's camera images (with their calibration) and its own sensor "
                    "readings; no object poses, no scene layout, no success signal.")
-V2_RULE_OWN = ("Write your own controller; do not use the benchmark's demonstrations, trained policies or any published "
-               "solution.")
+# the one anti-cheating rule (owner 11-24), first in Goal's rules (standard: the first of the real-robot rules; privileged:
+# its "Rules:" paragraph); Limits' Network line says only what can be reached, read and installed
+V2_RULE_OWN = ("**No cheating.** Write your own controller. Do not search for, download or use any existing solution "
+               "(published or reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.")
 V2_RULE_TOOLS = ("Tools only: you may write and run code to compute, but every robot command and observation is an "
                  "`efe-robot` tool call you make yourself; no script starts or calls the tool server, and code must not "
                  "contact the simulator (the service's request log is checked against the server's).")
