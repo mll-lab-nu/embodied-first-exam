@@ -5,6 +5,12 @@ the episode, crash recovery and the finalize live in rcb_service.py, which impor
 episode's: step() reports HumanoidBench's own rule (the episode's return reached the pass mark) and the
 episode ends there, so nothing is replayed to grade it; render_video() re-runs the trajectory once, after the verdict, to
 film it. start_sha is the frozen instance's starting state as instance.npz records it, checked when an episode begins.
+Agent-ended episodes (RCB_AGENT_END, PROTOCOL §3; every HumanoidBench standard and realtime task): the pass mark is a
+score earned over the episode, so it is judged as it happened (end_judgement "events": the summed reward reached the
+pass mark at some step); reaching it no longer ends the episode. A fall or another of the task's failure rules ends it
+(reason "failed": 0 before the mark was reached; after it the event stands and the episode is a success, rcb_service
+decision 1), the episode's length (and bookshelf's end once all five objects are placed) as the step cap, judged on the
+score so far.
 Settings come from environment/docker-compose.yaml:
   RCB_TASK, RCB_INSTANCE   which HumanoidBench task, which frozen scene (the privileged twin's instance)
   RCB_TASK_TEXT            one sentence for /spec
@@ -36,7 +42,7 @@ import mujoco  # noqa: E402
 from rcb_rewards import restore  # noqa: E402
 
 restore()  # the scoring formula lives in this sidecar only, and must be back before a Session is opened
-from rcb_service import InstanceMismatch, main  # noqa: E402
+from rcb_service import AGENT_END, InstanceMismatch, main  # noqa: E402
 from humanoid_bench.tasks import Task  # noqa: E402
 
 # HumanoidBench's own non-privileged sensors (humanoid_bench/wrappers.py, ObservationWrapper): `image` renders
@@ -90,6 +96,7 @@ class HumanoidBench:
         self._axes, self._anchors, self._links, self._camera_facts = self._hardware()
         self.image_hw = list(self._render(CAMERAS[0]).shape[:2])   # also warms up the GL context
         self.cmd = self._command_now()
+        self.end_judgement = "events"   # agent-ended episodes: the pass mark reached as the episode ran
 
     def _command_now(self) -> np.ndarray:
         """The servo targets the actuators hold now, in the action's normalised units."""
@@ -267,7 +274,16 @@ class HumanoidBench:
     def step(self, row: np.ndarray) -> tuple[bool, bool, dict]:
         done = self.s.step(row)[2]
         self.cmd = np.asarray(row, dtype=np.float64)
-        return done, bool(self.s.status()["success"]), {}
+        success = bool(self.s.status()["success"])
+        if AGENT_END and done:
+            # the episode's length, or bookshelf's own end once every object is placed (terminated_reason 1): the
+            # step cap, judged on the score so far; any other end is a failure rule (a fall, a dropped object): reason
+            # "failed", a success only if the pass mark was reached before it (end_judgement "events")
+            info = getattr(self.s, "_last_info", None) or {}
+            if self.s.status()["sim_steps"] >= self.max_control_steps or info.get("terminated_reason") == 1:
+                return True, success, {"step_cap": True}
+            return True, False, {}
+        return done, success, {}
 
     def reset(self) -> None:
         self.s.reset()

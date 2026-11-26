@@ -21,5 +21,5 @@ for i in range(0, len(Q), rows_per_chunk):
     print(f"chunk {i // rows_per_chunk}: rows={res.meta['executed_rows']} phys={res.meta['physics_steps_chunk']} clipped={res.meta['n_clipped']} done={res.meta['done']}", flush=True)
     if res.meta["done"]: done = True; print("done:", res.meta["reason"]); break
 if not done:
-    obs = r.get_obs(seconds=1.0, cameras=["head_camera"], video="none"); print("settle:", obs.meta["done"], obs.meta["reason"])
+    obs = r.hold(1.0, cameras=["head_camera"], video="none"); print("settle:", obs.meta["done"], obs.meta["reason"])
 print("status:", r.status(), "wall %.0fs" % (time.time() - t0))

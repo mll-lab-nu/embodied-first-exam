@@ -8,7 +8,7 @@ shelf board at the target, then open both hands and move them away.
 Success: the pot is carried with both hands lifting it, off the worktop and the shelf, for a moment; then it stands
 upright on the shelf board at the target (Robot Interface), fully inside the compartment except that its front handle
 may stick out a little past the board's front edge, resting on the board alone, with both hands opened and moved a
-little away from it, and is still for two seconds. The episode ends as soon as the task is done.
+little away from it, and is still for two seconds.
 
 Any of these ends the episode at once as a failure, which later actions cannot undo:
 - The pot falls or tips over.
@@ -20,21 +20,24 @@ Any of these ends the episode at once as a failure, which later actions cannot u
 - A robot joint is pushed past its range.
 - The physics becomes unstable.
 
+The steps before the last count as they happen. Success is judged on how things stand when the episode ends. It ends
+when you call finish (Limits) or when your session ends. The robot never tells you whether you have succeeded.
+
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
   benchmark's demonstrations, trained policies); trials are reviewed.
 - Episodes: 20 resets (`spec()["budget"]["reset"]`), each a new episode from the same starting state; within an episode
-  what you knock over stays knocked over until you reset. Only the last episode is graded: a success ends the run at
-  once (no reset after it), and when your time is up the episode then running is graded.
-- You get only the cameras and the robot's own sensor readings: no object poses, no scene layout, no score; the episode
-  ends when the task is done, and the service tells you that it ended and why.
+  what you knock over stays knocked over until you reset. Only the last episode is graded: the episode you end with
+  finish (Limits; no reset after it), or else the one running when your session ends.
+- You get only the cameras and the robot's own sensor readings: no object poses, no scene layout, no score, no success
+  signal.
 
 Only the robot's actuator targets act on the scene: no object teleports, grasp welds, scripted object motion or applied
 forces.
 
 ## Robot Interface
 A fixed Tianji Marvin robot with two 7-joint arms and a dexterous hand on each wrist, at a kitchen worktop (DexHand,
-MuJoCo). The robot runs as a service you reach only through its client, as if it were real hardware.
+MuJoCo). The robot runs as a service you reach through its client or its MCP tools, as if it were real hardware.
 
 ### Client
 `/opt/tools/rcb_client.py`:
@@ -55,15 +58,26 @@ res = r._post("/reset", {"cameras": ["overview"]}, [], 900)   # POST /reset (thi
 Requests can return RGB frames or mp4, with depth `none`, `last` or `frames`; each call returns at most 1,000 camera
 images, counting per-frame depth. Frames are rendered in software, about 0.6 s per camera image, and a call records
 `video_fps` frames per simulated second (1 to 50, default 10) whatever `video` returns: lower it for long chunks.
-`get_obs(seconds=...)` holds the current targets for up to 30 s and records those steps; without seconds it only
-observes. No IK primitive is supplied. If the service connection fails, call `r.wait_ready()` and inspect `r.status()`
-before continuing. Crash recovery resumes the same journaled episode, without a reset, and the wall-clock budget keeps
-running.
+`hold(s)` holds the current targets and records those steps; `get_obs()` only observes. No IK primitive is supplied. If
+the service connection fails, call `r.wait_ready()` and inspect `r.status()` before continuing. Crash recovery resumes
+the same journaled episode, without a reset, and the wall-clock budget keeps running.
 
 Resets: `r._post("/reset", ...)` (`POST /reset`) starts a new episode from the same starting state, abandoning the
 running one or after one has ended; it takes no simulated time and returns the start's images and proprioception. Once
 an episode has ended, `submit` raises `EpisodeOver` until you reset. `meta["episode"]` and `meta["resets_left"]` count
 the episodes; `meta["control_steps"]` is the current episode's, `meta["control_steps_total"]` all of them.
+
+### MCP tools
+- The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
+  `observe`, `submit`, `reset`, `kinematics`, `finish`. A tool takes its endpoint's request fields (any other field in
+  `fields`) and returns the service's reply `meta` unchanged; images, arrays and video are written as files under
+  `/app/obs/` (`.png`, `.npy`, `.mp4`) and the result lists them. Long action chunks can be passed as a file
+  (`actions_file`).
+- `observe` returns at once with what is already recorded: the current frame, or the last `last_s` seconds. Time passes
+  only through `submit`, which answers when its rows have run; a `submit` with `interpolate` "hold", `seconds` and no
+  rows lets time pass with the robot holding still.
+- A call still running after 45 s returns `pending` with an `operation` id; `observe(operation=id)` collects its reply.
+- The client and the tools drive the same robot in the same episode; use either, or both.
 
 ### Actions
 `rows` is `(T, 58)` for `sharpa` or `(T, 54)` for `wuji`, in `spec["action_types"]["joint_position"]["layout"]` order
@@ -130,4 +144,8 @@ z = 1.465), and opens toward -y. The target for the pot's base centre is (0.46, 
   slows you down); usage: `/run/rcb-limits/usage.json`.
 - Resets: at most 20 (`spec()["budget"]["reset"]`), each a new episode from the same starting state.
 - Steps: at most 30,000 rows (one per 2 ms physics step) (60 s of simulated time) per episode; an episode that reaches
-  them without success has failed.
+  them ends there and is graded as it stands.
+- Finish: when you are done, call finish: `POST /finish` with an empty JSON body to the service, at the client's base
+  URL (`http://sim:8000` or `http://localhost:8000`; in Python `requests.post(r.base + "/finish", json={})` with your
+  client `r`). It ends the episode, and every call after it is refused. Reaching the goal changes no reply and does not
+  end the episode; if you never call finish, the end of your session ends it.

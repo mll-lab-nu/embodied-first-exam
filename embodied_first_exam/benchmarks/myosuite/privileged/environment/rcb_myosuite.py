@@ -55,6 +55,13 @@ from typing import Any
 import numpy as np
 
 MAX_STEPS = 10_000_000          # runaway guard only; the wall clock is the budget
+# Agent-ended episodes (PROTOCOL §3; the standard service's RCB_AGENT_END, sim/server.py): a success never ends the
+# episode. `success` is the task's verdict on the episode as it now stands: hold, the goal held for the hold time up to
+# now (a failure ends the episode with 0); event, the challenge's success event once it has happened (it stays counted,
+# also when a failure ends the episode later; the challenge's own `done` at the event ends nothing); track, as without
+# it (the episode is the reference motion). `at_limit`: the episode reached its own length (the reference motion, or
+# baoding's 1000 target points), judged as it stands.
+AGENT_END = os.environ.get("RCB_AGENT_END") == "1"
 # the task's `solved` must hold this long (consecutive control steps) to count. 1 s for a fixed goal, so passing
 # through it does not count; baoding's targets circle the palm once every 5 s, so there it is one full orbit (the balls
 # must really rotate: parking them where the moving targets sweep past was enough at 0.25 s).
@@ -415,6 +422,8 @@ class Session:
         self.success = False
         self.reason: str | None = None
         self.solved_run = 0
+        self.event_step: int | None = None
+        self.at_limit = False
         self.last_info: dict[str, Any] = {}
 
     def reset(self) -> None:
@@ -453,12 +462,16 @@ class Session:
             if failed:
                 self.done, self.reason = True, "failure: " + _FAILURE.get(self.task, "task terminated")
             elif self.steps >= self.track_steps:
-                self.done = True
+                self.done = self.at_limit = True
                 self.success = ok and self.track_ok >= TRACK_FRAC * self.track_steps and self.track_max <= TRACK_MAX_M
                 self.reason = "success" if self.success else (
                     f"failure: on track at {self.track_ok} of {self.track_steps} steps"
                     + ("" if ok else ", off track at the end")
                     + (f", {self.track_max:.3f} m off at worst" if self.track_max > TRACK_MAX_M else ""))
+                if AGENT_END:   # the reference motion is over: the end tells nothing about the verdict
+                    self.reason = "limit: the reference motion is over"
+        elif AGENT_END:
+            self._agent_end_rule(solved, failed)
         elif self.solved_run >= self.hold_steps and self.task == "bimanual" and not self._bimanual_contacts_ok():
             self.done, self.reason = True, "failure: placed without a clean hand-over (MyoChallenge's contact check)"
         elif self.solved_run >= self.hold_steps:
@@ -471,7 +484,24 @@ class Session:
         n_goal = len(getattr(self.base, "goal", ())) if self.task == "baoding" else 0
         if not self.done and n_goal and self.steps >= n_goal:
             self.done, self.reason = True, f"failure: the targets' trajectory ends after {n_goal} control steps"
+            if AGENT_END:
+                self.at_limit, self.reason = True, f"limit: the targets' trajectory ends after {n_goal} control steps"
         return not self.done
+
+    def _agent_end_rule(self, solved: bool, failed: bool) -> None:
+        """AGENT_END's hold and event rules (module constants): `success` as the episode now stands, never an end."""
+        if self.rule == "event":
+            if self.event_step is None and solved:
+                if self.task == "bimanual" and not self._bimanual_contacts_ok():
+                    self.done, self.reason = True, "failure: placed without a clean hand-over (MyoChallenge's contact check)"
+                else:
+                    self.event_step, self.success = self.steps, True
+            elif failed and not solved:          # the challenge's own `done` at (and after) its success event is no failure
+                self.done, self.reason = True, "failure: " + _FAILURE.get(self.task, "task terminated")
+            return
+        self.success = self.solved_run >= self.hold_steps
+        if failed:
+            self.done, self.success, self.reason = True, False, "failure: " + _FAILURE.get(self.task, "task terminated")
 
     def _bimanual_contacts_ok(self) -> bool:
         """MyoChallenge 2024's own evaluation of the object's contact history: the MyoHand held it, then the prosthesis,

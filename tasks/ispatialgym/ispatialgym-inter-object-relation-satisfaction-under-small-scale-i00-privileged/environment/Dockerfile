@@ -80,7 +80,7 @@ ENV OMNI_KIT_ACCEPT_EULA=YES HDF5_USE_FILE_LOCKING=FALSE HF_HUB_OFFLINE=1 \
 FROM ispatialgym-base
 COPY instance.json /app/instance.json
 COPY --from=ghcr.io/mll-lab-nu/efe:ispatialgym-goals-files-0.1.0@sha256:a5b14edb2270793a3d97edeb2ff151646532f30221fe40b55867d33732c97e7f /inter-object-relation-satisfaction-under-small-scale-i00/goal.png /app/goal.png
-COPY --from=ghcr.io/mll-lab-nu/efe:ispatialgym-files-0.5.1@sha256:8da12bf55ae8f0189bce0a21f53928a2c9f82ee33f65a6955348dd2bd8a0afb1 /privileged/environment/rcb_ispatialgym.py /opt/tools/rcb_ispatialgym.py
+COPY --from=ghcr.io/mll-lab-nu/efe:ispatialgym-files-0.6.0@sha256:8076179b5976cdc7609454e48d95e2028067025defd1a020a23fa4532a0854d3 /privileged/environment/rcb_ispatialgym.py /opt/tools/rcb_ispatialgym.py
 RUN --mount=type=bind,source=scrub,target=/tmp/scrub sh /tmp/scrub/scrub.sh \
       /opt/ispatialgym/ispatialgym/assets/bddl/activity_definitions/inter_object_relation_satisfaction/problem4.bddl && mkdir -p /app/output
 ENV PYTHONPATH=/opt/tools OMNIGIBSON_HEADLESS=1

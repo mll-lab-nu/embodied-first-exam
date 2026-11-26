@@ -19,7 +19,8 @@ through raw HTTP for the protocol-level cases (404s, 2.0/2.1 requests, malformed
             proprio; FK(parent link) . mount = each moving camera's pose; IK round trip; unreachable -> ok false; 400s;
   projection the TCP projected through intrinsics/extrinsics lands on the gripper: within a 6 cm disc around it the depth
             image has a surface at the TCP's depth (+-5 cm) (overlays in --out).
-A watch of --watch seconds (default 0.5) advances physics while holding the last command, as /observe does for an agent.
+A hold chunk of --watch seconds (default 0.5; eai-standard/3.0: /submit interpolate="hold", no rows) advances physics while
+holding the last command; /observe with seconds > 0 must be a 400 and last_s reads what the hold recorded.
 Exit 1 on any FAIL. Needs numpy + requests (+ pyyaml for --launch, Pillow for the overlays)."""
 from __future__ import annotations
 import argparse, json, math, os, re, subprocess, sys, tempfile, time
@@ -46,7 +47,7 @@ WORLD_KEYS_REQ = {"frame", "up", "units", "quaternion_order", "camera_axes"}
 GROUPS_REQ = ("joint_pos", "joint_vel", "gripper_opening", "tcp_pose", "joint_effort")
 META_KEYS_OK = {"stopped", "step", "calls", "control_steps", "physics_steps", "sim_time_s", "time_s", "time_left_s", "proprio", "cameras",
                 "done", "reason", "degraded", "chunk_id", "type", "executed_rows", "control_steps_chunk", "physics_steps_chunk",
-                "clipped", "n_clipped", "plan", "rejected", "ok", "obs_id", "seconds", "control_steps_watch", "physics_steps_watch",
+                "clipped", "n_clipped", "plan", "rejected", "ok", "obs_id", "seconds", "control_steps_watch", "physics_steps_watch", "last_s", "frame_step", "hold", "duration_s", "planned_duration_s", "chunk_id",
                 "frames_skipped"}   # frames_skipped: frames a call left out at max_frames_per_call (PROTOCOL §3)
 META_CAM_KEYS_OK = {"intrinsic_cv", "extrinsic_cv", "cam2world_gl", "image_size"}
 PART_RE = re.compile(r"^(video|frames|last|last_depth|depth_frames|depth|extrinsic_cv)/[^/]+$|^(proprio|frame_step|frame_time_s)$")
@@ -428,14 +429,22 @@ def check_live(rep: Report, url: str, task: Path | None, client_dir: Path, out: 
     for c in cams:
         check_depth_map(rep, "depth.last", ol.last_depth.get(c), ol.last.get(c), spec, c)
     rep.ok(not ol.depth, "observe.depth_last.no_per_frame_depth")
-    # a watch with per-frame depth: the frame axis
+    # eai-standard/3.0: observe never lets time pass (seconds > 0 is a 400); a hold chunk does
+    rj = raw_post(url, "/observe", {"cameras": cams, "seconds": watch, "video": "frames"})
+    rep.ok(rj.status_code == 400 and "hold" in rj.text, "observe.seconds_refused", f"HTTP {rj.status_code}")
+    # a hold chunk with per-frame depth: the frame axis
     steps_before = r.status().get("control_steps")
-    ow = r.get_obs(seconds=watch, depth="frames", video="both")
-    check_parts_and_meta(rep, "observe.watch_frames", ow, spec, cams)
+    ow = r.hold(watch, depth="frames", video="both")
+    check_parts_and_meta(rep, "submit.hold_frames", ow, spec, cams)
     N = len(ow.frame_step)
     if not ow.meta.get("done"):
-        rep.ok(N >= 2 and int(ow.frame_step[-1] - ow.frame_step[0]) == int(ow.meta.get("control_steps_watch", -1)) == int(round(watch * hz)),
-               "watch.steps_advance", f"frame_step {ow.frame_step.tolist()} watch steps {ow.meta.get('control_steps_watch')}")
+        rep.ok(N >= 2 and int(ow.frame_step[-1] - ow.frame_step[0]) == int(ow.meta.get("control_steps_chunk", -1)) == int(round(watch * hz)),
+               "hold.steps_advance", f"frame_step {ow.frame_step.tolist()} hold steps {ow.meta.get('control_steps_chunk')}")
+        rep.ok(ow.meta.get("hold") is True and abs(float(ow.meta.get("duration_s", -1)) - round(watch * hz) / hz) < 1e-6,
+               "hold.duration_s", f"duration_s {ow.meta.get('duration_s')}")
+        ol2 = r.get_obs(last_s=watch, video="frames")
+        rep.ok(r.status().get("control_steps") == steps_before + int(ow.meta.get("control_steps_chunk", 0)) and ol2.meta.get("last_s", 0) > 0,
+               "observe.last_s_reads_recorded", f"last_s {ol2.meta.get('last_s')}")
     for c in cams:
         dd = ow.depth.get(c)
         rep.ok(dd is not None and dd.shape == (N,) + ow.last[c].shape[:2], f"depth.frames[{c}].one_per_frame", f"{None if dd is None else dd.shape} for {N} frames")

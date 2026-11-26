@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | Embodied Olympics - Match |
-| Mode | realtime (`eai-standard-realtime/1.0`) |
+| Mode | realtime (`eai-standard/2.3+match/1.0`) |
 | Twin | `embodied-olympics-match-badminton-match-i04-privileged` |
 | Simulator / robot | `mujoco` / `franka-panda` |
 | Family / instance | `badminton_match` / seed 1034 (allowed seeds: [1034, 1, 2]; PROTOCOL §2) |

@@ -9,6 +9,12 @@ embodied_first_exam/benchmarks/ (the copies are byte-identical; a copy without t
   - abandon (reset mid-episode), reset, fail: first_reason "reset";
   - one attempt that times out: first_success 0 ("timeout");
   - a first-episode video that fails to render: the verdict and the graded video are unchanged (evidence only).
+
+and, for every distinct copy (also humanclaw's and abc-sim's realtime base), the eai-standard/3.0 rules: /observe
+seconds > 0 is a 400 that names the hold chunk; a /submit answers duration_s and planned_duration_s; the recorder keeps
+the submit's frames and /observe last_s = n returns them (frame_step, proprio rows); a hold chunk (no rows, "hold",
+seconds) runs round(seconds / control_dt) control steps and is answered as a submit; rows with seconds, or no rows
+without "hold", are a 400; a reset empties the recorder; /spec states standard and timing.recorder.
 """
 import hashlib
 import importlib.util
@@ -158,7 +164,73 @@ def test(path: Path) -> None:
           f"{tag}: a failed first video changed the verdict: {fin}")
 
 
+def test_v3(path: Path) -> None:
+    """The eai-standard/3.0 rules (module docstring) on one copy, through Service.handle (the HTTP surface)."""
+    import rcb1
+    spec = importlib.util.spec_from_file_location(f"rcb_service_v3_{hashlib.sha1(str(path).encode()).hexdigest()[:8]}", path)
+    S = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(S)
+    tag = path.relative_to(ROOT)
+    d = tempfile.mkdtemp()
+    try:
+        svc = S.Service(Toy(), data=d, reset_budget=1, agent_end=False)
+        svc.start()
+
+        def post(path_, obj):
+            code, ctype, body = svc.handle("POST", path_, json.dumps(obj).encode())
+            if ctype == "application/json":
+                return code, json.loads(body), {}
+            m, p = rcb1.decode(body)
+            return code, m, p
+
+        sp = svc.spec
+        check(sp.get("standard") == "eai-standard/3.0" and sp["timing"]["recorder"]["cameras"] == ["c"]
+              and sp["timing"]["recorder"]["fps"] == 10.0, f"{tag}: /spec standard / timing.recorder: {sp.get('timing')}")
+        code, m, _ = post("/observe", {"seconds": 1.0})
+        check(code == 400 and "hold chunk" in m.get("error", ""), f"{tag}: observe seconds > 0: {code} {m}")
+        code, m, p = post("/observe", {"last_s": 1.0})
+        check(code == 200 and m["last_s"] == 0.0 and m["frame_step"] == 0, f"{tag}: last_s before any submit: {code} {m}")
+        mp4 = importlib.util.find_spec("imageio") is not None      # (the video encoder; frames without it)
+        code, m, p = post("/submit", {"type": "joints", "dt": 0.02, "actions": [[0.01, 0]] * 10, "video": "frames"})
+        check(code == 200 and m["duration_s"] == 0.2 and m["planned_duration_s"] == 0.2 and m["control_steps_chunk"] == 20,
+              f"{tag}: submit duration: {code} {m}")
+        code, m, p = post("/observe", {"last_s": 0.1, "video": "frames"})
+        steps = p.get("frame_step", {}).get("data")
+        check(code == 200 and m["frame_step"] == 20 and m["last_s"] == 0.1 and steps is not None
+              and list(steps) == [10, 20] and p["frames/c"]["data"].shape[0] == 2 and p["proprio"]["data"].shape[0] == 2
+              and m["control_steps"] == 20, f"{tag}: last_s after a submit: {code} {m} {steps}")
+        code, m, p = post("/observe", {"last_s": 99, "video_fps": 30, "video": "mp4" if mp4 else "frames"})
+        check(code == 200 and list(p["frame_step"]["data"]) == [0, 10, 20] and ("video/c" in p) == mp4,
+              f"{tag}: last_s capped at the ring: {code} {m}")
+        code, m, p = post("/submit", {"type": "joints", "interpolate": "hold", "seconds": 0.1,
+                                      "video": "mp4" if mp4 else "frames"})
+        check(code == 200 and m.get("hold") is True and m["control_steps_chunk"] == 10 and m["duration_s"] == 0.1
+              and m["executed_rows"] == 0 and m["control_steps"] == 30 and ("video/c" in p) == mp4,
+              f"{tag}: hold chunk: {code} {m}")
+        code, m, _ = post("/submit", {"type": "joints", "interpolate": "hold", "seconds": 0.1, "actions": [[0, 0]]})
+        check(code == 400 and "no rows" in m.get("error", ""), f"{tag}: rows with seconds: {code} {m}")
+        code, m, _ = post("/submit", {"type": "joints", "seconds": 0.1})
+        check(code == 400 and "hold chunk" in m.get("error", ""), f"{tag}: no rows without hold: {code} {m}")
+        code, m, _ = post("/submit", {"type": "joints", "interpolate": "hold", "seconds": 1e9})
+        check(code == 400, f"{tag}: hold chunk too long: {code} {m}")
+        code, m, _ = post("/observe", {"last_s": 0.05, "include_depth": True})
+        check(code == 400, f"{tag}: last_s with depth: {code} {m}")
+        code, m, _ = post("/reset", {"cameras": []})
+        check(code == 200, f"{tag}: reset: {code} {m}")
+        code, m, p = post("/observe", {"last_s": 1.0})
+        check(code == 200 and m["last_s"] == 0.0 and m["frame_step"] == 0, f"{tag}: last_s after a reset: {code} {m}")
+    finally:
+        shutil.rmtree(d)
+
+
 def main() -> None:
+    v3: dict[str, Path] = {}
+    for p in sorted(list((ROOT / "embodied_first_exam/benchmarks").glob("**/rcb_service.py"))
+                    + list((ROOT / "images").glob("*/tools/**/rcb_service.py"))):
+        if "class Service" in p.read_text():
+            v3.setdefault(hashlib.sha256(p.read_bytes()).hexdigest(), p)
+    for p in v3.values():
+        test_v3(p)
     copies: dict[str, list[Path]] = {}
     for p in sorted((ROOT / "embodied_first_exam/benchmarks").glob("*/*/rcb_service.py")):
         copies.setdefault(hashlib.sha256(p.read_bytes()).hexdigest(), []).append(p)
@@ -175,7 +247,8 @@ def main() -> None:
         print(f"{len(fails)} failure(s)")
         sys.exit(1)
     print(f"ok first-attempt record: {tested} rcb_service.py copies ({sum(1 for ps in copies.values())} distinct): one "
-          "success, fail-reset-success, abandon-reset-fail, timeout, a failed first video")
+          "success, fail-reset-success, abandon-reset-fail, timeout, a failed first video; eai-standard/3.0 rules on "
+          f"{len(v3)} distinct copies: observe seconds refused, last_s from the recorder, hold chunk, duration_s")
 
 
 if __name__ == "__main__":

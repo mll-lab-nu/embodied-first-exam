@@ -1,0 +1,16 @@
+{
+ "manifest": "efe-mcp-manifest/1",
+ "kind": "rcb",
+ "suite": "myosuite",
+ "task": "myosuite-die-reorient-i00-standard",
+ "protocol": "eai-standard/2.2",
+ "realtime": false,
+ "tools": [
+  "spec",
+  "observe",
+  "submit",
+  "reset",
+  "kinematics",
+  "finish"
+ ]
+}

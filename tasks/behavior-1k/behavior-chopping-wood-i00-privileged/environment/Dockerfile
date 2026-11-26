@@ -30,8 +30,8 @@ WORKDIR /app
 # environment/docker-compose.yaml mounts the host's licensed copy.
 FROM behavior-base
 COPY instance.json /app/instance.json
-COPY --from=ghcr.io/mll-lab-nu/efe:behavior-files-0.5.1@sha256:6072d37526a46bdebc63fcb336d7937947d452fa990ed40045b95a14928c129d /rcb_behavior.py /opt/tools/rcb_behavior.py
-COPY --from=ghcr.io/mll-lab-nu/efe:behavior-files-0.5.1@sha256:6072d37526a46bdebc63fcb336d7937947d452fa990ed40045b95a14928c129d /r1pro_primitives_eval.yaml /opt/tools/r1pro_primitives_eval.yaml
+COPY --from=ghcr.io/mll-lab-nu/efe:behavior-files-0.6.0@sha256:d667a50dbe8ea0005b885ce5b5d3e6996874f46e26a16a7b5abf3089049b0586 /rcb_behavior.py /opt/tools/rcb_behavior.py
+COPY --from=ghcr.io/mll-lab-nu/efe:behavior-files-0.6.0@sha256:d667a50dbe8ea0005b885ce5b5d3e6996874f46e26a16a7b5abf3089049b0586 /r1pro_primitives_eval.yaml /opt/tools/r1pro_primitives_eval.yaml
 ENV PYTHONPATH=/opt/tools
 # this task's state-dump patch (sitecustomize.py, imported at startup from PYTHONPATH): the state can be dumped on the
 # step a log is split; the shared tooling is unchanged

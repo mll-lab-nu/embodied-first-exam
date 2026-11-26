@@ -5,9 +5,11 @@ Collect all six soda cans into the bucket.
 
 ## Goal
 Success: all six cans of soda are inside the bucket. It counts only once the scene has settled: nothing the task names
-(a tool included) is still in a gripper, and everything has come to rest. The episode ends as soon as the task is done.
-When your session ends with the episode still running, the robot is held still for a few seconds more (your last
-command, the base at 0), and a success that settles in that time counts.
+(a tool included) is still in a gripper, and everything has come to rest. When the episode ends, the robot is held still
+for a few seconds more (your last command, the base at 0), and a success that settles in that time counts.
+
+Success is judged on how things stand when the episode ends. It ends when you call finish (Limits) or when your session
+ends. The robot never tells you whether you have succeeded.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
@@ -19,7 +21,7 @@ Rules:
 
 ## Robot Interface
 An R1Pro mobile bimanual robot in a simulated house (BEHAVIOR-1K: OmniGibson on Isaac Sim). The robot runs as a service
-you reach only through its client, as if it were real hardware: one live episode.
+you reach through its client or its MCP tools, as if it were real hardware: one live episode.
 
 ### Client
 `/opt/tools/rcb_client.py` (protocol `eai-standard/2.2`):
@@ -32,7 +34,8 @@ spec = r.spec()                               # actions, cameras, robot_spec, wo
 obs = r.get_obs()                             # current frames from the robot's 3 cameras: obs.last[cam] -> uint8 (224,224,3)
 obs.meta["proprio"]                           # {"layout": [...], "now": [...]}: named columns (spec["proprio_groups"])
 obs.meta["cameras"]                           # per-camera intrinsic_cv / extrinsic_cv / cam2world_gl of the LAST frame
-obs = r.get_obs(seconds=2.0, video="mp4")     # hold the last command and watch for 2 s (max 30): obs.video[cam] = mp4 bytes
+obs = r.hold(2.0)                             # hold the last command for 2 s of robot time: obs.video[cam] = mp4 bytes
+obs = r.get_obs(last_s=1.0)                   # the frames recorded over the last 1 s (reading moves no time)
 
 res = r.submit("joint_position", A, dt=0.1)   # A: (T, 25) rows dt seconds apart; streamed at 30 Hz
 res = r.submit("ee_pose", P)                  # P: (T, 16) end-effector targets for both arms; cuRobo IK per row
@@ -54,6 +57,17 @@ res.video[cam]; res.frames[cam]; res.last[cam]; res.proprio   # execution video 
   in the state after the last call it completed, which you may not have received: call `r.wait_ready()`, then check
   `r.status()` (`calls`, `control_steps`) before you continue. Resuming replays the episode so far (minutes in a long
   episode) on your wall clock.
+
+### MCP tools
+- The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
+  `observe`, `submit`, `kinematics`, `finish`. A tool takes its endpoint's request fields (any other field in `fields`)
+  and returns the service's reply `meta` unchanged; images, arrays and video are written as files under `/app/obs/`
+  (`.png`, `.npy`, `.mp4`) and the result lists them. Long action chunks can be passed as a file (`actions_file`).
+- `observe` returns at once with what is already recorded: the current frame, or the last `last_s` seconds. Time passes
+  only through `submit`, which answers when its rows have run; a `submit` with `interpolate` "hold", `seconds` and no
+  rows lets time pass with the robot holding still.
+- A call still running after 45 s returns `pending` with an `operation` id; `observe(operation=id)` collects its reply.
+- The client and the tools drive the same robot in the same episode; use either, or both.
 
 ### Actions
 - The world frame is OmniGibson's (metres, +z up, the floor is the plane z = 0); poses are position + quaternion XYZW.
@@ -104,3 +118,7 @@ res.video[cam]; res.frames[cam]; res.last[cam]; res.proprio   # execution video 
 - Resets: none: one episode.
 - Steps: no step budget (actions and simulated time are reported as cost); a runaway guard ends the episode at 200,000
   control steps (1.85 h of simulated time).
+- Finish: when you are done, call finish: `POST /finish` with an empty JSON body to the service, at the client's base
+  URL (`http://sim:8000` or `http://localhost:8000`; in Python `requests.post(r.base + "/finish", json={})` with your
+  client `r`). It ends the episode, and every call after it is refused. Reaching the goal changes no reply and does not
+  end the episode; if you never call finish, the end of your session ends it.

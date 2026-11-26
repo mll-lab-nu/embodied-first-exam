@@ -4,10 +4,11 @@
 Set the thermal mixer to time 30 s, temperature 33 °C, mixing speed 600 rpm, with the buttons on its front panel.
 
 ## Goal
-Success: the panel is set to exactly these three values. What counts is how things stand at the end of the episode. A
-physics warning (an unstable simulation, for instance after the robot was driven hard into something) ends the episode
-at once, as a failure. End the episode with `r.submit("done", [])` once the panel shows these values; if you never do,
-it is judged as it stands when your time is up.
+Success: the panel is set to exactly these three values. A physics warning (an unstable simulation, for instance after
+the robot was driven hard into something) ends the episode at once, as a failure.
+
+Success is judged on how things stand when the episode ends. It ends when you call finish (Limits) or when your session
+ends. The robot never tells you whether you have succeeded.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
@@ -17,7 +18,8 @@ Rules:
 
 ## Robot Interface
 A UR5e arm (6 joints) with a Robotiq 2F-85 gripper, fixed to the bench, in AutoBio's simulated biology laboratory
-(MuJoCo). The robot runs as a service you reach only through its client, as if it were real hardware: one live episode.
+(MuJoCo). The robot runs as a service you reach through its client or its MCP tools, as if it were real hardware: one
+live episode.
 
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
@@ -31,16 +33,28 @@ obs.meta["proprio"]                            # {"layout": [...], "now": [...]}
 obs.meta["cameras"]                            # per camera intrinsic_cv / extrinsic_cv / cam2world_gl at the last frame
 res = r.submit("joint_position", rows, dt=0.02)   # rows: (T, 7) targets, here one every 20 ms, reached linearly in 2 ms steps
 res.meta["done"], res.meta["reason"], res.meta["control_steps_chunk"], res.meta["clipped"]; res.video[cam]; res.last[cam]; res.proprio
-obs = r.get_obs(seconds=1.0, video="mp4")      # hold the last targets and watch for 1 s (max 30)
+obs = r.hold(1.0)                              # hold the last targets for 1 s of robot time
+obs = r.get_obs(last_s=1.0)                    # the frames recorded over the last 1 s (reading moves no time)
 r.fk(q); r.ik({frame: pose})                   # kinematics of the arm joints (spec["kinematics"]): no physics, no collision check
-r.submit("done", [])                           # ends the episode now, in its current state
+r.submit("done", [])                           # the same as finish (Limits): ends the episode now
 r.status()                                     # calls, control steps, done, reason, elapsed time
 ```
 
-Simulated time only advances with your commands (and `get_obs(seconds=...)`, which holds the last targets). If the
-service crashes, a call fails with a connection error: it restarts and resumes the same episode (never a reset) in the
-state after the last call it completed. `r.wait_ready()` waits for it; then check `r.status()`. One call returns at most
-3000 images; `video_fps` is up to 50, default 10.
+Simulated time only advances with your commands (and `hold(s)`, which holds the last targets). If the service crashes, a
+call fails with a connection error: it restarts and resumes the same episode (never a reset) in the state after the last
+call it completed. `r.wait_ready()` waits for it; then check `r.status()`. One call returns at most 3000 images;
+`video_fps` is up to 50, default 10.
+
+### MCP tools
+- The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
+  `observe`, `submit`, `kinematics`, `finish`. A tool takes its endpoint's request fields (any other field in `fields`)
+  and returns the service's reply `meta` unchanged; images, arrays and video are written as files under `/app/obs/`
+  (`.png`, `.npy`, `.mp4`) and the result lists them. Long action chunks can be passed as a file (`actions_file`).
+- `observe` returns at once with what is already recorded: the current frame, or the last `last_s` seconds. Time passes
+  only through `submit`, which answers when its rows have run; a `submit` with `interpolate` "hold", `seconds` and no
+  rows lets time pass with the robot holding still.
+- A call still running after 45 s returns `pending` with an `operation` id; `observe(operation=id)` collects its reply.
+- The client and the tools drive the same robot in the same episode; use either, or both.
 
 ### Actions
 Action type `joint_position` (7): 7 position targets per control step, in this order: `shoulder_pan`, `shoulder_lift`,
@@ -75,3 +89,7 @@ spec sheet: where each arm's base stands, joint limits, the drives' gains, the g
   GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap only
   slows you down); usage: `/run/rcb-limits/usage.json`.
 - Resets: none: one episode.
+- Finish: when you are done, call finish: `POST /finish` with an empty JSON body to the service, at the client's base
+  URL (`http://sim:8000` or `http://localhost:8000`; in Python `requests.post(r.base + "/finish", json={})` with your
+  client `r`). It ends the episode, and every call after it is refused. Reaching the goal changes no reply and does not
+  end the episode; if you never call finish, the end of your session ends it.

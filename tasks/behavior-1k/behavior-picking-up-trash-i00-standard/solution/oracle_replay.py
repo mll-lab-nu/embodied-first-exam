@@ -33,5 +33,5 @@ while i < len(Q):
     if res.meta["done"]: done = True; print("done:", res.meta["reason"]); break
     if not res.meta["executed_rows"]: print("the service executed no row:", res.meta.get("stopped")); break
 if not done:
-    obs = r.get_obs(seconds=1.0, cameras=cam, video="none"); print("settle:", obs.meta["done"], obs.meta["reason"])
+    obs = r.hold(1.0, cameras=cam, video="none"); print("settle:", obs.meta["done"], obs.meta["reason"])
 print("status:", r.status(), "wall %.0fs" % (time.time() - t0))

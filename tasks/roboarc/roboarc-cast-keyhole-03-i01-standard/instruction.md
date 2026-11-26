@@ -7,19 +7,22 @@ piece behind, no closer to the goal than it was at the start.
 ## Goal
 Success: all of the silver keyhole piece is inside the green dashed goal square and still, and the gold piece is no
 closer to the goal than at the start. Do not force pieces into each other: a success with pieces pushed into each other
-is reviewed instead of credited automatically. Dropping a piece off the table ends the episode as a failure. The episode
-ends, as a success, as soon as all of this has held for 0.5 s.
+is reviewed instead of credited automatically. Dropping a piece off the table ends the episode as a failure.
+
+Success is judged on how things stand when the episode ends: all of this must hold then, and keep holding with your last
+command held until it has held for a moment. It ends when you call finish (Limits) or when your session ends. The robot
+never tells you whether you have succeeded.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
   benchmark's demonstrations, trained policies); trials are reviewed.
 - One episode, no reset: what you knock over stays knocked over.
 - You get only the cameras, the robot's own sensor readings and the safety readings (Robot Interface): no object poses,
-  no scene layout; the episode ends when the task is done.
+  no scene layout, no success signal.
 
 ## Robot Interface
 Two 6-DoF ALOHA (ViperX) arms with parallel-jaw grippers on a fixed base, at a table (RoboARC, MuJoCo). The robot runs
-as a service you reach only through its client, as if it were real hardware: one live episode.
+as a service you reach through its client or its MCP tools, as if it were real hardware: one live episode.
 
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.4`:
@@ -32,7 +35,8 @@ obs = r.get_obs()                             # current frames from 4 cameras: o
 obs.meta["proprio"]                           # {"layout": [72 names], "now": [...]}: groups in spec["proprio_groups"]
 obs.meta["cameras"]                           # per camera: intrinsic_cv, extrinsic_cv, cam2world_gl of the LAST frame
 obs = r.get_obs(depth=True)                   # + obs.last_depth[cam]: float32 (480,848) z-depth in metres, 0 = no reading
-obs = r.get_obs(seconds=2.0, video="mp4")     # hold the last command and watch for 2 s (max 30): obs.video[cam] = mp4 bytes
+obs = r.hold(2.0)                             # hold the last command for 2 s of robot time: obs.video[cam] = mp4 bytes
+obs = r.get_obs(last_s=1.0)                   # the frames recorded over the last 1 s (reading moves no time)
 
 res = r.submit("joint_position", A, dt=0.1)   # A: (T, 14) rows dt seconds apart; streamed at 40 Hz with linear interpolation
 res = r.submit("ee_pose", P)                  # P: (T, 16) tool-frame targets; inverse kinematics per row
@@ -50,10 +54,10 @@ r.ik({"left_tcp": pose}, seed=q)             # inverse kinematics -> {"ok", "q",
 
 - One control step takes about 0.042 s of wall clock here. A request returns when all of its steps have run, or earlier:
   a call that has run for 900 s (`spec["max_call_wall_s"]`) is stopped by the service at the next control step and
-  returns what it executed (`res.stopped` is `"max_call_wall_s"`; `res.meta["executed_rows"]`, or
-  `res.meta["control_steps_watch"]` for a watch, says how far it got; the robot holds its last target). Check
-  `res.stopped` before you send the next rows. A `submit` of the maximum 10 s chunk takes about 17 s here, and any watch
-  up to 30 s fits (both with a 2x margin).
+  returns what it executed (`res.stopped` is `"max_call_wall_s"`; `res.meta["executed_rows"]` (for a hold,
+  `res.meta["duration_s"]`) says how far it got; the robot holds its last target). Check `res.stopped` before you send
+  the next rows. A `submit` of the maximum 10 s chunk, or a 10 s `hold(s)`, takes about 17 s here and fits (with a 2x
+  margin).
 - The client waits longer than that (1800 s for `submit`, 1020 s for `get_obs`), so a client timeout or a connection
   error means the connection or the service failed, not that the call is still on its way. Do NOT send the request again
   blindly (it could run twice): `r.operation_status()` tells what became of the last one. Its `status` is `completed` or
@@ -65,9 +69,20 @@ r.ik({"left_tcp": pose}, seed=q)             # inverse kinematics -> {"ok", "q",
   control step. A request that arrives after its deadline is refused (408), and one whose operation id was already
   admitted is refused (409); neither moves the robot. A control step that hangs for more than 60 s past the call's limit
   ends the episode as an infrastructure error, not as your failure.
-- `meta["reason"]` says why the episode ended: `success`, `task_failed` (the task's failure rule), `step_guard` (the
-  step cap), `timeout`, or an error.
+- `meta["reason"]` says why the episode ended: `finished` (you called finish), `task_failed` (the task's failure rule),
+  `step_limit` (the step cap), `timeout`, or an error.
 - One call returns at most 2000 images.
+
+### MCP tools
+- The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
+  `observe`, `submit`, `kinematics`, `finish`. A tool takes its endpoint's request fields (any other field in `fields`)
+  and returns the service's reply `meta` unchanged; images, arrays and video are written as files under `/app/obs/`
+  (`.png`, `.npy`, `.mp4`) and the result lists them. Long action chunks can be passed as a file (`actions_file`).
+- `observe` returns at once with what is already recorded: the current frame, or the last `last_s` seconds. Time passes
+  only through `submit`, which answers when its rows have run; a `submit` with `interpolate` "hold", `seconds` and no
+  rows lets time pass with the robot holding still.
+- A call still running after 45 s returns `pending` with an `operation` id; `observe(operation=id)` collects its reply.
+- The client and the tools drive the same robot in the same episode; use either, or both.
 
 ### Actions
 - `joint_position` (14): `left/waist`, `left/shoulder`, `left/elbow`, `left/forearm_roll`, `left/wrist_angle`,
@@ -146,5 +161,9 @@ r.ik({"left_tcp": pose}, seed=q)             # inverse kinematics -> {"ok", "q",
   no GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap
   only slows you down); usage: `/run/rcb-limits/usage.json`.
 - Resets: none: one episode.
-- Steps: no step budget; a technical cap ends the episode after 200,000 control steps, watches included, graded as it
+- Steps: no step budget; a technical cap ends the episode after 200,000 control steps, holds included, graded as it
   stands.
+- Finish: when you are done, call finish: `POST /finish` with an empty JSON body to the service, at the client's base
+  URL (`http://sim:8000` or `http://localhost:8000`; in Python `requests.post(r.base + "/finish", json={})` with your
+  client `r`). It ends the episode, and every call after it is refused. Reaching the goal changes no reply and does not
+  end the episode; if you never call finish, the end of your session ends it.

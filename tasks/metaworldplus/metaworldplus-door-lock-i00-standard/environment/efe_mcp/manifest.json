@@ -1,0 +1,14 @@
+{
+ "manifest": "efe-mcp-manifest/1",
+ "kind": "rcb",
+ "suite": "metaworldplus",
+ "task": "metaworldplus-door-lock-i00-standard",
+ "protocol": "eai-standard/2.1",
+ "realtime": false,
+ "tools": [
+  "spec",
+  "observe",
+  "submit",
+  "finish"
+ ]
+}

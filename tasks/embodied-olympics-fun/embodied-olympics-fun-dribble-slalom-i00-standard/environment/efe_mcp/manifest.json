@@ -1,0 +1,15 @@
+{
+ "manifest": "efe-mcp-manifest/1",
+ "kind": "rcb",
+ "suite": "embodied-olympics-fun",
+ "task": "embodied-olympics-fun-dribble-slalom-i00-standard",
+ "protocol": "eai-standard/2.1",
+ "realtime": false,
+ "tools": [
+  "spec",
+  "observe",
+  "submit",
+  "reset",
+  "finish"
+ ]
+}

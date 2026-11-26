@@ -5,8 +5,9 @@ Put the black rail mount down right beside the bread, almost touching it.
 
 ## Goal
 Success: the black rail mount rests on the same surface as the bread, right beside it and almost touching it but not on
-it, and the bread has not been pushed far or turned much. What counts is how things stand at the end of the episode. End
-the episode with `done` once the task holds; otherwise it ends at the step limit (Limits) or when your time is up.
+it, and the bread has not been pushed far or turned much. Success is judged on how things stand when the episode ends.
+It ends when you call finish (Limits) or when your session ends. The robot never tells you whether you have succeeded.
+It also ends at the step limit (Limits); the `done` action is the same as finish.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
@@ -16,7 +17,8 @@ Rules:
 
 ## Robot Interface
 A Franka FR3 arm with a Robotiq 2F-85 gripper on a fixed base (the DROID setup) in a simulated house (Ai2's MolmoSpaces,
-MuJoCo). The robot runs as a service you reach only through its client, as if it were real hardware: one live episode.
+MuJoCo). The robot runs as a service you reach through its client or its MCP tools, as if it were real hardware: one
+live episode.
 
 ### Client
 `/opt/tools/rcb_client.py` (protocol `eai-standard/2.2`):
@@ -27,8 +29,9 @@ spec = r.spec()                                # action types, limits, cameras (
 obs = r.get_obs()                              # obs.last[cam] -> uint8 (H, W, 3); obs.meta["proprio"] {"layout", "now"}
 obs = r.get_obs(depth=True)                    # + obs.last_depth[cam] -> float32 (H, W) z-depth in m (0 = no reading)
 res = r.submit("joint_position", A, dt=0.066)   # A: (T, 8) rows dt apart; res.video[cam], res.proprio, res.meta
-obs = r.get_obs(seconds=2.0, video="mp4")      # hold the current targets and watch for 2 s (max 30; whole control
-                                               # steps: obs.meta["seconds"] is what ran)
+obs = r.hold(2.0)                              # hold the current targets for 2 s of robot time (whole control
+                                               # steps: obs.meta["duration_s"] is what ran)
+obs = r.get_obs(last_s=1.0)                    # the frames recorded over the last 1 s (reading moves no time)
 r.fk(q); r.ik({"gripper": pose7}, seed=q)        # upstream's kinematic model, no physics: tcp poses <-> joint positions
 r.submit("done", [])                           # end the episode now
 r.status()                                     # calls, control steps, done, reason, elapsed time
@@ -38,6 +41,17 @@ r.status()                                     # calls, control steps, done, rea
   Python objects.
 - If the service crashes, a call fails with a connection error: the service restarts and resumes the same episode (never
   a reset) in the state after the last call it completed. `r.wait_ready()` waits for it; then check `r.status()`.
+
+### MCP tools
+- The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
+  `observe`, `submit`, `kinematics`, `finish`. A tool takes its endpoint's request fields (any other field in `fields`)
+  and returns the service's reply `meta` unchanged; images, arrays and video are written as files under `/app/obs/`
+  (`.png`, `.npy`, `.mp4`) and the result lists them. Long action chunks can be passed as a file (`actions_file`).
+- `observe` returns at once with what is already recorded: the current frame, or the last `last_s` seconds. Time passes
+  only through `submit`, which answers when its rows have run; a `submit` with `interpolate` "hold", `seconds` and no
+  rows lets time pass with the robot holding still.
+- A call still running after 45 s returns `pending` with an `operation` id; `observe(operation=id)` collects its reply.
+- The client and the tools drive the same robot in the same episode; use either, or both.
 
 ### Actions
 - `joint_position` (8): `fr3_joint1`, `fr3_joint2`, `fr3_joint3`, `fr3_joint4`, `fr3_joint5`, `fr3_joint6`,
@@ -61,9 +75,9 @@ r.status()                                     # calls, control steps, done, rea
   poses.
 
 ### Timing
-One control step is 0.066 s of simulated time. Simulated time advances only with your commands and with
-`get_obs(seconds=...)`: while you think, the robot waits. The service's `time_left_s` counts from your first request to
-it, so it never reaches 0 before your time is up: plan by it.
+One control step is 0.066 s of simulated time. Simulated time advances only with your commands and with `hold(s)`: while
+you think, the robot waits. The service's `time_left_s` counts from your first request to it, so it never reaches 0
+before your time is up: plan by it.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
@@ -80,3 +94,7 @@ it, so it never reaches 0 before your time is up: plan by it.
 - Resets: none: one episode.
 - Steps: at most 455 control steps (the benchmark's 30 s horizon); then the episode ends by itself and is graded as it
   stands.
+- Finish: when you are done, call finish: `POST /finish` with an empty JSON body to the service, at the client's base
+  URL (`http://sim:8000` or `http://localhost:8000`; in Python `requests.post(r.base + "/finish", json={})` with your
+  client `r`). It ends the episode, and every call after it is refused. Reaching the goal changes no reply and does not
+  end the episode; if you never call finish, the end of your session ends it.

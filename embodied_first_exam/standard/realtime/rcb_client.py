@@ -4,8 +4,8 @@ PYTHONPATH).
     from rcb_client import Robot, EpisodeOver
     r = Robot()            # finds the service (SIM_URL, http://sim:8000, http://localhost:8000), waits until it is ready
 
-TIME DOES NOT STOP (spec()["timing"]). An episode starts paused; its clock starts at its first submit() or
-get_obs(seconds > 0) (again after every reset()) and from then on runs one control step every spec()["control_dt"] x
+TIME DOES NOT STOP (spec()["timing"]). An episode starts paused; its clock starts at its first submit() or hold()
+(again after every reset()) and from then on runs one control step every spec()["control_dt"] x
 spec()["timing"]["slowdown"] seconds of wall time, whether or not you call, until the episode ends. The service keeps a
 plan, one servo-target row per coming control step: submit() writes into it and answers at once; when the plan runs out
 the last target is held. Whatever you do in between -- think, print, run a model -- the robot keeps executing.
@@ -20,11 +20,12 @@ Calls (each is one HTTP request; every answer that carries data is an RCB1 frame
                                              feet's boxes), "depth", "budget" {"reset", "wall_clock_s"}, "episode"
     r.status()                               GET /status: calls, rows, control_steps, done, reason, elapsed_s, running,
                                              planned_steps, lag_s (and episode, resets_left with a reset budget)
-    r.get_obs(cameras=None, seconds=0.0, video_fps=10, include_depth=False, video="frames")
-                                             POST /observe. seconds=0: the robot now, at once. seconds>0 (at most
-                                             spec()["max_watch_s"]): waits while that much robot time runs (starting the
-                                             clock if it is not running) and returns what the cameras saw; it never
-                                             changes the plan
+    r.get_obs(cameras=None, last_s=0.0, video_fps=10, include_depth=False, video="frames")
+                                             POST /observe: reads what the cameras recorded, at once; it never waits,
+                                             never moves time and never changes the plan. last_s=0: the robot now
+                                             (meta["frame_step"]: the control step the image shows); last_s=n: the
+                                             frames recorded in the last n seconds of robot time
+                                             (spec()["timing"]["recorder"])
     r.submit("joint_position", actions, dt=None, interpolate="linear", at=None, cameras=None, video_fps=10,
              video="none", include_depth=False, note="")
                                              POST /submit: answers at once with the robot as it is now (the rows
@@ -37,6 +38,12 @@ Calls (each is one HTTP request; every answer that carries data is an RCB1 frame
                                              planned before it; at most spec()["timing"]["max_ahead_steps"] ahead. Rows
                                              for steps already gone when the request arrives are dropped
                                              (meta["late_steps"]). The first submit of an episode starts its clock
+    r.hold(seconds, action_type=None, at=None, ...)
+                                             POST /submit with no rows (a hold chunk: interpolate="hold", seconds):
+                                             the target in force is planned for `seconds` from `at`, replacing what
+                                             was planned from there; answers at once, like submit
+    r.finish()                               POST /finish: you end the episode (the clock stops); the state it is in
+                                             is judged. After it every call but spec() and status() is refused
     r.reset(cameras=None, include_depth=False)
                                              POST /reset, only when spec()["budget"]["reset"] > 0: abandons the
                                              running episode and starts a new one, paused, from the same starting state;
@@ -47,7 +54,7 @@ fastest call: what a controller loop wants). video: "mp4" (one H.264 file per ca
 "both" or "none" (only the last frame); a submit returns no video (no time passes inside it). include_depth adds depth
 for the cameras that have it.
 
-Result (what get_obs / submit / reset return):
+Result (what get_obs / submit / hold / reset return):
     res.meta                 dict: calls, rows, control_steps (steps run in this episode: the next one is this number),
                              sim_time_s, time_s, time_left_s, proprio {"layout", "now"}, done, reason ("success" |
                              "failed" | "timeout" | "error"; None while the episode runs), running, planned_steps,
@@ -57,8 +64,7 @@ Result (what get_obs / submit / reset return):
     res.last[cam]            uint8 H x W x 3: the last frame (unless cameras=[])
     res.frames[cam]          uint8 N x H x W x 3 (get_obs, video="frames"/"both")     res.video[cam]   mp4 bytes
     res.depth[cam]           float16 N x H x W, metres, 0 = nothing in range (include_depth)
-    res.proprio              float32 rows of spec()["proprio_layout"]: one at the call's start, one every 1/video_fps s
-                             of a watch, one at its end
+    res.proprio              float32 rows of spec()["proprio_layout"], one per returned frame
     res.done                 the episode is over
     res.save(dir)            meta.json, <cam>.mp4, last/<cam>.jpg, frames/<cam>/NNN.jpg, depth_<cam>.npy, proprio.npy
 
@@ -85,6 +91,19 @@ MAX_BODY = 64 * 1024 * 1024                          # the protocol's request li
 
 class EpisodeOver(RuntimeError):
     pass
+
+
+GONE = ("get_obs(seconds=...) is gone (eai-standard/3.0): observe never waits; the clock runs by itself (wait with "
+        "time.sleep), and get_obs(last_s=n) reads the last n seconds already recorded")
+
+
+def _hold_type(spec: dict) -> str:
+    """The action type a hold chunk names when none is given: the first one the service offers (the target held is the
+    last command, whatever its type)."""
+    types = [t for t in (spec.get("action_types") or {}) if t != "not_yet"]
+    if not types:
+        raise ValueError("hold: spec()['action_types'] names no action type; pass action_type=")
+    return str(types[0])
 
 
 class Result:
@@ -161,9 +180,14 @@ class Robot:
         r.raise_for_status()
         return r.json()
 
-    def get_obs(self, cameras=None, seconds: float = 0.0, video_fps: int = 10, include_depth: bool = False,
-                video: str = "frames") -> Result:
-        meta = {"cameras": _names(cameras), "seconds": float(seconds), "video_fps": int(video_fps),
+    def get_obs(self, cameras=None, last_s: float = 0.0, video_fps: int = 10, include_depth: bool = False,
+                video: str = "frames", seconds: float | None = None) -> Result:
+        """What is already recorded, at once: nothing moves and no time passes. last_s=0: the current frames; last_s=n:
+        the frames recorded in the last n seconds of robot time (at most spec()["timing"]["recorder"]["buffer_s"]).
+        hold(seconds) lets time pass."""
+        if seconds:
+            raise ValueError(GONE)
+        meta = {"cameras": _names(cameras), "last_s": float(last_s), "video_fps": int(video_fps),
                 "include_depth": bool(include_depth), "video": video}
         return self._post("/observe", meta, [], timeout=900)
 
@@ -181,6 +205,32 @@ class Robot:
                 "include_depth": bool(include_depth), "note": note}
         return self._post("/submit", meta, [rcb1.array_part("actions", a)], timeout=1800)
 
+
+    def hold(self, seconds: float, action_type: str | None = None, at: int | None = None, cameras=None,
+             video_fps: int = 10, video: str = "none", include_depth: bool = False, note: str = "") -> Result:
+        """A hold chunk (POST /submit with interpolate="hold", `seconds` and no rows): the target in force is held for
+        `seconds` of robot time from control step `at` (None = the next step), replacing what was planned from `at` on.
+        Answers at once, like submit (it starts the clock). action_type: any of spec()["action_types"] (default: the
+        first)."""
+        meta = {"type": action_type or _hold_type(self._spec), "interpolate": "hold", "seconds": float(seconds),
+                "at": None if at is None else int(at), "cameras": _names(cameras), "video_fps": int(video_fps),
+                "video": video, "include_depth": bool(include_depth), "note": note}
+        return self._post("/submit", meta, [], timeout=1800)
+
+    def finish(self) -> dict:
+        """POST /finish: end the episode now; the state it is in is judged. After it every call but spec() and status()
+        is refused (EpisodeOver). Returns the service's answer ({"ok": true, ...status fields})."""
+        r = requests.post(self.base + "/finish", json={}, timeout=(5, 900))
+        try:
+            err = r.json()
+        except ValueError:
+            err = {"error": r.text[:300]}
+        if r.status_code == 200:
+            return err
+        msg = f"{r.status_code} /finish: {err.get('error')}" + (f"; reason {err['reason']}" if err.get("reason") else "")
+        if r.status_code == 409:
+            raise EpisodeOver(msg)
+        raise RuntimeError(msg)
     def reset(self, cameras=None, include_depth: bool = False) -> Result:
         return self._post("/reset", {"cameras": _names(cameras), "include_depth": bool(include_depth)}, [], timeout=900)
 

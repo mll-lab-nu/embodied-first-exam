@@ -1,0 +1,15 @@
+{
+ "manifest": "efe-mcp-manifest/1",
+ "kind": "rcb",
+ "suite": "robopaint",
+ "task": "robopaint-oil-saintevictoire-i01-standard",
+ "protocol": "eai-standard/2.2",
+ "realtime": false,
+ "tools": [
+  "spec",
+  "observe",
+  "submit",
+  "kinematics",
+  "finish"
+ ]
+}

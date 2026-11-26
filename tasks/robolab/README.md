@@ -241,6 +241,14 @@ takes its default. One case is left in
 the shared layer (`embodied_first_exam/standard/rcb_limited.py`): `actions` sent as a JSON object is converted before the adapter
 sees it and still ends the episode with a 500.
 
+**Agent-ended episodes** (standard mode; PROTOCOL §3 "Agent-ended episodes", `RCB_AGENT_END` in each sim service,
+`rcb_agent_end.py`). The task's success is never shown and never ends the episode: the agent ends it with `POST /finish`
+(reason `finished`), or the end of its session does (`timeout`). RoboLab's success termination term is wrapped
+(`rcb_robolab.Session._hide_success_term`): it records whether it holds and never terminates the env. At `/finish` and
+at the session's end the last command is held for the settle steps (30), then the term is judged on that state;
+RoboLab's other terminations are 0; the technical cap is the step limit (`step_limit`, judged as it stands). There is no
+`RCB_STEP_LIMIT` (no step budget).
+
 ## Known issues
 - The tooling stops a runaway trajectory at 100,000 control steps (`step_guard`, 1.9 h of simulated time); the live
   service runs 3-15 steps/s, so the time limit ends an episode long before. Stated in `/spec` (`max_control_steps`,

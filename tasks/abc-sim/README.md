@@ -13,8 +13,8 @@ families whose scene moves by itself (`abc-sim-conveyor-pick-i00-realtime`, `abc
 harbor run -d embodied-first-exam@all -p tasks/abc-sim -a codex -m openai/gpt-6-astra
 ```
 The tasks need an NVIDIA GPU (the cameras render over EGL; the physics runs on the CPU). The base image is
-`ghcr.io/mll-lab-nu/efe:abc-sim-0.3.0` (`images/abc-sim/`; the standard and realtime tasks keep `abc-sim-0.2.0`, whose
-simulator, scenes and adapters are the same), built from public sources.
+`ghcr.io/mll-lab-nu/efe:abc-sim-0.3.0` for the privileged tasks and `abc-sim-0.4.0` for the standard and realtime tasks
+(`images/abc-sim/`; the same simulator and scenes, 0.4.0 with the adapters of eai-standard/3.0), built from public sources.
 
 ## Tasks
 | family | upstream task | directive of the frozen instance | reference rows |
@@ -125,6 +125,20 @@ renders `replay.mp4` in one pass over the trajectory (EGL on the sidecar's GPU);
 shared layer does the same from the adapter's `step()`. The verifier is the shared `v2_1/grade.py` (from the pinned
 `standard-files` image), for both modes. At a fresh episode's start the service compares the built scene's state hash
 with the instance's recorded one; a mismatch gives up before the agent is served (`instance_mismatch`, `infra_error`).
+
+### Agent-ended episodes
+
+Every standard and realtime task sets `RCB_AGENT_END "1"` in its sim service (PROTOCOL §3; standard: the 2.2 layer
+`rcb_agent_end.py`, realtime: `rcb_service.py`'s generic fields). `rcb_abc.Session` runs in its `agent_end` mode: a
+success never ends the episode and is never shown (it is recorded after every control step,
+`hidden_success_first_step`). The agent ends the episode with `POST /finish` (reason `finished`); the end of its session
+(`timeout`) ends it too, and both are judged on the end state. Hold rule (every task but the ball tray): the robot holds
+its last command for the 30-step hold window (1.02 s) from the end state, and the goal must have held for all of it
+(standard: run on a snapshot that is restored afterwards, `end_window` in `final.json`; realtime: `end_window_steps`).
+Ball tray: the countdown has completed with both handles held and the ball is still on the tray at the end; the ball
+leaving the tray ends the episode at once with 0, after a completed countdown too (letting go after the countdown is no
+failure). `final.json` adds the shared fields (`ended_by`, `hidden_success_seen`, `finish_time_s`, ...). Without
+`RCB_AGENT_END` the service behaves as before (a success ends the episode).
 
 ## Reference solutions and oracle levels
 `oracle = "full"` for all 60 directories. The reference of a family (`solution/oracle.npy`) is the commanded actions of

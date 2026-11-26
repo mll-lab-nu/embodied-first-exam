@@ -8,6 +8,10 @@ LIBERO's success check holds (step() reports it), and that is the success; nothi
 frozen start is checked when the episode begins (start_sha: the instance's recorded start-state hash; a scene that
 did not rebuild to it is refused as instance_mismatch, an infrastructure failure, before the agent is served).
 live_verdict() adds LIBERO-MAX's event record of the live episode to final.json (event_fired, event_step).
+Agent-ended episodes (RCB_AGENT_END, PROTOCOL §3; every LIBERO-MAX standard task): LIBERO's success check no longer
+ends the episode (lmx_tool Session.run_on, also in the video's replay, which inherits the setting); step() reports the
+check as things stand, and the episode is judged on the state it ends in (end_judgement "state": the task's BDDL goal
+is a predicate on the scene); RCB_MAX_CONTROL_STEPS is the step cap, judged as it stands.
 The video is one video-only pass after the verdict is on disk: render_video() replays the trajectory in a fresh
 process (one simulator per process, lmx_tool) with the camera on; it can neither change nor cost the verdict
 (tasks/libero-max/README.md, "Grading (standard mode)").
@@ -173,7 +177,8 @@ class LiberoMax:
     def live_verdict(self, rows: np.ndarray, success: bool) -> dict:
         """LIBERO-MAX's record of the live episode, for final.json: whether, and at which control step (1-based; null if
         never), the case's event fired. No "success" key: LIBERO's rule is the live one (the episode ends the moment
-        the success check holds, so no action can follow a success), applied by rcb_service as it ran."""
+        the success check holds, so no action can follow a success; an agent-ended episode is judged on its end
+        state), applied by rcb_service as it ran."""
         live = self.s.report()
         self._live_sha = self.s.state_sha()
         return {"event_fired": bool(live["event_fired"]), "event_step": live["event_step"]}

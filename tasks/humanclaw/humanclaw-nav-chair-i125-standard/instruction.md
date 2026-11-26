@@ -4,22 +4,23 @@
 Walk up to any chair in the house and stop right next to it, about a hand's length away or closer.
 
 ## Goal
-Success: when you stop, you are right next to a chair, about a hand's length from it or closer. The episode ends with
-your stop (action 1), which declares that you are done: how things stand at that moment is what counts, and only a stop
-can succeed. Ending without a stop fails: the 100th action ends the episode whatever it is.
+Success: when you stop, you are right next to a chair, about a hand's length from it or closer. Your stop (action 1)
+declares that you are done and ends the episode; finish (Limits) is the same stop, and the end of your session counts as
+one too. Only a stop can succeed: if your 100th action is not a stop, the episode fails there. Success is judged on how
+things stand when the episode ends. The episode ends when you call finish (Limits), at the step limit (Limits) or when
+your session ends. The robot never tells you whether you have succeeded.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
   benchmark's demonstrations, trained policies); trials are reviewed.
 - One episode, no reset: what you knock over stays knocked over.
 - You see only what the head camera sees and feel how many actions are used and left and how far your pelvis is above
-  (or below) its starting height; not where you are, not where the target is, not a map, no success signal: the service
-  only tells you that the episode ended (`meta["done"]`, `meta["reason"]`).
+  (or below) its starting height; not where you are, not where the target is, not a map, no success signal.
 
 ## Robot Interface
 A simulated adult human body in a furnished house (HumanCLAW: Habitat-Sim with Half-Physics, an HSSD scene); the body
 moves only by motion skills: walk, turn, side step, step back, steps up or down, sit and stop. The robot runs as a
-service you reach only through its client, as if it were real hardware: one live episode.
+service you reach through its client or its MCP tools, as if it were real hardware: one live episode.
 
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`. Its docstring is the full reference
@@ -33,8 +34,19 @@ res = r.submit("skill", [[2, 30.0], [0, 0.4]], video="none")   # turn left 30 de
 res.last["ego"]                              # what the head camera sees after the last action
 ```
 Time moves only inside calls. Each action is one 0.5 s motion; between calls the body waits while you think. `get_obs()`
-is free; `get_obs(seconds=s)` lets s seconds pass with the body standing still (no action used). One call returns at
-most 3000 images.
+is free; `hold(s)` lets s seconds pass with the body standing still (no action used). One call returns at most 3000
+images.
+
+### MCP tools
+- The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
+  `observe`, `submit`, `finish`. A tool takes its endpoint's request fields (any other field in `fields`) and returns
+  the service's reply `meta` unchanged; images, arrays and video are written as files under `/app/obs/` (`.png`, `.npy`,
+  `.mp4`) and the result lists them. Long action chunks can be passed as a file (`actions_file`).
+- `observe` returns at once with what is already recorded: the current frame, or the last `last_s` seconds. Time passes
+  only through `submit`, which answers when its rows have run; a `submit` with `interpolate` "hold", `seconds` and no
+  rows lets time pass with the robot holding still.
+- A call still running after 45 s returns `pending` with an `operation` id; `observe(operation=id)` collects its reply.
+- The client and the tools drive the same robot in the same episode; use either, or both.
 
 ### Actions
 Actions go as `submit("skill", A)`, rows `[action_id, value]`:
@@ -42,7 +54,7 @@ Actions go as `submit("skill", A)`, rows `[action_id, value]`:
 | id | action | value |
 |---|---|---|
 | 0 | walk forward | stride in m: `0.2`, `0.4` or `0.6` (nothing else) |
-| 1 | stop | `0`. Ends the episode: you declare you are done. Only a stop can succeed |
+| 1 | stop | `0`. Ends the episode: you declare you are done. Only a stop can succeed. `r.finish()` (Limits) is the same stop |
 | 2 | turn in place | signed degrees, + left (counter-clockwise seen from above), - right; \|value\| clamped to [10, 120]; 0 is refused |
 | 3 | climb up one step | `0` |
 | 4 | sit down | target pelvis height in m, clamped to [0.15, 0.85] |
@@ -77,3 +89,7 @@ the whole call (`ValueError`) and nothing runs; a clamped value is reported in `
   slows you down); usage: `/run/rcb-limits/usage.json`.
 - Resets: none: one episode.
 - Actions: at most 100 per episode, the stop included.
+- Finish: when you are done, call finish: `POST /finish` with an empty JSON body to the service, at the client's base
+  URL (`http://sim:8000` or `http://localhost:8000`; in Python `requests.post(r.base + "/finish", json={})` with your
+  client `r`). It ends the episode, and every call after it is refused. Reaching the goal changes no reply and does not
+  end the episode; if you never call finish, the end of your session ends it.

@@ -1,0 +1,15 @@
+{
+ "manifest": "efe-mcp-manifest/1",
+ "kind": "rcb",
+ "suite": "dextoolbench",
+ "task": "dextoolbench_brush_red_brush_sweep_forward-standard",
+ "protocol": "eai-standard/2.1",
+ "realtime": false,
+ "tools": [
+  "spec",
+  "observe",
+  "submit",
+  "reset",
+  "finish"
+ ]
+}

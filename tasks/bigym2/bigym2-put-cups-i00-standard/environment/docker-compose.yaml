@@ -21,9 +21,10 @@ services:
     command: python /srv/server.py
     restart: on-failure:6                               # a crash resumes the same episode, never a reset (rcb_service.py)
     environment:
+      RCB_AGENT_END: "1"                               # agent-ended episodes (PROTOCOL §3)
       RCB_INSTANCE: /srv/instance.json
       RCB_TASK_TEXT: "Put both cups from the counter on the bottom shelf of the wall cabinet and let go."
-      RCB_EPISODE: "one episode, no reset: it succeeds when this has held for 1 s (50 control steps): both cups touch the bottom shelf of the wall cabinet (its glass doors start closed) and neither is held by a gripper (held = a finger of the gripper touching the object); a fall (pelvis tilted beyond ~53 degrees or below 0.30 m) fails it without ending it; it ends at the success, a failure, the pelvis 10 m from the scene's origin, a simulator error, or after 3000 control steps"
+      RCB_EPISODE: "one episode, no reset: it succeeds when this has held for 1 s (50 control steps): both cups touch the bottom shelf of the wall cabinet (its glass doors start closed) and neither is held by a gripper (held = a finger of the gripper touching the object); a fall (pelvis tilted beyond ~53 degrees or below 0.30 m) fails it without ending it; it ends at your POST /finish, a failure, the pelvis 10 m from the scene's origin, a simulator error, or after 3000 control steps; judged on how things stand when it ends (a success does not end it)"
       RCB_WALL_CLOCK_S: "3600"
       # Knobs: ${NAME:-default} takes NAME from the shell that runs harbor. The defaults are the standard
       # configuration; results under other settings are reported separately.

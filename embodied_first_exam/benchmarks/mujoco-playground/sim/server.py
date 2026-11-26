@@ -19,7 +19,14 @@ episode ends the service writes /data/trajectory.npz + /data/episode.json with t
 this simulator when the episode ends); the collect hook (finalize.sh) makes it exit, writes that verdict into final.json
 (nothing is replayed to grade it) and renders the video from the trajectory. The frozen
 instance is checked when the service builds it: a scene whose start state does not hash to the instance's recorded
-`state_sha` gets no episode (instance_mismatch, an infrastructure failure)."""
+`state_sha` gets no episode (instance_mismatch, an infrastructure failure).
+
+Agent-ended episodes (RCB_AGENT_END=1, rcb_agent_end.py; PROTOCOL §3): the service never shows the task's success and a
+success never ends the episode (the check is still run after every control step, and only recorded); POST /finish (or
+the `done` action, the same end) ends it with reason "finished", the horizon with "step_limit" (RCB_STEP_LIMIT may only
+lower it) and the end of the agent's session with "timeout": those three are judged on the state they leave (the task's
+check on the steps executed: a getup or stand pose held for its last steps, a joystick schedule tracked to the
+horizon). The termination rule (a fall) still ends the episode with 0. A reset after /finish is refused (409)."""
 
 import math
 import os
@@ -32,6 +39,7 @@ import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import rcb_limited as L  # noqa: E402
+import rcb_agent_end as AE  # noqa: E402
 
 DATA = os.environ.get("RCB_DATA", "/data")
 INSTANCE = os.environ.get("RCB_INSTANCE", os.path.join(os.path.dirname(os.path.abspath(__file__)), "instance.json"))
@@ -53,7 +61,7 @@ os.environ["RCB_AGENT_TRACE_DIR"] = ""
 import rcb_quadruped as Q  # noqa: E402  (first: it picks the rendering backend before mujoco loads)
 import mujoco  # noqa: E402
 
-EP = L.Episode(DATA, dim=Q.N, resume="exact", persist=("t_first", "resets", "reset_at"))
+EP = L.Episode(DATA, dim=Q.N, resume="exact", persist=AE.persist(("t_first", "resets", "reset_at")))
 EP.startup()  # start count, back-off after failed starts, the startup watchdog until scene_built()
 S = Q.Session(INSTANCE, check_hash=False)   # the start is checked here, as a give-up the agent is told about (below)
 if not S.instance_ok:
@@ -190,6 +198,19 @@ TASK_EPISODE = {
                     f"floor), after {S.horizon} control steps, when you "
                     "submit `done`, or when your time is over",
 }[S.kind]
+CAP = min(S.horizon, AE.STEP_LIMIT or S.horizon)   # agent-ended episodes: the step cap (RCB_STEP_LIMIT may only lower it)
+if AE.ENABLED:
+    _ONE = "one episode, no reset" if not RESET_BUDGET else (
+        f"an episode (with up to {RESET_BUDGET} resets: POST /reset starts a new one; only the last is graded)")
+    _END = (f"it ends at your POST /finish (or the `done` action), after {CAP} control steps (reason step_limit), "
+            + ("when the robot meets its termination rule (" + str(S.spec.get("term_text")) + ": a failure), "
+               if S.kind == "joystick" else
+               "when the robot meets the termination rule (a failure), " if S.kind == "stand_on_two" else "")
+            + "or when your time is over; the task's check on the steps executed is graded then")
+    TASK_EPISODE = f"{_ONE}: {_END}" + {
+        "joystick": f" (it passes only once the whole {S.horizon * DT:g} s schedule has been tracked)",
+        "getup": f" (the robot must have stood upright for the last {Q.HOLD_STEPS} control steps)",
+        "stand_on_two": f" (the pose must have been held for the last {Q.POSE_HOLD_STEPS} control steps)"}[S.kind]
 _ctl = {"type": "joint position actuators (PD)", "kp_nm_per_rad": float(M.actuator_gainprm[0, 0]),
         "kd_nms_per_rad": float(M.dof_damping[6] - M.actuator_biasprm[0, 2])}
 SPEC = {
@@ -221,7 +242,8 @@ SPEC = {
                          "apart (a multiple of the control period, at most 0.5 s), `hold` or `linear` between rows; values "
                          "outside the limits are clipped and reported",
         },
-        "done": {"dim": 0, "layout": [], "semantics": 'ends the episode now, in the current state (no physics); r.submit("done", [])'},
+        "done": {"dim": 0, "layout": [], "semantics": 'ends the episode now, in the current state (no physics); r.submit("done", [])'
+                 + ("; the same end as POST /finish" if AE.ENABLED else "")},
         "not_yet": ["joint_velocity", "joint_torque", "joint_delta"],
     },
     "proprio_layout": PROPRIO_LAYOUT,
@@ -230,7 +252,7 @@ SPEC = {
     "world": {"frame": "z up; the robot starts where the episode puts it (no world coordinates are given)", "up": "+z",
               "units": {"length": "m", "angle": "rad", "time": "s"}, "quaternion_order": "wxyz",
               "camera_axes": "intrinsic_cv / extrinsic_cv: OpenCV camera axes (x right, y down, z forward); cam2world_gl: OpenGL axes"},
-    "budget": {"reset": RESET_BUDGET, "steps": None, "wall_clock_s": WALL_CLOCK_S},   # + "clock" (rcb_limited.CLOCK_NOTE): what time_left_s counts from
+    "budget": {"reset": RESET_BUDGET, "steps": CAP if AE.STEP_LIMIT else None, "wall_clock_s": WALL_CLOCK_S},   # + "clock" (rcb_limited.CLOCK_NOTE): what time_left_s counts from
     "max_control_steps": S.horizon,
     "episode": TASK_EPISODE,
     "command_schedule": schedule_text(),
@@ -254,8 +276,9 @@ if RESET_BUDGET:
         f"POST /reset (JSON or RCB1 {{cameras, video_fps, depth}}; no physics) abandons the running episode, or follows "
         f"one that has ended, and starts a new one from the same frozen starting state, {RESET_BUDGET} times in all; it "
         "returns the new episode's first frames and proprioception. Only the last episode is graded: an episode you "
-        "reset away is never graded, a success ends the trial (409 after it), and when your time is up the episode then "
-        "running is the one graded. The wall clock never restarts. /status and every meta add `episode`, `resets_left` "
+        "reset away is never graded, " + ("after POST /finish no reset is possible (409)" if AE.ENABLED else
+                                          "a success ends the trial (409 after it)")
+        + ", and when your time is up the episode then running is the one graded. The wall clock never restarts. /status and every meta add `episode`, `resets_left` "
         "and `control_steps_total` (all episodes); `control_steps` counts the current episode's."
     )
 L.check_spec(SPEC)  # a spec that misses a 2.2 field or names a forbidden one never starts the episode
@@ -313,7 +336,8 @@ def summary() -> dict:
             "fell_at": chk.get("fell_at"), "worst_lin_err": chk.get("worst_lin_err"), "worst_yaw_err": chk.get("worst_yaw_err"),
             "tilt_deg": chk.get("tilt_deg"), "imu_height": chk.get("imu_height"), "pose_angle_deg": chk.get("pose_angle_deg"),
             "episodes": E["resets"] + 1, "resets": E["resets"], "reset_budget": RESET_BUDGET, "control_steps_total": EP.rows,
-            "instance_ok": bool(S.instance_ok), **EP.final_fields()}
+            "instance_ok": bool(S.instance_ok), **EP.final_fields(), **AE.final_fields(E, n),
+            **({"end_judgement": "state"} if AE.ENABLED else {})}
 
 
 def finish(reason: str) -> None:
@@ -327,8 +351,9 @@ def finish(reason: str) -> None:
     try:
         chk = S.check()
         E["check"] = {k: v for k, v in chk.items() if k != "segments"}
-        # a simulator error ends the episode: the state after it is never judged a success (PROTOCOL §4.6)
-        E["success"] = bool(chk["success"]) and reason != "error"
+        # a simulator error ends the episode: the state after it is never judged a success (PROTOCOL §4.6); agent-ended:
+        # only the ends judged on the state they leave can succeed (a fall is the termination rule: 0)
+        E["success"] = bool(chk["success"]) and reason != "error" and (not AE.ENABLED or reason in AE.END_STATE_REASONS)
     except Exception:  # noqa: BLE001
         traceback.print_exc()
     EP.log({"ev": "end", "reason": reason, "step": E["step"], "control_steps": ctrl_steps(), "success": bool(E["success"]),
@@ -348,6 +373,13 @@ def dump() -> None:
 
 
 def after_step() -> None:
+    if AE.ENABLED:   # the check is only recorded (a joystick's passes only at the horizon); the horizon is the step cap
+        if S.kind in ("joystick", "stand_on_two") and S.fell_at is not None:
+            finish("fell"); return
+        AE.hidden_success(E, (S.kind != "joystick" or S.done) and S.check()["success"], EP.log, ctrl_steps())
+        if S.done or ctrl_steps() >= CAP:
+            finish("step_limit")
+        return
     if S.kind in ("joystick", "stand_on_two") and S.fell_at is not None:
         finish("fell")
     elif S.kind in ("getup", "stand_on_two") and S.check()["success"]:
@@ -438,7 +470,7 @@ def meta_common(cams) -> dict:
            "sim_time_s": round(n * DT, 3), "time_s": round(_agent_time(), 2),
            "time_left_s": max(0.0, round(WALL_CLOCK_S - _agent_time(), 1)),
            "proprio": {"layout": PROPRIO_LAYOUT, "now": proprio_row().tolist()}, "done": E["done"], "reason": E["reason"],
-           "cameras": {c: camera_info(c) for c in cams}, **reset_counters()}
+           "cameras": {c: camera_info(c) for c in cams}, **reset_counters(), **AE.steps_left(ctrl_steps())}
     if S.kind == "joystick":
         out["command_now"] = dict(zip(("vx_mps", "vy_mps", "wz_radps"), S.command_now().round(4).tolist()))
     return out
@@ -451,7 +483,9 @@ def do_submit(meta: dict, A: np.ndarray):
         rec = recorder(cameras_of(meta), 5, meta)
         rec.tick(force=True, last=True)  # every response carries the last frames
         E["calls"] += 1
-        finish("done")
+        if AE.ENABLED:   # the `done` action is POST /finish's end
+            E["finish_t"] = time.time()
+        finish("finished" if AE.ENABLED else "done")
         return {**meta_common(cameras_of(meta)), "chunk_id": E["calls"], "type": typ, "executed_rows": 0, "ok": True}, rec.parts("none", 5)
     if typ != "joint_position":
         raise ValueError(f"type must be joint_position or done (not yet: {SPEC['action_types']['not_yet']})")
@@ -533,14 +567,15 @@ def do_observe(meta: dict):
 def reset_counters() -> dict:
     if not RESET_BUDGET:
         return {}
-    left = 0 if (E["success"] or E.get("exiting")) else RESET_BUDGET - E["resets"]
+    over = AE.finished(E) if AE.ENABLED else E["success"]   # agent-ended: only /finish closes the trial
+    left = 0 if (over or E.get("exiting")) else RESET_BUDGET - E["resets"]
     return {"episode": E["resets"] + 1, "resets_left": left, "control_steps_total": EP.rows}
 
 
 def status() -> dict:
     _touch()
     return {"step": E["step"], "calls": E["calls"], "control_steps": ctrl_steps(), "done": E["done"], "reason": E["reason"],
-            "elapsed_s": round(time.time() - E["t0"], 1), **reset_counters()}
+            "elapsed_s": round(time.time() - E["t0"], 1), **reset_counters(), **AE.steps_left(ctrl_steps())}
 
 
 class Refused(Exception):
@@ -556,7 +591,9 @@ def do_reset(meta: dict):
     meta = _request(meta)
     cams, fps = cameras_of(meta), video_fps(meta)
     L.depth_mode(meta)  # a bad depth value is a 400 before anything changes
-    if E["success"]:
+    if AE.ENABLED and E["done"] and E["reason"] in ("finished", "timeout"):
+        raise Refused({"error": "episode finished", "reason": E["reason"], "resets_left": 0})
+    if E["success"] and not AE.ENABLED:
         raise Refused({"error": "trial finished: an episode succeeded", "reason": E["reason"], "resets_left": 0})
     if E["resets"] >= RESET_BUDGET:
         raise Refused({"error": "reset budget exhausted", "reason": "reset budget exhausted", "budget": RESET_BUDGET,
@@ -570,6 +607,8 @@ def do_reset(meta: dict):
     E["resets"] += 1
     E["reset_at"] = list(E["reset_at"]) + [EP.rows]
     E.update(done=False, reason=None, success=False, t_end=None, episode_control_steps=None, dumped=False, check=None)
+    if AE.ENABLED:   # the new episode's hidden success (trial_seen keeps the trial's)
+        E.update(now_success=False, seen_step=None)
     EP._ck = None  # the state changed without a journal row: the checkpoint after this call must hash it anew
     E["calls"] += 1
     EP.log({"ev": "reset", "call": E["calls"], "episode": E["resets"] + 1, "journal_rows": EP.rows,
@@ -641,8 +680,9 @@ print(f"{L.PROTOCOL} MuJoCo Playground quadruped sim ready ({S.env}; startup {EP
 
 
 def make_handler(svc: L.Service):
-    """The shared 2.2 handler, plus POST /reset when the run grants resets (the shared layer has no reset)."""
-    base = L.make_handler(svc)
+    """The shared 2.2 handler (with POST /finish when the task's episodes are agent-ended), plus POST /reset when the run
+    grants resets (the shared layer has no reset)."""
+    base = AE.make_handler(svc)
 
     class H(base):
         def do_POST(self):
@@ -660,6 +700,7 @@ def make_handler(svc: L.Service):
                 out = blobs = err = None
                 try:
                     out, blobs = do_reset(meta)
+                    L.RING.clear()               # a new episode: nothing of it recorded yet (eai-standard/3.0)
                 except Refused as exc:
                     err = (409, exc.body)
                 except ValueError as exc:
@@ -692,10 +733,13 @@ def serve(svc: L.Service, port: int) -> None:
     service restarts is waited for, not a crash)."""
     svc.spec.setdefault("on_service_error", L.ON_SERVICE_ERROR)
     svc.spec.setdefault("max_call_wall_s", EP.max_call_wall_s)
+    if AE.ENABLED:
+        svc.spec["success_signal"] = AE.SUCCESS_SIGNAL_NOTE
     L.check_spec(svc.spec)
     L.bind(port, make_handler(svc)).serve_forever()
 
 
-serve(L.Service(spec=SPEC, lock=LOCK, state=E, submit=do_submit, observe=do_observe, kinematics=do_kinematics, status=status,
-                on_submit_error=lambda exc: finish("error"), log=EP.log, episode=EP, state_sha=S.state_sha,
-                proprio=proprio_row), port=int(os.environ.get("RCB_PORT", "8000")))
+serve(AE.Service(spec=SPEC, lock=LOCK, state=E, submit=do_submit, observe=do_observe, kinematics=do_kinematics, status=status,
+                 on_submit_error=lambda exc: finish("error"), log=EP.log, episode=EP, state_sha=S.state_sha,
+                 proprio=proprio_row, **({"finish": lambda: finish("finished")} if AE.ENABLED else {})),
+      port=int(os.environ.get("RCB_PORT", "8000")))

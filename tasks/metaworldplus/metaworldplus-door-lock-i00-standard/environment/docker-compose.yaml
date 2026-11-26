@@ -20,6 +20,7 @@ services:
     command: python /srv/server_mw.py
     restart: on-failure:6
     environment:
+      RCB_AGENT_END: "1"                               # agent-ended episodes (PROTOCOL §3)
       RCB_TOOL: mw_tool
       RCB_INSTANCE: /srv/instance.npz
       RCB_INSTANCE_SHA: "fed6615a52129e1dfdd214e573a68fb8ab0086f836986a93d4e913b0f76e6388"

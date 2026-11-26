@@ -4,8 +4,9 @@
 Put the mustard bottle on top of the raisin box.
 
 ## Goal
-Success: the mustard bottle rests on top of the raisin box, and neither gripper finger touches it. The episode ends as
-soon as the task is done, when your time is up, or on a simulator error.
+Success: the mustard bottle rests on top of the raisin box, and neither gripper finger touches it. Success is judged on
+how things stand when the episode ends. It ends when you call finish (Limits) or when your session ends. The robot never
+tells you whether you have succeeded.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
@@ -15,7 +16,7 @@ Rules:
 
 ## Robot Interface
 A Franka Panda arm with a Robotiq 2F-85 gripper at a table (NVIDIA RoboLab's DROID setup, Isaac Sim / PhysX). The robot
-runs as a service you reach only through its client, as if it were real hardware: one live episode.
+runs as a service you reach through its client or its MCP tools, as if it were real hardware: one live episode.
 
 ### Client
 `/opt/tools/rcb_client.py` (protocol `eai-standard/2.2`):
@@ -28,7 +29,8 @@ spec = r.spec()                               # action types, dims, joint limits
 obs = r.get_obs()                             # current frames from 3 cameras: obs.last[cam] -> uint8 (H,W,3)
 obs.meta["proprio"]                           # {"layout": [...32 names], "now": [...]}: joints, gripper, end-effector pose, ...
 obs.meta["cameras"]                           # per-camera intrinsic_cv / extrinsic_cv / cam2world_gl at the LAST frame
-obs = r.get_obs(seconds=2.0, video="mp4")     # hold the last command and watch for 2 s (max 30): obs.video[cam] = mp4 bytes
+obs = r.hold(2.0)                             # hold the last command for 2 s of robot time: obs.video[cam] = mp4 bytes
+obs = r.get_obs(last_s=1.0)                   # the frames recorded over the last 1 s (reading moves no time)
 
 res = r.submit("joint_position", A, dt=0.2)   # A: (T, 8) rows dt seconds apart; streamed at 15 Hz with linear interpolation
 res = r.submit("ee_pose", P)                  # P: (T, 8) fingertip-centre targets; differential IK per row
@@ -46,7 +48,7 @@ res.last["egocentric_mirrored_camera"]; res.proprio   # last frame per camera; f
 - A malformed request (a wrong type, a value out of range) is answered 400 with the reason and executes nothing. One
   call returns at most 2712 images.
 - A busy service has not crashed. The service answers one request at a time: while a call runs (a long `submit` or a
-  watching `get_obs` can take minutes; one call stops at `spec["max_call_wall_s"]`), every other request waits for it,
+  long `hold` can take minutes; one call stops at `spec["max_call_wall_s"]`), every other request waits for it,
   `r.status()` from another process included. A client-side timeout while a call is in flight (for example a `requests`
   ReadTimeout on `r.status()`) means "busy": nothing restarts, the call runs to its end and the episode goes on from
   there. Keep one client process and wait for your call's answer.
@@ -54,6 +56,17 @@ res.last["egocentric_mirrored_camera"]; res.proprio   # last frame per camera; f
   the same episode (never a reset) in the state after the last call it completed, which you may not have received.
   `r.wait_ready()` waits until it answers again (resuming replays the episode so far, which can take minutes; the wall
   clock keeps running); then check `r.status()["control_steps"]` before you continue (`spec["on_service_error"]`).
+
+### MCP tools
+- The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
+  `observe`, `submit`, `kinematics`, `finish`. A tool takes its endpoint's request fields (any other field in `fields`)
+  and returns the service's reply `meta` unchanged; images, arrays and video are written as files under `/app/obs/`
+  (`.png`, `.npy`, `.mp4`) and the result lists them. Long action chunks can be passed as a file (`actions_file`).
+- `observe` returns at once with what is already recorded: the current frame, or the last `last_s` seconds. Time passes
+  only through `submit`, which answers when its rows have run; a `submit` with `interpolate` "hold", `seconds` and no
+  rows lets time pass with the robot holding still.
+- A call still running after 45 s returns `pending` with an `operation` id; `observe(operation=id)` collects its reply.
+- The client and the tools drive the same robot in the same episode; use either, or both.
 
 ### Actions
 - `joint_position` (8): `panda_joint1..7, gripper`; radians, and the gripper command is binary (0 = open, 1 = closed; it
@@ -100,3 +113,7 @@ task is still judged, so a release you sent last completes.
 - Steps: no step budget (actions and simulated time are reported as cost); a technical cap ends the episode after
   100,000 control steps (1.9 h of simulated time), graded as it stands; at this service's speed (3-15 control steps/s)
   your time runs out long before.
+- Finish: when you are done, call finish: `POST /finish` with an empty JSON body to the service, at the client's base
+  URL (`http://sim:8000` or `http://localhost:8000`; in Python `requests.post(r.base + "/finish", json={})` with your
+  client `r`). It ends the episode, and every call after it is refused. Reaching the goal changes no reply and does not
+  end the episode; if you never call finish, the end of your session ends it.

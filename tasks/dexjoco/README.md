@@ -141,7 +141,8 @@ unchanged), resume class `exact`:
   (`Session.step`, with this benchmark's tightened checks such as water_plant's aim and 30-step hold) on the episode the
   service ran, recorded by the service in `episode.json` when the episode ends; `final.json` has `graded_by = "live"`,
   `replays = 0`, `live_success`, `live_sha` (the final-state hash). Nothing is replayed to grade it. No settle window
-  is needed: the episode ends at the first success.
+  is needed without agent-ended episodes: the episode ends at the first success (with them, see "Agent-ended
+  episodes").
 - **start state:** the service checks the frozen instance when the episode begins (`server.py`, before
   `Episode.begin`): a scene that does not rebuild to the instance's recorded state hash (`instance_exact`) gets no
   episode; the service gives up (`instance_mismatch = 1`, `infra_error = 1`, 409 to every request) before the agent is
@@ -172,6 +173,22 @@ unchanged), resume class `exact`:
 - `ci_checks/check-standard-protocol.py` passes against a live service of a single-arm and a bimanual task (velocity limits are null:
   WARN only). Crash recovery: the service killed between calls and inside a call resumes the same episode
   (`resumes = 2`, exact hash) and the oracle still ends in success.
+
+### Agent-ended episodes
+
+Standard episodes are agent-ended (PROTOCOL §3 "Agent-ended episodes"; `RCB_AGENT_END` in the sim service,
+`/srv/rcb_agent_end.py`). The agent never sees a success: no `success` or progress in any meta, status or spec, and a
+success never ends the episode. The episode ends at the agent's `POST /finish` (reason `finished`), when its time runs
+out (`timeout`), at the episode's step cap (`step_limit`), on a failure rule of the task (a 0, even after a success) or
+on a simulator error (judged as without the feature). It is then judged on how things stand when it ends; `episode.json`
+records `ended_by`, `hidden_success_seen` and the step of the first hidden success as evidence. No `RCB_STEP_LIMIT` is
+set: DexJoCo's `max_steps` already caps the episode and maps to `step_limit`.
+
+`rcb_dexjoco.Session(hide_success=True)` records DexJoCo's `succeed` (`now_success`) without ending the episode; its
+other terminations stay failures. The microwave, photograph and water-plant tasks are judged as events (seen during the
+episode, with its conditions at that moment); the assembly, Hanoi, unlock-iPad, click-mouse, fold-glasses and
+pinch-tongs tasks get up to 1.2 s with the hands held still at the end for a success that is completing; the rest are
+judged on the end state.
 
 ## World-frame information
 Privileged mode gives world coordinates (object poses through the tooling, the table height and the arm bases in the

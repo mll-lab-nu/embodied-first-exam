@@ -23,7 +23,10 @@ Differences from the YAMLab service, all from the robot and the simulator:
   gripper linear); AM-Bench's controller (floating-base IK + PID on the airframe + PD joint drives) does the rest;
 - the airframe is free-flying: /kinematics is the arm on its base (frame `base`, or world with `base_pose`);
 - the episode ends at the first control step where AM-Bench's success check holds, or at the task's own time-out (its
-  episode length), or when the time is up;
+  episode length), or when the time is up. With agent-ended episodes (RCB_AGENT_END, PROTOCOL §3; every AM-Bench standard
+  task) a success never ends it and is never shown: it ends at the agent's POST /finish, at the time-out (reason
+  "step_limit"), at the end of the agent's session ("timeout") or on a simulator error, and the verdict is the state it
+  ends in (END_JUDGEMENT: press_button's press counts as it happens; ndt's hold runs on from the end, END_WINDOW);
 - the episode is graded as it ran (no grading replay): when it ends the service writes
   /data/trajectory.npz (the deliverable) + /data/episode.json (the live result and the end-state hash); the collect hook's
   SIGUSR1 makes it exit, and environment/sim/finalize.sh writes final.json from it, then films the rows once (an
@@ -38,6 +41,7 @@ import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import rcb_limited as L  # noqa: E402
+import rcb_agent_end as AE  # noqa: E402
 
 PROTOCOL = L.PROTOCOL
 DATA = os.environ.get("RCB_DATA", "/data"); os.makedirs(DATA, exist_ok=True); os.makedirs(os.path.join(DATA, "calls"), exist_ok=True)
@@ -55,7 +59,7 @@ E = {"ready": False, "step": 0, "calls": 0, "done": False, "reason": None, "succ
 # deviation (resume_state_mismatch, resume_max_tcp_dev_m) and continues; the verdict is the live episode's after the
 # resume, for every task.
 VERDICT = json.load(open(INSTANCE)).get("determinism") == "verdict"
-EP = L.Episode(DATA, dim=ACTION_DIM, resume="approx")
+EP = L.Episode(DATA, dim=ACTION_DIM, resume="approx", persist=AE.persist())
 EP.startup()             # start count, back-off after failed starts, startup watchdog (RCB_STARTUP_TIMEOUT_S) until scene_built()
 log = EP.log
 
@@ -72,7 +76,7 @@ def write_final() -> None:
                   {"success": bool(E["success"]), "steps": E["step"], "calls": E["calls"], "control_steps": n, "physics_steps": n * SUBSTEPS,
                    "elapsed_s": round((E.get("t_end") or time.time()) - E["t0"], 1), "reason": E["reason"], "done": E["done"],
                    "task": S.env_id, "protocol": PROTOCOL, "finalized": False, "n_actions": E.get("n_actions"), "live_sha": E.get("live_sha"),
-                   **EP.final_fields()})
+                   **EP.final_fields(), **AE.final_fields(E, n), **end_fields()})
 
 
 def dump() -> None:
@@ -95,14 +99,56 @@ def dump() -> None:
                   {"success": bool(E["success"]), "steps": E["step"], "calls": E["calls"], "control_steps": n, "physics_steps": n * SUBSTEPS,
                    "elapsed_s": round((E.get("t_end") or time.time()) - E["t0"], 1), "reason": E["reason"], "task": S.env_id, "protocol": PROTOCOL,
                    "n_actions": E.get("n_actions"), "hold_pad_rows": E.get("hold_pad_rows", 0), "live_sha": E.get("live_sha"),
-                   "determinism_verdict_mode": VERDICT, **INSTANCE_CHECK, **EP.final_fields()})
+                   "determinism_verdict_mode": VERDICT, **INSTANCE_CHECK, **EP.final_fields(), **AE.final_fields(E, n), **end_fields()})
     write_final()
+
+
+# Agent-ended episodes (PROTOCOL §3): how each AM-Bench task is judged when the agent ends it. "state": AM-Bench's success
+# check on the state the episode ends in; "event": the check held at some control step of the episode (a press is a
+# moment: the button springs back). END_WINDOW: a task whose check is a hold (ndt: the end effector held at the inspection
+# point) runs its hold on from the end state, the robot holding its last command, for at most that many control steps,
+# and succeeds if the check holds within them (the steps already held count).
+END_JUDGEMENT = {"PressButton": "event"}          # by env_id prefix; every other task: "state"
+END_WINDOW = {"NDT": int(CTRL_HZ)}                # control steps (1 s): ndt's hold is just short of a second
+
+
+def end_judgement() -> str:
+    return next((v for k, v in END_JUDGEMENT.items() if S.env_id.startswith(k)), "state")
+
+
+def end_window() -> int:
+    return next((v for k, v in END_WINDOW.items() if S.env_id.startswith(k)), 0)
+
+
+def end_fields() -> dict:
+    return {"end_judgement": end_judgement(), "end_window_steps": int(E.get("end_window_steps") or 0)} if AE.ENABLED else {}
+
+
+def judge_end(reason: str) -> bool:
+    """An agent-ended episode's verdict (lock held): the end state's success, or for an event task whether it happened;
+    a hold task's window first runs on from the end state (journaled: the trajectory has its rows)."""
+    if end_judgement() == "event":
+        return E.get("seen_step") is not None
+    ok = bool(S.now_success)
+    if not ok and reason in ("finished", "timeout") and end_window() and not S.done:
+        n = 0
+        hold = np.asarray(S.hold_action(), dtype=np.float64)
+        while n < end_window() and not S.done and not ok:
+            S.step(hold); EP.journal(hold); n += 1
+            ok = bool(S.now_success)
+        E["end_window_steps"] = n
+        log({"ev": "end_window", "steps": n, "success": ok})
+    return ok
 
 
 def finish(reason: str) -> None:
     if E["done"]: return
-    E["done"] = True; E["reason"] = reason; E["t_end"] = time.time(); E["episode_control_steps"] = ctrl_steps()
-    if not E["success"]:
+    E["done"] = True; E["reason"] = reason; E["t_end"] = time.time()
+    if AE.ENABLED:       # agent-ended: the state it ends in (a simulator error is judged as without the feature)
+        try: E["success"] = reason in AE.END_STATE_REASONS + ("error",) and judge_end(reason)
+        except Exception: traceback.print_exc(); E["success"] = False
+    E["episode_control_steps"] = ctrl_steps()
+    if not E["success"] and not AE.ENABLED:
         E["success"] = bool(S.success())
     log({"ev": "end", "reason": reason, "step": E["step"], "control_steps": ctrl_steps(), "elapsed_s": round(E["t_end"] - E["t0"], 1), "success": bool(E["success"])})
     dump()
@@ -110,7 +156,8 @@ def finish(reason: str) -> None:
 
 # ---------------------------------------------------------------- scene
 import rcb_ambench as M  # noqa: E402
-S = M.Session(INSTANCE, strict=False, cameras=True, depth=True)   # the start-state check is below (instance_mismatch)
+S = M.Session(INSTANCE, strict=False, cameras=True, depth=True,    # the start-state check is below (instance_mismatch)
+              hide_success=AE.ENABLED)                               # agent-ended: a success never ends the episode
 # The frozen initial state, checked before anything is served: the rebuilt scene's state hash against instance.json's
 # `initial_sha` (what strict mode refused by raising, which crashed the service until the collect hook gave up; the
 # replays checked it again until 2026-10-17).
@@ -179,7 +226,10 @@ SPEC = {
               "camera_axes": "intrinsic_cv / extrinsic_cv: OpenCV camera axes (x right, y down, z forward); cam2world_gl: OpenGL axes (x right, y up, z back)"},
     "budget": {"reset": 0, "steps": None, "wall_clock_s": float(os.environ.get("RCB_WALL_CLOCK_S", "3600"))},
     "max_control_steps": EPISODE_STEPS,
-    "episode": TEXTS["episode"],
+    "episode": (TEXTS["episode"].replace("it ends at the first control step where AM-Bench's success check holds, when",
+                                         "a success never ends it and is never shown: it ends at your POST /finish, when")
+                .replace("runs out (AM-Bench's time-out,", "runs out (graded as it stands; AM-Bench's time-out, reason \"step_limit\",")
+                if AE.ENABLED else TEXTS["episode"]),
     "robot_spec": S.robot_spec(),
     "kinematics": S.kinematics_spec(),
     "depth": {"modes": list(L.DEPTH_MODES), "default": "none", "kind": "z-depth", "unit": "m", "invalid": 0, "max_m": L.DEPTH_MAX_M,
@@ -314,6 +364,10 @@ def ctrl_step(a: np.ndarray, rec: L.Recorder) -> bool:
     (success, AM-Bench's time-out), or the service stops the call (max_call_wall_s, the client hung up)."""
     a = np.asarray(a, dtype=np.float64)                    # the exact row Session.step executes (and records)
     over = S.step(a); stop = EP.journal(a); rec.tick()
+    if AE.ENABLED:       # the success is only recorded; AM-Bench's time-out (or the runaway cap) ends it, judged as it stands
+        AE.hidden_success(E, S.now_success, log, ctrl_steps())
+        if over: finish("step_limit")
+        return E["done"] or stop
     if over: finish(end_reason())
     return E["done"] or stop
 
@@ -388,14 +442,15 @@ def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
     before = ctrl_steps(); rec.tick(force=True)
     run_ee_pose(A, dt, interp, rec, clipped)
     rec.tick(force=True, last=True)
-    succ = E["success"] or bool(S.success()); E["success"] = succ
+    succ = bool(E.get("now_success")) if AE.ENABLED else (E["success"] or bool(S.success()))   # agent-ended: never latched
+    if not AE.ENABLED: E["success"] = succ
     out = {**meta_common(cams), "chunk_id": E["calls"], "type": typ, "executed_rows": E["step"] - step0, "control_steps_chunk": ctrl_steps() - before,
            "physics_steps_chunk": (ctrl_steps() - before) * SUBSTEPS, "clipped": clipped[:200], "n_clipped": len(clipped), "plan": [], "rejected": None, "ok": True}
     log({"ev": "submit", "call": E["calls"], "type": typ, "rows": E["step"] - step0, "dt": dt, "interpolate": interp, "cameras": cams, "note": note,
          "depth": rec.mode, "control_steps": ctrl_steps() - before, "n_clipped": len(clipped), "success": succ,
          **({"stopped": EP.stop_reason} if EP.stopping else {})})
     save_call_evidence(E["calls"], {k: v for k, v in out.items() if k != "cameras"}, rec)
-    if succ: finish("success")
+    if succ and not AE.ENABLED: finish("success")
     out["done"] = E["done"]; out["reason"] = E["reason"]
     return out, rec.parts(video, fps)
 
@@ -418,8 +473,9 @@ def do_observe(meta: dict) -> tuple[dict, list]:
         for _ in range(int(round(seconds * CTRL_HZ))):
             if ctrl_step(hold, rec): break
         rec.tick(force=True, last=True)
-        succ = E["success"] or bool(S.success()); E["success"] = succ
-        if succ: finish("success")
+        if not AE.ENABLED:         # agent-ended: ctrl_step recorded the state's success, nothing ends here
+            succ = E["success"] or bool(S.success()); E["success"] = succ
+            if succ: finish("success")
     else:
         rec.tick(force=True, last=True)                    # the current frames: no physics
     E["calls"] += 1
@@ -438,14 +494,14 @@ def do_kinematics(req: dict) -> dict:
 
 def status() -> dict:
     return {"step": E["step"], "calls": E["calls"], "control_steps": ctrl_steps(), "done": E["done"], "reason": E["reason"],
-            "elapsed_s": round(time.time() - E["t0"], 1)}
+            "elapsed_s": round(time.time() - E["t0"], 1), **AE.steps_left(ctrl_steps())}
 
 
 def end_from_signal() -> None:
     """The collect hook's SIGUSR1 (rcb_limited.Episode runs this in a thread): end the episode, dump it, exit 0."""
     with LOCK:
         E["exiting"] = True
-        if not E["done"]: finish("time_up")         # the agent's time ran out with the episode still running
+        if not E["done"]: finish("timeout" if AE.ENABLED else "time_up")   # the agent's session ended mid-episode
         else: dump()
         log({"ev": "exit", "reason": "collect hook: episode dumped (graded by the live episode), releasing the simulator"})
         if not os.path.exists(PID_FILE):   # a SIGUSR1 that came in during a resume: the hook still needs to see this process end
@@ -474,5 +530,6 @@ EP.begin(state=E, step=replay_row, state_sha=lambda: S.status()["state_sha"], pr
 E["ready"] = True; write_final()
 open(PID_FILE, "w").write(str(os.getpid()))
 print(f"{PROTOCOL} sim ready (startup {EP.n_startups}, resumes {EP.resumes})", flush=True)
-L.serve(L.Service(spec=SPEC, lock=LOCK, state=E, submit=do_submit, observe=do_observe, kinematics=do_kinematics, status=status,
-                  on_submit_error=lambda exc: finish("error"), log=log, episode=EP, state_sha=lambda: S.status()["state_sha"], proprio=proprio_row))
+AE.serve(AE.Service(spec=SPEC, lock=LOCK, state=E, submit=do_submit, observe=do_observe, kinematics=do_kinematics, status=status,
+                    on_submit_error=lambda exc: finish("error"), log=log, episode=EP, state_sha=lambda: S.status()["state_sha"],
+                    proprio=proprio_row, **({"finish": lambda: finish("finished")} if AE.ENABLED else {})))

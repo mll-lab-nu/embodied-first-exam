@@ -671,6 +671,12 @@ ON_TABLE = ("take_measuring_spoon_out", "cooking_clear_plate")
 # row for SETTLE_STEPS more control steps (2 s), the success term still checked at every step, so that a release in the
 # last rows completes; a trajectory that ends holding the object goes on holding it.
 SETTLE_STEPS = 30
+# Agent-ended episodes (PROTOCOL §3; the standard task's sim service sets RCB_AGENT_END=1): the success term never ends the
+# episode and is never shown. Session wraps the term: RoboLab's termination manager still evaluates it at every control step
+# (stateful conditionals see every step, as before), the value is kept in Session.term_now, and the term returns False, so
+# the env never terminates on it. The service judges the state the episode ends in: the last command held for SETTLE_STEPS
+# control steps from there, the term at the window's last step.
+AGENT_END = os.environ.get("RCB_AGENT_END") == "1"
 
 ARM_SLICE = slice(0, 7)
 GRIP_INDEX = 7
@@ -960,6 +966,9 @@ class Session:
             term = cfg.terminations.success
             params = {k: v for k, v in dict(term.params).items() if k != "require_contact_with"}
             term.func = object_outside_of_and_on_surface; term.params = {**params, "surface": "table"}
+        self.term_now = False               # AGENT_END: the success term's value at the last control step
+        if AGENT_END:
+            self._hide_success_term(cfg.terminations.success)
         if self.depth_enabled:              # every camera also renders z-depth (read by render_depth; never touches physics)
             from isaaclab.sensors import CameraCfg
             for name, cam in list(vars(cfg.scene).items()):
@@ -1105,8 +1114,21 @@ class Session:
         self._recording = None
         self.episode_done = False
         self.n_steps = 0
+        self.term_now = False
         self._restore(self.initial_state)
         self._targets = self._current_targets()
+
+    def _hide_success_term(self, term) -> None:
+        """AGENT_END: the success term is evaluated as before at every control step, its value kept in term_now, and it
+        never terminates the env (it returns False)."""
+        func, sess, torch = term.func, self, self.th
+
+        def hidden_success(env, **params):
+            v = func(env, **params)
+            sess.term_now = bool(torch.as_tensor(v).reshape(-1)[0].item())
+            return torch.zeros_like(torch.as_tensor(v), dtype=torch.bool)
+        hidden_success.__name__ = getattr(func, "__name__", "success") + "_hidden"
+        term.func = hidden_success
 
     def _current_targets(self) -> np.ndarray:
         q = self.robot.data.joint_pos[0].detach().cpu().numpy().astype(np.float64)

@@ -126,6 +126,10 @@ class Session:
         self.n_steps_total = 0
         self.n_clipped = 0
         self._video = None
+        # agent-ended episodes (the standard / realtime sim service with RCB_AGENT_END, PROTOCOL §3): the task's success
+        # does not end the episode; it runs on until a failure, the environment's step cap or the agent's end
+        self.run_on = False
+        self.horizon_end = False
         self._pin = {uid: arm.robot.create_pinocchio_model() for uid, arm in self.u.arms.items()}
         self._links = {uid: {l.entity.name: i for i, l in enumerate(arm.robot.links)} for uid, arm in self.u.arms.items()}
         self.reset()
@@ -142,6 +146,7 @@ class Session:
         self.env.reset(seed=int(self.instance["seed"]))
         self.done = False
         self.truncated = False
+        self.horizon_end = False
         self.n_resets += 1
         if self.n_resets > 1:
             _slog("reset", task=self.task)
@@ -177,7 +182,11 @@ class Session:
         _, _, term, trunc, _ = self.env.step(act)
         self.n_steps_total += 1
         self.truncated = bool(_np(trunc).reshape(-1)[0])
-        self.done = bool(_np(term).reshape(-1)[0]) or self.truncated
+        term = bool(_np(term).reshape(-1)[0])
+        # agent-ended episodes: the task's horizon ends the episode whether or not every phase is done (a completed
+        # task would otherwise run on past it, and an episode outliving its horizon would tell the agent it succeeded)
+        self.horizon_end = self.run_on and float(self.u.time) >= float(self.u.params["horizon"]) - self.u.dt / 2
+        self.done = (term and not (self.run_on and self.success())) or self.truncated or self.horizon_end
         if self._video is not None:
             self._video_add()
         return self.done

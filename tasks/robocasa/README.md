@@ -71,7 +71,7 @@ Derived from `images/mujoco/limited/server_mj.py` (via MetaWorld+'s `server_mw.p
 lifecycle: four endpoints, RCB1, no reset, journal + per-call checkpoints with at most two resumes, startup watchdog,
 SIGUSR1 collect hook, `/data` evidence, verdict before video. Differences (items 6, 7 and 11: the grading):
 1. The action type, channels and limits come from the instance (`casa_tool.action_spec`), not a fixed `joint_position`.
-2. Watching (`/observe` with `seconds > 0`) holds the robot still (delta channels zero; targets, grip and mode kept).
+2. A hold chunk (`/submit` with `interpolate: "hold"`, `seconds`, no rows) holds the robot still (delta channels zero; targets, grip and mode kept).
 3. Camera calibration is computed for every response (robot-mounted cameras move); `meta.task` is the instruction.
 4. The protocol is reported as `eai-standard/2.1`, with HumanoidBench's client (accepts both spellings); a simulator
    error (500) ends the episode with `reason = "error"`; a body over 64 MB gets 413; the grader writes numeric fields.
@@ -136,6 +136,17 @@ SIGUSR1 collect hook, `/data` evidence, verdict before video. Differences (items
    variables are in the task's `environment/docker-compose.yaml` (the sidecar's environment; the agent never sees
    it). Not checked: an instance without an archived episode (RoboCasa365 `PortionInTupperware`) has no start hash,
    only the file's; `RCB_START_SHA` changes whenever the image or `casa_tool` changes how a scene is built.
+
+### Agent-ended episodes
+
+Every standard task sets `RCB_AGENT_END "1"` in its sim service (PROTOCOL §3). `server_casa.py` never shows the task's
+success and a success never ends the episode: the environment's own check is still run after every call (as before,
+twice per control step) and only recorded (`hidden_success_first_step`). The agent ends the episode with `POST /finish`
+(reason `finished`); the end of its session (`timeout`) ends it too, and each is judged on the state it ends in (end
+judgement `state`: the environment's `_check_success`, whose timers and event memory are the environment's own; no
+settle window), with the rule that a scene solved at the start is no success. `final.json` adds the shared fields
+(`success_signal`, `ended_by`, `end_judgement`, `hidden_success_seen`, `hidden_success_first_step`,
+`trial_hidden_success_seen`, `finish_time_s`). Without `RCB_AGENT_END` the service behaves as described above.
 
 ## Egress
 The demonstrations (the references) are public, so `task.toml` closes agent egress to the model APIs and the package registries

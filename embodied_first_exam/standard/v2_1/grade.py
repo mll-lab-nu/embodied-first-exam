@@ -63,7 +63,21 @@ def realtime_fields(d: dict) -> dict:
 
 
 # How the first episode ended (final.json first_reason; the reason itself when no reset was made): 0 = not known.
-FIRST_REASON = {"success": 1, "failed": 2, "reset": 3, "timeout": 4, "error": 5}   # any other reason: 9
+FIRST_REASON = {"success": 1, "failed": 2, "reset": 3, "timeout": 4, "error": 5, "finished": 6,
+                "step_limit": 7}   # any other reason: 9
+
+
+def agent_end_fields(d: dict) -> dict:
+    """An agent-ended episode's record (PROTOCOL §3: final.json success_signal / ended_by, step_limit / steps_used):
+    evidence only; the runner reads ended_session_end."""
+    if d.get("success_signal") != "hidden":
+        return {}
+    by = d.get("ended_by")
+    out = {"ended_finish": int(by == "finish"), "ended_step_limit": int(by == "step_limit"),
+           "ended_session_end": int(by == "session_end"), "hidden_success_seen": int(bool(d.get("hidden_success_seen")))}
+    if d.get("step_limit"):
+        out.update(step_limit=int(num(d.get("step_limit"))), steps_used=int(num(d.get("steps_used"))))
+    return out
 
 
 def first_attempt(d: dict, ok: bool, infra: bool) -> dict:
@@ -107,7 +121,8 @@ def main() -> None:
                "calls": int(d.get("calls") or 0), "rows": int(d.get("rows") or 0), "resets": int(d.get("resets") or 0),
                "reset_budget": int(d.get("reset_budget") or 0),
                "sim_startups": int(d.get("sim_startups") or 0), "elapsed_s": float(d.get("elapsed_s") or 0.0),
-               "video_rendered": int(bool(d.get("video"))), **first_attempt(d, ok, infra), **realtime_fields(d)}
+               "video_rendered": int(bool(d.get("video"))), **first_attempt(d, ok, infra), **realtime_fields(d),
+               **agent_end_fields(d)}
     except Exception:  # noqa: BLE001 -- an unreadable final.json is the grader's failure, not the agent's
         traceback.print_exc()
         write(False, {**BASE, "infra_error": 1, "grader_error": 1})

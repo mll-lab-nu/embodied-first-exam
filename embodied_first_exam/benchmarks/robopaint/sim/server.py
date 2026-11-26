@@ -11,7 +11,8 @@ Differences from the RoboLab service, all from the task:
 - `ee_pose` rows are brush-tip poses `dt` apart: the tip target moves on a straight line (orientation slerped) from the previous row's
   target at the 20 Hz control rate, one IK solve per control step (SAPIEN's Pinocchio CLIK, no collision checking), at most
   0.25 m/s (a faster row is slowed down and reported);
-- painting has no terminal state: the episode ends only when the agent phase ends (the collect hook) or on a simulator error;
+- painting has no terminal state: the episode ends only when the agent phase ends (the collect hook), at the agent's POST
+  /finish (agent-ended episodes, PROTOCOL §3: RCB_AGENT_END, rcb_agent_end.py) or on a simulator error;
 - the verdict is the live episode's (docs/protocol/README.md H.4): when the collect hook ends the episode
   (environment/sim/finalize.sh, after the agent's container is stopped) this service commits a stroke still pressed, scores its
   live main sheet with the graders' scorer and rules (rcb_brush_strict.py: the picture rule and the process rules, the same
@@ -30,6 +31,7 @@ import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import rcb_limited as L  # noqa: E402
+import rcb_agent_end as AE  # noqa: E402
 
 PROTOCOL = L.PROTOCOL
 DATA = os.environ.get("RCB_DATA", "/data"); os.makedirs(DATA, exist_ok=True); os.makedirs(os.path.join(DATA, "calls"), exist_ok=True)
@@ -47,7 +49,7 @@ MAX_VIDEO_FPS = 1000                   # the mp4 encoder's frame rate; the recor
 MAX_FRAMES = 640                       # /spec max_frames_per_call
 LOCK = threading.Lock()
 E = {"ready": False, "step": 0, "calls": 0, "done": False, "reason": None, "t0": time.time(), "error": None}
-EP = L.Episode(DATA, dim=7, resume="exact", persist=("tip_target",))   # the journal rows are Session.step's 7 joint targets
+EP = L.Episode(DATA, dim=7, resume="exact", persist=AE.persist(("tip_target",)))   # the journal rows are Session.step's 7 joint targets
 EP.startup()                           # before the scene is built: start count, back-off after failed starts, startup watchdog
 log = EP.log
 _fin = L.final_verdict(DATA)
@@ -106,7 +108,8 @@ def dump() -> list | None:
     ok = bool(live.get("success")) and err is None
     rec = {"steps": E["step"], "calls": E["calls"], "control_steps": n, "physics_steps": n * SUBSTEPS,
            "elapsed_s": round((E.get("t_end") or time.time()) - E["t0"], 1), "reason": E["reason"], "done": True, "task": TASK, "protocol": PROTOCOL,
-           "n_actions": E.get("n_actions"), "live_sha": E.get("live_sha"), **EP.final_fields(), "live": numbers(live)}
+           "n_actions": E.get("n_actions"), "live_sha": E.get("live_sha"), **EP.final_fields(), **AE.final_fields(E, n),
+           "live": numbers(live)}
     json.dump(rec, open(os.path.join(DATA, "episode.json"), "w"))
     verdict = {**rec, "success": ok, "live_success": ok, "graded_by": "live", "replays": 0, "finalized": True,
                "success_rule": {k: float(v) for k, v in S.inst["target"]["success"].items()},
@@ -137,7 +140,12 @@ def render(acts) -> None:
 
 
 def finish(reason: str) -> None:
+    """The episode ends. Painting has no terminal state, so the verdict is always the sheet as the episode leaves it (dump(),
+    at the collect hook): agent-ended episodes (PROTOCOL §3, RCB_AGENT_END) add only POST /finish (reason "finished"), after
+    which the robot does nothing more, and the runaway guard's end is called "step_limit" (judged as it stands)."""
     if E["done"]: return
+    if AE.ENABLED and reason == "step_guard":
+        reason = "step_limit"
     E["done"] = True; E["reason"] = reason; E["t_end"] = time.time(); E["episode_control_steps"] = ctrl_steps()
     log({"ev": "end", "reason": reason, "step": E["step"], "control_steps": ctrl_steps(), "elapsed_s": round(E["t_end"] - E["t0"], 1)})
 
@@ -395,7 +403,7 @@ def run_ee_pose(A: np.ndarray, dt: float, rec: L.Recorder, plan: list) -> None:
             if not ok: fails += 1
             if ctrl_step(q if ok else S.hold_action(), rec):
                 E["tip_target"] = (p0 + (p1 - p0) * t, M.quat_slerp(q0, q1, t))
-                plan.append({"row": ri, "steps": k, "ik_failures": fails, "slowed": n > n_dt, "stopped": EP.stop_reason or "episode over"}); return
+                plan.append({"row": ri, "steps": k, "planned_steps": n, "ik_failures": fails, "slowed": n > n_dt, "stopped": EP.stop_reason or "episode over"}); return
         E["tip_target"] = (p1, q1)
         plan.append({"row": ri, "steps": n, "ik_failures": fails, "slowed": n > n_dt})
 
@@ -502,6 +510,8 @@ def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
     out = {**meta_common(cams), "chunk_id": E["calls"], "type": typ, "executed_rows": E["step"] - step0, "control_steps_chunk": ctrl_steps() - before,
            "physics_steps_chunk": (ctrl_steps() - before) * SUBSTEPS, "clipped": clipped[:200], "n_clipped": len(clipped), "plan": plan[:400],
            "rejected": None, "ok": True}
+    if typ != "joint_position":   # eai-standard/3.0: the planner's planned duration (a row it slows takes longer than dt)
+        out["planned_duration_s"] = round(sum(p.get("planned_steps", p["steps"]) for p in plan) / CTRL_HZ, 4)
     log({"ev": "submit", "call": E["calls"], "type": typ, "rows": E["step"] - step0, "dt": dt, "interpolate": interp, "cameras": cams,
          "note": note, "control_steps": ctrl_steps() - before, "n_clipped": len(clipped),
          "ik_failures": int(sum(p.get("ik_failures", 0) for p in plan)), "depth": rec.mode})
@@ -568,5 +578,6 @@ if E.get("tip_target") is not None:    # restored from the checkpoint (JSON list
 E["ready"] = True; write_final()
 open(os.path.join(DATA, "server.pid"), "w").write(str(os.getpid()))
 print(f"{PROTOCOL} sim ready (startup {EP.n_startups}, resumes {EP.resumes}{', resumed at control step %d' % ctrl_steps() if resumed else ''})", flush=True)
-L.serve(L.Service(spec=SPEC, lock=LOCK, state=E, submit=do_submit, observe=do_observe, kinematics=do_kinematics, status=status,
-                  on_submit_error=lambda exc: finish("error"), log=log, episode=EP, state_sha=S.state_sha, proprio=proprio_row))
+AE.serve(AE.Service(spec=SPEC, lock=LOCK, state=E, submit=do_submit, observe=do_observe, kinematics=do_kinematics, status=status,
+                    on_submit_error=lambda exc: finish("error"), log=log, episode=EP, state_sha=S.state_sha, proprio=proprio_row,
+                    **({"finish": lambda: finish("finished")} if AE.ENABLED else {})))

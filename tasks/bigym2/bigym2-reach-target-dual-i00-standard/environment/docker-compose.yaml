@@ -21,9 +21,10 @@ services:
     command: python /srv/server.py
     restart: on-failure:6                               # a crash resumes the same episode, never a reset (rcb_service.py)
     environment:
+      RCB_AGENT_END: "1"                               # agent-ended episodes (PROTOCOL §3)
       RCB_INSTANCE: /srv/instance.json
       RCB_TASK_TEXT: "Put your left gripper in the red sphere and your right gripper in the green sphere at the same time, with the gap between each gripper's fingers inside its sphere."
-      RCB_EPISODE: "one episode, no reset: it succeeds when this has held for 1 s (50 control steps): the point between the left gripper's two finger pads is inside the red sphere and the right gripper's inside the green sphere at the same time: each within 0.05 m of its sphere's centre (the spheres' radius); a fall (pelvis tilted beyond ~53 degrees or below 0.30 m) fails it without ending it; it ends at the success, a failure, the pelvis 10 m from the scene's origin, a simulator error, or after 700 control steps"
+      RCB_EPISODE: "one episode, no reset: it succeeds when this has held for 1 s (50 control steps): the point between the left gripper's two finger pads is inside the red sphere and the right gripper's inside the green sphere at the same time: each within 0.05 m of its sphere's centre (the spheres' radius); a fall (pelvis tilted beyond ~53 degrees or below 0.30 m) fails it without ending it; it ends at your POST /finish, a failure, the pelvis 10 m from the scene's origin, a simulator error, or after 700 control steps; judged on how things stand when it ends (a success does not end it)"
       RCB_WALL_CLOCK_S: "3600"
       # Knobs: ${NAME:-default} takes NAME from the shell that runs harbor. The defaults are the standard
       # configuration; results under other settings are reported separately.

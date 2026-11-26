@@ -36,7 +36,7 @@ def run_reference(document, arrays, robot, output=None, *, monotonic=time.monoto
         if document.get('http_policy')!=HTTP_POLICY:
             raise ValueError('New candidate oracle lacks its frozen HTTP observation policy')
         cameras=sorted(spec['cameras'])
-        robot.get_obs(cameras=cameras,seconds=0.,video='none')
+        robot.get_obs(cameras=cameras,video='none')
     else:cameras=[sorted(spec['cameras'])[0]]
     dt=spec['control_dt'];per=max(1,int(round(spec['max_chunk_s']/dt)))
     deliveries=[];last=None
@@ -48,7 +48,7 @@ def run_reference(document, arrays, robot, output=None, *, monotonic=time.monoto
                     before=robot.status()
                     if before.get('done'):break
                     sent=monotonic()
-                    result=robot.get_obs(cameras=cams,seconds=0,video='none',include_depth=False)
+                    result=robot.get_obs(cameras=cams,video='none',include_depth=False)
                     received=monotonic();after=robot.status()
                     deliveries.append(save_snapshot(output/('%04d-%02d'%(index,batch)),result,spec,
                         item['boundary'],cams,before,after,sent,received,clock='paused'))

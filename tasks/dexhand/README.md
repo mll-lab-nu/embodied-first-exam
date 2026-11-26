@@ -65,11 +65,30 @@ Every family follows the same three rules, checked by the trusted runtime from s
    boundaries.
 2. **No partial credit.** Success needs every ordered stage and the terminal (released or held) condition for its full
    window of consecutive samples; four of five layers, five of six debris pieces or a placed but still-held pot is a
-   failure. Success ends the episode too.
+   failure. Without agent-ended episodes, success ends the episode too.
 3. **Judged by a trusted simulator, never claimed.** Privileged: the grader rebuilds the frozen scene with the
    recorded hand in a fresh process and replays only the motor targets; that replay must succeed. Standard: the sim service's own record of the episode it ran is the verdict (no replay; see
    "Standard-mode grading by the live episode" below). Success flags, object poses,
    configuration overrides or any other member of an agent's archive are never read.
+
+## Agent-ended episodes
+
+Standard episodes are agent-ended (PROTOCOL §3 "Agent-ended episodes"; `RCB_AGENT_END` in the sim service,
+`/srv/rcb_agent_end.py`). The agent never sees a success: no `success` or progress in any meta, status or spec, and a
+success never ends the episode. The episode ends at the agent's `POST /finish` (reason `finished`), when its time runs
+out (`timeout`), at the family's stated episode budget (Limits; `step_limit`, enforced by the server as `BUDGET`), on a
+failure rule of the task (a 0, even after a success) or on a simulator error (judged as without the feature). It is then
+judged on how things stand when it ends; `episode.json` records `ended_by`, `hidden_success_seen` and the step of the
+first hidden success as evidence. No `RCB_STEP_LIMIT` is set: the budget counts per episode with resets, so the server
+applies it rather than the shared per-trial limit.
+
+The family runtimes latch success and stop; under the feature the server saves the verdict state (the checker's own
+fields, or `RUNTIME_VERDICT` on runtimes that hold it) before each step and restores it after a step that latched
+success, so physics and the check go on (the success is recorded as hidden evidence). At the end, a success not yet held
+is given up to 3 s with the hand held still (`end_window_steps`). Fail-fast failures still end the episode as a 0, also
+after a success. Ordered stages before the last count as they happened. Resets stay available until `/finish`; the
+graded episode is the one ended by finish, or else the one running when the session ends; after finish `/reset`,
+`/submit` and `/finish` are 409.
 
 ## Hands
 
@@ -941,8 +960,8 @@ Results with a different budget are reported separately.
 `Session.status()["success"]` after the last executed row, the family's full predicate (every ordered stage, the
 terminal hold, the invariants at every physics substep), evaluated by `execute()` in
 the task's `environment/sim/server.py` and written to `episode.json` by `end_episode()`. `Session.step` also refuses an out-of-range target or a moved locked
-wrist (the service clips to the published ranges first), and a success ends the episode, so no settle or hold window is
-added. The collect hook: `finalize.py` copies the record into `final.json` with `graded_by = "live"`, `replays = 0`, `live_success`, `live_sha`,
+wrist (the service clips to the published ranges first). Without agent-ended episodes a success ends the episode, so no
+settle or hold window is added; with them, see "Agent-ended episodes" (an end window of up to 3 s). The collect hook: `finalize.py` copies the record into `final.json` with `graded_by = "live"`, `replays = 0`, `live_success`, `live_sha`,
 `video_pending`, then the family's `replay.py --video` films the trajectory once (`video.json`, `video.log`;
 `video_source = "render"`); a failed or late video sets `video = false` and changes nothing else. `reward.json` carries
 `graded_by_live`, `replays`, `gave_up`, `instance_mismatch` and `video_rendered`. When a fresh episode begins (not on a crash resume) the service compares the

@@ -38,6 +38,7 @@ import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import rcb_limited as L  # noqa: E402
+import rcb_agent_end as AE  # noqa: E402
 
 PROTOCOL = L.PROTOCOL
 DATA = os.environ.get("RCB_DATA", "/data"); os.makedirs(DATA, exist_ok=True); os.makedirs(os.path.join(DATA, "calls"), exist_ok=True)
@@ -49,7 +50,7 @@ MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10")); MAX_WATCH_S = floa
 LOCK = threading.Lock()
 E = {"ready": False, "step": 0, "calls": 0, "done": False, "reason": None, "success": False, "t0": time.time(), "error": None}
 # Crash-safe episode bookkeeping, set up before the scene is built (start count, back-off, startup watchdog)
-EP = L.Episode(DATA, dim=16, resume="approx" if BACKEND == "gpu" else "exact")
+EP = L.Episode(DATA, dim=16, resume="approx" if BACKEND == "gpu" else "exact", persist=AE.persist())
 EP.startup()
 log = EP.log
 _fin = L.final_verdict(DATA)
@@ -77,7 +78,8 @@ def write_final() -> None:
         "live_sha": E.get("live_sha"), "video": bool(E.get("video")),
         "video_done": bool(E.get("video_done")), "backend": BACKEND, "grade_error": bool(E.get("grade_error")),
         "instance_exact": E.get("instance_exact"), "settle": E.get("settle"), "agent_time_s": E.get("agent_time_s"),
-        "final_window": E.get("final_window"), **{k: E[k] for k in ("trajectory_error", "video_error", "finalize_error") if E.get(k)}, **EP.final_fields()})
+        "final_window": E.get("final_window"), **{k: E[k] for k in ("trajectory_error", "video_error", "finalize_error") if E.get(k)}, **EP.final_fields(),
+        **AE.final_fields(E, n), **({"agent_exit": True} if E.get("agent_exit") else {})})
 
 
 VERDICT_KEYS = ("success", "graded_by", "grade_error", "n_actions", "live_sha", "reason", "settle", "final_window")
@@ -178,8 +180,27 @@ def settle(step) -> bool:
 
 def finish(reason: str) -> None:
     if E["done"]: return
+    if AE.ENABLED:
+        # agent-ended episodes (PROTOCOL §3, rcb_agent_end.py): a success never ends the episode (no settle window inside a
+        # call); the end of the agent's session is one reason, "timeout" (agent_exit is kept as evidence), the runaway guard
+        # is the step limit; the settle window runs from the state the episode ends in (/finish, the session's end); at the
+        # step limit no step can run, so the goal there is judged as it stands
+        if reason == "agent_exit":
+            E["agent_exit"], reason = True, "timeout"
+        elif reason == "step_guard":
+            reason = "step_limit"
     E["done"] = True; E["reason"] = reason; E["t_end"] = time.time()
-    if not E["success"] and reason in ("timeout", "agent_exit"):
+    if AE.ENABLED and reason == "finished":
+        # POST /finish: the agent's own call (rcb_agent_end's handler has begun it): the window runs inside it
+        try:
+            E["success"] = settle(journal_step)
+            E["final_window"] = int(E["settle"]["steps"]); E["final_window_end"] = ctrl_steps()
+        except Exception:  # noqa
+            traceback.print_exc(); E["success"] = False
+    elif AE.ENABLED and reason == "step_limit":
+        try: E["success"] = check_success()
+        except Exception: E["success"] = False  # noqa
+    elif not E["success"] and reason in ("timeout", "agent_exit"):
         # the agent phase is over: the last command is held for the settle window and the verdict taken there (as the
         # privileged grader does after the last action of a trajectory); never after a simulator error or at the step cap.
         # The window is the end of the agent's last call (docs/protocol/running.md): it runs as a call ("/settle"), so a crash of the
@@ -296,7 +317,13 @@ SPEC = {
     "depth": {"modes": list(L.DEPTH_MODES), "default": "none", "kind": "z-depth", "unit": "m", "invalid": 0, "max_m": L.DEPTH_MAX_M,
               "frames_encoding": "uint16 mm, zlib", "noise": L.DEPTH_NOISE,
               "source": "Genesis rasterizer depth of the same camera (the distance along the optical axis)"},
-    "episode": ("ends at the first success: after every /submit and every /observe that watches, the goal is checked (the task "
+    "episode": ("ends when you call POST /finish or when your phase ends (reason \"timeout\"; the service never tells you "
+                "whether you have succeeded): from that state the service holds your last command for a settle window (1 s, "
+                "then 2 s in which the goal (the task predicate, the graded objects released by the robot) must hold and the "
+                "graded objects stay at rest, within 2 mm; part of the episode), which decides the verdict. It also ends on a "
+                "simulator error, or after max_control_steps control steps (a technical cap, reason \"step_limit\", judged as it "
+                "stands, with no window); nothing is replayed to grade it") if AE.ENABLED else
+               ("ends at the first success: after every /submit and every /observe that watches, the goal is checked (the task "
                 "predicate, the graded objects released by the robot); when it holds, the service holds the last command for a "
                 "settle window (1 s, then 2 s in which the goal must hold and the graded objects stay at rest, within 2 mm; part "
                 "of the call and of the episode) and the episode ends with reason \"success\" if the window passes, else it goes "
@@ -383,6 +410,8 @@ def ctrl_step(a: np.ndarray, rec: L.Recorder) -> bool:
     past max_call_wall_s / its client hung up (EP.journal)."""
     row = np.asarray(a, dtype=np.float32)   # exactly what the simulator gets (Session.step casts to float32): the journal row
     guard = S.step(row); stop = EP.journal(row); rec.tick()
+    if AE.ENABLED:                      # the goal right now, recorded only (final.json hidden_success_*); never shown
+        AE.hidden_success(E, check_success(), log, ctrl_steps())
     if guard: finish("step_guard")
     return E["done"] or stop
 
@@ -502,7 +531,7 @@ def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
     if typ == "joint_position": run_joint_position(A, dt, interp, rec, clipped)
     else: run_ee_pose(A, rec, plan, clipped)
     succ = False; settled = None
-    if not E["done"] and not EP.stopping and check_success():
+    if not AE.ENABLED and not E["done"] and not EP.stopping and check_success():
         succ = settle(lambda a: ctrl_step(a, rec)); settled = E["settle"]
     rec.tick(force=True, last=True)
     E["success"] = E["success"] or succ
@@ -530,10 +559,10 @@ def do_observe(meta: dict) -> tuple[dict, list]:
         hold = np.asarray(S.hold_action(), dtype=np.float64)
         for _ in range(int(round(seconds * CTRL_HZ))):
             if ctrl_step(hold, rec): break
-        if not E["done"] and not EP.stopping and check_success():
+        if not AE.ENABLED and not E["done"] and not EP.stopping and check_success():
             E["success"] = settle(lambda a: ctrl_step(a, rec)); settled = E["settle"]
         rec.tick(force=True, last=True)
-        if E["success"]: finish("success")  # settle() recorded the window (finish drops it if rows came after it)
+        if E["success"] and not AE.ENABLED: finish("success")  # settle() recorded the window (finish drops it if rows came after it)
     E["calls"] += 1
     out = {**meta_common(cams), "obs_id": E["calls"], "seconds": seconds, "control_steps_watch": ctrl_steps() - before,
            "physics_steps_watch": (ctrl_steps() - before) * SUBSTEPS, "ok": True, **({"frames_skipped": rec.skipped} if rec.skipped else {}),
@@ -550,7 +579,7 @@ def do_kinematics(req: dict) -> dict:
 
 def status() -> dict:
     return {"step": E["step"], "calls": E["calls"], "control_steps": ctrl_steps(), "done": E["done"], "reason": E["reason"],
-            "elapsed_s": round(time.time() - E["t0"], 1)}
+            "elapsed_s": round(time.time() - E["t0"], 1), **AE.steps_left(ctrl_steps())}
 
 
 AGENT_EXIT_MARGIN_S = 60.0    # more time left than this when the agent phase ended: the agent ended its own session
@@ -579,5 +608,6 @@ with LOCK:                              # a SIGUSR1 remembered during the resume
     write_final()
 open(os.path.join(DATA, "server.pid"), "w").write(str(os.getpid()))
 print(f"{PROTOCOL} sim ready (startup {EP.n_startups}, resumes {EP.resumes})", flush=True)
-L.serve(L.Service(spec=SPEC, lock=LOCK, state=E, submit=do_submit, observe=do_observe, kinematics=do_kinematics, status=status,
-                  on_submit_error=lambda exc: finish("error"), log=log, episode=EP, state_sha=S.state_sha, proprio=proprio_row))
+AE.serve(AE.Service(spec=SPEC, lock=LOCK, state=E, submit=do_submit, observe=do_observe, kinematics=do_kinematics, status=status,
+                    on_submit_error=lambda exc: finish("error"), log=log, episode=EP, state_sha=S.state_sha, proprio=proprio_row,
+                    **({"finish": lambda: finish("finished")} if AE.ENABLED else {})))

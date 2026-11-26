@@ -163,6 +163,21 @@ success rate), load rotor 14.7 / 1.0.
   copy of the state; nothing calls `mj_forward` on the live data (that would change the solver's warm start and with
   it the trajectory). A replay with rendering ends in the same state as one without.
 
+## Agent-ended episodes
+
+Standard episodes are agent-ended (PROTOCOL §3 "Agent-ended episodes"; `RCB_AGENT_END` in the sim service,
+`/srv/rcb_agent_end.py`). The agent never sees a success: no `success` or progress in any meta, status or spec, and a
+success never ends the episode. The episode ends at the agent's `POST /finish` (reason `finished`), when its time runs
+out (`timeout`), at the service's technical cap on control steps (`step_limit`), on a failure rule of the task (a 0,
+even after a success) or on a simulator error (judged as without the feature). It is then judged on how things stand
+when it ends; `episode.json` records `ended_by`, `hidden_success_seen` and the step of the first hidden success as
+evidence. No `RCB_STEP_LIMIT` is set: AutoBio states no step count; its cap is technical.
+
+Under the feature the service checks AutoBio's own `check()` with the `final` rule after every control step
+(`native_rule` in the record keeps the task's own rule); the action type `done` is the same as `POST /finish`. AutoBio's
+checks are state checks; the pipette's latches (the dip and the drawing of liquid) count as they happened, and the final
+lift must hold at the end. A simulator warning (unstable state) is a failure, also after a success.
+
 ## Reference solutions
 AutoBio's scripted experts (`class <Task>Expert` in each task module), run from the frozen instance in a checkout that
 still has them: the targets in effect at every physics step, clipped to the actuators' ranges, rounded to float32 (what

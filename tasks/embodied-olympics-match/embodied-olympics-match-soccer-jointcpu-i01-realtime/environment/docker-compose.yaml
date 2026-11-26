@@ -1,7 +1,7 @@
 # Exported by Embodied Olympics pilots/soccer_joint/export_fexam_pair.py (do not edit). Three containers share the
 # egress sidecar's network namespace (keep [agent] network_mode = "allowlist"): main (the agent, the prebuilt
 # seat image with the joint-level toolkit; CPU only)
-# reaches the match service (`sim`, core/launch.py, eai-standard-realtime/1.0) at localhost:8000 and its
+# reaches the match service (`sim`, core/launch.py, eai-standard/2.3+match/1.0) at localhost:8000 and its
 # practice service (`practice`: full copies of the match world, the scripted levels as black boxes) at
 # localhost:8100. The seat is unmetered: no metering proxy and no credential here. cap_drop NET_RAW: no raw
 # sockets and no SO_MARK, which could bypass the egress proxy's mark.
@@ -20,13 +20,14 @@ services:
     volumes:
       - rcb_observe:/run/rcb-observe:ro   # rcb-monitor
     working_dir: /srv
-    command: python3 /srv/core/launch.py
+    command: python3 -m eai_std.serve
     cpus: 6
     mem_limit: 7g
     pids_limit: 1024
     cap_drop: [NET_RAW]
     environment:
       RCB_DATA: "/data"
+      EAI_STD_CLOCK: "realtime"
       MUJOCO_GL: "osmesa"
       PYOPENGL_PLATFORM: "osmesa"
       OPENBLAS_NUM_THREADS: "1"

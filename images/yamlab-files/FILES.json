@@ -1,12 +1,12 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe:yamlab-files-0.6.1@sha256:be59d11d993ba4608c7b4e761c86958bed8e98ac67411caa05450b151ee7dfba",
+ "image": "ghcr.io/mll-lab-nu/efe:yamlab-files-0.7.0@sha256:7a8dfddd636bd6c2eccdfd622b10a16ceda585198b5a3d2977e542317a740f22",
  "source": "embodied_first_exam/benchmarks/yamlab",
  "files": {
-  "privileged/environment/rcb_yamlab.py": "4a6b6d9e4aa43f35c8e2e2f6ba267c2d6c98d9455b793d2a3efd1788da1015c0",
+  "privileged/environment/rcb_yamlab.py": "e833c553219e632fff038fba7cfcfe8dfcfdbb24d853015febbf62c01b2e5c95",
   "privileged/tests/grade.py": "a2fa34aeea91a4706ee0c2632e1c17dbb2ae4762b3e8977d84886bae81c14192",
   "sim/finalize.sh": "7ca27997c065f26caed0a77c1f5d49555bd611312bbb4084582cf27bbf813689",
   "sim/live_video.py": "eb4f98634ffbade423a0c10cc45140b78695dc42c86bc8d6fa5b4941c3b19075",
-  "sim/server.py": "8942722db3482818a62b08a2162bc12299a1ed01409ff5beddbd061f4e51603a",
+  "sim/server.py": "3c207c0414000fb1835375a0dda36614e25e94c89620005019b92bfc2d873119",
   "standard/tests/grade.py": "24e62244b6220fbd351d66e6bb58ccd41453c45cb37dbd8e44a21a2e9708420a"
  }
 }

@@ -239,6 +239,66 @@ def case_give_up_is_answered_and_a_repeated_camera_is_one():
             p.kill(); p.wait()
 
 
+def case_standard_3_0_observe_hold_ring():
+    """eai-standard/3.0 in the 2.4 HTTP layer, on an in-process adapter: observe seconds > 0 is a 400, last_s reads the
+    frames recorded during submits (the time-based Recorder feeds the ring), a rows-free hold chunk runs the adapter's
+    watch and answers as a submit with duration_s; rows + seconds is a 400."""
+    import threading, urllib.request, urllib.error
+    from http.server import HTTPServer
+    sys.path[:0] = [HERE, os.path.dirname(HERE)]
+    import rcb1, rcb_limited as L
+    st = {"step": 0, "calls": 0}
+    grab = lambda cams, want: ({c: np.full((2, 2, 3), st["step"] % 250, np.uint8) for c in cams}, {})   # noqa: E731
+
+    def run(n):
+        rec = L.Recorder(["top"], 1, grab, lambda: np.full(2, st["step"], np.float32), lambda cams: {}, lambda: st["step"],
+                         clock_hz=20, fps=10)
+        rec.tick(force=True); s0 = st["step"]
+        for _ in range(n):
+            st["step"] += 1; rec.tick()
+        rec.tick(force=True, last=True); st["calls"] += 1
+        return st["step"] - s0, rec.parts("none", 10)
+
+    def submit(meta, A):
+        k, parts = run(len(A)); return {"ok": True, "calls": st["calls"], "control_steps": st["step"], "control_steps_chunk": k}, parts
+
+    def observe(meta):
+        st["observe_meta"] = dict(meta)
+        k, parts = run(int(round(float(meta.get("seconds") or 0) * 20)))
+        return {"ok": True, "obs_id": st["calls"], "calls": st["calls"], "control_steps": st["step"], "control_steps_watch": k}, parts
+    spec = {"kinematics": {}, "control_hz": 20, "max_chunk_s": 10.0, "max_watch_s": 30.0, "cameras": {"top": {}},
+            "default_cameras": ["top"], "action_types": {"joint_position": {"dim": 2}}}
+    svc = L.Service(spec=spec, lock=threading.Lock(), state={"done": False}, submit=submit, observe=observe,
+                    kinematics=lambda req: {"ok": True}, status=lambda: {}, on_submit_error=lambda exc: None, log=lambda ev: None)
+    srv = HTTPServer(("127.0.0.1", 0), L.make_handler(svc)); port = srv.server_address[1]
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+
+    def post(path, body: dict):
+        req = urllib.request.Request(f"http://127.0.0.1:{port}{path}", data=json.dumps(body).encode(),
+                                     headers={"Content-Type": "application/json"})
+        try:
+            r = urllib.request.urlopen(req, timeout=10); return r.status, rcb1.decode(r.read())
+        except urllib.error.HTTPError as exc:
+            return exc.code, json.loads(exc.read())
+    try:
+        assert spec["standard"] == "eai-standard/3.0" and spec["timing"]["recorder"]["fps"] == 10.0, spec.get("timing")
+        code, body = post("/observe", {"seconds": 2})
+        assert code == 400 and "hold chunk" in body["error"] and st["step"] == 0, (code, body, st)
+        code, (m, p) = post("/submit", {"type": "joint_position", "actions": [[0, 0]] * 20, "dt": 0.05})
+        assert code == 200 and m["duration_s"] == 1.0 and m["planned_duration_s"] == 1.0, m
+        code, (m, p) = post("/observe", {"last_s": 0.5})
+        steps = list(np.asarray(p["frame_step"]["data"]))
+        assert code == 200 and steps == [10, 12, 14, 16, 18, 20] and m["frame_step"] == 20 and m["last_s"] == 0.5, (m, steps)
+        assert np.asarray(p["frames/top"]["data"])[0, 0, 0, 0] == 10 and st["step"] == 20, "the frames recorded then; nothing ran"
+        code, (m, p) = post("/submit", {"type": "joint_position", "interpolate": "hold", "seconds": 0.5})
+        assert code == 200 and m["hold"] is True and m["duration_s"] == 0.5 and m["executed_rows"] == 0 and st["step"] == 30, m
+        assert st["observe_meta"].get("video") == "mp4" and st["observe_meta"]["seconds"] == 0.5, st["observe_meta"]
+        code, body = post("/submit", {"type": "joint_position", "interpolate": "hold", "seconds": 0.5, "actions": [[0, 0]]})
+        assert code == 400 and st["step"] == 30, (code, body)
+    finally:
+        srv.shutdown()
+
+
 def main(argv: list[str]) -> int:
     cases = [(n[5:], f) for n, f in sorted(globals().items()) if n.startswith("case_") and (not argv or any(a in n for a in argv))]
     bad = 0

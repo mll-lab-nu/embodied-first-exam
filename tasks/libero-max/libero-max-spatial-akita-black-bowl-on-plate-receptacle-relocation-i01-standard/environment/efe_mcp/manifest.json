@@ -1,0 +1,14 @@
+{
+ "manifest": "efe-mcp-manifest/1",
+ "kind": "rcb",
+ "suite": "libero-max",
+ "task": "libero-max-spatial-akita-black-bowl-on-plate-receptacle-relocation-i01-standard",
+ "protocol": "eai-standard/2.1",
+ "realtime": false,
+ "tools": [
+  "spec",
+  "observe",
+  "submit",
+  "finish"
+ ]
+}

@@ -15,7 +15,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/embodied-olympics-match-soccer-jointgpu-i01-standard"
-description = "STANDARD (Embodied Olympics / Embodied Agent Olympics, our own service): humanoid robot soccer 2 v 2 at the JOINT LEVEL (12 leg joint targets per Booster T1 every 20 ms, no walking policy, no kick skill), coach format (the agent commands both robots of its team) against a learned opponent team at the joint level (level 5: its two T1s walk on a policy trained with reinforcement learning on the same joint interface and limits as yours; a learned strategy layer decides what each robot does), program play (eai-standard-lockstep/1.0: the world advances only while the player waits or an act takes effect and stands still between its calls; it freezes at every stoppage for the player's review, at most 300 s). Task: Win a 2 v 2 robot soccer match against the other team. CPU + GPU resource tier (6 CPU cores + 1 NVIDIA GPU with mjlab 1.6.0 + rsl_rl 5.4.2, the full 2 v 2 match world and a single T1 on the GPU); any method (hand-written, planning, optimisation, learning); a practice service with full copies of the match world. 2 h development (start window), then the match. The twin embodied-olympics-match-soccer-jointcpu-i01-standard is the same match in the other resource tier. Frozen development instance (seed and opponent fixed, not an official seed). Exported from Embodied Olympics pilot v5 (task soccer-match-wallclock-program-lowlevel-standard)."
+description = "STANDARD (Embodied Olympics / Embodied Agent Olympics, our own service): humanoid robot soccer 2 v 2 at the JOINT LEVEL (12 leg joint targets per Booster T1 every 20 ms, no walking policy, no kick skill), coach format (the agent commands both robots of its team) against a learned opponent team at the joint level (level 5: its two T1s walk on a policy trained with reinforcement learning on the same joint interface and limits as yours; a learned strategy layer decides what each robot does), program play (eai-standard/2.1+match/1.0: the world advances only while the player waits or an act takes effect and stands still between its calls; it freezes at every stoppage for the player's review, at most 300 s). Task: Win a 2 v 2 robot soccer match against the other team. CPU + GPU resource tier (6 CPU cores + 1 NVIDIA GPU with mjlab 1.6.0 + rsl_rl 5.4.2, the full 2 v 2 match world and a single T1 on the GPU); any method (hand-written, planning, optimisation, learning); a practice service with full copies of the match world. 2 h development (start window), then the match. The twin embodied-olympics-match-soccer-jointcpu-i01-standard is the same match in the other resource tier. Frozen development instance (seed and opponent fixed, not an official seed). Exported from Embodied Olympics pilot v5 (task soccer-match-wallclock-program-lowlevel-standard)."
 keywords = ["robotics", "embodied-olympics", "sports", "soccer", "mujoco", "standard-mode", "lockstep", "joint-level", "gpu-training"]
 
 [metadata]
@@ -24,7 +24,7 @@ simulator = "mujoco"
 robot = "booster-t1"
 family = "soccer_jointmatch"
 dynamics = "dynamic"              # scene dynamics (docs/protocol/README.md §2): the task's own declaration
-protocol = "eai-standard-lockstep/1.0"
+protocol = "eai-standard/2.1+match/1.0"
 instance_seed = 101
 opponent_level = 5
 resource_tier = "gpu"
@@ -86,6 +86,13 @@ build_timeout_sec = 3600.0
 cpus = 6
 memory_mb = 16384
 storage_mb = 10240
+
+# The robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): Harbor starts this server for the agent.
+[[environment.mcp_servers]]
+name = "efe-robot"
+transport = "stdio"
+command = "python3"
+args = ["/opt/tools/efe_mcp/server.py"]
 
 [verifier.environment]
 build_timeout_sec = 600.0

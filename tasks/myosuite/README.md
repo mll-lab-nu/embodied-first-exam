@@ -310,6 +310,19 @@ only after the whole reference with the on-track share, the final step and the w
 - **Cost.** The hook steps the graded episode's physics once (the render pass). All CPU (OSMesa); the realtime twin's
   GPU is for the agent's images.
 
+**Agent-ended episodes** (standard mode; PROTOCOL §3 "Agent-ended episodes", `RCB_AGENT_END` in each sim service,
+`rcb_agent_end.py`). The task's success is never shown and never ends the episode: the agent ends it with `POST /finish`
+(reason `finished`), or the end of its session does (`timeout`). Resets stay available after a success (a success no
+longer ends the trial); `/finish` ends the trial (409 after it, `/reset` too), and only the episode running then, or at
+the session's end, is graded. `rcb_myosuite.AGENT_END`: the hold families are judged on the state the episode ends in
+(the goal held for the hold time up to the end; at `/finish` and the session's end a hold that has begun is run out with
+the last command held); a challenge's success event (the `event` rule) counts once it has happened, also when the
+challenge's failure ends the episode after it (its own `done` at the event ends nothing); MyoDex's track is judged over
+the whole reference motion, whose end, like baoding's 1000 target points, is the episode's own length (`step_limit`,
+judged as it stands). Any other failure ends the episode with 0, also after a held goal. There is no `RCB_STEP_LIMIT`
+(no step budget). The realtime twin declares the same through rcb_service's adapter fields (`end_judgement`,
+`end_window_steps`, `info["step_cap"]`).
+
 ## Files
 Each task directory carries its frozen instance (`instance.npz`: the privileged task's `environment/` and `tests/`, a
 standard or realtime twin's `environment/sim/`) and, where the family has one, its reference solution (`solution/`); a

@@ -1,0 +1,14 @@
+{
+ "manifest": "efe-mcp-manifest/1",
+ "kind": "rcb",
+ "suite": "vlabench",
+ "task": "vlabench-book-rearrange-i00-standard",
+ "protocol": "eai-standard/2.1",
+ "realtime": false,
+ "tools": [
+  "spec",
+  "observe",
+  "submit",
+  "finish"
+ ]
+}

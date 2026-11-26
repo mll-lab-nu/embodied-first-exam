@@ -43,8 +43,9 @@ INSTRUCTION = ["bash", str(ROOT / "ci_checks/check-instruction.sh")]
 RP_LEAK = ["bash", str(ROOT / "ci_checks/benchmarks/robopaint/invariant-leak.sh")]
 EOM_MI = [sys.executable, str(ROOT / "ci_checks/benchmarks/embodied-olympics-match/invariant-match-instance.py")]
 ARC_BIND = [sys.executable, str(ROOT / "ci_checks/benchmarks/roboarc/invariant-runtime-binding.py")]
+AGENT_END = [sys.executable, str(ROOT / "ci_checks/check-agent-end.py"), "--tier", "invariants"]
 # the checks that enforce Appendix H (run_invariants.sh); every other check here is advisory
-INVARIANT_CMDS = (ISOLATION, POINTERS, TWINS, INSTANCE, STDIMG, MONITOR, DIGESTS, RP_LEAK, EOM_MI, ARC_BIND)
+INVARIANT_CMDS = (ISOLATION, POINTERS, TWINS, INSTANCE, STDIMG, MONITOR, DIGESTS, RP_LEAK, EOM_MI, ARC_BIND, AGENT_END)
 WITH_NEIGHBOURS = (IDENTITY, TWINS, EOM_MI)   # run on the broken copy among (links to) every other task
 
 STD = "behavior-boxing-books-up-for-storage-i00-standard"      # a sim sidecar with a trusted cache volume
@@ -218,6 +219,10 @@ MUTATIONS = [
      PRIV, TEST_COMPOSE, in_service("main", "    networks: [default]"), ISOLATION, "service main: `networks` is not allowed"),
     ("... `network_mode: host` in the verifier's compose file",
      PRIV, TEST_COMPOSE, in_service("main", "    network_mode: host"), ISOLATION, "service main: `network_mode: host` is not allowed"),
+    ("a standard task's sim service shows the success again (no RCB_AGENT_END: H.3, PROTOCOL §3)",
+     STD, COMPOSE, sub(r"^[ \t]*RCB_AGENT_END:.*\n", ""), AGENT_END, "does not set RCB_AGENT_END"),
+    ("... its instruction no longer says how to end the episode (the Finish line)",
+     STD, "instruction.md", sub(r"(?ms)^- Finish: .*?(?=^- |\Z)", ""), AGENT_END, "has no Finish line"),
     ("the instruction no longer states the network rule (what the network reaches)",
      STD, "instruction.md", sub(r"(?ms)^- Network: .*?(?=^- )", ""), RESOURCES, "does not state the Network line"),
     ("the frozen instance the agent reads names where its scene came from",

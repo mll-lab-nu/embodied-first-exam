@@ -174,6 +174,6 @@ WORKDIR /app
 # the shared RCB1 codec. .dockerignore keeps the build's own two files out of /srv.
 FROM humanclaw-base
 COPY . /srv/
-COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.4.1@sha256:7f1a830075fd6dd25e7a20a340316c041df583a29062796f59a4fa63b6f76946 /rcb1.py /srv/rcb1.py
-COPY --from=ghcr.io/mll-lab-nu/efe:humanclaw-files-0.1.1@sha256:805f9ad6c273ef08d58e93d419371c99ea78638a18ee03c1396d91fcd90d5eee /hc_core.py /rcb_service.py /server.py /srv/
+COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.5.0@sha256:a6c2ac2ede9fe2c1744f9c6e67c6a49de9c5a8b8c2c9ae4f0d774b7dd72662ff /rcb1.py /srv/rcb1.py
+COPY --from=ghcr.io/mll-lab-nu/efe:humanclaw-files-0.2.0@sha256:81b6453e17626533b4187d5bae8c406833f6e8ef904a9744daeed82e367c0634 /hc_core.py /rcb_service.py /server.py /srv/
 WORKDIR /srv

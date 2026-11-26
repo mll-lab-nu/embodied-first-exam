@@ -6,20 +6,22 @@ let go and move the hand away.
 
 ## Goal
 Success: after being lifted more than a hand's width, the beaker rests in the middle of the white plate, with the hand
-let go and moved away, for a second. The episode ends the moment that is reached.
+let go and moved away, for a second. The lift counts once it has happened; the rest is judged on how things stand when
+the episode ends. It ends when you call finish (Limits) or when your session ends. The robot never tells you whether you
+have succeeded.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
   benchmark's demonstrations, trained policies); trials are reviewed.
 - One episode, no reset: what you knock over stays knocked over.
 - You get only the cameras and the robot's own proprioception (joint positions, velocities and drive efforts, the
-  gripper's opening, the pose of its tool frame and the targets in effect): no poses of the objects or instruments; the
-  episode ends when the task is done, and the service tells you that it ended and why.
+  gripper's opening, the pose of its tool frame and the targets in effect): no poses of the objects or instruments, no
+  success signal.
 
 ## Robot Interface
 A Franka Panda arm (7 joints) with its two-finger gripper, fixed to a laboratory bench, in LabUtopia's simulated
-chemistry laboratory (NVIDIA Isaac Sim). The robot runs as a service you reach only through its client, as if it were
-real hardware: one live episode.
+chemistry laboratory (NVIDIA Isaac Sim). The robot runs as a service you reach through its client or its MCP tools, as
+if it were real hardware: one live episode.
 
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
@@ -33,17 +35,29 @@ obs.meta["proprio"]                            # {"layout": [...], "now": [...]}
 obs.meta["cameras"]                            # per camera intrinsic_cv / extrinsic_cv / cam2world_gl at the last frame
 res = r.submit("joint_position", rows, dt=0.05)   # rows: (T, 9) position targets, here one every 50 ms, reached linearly in 1/60 s steps
 res.meta["done"], res.meta["reason"], res.meta["control_steps_chunk"], res.meta["clipped"]; res.video[cam]; res.last[cam]; res.proprio
-obs = r.get_obs(seconds=1.0, video="mp4")      # hold the last targets and watch for 1 s (max 30)
+obs = r.hold(1.0)                              # hold the last targets for 1 s of robot time
+obs = r.get_obs(last_s=1.0)                    # the frames recorded over the last 1 s (reading moves no time)
 r.fk(q); r.ik({"tcp": pose})                   # kinematics of the seven arm joints (spec["kinematics"]): no physics, no collision check
 r.status()                                     # calls, control steps, done, reason, elapsed time
 ```
 
-Simulated time only advances with your commands (and `get_obs(seconds=...)`, which holds the last targets). The service
-needs 5 to 10 minutes to come up (Isaac Sim prepares the stage for its renderer once; longer on a busy host): `Robot()`
-waits for it (it prints its progress to stderr), and that wait is part of your budget. If the service crashes, a call
-fails with a connection error: it restarts and resumes the same episode (never a reset) in the state after the last call
-it completed. `r.wait_ready()` waits for it; then check `r.status()`. Ask only for the cameras you need; `video="none"`
+Simulated time only advances with your commands (and `hold(s)`, which holds the last targets). The service needs 5 to 10
+minutes to come up (Isaac Sim prepares the stage for its renderer once; longer on a busy host): `Robot()` waits for it
+(it prints its progress to stderr), and that wait is part of your budget. If the service crashes, a call fails with a
+connection error: it restarts and resumes the same episode (never a reset) in the state after the last call it
+completed. `r.wait_ready()` waits for it; then check `r.status()`. Ask only for the cameras you need; `video="none"`
 makes a chunk fastest. One call returns at most 1800 images; `video_fps` is up to 30, default 10.
+
+### MCP tools
+- The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
+  `observe`, `submit`, `kinematics`, `finish`. A tool takes its endpoint's request fields (any other field in `fields`)
+  and returns the service's reply `meta` unchanged; images, arrays and video are written as files under `/app/obs/`
+  (`.png`, `.npy`, `.mp4`) and the result lists them. Long action chunks can be passed as a file (`actions_file`).
+- `observe` returns at once with what is already recorded: the current frame, or the last `last_s` seconds. Time passes
+  only through `submit`, which answers when its rows have run; a `submit` with `interpolate` "hold", `seconds` and no
+  rows lets time pass with the robot holding still.
+- A call still running after 45 s returns `pending` with an `operation` id; `observe(operation=id)` collects its reply.
+- The client and the tools drive the same robot in the same episode; use either, or both.
 
 ### Actions
 Action type `joint_position` (9): Position targets of the joints' drives: `panda_joint1` .. `panda_joint7` (rad), then
@@ -61,7 +75,7 @@ above; the velocity targets of a row hold for its whole interval.
 
 The control rate is 60 Hz (one physics step per control step). At the start the arm is not at rest: it stands straight
 up and is moving towards its home pose (the targets in effect, `cmd_*` in the proprioception); holding them, e.g. with
-`r.get_obs(seconds=2)`, brings it there in about two seconds. There is no step budget: the one technical cap is
+`r.hold(2)`, brings it there in about two seconds. There is no step budget: the one technical cap is
 `spec["max_control_steps"]`, 36000 (600 s of simulated time), at which the episode ends.
 
 ### Observations
@@ -89,3 +103,7 @@ gains, the gripper's command, the tool frame.
   no GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap
   only slows you down); usage: `/run/rcb-limits/usage.json`.
 - Resets: none: one episode.
+- Finish: when you are done, call finish: `POST /finish` with an empty JSON body to the service, at the client's base
+  URL (`http://sim:8000` or `http://localhost:8000`; in Python `requests.post(r.base + "/finish", json={})` with your
+  client `r`). It ends the episode, and every call after it is refused. Reaching the goal changes no reply and does not
+  end the episode; if you never call finish, the end of your session ends it.

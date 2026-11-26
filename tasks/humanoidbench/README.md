@@ -130,7 +130,7 @@ clock that does not stop (each task's `environment/sim/rcb_realtime.py`, which e
 wire protocol is `eai-standard/2.3`, 2.2 plus the realtime capability, docs/protocol/standard_mode.md "Realtime mode"):
 
 - **Clock.** An episode starts paused at the frozen start, its servos holding their starting targets. Its clock starts
-  at its first `submit` (or `get_obs(seconds > 0)`) and runs one control step every 20 ms of wall time
+  at its first `submit` and runs one control step every 20 ms of wall time
   (`RCB_SLOWDOWN` = S: every S × 20 ms; 1 by default, other values reported separately) until the episode ends. Each
   episode after a reset starts paused again; so does an episode resumed after a crash.
 - **Actions.** The service keeps a plan, one target row per coming control step. `submit` expands its chunk exactly as
@@ -139,8 +139,8 @@ wire protocol is `eai-standard/2.3`, 2.2 plus the realtime capability, docs/prot
   already run when the request arrives is dropped (`late_steps`). When the plan runs out, the last target is held
   (zero-order hold): a slow agent's robot keeps its last servo targets, as a position-controlled H1 would. (The layer
   is shared with BiGym 2.0 and Embodied Olympics - Fun, whose plans mix action types: rows of different types are never combined.)
-- **Observations.** `get_obs()` is the robot now; `get_obs(seconds=s)` watches the next s seconds and returns what the
-  cameras saw, without touching the plan. `cameras=[]` returns proprioception only (the controller's call).
+- **Observations.** `get_obs()` is the robot now; `get_obs(last_s=n)` returns at once what the recorder
+  recorded over the last n seconds, without touching the plan (observe never waits). `cameras=[]` returns proprioception only (the controller's call).
 - **Grading.** The live episode, as in standard mode (above). The journal (`trajectory_live.f64`) holds the sim row the simulator applied at every control
   step, whatever was submitted, so the trajectory reproduces the live run however late or early the agent was.
   Evidence beside it:
@@ -180,6 +180,18 @@ no object or target pose; the room camera's pose is given in the robot's startin
 | two head cameras, RGB 256×256 (cube 512); `room_camera`; depth (`RCB_OBS_DEPTH=1`, off) | the robot's position in the room |
 | joint angles and velocities; pelvis IMU: gyro, gravity direction | any object's or target's pose |
 | `spec()`: servo ranges, joint axes and positions, link masses and centres of mass, feet boxes, IMU and camera frames, 50 Hz, the episode length (1000 control steps; 500 for cube), budget | contact forces, the simulator itself |
+
+## Agent-ended episodes
+Every standard and realtime task runs with `RCB_AGENT_END=1` (PROTOCOL §3, agent-ended episodes): reaching the pass mark
+no longer ends the episode or the trial and no reply shows it. The episode ends at the agent's `POST /finish`, at one of
+the task's own terminations (a fall, a dropped tool, cube or book, a forbidden contact: a failure), at the episode's
+length or bookshelf's own end once all five objects are placed (reason `step_limit`), or at the end of the session.
+Judgement is by events (`end_judgement = "events"`): the summed reward reaching the pass mark counts once reached, and
+an event that happened stands: a fall or another failure rule after the pass mark ends the episode (reason `failed`)
+but the episode is a success (eai-standard/3.0, PROTOCOL §3: on a goal judged as events a later failure does not take
+an event back; `rcb_service.py`). A failure before the pass mark is reached is 0. Resets stay available
+after a success, and the last episode is graded. With the flag off nothing changes; where this README says a success
+ends the episode, that is the flag-off behaviour.
 
 ## Physics: fixes to upstream (image 0.2.0)
 

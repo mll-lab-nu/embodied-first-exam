@@ -6,9 +6,12 @@ without dropping either.
 
 ## Goal
 Success: both cubes are turned to match the see-through cube closely, early in the episode, and kept that way, with each
-hand at its cube and the robot standing steadily in place. The episode ends as soon as the task is done.
+hand at its cube and the robot standing steadily in place. Success is counted as it happens: what the robot does adds up
+over the episode (its full length is in Limits), and once it adds up to a pass the episode is a success, unless it then
+ends as a failure (below). It ends when you call finish (Limits) or when your session ends. The robot never tells you
+whether you have succeeded.
 
-Any of these ends the episode at once, and nothing after it counts:
+Any of these ends the episode at once as a failure:
 - The robot falls.
 - Either cube drops.
 
@@ -16,16 +19,15 @@ Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
   benchmark's demonstrations, trained policies); trials are reviewed.
 - Episodes: 50 resets (`spec()["budget"]["reset"]`), each a new episode from the same starting state; within an episode
-  a robot that has fallen stays down until you reset. Only the last episode is graded: a success ends the run at once
-  (no reset after it), and when your time is up the episode then running is graded.
+  a robot that has fallen stays down until you reset. Only the last episode is graded: the latest one when you call
+  finish or when your session ends.
 - You get only the robot's camera images (its two head cameras and `room_camera`, fixed in the room) and its own joint
   angles, joint velocities and pelvis IMU: not where the robot is in the room, not the cubes' orientations, not the goal
-  orientation; no object poses, no scene layout, no score; the episode ends when the task is done, and the service tells
-  you that it ended and why.
+  orientation; no object poses, no scene layout, no score, no success signal.
 
 ## Robot Interface
 A simulated Unitree H1 humanoid with two Shadow dexterous hands (HumanoidBench, MuJoCo). The robot runs as a service you
-reach only through its client, as if it were real hardware.
+reach through its client or its MCP tools, as if it were real hardware.
 
 ### Client
 `/opt/tools/rcb_client.py` (protocol `eai-standard/2.1`); its docstring is the full reference
@@ -36,7 +38,8 @@ reach only through its client, as if it were real hardware.
 | `r = Robot()` | | connects (`http://sim:8000`, then `http://localhost:8000`) and waits until the scene is ready |
 | `r.spec()` | `GET /spec` | the robot's facts: the actuators' order and ranges, `control_dt` (0.02 s), `max_control_steps` (500), the cameras, `proprio_layout`, `budget` |
 | `r.status()` | `GET /status` | `calls`, `rows`, `control_steps`, `done`, `reason`, `elapsed_s`, and `episode`, `resets_left`, `control_steps_total` (all episodes) |
-| `r.get_obs(cameras=None, seconds=0, include_depth=False, video="frames")` | `POST /observe` | the current frames (free), or hold the last targets and watch for `seconds` (at most 30) |
+| `r.get_obs(cameras=None, last_s=0, include_depth=False, video="frames")` | `POST /observe` | the current frames (free), or with `last_s=n` the frames recorded over the last n seconds; no time passes |
+| `r.hold(seconds, cameras=None, video="mp4")` | `POST /submit` | hold the last targets for `seconds` of robot time and return the video, like a submit |
 | `r.submit("joint_position", A, dt=0.02, interpolate="linear", cameras=None, video="mp4")` | `POST /submit` | runs `A`, rows of 61 targets `dt` seconds apart (a multiple of 0.02; a chunk covers at most 10 s); stops early when the episode ends |
 | `r.reset(cameras=None, include_depth=False)` | `POST /reset` | a new episode from the frozen starting state (at most 50 in all); returns the start's frames |
 
@@ -56,6 +59,17 @@ control steps (either abandoning the running episode or after one has ended) and
 proprioception; it takes no robot time. Once an episode has ended, `submit` raises `EpisodeOver` (its message gives
 `resets_left`) until you reset. `meta["episode"]` and `meta["resets_left"]` count the episodes; the wall clock never
 restarts.
+
+### MCP tools
+- The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
+  `observe`, `submit`, `reset`, `finish`. A tool takes its endpoint's request fields (any other field in `fields`) and
+  returns the service's reply `meta` unchanged; images, arrays and video are written as files under `/app/obs/` (`.png`,
+  `.npy`, `.mp4`) and the result lists them. Long action chunks can be passed as a file (`actions_file`).
+- `observe` returns at once with what is already recorded: the current frame, or the last `last_s` seconds. Time passes
+  only through `submit`, which answers when its rows have run; a `submit` with `interpolate` "hold", `seconds` and no
+  rows lets time pass with the robot holding still.
+- A call still running after 45 s returns `pending` with an `operation` id; `observe(operation=id)` collects its reply.
+- The client and the tools drive the same robot in the same episode; use either, or both.
 
 ### Actions
 One action type, `joint_position`: one row per control step (`control_dt` = 0.02 s, 50 Hz), rows `dt` apart (a multiple
@@ -80,12 +94,12 @@ the robot stays there depends on whether that pose is stable under gravity and c
 - The robot's own facts, as its URDF would give them, are in `r.spec()`: each actuator's range, each joint's axis and
   position, each link's mass and centre of mass, the feet's collision boxes, the IMU's frame, each camera's field of
   view and pose.
-- When an episode has ended, `meta["reason"]` says why: `"success"`, `"error"` after a simulator error, else `"failed"`.
+- When an episode has ended, `meta["reason"]` says why: `"finished"` after your finish, `"step_limit"` at the end of its
+  control steps, `"error"` after a simulator error, else `"failed"`.
 
 ### Time
-Time moves only inside calls: running your servo targets and holding the last ones while you watch
-(`get_obs(seconds=s)`, at most 30 s) use up the episode's control steps. Between calls the robot waits, frozen, while
-you think; an observation without seconds is free.
+Time moves only inside calls: running your servo targets and holding the last ones (`hold(s)`) use up the episode's
+control steps. Between calls the robot waits, frozen, while you think; an observation is free.
 
 ## Others
 - A robot that has fallen in a way the Goal does not list (on its side, face down, sitting on the floor) is not stopped:
@@ -107,3 +121,7 @@ you think; an observation without seconds is free.
   slows you down); usage: `/run/rcb-limits/usage.json`.
 - Resets: at most 50 (`spec()["budget"]["reset"]`), each a new episode from the same starting state.
 - Steps: each episode ends after 500 control steps (10 s of robot time).
+- Finish: when you are done, call finish: `POST /finish` with an empty JSON body to the service, at the client's base
+  URL (`http://sim:8000` or `http://localhost:8000`; in Python `requests.post(r.base + "/finish", json={})` with your
+  client `r`). It ends the episode, and every call after it is refused. Reaching the goal changes no reply and does not
+  end the episode; if you never call finish, the end of your session ends it.

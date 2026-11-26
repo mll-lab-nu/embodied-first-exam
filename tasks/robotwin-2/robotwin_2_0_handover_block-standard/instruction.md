@@ -6,8 +6,8 @@ blue pad on the same end that was down at the start, then let go.
 
 ## Goal
 Success: the red block stands in the middle of the blue pad on the end that was down at the start, and the right gripper
-is open. The service judges the scene at the end of each of your calls, and the episode ends at the first success; it
-also ends when your time is up or on a simulator error.
+is open. Success is judged on how things stand when the episode ends. It ends when you call finish (Limits) or when your
+session ends. The robot never tells you whether you have succeeded.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
@@ -16,8 +16,8 @@ Rules:
 - You get only the cameras and the robot's own sensor readings: no object poses, no scene layout, no success signal.
 
 ## Robot Interface
-A dual-arm ALOHA-AgileX robot at a table (RoboTwin 2.0, SAPIEN / PhysX). The robot runs as a service you reach only
-through its client, as if it were real hardware: one live episode.
+A dual-arm ALOHA-AgileX robot at a table (RoboTwin 2.0, SAPIEN / PhysX). The robot runs as a service you reach through
+its client or its MCP tools, as if it were real hardware: one live episode.
 
 ### Client
 `/opt/tools/rcb_client.py` (protocol `eai-standard/2.1`):
@@ -29,7 +29,8 @@ spec = r.spec()                               # action types, dims, joint limits
 obs = r.get_obs()                             # current frames from 4 cameras: obs.last[cam] -> uint8 (240,320,3)
 obs.meta["proprio"]                           # {"layout": [...82 names], "now": [...]}: see "Proprioception" below
 obs.meta.get("cameras")                       # per-camera intrinsic_cv / extrinsic_cv / cam2world_gl for the state this response ends in
-obs = r.get_obs(seconds=2.0, video="mp4")     # hold the last command and watch for 2 s (max 30): obs.video[cam] = mp4 bytes
+obs = r.hold(2.0)                             # hold the last command for 2 s of robot time: obs.video[cam] = mp4 bytes
+obs = r.get_obs(last_s=1.0)                   # the frames recorded over the last 1 s (reading moves no time)
 
 res = r.submit("joint_position", A, dt=0.05)  # A: (T, 14) rows dt seconds apart; streamed at 250 Hz with linear interpolation
 res = r.submit("ee_pose", P)                  # P: (T, 16) end-effector targets; CuRobo plans each row (table-only collision)
@@ -44,6 +45,17 @@ res.last["left_camera"]; res.proprio          # last frame per camera; float32 (
   `res.raw["cam2world_gl/<cam>"]["data"]` is a float64 `(n_frames, 4, 4)` array with the camera's pose at every returned
   frame.
 - One call returns at most 3000 images.
+
+### MCP tools
+- The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
+  `observe`, `submit`, `finish`. A tool takes its endpoint's request fields (any other field in `fields`) and returns
+  the service's reply `meta` unchanged; images, arrays and video are written as files under `/app/obs/` (`.png`, `.npy`,
+  `.mp4`) and the result lists them. Long action chunks can be passed as a file (`actions_file`).
+- `observe` returns at once with what is already recorded: the current frame, or the last `last_s` seconds. Time passes
+  only through `submit`, which answers when its rows have run; a `submit` with `interpolate` "hold", `seconds` and no
+  rows lets time pass with the robot holding still.
+- A call still running after 45 s returns `pending` with an `operation` id; `observe(operation=id)` collects its reply.
+- The client and the tools drive the same robot in the same episode; use either, or both.
 
 ### Actions
 - `joint_position` (14): `fl_joint1..6, left_gripper, fr_joint1..6, right_gripper`; radians, gripper 0 = closed, 1 =
@@ -85,3 +97,7 @@ res.last["left_camera"]; res.proprio          # last frame per camera; float32 (
   slows you down); usage: `/run/rcb-limits/usage.json`.
 - Resets: none: one episode.
 - Steps: unlimited (actions and simulated time are reported as cost).
+- Finish: when you are done, call finish: `POST /finish` with an empty JSON body to the service, at the client's base
+  URL (`http://sim:8000` or `http://localhost:8000`; in Python `requests.post(r.base + "/finish", json={})` with your
+  client `r`). It ends the episode, and every call after it is refused. Reaching the goal changes no reply and does not
+  end the episode; if you never call finish, the end of your session ends it.

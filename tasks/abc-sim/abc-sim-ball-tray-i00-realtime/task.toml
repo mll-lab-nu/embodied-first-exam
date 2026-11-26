@@ -58,5 +58,12 @@ cpus = 4
 memory_mb = 10240
 storage_mb = 20480
 
+# The robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): Harbor starts this server for the agent.
+[[environment.mcp_servers]]
+name = "efe-robot"
+transport = "stdio"
+command = "python3"
+args = ["/opt/tools/efe_mcp/server.py"]
+
 [verifier.env]
 RCB_LIMITS_ENFORCE = "${RCB_LIMITS_ENFORCE:-0}"

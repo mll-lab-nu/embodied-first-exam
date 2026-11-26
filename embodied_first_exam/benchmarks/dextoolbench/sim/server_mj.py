@@ -60,6 +60,70 @@ E = {"ready": False, "calls": 0, "rows": 0, "done": False, "reason": None, "t0":
 # journal_rows: control steps executed over the whole trial (record.f64's length); ep_start: where the current episode
 # begins in it. stopping: the agent's time is up (SIGUSR1): no reset any more.
 
+# Agent-ended episodes (docs/protocol/README.md §3 "Agent-ended episodes", standard_mode.md; required for every standard
+# and realtime task from protocol v2.5; the same rules as rcb_service.py's AGENT_END). RCB_AGENT_END=1: the service never
+# shows the task's success and a success never ends the episode; POST /finish (JSON {}) ends it (reason "finished"),
+# and so do the step cap (reason "step_limit": RCB_MAX_CONTROL_STEPS, or RCB_STEP_LIMIT=N when set, which may only lower
+# it) and the end of the agent's session ("timeout"); those three ends are judged on the state they leave (END_JUDGEMENT
+# says how: "state", the task's success as things stand then; "events", a goal judged on moments as they happened).
+# A task's own failure rule still ends the episode with 0, after a success too.
+AGENT_END = os.environ.get("RCB_AGENT_END") == "1"
+STEP_LIMIT = int(os.environ.get("RCB_STEP_LIMIT") or 0) or None
+if STEP_LIMIT is not None and (not AGENT_END or STEP_LIMIT < 1):
+    raise RuntimeError("RCB_STEP_LIMIT needs RCB_AGENT_END=1 and a positive number of steps")
+if STEP_LIMIT:
+    MAX_CONTROL_STEPS = min(MAX_CONTROL_STEPS or STEP_LIMIT, STEP_LIMIT)
+END_STATE_REASONS = ("finished", "timeout", "step_limit")     # ends judged on the state they leave
+CAP_REASON = "step_limit" if AGENT_END else "step limit"     # the step cap's end (judged as it stands either way)
+ENDED_BY = {"finished": "finish", "step_limit": "step_limit", "timeout": "session_end", "error": "error",
+            "sim_crashed_on_call": "error", "sim_crashed": "error"}   # any other end: "failed" (the task's own rule)
+SUCCESS_SIGNAL_NOTE = ("hidden: the service never tells you whether you have succeeded and a success does not end the "
+                       "episode; POST /finish (JSON {}) ends it (if you never call it, the end of your session does) and "
+                       "the episode is judged then, as the instruction's Goal says: on how things stand at that moment, "
+                       "and on any steps the Goal says count as they happen; after /finish every call is refused (409)")
+E.update({"now_success": False, "seen_step": None, "trial_seen": False, "finish_t": None})
+
+
+def _hidden_success(ok, step: int) -> None:
+    """The task's success as the state now is: kept, never latched and never shown; the episode's first one is logged."""
+    E["now_success"] = bool(ok)
+    if ok and E["seen_step"] is None:
+        E["seen_step"], E["trial_seen"] = int(step), True
+        log({"ev": "hidden_success", "control_steps": int(step)})
+
+
+def _ae_state() -> dict:
+    """The hidden success as a checkpoint (a completed call's log line) keeps it: a resume restores it."""
+    return {"now_success": E["now_success"], "seen_step": E["seen_step"], "trial_seen": E["trial_seen"]} if AGENT_END else {}
+
+
+def _ae_restore(last: dict, ev: list) -> None:
+    if not AGENT_END:
+        return
+    E["now_success"], E["seen_step"] = bool(last.get("now_success")), last.get("seen_step")
+    E["trial_seen"] = bool(last.get("trial_seen"))
+    fin = [e for e in ev if e.get("ev") == "end" and e.get("reason") == "finished"]
+    E["finish_t"] = fin[-1].get("finish_t") if fin else None
+
+
+def _ae_fields() -> dict:
+    """final.json's record of an agent-ended episode (evidence only; nothing without the feature)."""
+    if not AGENT_END:
+        return {}
+    r, t0, ft = E["reason"], E.get("t_first"), E.get("finish_t")
+    out = {"success_signal": "hidden", "ended_by": ENDED_BY.get(r, "failed") if r else None, "end_judgement": END_JUDGEMENT,
+           "hidden_success_seen": E["seen_step"] is not None, "hidden_success_first_step": E["seen_step"],
+           "trial_hidden_success_seen": bool(E["trial_seen"]),
+           "finish_time_s": round(float(ft) - float(t0), 1) if ft and t0 else None}
+    if STEP_LIMIT:
+        out.update(step_limit=MAX_CONTROL_STEPS, steps_used=len(RECORD))
+    return out
+
+
+def _steps_left() -> dict:
+    """With a step limit: the limit and what is left of it, in every meta and /status."""
+    return {"step_limit": MAX_CONTROL_STEPS, "steps_left": max(0, MAX_CONTROL_STEPS - len(RECORD))} if STEP_LIMIT else {}
+
 # SIGUSR1 (the collect hook's "episode over") may arrive before the service is ready, e.g. during a resume replay; its
 # default action would kill the process. Until the real handler is installed, only remember it.
 _USR1 = {"pending": False}
@@ -172,6 +236,9 @@ except RuntimeError as exc:   # the tooling's own start check (ALOHA, Panda): th
     _give_up("instance_mismatch", infra=True, instance_mismatch=1, error=str(exc)[:300], video_done=True)
 E["built"] = True; faulthandler.cancel_dump_traceback_later()    # the scene exists: the startup watchdog stands down (a resume replay may take minutes)
 KIND = "dtb" if TOOL.__name__ == "rcb_dtb" else "pg"
+# DexToolBench's goal is a sequence of poses the goal tracker counts as they are reached ("events": every goal reached,
+# in order, during the episode); Playground's is the final state ("state": the tooling's check() at the end)
+END_JUDGEMENT = "events" if KIND == "dtb" else "state"
 CTRL_DT = float(TOOL.CONTROL_DT); N = int(TOOL.N)
 NAMES = list(getattr(TOOL, "JOINT_NAMES", None) or getattr(TOOL, "ACTUATOR_NAMES"))
 RECORD: list = []                         # the current episode: one row of targets per control step (what is graded)
@@ -299,6 +366,12 @@ def _robot_qd():
 def task_info() -> dict:
     if KIND == "dtb":
         p = S.progress()
+        if AGENT_END:   # the last goal stays shown once it is reached: reaching the whole sequence is never announced
+            i = min(int(p["reached"]), int(p["n_goals"]) - 1)
+            return {"goal_index": i, "n_goals": p["n_goals"], "goal": list(S.goals[i]), "goals_reached": i,
+                    "failed_on_timeout": p["failed"], "steps_left_on_goal": None if p["done"] else p["steps_left_on_goal"],
+                    "goal_time_limit_s": round(TOOL.GOAL_TIMEOUT_STEPS * CTRL_DT, 3) or None,
+                    "pose_format": "x y z qx qy qz qw (world frame, metres)"}
         return {"goal_index": p["reached"], "n_goals": p["n_goals"], "goal": None if p["done"] else list(S.goals[p["reached"]]),
                 "goals_reached": p["reached"], "failed_on_timeout": p["failed"], "steps_left_on_goal": p["steps_left_on_goal"],
                 "goal_time_limit_s": round(TOOL.GOAL_TIMEOUT_STEPS * CTRL_DT, 3) or None,
@@ -343,11 +416,23 @@ if RESET_BUDGET:
                      "budget.reset times in all; only the last episode is graded, and a success ends the trial. The clock "
                      "(time_left_s) keeps running. meta and /status add episode, resets_left and control_steps_total")
     SPEC["episode"] += "; with resets, only the last episode is scored"
+if AGENT_END:
+    SPEC["success_signal"] = SUCCESS_SIGNAL_NOTE
+    if STEP_LIMIT: SPEC["budget"]["steps"] = MAX_CONTROL_STEPS
+    SPEC["episode"] = ("ends at your POST /finish, when your time is up"
+                       + (f", when a goal is not reached within {TOOL.GOAL_TIMEOUT_STEPS * CTRL_DT:g} s" if KIND == "dtb" and TOOL.GOAL_TIMEOUT_STEPS else "")
+                       + (f", or after {MAX_CONTROL_STEPS} control steps (reason step_limit)" if MAX_CONTROL_STEPS else "")
+                       + ("; every goal must have been reached in order during the episode (counted as it happens)" if KIND == "dtb"
+                          else "; the state at that end is graded"))
+    if RESET_BUDGET:
+        SPEC["reset"] = ("POST /reset abandons the running episode and starts a new one from the same starting state, "
+                         "budget.reset times in all; only the last episode is graded (after /finish no reset is possible). "
+                         "The clock (time_left_s) keeps running. meta and /status add episode, resets_left and control_steps_total")
 
 
 def _success() -> bool:
     """The running episode has succeeded (DexToolBench: every goal reached): the trial is over, no reset after it."""
-    return E["done"] and E["reason"] == "all goals reached"
+    return not AGENT_END and E["done"] and E["reason"] == "all goals reached"   # agent-ended: a success ends nothing
 
 
 def _reset_counters() -> dict:
@@ -372,7 +457,7 @@ def meta_common() -> dict:
     return {"calls": E["calls"], "rows": E["rows"], "control_steps": len(RECORD), "sim_time_s": round(len(RECORD) * CTRL_DT, 3),
             "time_s": round(_agent_time(), 2), "time_left_s": max(0.0, round(WALL_CLOCK_S - _agent_time(), 1)),
             "proprio": {"layout": PROPRIO_LAYOUT, "now": proprio().tolist()}, "task": task_info(), "cameras": calib(),
-            "done": E["done"], "reason": E["reason"], **_reset_counters()}
+            "done": E["done"], "reason": E["reason"], **_reset_counters(), **_steps_left()}
 
 
 def write_final(extra: dict | None = None) -> None:
@@ -380,7 +465,7 @@ def write_final(extra: dict | None = None) -> None:
          "elapsed_s": round((E.get("t_end") or time.time()) - E["t0"], 1), "done": E["done"], "reason": E["reason"], "finalized": E["finalized"],
          "video_done": E["video_done"], "reset_budget": RESET_BUDGET, "resets": E["resets"], "episodes": E["resets"] + 1,
          "control_steps_total": E["journal_rows"]}
-    d.update(E.get("verdict") or {}); d.update(extra or {})
+    d.update(E.get("verdict") or {}); d.update(_ae_fields()); d.update(extra or {})
     _write_json(os.path.join(DATA, "final.json"), d)
 
 
@@ -390,18 +475,20 @@ def _every(fps: int) -> int:
 
 
 class Recorder:
-    def __init__(self, cams, fps, depth):
-        self.cams = cams; self.every = _every(fps); self.depth = depth
+    def __init__(self, cams, fps, depth, ring=False):
+        self.cams = cams; self.every = _every(fps); self.depth = depth; self.ring = ring   # ring: a /submit's (the recorder)
         self.frames = {c: [] for c in cams}; self.dep = {c: [] for c in cams}; self.prop = []; self.n = 0
         self.pose = {c: [] for c in cams if MOVING[c]}     # a moving camera: its pose with every frame
     def tick(self, force=False):
+        imgs, prop = {}, None
         if force or self.n % self.every == 0:
             imgs, dep = grab(self.cams, self.depth)
             for c in self.cams:
                 self.frames[c].append(imgs[c])
                 if c in dep: self.dep[c].append(dep[c])
                 if c in self.pose: self.pose[c].append(cam2world(c))
-            self.prop.append(proprio())
+            prop = proprio(); self.prop.append(prop)
+        if self.ring: _ring_record(imgs, prop, force)
         self.n += 1
     def parts(self, video: str, fps: int):
         """The response's parts, with one copy of the frames: no np.stack; frames/ and depth/ are written into the body
@@ -435,14 +522,123 @@ class Recorder:
         return out
 
 
+# ---- eai-standard/3.0 (docs/protocol/standard_mode.md): standard mode is Gym's env.step. The world is frozen between
+# submits; /observe never lets time pass (`seconds` > 0 is a 400) and reads the recorder: last_s = 0 the current frame,
+# last_s = n the frames recorded in the last n robot seconds. The recorder is no process of its own: during every /submit
+# (a rows-free hold chunk too) it keeps every camera's RGB frame every 1 / RCB_CAMERA_FPS of robot time, with the proprio
+# row and the step, in a ring of the last RCB_LOOKBACK_S robot seconds; an image the call's own Recorder grabbed at that
+# step is reused, not rendered again. A rows-free hold chunk {"type", "interpolate": "hold", "seconds": n} holds the
+# current target for n seconds (what /observe with seconds > 0 did before).
+EAI_STANDARD = "eai-standard/3.0"
+HOLD_HINT = ('observe never lets time pass (eai-standard/3.0): to let n seconds pass, submit a hold chunk {"type": <type>, '
+             '"interpolate": "hold", "seconds": n} with no rows; last_s = n returns the frames recorded in the last n seconds')
+RING_DT = CTRL_DT                                         # robot seconds per step of _ring_step()
+RING_FPS = min(1.0 / RING_DT, max(1e-6, float(os.environ.get("RCB_CAMERA_FPS") or 10)))
+RING_EVERY = max(1, int(round(1.0 / (RING_DT * RING_FPS))))
+RING_S = max(0.0, float(os.environ.get("RCB_LOOKBACK_S") or 3.0))
+RING_CAMS = list(CAMS)
+RING: list = []      # [{"step", "imgs": {cam: uint8 HxWx3}, "prop", "pose": {cam: 4x4}}], oldest first
+
+
+def _ring_step() -> int:
+    return int(len(RECORD))
+
+
+def _ring_record(imgs: dict, prop, force: bool = False) -> None:
+    """Recorder.tick's hook during a /submit: every RING_EVERY steps (and at the call's forced first and last frame) the
+    frame of every camera; `imgs` / `prop` are what the call's own Recorder has just grabbed at this step (reused)."""
+    step = _ring_step()
+    if not (force or step % RING_EVERY == 0) or (RING and RING[-1]["step"] == step):
+        return
+    if RING and step < RING[-1]["step"]:
+        RING.clear()                                   # a new episode
+    have = {c: imgs[c] for c in RING_CAMS if c in imgs}
+    miss = [c for c in RING_CAMS if c not in have]
+    if miss:
+        got = grab(miss, False)[0]
+        have.update({c: got[c] for c in miss if c in got})
+    RING.append({"step": step, "imgs": have, "prop": proprio() if prop is None else prop, "pose": {c: cam2world(c) for c in RING_CAMS if MOVING[c]}})
+    lo = step - int(round(RING_S / RING_DT))
+    while RING and RING[0]["step"] < lo:
+        RING.pop(0)
+
+
+def _ring_pick(last_s: float, fps: int, n_cams: int) -> list:
+    """The recorded frames of the last `last_s` robot seconds (at most RING_S), `fps` apart, oldest first; [] when the ring
+    does not end at the current state (nothing recorded yet in this episode)."""
+    if not RING or RING[-1]["step"] != _ring_step():
+        return []
+    new = RING[-1]["step"]
+    lo = new - int(round(min(last_s, RING_S) / RING_DT))
+    gap = max(1, int(round(1.0 / (RING_DT * max(1, fps)))))
+    out, nxt = [], new
+    for f in reversed(RING):
+        if f["step"] < lo or len(out) * max(1, n_cams) >= MAX_FRAMES_PER_CALL:
+            break
+        if f["step"] <= nxt:
+            out.append(f)
+            nxt = f["step"] - gap
+    return out[::-1]
+
+
+def _hold_seconds(meta: dict, parts: dict):
+    """A rows-free hold chunk (eai-standard/3.0): its `seconds`, or None for a chunk of rows."""
+    if meta.get("seconds") is None:
+        return None
+    if "actions" in parts or meta.get("actions") not in (None, []) or meta.get("rows") not in (None, []):
+        raise ValueError("a chunk has either rows or `seconds` (a hold chunk without rows), not both")
+    if meta.get("interpolate") != "hold":
+        raise ValueError('a chunk without rows is a hold chunk: {"type": <type>, "interpolate": "hold", "seconds": n}')
+    v = meta.get("seconds")
+    try:
+        if isinstance(v, bool):
+            raise TypeError
+        n = float(v)
+    except (TypeError, ValueError, OverflowError):
+        raise ValueError("seconds must be a number") from None
+    if not (math.isfinite(n) and 0 < n <= MAX_CHUNK_S + 1e-9):
+        raise ValueError(f"a hold chunk's seconds must be in (0, max_chunk_s = {MAX_CHUNK_S:g}]")
+    return n
+
+
+def _last_s(meta: dict) -> float:
+    """/observe's request: `seconds` > 0 is refused (HOLD_HINT); last_s >= 0 (0 = the current frame)."""
+    s = meta.get("seconds")
+    if s is not None:
+        try:
+            s = float(s)
+        except (TypeError, ValueError, OverflowError):
+            raise ValueError("seconds must be a number") from None
+        if s != 0:
+            raise ValueError(HOLD_HINT)
+    v = meta.get("last_s")
+    if v is None:
+        return 0.0
+    try:
+        if isinstance(v, bool):
+            raise TypeError
+        v = float(v)
+    except (TypeError, ValueError, OverflowError):
+        raise ValueError("last_s must be a number of seconds") from None
+    if not (math.isfinite(v) and v >= 0):
+        raise ValueError("last_s must be a finite number >= 0")
+    return v
+
+
+SPEC["standard"] = EAI_STANDARD
+SPEC["timing"] = {"recorder": {"cameras": RING_CAMS, "fps": round(1.0 / (RING_DT * RING_EVERY), 3), "buffer_s": RING_S,
+                               "records": "during /submit"}}
+
+
 def _ctrl_step(tg, rec) -> bool:
     """One control step with targets `tg`; returns True if the episode ended (DexToolBench goal rule)."""
     S.step(tg); row = np.asarray(S.targets, float).copy(); RECORD.append(row); RECF.write(row.tobytes()); E["journal_rows"] += 1; rec.tick()
     if KIND == "dtb":
         p = S.progress()
-        if p["done"]: finish("all goals reached"); return True
+        if AGENT_END: _hidden_success(p["done"], len(RECORD))   # counted, never shown; the episode goes on
+        elif p["done"]: finish("all goals reached"); return True
         if p["failed"]: finish("goal timeout"); return True
-    if MAX_CONTROL_STEPS and len(RECORD) >= MAX_CONTROL_STEPS: finish("step limit"); return True
+    if MAX_CONTROL_STEPS and len(RECORD) >= MAX_CONTROL_STEPS: finish(CAP_REASON); return True
     return False
 
 
@@ -499,6 +695,12 @@ def _frame_budget(cams, fps: int, steps: int, depth: bool) -> None:
 def parse_submit(meta: dict, parts: dict) -> dict:
     """Validate a /submit request completely; returns what do_submit executes. No physics, no state change."""
     if meta.get("type", "joint_position") != "joint_position": raise ValueError(f"type must be joint_position (not yet: {SPEC['action_types']['not_yet']})")
+    hold = _hold_seconds(meta, parts)
+    if hold is not None:      # a rows-free hold chunk: the current targets held for `seconds` (eai-standard/3.0)
+        k = max(1, int(round(hold / CTRL_DT)))
+        cams = _cameras(meta, list(CAMS)[:1]); fps = _fps(meta); video = _video(meta, "mp4"); depth = bool(meta.get("include_depth", False))
+        _frame_budget(cams, fps, k, depth)
+        return {"hold": hold, "k": k, "cams": cams, "fps": fps, "video": video, "depth": depth, "note": str(meta.get("note") or "")[:500]}
     raw = parts["actions"].get("data") if isinstance(parts.get("actions"), dict) else meta.get("actions", [])
     try: A = np.asarray(raw, dtype=np.float64)
     except (TypeError, ValueError, OverflowError): raise ValueError(f"actions must be a numeric array (T, {N})") from None
@@ -518,15 +720,16 @@ def parse_submit(meta: dict, parts: dict) -> dict:
 
 def parse_observe(meta: dict) -> dict:
     """Validate an /observe request completely; returns what do_observe executes."""
-    cams = _cameras(meta, list(CAMS)); seconds = _num(meta, "seconds", 0); fps = _fps(meta); video = _video(meta, "frames"); depth = bool(meta.get("include_depth", False))
-    if seconds < 0 or seconds > MAX_WATCH_S: raise ValueError(f"seconds must be in [0, {MAX_WATCH_S}]")
-    _frame_budget(cams, fps, int(round(seconds / CTRL_DT)), depth)
-    return {"cams": cams, "seconds": seconds, "fps": fps, "video": video, "depth": depth}
+    cams = _cameras(meta, list(CAMS)); last_s = _last_s(meta); fps = _fps(meta); video = _video(meta, "frames"); depth = bool(meta.get("include_depth", False))
+    _frame_budget(cams, fps, 0, depth)
+    return {"cams": cams, "last_s": last_s, "fps": fps, "video": video, "depth": depth}
 
 
 def do_submit(q: dict):
+    if "hold" in q: return do_hold(q)
     A, dt, k, interp, cams, fps, video, depth = (q[x] for x in ("A", "dt", "k", "interp", "cams", "fps", "video", "depth"))
-    rec = Recorder(cams, fps, depth); rec.tick(force=True); prev = np.asarray(S.targets, float).copy(); n_clip = 0; done = False
+    before = len(RECORD)
+    rec = Recorder(cams, fps, depth, ring=True); rec.tick(force=True); prev = np.asarray(S.targets, float).copy(); n_clip = 0; done = False
     for row in A.astype(np.float64):
         tgt = np.clip(row, S.lower, S.upper); n_clip += int(np.any(tgt != row))
         for j in range(1, k + 1):
@@ -535,26 +738,55 @@ def do_submit(q: dict):
         prev = tgt
         if done: break
     rec.tick(force=True); E["calls"] += 1; E["rows"] += int(A.shape[0]); RECF.flush()
-    out = {**meta_common(), "chunk_id": E["calls"], "type": "joint_position", "executed_rows": int(A.shape[0]), "n_clipped_rows": n_clip, "ok": True}
+    if AGENT_END and KIND != "dtb": _hidden_success(S.check()["success"], len(RECORD))   # the state's success: never shown
+    out = {**meta_common(), "chunk_id": E["calls"], "type": "joint_position", "executed_rows": int(A.shape[0]), "n_clipped_rows": n_clip,
+           "duration_s": round((len(RECORD) - before) * CTRL_DT, 6), "planned_duration_s": round(int(A.shape[0]) * dt, 6), "ok": True}
     log({"ev": "submit", "call": E["calls"], "type": "joint_position", "rows": int(A.shape[0]), "dt": dt, "interpolate": interp, "cameras": cams,
          "note": q["note"], "control_steps": len(RECORD), "n_clipped_rows": n_clip, "task": task_info(),
-         "rows_total": E["rows"], **_journal_pos(), "state_sha": S.state_sha()})
+         "rows_total": E["rows"], **_journal_pos(), "state_sha": S.state_sha(), **_ae_state()})
     d = os.path.join(DATA, "calls", f"{E['calls']:06d}"); os.makedirs(d, exist_ok=True); np.save(os.path.join(d, "actions.npy"), A.astype(np.float32))
     return out, rec.parts(video, fps)
 
 
+def do_hold(q: dict):
+    """A rows-free hold chunk (eai-standard/3.0): the current targets held for q["k"] control steps, answered as a /submit."""
+    cams, fps, video, depth, k = (q[x] for x in ("cams", "fps", "video", "depth", "k"))
+    before = len(RECORD)
+    rec = Recorder(cams, fps, depth, ring=True); rec.tick(force=True)
+    hold = np.asarray(S.targets, float).copy()
+    for _ in range(k):
+        if _ctrl_step(hold, rec): break
+    rec.tick(force=True); E["calls"] += 1; RECF.flush()
+    if AGENT_END and KIND != "dtb": _hidden_success(S.check()["success"], len(RECORD))   # the state's success: never shown
+    out = {**meta_common(), "chunk_id": E["calls"], "type": "joint_position", "hold": True, "executed_rows": 0, "n_clipped_rows": 0,
+           "duration_s": round((len(RECORD) - before) * CTRL_DT, 6), "planned_duration_s": round(q["hold"], 6), "ok": True}
+    log({"ev": "submit", "call": E["calls"], "type": "joint_position", "rows": 0, "hold_s": q["hold"], "cameras": cams,
+         "note": q["note"], "control_steps": len(RECORD), "n_clipped_rows": 0, "task": task_info(),
+         "rows_total": E["rows"], **_journal_pos(), "state_sha": S.state_sha(), **_ae_state()})
+    return out, rec.parts(video, fps)
+
+
 def do_observe(q: dict):
-    cams, seconds, fps, video, depth = (q[x] for x in ("cams", "seconds", "fps", "video", "depth"))
-    rec = Recorder(cams, fps, depth); rec.tick(force=True)
-    if seconds > 0 and not E["done"]:
-        hold = np.asarray(S.targets, float).copy()
-        for _ in range(int(round(seconds / CTRL_DT))):
-            if _ctrl_step(hold, rec): break
-        rec.tick(force=True)
-    E["calls"] += 1; RECF.flush()
-    log({"ev": "observe", "call": E["calls"], "seconds": seconds, "cameras": cams, "control_steps": len(RECORD),
-         "rows_total": E["rows"], **_journal_pos(), "state_sha": S.state_sha()})
-    return {**meta_common(), "obs_id": E["calls"], "seconds": seconds, "ok": True}, rec.parts(video if seconds > 0 else ("frames" if video == "mp4" else video), fps)
+    """/observe never lets time pass (eai-standard/3.0): last_s = 0 the current frame, last_s = n the recorder's frames of
+    the last n robot seconds (none recorded yet: the current frame)."""
+    cams, last_s, fps, video, depth = (q[x] for x in ("cams", "last_s", "fps", "video", "depth"))
+    pick = _ring_pick(last_s, fps, len(cams)) if last_s > 0 else []
+    E["calls"] += 1
+    log({"ev": "observe", "call": E["calls"], "last_s": last_s, "cameras": cams, "control_steps": len(RECORD),
+         "rows_total": E["rows"], **_journal_pos(), "state_sha": S.state_sha(), **_ae_state()})
+    if not pick:
+        rec = Recorder(cams, fps, depth); rec.tick(force=True)
+        return ({**meta_common(), "obs_id": E["calls"], "last_s": 0.0, "frame_step": len(RECORD), "ok": True},
+                rec.parts("frames" if video == "mp4" else video, fps))
+    rec = Recorder(cams, fps, False)
+    for f in pick:
+        for c in cams:
+            rec.frames[c].append(f["imgs"][c])
+            if c in rec.pose: rec.pose[c].append(f["pose"][c])
+        rec.prop.append(f["prop"])
+    steps = np.asarray([f["step"] for f in pick], np.int64)
+    out = {**meta_common(), "obs_id": E["calls"], "last_s": round((steps[-1] - steps[0]) * CTRL_DT, 4), "frame_step": int(steps[-1]), "ok": True}
+    return out, rec.parts(video, fps) + [rcb1.array_part("frame_step", steps)]
 
 
 def _journal_pos() -> dict:
@@ -577,6 +809,8 @@ class Refused(Exception):
 
 def check_reset() -> None:
     """409 when no new episode may start: the trial is over (a success, or the agent's time is up), or the budget is spent."""
+    if AGENT_END and E["done"] and E["reason"] in ("finished", "timeout"):
+        raise Refused({"error": "episode finished", "reason": E["reason"], "resets_left": 0})
     if _success() or E["stopping"] or E.get("finalizing"):
         raise Refused({"error": "trial finished: " + ("an episode succeeded" if _success() else "your time is up"), "reason": E["reason"], "resets_left": 0})
     if E["resets"] >= RESET_BUDGET:
@@ -592,8 +826,8 @@ def do_reset(q: dict):
     except Exception:   # the simulator failed to start the new episode: the trial ends on a simulator error
         E["done"] = True; E["reason"] = "error"; log({"ev": "end", "reason": "error", "reset_failed": True, "control_steps": len(RECORD), **_journal_pos()}); write_final()
         raise
-    E["resets"] += 1; E["ep_start"] = E["journal_rows"]; RECORD.clear()
-    E["done"] = False; E["reason"] = None; E["t_end"] = None
+    E["resets"] += 1; E["ep_start"] = E["journal_rows"]; RECORD.clear(); RING.clear()
+    E["done"] = False; E["reason"] = None; E["t_end"] = None; E["now_success"] = False; E["seen_step"] = None
     rec = Recorder(q["cams"], q["fps"], q["depth"]); rec.tick(force=True)
     E["calls"] += 1; RECF.flush()
     log({"ev": "reset", "call": E["calls"], "cameras": q["cams"], "control_steps": 0, "rows_total": E["rows"], **_journal_pos(),
@@ -621,11 +855,11 @@ def finalize() -> None:
             if err:
                 v.update(success=False, live_success=False)
             elif KIND == "dtb":
-                ok = bool(live["done"])
+                ok = bool(live["done"]) and (not AGENT_END or E["reason"] in END_STATE_REASONS)
                 v.update(success=ok, live_success=ok, progress=round(float(live["progress"]), 4), goals_reached=int(live["reached"]),
                          n_goals=int(live["n_goals"]), failed_on_timeout=bool(live["failed"]), live_goals_reached=int(live["reached"]))
             else:
-                v.update(success=bool(live["success"]), live_success=bool(live["success"]),
+                v.update(success=bool(live["success"]) and (not AGENT_END or E["reason"] in END_STATE_REASONS), live_success=bool(live["success"]),
                          **{k: val for k, val in live.items() if k not in ("success", "state_sha", "steps") and isinstance(val, (int, float, bool))})
             # The verdict is final and on disk (finalized) before any video is rendered: the video never changes, hides or
             # delays it (a slow or failing render, or a collect hook that stops waiting, leaves the verdict as it is).
@@ -652,7 +886,14 @@ def finalize() -> None:
 def finish(reason: str) -> None:
     if E["done"]: return
     E["done"] = True; E["reason"] = reason; E["t_end"] = time.time()
-    log({"ev": "end", "reason": reason, "control_steps": len(RECORD), **_journal_pos()}); write_final()
+    if AGENT_END and reason == "finished": E["finish_t"] = E["t_end"]
+    log({"ev": "end", "reason": reason, "control_steps": len(RECORD), **_journal_pos(),
+         **({"finish_t": E["finish_t"]} if reason == "finished" else {})}); write_final()
+
+
+def _status() -> dict:
+    return {"calls": E["calls"], "control_steps": len(RECORD), "done": E["done"], "reason": E["reason"],
+            "elapsed_s": round(time.time() - E["t0"], 1), **_reset_counters(), **_steps_left()}
 
 
 def start_finalize() -> None:
@@ -684,11 +925,11 @@ class Hd(BaseHTTPRequestHandler):
     def do_GET(self):
         _touch()
         if self.path == "/spec": return self._json(200, SPEC)
-        if self.path == "/status": return self._json(200, {"calls": E["calls"], "control_steps": len(RECORD), "done": E["done"], "reason": E["reason"], "elapsed_s": round(time.time() - E["t0"], 1), **_reset_counters()})
+        if self.path == "/status": return self._json(200, _status())
         return self._json(404, {"error": "no such endpoint"})
     def do_POST(self):
         _touch()
-        if self.path not in ("/submit", "/observe") + (("/reset",) if RESET_BUDGET else ()): return self._json(404, {"error": "no such endpoint"})
+        if self.path not in ("/submit", "/observe") + (("/reset",) if RESET_BUDGET else ()) + (("/finish",) if AGENT_END else ()): return self._json(404, {"error": "no such endpoint"})
         try: self._req = self._body()
         except Exception as exc: return self._json(413 if str(exc) == "request too large" else 400, {"error": str(exc)[:200]})
         with LOCK:
@@ -700,6 +941,11 @@ class Hd(BaseHTTPRequestHandler):
 
     def _serve(self):
         meta, parts = self._req
+        if self.path == "/finish":   # agent-ended episodes: the agent ends the episode; the state it leaves is graded
+            if E["done"] or E["stopping"] or E.get("finalizing"): return self._json(409, {"error": "episode finished", "reason": E["reason"]})
+            finish("finished"); return self._json(200, {"ok": True, **_status()})
+        if self.path == "/observe" and AGENT_END and E["done"] and E["reason"] == "finished":
+            return self._json(409, {"error": "episode finished", "reason": E["reason"]})   # after /finish: only /spec, /status
         if self.path == "/submit" and E["done"]:
             return self._json(409, {"error": "episode finished", "reason": E["reason"], **({"resets_left": _reset_counters()["resets_left"]} if RESET_BUDGET else {})})
         if self.path == "/reset":
@@ -773,6 +1019,7 @@ def _resume_or_start() -> None:
     ended = [e for e in ev if e.get("ev") == "end" and e.get("reason") != "reset" and int(e.get("resets", 0)) == resets
              and int(e.get("journal_rows", e.get("control_steps")) or 0) <= n]
     if ended: E["done"] = True; E["reason"] = ended[-1].get("reason"); E["t_end"] = float(ended[-1]["ts"])
+    _ae_restore(last, ev)                                # the hidden success of the episode, as the checkpoint had it
     E["stopping"] = any(e.get("ev") == "end" and e.get("reason") == "timeout" for e in ev)   # the agent's time was up already
     log({"ev": "resumed", "control_steps": len(RECORD), "journal_rows": n, "resets": resets, "calls": E["calls"], "state_sha": S.state_sha(), "crashed_in_call": in_call,
          "downtime_s": round(time.time() - float(ev[-1]["ts"]), 1)})

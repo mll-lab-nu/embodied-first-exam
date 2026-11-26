@@ -174,6 +174,20 @@ Outside Harbor, the standard service run on each reference (`std_local` check): 
   the layer's own rule, PROTOCOL §3), a fall, a timeout are the agent's result. A video that fails is only a missing
   video.
 
+### Agent-ended episodes
+
+Every standard and realtime task sets `RCB_AGENT_END "1"` in its sim service (PROTOCOL §3; ALOHA and Panda:
+`server_mj.py`; the quadrupeds' standard tasks: `sim/server.py` with the 2.2 layer `rcb_agent_end.py`; realtime:
+`rcb_service.py`). A success never ends the episode and is never shown: the task's check is still run (after every call,
+or for the quadrupeds after every control step) and only recorded. The agent ends the episode with `POST /finish`
+(reason `finished`; a quadruped's `done` action is the same end); the end of its session (`timeout`) and the horizon
+(`step_limit`) end it too, and each is judged on the state it ends in (end judgement `state`: the task's check on the
+steps executed, so a getup or two-leg stand must have held its pose through the last steps, and a joystick episode
+passes only at the end of its schedule). The termination rule (a fall, a joint out of range) still ends the episode with
+0. Resets stay possible until `POST /finish`. `final.json` adds the shared fields (`success_signal`, `ended_by`,
+`end_judgement`, `hidden_success_seen`, `hidden_success_first_step`, `trial_hidden_success_seen`, `finish_time_s`).
+Without `RCB_AGENT_END` the service behaves as described above.
+
 ## Realtime (`eai-standard/2.3`)
 The dynamic families (PROTOCOL §2: each task's `[metadata] dynamics`) get a `-realtime` twin. Among the quadrupeds that is **BarkourJoystick** (its torso is pushed 12 times at
 frozen moments: an external force that is neither the robot's nor gravity).

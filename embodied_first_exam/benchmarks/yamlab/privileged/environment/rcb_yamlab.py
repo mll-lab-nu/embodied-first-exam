@@ -113,6 +113,17 @@ TASKS: dict[str, dict[str, Any]] = {
     },
 }
 
+# Agent-ended episodes (PROTOCOL §3; the standard task's sim service sets RCB_AGENT_END=1): a success never ends the episode
+# and the state the episode ends in is judged. YAMLab's stages latch in order; the earlier stages count as they happened,
+# the LAST one must still hold when the episode ends: before every control step its latch is opened again with its
+# consecutive-step counter one short of the requirement, so YAMLab's own update_stage_success re-latches it at once while
+# its condition (and, for the hang, its height stability) still holds and drops it to 0 the first step it does not, after
+# which it needs its full run of consecutive steps again. success() is then "every earlier stage happened and the last
+# one holds now, held for its required steps". LAST_STAGE: (flag, counter, requirement) attributes of YAMLab's env.
+AGENT_END = os.environ.get("RCB_AGENT_END") == "1"
+LAST_STAGE = {"put_pot_on_cooktop": ("stage2_success", "_consecutive_ontop_steps", "_ontop_required_consecutive_steps"),
+              "hang_mug_on_tree": ("stage3_success", "_consecutive_hang_steps", "_hang_required_consecutive_steps")}
+
 ACTION_DIM = 14
 CONTROL_HZ = 30                      # sim dt 1/120 s x decimation 4
 MAX_STEPS = 100_000                  # no step budget (the wall clock is); this only stops a runaway trajectory (~55 min of sim time)
@@ -601,19 +612,34 @@ class Session:
             raise PrimitiveError(f"episode is over ({self.end_reason}); call reset() before stepping again")
         if self._recording is not None:
             self._recording.append(a.copy())
+        if AGENT_END:
+            self._reopen_last_stage()
         self.env.step(self.th.as_tensor(a, device=self.device).unsqueeze(0))
         self._pristine = False
         self._targets = a.astype(np.float64)
         self.n_steps += 1
         if self._video is not None and self.n_steps % self._video["every"] == 0:
             self._video_add()
-        if self.success():
+        if self.success() and not AGENT_END:
             self.episode_done, self.end_reason = True, "success"
         elif self.fallen():
             self.episode_done, self.end_reason = True, f"{self.fallen()} fell off the table"
         elif self.n_steps >= self.max_steps:
             self.episode_done, self.end_reason = True, "step_guard"
         return self.episode_done
+
+    def _reopen_last_stage(self) -> None:
+        """AGENT_END: the last stage's latch opened again before a control step, its counter one short (see LAST_STAGE)."""
+        flag, counter, need = LAST_STAGE[self.task]
+        f = getattr(self.env, flag)
+        if bool(f[0].item()):
+            f[0] = False
+            getattr(self.env, counter)[0] = max(0, int(getattr(self.env, need)) - 1)
+
+    def last_stage_hold(self) -> tuple[int, int]:
+        """(consecutive steps the last stage's condition has held, steps it must hold): the hold window's progress."""
+        flag, counter, need = LAST_STAGE[self.task]
+        return int(getattr(self.env, counter)[0].item()), int(getattr(self.env, need))
 
     def fallen(self) -> str | None:
         """The task object that has fallen below the table top (YAMLab's `<object>_below_table` rule: its root more than

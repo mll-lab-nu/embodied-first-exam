@@ -20,6 +20,7 @@ services:
     command: python /srv/server_casa.py
     restart: on-failure:6
     environment:
+      RCB_AGENT_END: "1"                               # agent-ended episodes (PROTOCOL §3)
       RCB_TOOL: casa_tool
       RCB_INSTANCE: /srv/instance.npz
       RCB_STARTUP_TIMEOUT_S: "600"

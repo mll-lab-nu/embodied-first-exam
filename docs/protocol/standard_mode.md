@@ -2,7 +2,8 @@
 
 Part of the task protocol ([README](README.md)): the wire format of the standard modes.
 
-**Version: `eai-standard/2.4`** is the current version. This document is the interoperability
+**Version: `eai-standard/3.0`** is the current version: the rules of "Version 3.0" below, on every layer (2.1–2.4 and
+the match extension), which keeps its own version string. This document is the interoperability
 specification of every 2.x version a task declares today: what a service answers and a client may send. Minor
 versions only add, so each part holds for the versions after it unless a later part says otherwise, and the shipped
 clients accept every 2.x service. What a task of the standard modes is, and which rules bind it, is in
@@ -19,15 +20,52 @@ types, cameras, proprioception columns, resume class, measured start-up times, k
 | `eai-standard/2.2` | 2.1 + optional capabilities: depth `last` / `frames`, per-frame steps, times and extrinsics, camera intrinsics and mounting, `robot_spec`, `world`, `POST /kinematics`, a per-call wall-clock bound; one shared service layer | Part 2 (§1–§18) | [`embodied_first_exam/standard/`](../../embodied_first_exam/standard/) |
 | `eai-standard/2.3` | 2.2 + the realtime capability: a clock that does not stop | Part 3 | `embodied_first_exam/standard/realtime/rcb_realtime.py` |
 | `eai-standard/2.4` | 2.3 + the operations capability: operation ids, request deadlines, `GET /operations/<id>`, a call watchdog, a physics-tick ledger | Part 4 (§19–§25) | [`embodied_first_exam/standard/v2_4/`](../../embodied_first_exam/standard/v2_4/) |
+| `eai-standard/2.x+match/1.0` | an extension, not a version: 2.1 (lockstep, turn-based) or 2.3 (realtime) in front of a match service, plus the match's own calls `/start`, `/ready`, `/say`, `/team` and its score in `meta` | Part 5 (§26–§31) | [`embodied_first_exam/benchmarks/embodied-olympics-match/eai_std/`](../../embodied_first_exam/benchmarks/embodied-olympics-match/eai_std/) |
 
 Which version a task serves is its `[metadata] protocol` (= `/spec.protocol`); which benchmarks serve which version is
-in their docs, not listed here.
+in their docs, not listed here. Every version is also offered as MCP tools, one per endpoint, in the same task ("MCP
+tools", the last section).
 
 **Spelling.** Services and tasks report `eai-standard/2.x`; the shipped clients also accept `rcb-limited/2.x`. No task
 declares a version before 2.1.
 
+### Version 3.0
+
+`eai-standard/3.0` is a set of rules every layer follows (`/spec.standard = "eai-standard/3.0"`); a layer's own
+version string (`/spec.protocol`, `[metadata] protocol`) says which capabilities it has. Where a part below says
+otherwise about `/observe`, `/submit` or the clock, this section wins; the older text stays as the history of 2.1–2.4.
+
+- **Standard mode is Gym's `env.step`.** The world stands still between calls. `/submit` blocks until its chunk has run
+  and answers with the chunk's video (as asked), its proprioception and `meta.duration_s`, the robot seconds it ran
+  (`planned_duration_s`: what it declared, rows × `dt`; a planner type such as `ee_pose`: the planned duration where the
+  service knows it).
+- **A hold chunk lets time pass.** `/submit` with `{"type": <type>, "interpolate": "hold", "seconds": n}` and no rows
+  holds the target in force (the last command, as 2.1's watch held it) for n seconds of robot time (whole control steps,
+  at least one; at most `max_chunk_s`) and answers as any `/submit` (`meta.hold = true`, `executed_rows = 0`,
+  `duration_s`). Rows and `seconds` together, or no rows without a hold, are a 400. In realtime mode it answers at once
+  and plans the target in force for n seconds from `at`.
+- **`/observe` only reads.** It never lets time pass, never waits and never changes the plan. `last_s = 0` (the default)
+  returns the current frame and the proprioception of now; `last_s = n` the frames recorded in the last n robot seconds
+  (at most `buffer_s`), `video_fps` apart, with the proprioception of their steps (`meta.last_s`: what they cover; none
+  recorded yet: the current frame). An answer with images adds `meta.frame_step`, the control step its newest image shows.
+  `seconds > 0` is a 400 that names the hold chunk.
+- **The recorder.** `/spec.timing.recorder` declares `cameras` (every camera), `fps` (`RCB_CAMERA_FPS`, default 10),
+  `buffer_s` (`RCB_LOOKBACK_S`, default 3). Standard mode records while a `/submit` runs (hold chunks too): every 1 /
+  `fps` of robot time, the RGB image of every camera and the proprioception, into a ring of the last `buffer_s`
+  seconds (`records: "during /submit"`), cleared at a reset; no process of its own. Realtime mode: Part 3's recorder
+  ("Cameras"); an adapter without its two hooks records on the simulator's thread into the same ring.
+- **The realtime clock** starts at the episode's first `/submit` (again after a reset and a crash recovery), never at an
+  `/observe`; `/submit` answers at once with `duration_s` and `end_step` (= `plan_end_step`).
+- **`/finish`** is required in the standard and realtime modes ("Agent-ended episodes"; RoboEngineer and Embodied
+  Olympics - Match are exempt: a match ends by its rules, its `/finish` is a 404, and its clock starts at its `/start`
+  barrier, a deviation it declares in `/spec.timing.deviations`).
+- **Every agent-facing endpoint has an MCP tool** ("MCP tools", the last section): `spec`, `observe`, `submit` (a hold
+  chunk too), `finish`, and `reset` where the task has a reset budget, `kinematics` where the service serves it.
+- **The shipped clients**: `get_obs(last_s=0)` (`get_obs(seconds=…)` raises and names `hold`), `hold(seconds)` (the
+  hold chunk), `submit(...)`, `finish()`.
+
 **Citing this document.** Numbered sections are unique in the document: §1–§18 are Part 2 (so "§13" is the shared
-layer's crash recovery), §19–§25 are Part 4. The sections of Parts 1 and 3 are cited by their titles. A section whose
+layer's crash recovery), §19–§25 are Part 4, §26–§31 are Part 5. The sections of Parts 1 and 3 are cited by their titles. A section whose
 content is per benchmark points to the benchmarks' docs.
 
 ## Part 1 — `eai-standard/2.1`: the base
@@ -49,8 +87,8 @@ connections are refused and the client retries.
 |---|---|---|---|
 | GET | `/spec` | — | JSON: action types (dims, layouts, limits, semantics), cameras, proprio layout, budgets |
 | GET | `/status` | — | JSON: `{step, calls, physics_steps, done, reason, elapsed_s}` |
-| POST | `/observe` | RCB1 or JSON `{cameras, seconds, video_fps, include_depth, video}` | RCB1 |
-| POST | `/submit` | RCB1: header `{type, dt, interpolate, cameras, video_fps, video, include_depth, note}` + part `actions` float32 (T, dim) | RCB1 |
+| POST | `/observe` | RCB1 or JSON `{cameras, last_s, video_fps, include_depth, video}` (3.0; before: `seconds`) | RCB1 |
+| POST | `/submit` | RCB1: header `{type, dt, interpolate, cameras, video_fps, video, include_depth, note}` + part `actions` float32 (T, dim); a hold chunk (3.0): header `{type, interpolate: "hold", seconds, ...}`, no part | RCB1 |
 
 Anything else (`/state`, `/success`, …) returns **404**; so does `/reset` unless the task declares a reset budget
 (below).
@@ -94,21 +132,25 @@ physics_steps_watch`.
   The chunk is appended to the recorded trajectory and to `episode.jsonl`.
 
 ### `/observe` semantics
-`seconds = 0` (default) returns the current frames, free (no physics). `seconds > 0` (≤ `max_watch_s`) holds the last
-command, advances physics and returns the video; the predicate is checked afterwards. Watching costs no budget beyond
+From 3.0: `last_s` ("Version 3.0"); `seconds > 0` is a 400 and a hold chunk takes its place. Before 3.0:
+`seconds = 0` (default) returned the current frames, free (no physics); `seconds > 0` (≤ `max_watch_s`) held the last
+command, advanced physics and returned the video; the predicate was checked afterwards. Watching costs no budget beyond
 the wall clock; the simulated time is recorded as cost.
 
 ### Errors (no physics executed)
 | code | when |
 |---|---|
-| 400 | wrong type/dim, a chunk with no rows, NaN/inf, a field of the wrong JSON type (`dt`, `seconds` or `video_fps` not a finite number, `cameras` not a list), `dt` or `seconds` out of range or `dt` not a multiple of the physics step, chunk too long, bad interpolate/video value, `video_fps` outside [1, 30], more images than `max_frames_per_call` in one response (PROTOCOL §3), malformed body |
+| 400 | wrong type/dim, a chunk with no rows (other than a hold chunk), a hold chunk with rows, `/observe` with `seconds > 0` (3.0), NaN/inf, a field of the wrong JSON type (`dt`, `seconds` or `video_fps` not a finite number, `cameras` not a list), `dt` or `seconds` out of range or `dt` not a multiple of the physics step, chunk too long, bad interpolate/video value, `video_fps` outside [1, 30], more images than `max_frames_per_call` in one response (PROTOCOL §3), malformed body |
 | 409 | episode already finished (`done`); the trial is over |
 | 413 | body over 64 MB (`rcb_client.py` raises before sending such a body) |
 | 500 | simulator error; the episode ends with `reason = "error"` (the client raises `EpisodeOver`; the verifier reports `sim_error = 1`) |
 
 ### Episode semantics
-The service starts the episode when it is ready (seed hidden inside). The first success ends it; otherwise it ends
-when the agent phase ends (`timeout`) or on an error. The predicate is evaluated once more at episode end.
+The service starts the episode when it is ready (seed hidden inside). From protocol v3.0 the agent ends it (POST
+`/finish`, "Agent-ended episodes" below; required in the standard and realtime modes), or the step cap, the end of the
+agent's session (`timeout`), the task's failure rule or an error does; the state it ends in is judged. Before v3.0 (and
+in a service without the feature) the first success ended it; otherwise it ended when the agent phase ended
+(`timeout`) or on an error, and the predicate was evaluated once more at episode end.
 
 **The agent's clock (every 2.x service).** `meta.time_s` is the wall time since the agent's **first
 request** to the service, whatever the endpoint (`GET /spec`, which the shipped clients send first, counts), and
@@ -187,10 +229,15 @@ episode and starts a new one from the same frozen state, `N` times in all; `/sta
 when the budget is spent. Only the last episode is graded. With N = 0 (or no declaration) `/reset` is 404. The reset
 budget is part of a result's configuration: results with different budgets are not ranked together (running.md).
 
-### Optional agent-ended episodes
-PROTOCOL §3 "Agent-ended episodes" (an optional task feature). A task opts in in its `sim` service's environment:
-`RCB_AGENT_END: "1"`, and `RCB_STEP_LIMIT: "<N>"` for a step limit (what one step is: the service's `/spec` and the
-task's instruction). The wire:
+### Agent-ended episodes
+PROTOCOL §3 "Agent-ended episodes": required from protocol v3.0 for every standard and realtime task served by an
+`eai-standard/2.x` service of its mode (`normalize` writes `RCB_AGENT_END: "1"` in its `sim` service's environment;
+`ci_checks/check-agent-end.py` checks it), an optional capability before. `RCB_STEP_LIMIT: "<N>"` adds a step limit
+(what one step is: the service's `/spec` and the task's instruction); without one, the service's own step cap
+(`/spec.max_control_steps`, the task's episode length) ends the episode the same way (`reason = "step_limit"`). Every
+2.x service implements it (2.1: the sidecar `rcb_service.py`; 2.2 and 2.4: `rcb_agent_end.py` with the adapter; 2.3:
+`rcb_realtime.py` over `rcb_service.py`; a benchmark's own 2.1 server: the same wire). The wire, additive (a 2.0 or 2.1
+client that never calls `/finish` is served as before, its session's end ending the episode):
 - `/spec.success_signal` says the success is hidden; with a step limit `/spec.budget.steps = /spec.max_control_steps = N`,
   and every `meta` and `/status` add `step_limit` and `steps_left`.
 - No answer depends on the task's success: no `done` / `reason = "success"`, no 409, no early end of a chunk and no
@@ -201,21 +248,36 @@ task's instruction). The wire:
 - At the step limit the episode ends by itself (`reason = "step_limit"`; the chunk stops at that step); then `/submit`
   and `/finish` are 409, `/observe` still answers.
 - The collect hook's signal at the end of the agent's session ends the episode with `reason = "timeout"`.
+- Realtime (2.3): `/finish` is answered by the simulator thread between control steps; the clock stops with the episode
+  (no step runs after it), pending watches are answered, and a settle or hold window runs after the agent is gone, off
+  the clock.
+- Resets: as before a success (`resets_left` counts as without one); after `/finish` or the session's end `/reset` is a
+  409; after a failure end or the step cap it is allowed while the budget lasts. Only the last episode is graded.
 - The verdict: the task's own rule on the state the episode ended in, with its settle or hold window run from there on
   the live simulator (a hold window counts the steps already held). A success reached and then undone is 0. A goal the
   task judges as events (a referee's call, moments in a sequence such as key strikes, a check at a trigger) is judged on
   them as they happened; the task says which (RoboDojo: `rcb_robodojo.END_JUDGEMENT`, where an ordered stage sequence
   is judged from the episode except its last stage, which must still hold at the end). The task's failure rules keep
-  running to the end: one that ends the episode gives 0, after a success too. A simulator error is judged as without
-  the feature.
+  running to the end, with one rule by judgement type: on a goal judged on the end state, a failure rule that ends the
+  episode gives 0, after a success too; on a goal judged as events, an event that happened stands (a referee's call or
+  a scored point is not taken back by a later foul or fall), and a failure rule ends the episode with the events
+  reached so far. A simulator error is judged as without the feature.
 - `final.json` adds `success_signal = "hidden"`, `ended_by` (`finish`, `step_limit`, `session_end`, `failed`: the
   task's own failure rule, `error`), `hidden_success_seen`, `hidden_success_first_step`, `trial_hidden_success_seen`,
   `finish_time_s` and, with a step limit, `step_limit` and `steps_used`; `reward.json` adds `ended_finish`,
-  `ended_step_limit`, `ended_session_end` (evidence only). Which limit ended a session (`session_end`) is the runner's
-  record: Harbor's `AgentTimeoutError` for the time limit, the gateway's `budget_stop` for the token budget.
-- Implementation for the 2.2 layer: `embodied_first_exam/standard/agent_end/rcb_agent_end.py` (`Service`, `serve`,
-  `hidden_success`, `final_fields`, `steps_left`; files-only image `agent-end-files`); an adapter without `finish()`
-  refuses to start with the feature on; tests `agent_end_selftest.py`.
+  `ended_step_limit`, `ended_session_end` (evidence only; the shared 2.1 grader `v2_1/grade.py` and RoboDojo's copy
+  them, final.json is the record). Which limit ended a session (`session_end`) is the runner's record: Harbor's
+  `AgentTimeoutError` for the time limit, the gateway's `budget_stop` for the token budget; over the token budget an
+  agent-ended task is graded on its end state, not failed on top (`scripts/write_task_results.py`, by the task's mode).
+- Implementation for the 2.2 and 2.4 layers: `embodied_first_exam/standard/agent_end/rcb_agent_end.py` (`Service`,
+  `serve`, `hidden_success`, `final_fields`, `steps_left`; files-only image `agent-end-files`); an adapter without
+  `finish()` refuses to start with the feature on; tests `agent_end_selftest.py`.
+- Implementation for the 2.1 sidecar and the 2.3 realtime layer: `rcb_service.py` (`AGENT_END`; the adapter's
+  `end_judgement` = `"state"` or `"events"`, `end_window_steps` for a settle or hold window, `hidden_keys` for progress
+  fields of `step()`'s info, `info["step_cap"]` for a done that is the episode's length) and `rcb_realtime.py` (the
+  `/finish` route); tests `agent_end_v21_selftest.py`.
+- `/spec.success_signal` is the key a front end reads: where it says `hidden`, an MCP front end offers a `finish` tool
+  that sends `POST /finish`.
 
 ## Part 2 — `eai-standard/2.2`: capabilities added to 2.1
 
@@ -284,7 +346,7 @@ the per-frame arrays always stay) and says so in `meta.degraded`. Requests over 
 | `video` | `mp4` (submit), `frames` (observe) | `mp4` \| `frames` \| `both` \| `none` |
 | `depth` (2.2) | `none` | `none` \| `last` \| `frames`; JSON `true` = `last` |
 | `include_depth` (2.0/2.1) | `false` | with no `depth` field: `true` answers as 2.1 did (`depth/<cam>` float16 per frame) |
-| `seconds` (observe) | 0 | 0 = the current frames, no physics; > 0 (≤ `max_watch_s`) = hold the last command and watch |
+| `last_s` (observe, 3.0) | 0 | 0 = the current frames; n = the frames recorded in the last n seconds; never physics (`seconds > 0`: 400, "Version 3.0") |
 | `type`, `dt`, `interpolate`, `note` (submit) | | as 2.1 |
 
 ### 4. `meta`
@@ -511,8 +573,8 @@ is 2.2 plus the realtime capability below; every 2.2 addition stays optional, so
 (`RCB_SLOWDOWN`; each task declares its default in its `sim` service), `control_dt`, `wall_s_per_control_step`,
 `max_ahead_steps`. Each task declares its reset budget (Part 1, "Optional reset capability"). S and the reset budget
 are part of a result's configuration (running.md).
-- **Clock.** An episode starts paused at its starting state. Its clock starts at its first `/submit` or `/observe`
-  with `seconds > 0` (after a reset, and after a crash recovery, the episode is paused again) and runs one control step
+- **Clock.** An episode starts paused at its starting state. Its clock starts at its first `/submit` (3.0; before:
+  also an `/observe` with `seconds > 0`; after a reset, and after a crash recovery, the episode is paused again) and runs one control step
   every `control_dt` × S seconds of wall time, whatever the agent does, until the episode ends.
 - **`/submit`** answers at once. The chunk is expanded into control steps exactly as in 2.1 (`dt`, `linear` / `hold`) and
   becomes the plan from control step `at` (an integer of the episode; absent: the next step; at most `max_ahead_steps`
@@ -525,9 +587,25 @@ are part of a result's configuration (running.md).
   interpolable (a command: one row, one control step) is never interpolated, and a gap left before `at` is held steps
   (the simulator's hold row, as after the plan's end) unless the chunk's type is an interpolable target in force there,
   which is then held through the gap. A request the plan cannot take is a 400 and changes nothing.
-- **`/observe`** with `seconds = 0` answers at once; with `seconds > 0` it waits while that much robot time runs and
-  returns what the cameras saw (2.1's video, frames, proprio rows); it never changes the plan. `cameras: []` asks for
+- **`/observe`** answers at once and never changes the plan (3.0: it reads the recorder, `last_s`; `seconds > 0` is a
+  400; before 3.0 `seconds > 0` waited while that much robot time ran). `cameras: []` asks for
   no images, only proprioception.
+- **Cameras (the recorder).** Where the adapter can copy its state (`render_state()`) and draw such a copy
+  (`render_from(state, cameras, depth)`), a recorder -- a process of its own, never the simulator's thread -- records
+  the cameras while time runs, and `/spec.timing.recorder` declares it: `cameras`, `fps`, `resolution`, `buffer_s`.
+  The simulator thread hands it a copy of the state every 1 / `fps` of robot time (a recorder that is slower skips
+  copies; it never holds the clock back); it draws the copy with its own copy of the scene, so recording cannot change
+  the journal, the trajectory or the verdict. The frames go into a ring of the last `buffer_s` robot seconds, each
+  tagged with its control step. `/observe` reads only the recorder, on its own thread: it answers at once, never
+  waits, never moves time and never reaches the simulator. `last_s = 0` (the default) returns the current frame (the
+  newest recorded) with the proprioception of now; `last_s = n` the frames recorded in the last n robot seconds
+  (capped at `buffer_s`; none recorded in it: the newest frame), `video_fps` apart, with the proprioception of their
+  steps (`meta.last_s`: what they cover). `seconds > 0` is refused (400). The clock starts at the first `/submit`
+  (after a reset too); a `/submit` answers at once with the newest recorded frames. An answer with images adds one
+  field, `frame_step`: the control step the newest image shows (the recorder may be behind `control_steps`); at most 8
+  answers with images are built at a time (past that: without frames, `frames_skipped`). A recorder that dies is
+  restarted; meanwhile answers come without frames (`frames_pending`). final.json adds `camera_worker` (frames
+  rendered, copies skipped, render time). Adapters without the two hooks render on the simulator's thread into the same ring (3.0), as below.
 - **Grading** is 2.1's: the live episode, judged by the service (PROTOCOL H.4). The journal holds the sim row the
   simulator applied at every control step, so the graded episode's trajectory reproduces the live run whatever the
   timing (the video is rendered from it). Evidence
@@ -554,8 +632,8 @@ are part of a result's configuration (running.md).
   took): requests queue behind each other, not into the clock, so `/observe` may take longer to answer under parallel
   load. A request that renders and alone takes more than 0.5 s makes the next rendering request wait four times that
   long, clock on time or not; requests without images (`cameras: []`, `/status`) are not held back by it. Requests can so
-  take at most a fifth of the clock's time. The cameras are rendered (and the proprioception read) at most once per
-  control step: parallel observes and watches share that step's frames. A watch (`seconds > 0`) renders inside the
+  take at most a fifth of the clock's time. Without a recorder, the cameras are rendered (and the proprioception
+  read) at most once per control step: parallel observes and watches share that step's frames. A watch (`seconds > 0`) renders inside the
   control steps it watches, so where one render of its cameras takes longer than its frame interval the clock runs late
   and stalls while it lasts -- counted in `stalls` and `stalled_s`. Refusals the episode's state decides (409; an `at`
   too far ahead; too many frames) are answered by the simulator's thread, and a 409 still comes before a 400 for a
@@ -659,3 +737,155 @@ bodies on the CPU (numpy only, about 15 s).
 - The 2.4 client sends ids only when `/spec.protocol` is 2.4, so it also works against 2.1–2.3 services.
 - A benchmark adopts 2.4 by copying `embodied_first_exam/standard/v2_4/` unchanged; `ci_checks/check-tooling-identity.sh`
   checks the copies.
+
+## Part 5 — The match extension: `eai-standard/2.x+match/1.0`
+
+Embodied Olympics - Match ([its README](../../tasks/embodied-olympics-match/README.md)) runs matches between seats,
+refereed by the match's own service (its `core/`, unchanged). The match extension puts the standard endpoints in front of
+that service and adds the match's own calls, so an agent uses the same endpoint names as in every other standard task.
+It is an extension of a 2.x version, not a new version: a client that knows 2.1 (or 2.3) plays a match with it, and
+calls `/start` and `/ready` besides.
+
+### 26. Version and implementation
+
+- `/spec.protocol` is `eai-standard/2.3+match/1.0` for a real-time match (Part 3's clock, §29) and
+  `eai-standard/2.1+match/1.0` for a standard twin in lockstep and for a turn-based match. `/spec.extensions` is
+  `{"match": "1.0"}`; `/spec.match_protocol` names the match service's own protocol (`eai-standard-realtime/1.0`,
+  `eai-standard-lockstep/1.0`, `eai-standard-turn/1.0`). The shipped clients accept these ids (any `eai-standard/2.`).
+- The implementation is `embodied_first_exam/benchmarks/embodied-olympics-match/eai_std/`, copied unchanged into each
+  task's `environment/sim/eai_std/` by `apply_eai_std.py` next to it (which also sets the task's protocol, client and
+  text). The sim sidecar runs `python3 -m eai_std.serve` (`EAI_STD_CLOCK` = `realtime`, `lockstep` or `turn`): the core's
+  own entry point (`core/serve.py`, or `core/lockstep.py` for a standard twin) builds and runs the match as before, and
+  the extension only wraps its HTTP server. One port serves both APIs: the standard endpoints below and the core's seat
+  API `/<SEAT>/<call>` (the `game` command), which keeps working unchanged; both reach the same match, and the per-seat
+  request budget (20 per second, 4 open) counts them together.
+- `core/` and `sport/` are untouched, so the match's `source_sha` is unchanged.
+
+### 27. Endpoints
+
+| Endpoint | Request | Answer |
+|---|---|---|
+| `GET /spec` | — | JSON: 2.1's spec (`protocol`, `control_hz`, `control_dt`, `cameras` with `intrinsic_cv` and `pose_at_spec`, `action_types`, `timing`, `budget`, `entities`), plus `extensions`, `endpoints` and `match`: the match service's own spec (`game spec`) in full |
+| `GET /status` | — | JSON `meta` (§28) |
+| `POST /observe` | JSON or RCB1 header `{last_s, cameras, video, query, team_since}` | RCB1: `last/<camera>`, `frames/<camera>`, `frame_step/<camera>`, `view` (the match's own tiled PNG); `meta.observation` (the match's observation fields) |
+| `POST /submit` | RCB1 header `{type, dt, at, entity, cameras, note}` + part `actions` (float32 `(T, dim)` in `action_types.<type>.layout`, or json: a list of action objects), or JSON `{type, dt, at, entity, rows: [...]}`; a hold chunk `{type, interpolate: "hold", seconds}` without rows (3.0) | RCB1, `meta` + `chunk_id`, `ok`, `effects` and the clock's fields (§29) |
+| `POST /start` | `{}` | JSON `{accepted, ok, meta}`: you are ready; the match begins when every seat has started |
+| `POST /ready` | `{why, plan}` (strings, at most 2000 characters each; both required for a review) | JSON `{accepted, ok, meta}` once the world goes on (every due seat has reviewed) |
+| `POST /say` | `{text}` | JSON `{…, ok, meta}`: a message to your team (team formats only; else 404) |
+| `POST /team`, `GET /team?since=N` | `{since}` | JSON `{messages, …, ok, meta}`: your team's messages (team formats only; else 404) |
+
+An RCB1 request to `/start`, `/ready`, `/say` or `/team` is answered in RCB1 (header: `meta` with the match's reply under
+`reply`). A row of `/submit` is an action object of the match (the body `game act` sends); a numeric row in the type's
+layout is turned into one (an enum by the index of its value, a boolean as 0 / 1, all columns of a field with a default
+NaN = that default). One chunk is one type and, where actions name a robot or rod (`entity`), one entity: `entity` in
+the header, in the rows, or as `type` = `<type>@<entity>` (the shipped clients have no entity argument). The match checks
+each row when it is sent, as the seat API does.
+
+**Not offered (404):** `/finish`, `/reset`, `/kinematics`. A match ends by its own rules (the final score, a forfeit, a
+review or start timeout, the session's end), never by the agent, so these tasks are exempt from agent-ended episodes
+(Part 1, "Optional agent-ended episodes"); there is one match per task and no reset.
+
+### 28. `meta`
+
+Every answer carries 2.1's `meta` (`protocol`, `step`, `control_steps`, `sim_time_s`, `calls`, `time_s`, `time_left_s`
+from the first request and `RCB_WALL_CLOCK_S`, `done`, `reason`, `proprio`) and the match:
+- `score`: the match's score (`{side: points}`), `side`: your side;
+- `review_due`: true while the world is frozen and your review is due (send `/ready`);
+- `match_over`: true once the match is decided (= `done`);
+- `phase` (the match's: `prepare`, `running` (turn-based: `play`), `review`, `over`), `world`, and `state`: your seat's state as the match gives it
+  (`game status`); `proprio` is its numeric leaves, each answer with its own `layout`;
+- realtime: `running`, `planned_steps`, `lag_s` (Part 3) and `effects` (§29).
+
+### 29. Clocks
+
+- **Realtime (2.3).** As Part 3: `/submit` answers at once; its rows become the plan of their entity from control step
+  `at` (absent: the current step; at most `max_ahead_steps` ahead), row i at `at` + i × `dt` / `control_dt`, replacing
+  what was planned from `at` on and keeping what is planned before it; rows whose step has run are dropped (`late_rows`,
+  `late_steps`); `meta` adds `start_step`, `replaced_rows`, `plan_end_step`. Each planned row is handed to the match at its
+  step and takes effect as the seat API's act does (`took_effect`); the answers report each row's `planned_step`,
+  `effect_step` and `late_steps` in `meta.effects` (once, in the next answer). Rows are commands, never interpolated, and
+  the last one stays in force (zero-order hold, as the sport defines a command's duration). `/observe` answers at once
+  (3.0: `seconds > 0` is a 400); a hold chunk clears the entity's plan from `at` for n seconds, the command in force
+  staying.
+- **Lockstep (2.1, a standard twin).** `/submit` runs its rows one after the other: each takes effect at the step the
+  world is at, then the world advances `dt` (default: one control step); it answers after the last row. A hold chunk
+  (3.0) lets n seconds of game time pass with the commands in force (`game wait`); `/observe` only reads (`seconds > 0`:
+  a 400). Between calls the world stands still.
+- **Turn-based (2.1).** `/submit` takes one row: the action of your turn (its review follows with `/ready`). A hold
+  chunk (3.0) waits up to n real seconds for your turn (`game wait`, at most `max_hold_s`; a declared deviation);
+  `/observe` only reads (`seconds > 0`: a 400).
+- **Freezes.** After every unit (a point, a phrase, a stoppage) the world freezes for the reviews until every due seat
+  has sent `/ready`, at most `timing.review_timeout_s` of real time, else that side loses (`ready_timeout`); the match
+  begins only after `/start`, within `timing.start.window_s` (else `no_show`). A realtime plan is cleared at a freeze. A
+  `/submit` while the world is frozen or not started answers `ok: false` with `not_now` and executes nothing; a request
+  after the match is over is a 409 (`done`, `reason`, `match_over`).
+
+### 30. Deviations from Part 3
+
+What the realtime clock cannot take from Part 3, `/spec.timing.deviations` lists, each with its rule, what the match does
+and why:
+- the clock starts at the start barrier (every seat's `/start`), not at the first `/submit`: a match is a contest of
+  several seats;
+- it freezes after every unit for the reviews (Embodied Olympics' rules), and the plan is cleared there;
+- a row takes effect at the first control-step boundary after the match has prepared it (a high-level action is planned
+  by the platform): normally its step, later when the preparation takes longer than one control period (reported per
+  row); one row per entity is in flight, the next waits for the previous one's effect;
+- behind its clock the match runs the missed steps back to back and records how late (`final.json` `sim_lag`); it drops
+  no debt (no stalls);
+- the match keeps no recorder: `/observe` with `last_s = n` answers with the sport's own frames of now (`meta.last_s`
+  says what they span), no video; `/submit` returns images only when it names `cameras` (a render costs the clock);
+- no depth (`depth.modes` = `["none"]`), no `linear` / `hold` interpolation.
+
+The lockstep and turn-based clocks list theirs the same way.
+
+### 31. Grading and evidence
+
+Unchanged: the match's referee judges the live match (`final.json`, `tests/grade.py`), and the seat API's record
+(`episode.jsonl`) holds every action whichever endpoint sent it. The extension adds `eai_std_calls.jsonl` (one line per
+standard call; realtime: each planned row's dispatch and effect, with wall times). None of it decides a verdict.
+
+## MCP tools (every version)
+Every standard and realtime task offers its robot service two ways, in the same task: the service's client (HTTP, as
+in the parts above) and the MCP server `efe-robot`. The agent chooses; both reach the same service, so they drive the
+same robot in the same episode and can be mixed call by call. The tools add nothing to the protocol: each sends its
+endpoint's request and returns the reply.
+
+**Rule: every agent-facing endpoint has a tool.** A tool takes its endpoint's request fields (any other field of the
+service in `fields`, sent unchanged) and returns the reply's `meta` unchanged, with each RCB1 part written as a file
+under `/app/obs/` (arrays `.npy`, exact; uint8 images also `.png`; video `.mp4`). A convenience tool may exist on top of
+these, but no endpoint is without its tool unless the table says why.
+
+| Endpoint | Tool | Where |
+|---|---|---|
+| `GET /spec` | `spec` | every task (the spec also saved as a file, `spec_file`) |
+| `POST /observe` | `observe` | every task: what is already recorded, at once (`last_s`) |
+| `POST /submit` | `submit` | every task; rows inline or as a file (`actions_file`), or a hold chunk (`interpolate` "hold" + `seconds`, no rows); realtime adds `at`; the result's `step` repeats the reply's duration, end step, `steps_left` / `step_limit` and `done` |
+| `POST /reset` | `reset` | a task with a reset budget (Optional reset capability) |
+| `POST /kinematics` | `kinematics` | a 2.2 / 2.4 task whose service serves it (§8) |
+| `POST /finish` | `finish` | every task; it sends the request only when `/spec.success_signal` is `"hidden"` (Optional agent-ended episodes), else it says so and sends nothing |
+| `GET /status` | none | its fields come back in every result's `meta` |
+| `GET /operations/<id>` | none | the tool server re-queries it itself when a 2.4 reply is lost (Part 4) |
+
+A match seat (Embodied Olympics - Match, its own protocols) has one tool per `game` command: `spec`, `start`,
+`observe`, `act`, `wait`, `ready` (and `say`, `team` in a team format); `GET /status` likewise has none.
+`ci_checks/check-mcp-tools.py` holds the routes the layers and adapters serve to this table, and every task to its
+tool list. Two kinds of task keep only their own interface, and their docs say so: RoboEngineer (`eai-policy`: the
+agent hands in a policy, no live robot) and the matchlow matches (the player delivers skill code the platform runs).
+
+**Time.** Standard mode: time passes only through `submit`; `observe` reads what is recorded and moves nothing.
+Realtime mode: no tool holds or slows the clock; `submit` answers at once as the endpoint does, and a call costs its
+own time. Each result carries `tool_s`, the tool's own wall time: on the toy 2.3 service an `observe` with `cameras = []` took 1.5-3 ms over HTTP and 1-3.5 ms more through the tool (`embodied_first_exam/standard/mcp/tests/test_realtime.py`), plus whatever the agent's harness takes per tool call, which is outside the task's control. A call still running after 45 s (`--max-block-s`; Codex's MCP calls time out at
+60 s) returns `{"pending": true, "operation": id}`; `observe(operation=id)` (a match seat: `wait(operation=id)`)
+collects the reply. Nothing is retried: a call is sent once.
+
+**Shipping.** `scripts/task_conventions.py` `normalize` writes, from `embodied_first_exam/standard/mcp/inject.py`, into
+every standard and realtime task: `environment/efe_mcp/` (the server, copied unchanged, and the task's `manifest.json`:
+its tools), `COPY efe_mcp /opt/tools/efe_mcp` in the agent's Dockerfile, one `[[environment.mcp_servers]]` entry
+(`efe-robot`, stdio, `python3 /opt/tools/efe_mcp/server.py`) in task.toml, through which Harbor registers the server
+with the agent's harness (Claude Code, Codex, Gemini CLI and the others that take MCP servers), and `### MCP tools`
+after `### Client` in the instruction's Robot Interface. The server needs Python 3 with numpy and requests (pillow for
+the `.png` copies): the standard client's pins (`client-requirements.txt`). It answers `tools/list` from the manifest
+without contacting the service; a tool the running service shows later (`kinematics`, `reset`) is added with
+`notifications/tools/list_changed`. It logs one line per call to `/logs/agent/efe-mcp.jsonl`. Tests:
+`embodied_first_exam/standard/mcp/tests/` (toy 2.2, 2.3 and 2.4 services and a match seat; an oracle run once over HTTP
+and once through the tools leaves the same episode).

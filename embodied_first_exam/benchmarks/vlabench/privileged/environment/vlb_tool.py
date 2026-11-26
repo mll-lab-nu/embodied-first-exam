@@ -187,6 +187,10 @@ class Session:
         self.instance_sha = digest(self.spec)
         self.instruction = self.spec["instruction"]
         self.env = None
+        # agent-ended episodes (the standard sim service with RCB_AGENT_END, PROTOCOL §3; its video replay inherits the
+        # setting): the task's termination condition (its success) does not end the episode; success() is the
+        # condition as things stand
+        self.run_on = os.environ.get("RCB_AGENT_END") == "1"
         self.reset()
 
     # -- episode -------------------------------------------------------------------------------------------------
@@ -201,6 +205,9 @@ class Session:
             raise RuntimeError("initial state differs from the frozen instance")
         if model_hash(env) != self.spec["model_sha256"]:
             raise RuntimeError("compiled model differs from the frozen instance")
+        self._success = env.task.should_terminate_episode   # the task's own condition (bound method)
+        if self.run_on:   # the environment never terminates on it (dm_control would then reset on the next step)
+            env.task.should_terminate_episode = lambda physics: False
         self.dt = float(env.control_timestep())
         self.substeps = int(env._n_sub_steps)
         spec = env.action_spec()
@@ -295,7 +302,7 @@ class Session:
         return self.env.physics
 
     def success(self) -> bool:
-        return bool(self.env.task.should_terminate_episode(self.env.physics))
+        return bool(self._success(self.env.physics))
 
     def state_sha(self) -> str:
         return state_hash(self.env)

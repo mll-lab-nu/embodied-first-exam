@@ -1,0 +1,15 @@
+{
+ "manifest": "efe-mcp-manifest/1",
+ "kind": "rcb",
+ "suite": "dextoolbench",
+ "task": "dextoolbench_spatula_flat_spatula_serve_plate-standard",
+ "protocol": "eai-standard/2.1",
+ "realtime": false,
+ "tools": [
+  "spec",
+  "observe",
+  "submit",
+  "reset",
+  "finish"
+ ]
+}

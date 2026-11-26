@@ -8,21 +8,22 @@ the ring and drive its two screws, and set the tray on the ring. Then let go of 
 Success: the tray table is assembled: frame B, the ring and all four screws are seated on frame A, one screw per hole
 (the three short screws are alike, so any of them may go into the bottom hole or either of the ring's holes), and the
 tray rests loose on the ring; no arm touches any part and everything is still. Forcing parts deep into each other breaks
-the simulation and ends the episode at once, without success. When all of this holds, the service checks it once more
-after holding your last command for 1 s more (on a copy: the robot does not move); if it still holds, the episode ends
-as a success, and if not, the episode goes on and you can still fix it.
+the simulation and ends the episode at once, without success.
+
+Success is judged on how things stand when the episode ends: all of this must hold then, and still hold after your last
+command is held for a moment more (on a copy: the robot does not move). It ends when you call finish (Limits) or when
+your session ends. The robot never tells you whether you have succeeded.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
   benchmark's demonstrations, trained policies); trials are reviewed.
 - One episode, no reset: what you knock over stays knocked over.
-- You get only the cameras and the robot's own sensor readings: no object poses, no scene layout; the episode ends when
-  the task is done.
+- You get only the cameras and the robot's own sensor readings: no object poses, no scene layout, no success signal.
 
 ## Robot Interface
 Two 7-DoF Franka Panda arms, each with the MuJoCo Menagerie Panda hand (two-finger, tendon-coupled), at a table
-(RoboARC's IKEA furniture-assembly suite, MuJoCo). The robot runs as a service you reach only through its client, as if
-it were real hardware: one live episode.
+(RoboARC's IKEA furniture-assembly suite, MuJoCo). The robot runs as a service you reach through its client or its MCP
+tools, as if it were real hardware: one live episode.
 
 ### Client
 `/opt/tools/rcb_client.py` (already installed; `python` from any directory):
@@ -37,7 +38,8 @@ obs.group("tcp_pose", now=True)                # proprio groups: joint_pos, join
 res = r.submit("joint_position", rows, dt=0.0025, interpolate="linear", cameras=["cam_high"], video="mp4")
 res.meta["executed_rows"], res.meta["clipped"], res.meta["done"], res.meta["reason"], res.meta["time_left_s"]
 res.video["cam_high"]                          # mp4 bytes of the chunk; video="frames" gives res.frames[cam] (N, H, W, 3)
-obs = r.get_obs(seconds=2.0)                   # hold the last command, simulate 2 s and return the video (<= 30 s)
+obs = r.hold(2.0)                              # hold the last command, simulate 2 s and return the video
+obs = r.get_obs(last_s=1.0)                    # the frames recorded over the last 1 s (reading moves no time)
 r.fk(q); r.ik({"left_tcp": [x, y, z, qw, qx, qy, qz]})   # stateless kinematics on the robot's model
 r.status()                                     # calls, control steps, done, reason, time left
 ```
@@ -50,6 +52,17 @@ the maximum 10 s chunk takes about 80 s. The client waits long enough for any ca
 error means the connection or the service failed (above), not that the call is still on its way: do not resend it
 blindly. `r.operation_status()` (the last call's operation, or `r.operation_status(operation_id)`) asks the service what
 became of a call.
+
+### MCP tools
+- The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
+  `observe`, `submit`, `kinematics`, `finish`. A tool takes its endpoint's request fields (any other field in `fields`)
+  and returns the service's reply `meta` unchanged; images, arrays and video are written as files under `/app/obs/`
+  (`.png`, `.npy`, `.mp4`) and the result lists them. Long action chunks can be passed as a file (`actions_file`).
+- `observe` returns at once with what is already recorded: the current frame, or the last `last_s` seconds. Time passes
+  only through `submit`, which answers when its rows have run; a `submit` with `interpolate` "hold", `seconds` and no
+  rows lets time pass with the robot holding still.
+- A call still running after 45 s returns `pending` with an `operation` id; `observe(operation=id)` collects its reply.
+- The client and the tools drive the same robot in the same episode; use either, or both.
 
 ### Actions
 - **Action** `joint_position`: rows of 16 values, float32 or float64, layout
@@ -101,3 +114,7 @@ became of a call.
   no GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap
   only slows you down); usage: `/run/rcb-limits/usage.json`.
 - Resets: none: one episode.
+- Finish: when you are done, call finish: `POST /finish` with an empty JSON body to the service, at the client's base
+  URL (`http://sim:8000` or `http://localhost:8000`; in Python `requests.post(r.base + "/finish", json={})` with your
+  client `r`). It ends the episode, and every call after it is refused. Reaching the goal changes no reply and does not
+  end the episode; if you never call finish, the end of your session ends it.

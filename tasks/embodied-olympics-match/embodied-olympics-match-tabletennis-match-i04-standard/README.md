@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | Embodied Olympics - Match |
-| Mode | standard (`eai-standard-lockstep/1.0`) |
+| Mode | standard (`eai-standard/2.1+match/1.0`) |
 | Twin | `embodied-olympics-match-tabletennis-match-i04-privileged` |
 | Simulator / robot | `mujoco` / `franka-panda` |
 | Family / instance | `tabletennis_match` / seed 34 (allowed seeds: [34, 404, 414]; PROTOCOL §2) |
@@ -50,4 +50,4 @@ Source: Embodied Olympics task `tabletennis-match-wallclock-program-standard`, r
 opponent, the observation, the review between points and the grader are ours, unchanged; only the seat is
 unmetered (Harbor records the model's usage) and the instance is frozen.
 
-Standard twin of `embodied-olympics-match-tabletennis-match-i04-realtime`: the same export, the world in lockstep (`environment/sim/core/lockstep.py`; `eai-standard-lockstep/1.0` in tasks/embodied-olympics-match/README.md).
+Standard twin of `embodied-olympics-match-tabletennis-match-i04-realtime`: the same export, the world in lockstep (`environment/sim/core/lockstep.py`; `eai-standard/2.1+match/1.0` in tasks/embodied-olympics-match/README.md).

@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | Embodied Olympics - Match |
-| Mode | realtime (`eai-standard-realtime/1.0`) |
+| Mode | realtime (`eai-standard/2.3+match/1.0`) |
 | Twin | `embodied-olympics-match-soccer-match-i00-privileged` |
 | Simulator / robot | `mujoco` / `booster-t1` |
 | Family / instance | `soccer_match` / seed 7 (allowed seeds: [7, 202, 212]; PROTOCOL §2) |

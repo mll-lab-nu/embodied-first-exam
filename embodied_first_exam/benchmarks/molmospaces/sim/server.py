@@ -22,6 +22,7 @@ import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import rcb_limited as L  # noqa: E402
+import rcb_agent_end as AE  # noqa: E402
 
 DATA = os.environ.get("RCB_DATA", "/data")
 INSTANCE = os.environ.get("RCB_INSTANCE", os.path.join(os.path.dirname(os.path.abspath(__file__)), "instance.json"))
@@ -46,7 +47,7 @@ E = {
 import rcb_molmospaces as M  # noqa: E402
 
 INST = M.load_instance(INSTANCE)
-EP = L.Episode(DATA, dim=INST["t0"]["action_dim"], resume="exact")
+EP = L.Episode(DATA, dim=INST["t0"]["action_dim"], resume="exact", persist=AE.persist())
 EP.startup()  # start count, back-off after failed starts, the startup watchdog until scene_built()
 S = M.Episode(INST)
 START_SHA = S.state_sha()  # before anything else touches the scene: the frozen start, checked here (not in a replay)
@@ -137,8 +138,10 @@ SPEC = {
     "budget": {"reset": 0, "steps": None, "wall_clock_s": WALL_CLOCK_S},
     "max_control_steps": S.horizon,
     "episode": f"one episode, no reset (upstream's evaluation): it ends after {S.horizon} control steps (the benchmark's "
-    f"{INST['facts']['horizon_s']} s horizon), when you submit `done`, or when your time is over; success is judged "
-    "on the state at that moment, also when the task was met earlier and undone",
+    f"{INST['facts']['horizon_s']} s horizon), when you submit `done`"
+    + (" or POST /finish (the same)" if AE.ENABLED else "")
+    + ", or when your time is over; success is judged on the state at that moment, also when the task was met earlier "
+    "and undone",
     "robot_spec": S.robot_spec(),
     "kinematics": S.kinematics_spec(),
     "depth": {
@@ -197,6 +200,7 @@ def summary() -> dict:
         "graded_by": "live",
         "replays": 0,
         **EP.final_fields(),
+        **AE.final_fields(E, n),
     }
 
 
@@ -204,6 +208,8 @@ def finish(reason: str) -> None:
     """The episode is over: upstream's verdict on the final state, then the record for the collect hook."""
     if E["done"]:
         return
+    if AE.ENABLED:  # agent-ended episodes (PROTOCOL §3): `done` is the agent's own end, as POST /finish; the horizon is the
+        reason = {"done": "finished", "horizon": "step_limit"}.get(reason, reason)  # step limit (judged as it stands)
     E["done"] = True
     E["reason"] = reason
     E["t_end"] = time.time()
@@ -241,6 +247,11 @@ def ctrl_step(a, rec) -> bool:
     ROWS.append(np.asarray(a, dtype=np.float64))
     stop = EP.journal(a)
     rec.tick()
+    if AE.ENABLED:  # the state's success, recorded only (evidence: final.json hidden_success_*); never shown
+        try:
+            AE.hidden_success(E, S.success(), EP.log, ctrl_steps())
+        except Exception:  # noqa: BLE001
+            traceback.print_exc()
     if S.done:
         finish("horizon")
     return E["done"] or stop
@@ -324,6 +335,7 @@ def meta_common(cams) -> dict:
         "proprio": {"layout": PROPRIO_LAYOUT, "now": proprio_row().tolist()},
         "done": E["done"],
         "reason": E["reason"],
+        **AE.steps_left(n),
         "cameras": {
             c: {k: ci[c][k] for k in ("intrinsic_cv", "extrinsic_cv", "cam2world_gl", "image_size")} for c in cams
         },
@@ -468,6 +480,7 @@ def status() -> dict:
         "done": E["done"],
         "reason": E["reason"],
         "elapsed_s": round(time.time() - E["t0"], 1),
+        **AE.steps_left(ctrl_steps()),
     }
 
 
@@ -514,8 +527,8 @@ E["ready"] = True
 write_final()
 open(PID_FILE, "w").write(str(os.getpid()))
 print(f"{L.PROTOCOL} MolmoSpaces sim ready (startup {EP.n_startups}, resumes {EP.resumes})", flush=True)
-L.serve(
-    L.Service(
+AE.serve(
+    AE.Service(
         spec=SPEC,
         lock=LOCK,
         state=E,
@@ -528,6 +541,7 @@ L.serve(
         episode=EP,
         state_sha=S.state_sha,
         proprio=proprio_row,
+        **({"finish": lambda: finish("finished")} if AE.ENABLED else {}),
     ),
     port=int(os.environ.get("RCB_PORT", "8000")),
 )

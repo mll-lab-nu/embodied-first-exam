@@ -1,0 +1,23 @@
+{
+ "manifest": "efe-mcp-manifest/1",
+ "kind": "eo-match",
+ "suite": "embodied-olympics-match",
+ "url": "http://localhost:8000",
+ "url_env": "SIM_URL",
+ "seat": "A",
+ "seat_env": "SEAT",
+ "max_wait_s": 10,
+ "notes": "The tools carry the seat's calls (the HTTP calls the `game` command makes). Locating the ball or the opponent is done by eye in the tile images, with the cameras' intrinsics and poses from `spec`.",
+ "task": "embodied-olympics-match-badminton-duelrl-i01-realtime",
+ "protocol": "eai-standard/2.3+match/1.0",
+ "realtime": true,
+ "turn": false,
+ "tools": [
+  "spec",
+  "start",
+  "observe",
+  "act",
+  "wait",
+  "ready"
+ ]
+}

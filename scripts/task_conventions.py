@@ -55,6 +55,20 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "images/monitor"))   # the monitor image's source (rcb_monitor/)
 from rcb_monitor import inject as rcb_monitor_inject  # noqa: E402
 
+
+def _load_efe_mcp_inject():
+    """embodied_first_exam/standard/mcp/inject.py, loaded by path (its directory is not put on sys.path: the server's
+    modules there would shadow others)."""
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(
+        "efe_mcp_inject", Path(__file__).resolve().parents[1] / "embodied_first_exam/standard/mcp/inject.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+efe_mcp_inject = _load_efe_mcp_inject()   # the robot's MCP tools in every standard and realtime task
+
 CLEAR_LOGS = "rm -rf /logs/verifier/*"
 TEXT_SUFFIXES = {".md", ".toml", ".py", ".sh", ".yaml", ".yml", ".txt", ""}
 TEXT_REPLACEMENTS = [  # (old, new), applied to task text files in order (a task's copy of an image source spelled otherwise)
@@ -148,9 +162,11 @@ MODE_REGISTRY = {
                    "twin": None, "same_cutoff_as": None},
     "standard": {"short": "S", "section": "§3", "sidecar": True, "limit_scope": "agent",
                  "protocols": ("eai-standard/2.1", "eai-standard/2.2", "eai-standard/2.4"),
-                 "twin": "privileged", "same_cutoff_as": "privileged"},   # one cutoff for both modes (Appendix H.7)
+                 "twin": "privileged", "same_cutoff_as": "privileged",   # one cutoff for both modes (Appendix H.7)
+                 "agent_end": True},   # v3.0: the agent ends the episode (§3 "Agent-ended episodes", H.3)
     "realtime": {"short": "RT", "section": "§3", "sidecar": True, "limit_scope": "agent",
-                          "protocols": ("eai-standard/2.3",), "twin": "privileged", "same_cutoff_as": None},
+                          "protocols": ("eai-standard/2.3",), "twin": "privileged", "same_cutoff_as": None,
+                          "agent_end": True},
 }
 MODES = tuple(MODE_REGISTRY)
 SIDECAR_MODES = tuple(m for m, d in MODE_REGISTRY.items() if d["sidecar"])   # robot as a service (PROTOCOL §3)
@@ -1008,8 +1024,8 @@ AGENT_END_STEP_UNIT = {
         "[step_lim]). One step is one 25 Hz action: 1/25 s of simulated time (RoboDojo's 14-D action, run over 10 physics "
         "steps), the unit RoboDojo's evaluator counts. Every call that moves simulated time on uses steps: a "
         "`joint_position` row with `dt` = k/25 s uses k steps (dt = 0.04: one step per row); an `ee_pose` row uses as many "
-        "steps as its move takes at 0.25 m/s (at least one); `get_obs(seconds=s)` holds the robot for s x 25 steps. "
-        "`get_obs()` without `seconds`, `/spec`, `/status` and `/kinematics` use none"),
+        "steps as its move takes at 0.25 m/s (at least one); a hold chunk (`hold(s)`) holds the robot for s x 25 steps. "
+        "`get_obs()`, `/spec`, `/status` and `/kinematics` use none"),
 }
 
 
@@ -1023,6 +1039,46 @@ def agent_end_of(task: Path) -> dict | None:
         return None
     m = STEP_LIMIT_RE.search(c)
     return {"step_limit": int(m.group(1)) if m else None}
+
+
+def agent_end_required(task: Path) -> bool:
+    """PROTOCOL v3.0 §3 / H.3: the task's episode must be agent-ended: its mode says so (MODE_REGISTRY "agent_end") and
+    it is served by an eai-standard service of that mode (a task exported with a runtime of its own, PROTOCOL §3, such
+    as Embodied Olympics Match or RoboEngineer, keeps its own rules)."""
+    d = MODE_REGISTRY.get(mode_of(task), {})
+    proto = str(metadata_of(task).get("protocol") or "")
+    return bool(d.get("agent_end")) and proto in d.get("protocols", ())
+
+
+AGENT_END_ENV_LINE = '      RCB_AGENT_END: "1"                               # agent-ended episodes (PROTOCOL §3)\n'
+
+
+def set_agent_end(compose: str, name: str = "") -> str:
+    """A compose file whose `sim` service ends its episodes the agent's way: `RCB_AGENT_END: "1"` first in its
+    `environment:` mapping (a value other than "1" is set to it)."""
+    if AGENT_END_RE.search(compose):
+        return compose
+    if re.search(r'(?m)^\s*RCB_AGENT_END:', compose):
+        return re.sub(r'(?m)^(\s*RCB_AGENT_END:)[^\n]*$', lambda m: m.group(1) + ' "1"', compose)
+    lines = compose.splitlines(keepends=True)
+    i, j = rcb_monitor_inject.services_span(lines)
+    for svc, k0, k1 in rcb_monitor_inject.service_blocks(lines, i, j):
+        if svc != "sim":
+            continue
+        e = rcb_monitor_inject.has_key(lines, k0, k1, "environment")
+        if e is None or not re.match(r"^    environment:[ \t]*(#.*)?$", lines[e]):
+            raise RuntimeError(f"{name}: the sim service has no `environment:` mapping normalize can add RCB_AGENT_END to")
+        lines.insert(e + 1, AGENT_END_ENV_LINE)
+        return "".join(lines)
+    raise RuntimeError(f"{name}: no `sim` service to add RCB_AGENT_END to")
+
+
+def normalize_agent_end(task: Path) -> None:
+    """PROTOCOL v3.0 §3: a task whose episode must be agent-ended (agent_end_required) has RCB_AGENT_END on in its sim
+    service (ci_checks/check-agent-end.py)."""
+    c = task / "environment/docker-compose.yaml"
+    if agent_end_required(task) and c.is_file():
+        write_if_changed(c, set_agent_end(c.read_text(), task.name))
 
 
 def _ordinal(n: int) -> str:
@@ -1163,14 +1219,19 @@ LIMITS_OVER_CAP = ("Over a cap a process can be killed (the CPU cap only slows y
 
 
 # The fixed wording of the v2 skeleton (TEMPLATE: Task's mode line, Goal's graded-state sentence, the hand-in line and the
-# rules blocks): the benchmarks' text generators and embodied_first_exam/standard/mcp/generate.py use these words, never
-# their own. `{deliverable}`: what a privileged task hands in ("a trajectory of robot actions").
+# rules blocks): the benchmarks' text generators use these words, never
+# their own (a task with the MCP tools: `<mode>+mcp`, normalize_instruction_v2). `{deliverable}`: what a privileged task hands in ("a trajectory of robot actions").
 V2_MODE_LINE = {
     "privileged": "You have the full simulator to develop with; you hand in {deliverable}.",
     "standard": ("The robot runs as a service you reach only through its client, as if it were real hardware: one live "
                  "episode."),
     "realtime": ("The robot runs as a service you reach only through its client, as if it were real hardware, on a clock "
                  "that does not stop while you think: one live episode."),
+    # a standard or realtime task with the robot's MCP tools as well (efe_mcp_manifest; owner 11-25: the agent chooses)
+    "standard+mcp": ("The robot runs as a service you reach through its client or its MCP tools, as if it were real "
+                     "hardware: one live episode."),
+    "realtime+mcp": ("The robot runs as a service you reach through its client or its MCP tools, as if it were real "
+                     "hardware, on a clock that does not stop while you think: one live episode."),
     "standard-mcp": ("The robot runs as a service you reach only through the `efe-robot` MCP tools, as if it were real "
                      "hardware: one live episode."),
     "standard-mcp-shell": ("The robot runs as a service you reach through the `efe-robot` MCP tools, their Python client "
@@ -1187,7 +1248,11 @@ V2_FINAL_STATE = {
     "standard": "What counts is how things stand at the end of the episode.",
 }
 V2_AGENT_END_STATE = "Success is judged on how things stand when the episode ends."
-V2_AGENT_END_ENDS = ("ends when you call finish (Robot Interface), at the step limit (Limits) or when your session ends. "
+# every other agent-ended task (v3.0): Goal says what is judged (V2_AGENT_END_STATE, or what counts as it happens for a
+# goal of moments) and then V2_AGENT_END_GOAL; Limits' Finish line (LIMITS_FINISH, rendered) says how to end it
+V2_AGENT_END_GOAL = ("It ends when you call finish (Limits) or when your session ends. The robot never tells you whether "
+                     "you have succeeded.")
+V2_AGENT_END_ENDS = ("ends when you call finish (Limits), at the step limit (Limits) or when your session ends. "
                      "The robot never tells you whether you have succeeded.")
 # the latched wording of 11-24, retired with D216: no RoboDojo standard Goal may carry it
 V2_AGENT_END_RETIRED = ("The episode succeeds if the goal is reached before it ends", "once done, stays counted")
@@ -1345,7 +1410,7 @@ def render_limits(task: Path, text: str = "") -> str:
     Network (§5, H.6), Resources (§6), then the task's own lines of `text`'s `## Limits` (a default Resets line where it
     has none, and for an agent-ended task with a step limit a default Steps line)."""
     have = limits_lines(text)
-    kept = [(k, v) for k, v in have if k not in LIMITS_RENDERED]
+    kept = [(k, v) for k, v in have if k not in LIMITS_RENDERED and k != "Finish"]   # Finish: rendered (agent-ended)
     net = next((v for k, v in have if k == "Network"), None)
     out = []
     sec = cutoff_for(task)
@@ -1363,8 +1428,20 @@ def render_limits(task: Path, text: str = "") -> str:
         left = ("the tool results' `steps_left`" if mode_of(task) in MCP_MODES else "`meta[\"steps_left\"]`")
         kept.append(("Steps", f"at most {n:,} control steps ({left} gives what is left); at the {_ordinal(n)} the "
                               "episode ends by itself and is graded as it stands."))
+    if ae:
+        kept.append(("Finish", LIMITS_FINISH[mode_of(task) in MCP_MODES]))
     out += [f"{k}: {v}" for k, v in kept]
     return LIMITS_HEADING + "\n" + "\n".join(_wrap_bullet(x) for x in out) + "\n"
+
+
+# the Finish line of an agent-ended task's `## Limits` (PROTOCOL §3; rendered): [HTTP client, MCP tools]
+LIMITS_FINISH = (
+    "when you are done, call finish: `POST /finish` with an empty JSON body to the service, at the client's base URL "
+    "(`http://sim:8000` or `http://localhost:8000`; in Python `requests.post(r.base + \"/finish\", json={})` with your "
+    "client `r`). It ends the episode, and every call after it is refused. Reaching "
+    "the goal changes no reply and does not end the episode; if you never call finish, the end of your session ends it.",
+    "when you are done, call the `finish` tool. It ends the episode, and every call after it is refused. Reaching the "
+    "goal changes no tool result and does not end the episode; if you never call finish, the end of your session ends it.")
 
 
 # a task with resets (a reset budget N > 0; Goal and `## Limits` state them): its mode line without "one live episode"
@@ -1398,10 +1475,53 @@ def _v2_episodes(task: Path, s: str) -> str:
     return s
 
 
+def efe_mcp_manifest(task: Path) -> dict | None:
+    """The manifest of the task's MCP tool server (embodied_first_exam/standard/mcp/inject.py), None for a task without
+    one (a privileged task; RoboEngineer and the matchlow matches keep only their own interface: inject.EXCEPTIONS)."""
+    mode = mode_of(task)
+    if mode not in ("standard", "realtime"):
+        return None
+    return efe_mcp_inject.manifest(task, bench_dir(task), mode, str(metadata_of(task).get("protocol") or ""),
+                                   reset_budget_of(task))
+
+
+def _v2_route(task: Path, s: str) -> str:
+    """`s` with the mode line that names the task's routes to the robot: its client, and its MCP tools where it has
+    them (V2_MODE_LINE `<mode>` / `<mode>+mcp`, each with or without "one live episode"), and `### MCP tools` after
+    `### Client` there (inject.place_section)."""
+    m = efe_mcp_manifest(task)
+    for mode in ("standard", "realtime"):
+        for full in (True, False):
+            pick = V2_MODE_LINE if full else V2_MODE_LINE_RESETS
+            old, new = (pick[mode], pick[mode + "+mcp"]) if m else (pick[mode + "+mcp"], pick[mode])
+            s = _sub_prose(s, re.compile(r"\s+".join(re.escape(w) for w in old.split()) + r"(?!\S)"), new)
+    return efe_mcp_inject.place_section(s, m)
+
+
+def _sub_prose(s: str, pat: "re.Pattern", new: str) -> str:
+    """`s` with `pat` replaced by `new` in each paragraph it occurs in; a prose paragraph is wrapped again (120)."""
+    import textwrap
+    paras = re.split(r"(\n[ \t]*\n)", s)
+    for i in range(0, len(paras), 2):
+        if not pat.search(paras[i]):
+            continue
+        q = pat.sub(lambda _: new, paras[i])
+        head = re.match(r"\n*(?:#[^\n]*\n)*", q).group(0)        # a heading over the paragraph stays as it is
+        body = q[len(head):]
+        if not body.strip() or re.match(r"\s*(- |\d+\. |\||```|#)", body.strip("\n")):
+            paras[i] = q
+            continue
+        t = re.sub(r"`[^`]*`", lambda mm: mm.group(0).replace(" ", "\0"), " ".join(body.split()))
+        trail = body[len(body.rstrip("\n")):]
+        paras[i] = head + textwrap.fill(t, 120, break_long_words=False, break_on_hyphens=False).replace("\0", " ") + trail
+    return "".join(paras)
+
+
 def normalize_instruction_v2(task: Path, s: str) -> str:
     """A v2 instruction with its `## Limits` rendered (render_limits), replacing the one it had, and the mode line that
-    fits its reset budget (_v2_episodes)."""
+    fits its reset budget (_v2_episodes) and its routes to the robot (_v2_route)."""
     s = _v2_episodes(task, s)
+    s = _v2_route(task, s)
     body = re.sub(rf"(?ms)^{re.escape(LIMITS_HEADING)}[ \t]*(?:\n.*?)?(?=^## |\Z)", "", s)
     return body.rstrip() + "\n\n" + render_limits(task, s)
 
@@ -1792,7 +1912,8 @@ def slowdown_text(S: float) -> str:
 # PROTOCOL §2: the settings a task declares, and the effective configuration of a trial, recorded with every result
 # so that results are ranked only within one comparable configuration (docs/protocol/running.md "Results"). Standard
 # library only: scripts/write_task_results.py, scripts/dataset_manifest.py and a runner's scheduler read these.
-PROTOCOL_VERSION = "2.4"                         # docs/protocol/README.md
+PROTOCOL_VERSION = "3.0"                         # docs/protocol/README.md; the wire's name: EAI_STANDARD
+EAI_STANDARD = f"eai-standard/{PROTOCOL_VERSION}"   # standard_mode.md: observe reads, submit (and hold chunks) move time, /finish
 
 
 def metadata_of(task: Path) -> dict:
@@ -2070,7 +2191,9 @@ TAXONOMY_PROTOCOL_ROW = re.compile(r"(?m)^\| `protocol` \| .* \|$")
 # what a protocol value adds to its row in docs/TAXONOMY.md (the benchmarks that serve it come from the tasks)
 PROTOCOL_NOTES = {"eai-standard/2.4": "the operations capability",
                   "eai-policy/1.0": "a benchmark's own runtime", "eai-policy/1.1": "a benchmark's own runtime",
-                  "eai-standard-turn/1.0": "a benchmark's own runtime", "eai-standard-realtime/1.0": "a benchmark's own runtime"}
+                  "eai-standard-turn/1.0": "a benchmark's own runtime", "eai-standard-realtime/1.0": "a benchmark's own runtime",
+                  "eai-standard/2.1+match/1.0": "the match extension, standard_mode.md Part 5",
+                  "eai-standard/2.3+match/1.0": "the match extension, standard_mode.md Part 5"}
 
 
 def taxonomy_protocol_row(tasks_dir: Path | None = None) -> str:
@@ -2186,9 +2309,11 @@ def normalize(task: Path) -> None:
     normalize_toml(task)
     normalize_dynamics(task)
     normalize_cutoff(task)
+    normalize_agent_end(task)
     normalize_resources(task)
     normalize_seeds(task)
     normalize_verifier_network(task)
+    efe_mcp_inject.apply(task, efe_mcp_manifest(task))   # the robot's MCP tools: server files, Dockerfile, task.toml
     caps = rule_caps(task)
     rcb_monitor_inject.write_compose(task, caps)   # the caps first: the instruction and the README show them
     normalize_text_files(task)

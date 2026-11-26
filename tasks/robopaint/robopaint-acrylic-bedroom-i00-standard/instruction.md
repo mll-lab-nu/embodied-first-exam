@@ -7,8 +7,8 @@ strokes.
 ## Goal
 Success: the main sheet looks like the picture (the same colours in the same places, the same lights and darks and
 edges, and paint only where the picture has paint), you used at most 388 strokes, and the process rules below hold; a
-small shift of the whole painting does not matter. The episode runs until your time is up (or a simulator error): there
-is no early end, and the main sheet is scored as your episode left it.
+small shift of the whole painting does not matter. The main sheet is scored as the episode leaves it. It ends when you
+call finish (Limits) or when your session ends. The robot never tells you whether you have succeeded.
 
 You are scored on how close your colours are to the picture's, afterwards, from the service's record of your episode.
 
@@ -24,8 +24,8 @@ Rules:
   pose: no sheet readout, no brush state, no score.
 
 ## Robot Interface
-A simulated Franka Panda arm holding a round acrylic brush. The robot runs as a service you reach only through its
-client, as if it were real hardware: one live episode.
+A simulated Franka Panda arm holding a round acrylic brush. The robot runs as a service you reach through its client or
+its MCP tools, as if it were real hardware: one live episode.
 
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
@@ -37,7 +37,8 @@ spec = r.spec()                               # action types, dims, joint limits
 obs = r.get_obs()                             # current frames of spec["default_cameras"] (all but practice_cam): obs.last[cam] -> uint8 (H,W,3)
 obs.meta["proprio"]                           # {"layout": [...28 names], "now": [...]}: 7 joints, tip x y z qw qx qy qz, joint velocities, efforts
 obs.meta["cameras"]                           # per camera intrinsic_cv / extrinsic_cv / cam2world_gl at the last frame (static cameras)
-obs = r.get_obs(seconds=2.0, video="mp4")     # hold the last command and watch for 2 s (max 30): obs.video[cam] = mp4 bytes
+obs = r.hold(2.0)                             # hold the last command for 2 s of robot time: obs.video[cam] = mp4 bytes
+obs = r.get_obs(last_s=1.0)                   # the frames recorded over the last 1 s (reading moves no time)
 
 res = r.submit("ee_pose", P, dt=0.05)         # P: (T, 7) brush-tip targets, rows dt apart; IK per control step
 res = r.submit("joint_position", A, dt=0.05)  # A: (T, 7) joint targets, rows dt apart; streamed at 20 Hz, linear interpolation
@@ -61,14 +62,26 @@ res.save("/app/runs/003")                     # meta.json, <cam>.mp4, frames/<ca
   the Panda's links and `tip`; `r.ik({"tip": pose}, seed=q)` → `{"ok", "q", "error"}`, the solver the `ee_pose` action
   uses.
 - Depth: `r.get_obs(depth=True)` → `obs.last_depth[cam]`, float32 (H,W) z-depth in metres of the last frame,
-  pixel-aligned with `obs.last[cam]` (0 = no reading); `depth="frames"` in `r.submit(...)` or a watch → `res.depth[cam]`
-  (N,H,W), one map per frame (1 mm steps). Depth is geometry only: paint on the paper never shows in it.
+  pixel-aligned with `obs.last[cam]` (0 = no reading); `depth="frames"` in `r.submit(...)` or `r.hold(...)` →
+  `res.depth[cam]` (N,H,W), one map per frame (1 mm steps). Depth is geometry only: paint on the paper never shows in
+  it.
 - `meta["time_left_s"]` is the service's count of the time left.
 
 A service restart is not a reset. If the service crashes, it restarts and resumes the same episode in the state after
 the last call it completed (the call that was running is lost as a whole: you get a connection error). `r.wait_ready()`
 waits until it answers again (resuming replays the episode so far without rendering; the clock keeps running), then
 `r.status()` tells `calls` and `control_steps`, so you know what was executed (`spec["on_service_error"]`).
+
+### MCP tools
+- The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
+  `observe`, `submit`, `kinematics`, `finish`. A tool takes its endpoint's request fields (any other field in `fields`)
+  and returns the service's reply `meta` unchanged; images, arrays and video are written as files under `/app/obs/`
+  (`.png`, `.npy`, `.mp4`) and the result lists them. Long action chunks can be passed as a file (`actions_file`).
+- `observe` returns at once with what is already recorded: the current frame, or the last `last_s` seconds. Time passes
+  only through `submit`, which answers when its rows have run; a `submit` with `interpolate` "hold", `seconds` and no
+  rows lets time pass with the robot holding still.
+- A call still running after 45 s returns `pending` with an `operation` id; `observe(operation=id)` collects its reply.
+- The client and the tools drive the same robot in the same episode; use either, or both.
 
 ### Actions
 Two action types:
@@ -142,4 +155,8 @@ stroke cap and when a process rule fails.
   slows you down); usage: `/run/rcb-limits/usage.json`.
 - Resets: none: one episode.
 - Steps: no step budget; actions and simulated time are reported as cost; a runaway guard stops the robot after 72000
-  control steps (1 h of simulated time; watching with `seconds > 0` also advances it).
+  control steps (1 h of simulated time; `hold(s)` also advances it).
+- Finish: when you are done, call finish: `POST /finish` with an empty JSON body to the service, at the client's base
+  URL (`http://sim:8000` or `http://localhost:8000`; in Python `requests.post(r.base + "/finish", json={})` with your
+  client `r`). It ends the episode, and every call after it is refused. Reaching the goal changes no reply and does not
+  end the episode; if you never call finish, the end of your session ends it.

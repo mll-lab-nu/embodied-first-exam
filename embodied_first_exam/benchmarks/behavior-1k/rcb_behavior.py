@@ -1391,11 +1391,25 @@ class Session:
         self._policy.next = a
         _, truncated = self.ev.step()       # OmniGibson's own `terminated` is the bare BDDL goal: the success rule decides
         # the order: a breakdown first (nothing else means anything then), the success rule (a success on the same step as
-        # a fall stands), the fall rule
-        ended = self._breakdown_step() or self._success_step() or self._fall_step()
+        # a fall stands), the fall rule. Agent-ended episodes (agent_end, PROTOCOL §3): the success rule never ends the
+        # episode (now_success says whether it holds now), a breakdown or a fall still does
+        if self._breakdown_step():
+            ended = True
+        elif self._success_step() and not self.agent_end:
+            ended = True
+        else:
+            ended = self._fall_step()
         if ended or truncated:
             self.episode_done = True
         return bool(ended), bool(truncated)
+
+    agent_end = False   # agent-ended episodes (the standard service sets it): a success never ends the episode
+
+    @property
+    def now_success(self) -> bool:
+        """The success rule as the state now is (agent-ended episodes): the goal has held, released and at rest, for the
+        last REST_STEPS control steps in a row; never latched (an undone goal resets the run)."""
+        return self._rest.run >= self._rest.hold and self.breakdown is None and self.end_reason is None
 
     @property
     def succeeded(self) -> bool:

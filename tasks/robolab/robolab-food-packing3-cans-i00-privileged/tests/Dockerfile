@@ -63,7 +63,7 @@ WORKDIR /app
 # the agent container cannot influence the verdict.
 FROM robolab-base
 COPY grade.py instance.json test.sh /tests/
-COPY --from=ghcr.io/mll-lab-nu/efe:robolab-files-0.5.4@sha256:b13e7fb2b083bdc205e169f86d8f5ced02aee01bd5cdc0f9285fc2ed116bc1ef /rcb_robolab.py /tests/rcb_robolab.py
+COPY --from=ghcr.io/mll-lab-nu/efe:robolab-files-0.6.0@sha256:fa84ce65c8878cd4a252e2b73fd50bc82b22f8b843e99ee7edf8532b903673e2 /rcb_robolab.py /tests/rcb_robolab.py
 RUN chmod +x /tests/test.sh && mkdir -p /app/output /logs/verifier
 ENV PYTHONPATH=/tests
 WORKDIR /tests

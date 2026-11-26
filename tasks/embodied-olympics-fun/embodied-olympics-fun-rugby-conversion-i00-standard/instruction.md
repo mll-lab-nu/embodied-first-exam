@@ -6,9 +6,11 @@ Kick the conversion: with one kick, send the ball from its tee over the crossbar
 ## Goal
 Success: with one kick you send the ball from the tee over the crossbar and between the posts.
 
-The referee in the service judges these stages, in order: **kick → goal**. An attempt (an episode) ends at the success,
-at the first foul or after 60 s of robot time, and a success ends the trial at once. Ending your session ends the run,
-so do not stop early: while you have attempts left, the run can still pass.
+The referee in the service judges these stages, in order: **kick → goal**. The referee's success call counts the moment
+it is made: nothing after it undoes it, but the attempt does not end there. An attempt (an episode) ends early at the
+first foul before a success (a failure) or after 60 s of robot time; a reset starts a new attempt, and only your last
+attempt is graded. It ends when you call finish (Limits) or when your session ends. The robot never tells you whether
+you have succeeded.
 
 Keep a `NOTES.md` of at most 20 lines in `/app/output/` (your approach, what failed, what you downloaded or installed):
 save it early and keep it current.
@@ -19,8 +21,8 @@ Rules:
 - Attempts: 5 resets, each a new attempt from the same start (the first attempt starts when the service comes up); only
   your last attempt is graded.
 - You get only what the robot's own sensors give (its head cameras, joint encoders, motor torques and IMUs) and the
-  venue's fixed cameras: not where you or any object is, not the referee's state. Once an attempt is over, every reply
-  carries the referee's call: the outcome (`"success"` or the rule that ended it) and how many of the stages it reached.
+  venue's fixed cameras: not where you or any object is, not the referee's state. If the referee ends an attempt on a
+  foul, every reply then carries the rule broken (`meta["outcome"]`); no stage count, no success signal.
 
 The attempt fails at once if:
 - any part of you but a foot touches the ball, or you touch it again after the kick
@@ -30,7 +32,7 @@ The attempt fails at once if:
 
 ## Robot Interface
 You control a simulated Unitree G1 humanoid robot (29 joints, 1.32 m tall, 33 kg; the Embodied Olympics simulator on
-MuJoCo). The robot runs as a service you reach only through its client, as if it were real hardware.
+MuJoCo). The robot runs as a service you reach through its client or its MCP tools, as if it were real hardware.
 
 ### Client
 `/opt/tools/rcb_client.py` (protocol `eai-standard/2.1`) is your whole interface to the robot. Its docstring is the full
@@ -42,7 +44,8 @@ reference (`python -c "import rcb_client; help(rcb_client)"`); its examples use 
 | `r = Robot()` | | connects (`http://sim:8000`, then `http://localhost:8000`) and waits until the service is ready |
 | `r.spec()` | `GET /spec` | the facts: `action_types` (each type's layout, lower, upper, meaning), `control_dt` (0.01 s), `max_control_steps` (6000), `cameras` (field of view, pose at the start), `proprio_layout`, `robot_facts` (joints, limits, default gains, the stance), `rules`, `budget` |
 | `r.status()` | `GET /status` | `calls`, `rows`, `control_steps`, `done`, `reason`, `elapsed_s`, `resets_left` |
-| `r.get_obs(cameras=None, seconds=0, video="frames", include_depth=False)` | `POST /observe` | the current frames (free), or hold the command in force and watch for `seconds` (at most 30) |
+| `r.get_obs(cameras=None, last_s=0, video="frames", include_depth=False)` | `POST /observe` | the current frames (free), or with `last_s=n` the frames recorded over the last n seconds; no time passes |
+| `r.hold(seconds, cameras=None, video="mp4")` | `POST /submit` | hold the command in force for `seconds` of robot time and return the video, like a submit |
 | `r.submit(type, A, dt=0.01, interpolate="linear", cameras=None, video="mp4")` | `POST /submit` | runs `A`, rows of that action type `dt` seconds apart (a multiple of 0.01; a chunk covers at most 10 s); stops early when the attempt ends |
 | `r.reset()` | `POST /reset` | a new attempt from the same start (see above) |
 
@@ -61,6 +64,17 @@ from rcb_client import Robot
 r = Robot()
 res = r.submit("walk", A, dt=0.02, video="none")   # A: (T, 22) rows of the `walk` type
 ```
+
+### MCP tools
+- The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
+  `observe`, `submit`, `reset`, `finish`. A tool takes its endpoint's request fields (any other field in `fields`) and
+  returns the service's reply `meta` unchanged; images, arrays and video are written as files under `/app/obs/` (`.png`,
+  `.npy`, `.mp4`) and the result lists them. Long action chunks can be passed as a file (`actions_file`).
+- `observe` returns at once with what is already recorded: the current frame, or the last `last_s` seconds. Time passes
+  only through `submit`, which answers when its rows have run; a `submit` with `interpolate` "hold", `seconds` and no
+  rows lets time pass with the robot holding still.
+- A call still running after 45 s returns `pending` with an `operation` id; `observe(operation=id)` collects its reply.
+- The client and the tools drive the same robot in the same episode; use either, or both.
 
 ### Actions
 One row is one control step (10 ms; the physics runs at 1 kHz) unless `dt` spreads it. Every row ends with `grip_left`,
@@ -150,9 +164,8 @@ in the spec's `robot_facts`.
   failure: "the simulation became unstable".
 
 ### Time
-- Time moves only inside calls: `submit` runs your rows and `get_obs(seconds=s)` holds the command in force for s
-  seconds; both use up the attempt's time. Between calls the robot waits, frozen, while you think; `r.get_obs()` with no
-  seconds is free.
+- Time moves only inside calls: `submit` runs your rows and `hold(s)` holds the command in force for s seconds; both use
+  up the attempt's time. Between calls the robot waits, frozen, while you think; `r.get_obs()` is free.
 
 ## Limits
 - Time: 7200 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
@@ -168,3 +181,7 @@ in the spec's `robot_facts`.
   no GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap
   only slows you down); usage: `/run/rcb-limits/usage.json`.
 - Resets: at most 5 (`spec()["budget"]["reset"]`), each a new episode from the same starting state.
+- Finish: when you are done, call finish: `POST /finish` with an empty JSON body to the service, at the client's base
+  URL (`http://sim:8000` or `http://localhost:8000`; in Python `requests.post(r.base + "/finish", json={})` with your
+  client `r`). It ends the episode, and every call after it is refused. Reaching the goal changes no reply and does not
+  end the episode; if you never call finish, the end of your session ends it.

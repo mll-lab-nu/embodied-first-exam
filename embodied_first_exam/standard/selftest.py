@@ -638,12 +638,62 @@ def client_read_timeout_outlasts_the_service_cap():
             r = object.__new__(rcb_client.Robot); r.base = "http://sim:8000"
             r._spec = {"default_cameras": ["c"], **({} if cap is None else {"max_call_wall_s": cap})}
             seen.clear()
-            r.get_obs(seconds=1.0); r.submit("joint_position", np.zeros((1, 2)))
+            r.get_obs(); r.submit("joint_position", np.zeros((1, 2)))
             want = (cap or 900) + 120
             expect(all(t >= want for _, t in seen) and [p for p, _ in seen] == ["observe", "submit"],
                    f"max_call_wall_s {cap}: read timeouts {seen}, want >= {want}")
     finally:
         rcb_client.requests.post = real
+
+
+@case
+def standard_3_0_observe_reads_hold_chunks_let_time_pass():
+    """eai-standard/3.0 in the shared layer: /observe never lets time pass (seconds > 0 is a 400), last_s = n reads the
+    frames recorded during the submits (the ring), a rows-free hold chunk holds the command in force and answers as a
+    submit, every submit answer carries duration_s and planned_duration_s. Raw requests: no client needed."""
+    import rcb1
+    c = Compose("standard_3_0")
+    try:
+        r = c.robot()
+        sp = r.spec()
+        expect(sp.get("standard") == "eai-standard/3.0", f"spec.standard {sp.get('standard')}")
+        rec = (sp.get("timing") or {}).get("recorder") or {}
+        expect(rec.get("cameras") == ["top"] and rec.get("fps") == 10.0 and rec.get("buffer_s") == 3.0, f"recorder {rec}")
+        post = lambda p, b: requests.post(c.url + p, json=b, timeout=30)          # noqa: E731
+        x = post("/observe", {"seconds": 1.0})
+        expect(x.status_code == 400 and "hold chunk" in x.json()["error"], f"observe seconds > 0: {x.status_code} {x.text[:200]}")
+        expect(r.status()["control_steps"] == 0, "the refused observe ran nothing")
+        x = post("/observe", {"last_s": 1.0})                                     # nothing recorded yet: the current frame
+        m, p = rcb1.decode(x.content)
+        expect(x.status_code == 200 and m.get("last_s") == 0.0 and "last/top" in p, f"last_s before any submit: {m}")
+        res = r.submit("joint_position", chunk(10, 0.3), dt=0.05, video="none")
+        expect(res.meta.get("duration_s") == 0.5 and res.meta.get("planned_duration_s") == 0.5, f"durations {res.meta}")
+        st = r.status()
+        x = post("/observe", {"last_s": 0.4, "video": "frames"})
+        m, p = rcb1.decode(x.content)
+        steps = list(np.asarray(p["frame_step"]["data"]))
+        expect(x.status_code == 200 and m.get("frame_step") == st["control_steps"] and steps[-1] == st["control_steps"]
+               and steps == [st["control_steps"] - 8, st["control_steps"] - 6, st["control_steps"] - 4, st["control_steps"] - 2,
+                             st["control_steps"]] and m.get("last_s") == 0.4, f"last_s from the ring: {m} {steps}")
+        expect(np.asarray(p["frames/top"]["data"]).shape == (5, 8, 8, 3) and np.asarray(p["proprio"]["data"]).shape[0] == 5,
+               "one frame and one proprio row per recorded step")
+        expect(r.status()["control_steps"] == st["control_steps"], "a last_s read moves nothing")
+        x = post("/submit", {"type": "joint_position", "interpolate": "hold", "seconds": 0.5, "video": "none"})
+        m, p = rcb1.decode(x.content)
+        expect(x.status_code == 200 and m.get("hold") is True and m.get("executed_rows") == 0 and m.get("duration_s") == 0.5
+               and m.get("planned_duration_s") == 0.5 and m.get("type") == "joint_position" and "chunk_id" in m,
+               f"hold chunk reply {m}")
+        expect(r.status()["control_steps"] == st["control_steps"] + 10, "the hold ran 0.5 s of control steps")
+        for body, what in (({"type": "joint_position", "interpolate": "hold", "seconds": 0.5, "actions": [[0, 0, 0]]}, "rows + seconds"),
+                           ({"type": "joint_position", "interpolate": "linear", "seconds": 0.5}, "no rows, not hold"),
+                           ({"type": "ee_pose", "interpolate": "hold", "seconds": 0.5}, "a type not served"),
+                           ({"type": "joint_position", "interpolate": "hold", "seconds": 99}, "past max_chunk_s"),
+                           ({"type": "joint_position", "interpolate": "hold", "seconds": -1}, "negative")):
+            x = post("/submit", body)
+            expect(x.status_code == 400, f"{what}: {x.status_code} {x.text[:160]}")
+        expect(r.status()["control_steps"] == st["control_steps"] + 10, "refused chunks ran nothing")
+    finally:
+        c.down()
 
 
 def main() -> int:

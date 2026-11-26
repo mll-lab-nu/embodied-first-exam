@@ -239,6 +239,17 @@ PhysX runs on the CPU (LabUtopia's default backend, `numpy`). Measured in the im
   grader's verdict replay and the oracle are of the first.
 - **Looking never changes the physics.** The same rows end in the same state with the renderer and without it.
 
+**Agent-ended episodes** (standard mode; PROTOCOL §3 "Agent-ended episodes", `RCB_AGENT_END` in each sim service,
+`rcb_agent_end.py`). The task's success is never shown and never ends the episode: the agent ends it with `POST /finish`
+(reason `finished`), or the end of its session does (`timeout`). The Session runs with its stop at success off;
+`server.py` keeps each family's rule running after every control step and judges the episode when it ends. Goals that
+are a state (pick, open_door, open_drawer, place, open_close) are judged on the state the episode ends in, the rule's
+earlier steps (place's lift, open_close's opening) counting as they happened; goals that are an act (press, pour, shake)
+count once they have happened; heat_liquid's press with the beaker on the plate counts once it has happened and the
+beaker must still be on the plate at the end. At `/finish` and at the session's end a hold the rule is counting (60
+control steps; pour's 84) is run out with the last command held. The technical cap (36,000 steps) is the step limit
+(`step_limit`, judged as it stands); there is no `RCB_STEP_LIMIT` (the instruction states no step budget).
+
 ## Reference solutions
 LabUtopia's scripted controllers (`controllers/<task>_controller.py`, state machines over RMPflow), run on the
 tooling's Session from the frozen instance, in a checkout that still has them and in LabUtopia's own order (state,

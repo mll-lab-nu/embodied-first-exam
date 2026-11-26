@@ -4,21 +4,21 @@
 Turn on the toaster oven by setting its timer.
 
 ## Goal
-Success: the toaster oven's timer is set, its knob turned well up from zero. The episode ends as soon as the task is
-done.
+Success: the toaster oven's timer is set, its knob turned well up from zero. Success is judged on how things stand when
+the episode ends. It ends when you call finish (Limits) or when your session ends. The robot never tells you whether you
+have succeeded.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
   benchmark's demonstrations, trained policies); trials are reviewed.
-- One episode, no reset: it ends as soon as the task is done, after 3000 control steps (150 s of robot time), when your
-  time is up or on a simulator error; what you knock over stays knocked over.
-- You get only the cameras and the robot's own sensor readings: no object poses, no scene layout; the service only tells
-  you that the episode ended and why (`meta["done"]`, `meta["reason"]`: `"success"`, `"failed"`, `"error"`).
+- One episode, no reset: it ends when you call finish, after 3000 control steps (150 s of robot time), when your time is
+  up or on a simulator error; what you knock over stays knocked over.
+- You get only the cameras and the robot's own sensor readings: no object poses, no scene layout, no success signal.
 
 ## Robot Interface
 A Franka Panda arm on an Omron mobile base with a torso lift, in a simulated kitchen (RoboCasa365, robosuite / MuJoCo).
-The robot runs as a service you reach only through its client, as if it were real hardware, on a clock that does not
-stop while you think: one live episode.
+The robot runs as a service you reach through its client or its MCP tools, as if it were real hardware, on a clock that
+does not stop while you think: one live episode.
 
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.3`, realtime mode. Its docstring is the full reference
@@ -30,13 +30,23 @@ stop while you think: one live episode.
 | `r.spec()` | `GET /spec` | `control_dt` (0.05 s), `timing`, the action layout and limits, the cameras (intrinsics), `proprio_layout`, `budget` |
 | `r.status()` | `GET /status` | `control_steps`, `done`, `reason`, `running`, `planned_steps`, `lag_s`, `episode`, `resets_left` |
 | `r.submit("joint_position", A, dt=0.05, interpolate="linear", at=None, cameras=None)` | `POST /submit` | plans `A`, rows of 13 channels `dt` apart, from step `at`; answers at once; the first one starts the clock |
-| `r.get_obs(cameras=None, seconds=0, include_depth=False, video="frames")` | `POST /observe` | the robot now, or what the cameras saw over the next `seconds` |
+| `r.get_obs(cameras=None, last_s=0, include_depth=False, video="frames")` | `POST /observe` | the robot now, or with `last_s=n` what the cameras recorded over the last n seconds; it never waits |
 
-One call returns at most 3000 images. A watch is refused with a 429 while the images in flight (pending watches and
-answers not read yet) would exceed it or 8 of them are outstanding; a `submit` or a `get_obs()` without seconds is never
-refused for its images: its answer then comes without its frames and `meta["frames_skipped"]` is set. The answers come
+One call returns at most 3000 images. No call is refused for its images: while 8 answers with images are outstanding,
+the answer of a `submit` or a `get_obs()` comes without its frames and `meta["frames_skipped"]` is set. The answers come
 back decoded: `res.meta` (the counters, `done`, `reason`, `proprio["now"]`, `clipped`), `res.last[camera]`, `res.frames`
 / `res.video`, `res.depth`, `res.proprio`. Once the episode has ended, `submit` raises `EpisodeOver`.
+
+### MCP tools
+- The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
+  `observe`, `submit`, `finish`. A tool takes its endpoint's request fields (any other field in `fields`) and returns
+  the service's reply `meta` unchanged; images, arrays and video are written as files under `/app/obs/` (`.png`, `.npy`,
+  `.mp4`) and the result lists them. Long action chunks can be passed as a file (`actions_file`).
+- `observe` returns at once with what is already recorded: the current frame, or the last `last_s` seconds. `submit`
+  answers at once, as the endpoint does. The clock does not wait for a tool call, and a call also takes your harness's
+  own time; each result's `tool_s` is the tool's part.
+- A call still running after 45 s returns `pending` with an `operation` id; `observe(operation=id)` collects its reply.
+- The client and the tools drive the same robot in the same episode; use either, or both.
 
 ### Actions
 - Action `joint_position`: the robot's native controller command, one row per control step (`control_dt` = 0.05 s). 13
@@ -56,10 +66,10 @@ back decoded: `res.meta` (the counters, `done`, `reason`, `proprio["now"]`, `cli
 ### Time and streaming
 - Slowdown: S = 2. The world runs at 1/S of real speed: one control step (0.05 s of robot time) every S × 0.05 s = 0.1 s
   of wall-clock time. `spec()["timing"]["slowdown"]` states it.
-- The episode starts paused, on the starting state, holding still. Its clock starts at your first `submit` (or
-  `get_obs(seconds=s)`) and from then on the robot runs one control step every 0.1 s of wall-clock time, whether or not
-  you send anything, until the episode ends. Between your commands it executes what you planned; when the plan runs out
-  it holds still (velocity channels zero, targets, grip and mode kept). Nothing pauses for you.
+- The episode starts paused, on the starting state, holding still. Its clock starts at your first `submit` and from then
+  on the robot runs one control step every 0.1 s of wall-clock time, whether or not you send anything, until the episode
+  ends. Between your commands it executes what you planned; when the plan runs out it holds still (velocity channels
+  zero, targets, grip and mode kept). Nothing pauses for you.
 - `submit` answers at once, with the robot as it is now: the rows you sent have not run yet. They become the plan from
   control step `at` (an episode step number; by default the next step), replacing whatever was planned from `at` on.
   `res.meta["control_steps"]` is the number of steps run so far in this episode, `res.meta["plan_end_step"]` where the
@@ -67,9 +77,9 @@ back decoded: `res.meta` (the counters, `done`, `reason`, `proprio["now"]`, `cli
   steps ahead, so plan a longer movement in several chunks (`at=0`, `at=200`, ...).
 - A row whose step has already run when the request arrives is dropped (`res.meta["late_steps"]`); in a gap before `at`
   the last row in force is repeated, velocity channels included.
-- `get_obs()` reads the robot now; `get_obs(seconds=s)` (at most 30) waits while s seconds of robot time run and returns
-  what the cameras saw meanwhile. `cameras=[]` skips the images (the fastest call); rendering takes about 0.12 s a
-  camera on the service's CPU and the robot does not wait for it.
+- `get_obs()` reads the robot now; `get_obs(last_s=n)` returns, without waiting, what the cameras recorded over the last
+  n seconds. `cameras=[]` skips the images (the fastest call); rendering takes about 0.12 s a camera on the service's
+  CPU and the robot does not wait for it.
 
 ## Others
 - The kitchen moves on too: the timer knob, once set, slowly turns back by itself.
@@ -92,3 +102,7 @@ back decoded: `res.meta` (the counters, `done`, `reason`, `proprio["now"]`, `cli
   no GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap
   only slows you down); usage: `/run/rcb-limits/usage.json`.
 - Resets: none: one episode.
+- Finish: when you are done, call finish: `POST /finish` with an empty JSON body to the service, at the client's base
+  URL (`http://sim:8000` or `http://localhost:8000`; in Python `requests.post(r.base + "/finish", json={})` with your
+  client `r`). It ends the episode, and every call after it is refused. Reaching the goal changes no reply and does not
+  end the episode; if you never call finish, the end of your session ends it.

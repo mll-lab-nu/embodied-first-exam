@@ -55,7 +55,7 @@ Caps per container (PROTOCOL §6).
 | | |
 |---|---|
 | Protocol | `eai-standard/2.2`: RGB + proprioception through the client; no reset, no object poses, no success predicate |
-| Action space | `submit` chunks of `joint_position` (23: base velocity command, trunk, both arms, one command per gripper; iSpatialGym's JoyLo action) streamed at the 30 Hz control rate; `observe` frames or a watch window; stateless `/kinematics` |
+| Action space | `submit` chunks of `joint_position` (23: base velocity command, trunk, both arms, one command per gripper; iSpatialGym's JoyLo action) streamed at the 30 Hz control rate; `observe` the current frames or those recorded over the last seconds (`last_s`); hold chunks (`hold(s)`); stateless `/kinematics` |
 | Goal | `/app/goal.png` (from the files-only image `ispatialgym-goals-files`): upstream's goal image of this instance, the head camera at 1080×1080 |
 | Instance | `environment/sim/instance.json`, byte-identical to the privileged twin's: the start only (scene, template keys the loader reads, start-only TRO, objects without upstream's role names); `environment/sim/goal.json` (sidecar only) restores upstream's targets onto it, checked by sha256; start-state hash b7b9f7f047f87caf |
 | Dataset | the licensed BEHAVIOR dataset, mounted read-only into the sidecar from `$RCB_BEHAVIOR_DATA` (a precondition) |

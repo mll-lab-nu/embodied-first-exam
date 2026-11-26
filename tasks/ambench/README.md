@@ -250,6 +250,21 @@ below).
   only beyond `RCB_RESUME_MAX_DEV_M` (5 cm); the verdict is the resumed live episode's. Kill test (PushSlider, kill -9
   during the fifth call): resumed at control step 480, the oracle carried on, success at 1353, `infra_error` 0.
 
+### Agent-ended episodes
+
+Standard episodes are agent-ended (PROTOCOL §3 "Agent-ended episodes"; `RCB_AGENT_END` in the sim service,
+`/srv/rcb_agent_end.py`). The agent never sees a success: no `success` or progress in any meta, status or spec, and a
+success never ends the episode. The episode ends at the agent's `POST /finish` (reason `finished`), when its time runs
+out (`timeout`), at the end of the task's simulated time (`step_limit`: AM-Bench's own time-out, judged on the state
+instead of a failure), on a failure rule of the task (a 0, even after a success) or on a simulator error (judged as
+without the feature). It is then judged on how things stand when it ends; `episode.json` records `ended_by`,
+`hidden_success_seen` and the step of the first hidden success as evidence. No `RCB_STEP_LIMIT` is set: AM-Bench states
+no step count, only its simulated time.
+
+AM-Bench's `_get_dones` success is recorded and its `terminated` suppressed (`rcb_ambench.py`, `hide_success`).
+PressButton is judged as an event (the button springs back: a press seen during the episode counts); NDT holds the robot
+still for up to 1 s at the end so a hold that is completing can finish; every other task is judged on its end state.
+
 ## Time budget
 3600 s for every task of both modes (each task's `[agent] timeout_sec`), stated in each instruction's closing `## Time limit` section. Every Python
 process pays ~2-6 min of Isaac Sim launch and scene build (the upper end with other Isaac jobs on the GPU); stepping runs

@@ -22,9 +22,19 @@
 
 # The protocol each mode of these tasks serves (PROTOCOL §3): ci_checks/check-protocol.py accepts it for the
 # directories listed below only.
+# The match extension of eai-standard/2.x (owner 2026-11-25; docs/protocol/standard_mode.md Part 5): every task below
+# except the low-level skill matches (matchlow) and the G1 table tennis serves the standard endpoints (/spec /status
+# /observe /submit, plus /start /ready /say /team) next to the core's own seat API, from
+# embodied_first_exam/benchmarks/embodied-olympics-match/eai_std/ (copied to environment/sim/eai_std/ by
+# apply_eai_std.py there, which a re-export runs again; the sim runs `python3 -m eai_std.serve`). Its `patched` lists
+# say so: environment/sim/eai_std/, environment/Dockerfile (the shared client), docker-compose.yaml, task.toml,
+# README.md, instruction.md. core/ and sport/ are unchanged (source_sha), and so is the files-only image.
 [protocols]
-realtime = "eai-standard-realtime/1.0"   # the real-time matches: Embodied Olympics' own service and referee
-standard = ["eai-standard-turn/1.0",              # the turn-based matches: the world waits for the player whose turn it
+realtime = ["eai-standard/2.3+match/1.0",         # the real-time matches on the match extension (2.3's realtime clock)
+            "eai-standard-realtime/1.0"]          # the real-time matches: Embodied Olympics' own service and referee
+                                                  # (matchlow, G1)
+standard = ["eai-standard/2.1+match/1.0",         # the standard twins and the turn-based bout on the match extension
+            "eai-standard-turn/1.0",              # the turn-based matches: the world waits for the player whose turn it
             "eai-standard-lockstep/1.0"]          # is, a chess clock per player (Embodied Olympics' own service and referee);
                                                   # the real-time matches' standard twins: the same service, the world in
                                                   # lockstep (environment/sim/core/lockstep.py, Embodied First Exam's)
@@ -36,7 +46,8 @@ revision = "foosball-program-v2+core-0.2"
 source_commits = ["d71e9f642ead"]
 patched = ["instruction.md", "environment/docker-compose.yaml",
            "environment/sim/core/service.py", "environment/sim/core/grading.py", "tests/grade.py", "task.toml", "README.md",
-           "environment/sim/core/realtime.py"]   # LP_NUM_THREADS 2 (OSMesa threads, as the other matches);
+           "environment/sim/core/realtime.py",
+           "environment/sim/eai_std/", "environment/Dockerfile"]   # LP_NUM_THREADS 2 (OSMesa threads, as the other matches);
              # the start window and its forfeit stated in the instruction
 
 [[tasks]]
@@ -45,7 +56,8 @@ source_task = "roboolympics/fencing-bout-wallclock-program-standard"
 revision = "fencing-7+core-0.2"
 source_commits = ["a6712a675343"]
 patched = ["task.toml", "environment/docker-compose.yaml",
-           "environment/sim/core/service.py", "environment/sim/core/grading.py", "tests/grade.py", "README.md"]   # the replay video's time limit 300 -> 900 s (not shorter than the verdict replay's 600 s), the collect / verifier timeouts with it
+           "environment/sim/core/service.py", "environment/sim/core/grading.py", "tests/grade.py", "README.md",
+           "environment/sim/eai_std/", "environment/Dockerfile", "instruction.md"]   # the replay video's time limit 300 -> 900 s (not shorter than the verdict replay's 600 s), the collect / verifier timeouts with it
 
 [[tasks]]
 name = "embodied-olympics-match-soccer-match-i00-realtime"
@@ -54,7 +66,8 @@ revision = "soccer-2v2-10+core-0.2"
 source_commits = ["0d7f680cc049"]
 patched = ["instruction.md", "environment/sim/core/realtime.py",   # the review time limit and its forfeit stated (instruction, game spec timing)
            "task.toml", "environment/docker-compose.yaml", "README.md",
-           "environment/sim/core/service.py", "environment/sim/core/grading.py", "tests/grade.py"]   # the replay video's time limits (RCB_VIDEO_TIMEOUT_S 1800 s, collect / verifier timeouts)
+           "environment/sim/core/service.py", "environment/sim/core/grading.py", "tests/grade.py",
+           "environment/sim/eai_std/", "environment/Dockerfile"]   # the replay video's time limits (RCB_VIDEO_TIMEOUT_S 1800 s, collect / verifier timeouts)
 
 [[tasks]]
 name = "embodied-olympics-match-soccer-jointcpu-i01-realtime"
@@ -62,7 +75,8 @@ source_task = "roboolympics/soccer-match-wallclock-program-lowlevel-standard"
 revision = "soccer-2v2-11"
 source_commits = ["7ae66874c32e"]   # the soccer pilot exporter (the joint-level resource-tier pair; v5 pilot rules)
 patched = ["environment/sim/audit/policy_fingerprint.py", "tests/fexam_reward.py",   # the walking-policy audit
-           "task.toml", "solution/solve.sh"]   # replays the match only after a live win of seat A, samples the row in effect at every
+           "task.toml", "solution/solve.sh",
+           "environment/sim/eai_std/", "environment/Dockerfile", "environment/docker-compose.yaml", "README.md", "instruction.md"]   # replays the match only after a live win of seat A, samples the row in effect at every
                                                # step (traj plans too) over the whole match, must reproduce the live record; a voided win is no win
 
 [[tasks]]
@@ -71,7 +85,8 @@ source_task = "roboolympics/soccer-match-wallclock-program-lowlevel-standard"
 revision = "soccer-2v2-11"
 source_commits = ["7ae66874c32e"]   # the soccer pilot exporter (the joint-level resource-tier pair; v5 pilot rules)
 patched = ["environment/sim/audit/policy_fingerprint.py", "tests/fexam_reward.py",   # the walking-policy audit
-           "task.toml", "solution/solve.sh"]   # replays the match only after a live win of seat A, samples the row in effect at every
+           "task.toml", "solution/solve.sh",
+           "environment/sim/eai_std/", "environment/Dockerfile", "environment/docker-compose.yaml", "README.md", "instruction.md"]   # replays the match only after a live win of seat A, samples the row in effect at every
                                                # step (traj plans too) over the whole match, must reproduce the live record; a voided win is no win
 
 [[tasks]]
@@ -81,7 +96,8 @@ revision = "wallclock-15+duel-wallclock-12+low-inloop-1+core-0.2"
 source_commits = ["e25d8cc11861"]
 patched = ["instruction.md",
            "environment/sim/core/service.py", "environment/sim/core/grading.py", "tests/grade.py", "environment/docker-compose.yaml", "task.toml", "README.md",
-           "environment/sim/core/realtime.py"]   # the start window and its forfeit stated in the instruction
+           "environment/sim/core/realtime.py",
+           "environment/sim/eai_std/", "environment/Dockerfile"]   # the start window and its forfeit stated in the instruction
 
 [[tasks]]
 name = "embodied-olympics-match-badminton-match-i04-realtime"
@@ -91,7 +107,8 @@ source_commits = ["62333496959f"]
 patched = ["instruction.md",   # the start window and its forfeit stated in the instruction
            "task.toml", "environment/docker-compose.yaml", "environment/sim/spectator/sport_video.py",
            "environment/sim/core/service.py", "environment/sim/core/grading.py", "tests/grade.py", "README.md",
-           "environment/sim/core/realtime.py"]   # a replay video from the players' cameras (badminton declares no spectator camera / scene
+           "environment/sim/core/realtime.py",
+           "environment/sim/eai_std/", "environment/Dockerfile"]   # a replay video from the players' cameras (badminton declares no spectator camera / scene
 
 [[tasks]]
 name = "embodied-olympics-match-soccerssl-match-i01-realtime"
@@ -100,7 +117,8 @@ revision = "soccer_ssl-1"
 source_commits = ["91156213b0de"]
 patched = ["instruction.md", "task.toml", "README.md",
            "environment/sim/core/service.py", "environment/sim/core/grading.py", "tests/grade.py", "environment/docker-compose.yaml",
-           "environment/sim/core/realtime.py"]   # the start window and its forfeit stated in the instruction; the level-4 opponent named as the learned tier, not "scripted"
+           "environment/sim/core/realtime.py",
+           "environment/sim/eai_std/", "environment/Dockerfile"]   # the start window and its forfeit stated in the instruction; the level-4 opponent named as the learned tier, not "scripted"
 
 [[tasks]]
 name = "embodied-olympics-match-tabletennis-duelrl-i01-realtime"
@@ -109,7 +127,8 @@ revision = "wallclock-15+duel-wallclock-12+low-inloop-1+core-0.2"
 source_commits = ["13f5e0981a99"]
 patched = ["instruction.md", "environment/sim/core/service.py", "tests/test.sh",
            "environment/sim/core/grading.py", "tests/grade.py", "environment/docker-compose.yaml", "task.toml", "README.md",
-           "environment/sim/core/realtime.py"]   # the start window and its forfeit stated in the instruction
+           "environment/sim/core/realtime.py",
+           "environment/sim/eai_std/", "environment/Dockerfile"]   # the start window and its forfeit stated in the instruction
            # a duel against a built-in seat: leaving after the start is a valid loss (`abandoned`, core/service.py abandon_single), stated in the instruction with the opponent's true-state reads; test.sh fails closed if fexam_reward.py fails
 
 [[tasks]]
@@ -120,7 +139,8 @@ source_commits = ["b12667a02300"]
 patched = ["instruction.md", "environment/sim/core/service.py", "tests/test.sh",   # the start window and its forfeit stated in the instruction
            "task.toml", "environment/docker-compose.yaml", "environment/sim/spectator/sport_video.py",
            "environment/sim/core/grading.py", "tests/grade.py", "README.md",
-           "environment/sim/core/realtime.py"]   # a replay video from the players' cameras (badminton declares no spectator camera / scene
+           "environment/sim/core/realtime.py",
+           "environment/sim/eai_std/", "environment/Dockerfile"]   # a replay video from the players' cameras (badminton declares no spectator camera / scene
            # a duel against a built-in seat: leaving after the start is a valid loss (`abandoned`, core/service.py abandon_single), stated in the instruction with the opponent's true-state reads; test.sh fails closed if fexam_reward.py fails
 
 [[tasks]]
@@ -237,7 +257,7 @@ name = "embodied-olympics-match-badminton-duelrl-i01-standard"
 source_task = "roboolympics/badminton-duel-wallclock-program-standard"
 revision = "badminton-wallclock-12+duel-14+core-0.2"
 source_commits = ["b12667a02300"]
-patched = ["instruction.md", "environment/sim/core/service.py", "tests/test.sh", "task.toml", "environment/docker-compose.yaml", "environment/sim/spectator/sport_video.py", "environment/sim/core/grading.py", "tests/grade.py", "README.md", "environment/sim/core/realtime.py", "environment/sim/core/lockstep.py", "tests/fexam_reward.py"]
+patched = ["instruction.md", "environment/sim/core/service.py", "tests/test.sh", "task.toml", "environment/docker-compose.yaml", "environment/sim/spectator/sport_video.py", "environment/sim/core/grading.py", "tests/grade.py", "README.md", "environment/sim/core/realtime.py", "environment/sim/core/lockstep.py", "tests/fexam_reward.py", "environment/sim/eai_std/", "environment/Dockerfile"]
 realtime_twin = "embodied-olympics-match-badminton-duelrl-i01-realtime"
 
 [[tasks]]
@@ -245,7 +265,7 @@ name = "embodied-olympics-match-badminton-match-i04-standard"
 source_task = "roboolympics/badminton-match-wallclock-program-standard"
 revision = "badminton-wallclock-12+duel-14+core-0.2"
 source_commits = ["62333496959f"]
-patched = ["instruction.md", "task.toml", "environment/docker-compose.yaml", "environment/sim/spectator/sport_video.py", "environment/sim/core/service.py", "environment/sim/core/grading.py", "tests/grade.py", "README.md", "environment/sim/core/realtime.py", "environment/sim/core/lockstep.py", "tests/fexam_reward.py"]
+patched = ["instruction.md", "task.toml", "environment/docker-compose.yaml", "environment/sim/spectator/sport_video.py", "environment/sim/core/service.py", "environment/sim/core/grading.py", "tests/grade.py", "README.md", "environment/sim/core/realtime.py", "environment/sim/core/lockstep.py", "tests/fexam_reward.py", "environment/sim/eai_std/", "environment/Dockerfile"]
 realtime_twin = "embodied-olympics-match-badminton-match-i04-realtime"
 
 [[tasks]]
@@ -261,7 +281,7 @@ name = "embodied-olympics-match-foosball-match-i01-standard"
 source_task = "roboolympics/foosball-match-wallclock-program-standard"
 revision = "foosball-program-v2+core-0.2"
 source_commits = ["d71e9f642ead"]
-patched = ["instruction.md", "environment/docker-compose.yaml", "environment/sim/core/service.py", "environment/sim/core/grading.py", "tests/grade.py", "task.toml", "README.md", "environment/sim/core/realtime.py", "environment/sim/core/lockstep.py", "tests/fexam_reward.py"]
+patched = ["instruction.md", "environment/docker-compose.yaml", "environment/sim/core/service.py", "environment/sim/core/grading.py", "tests/grade.py", "task.toml", "README.md", "environment/sim/core/realtime.py", "environment/sim/core/lockstep.py", "tests/fexam_reward.py", "environment/sim/eai_std/", "environment/Dockerfile"]
 realtime_twin = "embodied-olympics-match-foosball-match-i01-realtime"
 
 [[tasks]]
@@ -269,7 +289,7 @@ name = "embodied-olympics-match-soccer-jointcpu-i01-standard"
 source_task = "roboolympics/soccer-match-wallclock-program-lowlevel-standard"
 revision = "soccer-2v2-11"
 source_commits = ["7ae66874c32e"]
-patched = ["environment/sim/audit/policy_fingerprint.py", "tests/fexam_reward.py", "task.toml", "solution/solve.sh", "environment/sim/core/lockstep.py", "environment/docker-compose.yaml", "instruction.md", "README.md", "solution/joint_oracle.py"]
+patched = ["environment/sim/audit/policy_fingerprint.py", "tests/fexam_reward.py", "task.toml", "solution/solve.sh", "environment/sim/core/lockstep.py", "environment/docker-compose.yaml", "instruction.md", "README.md", "solution/joint_oracle.py", "environment/sim/eai_std/", "environment/Dockerfile"]
 realtime_twin = "embodied-olympics-match-soccer-jointcpu-i01-realtime"
 
 [[tasks]]
@@ -277,7 +297,7 @@ name = "embodied-olympics-match-soccer-jointgpu-i01-standard"
 source_task = "roboolympics/soccer-match-wallclock-program-lowlevel-standard"
 revision = "soccer-2v2-11"
 source_commits = ["7ae66874c32e"]
-patched = ["environment/sim/audit/policy_fingerprint.py", "tests/fexam_reward.py", "task.toml", "solution/solve.sh", "environment/sim/core/lockstep.py", "environment/docker-compose.yaml", "instruction.md", "README.md", "solution/joint_oracle.py"]
+patched = ["environment/sim/audit/policy_fingerprint.py", "tests/fexam_reward.py", "task.toml", "solution/solve.sh", "environment/sim/core/lockstep.py", "environment/docker-compose.yaml", "instruction.md", "README.md", "solution/joint_oracle.py", "environment/sim/eai_std/", "environment/Dockerfile"]
 realtime_twin = "embodied-olympics-match-soccer-jointgpu-i01-realtime"
 
 [[tasks]]
@@ -285,7 +305,7 @@ name = "embodied-olympics-match-soccer-match-i00-standard"
 source_task = "roboolympics/soccer-match-wallclock-program-standard"
 revision = "soccer-2v2-10+core-0.2"
 source_commits = ["0d7f680cc049"]
-patched = ["instruction.md", "environment/sim/core/realtime.py", "task.toml", "environment/docker-compose.yaml", "README.md", "environment/sim/core/service.py", "environment/sim/core/grading.py", "tests/grade.py", "environment/sim/core/lockstep.py", "tests/fexam_reward.py"]
+patched = ["instruction.md", "environment/sim/core/realtime.py", "task.toml", "environment/docker-compose.yaml", "README.md", "environment/sim/core/service.py", "environment/sim/core/grading.py", "tests/grade.py", "environment/sim/core/lockstep.py", "tests/fexam_reward.py", "environment/sim/eai_std/", "environment/Dockerfile"]
 realtime_twin = "embodied-olympics-match-soccer-match-i00-realtime"
 
 [[tasks]]
@@ -293,7 +313,7 @@ name = "embodied-olympics-match-soccerssl-match-i01-standard"
 source_task = "roboolympics/soccer_ssl-match-wallclock-program-standard"
 revision = "soccer_ssl-1"
 source_commits = ["91156213b0de"]
-patched = ["instruction.md", "task.toml", "README.md", "environment/sim/core/service.py", "environment/sim/core/grading.py", "tests/grade.py", "environment/docker-compose.yaml", "environment/sim/core/realtime.py", "environment/sim/core/lockstep.py", "tests/fexam_reward.py"]
+patched = ["instruction.md", "task.toml", "README.md", "environment/sim/core/service.py", "environment/sim/core/grading.py", "tests/grade.py", "environment/docker-compose.yaml", "environment/sim/core/realtime.py", "environment/sim/core/lockstep.py", "tests/fexam_reward.py", "environment/sim/eai_std/", "environment/Dockerfile"]
 realtime_twin = "embodied-olympics-match-soccerssl-match-i01-realtime"
 
 [[tasks]]
@@ -301,7 +321,7 @@ name = "embodied-olympics-match-tabletennis-duelrl-i01-standard"
 source_task = "roboolympics/tabletennis-duel-wallclock-program-standard"
 revision = "wallclock-15+duel-wallclock-12+low-inloop-1+core-0.2"
 source_commits = ["13f5e0981a99"]
-patched = ["instruction.md", "environment/sim/core/service.py", "tests/test.sh", "environment/sim/core/grading.py", "tests/grade.py", "environment/docker-compose.yaml", "task.toml", "README.md", "environment/sim/core/realtime.py", "environment/sim/core/lockstep.py", "tests/fexam_reward.py"]
+patched = ["instruction.md", "environment/sim/core/service.py", "tests/test.sh", "environment/sim/core/grading.py", "tests/grade.py", "environment/docker-compose.yaml", "task.toml", "README.md", "environment/sim/core/realtime.py", "environment/sim/core/lockstep.py", "tests/fexam_reward.py", "environment/sim/eai_std/", "environment/Dockerfile"]
 realtime_twin = "embodied-olympics-match-tabletennis-duelrl-i01-realtime"
 
 [[tasks]]
@@ -309,7 +329,7 @@ name = "embodied-olympics-match-tabletennis-match-i04-standard"
 source_task = "roboolympics/tabletennis-match-wallclock-program-standard"
 revision = "wallclock-15+duel-wallclock-12+low-inloop-1+core-0.2"
 source_commits = ["e25d8cc11861"]
-patched = ["instruction.md", "environment/sim/core/service.py", "environment/sim/core/grading.py", "tests/grade.py", "environment/docker-compose.yaml", "task.toml", "README.md", "environment/sim/core/realtime.py", "environment/sim/core/lockstep.py", "tests/fexam_reward.py"]
+patched = ["instruction.md", "environment/sim/core/service.py", "environment/sim/core/grading.py", "tests/grade.py", "environment/docker-compose.yaml", "task.toml", "README.md", "environment/sim/core/realtime.py", "environment/sim/core/lockstep.py", "tests/fexam_reward.py", "environment/sim/eai_std/", "environment/Dockerfile"]
 realtime_twin = "embodied-olympics-match-tabletennis-match-i04-realtime"
 
 [[tasks]]

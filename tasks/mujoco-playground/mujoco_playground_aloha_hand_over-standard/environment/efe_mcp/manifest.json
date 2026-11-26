@@ -1,0 +1,14 @@
+{
+ "manifest": "efe-mcp-manifest/1",
+ "kind": "rcb",
+ "suite": "mujoco-playground",
+ "task": "mujoco_playground_aloha_hand_over-standard",
+ "protocol": "eai-standard/2.1",
+ "realtime": false,
+ "tools": [
+  "spec",
+  "observe",
+  "submit",
+  "finish"
+ ]
+}

@@ -78,7 +78,7 @@ ENV OMNI_KIT_ACCEPT_EULA=YES HDF5_USE_FILE_LOCKING=FALSE HF_HUB_OFFLINE=1 \
 # upstream's TRO by sha256), the measured facts and the tooling. Only /app/output/ reaches it.
 FROM ispatialgym-base
 COPY instance.json goal.json facts.json upstream.json test.sh /tests/
-COPY --from=ghcr.io/mll-lab-nu/efe:ispatialgym-files-0.5.1@sha256:8da12bf55ae8f0189bce0a21f53928a2c9f82ee33f65a6955348dd2bd8a0afb1 /privileged/environment/rcb_ispatialgym.py /privileged/tests/grade.py /tests/
+COPY --from=ghcr.io/mll-lab-nu/efe:ispatialgym-files-0.6.0@sha256:8076179b5976cdc7609454e48d95e2028067025defd1a020a23fa4532a0854d3 /privileged/environment/rcb_ispatialgym.py /privileged/tests/grade.py /tests/
 RUN chmod +x /tests/test.sh && mkdir -p /app/output /logs/verifier
 ENV OMNIGIBSON_HEADLESS=1
 WORKDIR /tests

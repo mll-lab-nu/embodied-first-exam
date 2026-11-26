@@ -4,23 +4,25 @@
 Press the red button on the wall in, nearly halfway or more.
 
 ## Goal
-Success: the button is pressed in nearly halfway or more. The episode ends by itself as soon as the task is done (reason
-`success`), or as a failure when its simulated time (Robot Interface) runs out (reason `episode_timeout`).
+Success: the button is pressed in nearly halfway or more. When its simulated time (Robot Interface) runs out, the
+episode ends by itself and is judged as it stands then.
+
+The episode counts the press as it happens: the button need not stay in. It ends when you call finish (Limits) or when
+your session ends. The robot never tells you whether you have succeeded.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
   benchmark's demonstrations, trained policies); trials are reviewed.
 - One episode, no reset: what you knock over stays knocked over.
-- You get only the cameras and the robot's own sensor readings: no object poses, no scene layout; the episode ends when
-  the task is done.
-- Simulated time moves only while the robot runs your commands or you watch it hold still: between your calls the world
+- You get only the cameras and the robot's own sensor readings: no object poses, no scene layout, no success signal.
+- Simulated time moves only while the robot runs your commands or holds still (`hold(s)`): between your calls the world
   is frozen.
 
 ## Robot Interface
 A simulated aerial manipulator: a fully actuated hexarotor (six tilted rotors, so it can hold any attitude while
 hovering) carrying a small arm (four joints: three pitch joints and a roll joint) with a two-finger gripper, in AM-Bench
-(Isaac Lab). The robot runs as a service you reach only through its client, as if it were real hardware: one live
-episode.
+(Isaac Lab). The robot runs as a service you reach through its client or its MCP tools, as if it were real hardware: one
+live episode.
 
 ### Client
 `/opt/tools/rcb_client.py` (protocol `eai-standard/2.2`):
@@ -32,7 +34,8 @@ spec = r.spec()                               # the action, cameras, proprio lay
 obs = r.get_obs()                             # current frames: obs.last[cam] -> uint8 (384, 384, 3), cam in ee_camera, base_camera
 obs.meta["proprio"]                           # {"layout": [...45 names], "now": [...]}: joints, gripper, tool and airframe poses, ...
 obs.meta["cameras"]                           # per-camera intrinsic_cv / extrinsic_cv / cam2world_gl at the LAST frame
-obs = r.get_obs(seconds=1.0, video="mp4")     # hold the current target and watch for 1 s (max 30; simulated time advances)
+obs = r.hold(1.0)                             # hold the current target for 1 s of robot time (simulated time advances)
+obs = r.get_obs(last_s=1.0)                   # the frames recorded over the last 1 s (reading moves no time)
 
 res = r.submit("ee_pose", A, dt=1/120, interpolate="hold")   # A: (T, 8) rows dt apart (see Action)
 res.meta["done"], res.meta["reason"], res.meta["clipped"], res.meta["control_steps_chunk"]
@@ -52,8 +55,8 @@ a reset) in the state after the last call it completed, which you may not have r
 answers again (resuming replays the episode so far, which can take minutes; the wall clock keeps running), then check
 `r.status()["control_steps"]` before you continue (`spec["on_service_error"]`).
 
-Simulated time moves only in `submit` and in `get_obs(seconds=s)` (the robot holds its current target while you watch,
-at most 30 s). One call returns at most 3000 images.
+Simulated time moves only in `submit` and in `hold(s)` (the robot holds its current target for s seconds). One call
+returns at most 3000 images.
 
 Optional inputs (ask only for what you need):
 - Depth: `r.get_obs(depth=True)` -> `obs.last_depth[cam]` float32 (H,W) z-depth in metres, 0 = no reading, pixel-aligned
@@ -68,6 +71,17 @@ Optional inputs (ask only for what you need):
   world with it); `r.ik({"tcp": pose7}, seed=q4, base_pose=base7)` -> `{"ok", "q", "error"}`: a stateless model of the
   arm on its airframe (no physics, no simulated time); `q4` = the arm's four joints. AM-Bench's own controller moves the
   airframe too (below): this model is the arm alone, for reasoning about reach and camera poses.
+
+### MCP tools
+- The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
+  `observe`, `submit`, `kinematics`, `finish`. A tool takes its endpoint's request fields (any other field in `fields`)
+  and returns the service's reply `meta` unchanged; images, arrays and video are written as files under `/app/obs/`
+  (`.png`, `.npy`, `.mp4`) and the result lists them. Long action chunks can be passed as a file (`actions_file`).
+- `observe` returns at once with what is already recorded: the current frame, or the last `last_s` seconds. Time passes
+  only through `submit`, which answers when its rows have run; a `submit` with `interpolate` "hold", `seconds` and no
+  rows lets time pass with the robot holding still.
+- A call still running after 45 s returns `pending` with an `operation` id; `observe(operation=id)` collects its reply.
+- The client and the tools drive the same robot in the same episode; use either, or both.
 
 ### Actions
 - World frame: metres, z up, the ground is the plane z = 0; positions relative to the environment's origin (the same
@@ -114,3 +128,7 @@ One episode lasts 20 s of simulated time.
   GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap only
   slows you down); usage: `/run/rcb-limits/usage.json`.
 - Resets: none: one episode.
+- Finish: when you are done, call finish: `POST /finish` with an empty JSON body to the service, at the client's base
+  URL (`http://sim:8000` or `http://localhost:8000`; in Python `requests.post(r.base + "/finish", json={})` with your
+  client `r`). It ends the episode, and every call after it is refused. Reaching the goal changes no reply and does not
+  end the episode; if you never call finish, the end of your session ends it.

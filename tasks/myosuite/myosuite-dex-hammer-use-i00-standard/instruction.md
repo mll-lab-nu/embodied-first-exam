@@ -5,23 +5,22 @@ Pick up the hammer and swing it, following the recorded reference motion.
 
 ## Goal
 Success: the hammer follows the recorded reference motion closely, in where it goes and how it turns, nearly all the way
-and at the end, and never strays far from it. The episode lasts as long as the reference motion. It ends early, as a
-failure, if the hammer gets far from the reference motion or from your wrist.
+and at the end, and never strays far from it. Success is judged on the whole episode, which lasts at most as long as the
+reference motion. It ends when you call finish (Limits) or when your session ends. The robot never tells you whether you
+have succeeded. It ends early, as a failure, if the hammer gets far from the reference motion or from your wrist.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
   benchmark's demonstrations, trained policies); trials are reviewed.
 - Episodes: 10 resets, each a new episode from the same starting state (Robot Interface). Only the last episode is
-  graded: a success ends the run at once (no reset after it), and when your time is up the episode then running is
-  graded.
+  graded: the one running when you call finish or when your session ends.
 - You get only the cameras and the body's own proprioception (joint positions, velocities and actuator torques, muscle
-  activations and lengths): no object, ball, opponent or goal poses; the episode ends when the task is done, and the
-  service tells you that it ended and why.
+  activations and lengths): no object, ball, opponent or goal poses, no success signal.
 
 ## Robot Interface
 The MyoHand, a musculoskeletal model of a human forearm and hand (MyoSuite, MuJoCo), driven only through its actuators
-(39 muscles and 6 other actuators): there is no joint-level controller. The robot runs as a service you reach only
-through its client, as if it were real hardware.
+(39 muscles and 6 other actuators): there is no joint-level controller. The robot runs as a service you reach through
+its client or its MCP tools, as if it were real hardware.
 
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
@@ -35,21 +34,34 @@ obs.meta["proprio"]                            # {"layout": [...], "now": [...]}
 obs.meta["cameras"]                            # per camera intrinsic_cv / extrinsic_cv / cam2world_gl at the last frame
 res = r.submit("actuators", rows, dt=0.02)          # rows: (T, 45) commands, one row per control step
 res.meta["done"], res.meta["reason"], res.meta["control_steps_chunk"]; res.video[cam]; res.last[cam]; res.proprio
-obs = r.get_obs(seconds=1.0, video="mp4")      # hold the last command and watch for 1 s (max 30)
+obs = r.hold(1.0)                              # hold the last command for 1 s of robot time
+obs = r.get_obs(last_s=1.0)                    # the frames recorded over the last 1 s (reading moves no time)
 r.fk(q)                                        # forward kinematics of the listed links (no physics)
 r.status()                                     # calls, control steps, done, reason, elapsed time, episode, resets_left
 obs = r._post("/reset", {"cameras": ["left_cam"]}, [], 900)   # POST /reset: a new episode (the 2.2 client has no reset())
 ```
 
-Simulated time only advances with your commands (and `get_obs(seconds=...)`, which holds the last command). A reset
-(`POST /reset`, the `_post` line above) puts the body and the scene back on the same frozen starting state and starts a
-new episode, either abandoning the running one or after one has ended; it takes no simulated time and returns the
-start's images and proprioception. Once an episode has ended, `submit` raises `EpisodeOver` until you reset. The wall
-clock is the run's and never restarts; `meta["episode"]` and `meta["resets_left"]` count the episodes
-(`meta["control_steps"]` is the current episode's). If the service crashes, a call fails with a connection error: it
-restarts and resumes the same episode (never a reset) in the state after the last call it completed. `r.wait_ready()`
-waits for it; then check `r.status()`. One call returns at most 1000 images. `r.fk(q)` (`/kinematics`) gives the
-fingertip sites and the camera mounts for any joint positions.
+Simulated time only advances with your commands (and `hold(s)`, which holds the last command). A reset (`POST /reset`,
+the `_post` line above) puts the body and the scene back on the same frozen starting state and starts a new episode,
+either abandoning the running one or after one has ended; it takes no simulated time and returns the start's images and
+proprioception. Once an episode has ended, `submit` raises `EpisodeOver` until you reset. The wall clock is the run's
+and never restarts; `meta["episode"]` and `meta["resets_left"]` count the episodes (`meta["control_steps"]` is the
+current episode's). If the service crashes, a call fails with a connection error: it restarts and resumes the same
+episode (never a reset) in the state after the last call it completed. `r.wait_ready()` waits for it; then check
+`r.status()`. One call returns at most 1000 images. `r.fk(q)` (`/kinematics`) gives the fingertip sites and the camera
+mounts for any joint positions.
+
+### MCP tools
+- The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
+  `observe`, `submit`, `reset`, `kinematics`, `finish`. A tool takes its endpoint's request fields (any other field in
+  `fields`) and returns the service's reply `meta` unchanged; images, arrays and video are written as files under
+  `/app/obs/` (`.png`, `.npy`, `.mp4`) and the result lists them. Long action chunks can be passed as a file
+  (`actions_file`).
+- `observe` returns at once with what is already recorded: the current frame, or the last `last_s` seconds. Time passes
+  only through `submit`, which answers when its rows have run; a `submit` with `interpolate` "hold", `seconds` and no
+  rows lets time pass with the robot holding still.
+- A call still running after 45 s returns `pending` with an `operation` id; `observe(operation=id)` collects its reply.
+- The client and the tools drive the same robot in the same episode; use either, or both.
 
 ### Actions
 Action type `actuators` (45): 45 real numbers per control step, one per actuator in order: 39 muscles and 6 non-muscle
@@ -88,3 +100,7 @@ orientation.
   GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap only
   slows you down); usage: `/run/rcb-limits/usage.json`.
 - Resets: at most 10 (`spec()["budget"]["reset"]`), each a new episode from the same starting state.
+- Finish: when you are done, call finish: `POST /finish` with an empty JSON body to the service, at the client's base
+  URL (`http://sim:8000` or `http://localhost:8000`; in Python `requests.post(r.base + "/finish", json={})` with your
+  client `r`). It ends the episode, and every call after it is refused. Reaching the goal changes no reply and does not
+  end the episode; if you never call finish, the end of your session ends it.

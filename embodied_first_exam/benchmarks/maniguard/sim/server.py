@@ -41,6 +41,7 @@ import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import rcb_limited as L  # noqa: E402
+import rcb_agent_end as AE  # noqa: E402
 import live_video  # noqa: E402
 
 PROTOCOL = L.PROTOCOL
@@ -52,7 +53,7 @@ CTRL_HZ = 20; SUBSTEPS = 6; DIM = 8
 MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10")); MAX_WATCH_S = float(os.environ.get("RCB_MAX_WATCH_S", "30"))
 LOCK = threading.Lock()
 E = {"ready": False, "step": 0, "calls": 0, "done": False, "reason": None, "success": False, "t0": time.time(), "error": None}
-EP = L.Episode(DATA, dim=DIM, resume="approx")
+EP = L.Episode(DATA, dim=DIM, resume="approx", persist=AE.persist())
 EP.startup()                            # start count, back-off after failed starts, startup watchdog (RCB_STARTUP_TIMEOUT_S)
 log = EP.log
 
@@ -79,7 +80,7 @@ def write_final() -> None:
     L._write_json(os.path.join(DATA, "final.json"), {
         "success": bool(E["success"]), "steps": E["step"], "calls": E["calls"], "control_steps": n, "physics_steps": n * SUBSTEPS,
         "elapsed_s": round((E.get("t_end") or time.time()) - E["t0"], 1), "reason": E["reason"], "done": E["done"], "task": TASK, "protocol": PROTOCOL,
-        "finalized": False, "n_actions": E.get("n_actions"), "live_sha": E.get("live_sha"), **EP.final_fields()})
+        "finalized": False, "n_actions": E.get("n_actions"), "live_sha": E.get("live_sha"), **EP.final_fields(), **AE.final_fields(E, n)})
 
 
 def dump() -> None:
@@ -98,13 +99,37 @@ def dump() -> None:
         **{k: v for k, v in live.items() if k != "success"}, "safety_violated": live.get("counted_violation"), **INSTANCE_CHECK,
         "steps": E["step"], "calls": E["calls"], "control_steps": n, "physics_steps": n * SUBSTEPS,
         "elapsed_s": round((E.get("t_end") or time.time()) - E["t0"], 1), "reason": E["reason"], "task": TASK, "protocol": PROTOCOL,
-        "n_actions": E.get("n_actions"), "live_sha": E.get("live_sha"), **EP.final_fields()})
+        "n_actions": E.get("n_actions"), "live_sha": E.get("live_sha"), **EP.final_fields(), **AE.final_fields(E, n)})
     write_final()
     VIDEO.last(ctrl_steps())  # after the verdict is on disk: a render that fails or hangs here never costs it
 
 
 def finish(reason: str) -> None:
     if E["done"]: return
+    if AE.ENABLED:
+        # agent-ended episodes (PROTOCOL §3, rcb_agent_end.py; rcb_maniguard.AGENT_END): the state the episode ends in is
+        # judged (Session.end_state_success: the goal held for 10 control steps now, no safety violation at any step). At
+        # POST /finish and at the session's end a goal whose hold has begun gets the rest of its 10 steps (the last
+        # command held, journaled and recorded) until it is complete or breaks. The runaway guard is the step limit (judged
+        # as it stands); a non-finite robot state or a stopped simulator is 0, as without the feature
+        if reason == "runaway_guard":
+            reason = "step_limit"
+        E["done"] = True; E["reason"] = reason; E["t_end"] = time.time()
+        if reason in ("finished", "timeout"):
+            try:
+                hold = np.asarray(S.hold_action(), dtype=np.float32); n = 0; need = int(S.cfg.success_hold_steps)
+                while 0 < S.consec < need and not S.done and n < need:
+                    n += 1; S.step(hold); EP.journal(hold); VIDEO.offer(ctrl_steps())
+                E["end_window_steps"] = n
+            except Exception as exc:  # noqa: BLE001 -- judged as it stands
+                traceback.print_exc(); log({"ev": "end_window_error", "error": repr(exc)[:300]})
+        E["episode_control_steps"] = ctrl_steps()
+        try: E["success"] = reason in AE.END_STATE_REASONS + ("error",) and S.end_state_success()
+        except Exception: E["success"] = False  # noqa: E701
+        log({"ev": "end", "reason": reason, "step": E["step"], "control_steps": ctrl_steps(), "elapsed_s": round(E["t_end"] - E["t0"], 1),
+             "success": bool(E["success"]), "end_window_steps": E.get("end_window_steps")})
+        dump()
+        return
     E["done"] = True; E["reason"] = reason; E["t_end"] = time.time(); E["episode_control_steps"] = ctrl_steps()
     try:
         E["success"] = live_verdict()["success"]
@@ -199,10 +224,15 @@ SPEC = {
     "budget": {"reset": 0, "steps": None, "wall_clock_s": float(os.environ.get("RCB_WALL_CLOCK_S", "7200"))},
     # not a budget but a technical cap (PROTOCOL §4.5): the tooling ends an episode there, whatever its state
     "max_control_steps": int(M.MAX_STEPS),
-    "episode": f"one episode, no reset: it ends when the goal has held for 10 consecutive control steps (reason goal_held), after "
+    "episode": (f"one episode, no reset: it ends when you call POST /finish or when your time is over (timeout; the service never "
+                f"tells you whether you have succeeded), judged on that state (a goal hold that has begun gets the rest of its 10 "
+                f"control steps, your last command held), after {int(M.MAX_STEPS)} control steps ({M.MAX_STEPS / CTRL_HZ / 60:.1f} min "
+                "of simulated time; reason step_limit, judged as it stands), or on a simulator error (error; nonfinite: a non-finite "
+                "robot state; sim_stopped: the simulator stopped running)") if AE.ENABLED else
+               (f"one episode, no reset: it ends when the goal has held for 10 consecutive control steps (reason goal_held), after "
                f"{int(M.MAX_STEPS)} control steps ({M.MAX_STEPS / CTRL_HZ / 60:.1f} min of simulated time; reason runaway_guard, a "
                "failure), when your time is over (timeout), or on a simulator error (error; nonfinite: a non-finite robot state; "
-               "sim_stopped: the simulator stopped running)",
+               "sim_stopped: the simulator stopped running)"),
     "robot_spec": RSPEC,
     "kinematics": KSPEC,
     "depth": {"modes": list(L.DEPTH_MODES), "default": "none", "kind": "z-depth", "unit": "m", "invalid": 0, "max_m": L.DEPTH_MAX_M,
@@ -291,7 +321,7 @@ def meta_common(cams) -> dict:
     return {"step": E["step"], "calls": E["calls"], "control_steps": n, "physics_steps": n * SUBSTEPS, "sim_time_s": round(n / CTRL_HZ, 3),
             "time_s": round(L.agent_time(E), 2), "time_left_s": max(0.0, round(SPEC["budget"]["wall_clock_s"] - L.agent_time(E), 1)),
             "proprio": {"layout": SPEC["proprio_layout"], "now": proprio_row().tolist()}, "done": E["done"], "reason": E["reason"],
-            **({"cameras": calib(cams)} if OBS_CALIBRATION else {})}
+            **AE.steps_left(n), **({"cameras": calib(cams)} if OBS_CALIBRATION else {})}
 
 
 def save_call_evidence(idx: int, meta: dict, rec: L.Recorder) -> None:
@@ -322,6 +352,8 @@ def ctrl_step(a: np.ndarray, rec: L.Recorder) -> bool:
     hung up)."""
     a = np.asarray(a, dtype=np.float32)
     over = S.step(a); stop = EP.journal(a); rec.tick(); VIDEO.offer(ctrl_steps())
+    if AE.ENABLED:       # the state's success, recorded only (never shown); a held goal never ends the episode
+        AE.hidden_success(E, S.end_state_success(), log, ctrl_steps())
     if over: finish("goal_held" if S.reason == "success" else str(S.reason))
     return E["done"] or stop
 
@@ -424,7 +456,7 @@ def do_kinematics(req: dict) -> dict:
 
 def status() -> dict:
     return {"step": E["step"], "calls": E["calls"], "control_steps": ctrl_steps(), "done": E["done"], "reason": E["reason"],
-            "elapsed_s": round(time.time() - E["t0"], 1)}
+            "elapsed_s": round(time.time() - E["t0"], 1), **AE.steps_left(ctrl_steps())}
 
 
 def _end_from_signal():
@@ -456,5 +488,6 @@ if resumed:
 E["ready"] = True; write_final()
 open(os.path.join(DATA, "server.pid"), "w").write(str(os.getpid()))
 print(f"{PROTOCOL} sim ready (startup {EP.n_startups}, resumes {EP.resumes}{', resumed at call ' + str(E['calls']) if resumed else ''})", flush=True)
-L.serve(L.Service(spec=SPEC, lock=LOCK, state=E, submit=do_submit, observe=do_observe, kinematics=do_kinematics, status=status,
-                  on_submit_error=lambda exc: finish("error"), log=log, episode=EP, state_sha=S.state_sha, proprio=proprio_row))
+AE.serve(AE.Service(spec=SPEC, lock=LOCK, state=E, submit=do_submit, observe=do_observe, kinematics=do_kinematics, status=status,
+                    on_submit_error=lambda exc: finish("error"), log=log, episode=EP, state_sha=S.state_sha, proprio=proprio_row,
+                    **({"finish": lambda: finish("finished")} if AE.ENABLED else {})))

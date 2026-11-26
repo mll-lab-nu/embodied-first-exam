@@ -7,18 +7,20 @@ does not have to match it.
 ## Goal
 Success: the objects that matter stand as the picture shows them (what is on, in, under, next to or touching what, what
 is open, what the robot holds and what it has let go of), and two of them each stand roughly where the picture shows
-them, turned roughly as there; then the robot and those objects stay still for at least a second and a half.
+them, turned roughly as there; then the robot and those objects stay still for at least a second and a half. Success is
+judged on how things stand when the episode ends. It ends when you call finish (Limits) or when your session ends. The
+robot never tells you whether you have succeeded.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
   benchmark's demonstrations, trained policies); trials are reviewed.
 - One episode, no reset: what you knock over stays knocked over.
-- You get only the cameras and the robot's own sensor readings: no object poses, no map, no world frame; the episode
-  ends when the task is done.
+- You get only the cameras and the robot's own sensor readings: no object poses, no map, no world frame, no success
+  signal.
 
 ## Robot Interface
 An R1Pro mobile robot with two arms, in a simulated house (iSpatialGym on BEHAVIOR-1K's OmniGibson). The robot runs as a
-service you reach only through its client, as if it were real hardware: one live episode.
+service you reach through its client or its MCP tools, as if it were real hardware: one live episode.
 
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
@@ -32,7 +34,8 @@ obs = r.get_obs()                             # the current head-camera frame: o
 obs = r.get_obs(cameras=[...])                # any of the three cameras (spec["cameras"])
 obs.meta["proprio"]                           # {"layout": [...], "now": [...]}: named columns (spec["proprio_groups"])
 obs.meta["cameras"]                           # per camera: intrinsic_cv / extrinsic_cv (odometry -> camera) of the LAST frame
-obs = r.get_obs(seconds=2.0, video="mp4")     # hold the last command and watch for 2 s (max 30): obs.video[cam] = mp4 bytes
+obs = r.hold(2.0)                             # hold the last command for 2 s of robot time: obs.video[cam] = mp4 bytes
+obs = r.get_obs(last_s=1.0)                   # the frames recorded over the last 1 s (reading moves no time)
 
 res = r.submit("joint_position", A, dt=0.1)   # A: (T, 23) rows dt seconds apart; streamed at 30 Hz
 res.meta["done"], res.meta["reason"], res.meta["clipped"], res.meta["control_steps_left"]
@@ -56,6 +59,17 @@ about 7 control steps per second of wall time.
 - Kinematics (stateless: no physics, no time): `r.fk(q)`, `r.ik({"left_tcp": pose}, seed=q)`; q =
   `spec["kinematics"]["joint_names"]` (trunk + both arms); poses in the robot's base frame, or in the odometry frame
   with `base_pose=` the 7 base_pose proprio columns.
+
+### MCP tools
+- The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
+  `observe`, `submit`, `kinematics`, `finish`. A tool takes its endpoint's request fields (any other field in `fields`)
+  and returns the service's reply `meta` unchanged; images, arrays and video are written as files under `/app/obs/`
+  (`.png`, `.npy`, `.mp4`) and the result lists them. Long action chunks can be passed as a file (`actions_file`).
+- `observe` returns at once with what is already recorded: the current frame, or the last `last_s` seconds. Time passes
+  only through `submit`, which answers when its rows have run; a `submit` with `interpolate` "hold", `seconds` and no
+  rows lets time pass with the robot holding still.
+- A call still running after 45 s returns `pending` with an `operation` id; `observe(operation=id)` collects its reply.
+- The client and the tools drive the same robot in the same episode; use either, or both.
 
 ### Actions
 Blocks (`spec["action_types"]["joint_position"]["blocks"]`): base (3), trunk (4), left arm (7), left gripper (1), right
@@ -81,9 +95,9 @@ any other `dt` is a 400); a chunk covers at most 10 s; out-of-limit values are c
   (left arm joints 1-7, then right arm joints 1-7); map by name.
 
 ### Holding still
-Simulated time passes only while you submit rows or watch. To hold still, first send a row with the base command at 0
-(the base keeps its last command until the next row), then submit rows that hold still, or watch with
-`r.get_obs(seconds=...)`, which holds the last command.
+Simulated time passes only while you submit rows or hold (`r.hold(s)`). To hold still, first send a row with the base
+command at 0 (the base keeps its last command until the next row), then submit rows that hold still, or call
+`r.hold(s)`, which holds the last command.
 
 ### Goal image
 `/app/goal.png` is what the robot's head camera (`robot_r1:zed_link:Camera:0`) sees once the task is done. It is the
@@ -102,5 +116,9 @@ same camera, resolution and intrinsics as the robot's own head camera.
   GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap only
   slows you down); usage: `/run/rcb-limits/usage.json`.
 - Resets: none: one episode.
-- Steps: at most 2076 control steps (69.2 s of simulated time): they are the whole episode, which ends when they run out
-  ("failed: the episode's control steps ran out") or on a simulator error; look and plan before you spend them.
+- Steps: at most 2076 control steps (69.2 s of simulated time): they are the whole episode, and at the 2,076th it ends
+  by itself and is graded as it stands; look and plan before you spend them.
+- Finish: when you are done, call finish: `POST /finish` with an empty JSON body to the service, at the client's base
+  URL (`http://sim:8000` or `http://localhost:8000`; in Python `requests.post(r.base + "/finish", json={})` with your
+  client `r`). It ends the episode, and every call after it is refused. Reaching the goal changes no reply and does not
+  end the episode; if you never call finish, the end of your session ends it.

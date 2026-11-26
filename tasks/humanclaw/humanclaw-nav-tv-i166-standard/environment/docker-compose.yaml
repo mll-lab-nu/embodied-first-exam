@@ -20,6 +20,7 @@ services:
     restart: on-failure:6                               # a crash resumes the same episode, never a reset
     shm_size: "4gb"
     environment:
+      RCB_AGENT_END: "1"                               # agent-ended episodes (PROTOCOL §3)
       RCB_INSTANCE: /srv/instance.json
       RCB_TASK_TEXT: "Walk up to any TV in the house and stop right next to it, about a hand's length away or closer."
       RCB_EPISODE: "Ends at your stop action (the only way to succeed), at the 100th action whatever it is, when your time is up (timeout), or on a simulator error."

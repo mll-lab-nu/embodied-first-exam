@@ -4,21 +4,22 @@
 Pick the three objects off the moving conveyor belt and put them in the bin.
 
 ## Goal
-Success: all three objects are in the bin at the same time. The episode ends as soon as that has held for about a
-second.
+Success: all three objects are in the bin at the same time. It must hold for about a second after the episode ends,
+while the robot keeps your last command. Success is judged on how things stand when the episode ends. It ends when you
+call finish (Limits) or when your session ends. The robot never tells you whether you have succeeded.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
   benchmark's demonstrations, trained policies); trials are reviewed.
 - One episode, no reset: what you knock over stays knocked over.
 - You get only the cameras and the robot's own proprioception (joint positions, velocities and efforts, gripper
-  openings, tool-frame poses): no object poses, no scene layout; the episode ends when the task is done, and the service
-  tells you that it ended and why.
+  openings, tool-frame poses): no object poses, no scene layout; no success signal.
 
 ## Robot Interface
 A bimanual robot in ABC Sim (MuJoCo): two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each) side
 by side at the near edge of a table, facing +x (the left arm is the one at +y). The robot runs as a service you reach
-only through its client, as if it were real hardware, on a clock that does not stop while you think: one live episode.
+through its client or its MCP tools, as if it were real hardware, on a clock that does not stop while you think: one
+live episode.
 
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.3`, realtime mode, its docstring the full reference
@@ -30,15 +31,24 @@ only through its client, as if it were real hardware, on a clock that does not s
 | `r.spec()` | `GET /spec` | the robot's facts: the action layout (`action_types["joint_position"]["layout"]`), `control_dt` (0.034 s), `timing`, the cameras, `proprio_layout`, `budget` |
 | `r.status()` | `GET /status` | `calls`, `rows`, `control_steps`, `done`, `reason`, `elapsed_s`, `running`, `planned_steps`, `lag_s`, and `episode`, `resets_left`, `control_steps_total` |
 | `r.submit("joint_position", A, dt=0.034, interpolate="linear", at=None, cameras=None)` | `POST /submit` | plans `A`, rows of 14 targets `dt` seconds apart (a chunk covers at most 10 s), from step `at`; answers at once; the first one starts the episode's clock |
-| `r.get_obs(cameras=None, seconds=0, include_depth=False, video="frames")` | `POST /observe` | the robot now, or what the cameras saw over the next `seconds` |
+| `r.get_obs(cameras=None, last_s=0, include_depth=False, video="frames")` | `POST /observe` | the robot now, or with `last_s=n` what the cameras recorded over the last n seconds; it never waits |
 
-Once the episode has ended, `submit` raises `EpisodeOver`. One call returns at most 3000 images. A watch is refused with
-a 429 while the images in flight (pending watches and answers not read yet) would exceed it or 8 of them are
-outstanding; a `submit` or a `get_obs()` without seconds is never refused for its images: its answer then comes without
-its frames and `meta["frames_skipped"]` is set. The answers are binary (RCB1) and come back decoded: `res.meta` (the
+Once the episode has ended, `submit` raises `EpisodeOver`. One call returns at most 3000 images. No call is refused for
+its images: while 8 answers with images are outstanding, the answer of a `submit` or a `get_obs()` comes without its
+frames and `meta["frames_skipped"]` is set. The answers are binary (RCB1) and come back decoded: `res.meta` (the
 counters, `done`, `reason`, `proprio["now"]`), `res.last[camera]` (the last frame), `res.frames` or `res.video` (what
-the cameras saw during a watch), `res.proprio` (proprioception rows). A malformed request raises `ValueError` and
-changes nothing.
+the cameras recorded), `res.proprio` (proprioception rows). A malformed request raises `ValueError` and changes nothing.
+
+### MCP tools
+- The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
+  `observe`, `submit`, `finish`. A tool takes its endpoint's request fields (any other field in `fields`) and returns
+  the service's reply `meta` unchanged; images, arrays and video are written as files under `/app/obs/` (`.png`, `.npy`,
+  `.mp4`) and the result lists them. Long action chunks can be passed as a file (`actions_file`).
+- `observe` returns at once with what is already recorded: the current frame, or the last `last_s` seconds. `submit`
+  answers at once, as the endpoint does. The clock does not wait for a tool call, and a call also takes your harness's
+  own time; each result's `tool_s` is the tool's part.
+- A call still running after 45 s returns `pending` with an `operation` id; `observe(operation=id)` collects its reply.
+- The client and the tools drive the same robot in the same episode; use either, or both.
 
 ### Actions
 Action type `joint_position` (14): 14 numbers per control step:
@@ -66,10 +76,10 @@ the arms), in front = -x (nearer to them). No positions of the scene are given.
 - Slowdown: S = 1. The world runs at 1/S of real speed: one control step (0.034 s of robot time) every S x 0.034 s of
   wall-clock time (real time). `spec()["timing"]["slowdown"]` states it.
 - Time does not stop. The episode starts paused, on the frozen starting state, with the robot holding its starting pose.
-  Its clock starts at your first `submit` (or `get_obs(seconds=s)`) and from then on the simulator runs at 29.4 Hz of
-  robot time (S = 1), one control step every 0.034 s of wall-clock time, whether or not you send anything, until the
-  episode ends. Between your commands it executes what you planned, then holds the last targets you sent; nothing pauses
-  for you, not your thinking, not your tool calls.
+  Its clock starts at your first `submit` and from then on the simulator runs at 29.4 Hz of robot time (S = 1), one
+  control step every 0.034 s of wall-clock time, whether or not you send anything, until the episode ends. Between your
+  commands it executes what you planned, then holds the last targets you sent; nothing pauses for you, not your
+  thinking, not your tool calls.
 - You are far too slow to steer it turn by turn. One turn of yours (a model response, a tool call) takes seconds. Drive
   the robot with a program: a controller of your own (Python in your container, with numpy and the client) that plans or
   streams the targets, started in the background (`nohup python /app/ctrl.py > /app/ctrl.log 2>&1 &`) or in the
@@ -89,9 +99,9 @@ the arms), in front = -x (nearer to them). No positions of the scene are given.
 - Latency: a reading is a few milliseconds old when it reaches you, and a row takes effect at the next control step at
   the earliest. A row whose step has already run when the request arrives is dropped (`res.meta["late_steps"]` counts
   them); the rest of its chunk applies from the next step.
-- `get_obs()` reads the robot now; `get_obs(seconds=s)` (at most 30) waits while s seconds of robot time run and returns
-  what the cameras saw meanwhile (the robot keeps executing its plan). `spec()["timing"]` states all this; `r.status()`
-  shows `running` and `lag_s`.
+- `get_obs()` reads the robot now; `get_obs(last_s=n)` returns, without waiting, what the cameras recorded over the last
+  n seconds (the robot keeps executing its plan). `spec()["timing"]` states all this; `r.status()` shows `running` and
+  `lag_s`.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
@@ -106,3 +116,7 @@ the arms), in front = -x (nearer to them). No positions of the scene are given.
   no GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap
   only slows you down); usage: `/run/rcb-limits/usage.json`.
 - Resets: none: one episode.
+- Finish: when you are done, call finish: `POST /finish` with an empty JSON body to the service, at the client's base
+  URL (`http://sim:8000` or `http://localhost:8000`; in Python `requests.post(r.base + "/finish", json={})` with your
+  client `r`). It ends the episode, and every call after it is refused. Reaching the goal changes no reply and does not
+  end the episode; if you never call finish, the end of your session ends it.

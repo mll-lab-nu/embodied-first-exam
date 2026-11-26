@@ -516,6 +516,12 @@ at `/tests/`; no task dir carries them. The sidecars are built from `environment
 
 More in docs/protocol/standard_mode.md §16.
 
+**Agent-ended episodes** (standard mode; PROTOCOL §3 "Agent-ended episodes", `RCB_AGENT_END` in each sim service,
+`rcb_agent_end.py`). The task's success is never shown and never ends the episode: the agent ends it with `POST /finish`
+(reason `finished`), or the end of its session does (`timeout`). Painting has no early end to remove: the sheet is
+scored as the episode leaves it, at `/finish`, at the session's end, or at the runaway guard (now reason `step_limit`,
+judged as it stands). There is no `RCB_STEP_LIMIT` (no step budget).
+
 ## Licences
 - ManiSkill and SAPIEN: Apache-2.0.
 - Spline-FRIDA (code and weights): GPL-3.0. Only the line family used it; it stays in the image with its source.

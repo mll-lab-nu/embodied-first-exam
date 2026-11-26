@@ -53,7 +53,7 @@ request #4 (PR #4: closed without merging; commit ad3c510, fetchable as `refs/pu
   `robot0_eye_in_right_hand`, `robot0_eye_in_left_hand`; RGB, depth, intrinsics and current poses), its joints
   (positions, velocities), both grip sites' positions, the last command and the instruction. No object poses, reward or
   success signal. Camera images (RGB and depth, in both modes and in replay videos) draw the visual meshes only, as
-  robosuite's own cameras do; the collision geoms (geom group 0) are hidden. Watching (`/observe` with `seconds > 0`)
+  robosuite's own cameras do; the collision geoms (geom group 0) are hidden. A hold chunk (`hold(s)`)
   holds the last command (before the first, the grip sites' current poses): the grip sites stay within a millimetre,
   while the IK's posture term may still move the waist and elbows by a few hundredths of a radian.
 
@@ -65,6 +65,18 @@ graded by the live episode, nothing replayed, the start checked against the froz
 `RCB_START_SHA` in each task's `environment/docker-compose.yaml`, a mismatch is infrastructure), the video one
 render pass after the verdict; the hook's budget; request validation; the camera calibration is the rendered
 viewpoint).
+
+### Agent-ended episodes
+
+Every standard task sets `RCB_AGENT_END "1"` in its sim service (PROTOCOL §3). `server_casa.py` (RoboCasa's, from
+`robocasa-files`) never shows the task's success and a success never ends the episode: the environment's own check is
+still run after every call (as before, twice per control step) and only recorded (`hidden_success_first_step`). The
+agent ends the episode with `POST /finish` (reason `finished`); the end of its session (`timeout`) ends it too, and each
+is judged on the state it ends in (end judgement `state`: the environment's `_check_success`, whose timers and event
+memory are the environment's own; no settle window), with the rule that a scene solved at the start is no success.
+`final.json` adds the shared fields (`success_signal`, `ended_by`, `end_judgement`, `hidden_success_seen`,
+`hidden_success_first_step`, `trial_hidden_success_seen`, `finish_time_s`). Without `RCB_AGENT_END` the service behaves
+as described above.
 
 ## Egress
 The demonstrations (the references) are public, so `task.toml` closes agent egress to the model APIs and the package registries. The image

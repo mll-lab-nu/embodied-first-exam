@@ -46,7 +46,7 @@ while i < len(Q) and not done:
     i = steps // K
 if not done:
     try:
-        obs = r.get_obs(seconds=1.0, cameras=cam, video="none"); print("settle:", obs.meta["done"], obs.meta["reason"])
+        obs = r.hold(1.0, cameras=cam, video="none"); print("settle:", obs.meta["done"], obs.meta["reason"])
     except (EpisodeOver, ValueError, requests.exceptions.RequestException) as e:
         print("settle failed:", repr(e)[:200])
 print("status:", r.status(), "service crashes seen:", crashes, "wall %.0fs" % (time.time() - t0))

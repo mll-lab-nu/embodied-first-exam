@@ -5,22 +5,24 @@ Take the spoon out of the mug, put it back in the other way round, and let go of
 
 ## Goal
 Success: the spoon is back in the mug the other way round (the end that pointed up now points down), and neither gripper
-touches the spoon or the mug, for a second. The episode ends as soon as it succeeds. A fall (the pelvis tipping far
-over, or dropping low) makes the episode a failure without ending it.
+touches the spoon or the mug, for a second. A fall (the pelvis tipping far over, or dropping low) makes the episode a
+failure without ending it. Success is judged on how things stand when the episode ends. When you finish, the robot
+stands still for one more second, and the check runs at its end. It ends when you call finish (Limits) or when your
+session ends. The robot never tells you whether you have succeeded.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
   benchmark's demonstrations, trained policies); trials are reviewed.
 - One episode, no reset: what you knock over stays knocked over.
 - You get only what the robot's three cameras see (RGB, 84x84: `head`, `left_wrist`, `right_wrist`) and its own
-  proprioception; not where any object is now, not the success check: when the episode ends, the service tells you that
-  it ended and why.
+  proprioception; not where any object is now, no success signal.
 
 ## Robot Interface
 A simulated Unitree G1 humanoid robot with two-finger grippers (BiGym 2.0, MuJoCo). NVIDIA's GR00T whole-body
 controller, a learned policy that runs inside every control step, drives the legs and waist and keeps the robot
 balanced: you command where it walks, how high its pelvis is, how far its torso leans forward, its arm joints and its
-grippers. The robot runs as a service you reach only through its client, as if it were real hardware: one live episode.
+grippers. The robot runs as a service you reach through its client or its MCP tools, as if it were real hardware: one
+live episode.
 
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`, its docstring the full reference
@@ -31,7 +33,8 @@ grippers. The robot runs as a service you reach only through its client, as if i
 | `r = Robot()` | | connects (`http://sim:8000`, then `http://localhost:8000`) and waits until the scene is ready |
 | `r.spec()` | `GET /spec` | the robot's facts: `action_types["whole_body"]` (layout, lower, upper, units), `control_dt` (0.02 s), `max_control_steps` (1950), the cameras, `proprio_layout`, `budget` |
 | `r.status()` | `GET /status` | `calls`, `rows`, `control_steps`, `done`, `reason`, `elapsed_s` |
-| `r.get_obs(cameras=None, seconds=0, video="frames")` | `POST /observe` | the current frames (free), or stand still and watch for `seconds` (at most 30) |
+| `r.get_obs(cameras=None, last_s=0, video="frames")` | `POST /observe` | the current frames (free), or with `last_s=n` the frames recorded over the last n seconds; no time passes |
+| `r.hold(seconds, cameras=None, video="mp4")` | `POST /submit` | stand still for `seconds` of robot time and return the video, like a submit |
 | `r.submit("whole_body", A, dt=0.02, interpolate="linear", cameras=None, video="mp4")` | `POST /submit` | runs `A`, rows of 21 commands `dt` seconds apart (a multiple of 0.02; a chunk covers at most 10 s); stops early when the episode ends |
 ```python
 from rcb_client import Robot
@@ -40,18 +43,29 @@ res = r.submit("whole_body", A, dt=0.02)   # A: (T, 21) commands, one row per co
 ```
 
 The episode starts when the service comes up, from a fixed starting state. Once it has ended, `submit` raises
-`EpisodeOver`. Time moves only inside calls. `submit` runs your commands and `get_obs(seconds=s)` stands still for s
-seconds; both use up the episode's control steps. Between calls the robot waits, frozen, while you think; `get_obs()`
-with no seconds is free. One call returns at most 3000 images. The answers are binary (RCB1) and come back decoded:
-`res.meta` (the counters, `done`, `reason`, `proprio["now"]`, `clipped`), `res.last[camera]` (the last frame),
-`res.frames` or `res.video` (what the cameras saw during the call), `res.proprio` (proprioception rows). Values outside
-the bounds are clipped and reported in `meta["clipped"]`, never refused; a malformed request raises `ValueError` and
-runs nothing. The response of the call that ends the episode also carries `meta["outcome"]`, BiGym's own label of how it
-ended (`success`, `fell`, `timeout`, `terminated`, `physics_error`). Standing still is the row with the current height,
-lean, arm and gripper targets and zero `vx`, `vy`, `wz`; `get_obs(seconds=s)` does that from your last row. Measured
-here: a control step costs about 14 ms of service time inside a `submit` (a 1 s chunk returns in about 0.7 s);
-`get_obs()` without seconds about 10 ms. The client's docstring explains the protocol with another benchmark's examples
-(`joint_position`, bounds [-1, 1], `imu`, `links`, `depth`): for this task `spec()` is authoritative.
+`EpisodeOver`. Time moves only inside calls. `submit` runs your commands and `hold(s)` stands still for s seconds; both
+use up the episode's control steps. Between calls the robot waits, frozen, while you think; `get_obs()` is free. One
+call returns at most 3000 images. The answers are binary (RCB1) and come back decoded: `res.meta` (the counters, `done`,
+`reason`, `proprio["now"]`, `clipped`), `res.last[camera]` (the last frame), `res.frames` or `res.video` (what the
+cameras saw during the call), `res.proprio` (proprioception rows). Values outside the bounds are clipped and reported in
+`meta["clipped"]`, never refused; a malformed request raises `ValueError` and runs nothing. The response of the call
+that ends the episode also carries `meta["outcome"]`, BiGym's own label of how it ended (`timeout` at the step cap,
+`fell`, `terminated`, `physics_error`). Standing still is the row with the current height, lean, arm and gripper targets
+and zero `vx`, `vy`, `wz`; `hold(s)` does that from your last row. Measured here: a control step costs about 14 ms of
+service time inside a `submit` (a 1 s chunk returns in about 0.7 s); `get_obs()` about 10 ms. The client's docstring
+explains the protocol with another benchmark's examples (`joint_position`, bounds [-1, 1], `imu`, `links`, `depth`): for
+this task `spec()` is authoritative.
+
+### MCP tools
+- The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
+  `observe`, `submit`, `finish`. A tool takes its endpoint's request fields (any other field in `fields`) and returns
+  the service's reply `meta` unchanged; images, arrays and video are written as files under `/app/obs/` (`.png`, `.npy`,
+  `.mp4`) and the result lists them. Long action chunks can be passed as a file (`actions_file`).
+- `observe` returns at once with what is already recorded: the current frame, or the last `last_s` seconds. Time passes
+  only through `submit`, which answers when its rows have run; a `submit` with `interpolate` "hold", `seconds` and no
+  rows lets time pass with the robot holding still.
+- A call still running after 45 s returns `pending` with an `operation` id; `observe(operation=id)` collects its reply.
+- The client and the tools drive the same robot in the same episode; use either, or both.
 
 ### Actions
 Action type `whole_body`: rows of 21 floats in physical units, one per control step (0.02 s), in this order: `vx` (0):
@@ -94,7 +108,7 @@ control steps (39 s of robot time).
   targets the arms were holding (the servos track with a small error), so holding with it lets the arms sag.
 
 ## Others
-- Ending your session early ends the run as the time limit does: do not stop while the episode runs; it can still pass.
+- Ending your session ends the episode as finish does: call finish when you are done.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
@@ -109,3 +123,7 @@ control steps (39 s of robot time).
   GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap only
   slows you down); usage: `/run/rcb-limits/usage.json`.
 - Resets: none: one episode.
+- Finish: when you are done, call finish: `POST /finish` with an empty JSON body to the service, at the client's base
+  URL (`http://sim:8000` or `http://localhost:8000`; in Python `requests.post(r.base + "/finish", json={})` with your
+  client `r`). It ends the episode, and every call after it is refused. Reaching the goal changes no reply and does not
+  end the episode; if you never call finish, the end of your session ends it.

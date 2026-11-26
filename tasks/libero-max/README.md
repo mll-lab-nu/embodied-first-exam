@@ -142,6 +142,15 @@ The hook (`finalize.sh`) signals the service every 30 s until `final.json` is fi
 `video_pending` is true, up to 5,400 s from its start. Only a service that crashed late in the episode needs the wait
 for its verdict: it resumes by replaying its journal (crash recovery, not grading), at most N × s + B.
 
+## Agent-ended episodes
+Every standard task runs with `RCB_AGENT_END=1` (PROTOCOL §3, agent-ended episodes): LIBERO's success check no longer
+ends the episode and no reply shows it (`lmx_tool.Session.run_on` reports it as things stand and keeps stepping). The
+episode ends at the agent's `POST /finish`, after 9,000 control steps (reason `step_limit`), at the end of the session
+or on a simulator error, and is judged on LIBERO's success check as things stand then (`end_judgement = "state"`, no end
+window: LIBERO's check has no hold). The LIBERO-MAX event (the one scene change) is unaffected. Actions after a success
+are allowed live. With the flag off nothing changes; where this README says a success ends the episode, that is the
+flag-off behaviour.
+
 ## Licence
 LIBERO-MAX (Zhang et al., [*LIBERO-MAX: Do Robot Policies Adapt When the World Changes?*](https://arxiv.org/abs/2609.36518),
 2026) has no licence file upstream; its authors have given written permission to redistribute the two parts below in

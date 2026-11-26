@@ -8,8 +8,8 @@ of a turn clockwise as seen from above, leaving it standing straight.
 Success: the key stands straight in the keyhole, ring up and pushed well in, turned about a sixth of a turn clockwise
 (seen from above) from the slit, so that its teeth point toward you and to the right.
 
-Success is judged on how things stand when the episode ends. It ends when you call finish (Robot Interface), at the step
-limit (Limits) or when your session ends. The robot never tells you whether you have succeeded.
+Success is judged on how things stand when the episode ends. It ends when you call finish (Limits), at the step limit
+(Limits) or when your session ends. The robot never tells you whether you have succeeded.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
@@ -19,7 +19,7 @@ Rules:
 
 ## Robot Interface
 Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). The robot
-runs as a service you reach only through its client, as if it were real hardware: one live episode.
+runs as a service you reach through its client or its MCP tools, as if it were real hardware: one live episode.
 
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
@@ -31,7 +31,8 @@ spec = r.spec()                               # action types, dims, joint limits
 obs = r.get_obs()                             # current frames from 3 cameras: obs.last[cam] -> uint8 (480, 640, 3)
 obs.meta["proprio"]                           # {"layout": [...58 names], "now": [...]}: joints, grippers, link6 poses, ...
 obs.meta["cameras"]                           # per-camera intrinsic_cv / extrinsic_cv / cam2world_gl at the LAST frame
-obs = r.get_obs(seconds=2.0, video="mp4")     # hold the last command and watch for 2 s (max 30): obs.video[cam] = mp4 bytes
+obs = r.hold(2.0)                             # hold the last command for 2 s of robot time: obs.video[cam] = mp4 bytes
+obs = r.get_obs(last_s=1.0)                   # the frames recorded over the last 1 s (reading moves no time)
 
 res = r.submit("joint_position", A, dt=0.04)  # A: (T, 14) rows dt seconds apart (multiples of 1/25 s); linear interpolation
 res = r.submit("ee_pose", P)                  # P: (T, 16) link6 targets of both arms + gripper commands; IK per row
@@ -57,13 +58,21 @@ Optional inputs (ask only for what you need):
   right joint1..6.
 - `res.group("joint_vel")`: proprio columns by group name (`spec["proprio_groups"]`).
 
-`POST /finish` with an empty JSON body (`{}`), on the client's base URL (`http://sim:8000` or `http://localhost:8000`;
-in Python, for example `requests.post(base + "/finish", json={})`), ends the episode (Goal); after it every call is
-refused (409). If the service crashes, a call fails with a connection error: the simulator restarts and resumes the SAME
-episode (never a reset) in the state after the last call it completed, which you may not have received. `r.wait_ready()`
-waits until it answers again (resuming replays the episode so far, which can take minutes; the wall clock keeps
-running), then check `r.status()["control_steps"]` before you continue (`spec["on_service_error"]`). One call returns at
-most 3000 images.
+If the service crashes, a call fails with a connection error: the simulator restarts and resumes the SAME episode (never
+a reset) in the state after the last call it completed, which you may not have received. `r.wait_ready()` waits until it
+answers again (resuming replays the episode so far, which can take minutes; the wall clock keeps running), then check
+`r.status()["control_steps"]` before you continue (`spec["on_service_error"]`). One call returns at most 3000 images.
+
+### MCP tools
+- The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
+  `observe`, `submit`, `kinematics`, `finish`. A tool takes its endpoint's request fields (any other field in `fields`)
+  and returns the service's reply `meta` unchanged; images, arrays and video are written as files under `/app/obs/`
+  (`.png`, `.npy`, `.mp4`) and the result lists them. Long action chunks can be passed as a file (`actions_file`).
+- `observe` returns at once with what is already recorded: the current frame, or the last `last_s` seconds. Time passes
+  only through `submit`, which answers when its rows have run; a `submit` with `interpolate` "hold", `seconds` and no
+  rows lets time pass with the robot holding still.
+- A call still running after 45 s returns `pending` with an `operation` id; `observe(operation=id)` collects its reply.
+- The client and the tools drive the same robot in the same episode; use either, or both.
 
 ### Actions
 - `joint_position` (14): `left_joint1..6, left_gripper, right_joint1..6, right_gripper`, RoboDojo's own action. Joints:
@@ -107,6 +116,10 @@ most 3000 images.
 - Resets: none: one episode.
 - Steps: at most 300 steps, RoboDojo's own limit for this task. One step is one 25 Hz action (1/25 s of simulated time),
   and everything that lets simulated time pass uses steps: a `joint_position` row with `dt` = k/25 s uses k, an
-  `ee_pose` row as many as its move takes at 0.25 m/s (at least one), holding still to watch for s seconds s x 25;
-  observing without waiting, the spec, the status and the kinematics use none. Every reply gives `steps_left`; at the
-  300th step the episode ends by itself.
+  `ee_pose` row as many as its move takes at 0.25 m/s (at least one), holding still for s seconds (`hold(s)`) s x 25;
+  observing (`get_obs`), the spec, the status and the kinematics use none. Every reply gives `steps_left`; at the 300th
+  step the episode ends by itself.
+- Finish: when you are done, call finish: `POST /finish` with an empty JSON body to the service, at the client's base
+  URL (`http://sim:8000` or `http://localhost:8000`; in Python `requests.post(r.base + "/finish", json={})` with your
+  client `r`). It ends the episode, and every call after it is refused. Reaching the goal changes no reply and does not
+  end the episode; if you never call finish, the end of your session ends it.

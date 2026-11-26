@@ -79,6 +79,22 @@ last attempt is graded and a success ends the trial. With resets the first attem
   no grading replay); the start is checked against the instance's state hash, and a crash resumes the attempt from the
   sidecar's journal.
 
+### Agent-ended episodes
+
+Every standard and realtime task sets `RCB_AGENT_END "1"` in its sim service (PROTOCOL §3, the shared `rcb_service.py`;
+realtime through `rcb_realtime.py`): the referee's success call is never shown and does not end the attempt. The
+referee's call is an event (`end_judgement` "events"): a success counts the moment the referee makes it, and since the
+referee does nothing more once it has called the attempt, nothing after it undoes it; the physics goes on
+(`rfo.World.run_after_done`) until the agent's `POST /finish` (reason `finished`), the end of its session (`timeout`), a
+reset (the attempt is abandoned, only the last is graded) or the attempt's time limit (the service's step cap,
+`step_limit`). A foul, a fall or a physics blow-up the referee calls before a success ends the attempt at once as a
+failure (`failed`, 0), and only then does a reply carry the call (`meta["outcome"]`, the rule broken); `stages_reached`
+and a success are never shown. The privileged replay (`rcb_rfo.replay`) is unchanged; the standard video replays every
+row with `after_done`. This differs from the generic rule (a failure after a success gives 0): the referee is Embodied
+Olympics' own and is frozen at its call. `final.json` adds the shared fields (`ended_by`, `hidden_success_seen`,
+`hidden_success_first_step`, `end_judgement`, ...). Without `RCB_AGENT_END` the service behaves as before (the referee's
+call ends the attempt and is shown).
+
 ## Reference solutions
 
 19 families have a real controller that succeeds in the task's own setting (`oracle = "full"`, marked below); the

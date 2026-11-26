@@ -26,6 +26,7 @@ CLAMP = [sys.executable, str(ROOT / "scripts/clamp_cpus.py")]
 sys.path.insert(0, str(ROOT / "scripts"))
 import task_conventions as tc  # noqa: E402  (task_dir / iter_tasks: the task tree)
 TASK = "robotwin_2_0_stack_blocks_two-standard"          # any task of the repository (write_task_results looks it up)
+PRIV_TASK = "robotwin_2_0_stack_blocks_two-privileged"   # not agent-ended: over the token budget fails it
 BIG = "behavior-boxing-food-after-dinner-i00"             # its standard twin's sidecar caps are 12 CPUs
 HB = "humanoidbench-loco-walk-i00-privileged"            # [environment] cpus = 16
 SMALL = "robotwin_2_0_stack_blocks_two"                  # caps of at most 8
@@ -39,7 +40,8 @@ def check(cond, what):
         print("FAIL", what)
 
 
-def result_line(td: Path, result: dict, reward=None, gateway=None, codex=None, down=False) -> str:
+def result_line(td: Path, result: dict, reward=None, gateway=None, codex=None, down=False, task: str = TASK) -> str:
+    TASK = task
     jobs = td / "jobs"; job = f"j{len(list(jobs.glob('*'))) if jobs.exists() else 0}"
     trial = jobs / job / f"{TASK}__abc"
     trial.mkdir(parents=True)
@@ -72,7 +74,7 @@ def test_results():
             ("the agent's 0", {}, {"success": 0}, None, None, "**0**"),
             ("0 at the cutoff", timeout, {"success": 0}, None, None, "**0**"),
             ("a success at the cutoff", timeout, {"success": 1}, None, None, "**1 (success)**"),
-            ("over the token budget", {}, {"success": 1}, {"over_token_budget": True}, None, "over the token budget"),
+            ("an agent-ended episode over the token budget", {}, {"success": 1}, {"over_token_budget": True}, None, "**1 (success)**"),
             ("infra_error", {}, {"success": 0, "infra_error": 1}, None, None, "not a result"),
             ("grader_error", timeout, {"success": 0, "grader_error": 1}, None, None, "not a result"),
             ("compose up failed, no reward.json",
@@ -106,6 +108,10 @@ def test_results():
             check(want in line, f"write_task_results: {name}: {line}")
             if want != "not a result":
                 check("not a result" not in line, f"write_task_results: {name} is a result: {line}")
+        # an agent-ended episode (every standard task, PROTOCOL §3) is graded on the state its session ended in, the
+        # token budget's end included; a privileged task over the budget is failed
+        line = result_line(td, {}, {"success": 1}, {"over_token_budget": True}, task=PRIV_TASK)
+        check("over the token budget" in line and "**1 (success)**" not in line, f"write_task_results: a privileged task over the token budget: {line}")
         line = result_line(td, {}, {"success": 0}, down=True)
         check("not a result" in line and "gateway was down" in line, f"write_task_results: the gateway down after the job: {line}")
         line = result_line(td, {"exception_info": {"exception_type": "EnvironmentStartTimeoutError"}})

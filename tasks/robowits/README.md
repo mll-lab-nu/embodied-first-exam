@@ -214,6 +214,14 @@ pinocchio (14 arm joints); 80 proprio columns; the end condition in `/spec` (`ep
   `resume_state_mismatch`, `resume_max_tcp_dev_m`, `resume_max_joint_dev`) with `infra_error` (a give-up the service
   caused, or a record that never finished grading).
 
+**Agent-ended episodes** (standard mode; PROTOCOL §3 "Agent-ended episodes", `RCB_AGENT_END` in each sim service,
+`rcb_agent_end.py`). The task's success is never shown and never ends the episode: the agent ends it with `POST /finish`
+(reason `finished`), or the end of its session does (`timeout`). No settle window runs inside a call any more: at
+`/finish` (inside that call) and at the session's end the settle window (`Session.settle_check`) runs from the state the
+episode ends in and decides. The step guard is the step limit (`step_limit`): no window fits under it, so the goal is
+judged as it stands. The session's end is one reason (`timeout`; an agent exit is kept as `agent_exit` evidence). There
+is no `RCB_STEP_LIMIT` (no step budget).
+
 ## Tooling (file names)
 No task directory carries a copy of the tooling: the task Dockerfiles copy it from the files image `robowits-files`
 (`images/robowits-files/FILES.json`, sources in `embodied_first_exam/benchmarks/robowits/`).

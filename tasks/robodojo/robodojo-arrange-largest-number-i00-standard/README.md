@@ -49,6 +49,6 @@ Caps per container (PROTOCOL §6).
 | | |
 |---|---|
 | Episode | one episode, no reset, ended by the agent (PROTOCOL §3 "Agent-ended episodes"): at its `/finish`, after RoboDojo's own step limit of 1050 steps (one 25 Hz action each), when its time is up, when a check fails for good (a 0) or on a simulator error; judged on how things stand when it ends: RoboDojo's check holds on the final state (`rcb_robodojo.py` `END_JUDGEMENT`) |
-| Action space | `submit` chunks of `joint_position` (14: RoboDojo's own action at 25 Hz, the agent's `dt` a multiple of 1/25 s) or `ee_pose` (16: both arms' link6 targets, IK per row); `observe` frames or a watch window; `/kinematics` (FK / IK of both arms, stateless); binary RCB1 responses |
+| Action space | `submit` chunks of `joint_position` (14: RoboDojo's own action at 25 Hz, the agent's `dt` a multiple of 1/25 s) or `ee_pose` (16: both arms' link6 targets, IK per row); `observe` the current frames or those recorded over the last seconds (`last_s`); hold chunks (`hold(s)`); `/kinematics` (FK / IK of both arms, stateless); binary RCB1 responses |
 | Source | RoboDojo @ `cb2a37d` (MIT), its Isaac Lab 2.3 fork @ `afca7b0`, its cuRobo fork @ `d17b54c`; assets from `RoboDojo-Benchmark/RoboDojo` @ `35efbc7` (Apache-2.0) |
 | Benchmark notes | tasks/robodojo/README.md |

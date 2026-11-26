@@ -83,6 +83,18 @@ so both modes apply one rule (H.7); there is no settle window after the last goa
   Crashes all inside the agent's calls (`sim_crashed_on_call`) and a simulator error from a call (`sim_error`) are the
   agent's 0; a failed video is only a missing video.
 
+### Agent-ended episodes
+
+Every standard task sets `RCB_AGENT_END "1"` in its sim service (PROTOCOL §3). The goal is a sequence of poses, judged
+as it happens (end judgement `events`): the goal tracker still runs on every executed control step, and the episode
+passes when it has reached every goal in order before the episode ends (`POST /finish`, reason `finished`; the step cap,
+`step_limit`; the end of the session, `timeout`). Reaching the last goal no longer ends the episode and is never shown:
+`meta["task"]` keeps showing the last goal once it is reached (`goals_reached` stops at `n_goals - 1`,
+`steps_left_on_goal` is null), so the agent cannot tell whether the sequence is complete. Resets stay possible until
+`POST /finish` (only the last episode is graded). `final.json` adds the shared fields (`success_signal`, `ended_by`,
+`end_judgement`, `hidden_success_seen`, `hidden_success_first_step`, `trial_hidden_success_seen`, `finish_time_s`).
+Without `RCB_AGENT_END` the service behaves as described above.
+
 ## Standard-mode service details
 
 **MuJoCo service (DexToolBench, MuJoCo Playground manipulation; `eai-standard/2.1`).** Same endpoints and RCB1 frames,

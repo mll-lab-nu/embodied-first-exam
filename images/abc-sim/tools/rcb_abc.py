@@ -21,6 +21,11 @@ episode    : starts at the frozen instance; ends in success once the task's eval
              and both handles held throughout; it fails the moment the ball leaves the tray or a handle is let go during
              the countdown. MAX_STEPS only stops runaway trajectories. MuJoCo on the CPU is deterministic: the same rows
              from the same instance give the same final state, bit for bit, in any fresh process.
+             agent_end (a standard-mode service whose episodes the agent ends, PROTOCOL §3; default off): a success
+             never ends the episode. `success` is then the state's: the goal has held for HOLD_STEPS consecutive steps
+             up to now (the run breaks when it stops holding); ball tray: the countdown has completed with the ball on
+             the tray and both handles held, and the ball has stayed on the tray since (letting a handle go counts only
+             during the countdown). Only the failures end the episode.
 
 CLI
 ---
@@ -207,6 +212,7 @@ class Session:
                  image_size: tuple[int, int] = (480, 640)):
         from abc_sim.randomization.core import RandomizationState
 
+        self.agent_end = False              # (see the module docstring)
         self.inst = load_instance(instance)
         self.family, self.task, self.rule = self.inst["family"], self.inst["task"], self.inst["rule"]
         self.instance_sha = self.inst["sha"]
@@ -313,17 +319,23 @@ class Session:
             self.last_info.update(state=rs.get("state"), handles_held=held)
             if not ok:
                 self.done, self.reason = True, "failure: the ball left the tray"
-            elif getattr(rt, "_started_at_s", None) is not None and not held:
+                self.success = False
+            elif getattr(rt, "_started_at_s", None) is not None and not held and not (self.agent_end and self.success):
                 self.done, self.reason = True, "failure: a handle was let go during the countdown"
             elif bool(rs.get("complete")):
-                self.done, self.success, self.reason = True, True, "success"
+                if self.agent_end:              # the countdown completed: a success that stands while the ball stays
+                    self.success = True
+                else:
+                    self.done, self.success, self.reason = True, True, "success"
             return not self.done
         if ok and self._mugs:
             ok = self.hanging()
             self.last_info["hanging"] = ok
         self.success_run = self.success_run + 1 if ok else 0
         self.last_info["success_run"] = self.success_run
-        if self.success_run >= HOLD_STEPS:
+        if self.agent_end:                      # the state's success (held long enough up to now): never ends it
+            self.success = self.success_run >= HOLD_STEPS
+        elif self.success_run >= HOLD_STEPS:
             self.done, self.success, self.reason = True, True, "success"
         return not self.done
 

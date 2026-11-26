@@ -109,6 +109,18 @@ it bit for bit). The toaster ovens and electric kettles of other tasks move by t
   0.05 s.
 - **Cutoff** 3600 s, the standard twin's.
 
+### Agent-ended episodes
+
+Every standard and realtime task sets `RCB_AGENT_END "1"` in its sim service (PROTOCOL §3). `server_casa.py` (standard)
+or `rcb_service.py` (realtime) never shows the task's success and a success never ends the episode: the environment's
+own check is still run after every call (as before, twice per control step) and only recorded
+(`hidden_success_first_step`). The agent ends the episode with `POST /finish` (reason `finished`); the end of its
+session (`timeout`), and in realtime the 3000-step cap (`step_limit`) ends it too, and each is judged on the state it
+ends in (end judgement `state`: the environment's `_check_success`, whose timers and event memory are the environment's
+own; no settle window), with the rule that a scene solved at the start is no success. `final.json` adds the shared
+fields (`success_signal`, `ended_by`, `end_judgement`, `hidden_success_seen`, `hidden_success_first_step`,
+`trial_hidden_success_seen`, `finish_time_s`). Without `RCB_AGENT_END` the service behaves as described above.
+
 ## Egress
 The demonstrations are public, so `task.toml` closes agent egress to the model APIs and the package registries. The image contains no
 demonstration data.

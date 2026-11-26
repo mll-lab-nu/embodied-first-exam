@@ -101,12 +101,18 @@ add python3 ci_checks/check-cutoffs.py"$targs"
 add python3 ci_checks/check-seeds.py"$pargs"
 # PROTOCOL §2: a realtime task states its slowdown S (its sim service's default, the instruction) and allows resets
 add python3 ci_checks/check-realtime.py"$pargs"
+# docs/protocol/standard_mode.md "MCP tools": every standard / realtime task has the robot's MCP tools (or a stated
+# exception), and every agent-facing endpoint the layers and adapters serve has a tool
+add python3 ci_checks/check-mcp-tools.py"$pargs"
 # PROTOCOL §4: every task renders a video and the runner can collect it; a declared video time bound is not
 # shorter than the verdict replay's (privileged)
 add python3 ci_checks/check-video.py"$targs"
 # PROTOCOL H.4: the standard modes' graders transcribe the live episode's verdict (graded_by_live), no replay
 # decides, and agent-caused ends are never infrastructure failures (synthetic records through each distinct grade.py)
 add python3 ci_checks/check-live-verdict.py"$targs"
+# PROTOCOL §3: an agent-ended task's Goal says how its episode is judged and ends (the environment and the Finish line
+# are invariants: run_invariants.sh)
+add python3 ci_checks/check-agent-end.py --tier advisory"$targs"
 # The task protocol (docs/protocol/README.md): the protocol version per mode, oracle fields, the image registry, no results/, no personal paths, internal names or host /data/ paths
 add python3 ci_checks/check-protocol.py"$pargs"
 # PROTOCOL §6: the resource monitor sidecar's copies and the verifier step (its isolation: run_invariants.sh)

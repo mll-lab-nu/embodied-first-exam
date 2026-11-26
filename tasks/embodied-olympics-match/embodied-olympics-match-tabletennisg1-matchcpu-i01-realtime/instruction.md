@@ -43,8 +43,8 @@ plan):
 Table tennis between two Unitree G1 humanoids (29 actuated joints each: arms 2 × 7, waist 3, legs 2 × 6; held to the
 real robot's limits), each holding a racket. You control seat `A`'s G1 at the joint level, with no skill commands,
 against a G1 the platform drives at level 4 of four (the BOSS). The world runs in real time (S = 1). The robot runs as a
-service you reach only through its client, as if it were real hardware, on a clock that does not stop while you think:
-one live episode.
+service you reach through its client or its MCP tools, as if it were real hardware, on a clock that does not stop while
+you think: one live episode.
 
 ### Client
 The `game` command (the seat protocol; `game spec` gives the exact command formats, observation fields, frames, limits
@@ -56,6 +56,13 @@ and timing; `game rules` the complete rules):
   reaches about 70 calls per second. Commanding at the control-step rate takes a long-running program that uses the
   client library `ro_client` (its documentation: `python3 -m pydoc ro_client`); the match accepts one command in flight
   per robot.
+
+### MCP tools
+- The same seat is also an MCP server, `efe-robot` (in your tool list), with one tool per `game` command: `spec`,
+  `start`, `observe`, `act`, `wait`, `ready`. Each result is the service's reply; images are written as files under
+  `/app/obs/`.
+- A call still running after 45 s returns `pending` with an `operation` id; `wait(operation=id)` collects it.
+- The `game` command and the tools play the same seat in the same match; use either, or both.
 
 ### Actions
 - You drive your robot with actuator-level (joint-level) commands, `joints` and `toss`, sent with `game act`

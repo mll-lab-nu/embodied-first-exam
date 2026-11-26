@@ -37,11 +37,32 @@ The bout (FIE direct elimination, no draws):
 ## Robot Interface
 Two simulated Unitree G1 humanoids holding epees fence one bout, phrase by phrase: before each phrase each fencer
 chooses one of nine tactical intentions, which the robots execute. You are seat `A` against a scripted fencer at level
-2. It is turn-based: nothing moves while you think. The robot runs as a service you reach only through its client, as if
-it were real hardware: one live episode.
+2. It is turn-based: nothing moves while you think. The robot runs as a service you reach through its client or its MCP
+tools, as if it were real hardware: one live episode.
 
 ### Client
-The `game` command, or the same calls as HTTP with JSON at `http://localhost:8000/<SEAT>/` (your seat is `$SEAT`):
+The service at `http://localhost:8000` speaks eai-standard/2.x with the match extension (`eai-standard/2.1+match/1.0`;
+docs/protocol/standard_mode.md Part 5): the endpoints of every standard task, plus `/start` and `/ready`. The shared
+client is installed (`from rcb_client import Robot`).
+
+| HTTP | |
+| --- | --- |
+| `GET /spec` | the standard spec (`cameras` with intrinsics and pose, `action_types` with each type's fields and row layout, `timing`) and, under `match`, everything `game spec` gives |
+| `GET /status` | the state, no image |
+| `POST /start {}` | you are ready; the match begins when every seat has started |
+| `POST /observe {"cameras": [...]}` | the camera images of now, at once; no time passes (RCB1: `last/<camera>`, `frames/<camera>`, `view` = the tiled PNG of `game observe`) |
+| `POST /submit {"type": T, "rows": [ACTION, ...]}` | your action for this turn (one row: the object of `game act`) |
+| `POST /submit {"type": T, "interpolate": "hold", "seconds": S}` | waits up to S seconds of real time for your turn (as `game wait`) |
+| `POST /ready {"why": "...", "plan": "..."}` | your review |
+
+`/submit` takes one row: the action of your turn; an action the match refuses is a 400. Every answer's `meta` has
+`score`, `review_due` (send `/ready` now), `match_over`, `step`, `phase` and your `state`. A `/submit` while the world
+is frozen or before the start executes nothing (`ok: false`, `not_now`); after the match is over requests are a 409.
+`/finish` and `/reset` are not offered (404): the match's rules end it, and there is one match. What differs from the
+plain standard: `timing.deviations` in `/spec`.
+
+The same match also answers the `game` command, or the same calls as HTTP with JSON under
+`http://localhost:8000/<SEAT>/` (the paths below are under it; your seat is `$SEAT`); you may use both:
 
 | `game` command | HTTP | |
 | --- | --- | --- |
@@ -57,6 +78,13 @@ The `game` command, or the same calls as HTTP with JSON at `http://localhost:800
 Errors: 400 = an invalid action (nothing happens), 409 = not now (not your turn, or a review is due), 429 = one action
 in flight (sent before the previous one returned), or more than 20 requests per second or 4 open requests from your seat
 (empty body: retry more slowly).
+
+### MCP tools
+- The same seat is also an MCP server, `efe-robot` (in your tool list), with one tool per `game` command: `spec`,
+  `start`, `observe`, `act`, `wait`, `ready`. Each result is the service's reply; images are written as files under
+  `/app/obs/`.
+- A call still running after 45 s returns `pending` with an `operation` id; `wait(operation=id)` collects it.
+- The `game` command and the tools play the same seat in the same match; use either, or both.
 
 ### Actions
 - `phrase`: your intention for the next phrase, one of the nine (`game phrase INTENTION`, or `game act` with

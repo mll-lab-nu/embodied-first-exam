@@ -25,6 +25,9 @@ The verdict is the live episode's: step() reports KinDER's own goal check (`term
 step and the episode ends there, so nothing is replayed to grade it; render_video() re-runs the trajectory once, after
 the verdict, to film it. start_sha is the frozen instance's recorded scene_sha (the state hash right after reset), which
 rcb_service checks when an episode begins; a KinDER that no longer builds the instance is InstanceMismatch.
+Agent-ended episodes (RCB_AGENT_END, PROTOCOL §3; every KinDER standard task): the goal check no longer ends the
+episode; it is judged on the state the episode ends in (end_judgement "state"; the goal check is a predicate on the
+scene); the episode's length is its step cap, judged as it stands.
 """
 from __future__ import annotations
 
@@ -37,7 +40,7 @@ import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from rcb_kinder import CAMERA_HW, GL_BACKEND, Session  # noqa: E402
-from rcb_service import InstanceMismatch, main  # noqa: E402
+from rcb_service import AGENT_END, InstanceMismatch, main  # noqa: E402
 
 CAMERAS = ("robot_base", "robot_wrist")       # the robot's own cameras
 DEPTH = ("robot_wrist",)                     # the one that is RGB-D on the real robot
@@ -49,6 +52,8 @@ BASE_STEP_M = 0.1                            # upstream's per-step bound on each
 DEPTH_MAX_M = 10.0
 CONTROL_DT = 0.1                             # TidyBot++'s 10 Hz; nominal for the kinematic robot
 BASE_FRAME = "the base frame: x forward, y left, z up, origin on the floor under the base's centre"
+EPISODE_AGENT_END = ("ends at your POST /finish, after {n} control steps, when your time is up, or on a simulator "
+                     "error; judged on how things stand when it ends (a success does not end it)")
 ODOMETRY = {"frame": "where the base started the episode: origin on the floor under the base's centre, x the way it "
                      "faced, y left, z up; noise-free"}
 ARM = [f"arm_{i}" for i in range(1, 8)]
@@ -109,6 +114,10 @@ class _Robot:
         self.hi = self.s.action_space.high.astype(np.float64)
         f = self._robot()
         self._start = f["pos_base_x"], f["pos_base_y"], f["pos_base_rot"]   # the odometry frame, every episode
+
+    def _cap(self) -> dict:
+        """Agent-ended episodes: the episode's last step is its step cap (judged as it stands), not a failure."""
+        return {"step_cap": True} if AGENT_END and self.s.t >= self.s.max_steps else {}
 
     def _robot(self) -> dict[str, float]:
         """The robot's features in KinDER's state, by name."""
@@ -217,7 +226,8 @@ class TidyBot(_Robot):
         return {
             "simulator": "kinder", "robot": "TidyBot++: holonomic base, Kinova Gen3 7-DoF arm, Robotiq 2F-85 gripper",
             "task_text": self.task_text,
-            "episode": f"ends when the task succeeds (KinDER's own goal check), after {self.max_control_steps} control "
+            "episode": EPISODE_AGENT_END.format(n=self.max_control_steps) if AGENT_END else
+                       f"ends when the task succeeds (KinDER's own goal check), after {self.max_control_steps} control "
                        "steps, when your time is up, or on a simulator error",
             "action_types": {"delta": {
                 "dim": self.dim, "layout": self.layout(),
@@ -267,7 +277,7 @@ class TidyBot(_Robot):
     def step(self, row: np.ndarray) -> tuple[bool, bool, dict]:
         _, success, done = self.s.step(row)
         self._grip = float(row[10])
-        return done, success, {"blocked": False}
+        return done, success, {"blocked": False, **self._cap()}
 
     def reset(self) -> None:
         super().reset()
@@ -313,7 +323,7 @@ class Kinova(_Robot):
                                                            arm.joint_upper_limits[:7])])
         _, success, done = self.s.step(row)
         asked, moved = np.abs(target - q0) > self.STILL, np.abs(self._pose() - q0) > self.STILL
-        return done, success, {"blocked": bool(asked.any() and not moved.any())}
+        return done, success, {"blocked": bool(asked.any() and not moved.any()), **self._cap()}
 
     def hold(self) -> tuple[str, np.ndarray]:
         return "delta", np.zeros(self.dim)      # gripper 0: leave it as it is
@@ -449,7 +459,8 @@ class Kinova(_Robot):
             "simulator": "kinder", "robot": "TidyBot++-style mobile manipulator, kinematic (PyBullet): base, Kinova "
                                             "Gen3 7-DoF arm, Robotiq 2F-85 gripper",
             "task_text": self.task_text,
-            "episode": f"ends when the task succeeds (KinDER's own goal check), after {self.max_control_steps} control "
+            "episode": EPISODE_AGENT_END.format(n=self.max_control_steps) if AGENT_END else
+                       f"ends when the task succeeds (KinDER's own goal check), after {self.max_control_steps} control "
                        "steps, when your time is up, or on a simulator error",
             "action_types": {"delta": {
                 "dim": self.dim, "layout": self.layout(),

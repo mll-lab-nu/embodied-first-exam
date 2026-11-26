@@ -74,6 +74,9 @@ package name in #329.
   `eai-standard/2.x` tasks. Appendix H applies unchanged. The private evaluator runs in the `sim` sidecar (port 8000
   on localhost, no published port); the agent's container holds the public nominal model and the controller ABI only
   (environment/public/, an explicit allowlist checked by `ci_checks/benchmarks/roboengineer/invariant-boundary.py`, plus AnyCar's two track data files from the files-only image).
+- **Its own interface only**: no MCP tools (docs/protocol/standard_mode.md "MCP tools"). The agent hands in a
+  policy the evaluator runs; there is no live robot to call, so the `efe-robot` tools of the eai-standard tasks do not
+  apply.
 - **No privileged twin**: the hidden plant is the task; a privileged agent would read it.
 - **Deliverable**: numeric policies only (bounded JSON coefficients; G1: the fixed-shape NPZ actor's weights). No
   agent code runs in the evaluator.

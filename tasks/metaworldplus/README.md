@@ -56,7 +56,7 @@ Derived from `images/mujoco/limited/server_mj.py` and identical in protocol and 
 reset, journal + per-call checkpoints with at most two resumes, startup watchdog, SIGUSR1 collect hook, `/data`
 evidence, verdict before video). Differences:
 1. The action type comes from the tool module (`mw_tool.ACTION_TYPE`: `ee_delta`) instead of a fixed `joint_position`.
-2. Watching (`/observe` with `seconds > 0`) holds the hand still (`S.hold_targets()`), since actions are deltas.
+2. A hold chunk (`/submit` with `interpolate: "hold"`, `seconds`, no rows) holds the hand still (`S.hold_targets()`), since actions are deltas.
 3. Cameras and proprioception come from the tool module (`CAMERA_VIEWS`, `PROPRIO_LAYOUT`); `meta.task` is the target.
 4. DexToolBench's goal logic is gone.
 5. As in the MuJoCo service: a simulator error (500) ends the episode with
@@ -108,6 +108,15 @@ one fresh-process replay).
 
 `meta["time_s"]` / `meta["time_left_s"]` count from the agent's first request to the service (logged, so a crash
 resume keeps it), not from the service's start: the service is up before the harness has installed the agent.
+
+### Agent-ended episodes
+
+Every standard task sets `RCB_AGENT_END "1"` in its sim service (PROTOCOL §3). `server_mw.py` already judged the state
+the episode ends in; with the feature it also takes `POST /finish` (reason `finished`), never shows a success
+(Meta-World's check is recorded after every call, `hidden_success_first_step`), and judges the ends `finished`,
+`timeout` and, with a step cap, `step_limit` on that state (end judgement `state`, no settle window). `final.json` adds
+the shared fields (`success_signal`, `ended_by`, `end_judgement`, `hidden_success_seen`, `hidden_success_first_step`,
+`trial_hidden_success_seen`, `finish_time_s`). Without `RCB_AGENT_END` the service behaves as described above.
 
 ## Egress
 Meta-World's scripted policies solve these tasks and are public (PyPI, GitHub), so `task.toml` closes agent egress to

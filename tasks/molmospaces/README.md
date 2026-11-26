@@ -102,8 +102,8 @@ place. The privileged verifier's verdict replay and video replay share its 1800 
 as a trajectory (not an npz, a pickled or non-numeric `actions`, more than 100,000 rows, or an entry that unpacks to more
 than that many rows can hold: checked before it is read, `too_large`) is `bad_trajectory`, the agent's 0. The service
 checks a request completely before anything moves: a null or wrongly typed `dt`, `seconds`, `cameras`, `note`, `video`,
-`interpolate` or `type` is a 400. `get_obs(seconds=...)` runs whole control steps (the request rounded to the control period, 66 ms for the
-Franka tasks) and `meta["seconds"]` is what ran, not what was asked for. The only step limit is upstream's horizon, which
+`interpolate` or `type` is a 400. `hold(s)` (a hold chunk) runs whole control steps (the request rounded to the control period, 66 ms for the
+Franka tasks) and `meta["duration_s"]` is what ran, not what was asked for. The only step limit is upstream's horizon, which
 the instruction and `/spec` (`max_control_steps`, `episode`) state; a privileged trajectory holds at most 100,000 rows (more
 than 160 times the longest horizon; rows after the episode's end are never executed), which the instruction states too.
 
@@ -153,3 +153,9 @@ Measured scene builds (episode `start` minus the end of Harbor's environment set
 |---|---|---|---|
 | MolmoSpaces | 8 families (213 trials), on a lab host (RTX 4090, 32 cores) | episode start 8–52 s after Harbor's environment setup began (median 11 s; navigate-to 33–52 s) | `RCB_STARTUP_TIMEOUT_S` = 300 |
 
+**Agent-ended episodes** (standard mode; PROTOCOL §3 "Agent-ended episodes", `RCB_AGENT_END` in each sim service,
+`rcb_agent_end.py`). The task's success is never shown and never ends the episode: the agent ends it with `POST /finish`
+(reason `finished`), or the end of its session does (`timeout`). The `done` action is the same as `/finish` (reason
+`finished`); the benchmark's horizon is the step limit (`RCB_STEP_LIMIT` = the task's horizon in control steps, the
+instruction's Steps line; reason `step_limit`). Every end is judged as before, on the final state with upstream's
+`judge_success()`; upstream's success is recorded after each control step (hidden) and never shown.

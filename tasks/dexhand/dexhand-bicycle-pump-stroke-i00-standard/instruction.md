@@ -9,7 +9,7 @@ Success: in this order, the hose head is pushed fully onto the valve and its thu
 and locked, the handle is pumped at least 28 full strokes (pushed nearly all the way down and let back up nearly to the
 top; shallower strokes do not count); the thumb lock is opened and the head pulled back off the valve; then the handle
 rests at the top and the pump stands upright and still, with no part of the robot touching the pump or the head, for a
-second. The episode ends as soon as the task is done.
+second.
 
 Any of these ends the episode at once as a failure, which later actions cannot undo:
 - The pump tips over, slides or lifts off its spot.
@@ -18,22 +18,25 @@ Any of these ends the episode at once as a failure, which later actions cannot u
 - The head is pulled back while its lock is still closed (open the lock first).
 - The physics becomes unstable.
 
+The steps before the last count as they happen. Success is judged on how things stand when the episode ends. It ends
+when you call finish (Limits) or when your session ends. The robot never tells you whether you have succeeded.
+
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
   benchmark's demonstrations, trained policies); trials are reviewed.
 - Episodes: 20 resets (`spec()["budget"]["reset"]`), each a new episode from the same starting state; within an episode
-  what you knock over stays knocked over until you reset. Only the last episode is graded: a success ends the run at
-  once (no reset after it), and when your time is up the episode then running is graded.
-- You get only the cameras and the robot's own sensor readings: no object poses, no scene layout, no score; the episode
-  ends when the task is done, and the service tells you that it ended and why.
+  what you knock over stays knocked over until you reset. Only the last episode is graded: the episode you end with
+  finish (Limits; no reset after it), or else the one running when your session ends.
+- You get only the cameras and the robot's own sensor readings: no object poses, no scene layout, no score, no success
+  signal.
 
 Only the robot's actuator targets act on the scene: no object teleports, grasp welds, scripted object motion or applied
 forces.
 
 ## Robot Interface
 The right arm and hand of a fixed Tianji Marvin robot (two 7-joint arms, a dexterous hand on each wrist; the left arm
-stays parked), at a bench (DexHand, MuJoCo). The robot runs as a service you reach only through its client, as if it
-were real hardware.
+stays parked), at a bench (DexHand, MuJoCo). The robot runs as a service you reach through its client or its MCP tools,
+as if it were real hardware.
 
 ### Client
 `/opt/tools/rcb_client.py`:
@@ -53,16 +56,28 @@ r.status()
 res = r._post("/reset", {"cameras": ["overview"]}, [], 900)   # POST /reset (this client has no reset())
 ```
 Requests can return RGB frames or mp4, with depth `none`, `last` or `frames`. Each call returns at most 1,000 camera
-images, counting per-frame depth; reduce cameras, fps or duration for larger chunks. `get_obs(seconds=...)` holds the
-current targets for up to 30 s and records those steps. Calling it without seconds only observes the current state.
-Forward kinematics uses only the robot's own links; no IK primitive is supplied. If the service connection fails, call
-`r.wait_ready()` and inspect `r.status()` before continuing. Crash recovery resumes the same journaled episode, without
-a reset, and the wall-clock budget keeps running.
+images, counting per-frame depth; reduce cameras, fps or duration for larger chunks. `hold(s)` holds the current targets
+and records those steps. `get_obs()` only observes the current state. Forward kinematics uses only the robot's own
+links; no IK primitive is supplied. If the service connection fails, call `r.wait_ready()` and inspect `r.status()`
+before continuing. Crash recovery resumes the same journaled episode, without a reset, and the wall-clock budget keeps
+running.
 
 Resets: `r._post("/reset", ...)` (`POST /reset`) starts a new episode from the same starting state, abandoning the
 running one or after one has ended; it takes no simulated time and returns the start's images and proprioception. Once
 an episode has ended, `submit` raises `EpisodeOver` until you reset. `meta["episode"]` and `meta["resets_left"]` count
 the episodes; `meta["control_steps"]` is the current episode's, `meta["control_steps_total"]` all of them.
+
+### MCP tools
+- The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
+  `observe`, `submit`, `reset`, `kinematics`, `finish`. A tool takes its endpoint's request fields (any other field in
+  `fields`) and returns the service's reply `meta` unchanged; images, arrays and video are written as files under
+  `/app/obs/` (`.png`, `.npy`, `.mp4`) and the result lists them. Long action chunks can be passed as a file
+  (`actions_file`).
+- `observe` returns at once with what is already recorded: the current frame, or the last `last_s` seconds. Time passes
+  only through `submit`, which answers when its rows have run; a `submit` with `interpolate` "hold", `seconds` and no
+  rows lets time pass with the robot holding still.
+- A call still running after 45 s returns `pending` with an `operation` id; `observe(operation=id)` collects its reply.
+- The client and the tools drive the same robot in the same episode; use either, or both.
 
 ### Actions
 `rows` is `(T, D)` in `spec["action_types"]["joint_position"]["layout"]` order, all position targets in radians: the 14
@@ -86,7 +101,7 @@ m. Cameras are overview, closeup, wide and front, at 640 x 480. Camera RGB and c
 (default) and `closeup` (aimed at the pump), the robot's own joint positions, velocities, actuator efforts, hand pose
 and current targets, and robot-link forward kinematics. The service does not report the pump pose, the head or lever
 position, the piston depth, the stroke count, the tire pressure or contacts: judge the handle and the pump from the
-images and depth. At the end of an episode the meta reports `done`, `success` and a failure category.
+images and depth. At the end of an episode the meta reports `done` and why it ended.
 
 ### Hands
 Two hand models: `sharpa` (Sharpa Wave, 22 finger actuators; the default) and `wuji` (Wuji Hand 2.2, 20 finger
@@ -122,5 +137,9 @@ head sits at the wheel rim near world (0.546, -0.12, 0.747) with its thumb-lock 
   GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap only
   slows you down); usage: `/run/rcb-limits/usage.json`.
 - Resets: at most 20 (`spec()["budget"]["reset"]`), each a new episode from the same starting state.
-- Steps: at most 5,000 control steps (100 s of simulated time) per episode; an episode that reaches them without success
-  has failed.
+- Steps: at most 5,000 control steps (100 s of simulated time) per episode; an episode that reaches them ends there and
+  is graded as it stands.
+- Finish: when you are done, call finish: `POST /finish` with an empty JSON body to the service, at the client's base
+  URL (`http://sim:8000` or `http://localhost:8000`; in Python `requests.post(r.base + "/finish", json={})` with your
+  client `r`). It ends the episode, and every call after it is refused. Reaching the goal changes no reply and does not
+  end the episode; if you never call finish, the end of your session ends it.

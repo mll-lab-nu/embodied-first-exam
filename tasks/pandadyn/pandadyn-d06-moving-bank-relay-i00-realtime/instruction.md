@@ -14,8 +14,9 @@ clearly moved and turned from where it was at the first rebound; finally the lef
 gap and across the goal line in front of the middle of the backstop, the right paddle not touching it after it passes
 the gap.
 
-The steps count only in this order, and a step once done stays done. The episode ends by itself as soon as the task is
-done or has failed; the task also fails at once when:
+The steps count only in this order, and a step once done stays done: the task is done once its last step is, and it
+stays done even when a failure ends the episode afterwards. It ends when you call finish (Limits) or when your session ends.
+The robot never tells you whether you have succeeded. The task fails, and the episode ends at once, when:
 - the task's horizon is reached before the task is done (Robot Interface);
 - an object leaves the workspace (falls well below the table top or flies far away);
 - a robot part touches what it may not: each paddle may touch only the puck, a paddle must not touch its own arm, no
@@ -29,18 +30,16 @@ Rules:
 - Episodes and resets: you have 3 resets (the spec's reset budget is authoritative). A reset puts the robot and the
   scene back on the same frozen starting state (the scene is rebuilt, about a second) and starts a new episode, paused
   until your next command, abandoning the running one or after one has ended. Only the last episode is graded: an
-  episode you reset away is never graded, a success ends the run at once (no reset after it), and when your time is up
-  the episode then running is the one graded. Do not stop early: while the episode runs, or a reset is left, the run can
-  still pass.
-- You get only the cameras and the robot's own sensor readings: no object poses, no scene layout; the service tells you
-  only that an episode has ended and why (a success, a failure or a simulator error).
+  episode you reset away is never graded, and the one graded is the latest when you call finish or when your session
+  ends. Do not stop early: while the episode runs, or a reset is left, the run can still pass.
+- You get only the cameras and the robot's own sensor readings: no object poses, no scene layout, no success signal.
 
 ## Robot Interface
 Two simulated Franka Panda arms (`panda-0` on the left, `panda-1` on the right; each with its standard hand and the
 task's tool where it has one) on a table (ManiSkill 3 / SAPIEN, rigid-body physics at 1000 Hz). The robot runs as a
-service you reach only through its client, as if it were real hardware, on a clock that does not stop while you think.
-Slowdown: S = 3: the world runs at 1/S of real speed, one control step (10 ms of robot time) every 30 ms of wall-clock
-time (`spec()["timing"]["slowdown"]`).
+service you reach through its client or its MCP tools, as if it were real hardware, on a clock that does not stop while
+you think. Slowdown: S = 3: the world runs at 1/S of real speed, one control step (10 ms of robot time) every 30 ms of
+wall-clock time (`spec()["timing"]["slowdown"]`).
 
 ### Client
 `/opt/tools/rcb_client.py` (protocol `eai-standard/2.3`, realtime mode). Its docstring (`help(rcb_client)`) is the full
@@ -52,22 +51,21 @@ reference.
 | `r.spec()` | the robot's facts: the action layout and limits, `control_dt` (0.01 s), `timing`, the cameras and their calibration, `proprio_layout` / `proprio_groups`, `robot_spec` (bases, servo and safety limits), `budget` |
 | `r.status()` | `calls`, `rows`, `control_steps`, `done`, `reason`, `elapsed_s`, `running`, `planned_steps`, `lag_s`, and `episode`, `resets_left`, `control_steps_total` (all episodes) |
 | `r.submit("joint_position", A, dt=0.01, interpolate="linear", at=None, cameras=None)` | plans `A`, rows of 16 targets `dt` seconds apart (a chunk covers at most 10 s), from step `at`; answers at once; the first one starts the episode's clock |
-| `r.get_obs(cameras=None, seconds=0, include_depth=False, video="frames")` | the robot now, or what the cameras saw over the next `seconds` |
+| `r.get_obs(cameras=None, last_s=0, include_depth=False, video="frames")` | the robot now, or with `last_s=n` what the cameras recorded over the last n seconds; it never waits |
 | `r.reset(cameras=None, include_depth=False)` | a new episode from the frozen starting state, paused (at most 3 in all); returns the start's frames |
 
-One call returns at most 3000 images. A watch is refused with a 429 while the images in flight (pending watches and
-answers not read yet) would exceed it or 8 of them are outstanding; a `submit` or a `get_obs()` without seconds is never
-refused for its images: its answer then comes without its frames and `meta["frames_skipped"]` is set. The answers are
+One call returns at most 3000 images. No call is refused for its images: while 8 answers with images are outstanding,
+the answer of a `submit` or a `get_obs()` comes without its frames and `meta["frames_skipped"]` is set. The answers are
 binary (RCB1) and come back decoded: `res.meta` (the counters, `done`, `reason`, `proprio["now"]`, `clipped`),
-`res.last[camera]` (the last frame), `res.frames` or `res.video` (what the cameras saw during a watch),
-`res.depth[camera]` (with `include_depth=True`, metres), `res.proprio` (proprioception rows). A malformed request raises
-`ValueError` and changes nothing. `cameras=None` means both: name the one you need, or `[]` for none.
+`res.last[camera]` (the last frame), `res.frames` or `res.video` (what the cameras recorded), `res.depth[camera]` (with
+`include_depth=True`, metres), `res.proprio` (proprioception rows). A malformed request raises `ValueError` and changes
+nothing. `cameras=None` means both: name the one you need, or `[]` for none.
 
-How an episode ended: `meta["done"]`, `meta["reason"]` (`success`, `failed`, or `error` after a simulator error); the
-`submit` that ended it names the failure in `meta["why"]`. `r.reset()` returns the new start's frames and
-proprioception; `meta["episode"]` and `meta["resets_left"]` count the episodes. If the service crashes, a call fails
-with a connection error: it restarts and resumes the same episode, paused (never a reset). `r.status()` answers again
-once it is back; check `control_steps` before you continue.
+How an episode ended: `meta["done"]`, `meta["reason"]` (`finished` after your finish, `failed`, `step_limit` at the step
+cap, or `error` after a simulator error); the `submit` that ended it names the failure in `meta["why"]`. `r.reset()`
+returns the new start's frames and proprioception; `meta["episode"]` and `meta["resets_left"]` count the episodes. If
+the service crashes, a call fails with a connection error: it restarts and resumes the same episode, paused (never a
+reset). `r.status()` answers again once it is back; check `control_steps` before you continue.
 
 ```python
 from rcb_client import Robot
@@ -79,6 +77,17 @@ res = r.submit("joint_position", rows, dt=0.01, interpolate="hold", at=0, camera
 while not r.status()["done"]:
     ...                                                                # plan the next chunk (at=...) or stream rows
 ```
+
+### MCP tools
+- The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
+  `observe`, `submit`, `reset`, `finish`. A tool takes its endpoint's request fields (any other field in `fields`) and
+  returns the service's reply `meta` unchanged; images, arrays and video are written as files under `/app/obs/` (`.png`,
+  `.npy`, `.mp4`) and the result lists them. Long action chunks can be passed as a file (`actions_file`).
+- `observe` returns at once with what is already recorded: the current frame, or the last `last_s` seconds. `submit`
+  answers at once, as the endpoint does. The clock does not wait for a tool call, and a call also takes your harness's
+  own time; each result's `tool_s` is the tool's part.
+- A call still running after 45 s returns `pending` with an `operation` id; `observe(operation=id)` collects its reply.
+- The client and the tools drive the same robot in the same episode; use either, or both.
 
 ### Actions
 - `joint_position` (16 per row): `[panda-0 joint1..7, panda-0 aperture, panda-1 joint1..7, panda-1 aperture]`. Each
@@ -126,10 +135,10 @@ while not r.status()["done"]:
 - Latency: a reading is a few milliseconds old when it reaches you, and a row takes effect at the next control step at
   the earliest. A row whose step has already run when the request arrives is dropped (`res.meta["late_steps"]` counts
   them); the rest of its chunk applies from the next step.
-- `get_obs()` reads the robot and the cameras now; `get_obs(seconds=s)` (at most 30) waits while s seconds of robot time
-  run and returns what the cameras saw meanwhile (the robot keeps executing its plan). Rendering a camera takes 10-150
-  ms on the service's GPU, time the simulator is not stepping: ask only for the cameras you need. `spec()["timing"]`
-  states all this; `r.status()` shows `running` and `lag_s`.
+- `get_obs()` reads the robot and the cameras now; `get_obs(last_s=n)` returns, without waiting, what the cameras
+  recorded over the last n seconds (the robot keeps executing its plan). Rendering a camera takes 10-150 ms on the
+  service's GPU, time the simulator is not stepping: ask only for the cameras you need. `spec()["timing"]` states all
+  this; `r.status()` shows `running` and `lag_s`.
 
 ### Arms and tools
 panda-0 (left): base at (-0.55, -0.22, 0), yaw 0 (facing +x). panda-1 (right): base at (0.74, 0.22, 0), yaw pi (facing
@@ -147,11 +156,11 @@ collision with its own tool (both grippers start fully open, at 0.08 m).
 ### Episode clock
 The scene is dynamic: from the episode's first control step on, things move by themselves, and they do not wait for the
 robot. Time does not stop: an episode starts paused, on the frozen starting state, the arms holding their starting
-joints. Its clock starts at your first `submit` (or `get_obs(seconds=s)`) and from then on the simulator runs one
-control step (10 ms of robot time) every 30 ms of wall-clock time, whether or not you send anything, until the episode
-ends. Between your commands each arm executes what you planned, then holds its last targets; nothing pauses for you, not
-your thinking, not your tool calls. The episode lasts at most 25 s of robot time (the task's horizon, 2500 control
-steps, about 75 s of wall-clock time): when it is reached before the task is complete, the task has failed.
+joints. Its clock starts at your first `submit` and from then on the simulator runs one control step (10 ms of robot
+time) every 30 ms of wall-clock time, whether or not you send anything, until the episode ends. Between your commands
+each arm executes what you planned, then holds its last targets; nothing pauses for you, not your thinking, not your
+tool calls. The episode lasts at most 25 s of robot time (the task's horizon, 2500 control steps, about 75 s of
+wall-clock time): when it is reached before the task is complete, the task has failed.
 
 ### Safety
 The task fails when an arm goes beyond the Franka Panda's own safety limits on joint positions, joint and finger speeds,
@@ -172,3 +181,7 @@ strike moves the arm too), and the servo's own reference motion is held to the s
   no GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap
   only slows you down); usage: `/run/rcb-limits/usage.json`.
 - Resets: at most 3 resets, each a new episode from the same frozen starting state; only the last episode is graded.
+- Finish: when you are done, call finish: `POST /finish` with an empty JSON body to the service, at the client's base
+  URL (`http://sim:8000` or `http://localhost:8000`; in Python `requests.post(r.base + "/finish", json={})` with your
+  client `r`). It ends the episode, and every call after it is refused. Reaching the goal changes no reply and does not
+  end the episode; if you never call finish, the end of your session ends it.

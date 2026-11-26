@@ -1,0 +1,16 @@
+{
+ "manifest": "efe-mcp-manifest/1",
+ "kind": "rcb",
+ "suite": "mujoco-playground",
+ "task": "mujoco_playground_spot_flat_terrain_joystick-standard",
+ "protocol": "eai-standard/2.2",
+ "realtime": false,
+ "tools": [
+  "spec",
+  "observe",
+  "submit",
+  "reset",
+  "kinematics",
+  "finish"
+ ]
+}

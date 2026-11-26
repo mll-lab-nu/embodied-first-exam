@@ -42,5 +42,5 @@ while i < len(Q):
         break
     i += rows
 if not done:
-    obs = r.get_obs(seconds=1.0, cameras=[next(iter(spec["cameras"]))], video="none"); print("settle:", obs.meta["done"], obs.meta["reason"])
+    obs = r.hold(1.0, cameras=[next(iter(spec["cameras"]))], video="none"); print("settle:", obs.meta["done"], obs.meta["reason"])
 print("status:", r.status(), "wall %.0fs" % (time.time() - t0))

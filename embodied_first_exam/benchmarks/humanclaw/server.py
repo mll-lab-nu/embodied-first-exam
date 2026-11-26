@@ -11,6 +11,14 @@ Settings come from environment/docker-compose.yaml:
   RCB_TASK_TEXT     one sentence for /spec
   RCB_EPISODE       what ends an episode, for /spec (the instruction's words)
   RCB_RESET_BUDGET, RCB_WALL_CLOCK_S, RCB_DATA   the service's own (rcb_service.main)
+
+Agent-ended episodes (RCB_AGENT_END=1, PROTOCOL §3; rcb_service.AGENT_END): HumanCLAW's episode is agent-ended by its
+own rule already (only a stop can succeed, the state at the stop is judged), so the service's finish IS the stop: POST
+/finish runs the stop action as the episode's last control step (journaled like any other row), and the end of the
+agent's session does too, before the episode is judged (reason "timeout"); a stop the agent sends ends the episode as
+/finish does (reason "finished"). The 100th action still ends the episode whatever it is (reason "step_limit",
+HumanCLAW's own rule: only a stop can succeed). Nothing tells the agent how the episode went: the verdict is HumanCLAW's
+at the stop.
 """
 from __future__ import annotations
 
@@ -21,9 +29,11 @@ import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import hc_core  # noqa: E402
+import rcb_service  # noqa: E402
 from rcb_service import InstanceMismatch, Refused, main  # noqa: E402
 
 IDLE_ROW = np.array([hc_core.IDLE, 0.0], dtype=np.float64)
+STOP_ROW = np.array([1.0, 0.0], dtype=np.float64)      # HumanCLAW's stop (action 1): the agent declares it is done
 MAX_CONTROL_STEPS = 20000   # a technical bound only: the episode's own limit is max_steps actions (hc_core)
 
 
@@ -38,6 +48,8 @@ class HumanClaw:
     depth_cameras = ()
     proprio_layout = ("actions_used", "actions_left", "pelvis_rise_m")
     raw_dim = 2
+    end_judgement = "state"              # agent-ended: the state at the stop (HumanCLAW's own rule)
+    hidden_keys = ("step_cap",)
 
     def __init__(self, instance: str, *, task_text: str = "", episode: str = ""):
         self.inst = hc_core.load_instance(instance)
@@ -53,16 +65,22 @@ class HumanClaw:
 
     # ------------------------------------------------------------------ the rcb_service.Sim contract
     def spec(self) -> dict:
+        ae = rcb_service.AGENT_END
         return {
             "simulator": "habitat-sim with HumanCLAW Half-Physics (Bullet), MotionDiT motion skills",
             "robot": "a simulated adult human body (SMPL-X neutral body), moved only by its motion skills",
-            "task_text": self.task_text, "episode": self.episode,
+            "task_text": self.task_text,
+            "episode": (self.episode if not ae else
+                        "ends at your stop action or POST /finish (the same thing: the stop), at the "
+                        f"{self.s.max_steps}th action whatever it is, when your session ends (judged as a stop then), "
+                        "or on a simulator error; only a stop can succeed, and the state at the stop is what counts"),
             "action_types": {"skill": {
                 "dim": 2, "layout": ["action_id", "value"],
                 "lower": [0.0, -120.0], "upper": [7.0, 120.0],
                 "actions": {
                     "0": "walk forward; value = stride in m: 0.2, 0.4 or 0.6 (nothing else)",
-                    "1": "stop; value 0. Ends the episode: you declare you are done (only a stop can succeed)",
+                    "1": "stop; value 0. Ends the episode: you declare you are done (only a stop can succeed)"
+                         + ("; POST /finish is the same stop" if ae else ""),
                     "2": "turn in place; value = signed degrees, + left (counter-clockwise from above), - right; "
                          "|value| clamped to [10, 120]; 0 is refused",
                     "3": "climb up one step; value 0",
@@ -75,8 +93,8 @@ class HumanClaw:
                 "dtype": "values are rounded to 4 decimals; action_id must be a whole number 0-7",
                 "semantics": "dt must be control_dt (a row cannot span several steps); interpolate is ignored; a "
                              "row that is invalid refuses the whole request (400) and nothing runs; clamped values "
-                             "are reported in `clipped`. /observe with seconds > 0 lets time pass with the body "
-                             "standing still: no action is used",
+                             "are reported in `clipped`. A hold chunk (/submit with no rows, interpolate "hold", "
+                             "seconds n) lets n seconds pass with the body standing still: no action is used",
                 "limit": f"{self.s.max_steps} actions per episode, the stop included; the {self.s.max_steps}th "
                          "action ends the episode whatever it is"}},
             "cameras": {"ego": {"mounted": "head, looking forward and slightly down", "hfov_deg": 90.0,
@@ -118,14 +136,21 @@ class HumanClaw:
         return "skill", IDLE_ROW
 
     def step(self, row: np.ndarray) -> tuple[bool, bool, dict]:
+        if self.s.done:                  # (agent-ended: the stop after the episode's end is no action)
+            return True, bool(self.s.result and self.s.result["success"]), {"step_cap": True}
         out = self.s.act(row)
         if int(row[0]) != hc_core.IDLE:
             self.cmd = np.asarray(row, dtype=np.float64)
-        return bool(out["done"]), bool(out["success"]), {}
+            self.stopped = int(row[0]) == 1
+        # agent-ended: the episode's end is HumanCLAW's own (a stop, or the 100th action), judged as it stands there
+        return bool(out["done"]), bool(out["success"]), ({"step_cap": True} if out["done"] else {})
+
+    stopped = False                      # the last action was a stop
 
     def reset(self) -> None:
         self.s.reset()
         self.cmd = IDLE_ROW.copy()
+        self.stopped = False
 
     def state_sha(self) -> str:
         return self.s.state_sha()
@@ -151,6 +176,47 @@ class HumanClaw:
         if int((rows[:, 0] != hc_core.IDLE).sum()) != self.s.n_actions:
             raise RuntimeError("the rows are not the live episode's")
         hc_core.episode_video(self.s, path)
+
+
+# ---------------------------------------------------------------- agent-ended episodes: the finish is HumanCLAW's stop
+_service_end = rcb_service.Service._end
+
+
+def _agent_finish(self) -> dict:
+    """POST /finish: the stop action, run as the episode's last control step (it ends the episode, judged there)."""
+    if self.done or self.stopping:
+        raise self._conflict()
+    self._closing = "finished"
+    try:
+        self._step("skill", STOP_ROW)
+    finally:
+        self._closing = None
+    if not self.done:                    # (HumanCLAW always ends at a stop; never left running)
+        self._end("finished")
+    return {"ok": True, **self.status()}
+
+
+def _end(self, reason: str) -> None:
+    """The end of the agent's session is a stop too (run first, then judged); an end HumanCLAW makes itself (a stop, the
+    100th action) is "finished" when its last action was a stop, else "step_limit"."""
+    if self.agent_end and not self.done:
+        if reason == "timeout" and not self.sim.s.done and not getattr(self, "_closing", None):
+            self._closing = "timeout"
+            try:
+                self._step("skill", STOP_ROW)
+            except Exception as exc:  # noqa: BLE001 -- a stop that fails: the episode ends as it stands (no success)
+                self.log("stop_at_session_end_error", error=repr(exc)[:300])
+            finally:
+                self._closing = None
+            if self.done:
+                return
+        elif reason == "step_limit" and self.sim.s.done:
+            reason = getattr(self, "_closing", None) or ("finished" if self.sim.stopped else "step_limit")
+    _service_end(self, reason)
+
+
+rcb_service.Service._agent_finish = _agent_finish
+rcb_service.Service._end = _end
 
 
 def build() -> HumanClaw:

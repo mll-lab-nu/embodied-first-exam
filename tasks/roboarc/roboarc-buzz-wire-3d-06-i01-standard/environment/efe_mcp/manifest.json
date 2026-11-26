@@ -1,0 +1,15 @@
+{
+ "manifest": "efe-mcp-manifest/1",
+ "kind": "rcb",
+ "suite": "roboarc",
+ "task": "roboarc-buzz-wire-3d-06-i01-standard",
+ "protocol": "eai-standard/2.4",
+ "realtime": false,
+ "tools": [
+  "spec",
+  "observe",
+  "submit",
+  "kinematics",
+  "finish"
+ ]
+}

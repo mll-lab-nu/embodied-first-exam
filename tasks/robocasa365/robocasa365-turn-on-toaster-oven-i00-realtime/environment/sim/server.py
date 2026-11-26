@@ -26,7 +26,13 @@ rule applied to the trajectory up to that step), after max_control_steps (the pr
 
 Settings (environment/docker-compose.yaml): RCB_INSTANCE (the frozen instance), RCB_START_SHA (the state hash a fresh
 episode of it starts in, recorded when the task was built), RCB_MAX_CONTROL_STEPS (3000), RCB_DATA,
-RCB_RESET_BUDGET, RCB_WALL_CLOCK_S, RCB_SLOWDOWN (rcb_realtime / rcb_service).
+RCB_RESET_BUDGET, RCB_WALL_CLOCK_S, RCB_SLOWDOWN (rcb_realtime / rcb_service), RCB_AGENT_END.
+
+Agent-ended episodes (RCB_AGENT_END=1, rcb_service.py's AGENT_END): step() reports the success check after every control
+step as before; rcb_service only records it, and the episode ends at the agent's POST /finish, after max_control_steps
+(reason "step_limit") or when the agent's time is up, each judged on the state it ends in (end_judgement "state": the
+environment's own check, whose timers and event memory are the environment's; no settle window), and live_verdict()'s
+start rule still applies. This adapter only words /spec's episode for it.
 """
 from __future__ import annotations
 
@@ -41,6 +47,8 @@ sys.path.insert(0, HERE)
 import casa_tool  # noqa: E402  (imports mujoco with the image's backend: OSMesa, as the standard twin)
 import mujoco  # noqa: E402
 from rcb_service import main  # noqa: E402
+
+AGENT_END = os.environ.get("RCB_AGENT_END") == "1"     # rcb_service.py's: here only for /spec's wording
 
 ACTION_NAME = {12: "ee_delta", 13: "joint_position", 24: "ee_pose"}
 W, H = 320, 240
@@ -98,7 +106,10 @@ class RoboCasa:
             "simulator": "robosuite 1.5.2 / RoboCasa365 (MuJoCo 3.3.1, CPU)",
             "robot": "franka-panda-omron: a Franka Panda arm on an Omron mobile base with a torso lift",
             "task_text": self.s.inst.get("text", ""),
-            "episode": (f"an episode ends at the first control step after which the task's success check holds "
+            "episode": (f"an episode ends at your POST /finish, after {self.max_control_steps} control steps (reason "
+                        "step_limit), when your time is up, or on a simulator error; the state it ends in is graded"
+                        if AGENT_END else
+                        f"an episode ends at the first control step after which the task's success check holds "
                         f"(success), after {self.max_control_steps} control steps (failed), when your time is up, or "
                         "on a simulator error"),
             "action_types": {self.atype: {

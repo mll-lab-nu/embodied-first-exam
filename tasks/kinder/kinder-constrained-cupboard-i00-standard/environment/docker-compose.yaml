@@ -22,6 +22,7 @@ services:
     command: python /srv/server.py
     restart: on-failure:6                               # a crash resumes the same episode, never a reset (rcb_service.py)
     environment:
+      RCB_AGENT_END: "1"                               # agent-ended episodes (PROTOCOL §3)
       RCB_INSTANCE: /srv/instance.json
       RCB_TASK_TEXT: "Put the six brown rods lying on the floor into the row of narrow cupboards ahead of you, one rod in the tall compartment of each of six cupboards. Taking the rods in order of distance from where you start, nearest first, they go into the 11th, 5th, 2nd, 8th, 4th and 1st cupboard of the row, counted from the left as you face it."
       RCB_WALL_CLOCK_S: "1800.0"

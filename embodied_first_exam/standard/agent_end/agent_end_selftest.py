@@ -211,6 +211,25 @@ def main() -> None:
         check(fin.get("ended_by") == "step_limit" and fin.get("step_limit") == 30 and fin.get("steps_used") == 30
               and fin.get("success") is True, f"step limit: final.json: {fin}")
 
+        t = Toy(ae, {"RCB_AGENT_END": "1", "RCB_STEP_LIMIT": "30"})   # eai-standard/3.0: a hold chunk is a chunk
+        hold = {"type": "joint_position", "interpolate": "hold", "seconds": 1.0, "video": "none"}
+        a = [t.call("POST", "/submit", sub(TO_BLOCK)), t.call("POST", "/observe", {"seconds": 1.0}),
+             t.call("POST", "/observe", {"last_s": 0.5}), t.call("POST", "/submit", hold)]
+        late = [t.call("POST", "/submit", hold), t.call("POST", "/observe", {"last_s": 0.5})]
+        fin = t.end()
+        check(a[1]["code"] == 400 and a[2]["code"] == 200 and a[2]["meta"].get("last_s") == 0.5
+              and a[3]["code"] == 200 and a[3]["meta"].get("hold") is True and a[3]["meta"]["reason"] == "step_limit"
+              and a[3]["meta"].get("duration_s") == 0.9,
+              f"3.0: observe seconds 400, last_s read, a hold chunk cut at the step limit: {a}")
+        check(late[0]["code"] == 409 and late[1]["code"] == 200 and fin.get("ended_by") == "step_limit",
+              f"3.0: after the step limit a hold chunk is a 409, a last_s read still answers: {late} {fin}")
+        t = Toy(ae, {"RCB_AGENT_END": "1"})
+        a = [t.call("POST", "/submit", hold), t.call("POST", "/finish", {}), t.call("POST", "/observe", {"last_s": 0.5}),
+             t.call("POST", "/submit", hold)]
+        t.end()
+        check(a[0]["code"] == 200 and a[1]["code"] == 200 and a[2]["code"] == 409 and a[3]["code"] == 409,
+              f"3.0: after /finish a last_s read and a hold chunk are 409s: {[x['code'] for x in a]}")
+
         for src, env, what in ((ae_nofinish, {"RCB_AGENT_END": "1"}, "an adapter without finish()"),
                                (ae, {"RCB_STEP_LIMIT": "30"}, "RCB_STEP_LIMIT without RCB_AGENT_END")):
             t = Toy(src, env)
@@ -224,7 +243,7 @@ def main() -> None:
         print(f"{len(fails)} failure(s)")
         sys.exit(1)
     print("ok agent-ended episodes (rcb_agent_end.py on toy_server.py): off = rcb_limited alone, on = no success shown, "
-          "/finish, end-state verdict, step limit, fail closed")
+          "/finish, end-state verdict, step limit, fail closed, 3.0 observe / hold chunks")
 
 
 if __name__ == "__main__":

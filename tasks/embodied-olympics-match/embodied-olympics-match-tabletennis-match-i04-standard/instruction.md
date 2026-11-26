@@ -58,10 +58,33 @@ Robot table tennis: each player is a Franka Panda arm with a paddle on an x-y ra
 to the real robot's limits, and you see the game only through two cameras of four frames each. The players' robots serve
 by the ITTF service laws, with a toss device on the robot. You are seat `A` against a scripted opponent at level 4 of 4.
 The world waits for you: it advances only while you let it (`### Time` below). The robot runs as a service you reach
-only through its client, as if it were real hardware: one live episode.
+through its client or its MCP tools, as if it were real hardware: one live episode.
 
 ### Client
-The `game` command, or the same calls as HTTP with JSON at `http://localhost:8000/<SEAT>/` (your seat is `$SEAT`):
+The service at `http://localhost:8000` speaks eai-standard/2.x with the match extension (`eai-standard/2.1+match/1.0`;
+docs/protocol/standard_mode.md Part 5): the endpoints of every standard task, plus `/start` and `/ready`. The shared
+client is installed (`from rcb_client import Robot`).
+
+| HTTP | |
+| --- | --- |
+| `GET /spec` | the standard spec (`cameras` with intrinsics and pose, `action_types` with each type's fields and row layout, `timing`) and, under `match`, everything `game spec` gives |
+| `GET /status` | the state, no image |
+| `POST /start {}` | you are ready; the match begins when every seat has started |
+| `POST /observe {"cameras": [...]}` | the camera images of now, at once; no time passes (RCB1: `last/<camera>`, `frames/<camera>`, `view` = the tiled PNG of `game observe`) |
+| `POST /submit {"type": T, "rows": [ACTION, ...], "dt": DT}` | your actions (the objects of `game act`), one after the other, each followed by DT of game time |
+| `POST /submit {"type": T, "interpolate": "hold", "seconds": S}` | lets S seconds of game time pass with your last actions in force (as `game wait S`) |
+| `POST /ready {"why": "...", "plan": "..."}` | your review when the world freezes |
+
+`/submit` returns after its last row: each row takes effect at the current step, then the world advances DT (default:
+one control step). An action the match refuses is a 400 (a later row's: `code` 400 in `meta.effects`). Where an action
+names a robot (`entity`), one chunk commands one: `"entity": E` in the chunk, or the type `T@E`. Every answer's `meta`
+has `score`, `review_due` (send `/ready` now), `match_over`, `step`, `phase` and your `state`. A `/submit` while the
+world is frozen or before the start executes nothing (`ok: false`, `not_now`); after the match is over requests are a
+409. `/finish` and `/reset` are not offered (404): the match's rules end it, and there is one match. What differs from
+the plain standard: `timing.deviations` in `/spec`.
+
+The same match also answers the `game` command, or the same calls as HTTP with JSON under
+`http://localhost:8000/<SEAT>/` (the paths below are under it; your seat is `$SEAT`); you may use both:
 
 | `game` command | HTTP | |
 | --- | --- | --- |
@@ -77,6 +100,13 @@ The `game` command, or the same calls as HTTP with JSON at `http://localhost:800
 Errors: 400 = an invalid action (nothing happens), 409 = not now (not your turn, or a review is due), 429 = one action
 in flight (sent before the previous one returned), or more than 20 requests per second or 4 open requests from your seat
 (empty body: retry more slowly).
+
+### MCP tools
+- The same seat is also an MCP server, `efe-robot` (in your tool list), with one tool per `game` command: `spec`,
+  `start`, `observe`, `act`, `wait`, `ready`. Each result is the service's reply; images are written as files under
+  `/app/obs/`.
+- A call still running after 45 s returns `pending` with an `operation` id; `wait(operation=id)` collects it.
+- The `game` command and the tools play the same seat in the same match; use either, or both.
 
 ### Actions
 - Your actions are the sport's skill API (`hit`): the platform executes each one; `game spec` (`skill_contract`) says

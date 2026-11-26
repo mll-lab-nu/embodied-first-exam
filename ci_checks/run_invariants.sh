@@ -11,7 +11,8 @@
 #   H.1 verifier isolation      check-verifier-isolation.sh (per task), check-monitor.py --tier invariants,
 #                               check-ci-selftest.py --tier invariants (the rules fire), benchmark hooks (a skill sandbox)
 #   H.2 no answer in reach      check-agent-pointers.py, the benchmarks' ci_checks/benchmarks/*/invariant-* hooks
-#   H.3 standard trust boundary check-standard-agent-image.sh, check-verifier-isolation.sh (ports, sidecar topology)
+#   H.3 standard trust boundary check-standard-agent-image.sh, check-verifier-isolation.sh (ports, sidecar topology),
+#                               check-agent-end.py (no success signal: agent-ended episodes in standard and realtime)
 #   H.4 trusted verdict         check-verifier-isolation.sh (evidence from a sidecar), check-instance-copies.sh
 #   H.5 infrastructure rerun    scripts/tests/test_retry_policy.py, scripts/tests/test_runner_results.py (a voided
 #                               attempt is never counted)
@@ -61,10 +62,11 @@ add twins           python3 ci_checks/check-twins.py"$targs"                    
 add monitor         python3 ci_checks/check-monitor.py --tier invariants"$targs"            # H.1
 add retry-policy    python3 scripts/tests/test_retry_policy.py                              # H.5
 add runner-results  python3 scripts/tests/test_runner_results.py                            # H.5
-EXPECTED_NAMED=6
+add agent-end       python3 ci_checks/check-agent-end.py --tier invariants"$targs"          # H.3
+EXPECTED_NAMED=7
 if [ "$scope" = full ] && [ $explicit -eq 0 ]; then
   add selftest      python3 ci_checks/check-ci-selftest.py --tier invariants                # H.1-H.8: the rules fire
-  EXPECTED_NAMED=7
+  EXPECTED_NAMED=8
 fi
 [ "${#ids[@]}" -eq "$EXPECTED_NAMED" ] || { echo "FAIL run_invariants.sh: ${#ids[@]} named checks, $EXPECTED_NAMED expected"; exit 1; }
 # the benchmarks' own invariant hooks (H.1 / H.2: leak checks, a skill sandbox's test): every ci_checks/benchmarks/*/invariant-*,

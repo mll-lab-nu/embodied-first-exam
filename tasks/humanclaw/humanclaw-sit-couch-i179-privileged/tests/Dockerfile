@@ -174,8 +174,8 @@ WORKDIR /app
 # the frozen instance. Only the declared artifacts (/app/output/) come over from the agent's container.
 FROM humanclaw-base
 COPY instance.json test.sh /tests/
-COPY --from=ghcr.io/mll-lab-nu/efe:humanclaw-files-0.1.1@sha256:805f9ad6c273ef08d58e93d419371c99ea78638a18ee03c1396d91fcd90d5eee /grade_privileged.py /tests/grade.py
-COPY --from=ghcr.io/mll-lab-nu/efe:humanclaw-files-0.1.1@sha256:805f9ad6c273ef08d58e93d419371c99ea78638a18ee03c1396d91fcd90d5eee /hc_core.py /hc_tools.py /tests/
+COPY --from=ghcr.io/mll-lab-nu/efe:humanclaw-files-0.2.0@sha256:81b6453e17626533b4187d5bae8c406833f6e8ef904a9744daeed82e367c0634 /grade_privileged.py /tests/grade.py
+COPY --from=ghcr.io/mll-lab-nu/efe:humanclaw-files-0.2.0@sha256:81b6453e17626533b4187d5bae8c406833f6e8ef904a9744daeed82e367c0634 /hc_core.py /hc_tools.py /tests/
 RUN chmod +x /tests/test.sh && mkdir -p /app/output /logs/verifier
 ENV PYTHONPATH=/tests
 WORKDIR /tests

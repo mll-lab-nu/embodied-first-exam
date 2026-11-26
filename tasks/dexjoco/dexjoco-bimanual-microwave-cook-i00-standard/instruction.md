@@ -5,19 +5,22 @@ Put the hot dog in the microwave, close the door and press the start button.
 
 ## Goal
 Success: the hot dog is inside the microwave, the door is fully closed and the start button is being pressed, all at
-once. The episode ends as soon as the task is done.
+once.
+
+The episode counts the press of the start button as it happens, with the hot dog inside and the door shut at that
+moment. It ends when you call finish (Limits) or when your session ends. The robot never tells you whether you have
+succeeded.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
   benchmark's demonstrations, trained policies); trials are reviewed.
 - One episode, no reset: what you knock over stays knocked over.
 - You get only the robot's camera images (RGB, depth on request, with their calibration) and its own proprioception
-  (joints, tcp poses, the current targets): no object poses, no scene layout, no score; the episode ends when the task
-  is done, and the service tells you that it ended and why.
+  (joints, tcp poses, the current targets): no object poses, no scene layout, no score, no success signal.
 
 ## Robot Interface
-Two Franka Panda arms, each with a 16-joint Allegro hand (DexJoCo, MuJoCo). The robot runs as a service you reach only
-through its client, as if it were real hardware: one live episode.
+Two Franka Panda arms, each with a 16-joint Allegro hand (DexJoCo, MuJoCo). The robot runs as a service you reach
+through its client or its MCP tools, as if it were real hardware: one live episode.
 
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
@@ -29,7 +32,8 @@ obs = r.get_obs()                             # current frames of spec["default_
 obs = r.get_obs(cameras=["back", "handcam_rgb_right"], depth=True)   # + obs.last_depth[cam] -> float32 (480, 640) z-depth (m)
 obs.meta["proprio"]                           # {"layout": [...], "now": [...]}; obs.group("tcp_pose", now=True)
 obs.meta["cameras"]                           # per camera intrinsic_cv / extrinsic_cv / cam2world_gl for these frames
-obs = r.get_obs(seconds=2.0, video="mp4")     # hold the current targets and watch for 2 s (max 30): obs.video[cam] = mp4 bytes
+obs = r.hold(2.0)                             # hold the current targets for 2 s of robot time: obs.video[cam] = mp4 bytes
+obs = r.get_obs(last_s=1.0)                   # the frames recorded over the last 1 s (reading moves no time)
 
 res = r.submit("ee_pose", rows, dt=0.1)       # rows: (T, 46) targets dt seconds apart, executed at 50 Hz with interpolation
 res = r.submit("joint_position", q_rows, dt=0.1)   # (T, 46) joint targets instead (see below)
@@ -40,6 +44,17 @@ r.status()                                    # calls, control steps, done, reas
 ```
 One call returns at most 1000 images. If a call fails with a connection error the service may have crashed: it resumes
 the same episode; `r.wait_ready()`, then check `r.status()` (`spec["on_service_error"]`).
+
+### MCP tools
+- The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
+  `observe`, `submit`, `kinematics`, `finish`. A tool takes its endpoint's request fields (any other field in `fields`)
+  and returns the service's reply `meta` unchanged; images, arrays and video are written as files under `/app/obs/`
+  (`.png`, `.npy`, `.mp4`) and the result lists them. Long action chunks can be passed as a file (`actions_file`).
+- `observe` returns at once with what is already recorded: the current frame, or the last `last_s` seconds. Time passes
+  only through `submit`, which answers when its rows have run; a `submit` with `interpolate` "hold", `seconds` and no
+  rows lets time pass with the robot holding still.
+- A call still running after 45 s returns `pending` with an `operation` id; `observe(operation=id)` collects its reply.
+- The client and the tools drive the same robot in the same episode; use either, or both.
 
 ### Actions
 - `ee_pose` (46 numbers, DexJoCo's own action): per arm, right first: tcp target position (3, metres, world frame), tcp
@@ -88,3 +103,7 @@ the same episode; `r.wait_ready()`, then check `r.status()` (`spec["on_service_e
   only slows you down); usage: `/run/rcb-limits/usage.json`.
 - Resets: none: one episode.
 - Steps: no limit; actions and simulated time are reported, as cost.
+- Finish: when you are done, call finish: `POST /finish` with an empty JSON body to the service, at the client's base
+  URL (`http://sim:8000` or `http://localhost:8000`; in Python `requests.post(r.base + "/finish", json={})` with your
+  client `r`). It ends the episode, and every call after it is refused. Reaching the goal changes no reply and does not
+  end the episode; if you never call finish, the end of your session ends it.

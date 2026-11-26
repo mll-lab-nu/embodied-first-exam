@@ -1,0 +1,14 @@
+{
+ "manifest": "efe-mcp-manifest/1",
+ "kind": "rcb",
+ "suite": "robocasa365",
+ "task": "robocasa365-add-lemon-to-fish-i00-standard",
+ "protocol": "eai-standard/2.1",
+ "realtime": false,
+ "tools": [
+  "spec",
+  "observe",
+  "submit",
+  "finish"
+ ]
+}

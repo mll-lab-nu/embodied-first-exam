@@ -9,7 +9,7 @@
 | Family / instance | `count_one` / seed 0 (allowed seeds: [0, 36, 50]; PROTOCOL §2) |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:abc-sim-0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe:abc-sim-0.4.0` |
 
 ## Task
 ABC Sim `count_one_into_opaque_box` (two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each) side by side at the near edge of a table, facing +x (the left arm is the one at +y)): Put exactly one red object in the box, and nothing else.

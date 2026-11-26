@@ -1,11 +1,17 @@
 # AGENTS.md — map for coding agents working in this repo
 
-Read `README.md`, `docs/protocol/README.md` (v2.4: recommended conventions, each task declares its own settings, §2; the eight
+Read `README.md`, `docs/protocol/README.md` (v3.0: recommended conventions, each task declares its own settings, §2; the eight
 invariants of Appendix H bind and no task value overrides them), `docs/protocol/running.md` (official runs) and `CONTRIBUTING.md` first.
 
 - Modes: **privileged**, **standard** (wire protocol `eai-standard/2.x`) and **realtime** (standard mode on a
   clock that does not stop, `eai-standard/2.3`), PROTOCOL §3. Task directories end in `-privileged`, `-standard` or
-  `-realtime`; base images are `ghcr.io/mll-lab-nu/efe:<name>-<version>` (private: `efe-private:<name>-<version>`), one image per benchmark (PROTOCOL §1). No
+  `-realtime`. From v3.0 every standard and realtime episode is agent-ended (PROTOCOL §3: the service never shows the
+  success, `POST /finish` ends the episode, the end state is judged; `normalize` writes `RCB_AGENT_END` and the
+  instruction's Finish line, `ci_checks/check-agent-end.py`; layers: `rcb_service.py` (2.1), `rcb_realtime.py` (2.3),
+  `embodied_first_exam/standard/agent_end/` (2.2, 2.4)). The rules of `eai-standard/3.0` (standard_mode.md "Version 3.0";
+  `EAI_STANDARD` in `scripts/task_conventions.py`) hold on every layer: `/observe` only reads (`last_s`; `seconds > 0` is a
+  400), a hold chunk (`/submit` `interpolate = "hold"` + `seconds`, no rows) lets time pass, `/submit` replies carry
+  `duration_s`, the realtime clock starts at the first `/submit`; clients `get_obs(last_s=)`, `hold()`, `finish()`. Base images are `ghcr.io/mll-lab-nu/efe:<name>-<version>` (private: `efe-private:<name>-<version>`), one image per benchmark (PROTOCOL §1). No
   `results/` in task dirs.
 - A pull request delivers tasks only (PROTOCOL §1, "What a contribution delivers"): no task-generation code in the
   repository; `scripts/` holds only what running the benchmark needs. Every task is in the normal form of
@@ -83,5 +89,13 @@ invariants of Appendix H bind and no task value overrides them), `docs/protocol/
   `embodied_first_exam/standard/v2_4/rcb_limited.py` + `rcb_client.py` with 2.2's `rcb1.py` and `run.sh`, copied unchanged
   into every 2.4 task (`check-tooling-identity.sh`).
   `python3 embodied_first_exam/standard/selftest.py` tests the crash recovery on the CPU in about two minutes.
+- MCP tools (docs/protocol/standard_mode.md "MCP tools"): every standard and realtime task also offers its robot service
+  as the `efe-robot` MCP server, one tool per agent-facing endpoint; source `embodied_first_exam/standard/mcp/`, written
+  into each task by `normalize` (`inject.py`: `environment/efe_mcp/`, a Dockerfile line, a task.toml
+  `[[environment.mcp_servers]]` entry, `### MCP tools` in Robot Interface); `ci_checks/check-mcp-tools.py` checks it.
+- The match extension `eai-standard/2.x+match/1.0` (docs/protocol/standard_mode.md Part 5, Embodied Olympics - Match):
+  `embodied_first_exam/benchmarks/embodied-olympics-match/eai_std/`, copied unchanged into each such task's
+  `environment/sim/eai_std/` by `apply_eai_std.py` there (`ci_checks/benchmarks/embodied-olympics-match/invariant-eai-std.py`);
+  the match's `core/` stays as exported.
 - Benchmark-level rules (templates, budgets, tooling file names, the world-frame and tooling declarations):
   `tasks/<benchmark>/README.md`.

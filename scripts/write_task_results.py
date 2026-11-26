@@ -75,7 +75,7 @@ def load_json(p):
         return {}
 
 
-def classify(trial, r, rw):
+def classify(trial, r, rw, agent_ended=False):
     """(status, reason, over the token budget): status `success`, `fail` (the agent's own result, counted) or
     `not_a_result` (infrastructure: voided, never counted)."""
     gw = load_json(trial / "gateway/totals.json")
@@ -84,9 +84,10 @@ def classify(trial, r, rw):
     # the verifier never graded, or that Harbor or the model account ended (not_a_result). A verdict of success with no
     # infrastructure flag stands; over the token budget is the agent's failure unless the verifier flagged infrastructure.
     infra = bool(rw.get("infra_error") or rw.get("grader_error"))
-    # an agent-ended episode (PROTOCOL §3; reward.json ended_session_end) is graded on the state its session ended in, the
-    # token budget's end included: over the budget it is not failed on top
-    fails = over and "ended_session_end" not in rw
+    # an agent-ended episode (PROTOCOL §3: every standard and realtime task from v2.5, tc.agent_end_required; before,
+    # reward.json ended_session_end) is graded on the state its session ended in, the token budget's end included: over
+    # the budget it is not failed on top
+    fails = over and not agent_ended and "ended_session_end" not in rw
     ok = rw.get("success") == 1 and not fails and not infra
     why = None if ok or (over and not infra) else not_a_result(trial, r, rw)
     return ("success" if ok else "not_a_result" if why else "fail"), why, over
@@ -184,7 +185,7 @@ def main(argv):
         rw = load_json(trial / "verifier/reward.json")
         ar = r.get("agent_result") or {}; mode = tc.mode_of(tdir); limited = mode != "privileged"
         out = out_root / task / slug; out.mkdir(parents=True, exist_ok=True)
-        status, why, over = classify(trial, r, rw)
+        status, why, over = classify(trial, r, rw, agent_ended=tdir.is_dir() and tc.agent_end_required(tdir))
         led = record_attempt(out, trial, r, status)
         rule = rp.check_attempts([{"outcome": OUTCOME.get(a["status"], "agent_failure")} for a in led])
         over_cap = bool(rule)

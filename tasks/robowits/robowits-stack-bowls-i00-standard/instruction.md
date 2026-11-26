@@ -5,21 +5,20 @@ Put the smaller bowl inside the larger one, centred.
 
 ## Goal
 Success: the smaller bowl sits centred in the larger one, both on the table and clear of its edges; the robot has let go
-of both bowls, touches neither, and they are at rest. When all of this holds after a call, the service holds your last
-command within that call for about three seconds (a second, then two seconds in which all of this must keep holding,
-with nothing moving); if it all holds through, the episode ends as a success, and if not, it goes on. When your session
-ends, the same check runs once more after your last command.
+of both bowls, touches neither, and they are at rest. When the episode ends, the service holds your last command for
+about three seconds (a second, then two seconds in which all of this must keep holding, with nothing moving), and
+success is judged at the end of that. It ends when you call finish (Limits) or when your session ends. The robot never
+tells you whether you have succeeded.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
   benchmark's demonstrations, trained policies); trials are reviewed.
 - One episode, no reset: what you knock over stays knocked over.
-- You get only the cameras and the robot's own sensor readings: no object poses, no scene layout; the episode ends when
-  the task is done.
+- You get only the cameras and the robot's own sensor readings: no object poses, no scene layout, no success signal.
 
 ## Robot Interface
 A bimanual Marvin robot (two 7-DoF arms with Pika parallel grippers), in RoboWits' simulation (Genesis). The robot runs
-as a service you reach only through its client, as if it were real hardware: one live episode.
+as a service you reach through its client or its MCP tools, as if it were real hardware: one live episode.
 
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
@@ -32,7 +31,8 @@ obs = r.get_obs()                             # current frames from 3 cameras: o
 obs.meta["proprio"]                           # {"layout": [80 names], "now": [...]}: groups in spec["proprio_groups"]
 obs.meta["cameras"]                           # per camera: intrinsic_cv, extrinsic_cv, cam2world_gl of the LAST frame
 obs = r.get_obs(depth=True)                   # + obs.last_depth[cam]: float32 (480,848) z-depth in metres, 0 = no reading
-obs = r.get_obs(seconds=2.0, video="mp4")     # hold the last command and watch for 2 s (max 30): obs.video[cam] = mp4 bytes
+obs = r.hold(2.0)                             # hold the last command for 2 s of robot time: obs.video[cam] = mp4 bytes
+obs = r.get_obs(last_s=1.0)                   # the frames recorded over the last 1 s (reading moves no time)
 
 res = r.submit("joint_position", A, dt=0.1)   # A: (T, 16) rows dt seconds apart; streamed at 30 Hz with linear interpolation
 res = r.submit("ee_pose", P)                  # P: (T, 16) gripper-tip targets; inverse kinematics per row
@@ -56,8 +56,18 @@ connection is refused or reset instead of an answer), it restarts and resumes th
 state after the last call it completed. `r.wait_ready()` waits until it answers again (resuming replays the episode so
 far: about a second per 700 control steps); then check `r.status()` (`calls`, `control_steps`) before you continue. A
 call that runs longer than `spec["max_call_wall_s"]` stops at the next control step and returns what it executed
-(`res.stopped`, `meta["executed_rows"]`). When the settle check after a call fails, `meta["settle"]` says why. One call
-returns at most 1500 images.
+(`res.stopped`, `meta["executed_rows"]`). One call returns at most 1500 images.
+
+### MCP tools
+- The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
+  `observe`, `submit`, `kinematics`, `finish`. A tool takes its endpoint's request fields (any other field in `fields`)
+  and returns the service's reply `meta` unchanged; images, arrays and video are written as files under `/app/obs/`
+  (`.png`, `.npy`, `.mp4`) and the result lists them. Long action chunks can be passed as a file (`actions_file`).
+- `observe` returns at once with what is already recorded: the current frame, or the last `last_s` seconds. Time passes
+  only through `submit`, which answers when its rows have run; a `submit` with `interpolate` "hold", `seconds` and no
+  rows lets time pass with the robot holding still.
+- A call still running after 45 s returns `pending` with an `operation` id; `observe(operation=id)` collects its reply.
+- The client and the tools drive the same robot in the same episode; use either, or both.
 
 ### Actions
 - `joint_position` (16): `Joint1_R..Joint7_R, right_gripper, Joint1_L..Joint7_L, left_gripper`; radians, gripper =
@@ -100,5 +110,9 @@ returns at most 1500 images.
   GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap only
   slows you down); usage: `/run/rcb-limits/usage.json`.
 - Resets: none: one episode.
-- Steps: no step budget; a technical cap ends the episode after 200,000 control steps (1/30 s each, watches included),
-  as a failure: no settle check runs after it.
+- Steps: no step budget; a technical cap ends the episode after 200,000 control steps (1/30 s each, holds included),
+  graded as it stands, without the closing three-second check.
+- Finish: when you are done, call finish: `POST /finish` with an empty JSON body to the service, at the client's base
+  URL (`http://sim:8000` or `http://localhost:8000`; in Python `requests.post(r.base + "/finish", json={})` with your
+  client `r`). It ends the episode, and every call after it is refused. Reaching the goal changes no reply and does not
+  end the episode; if you never call finish, the end of your session ends it.

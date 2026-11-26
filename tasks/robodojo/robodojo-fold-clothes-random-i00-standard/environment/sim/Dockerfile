@@ -114,7 +114,7 @@ COPY --from=ghcr.io/mll-lab-nu/efe:robodojo-files-0.7.1@sha256:42187828222adbc6d
      /privileged/environment/rcb_robodojo.py \
      /sim/server.py \
      /srv/
-COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.4.1@sha256:7f1a830075fd6dd25e7a20a340316c041df583a29062796f59a4fa63b6f76946 \
+COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.5.0@sha256:a6c2ac2ede9fe2c1744f9c6e67c6a49de9c5a8b8c2c9ae4f0d774b7dd72662ff \
      /rcb1.py \
      /rcb_limited.py \
      /run.sh \

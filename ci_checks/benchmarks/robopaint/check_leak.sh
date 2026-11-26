@@ -31,10 +31,19 @@ ALLOWED = {"Dockerfile", "docker-compose.yaml", "instance.json", "target.png", "
            "client-requirements.txt", "NOTICE-exemplar.md", "ARPHICPL.TXT"}
 SIDECARS = {"sim", "scorer"}
 MONITOR = "rcb_monitor"   # the resource monitor sidecar's limits, mounted only into it (check-monitor.py)
+MCP = "efe_mcp"   # standard: the robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"), the server's files unchanged
+MCP_SRC = Path(root) / "embodied_first_exam/standard/mcp"   # from their source, + the task's manifest.json
+MCP_COPY = "COPY efe_mcp /opt/tools/efe_mcp"
 for f in sorted(os.listdir(env)):
     p = os.path.join(env, f)
     if os.path.isdir(p):
-        if f not in SIDECARS and f != MONITOR:
+        if f == MCP and not name.endswith("-privileged"):
+            for q in sorted(Path(p).rglob("*")):
+                rel = q.relative_to(p).as_posix()
+                if q.is_file() and rel != "manifest.json" and (not (MCP_SRC / rel).is_file()
+                                                                or q.read_bytes() != (MCP_SRC / rel).read_bytes()):
+                    bad.append(f"environment/{MCP}/{rel}: not the file of embodied_first_exam/standard/mcp/")
+        elif f not in SIDECARS and f != MONITOR:
             bad.append(f"environment/{f}/: unexpected directory")
     elif f not in ALLOWED:
         bad.append(f"environment/{f}: not an allowed agent-side file")
@@ -42,6 +51,8 @@ for f in sorted(os.listdir(env)):
 df = open(os.path.join(env, "Dockerfile")).read()
 tooling = {}   # agent-side tooling file -> where its bytes are (the task dir, or the files-only image's source)
 for m in re.finditer(r"^\s*(COPY|ADD)\s+(.+)$", df, re.M):
+    if m.group(0).strip() == MCP_COPY and not name.endswith("-privileged"):
+        continue
     parts = [x for x in m.group(2).split() if not x.startswith("--")]
     frm = [x for x in m.group(2).split() if x.startswith("--from")]
     if frm and frm[0] == "--from=" + PICS["image"]:   # the pictures image: this task's own target.png, nothing else

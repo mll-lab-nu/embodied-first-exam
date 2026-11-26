@@ -4,8 +4,9 @@
 Hook the stick into the thermos's handle and pull the thermos to the target with it. Leave the stick in the handle.
 
 ## Goal
-Success: the thermos is at the target point with the stick still hooked in its handle. What counts is how things stand
-at the end of the episode.
+Success: the thermos is at the target point with the stick still hooked in its handle. Success is judged on how things
+stand when the episode ends. It ends when you call finish (Limits) or when your session ends. The robot never tells you
+whether you have succeeded.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions,
@@ -15,8 +16,8 @@ Rules:
   signal.
 
 ## Robot Interface
-A Sawyer arm at a table (Meta-World, MuJoCo). The robot runs as a service you reach only through its client, as if it
-were real hardware: one live episode.
+A Sawyer arm at a table (Meta-World, MuJoCo). The robot runs as a service you reach through its client or its MCP tools,
+as if it were real hardware: one live episode.
 
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`.
@@ -30,14 +31,26 @@ obs = r.get_obs(cameras=cams, include_depth=True)   # obs.last[cam] -> uint8 (24
 obs.meta["proprio"]                           # {"layout": [...], "now": [...]}
 obs.meta["cameras"]                           # per camera: intrinsic_cv, cam2world_gl (OpenGL: looks along -z)
 obs.meta["task"]["target_pos"]                # the task's target point (world frame)
-obs = r.get_obs(cameras=cams[:1], seconds=2.0, video="mp4")    # hold still and watch for 2 s (max 30)
+obs = r.hold(2.0, cameras=cams[:1])                            # hold still for 2 s of robot time
+obs = r.get_obs(last_s=1.0)                                    # the frames recorded over the last 1 s (reading moves no time)
 res = r.submit("ee_delta", A, dt=spec["control_dt"], cameras=cams[:1], video="mp4")   # A: (T, 4)
 res.meta["done"], res.meta["reason"]
 res.video[cam]; res.frames[cam]; res.last[cam]; res.proprio
 ```
 
-One call returns at most 3000 images. `get_obs(seconds=s)` holds the hand still (zero motion, same grip) while physics
-runs for `s` seconds; those control steps are part of the episode.
+One call returns at most 3000 images. `hold(s)` holds the hand still (zero motion, same grip) while physics runs for `s`
+seconds; those control steps are part of the episode.
+
+### MCP tools
+- The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
+  `observe`, `submit`, `finish`. A tool takes its endpoint's request fields (any other field in `fields`) and returns
+  the service's reply `meta` unchanged; images, arrays and video are written as files under `/app/obs/` (`.png`, `.npy`,
+  `.mp4`) and the result lists them. Long action chunks can be passed as a file (`actions_file`).
+- `observe` returns at once with what is already recorded: the current frame, or the last `last_s` seconds. Time passes
+  only through `submit`, which answers when its rows have run; a `submit` with `interpolate` "hold", `seconds` and no
+  rows lets time pass with the robot holding still.
+- A call still running after 45 s returns `pending` with an `operation` id; `observe(operation=id)` collects its reply.
+- The client and the tools drive the same robot in the same episode; use either, or both.
 
 ### Actions
 - Action `ee_delta` (4: `dx, dy, dz, grip`, float64, each clipped to [-1, 1]) is Meta-World's native action, applied
@@ -70,3 +83,7 @@ runs for `s` seconds; those control steps are part of the episode.
   GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap only
   slows you down); usage: `/run/rcb-limits/usage.json`.
 - Resets: none: one episode.
+- Finish: when you are done, call finish: `POST /finish` with an empty JSON body to the service, at the client's base
+  URL (`http://sim:8000` or `http://localhost:8000`; in Python `requests.post(r.base + "/finish", json={})` with your
+  client `r`). It ends the episode, and every call after it is refused. Reaching the goal changes no reply and does not
+  end the episode; if you never call finish, the end of your session ends it.
