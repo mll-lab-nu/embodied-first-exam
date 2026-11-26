@@ -948,7 +948,12 @@ def _resume_or_start() -> None:
     # the episode's end, if it is within the last checkpoint: an end past it was logged by a call lost with the crash (an
     # end record without rows is kept)
     ended = [e for e in ev if e.get("ev") == "end" and int(e.get("rows") or 0) <= n]
-    if ended: E["done"] = True; E["reason"] = ended[-1].get("reason"); E["t_end"] = float(ended[-1]["ts"]); E["episode_physics_steps"] = int(ended[-1].get("physics_steps") or n)
+    if ended:
+        E["done"] = True; E["reason"] = ended[-1].get("reason"); E["t_end"] = float(ended[-1]["ts"]); E["episode_physics_steps"] = int(ended[-1].get("physics_steps") or n)
+        # the verdict finish() judged is the end record's: the checkpoint before it does not hold it (agent-ended: an
+        # end-state end is judged only in finish(), the checkpoints keep success False; without the feature: a timeout's
+        # check_success). A crash between the end and finalize() must not turn a success into 0.
+        E["success"] = bool(ended[-1].get("success", E["success"]))
     log({"ev": "resumed", "rows": n, "calls": E["calls"], "state_sha": S.state_sha(), "crashed_in_call": in_call, "downtime_s": round(time.time() - float(ev[-1]["ts"]), 1)})
     if not E["done"] and E["success"]:
         # the call that succeeded completed (its checkpoint holds the success) and the crash came before its end was
