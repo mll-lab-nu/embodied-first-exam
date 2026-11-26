@@ -1,10 +1,11 @@
 """End-to-end test of the efe-robot MCP server against the toy eai-standard/2.2 service (CPU, ~10 s): the endpoint
-tools' request and reply, a hold chunk (no rows), a refusal, the end of the episode, finish refused where the success is not hidden (and sent where it is: test_agent_end.py, run at the end), a tool
-added from /spec (kinematics), and a pending call collected with observe(operation=...).
+tools' request and reply, a hold chunk (no rows), a refusal, the end of the episode, finish refused where the success is not hidden (and sent where it is: test_agent_end.py, run at the end), a pending call collected with
+observe(operation=...), one deadline per call (the wait for an earlier call included) and a call that finds an earlier
+one still running not sent (`sent` false).
 
     python3 embodied_first_exam/standard/mcp/tests/test_toy.py
 """
-import json, os, pathlib, socket, subprocess, sys, tempfile
+import json, os, pathlib, socket, subprocess, sys, tempfile, time
 import numpy as np
 HERE = pathlib.Path(__file__).resolve().parent
 MCP = HERE.parent
@@ -69,7 +70,7 @@ def main():
             raise AssertionError("a row of the wrong width was accepted")
         except McpToolError as e:
             assert str(e).startswith("400 /submit"), e
-        # a long chunk: pending after 1 s, collected with observe(operation=...)
+        # a long chunk (100 rows, 2 s): pending after 1 s, collected with observe(operation=...)
         raw = c.call_raw("submit", type="joint_position", actions=[[0.3 * k / 100, 0, 0] for k in range(1, 101)],
                          dt=0.05, cameras=["top"], video="none")
         out = json.loads(raw["content"][0]["text"])
@@ -77,6 +78,29 @@ def main():
         while out.get("pending"):
             out = json.loads(c.call_raw("observe", operation=out["operation"])["content"][0]["text"])
         assert out["meta"]["executed_rows"] == 100, out["meta"]
+        # one deadline per call, the wait for an earlier call included; a call that finds one still running is not sent
+        def timed(name, **a):
+            t = time.monotonic(); r = c.call_raw(name, **a)
+            return r, json.loads(r["content"][0]["text"]), time.monotonic() - t
+        _, p1, dt1 = timed("submit", type="joint_position", actions=[[0.3 - 0.1 * k / 200, 0, 0] for k in range(1, 201)],
+                           dt=0.05, video="none")                                  # 200 rows: 4 s
+        assert p1.get("pending") and dt1 < 1.6, (p1, dt1)
+        r2, p2, dt2 = timed("observe", cameras=[])
+        assert r2["isError"] and p2.get("sent") is False and p2["operation"] == p1["operation"] \
+            and p2["failure"]["category"] == "busy" and dt2 < 1.6, (p2, dt2)       # not the earlier call's result
+        _, p3, dt3 = timed("observe", operation=p1["operation"])                    # still running: pending again
+        out = c._collect(p3)
+        assert out["meta"]["executed_rows"] == 200, out["meta"]
+        _, p4, _ = timed("submit", type="joint_position", actions=[[0.2 + 0.1 * k / 70, 0, 0] for k in range(1, 71)],
+                         dt=0.05, video="none")                                    # 70 rows: 1.4 s
+        _, p5, dt5 = timed("submit", type="joint_position", actions=[[0.3 - 0.1 * k / 100, 0, 0] for k in range(1, 101)],
+                           dt=0.05, video="none")    # waits ~0.4 s for p4, then runs: pending at 1 s from its arrival
+        assert p4.get("pending") and p5.get("pending") and p5["operation"] != p4["operation"] and dt5 < 1.6, (p4, p5, dt5)
+        assert c._collect(p4)["meta"]["executed_rows"] == 70 and c._collect(p5)["meta"]["executed_rows"] == 100
+        # McpClient.call: a call not sent is sent again once the running one is collected
+        _, p6, _ = timed("submit", type="joint_position", actions=[[0.2, 0, 0]] * 100, dt=0.05, video="none")
+        ob = c.call("observe", cameras=[])
+        assert p6.get("pending") and "meta" in ob and not ob.get("sent") is False, (p6, ob)
         np.save(tmp / "app" / "rows.npy", np.array([[0.5 + 0.05 * k, 0, 0] for k in range(10)], dtype=np.float32))
         r = c.call("submit", type="joint_position", actions_file="rows.npy", dt=0.1, cameras=["top"], video="none")
         assert r["meta"]["done"] and r["meta"]["reason"] == "success", r["meta"]
