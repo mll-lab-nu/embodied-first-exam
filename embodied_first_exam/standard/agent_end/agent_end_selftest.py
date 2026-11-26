@@ -49,6 +49,9 @@ PATCH = [
      '        if AE.STEP_LIMIT is not None and ctrl_steps() >= AE.STEP_LIMIT:\n            finish("step_limit")\n'
      '    elif S.success() and not E["success"]:\n        E["success"] = True; finish("success")\n'),
     ('            "reason": E["reason"], "proprio"', '            "reason": E["reason"], **AE.steps_left(ctrl_steps()), "proprio"'),
+    ('"done": E["done"], "reason": E["reason"],\n            "proprio"',
+     '"done": E["done"], "reason": E["reason"], **AE.steps_left(ctrl_steps()),\n            "proprio"'),
+    ('"last_note": E.get("last_note")}', '"last_note": E.get("last_note"), **AE.steps_left(ctrl_steps())}'),
     ("L.serve(L.Service(", "AE.serve(AE.Service("),
     ("proprio=proprio_row), port=", "proprio=proprio_row, **({\"finish\": lambda: finish(\"finished\")} if AE.ENABLED else {})), port="),
 ]

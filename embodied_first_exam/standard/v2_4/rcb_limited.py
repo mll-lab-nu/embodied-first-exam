@@ -1039,8 +1039,11 @@ def check_common(path: str, meta: dict, spec: dict) -> None:
     """The 400s every layer answers before anything runs (docs/protocol/standard_mode.md, Errors; the OpenAPI
     BadRequest), checked here so that no adapter can miss one: the numeric fields are JSON numbers, video_fps in
     [1, max_video_fps], and on /submit interpolate is linear or hold. A chunk's rows x dt cap is checked in
-    standard_call once the rows are parsed."""
+    standard_call once the rows are parsed. A null numeric field is absent (as in every layer): it is dropped here, so
+    no adapter reads a None (the toy's float(meta.get("seconds", 0)) raised, and a 500 ended the episode)."""
     for k in NUMBER_FIELDS:
+        if k in meta and meta[k] is None:
+            del meta[k]
         _real(meta, k)
     fps = _real(meta, "video_fps")
     if fps is not None and not 1.0 <= fps <= max_video_fps(spec) + 1e-9:
