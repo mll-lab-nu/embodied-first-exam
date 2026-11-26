@@ -64,11 +64,16 @@ EXCEPTIONS = (
      "RoboEngineer (eai-policy): the agent hands in a policy the platform runs; there is no live robot to call"),
     (lambda folder, name, protocol: folder == "embodied-olympics-match" and "-matchlow-" in name,
      "a matchlow match: the player delivers skill code the platform runs in the loop; tool calls cannot deliver it"),
+    (lambda folder, name, protocol: folder == "embodied-olympics-match" and protocol.startswith(EO_EXPORTED),
+     "an exported match without the match extension (no environment/sim/eai_std/; the G1 table-tennis tasks): its "
+     "service serves only the seat API /<SEAT>/<call> of the `game` command, not the /spec, /observe and /submit the "
+     "tools call"),
 )
 RCB_PROTOCOLS = ("eai-standard/2.1", "eai-standard/2.2", "eai-standard/2.3", "eai-standard/2.4")
 KIN_PROTOCOLS = ("eai-standard/2.2", "eai-standard/2.4")       # the layers that route POST /kinematics
-EO_PROTOCOLS = ("eai-standard-lockstep/", "eai-standard-realtime/", "eai-standard-turn/",
-                "eai-standard/2.1+match/", "eai-standard/2.3+match/")   # the match extension (standard_mode.md Part 5)
+EO_PROTOCOLS = ("eai-standard/2.1+match/", "eai-standard/2.3+match/")   # the match extension (standard_mode.md Part 5)
+# a match exported as it is (Embodied Olympics core's own protocol names): the seat API only, no eai_std/ (EXCEPTIONS)
+EO_EXPORTED = ("eai-standard-lockstep/", "eai-standard-realtime/", "eai-standard-turn/")
 
 
 def eo_clock(task: pathlib.Path, protocol: str) -> str:

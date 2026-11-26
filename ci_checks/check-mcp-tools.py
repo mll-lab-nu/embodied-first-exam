@@ -10,9 +10,10 @@ tool.
      schema/tools.json, and the schema's own `endpoints` map is the table's.
   2. Per task: a standard or realtime task has environment/efe_mcp/ (the server files byte-identical to their source,
      manifest.json what inject.manifest gives), the Dockerfile line, the task.toml entry and `### MCP tools` in Robot
-     Interface; a task inject.EXCEPTIONS names (RoboEngineer, the matchlow matches) has none of them. A manifest's
-     tools: spec, observe, submit and finish, reset where the task declares a reset budget, kinematics where its
-     service serves it; a match (kind eo-match): spec, observe, submit and the extension's calls, no finish.
+     Interface; a task inject.EXCEPTIONS names (RoboEngineer, the matchlow matches, an exported match without the
+     match extension) has none of them. A manifest's tools: spec, observe, submit and finish, reset where the task
+     declares a reset budget, kinematics where its service serves it; a match (kind eo-match): spec, observe, submit
+     and the extension's calls, no finish, and its service is the extension's (environment/sim/eai_std/).
 
     python3 ci_checks/check-mcp-tools.py [task dirs]      # default: every task
 Standard library only.
@@ -146,6 +147,9 @@ def check_task(task: Path) -> list[str]:
         if t[:3] != ["spec", "observe", "submit"] or set(t) & {"finish", "reset", "kinematics", "act", "wait", "status"}:
             errs.append(f"{task.name}: tools {t}: a match has spec, observe, submit and its extension's calls "
                         "(start, ready; say, team), no finish")
+        if not (task / "environment/sim/eai_std").is_dir():
+            errs.append(f"{task.name}: a match's tools without the match extension (environment/sim/eai_std/): the "
+                        "endpoints they call are not served")
     return errs
 
 

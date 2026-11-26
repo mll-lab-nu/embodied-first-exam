@@ -905,8 +905,11 @@ A match (Embodied Olympics - Match, `eai-standard/2.x+match/1.0`, Part 5) has th
 `reset` and no `kinematics`; its declared deviations (`/spec.timing.deviations`: the clock from `/start`, `last_s` the
 frames of now) are the service's. `GET /status` likewise has no tool.
 `ci_checks/check-mcp-tools.py` holds the routes the layers and adapters serve to this table, and every task to its
-tool list. Two kinds of task keep only their own interface, and their docs say so: RoboEngineer (`eai-policy`: the
-agent hands in a policy, no live robot) and the matchlow matches (the player delivers skill code the platform runs).
+tool list. Three kinds of task keep only their own interface, and their docs say so: RoboEngineer (`eai-policy`: the
+agent hands in a policy, no live robot), the matchlow matches (the player delivers skill code the platform runs) and a
+match exported without the extension (`eai-standard-lockstep/1.0`, `eai-standard-realtime/1.0`: no
+`environment/sim/eai_std/`, the G1 table-tennis tasks; its service serves only the seat API `/<SEAT>/<call>` of the
+`game` command).
 
 **Time.** Standard mode: time passes only through `submit`; `observe` reads what is recorded and moves nothing.
 Realtime mode: no tool holds or slows the clock; `submit` answers at once as the endpoint does, and a call costs its
