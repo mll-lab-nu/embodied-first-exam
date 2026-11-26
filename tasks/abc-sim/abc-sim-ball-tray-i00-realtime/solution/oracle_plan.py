@@ -22,8 +22,13 @@ try:
         res = r.submit("joint_position", A[i:j], dt=dt, interpolate="hold", at=i, cameras=[])
         print(f"planned rows {i}..{j} at step {i}; now step {res.meta['control_steps']}, late {res.meta.get('late_steps')}",
               flush=True)
-    while not r.status()["done"]:
-        time.sleep(0.1)
+    while True:                                  # eai-standard/3.0: a success never ends the episode; the agent ends
+        st = r.status()                          # it with /finish once the plan has run (its last row is the success)
+        if st["done"] or st["control_steps"] >= len(A):
+            break
+        time.sleep(0.02)
+    if not st["done"]:
+        print("finish:", r.finish())
 except EpisodeOver:
     pass
 print(r.status())

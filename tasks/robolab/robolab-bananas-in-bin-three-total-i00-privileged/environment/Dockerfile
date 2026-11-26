@@ -61,7 +61,7 @@ WORKDIR /app
 # Everything task-specific is copied here.
 FROM robolab-base
 COPY instance.json /app/instance.json
-COPY --from=ghcr.io/mll-lab-nu/efe:robolab-files-0.6.0@sha256:08031fdfae8d36a1cda40fa2cb46c9c252b064df9c482bed1cbf582d44b421be /rcb_robolab.py /opt/tools/rcb_robolab.py
+COPY --from=ghcr.io/mll-lab-nu/efe:robolab-files-0.6.0@sha256:2750f47dedd2541b6f1bfec2d4aef66f0a02f1fd6c3c249a42880ba93be4babf /rcb_robolab.py /opt/tools/rcb_robolab.py
 ENV PYTHONPATH=/opt/tools
 RUN mkdir -p /app/output
 WORKDIR /app

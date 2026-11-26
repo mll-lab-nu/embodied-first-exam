@@ -64,6 +64,7 @@ os.environ.setdefault("OMNI_KIT_ALLOW_ROOT", "1")
 os.environ.setdefault("PYTHONUNBUFFERED", "1")
 
 import argparse
+import functools
 import hashlib
 import json
 import math
@@ -1123,6 +1124,9 @@ class Session:
         never terminates the env (it returns False)."""
         func, sess, torch = term.func, self, self.th
 
+        # functools.wraps: IsaacLab's manager reads the term's parameters from inspect.signature(func), which follows
+        # __wrapped__; a bare (env, **params) signature is refused at env creation ("expects mandatory parameters")
+        @functools.wraps(func)
         def hidden_success(env, **params):
             v = func(env, **params)
             sess.term_now = bool(torch.as_tensor(v).reshape(-1)[0].item())
