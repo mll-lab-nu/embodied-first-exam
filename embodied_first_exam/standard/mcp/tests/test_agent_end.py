@@ -70,7 +70,7 @@ def oracle_shim(src: str, tmp: pathlib.Path):
            "--port-env", "RCB_TOY_PORT", "--service-env", f"PYTHONPATH={src}", "--service-env", "RCB_AGENT_END=1",
            "--tools", str(STD), "--manifest", str(HERE / "toy_manifest.json"),
            "--oracle", f"{sys.executable} {tmp / 'oracle.py'}", "--out", str(tmp / "equiv"),
-           "--compare", "journal.f64,final.json"]
+           "--compare", "journal.f64,final.json", "--ignore-keys", "finish_time_s"]     # wall time, 0.1 s steps
     p = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
     s = json.loads(p.stdout.strip().splitlines()[-1])
     assert p.returncode == 0, p.stdout + p.stderr
