@@ -1,5 +1,5 @@
 """End-to-end test of the efe-robot MCP server against the toy eai-standard/2.2 service (CPU, ~10 s): the endpoint
-tools' request and reply, a hold chunk (no rows), a refusal, the end of the episode, finish refused where the success is not hidden (and sent where it is: test_agent_end.py, run at the end), a pending call collected with
+tools' request and reply, a hold chunk (no rows), a refusal, the end of the episode, finish refused where the success is not hidden (and sent where it is: test_agent_end.py, run at the end), a tool added from /spec (kinematics: tools/list after the first call), a pending call collected with
 observe(operation=...), one deadline per call (the wait for an earlier call included) and a call that finds an earlier
 one still running not sent (`sent` false).
 
@@ -46,6 +46,11 @@ def main():
         sp = c.call("spec")
         spec = json.loads(pathlib.Path(sp["spec_file"]).read_text())
         assert spec["protocol"].startswith("eai-standard/2."), spec
+        # a tool added from /spec: the toy serves /kinematics (spec `kinematics`), the manifest does not list it
+        listed = {t["name"] for t in c.request("tools/list")["tools"]}
+        assert "kinematics" in listed and "kinematics" in spec, listed
+        k = c.call("kinematics", body={"op": "fk", "q": [0.0, 0.0, 0.0]})
+        assert k.get("ok") and k.get("op") == "fk", k
         try:
             c.call("observe", fields={"seconds": 1.0})
             raise AssertionError("an observe with a forward window (seconds > 0) must be refused")
