@@ -8,6 +8,20 @@ Success: nearly all the liquid has left the bottle, almost all of it is in the c
 stands upright again. The pour is judged at the moment the bottle stands upright again, so finish pouring before you
 stand it up.
 
+You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
+you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
+when your session ends.
+
+Nothing to hand in: the service records and grades the episode. Keep the script that drives the robot at
+`/app/output/gen.py`.
+
+Real-robot rules:
+- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
+  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
+- One episode, no reset: what you knock over stays knocked over.
+- No privileged state: you get the robot's camera images (with their calibration) and its own sensor readings; no object
+  poses, no scene layout, no success signal.
+
 ### Detailed success criteria
 - The bottle is 8.2 cm across and 21.8 cm tall. The cup, a mug, is 10.5 cm across with its handle, 7.5 cm the other way
   and 8.2 cm tall.
@@ -22,20 +36,6 @@ stand it up.
 - The pour passes when, of the particles not left out, at most 15% are still in the bottle's box and at least 97% of the
   rest are in the cup's box.
 - The 400-step limit is 16 s of simulated time.
-
-You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
-you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
-when your session ends.
-
-Nothing to hand in: the service records and grades the episode. Keep the script that drives the robot at
-`/app/output/gen.py`.
-
-Real-robot rules:
-- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
-  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
-- One episode, no reset: what you knock over stays knocked over.
-- No privileged state: you get the robot's camera images (with their calibration) and its own sensor readings; no object
-  poses, no scene layout, no success signal.
 
 ## Robot Interface
 Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). The robot

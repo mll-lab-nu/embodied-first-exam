@@ -8,17 +8,6 @@ Success: the three bowls are nested in one stack, all upright, the bottom one fl
 where they started. What counts is how things stand at the end of the episode: a success reached earlier and lost by the
 end does not count, so finish in the state you want graded and stop sending commands.
 
-### Detailed success criteria
-- The three bowls are the same model, 12.0 cm across and 5.0 cm tall. At the start their centres are 0.2 to 0.5 m apart.
-- A bowl's position, as the check measures it, is its centre: on its axis, 2.5 cm above the bottom of its foot.
-- Upright: each bowl's axis less than 45° from straight up, and the lowest bowl's (the one whose centre is lowest) less
-  than 7°.
-- One stack: taking the bowls in order of the height of their centres, each centre is at most 0.04 m horizontally from
-  the centre of the bowl below it and at least 0.005 m higher.
-- Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
-  starting orientation.
-- The 800-step limit is 32 s of simulated time.
-
 You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
 you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
 when your session ends.
@@ -32,6 +21,17 @@ Real-robot rules:
 - One episode, no reset: what you knock over stays knocked over.
 - No privileged state: you get the robot's camera images (with their calibration) and its own sensor readings; no object
   poses, no scene layout, no success signal.
+
+### Detailed success criteria
+- The three bowls are the same model, 12.0 cm across and 5.0 cm tall. At the start their centres are 0.2 to 0.5 m apart.
+- A bowl's position, as the check measures it, is its centre: on its axis, 2.5 cm above the bottom of its foot.
+- Upright: each bowl's axis less than 45° from straight up, and the lowest bowl's (the one whose centre is lowest) less
+  than 7°.
+- One stack: taking the bowls in order of the height of their centres, each centre is at most 0.04 m horizontally from
+  the centre of the bowl below it and at least 0.005 m higher.
+- Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
+  starting orientation.
+- The 800-step limit is 32 s of simulated time.
 
 ## Robot Interface
 Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). The robot

@@ -10,6 +10,20 @@ seen (a quick tap can be missed), with the head itself lifted clear of the keys 
 things stand at the end of the episode: a success reached earlier and lost by the end does not count, so finish in the
 state you want graded and stop sending commands.
 
+You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
+you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
+when your session ends. A step of the task's sequence, once done, stays counted.
+
+Nothing to hand in: the service records and grades the episode. Keep the script that drives the robot at
+`/app/output/gen.py`.
+
+Real-robot rules:
+- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
+  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
+- One episode, no reset: what you knock over stays knocked over.
+- No privileged state: you get the robot's camera images (with their calibration) and its own sensor readings; no object
+  poses, no scene layout, no success signal.
+
 ### Detailed success criteria
 - The xylophone is 42 × 21 cm and 2.3 cm tall; its keys run from 11 cm long at the left end to 7 cm at the right end.
   The mallet is about 21 cm long, with a ball head 2.6 cm across.
@@ -25,20 +39,6 @@ state you want graded and stop sending commands.
 - The check runs 15 stages in order, at most one per action: a strike on each of the 8 keys from left to right, with a
   lift after each of the first 7 (none after the last).
 - The 500-step limit is 20 s of simulated time.
-
-You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
-you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
-when your session ends. A step of the task's sequence, once done, stays counted.
-
-Nothing to hand in: the service records and grades the episode. Keep the script that drives the robot at
-`/app/output/gen.py`.
-
-Real-robot rules:
-- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
-  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
-- One episode, no reset: what you knock over stays knocked over.
-- No privileged state: you get the robot's camera images (with their calibration) and its own sensor readings; no object
-  poses, no scene layout, no success signal.
 
 ## Robot Interface
 Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). The robot

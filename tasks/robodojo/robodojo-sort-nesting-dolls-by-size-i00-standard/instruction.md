@@ -10,20 +10,6 @@ the right, a little apart, and both arms are back where they started. What count
 episode: a success reached earlier and lost by the end does not count, so finish in the state you want graded and stop
 sending commands.
 
-### Detailed success criteria
-- The five yellow rubber ducks are 5, 7, 9, 11 and 13 cm tall. Seen from above, the smallest is 3.7 × 4.8 cm and the
-  largest 9.6 × 12.4 cm.
-- At the start the second smallest duck stands about 12 cm to the right of the smallest one.
-- A duck's position, as the check measures it, is its centre: the middle of its bounding box, half its height above its
-  base.
-- Order: going from the smallest duck to the largest, each next duck's centre is more than 0.03 m further right (along
-  x) than the one before; only these four neighbouring pairs are compared.
-- Straight row: the y values of the five centres span at most 0.035 m (largest minus smallest).
-- Upright: each duck's up axis less than 15° from straight up.
-- Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
-  starting orientation.
-- The 1,050-step limit is 42 s of simulated time.
-
 You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
 you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
 when your session ends.
@@ -37,6 +23,20 @@ Real-robot rules:
 - One episode, no reset: what you knock over stays knocked over.
 - No privileged state: you get the robot's camera images (with their calibration) and its own sensor readings; no object
   poses, no scene layout, no success signal.
+
+### Detailed success criteria
+- The five yellow rubber ducks are 5, 7, 9, 11 and 13 cm tall. Seen from above, the smallest is 3.7 × 4.8 cm and the
+  largest 9.6 × 12.4 cm.
+- At the start the second smallest duck stands about 12 cm to the right of the smallest one.
+- A duck's position, as the check measures it, is its centre: the middle of its bounding box, half its height above its
+  base.
+- Order: going from the smallest duck to the largest, each next duck's centre is more than 0.03 m further right (along
+  x) than the one before; only these four neighbouring pairs are compared.
+- Straight row: the y values of the five centres span at most 0.035 m (largest minus smallest).
+- Upright: each duck's up axis less than 15° from straight up.
+- Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
+  starting orientation.
+- The 1,050-step limit is 42 s of simulated time.
 
 ## Robot Interface
 Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). The robot

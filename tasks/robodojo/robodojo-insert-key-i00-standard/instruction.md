@@ -10,20 +10,6 @@ Success: the key stands straight in the keyhole, ring up and pushed well in, tur
 the end of the episode: a success reached earlier and lost by the end does not count, so finish in the state you want
 graded and stop sending commands.
 
-### Detailed success criteria
-- The key is 6.3 cm long, 2.3 cm wide and 1.0 cm thick. The keyhole block is round, 10.0 cm across and 5.5 cm tall.
-- At the start the key lies flat with its teeth pointing about 6° clockwise from world +x (seen from above); the block's
-  own x direction points 15° anticlockwise from world +x.
-- The key's centre, as the check measures it, is inside its ring, 1.0 cm from the ring's outer end and 5.3 cm from the
-  blade's tip; the block's centre is the middle of its round footprint.
-- Deep enough: the bottom of the key's bounding box more than 0.025 m below the block's top face; with the key upright
-  that box bottom is 0.1 cm below the blade's tip.
-- Centred: the key's centre less than 0.007 m from the block's centre horizontally (world x, y).
-- Upright, ring up: the key's long direction, from the blade's tip to the ring, less than 7° from straight up.
-- Turned: the direction across the key's blade toward the side its teeth stick out less than 30° (3-D angle) from the
-  block's x direction turned 60° clockwise seen from above, which here points 45° clockwise from world +x.
-- The 300-step limit is 12 s of simulated time.
-
 You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
 you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
 when your session ends.
@@ -37,6 +23,20 @@ Real-robot rules:
 - One episode, no reset: what you knock over stays knocked over.
 - No privileged state: you get the robot's camera images (with their calibration) and its own sensor readings; no object
   poses, no scene layout, no success signal.
+
+### Detailed success criteria
+- The key is 6.3 cm long, 2.3 cm wide and 1.0 cm thick. The keyhole block is round, 10.0 cm across and 5.5 cm tall.
+- At the start the key lies flat with its teeth pointing about 6° clockwise from world +x (seen from above); the block's
+  own x direction points 15° anticlockwise from world +x.
+- The key's centre, as the check measures it, is inside its ring, 1.0 cm from the ring's outer end and 5.3 cm from the
+  blade's tip; the block's centre is the middle of its round footprint.
+- Deep enough: the bottom of the key's bounding box more than 0.025 m below the block's top face; with the key upright
+  that box bottom is 0.1 cm below the blade's tip.
+- Centred: the key's centre less than 0.007 m from the block's centre horizontally (world x, y).
+- Upright, ring up: the key's long direction, from the blade's tip to the ring, less than 7° from straight up.
+- Turned: the direction across the key's blade toward the side its teeth stick out less than 30° (3-D angle) from the
+  block's x direction turned 60° clockwise seen from above, which here points 45° clockwise from world +x.
+- The 300-step limit is 12 s of simulated time.
 
 ## Robot Interface
 Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). The robot

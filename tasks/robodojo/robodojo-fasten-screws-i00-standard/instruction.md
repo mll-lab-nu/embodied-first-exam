@@ -10,18 +10,6 @@ fully open, and both arms are back where they started. What counts is how things
 success reached earlier and lost by the end does not count, so finish in the state you want graded and stop sending
 commands.
 
-### Detailed success criteria
-- The nuts are hexagonal, about 4 cm across the corners and 2 cm thick. The bolts are 5.25 cm tall.
-- A nut's position, as the check measures it, is its centre: on the axis of its hole, 0.9 cm above its underside. A
-  bolt's position is the middle of its base, on its axis, at table level.
-- Nut flat: each nut's axis less than 10° from straight up, with the same face up as at the start.
-- Nut centred: each nut's centre less than 0.001 m horizontally from the axis of the bolt of its colour.
-- Nut down: the bolt's tip (its highest point) more than 0.009 m higher than the lowest point of the nut on it.
-- Grippers open: each gripper at least 0.9 of its full opening.
-- Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
-  starting orientation.
-- The 1,900-step limit is 76 s of simulated time.
-
 You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
 you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
 when your session ends.
@@ -35,6 +23,18 @@ Real-robot rules:
 - One episode, no reset: what you knock over stays knocked over.
 - No privileged state: you get the robot's camera images (with their calibration) and its own sensor readings; no object
   poses, no scene layout, no success signal.
+
+### Detailed success criteria
+- The nuts are hexagonal, about 4 cm across the corners and 2 cm thick. The bolts are 5.25 cm tall.
+- A nut's position, as the check measures it, is its centre: on the axis of its hole, 0.9 cm above its underside. A
+  bolt's position is the middle of its base, on its axis, at table level.
+- Nut flat: each nut's axis less than 10° from straight up, with the same face up as at the start.
+- Nut centred: each nut's centre less than 0.001 m horizontally from the axis of the bolt of its colour.
+- Nut down: the bolt's tip (its highest point) more than 0.009 m higher than the lowest point of the nut on it.
+- Grippers open: each gripper at least 0.9 of its full opening.
+- Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
+  starting orientation.
+- The 1,900-step limit is 76 s of simulated time.
 
 ## Robot Interface
 Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). The robot

@@ -11,6 +11,20 @@ button exactly three times in the whole episode: a fourth counted press ends the
 three means no success. What counts is how things stand at the end of the episode: a success reached earlier and lost by
 the end does not count, so finish in the state you want graded and stop sending commands.
 
+You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
+you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
+when your session ends. A step of the task's sequence, once done, stays counted.
+
+Nothing to hand in: the service records and grades the episode. Keep the script that drives the robot at
+`/app/output/gen.py`.
+
+Real-robot rules:
+- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
+  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
+- One episode, no reset: what you knock over stays knocked over.
+- No privileged state: you get the robot's camera images (with their calibration) and its own sensor readings; no object
+  poses, no scene layout, no success signal.
+
 ### Detailed success criteria
 - The three mats are 8 cm across and 0.5 cm thick, in a row 11.5 cm apart; the cubes are 3.5 cm on a side; the spring
   button is 6.1 cm across and 3 cm tall.
@@ -28,20 +42,6 @@ the end does not count, so finish in the state you want graded and stop sending 
 - Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
   starting orientation.
 - The 700-step limit is 28 s of simulated time.
-
-You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
-you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
-when your session ends. A step of the task's sequence, once done, stays counted.
-
-Nothing to hand in: the service records and grades the episode. Keep the script that drives the robot at
-`/app/output/gen.py`.
-
-Real-robot rules:
-- **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published or
-  reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed.
-- One episode, no reset: what you knock over stays knocked over.
-- No privileged state: you get the robot's camera images (with their calibration) and its own sensor readings; no object
-  poses, no scene layout, no success signal.
 
 ## Robot Interface
 Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). The robot

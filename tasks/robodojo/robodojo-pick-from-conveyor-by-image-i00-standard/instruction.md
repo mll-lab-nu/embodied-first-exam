@@ -8,15 +8,6 @@ Success: the object shown in the photo lies on the basket's floor, and the baske
 the belt. What counts is how things stand at the end of the episode: a success reached earlier and lost by the end does
 not count, so finish in the state you want graded and stop sending commands.
 
-### Detailed success criteria
-- The basket is 36 cm front to back, 24 cm wide and 22 cm tall overall. Four objects, each different, ride the belt with
-  it; one of them is the object in the photo.
-- The object's position, as the check measures it, is its centre, the middle of its bounding box.
-- On the basket's floor: the object's lowest point from 0.01 m below to 0.04 m above the basket's lowest point, both
-  inclusive.
-- Lifted: the object's centre more than 0.08 m higher than at the start of the episode.
-- The 700-step limit is 28 s of simulated time.
-
 You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
 you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
 when your session ends.
@@ -30,6 +21,15 @@ Real-robot rules:
 - One episode, no reset: what you knock over stays knocked over.
 - No privileged state: you get the robot's camera images (with their calibration) and its own sensor readings; no object
   poses, no scene layout, no success signal.
+
+### Detailed success criteria
+- The basket is 36 cm front to back, 24 cm wide and 22 cm tall overall. Four objects, each different, ride the belt with
+  it; one of them is the object in the photo.
+- The object's position, as the check measures it, is its centre, the middle of its bounding box.
+- On the basket's floor: the object's lowest point from 0.01 m below to 0.04 m above the basket's lowest point, both
+  inclusive.
+- Lifted: the object's centre more than 0.08 m higher than at the start of the episode.
+- The 700-step limit is 28 s of simulated time.
 
 ## Robot Interface
 Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). The robot

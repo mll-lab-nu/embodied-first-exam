@@ -9,20 +9,6 @@ Success: all four pens are in the holder the right way up, the holder stands upr
 started. What counts is how things stand at the end of the episode: a success reached earlier and lost by the end does
 not count, so finish in the state you want graded and stop sending commands.
 
-### Detailed success criteria
-- The pen holder is a hexagonal cup 8 cm across and 12 cm tall. The black-and-gold pen is 18.5 cm long, the white
-  ballpoint 14.5 cm, the light-blue marker 14 cm and the purple marker 15 cm.
-- Measured points: the holder's centre is the middle of its base, and its axis runs through it along the cup. A pen's
-  centre is the middle of the pen; its end point is on its axis, a few millimetres in from the end that must be lowest.
-- In the cup: each pen's end point less than 0.035 m from the holder's axis, measured at right angles to the axis.
-- Down in the cup: the top of the holder (12 cm above its base when upright) more than 0.035 m higher than each pen's
-  lowest point.
-- Right way up: each pen's end point no higher than the pen's centre (tolerance 0.000001 m).
-- Holder upright: its axis less than 15° from straight up.
-- Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
-  starting orientation.
-- The 1,100-step limit is 44 s of simulated time.
-
 You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
 you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
 when your session ends.
@@ -36,6 +22,20 @@ Real-robot rules:
 - One episode, no reset: what you knock over stays knocked over.
 - No privileged state: you get the robot's camera images (with their calibration) and its own sensor readings; no object
   poses, no scene layout, no success signal.
+
+### Detailed success criteria
+- The pen holder is a hexagonal cup 8 cm across and 12 cm tall. The black-and-gold pen is 18.5 cm long, the white
+  ballpoint 14.5 cm, the light-blue marker 14 cm and the purple marker 15 cm.
+- Measured points: the holder's centre is the middle of its base, and its axis runs through it along the cup. A pen's
+  centre is the middle of the pen; its end point is on its axis, a few millimetres in from the end that must be lowest.
+- In the cup: each pen's end point less than 0.035 m from the holder's axis, measured at right angles to the axis.
+- Down in the cup: the top of the holder (12 cm above its base when upright) more than 0.035 m higher than each pen's
+  lowest point.
+- Right way up: each pen's end point no higher than the pen's centre (tolerance 0.000001 m).
+- Holder upright: its axis less than 15° from straight up.
+- Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
+  starting orientation.
+- The 1,100-step limit is 44 s of simulated time.
 
 ## Robot Interface
 Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). The robot

@@ -8,16 +8,6 @@ Success: the three blocks stand in one tower, each nearly centred on the one bel
 started. What counts is how things stand at the end of the episode: a success reached earlier and lost by the end does
 not count, so finish in the state you want graded and stop sending commands.
 
-### Detailed success criteria
-- The three blocks are cubes of the same size, 3.5 cm on each edge. At the start one of them lies 11 to 17 cm farther
-  from you (along y) than the other two.
-- A block's position, as the check measures it, is its centre, the middle of the cube.
-- One tower: taking the blocks in order of the height of their centres, each centre is at most 0.0175 m horizontally
-  from the centre of the block below it and at least 0.005 m higher; any order of the three blocks counts.
-- Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
-  starting orientation.
-- The 550-step limit is 22 s of simulated time.
-
 You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
 you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
 when your session ends.
@@ -31,6 +21,16 @@ Real-robot rules:
 - One episode, no reset: what you knock over stays knocked over.
 - No privileged state: you get the robot's camera images (with their calibration) and its own sensor readings; no object
   poses, no scene layout, no success signal.
+
+### Detailed success criteria
+- The three blocks are cubes of the same size, 3.5 cm on each edge. At the start one of them lies 11 to 17 cm farther
+  from you (along y) than the other two.
+- A block's position, as the check measures it, is its centre, the middle of the cube.
+- One tower: taking the blocks in order of the height of their centres, each centre is at most 0.0175 m horizontally
+  from the centre of the block below it and at least 0.005 m higher; any order of the three blocks counts.
+- Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
+  starting orientation.
+- The 550-step limit is 22 s of simulated time.
 
 ## Robot Interface
 Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). The robot

@@ -10,18 +10,6 @@ the other tiles (turned half round does not count, even if it looks the same), a
 started. What counts is how things stand at the end of the episode: a success reached earlier and lost by the end does
 not count, so finish in the state you want graded and stop sending commands.
 
-### Detailed success criteria
-- The five pads are 8 cm across, in a left-to-right row with their centres 8.5 cm apart.
-- Loose tiles: four operator tiles, discs 6.0 cm across and 0.8 cm thick, starting in a row 27 cm nearer to you than the
-  pads, and ten digit tiles, 0 to 9.
-- On the empty pad: the tile's centre (the middle of its bounding box) less than 0.018 m horizontally from the centre of
-  the empty pad.
-- Same way round: the tile's left-to-right direction (as read from the arms' side) less than 45° from world +x and its
-  bottom-to-top direction less than 45° from world +y, each measured in 3-D.
-- Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
-  starting orientation.
-- The 300-step limit is 12 s of simulated time.
-
 You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
 you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
 when your session ends.
@@ -35,6 +23,18 @@ Real-robot rules:
 - One episode, no reset: what you knock over stays knocked over.
 - No privileged state: you get the robot's camera images (with their calibration) and its own sensor readings; no object
   poses, no scene layout, no success signal.
+
+### Detailed success criteria
+- The five pads are 8 cm across, in a left-to-right row with their centres 8.5 cm apart.
+- Loose tiles: four operator tiles, discs 6.0 cm across and 0.8 cm thick, starting in a row 27 cm nearer to you than the
+  pads, and ten digit tiles, 0 to 9.
+- On the empty pad: the tile's centre (the middle of its bounding box) less than 0.018 m horizontally from the centre of
+  the empty pad.
+- Same way round: the tile's left-to-right direction (as read from the arms' side) less than 45° from world +x and its
+  bottom-to-top direction less than 45° from world +y, each measured in 3-D.
+- Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
+  starting orientation.
+- The 300-step limit is 12 s of simulated time.
 
 ## Robot Interface
 Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). The robot

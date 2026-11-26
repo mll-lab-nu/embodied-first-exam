@@ -10,20 +10,6 @@ up as before, and both arms are back where they started. What counts is how thin
 success reached earlier and lost by the end does not count, so finish in the state you want graded and stop sending
 commands.
 
-### Detailed success criteria
-- The two T-shaped blocks are the same shape: 8 cm long, 6 cm across the crossbar and 1.5 cm thick.
-- At the start, seen from above: the red T's stem points along world -x, turned 3° toward you; the blue T lies about 16
-  cm to its right (centre to centre), its stem pointing toward you, turned 40° toward +x.
-- Seen from above, the blue T's start heading is about 127° counter-clockwise from the red T's (233° clockwise).
-- A T's position, as the check measures it, is the middle of its 8 × 6 cm bounding rectangle: on the stem's centre line,
-  4 cm from the stem's tip, half-way up its thickness.
-- Places: each T's centre less than 0.02 m, measured horizontally, from where the other T's centre was at the start.
-- Headings: each T's full 3-D orientation less than 3° from the other T's orientation at the start (the angle of the one
-  rotation between them).
-- Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
-  starting orientation.
-- The 400-step limit is 16 s of simulated time.
-
 You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
 you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
 when your session ends.
@@ -37,6 +23,20 @@ Real-robot rules:
 - One episode, no reset: what you knock over stays knocked over.
 - No privileged state: you get the robot's camera images (with their calibration) and its own sensor readings; no object
   poses, no scene layout, no success signal.
+
+### Detailed success criteria
+- The two T-shaped blocks are the same shape: 8 cm long, 6 cm across the crossbar and 1.5 cm thick.
+- At the start, seen from above: the red T's stem points along world -x, turned 3° toward you; the blue T lies about 16
+  cm to its right (centre to centre), its stem pointing toward you, turned 40° toward +x.
+- Seen from above, the blue T's start heading is about 127° counter-clockwise from the red T's (233° clockwise).
+- A T's position, as the check measures it, is the middle of its 8 × 6 cm bounding rectangle: on the stem's centre line,
+  4 cm from the stem's tip, half-way up its thickness.
+- Places: each T's centre less than 0.02 m, measured horizontally, from where the other T's centre was at the start.
+- Headings: each T's full 3-D orientation less than 3° from the other T's orientation at the start (the angle of the one
+  rotation between them).
+- Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
+  starting orientation.
+- The 400-step limit is 16 s of simulated time.
 
 ## Robot Interface
 Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). The robot

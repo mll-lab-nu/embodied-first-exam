@@ -8,12 +8,6 @@ Success: the mint green scissors are about a hand's length above where they lay 
 stand at the end of the episode: a success reached earlier and lost by the end does not count, so finish in the state
 you want graded and stop sending commands.
 
-### Detailed success criteria
-- The scissors are 23.2 cm long. Eight other objects lie on the table; the check ignores them.
-- The scissors' position, as the check measures it, is their centre, halfway along the scissors.
-- Lifted: that centre more than 0.10 m higher than it was at the start.
-- The 200-step limit is 8 s of simulated time.
-
 You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
 you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
 when your session ends.
@@ -27,6 +21,12 @@ Real-robot rules:
 - One episode, no reset: what you knock over stays knocked over.
 - No privileged state: you get the robot's camera images (with their calibration) and its own sensor readings; no object
   poses, no scene layout, no success signal.
+
+### Detailed success criteria
+- The scissors are 23.2 cm long. Eight other objects lie on the table; the check ignores them.
+- The scissors' position, as the check measures it, is their centre, halfway along the scissors.
+- Lifted: that centre more than 0.10 m higher than it was at the start.
+- The 200-step limit is 8 s of simulated time.
 
 ## Robot Interface
 Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). The robot
