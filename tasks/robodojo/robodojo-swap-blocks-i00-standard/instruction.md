@@ -10,8 +10,8 @@ button was pressed after each move, and both arms are back where they started wh
 button exactly three times in the whole episode: a fourth counted press ends the episode as a failure, and fewer than
 three means no success.
 
-When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts. A step of
-the task's sequence, once done, stays counted.
+When you are done, send `/finish` to end the episode and get it graded. A step of the sequence, once done, stays
+counted.
 
 Nothing to hand in: the service records and grades the episode. Keep the script that drives the robot at
 `/app/output/gen.py`.

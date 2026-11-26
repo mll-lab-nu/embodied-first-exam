@@ -8,8 +8,8 @@ keys between strikes.
 Success: the mallet head has struck all eight keys in order from left to right, staying on each key long enough to be
 seen (a quick tap can be missed), with the head itself lifted clear of the keys between strikes.
 
-When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts. A step of
-the task's sequence, once done, stays counted.
+When you are done, send `/finish` to end the episode and get it graded. A step of the sequence, once done, stays
+counted.
 
 Nothing to hand in: the service records and grades the episode. Keep the script that drives the robot at
 `/app/output/gen.py`.

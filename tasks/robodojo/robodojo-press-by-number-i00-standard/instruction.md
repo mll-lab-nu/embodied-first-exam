@@ -12,8 +12,8 @@ pushes the button all the way down and lets it spring all the way back up, long 
 missed). When the last blue press is released, both arms are back where they started. One press too many on any button
 ends the episode at once as a failure.
 
-When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts. A step of
-the task's sequence, once done, stays counted.
+When you are done, send `/finish` to end the episode and get it graded. A step of the sequence, once done, stays
+counted.
 
 Nothing to hand in: the service records and grades the episode. Keep the script that drives the robot at
 `/app/output/gen.py`.
