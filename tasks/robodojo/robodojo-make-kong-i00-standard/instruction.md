@@ -12,6 +12,24 @@ right end up; and both grippers are open. Moving one of your arms far from where
 out ends the episode as a failure. What counts is how things stand at the end of the episode: a success reached earlier
 and lost by the end does not count, so finish in the state you want graded and stop sending commands.
 
+### Detailed success criteria
+- Every tile is the same block, 4.5 cm wide, 6.5 cm long and 3.3 cm thick.
+- Your row is 14 tiles standing on their short ends, 4.6 cm apart centre to centre: four sets of three, then a pair at
+  the right end. The opponent's row has 4 tiles.
+- Matching tiles flipped: each of the three matching tiles has its picture side looking less than 30° from straight up.
+- The other nine stay standing: each of the other nine tiles of your four sets has its long direction, from its bottom
+  end to its top end as it stands now, less than 7° from straight up.
+- Two stages, passed in order at different actions, both needing the two checks above. Stage 1 also needs the front
+  stack's top tile less than 7° from its starting orientation (face down, long side left-right).
+- Stage 2 also needs that tile's long direction, from the end that pointed left at the start to the end that pointed
+  right, less than 7° from straight up.
+- Stage 2 also needs that tile's centre (the middle of the tile) less than 0.015 m horizontally from (0.319, -0.15), one
+  4.6 cm step right of your row's rightmost tile, and both grippers open to at least 0.6 of full opening.
+- Arms out: the episode fails at once if one of your arms' end-effector is more than 0.3 m from its start position along
+  x, y or z, or turned more than 30°, while the opponent's arm is more than 0.3 m from its start along any axis or
+  turned more than 40°.
+- The 600-step limit is 24 s of simulated time.
+
 You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
 you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
 when your session ends.
@@ -104,24 +122,6 @@ most 3000 images.
 
 ## Others
 - The opponent's arm starts after your first action and moves only while your actions run, in lock-step with them.
-
-### Detailed success criteria
-- Every tile is the same block, 4.5 cm wide, 6.5 cm long and 3.3 cm thick.
-- Your row is 14 tiles standing on their short ends, 4.6 cm apart centre to centre: four sets of three, then a pair at
-  the right end. The opponent's row has 4 tiles.
-- Matching tiles flipped: each of the three matching tiles has its picture side looking less than 30° from straight up.
-- The other nine stay standing: each of the other nine tiles of your four sets has its long direction, from its bottom
-  end to its top end as it stands now, less than 7° from straight up.
-- Two stages, passed in order at different actions, both needing the two checks above. Stage 1 also needs the front
-  stack's top tile less than 7° from its starting orientation (face down, long side left-right).
-- Stage 2 also needs that tile's long direction, from the end that pointed left at the start to the end that pointed
-  right, less than 7° from straight up.
-- Stage 2 also needs that tile's centre (the middle of the tile) less than 0.015 m horizontally from (0.319, -0.15), one
-  4.6 cm step right of your row's rightmost tile, and both grippers open to at least 0.6 of full opening.
-- Arms out: the episode fails at once if one of your arms' end-effector is more than 0.3 m from its start position along
-  x, y or z, or turned more than 30°, while the opponent's arm is more than 0.3 m from its start along any axis or
-  turned more than 40°.
-- The 600-step limit is 24 s of simulated time.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At

