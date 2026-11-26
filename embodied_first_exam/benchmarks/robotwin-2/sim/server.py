@@ -430,7 +430,7 @@ class Recorder:
                 finally:
                     try: os.unlink(path)
                     except OSError: pass
-                out.append((f"video/{c}", "mp4", data, {"fps": fps, "n": int(len(fr))}))
+                out.append((f"video/{c}", "mp4", data, {"fps": round(float(fps), 3), "n": int(len(fr))}))
             last = rcb1.array_part(f"last/{c}", np.asarray(fr[-1], dtype=dt)) if len(fr) else None
             if video in ("frames", "both"):
                 out.append(fp)
@@ -453,6 +453,8 @@ class Recorder:
 EAI_STANDARD = "eai-standard/3.0"
 HOLD_HINT = ('observe never lets time pass (eai-standard/3.0): to let n seconds pass, submit a hold chunk {"type": <type>, '
              '"interpolate": "hold", "seconds": n} with no rows; last_s = n returns the frames recorded in the last n seconds')
+DEPTH_PAST = ("depth with last_s > 0: the recorder keeps no depth for these cameras (spec timing.recorder.depth lists "
+              "the cameras it keeps depth for): ask for depth with last_s = 0")
 RING_DT = 1.0 / PHYS_HZ                                         # robot seconds per step of _ring_step()
 RING_FPS = min(1.0 / RING_DT, max(1e-6, float(os.environ.get("RCB_CAMERA_FPS") or 10)))
 RING_EVERY = max(1, int(round(1.0 / (RING_DT * RING_FPS))))
@@ -556,7 +558,7 @@ def _last_s(meta: dict) -> float:
 
 SPEC["standard"] = EAI_STANDARD
 SPEC["timing"] = {"recorder": {"cameras": RING_CAMS, "fps": round(1.0 / (RING_DT * RING_EVERY), 3), "buffer_s": RING_S,
-                               "records": "during /submit"}}
+                               "records": "during /submit", "depth": []}}
 
 
 def touch_clock() -> None:
@@ -757,7 +759,7 @@ def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
     flush_traj(); log({"ev": "checkpoint", "call": E["calls"], "step": E["step"], "rows": E.get("flushed", 0), "success": E["success"], "state_sha": S.state_sha(), **_ae_state()})
     if succ: finish("success")
     out["done"] = E["done"]; out["reason"] = E["reason"]
-    return out, rec.parts(video, fps)
+    return out, rec.parts(video, 1.0 / (RING_DT * rec.every))   # the capture's real frame rate
 
 
 def do_hold(meta: dict, n: float) -> tuple[dict, list]:
@@ -791,7 +793,7 @@ def do_hold(meta: dict, n: float) -> tuple[dict, list]:
     log({"ev": "checkpoint", "call": E["calls"], "step": E["step"], "rows": E.get("flushed", 0), "success": E["success"], "state_sha": S.state_sha(), **_ae_state()})
     if succ: finish("success")
     out["done"] = E["done"]; out["reason"] = E["reason"]
-    return out, rec.parts(video, fps)
+    return out, rec.parts(video, 1.0 / (RING_DT * rec.every))   # the capture's real frame rate
 
 
 def do_observe(meta: dict) -> tuple[dict, list]:
@@ -801,6 +803,7 @@ def do_observe(meta: dict) -> tuple[dict, list]:
         cams = _cams(meta, ALL_CAMS[:4])
         last_s = _last_s(meta); fps = _fps(meta); video = meta.get("video", "frames"); depth = bool(meta.get("include_depth", False))
         if not isinstance(video, str) or video not in ("mp4", "frames", "both", "none"): raise ValueError("video must be mp4|frames|both|none")
+        if last_s > 0 and depth: raise ValueError(DEPTH_PAST)   # the recorder keeps RGB only (spec timing.recorder.depth = [])
         _frame_budget(cams, fps, 0, depth)
     except (TypeError, OverflowError, AttributeError, KeyError) as exc:
         raise _bad_request(exc) from None
@@ -819,7 +822,9 @@ def do_observe(meta: dict) -> tuple[dict, list]:
         rec.prop.append(f["prop"])
     steps = np.asarray([f["step"] for f in pick], np.int64)
     out = {**meta_common(), "obs_id": E["calls"], "last_s": round(float(steps[-1] - steps[0]) / PHYS_HZ, 4), "frame_step": int(steps[-1]), "ok": True}
-    return out, rec.parts(video, fps) + [rcb1.array_part("frame_step", steps)]
+    gap = float(steps[-1] - steps[0]) / max(1, len(steps) - 1)
+    rate = 1.0 / (RING_DT * gap) if gap else float(fps)   # the frames' real spacing, not the requested fps
+    return out, rec.parts(video, rate) + [rcb1.array_part("frame_step", steps)]
 
 
 def _status() -> dict:

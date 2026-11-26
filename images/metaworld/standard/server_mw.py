@@ -513,7 +513,7 @@ class Recorder:
                         os.unlink(path)
                     except OSError:
                         pass
-                out.append((f"video/{c}", "mp4", data, {"fps": fps, "n": int(len(fr))}))
+                out.append((f"video/{c}", "mp4", data, {"fps": round(float(fps), 3), "n": int(len(fr))}))
             last = rcb1.array_part(f"last/{c}", np.asarray(fr[-1], dtype=dt)) if len(fr) else None
             if video in ("frames", "both"):
                 out.append(fp)
@@ -539,6 +539,8 @@ class Recorder:
 EAI_STANDARD = "eai-standard/3.0"
 HOLD_HINT = ('observe never lets time pass (eai-standard/3.0): to let n seconds pass, submit a hold chunk {"type": <type>, '
              '"interpolate": "hold", "seconds": n} with no rows; last_s = n returns the frames recorded in the last n seconds')
+DEPTH_PAST = ("depth with last_s > 0: the recorder keeps no depth for these cameras (spec timing.recorder.depth lists "
+              "the cameras it keeps depth for): ask for depth with last_s = 0")
 RING_DT = CTRL_DT                                         # robot seconds per step of _ring_step()
 RING_FPS = min(1.0 / RING_DT, max(1e-6, float(os.environ.get("RCB_CAMERA_FPS") or 10)))
 RING_EVERY = max(1, int(round(1.0 / (RING_DT * RING_FPS))))
@@ -634,7 +636,7 @@ def _last_s(meta: dict) -> float:
 
 SPEC["standard"] = EAI_STANDARD
 SPEC["timing"] = {"recorder": {"cameras": RING_CAMS, "fps": round(1.0 / (RING_DT * RING_EVERY), 3), "buffer_s": RING_S,
-                               "records": "during /submit"}}
+                               "records": "during /submit", "depth": []}}
 
 
 def _ctrl_step(tg, rec) -> bool:
@@ -736,6 +738,8 @@ def parse_submit(meta: dict, parts: dict) -> dict:
         raise ValueError(f"actions must be a numeric array (T, {N})") from None
     if A.ndim != 2 or A.shape[1] != N:
         raise ValueError(f"{ACTION_NAME} actions must be (T, {N}), got {list(A.shape)}")
+    if A.shape[0] < 1:
+        raise ValueError('a chunk without rows is a hold chunk: {"type": <type>, "interpolate": "hold", "seconds": n}')
     if not np.all(np.isfinite(A)):
         raise ValueError("actions contain NaN/inf")
     dt = _num(meta, "dt", CTRL_DT)
@@ -765,6 +769,8 @@ def parse_observe(meta: dict) -> dict:
     fps = _fps(meta)
     video = _video(meta, "frames")
     depth = bool(meta.get("include_depth", False))
+    if last_s > 0 and depth:  # the recorder keeps RGB only (spec timing.recorder.depth = [])
+        raise ValueError(DEPTH_PAST)
     _frame_budget(cams, fps, 0, depth)
     return {"cams": cams, "last_s": last_s, "fps": fps, "video": video, "depth": depth}
 
@@ -831,7 +837,7 @@ def do_submit(q: dict):
     d = os.path.join(DATA, "calls", f"{E['calls']:06d}")
     os.makedirs(d, exist_ok=True)
     np.save(os.path.join(d, "actions.npy"), A.astype(np.float64))
-    return out, rec.parts(video, fps)
+    return out, rec.parts(video, 1.0 / (RING_DT * rec.every))   # the capture's real frame rate
 
 
 def do_hold(q: dict):
@@ -880,7 +886,7 @@ def do_hold(q: dict):
             **_ae_state(),
         }
     )
-    return out, rec.parts(q["video"], fps)
+    return out, rec.parts(q["video"], 1.0 / (RING_DT * rec.every))   # the capture's real frame rate
 
 
 def do_observe(q: dict):
@@ -914,7 +920,9 @@ def do_observe(q: dict):
     steps = np.asarray([f["step"] for f in pick], np.int64)
     out = {**meta_common(), "obs_id": E["calls"], "last_s": round(float(steps[-1] - steps[0]) * CTRL_DT, 4),
            "frame_step": int(steps[-1]), "ok": True}
-    return out, rec.parts(video, fps) + [rcb1.array_part("frame_step", steps)]
+    gap = float(steps[-1] - steps[0]) / max(1, len(steps) - 1)
+    rate = 1.0 / (RING_DT * gap) if gap else float(fps)   # the frames' real spacing, not the requested fps
+    return out, rec.parts(video, rate) + [rcb1.array_part("frame_step", steps)]
 
 
 def finalize() -> None:
