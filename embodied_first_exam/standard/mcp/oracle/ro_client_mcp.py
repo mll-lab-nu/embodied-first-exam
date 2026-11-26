@@ -48,6 +48,9 @@ def _tool(name, **args):
         msg = str(e)                          # the tools' refusal: "<HTTP status> <path>: <the service's error>"
         code = int(msg[:3]) if msg[:3].isdigit() else 409
         return {"error": msg, "http_status": code}
+    if isinstance(out, dict) and out.get("reply_lost"):     # no reply reached the tool server: the seat API's error
+        import urllib.error
+        raise urllib.error.URLError(f"{out.get('path')}: the reply was lost ({out.get('error')})")
     if isinstance(out, dict) and isinstance(out.get("operation_result"), dict):
         out = out["operation_result"]
     return _with_images(out)

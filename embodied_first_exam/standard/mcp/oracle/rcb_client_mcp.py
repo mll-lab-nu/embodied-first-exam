@@ -4,7 +4,9 @@ The module is the task's `rcb_client.py` (EFE_MCP_TOOLS_DIR, else /opt/tools), l
 replaced: every request it would send to the service goes to the endpoint tool of the same endpoint instead (GET /spec ->
 `spec`, POST /observe -> `observe`, POST /submit -> `submit`, POST /reset -> `reset`, POST
 /kinematics -> `kinematics`, POST /finish -> `finish`; GET /status, which has no tool, is answered from the meta of the
-last reply, where its fields are; GET /operations/<id> likewise has none: the server re-queries it itself), with the client's request
+last reply, where its fields are; GET /operations/<id> likewise has none: the server re-queries it itself after a lost
+reply, which reaches the client as the ConnectionError the request would have raised, and the record it fetched answers the
+client's own GET /operations/<id>), with the client's request
 fields passed unchanged (`fields`; a submit's rows as an .npy file, their dtype kept), and the tool's reply (the
 service's meta, each part as a file) encoded back into the RCB1 bytes the client decodes. An oracle written for the
 client therefore runs unchanged over the tools: the same requests reach the service, and the same replies reach the
@@ -94,6 +96,13 @@ def _tool(name, **args):
     if isinstance(out, dict) and out.get("episode_over"):
         body = {k: v for k, v in out.items() if k not in ("episode_over", "http_status", "path", "tool_s")}
         return None, _json(409, body)
+    if isinstance(out, dict) and out.get("reply_lost"):
+        # no reply reached the tool server: the client sees what it would have seen, the request failing (and, on 2.4,
+        # GET /operations/<id> answers from the record the server fetched)
+        op = out.get("operation")
+        if isinstance(op, dict) and (op.get("operation_id") or op.get("id")):
+            _OPS[str(op.get("operation_id") or op.get("id"))] = op
+        raise _requests.exceptions.ConnectionError(f"{out.get('path')}: the reply was lost ({out.get('error')})")
     return out, None
 
 
@@ -116,6 +125,7 @@ def _rcb1_reply(out: dict) -> _Response:
 
 _N = [0]
 _LAST_META: dict = {"done": False, "reason": None}       # GET /status: the fields every reply's meta carries
+_OPS: dict = {}                                          # GET /operations/<id>: the records fetched after a lost reply
 
 
 def _post(url, data=None, json=None, **_):          # noqa: A002 (requests' own keyword)
@@ -162,12 +172,12 @@ def _get(url, **_):
         return _json(200, json.loads(pathlib.Path(out["spec_file"]).read_text()))
     if path == "/status":
         return _json(200, {k: v for k, v in _LAST_META.items() if k not in ("proprio", "cameras")})
-    else:
-        return _json(404, {"error": f"no tool for GET {path}"})
-    if err is not None:
-        return err
-    out.pop("tool_s", None)
-    return _json(200, out)
+    if path.startswith("/operations/"):
+        op = _OPS.get(path.rsplit("/", 1)[1])
+        if op is None or op.get("known") is False:
+            return _json(404, {"error": "unknown operation"})
+        return _json(200, op)
+    return _json(404, {"error": f"no tool for GET {path}"})
 
 
 class _RequestsViaTools:
