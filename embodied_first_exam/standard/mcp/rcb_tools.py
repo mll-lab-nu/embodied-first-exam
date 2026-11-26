@@ -88,13 +88,14 @@ class RcbTools:
 
     # ------------------------------------------------------------------ connection
     def connect(self, timeout: float = 3600.0):
-        """Find the service (SIM_URL, sim:8000, localhost:8000) and read /spec, waiting while it warms up."""
+        """Find the service (SIM_URL where it is set, else sim:8000, localhost:8000) and read /spec, waiting while it
+        warms up."""
         if self.base is not None:
             return
         import requests
         if TOOLS_DIR not in sys.path:
             sys.path.append(TOOLS_DIR)
-        cands = [c for c in (os.environ.get("SIM_URL"), *CANDIDATES) if c]
+        cands = [os.environ["SIM_URL"]] if os.environ.get("SIM_URL") else list(CANDIDATES)   # an explicit address only
         t0, last = time.time(), None
         while time.time() - t0 < timeout:
             refused = None

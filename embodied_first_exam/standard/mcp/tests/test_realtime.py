@@ -15,7 +15,7 @@
 
     python3 embodied_first_exam/standard/mcp/tests/test_realtime.py
 """
-import json, os, pathlib, shutil, socket, statistics, subprocess, sys, tempfile, textwrap, time
+import json, os, pathlib, shutil, socket, statistics, subprocess, sys, tempfile, textwrap, time, urllib.request
 HERE = pathlib.Path(__file__).resolve().parent
 MCP = HERE.parent
 STD = MCP.parent
@@ -30,14 +30,16 @@ ORACLE = textwrap.dedent('''
     assert spec["protocol"] == "eai-standard/2.3", spec["protocol"]
     o = r.get_obs(cameras=[])
     print("now", o.meta["proprio"]["now"])
-    rows = np.zeros((20, 2)); rows[:, 0] = 0.04
+    dx = 1 / 64                             # exact in binary: x reaches 1 at the 64th row in both runs
+    rows = np.zeros((48, 2)); rows[:, 0] = dx
     a = r.submit("joint_position", rows, cameras=[])
     print("plan", a.meta["start_step"], a.meta["plan_end_step"], a.meta["late_steps"])
-    # a second chunk joined to the first one's end: `at` = where the plan ends, so no step is late or held
-    b = r.submit("joint_position", np.vstack([np.full((5, 1), 0.04), np.zeros((15, 1))]).repeat(2, 1) * [1, 0],
+    # a second chunk joined to the first one's end: `at` = where the plan ends, so no step is late or held (it has the
+    # first chunk's 0.96 s to arrive, a loaded host's round trip through the tools included)
+    b = r.submit("joint_position", np.vstack([np.full((16, 1), dx), np.zeros((16, 1))]).repeat(2, 1) * [1, 0],
                  at=a.meta["plan_end_step"], cameras=[])
     print("plan", b.meta["start_step"], b.meta["plan_end_step"], b.meta["late_steps"])
-    time.sleep(1.0)                         # the plan runs out on the clock; then a read of the robot as it is
+    time.sleep(2.5)                         # the plan (1.6 s) runs out on the clock; then a read of the robot as it is
     w = r.get_obs(cameras=["top"])
     print("watched", round(w.meta["proprio"]["now"][0], 4), w.meta["done"], w.meta["reason"], int(w.last["top"].sum()))
 ''')
@@ -61,7 +63,7 @@ ORACLE_21 = textwrap.dedent('''
 ''')
 
 TIMING = ("max_lag_s,clock_s,max_queue_wait_s,request_busy_s,stalled_s,lag_s,stalled_share,request_mb,stalls,"
-          "elapsed_s,control_steps,control_steps_total,held_steps")
+          "elapsed_s,control_steps,control_steps_total,held_steps,render_s_max,render_s_p50")   # render_s_*: camera_worker's
 
 
 def free_port():
@@ -90,7 +92,7 @@ def equivalence(tmp, tools, man):
     assert p.returncode == 0, p.stdout + p.stderr
     assert {"trajectory_live.f64", "submitted.f64", "final.json"} <= set(s["same"]), s
     out = (pathlib.Path(s["out"]) / "mcp" / "oracle.out").read_text()
-    assert "True success" in out and "plan 20 40 0" in out, out
+    assert "True success" in out and "plan 48 80 0" in out, out
     return s
 
 
@@ -122,10 +124,11 @@ def latency(tmp, tools, man, n=40):
     try:
         sys.path.insert(0, str(tools))
         import rcb_client
-        for _ in range(200):                          # up first: the client would try other addresses
+        for _ in range(600):                          # /spec up first: the client would try other addresses
             try:
-                socket.create_connection(("127.0.0.1", port), 0.2).close(); break
-            except OSError:
+                with urllib.request.urlopen(f"http://127.0.0.1:{port}/spec", timeout=2):
+                    break
+            except (OSError, ValueError):
                 time.sleep(0.1)
         r = rcb_client.Robot(f"http://127.0.0.1:{port}")
         c = McpClient(cmd=[sys.executable, str(MCP / "server.py"), "--manifest", str(man)],
@@ -142,7 +145,8 @@ def latency(tmp, tools, man, n=40):
         t0 = time.perf_counter()
         a = c.call("submit", type="joint_position", actions=[[0.01, 0]] * 50, cameras=[])
         sub = time.perf_counter() - t0
-        assert a["meta"]["plan_end_step"] - a["meta"]["start_step"] == 50 and sub < 0.5, (a["meta"], sub)
+        # at once: well before its 50 rows (1 s of clock) have run, with room for a loaded host
+        assert a["meta"]["plan_end_step"] - a["meta"]["start_step"] == 50 and sub < 0.9, (a["meta"], sub)
         assert a["step"]["plan_end_step"] == a["meta"]["plan_end_step"], a["step"]
         c.close() if hasattr(c, "close") else None
         med = lambda v: round(statistics.median(v) * 1000, 2)

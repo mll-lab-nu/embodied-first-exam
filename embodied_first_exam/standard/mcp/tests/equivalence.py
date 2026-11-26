@@ -30,6 +30,26 @@ def free_port():
     s = socket.socket(); s.bind(("127.0.0.1", 0)); p = s.getsockname()[1]; s.close(); return p
 
 
+def ready(url: str, svc, timeout: float = 300.0):
+    """Wait until the service answers GET /spec (200, or 409: it gave up, which the oracle is to see) before the oracle
+    starts: a client that finds nothing at SIM_URL tries the default addresses next (sim:8000, localhost:8000), and on a
+    host where something else listens on port 8000 it would talk to that."""
+    import urllib.error, urllib.request
+    t0 = time.time()
+    while time.time() - t0 < timeout:
+        if svc.poll() is not None:
+            return                      # it exited: the oracle's run shows how
+        try:
+            with urllib.request.urlopen(url.rstrip("/") + "/spec", timeout=5):
+                return
+        except urllib.error.HTTPError as e:
+            if e.code == 409:
+                return
+        except (OSError, ValueError):
+            pass
+        time.sleep(0.1)
+
+
 def scrub(o, ignore):
     if isinstance(o, dict):
         return {k: scrub(v, ignore) for k, v in o.items() if k not in ignore}
@@ -62,6 +82,7 @@ def run(mode, a, out: pathlib.Path):
                            env=env, stdout=log, stderr=subprocess.STDOUT, cwd=a.service_cwd or None,
                            start_new_session=True)
     url = (a.url or "http://127.0.0.1:{port}").replace("{port}", str(port))
+    ready(url, svc)
     oenv = {**os.environ, "SIM_URL": url, "PYTHONPATH": a.tools, "EFE_MCP_TOOLS_DIR": a.tools}
     for kv in a.oracle_env:
         k, v = kv.split("=", 1)
