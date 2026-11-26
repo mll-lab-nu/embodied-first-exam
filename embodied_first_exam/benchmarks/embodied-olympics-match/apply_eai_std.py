@@ -45,8 +45,11 @@ OLD = {"realtime": "eai-standard-realtime/1.0", "lockstep": "eai-standard-lockst
 NEW = {"realtime": "eai-standard/2.3+match/1.0", "lockstep": "eai-standard/2.1+match/1.0", "turn": "eai-standard/2.1+match/1.0"}
 OLD_CMD = {"realtime": "python3 /srv/core/launch.py", "lockstep": "python3 -m core.lockstep", "turn": "python3 /srv/core/launch.py"}
 CMD = "python3 -m eai_std.serve"
-STD_FILES = ("ghcr.io/mll-lab-nu/efe:standard-files-0.5.0@sha256:"
-             "a6c2ac2ede9fe2c1744f9c6e67c6a49de9c5a8b8c2c9ae4f0d774b7dd72662ff")
+# the shared client's files-only image: the pin in images/standard-files/FILES.json (scripts/files_image.py), never a copy
+sys.path.insert(0, str(ROOT / "scripts"))
+import files_image  # noqa: E402
+
+STD_FILES = files_image.image("standard-files")
 CLIENT = {"realtime": "/rcb1.py /realtime/rcb_client.py", "lockstep": "/rcb1.py /rcb_client.py",
           "turn": "/rcb1.py /rcb_client.py"}
 DOCKER_MARK = "# the eai-standard/2.x client (docs/protocol/standard_mode.md): `from rcb_client import Robot`"
