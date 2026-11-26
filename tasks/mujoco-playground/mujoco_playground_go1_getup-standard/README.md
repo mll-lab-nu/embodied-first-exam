@@ -25,7 +25,7 @@ on the robot's own sensors; only the last episode is graded.
 ## Reference solution
 `solution/oracle_replay.py` streams the privileged reference's rows (`solution/oracle.npy`, 136 rows, float32-exact)
 through the client in `hold` chunks; it uses no privileged information at run time. The service's recorded trajectory
-is then exactly the privileged reference, and the episode ends with success after 136 control steps.
+is then exactly the privileged reference (136 control steps), whose end state is a success.
 
 ## Verification
 The verdict is the live episode's (`graded_by = "live"`, `replays = 0`): the sim service runs the task's check on the

@@ -39,7 +39,6 @@ verdict, and nothing is replayed to grade it. The isolated verifier reads only t
 service then renders `replay.mp4` from the recorded trajectory in one video-only pass, which never changes the
 verdict. A missing or unfinished record, a give-up after crashes between the agent's calls and a frozen instance
 that does not build at the episode's start are infrastructure errors.
-The episode ends at the first success or the first failure.
 Failures are fail-fast and permanent: bowl tipped, moved or lifted; whisk dropped after the pickup (touching nothing
 while falling faster than 0.2 m/s more than 2 mm above the counter, counter contact or no robot contact before it was
 placed, or neither robot nor counter contact for more than 5 controls after it was placed); bowl or whisk on the floor, below the counter top or outside the workspace; unstable physics;

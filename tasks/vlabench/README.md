@@ -68,7 +68,7 @@ benchmark re-verifies on its frozen instance and whose instruction identifies th
 - **Success.** VLABench's own success check, the task's termination condition (`task.should_terminate_episode`). The
   native episode ends the moment it holds, so a trajectory ends there and the graded state is its final state
   (PROTOCOL §3): the privileged verifier rejects a trajectory with actions after the termination
-  (`invalid_trajectory`), and the standard service ends the episode with `reason = "success"`.
+  (`invalid_trajectory`); the standard service does not end the episode there (Agent-ended episodes, below).
 - **Predicates are VLABench's.** They are graded as upstream defines them, including their looseness: e.g.
   `select_fruit`'s containment checks the fruit's root point against the plate's footprint and a 0–0.1 m height band,
   not that the fruit rests on the plate (found by the red-team trial). Changing them would make it another benchmark.
@@ -104,8 +104,7 @@ longer ends the episode and no reply shows it (`vlb_tool.Session.run_on` replace
 never-terminating one after the start-state check, so dm_control does not reset the scene, and reads the original as the
 success check). The episode ends at the agent's `POST /finish`, after 9,000 control steps (reason `step_limit`), at the
 end of the session or on a simulator error, and is judged on VLABench's check as things stand then
-(`end_judgement = "state"`). Actions after a success are allowed live. With the flag off nothing changes; where this
-README says a success ends the episode, that is the flag-off behaviour.
+(`end_judgement = "state"`). Actions after a success are allowed live.
 
 ## Image
 `images/vlabench/Dockerfile` is the full, pinned recipe and needs no build context: Python 3.10.18 by digest, Debian

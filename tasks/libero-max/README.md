@@ -148,8 +148,7 @@ ends the episode and no reply shows it (`lmx_tool.Session.run_on` reports it as 
 episode ends at the agent's `POST /finish`, after 9,000 control steps (reason `step_limit`), at the end of the session
 or on a simulator error, and is judged on LIBERO's success check as things stand then (`end_judgement = "state"`, no end
 window: LIBERO's check has no hold). The LIBERO-MAX event (the one scene change) is unaffected. Actions after a success
-are allowed live. With the flag off nothing changes; where this README says a success ends the episode, that is the
-flag-off behaviour.
+are allowed live.
 
 ## Licence
 LIBERO-MAX (Zhang et al., [*LIBERO-MAX: Do Robot Policies Adapt When the World Changes?*](https://arxiv.org/abs/2609.36518),

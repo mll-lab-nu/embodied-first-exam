@@ -48,9 +48,8 @@ verdict, and nothing is replayed to grade it. The isolated verifier reads only t
 service then renders `replay.mp4` from the recorded trajectory in one video-only pass, which never changes the
 verdict. A missing or unfinished record, a give-up after crashes between the agent's calls and a frozen instance
 that does not build at the episode's start are infrastructure errors.
-The episode ends at the first success or the first failure. Failures are fail-fast and permanent (jar tipped, slid or lifted, lid knocked off or
-dropped, an object off the worktop or out of the workspace, the lid forced through the thread, the parked left arm or left hand touching the jar or the lid, unstable physics, or
-the 3,000-control budget). A no-op fails. Human review and full agent-trial calibration remain pending; report this
+Failures are fail-fast and permanent (jar tipped, slid or lifted, lid knocked off or
+dropped, an object off the worktop or out of the workspace, the lid forced through the thread, the parked left arm or left hand touching the jar or the lid, or unstable physics). At the 3,000-control budget the episode ends and is judged on the state it leaves. A no-op fails. Human review and full agent-trial calibration remain pending; report this
 task as provisional.
 
 ## Resources
