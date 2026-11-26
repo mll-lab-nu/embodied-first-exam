@@ -205,7 +205,9 @@ def held_now() -> bool:
 def judge_end() -> bool:
     """The end state (agent-ended episodes): the goal holds now, and keeps holding for the rest of the window with the
     last targets held (the time it already held counts). Main thread. The extra control steps are not journaled: they
-    come after the live end (`end_row`), like the rest of a chunk that ended an episode."""
+    come after the live end (`end_row`), like the rest of a chunk that ended an episode. The runaway guard does not cut
+    the window short: at a step_limit end (S.episode_done) a goal reached inside the last window still gets the rest of
+    it (bounded by the window itself), as at any other end-state end."""
     if HOLD["mode"] != "window":
         return S.episode_end == "success"
     T = S.env._task
@@ -213,10 +215,15 @@ def judge_end() -> bool:
         E["ae_end_held_s"] = 0.0
         return False
     t0 = HOLD["s"]
-    for _ in range(int(math.ceil(HOLD["window"] * CTRL_HZ)) + 2):
-        if held_now() or S.episode_end is not None or S.episode_done or not T._goal_active:
-            break
-        S.step(S.hold_action())
+    guard = S.episode_done
+    try:
+        for _ in range(int(math.ceil(HOLD["window"] * CTRL_HZ)) + 2):
+            if held_now() or S.episode_end is not None or not T._goal_active:
+                break
+            S.episode_done = False      # Session.step refuses a step past max_steps; the episode itself has ended
+            S.step(S.hold_action())
+    finally:
+        S.episode_done = guard or S.episode_done
     ok = held_now()
     E["ae_end_held_s"] = round(HOLD["s"], 4)
     log({"ev": "ae_end_state", "held_before_s": round(t0, 4), "held_s": round(HOLD["s"], 4), "window_s": HOLD["window"],
