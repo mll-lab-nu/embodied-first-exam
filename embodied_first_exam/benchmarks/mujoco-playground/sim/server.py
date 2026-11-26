@@ -721,7 +721,7 @@ def make_handler(svc: L.Service):
                     EP.call_end(cid, self.path)
             if err is not None:
                 return self._json(*err)
-            return self._rcb1({**out, "stopped": None}, blobs)
+            return self._rcb1(*L.with_frame_step({**out, "stopped": None}, blobs))   # meta.frame_step (eai-standard/3.0)
 
     return H
 

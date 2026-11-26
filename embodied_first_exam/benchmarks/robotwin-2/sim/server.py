@@ -746,7 +746,8 @@ def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
     planned = round(int(A.shape[0]) * dt, 6) if typ == "joint_position" else round(_plan_steps(plan) / PHYS_HZ, 6)
     out = {**meta_common(), "chunk_id": E["calls"], "type": typ, "executed_rows": int(A.shape[0]), "physics_steps_chunk": int(S._sim_steps) - before,
            "duration_s": round((int(S._sim_steps) - before) / PHYS_HZ, 6), "planned_duration_s": planned,
-           "clipped": clipped[:200], "n_clipped": len(clipped), "plan": plan, "rejected": None, "ok": True,
+           "clipped": clipped[:200], "n_clipped": len(clipped), "plan": plan, "rejected": None,
+           "frame_step": int(S._sim_steps), "ok": True,   # the physics step its newest image shows (as /observe's)
            **({"frames_skipped": rec.skipped} if rec.skipped else {})}
     log({"ev": "submit", "call": E["calls"], "type": typ, "rows": int(A.shape[0]), "dt": dt, "interpolate": interp, "cameras": cams, "note": note_full[:500],
          "physics_steps": int(S._sim_steps) - before, "n_clipped": len(clipped), "plan": plan[:50], "success": succ})
@@ -783,7 +784,7 @@ def do_hold(meta: dict, n: float) -> tuple[dict, list]:
     else: E["success"] = E["success"] or succ
     out = {**meta_common(), "chunk_id": E["calls"], "type": typ, "hold": True, "executed_rows": 0, "physics_steps_chunk": int(S._sim_steps) - before,
            "duration_s": round((int(S._sim_steps) - before) / PHYS_HZ, 6), "planned_duration_s": round(n, 6),
-           "clipped": [], "n_clipped": 0, "plan": [], "rejected": None, "ok": True}
+           "clipped": [], "n_clipped": 0, "plan": [], "rejected": None, "frame_step": int(S._sim_steps), "ok": True}
     log({"ev": "submit", "call": E["calls"], "type": typ, "rows": 0, "hold_s": n, "cameras": cams, "note": note_full[:500],
          "physics_steps": int(S._sim_steps) - before, "n_clipped": 0, "success": succ})
     save_call_evidence(E["calls"], {k: v for k, v in out.items() if k != "cameras"}, rec); flush_traj()

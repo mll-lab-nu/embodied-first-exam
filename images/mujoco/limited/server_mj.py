@@ -740,7 +740,8 @@ def do_submit(q: dict):
     rec.tick(force=True); E["calls"] += 1; E["rows"] += int(A.shape[0]); RECF.flush()
     if AGENT_END and KIND != "dtb": _hidden_success(S.check()["success"], len(RECORD))   # the state's success: never shown
     out = {**meta_common(), "chunk_id": E["calls"], "type": "joint_position", "executed_rows": int(A.shape[0]), "n_clipped_rows": n_clip,
-           "duration_s": round((len(RECORD) - before) * CTRL_DT, 6), "planned_duration_s": round(int(A.shape[0]) * dt, 6), "ok": True}
+           "duration_s": round((len(RECORD) - before) * CTRL_DT, 6), "planned_duration_s": round(int(A.shape[0]) * dt, 6),
+           "frame_step": len(RECORD), "ok": True}   # frame_step: the control step its newest image shows (eai-standard/3.0)
     log({"ev": "submit", "call": E["calls"], "type": "joint_position", "rows": int(A.shape[0]), "dt": dt, "interpolate": interp, "cameras": cams,
          "note": q["note"], "control_steps": len(RECORD), "n_clipped_rows": n_clip, "task": task_info(),
          "rows_total": E["rows"], **_journal_pos(), "state_sha": S.state_sha(), **_ae_state()})
@@ -759,7 +760,8 @@ def do_hold(q: dict):
     rec.tick(force=True); E["calls"] += 1; RECF.flush()
     if AGENT_END and KIND != "dtb": _hidden_success(S.check()["success"], len(RECORD))   # the state's success: never shown
     out = {**meta_common(), "chunk_id": E["calls"], "type": "joint_position", "hold": True, "executed_rows": 0, "n_clipped_rows": 0,
-           "duration_s": round((len(RECORD) - before) * CTRL_DT, 6), "planned_duration_s": round(q["hold"], 6), "ok": True}
+           "duration_s": round((len(RECORD) - before) * CTRL_DT, 6), "planned_duration_s": round(q["hold"], 6),
+           "frame_step": len(RECORD), "ok": True}
     log({"ev": "submit", "call": E["calls"], "type": "joint_position", "rows": 0, "hold_s": q["hold"], "cameras": cams,
          "note": q["note"], "control_steps": len(RECORD), "n_clipped_rows": 0, "task": task_info(),
          "rows_total": E["rows"], **_journal_pos(), "state_sha": S.state_sha(), **_ae_state()})
@@ -833,7 +835,7 @@ def do_reset(q: dict):
     log({"ev": "reset", "call": E["calls"], "cameras": q["cams"], "control_steps": 0, "rows_total": E["rows"], **_journal_pos(),
          "state_sha": S.state_sha()})
     write_final()
-    return {**meta_common(), "reset_id": E["calls"], "ok": True}, rec.parts(q["video"], q["fps"])
+    return {**meta_common(), "reset_id": E["calls"], "frame_step": len(RECORD), "ok": True}, rec.parts(q["video"], q["fps"])
 
 
 def finalize() -> None:

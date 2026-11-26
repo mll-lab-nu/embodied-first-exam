@@ -807,6 +807,7 @@ def do_submit(q: dict):
         "n_clipped_rows": n_clip,
         "duration_s": round((len(RECORD) - before) * CTRL_DT, 6),
         "planned_duration_s": round(int(A.shape[0]) * dt, 6),
+        "frame_step": len(RECORD),  # the control step its newest image shows (eai-standard/3.0)
         "ok": True,
     }
     log(
@@ -859,6 +860,7 @@ def do_hold(q: dict):
         "n_clipped_rows": 0,
         "duration_s": round((len(RECORD) - before) * CTRL_DT, 6),
         "planned_duration_s": round(q["hold"], 6),
+        "frame_step": len(RECORD),
         "ok": True,
     }
     log(
