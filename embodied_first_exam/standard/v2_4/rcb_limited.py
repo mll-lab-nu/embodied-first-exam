@@ -40,7 +40,11 @@ eai-standard/3.0 (standard_call, StandardRing; docs/protocol/standard_mode.md): 
 (observe never lets time pass), serves /observe last_s = n from the ring that Recorder.tick fills while a /submit runs
 (every /spec camera at RCB_CAMERA_FPS, RCB_LOOKBACK_S seconds), runs a rows-free hold chunk {type, interpolate: "hold",
 seconds} through the adapter's own observe watch and answers it as a submit, and adds duration_s / planned_duration_s
-to every submit answer; adapters need no change (one that serves /reset itself calls RING.clear())."""
+to every submit answer; adapters need no change (one that serves /reset itself calls RING.clear(); one whose
+rendering has effects of its own passes Service(record_frames=False): no recorder). It also answers, before the
+adapter runs, the 400s every layer answers (check_common, check_chunk): dt, seconds, video_fps, last_s not a JSON
+number, video_fps outside [1, max_video_fps()], interpolate not linear or hold, a chunk whose rows x dt exceed
+max_chunk_s (not for a planner type such as ee_pose)."""
 from __future__ import annotations
 import errno, faulthandler, json, math, os, re, select, signal, socket, sys, tempfile, threading, time, traceback, zlib
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -996,6 +1000,11 @@ OBSERVE_SECONDS_GONE = ('observe never lets time pass (eai-standard/3.0): to let
                         '{"type": <type>, "interpolate": "hold", "seconds": n} with no rows; last_s = n returns the frames '
                         'recorded in the last n seconds')
 VIDEO_MODES = ("mp4", "frames", "both", "none")
+INTERPOLATIONS = ("linear", "hold")
+MAX_VIDEO_FPS = 30           # video_fps in [1, 30] (2.1's bound); an adapter with a faster control rate may go up to it,
+                             # and one that declares /spec.max_video_fps is held to that instead
+PLANNER_TYPES = ("ee_pose",)  # rows the benchmark's planner executes (their dt is the planner's): no rows x dt cap here
+NUMBER_FIELDS = ("dt", "seconds", "video_fps", "last_s")
 
 
 def _num(v) -> float | None:
@@ -1004,6 +1013,55 @@ def _num(v) -> float | None:
     except (TypeError, ValueError, OverflowError):
         return None
     return f if math.isfinite(f) else None
+
+
+def _real(meta: dict, key: str) -> float | None:
+    """meta[key] as a float: a JSON number (not a boolean, not a string), finite; None when absent or null. ValueError
+    (400) otherwise -- what every layer answers (the 2.1 sidecar, the 2.3 layer)."""
+    v = meta.get(key)
+    if v is None:
+        return None
+    if isinstance(v, bool) or not isinstance(v, (int, float)) or _num(v) is None:
+        raise ValueError(f"{key} must be a finite number (got {v!r:.60})")
+    return float(v)
+
+
+def max_video_fps(spec: dict) -> float:
+    """The highest video_fps this service takes: /spec.max_video_fps where the adapter declares it, else 30 (or the
+    control rate, where that is higher: at most one frame per control step)."""
+    own = spec.get("max_video_fps")
+    if isinstance(own, (int, float)) and not isinstance(own, bool) and own >= 1:
+        return float(own)
+    return max(float(MAX_VIDEO_FPS), _num(spec.get("control_hz")) or 0.0)
+
+
+def check_common(path: str, meta: dict, spec: dict) -> None:
+    """The 400s every layer answers before anything runs (docs/protocol/standard_mode.md, Errors; the OpenAPI
+    BadRequest), checked here so that no adapter can miss one: the numeric fields are JSON numbers, video_fps in
+    [1, max_video_fps], and on /submit interpolate is linear or hold. A chunk's rows x dt cap is checked in
+    standard_call once the rows are parsed."""
+    for k in NUMBER_FIELDS:
+        _real(meta, k)
+    fps = _real(meta, "video_fps")
+    if fps is not None and not 1.0 <= fps <= max_video_fps(spec) + 1e-9:
+        raise ValueError(f"video_fps must be in [1, {max_video_fps(spec):g}] (got {meta['video_fps']!r:.60})")
+    if path == "/submit" and meta.get("interpolate") is not None and meta["interpolate"] not in INTERPOLATIONS:
+        raise ValueError(f"interpolate must be one of {list(INTERPOLATIONS)} (got {meta['interpolate']!r:.60})")
+
+
+def check_chunk(meta: dict, A, spec: dict) -> None:
+    """A chunk with rows covers at most max_chunk_s: rows x dt (dt: the request's, else one control period), for every
+    type whose rows are dt apart (not a planner type, PLANNER_TYPES)."""
+    if meta.get("type") in PLANNER_TYPES or getattr(A, "ndim", 0) < 1:
+        return
+    hz = _num(spec.get("control_hz")) or 0.0
+    dt = _real(meta, "dt") or (1.0 / hz if hz > 0 else None)
+    cap = _num(spec.get("max_chunk_s"))
+    if dt is None or cap is None:
+        return
+    if int(A.shape[0]) * dt > cap + 1e-9:
+        raise ValueError(f"the chunk covers {int(A.shape[0]) * dt:g} s ({int(A.shape[0])} rows x {dt:g} s): more than "
+                         f"max_chunk_s = {cap:g}")
 
 
 class StandardRing:
@@ -1017,6 +1075,7 @@ class StandardRing:
     def __init__(self):
         self.cams: list = []; self.hz = 0.0; self.every = 1; self.keep = 0
         self.active = False
+        self.enabled = True             # Service(record_frames=False): no recorder, last_s answers the current frame
         self.frames: list = []          # [(step, {cam: uint8 HxWx3}, {cam: (3,4)}, proprio row)], oldest first
 
     def configure(self, spec: dict) -> None:
@@ -1032,6 +1091,9 @@ class StandardRing:
         return self.hz / self.every if self.hz > 0 else CAMERA_FPS
 
     def spec(self) -> dict:
+        if not self.enabled:
+            return {"cameras": [], "fps": round(self.fps, 3), "buffer_s": LOOKBACK_S,
+                    "records": "nothing: last_s returns the current frame", "depth": []}
         return {"cameras": list(self.cams), "fps": round(self.fps, 3), "buffer_s": LOOKBACK_S, "records": "during /submit",
                 "depth": []}                 # RGB only: depth comes with the current frame (last_s = 0)
 
@@ -1039,7 +1101,7 @@ class StandardRing:
         self.frames = []
 
     def feed(self, rec, last: bool = False) -> None:
-        if not self.active or not self.cams:
+        if not self.active or not self.enabled or not self.cams:
             return
         step = int(rec._clock())
         if self.frames and step < self.frames[-1][0]:
@@ -1091,9 +1153,12 @@ class StandardRing:
 RING = StandardRing()
 
 
-def configure_standard(spec: dict) -> None:
-    """/spec.standard and /spec.timing.recorder (the standard recorder), once, when the handler is built."""
+def configure_standard(spec: dict, record_frames: bool = True) -> None:
+    """/spec.standard and /spec.timing.recorder (the standard recorder), once, when the handler is built. record_frames
+    False (Service(record_frames=False): an adapter whose rendering has effects of its own) turns the recorder off, as
+    the 2.1 sidecar's record_frames: /spec says it records nothing and last_s answers the current frame."""
     RING.configure(spec)
+    RING.enabled = bool(record_frames)
     spec["standard"] = EAI_STANDARD
     timing = spec.get("timing")
     if not isinstance(timing, dict):
@@ -1106,15 +1171,14 @@ def _spec_types(spec: dict) -> list:
 
 
 def hold_request(meta: dict, parts: dict, spec: dict):
-    """(type, seconds) of a rows-free hold chunk {"type", "interpolate": "hold", "seconds": n}; None for a chunk with
-    rows. ValueError (400) for rows together with seconds, or a malformed hold chunk."""
+    """(type, seconds to run, seconds as sent) of a rows-free hold chunk {"type", "interpolate": "hold", "seconds": n}
+    (the seconds to run are at least one control step); None for a chunk with rows. ValueError (400) for rows together
+    with seconds, or a malformed hold chunk."""
     sec = meta.get("seconds")
     rows = ("actions" in parts or meta.get("actions") not in (None, []) or meta.get("rows") not in (None, []))
     if sec is None:
         return None
-    s = _num(sec)
-    if s is None:
-        raise ValueError(f"seconds must be a finite number (got {sec!r:.60})")
+    s = _real(meta, "seconds")
     if rows:
         raise ValueError("a chunk with rows takes no `seconds` (its rows and dt say how long it runs); a hold chunk "
                          '{"type": <type>, "interpolate": "hold", "seconds": n} has no rows')
@@ -1127,9 +1191,10 @@ def hold_request(meta: dict, parts: dict, spec: dict):
     if not 0.0 < s <= cap + 1e-9:
         raise ValueError(f"seconds must be in (0, {cap:g}] (max_chunk_s)")
     hz = _num(spec.get("control_hz")) or 0.0
+    sent = s
     if hz > 0 and round(s * hz) < 1:
-        s = 1.0 / hz                         # at least one control step
-    return meta["type"], s
+        s = 1.0 / hz                         # at least one control step (planned_duration_s stays what was sent)
+    return meta["type"], s, sent
 
 
 def _steps_ran(ep, rows0: int, out: dict, *keys) -> int | None:
@@ -1225,19 +1290,16 @@ def standard_call(svc, path: str, meta: dict, parts: dict, ep, rows0: int, rows_
       n seconds) and answers as a submit: chunk_id, type, hold, executed_rows 0, duration_s;
     - every submit answer adds duration_s (control steps run x control_dt) and planned_duration_s (rows x dt);
     - every answer with images adds meta.frame_step (with_frame_step).
+    - the 400s every layer answers (check_common, check_chunk) before the adapter runs.
     rows_of(meta, parts) -> the rows of an ordinary chunk (the layer's own parsing; ValueError -> 400)."""
     spec = svc.spec
+    check_common(path, meta, spec)
     if path == "/observe":
-        sec = meta.get("seconds")
-        if sec is not None:
-            s = _num(sec)
-            if s is None:
-                raise ValueError(f"seconds must be a finite number (got {sec!r:.60})")
-            if s != 0.0:
-                raise ValueError(OBSERVE_SECONDS_GONE)
+        if (_real(meta, "seconds") or 0.0) != 0.0:
+            raise ValueError(OBSERVE_SECONDS_GONE)
         ls = meta.get("last_s")
-        last_s = 0.0 if ls is None else _num(ls)
-        if last_s is None or last_s < 0:
+        last_s = 0.0 if ls is None else _real(meta, "last_s")
+        if last_s < 0:
             raise ValueError("last_s must be a finite number of seconds >= 0")
         if last_s > 0:
             return with_frame_step(*_observe_view(svc, meta, last_s))
@@ -1247,7 +1309,7 @@ def standard_call(svc, path: str, meta: dict, parts: dict, ep, rows0: int, rows_
     RING.active = True
     try:
         if hold is not None:
-            typ, s = hold
+            typ, s, sent = hold
             m = {k: v for k, v in meta.items() if k not in ("type", "interpolate", "dt", "at", "actions", "rows", "last_s")}
             m["seconds"] = s
             m.setdefault("video", "mp4")
@@ -1257,14 +1319,19 @@ def standard_call(svc, path: str, meta: dict, parts: dict, ep, rows0: int, rows_
             watched = out.pop("control_steps_watch", None)
             out.pop("physics_steps_watch", None); out.pop("seconds", None)
             steps = _steps_ran(ep, rows0, {"w": watched}, "w")
-            out.update({"chunk_id": chunk if chunk is not None else out.get("calls"), "type": typ, "hold": True,
+            # chunk_id: the adapter's call counter, which its submits' chunk_id is (E["calls"], counted over every
+            # call), so a hold chunk's id never repeats a chunk's; obs_id only where an adapter reports no calls
+            calls = out.get("calls")
+            cid = calls if isinstance(calls, int) and not isinstance(calls, bool) else chunk
+            out.update({"chunk_id": cid, "type": typ, "hold": True,
                         "executed_rows": 0, **({"control_steps_chunk": steps} if steps is not None else {}),
-                        **_durations(spec, out, steps, s)})
+                        **_durations(spec, out, steps, sent)})
             return with_frame_step(out, blobs)
         A = rows_of(meta, parts)
+        check_chunk(meta, A, spec)
         out, blobs = svc.submit(meta, A)
         hz = _num(spec.get("control_hz")) or 0.0
-        dt = _num(meta.get("dt")) or (1.0 / hz if hz > 0 else None)
+        dt = _real(meta, "dt") or (1.0 / hz if hz > 0 else None)
         n = int(A.shape[0]) if getattr(A, "ndim", 0) >= 1 else 0
         steps = _steps_ran(ep, rows0, out, "control_steps_chunk")
         return with_frame_step({**out, **_durations(spec, out, steps, n * dt if dt else None)}, blobs)
@@ -1280,8 +1347,10 @@ class Service:
 
     def __init__(self, *, spec: dict, lock, state: dict, submit: Callable, observe: Callable, kinematics: Callable,
                  status: Callable, on_submit_error: Callable, log: Callable, max_resp: int = MAX_RESP,
-                 episode: Episode | None = None, state_sha: Callable | None = None, proprio: Callable | None = None):
+                 episode: Episode | None = None, state_sha: Callable | None = None, proprio: Callable | None = None,
+                 record_frames: bool = True):
         self.spec, self.lock, self.state, self.submit, self.observe = spec, lock, state, submit, observe
+        self.record_frames = bool(record_frames)   # False: no standard recorder (configure_standard)
         self.kinematics, self.status, self.on_submit_error, self.log, self.max_resp = kinematics, status, on_submit_error, log, max_resp
         self.episode, self.state_sha, self.proprio = episode, state_sha, proprio
         self.kin_calls = 0
@@ -1297,7 +1366,7 @@ def _rows(meta: dict, parts: dict) -> np.ndarray:
 
 
 def make_handler(svc: Service):
-    configure_standard(svc.spec)             # /spec.standard, /spec.timing.recorder; the ring's cameras and rate
+    configure_standard(svc.spec, getattr(svc, "record_frames", True))   # /spec.standard, timing.recorder; the ring
     class H(BaseHTTPRequestHandler):
         def _send(self, code: int, ctype: str, body: bytes) -> None:
             try:

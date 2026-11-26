@@ -124,6 +124,9 @@ def make_handler(svc: Service):
             if self.path == "/status":
                 st = svc.hide(svc.status())
                 return self._json(200, {**st, "resumes": svc.episode.resumes} if svc.episode else st)
+            if self.path.startswith("/operations/") and finished(svc.state):   # 2.4: after /finish every call but
+                E = svc.state                                                  # GET /spec and /status is a 409
+                return self._json(409, {"error": "episode finished", "reason": E.get("reason")})
             return super().do_GET()
 
         def do_POST(self):

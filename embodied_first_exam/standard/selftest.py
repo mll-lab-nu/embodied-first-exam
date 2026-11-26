@@ -235,7 +235,7 @@ def third_crash_ends_the_episode():
     try:
         r = c.robot()
         for _ in range(3):                               # every crash inside a call: the agent's
-            t = threading.Thread(target=lambda: _try(lambda: r.submit("joint_position", chunk(300, 0.5), dt=0.05, video="none")))
+            t = threading.Thread(target=lambda: _try(lambda: r.submit("joint_position", chunk(200, 0.5), dt=0.05, video="none")))   # 10 s: max_chunk_s
             t.start(); time.sleep(0.8); c.kill_service(); t.join(30)
             if isinstance(_try(lambda: r.wait_ready(20)), Exception):
                 break
@@ -330,7 +330,7 @@ def client_disconnect_abandons_the_call():
     c = Compose("disconnect", RCB_TOY_STEP_S=0.05)
     try:
         r = c.robot()
-        body = rcb_client.rcb1.encode({"type": "joint_position", "dt": 0.05, "video": "none"}, [rcb_client.rcb1.array_part("actions", chunk(400, 0.4))])
+        body = rcb_client.rcb1.encode({"type": "joint_position", "dt": 0.05, "video": "none"}, [rcb_client.rcb1.array_part("actions", chunk(200, 0.4))])
         e = _try(lambda: requests.post(c.url + "/submit", data=body, timeout=(5, 1.0)))
         expect(isinstance(e, requests.exceptions.ReadTimeout), "the client gave up")
         st = r.status()                                 # answers once the service noticed the hang-up
@@ -349,8 +349,8 @@ def max_call_wall_s_stops_a_long_call():
         r = c.robot()
         err = io.StringIO()
         with contextlib.redirect_stderr(err):
-            res = r.submit("joint_position", chunk(400, 0.4), dt=0.05, video="none")
-        expect(res.meta["stopped"] == "max_call_wall_s" and 0 < res.meta["executed_rows"] < 400 and res.stopped == "max_call_wall_s", f"meta {res.meta}")
+            res = r.submit("joint_position", chunk(200, 0.4), dt=0.05, video="none")   # 10 s: max_chunk_s
+        expect(res.meta["stopped"] == "max_call_wall_s" and 0 < res.meta["executed_rows"] < 200 and res.stopped == "max_call_wall_s", f"meta {res.meta}")
         expect("stopped this call early" in err.getvalue(), "the client warns")
         expect(r.status()["control_steps"] == res.meta["control_steps"], "status agrees")
     finally:
