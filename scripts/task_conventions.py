@@ -1146,7 +1146,8 @@ def limits_resets(task: Path) -> str:
 def render_limits(task: Path, text: str = "") -> str:
     """instruction.md's `## Limits` (v2): Time (PROTOCOL §2, §5; left out when the task has no usable number), Tokens,
     Network (§5, H.6), Resources (§6), then the task's own lines of `text`'s `## Limits` (a default Resets line where it
-    has none, and for an agent-ended task with a step limit a default Steps line)."""
+    has none, and for an agent-ended task with a step limit a default Steps line), and an agent-ended task's Finish line
+    (limits_finish)."""
     have = limits_lines(text)
     kept = [(k, v) for k, v in have if k not in LIMITS_RENDERED and k != "Finish"]   # Finish: rendered (agent-ended)
     net = next((v for k, v in have if k == "Network"), None)
@@ -1167,20 +1168,31 @@ def render_limits(task: Path, text: str = "") -> str:
         kept.append(("Steps", f"at most {n:,} control steps ({left} gives what is left); at the {_ordinal(n)} the "
                               "episode ends by itself."))
     if ae:
-        steps = next((v for k, v in kept if k == "Steps"), "")
-        unlimited = bool(re.match(r"(?:no step budget|unlimited|no limit)\b", steps))
-        kept.append(("Finish", LIMITS_FINISH[mode_of(task) in MCP_MODES][unlimited]))
+        kept.append(("Finish", limits_finish(task, next((v for k, v in kept if k == "Steps"), ""))))
     out += [f"{k}: {v}" for k, v in kept]
     return LIMITS_HEADING + "\n" + "\n".join(_wrap_bullet(x) for x in out) + "\n"
 
 
 # the Finish line of an agent-ended task's `## Limits` (PROTOCOL §3; rendered; owner 11-26: one line):
-# [HTTP client, MCP tools][a step limit, or no step budget (its Steps line says how a technical cap is graded)]
+# [HTTP client, MCP tools][a Steps line with a step limit or cap; no Steps line, or one that says there is no step
+# budget (a technical cap it names is graded the same way); a reset budget (after the cap, a failure end too, /reset is
+# still allowed and only the last episode is graded: standard_mode.md "Agent-ended episodes")]
 LIMITS_FINISH = (
     ("if you never send `/finish`, the episode is graded when the step limit is reached or your session ends.",
-     "if you never send `/finish`, the episode is graded when your session ends."),
+     "if you never send `/finish`, the episode is graded when your session ends.",
+     "if you never send `/finish`, the last episode is graded when your session ends."),
     ("if you never call the `finish` tool, the episode is graded when the step limit is reached or your session ends.",
-     "if you never call the `finish` tool, the episode is graded when your session ends."))
+     "if you never call the `finish` tool, the episode is graded when your session ends.",
+     "if you never call the `finish` tool, the last episode is graded when your session ends."))
+LIMITS_NO_STEP_BUDGET = re.compile(r"(?:there is )?(?:no step budget|unlimited|no (?:step )?limit)\b", re.I)
+
+
+def limits_finish(task: Path, steps: str) -> str:
+    """The Finish line (LIMITS_FINISH) of an agent-ended task whose Limits' Steps line is `steps` ("": none)."""
+    kind = 2 if reset_budget_of(task) else 1 if not steps or LIMITS_NO_STEP_BUDGET.match(steps) else 0
+    return LIMITS_FINISH[mode_of(task) in MCP_MODES][kind]
+
+
 # the endpoint's line in an agent-ended task's `## Robot Interface`, its own paragraph after the mode line (rendered):
 # [client only, client and MCP tools, MCP tools only]
 ROBOT_FINISH = ("`POST /finish`: ends the episode; it is graded right away.",
