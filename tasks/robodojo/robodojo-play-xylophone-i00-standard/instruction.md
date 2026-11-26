@@ -6,13 +6,10 @@ keys between strikes.
 
 ## Goal
 Success: the mallet head has struck all eight keys in order from left to right, staying on each key long enough to be
-seen (a quick tap can be missed), with the head itself lifted clear of the keys between strikes. What counts is how
-things stand at the end of the episode: a success reached earlier and lost by the end does not count, so finish in the
-state you want graded and stop sending commands.
+seen (a quick tap can be missed), with the head itself lifted clear of the keys between strikes.
 
-You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
-you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
-when your session ends. A step of the task's sequence, once done, stays counted.
+When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts. A step of
+the task's sequence, once done, stays counted.
 
 Nothing to hand in: the service records and grades the episode. Keep the script that drives the robot at
 `/app/output/gen.py`.

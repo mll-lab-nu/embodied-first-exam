@@ -10,12 +10,10 @@ Success: the left red button has been pressed exactly as many times as the left 
 then the middle red button exactly as many times as the middle card shows, then the blue button once more. Each press
 pushes the button all the way down and lets it spring all the way back up, long enough to be seen (a quick tap can be
 missed). When the last blue press is released, both arms are back where they started. One press too many on any button
-ends the episode at once as a failure. What counts is how things stand at the end of the episode: a success reached
-earlier and lost by the end does not count, so finish in the state you want graded and stop sending commands.
+ends the episode at once as a failure.
 
-You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
-you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
-when your session ends. A step of the task's sequence, once done, stays counted.
+When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts. A step of
+the task's sequence, once done, stays counted.
 
 Nothing to hand in: the service records and grades the episode. Keep the script that drives the robot at
 `/app/output/gen.py`.

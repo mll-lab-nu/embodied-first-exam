@@ -8,12 +8,9 @@ filled.
 ## Goal
 Success: all nine cells hold one piece each, lying flat in the middle of its cell: your five gold rings and the
 opponent's four crosses; no winner is needed. If one of your arms is away from where it started while the opponent arm
-is out, the episode ends at once as a failure. What counts is how things stand at the end of the episode: a success
-reached earlier and lost by the end does not count, so finish in the state you want graded and stop sending commands.
+is out, the episode ends at once as a failure.
 
-You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
-you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
-when your session ends.
+When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
 Nothing to hand in: the service records and grades the episode. Keep the script that drives the robot at
 `/app/output/gen.py`.

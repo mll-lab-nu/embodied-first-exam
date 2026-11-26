@@ -8,13 +8,9 @@ back to where they started, with both grippers open.
 Success: both sleeves are folded in across the chest, then the hem is folded straight up to the shoulders, and then both
 arms are back where they started with both grippers open. The fold is judged at the moment both arms arrive home with
 open grippers after having been away, so finish the folds first. An arm coming back to where it started while the hem is
-folded up and a sleeve is not folded in ends the episode as a failure. What counts is how things stand at the end of the
-episode: a success reached earlier and lost by the end does not count, so finish in the state you want graded and stop
-sending commands.
+folded up and a sleeve is not folded in ends the episode as a failure.
 
-You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
-you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
-when your session ends.
+When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
 Nothing to hand in: the service records and grades the episode. Keep the script that drives the robot at
 `/app/output/gen.py`.

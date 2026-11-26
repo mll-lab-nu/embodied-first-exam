@@ -8,9 +8,7 @@ move both arms back to where they started.
 Success: the block lies flat exactly over the pad, the same way round, and both arms are back where they started.
 Picking up the block, tipping it onto an edge or letting it hop ends the episode at once as a failure.
 
-You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
-you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
-when your session ends.
+When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
 Nothing to hand in: the service records and grades the episode. Keep the script that drives the robot at
 `/app/output/gen.py`.

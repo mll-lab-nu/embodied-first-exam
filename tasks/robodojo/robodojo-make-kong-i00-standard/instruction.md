@@ -9,12 +9,9 @@ grippers.
 Success: the three tiles in your row that match the discarded tile are face up and the other nine tiles of your four
 sets of three still stand; then the tile from the front stack stands on its short end at the right end of your row, its
 right end up; and both grippers are open. Moving one of your arms far from where it started while the opponent's arm is
-out ends the episode as a failure. What counts is how things stand at the end of the episode: a success reached earlier
-and lost by the end does not count, so finish in the state you want graded and stop sending commands.
+out ends the episode as a failure.
 
-You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
-you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
-when your session ends.
+When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
 Nothing to hand in: the service records and grades the episode. Keep the script that drives the robot at
 `/app/output/gen.py`.

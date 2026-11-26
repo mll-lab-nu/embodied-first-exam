@@ -5,12 +5,9 @@ Stack the three blocks into one tower. Then move both arms back to where they st
 
 ## Goal
 Success: the three blocks stand in one tower, each nearly centred on the one below, and both arms are back where they
-started. What counts is how things stand at the end of the episode: a success reached earlier and lost by the end does
-not count, so finish in the state you want graded and stop sending commands.
+started.
 
-You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
-you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
-when your session ends.
+When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
 Nothing to hand in: the service records and grades the episode. Keep the script that drives the robot at
 `/app/output/gen.py`.

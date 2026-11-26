@@ -8,12 +8,10 @@ the button's cap up and press it once. Finish with the cap pulled up while both 
 Success: the two cubes have swapped mats in three moves through the empty mat, each nearly centred on its new mat, the
 button was pressed after each move, and both arms are back where they started while the cap is pulled up. Press the
 button exactly three times in the whole episode: a fourth counted press ends the episode as a failure, and fewer than
-three means no success. What counts is how things stand at the end of the episode: a success reached earlier and lost by
-the end does not count, so finish in the state you want graded and stop sending commands.
+three means no success.
 
-You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
-you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
-when your session ends. A step of the task's sequence, once done, stays counted.
+When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts. A step of
+the task's sequence, once done, stays counted.
 
 Nothing to hand in: the service records and grades the episode. Keep the script that drives the robot at
 `/app/output/gen.py`.

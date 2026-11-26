@@ -7,13 +7,9 @@ and keep the box upright where it is. Then move both arms back to where they sta
 ## Goal
 Success: the car, the toothbrush, the hammer and the shoe lie wholly inside the box, in its middle away from the short
 end walls, each lengthwise with its front end pointing left (the car's nose, the toothbrush's brush head, the hammer's
-head, the shoe's toe); the box still stands upright and is not turned; and both arms are back where they started. What
-counts is how things stand at the end of the episode: a success reached earlier and lost by the end does not count, so
-finish in the state you want graded and stop sending commands.
+head, the shoe's toe); the box still stands upright and is not turned; and both arms are back where they started.
 
-You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
-you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
-when your session ends.
+When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
 Nothing to hand in: the service records and grades the episode. Keep the script that drives the robot at
 `/app/output/gen.py`.

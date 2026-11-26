@@ -8,13 +8,9 @@ brown bowl, in that order.
 Success: the violet bottle has been poured into the black bowl, then the red bottle into the white bowl, then the
 turquoise bottle into the brown bowl, each bottle nearly emptied into its bowl with little spilled. Each pour is judged
 at the moment its bottle stands upright again, so finish pouring before you stand it up. If an arm comes back to where
-it started while a later bowl holds its liquid and an earlier one does not, the episode ends at once as a failure. What
-counts is how things stand at the end of the episode: a success reached earlier and lost by the end does not count, so
-finish in the state you want graded and stop sending commands.
+it started while a later bowl holds its liquid and an earlier one does not, the episode ends at once as a failure.
 
-You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
-you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
-when your session ends.
+When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
 Nothing to hand in: the service records and grades the episode. Keep the script that drives the robot at
 `/app/output/gen.py`.

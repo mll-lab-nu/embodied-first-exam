@@ -8,9 +8,7 @@ Success: nearly all the liquid has left the bottle, almost all of it is in the c
 stands upright again. The pour is judged at the moment the bottle stands upright again, so finish pouring before you
 stand it up.
 
-You end the episode yourself, with the finish call (Robot Interface), once you are done: the robot never says whether
-you have succeeded, and reaching the goal does not end the episode. Without that call the episode is graded as it stands
-when your session ends.
+When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
 Nothing to hand in: the service records and grades the episode. Keep the script that drives the robot at
 `/app/output/gen.py`.
