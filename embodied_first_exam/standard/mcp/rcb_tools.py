@@ -11,14 +11,15 @@
 
 GET /status has no tool: its fields are in every reply's meta. GET /operations/<id> has none either: against a 2.4
 service every request carries an operation id and a request deadline (as the 2.4 client sends them), and when a reply
-is lost (a connection error or a timeout) this module re-queries /operations/<id> itself and says whether the call ran.
+is lost (a connection error or a timeout; never an answer, a 5xx included) this module re-queries /operations/<id> itself
+and says whether the call ran.
 
 A request is sent as the service's own client sends it: RCB1 for /observe, /submit, /reset (rcb1.py, the task's copy
 next to its client), JSON for /kinematics and /finish; fields the agent leaves out are left out (the service's
 defaults apply). A reply's parts are written under /app/obs (workspace.py): arrays as .npy, exact, each RGB image also
 as .png to view, video as .mp4, JSON as .json, anything else as .bin; the result is {"meta": the service's meta, unchanged,
 "parts": {name: {kind, dtype, shape, ..., file, image}}}. A refusal comes back as the service's status and error
-(409 as {"episode_over": true, ...}, not an error: the episode has ended).
+(409 as {"episode_over": true, ...}, not an error: the episode has ended; a 409 to GET /spec likewise, EpisodeOver).
 
 No tool waits for anything the service does not: in realtime mode a submit answers at once and observe reads what is
 recorded; nothing here holds or slows the clock. The agent may use the service's client at the same time; both
@@ -39,6 +40,11 @@ except ImportError:
 TOOLS_DIR = os.environ.get("EFE_MCP_TOOLS_DIR") or "/opt/tools"     # the task's client and its rcb1.py
 CANDIDATES = ("http://sim:8000", "http://localhost:8000")
 MAX_BODY = 64 * 1024 * 1024                                          # the protocol's request limit
+
+
+class EpisodeOver(Exception):
+    """The service has ended the episode for good (GET /spec answered 409: it gave up); the server reports it as
+    {"episode_over": true, "reason": ...}, not as an error."""
 
 
 class ToolError(Exception):
@@ -91,18 +97,28 @@ class RcbTools:
         cands = [c for c in (os.environ.get("SIM_URL"), *CANDIDATES) if c]
         t0, last = time.time(), None
         while time.time() - t0 < timeout:
+            refused = None
             for b in cands:
                 try:
                     self._log("/spec", "GET")
                     r = requests.get(b.rstrip("/") + "/spec", timeout=(5, 60))
-                    if r.status_code == 503:
-                        last = "warming up"
-                        continue
-                    r.raise_for_status()
-                    self.base, self.spec = b.rstrip("/"), r.json()
-                    return
                 except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
                     last = e
+                    continue
+                if r.status_code == 503:
+                    last = "warming up"
+                    continue
+                if r.status_code == 409:          # the service gave up for good: no wait brings it back
+                    raise EpisodeOver(json.dumps(_jsonable(self._error_body(r)))[:1500])
+                if r.status_code != 200:
+                    refused = refused or (b, r)
+                    continue
+                self.base, self.spec = b.rstrip("/"), r.json()
+                return
+            if refused:                           # an answer, but not a robot service's /spec
+                b, r = refused
+                raise ToolError(f"{r.status_code} GET {b.rstrip('/')}/spec: "
+                                + json.dumps(_jsonable(self._error_body(r)))[:1500], "service")
             time.sleep(2)
         raise ToolError(f"the robot service did not answer: {last}", "service")
 
@@ -126,12 +142,16 @@ class RcbTools:
         return rcb1
 
     # ------------------------------------------------------------------ requests
-    def _refusal(self, path, r):
+    @staticmethod
+    def _error_body(r) -> dict:
         try:
             err = r.json()
         except ValueError:
             err = {"error": r.text[:300]}
-        err = _jsonable(err if isinstance(err, dict) else {"error": err})
+        return err if isinstance(err, dict) else {"error": err}
+
+    def _refusal(self, path, r):
+        err = _jsonable(self._error_body(r))
         if r.status_code == 409:
             return {"episode_over": True, "http_status": 409, "path": path, **err}
         if r.status_code == 404:
@@ -186,9 +206,7 @@ class RcbTools:
             return rcb1.decode(r.content)
         if r.status_code == 200:
             return {"reply": _jsonable(r.json())}
-        if r.status_code >= 500 and op:
-            return self._lost(path, op, RuntimeError(f"{r.status_code}: {r.text[:200]}"))
-        return self._refusal(path, r)
+        return self._refusal(path, r)      # a 5xx too: the service answered (only a reply that never came is lost)
 
     def post_json(self, path: str, body: dict):
         import requests

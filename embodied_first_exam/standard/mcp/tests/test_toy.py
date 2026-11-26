@@ -122,6 +122,8 @@ def main():
         sim.terminate(); sim.wait(10)
     import test_agent_end                  # finish where it is the agent's: an agent-ended toy (ci runs this file)
     test_agent_end.main()
+    import test_failures                   # a 5xx, a lost reply, /spec 409
+    test_failures.main()
 
 
 if __name__ == "__main__":
