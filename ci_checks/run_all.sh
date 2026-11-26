@@ -104,6 +104,9 @@ add python3 ci_checks/check-realtime.py"$pargs"
 # docs/protocol/standard_mode.md "MCP tools": every standard / realtime task has the robot's MCP tools (or a stated
 # exception), and every agent-facing endpoint the layers and adapters serve has a tool
 add python3 ci_checks/check-mcp-tools.py"$pargs"
+# docs/protocol/standard_mode.md "Version 3.0": the reference services of 2.1–2.4 answer as
+# docs/protocol/eai-standard-3.0.openapi.yaml says (paths, status codes, bodies against the schemas)
+add python3 ci_checks/check-openapi-contract.py
 # PROTOCOL §4: every task renders a video and the runner can collect it; a declared video time bound is not
 # shorter than the verdict replay's (privileged)
 add python3 ci_checks/check-video.py"$targs"

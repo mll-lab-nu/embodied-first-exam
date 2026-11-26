@@ -34,6 +34,9 @@ declares a version before 2.1.
 `eai-standard/3.0` is a set of rules every layer follows (`/spec.standard = "eai-standard/3.0"`); a layer's own
 version string (`/spec.protocol`, `[metadata] protocol`) says which capabilities it has. Where a part below says
 otherwise about `/observe`, `/submit` or the clock, this section wins; the older text stays as the history of 2.1–2.4.
+The HTTP interface of every layer is written out as OpenAPI 3.1 in
+[`eai-standard-3.0.openapi.yaml`](eai-standard-3.0.openapi.yaml); `ci_checks/check-openapi-contract.py` runs the
+reference services of 2.1–2.4 and checks their answers against it.
 
 - **Standard mode is Gym's `env.step`.** The world stands still between calls. `/submit` blocks until its chunk has run
   and answers with the chunk's video (as asked), its proprioception and `meta.duration_s`, the robot seconds it ran
