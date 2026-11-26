@@ -801,6 +801,10 @@ def no_twin_reason(task: Path) -> str | None:
 # finish line in `## Robot Interface` (ROBOT_FINISH) and the Finish (and Steps) lines of `## Limits` (render_limits).
 AGENT_END_RE = re.compile(r'^\s*RCB_AGENT_END:\s*"?1"?\s*(?:#.*)?$', re.M)
 STEP_LIMIT_RE = re.compile(r'^\s*RCB_STEP_LIMIT:\s*"?([0-9]+)"?\s*(?:#.*)?$', re.M)
+# a service's own technical episode cap set in its environment (the 2.1 adapters server_mw / server_casa / server_mj:
+# `/spec.max_control_steps`); without RCB_STEP_LIMIT it ends the episode the same way (standard_mode.md "Agent-ended
+# episodes"), so the instruction's Limits states it in a Steps line
+MAX_CONTROL_STEPS_RE = re.compile(r'^\s*RCB_MAX_CONTROL_STEPS:\s*"?([0-9]+)"?\s*(?:#.*)?$', re.M)
 
 
 def agent_end_of(task: Path) -> dict | None:
@@ -1146,8 +1150,8 @@ def limits_resets(task: Path) -> str:
 def render_limits(task: Path, text: str = "") -> str:
     """instruction.md's `## Limits` (v2): Time (PROTOCOL §2, §5; left out when the task has no usable number), Tokens,
     Network (§5, H.6), Resources (§6), then the task's own lines of `text`'s `## Limits` (a default Resets line where it
-    has none, and for an agent-ended task with a step limit a default Steps line), and an agent-ended task's Finish line
-    (limits_finish)."""
+    has none, and for an agent-ended task with a step limit, or a cap its service's environment sets, a default Steps
+    line), and an agent-ended task's Finish line (limits_finish)."""
     have = limits_lines(text)
     kept = [(k, v) for k, v in have if k not in LIMITS_RENDERED and k != "Finish"]   # Finish: rendered (agent-ended)
     net = next((v for k, v in have if k == "Network"), None)
@@ -1167,6 +1171,11 @@ def render_limits(task: Path, text: str = "") -> str:
         left = ("the tool results' `steps_left`" if mode_of(task) in MCP_MODES else "`meta[\"steps_left\"]`")
         kept.append(("Steps", f"at most {n:,} control steps ({left} gives what is left); at the {_ordinal(n)} the "
                               "episode ends by itself."))
+    elif ae and "Steps" not in labels:
+        m = MAX_CONTROL_STEPS_RE.search(read_text(task / "environment/docker-compose.yaml") or "")
+        if m:   # the service's own cap (RCB_MAX_CONTROL_STEPS), which the task's text does not state
+            n = int(m.group(1))
+            kept.append(("Steps", f"at most {n:,} control steps; at the {_ordinal(n)} the episode ends by itself."))
     if ae:
         kept.append(("Finish", limits_finish(task, next((v for k, v in kept if k == "Steps"), ""))))
     out += [f"{k}: {v}" for k, v in kept]
@@ -1281,15 +1290,67 @@ def _v2_finish(task: Path, s: str) -> str:
     return s
 
 
+def _ws(t: str) -> str:
+    """A regex for `t` with any run of white space between its words (a wrapped paragraph)."""
+    return r"\s+".join(re.escape(w) for w in t.split())
+
+
+# where a task's own text states its service's technical step cap outside a Steps line (PROTOCOL §3: the Limits' Steps
+# line states how the episode ends on its own, and the Finish line names it): (pattern, Steps line) and what stays.
+# A cap in the Resets line ("none: one episode, at most N control steps (...)"):
+_CAP_IN_RESETS = re.compile(r"(?m)^- Resets:\s+none:\s+one\s+episode,\s+at\s+most\s+([\d,]+)\s+(control\s+steps\b[^\n]*"
+                            r"(?:\n(?![ \t]*(?:- |\n|#))[^\n]*)*?)\.[ \t]*$")
+# a sentence in Robot Interface ("There is no step budget: the one technical cap is `spec["max_control_steps"]`, ..."):
+_CAP_SENTENCE = re.compile(r"\s*" + _ws('There is no step budget: the one technical cap is `spec["max_control_steps"]`,')
+                           + r"\s+([\d,]+)\s+\(([^)]*)\),\s+" + _ws("at which the episode ends."))
+# a list of the episode's other ends that closes with the cap ("The episode also ends ..., and after N control steps
+# (...).")
+_CAP_IN_ENDS = re.compile(_ws("The episode also ends") + r"\s+((?:[^.]|\.\d)+?),\s+and\s+after\s+([\d,]+)\s+control\s+steps\s+"
+                          r"\(([^)]*)\)\.")
+
+
+def _v2_steps(task: Path, s: str) -> str:
+    """`s` with the technical step cap its own text states outside `## Limits` (or inside the Resets line) moved into a
+    Steps line of `## Limits` (render_limits keeps it), for an agent-ended task without a step limit or a Steps line."""
+    ae = agent_end_of(task)
+    if not ae or ae.get("step_limit") or any(k == "Steps" for k, _ in limits_lines(s)):
+        return s
+    steps = None
+    m = _CAP_IN_RESETS.search(s)
+    if m:
+        n, rest = int(m.group(1).replace(",", "")), " ".join(m.group(2).split())
+        steps = f"at most {n:,} {rest}; at the {_ordinal(n)} the episode ends by itself."
+        s = s[:m.start()] + "- Resets: none: one episode." + s[m.end():]
+    elif _CAP_SENTENCE.search(s):
+        m = _CAP_SENTENCE.search(s)
+        n = int(m.group(1).replace(",", ""))
+        steps = (f"no step budget; a technical cap (`spec[\"max_control_steps\"]`) ends the episode after {n:,} control "
+                 f"steps ({' '.join(m.group(2).split())}).")
+        s = _sub_prose(s, _CAP_SENTENCE, "")
+    elif _CAP_IN_ENDS.search(s):
+        m = _CAP_IN_ENDS.search(s)
+        n, ends = int(m.group(2).replace(",", "")), " ".join(m.group(1).split())
+        ends = " and ".join(ends.rsplit(", ", 1))
+        steps = f"at most {n:,} control steps ({' '.join(m.group(3).split())}); at the {_ordinal(n)} the episode ends by itself."
+        s = _sub_prose(s, _CAP_IN_ENDS, f"The episode also ends {ends}.")
+    if steps is None:
+        return s
+    lim = re.search(rf"(?ms)^{re.escape(LIMITS_HEADING)}[ \t]*\n(.*?)(?=^## |\Z)", s)
+    if not lim:
+        return s
+    body = lim.group(1).rstrip("\n")
+    return s[:lim.start(1)] + body + "\n- Steps: " + steps + "\n" + s[lim.end(1):]
+
+
 def normalize_instruction(task: Path) -> None:
     """instruction.md (v2, V2_SECTIONS) with the mode line that fits its reset budget (_v2_episodes), its routes to the
-    robot (_v2_route), an agent-ended task's finish line (_v2_finish), and last its `## Limits` rendered (render_limits),
-    replacing the one it had."""
+    robot (_v2_route), an agent-ended task's finish line (_v2_finish) and its step cap in a Steps line (_v2_steps), and
+    last its `## Limits` rendered (render_limits), replacing the one it had."""
     p = task / "instruction.md"
     if not p.is_file():
         return
     s = p.read_text(encoding="utf-8")
-    s = _v2_finish(task, _v2_route(task, _v2_episodes(task, s)))
+    s = _v2_steps(task, _v2_finish(task, _v2_route(task, _v2_episodes(task, s))))
     body = re.sub(rf"(?ms)^{re.escape(LIMITS_HEADING)}[ \t]*(?:\n.*?)?(?=^## |\Z)", "", s)
     write_if_changed(p, body.rstrip() + "\n\n" + render_limits(task, s))
 
