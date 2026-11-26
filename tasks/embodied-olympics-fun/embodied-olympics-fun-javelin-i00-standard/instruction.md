@@ -9,10 +9,10 @@ Success: you throw the javelin over your shoulder from behind the arc, it lands 
 20 m out, and you then leave the runway behind the arc and stand still.
 
 The referee in the service judges these stages, in order: **release → landing → exit**. The referee's success call
-counts the moment it is made: nothing after it undoes it, but the attempt does not end there. An attempt (an episode)
-ends early at the first foul before a success (a failure) or after 60 s of robot time; a reset starts a new attempt, and
-only your last attempt is graded. It ends when you call finish (Limits) or when your session ends. The robot never tells
-you whether you have succeeded.
+counts the moment it is made: nothing after it undoes it, but the attempt does not end there. The first foul before a
+success ends the attempt as a failure. A reset starts a new attempt, and only your last attempt is graded.
+
+When you are done, send `/finish` to end the episode and get it graded.
 
 Keep a `NOTES.md` of at most 20 lines in `/app/output/` (your approach, what failed, what you downloaded or installed):
 save it early and keep it current.
@@ -38,6 +38,8 @@ The attempt fails at once if:
 ## Robot Interface
 You control a simulated Unitree H1-2 humanoid robot (27 joints, 1.78 m tall, 67 kg; the Embodied Olympics simulator on
 MuJoCo). The robot runs as a service you reach through its client or its MCP tools, as if it were real hardware.
+
+`POST /finish` (MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
 `/opt/tools/rcb_client.py` (protocol `eai-standard/2.1`) is your whole interface to the robot. Its docstring is the full
@@ -167,10 +169,9 @@ Joint order everywhere (Unitree's SDK order): `left_hip_yaw`, `left_hip_pitch`, 
 
 ## Limits
 - Time: 7200 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
-  the end you are stopped without warning and the episode is graded as it stands. Time left:
-  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`); the service's `time_left_s` (in every reply) starts at
-  your first request, so the file is the one to trust. Calls into a long-running process can block for their whole wait
-  time: use short waits or one-shot scripts.
+  the end you are stopped without warning. Time left: `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`); the
+  service's `time_left_s` (in every reply) starts at your first request, so the file is the one to trust. Calls into a
+  long-running process can block for their whole wait time: use short waits or one-shot scripts.
 - Tokens: no separate limit.
 - Network: open. You may install packages and search for, download and use public tools, robot models and pretrained
   controllers (say in your notes what you used); you may read anything in your container, the benchmark's source
@@ -179,7 +180,5 @@ Joint order everywhere (Unitree's SDK order): `left_hip_yaw`, `left_hip_pitch`, 
   no GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap
   only slows you down); usage: `/run/rcb-limits/usage.json`.
 - Resets: at most 5 (`spec()["budget"]["reset"]`), each a new episode from the same starting state.
-- Finish: when you are done, call finish: `POST /finish` with an empty JSON body to the service, at the client's base
-  URL (`http://sim:8000` or `http://localhost:8000`; in Python `requests.post(r.base + "/finish", json={})` with your
-  client `r`). It ends the episode, and every call after it is refused. Reaching the goal changes no reply and does not
-  end the episode; if you never call finish, the end of your session ends it.
+- Steps: an attempt ends by itself after 60 s of robot time.
+- Finish: if you never send `/finish`, the episode is graded when the step limit is reached or your session ends.

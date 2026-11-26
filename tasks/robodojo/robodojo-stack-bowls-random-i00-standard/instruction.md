@@ -7,8 +7,7 @@ Stack the three bowls one inside another, all upright. Then move both arms back 
 Success: the three bowls are nested in one stack, all upright, the bottom one flat on the table, and both arms are back
 where they started.
 
-Success is judged on how things stand when the episode ends. It ends when you call finish (Limits), at the step limit
-(Limits) or when your session ends. The robot never tells you whether you have succeeded.
+When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
@@ -19,6 +18,8 @@ Rules:
 ## Robot Interface
 Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). The robot
 runs as a service you reach through its client or its MCP tools, as if it were real hardware: one live episode.
+
+`POST /finish` (MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
@@ -103,9 +104,9 @@ answers again (resuming replays the episode so far, which can take minutes; the 
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
-  the end you are stopped without warning and the episode ends. Time left: `/run/rcb-limits/usage.json` (`time_left_s`,
-  `deadline_utc`); the service's `time_left_s` (in every reply) starts at your first request, so the file is the one to
-  trust. Calls into a long-running process can block for their whole wait time: use short waits or one-shot scripts.
+  the end you are stopped without warning. Time left: `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`); the
+  service's `time_left_s` (in every reply) starts at your first request, so the file is the one to trust. Calls into a
+  long-running process can block for their whole wait time: use short waits or one-shot scripts.
 - Tokens: no separate limit.
 - Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
   and read anything in your container, the simulator's and the benchmark's source included.
@@ -118,7 +119,4 @@ answers again (resuming replays the episode so far, which can take minutes; the 
   `ee_pose` row as many as its move takes at 0.25 m/s (at least one), holding still for s seconds (`hold(s)`) s x 25;
   observing (`get_obs`), the spec, the status and the kinematics use none. Every reply gives `steps_left`; at the 800th
   step the episode ends by itself.
-- Finish: when you are done, call finish: `POST /finish` with an empty JSON body to the service, at the client's base
-  URL (`http://sim:8000` or `http://localhost:8000`; in Python `requests.post(r.base + "/finish", json={})` with your
-  client `r`). It ends the episode, and every call after it is refused. Reaching the goal changes no reply and does not
-  end the episode; if you never call finish, the end of your session ends it.
+- Finish: if you never send `/finish`, the episode is graded when the step limit is reached or your session ends.

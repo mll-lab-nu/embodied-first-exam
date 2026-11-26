@@ -13,17 +13,17 @@ time the same way, the tray moving, so that the cube's original bottom face ends
 cube, that face up and at rest, at the output point.
 
 The steps count only in this order, and a step once done stays done: the task is done once its last step is, and it
-stays done even when a failure ends the episode afterwards. It ends when you call finish (Limits) or when your session ends.
-The robot never tells you whether you have succeeded. The task fails, and the episode ends at once, when:
+stays done even when a failure ends the episode afterwards. The task fails, and the episode ends at once, when:
 - the cube leaves the tray;
 - the pusher touches the cube again after letting go and before it has tipped past half-way;
 - the tray stands (nearly) still while the cube tips;
-- the task's horizon is reached before the task is done (Robot Interface);
 - an object leaves the workspace (falls well below the table top or flies far away);
 - a robot part touches what it may not: the tray and the pusher may touch only the cube, no other robot part may touch
   anything, and the two arms must never touch each other;
 - an arm touches itself, a robot part touches the table or the floor, or a contact presses deep into anything;
 - an arm goes beyond the Franka Panda's own safety limits (Robot Interface, Safety).
+
+When you are done, send `/finish` to end the episode and get it graded.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
@@ -31,14 +31,15 @@ Rules:
 - Episodes and resets: you have 3 resets (the spec's reset budget is authoritative). A reset puts the robot and the
   scene back on the same frozen starting state (the scene is rebuilt, about a second; no robot time passes) and starts a
   new episode, abandoning the running one or after one has ended. Only the last episode is graded: an episode you reset
-  away is never graded, and the one graded is the latest when you call finish or when your session ends. Do not stop
-  early: while the episode runs, or a reset is left, the run can still pass.
+  away is never graded. Do not stop early: while the episode runs, or a reset is left, the run can still pass.
 - You get only the cameras and the robot's own sensor readings: no object poses, no scene layout, no success signal.
 
 ## Robot Interface
 Two simulated Franka Panda arms (`panda-0` on the left, `panda-1` on the right; each with its standard hand and the
 task's tool where it has one) on a table (ManiSkill 3 / SAPIEN, rigid-body physics at 1000 Hz). The robot runs as a
 service you reach through its client or its MCP tools, as if it were real hardware.
+
+`POST /finish` (MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
 `/opt/tools/rcb_client.py` (protocol `eai-standard/2.1`). Its docstring (`help(rcb_client)`) lists the calls and their
@@ -155,10 +156,9 @@ strike moves the arm too), and the servo's own reference motion is held to the s
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
-  the end you are stopped without warning and the episode is graded as it stands. Time left:
-  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`); the service's `time_left_s` (in every reply) starts at
-  your first request, so the file is the one to trust. Calls into a long-running process can block for their whole wait
-  time: use short waits or one-shot scripts.
+  the end you are stopped without warning. Time left: `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`); the
+  service's `time_left_s` (in every reply) starts at your first request, so the file is the one to trust. Calls into a
+  long-running process can block for their whole wait time: use short waits or one-shot scripts.
 - Tokens: no separate limit.
 - Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
   and read anything in your container, the simulator's and the benchmark's source included.
@@ -166,7 +166,5 @@ strike moves the arm too), and the servo's own reference motion is held to the s
   no GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap
   only slows you down); usage: `/run/rcb-limits/usage.json`.
 - Resets: at most 3 resets, each a new episode from the same frozen starting state; only the last episode is graded.
-- Finish: when you are done, call finish: `POST /finish` with an empty JSON body to the service, at the client's base
-  URL (`http://sim:8000` or `http://localhost:8000`; in Python `requests.post(r.base + "/finish", json={})` with your
-  client `r`). It ends the episode, and every call after it is refused. Reaching the goal changes no reply and does not
-  end the episode; if you never call finish, the end of your session ends it.
+- Steps: the episode ends by itself after 25 s of robot time.
+- Finish: if you never send `/finish`, the episode is graded when the step limit is reached or your session ends.

@@ -1238,24 +1238,26 @@ V2_MODE_LINE = {
                            "`efe_robot` or the service's own client, as if it were real hardware: one live episode."),
 }
 # owner 11-24: the fixed grading words carry each rule once (what is graded and when, who ends the episode), no
-# restatement. V2_FINAL_STATE is for a grader that judges the end state. An agent-ended episode (RoboDojo standard)
-# closes its Goal with what is judged and when the episode ends (owner 11-25, board 0309 D216 / 0611 D1=B): a task
-# judged on its end state says V2_AGENT_END_STATE (an ordered task first says which steps count as they happen), a task
-# whose goal is moments or a trigger (rcb_robodojo.END_JUDGEMENT "history") says what counts as it happens; then
-# V2_AGENT_END_ENDS (ci_checks/benchmarks/robodojo/advisory-end-judgement.py checks each task against END_JUDGEMENT).
+# restatement. V2_FINAL_STATE is for a grader that judges the end state. An agent-ended episode closes its Goal with
+# how it ends and what is judged (owner 11-25, board 0309 D216 / 0611 D1=B; RoboDojo:
+# ci_checks/benchmarks/robodojo/advisory-end-judgement.py checks each task against rcb_robodojo.END_JUDGEMENT, whose
+# "history" tasks say what counts as it happens).
 V2_FINAL_STATE = {
     "privileged": "What counts is how things stand after the last action of your {deliverable}, replayed from the fixed start.",
     "standard": "What counts is how things stand at the end of the episode.",
 }
-V2_AGENT_END_STATE = "Success is judged on how things stand when the episode ends."
-# every other agent-ended task (v3.0): Goal says what is judged (V2_AGENT_END_STATE, or what counts as it happens for a
-# goal of moments) and then V2_AGENT_END_GOAL; Limits' Finish line (LIMITS_FINISH, rendered) says how to end it
-V2_AGENT_END_GOAL = ("It ends when you call finish (Limits) or when your session ends. The robot never tells you whether "
-                     "you have succeeded.")
-V2_AGENT_END_ENDS = ("ends when you call finish (Limits), at the step limit (Limits) or when your session ends. "
-                     "The robot never tells you whether you have succeeded.")
-# the latched wording of 11-24, retired with D216: no RoboDojo standard Goal may carry it
-V2_AGENT_END_RETIRED = ("The episode succeeds if the goal is reached before it ends", "once done, stays counted")
+# owner 11-26: plain finish wording, said once in each section. Goal: after the Success sentence, one short paragraph,
+# V2_AGENT_END_GOAL then V2_AGENT_END_STATE (a task judged on events, or on what counts as it happens, says only
+# V2_AGENT_END_GOAL; a task that counts some steps as they happen and the rest at the end says V2_AGENT_END_REST
+# instead of V2_AGENT_END_STATE). Robot Interface: one line for the endpoint (ROBOT_FINISH, rendered after the mode
+# line). Limits: one Finish line (LIMITS_FINISH, rendered). Nowhere else.
+V2_AGENT_END_GOAL = "When you are done, send `/finish` to end the episode and get it graded."
+V2_AGENT_END_STATE = "Only the state at that point counts."
+V2_AGENT_END_REST = "Everything else counts only as it stands at that point."
+# the latched wording of 11-24, retired with D216, and the finish wording retired on 11-26: no Goal may carry it
+V2_AGENT_END_RETIRED = ("The episode succeeds if the goal is reached before it ends", "once done, stays counted",
+                        "call finish (Limits)", "The robot never tells you whether you have succeeded",
+                        "Success is judged on how things stand when the episode ends")
 V2_HAND_IN = {   # owner 11-24: a standard mode hands nothing in and is not asked for a script (no `/app/output/gen.py`)
     "standard-mcp": "The tool server records your calls.",
 }
@@ -1340,6 +1342,8 @@ def limits_time(task: Path, sec: int) -> str:
         a, b = LIMITS_TIME_TASK
     elif mode in MCP_MODES and base_std in RO_EXPORTED_TASKS:
         a, b = LIMITS_TIME_TASK_MCP
+    if agent_end_of(task) and a in (LIMITS_TIME[mode][0], LIMITS_TIME_OWN.get((bench, mode), ("",))[0]):
+        a = re.sub(r" At the end you are stopped without warning\b.*", " At the end you are stopped without warning.", a)
     return f"{sec} s of wall-clock time from the start of your session; {a} {_LIMITS_CLOCK}{b}.{_LIMITS_WAITS}"
 
 
@@ -1427,21 +1431,27 @@ def render_limits(task: Path, text: str = "") -> str:
         n = ae["step_limit"]
         left = ("the tool results' `steps_left`" if mode_of(task) in MCP_MODES else "`meta[\"steps_left\"]`")
         kept.append(("Steps", f"at most {n:,} control steps ({left} gives what is left); at the {_ordinal(n)} the "
-                              "episode ends by itself and is graded as it stands."))
+                              "episode ends by itself."))
     if ae:
-        kept.append(("Finish", LIMITS_FINISH[mode_of(task) in MCP_MODES]))
+        steps = next((v for k, v in kept if k == "Steps"), "")
+        unlimited = bool(re.match(r"(?:no step budget|unlimited|no limit)\b", steps))
+        kept.append(("Finish", LIMITS_FINISH[mode_of(task) in MCP_MODES][unlimited]))
     out += [f"{k}: {v}" for k, v in kept]
     return LIMITS_HEADING + "\n" + "\n".join(_wrap_bullet(x) for x in out) + "\n"
 
 
-# the Finish line of an agent-ended task's `## Limits` (PROTOCOL §3; rendered): [HTTP client, MCP tools]
+# the Finish line of an agent-ended task's `## Limits` (PROTOCOL §3; rendered; owner 11-26: one line):
+# [HTTP client, MCP tools][a step limit, or no step budget (its Steps line says how a technical cap is graded)]
 LIMITS_FINISH = (
-    "when you are done, call finish: `POST /finish` with an empty JSON body to the service, at the client's base URL "
-    "(`http://sim:8000` or `http://localhost:8000`; in Python `requests.post(r.base + \"/finish\", json={})` with your "
-    "client `r`). It ends the episode, and every call after it is refused. Reaching "
-    "the goal changes no reply and does not end the episode; if you never call finish, the end of your session ends it.",
-    "when you are done, call the `finish` tool. It ends the episode, and every call after it is refused. Reaching the "
-    "goal changes no tool result and does not end the episode; if you never call finish, the end of your session ends it.")
+    ("if you never send `/finish`, the episode is graded when the step limit is reached or your session ends.",
+     "if you never send `/finish`, the episode is graded when your session ends."),
+    ("if you never call the `finish` tool, the episode is graded when the step limit is reached or your session ends.",
+     "if you never call the `finish` tool, the episode is graded when your session ends."))
+# the endpoint's line in an agent-ended task's `## Robot Interface`, its own paragraph after the mode line (rendered):
+# [client only, client and MCP tools, MCP tools only]
+ROBOT_FINISH = ("`POST /finish`: ends the episode; it is graded right away.",
+                "`POST /finish` (MCP tool `finish`): ends the episode; it is graded right away.",
+                "The `finish` tool ends the episode; it is graded right away.")
 
 
 # a task with resets (a reset budget N > 0; Goal and `## Limits` state them): its mode line without "one live episode"
@@ -1517,11 +1527,34 @@ def _sub_prose(s: str, pat: "re.Pattern", new: str) -> str:
     return "".join(paras)
 
 
+def _v2_finish(task: Path, s: str) -> str:
+    """`s` with the finish line of an agent-ended task's `## Robot Interface` (ROBOT_FINISH: client only, client and MCP
+    tools, MCP tools only) as its own paragraph right after the paragraph with the mode line; an earlier copy of it is
+    dropped first, and a task that is not agent-ended has none."""
+    s = re.sub(r"(?m)^(?:" + "|".join(re.escape(x) for x in ROBOT_FINISH) + r")[ \t]*\n(?:[ \t]*\n)?", "", s)
+    if not agent_end_of(task):
+        return s
+    mode = mode_of(task)
+    line = ROBOT_FINISH[2] if mode == "standard-mcp" else ROBOT_FINISH[1] if efe_mcp_manifest(task) else ROBOT_FINISH[0]
+    m = re.search(r"(?ms)^## Robot Interface[ \t]*\n(.*?)(?=^## |\Z)", s)
+    if not m:
+        return s
+    modes = {" ".join(v.split()) for d in (V2_MODE_LINE, V2_MODE_LINE_RESETS) for k, v in d.items() if k != "privileged"}
+    paras = re.split(r"(\n[ \t]*\n)", m.group(1))
+    for i in range(0, len(paras), 2):
+        if any(x in " ".join(paras[i].split()) for x in modes):
+            paras[i] = paras[i].rstrip("\n") + "\n\n" + line + ("\n" if paras[i].endswith("\n") else "")
+            return s[:m.start(1)] + "".join(paras) + s[m.end(1):]
+    return s
+
+
 def normalize_instruction_v2(task: Path, s: str) -> str:
-    """A v2 instruction with its `## Limits` rendered (render_limits), replacing the one it had, and the mode line that
-    fits its reset budget (_v2_episodes) and its routes to the robot (_v2_route)."""
+    """A v2 instruction with its `## Limits` rendered (render_limits), replacing the one it had, the mode line that
+    fits its reset budget (_v2_episodes) and its routes to the robot (_v2_route), and an agent-ended task's finish line
+    (_v2_finish)."""
     s = _v2_episodes(task, s)
     s = _v2_route(task, s)
+    s = _v2_finish(task, s)
     body = re.sub(rf"(?ms)^{re.escape(LIMITS_HEADING)}[ \t]*(?:\n.*?)?(?=^## |\Z)", "", s)
     return body.rstrip() + "\n\n" + render_limits(task, s)
 

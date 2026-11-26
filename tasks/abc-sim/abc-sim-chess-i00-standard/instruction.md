@@ -5,9 +5,9 @@ Put the black pieces that stand next to the board back on their empty starting s
 
 ## Goal
 Success: each of those pieces stands upright on an empty starting square of its own kind. It must hold for about a
-second after the episode ends, while the robot keeps your last command. Success is judged on how things stand when the
-episode ends. It ends when you call finish (Limits) or when your session ends. The robot never tells you whether you
-have succeeded.
+second after the episode ends, while the robot keeps your last command.
+
+When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
@@ -20,6 +20,8 @@ Rules:
 A bimanual robot in ABC Sim (MuJoCo): two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each) side
 by side at the near edge of a table, facing +x (the left arm is the one at +y). The robot runs as a service you reach
 through its client or its MCP tools, as if it were real hardware: one live episode.
+
+`POST /finish` (MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
@@ -83,10 +85,9 @@ the arms), in front = -x (nearer to them). No positions of the scene are given; 
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
-  the end you are stopped without warning and the episode is graded as it stands. Time left:
-  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`); the service's `time_left_s` (in every reply) starts at
-  your first request, so the file is the one to trust. Calls into a long-running process can block for their whole wait
-  time: use short waits or one-shot scripts.
+  the end you are stopped without warning. Time left: `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`); the
+  service's `time_left_s` (in every reply) starts at your first request, so the file is the one to trust. Calls into a
+  long-running process can block for their whole wait time: use short waits or one-shot scripts.
 - Tokens: no separate limit.
 - Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
   and read anything in your container, the simulator's and the benchmark's source included.
@@ -94,7 +95,4 @@ the arms), in front = -x (nearer to them). No positions of the scene are given; 
   no GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap
   only slows you down); usage: `/run/rcb-limits/usage.json`.
 - Resets: none: one episode.
-- Finish: when you are done, call finish: `POST /finish` with an empty JSON body to the service, at the client's base
-  URL (`http://sim:8000` or `http://localhost:8000`; in Python `requests.post(r.base + "/finish", json={})` with your
-  client `r`). It ends the episode, and every call after it is refused. Reaching the goal changes no reply and does not
-  end the episode; if you never call finish, the end of your session ends it.
+- Finish: if you never send `/finish`, the episode is graded when the step limit is reached or your session ends.

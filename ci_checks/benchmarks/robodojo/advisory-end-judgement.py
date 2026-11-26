@@ -5,9 +5,10 @@
 - rcb_robodojo.END_JUDGEMENT classifies every one of RoboDojo's tasks, exactly the 54 the standard tasks run
   (`RCB_TASK` in each tasks/robodojo/*-standard/environment/docker-compose.yaml), as "end" or "history", each with its
   reason; the sim service refuses an agent-ended task the table does not name.
-- each standard task in scope closes its Goal as its class says (scripts/task_conventions.py V2_AGENT_END_*): an "end"
-  task says what is judged on how things stand when the episode ends, a "history" task what counts as it happens and not
-  that; both say when the episode ends; none carries the retired latched wording.
+- each standard task in scope closes its Goal as its class says (scripts/task_conventions.py V2_AGENT_END_*): both say
+  how to end the episode (V2_AGENT_END_GOAL); an "end" task then says that only the state at that point counts
+  (V2_AGENT_END_STATE, or V2_AGENT_END_REST after the steps that count as they happen), a "history" task says what
+  counts as it happens and not that; none carries retired wording (V2_AGENT_END_RETIRED).
 """
 from __future__ import annotations
 
@@ -67,18 +68,19 @@ def main(args: list[str]) -> int:
         goal = (t / "instruction.md").read_text().split("\n## Goal\n", 1)[-1].split("\n## ", 1)[0]
         flat = " ".join(goal.split())
         kind = tab[fams[t]][0]
-        at_end = "judged on how things stand when the episode ends" in flat
-        if not flat.count(tc.V2_AGENT_END_ENDS):
-            errs.append(f"{t.name}: Goal does not say when the episode ends ({tc.V2_AGENT_END_ENDS[:50]!r}...)")
+        at_end = any(w in flat for w in (tc.V2_AGENT_END_STATE, tc.V2_AGENT_END_REST,
+                                         "judged on how things stand when the episode ends"))
+        if not flat.count(tc.V2_AGENT_END_GOAL):
+            errs.append(f"{t.name}: Goal does not say how to end the episode ({tc.V2_AGENT_END_GOAL!r})")
         if kind == "end" and not at_end:
-            errs.append(f"{t.name}: END_JUDGEMENT says \"end\", but Goal does not say what is judged on how things stand "
-                        f"when the episode ends ({tc.V2_AGENT_END_STATE!r})")
+            errs.append(f"{t.name}: END_JUDGEMENT says \"end\", but Goal does not say that only the state at the end "
+                        f"counts ({tc.V2_AGENT_END_STATE!r})")
         if kind == "history" and (at_end or not re.search(r"\bcounts? as (?:it|they) happens?\b", flat)):
             errs.append(f"{t.name}: END_JUDGEMENT says \"history\": Goal must say what counts as it happens, and not that "
                         "the end state is judged")
         for w in tc.V2_AGENT_END_RETIRED:
             if w in flat:
-                errs.append(f"{t.name}: Goal still has the retired latched wording {w!r}")
+                errs.append(f"{t.name}: Goal still has the retired wording {w!r}")
     if errs:
         print("FAIL advisory-end-judgement:\n  " + "\n  ".join(errs))
         return 1

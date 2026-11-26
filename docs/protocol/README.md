@@ -57,7 +57,7 @@ configuration (`config_key`; running.md "Results").
 | Modes offered (§3): any subset; a task without its privileged twin says why in its README Twin row | the task directories it ships | — |
 | Cutoff: the agent's wall-clock time, decided by the task's author | `[agent] timeout_sec` (a whole number of seconds) | 3600 s; at most 14400 s; equal in a task's privileged and standard versions (H.7) |
 | Reset budget N (standard modes) | the `sim` service's `RCB_RESET_BUDGET` default (`/spec.budget.reset`), the instruction | 0 in both standard and realtime (a task that grants resets declares its own N) |
-| Agent-ended episode and its step limit (standard and realtime mode, §3; required from v3.0) | the `sim` service's `RCB_AGENT_END` (written by `normalize`) and `RCB_STEP_LIMIT` (`/spec.success_signal`, `/spec.budget.steps`), the instruction's Goal and its `## Limits` Finish line (rendered by `normalize`) | on: the agent ends the episode (`POST /finish`); no step limit beyond the service's own step cap |
+| Agent-ended episode and its step limit (standard and realtime mode, §3; required from v3.0) | the `sim` service's `RCB_AGENT_END` (written by `normalize`) and `RCB_STEP_LIMIT` (`/spec.success_signal`, `/spec.budget.steps`), the instruction's Goal, its `## Robot Interface` finish line and its `## Limits` Finish line (both rendered by `normalize`) | on: the agent ends the episode (`POST /finish`); no step limit beyond the service's own step cap |
 | Slowdown S (realtime) | the `sim` service's `RCB_SLOWDOWN` default (`/spec.timing.slowdown`), the instruction (`S = <S>`) | S = 1 when the service's real-time factor is ≥ 3, else ⌈1.5 / RTF⌉ |
 | Observation and action extensions | `/spec`, the instruction, the benchmark doc | the `eai-standard` core |
 | Grading kind | the instruction, the frozen instance, `reward.json` (`replays`, `graded_by_live`) | privileged: one fresh replay, or up to `[metadata] replays` where the simulator does not replay bit-wise, any success counting (§4); standard modes: the live episode (H.4) |
@@ -103,9 +103,12 @@ infrastructure, a reference implementation, one benchmark using it, CI support t
   on them as they happened; a failure rule that ends the episode gives 0 on a goal judged on its end state, after a
   success too, while on a goal judged as events an event that happened stands. In realtime mode `/finish` stops the
   clock with the episode; a settle or hold window runs after it, off the clock. Resets work as before a success (within the
-  budget; none after `/finish`), and only the last episode is graded. The instruction's Goal says what is judged and
-  that the agent ends the episode (`V2_AGENT_END_STATE` / `V2_AGENT_END_GOAL` of `scripts/task_conventions.py`), and its
-  `## Limits` has the Finish line (rendered by `normalize`) and, with a step limit, the Steps line. `final.json` records
+  budget; none after `/finish`), and only the last episode is graded. The instruction says it once per section, in plain words
+  (`scripts/task_conventions.py`): the Goal, after the Success sentence, has one short paragraph, "When you are done,
+  send `/finish` to end the episode and get it graded." (`V2_AGENT_END_GOAL`) and, for a goal judged on its end state,
+  "Only the state at that point counts." (`V2_AGENT_END_STATE`); `## Robot Interface` has one line for the endpoint
+  (`ROBOT_FINISH`) and `## Limits` the Finish line (`LIMITS_FINISH`: what is graded if the agent never sends
+  `/finish`), both rendered by `normalize`, with a step limit also the Steps line. `final.json` records
   `ended_by` (`finish`, `step_limit`, `session_end`: the time limit, the token budget or the agent's exit, which the
   runner's record tells apart; `failed`, `error`) and the counters (`steps_used`, `finish_time_s`).
 - **Two routes to the robot** (standard and realtime): every such task offers its service through the shipped client

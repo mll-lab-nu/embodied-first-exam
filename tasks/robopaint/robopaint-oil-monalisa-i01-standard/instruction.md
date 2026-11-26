@@ -7,8 +7,9 @@ paints, in at most 2507 strokes.
 ## Goal
 Success: the main sheet looks like the picture (the same colours in the same places, the same lights and darks and
 edges, and paint only where the picture has paint), you used at most 2507 strokes, and the process rules below hold; a
-small shift of the whole painting does not matter. The main sheet is scored as the episode leaves it. It ends when you
-call finish (Limits) or when your session ends. The robot never tells you whether you have succeeded.
+small shift of the whole painting does not matter. The main sheet is scored as the episode leaves it.
+
+When you are done, send `/finish` to end the episode and get it graded.
 
 You are scored on how close your colours are to the picture's, afterwards, from the service's record of your episode.
 
@@ -26,6 +27,8 @@ Rules:
 ## Robot Interface
 A simulated Franka Panda arm holding an oil-paint brush. The robot runs as a service you reach through its client or its
 MCP tools, as if it were real hardware: one live episode.
+
+`POST /finish` (MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
@@ -143,10 +146,9 @@ stroke cap and when a process rule fails.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
-  the end you are stopped without warning and the episode is graded as it stands. Time left:
-  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`); the service's `time_left_s` (in every reply) starts at
-  your first request, so the file is the one to trust. Calls into a long-running process can block for their whole wait
-  time: use short waits or one-shot scripts.
+  the end you are stopped without warning. Time left: `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`); the
+  service's `time_left_s` (in every reply) starts at your first request, so the file is the one to trust. Calls into a
+  long-running process can block for their whole wait time: use short waits or one-shot scripts.
 - Tokens: no separate limit.
 - Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
   and read anything in your container, the simulator's and the benchmark's source included.
@@ -156,7 +158,4 @@ stroke cap and when a process rule fails.
 - Resets: none: one episode.
 - Steps: no step budget; actions and simulated time are reported as cost; a runaway guard stops the robot after 72000
   control steps (1 h of simulated time; `hold(s)` also advances it).
-- Finish: when you are done, call finish: `POST /finish` with an empty JSON body to the service, at the client's base
-  URL (`http://sim:8000` or `http://localhost:8000`; in Python `requests.post(r.base + "/finish", json={})` with your
-  client `r`). It ends the episode, and every call after it is refused. Reaching the goal changes no reply and does not
-  end the episode; if you never call finish, the end of your session ends it.
+- Finish: if you never send `/finish`, the episode is graded when your session ends.

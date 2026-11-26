@@ -7,15 +7,16 @@ opponent's half, with no second paddle touch and no second bounce on your half.
 ## Goal
 Success: after the serve bounces once on your half, you hit the ball once with the paddle and it then lands on the
 opponent's half, with no second paddle touch and no second bounce on your half. This counts once it has happened, even
-if the episode then ends as a failure. It ends when you call finish (Limits) or when your session ends. The robot never
-tells you whether you have succeeded. It ends as a failure on any other outcome of the rally, if the ball falls toward
-the floor, and after 3 s.
+if the episode then ends as a failure. It ends as a failure on any other outcome of the rally or if the ball falls
+toward the floor.
+
+When you are done, send `/finish` to end the episode and get it graded.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
   benchmark's demonstrations, trained policies); trials are reviewed.
 - Episodes: 10 resets, each a new episode from the same starting state (Robot Interface). Only the last episode is
-  graded: the one running when you call finish or when your session ends.
+  graded.
 - You get only the cameras and the body's own proprioception (joint positions, velocities and actuator torques, muscle
   activations and lengths): no object, ball, opponent or goal poses, no success signal.
 
@@ -23,6 +24,8 @@ Rules:
 The MyoArm with torso, a musculoskeletal model of a human torso, right arm and hand on a pelvis that slides on the floor
 (MyoSuite, MuJoCo), driven only through its actuators (273 muscles and 2 other actuators): there is no joint-level
 controller. The robot runs as a service you reach through its client or its MCP tools, as if it were real hardware.
+
+`POST /finish` (MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
@@ -88,10 +91,9 @@ and intrinsics, and every response carries each frame's pose. Proprioception (`s
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
-  the end you are stopped without warning and the episode is graded as it stands. Time left:
-  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`); the service's `time_left_s` (in every reply) starts at
-  your first request, so the file is the one to trust. Calls into a long-running process can block for their whole wait
-  time: use short waits or one-shot scripts.
+  the end you are stopped without warning. Time left: `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`); the
+  service's `time_left_s` (in every reply) starts at your first request, so the file is the one to trust. Calls into a
+  long-running process can block for their whole wait time: use short waits or one-shot scripts.
 - Tokens: no separate limit.
 - Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
   and read anything in your container, the simulator's and the benchmark's source included.
@@ -99,7 +101,5 @@ and intrinsics, and every response carries each frame's pose. Proprioception (`s
   GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap only
   slows you down); usage: `/run/rcb-limits/usage.json`.
 - Resets: at most 10 (`spec()["budget"]["reset"]`), each a new episode from the same starting state.
-- Finish: when you are done, call finish: `POST /finish` with an empty JSON body to the service, at the client's base
-  URL (`http://sim:8000` or `http://localhost:8000`; in Python `requests.post(r.base + "/finish", json={})` with your
-  client `r`). It ends the episode, and every call after it is refused. Reaching the goal changes no reply and does not
-  end the episode; if you never call finish, the end of your session ends it.
+- Steps: the episode ends by itself after 3 s of robot time.
+- Finish: if you never send `/finish`, the episode is graded when the step limit is reached or your session ends.

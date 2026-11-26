@@ -7,16 +7,16 @@ commanded gait: the same stepping pattern, rhythm and foot height.
 ## Goal
 Success: the robot never falls, and through every command of the schedule its speed and turning follow that command
 closely on average, and its feet follow the gait's target heights closely. A fall (the trunk tilting well over) ends the
-episode at once, as a failure. Success is judged on the whole run when the episode ends, and only an episode that lasts
-to the schedule's end (the step limit, Robot Interface, where it ends by itself) can succeed. It ends when you call
-finish (Limits) or when your session ends. The robot never tells you whether you have succeeded. The `done` action is
-the same as finish.
+episode at once, as a failure. Success is judged on the whole run, and only an episode that lasts to the end of the
+schedule can succeed. The `done` action is the same as `/finish`.
+
+When you are done, send `/finish` to end the episode and get it graded.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
   benchmark's demonstrations, trained policies); trials are reviewed.
 - Episodes: 10 resets, each a new episode from the same starting state (Robot Interface). Only the last episode is
-  graded: after finish no reset is possible, and when your session ends the episode then running is graded.
+  graded. No reset is possible after `/finish`.
 - You get only the cameras and the robot's own sensors (joint positions, velocities and torques, the IMU, foot
   contacts): no world positions, no success signal.
 
@@ -24,6 +24,8 @@ Rules:
 Boston Dynamics Spot (MuJoCo Playground's scene, in MuJoCo), driven by 12 joint position actuators: there is no walking
 or balance controller. The robot runs as a service you reach through its client or its MCP tools, as if it were real
 hardware.
+
+`POST /finish` (MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
@@ -91,10 +93,9 @@ control steps).
 
 ## Limits
 - Time: 1800 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
-  the end you are stopped without warning and the episode is graded as it stands. Time left:
-  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`); the service's `time_left_s` (in every reply) starts at
-  your first request, so the file is the one to trust. Calls into a long-running process can block for their whole wait
-  time: use short waits or one-shot scripts.
+  the end you are stopped without warning. Time left: `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`); the
+  service's `time_left_s` (in every reply) starts at your first request, so the file is the one to trust. Calls into a
+  long-running process can block for their whole wait time: use short waits or one-shot scripts.
 - Tokens: no separate limit.
 - Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
   and read anything in your container, the simulator's and the benchmark's source included.
@@ -102,7 +103,5 @@ control steps).
   GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap only
   slows you down); usage: `/run/rcb-limits/usage.json`.
 - Resets: at most 10 (`spec()["budget"]["reset"]`), each a new episode from the same starting state.
-- Finish: when you are done, call finish: `POST /finish` with an empty JSON body to the service, at the client's base
-  URL (`http://sim:8000` or `http://localhost:8000`; in Python `requests.post(r.base + "/finish", json={})` with your
-  client `r`). It ends the episode, and every call after it is refused. Reaching the goal changes no reply and does not
-  end the episode; if you never call finish, the end of your session ends it.
+- Steps: the episode ends by itself at the end of the schedule, after 20 s of robot time.
+- Finish: if you never send `/finish`, the episode is graded when the step limit is reached or your session ends.

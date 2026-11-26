@@ -8,8 +8,7 @@ Success: both trees are covered with pesticide. It counts only once the scene ha
 tool included) is still in a gripper, and everything has come to rest. When the episode ends, the robot is held still
 for a few seconds more (your last command, the base at 0), and a success that settles in that time counts.
 
-Success is judged on how things stand when the episode ends. It ends when you call finish (Limits) or when your session
-ends. The robot never tells you whether you have succeeded.
+When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
@@ -22,6 +21,8 @@ Rules:
 ## Robot Interface
 An R1Pro mobile bimanual robot in a simulated house (BEHAVIOR-1K: OmniGibson on Isaac Sim). The robot runs as a service
 you reach through its client or its MCP tools, as if it were real hardware: one live episode.
+
+`POST /finish` (MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
 `/opt/tools/rcb_client.py` (protocol `eai-standard/2.2`):
@@ -105,10 +106,9 @@ res.video[cam]; res.frames[cam]; res.last[cam]; res.proprio   # execution video 
 
 ## Limits
 - Time: 7200 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
-  the end you are stopped without warning and the episode is graded as it stands. Time left:
-  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`); the service's `time_left_s` (in every reply) starts at
-  your first request, so the file is the one to trust. Calls into a long-running process can block for their whole wait
-  time: use short waits or one-shot scripts.
+  the end you are stopped without warning. Time left: `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`); the
+  service's `time_left_s` (in every reply) starts at your first request, so the file is the one to trust. Calls into a
+  long-running process can block for their whole wait time: use short waits or one-shot scripts.
 - Tokens: no separate limit.
 - Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
   and read anything in your container, the simulator's and the benchmark's source included.
@@ -118,7 +118,4 @@ res.video[cam]; res.frames[cam]; res.last[cam]; res.proprio   # execution video 
 - Resets: none: one episode.
 - Steps: no step budget (actions and simulated time are reported as cost); a runaway guard ends the episode at 200,000
   control steps (1.85 h of simulated time).
-- Finish: when you are done, call finish: `POST /finish` with an empty JSON body to the service, at the client's base
-  URL (`http://sim:8000` or `http://localhost:8000`; in Python `requests.post(r.base + "/finish", json={})` with your
-  client `r`). It ends the episode, and every call after it is refused. Reaching the goal changes no reply and does not
-  end the episode; if you never call finish, the end of your session ends it.
+- Finish: if you never send `/finish`, the episode is graded when your session ends.

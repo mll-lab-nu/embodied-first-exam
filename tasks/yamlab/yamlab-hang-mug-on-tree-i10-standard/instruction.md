@@ -7,8 +7,9 @@ Pick up the mug with the left arm, pass it to the right arm in the air, and hang
 Success: the left gripper picks up the mug, the right gripper then takes it in the air and holds it up on its own for
 about a second, and then the mug hangs on the mug tree with neither gripper holding it, steady for about a second. The
 steps count in this order: each but the last counts for good once done, and the last is judged on how things stand when
-the episode ends. An object falling off the table ends the episode as a failure. It ends when you call finish (Limits)
-or when your session ends. The robot never tells you whether you have succeeded.
+the episode ends. An object falling off the table ends the episode as a failure.
+
+When you are done, send `/finish` to end the episode and get it graded.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
@@ -19,6 +20,8 @@ Rules:
 ## Robot Interface
 Two I2RT YAM arms with parallel two-finger grippers on a workstation table (YAMLab's bimanual setup, Isaac Sim). The
 robot runs as a service you reach through its client or its MCP tools, as if it were real hardware: one live episode.
+
+`POST /finish` (MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
@@ -100,10 +103,9 @@ answers again (resuming replays the episode so far, which can take minutes; the 
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
-  the end you are stopped without warning and the episode is graded as it stands. Time left:
-  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`); the service's `time_left_s` (in every reply) starts at
-  your first request, so the file is the one to trust. Calls into a long-running process can block for their whole wait
-  time: use short waits or one-shot scripts.
+  the end you are stopped without warning. Time left: `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`); the
+  service's `time_left_s` (in every reply) starts at your first request, so the file is the one to trust. Calls into a
+  long-running process can block for their whole wait time: use short waits or one-shot scripts.
 - Tokens: no separate limit.
 - Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
   and read anything in your container, the simulator's and the benchmark's source included.
@@ -113,7 +115,4 @@ answers again (resuming replays the episode so far, which can take minutes; the 
 - Resets: none: one episode.
 - Steps: no step budget; a technical cap ends the episode after 100,000 control steps (1/30 s each, about 56 min of
   simulated time), graded as it stands. The service runs 60-120 control steps per second, so long holds can reach it.
-- Finish: when you are done, call finish: `POST /finish` with an empty JSON body to the service, at the client's base
-  URL (`http://sim:8000` or `http://localhost:8000`; in Python `requests.post(r.base + "/finish", json={})` with your
-  client `r`). It ends the episode, and every call after it is refused. Reaching the goal changes no reply and does not
-  end the episode; if you never call finish, the end of your session ends it.
+- Finish: if you never send `/finish`, the episode is graded when your session ends.

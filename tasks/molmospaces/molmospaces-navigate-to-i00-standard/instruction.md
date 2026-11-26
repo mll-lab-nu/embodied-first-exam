@@ -5,9 +5,9 @@ Go to one of the two table lamps and stop close by, with the lamp in view of the
 
 ## Goal
 Success: the robot's base is within about two steps of the nearer table lamp, and that lamp shows in the head camera.
-Success is judged on how things stand when the episode ends. It ends when you call finish (Limits) or when your session
-ends. The robot never tells you whether you have succeeded. It also ends at the step limit (Limits); the `done` action
-is the same as finish.
+The `done` action is the same as `/finish`.
+
+When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
@@ -19,6 +19,8 @@ Rules:
 A Rainbow Robotics RB-Y1 mobile manipulator (holonomic base, 6-joint torso, two 7-joint arms with parallel grippers,
 head camera) in a simulated house (Ai2's MolmoSpaces, MuJoCo). The robot runs as a service you reach through its client
 or its MCP tools, as if it were real hardware: one live episode.
+
+`POST /finish` (MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
 `/opt/tools/rcb_client.py` (protocol `eai-standard/2.2`):
@@ -83,10 +85,9 @@ before your time is up: plan by it.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
-  the end you are stopped without warning and the episode is graded as it stands. Time left:
-  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`); the service's `time_left_s` (in every reply) starts at
-  your first request, so the file is the one to trust. Calls into a long-running process can block for their whole wait
-  time: use short waits or one-shot scripts.
+  the end you are stopped without warning. Time left: `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`); the
+  service's `time_left_s` (in every reply) starts at your first request, so the file is the one to trust. Calls into a
+  long-running process can block for their whole wait time: use short waits or one-shot scripts.
 - Tokens: no separate limit.
 - Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
   and read anything in your container, the simulator's and the benchmark's source included.
@@ -94,9 +95,5 @@ before your time is up: plan by it.
   GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap only
   slows you down); usage: `/run/rcb-limits/usage.json`.
 - Resets: none: one episode.
-- Steps: at most 500 control steps (the benchmark's 100 s horizon); then the episode ends by itself and is graded as it
-  stands.
-- Finish: when you are done, call finish: `POST /finish` with an empty JSON body to the service, at the client's base
-  URL (`http://sim:8000` or `http://localhost:8000`; in Python `requests.post(r.base + "/finish", json={})` with your
-  client `r`). It ends the episode, and every call after it is refused. Reaching the goal changes no reply and does not
-  end the episode; if you never call finish, the end of your session ends it.
+- Steps: at most 500 control steps (the benchmark's 100 s horizon); then the episode ends by itself.
+- Finish: if you never send `/finish`, the episode is graded when the step limit is reached or your session ends.

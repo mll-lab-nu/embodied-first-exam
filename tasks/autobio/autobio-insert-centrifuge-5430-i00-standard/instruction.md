@@ -9,8 +9,7 @@ Success: the tube is seated all the way down in the slot opposite the tube alrea
 started. A physics warning (an unstable simulation, for instance after the robot was driven hard into something) ends
 the episode at once, as a failure.
 
-Success is judged on how things stand when the episode ends. It ends when you call finish (Limits) or when your session
-ends. The robot never tells you whether you have succeeded.
+When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
@@ -24,6 +23,8 @@ Rules:
 A UR5e arm (6 joints) with a Robotiq 2F-85 gripper, fixed to the bench, in AutoBio's simulated biology laboratory
 (MuJoCo). The robot runs as a service you reach through its client or its MCP tools, as if it were real hardware: one
 live episode.
+
+`POST /finish` (MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
@@ -40,7 +41,7 @@ res.meta["done"], res.meta["reason"], res.meta["control_steps_chunk"], res.meta[
 obs = r.hold(1.0)                              # hold the last targets for 1 s of robot time
 obs = r.get_obs(last_s=1.0)                    # the frames recorded over the last 1 s (reading moves no time)
 r.fk(q); r.ik({frame: pose})                   # kinematics of the arm joints (spec["kinematics"]): no physics, no collision check
-r.submit("done", [])                           # the same as finish (Limits): ends the episode now
+r.submit("done", [])                           # the same as /finish: ends the episode now
 r.status()                                     # calls, control steps, done, reason, elapsed time
 ```
 
@@ -85,10 +86,9 @@ spec sheet: where each arm's base stands, joint limits, the drives' gains, the g
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
-  the end you are stopped without warning and the episode is graded as it stands. Time left:
-  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`); the service's `time_left_s` (in every reply) starts at
-  your first request, so the file is the one to trust. Calls into a long-running process can block for their whole wait
-  time: use short waits or one-shot scripts.
+  the end you are stopped without warning. Time left: `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`); the
+  service's `time_left_s` (in every reply) starts at your first request, so the file is the one to trust. Calls into a
+  long-running process can block for their whole wait time: use short waits or one-shot scripts.
 - Tokens: no separate limit.
 - Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
   and read anything in your container, the simulator's and the benchmark's source included.
@@ -96,7 +96,4 @@ spec sheet: where each arm's base stands, joint limits, the drives' gains, the g
   GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap only
   slows you down); usage: `/run/rcb-limits/usage.json`.
 - Resets: none: one episode.
-- Finish: when you are done, call finish: `POST /finish` with an empty JSON body to the service, at the client's base
-  URL (`http://sim:8000` or `http://localhost:8000`; in Python `requests.post(r.base + "/finish", json={})` with your
-  client `r`). It ends the episode, and every call after it is refused. Reaching the goal changes no reply and does not
-  end the episode; if you never call finish, the end of your session ends it.
+- Finish: if you never send `/finish`, the episode is graded when the step limit is reached or your session ends.

@@ -5,12 +5,15 @@ the service never shows the task's success). Two tiers:
   --tier invariants (the required CI job `invariants`, ci_checks/run_invariants.sh): every standard and realtime task
       served by an eai-standard service of its mode (scripts/task_conventions.py agent_end_required: MODE_REGISTRY
       "agent_end"; tasks a benchmark exports with a runtime of its own, Embodied Olympics Match and RoboEngineer, keep
-      their own rules) has RCB_AGENT_END "1" in its sim service and the rendered Finish line in its `## Limits`;
-  --tier advisory (ci_checks/run_all.sh): such a task's Goal says how the episode is judged and ends
-      (V2_AGENT_END_GOAL, or RoboDojo's V2_AGENT_END_ENDS) and none of the wording of an episode that a success ends.
+      their own rules) has RCB_AGENT_END "1" in its sim service, the rendered finish line in its `## Robot Interface`
+      (ROBOT_FINISH) and the rendered Finish line in its `## Limits` (LIMITS_FINISH);
+  --tier advisory (ci_checks/run_all.sh): such a task's Goal says how to end the episode (V2_AGENT_END_GOAL; the
+      Embodied Safety Exam's exits instead: an exit is the same as `/finish`), none of the retired finish wording
+      (V2_AGENT_END_RETIRED), none of the wording of an episode that a success ends, and nothing on how the episode
+      ends on its own (a time-out or step limit: Limits' Steps line).
 
     python3 ci_checks/check-agent-end.py [--tier invariants|advisory] [task dirs]    # default: invariants, every task
-Standard library only; `normalize` writes the environment line and the Finish line.
+Standard library only; `normalize` writes the environment line, the Robot Interface finish line and the Finish line.
 """
 from __future__ import annotations
 
@@ -26,6 +29,9 @@ import task_conventions as tc  # noqa: E402
 RETIRED = (r"ends as soon as", r"ends the moment", r"ends at the first success", r"a success ends the (?:run|trial)",
            r"the episode ends when the task is done", r"ends by itself as soon as", r"the service tells you that it ended",
            r"ends, as a success,")
+# Goal wording of how an episode ends on its own (owner 11-26): the time-out and the step limit are Limits' Steps line
+GOAL_ENDS_ITSELF = (r"ends by itself", r"(?:judged|graded) as it stands", r"reason `", r"\bstep (?:limit|cap)\b",
+                    r"horizon is reached", r"\btime-?out\b", r"runs out, the episode")
 
 
 def goal_of(text: str) -> str:
@@ -47,13 +53,21 @@ def errors(tasks: list[Path], tier: str) -> list[str]:
                             "in standard and realtime mode, PROTOCOL §3; normalize writes it)")
             if not any(k == "Finish" for k, _ in tc.limits_lines(text)):
                 errs.append(f"{rel}: instruction.md's `## Limits` has no Finish line (normalize renders it)")
+            if not any(re.search(rf"(?m)^{re.escape(x)}$", text) for x in tc.ROBOT_FINISH):
+                errs.append(f"{rel}: instruction.md's `## Robot Interface` has no finish line (normalize renders it)")
         else:
             g = goal_of(text)
-            if tc.V2_AGENT_END_GOAL not in g and " ".join(tc.V2_AGENT_END_ENDS.split()) not in g:
-                errs.append(f"{rel}: Goal does not end with how the episode is judged and ends (V2_AGENT_END_GOAL)")
+            if tc.V2_AGENT_END_GOAL not in g and "An exit is the same as `/finish`" not in g:
+                errs.append(f"{rel}: Goal does not say how to end the episode (V2_AGENT_END_GOAL)")
+            for w in tc.V2_AGENT_END_RETIRED:
+                if w in g:
+                    errs.append(f"{rel}: Goal still has the retired wording {w!r}")
             for pat in RETIRED:
                 if re.search(pat, g, re.I):
                     errs.append(f"{rel}: Goal says a success ends the episode ({pat!r}): an agent-ended episode ends at finish")
+            for pat in GOAL_ENDS_ITSELF:
+                if re.search(pat, g, re.I):
+                    errs.append(f"{rel}: Goal says how the episode ends on its own ({pat!r}): that is Limits' Steps line")
     return errs
 
 

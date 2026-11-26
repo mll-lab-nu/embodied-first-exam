@@ -8,8 +8,9 @@ itself.
 Success: all five red objects are put on their places within the episode, one at a time, palest first, with the robot
 standing steadily and a hand at the object it is moving. Success is counted as it happens: what the robot does adds up
 over the episode (its full length is in Limits), and once it adds up to a pass the episode is a success, unless it then
-ends as a failure (below). Putting the fifth object in its place also ends the episode. It ends when you call finish
-(Limits) or when your session ends. The robot never tells you whether you have succeeded.
+ends as a failure (below). Putting the fifth object in its place also ends the episode.
+
+When you are done, send `/finish` to end the episode and get it graded.
 
 Any of these ends the episode at once as a failure:
 - The robot falls.
@@ -19,8 +20,7 @@ Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
   benchmark's demonstrations, trained policies); trials are reviewed.
 - Episodes: 50 resets (`spec()["budget"]["reset"]`), each a new episode from the same starting state; within an episode
-  a robot that has fallen stays down until you reset. Only the last episode is graded: the latest one when you call
-  finish or when your session ends.
+  a robot that has fallen stays down until you reset. Only the last episode is graded.
 - You get only the robot's camera images (its two head cameras and `room_camera`, fixed in the room) and its own joint
   angles, joint velocities and pelvis IMU: not where the robot is in the room, not where the objects or their places
   are; no object poses, no scene layout, no score, no success signal.
@@ -28,6 +28,8 @@ Rules:
 ## Robot Interface
 A simulated Unitree H1 humanoid with two Shadow dexterous hands (HumanoidBench, MuJoCo). The robot runs as a service you
 reach through its client or its MCP tools, as if it were real hardware, on a clock that does not stop while you think.
+
+`POST /finish` (MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
 `/opt/tools/rcb_client.py` (protocol `eai-standard/2.3`, realtime mode); its docstring is the full reference
@@ -134,15 +136,12 @@ the robot stays there depends on whether that pose is stable under gravity and c
 ## Others
 - A robot that has fallen in a way the Goal does not list (on its side, face down, sitting on the floor) is not stopped:
   the episode goes on, so an episode still running does not mean the robot is still up.
-- Ending your session ends the episode as finish does, and stops your background programs: call finish when you are
-  done.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
-  the end you are stopped without warning and the episode is graded as it stands. Time left:
-  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`); the service's `time_left_s` (in every reply) starts at
-  your first request, so the file is the one to trust. Calls into a long-running process can block for their whole wait
-  time: use short waits or one-shot scripts.
+  the end you are stopped without warning. Time left: `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`); the
+  service's `time_left_s` (in every reply) starts at your first request, so the file is the one to trust. Calls into a
+  long-running process can block for their whole wait time: use short waits or one-shot scripts.
 - Tokens: no separate limit.
 - Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
   and read anything in your container, the simulator's and the benchmark's source included.
@@ -151,7 +150,4 @@ the robot stays there depends on whether that pose is stable under gravity and c
   slows you down); usage: `/run/rcb-limits/usage.json`.
 - Resets: at most 50 (`spec()["budget"]["reset"]`), each a new episode from the same starting state.
 - Steps: each episode ends after 1000 control steps (20 s of robot time).
-- Finish: when you are done, call finish: `POST /finish` with an empty JSON body to the service, at the client's base
-  URL (`http://sim:8000` or `http://localhost:8000`; in Python `requests.post(r.base + "/finish", json={})` with your
-  client `r`). It ends the episode, and every call after it is refused. Reaching the goal changes no reply and does not
-  end the episode; if you never call finish, the end of your session ends it.
+- Finish: if you never send `/finish`, the episode is graded when the step limit is reached or your session ends.
