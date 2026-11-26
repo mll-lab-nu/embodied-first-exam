@@ -551,10 +551,16 @@ def kinematics(request):
     return L.fk_response({link: pose(KIN_DATA, LINK_IDS[link]) for link in request["links"]}, "world")
 
 
+def success_shown() -> bool:
+    """The success as an answer may let it show (the trial over, no reset after it): never with agent-ended episodes on
+    (an episode the step budget ended keeps its resets as before a success; rcb_service._success_shown)."""
+    return bool(E["success"]) and not AE.ENABLED
+
+
 def reset_counters() -> dict:
     if not RESET_BUDGET:
         return {}
-    left = 0 if (E["success"] or E.get("exiting") or AE.finished(E)) else RESET_BUDGET - E["resets"]
+    left = 0 if (success_shown() or E.get("exiting") or AE.finished(E)) else RESET_BUDGET - E["resets"]
     return {"episode": E["resets"] + 1, "resets_left": left, "control_steps_total": EP.rows}
 
 
@@ -585,7 +591,7 @@ def do_reset(meta):
         raise ValueError("the request must be a JSON object")
     # every field first: a malformed request is a 400 before anything changes (one frame per camera here)
     recorder, _, fps = options({key: meta[key] for key in ("cameras", "video_fps", "depth") if key in meta}, 0)
-    if E["success"]:
+    if success_shown():
         raise Refused({"error": "trial finished: an episode succeeded", "reason": E["reason"], "resets_left": 0})
     if E["resets"] >= RESET_BUDGET:
         raise Refused({"error": "reset budget exhausted", "reason": "reset budget exhausted", "budget": RESET_BUDGET,
