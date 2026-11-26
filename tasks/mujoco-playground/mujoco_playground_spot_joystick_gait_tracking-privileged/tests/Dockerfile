@@ -2,7 +2,7 @@
 # instance. Nothing the agent did in its container reaches this one: Harbor uploads only the declared artifacts.
 FROM ghcr.io/mll-lab-nu/efe:mujoco-0.1.3
 COPY instance.json test.sh /tests/
-COPY --from=ghcr.io/mll-lab-nu/efe:mujoco-playground-files-0.7.0@sha256:bc240458f4e616cbf61a27a5d6b4d956b6934f0a4252fb6c0d24816488005954 /privileged/environment/rcb_quadruped.py /privileged/tests/grade.py /tests/
+COPY --from=ghcr.io/mll-lab-nu/efe:mujoco-playground-files-0.7.0@sha256:931d2b59ff197790ac2d917f047334a485f1ae272753ab4ba5de7612aa7edf6d /privileged/environment/rcb_quadruped.py /privileged/tests/grade.py /tests/
 RUN chmod +x /tests/test.sh && mkdir -p /app/output /logs/verifier
 ENV PYTHONPATH=/tests
 WORKDIR /tests

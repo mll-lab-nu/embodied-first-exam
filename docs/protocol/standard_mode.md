@@ -48,10 +48,13 @@ otherwise about `/observe`, `/submit` or the clock, this section wins; the older
 - **`/observe` only reads.** It never lets time pass, never waits and never changes the plan. `last_s = 0` (the default)
   returns the current frame and the proprioception of now; `last_s = n` the frames recorded in the last n robot seconds
   (at most `buffer_s`), `video_fps` apart, with the proprioception of their steps (`meta.last_s`: what they cover; none
-  recorded yet: the current frame). Every answer with images (`/observe` and `/submit`, every layer) adds
-  `meta.frame_step`, the control step its newest image shows. `seconds > 0` is a 400 that names the hold chunk. Depth
-  with `last_s > 0` is served for the cameras whose recorder keeps depth (`/spec.timing.recorder.depth`); for any other
-  camera it is a 400 that says to ask for depth with `last_s = 0` (the current frame's depth, every layer).
+  recorded yet: the current frame). Every answer with images (`/observe`, `/submit` and `/reset`, every layer; in 2.3
+  also a service without a recorder) adds `meta.frame_step`, the control step its newest image shows. `seconds > 0` is
+  a 400 that names the hold chunk. Per-frame depth with `last_s > 0` (`include_depth`; 2.2/2.4 `depth: "frames"`) is
+  served only when every requested camera is one whose depth the recorder keeps (`/spec.timing.recorder.depth`);
+  otherwise it is a 400 that says to ask for depth with `last_s = 0` (the current frame's depth), in every layer. 2.2/2.4
+  `depth: "last"` with `last_s > 0` is not refused: it returns the current frame's depth (`last_depth/<cam>`), which is
+  not the recorder's.
 - **The recorder.** `/spec.timing.recorder` declares `cameras` (every camera), `fps`, `buffer_s` (`RCB_LOOKBACK_S`,
   default 3), `records` (when it records) and `depth` (the cameras whose depth it keeps). Standard mode: 10 fps
   (`RCB_CAMERA_FPS`, default 10), recorded while a `/submit` runs (hold chunks too): every 1 / `fps` of robot time, the
@@ -129,6 +132,7 @@ in `budget.clock` or `budget.wall_clock_note`).
 |---|---|
 | `/submit` | `chunk_id`, `type`, `executed_rows`, `control_steps_chunk` (a benchmark's own service: `physics_steps_chunk`), `duration_s`, `planned_duration_s`, `hold` (a hold chunk), `clipped` `[{row,index,reason}]`, `n_clipped`, `plan` (where the service plans), `frame_step` (with images), `ok`; the shared sidecar also the adapter's step fields (never a success or progress field) |
 | `/observe` | `obs_id`, `last_s`, `frame_step` (with images), `seconds` (always 0), `control_steps_watch` (always 0; a benchmark's own service: `physics_steps_watch`), `ok` |
+| `/reset` | `frame_step` (with images: the new episode's first step), `ok` |
 
 ### `/submit` semantics
 - `joint_position` rows are `dt` seconds apart, `dt` a positive whole multiple of the control step (`control_dt`);
@@ -200,8 +204,8 @@ and writes the verdict into `final.json` (`success`, the verdict; `live_success`
 any settle or hold check; `graded_by` = `live`, `replays` = 0); nothing is
 replayed to grade it (PROTOCOL H.4). The video is a post-hoc replay of `trajectory.npz` after the verdict by default, and a live
 recording where the simulator is not verified bit-wise replayable (`video_source`, PROTOCOL §4); it never decides
-anything. With resets, the shared 2.1 sidecar service (`rcb_service.py`, one file copied unchanged into each benchmark
-that runs it, also under the 2.3 realtime layer) keeps the first episode as evidence too: `trajectory.first.npz` (its
+anything. With resets, the shared 2.1 sidecar service (`rcb_service.py`, one file copied into each benchmark that runs it,
+also under the 2.3 realtime layer; the copies behave the same on the wire, and a few differ only in comments) keeps the first episode as evidence too: `trajectory.first.npz` (its
 rows from the journal) and `replay.first.mp4`, rendered after the graded video; `final.json` says how it ended
 (`first_success`, `first_reason`; a success ends the trial, so after a reset `first_success` is 0) and decides nothing
 with it. A separate verifier transcribes `final.json` into `reward.json` (`graded_by_live` = 1); the shared grader
@@ -258,7 +262,8 @@ client that never calls `/finish` is served as before, its session's end ending 
 - No answer depends on the task's success: no `done` / `reason = "success"`, no 409, no early end of a chunk and no
   per-call work caused by it, `resets_left` and `/reset` as before a success, no success or progress field of the
   service's own (stages reached, a settled-check counter) in `meta` or `/status`.
-- `POST /finish` (JSON `{}`) ends the episode (`reason = "finished"`) and answers `{"ok": true, ...}` with `/status`'s
+- `POST /finish` (its body is optional and ignored: the shared layers 2.1-2.4 never parse it; clients send `{}`,
+  which every service accepts, as it does an empty body) ends the episode (`reason = "finished"`) and answers `{"ok": true, ...}` with `/status`'s
   fields; after it every call but `GET /spec` and `GET /status` is a 409. Without the feature it is a 404.
 - At the step limit the episode ends by itself (`reason = "step_limit"`; the chunk stops at that step); then `/submit`
   and `/finish` are 409, `/observe` still answers.
@@ -356,7 +361,7 @@ the per-frame arrays always stay) and says so in `meta.degraded`. Requests over 
 ### 3. Request fields (`/submit` header, `/observe` body)
 | field | default | meaning |
 |---|---|---|
-| `cameras` | every camera | names from `spec.cameras`; the client sends `spec.default_cameras` when given none |
+| `cameras` | every camera | names from `spec.cameras`; the client sends `spec.default_cameras` when given none; in 2.1 standard mode `[]` also means every camera (in realtime mode `[]` means no images) |
 | `video_fps` | the service's | frames per simulated second |
 | `video` | `mp4` (submit), `frames` (observe) | `mp4` \| `frames` \| `both` \| `none` |
 | `depth` (2.2) | `none` | `none` \| `last` \| `frames`; JSON `true` = `last` |

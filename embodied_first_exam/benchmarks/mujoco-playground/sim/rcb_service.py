@@ -1186,7 +1186,7 @@ class Service:
         rec.start()
         rec.finish()
         self.calls += 1
-        out = {**self.meta(), "ok": True}
+        out = {**self.meta(), **({"frame_step": len(self.episode)} if cams else {}), "ok": True}
         self._checkpoint("reset", cameras=cams, start_ok=self.ep_start_ok)
         self._save_call(out, None)
         return out, rec.parts()

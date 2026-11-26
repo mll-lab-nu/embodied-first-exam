@@ -172,7 +172,7 @@ def rules_v3(tmp):
     svc = R.RealtimeService(toy.Toy(), data=str(d), slowdown=1.0, agent_end=True)
     svc.start()
 
-    def req(path, body):
+    def call(svc, path, body):
         j = R._Job("POST", path, json.dumps(body).encode())
         svc.dispatch(j)
         kind, *rest = j.reply
@@ -185,6 +185,8 @@ def rules_v3(tmp):
         meta, payload = rest
         m, p = rcb1.decode(bytes(svc._reply_rcb1(meta, payload.parts() if kind == "rec" else payload)[2]))
         return 200, m, p
+
+    req = lambda path, body: call(svc, path, body)  # noqa: E731
 
     sp = svc.spec
     assert sp["standard"] == "eai-standard/3.0" and sp["timing"]["recorder"]["cameras"] == ["top"], sp["timing"]
@@ -213,7 +215,34 @@ def rules_v3(tmp):
     code, m, _ = req("/observe", {"last_s": 0})
     assert code == 409, (code, m)
     svc.on_sigusr1(); svc.poll()
-    return {"observe_refused_seconds": True, "clock_from_submit": True, "last_s_frames": n, "hold_chunk": True}
+
+    # depth with last_s > 0 only for cameras the recorder keeps depth for (as 2.1 and 2.2/2.4): mixed cameras are a 400
+    t2 = toy.Toy(); t2.cameras = ["top", "side"]; t2.depth_cameras = ["top"]
+    t2.spec = lambda: {"cameras": {"top": {"shape": [8, 8, 3]}, "side": {"shape": [8, 8, 3]}},
+                       "action_types": {"joint_position": {"dim": 2, "layout": ["dx", "unused"]}}}
+    d2 = tmp / "v3_depth"; d2.mkdir()
+    svc2 = R.RealtimeService(t2, data=str(d2), slowdown=1.0, agent_end=True)
+    svc2.start()
+    assert svc2.spec["timing"]["recorder"]["depth"] == ["top"], svc2.spec["timing"]["recorder"]
+    code, m, _ = call(svc2, "/observe", {"last_s": 0.4, "cameras": ["top", "side"], "include_depth": True})
+    assert code == 400 and "keeps no depth" in m["error"], (code, m)
+    code, m, _ = call(svc2, "/observe", {"last_s": 0.4, "cameras": ["top"], "include_depth": True})
+    assert code == 200, (code, m)
+    svc2.on_sigusr1(); svc2.poll()
+
+    # a service without a recorder (record_frames not True) still answers /submit's images with meta.frame_step
+    t3 = toy.Toy(); t3.record_frames = False
+    d3 = tmp / "v3_norec"; d3.mkdir()
+    svc3 = R.RealtimeService(t3, data=str(d3), slowdown=1.0, agent_end=True)
+    svc3.start()
+    assert not svc3.recording
+    code, m, _ = call(svc3, "/submit", {"type": "joint_position", "dt": 0.04, "actions": [[0.01, 0]] * 2, "cameras": ["top"]})
+    assert code == 200 and "frame_step" in m, (code, m)
+    code, m, _ = call(svc3, "/submit", {"type": "joint_position", "dt": 0.04, "actions": [[0.01, 0]] * 2, "cameras": []})
+    assert code == 200 and "frame_step" not in m, (code, m)
+    svc3.on_sigusr1(); svc3.poll()
+    return {"observe_refused_seconds": True, "clock_from_submit": True, "last_s_frames": n, "hold_chunk": True,
+            "depth_past_mixed_refused": True, "frame_step_without_recorder": True}
 
 
 def main():

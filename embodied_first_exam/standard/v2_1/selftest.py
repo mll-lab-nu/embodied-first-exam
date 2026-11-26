@@ -222,7 +222,7 @@ def test_v3(path: Path) -> None:
         code, m, _ = post("/observe", {"last_s": 0.05, "include_depth": True})
         check(code == 400, f"{tag}: last_s with depth: {code} {m}")
         code, m, _ = post("/reset", {"cameras": []})
-        check(code == 200, f"{tag}: reset: {code} {m}")
+        check(code == 200 and m.get("frame_step") == 0, f"{tag}: reset (3.0: frame_step on an answer with images): {code} {m}")
         code, m, p = post("/observe", {"last_s": 1.0})
         check(code == 200 and m["last_s"] == 0.0 and m["frame_step"] == 0, f"{tag}: last_s after a reset: {code} {m}")
     finally:

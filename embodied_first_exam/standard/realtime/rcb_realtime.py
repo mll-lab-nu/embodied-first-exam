@@ -951,7 +951,14 @@ class RealtimeService(Service):
                 raise ValueError(SECONDS_GONE)
             if not 0.0 <= last_s < float("inf"):
                 raise ValueError("last_s must be >= 0")
-            return {"last_s": min(last_s, LOOKBACK_S), "seconds": 0.0, "view": self._view_rt(meta, "frames")}
+            view = self._view_rt(meta, "frames")
+            # depth with last_s > 0 (as 2.1 and 2.2/2.4): only for cameras the recorder keeps depth for
+            # (timing.recorder.depth); a service without a recorder answers last_s with the current frame
+            if last_s > 0 and view[3] and self.recording:
+                keep = set(getattr(self.sim, "depth_cameras", ()) or ())
+                if any(c not in keep for c in view[0]):
+                    raise ValueError(rcb_service.DEPTH_PAST)
+            return {"last_s": min(last_s, LOOKBACK_S), "seconds": 0.0, "view": view}
 
     # ------------------------------------------------------------------ /observe as a pure read (HTTP threads)
     def _observe_read(self, req: dict) -> tuple:
@@ -1170,7 +1177,8 @@ class RealtimeService(Service):
             rec = Recorder(self.views, [], fps, False, "none")
         rec.start()
         rec.finish()
-        out = {**self.meta(), **extra, **({"frames_skipped": 1} if full else {})}
+        out = {**self.meta(), **extra, **({"frames_skipped": 1} if full else {}),
+               **({"frame_step": len(self.episode)} if cams and not full else {})}   # the step the images show
         self._save_call({**out, "note": req["note"]}, A)
         self._finish_rec(job, out, rec, rec.images_per_call(0))
 

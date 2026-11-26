@@ -104,6 +104,22 @@ def make_handler(svc: Service):
         def _rcb1(self, meta: dict, parts: list) -> None:
             super()._rcb1(svc.hide(meta), parts)
 
+        def _drain(self) -> None:
+            """Read a request body without parsing it (POST /finish): a bad or oversized Content-Length is still refused."""
+            try:
+                n = int(self.headers.get("Content-Length", 0))
+            except ValueError:
+                n = -1
+            if n < 0:
+                raise ValueError("bad Content-Length")
+            if n > L.MAX_BODY:
+                raise ValueError("request too large")
+            while n > 0:
+                got = self.rfile.read(min(n, 1 << 20))
+                if not got:
+                    break
+                n -= len(got)
+
         def do_GET(self):
             if self.path == "/status":
                 st = svc.hide(svc.status())
@@ -116,7 +132,10 @@ def make_handler(svc: Service):
                     finished(E) or self.path == "/finish"):
                 return super().do_POST()
             try:
-                self._body()
+                if self.path == "/finish":       # its body is optional and ignored (read and dropped, never parsed)
+                    self._drain()
+                else:
+                    self._body()
             except Exception as exc:  # noqa: BLE001
                 return self._json(413 if "too large" in str(exc) else 400, {"error": str(exc)[:200]})
             if finished(E) or E.get("done") or E.get("exiting"):

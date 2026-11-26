@@ -101,9 +101,9 @@ class Toy:
             except OSError:
                 time.sleep(0.1)
 
-    def call(self, method: str, path: str, body: dict | None = None) -> dict:
-        req = urllib.request.Request(f"http://127.0.0.1:{self.port}{path}", method=method,
-                                     data=None if body is None else json.dumps(body).encode(),
+    def call(self, method: str, path: str, body: dict | None = None, raw: bytes | None = None) -> dict:
+        data = raw if raw is not None else (None if body is None else json.dumps(body).encode())
+        req = urllib.request.Request(f"http://127.0.0.1:{self.port}{path}", method=method, data=data,
                                      headers={"Content-Type": "application/json"})
         try:
             with urllib.request.urlopen(req, timeout=60) as r:
@@ -179,6 +179,11 @@ def main() -> None:
               f"on: calls after /finish: {s2['code']} {obs1['code']} {k1['code']} {f2['code']} {st1['code']}")
         check(fin.get("success") is False and fin.get("ended_by") == "finish" and fin.get("success_signal") == "hidden"
               and fin.get("hidden_success_seen") is False, f"on: finish before the block moved: {fin}")
+
+        t = Toy(ae, {"RCB_AGENT_END": "1"})       # eai-standard/3.0: /finish's body is optional and ignored
+        f = t.call("POST", "/finish", raw=b"not json {")
+        t.end()
+        check(f["code"] == 200 and f["json"]["reason"] == "finished", f"on: /finish with a malformed body: {f}")
 
         t = Toy(ae, {"RCB_AGENT_END": "1"})       # a success mid-chunk, then undone, then /finish: nothing shown, 0
         a = [t.call("POST", "/submit", sub(TO_BLOCK)), t.call("POST", "/submit", sub(PUSH))]
