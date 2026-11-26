@@ -23,14 +23,13 @@ What it does:
   (`cpus`, `memory_mb`, `storage_mb`, and `gpu_types` for a task that needs an RTX-class GPU), every other service's and
   main's processes in `environment/docker-compose.yaml` (`cpus`, `mem_limit`, `pids_limit`, and `x-gpu-memory-gb` on
   the service that holds the GPU; images/monitor/rcb_monitor/inject.py writes them). No `[metadata.resources]`.
-- `instruction.md` ends with `## External material` (§5: the same text in every task) and `## Resources`, the caps of
-  the agent's own container, rendered from those.
+- `instruction.md` in the v2 skeleton (V2_SECTIONS) ends with `## Limits`, rendered: the Time (§2, §5), Tokens, Network
+  (§5) and Resources (§6, the caps of the agent's own container) lines, then the task's own lines.
 - `[metadata] dynamics` (`dynamic` when something in the scene other than the robot does work by a force other than the
   robot's and gravity, else `static`) is the task's own declaration: kept as written; a re-render that lost it gets the
   committed task's line back (normalize_dynamics).
 - from the agent's time cutoff (§2), the task's own `[agent] timeout_sec`: the standard modes' `RCB_WALL_CLOCK_S` in
-  `environment/docker-compose.yaml`, the README's "Agent time budget" row and the last section of `instruction.md`,
-  `## Time limit` (CUTOFF_SENTENCE, then what the cutoff means in the mode).
+  `environment/docker-compose.yaml`, the README's "Agent time budget" row and the Time line of `## Limits`.
 - `README.md` in the standard layout (docs/protocol/README.md §1): title, key table, Task, Difficulty, Reference solution,
   Verification, Resources (the caps of every container, rendered), and Details for everything else.
 - last, `DIGEST`: the task's content digest (PROTOCOL Appendix H.8; the digest Harbor publishes it under, `digest()`), one
@@ -127,7 +126,7 @@ BENCHMARKS = [(p, label) for p, label, _ in BENCHMARK_TABLE]   # (directory pref
 # Modes (PROTOCOL §3): a benchmark ships any subset of the modes. A standard or realtime
 # task without a privileged twin says why in its README's Twin row ("— (none: ...)"), the task's own declaration:
 # no_twin_reason() reads it back, so no list of such tasks is kept here.
-# Embodied Olympics' exported tasks (PROTOCOL §3) have a cutoff note of their own (CUTOFF_NOTE_TASK below): the
+# Embodied Olympics' exported tasks (PROTOCOL §3) have a Time line of their own (LIMITS_TIME_TASK below): the
 # directories its manifest ci_checks/benchmarks/embodied-olympics-match/exported.toml lists in a mode that serves its own
 # protocol (its [protocols] table: their session talks to its own service). The privileged twins listed there
 # (`kind = "fullsim-policy"`) run no service: they keep their mode's note.
@@ -199,104 +198,23 @@ RULE_KEYS = {"match": str, "gpu_types": list, "recommended_gpu": str, "measured"
 # NVIDIA GPU sets none (ci_checks/check-resources.py)
 RTX_GPU_MODELS = ("L40S", "L40", "L4", "RTX 4090", "RTX 6000 Ada", "RTX PRO 6000 Blackwell", "A40", "RTX A6000")
 ENFORCE_ENV = "RCB_LIMITS_ENFORCE"   # §6: run-time switch (compose default 0 = record only; 1 = the monitor's backstop)
-RESOURCES_HEADING = "## Resources"
-OLD_RESOURCES_HEADINGS = ("## Resource limits",)   # another name of the section (normalize replaces it)
-# PROTOCOL §5: what a task may use from outside, the same words in every task's instruction.md, just before
-# `## Resources` (rendered by normalize: edit it here, never in a task; ci_checks/check-resources.py compares).
-# Installing packages and reading whatever is installed in the container (the simulator's and the benchmark's own
-# source included) are fine. The prohibition (no existing solution) is not here: it is the first rule of the task's
-# rules section (NO_CHEATING, place_no_cheating).
-EXTERNAL_HEADING = "## External material"
-EXTERNAL_TEXT = (
-    "You may install packages you need (pip, apt), and you may read anything installed in your container, the "
-    "simulator's and this benchmark's own source code included. The network reaches your model's API and the package "
-    "registries (PyPI, Debian / Ubuntu archives) only.")
-# Open network (PROTOCOL §2, Appendix H.6): the task author's choice, declared as
-# `[agent] network_mode = "public"` in task.toml (network_of). Such a task carries its own `## External material` paragraph (the author
-# says what may be used); normalize keeps it, and writes EXTERNAL_TEXT_OPEN where it has none.
-EXTERNAL_TEXT_OPEN = (
-    "The network is open. You may install packages (pip, apt), and you may search for, download and use public tools, "
-    "robot models and pretrained controllers: finding existing work and adapting it to this task is encouraged. Say in "
-    "your notes what you used. You may read anything installed in your container, this benchmark's own source code "
-    "included.")
-# PROTOCOL §5 (owner 11-24): the one anti-cheating rule, emphasized, as the first rule of the task's rules section
-# (RULES_HEADING_RE; a task without one gets a `## Rules` section of its own). Rendered by normalize
-# (place_no_cheating): edit it here, never in a task. The same words as the v2 rule (V2_RULE_OWN). An open-network task
-# may use existing work (pretrained controllers too), so its rule names only a solution to this exact task.
+RESOURCES_HEADING = "## Resources"   # the README's section (readme_resources)
+# PROTOCOL §5 (owner 11-24): the one anti-cheating rule, emphasized, first in Goal's rules (V2_RULE_OWN). Rendered words:
+# edit them here, never in a task.
 NO_CHEATING = ("**No cheating.** Do not search for, download or use any existing solution (published or reference "
                "solutions, the benchmark's demonstrations, trained policies); trials are reviewed.")
-NO_CHEATING_OPEN = ("**No cheating.** Do not search for, download or use an existing solution to this exact task "
-                    "(published or reference solutions, the benchmark's demonstrations, policies trained for it); "
-                    "trials are reviewed.")
 # owner 11-24: wording no task may carry any more (ci_checks/check-resources.py): "Write your own controller." in the No
 # cheating rule, a privileged "Only the actions count: ... changes nothing in the replay." line, and "real-robot rules"
 # as a rules heading (the rules section is `## Rules` / "Rules:"; Robot Interface says the robot is reached as if it
 # were real hardware)
 RETIRED_RULES_RE = re.compile(r"\*\*No cheating\.\*\* Write your own controller\.|changes nothing in the (?:replay|grading)\."
                               r"|(?i:real-robot rules)")
-RULES_HEADING_RE = re.compile(r"(?m)^## (?:\d+\. )?(?:Rules|The rules|Real-robot rules|Safety rules|Process rules)\b.*$")
-NO_CHEATING_RE = re.compile(r"(?m)^- \*\*No cheating\.\*\*.*\n(?:  \S.*\n)*\n?")
 
 # PROTOCOL §2, §5: the agent's time cutoff. Each task sets its own, in `[agent] timeout_sec` of its task.toml (its author
 # decides it in the pull request that adds or changes the task), as in Terminal-Bench. There is no table: normalize
-# writes from the task's own number the standard modes' RCB_WALL_CLOCK_S and the last section of instruction.md, `## Time
-# limit`, the last thing the agent reads: CUTOFF_SENTENCE (one format in every task, Terminal-Bench's), then CUTOFF_NOTE,
-# what the cutoff means in the task's mode. Rendered like the two sections before it: edit `timeout_sec` or these words
-# here, never the section in a task (ci_checks/check-cutoffs.py).
-CUTOFF_SENTENCE = ("You have {sec} seconds to complete this task. Do not cheat by using online solutions or hints specific "
-                   "to this task.")
-CUTOFF_RE = (r"You have (\d+) seconds to complete this task\. Do not cheat by using online solutions or hints specific "
-             r"to this task\.")
-CUTOFF_HEADING = "## Time limit"
-CUTOFF_REF = "the time limit (`## Time limit`)"    # how a benchmark's own text names the limit: never a duration
-_CUTOFF_CLOSE = " Installing packages is not cheating (`## External material` above)."
-# Agents without a clock in their tool output guess their elapsed time 2-7 times too high and stop early, and a sentence
-# asking for `date` is not enough: every agent gets the same clock to read, which the resource monitor shows
-# (images/monitor/rcb_monitor/monitor.py clock(): from the trial environment's start, so it never overstates the time
-# left; `monitor.py beacon` keeps it on runners that cannot run the monitor).
-_CUTOFF_CLOCK = (" Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few "
-                 "seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a "
-                 "little before your session started, so it never gives you more time than you have: read it (or run "
-                 "`date`) before you decide that time is short, never guess.")
-# A tool call that writes to a still-running process can return only when its wait is over, even when the answer is
-# printed at once (one recorded trial lost ~98 min of a 3 h budget that way). Harness-neutral advice, same text for
-# every agent, naming no harness or tool parameter; no duration in it (ci_checks/check-cutoffs.py).
-_CUTOFF_WAITS = (" Waiting counts too: a tool call that sends input to a process that keeps running (an interactive "
-                 "interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even "
-                 "when the answer is printed at once, so give such calls a short "
-                 "wait and poll again if the output is not complete, or run one-shot scripts that exit when they are "
-                 "done.")
-CUTOFF_NOTE = {
-    "privileged": ("This is wall-clock time from the start of your session; the time a simulator takes to start counts. "
-                   "When it is up you are stopped without warning and only what is in `/app/output/` at that moment is "
-                   "graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better "
-                   "one." + _CUTOFF_CLOCK + _CUTOFF_WAITS + _CUTOFF_CLOSE),
-    "standard": ("This is wall-clock time from the start of your session; the time you wait for the simulator service "
-                 "counts. When it is up you are stopped without warning and the episode is graded as it stands at that "
-                 "moment. The service's `time_left_s` counts the same limit from your first request to the service, so "
-                 "it never runs out before your time does: your real time left is `time_left_s` minus the time you "
-                 "spent before that request. Plan by it." + _CUTOFF_CLOCK + _CUTOFF_WAITS + _CUTOFF_CLOSE),
-}
-CUTOFF_NOTE["realtime"] = CUTOFF_NOTE["standard"]
-assert set(CUTOFF_NOTE) == set(MODE_REGISTRY), "every mode of MODE_REGISTRY needs its CUTOFF_NOTE (PROTOCOL §5)"
-# A benchmark whose service counts the limit its own way has a note of its own (PROTOCOL §5).
-CUTOFF_NOTE_OWN = {}   # (benchmark label, mode) -> its note
-# roboEngineer: its own multi-round runtime (ci_checks/benchmarks/roboengineer/exported.toml) grades a deployed policy, not an
-# episode that stands at the cutoff, and its service reports a deadline, not `time_left_s`
-CUTOFF_NOTE_OWN[("roboEngineer", "standard")] = (
-    "This is wall-clock time from the start of your session; the time you wait for the deployment service counts, "
-    "deployments included. When it is up you are stopped without warning and the evaluator takes the round you sealed "
-    "or, if you sealed none, the latest deployment that completed before that moment; a deployment still running then "
-    "is not graded. The service's own deadline counts the same limit from your first request to it, so it never runs "
-    "out before your time does." + _CUTOFF_CLOCK + _CUTOFF_WAITS + _CUTOFF_CLOSE)
-# Embodied Olympics' exported tasks (PROTOCOL §3): their own service reports no `time_left_s` and does not read
-# RCB_WALL_CLOCK_S (its clocks are the game's own), and a skill task has no episode
-CUTOFF_NOTE_TASK = {n: (
-    "This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When "
-    "it is up you are stopped without warning and graded on what stands at that moment, as the sections above say. The "
-    "service does not count this limit for you: the clocks it reports are the game's own." + _CUTOFF_CLOCK + _CUTOFF_WAITS + _CUTOFF_CLOSE)
-    for n in RO_EXPORTED_TASKS}
-CUTOFF_NOTE_START = "This is wall-clock time from the start of your session;"   # how an earlier note is recognised
+# writes from the task's own number the standard modes' RCB_WALL_CLOCK_S and the Time line of instruction.md's
+# `## Limits` (limits_time), the last section the agent reads: edit `timeout_sec` or the words of LIMITS_TIME, never the
+# line in a task (ci_checks/check-cutoffs.py).
 WALL_CLOCK_ENV = "RCB_WALL_CLOCK_S"              # the standard modes' sim service: what its /spec budget and time_left_s report
 CUTOFF_CAP = 14400                               # PROTOCOL §2, no benchmark excepted (ci_checks/check-cutoffs.py)
 # The repository's task tree: one folder per benchmark, tasks/<folder>/<task>/ (a task dir's name says its benchmark,
@@ -772,58 +690,6 @@ def _paths(ps) -> str:
     return q[0] if len(q) == 1 else ", ".join(q[:-1]) + " and " + q[-1]
 
 
-RESOURCES_RULE = ("CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: "
-                  "`/run/rcb-limits/usage.json`.")
-
-
-def _and(xs: list[str]) -> str:
-    return ", ".join(xs[:-1]) + " and " + xs[-1] if len(xs) > 1 else "".join(xs)
-
-
-def render_resources(task: Path) -> str:
-    """instruction.md's `## Resources` (PROTOCOL §6): the numbers of the agent's own container, as applied (task_caps),
-    and of a service it drives, then RESOURCES_RULE. Who enforces what is PROTOCOL §6's, never repeated here."""
-    caps = task_caps(task)
-    m = caps["main"]
-    gpu = bool(m.get("gpu"))
-    lim = rcb_monitor_inject.rcb_limits
-    parts = []
-    if m.get("cpus"):
-        parts.append(f"**{_num(m['cpus'])} CPUs**")
-    if m.get("memory_gb"):
-        parts.append(f"**{_num(m['memory_gb'])} GiB of memory**")
-    if m.get("pids"):
-        parts.append(f"**{int(m['pids'])} processes and threads**")
-    if m.get("disk_gb"):
-        parts.append(f"**{_num(m['disk_gb'])} GiB** of disk (new files under {_paths(lim.DISK_PATHS)})")
-    if gpu and m.get("gpu_memory_gb"):
-        parts.append(f"**one GPU, {_num(m['gpu_memory_gb'])} GiB of its memory**")
-    elif gpu:
-        parts.append("**one GPU**")
-    text = "Your container: " + _and(parts) + "." if parts else "Your container has no declared caps."
-    if not gpu:
-        text += " Your container has no GPU."
-    side = sidecars_of(task) if mode_of(task) in SIDECAR_MODES else []   # a standard task without a sim service (a
-    # policy task, PROTOCOL §3) has no simulator to leave out
-    if side == ["sim"] or (side and "sim" not in side and len(side) == 1):
-        text += " The simulator runs in its own container and does not count against these."
-    elif side:
-        rest = [n for n in side if n != "sim"]
-        text += (f" The simulator (`sim`) and {_paths(rest)} run in containers of their own and do not count against "
-                 "these." if "sim" in side else f" {_paths(side)} run in containers of their own and do not count against these.")
-    drive = [n for n in caps if n != "main" and rcb_monitor_inject.kind_of(mode_of(task), n) == "scope"]
-    for n in drive:   # privileged: a service the agent drives runs in a container of its own, with caps of its own
-        c = caps[n]
-        own = [f"{_num(c['cpus'])} CPU{'' if float(c['cpus']) == 1 else 's'}" if c.get("cpus") else None,
-               f"{_num(c['memory_gb'])} GiB of memory" if c.get("memory_gb") else None,
-               f"{int(c['pids'])} processes and threads" if c.get("pids") else None,
-               f"one GPU, {_num(c['gpu_memory_gb'])} GiB of its memory" if c.get("gpu") and c.get("gpu_memory_gb") else None]
-        own = [x for x in own if x]
-        text += f" `{n}` runs in its own container" + (f": {_and(own)}" if own else "") + "."
-    text += " " + RESOURCES_RULE
-    return RESOURCES_HEADING + "\n" + text + "\n"
-
-
 def _gb(v) -> str:
     return "—" if v is None else f"{_num(v)} GiB"
 
@@ -888,53 +754,6 @@ def normalize_verifier_network(task: Path) -> None:
     write_if_changed(p, s[:at] + VERIFIER_NETWORK_LINE + "\n" + s[at:])
 
 
-def external_paragraph(text: str) -> str | None:
-    """The body of an instruction's `## External material` section (without the heading and a stricter-rules addition),
-    or None."""
-    m = re.search(rf"(?ms)^{re.escape(EXTERNAL_HEADING)}[ \t]*\n(.*?)(?=^## |\Z)", text or "")
-    if not m:
-        return None
-    body = m.group(1).split("\n\nAdditional rules for this task (stricter than the above): ")[0].strip()
-    return body or None
-
-
-def render_external(task: "Path | str" = "") -> str:
-    """instruction.md's `## External material` (PROTOCOL §5): the same words in every allowlist task (EXTERNAL_TEXT); a
-    task with open egress (`[agent] network_mode = "public"`, network_of) keeps its own paragraph (EXTERNAL_TEXT_OPEN
-    when it has none)."""
-    text = EXTERNAL_TEXT
-    if isinstance(task, Path) and network_of(task) == "open":
-        text = external_paragraph(read_text(task / "instruction.md") or "") or EXTERNAL_TEXT_OPEN
-    # the words above are the baseline every task carries; a task may add STRICTER requirements of
-    # its own on top (never looser), as `[metadata.honour] stricter = "..."` in its task.toml, rendered after them
-    stricter = ((metadata_of(task).get("honour") or {}).get("stricter", "")) if isinstance(task, Path) else ""
-    if stricter:
-        text = text.rstrip() + "\n\nAdditional rules for this task (stricter than the above): " + str(stricter).strip()
-    return EXTERNAL_HEADING + "\n" + text + "\n"
-
-
-def no_cheating_rule(task: "Path | str" = "") -> str:
-    """The task's `**No cheating.**` rule (NO_CHEATING; NO_CHEATING_OPEN for an open-network task)."""
-    return NO_CHEATING_OPEN if isinstance(task, Path) and network_of(task) == "open" else NO_CHEATING
-
-
-def place_no_cheating(task: "Path | str", s: str) -> str:
-    """instruction.md (v1) with the `**No cheating.**` rule as the first bullet of its rules section (the first H2 that
-    RULES_HEADING_RE matches); a task without such a section gets `## Rules` with that one rule at its end, before the
-    sections normalize renders. Any earlier copy of the rule is replaced."""
-    s = NO_CHEATING_RE.sub("", s)
-    bullet = _wrap_bullet(no_cheating_rule(task)) + "\n"
-    m = RULES_HEADING_RE.search(s)
-    if not m:
-        return s.rstrip() + "\n\n## Rules\n" + bullet
-    at = m.end() + 1
-    while s[at:at + 1] == "\n":
-        at += 1
-    rest = s[at:]
-    sep = "" if rest.startswith("- ") else "\n"
-    return s[:m.end()] + "\n" + bullet + sep + rest
-
-
 def cutoff_for(task: Path) -> int | None:
     """The agent's time cutoff of a task in seconds: its own `[agent] timeout_sec` (PROTOCOL §2), the one source of the
     number. None when task.toml has none, or one that is not a whole positive number of seconds (ci_checks/check-cutoffs.py
@@ -977,56 +796,11 @@ def no_twin_reason(task: Path) -> str | None:
     return None
 
 
-# PROTOCOL §3 "Agent-ended episodes" (optional, standard mode): a task opts in in its sim service's environment
-# (`RCB_AGENT_END: "1"`, and `RCB_STEP_LIMIT: "<N>"` for a step limit; embodied_first_exam/standard/agent_end/). Its
-# instruction then has `## Episode end` before `## External material`, rendered here (render_agent_end): what the agent
-# sees and does, what is graded, and the limits, of which only the step limit is the task's number. The token budget is
-# the official runs' (docs/protocol/running.md "Official runs"; scripts/run_agent_batch.sh TOKEN_BUDGET_IN / _OUT).
-AGENT_END_HEADING = "## Episode end"
+# PROTOCOL §3 "Agent-ended episodes": a task opts in in its sim service's environment (`RCB_AGENT_END: "1"`, and
+# `RCB_STEP_LIMIT: "<N>"` for a step limit; embodied_first_exam/standard/agent_end/). Its instruction then has the
+# finish line in `## Robot Interface` (ROBOT_FINISH) and the Finish (and Steps) lines of `## Limits` (render_limits).
 AGENT_END_RE = re.compile(r'^\s*RCB_AGENT_END:\s*"?1"?\s*(?:#.*)?$', re.M)
 STEP_LIMIT_RE = re.compile(r'^\s*RCB_STEP_LIMIT:\s*"?([0-9]+)"?\s*(?:#.*)?$', re.M)
-TOKEN_BUDGET = (10_000_000_000, 10_000_000_000)   # input, output tokens per trial: running.md "Official runs"
-AGENT_END_INTRO = (
-    "You end this task's episode, not a success. This section overrides anything above, and anything in `/spec`, that "
-    "says a success ends the episode, that `meta[\"reason\"]` can be `\"success\"`, or that a success refuses later calls "
-    "or resets.")
-AGENT_END_BULLETS = (
-    "The robot never tells you whether you have succeeded: reaching the goal changes no response, status, error or "
-    "counter, and the episode does not end there.",
-    "You decide when you are done: send `POST /finish` with an empty JSON body (`{}`) to the service, on the same base "
-    "URL as your other calls (`http://sim:8000` or `http://localhost:8000`; in Python, for example "
-    "`requests.post(base + \"/finish\", json={})`). The state at that moment is graded with the task's success rule (with "
-    "the task's settle or hold time described above, run from that state). After `/finish` every call is refused (409).",
-    "If you do not call it, the state when your session ends (you stop, or your time or token budget runs out) is graded.",
-    "A success reached earlier and then undone does not count: only the state at the end is graded. An event the task "
-    "records once it happens (for example a scored goal or a completed stage sequence) stays part of that state, also "
-    "when one of the task's failure rules ends the episode after it. Resets work as described above, within the budget, "
-    "and only the episode that ends with `/finish` or at the end of your session is graded.",
-    "The episode still ends on its own on a simulator error, at the task's step limit or technical step cap (graded as "
-    "it stands), and where the task's own rules end it as a failure (for example a fall), as described above.")
-AGENT_END_LIMITS = "**Limits.** The episode ends at whichever of these comes first, and the state at that moment is graded as above:"
-AGENT_END_STEP = (
-    "the step limit: **{n:,} steps**{unit}. `meta[\"control_steps\"]` counts the steps used so far; `meta[\"steps_left\"]` "
-    "and `/status` `steps_left` give what is left, `spec[\"max_control_steps\"]` the limit ({n}). At the {nth} step the "
-    "episode ends by itself (`meta[\"done\"]`, `meta[\"reason\"]` = `\"step_limit\"`; a chunk that reaches it stops "
-    "there); after it every `/submit` and `/finish` is refused (409). This overrides anything above, and anything in "
-    "`/spec`, that says there is no step budget, that the time limit is your only budget, or that the episode is capped "
-    "at another number of steps;")
-AGENT_END_TIME = "the time limit (`## Time limit`; `meta[\"time_left_s\"]` is the service's count of what is left);"
-AGENT_END_TOKENS = ("the token budget: {tin:,} input and {tout:,} output tokens of your model for the session (cached "
-                    "input counts in full, output includes reasoning): past it every model request is refused and your "
-                    "session ends;")
-AGENT_END_FINISH = "your `POST /finish`."
-# what one step is, in a benchmark's own terms (the limit's unit): (benchmark label) -> text after the number
-AGENT_END_STEP_UNIT = {
-    "RoboDojo": (
-        ", RoboDojo's own limit for this task (RoboDojo's evaluation ends a policy's episode after that many actions "
-        "[step_lim]). One step is one 25 Hz action: 1/25 s of simulated time (RoboDojo's 14-D action, run over 10 physics "
-        "steps), the unit RoboDojo's evaluator counts. Every call that moves simulated time on uses steps: a "
-        "`joint_position` row with `dt` = k/25 s uses k steps (dt = 0.04: one step per row); an `ee_pose` row uses as many "
-        "steps as its move takes at 0.25 m/s (at least one); a hold chunk (`hold(s)`) holds the robot for s x 25 steps. "
-        "`get_obs()`, `/spec`, `/status` and `/kinematics` use none"),
-}
 
 
 def agent_end_of(task: Path) -> dict | None:
@@ -1083,40 +857,6 @@ def normalize_agent_end(task: Path) -> None:
 
 def _ordinal(n: int) -> str:
     return f"{n:,}" + ("th" if 10 <= n % 100 <= 20 else {1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th"))
-
-
-def render_agent_end(task: Path) -> str | None:
-    """instruction.md's `## Episode end` for a task that opts in (agent_end_of), else None; wrapped at 120 columns."""
-    import textwrap
-    ae = agent_end_of(task)
-    if ae is None:
-        return None
-    n = ae["step_limit"]
-    def wrap(t: str, first: str = "", rest: str = "") -> str:      # never inside a code span
-        t = re.sub(r"`[^`]*`", lambda m: m.group(0).replace(" ", "\0"), t)
-        return textwrap.fill(t, 120, initial_indent=first, subsequent_indent=rest, break_long_words=False,
-                             break_on_hyphens=False).replace("\0", " ")
-    limits = ([AGENT_END_STEP.format(n=n, nth=_ordinal(n), unit=AGENT_END_STEP_UNIT.get(bench_of(task), ""))] if n else []) \
-        + [AGENT_END_TIME, AGENT_END_TOKENS.format(tin=TOKEN_BUDGET[0], tout=TOKEN_BUDGET[1]), AGENT_END_FINISH]
-    return (AGENT_END_HEADING + "\n" + wrap(AGENT_END_INTRO) + "\n\n"
-            + "\n".join(wrap(b, "- ", "  ") for b in AGENT_END_BULLETS) + "\n\n"
-            + wrap(AGENT_END_LIMITS) + "\n" + "\n".join(wrap(b, "- ", "  ") for b in limits) + "\n")
-
-
-def render_cutoff(sec: int, mode: str, bench: str = "", name: str = "") -> str:
-    """instruction.md's last section (PROTOCOL §5): the heading, the cutoff sentence, then what the cutoff means in
-    the mode (`bench`, a BENCHMARKS label: a benchmark whose service counts on a clock of its own has its own note;
-    `name`, the task directory's name: a task exported with its own service, CUTOFF_NOTE_TASK)."""
-    note = CUTOFF_NOTE_TASK.get(name) or CUTOFF_NOTE_OWN.get((bench, mode), CUTOFF_NOTE[mode])
-    return CUTOFF_HEADING + "\n" + CUTOFF_SENTENCE.format(sec=sec) + "\n\n" + note + "\n"
-
-
-def strip_cutoff(s: str) -> str:
-    """An instruction without the cutoff section, and without the cutoff sentence or note anywhere else in it (a
-    second statement of the limit)."""
-    s = re.sub(rf"(?ms)^{re.escape(CUTOFF_HEADING)}[ \t]*(?:\n.*?)?(?=^## |\Z)", "", s)
-    s = re.sub(rf"(?m)^{CUTOFF_RE}[ \t]*\n(?:[ \t]*\n)*", "", s)
-    return re.sub(rf"(?m)^{re.escape(CUTOFF_NOTE_START)}[^\n]*\n(?:[ \t]*\n)*", "", s)
 
 
 def _set_number(old: str, sec: int) -> str:
@@ -1179,7 +919,12 @@ LIMITS_HEADING = "## Limits"
 LIMITS_RENDERED = ("Time", "Tokens", "Network", "Resources")
 V2_CUTOFF_REF = "the time limit (Limits)"
 LIMITS_TOKENS = "no separate limit."
+# Agents without a clock in their tool output guess their elapsed time 2-7 times too high and stop early: every agent
+# gets the same clock to read, which the resource monitor writes (images/monitor/rcb_monitor/monitor.py clock(): from the
+# trial environment's start, so it never overstates the time left; `monitor.py beacon` where the monitor cannot run).
 _LIMITS_CLOCK = "Time left: `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`)"
+# A tool call that writes to a still-running process can return only when its wait is over, even when the answer is
+# printed at once (one recorded trial lost ~98 min of a 3 h budget that way): harness-neutral advice, no duration in it.
 _LIMITS_WAITS = " Calls into a long-running process can block for their whole wait time: use short waits or one-shot scripts."
 LIMITS_TIME = {   # mode -> (what counts and what is graded at the end, the service's own count of the limit)
     "privileged": ("everything counts (the simulator's start-up too). At the end you are stopped without warning and only "
@@ -1220,7 +965,7 @@ LIMITS_OVER_CAP = ("Over a cap a process can be killed (the CPU cap only slows y
 
 # The fixed wording of the v2 skeleton (TEMPLATE: Task's mode line, Goal's graded-state sentence, the hand-in line and the
 # rules blocks): the benchmarks' text generators use these words, never
-# their own (a task with the MCP tools: `<mode>+mcp`, normalize_instruction_v2). `{deliverable}`: what a privileged task hands in ("a trajectory of robot actions").
+# their own (a task with the MCP tools: `<mode>+mcp`, _v2_route). `{deliverable}`: what a privileged task hands in ("a trajectory of robot actions").
 V2_MODE_LINE = {
     "privileged": "You have the full simulator to develop with; you hand in {deliverable}.",
     "standard": ("The robot runs as a service you reach only through its client, as if it were real hardware: one live "
@@ -1282,22 +1027,6 @@ def _wrap_bullet(t: str) -> str:
 
 
 MCP_MODES = ("standard-mcp", "standard-mcp-shell")     # the MCP modes (their task dirs: branch standard-mcp)
-# the benchmarks (tasks/ folders) whose instructions are in the v2 form (the others keep the v1 form for now)
-V2_SUITES = frozenset({
-    "abc-sim", "ambench", "autobio", "behavior-1k", "bigym2", "dexhand", "dexjoco", "dextoolbench",
-    "embodied-olympics-fun", "embodied-olympics-match", "embodied-safety-exam", "embodiedswe", "humanclaw",
-    "humanoidbench", "ispatialgym", "kinder", "labutopia", "libero-max", "maniguard", "metaworldplus",
-    "molmospaces", "mujoco-playground", "myosuite", "pandadyn", "roboarc", "robocasa", "robocasa-gr1",
-    "robocasa365", "robodojo", "roboengineer", "robolab", "robopaint", "robotwin-2", "robowits", "vlabench",
-    "yamlab",
-})
-
-
-def is_v2(text: str) -> bool:
-    """Whether an instruction is in the v2 form: its first H2 is `## Task` and it has no section of the v1 form's
-    closing three."""
-    h2 = re.findall(r"(?m)^## (.+?)[ \t]*$", text or "")
-    return bool(h2) and h2[0] == "Task" and not {"Time limit", "External material", "Resources"} & set(h2)
 
 
 def skeleton_errors(text: str) -> list[str]:
@@ -1548,41 +1277,17 @@ def _v2_finish(task: Path, s: str) -> str:
     return s
 
 
-def normalize_instruction_v2(task: Path, s: str) -> str:
-    """A v2 instruction with its `## Limits` rendered (render_limits), replacing the one it had, the mode line that
-    fits its reset budget (_v2_episodes) and its routes to the robot (_v2_route), and an agent-ended task's finish line
-    (_v2_finish)."""
-    s = _v2_episodes(task, s)
-    s = _v2_route(task, s)
-    s = _v2_finish(task, s)
-    body = re.sub(rf"(?ms)^{re.escape(LIMITS_HEADING)}[ \t]*(?:\n.*?)?(?=^## |\Z)", "", s)
-    return body.rstrip() + "\n\n" + render_limits(task, s)
-
-
 def normalize_instruction(task: Path) -> None:
-    """instruction.md ends with three sections normalize renders, each replacing an earlier one (a task with an
-    agent-ended episode, PROTOCOL §3, has `## Episode end` rendered before them: render_agent_end): `## External material`
-    (PROTOCOL §5), `## Resources`, the caps of the agent's own container (§6, render_resources) and, last, `## Time
-    limit` rendered from the task's `[agent] timeout_sec` (§2; left out when it has no usable number): the last thing
-    the agent reads."""
+    """instruction.md (v2, V2_SECTIONS) with the mode line that fits its reset budget (_v2_episodes), its routes to the
+    robot (_v2_route), an agent-ended task's finish line (_v2_finish), and last its `## Limits` rendered (render_limits),
+    replacing the one it had."""
     p = task / "instruction.md"
     if not p.is_file():
         return
     s = p.read_text(encoding="utf-8")
-    if is_v2(s):
-        write_if_changed(p, normalize_instruction_v2(task, s))
-        return
-    sec = cutoff_for(task)
-    if sec is not None:
-        s = strip_cutoff(s)
-    for heading in (AGENT_END_HEADING, EXTERNAL_HEADING, RESOURCES_HEADING, *OLD_RESOURCES_HEADINGS):
-        s = re.sub(rf"(?ms)^{re.escape(heading)}[ \t]*(?:\n.*?)?(?=^## |\Z)", "", s)
-    s = place_no_cheating(task, s)
-    ae = render_agent_end(task)
-    s = s.rstrip() + "\n\n" + (ae + "\n" if ae else "") + render_external(task) + "\n" + render_resources(task)
-    if sec is not None:
-        s += "\n" + render_cutoff(sec, mode_of(task), bench_of(task), task.name)
-    write_if_changed(p, s)
+    s = _v2_finish(task, _v2_route(task, _v2_episodes(task, s)))
+    body = re.sub(rf"(?ms)^{re.escape(LIMITS_HEADING)}[ \t]*(?:\n.*?)?(?=^## |\Z)", "", s)
+    write_if_changed(p, body.rstrip() + "\n\n" + render_limits(task, s))
 
 
 def _shared_sources() -> set[bytes]:
@@ -2461,10 +2166,9 @@ def main(argv: list[str]) -> int:
                     print(f"FAIL {d}: not normalized (run scripts/task_conventions.py {d})")
                     bad = 1
             txt = read_text(d / "instruction.md") or ""
-            if is_v2(txt) or d.parent.name in V2_SUITES:          # instructions v2 (V2_SECTIONS)
-                for e in skeleton_errors(txt):
-                    print(f"FAIL {d}: instruction.md {e}")
-                    bad = 1
+            for e in skeleton_errors(txt):             # instructions v2 (V2_SECTIONS)
+                print(f"FAIL {d}: instruction.md {e}")
+                bad = 1
         else:
             normalize(d)
     return bad

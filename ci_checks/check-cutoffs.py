@@ -5,10 +5,9 @@ The number is the task's `[agent] timeout_sec` in task.toml, set by its author i
 pull request that adds or changes the task, as in Terminal-Bench; there is no table. For every task given (default:
 every task):
   - `[agent] timeout_sec` is a whole positive number of seconds, at most 14400 (PROTOCOL §2; no benchmark is excepted);
-  - instruction.md ends with the section scripts/task_conventions.py renders from that number, the last thing the agent
-    reads: `## Time limit`, the sentence `CUTOFF_SENTENCE` with the same N (Terminal-Bench's), then what the cutoff
-    means in the task's mode;
-    nothing follows it, and the heading and the sentence stand there once;
+  - instruction.md ends with the `## Limits` section scripts/task_conventions.py renders, the last thing the agent
+    reads, whose Time line states that number and what the cutoff means in the task's mode; nothing follows it, and the
+    heading stands there once;
   - nothing else in instruction.md states the agent's limit as a duration (wordings such as
     "wall-clock budget is 90 min (5400 s)", "You have 60 minutes of wall-clock time", "Time limit: one hour", ...; and
     the obvious other shapes: "You have one hour.", "The limit is 3600 seconds.", "Finish within 60 minutes."): two
@@ -37,8 +36,8 @@ DUR = r"\d[\d,.]*\s*(?:s|sec|secs|seconds?|min|mins|minutes?|h|hrs?|hours?)\b"
 WORD_DUR = (r"(?:(?:an|one|two|three|four|six|half an) hours?|(?:ten|fifteen|twenty|thirty|forty[- ]five|sixty|ninety|"
             r"a hundred and twenty|one hundred and twenty) minutes)\b")
 ANY_DUR = rf"(?:{DUR}|{WORD_DUR})"
-# Other statements of the agent's limit, searched in each sentence of the instruction's own text (outside the three
-# closing sections). The first five are wordings instructions have used.
+# Other statements of the agent's limit, searched in each sentence of the instruction's own text (outside `## Limits`).
+# The first five are wordings instructions have used.
 OTHER_LIMIT = [
     ("a wall-clock or time budget with a duration", rf"(?:wall[- ]clock|time) budget\b.*?{ANY_DUR}"),
     ("'You have <duration> ... of wall-clock time / in all / in total'",
@@ -65,14 +64,8 @@ NOT_THE_LIMIT = (r"simulated time|robot time|of play\b|control steps?|physics|pe
 
 
 def own_text(instruction: str) -> str:
-    """The instruction without the generated parts: the three closing sections (and cutoff paragraphs anywhere); a v2
-    text without its `## Limits`."""
-    if tc.is_v2(instruction):
-        return re.sub(rf"(?ms)^{re.escape(tc.LIMITS_HEADING)}[ \t]*(?:\n.*?)?(?=^## |\Z)", "", instruction)
-    s = tc.strip_cutoff(instruction)
-    for heading in (tc.EXTERNAL_HEADING, tc.RESOURCES_HEADING, *tc.OLD_RESOURCES_HEADINGS):
-        s = re.sub(rf"(?ms)^{re.escape(heading)}[ \t]*(?:\n.*?)?(?=^## |\Z)", "", s)
-    return s
+    """The instruction without the generated part, its `## Limits`."""
+    return re.sub(rf"(?ms)^{re.escape(tc.LIMITS_HEADING)}[ \t]*(?:\n.*?)?(?=^## |\Z)", "", instruction)
 
 
 def other_limits(instruction: str) -> list[str]:
@@ -112,30 +105,16 @@ def check_task(task: Path) -> list[str]:
     if errs:
         return errs
     sec = tc.cutoff_for(task)
-    bench = tc.bench_of(task)
     ins = (task / "instruction.md").read_text(encoding="utf-8") if (task / "instruction.md").is_file() else ""
-    want = tc.render_cutoff(sec, mode, bench, task.name)
     if not ins.startswith("# "):
         errs.append("instruction.md does not start with its `# ` title line")
-    if tc.is_v2(ins):      # instructions v2: `## Limits` last, rendered (its Time line states the cutoff)
-        lim = tc.render_limits(task, ins)
-        if not ins.endswith("\n\n" + lim):
-            errs.append(f"instruction.md does not end with the `{tc.LIMITS_HEADING}` section rendered for its {sec} s in "
-                        f"{mode} mode (run scripts/task_conventions.py on the task)")
-        if len(re.findall(rf"(?m)^{re.escape(tc.LIMITS_HEADING)}[ \t]*$", ins)) > 1:
-            errs.append(f"instruction.md has the `{tc.LIMITS_HEADING}` heading more than once")
-        errs += [f"instruction.md states the agent's limit a second time, outside `{tc.LIMITS_HEADING}` ({x}); say "
-                 f"\"{tc.V2_CUTOFF_REF}\" instead of a number" for x in other_limits(ins)]
-    elif not ins.endswith("\n\n" + want):
-        stated = re.findall(tc.CUTOFF_RE, ins)
-        errs.append(f"instruction.md does not end with the `{tc.CUTOFF_HEADING}` section rendered for its {sec} s in {mode} mode "
-                    "(the last thing the agent reads; nothing after it; run scripts/task_conventions.py on the task)"
-                    + (f" (it says {', '.join(stated)} seconds)" if stated else " (the sentence is missing)"))
-    if not tc.is_v2(ins):
-        if len(re.findall(tc.CUTOFF_RE, ins)) > 1 or len(re.findall(rf"(?m)^{re.escape(tc.CUTOFF_HEADING)}[ \t]*$", ins)) > 1:
-            errs.append(f"instruction.md has the cutoff sentence or the `{tc.CUTOFF_HEADING}` heading more than once")
-        errs += [f"instruction.md states the agent's limit a second time, outside `{tc.CUTOFF_HEADING}` ({x}); say "
-                 f"\"{tc.CUTOFF_REF}\" instead of a number" for x in other_limits(ins)]
+    if not ins.endswith("\n\n" + tc.render_limits(task, ins)):     # `## Limits` last, rendered (its Time line states the cutoff)
+        errs.append(f"instruction.md does not end with the `{tc.LIMITS_HEADING}` section rendered for its {sec} s in "
+                    f"{mode} mode (run scripts/task_conventions.py on the task)")
+    if len(re.findall(rf"(?m)^{re.escape(tc.LIMITS_HEADING)}[ \t]*$", ins)) > 1:
+        errs.append(f"instruction.md has the `{tc.LIMITS_HEADING}` heading more than once")
+    errs += [f"instruction.md states the agent's limit a second time, outside `{tc.LIMITS_HEADING}` ({x}); say "
+             f"\"{tc.V2_CUTOFF_REF}\" instead of a number" for x in other_limits(ins)]
     readme = (task / "README.md").read_text(encoding="utf-8") if (task / "README.md").is_file() else ""
     if f"| Agent time budget | {sec} s;" not in readme:
         errs.append(f"README.md's `Agent time budget` row does not say {sec} s")

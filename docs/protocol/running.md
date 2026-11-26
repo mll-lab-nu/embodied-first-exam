@@ -75,8 +75,8 @@ The list is the one switch.
   `harbor run -p /some/dir/tasks/<benchmark> ...` (with `scripts/run_agent_batch.sh`: a copy of the repository with that
   `tasks/`; the copies say `network_mode = "public"`, so the runner keeps each job's copy open, with the gateway or
   without, `set_agent_egress.py allowlist` skips them, and their results record `network` = open). The instructions'
-  last sentence about the network does not hold for such a run: `EXTERNAL_TEXT` in `scripts/task_conventions.py` is
-  the text every allowlist task carries.
+  Network line does not hold for such a run: `LIMITS_NETWORK` in `scripts/task_conventions.py` is the text every
+  allowlist task carries.
 
 ## Infrastructure failures: rerun
 The rule is PROTOCOL Appendix H.5; how the runner applies it:
@@ -359,15 +359,14 @@ Every task gives the agent a fixed wall-clock time, its cutoff: Harbor's `[agent
 §2 (3600 s unless the pull request justifies another number, at most 14400 s, `CUTOFF_CAP`; the same for a task's
 privileged and standard versions, H.7; one number for a benchmark's tasks of a mode unless the pull request says why).
 `ci_checks/check-cutoffs.py` checks per task that the number is a whole number of seconds within the cap and that the
-instruction's closing `## Time limit`, the README's `Agent time budget` row and, in the standard modes, the sim
+Time line of the instruction's closing `## Limits`, the README's `Agent time budget` row and, in the standard modes, the sim
 service's `RCB_WALL_CLOCK_S` state the same number; nothing else in the instruction states the limit as a duration.
 
-**What the agent is told.** `normalize` ends every `instruction.md` with `## Time limit`: the cutoff sentence
-(`CUTOFF_SENTENCE` in `scripts/task_conventions.py`, the task's number in Terminal-Bench's format), then what the cutoff
-means in the mode (`CUTOFF_NOTE`: wall-clock time from the start of the session; at the cutoff
-the agent is stopped and only `/app/output/` (privileged) or the episode as it stands (standard modes) is graded;
-`/run/rcb-limits/usage.json` gives `time_left_s` and `deadline_utc`; long waits in tool calls count). A benchmark's own
-text about its time says "the time limit (`## Time limit`)", never a number.
+**What the agent is told.** `normalize` ends every `instruction.md` with `## Limits`, whose Time line gives the
+task's number and what the cutoff means in the mode (`LIMITS_TIME` in `scripts/task_conventions.py`: wall-clock time
+from the start of the session; at the cutoff the agent is stopped and only `/app/output/` (privileged) or the episode
+as it stands (standard modes) is graded; `/run/rcb-limits/usage.json` gives `time_left_s` and `deadline_utc`; long
+waits in tool calls count). A benchmark's own text about its time says "the time limit (Limits)", never a number.
 
 **When the clock runs.** Harbor counts the cutoff around the agent's run only (`asyncio.wait_for(agent.run(...),
 timeout=...)`): after the environment has been built and started and the harness installed, each under a timeout of its

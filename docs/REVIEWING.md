@@ -59,7 +59,7 @@ Guide for maintainers. The contract is [protocol/README.md](protocol/README.md);
   otherwise: a deleted or misnamed twin must not pass silently)?
 - A new mode (PROTOCOL §3): does the pull request have everything §3 lists: the name (the directory suffix),
   its own PROTOCOL section (what the agent gets, what is graded, the time and reset rules, which failures are
-  infrastructure and which the agent's), the `MODE_REGISTRY` entry and `CUTOFF_NOTE`, CI support keyed on the registry
+  infrastructure and which the agent's), the `MODE_REGISTRY` entry and `LIMITS_TIME`, CI support keyed on the registry
   (no new hard-coded list of mode names anywhere) with a self-test case, at least one benchmark using it, the TAXONOMY
   entry, and a stated cutoff relation (`same_cutoff_as`, or free)? Is the runner side (runners, the results
   site) told the new suffix? A new mode is a protocol change the maintainers decide: one pull request of its own, shared files
