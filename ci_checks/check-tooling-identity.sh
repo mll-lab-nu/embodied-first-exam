@@ -73,10 +73,11 @@ for rel, (f, spell) in FAMILY_SOURCE.items():
     p = os.path.join(os.path.dirname(images), f)
     if os.path.isfile(p):
         src_sha[rel] = hashlib.sha256(spell(open(p, encoding="utf-8").read()).encode()).hexdigest()[:16]
-canon = {f: sha(os.path.join(src, f)) for f in set(LAYER.values()) if os.path.isfile(os.path.join(src, f))}
 V24 = {"rcb_limited.py", "rcb_client.py"}   # the 2.4 layer's own files (embodied_first_exam/standard/v2_4/); the rest is 2.2's
-canon24 = {f: sha(os.path.join(src, "v2_4" if f in V24 else "", f)) for f in set(LAYER.values())
-           if os.path.isfile(os.path.join(src, "v2_4" if f in V24 else "", f))}
+src22 = lambda f: f  # noqa: E731  (each layer: its file's path under embodied_first_exam/standard/)
+src24 = lambda f: f"v2_4/{f}" if f in V24 else f  # noqa: E731
+canon_of = lambda files, at: {f: sha(os.path.join(src, at(f))) for f in set(files) if os.path.isfile(os.path.join(src, at(f)))}  # noqa: E731
+canon, canon24 = canon_of(LAYER.values(), src22), canon_of(LAYER.values(), src24)
 # files-only images (scripts/files_image.py): a file's one source -> the sha256 FILES.json pins for it
 import files_image  # noqa: E402
 PINNED = {}
@@ -103,10 +104,25 @@ def from_files_image(task_dir: str) -> dict:
 seen = collections.defaultdict(lambda: collections.defaultdict(dict))   # benchmark -> role -> {sha: first copy}
 dirs = collections.Counter(); bad = []; n_layer = 0
 # the 2.3 realtime layer: one source, copied unchanged
-RT_SRC = os.path.join(src, "realtime")
 RT_LAYER = {"environment/sim/rcb_realtime.py": "rcb_realtime.py", "environment/rcb_client.py": "rcb_client.py"}
-rt_canon = {f: sha(os.path.join(RT_SRC, f)) for f in set(RT_LAYER.values()) if os.path.isfile(os.path.join(RT_SRC, f))}
+src23 = lambda f: f"realtime/{f}"  # noqa: E731
+rt_canon = canon_of(RT_LAYER.values(), src23)
 n_rt = 0
+
+
+def check_layer(t: str, layer: dict, ref: dict, at, ver: str, img: dict) -> None:
+    """Every file of a layer (task path -> source file) is in the task, or taken from a files-only image, byte-identical
+    to its source under embodied_first_exam/standard/ (`at`: the file's path there)."""
+    for rel, f in sorted(layer.items()):
+        p = os.path.join(TDIR[t], rel)
+        srcf = f"embodied_first_exam/standard/{at(f)}"
+        if not os.path.isfile(p) and rel in img:
+            if img[rel] != (ref.get(f) or "")[:16]:
+                bad.append(f"{t}: {rel} (from a files-only image) differs from {srcf}")
+        elif not os.path.isfile(p):
+            bad.append(f"{t}: {rel} missing (eai-standard/{ver} layer, {srcf})")
+        elif sha(p) != ref.get(f):
+            bad.append(f"{t}: {rel} differs from {srcf} (regenerate the task)")
 
 
 def sim_service(compose: str) -> str:
@@ -138,28 +154,10 @@ for t in sorted(TDIR):
     img = from_files_image(TDIR[t])     # layer files the image build takes from a files-only image
     if proto == "eai-standard/2.3":
         n_rt += 1
-        for rel, f in sorted(RT_LAYER.items()):
-            p = os.path.join(TDIR[t], rel)
-            if not os.path.isfile(p) and rel in img:
-                if img[rel] != (rt_canon.get(f) or "")[:16]:
-                    bad.append(f"{t}: {rel} (from a files-only image) differs from embodied_first_exam/standard/realtime/{f}")
-            elif not os.path.isfile(p):
-                bad.append(f"{t}: {rel} missing (eai-standard/2.3 layer, embodied_first_exam/standard/realtime/{f})")
-            elif sha(p) != rt_canon.get(f):
-                bad.append(f"{t}: {rel} differs from embodied_first_exam/standard/realtime/{f} (regenerate the task)")
+        check_layer(t, RT_LAYER, rt_canon, src23, "2.3", img)
     if v24 or proto == "eai-standard/2.2":
         n_layer += 1
-        ver, ref = ("2.4", canon24) if v24 else ("2.2", canon)
-        for rel, f in sorted(LAYER.items()):
-            p = os.path.join(TDIR[t], rel)
-            srcf = f"embodied_first_exam/standard/{'v2_4/' if v24 and f in V24 else ''}{f}"
-            if not os.path.isfile(p) and rel in img:
-                if img[rel] != (ref.get(f) or "")[:16]:
-                    bad.append(f"{t}: {rel} (from a files-only image) differs from {srcf}")
-            elif not os.path.isfile(p):
-                bad.append(f"{t}: {rel} missing (eai-standard/{ver} layer, {srcf})")
-            elif sha(p) != ref.get(f):
-                bad.append(f"{t}: {rel} differs from {srcf} (regenerate the task)")
+        check_layer(t, LAYER, *((canon24, src24, "2.4") if v24 else (canon, src22, "2.2")), img)
         cf = os.path.join(TDIR[t], "environment/docker-compose.yaml")
         blk = sim_service(cf) if os.path.isfile(cf) else ""
         m = re.search(r"^\s*restart:\s*[\"']?on-failure:(\d+)", blk, re.M)
@@ -212,7 +210,7 @@ for t in sorted(TDIR):
             role = module if f == module else f"{mode} {rel}" if rel in SHARED else None
             if role:
                 seen[bench][role].setdefault(sha(os.path.join(dp, f)), f"{t}/{rel}")
-    for rel, h in sorted(from_files_image(TDIR[t]).items()):   # copies the image build puts in place
+    for rel, h in sorted(img.items()):   # copies the image build puts in place
         f = os.path.basename(rel)
         role = module if f == module else f"{mode} {rel}" if rel in SHARED else None
         if role:
