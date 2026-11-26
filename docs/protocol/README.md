@@ -81,10 +81,11 @@ infrastructure, a reference implementation, one benchmark using it, CI support t
   (`task_type = "policy"`), graded offline in the verifier.
 - **standard** (`-standard`; `eai-standard/2.1`, `2.2`, `2.4`): robot as a service. The simulator runs
   in a `sim` sidecar the agent cannot open; the agent sends actions and receives images and proprioception through the
-  shipped client (`rcb_client.py`, `rcb1.py`); resets within the declared budget; no step caps, the wall clock is the
-  only hard budget (unless the task has a step limit, below). Time passes only through `/submit` (Gym's `env.step`):
-  a chunk, or a hold chunk that keeps the command in force for a number of seconds; `/observe` only reads. The agent
-  ends the episode (agent-ended episodes, below; required from v3.0). Graded by the live episode the sidecar ran (H.4).
+  shipped client (`rcb_client.py`, `rcb1.py`); resets within the declared budget; the wall clock is the hard budget,
+  with the task's step limit or the service's own step cap where it has one (below). Time passes only through
+  `/submit` (Gym's `env.step`): a chunk, or a hold chunk that keeps the command in force for a number of seconds;
+  `/observe` only reads. The agent ends the episode (agent-ended episodes, below; required from v3.0). Graded by the
+  live episode the sidecar ran (H.4).
 - **realtime** (`-realtime`; `eai-standard/2.3`): standard mode on a clock that does not stop: once
   an episode starts (its first `/submit`) the robot runs at 1/S of real speed whatever the agent does, holds its last targets while the agent
   thinks, and is driven by a program in the agent's own container. Resets as in standard: within the declared budget,
@@ -106,9 +107,12 @@ infrastructure, a reference implementation, one benchmark using it, CI support t
   budget; none after `/finish`), and only the last episode is graded. The instruction says it once per section, in plain words
   (`scripts/task_conventions.py`): the Goal, after the Success sentence, has one short paragraph, "When you are done,
   send `/finish` to end the episode and get it graded." (`V2_AGENT_END_GOAL`) and, for a goal judged on its end state,
-  "Only the state at that point counts." (`V2_AGENT_END_STATE`); `## Robot Interface` has one line for the endpoint
-  (`ROBOT_FINISH`) and `## Limits` the Finish line (`LIMITS_FINISH`: what is graded if the agent never sends
-  `/finish`), both rendered by `normalize`, with a step limit also the Steps line. `final.json` records
+  "Only the state at that point counts." (`V2_AGENT_END_STATE`), for one that counts some steps as they happen and
+  the rest at the end, "Everything else counts only as it stands at that point." (`V2_AGENT_END_REST`); `## Robot
+  Interface` has one line for the endpoint (`ROBOT_FINISH`) and `## Limits` the Finish line (`LIMITS_FINISH`: what is
+  graded if the agent never sends `/finish`: the episode at the step limit or cap its Steps line states, or at the
+  session's end; with a reset budget, the last episode at the session's end), both rendered by `normalize`, with a step
+  limit or a step cap of the service also the Steps line. `final.json` records
   `ended_by` (`finish`, `step_limit`, `session_end`: the time limit, the token budget or the agent's exit, which the
   runner's record tells apart; `failed`, `error`) and the counters (`steps_used`, `finish_time_s`).
 - **Two routes to the robot** (standard and realtime): every such task offers its service through the shipped client
@@ -131,10 +135,10 @@ filming at the budget instead: the motion goes on, its last frame is always take
 sent, not the budget. Building a response holds the captured frames plus one response body (the frames are written
 once into it, a part the response drops is let go of first, and per-frame depth is compressed only while it
 still fits), and the service's memory cap covers the largest
-response the budget allows (§6). In realtime mode the pending watches and the answers not yet sent count
-against one budget together: a watch that would exceed it, or that would make more than 8 watches and unsent answers
-outstanding, is refused (429, nothing ran); a submit or an observation of the present (no watch) is never refused for its
-images: past the budget its answer comes without its frames and `meta["frames_skipped"]` is set.
+response the budget allows (§6). In realtime mode the answers not yet sent (built, or being written to a client that
+reads slowly) count against one budget together, and at most 8 of them with images are outstanding; a call is never
+refused for its images: past the budget, or with 8 answers outstanding, its answer comes without its frames and
+`meta["frames_skipped"]` is set.
 
 ## 4. Grading and results
 
@@ -156,7 +160,7 @@ images: past the budget its answer comes without its frames and `meta["frames_sk
 | The instruction never mentions `/tests/`; a privileged instruction names the deliverable under `/app/output/` (standard modes have none: the service grades the live episode) | `check-instruction.sh` |
 | It states every convention the agent cannot infer: frames, quaternion order, units, action layout, client usage, the reset budget and S; world-frame quantities are decided per benchmark and consistent within it | benchmark hooks `ci_checks/benchmarks/<bench>/advisory-*` |
 | The success condition is written in terms the agent can observe in that mode: each object is named by its appearance and/or its starting place; an object's axis or point is described physically ("the keyboard's short edge", "the key's teeth end"), saying whether the condition already holds at the start; upstream identifiers (labels, function names, indices, asset metadata) may follow, only in brackets; thresholds stay exact and equal to the grader's. No benchmark is exempt | `check-instruction.sh` (standard modes: code-like terms with no physical description next to them) |
-| It ends with three sections `normalize` renders: `## External material` (what is allowed: install packages and read what is installed; the open-network paragraph for an open task; the **No cheating.** rule, no existing solution, is rendered as the first rule of the task's rules section), `## Resources` (the caps of the agent's own container, §6), `## Time limit` (the cutoff and what it means in the mode: running.md "The agent's time"); no second statement of the limit | `check-cutoffs.py`, `check-resources.py` |
+| Its sections are `## Task`, `## Goal`, `## Robot Interface`, `## Others` (optional) and `## Limits`, in this order, after the `# ` title and nothing else (`V2_SECTIONS`). The **No cheating.** rule (no existing solution) is the first of Goal's rules. `normalize` renders `## Limits`: Time (the cutoff and what it means in the mode: running.md "The agent's time"), Tokens, Network (what can be reached, read and installed; the open-network text for an open task), Resources (the caps of the agent's own container, §6), then the task's own lines (Resets, Steps, ...) and, for an agent-ended task, the Finish line (§3); no second statement of the limit | `task_conventions.py --check`, `check-cutoffs.py`, `check-resources.py` |
 | Everything a task needs at run time is in its image or directory; nothing tells the agent to download something | |
 | A trial that fetched a solution is flagged and judged case by case by the maintainers; installing a general-purpose package never is | running.md |
 
