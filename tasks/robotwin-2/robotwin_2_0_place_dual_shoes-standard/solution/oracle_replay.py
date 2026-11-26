@@ -7,7 +7,9 @@ sys.path.insert(0, "/opt/tools")
 from rcb_client import Robot, EpisodeOver
 HERE = os.path.dirname(os.path.abspath(__file__))
 Q = np.load(os.path.join(HERE, "oracle_qpos.npy")).astype(np.float32)           # (N, 14) or (N, 28: + velocity feed-forward), one row per K physics steps
-K = int(json.load(open(os.path.join(HERE, "oracle_meta.json"))).get("K", 25)) if os.path.exists(os.path.join(HERE, "oracle_meta.json")) else 25
+META = json.load(open(os.path.join(HERE, "oracle_meta.json"))) if os.path.exists(os.path.join(HERE, "oracle_meta.json")) else {}
+K = int(META.get("K", 25))
+SETTLE_S = float(META.get("settle_s", 1.0))     # 0: finish on the replay's last state (a success that is a moment, e.g. a strike)
 dt = K / 250.0
 r = Robot(); spec = r.spec(); print("spec:", spec["protocol"], "rows:", len(Q), "dt:", dt, flush=True)
 rows_per_chunk = max(1, int(spec.get("max_chunk_s", 10) / dt))
@@ -20,8 +22,8 @@ for i in range(0, len(Q), rows_per_chunk):
         print("episode over:", e); break
     print(f"chunk {i // rows_per_chunk}: rows={res.meta['executed_rows']} phys={res.meta['physics_steps_chunk']} clipped={res.meta['n_clipped']} done={res.meta['done']}", flush=True)
     if res.meta["done"]: done = True; print("done:", res.meta["reason"]); break
-if not done:
-    obs = r.hold(1.0, cameras=["head_camera"], video="none"); print("settle:", obs.meta["done"], obs.meta["reason"])
+if not done and SETTLE_S > 0:
+    obs = r.hold(SETTLE_S, cameras=["head_camera"], video="none"); print("settle:", obs.meta["done"], obs.meta["reason"])
 try: print("finish:", r.finish())                       # the agent ends the episode (eai-standard/3.0: POST /finish)
 except EpisodeOver as e: print("finish: the episode had already ended:", e)
 print("status:", r.status(), "wall %.0fs" % (time.time() - t0))
