@@ -7,9 +7,9 @@ Move the small ball from the blue container down to the bottom of the red bottle
 Success: the ball rests deep inside the red bottle, at its bottom (not caught near the mouth, not fallen through the
 base), and the robot does not touch it; neither the ball nor the bottle has fallen off the table. When the episode ends,
 the service holds your last command for about three seconds (a second, then two seconds in which all of this must keep
-holding, with nothing moving), and success is judged at the end of that.
+holding, with nothing moving).
 
-When you are done, send `/finish` to end the episode and get it graded.
+When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the

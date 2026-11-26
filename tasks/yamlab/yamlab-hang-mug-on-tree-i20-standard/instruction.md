@@ -6,10 +6,11 @@ Pick up the mug with the left arm, pass it to the right arm in the air, and hang
 ## Goal
 Success: the left gripper picks up the mug, the right gripper then takes it in the air and holds it up on its own for
 about a second, and then the mug hangs on the mug tree with neither gripper holding it, steady for about a second. The
-steps count in this order: each but the last counts for good once done, and the last is judged on how things stand when
-the episode ends. An object falling off the table ends the episode as a failure.
+steps count in this order: each but the last counts for good once done. An object falling off the table ends the episode
+as a failure.
 
-When you are done, send `/finish` to end the episode and get it graded.
+When you are done, send `/finish` to end the episode and get it graded. Everything else counts only as it stands at that
+point.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the

@@ -10,10 +10,10 @@ button was pressed after each move, and both arms are back where they started wh
 button exactly three times in the whole episode: a fourth counted press ends the episode as a failure, and fewer than
 three means no success.
 
-The three moves and the button presses count as they happen, in order. The last step, both arms back where they started
-while the cap is pulled up, is judged on how things stand when the episode ends.
+The three moves and the button presses count as they happen, in order.
 
-When you are done, send `/finish` to end the episode and get it graded.
+When you are done, send `/finish` to end the episode and get it graded. Everything else counts only as it stands at that
+point.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the

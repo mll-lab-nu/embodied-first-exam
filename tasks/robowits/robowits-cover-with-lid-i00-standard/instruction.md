@@ -7,9 +7,9 @@ Put the lid that fits onto the pot, neatly centred.
 Success: the pot is covered by the lid that fits it (the large one): the lid lies on the pot's rim, centred over the
 pot, both on the table and clear of its edges; the robot has let go of the lid, no longer touches it, and it is at rest.
 When the episode ends, the service holds your last command for about three seconds (a second, then two seconds in which
-all of this must keep holding, with nothing moving), and success is judged at the end of that.
+all of this must keep holding, with nothing moving).
 
-When you are done, send `/finish` to end the episode and get it graded.
+When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the

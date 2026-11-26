@@ -6,10 +6,10 @@ let go and move the hand away.
 
 ## Goal
 Success: after being lifted more than a hand's width, the beaker rests in the middle of the white plate, with the hand
-let go and moved away, for a second. The lift counts once it has happened; the rest is judged on how things stand when
-the episode ends.
+let go and moved away, for a second. The lift counts once it has happened.
 
-When you are done, send `/finish` to end the episode and get it graded.
+When you are done, send `/finish` to end the episode and get it graded. Everything else counts only as it stands at that
+point.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the

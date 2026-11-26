@@ -5,11 +5,11 @@ Lift the pot with both grippers and set it down on the cooktop.
 
 ## Goal
 Success: both grippers hold the pot and lift it off the table, then the pot stands upright on the cooktop with neither
-gripper holding it for about a second. The steps count in this order: each but the last counts for good once done, and
-the last is judged on how things stand when the episode ends. An object falling off the table ends the episode as a
-failure.
+gripper holding it for about a second. The steps count in this order: each but the last counts for good once done. An
+object falling off the table ends the episode as a failure.
 
-When you are done, send `/finish` to end the episode and get it graded.
+When you are done, send `/finish` to end the episode and get it graded. Everything else counts only as it stands at that
+point.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the

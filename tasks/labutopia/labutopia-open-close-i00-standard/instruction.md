@@ -7,9 +7,10 @@ let go and keep the hand away for another second.
 ## Goal
 Success: the top drawer has been pulled out about a pen's length or more and left with the hand away from it for a
 second; then it has been pushed back in by about a pen's length or more and again left with the hand away from it for a
-second. The opening counts once it has happened; the closing is judged on how things stand when the episode ends.
+second. The opening counts once it has happened.
 
-When you are done, send `/finish` to end the episode and get it graded.
+When you are done, send `/finish` to end the episode and get it graded. Everything else counts only as it stands at that
+point.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the

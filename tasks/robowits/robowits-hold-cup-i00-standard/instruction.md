@@ -7,9 +7,9 @@ Stand the cup upright on the green target area on the slope, so that it stays th
 Success: the cup stands upright on the green target area on the slope and stays there without sliding down; the robot
 has let go of the cup and moved its grippers away from it, and the cup stays on the table, clear of its edges. When the
 episode ends, the service holds your last command for about three seconds (a second, then two seconds in which all of
-this must keep holding, with nothing moving), and success is judged at the end of that.
+this must keep holding, with nothing moving).
 
-When you are done, send `/finish` to end the episode and get it graded.
+When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the

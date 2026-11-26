@@ -7,9 +7,9 @@ Take the small cube out of the container and put it on the green target area.
 Success: the cube is out of the container and lies on the table on the green target area, clear of the table's edges;
 the robot has let go of the cube, no longer touches it, and it is at rest. When the episode ends, the service holds your
 last command for about three seconds (a second, then two seconds in which all of this must keep holding, with nothing
-moving), and success is judged at the end of that.
+moving).
 
-When you are done, send `/finish` to end the episode and get it graded.
+When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the

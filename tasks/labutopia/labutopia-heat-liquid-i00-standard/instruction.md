@@ -5,10 +5,10 @@ Put the beaker in the middle of the heater's plate and leave it there, then pres
 
 ## Goal
 Success: the beaker has been picked up and set down near the middle of the heater's plate, and then, with the beaker
-still there, the red button is pressed down. The press counts once it has happened; the beaker must still be on the
-plate when the episode ends.
+still there, the red button is pressed down. The press counts once it has happened.
 
-When you are done, send `/finish` to end the episode and get it graded.
+When you are done, send `/finish` to end the episode and get it graded. Everything else counts only as it stands at that
+point.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the

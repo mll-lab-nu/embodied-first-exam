@@ -7,9 +7,9 @@ Move one of the three cubes across the goal line, to the side away from the robo
 Success: at least one of the three cubes lies past the goal line, on the side away from the robot, and still on the
 table; the robot does not touch it, and the cubes have come to rest, none of them crossing the line or leaving the table
 any more. When the episode ends, the service holds your last command for about three seconds (a second, then two seconds
-in which all of this must keep holding, with nothing moving), and success is judged at the end of that.
+in which all of this must keep holding, with nothing moving).
 
-When you are done, send `/finish` to end the episode and get it graded.
+When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the

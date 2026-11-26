@@ -6,10 +6,9 @@ Put the smaller bowl inside the larger one, centred.
 ## Goal
 Success: the smaller bowl sits centred in the larger one, both on the table and clear of its edges; the robot has let go
 of both bowls, touches neither, and they are at rest. When the episode ends, the service holds your last command for
-about three seconds (a second, then two seconds in which all of this must keep holding, with nothing moving), and
-success is judged at the end of that.
+about three seconds (a second, then two seconds in which all of this must keep holding, with nothing moving).
 
-When you are done, send `/finish` to end the episode and get it graded.
+When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the

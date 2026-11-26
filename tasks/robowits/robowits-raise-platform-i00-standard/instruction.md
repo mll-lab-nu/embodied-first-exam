@@ -7,9 +7,9 @@ Lay the book across the two cups so that it rests on top of them.
 Success: the book lies raised on top of the two cups, both cups under it; the robot has let go of the book and moved its
 grippers away from it, it is at rest, and neither the book nor the cups have fallen off the table. When the episode
 ends, the service holds your last command for about three seconds (a second, then two seconds in which all of this must
-keep holding, with nothing moving), and success is judged at the end of that.
+keep holding, with nothing moving).
 
-When you are done, send `/finish` to end the episode and get it graded.
+When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the

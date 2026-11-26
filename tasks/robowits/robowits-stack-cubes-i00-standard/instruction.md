@@ -7,10 +7,9 @@ Set the two grey cubes side by side, touching, and put the red cube on top of th
 Success: the two grey cubes stand side by side on the table, touching, and the red cube sits on top of them with its
 centre right above the green dot; the robot has let go of the red cube and moved its grippers away from it, touches none
 of the cubes, and they are at rest. When the episode ends, the service holds your last command for about three seconds
-(a second, then two seconds in which all of this must keep holding, with nothing moving), and success is judged at the
-end of that.
+(a second, then two seconds in which all of this must keep holding, with nothing moving).
 
-When you are done, send `/finish` to end the episode and get it graded.
+When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
