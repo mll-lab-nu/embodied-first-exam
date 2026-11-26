@@ -1019,11 +1019,16 @@ V2_RULE_TOOLS = ("Tools only: you may write and run code to compute, but every r
 V2_RULE_ROUTE = "One route at a time: the tools, `efe_robot` and the service's client all drive the one robot."
 
 
-def _wrap_bullet(t: str) -> str:
+def _fill(t: str, first: str = "", rest: str = "") -> str:
+    """`t` as one paragraph wrapped at 120 columns, never inside a code span."""
     import textwrap
     t = re.sub(r"`[^`]*`", lambda m: m.group(0).replace(" ", "\0"), " ".join(t.split()))
-    return textwrap.fill(t, 120, initial_indent="- ", subsequent_indent="  ", break_long_words=False,
+    return textwrap.fill(t, 120, initial_indent=first, subsequent_indent=rest, break_long_words=False,
                          break_on_hyphens=False).replace("\0", " ")
+
+
+def _wrap_bullet(t: str) -> str:
+    return _fill(t, "- ", "  ")
 
 
 MCP_MODES = ("standard-mcp", "standard-mcp-shell")     # the MCP modes (their task dirs: branch standard-mcp)
@@ -1189,8 +1194,7 @@ V2_MODE_LINE_RESETS = {m: t.replace(": one live episode.", ".") for m, t in V2_M
 
 def _v2_episodes(task: Path, s: str) -> str:
     """`s` with the mode line that fits the task's reset budget (V2_MODE_LINE or V2_MODE_LINE_RESETS), however it was
-    wrapped; the paragraph it stands in is wrapped again."""
-    import textwrap
+    wrapped; the paragraph it stands in is wrapped again (one under a heading is left as it is)."""
     n = reset_budget_of(task)
     if n is None:
         return s
@@ -1199,18 +1203,7 @@ def _v2_episodes(task: Path, s: str) -> str:
         if not n and V2_MODE_LINE[m] in " ".join(s.split()):
             continue
         pat = re.compile(r"\s+".join(re.escape(w) for w in old.split()) + (r"(?!\S)" if not n else ""))
-        paras = re.split(r"(\n[ \t]*\n)", s)
-        for i in range(0, len(paras), 2):
-            if not pat.search(paras[i]):
-                continue
-            q = pat.sub(lambda _: new, paras[i])
-            if re.match(r"\s*(- |\d+\. |\||```|#)", q.strip("\n")):     # not prose: replaced, not wrapped again
-                paras[i] = q
-                continue
-            t = re.sub(r"`[^`]*`", lambda mm: mm.group(0).replace(" ", "\0"), " ".join(q.split()))
-            lead, trail = q[:len(q) - len(q.lstrip("\n"))], q[len(q.rstrip("\n")):]
-            paras[i] = lead + textwrap.fill(t, 120, break_long_words=False, break_on_hyphens=False).replace("\0", " ") + trail
-        s = "".join(paras)
+        s = _sub_prose(s, pat, new, wrap_headed=False)
     return s
 
 
@@ -1237,9 +1230,9 @@ def _v2_route(task: Path, s: str) -> str:
     return efe_mcp_inject.place_section(s, m)
 
 
-def _sub_prose(s: str, pat: "re.Pattern", new: str) -> str:
-    """`s` with `pat` replaced by `new` in each paragraph it occurs in; a prose paragraph is wrapped again (120)."""
-    import textwrap
+def _sub_prose(s: str, pat: "re.Pattern", new: str, wrap_headed: bool = True) -> str:
+    """`s` with `pat` replaced by `new` in each paragraph it occurs in; a prose paragraph is wrapped again (120), below
+    the heading over it (wrap_headed=False: a paragraph that starts with a heading is only replaced)."""
     paras = re.split(r"(\n[ \t]*\n)", s)
     for i in range(0, len(paras), 2):
         if not pat.search(paras[i]):
@@ -1247,12 +1240,11 @@ def _sub_prose(s: str, pat: "re.Pattern", new: str) -> str:
         q = pat.sub(lambda _: new, paras[i])
         head = re.match(r"\n*(?:#[^\n]*\n)*", q).group(0)        # a heading over the paragraph stays as it is
         body = q[len(head):]
-        if not body.strip() or re.match(r"\s*(- |\d+\. |\||```|#)", body.strip("\n")):
+        if not body.strip() or re.match(r"\s*(- |\d+\. |\||```|#)", body.strip("\n")) \
+                or (not wrap_headed and q.lstrip("\n").startswith("#")):
             paras[i] = q
             continue
-        t = re.sub(r"`[^`]*`", lambda mm: mm.group(0).replace(" ", "\0"), " ".join(body.split()))
-        trail = body[len(body.rstrip("\n")):]
-        paras[i] = head + textwrap.fill(t, 120, break_long_words=False, break_on_hyphens=False).replace("\0", " ") + trail
+        paras[i] = head + _fill(body) + body[len(body.rstrip("\n")):]
     return "".join(paras)
 
 
