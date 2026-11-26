@@ -255,8 +255,8 @@ by PSS and reads no kernel OOM counters. It reads the runtime's limits from the 
 parents that carry the container's id) where the v1 hierarchy is visible to it; where it is not, every cap is recorded as
 the monitor's (`enforced_by`), and the kernel still applies the runtime's limits first. A runtime that refuses `pid: host` runs the monitor as a beacon (the clock in
 `usage.json`, nothing measured or enforced; running.md "Without Docker"). The `x-gpu-memory-gb` of a recorded service and
-of the verifier is a cap stated for the reader: nothing measures it. The agent reads its own container's caps in
-`## Resources` (§5) and in `/run/rcb-limits/usage.json`. Placing trials, the switches, the record and the reward
+of the verifier is a cap stated for the reader: nothing measures it. The agent reads its own container's caps in the
+Resources line of its instruction's `## Limits` (§5) and in `/run/rcb-limits/usage.json`. Placing trials, the switches, the record and the reward
 fields: running.md "Resources".
 
 ## 7. Versions

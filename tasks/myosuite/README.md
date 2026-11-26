@@ -102,7 +102,7 @@ locomotion challenges and by hand_pose); elbow and finger pose / reach (near-dup
   is a height in the world frame ("a ball's height below 1.25 m"). No object or goal position is given in either mode.
 - **Budget: 3600 s**, uniform within the benchmark and both modes. The number lives in each task's own
   `[agent] timeout_sec` (PROTOCOL §2, docs/protocol/running.md "The agent's time"), and every instruction
-  states it in its closing `## Time limit` section.
+  states it in the Time line of its closing `## Limits`.
 
 ## Modes
 - **Privileged:** `rcb_myosuite.Session` in the agent's container: reset, the task's observation dict, MuJoCo model and

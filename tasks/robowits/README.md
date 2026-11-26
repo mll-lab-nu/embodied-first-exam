@@ -119,7 +119,7 @@ which was graded on an AMD workstation (with `instance_exact = 1`).
 
 ## Time budget
 3600 s for every task of both modes: each task's own `[agent] timeout_sec` (PROTOCOL §2,
-docs/protocol/running.md "The agent's time"); every instruction states it in its closing `## Time limit` section. The families are
+docs/protocol/running.md "The agent's time"); every instruction states it in the Time line of its closing `## Limits`. The families are
 bimanual physical puzzles that take several attempts, every Python process pays about a minute of scene build before
 its first step, and a standard-mode crash resume replays the episode on the agent's clock.
 

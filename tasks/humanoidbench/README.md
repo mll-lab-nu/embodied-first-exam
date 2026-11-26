@@ -125,7 +125,7 @@ grants N. Results under a budget other than 50 are reported separately.
 In standard mode the robot waits, frozen, between the agent's calls: a model that thinks for a minute between two
 chunks loses nothing. A real H1 does not wait. The realtime mode (PROTOCOL §3;
 `tasks/humanoidbench/humanoidbench-*-i00-realtime`, 10 tasks, one per family, `mode = "realtime"`) is standard mode with the same
-instance, sensors, success rule, reset budget (50), wall clock (each task's own `[agent] timeout_sec`, stated by the closing `## Time limit` section of every instruction, PROTOCOL §2) and client, on a
+instance, sensors, success rule, reset budget (50), wall clock (each task's own `[agent] timeout_sec`, stated by the Time line of every instruction's closing `## Limits`, PROTOCOL §2) and client, on a
 clock that does not stop (each task's `environment/sim/rcb_realtime.py`, which extends `rcb_service.py`; the
 wire protocol is `eai-standard/2.3`, 2.2 plus the realtime capability, docs/protocol/standard_mode.md "Realtime mode"):
 

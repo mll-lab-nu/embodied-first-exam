@@ -143,8 +143,7 @@ wash_dog_toys.
 
 ## Time budget
 7200 s for every task of both modes (each task's own `[agent] timeout_sec`; `instruction.md`
-states it once, in its closing `## Time limit` section, and the benchmark's own text says "the time limit (`## Time
-limit`)"). Every Python process pays an Isaac launch and scene load (about 2-3 minutes with a warm Kit cache; the first
+states it once, in the Time line of its closing `## Limits`, and the benchmark's own text says "the time limit (Limits)"). Every Python process pays an Isaac launch and scene load (about 2-3 minutes with a warm Kit cache; the first
 launch of a trial adds about 4 minutes to compile shaders into the trial's own cache, below), and the simulator runs
 7-18 control steps/s depending on the host (30 Hz control), while these tasks take thousands of steps.
 

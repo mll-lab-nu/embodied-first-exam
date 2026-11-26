@@ -62,7 +62,7 @@ Every topological task shares the tooling `rcb_topogym.py`, the graders, the sim
 ## Time budget
 
 10800 s (3 h) wall clock in both modes and every family (each task's `[agent] timeout_sec`), within the default cap.
-The texts say "the time limit (`## Time limit`)". The standard service's clock (`meta["time_left_s"]`, `RCB_WALL_CLOCK_S`
+The texts say "the time limit (Limits)". The standard service's clock (`meta["time_left_s"]`, `RCB_WALL_CLOCK_S`
 = the cutoff) counts from the agent's first request to the service (logged in `episode.jsonl`, kept over a restart), so
 the instruction has the common closing sentence. The service still ends the episode with reason `timeout` when that
 count reaches 0, never before the harness's cutoff; open: that end becomes report-only at RoboARC's next task update.

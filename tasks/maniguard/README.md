@@ -300,7 +300,7 @@ primitives. Every one scores 0, for the reason given.
 
 ## Time budget
 **3600 s** for every task of both modes: each task's own `[agent] timeout_sec` (PROTOCOL §2,
-docs/protocol/running.md "The agent's time"), stated in every instruction's closing `## Time limit` section; the benchmark's own text
+docs/protocol/running.md "The agent's time"), stated in the Time line of every instruction's closing `## Limits`; the benchmark's own text
 names no number. Every Python process pays an Isaac Sim 4.5 launch and the scene load (23 s with a warm cache, 239 s with
 a cold one, which every trial's first process has: Kit's shaders and OmniGibson's `torch.compile` kernels; then roughly
 20 control steps per wall second). ManiGuard's own step limit is reported (`within_upstream_horizon`), not enforced. A

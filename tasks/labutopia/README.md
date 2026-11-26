@@ -144,8 +144,8 @@ through the robot's joint targets alone, (b) whose success check can be stated w
   relative to where things start ("more than 10 cm above where it stood", "pushed in more than 5 mm", "along the
   forward axis of the arm's base") and never a world coordinate or an object pose; the arm's base pose is in `/spec`
   (`robot_spec.base`). `ci_checks/benchmarks/labutopia/advisory-world-frame.sh` checks the standard texts.
-- **Budget: 3600 s**, both modes (each task's `[agent] timeout_sec`, stated in its instruction's closing
-  `## Time limit` section), the same as RoboLab's (also on Isaac Sim).
+- **Budget: 3600 s**, both modes (each task's `[agent] timeout_sec`, stated in the Time line of its
+  instruction's closing `## Limits`), the same as RoboLab's (also on Isaac Sim).
 
 ## Simulator version: Isaac Sim 6.1.0
 LabUtopia's README installs Isaac Sim 5.1.0. The host this benchmark was built on has NVIDIA's R595 driver (595.91.07,

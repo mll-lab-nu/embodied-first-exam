@@ -266,7 +266,7 @@ PressButton is judged as an event (the button springs back: a press seen during 
 still for up to 1 s at the end so a hold that is completing can finish; every other task is judged on its end state.
 
 ## Time budget
-3600 s for every task of both modes (each task's `[agent] timeout_sec`), stated in each instruction's closing `## Time limit` section. Every Python
+3600 s for every task of both modes (each task's `[agent] timeout_sec`), stated in the Time line of each instruction's closing `## Limits`. Every Python
 process pays ~2-6 min of Isaac Sim launch and scene build (the upper end with other Isaac jobs on the GPU); stepping runs
 at about 9-15 control steps/s.
 
