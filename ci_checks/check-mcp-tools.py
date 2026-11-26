@@ -8,6 +8,9 @@ tool.
      its fields come back in every result; GET /operations/<id>: the server re-queries it). A route found in a layer
      or adapter source and missing from the table fails: a served endpoint without a tool. Each table tool exists in
      schema/tools.json, and the schema's own `endpoints` map is the table's.
+     The match extension likewise: every endpoint its layer serves (embodied-olympics-match/eai_std/serve.py STD_GET,
+     STD_POST; NOT_OFFERED are its 404s) is in inject.EO_ENDPOINTS with its tool (inject.EO_TOOLS, EO_TEAM_TOOLS) or the
+     reason it has none (inject.EO_NO_TOOL), and the endpoints the layer's /spec lists (adapter.py ENDPOINTS) too.
   2. Per task: a standard or realtime task has environment/efe_mcp/ (the server files byte-identical to their source,
      manifest.json what inject.manifest gives), the Dockerfile line, the task.toml entry and `### MCP tools` in Robot
      Interface; a task inject.EXCEPTIONS names (RoboEngineer, the matchlow matches, an exported match without the
@@ -94,6 +97,43 @@ def check_table() -> list[str]:
     return errs
 
 
+EAI_STD = ROOT / "embodied_first_exam/benchmarks/embodied-olympics-match/eai_std"
+
+
+def _literal(path: Path, name: str):
+    """A module-level literal assignment of a source file, read without importing it."""
+    import ast
+    for node in ast.parse(path.read_text()).body:
+        if isinstance(node, ast.Assign) and any(isinstance(t, ast.Name) and t.id == name for t in node.targets):
+            return ast.literal_eval(node.value)
+    raise KeyError(f"{path.name}: no {name}")
+
+
+def check_match_table() -> list[str]:
+    """Rule 1 for the match extension (Part 5)."""
+    if not EAI_STD.is_dir():
+        return []
+    errs = []
+    try:
+        served = {f"GET /{e}" for e in _literal(EAI_STD / "serve.py", "STD_GET")}
+        served |= {f"POST /{e}" for e in _literal(EAI_STD / "serve.py", "STD_POST")}
+        served |= set(_literal(EAI_STD / "adapter.py", "ENDPOINTS"))
+    except (OSError, KeyError, ValueError, SyntaxError) as e:
+        return [f"the match extension's endpoints could not be read: {e}"]
+    paths = {k.split(" ", 1)[1] for k in I.EO_ENDPOINTS}
+    for ep in sorted(served):
+        if ep not in I.EO_ENDPOINTS and ep.split(" ", 1)[1] not in paths:
+            errs.append(f"{ep}: served by the match extension (eai_std/) but not in inject.EO_ENDPOINTS: an endpoint "
+                        "without a tool")
+    tools = set(I.EO_TOOLS) | set(I.EO_TEAM_TOOLS)
+    for k, v in I.EO_ENDPOINTS.items():
+        if v is None and k not in I.EO_NO_TOOL:
+            errs.append(f"{k}: a match endpoint with no tool and no reason (inject.EO_NO_TOOL)")
+        if v is not None and v not in tools:
+            errs.append(f"{k}: its tool {v!r} is not a match tool (inject.EO_TOOLS, EO_TEAM_TOOLS)")
+    return errs
+
+
 def check_task(task: Path) -> list[str]:
     errs = []
     m = tc.efe_mcp_manifest(task)
@@ -155,7 +195,7 @@ def check_task(task: Path) -> list[str]:
 
 def main(argv: list[str]) -> int:
     dirs = [Path(a) for a in argv] or tc.iter_tasks()
-    errs = check_table()
+    errs = check_table() + check_match_table()
     n = 0
     for task in dirs:
         if tc.mode_of(task) in ("standard", "realtime"):

@@ -57,7 +57,12 @@ NO_TOOL = {
 EO_ENDPOINTS = {"GET /spec": "spec", "POST /observe": "observe", "POST /submit": "submit", "POST /start": "start",
                 "POST /ready": "ready", "POST /say": "say", "POST /team": "team", "GET /status": None,
                 "POST /finish": None}
+EO_NO_TOOL = {
+    "GET /status": "its fields come back in every tool result's meta",
+    "POST /finish": "a match has none (404): its rules end it",
+}
 EO_TOOLS = ("spec", "observe", "submit", "start", "ready")
+EO_TEAM_TOOLS = ("say", "team")              # a team format's
 # tasks that keep only their own interface, and why (their docs say so too)
 EXCEPTIONS = (
     (lambda folder, name, protocol: protocol.startswith("eai-policy/"),
@@ -130,7 +135,7 @@ def manifest(task: pathlib.Path, folder: str, mode: str, protocol: str, resets: 
         m.update({"manifest": FORMAT, "task": task.name, "protocol": protocol,
                   "realtime": eo_clock(task, protocol) == "realtime",
                   "turn": eo_clock(task, protocol) == "turn"})
-        m["tools"] = list(EO_TOOLS) + (["say", "team"] if m.get("team") else [])   # = suites.tools_for (tests)
+        m["tools"] = list(EO_TOOLS) + (list(EO_TEAM_TOOLS) if m.get("team") else [])   # = suites.tools_for (tests)
         return m
     return None
 
