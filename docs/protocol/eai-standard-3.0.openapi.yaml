@@ -9,12 +9,16 @@ info:
     (docs/protocol/standard_mode.md). `eai-standard/3.0` is a set of rules every layer follows
     (`/spec.standard = "eai-standard/3.0"`); each layer keeps its own version string in `/spec.protocol`:
 
-    | `/spec.protocol` | layer | reference implementation |
+    | `/spec.protocol` | version: what it adds | reference implementation (what it serves) |
     |---|---|---|
     | `eai-standard/2.1` | base: `/spec` `/status` `/observe` `/submit`, RCB1 frames, optional `/reset` | the shared sidecar `rcb_service.py` (one file copied into each benchmark that runs it) |
     | `eai-standard/2.2` | 2.1 + depth modes, per-frame steps/extrinsics, `robot_spec`, `world`, `/kinematics`, per-call wall bound | `embodied_first_exam/standard/rcb_limited.py` (+ `agent_end/rcb_agent_end.py`) |
-    | `eai-standard/2.3` | 2.1/2.2 + a clock that does not stop (realtime mode) | `embodied_first_exam/standard/realtime/rcb_realtime.py` over `rcb_service.py` |
-    | `eai-standard/2.4` | 2.2 + operation ids, request deadlines, `GET /operations/{id}` | `embodied_first_exam/standard/v2_4/rcb_limited.py` |
+    | `eai-standard/2.3` | 2.2 + the realtime capability: a clock that does not stop (realtime mode) | `embodied_first_exam/standard/realtime/rcb_realtime.py` over the 2.1 sidecar `rcb_service.py`: 2.1's surface plus the clock (2.2's capabilities stay optional and are not served: no `/kinematics`, no `depth` modes) |
+    | `eai-standard/2.4` | 2.3 + the operations capability: operation ids, request deadlines, `GET /operations/{id}` | `embodied_first_exam/standard/v2_4/rcb_limited.py` (+ `agent_end/rcb_agent_end.py`): the 2.2 layer plus operations (standard mode only: the realtime capability stays optional and is not served; realtime tasks stay on 2.3) |
+
+    Minor versions only add, and every capability a version adds stays optional for the versions after it
+    (docs/protocol/standard_mode.md, the version table and Part 4 §19); the third column says which ones each
+    reference layer serves.
     | `eai-standard/2.x+match/1.0` | the match extension (`/start`, `/ready`, `/say`, `/team`) | `embodied_first_exam/benchmarks/embodied-olympics-match/eai_std/` |
 
     **Modes.** Standard mode is Gym's `env.step`: the world stands still between calls, time passes only
@@ -286,8 +290,8 @@ paths:
         required: false
         description: |
           Optional and ignored: no layer (2.1-2.4) parses it. Clients send `{}`; an empty or malformed body is
-          accepted as well. 2.2/2.4 still read and drop it, so a bad Content-Length is a 400 and one over the body
-          limit a 413.
+          accepted as well. Its Content-Length is checked as every POST's (2.1/2.3 leave the body unread, 2.2/2.4
+          read and drop it): a bad one is a 400, one over the body limit a 413.
         content:
           application/json:
             schema: {$ref: "#/components/schemas/FinishRequest"}
@@ -380,7 +384,8 @@ paths:
       summary: The record of an operation (2.4).
       description: |
         Client-internal: after a lost reply the 2.4 client and the MCP server query the operation instead of
-        re-sending the actions. Read-only, never steps physics. Only a 2.4 service serves it (others: 404).
+        re-sending the actions. Read-only, never steps physics. Only a 2.4 service serves it (others: 404). After
+        `/finish` it is a 409, as every call but GET /spec and GET /status.
       x-eai-layer: "2.4"
       x-eai-client-internal: true
       x-eai-mcp: null
@@ -399,6 +404,13 @@ paths:
             application/json:
               schema: {$ref: "#/components/schemas/OperationRecord"}
         "400": {$ref: "#/components/responses/BadRequest"}
+        "409":
+          description: |
+            After `/finish` (agent-ended episodes: every call but GET /spec and GET /status is a 409), or a
+            service that gave up on the trial (`gave_up: true`).
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Conflict"}
         "404":
           description: Unknown operation id (body `{}`), or a service without the operations capability.
           content:
@@ -551,7 +563,9 @@ components:
         The request is malformed or not allowed; nothing ran. Examples: an unknown action type or camera, a
         wrong row shape, NaN/inf, `dt` not a whole multiple of the control period, a chunk over `max_chunk_s`,
         rows together with `seconds`, no rows without a hold chunk, `/observe` with `seconds > 0`, `last_s < 0`,
-        `video_fps` outside [1, 30], a hold chunk's `seconds` over `max_chunk_s`, depth with `last_s > 0` for a
+        `video_fps` outside [1, `max_video_fps`], an `interpolate` other than linear or hold, `dt`, `seconds`,
+        `last_s` or `video_fps` not a JSON number (a boolean or a string), a hold chunk's `seconds` over
+        `max_chunk_s`, depth with `last_s > 0` for a
         camera not in `timing.recorder.depth`, more images than `max_frames_per_call`, a bad Content-Length, a body that
         is neither a JSON object nor an RCB1 frame, a malformed kinematics request, a malformed operation id or
         request deadline (2.4), realtime `at` more than `max_ahead_steps` ahead.
@@ -693,9 +707,12 @@ components:
         video_fps:
           type: integer
           minimum: 1
-          maximum: 30
           default: 10
-          description: Frames per robot second in the answer (2.1 casts the value to an integer).
+          description: |
+            Frames per robot second in the answer, a JSON number (a boolean or a string is a 400). At most
+            `/spec.max_video_fps` (2.1: 30; 2.2/2.4: 30, or the control rate where that is higher, unless the
+            service declares `max_video_fps`); outside [1, max] it is a 400 in every layer. 2.1 casts the value
+            to an integer.
         depth:
           oneOf:
             - {enum: [none, last, frames]}
@@ -719,15 +736,14 @@ components:
         - type: object
           properties:
             last_s:
-              type: number
+              type: [number, "null"]
               minimum: 0
               default: 0
-              description: "0: the current frame; n: the frames recorded in the last n robot seconds (capped at timing.recorder.buffer_s)."
+              description: "0 (or null): the current frame; n: the frames recorded in the last n robot seconds (capped at timing.recorder.buffer_s)."
             seconds:
-              type: number
-              maximum: 0
+              enum: [0, null]
               deprecated: true
-              description: "Before 3.0, a watch. From 3.0 any value other than 0 is a 400 that names the hold chunk."
+              description: "Before 3.0, a watch. From 3.0 any value other than 0 (or null, read as absent) is a 400 that names the hold chunk."
             query: {description: "match: the observation's query (the match's own)."}
             team_since: {type: integer, minimum: 0, description: "match: team messages since this index."}
     SubmitRequest:
@@ -761,8 +777,10 @@ components:
       allOf:
         - {$ref: "#/components/schemas/ChunkCommon"}
         - type: object
-          not: {required: [seconds]}
           properties:
+            seconds:
+              type: "null"
+              description: "A chunk with rows takes no `seconds` (any number, 0 too, is a 400); null is read as absent."
             actions:
               type: array
               minItems: 1
@@ -775,9 +793,9 @@ components:
               minItems: 1
               description: "match: JSON action objects (or numeric rows in the type's layout)."
             dt:
-              type: number
+              type: [number, "null"]
               exclusiveMinimum: 0
-              description: "Seconds between rows; default one control period; a whole multiple of it (never rounded)."
+              description: "Seconds between rows; default (absent or null) one control period; a whole multiple of it (never rounded). Rows x dt is at most max_chunk_s (a planner type such as ee_pose: the planner's own timing)."
             interpolate: {enum: [linear, hold], default: linear}
     HoldChunkRequest:
       allOf:
@@ -933,13 +951,23 @@ components:
     SubmitMeta:
       allOf:
         - {$ref: "#/components/schemas/Meta"}
+        - if: {required: [hold]}
+          then:
+            description: "a hold chunk's answer, every layer (and the match)"
+            required: [executed_rows]
+            properties:
+              executed_rows: {const: 0}
+        - if: {required: [running]}
+          then:
+            description: "a realtime answer (2.3, a realtime match): what the plan covers"
+            required: [plan_end_step, end_step]
         - type: object
           required: [duration_s, planned_duration_s]
           properties:
             chunk_id: {type: [integer, "null"]}
             type: {type: string}
             hold: {const: true, description: "a hold chunk"}
-            executed_rows: {type: integer, minimum: 0, description: "standard: rows executed (0 for a hold chunk)"}
+            executed_rows: {type: integer, minimum: 0, description: "standard: rows executed; a hold chunk: 0 (every layer, realtime too)"}
             control_steps_chunk: {type: integer, minimum: 0, description: "standard: control steps the chunk ran"}
             duration_s: {type: [number, "null"], minimum: 0, description: "standard: robot seconds the chunk ran; realtime: robot seconds the plan covers; match turn-based: null"}
             planned_duration_s: {type: [number, "null"], minimum: 0, description: "rows x dt as sent (a hold chunk: its seconds)"}

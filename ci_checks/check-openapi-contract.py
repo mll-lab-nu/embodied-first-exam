@@ -10,15 +10,22 @@
      2.3  rcb_realtime.py over rcb_service.py (realtime mode)      embodied_first_exam/standard/mcp/tests/toy_realtime.py
      2.2  rcb_limited.py (the shared 2.2 layer)                    embodied_first_exam/standard/toy_server.py
      2.4  v2_4/rcb_limited.py (toy_server.py staged next to it in the work directory)
-   2.1 and 2.3 run with RCB_AGENT_END=1 and a reset budget of 1. Every request is sent, and every answer is checked:
+   2.1 and 2.3 run with RCB_AGENT_END=1 and a reset budget of 1; 2.2 and 2.4 without the feature, and again as
+   agent-ended adapters (2.2-ae, 2.4-ae: toy_server.py made one with agent_end/agent_end_selftest.py's PATCH and
+   rcb_agent_end.py staged next to it): /finish validated against FinishResponse, then the 409s after it. With a step
+   limit (2.1-limit, 2.2-limit, 2.4-limit: RCB_STEP_LIMIT): steps_left, the chunk cut at the limit (reason
+   step_limit), then /submit and /finish 409 while /observe answers. A service that gave up (2.2-gaveup:
+   RCB_TOY_REFUSE): every endpoint 409 with gave_up. Every request is sent, and every answer is checked:
    its status code must be documented for that operation, its content type must be one the response lists, a JSON
    body must validate against the response's schema, and an RCB1 body is decoded and its header, part names and
    meta validated against Rcb1Header, Rcb1PartName and the schema the media type's x-eai-rcb1-meta names. Each valid
    request body is validated against the request schema; each deliberately invalid one must be rejected by it where
-   the schema can express the rule. Semantic assertions (a hold chunk's duration, observe never moving time, the
+   the schema can express the rule (valid=None: a rule the schema cannot express, such as a service's own
+   max_video_fps or rows x dt over max_chunk_s). Every layer must answer the same 400s (a bool or string where a
+   number goes, interpolate cubic, a chunk over max_chunk_s, video_fps 0 / 0.5 / 99). Semantic assertions (a hold chunk's duration, observe never moving time, the
    realtime clock starting at the first /submit, /finish then 409) are checked on top.
 
-    python3 ci_checks/check-openapi-contract.py [--repo DIR] [--spec FILE] [--targets 2.1,2.3,2.2,2.4] [--work DIR]
+    python3 ci_checks/check-openapi-contract.py [--repo DIR] [--spec FILE] [--targets 2.1,2.3,2.2,...] [--work DIR]
 
 Needs numpy, requests, PyYAML and jsonschema (>= 4.18). Exit 0: all passed; 1: a failure; 2: a missing dependency.
 """
@@ -193,6 +200,8 @@ class Contract:
         if ref is None:
             return
         errs = self.errors(ref, meta)
+        if valid is None:                    # a rule the schema cannot express (the service's own limit)
+            return
         if valid:
             check(not errs, f"{label}: a valid request is rejected by {ref}: {errs[:3]}")
         else:
@@ -292,6 +301,14 @@ class Target:
         self.log.close()
 
     # requests --------------------------------------------------------------------------------------------
+    def bad(self, path: str, body: dict, label: str, valid=False) -> dict:
+        """A request every layer refuses with a 400 before anything runs (the episode's control steps unchanged)."""
+        _, st0, _ = self.get("/status", label=f"status before {label}")
+        _, e, _ = self.post_json(path, body, expect=(400,), label=label, valid=valid)
+        _, st1, _ = self.get("/status", label=f"status after {label}")
+        check(st0.get("control_steps") == st1.get("control_steps"), f"{self.name} {label}: a refused request ran steps")
+        return e
+
     def get(self, path: str, expect=(200,), label: str = ""):
         r = requests.get(self.base + path, timeout=60)
         return self._done("GET", path, r, expect, label)
@@ -359,7 +376,9 @@ def standard_21(t: Target) -> None:
     _, e, _ = t.post_json("/observe", {"seconds": 1.0}, expect=(400,), label="observe seconds>0", valid=False)
     check("hold" in e.get("error", ""), "2.1 observe seconds>0 names the hold chunk")
     t.post_json("/observe", {"last_s": -1}, expect=(400,), label="observe last_s<0", valid=False)
-    t.post_json("/observe", {"video_fps": 99}, expect=(400,), label="observe video_fps 99", valid=False)
+    t.post_json("/observe", {"video_fps": 99}, expect=(400,), label="observe video_fps 99", valid=None)
+    common_400s(t, J, 2)
+    t.post_json("/observe", {"seconds": None, "last_s": None}, label="observe seconds null, last_s null")
     _, m, _ = t.get("/status", label="status after observes")
     check(m["control_steps"] == 0, "2.1 observe moved time")
     _, m, p = t.post_rcb1("/submit", {"type": J, "dt": 0.02, "video": "frames", "cameras": ["top"]},
@@ -369,8 +388,8 @@ def standard_21(t: Target) -> None:
     check("done" in m and not m["done"] and m["control_steps"] == 10, "2.1 submit counters")
     check(m.get("frame_step") == 10, f"2.1 submit with images has frame_step: {m.get('frame_step')}")
     check(p["frames/top"]["data"].shape[0] == p["proprio"]["data"].shape[0], "2.1 submit frames and proprio share the frame axis")
-    _, m, _ = t.post_json("/submit", {"type": J, "dt": 0.04, "actions": [[0.0, 0.0]] * 5, "video": "none"},
-                          label="submit json dt=2 steps")
+    _, m, _ = t.post_json("/submit", {"type": J, "dt": 0.04, "actions": [[0.0, 0.0]] * 5, "video": "none",
+                                      "seconds": None}, label="submit json dt=2 steps (seconds null)")
     check(abs(m["duration_s"] - 0.2) < 1e-9 and m["control_steps_chunk"] == 10, f"2.1 submit dt 0.04 {m.get('duration_s')}")
     _, m, _ = t.post_json("/submit", {"type": J, "interpolate": "hold", "seconds": 0.5, "video": "frames"},
                           label="hold chunk")
@@ -398,6 +417,9 @@ def standard_21(t: Target) -> None:
     t.get("/operations/abc", expect=(404,), label="operations (not 2.1)")
     t.post_raw_length("/submit", str(65 * 1024 * 1024), (413,), "body over 64 MiB")
     t.post_raw_length("/submit", "-1", (400,), "negative Content-Length")
+    t.post_raw_length("/finish", str(65 * 1024 * 1024), (413,), "finish body over 64 MiB")
+    _, s, _ = t.get("/status", label="status after a refused finish")
+    check(not s["done"] and s["resets_left"] == 1, f"2.1 a refused /finish ended the episode: {s}")
     _, m, p = t.post_json("/reset", {}, label="reset")
     check(m["episode"] == 2 and m["resets_left"] == 0 and m["control_steps"] == 0, f"2.1 reset meta {m}")
     check(any(k.startswith("last/") for k in p) and isinstance(m.get("frame_step"), int),
@@ -406,13 +428,15 @@ def standard_21(t: Target) -> None:
     t.post_json("/submit", {"type": J, "actions": [[0.01, 0.0]] * 3, "video": "none"}, label="submit after reset")
     _, f, _ = t.post_bytes("/finish", b"not json at all", label="finish with a body it ignores")
     check(f["ok"] is True and f["reason"] == "finished" and f["done"] is True, f"2.1 finish {f}")
-    t.post_json("/submit", {"type": J, "actions": [[0, 0]], "video": "none"}, expect=(409,), label="submit after finish")
+    _, c, _ = t.post_json("/submit", {"type": J, "actions": [[0, 0]], "video": "none"}, expect=(409,),
+                          label="submit after finish")
+    check(c.get("resets_left", 0) == 0, f"2.1 409 after finish reports resets_left {c.get('resets_left')}")
     t.post_json("/observe", {}, expect=(409,), label="observe after finish")
     t.post_json("/finish", {}, expect=(409,), label="finish after finish")
     t.post_json("/reset", {}, expect=(409,), label="reset after finish")
     t.get("/spec", label="spec after finish")
     _, s, _ = t.get("/status", label="status after finish")
-    check(s["done"] and s["reason"] == "finished", "2.1 status after finish")
+    check(s["done"] and s["reason"] == "finished" and s["resets_left"] == 0, f"2.1 status after finish {s}")
 
 
 def realtime_23(t: Target) -> None:
@@ -458,7 +482,9 @@ def realtime_23(t: Target) -> None:
         t.post_json("/observe", {"last_s": 0.4, "include_depth": True, "cameras": rec["depth"][:1], "video": "frames"},
                     label="observe depth with last_s, recorder depth camera")
     _, m, _ = t.post_json("/submit", {"type": J, "interpolate": "hold", "seconds": 0.3}, label="hold chunk")
-    check(m.get("hold") is True and abs(m["duration_s"] - 0.3) < 1e-9 and "end_step" in m, f"2.3 hold meta {m}")
+    check(m.get("hold") is True and abs(m["duration_s"] - 0.3) < 1e-9 and "end_step" in m and m.get("executed_rows") == 0,
+          f"2.3 hold meta {m}")
+    common_400s(t, J, 2, status=False)
     t.post_json("/submit", {"type": J, "actions": [[0, 0]], "at": 10 ** 6}, expect=(400,), label="at too far ahead")
     t.post_json("/submit", {"type": J, "interpolate": "hold", "seconds": 0.5, "actions": [[0, 0]]}, expect=(400,),
                 label="rows + seconds", valid=False)
@@ -468,6 +494,10 @@ def realtime_23(t: Target) -> None:
                 label="hold over max_chunk_s")
     t.post_json("/kinematics", {"op": "fk", "q": [0, 0]}, expect=(404,), label="kinematics (not 2.3)")
     t.post_raw_length("/submit", str(65 * 1024 * 1024), (413,), "body over 64 MiB")
+    t.post_raw_length("/finish", str(65 * 1024 * 1024), (413,), "finish body over 64 MiB")
+    t.post_raw_length("/finish", "-1", (400,), "finish negative Content-Length")
+    _, s, _ = t.get("/status", label="status after refused finishes")
+    check(not s["done"], f"2.3 a refused /finish ended the episode: {s}")
     _, m, p = t.post_json("/reset", {}, label="reset")
     check(m["episode"] == 2 and m["running"] is False, f"2.3 reset meta {m}")
     check(any(k.startswith("last/") for k in p) and isinstance(m.get("frame_step"), int),
@@ -481,7 +511,26 @@ def realtime_23(t: Target) -> None:
     t.post_json("/submit", {"type": J, "actions": [[0, 0]]}, expect=(409,), label="submit after finish")
     t.post_json("/observe", {}, expect=(409,), label="observe after finish")
     t.post_json("/finish", {}, expect=(409,), label="finish after finish")
-    t.get("/status", label="status after finish")
+    _, s, _ = t.get("/status", label="status after finish")
+    check(s["done"] and s["reason"] == "finished" and s.get("resets_left") == 0, f"2.3 status after finish {s}")
+
+
+def common_400s(t: Target, J: str, dim: int, status: bool = True) -> None:
+    """The 400s every layer answers before anything runs (the OpenAPI BadRequest): nothing ran (status=True: the
+    control steps unchanged; a realtime clock may run, so it is checked by the answer only)."""
+    send = t.bad if status else (lambda path, body, label, valid=False:
+                                 t.post_json(path, body, expect=(400,), label=label, valid=valid)[1])
+    row = [0.0] * dim
+    send("/submit", {"type": J, "actions": [row], "interpolate": "cubic"}, "interpolate cubic")
+    send("/submit", {"type": J, "actions": [row] * 800, "dt": 0.02 if dim == 2 else 0.05},
+         "a chunk over max_chunk_s (rows x dt)", valid=None)
+    send("/submit", {"type": J, "interpolate": "hold", "seconds": True}, "hold seconds true")
+    send("/submit", {"type": J, "interpolate": "hold", "seconds": "0.1"}, "hold seconds string")
+    send("/submit", {"type": J, "actions": [row], "dt": "0.05"}, "dt string")
+    for fps, valid in ((0, False), (0.5, False), (99, None), (True, False)):
+        send("/observe", {"video_fps": fps}, f"observe video_fps {fps!r}", valid=valid)
+    send("/observe", {"last_s": "1"}, "observe last_s string")
+    send("/observe", {"seconds": True}, "observe seconds true")
 
 
 def layer_22(t: Target, protocol: str = "eai-standard/2.2") -> None:
@@ -508,6 +557,16 @@ def layer_22(t: Target, protocol: str = "eai-standard/2.2") -> None:
     check(m.get("hold") is True and m["executed_rows"] == 0 and abs(m["duration_s"] - 0.25) < 1e-9, f"{t.name} hold {m}")
     t.post_json("/submit", {"type": J, "interpolate": "hold", "seconds": 0.5, "actions": [[0, 0, 0]]}, expect=(400,),
                 label="rows + seconds", valid=False)
+    _, m, _ = t.post_json("/submit", {"type": J, "interpolate": "hold", "seconds": 0.01, "video": "none"},
+                          label="hold chunk under one control step")
+    check(m.get("control_steps_chunk") == 1 and abs(m["duration_s"] - 0.05) < 1e-9
+          and abs(m["planned_duration_s"] - 0.01) < 1e-9 and isinstance(m.get("chunk_id"), int),
+          f"{t.name} a hold under one step runs one and plans what was sent: {m}")
+    common_400s(t, J, 3)
+    _, m, _ = t.post_json("/submit", {"type": J, "actions": [[0, 0, 0]] * 200, "dt": 0.05, "video": "none"},
+                          label="a chunk of exactly max_chunk_s")
+    check(m.get("executed_rows") == 200, f"{t.name} a chunk of max_chunk_s: {m.get('executed_rows')}")
+    _, m, _ = t.post_json("/observe", {"video_fps": 30, "seconds": None}, label="observe video_fps 30, seconds null")
     _, m, p = t.post_json("/observe", {"last_s": 0.5, "video": "frames"}, label="observe last_s 0.5")
     check(m.get("last_s", 0) > 0 and m.get("frame_step") == int(p["frame_step"]["data"][-1]), f"{t.name} observe window {m}")
     t.post_json("/observe", {"last_s": 0.5, "depth": "frames"}, expect=(400,), label="observe depth frames with last_s")
@@ -517,6 +576,17 @@ def layer_22(t: Target, protocol: str = "eai-standard/2.2") -> None:
     t.post_json("/finish", {}, expect=(404,), label="finish without the feature")
     t.post_json("/reset", {}, expect=(404,), label="reset without a budget")
     t.post_raw_length("/submit", str(65 * 1024 * 1024), (413,), "body over 64 MiB")
+    t.post_raw_length("/observe", "-1", (400,), "negative Content-Length")
+    if protocol == "eai-standard/2.2":
+        simulator_error(t)
+
+
+def simulator_error(t: Target) -> None:
+    """A simulator error (the toy raises on note "raise"): a 500, the episode ends (reason error), /submit then 409."""
+    t.post_json("/observe", {"note": "raise"}, expect=(500,), label="observe: the simulator raises")
+    _, s, _ = t.get("/status", label="status after a simulator error")
+    check(s["done"] and s["reason"] == "error", f"{t.name} a simulator error ends the episode: {s}")
+    t.post_json("/submit", {"type": "joint_position", "actions": [[0, 0, 0]]}, expect=(409,), label="submit after the error")
 
 
 def layer_24(t: Target) -> None:
@@ -537,6 +607,104 @@ def layer_24(t: Target) -> None:
                 label="malformed operation id", valid=False)
     t.get("/operations/bad.id", expect=(400,), label="operation malformed id")
     t.get("/operations/unknown", expect=(404,), label="operation unknown id")
+    simulator_error(t)
+
+
+def agent_ended_22(t: Target, protocol: str = "eai-standard/2.2") -> None:
+    """2.2 / 2.4 with the agent-ended feature (rcb_agent_end.py on the toy): /finish (FinishResponse), the 409s after it."""
+    J = "joint_position"
+    _, spec, _ = t.get("/spec", label="spec")
+    check(spec["protocol"] == protocol and str(spec.get("success_signal", "")).startswith("hidden"),
+          f"{t.name} spec {spec.get('protocol')} {spec.get('success_signal')}")
+    _, m, _ = t.post_json("/submit", {"type": J, "actions": [[0.5, 0, 0]] * 12, "video": "none"}, label="submit")
+    check(not m["done"] and m["reason"] is None and "success" not in m, f"{t.name} a submit shows nothing of the success: {m}")
+    common_400s(t, J, 3)
+    if protocol == "eai-standard/2.4":
+        _, m, _ = t.post_json("/submit", {"type": J, "actions": [[0.5, 0, 0]], "operation_id": "op-ae",
+                                          "video": "none"}, label="submit with an operation id")
+        t.get("/operations/op-ae", label="operation record before finish")
+    t.post_raw_length("/finish", str(65 * 1024 * 1024), (413,), "finish body over 64 MiB")
+    t.post_raw_length("/finish", "-1", (400,), "finish negative Content-Length")
+    _, s, _ = t.get("/status", label="status after refused finishes")
+    check(not s["done"], f"{t.name} a refused /finish ended the episode: {s}")
+    _, f, _ = t.post_bytes("/finish", b"not json at all", label="finish with a body it ignores")
+    check(f.get("ok") is True and f.get("done") is True and f.get("reason") == "finished", f"{t.name} finish {f}")
+    t.post_json("/submit", {"type": J, "actions": [[0, 0, 0]], "video": "none"}, expect=(409,), label="submit after finish")
+    t.post_json("/submit", {"type": J, "interpolate": "hold", "seconds": 0.1}, expect=(409,), label="hold after finish")
+    t.post_json("/observe", {}, expect=(409,), label="observe after finish")
+    t.post_json("/observe", {"last_s": 0.5}, expect=(409,), label="observe last_s after finish")
+    t.post_json("/kinematics", {"op": "fk", "q": [0, 0, 0]}, expect=(409,), label="kinematics after finish")
+    t.post_json("/finish", {}, expect=(409,), label="finish after finish")
+    if protocol == "eai-standard/2.4":
+        t.get("/operations/op-ae", expect=(409,), label="operation record after finish")
+    t.get("/spec", label="spec after finish")
+    _, s, _ = t.get("/status", label="status after finish")
+    check(s["done"] and s["reason"] == "finished", f"{t.name} status after finish {s}")
+
+
+def agent_ended_24(t: Target) -> None:
+    agent_ended_22(t, "eai-standard/2.4")
+
+
+def step_limit(t: Target) -> None:
+    """RCB_STEP_LIMIT=30 (agent-ended): steps_left in every meta and /status, the hold chunk cut at the limit (reason
+    step_limit), then /submit and /finish 409 while /observe answers."""
+    J = "joint_position"
+    _, spec, _ = t.get("/spec", label="spec")
+    dim = int(spec["action_types"][J]["dim"])
+    hz = spec.get("control_hz") or 1.0 / spec["control_dt"]
+    check(spec.get("budget", {}).get("steps") in (30, None), f"{t.name} spec budget.steps {spec.get('budget')}")
+    _, m, _ = t.post_json("/submit", {"type": J, "actions": [[0.01] + [0.0] * (dim - 1)] * 10, "video": "none"},
+                          label="submit 10 rows")
+    check(m.get("step_limit") == 30 and m.get("steps_left") == 20 and not m["done"], f"{t.name} steps_left {m}")
+    _, s, _ = t.get("/status", label="status")
+    check(s.get("step_limit") == 30 and s.get("steps_left") == 20, f"{t.name} status steps_left {s}")
+    _, m, _ = t.post_json("/submit", {"type": J, "interpolate": "hold", "seconds": 2.0, "video": "none"},
+                          label="hold chunk past the step limit")
+    check(m.get("hold") is True and m["done"] and m["reason"] == "step_limit" and m.get("steps_left") == 0
+          and abs(m["duration_s"] - 20 / hz) < 1e-6 and m.get("executed_rows") == 0,
+          f"{t.name} the hold chunk cut at the step limit: {m}")
+    t.post_json("/submit", {"type": J, "actions": [[0.0] * dim], "video": "none"}, expect=(409,),
+                label="submit after the step limit")
+    t.post_json("/finish", {}, expect=(409,), label="finish after the step limit")
+    _, m, _ = t.post_json("/observe", {"last_s": 0.5}, label="observe after the step limit")
+    check(m["done"] and m["reason"] == "step_limit" and m.get("steps_left") == 0, f"{t.name} observe after the limit {m}")
+
+
+def gave_up(t: Target) -> None:
+    """A service that gave up on the trial (RCB_TOY_REFUSE): every endpoint is a 409 with gave_up."""
+    for method, path, body in (("GET", "/spec", None), ("GET", "/status", None), ("POST", "/observe", {}),
+                               ("POST", "/submit", {"type": "joint_position", "actions": [[0, 0, 0]]}),
+                               ("POST", "/finish", {}), ("POST", "/kinematics", {"op": "fk", "q": [0, 0, 0]})):
+        if method == "GET":
+            _, b, _ = t.get(path, expect=(409,), label=f"{path} after a give-up")
+        else:
+            _, b, _ = t.post_json(path, body, expect=(409,), label=f"{path} after a give-up")
+        check(b.get("gave_up") is True and b.get("reason"), f"{t.name} {path}: {b}")
+
+
+def stage(work: pathlib.Path, std: pathlib.Path, name: str, layer: str, agent_end: bool) -> pathlib.Path:
+    """toy_server.py staged with a layer (2.2: rcb_limited.py; 2.4: v2_4/rcb_limited.py) and rcb1.py; agent_end: made
+    an agent-ended adapter with agent_end_selftest.py's PATCH (the way an adapter uses rcb_agent_end.py), which is
+    staged too. Returns the directory."""
+    d = work / f"stage_{name}"
+    d.mkdir(exist_ok=True)
+    src = (std / "toy_server.py").read_text()
+    if agent_end:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("agent_end_selftest", std / "agent_end/agent_end_selftest.py")
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        for old, new in mod.PATCH:
+            if src.count(old) != 1:
+                raise RuntimeError(f"toy_server.py and agent_end_selftest.PATCH disagree ({old[:60]!r})")
+            src = src.replace(old, new)
+        shutil.copy2(std / "agent_end/rcb_agent_end.py", d / "rcb_agent_end.py")
+    (d / "toy_server.py").write_text(src)
+    shutil.copy2(std / layer, d / "rcb_limited.py")
+    shutil.copy2(std / "rcb1.py", d / "rcb1.py")
+    (d / "launch_toy.py").write_text(LAUNCH_24)
+    return d
 
 
 LAUNCH_24 = """import os, runpy, sys, time
@@ -551,11 +719,22 @@ runpy.run_path(os.path.join(here, "toy_server.py"), run_name="__main__")
 
 
 # ---------------------------------------------------------------------------------------------- main
+# the toy_server.py targets: (layer file, agent-ended, extra environment, scenario)
+TOYS = {"2.2": ("rcb_limited.py", False, {}, layer_22),
+        "2.2-ae": ("rcb_limited.py", True, {}, agent_ended_22),
+        "2.2-limit": ("rcb_limited.py", True, {"RCB_STEP_LIMIT": "30"}, step_limit),
+        "2.2-gaveup": ("rcb_limited.py", False, {"RCB_TOY_REFUSE": "the contract check's refusal"}, gave_up),   # (+ RCB_PORT)
+        "2.4": ("v2_4/rcb_limited.py", False, {}, layer_24),
+        "2.4-ae": ("v2_4/rcb_limited.py", True, {}, agent_ended_24),
+        "2.4-limit": ("v2_4/rcb_limited.py", True, {"RCB_STEP_LIMIT": "30"}, step_limit)}
+TARGETS = ("2.1", "2.1-limit", "2.3", "2.2", "2.2-ae", "2.2-limit", "2.2-gaveup", "2.4", "2.4-ae", "2.4-limit")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--repo", default=str(HERE.parent), help="repository root (default: this script's parent's parent)")
     ap.add_argument("--spec", default=None, help="the OpenAPI file (default: <repo>/docs/protocol/eai-standard-3.0.openapi.yaml)")
-    ap.add_argument("--targets", default="2.1,2.3,2.2,2.4")
+    ap.add_argument("--targets", default=",".join(TARGETS))
     ap.add_argument("--work", default=None, help="scratch directory (default: a new temporary one, removed at the end)")
     ap.add_argument("--keep", action="store_true", help="keep the scratch directory")
     a = ap.parse_args()
@@ -585,24 +764,22 @@ def main() -> int:
             data = work / f"data_{name}"
             shutil.rmtree(data, ignore_errors=True)            # a fresh trial: never an episode a previous run ended
             env = {**base_env, "RCB_DATA": str(data)}
-            if name in ("2.1", "2.3"):
+            if name in ("2.1", "2.3", "2.1-limit"):
                 env.update(RCB_AGENT_END="1", RCB_RESET_BUDGET="1")
-                argv = [py, str(toy), str(port)] + (["--standard"] if name == "2.1" else [])
-                run = standard_21 if name == "2.1" else realtime_23
-            elif name == "2.2":
-                env.update(RCB_TOY_PORT=str(port), PYTHONPATH=str(std))
-                argv, run = [py, str(std / "toy_server.py")], layer_22
-            elif name == "2.4":
-                # The repository has no runnable 2.4 toy service: toy_server.py (the 2.2 toy) is staged unchanged next to
-                # v2_4/rcb_limited.py, and a launcher gives the 2.4 module the one helper the toy needs that it lacks
-                # (agent_time, the 2.2 layer's first-request clock).
-                stage = work / "stage_2.4"
-                stage.mkdir(exist_ok=True)
-                for src in (std / "toy_server.py", std / "v2_4/rcb_limited.py", std / "rcb1.py"):
-                    shutil.copy2(src, stage / src.name)
-                (stage / "launch_toy_24.py").write_text(LAUNCH_24)
-                env.update(RCB_TOY_PORT=str(port))
-                argv, run = [py, str(stage / "launch_toy_24.py")], layer_24
+                if name == "2.1-limit":
+                    env.update(RCB_STEP_LIMIT="30")
+                argv = [py, str(toy), str(port)] + (["--standard"] if name != "2.3" else [])
+                run = {"2.1": standard_21, "2.3": realtime_23, "2.1-limit": step_limit}[name]
+            elif name in TOYS:
+                # toy_server.py (the 2.2 toy) staged next to the layer (v2_4/rcb_limited.py for 2.4: the repository
+                # has no runnable 2.4 toy service), the agent-ended targets with rcb_agent_end.py; a launcher gives the
+                # 2.4 module the one helper the toy needs that it lacks (agent_time, the 2.2 layer's first-request clock)
+                layer, agent_end, extra, run = TOYS[name]
+                d = stage(work, std, name, layer, agent_end)
+                env.update(RCB_TOY_PORT=str(port), RCB_PORT=str(port), **extra)   # RCB_PORT: the give-up's refusal
+                if agent_end:
+                    env.update(RCB_AGENT_END="1")
+                argv = [py, str(d / "launch_toy.py")]
             else:
                 check(False, f"unknown target {name}")
                 continue
