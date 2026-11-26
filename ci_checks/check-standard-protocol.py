@@ -29,7 +29,7 @@ from pathlib import Path
 import numpy as np
 import requests
 
-SPEC_KEYS_REQ = {"protocol", "protocol_compat", "simulator", "robot", "task_text", "control_hz", "max_chunk_s", "max_watch_s",
+SPEC_KEYS_REQ = {"protocol", "protocol_compat", "simulator", "robot", "task_text", "control_hz", "max_chunk_s",
                  "cameras", "default_cameras", "action_types", "proprio_layout", "proprio_groups", "static", "world", "budget",
                  "robot_spec", "kinematics", "depth"}
 SPEC_KEYS_OK = SPEC_KEYS_REQ | {"physics_substeps", "physics_hz", "on_service_error", "max_call_wall_s",   # + crash recovery

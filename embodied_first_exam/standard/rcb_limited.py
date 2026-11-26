@@ -996,7 +996,8 @@ class StandardRing:
         return self.hz / self.every if self.hz > 0 else CAMERA_FPS
 
     def spec(self) -> dict:
-        return {"cameras": list(self.cams), "fps": round(self.fps, 3), "buffer_s": LOOKBACK_S, "records": "during /submit"}
+        return {"cameras": list(self.cams), "fps": round(self.fps, 3), "buffer_s": LOOKBACK_S, "records": "during /submit",
+                "depth": []}                 # RGB only: depth comes with the current frame (last_s = 0)
 
     def clear(self) -> None:
         self.frames = []
@@ -1079,17 +1080,14 @@ def hold_request(meta: dict, parts: dict, spec: dict):
     if s is None:
         raise ValueError(f"seconds must be a finite number (got {sec!r:.60})")
     if rows:
-        if s:
-            raise ValueError("a hold chunk has no rows: send rows, or {\"type\": <type>, \"interpolate\": \"hold\", "
-                             "\"seconds\": n} without them")
-        return None
+        raise ValueError("a chunk with rows takes no `seconds` (its rows and dt say how long it runs); a hold chunk "
+                         '{"type": <type>, "interpolate": "hold", "seconds": n} has no rows')
     if meta.get("interpolate") != "hold":
         raise ValueError('a chunk without rows is a hold chunk: {"type": <type>, "interpolate": "hold", "seconds": n}')
     types = _spec_types(spec)
     if meta.get("type") not in types:
         raise ValueError(f"type must be one of {sorted(types)}")
-    caps = [c for c in (_num(spec.get("max_chunk_s")), _num(spec.get("max_watch_s"))) if c]
-    cap = min(caps) if caps else 30.0
+    cap = _num(spec.get("max_chunk_s")) or 10.0
     if not 0.0 < s <= cap + 1e-9:
         raise ValueError(f"seconds must be in (0, {cap:g}] (max_chunk_s)")
     hz = _num(spec.get("control_hz")) or 0.0
@@ -1130,7 +1128,9 @@ def _observe_view(svc, meta: dict, last_s: float):
         raise ValueError(f"unknown camera(s) {unknown}; the recorder records {RING.cams}")
     dmode = depth_mode(meta)
     if dmode in ("frames", "legacy"):
-        raise ValueError("the recorder keeps no depth frames: ask for depth with last_s = 0 (depth: \"last\")")
+        raise ValueError("depth with last_s > 0: the recorder keeps no depth for these cameras (spec "
+                         "timing.recorder.depth lists the cameras it keeps depth for): ask for depth with last_s = 0 "
+                         "(depth: \"last\")")
     video = meta.get("video", "frames")
     if video not in VIDEO_MODES:
         raise ValueError(f"video must be one of {list(VIDEO_MODES)}")
@@ -1166,13 +1166,29 @@ def _observe_view(svc, meta: dict, last_s: float):
     return {**out, "last_s": round((sel[-1][0] - sel[0][0]) / hz, 4), "frame_step": int(sel[-1][0])}, parts
 
 
+IMAGE_PARTS = ("last/", "frames/", "video/")
+
+
+def with_frame_step(out: dict, blobs: list) -> tuple[dict, list]:
+    """meta.frame_step (eai-standard/3.0) on every answer that carries images: the control step of its newest image (the
+    last value of the frame_step part, else the answer's control_steps)."""
+    if "frame_step" in out or not any(str(b[0]).startswith(IMAGE_PARTS) for b in blobs):
+        return out, blobs
+    for b in blobs:
+        if b[0] == "frame_step" and b[1] == "array" and b[3].get("shape") and b[3]["shape"][0] > 0:
+            return {**out, "frame_step": int(np.frombuffer(b[2], dtype=b[3]["dtype"])[-1])}, blobs
+    cs = out.get("control_steps", out.get("step"))
+    return ({**out, "frame_step": int(cs)} if isinstance(cs, (int, float)) and not isinstance(cs, bool) else out), blobs
+
+
 def standard_call(svc, path: str, meta: dict, parts: dict, ep, rows0: int, rows_of: Callable):
     """One /submit or /observe under eai-standard/3.0, around the adapter's submit(meta, A) and observe(meta):
     - /observe never lets time pass: `seconds` > 0 is a 400 (OBSERVE_SECONDS_GONE); last_s = 0 is the adapter's current
       frame, last_s = n the ring's last n seconds (_observe_view);
     - a rows-free hold chunk runs the adapter's own hold (its observe watch, `seconds` = n: the command in force held for
       n seconds) and answers as a submit: chunk_id, type, hold, executed_rows 0, duration_s;
-    - every submit answer adds duration_s (control steps run x control_dt) and planned_duration_s (rows x dt).
+    - every submit answer adds duration_s (control steps run x control_dt) and planned_duration_s (rows x dt);
+    - every answer with images adds meta.frame_step (with_frame_step).
     rows_of(meta, parts) -> the rows of an ordinary chunk (the layer's own parsing; ValueError -> 400)."""
     spec = svc.spec
     if path == "/observe":
@@ -1188,9 +1204,9 @@ def standard_call(svc, path: str, meta: dict, parts: dict, ep, rows0: int, rows_
         if last_s is None or last_s < 0:
             raise ValueError("last_s must be a finite number of seconds >= 0")
         if last_s > 0:
-            return _observe_view(svc, meta, last_s)
+            return with_frame_step(*_observe_view(svc, meta, last_s))
         out, blobs = svc.observe({k: v for k, v in meta.items() if k != "last_s"})
-        return ({**out, "last_s": 0.0} if ls is not None else out), blobs
+        return with_frame_step({**out, "last_s": 0.0} if ls is not None else out, blobs)
     hold = hold_request(meta, parts, spec)
     RING.active = True
     try:
@@ -1208,14 +1224,14 @@ def standard_call(svc, path: str, meta: dict, parts: dict, ep, rows0: int, rows_
             out.update({"chunk_id": chunk if chunk is not None else out.get("calls"), "type": typ, "hold": True,
                         "executed_rows": 0, **({"control_steps_chunk": steps} if steps is not None else {}),
                         **_durations(spec, out, steps, s)})
-            return out, blobs
+            return with_frame_step(out, blobs)
         A = rows_of(meta, parts)
         out, blobs = svc.submit(meta, A)
         hz = _num(spec.get("control_hz")) or 0.0
         dt = _num(meta.get("dt")) or (1.0 / hz if hz > 0 else None)
         n = int(A.shape[0]) if getattr(A, "ndim", 0) >= 1 else 0
         steps = _steps_ran(ep, rows0, out, "control_steps_chunk")
-        return {**out, **_durations(spec, out, steps, n * dt if dt else None)}, blobs
+        return with_frame_step({**out, **_durations(spec, out, steps, n * dt if dt else None)}, blobs)
     finally:
         RING.active = False
 

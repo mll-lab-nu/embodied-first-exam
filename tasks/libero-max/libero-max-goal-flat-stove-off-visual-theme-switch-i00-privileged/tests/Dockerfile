@@ -2,7 +2,7 @@
 # only the declared artifacts (/app/output/) arrive from the agent.
 FROM ghcr.io/mll-lab-nu/efe:libero-max-0.1.1
 COPY test.sh instance.json /tests/
-COPY --from=ghcr.io/mll-lab-nu/efe:libero-max-files-0.5.0@sha256:5fce3c4cd840e71f65f73072e745683724ebe7cb741374b8d4f0ba846bb20374 /privileged/environment/lmx_tool.py /privileged/tests/grade.py /tests/
+COPY --from=ghcr.io/mll-lab-nu/efe:libero-max-files-0.5.0@sha256:eb345a0248bcb300114dacc99c3c3abfe037c7adc8b45f568b68160927766681 /privileged/environment/lmx_tool.py /privileged/tests/grade.py /tests/
 RUN chmod +x /tests/test.sh && mkdir -p /app/output /logs/verifier
 ENV PYTHONPATH=/tests:/opt/libero-max/overlay:/opt/libero-max/src
 WORKDIR /tests

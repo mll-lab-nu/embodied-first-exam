@@ -11,7 +11,6 @@ Calls (each is one HTTP request; every answer that carries data is an RCB1 frame
                                              "ee_delta" or "ee_pose": dim, layout (channel order), lower/upper, units,
                                              kinds (delta | absolute | grip | mode), parts, frame, semantics, rows;
                                              "not_yet" lists the types this robot does not offer), "max_chunk_s",
-                                             "max_watch_s",
                                              "max_control_steps" (null: no step limit), "max_video_fps",
                                              "max_frames_per_call", "cameras" {name: rgb, depth, size [W, H]},
                                              "proprio_layout", "frames" (the world frame), "task_text", "budget"

@@ -61,7 +61,7 @@ EP.scene_built()
 LAYOUT = [f"j{i}" for i in range(N)]
 SPEC = {
     "protocol": L.PROTOCOL, "protocol_compat": L.COMPAT, "simulator": "toy (numpy)", "robot": "toy-3dof", "task_text": "push the block to x > 0.9",
-    "control_hz": CTRL_HZ, "physics_substeps": 1, "max_chunk_s": 10.0, "max_watch_s": 30.0,
+    "control_hz": CTRL_HZ, "physics_substeps": 1, "max_chunk_s": 10.0,
     "cameras": {"top": {"rgb": True, "depth": True, "mounted": "static", "resolution": [8, 8], "intrinsic_cv": [[8, 0, 4], [0, 8, 4], [0, 0, 1]],
                         "mount": {"type": "static", "extrinsic_cv": np.eye(4)[:3].tolist(), "cam2world_gl": np.eye(4).tolist()}}},
     "default_cameras": ["top"],

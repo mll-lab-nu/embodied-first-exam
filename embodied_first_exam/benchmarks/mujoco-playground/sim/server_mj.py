@@ -45,7 +45,7 @@ PROTOCOL = "eai-standard/2.1"
 DATA = os.environ.get("RCB_DATA", "/data"); os.makedirs(os.path.join(DATA, "calls"), exist_ok=True)   # RCB_DATA / RCB_PORT: test hooks (never set in tasks)
 TOOL = importlib.import_module(os.environ.get("RCB_TOOL", "rcb_dtb"))
 INSTANCE = os.environ.get("RCB_INSTANCE", os.path.join(os.path.dirname(__file__), "instance.json"))
-MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10")); MAX_WATCH_S = float(os.environ.get("RCB_MAX_WATCH_S", "30"))
+MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10"))
 # Episode cap in control steps (0 = none). Set where nothing else ends the episode, e.g. DexToolBench without its per-goal
 # time limit (the standard twins: RCB_DTB_GOAL_TIMEOUT_S=0, RCB_MAX_CONTROL_STEPS=360000 = 100 min of robot time).
 MAX_CONTROL_STEPS = int(os.environ.get("RCB_MAX_CONTROL_STEPS", "0"))
@@ -383,7 +383,7 @@ def task_info() -> dict:
 
 PROPRIO_LAYOUT = [f"{n}_pos" for n in NAMES] + [f"{n}_vel" for n in NAMES] + [f"{n}_target" for n in NAMES]
 SPEC = {"protocol": PROTOCOL, "simulator": "mujoco", "task_text": S.inst.get("text", ""), "control_dt": CTRL_DT,
-        "max_chunk_s": MAX_CHUNK_S, "max_watch_s": MAX_WATCH_S, "max_control_steps": MAX_CONTROL_STEPS or None,
+        "max_chunk_s": MAX_CHUNK_S, "max_control_steps": MAX_CONTROL_STEPS or None,
         "max_video_fps": MAX_VIDEO_FPS, "max_frames_per_call": MAX_FRAMES_PER_CALL,
         "on_service_error": ("if a call fails with a connection error or 5xx, the service may have crashed and resumed the same "
                              "episode (never a reset): the state is the one after the last call that completed on the service, "

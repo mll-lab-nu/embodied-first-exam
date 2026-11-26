@@ -55,7 +55,7 @@ PROTOCOL = L.PROTOCOL
 DATA = os.environ.get("RCB_DATA", "/data"); os.makedirs(DATA, exist_ok=True); os.makedirs(os.path.join(DATA, "calls"), exist_ok=True)
 TASK = os.environ.get("RCB_TASK", "cube_pick_place"); INSTANCE = os.environ.get("RCB_INSTANCE", os.path.join(os.path.dirname(__file__), "instance.json"))
 OBS_CALIBRATION = os.environ.get("RCB_OBS_CALIBRATION", "1") == "1"
-MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10")); MAX_WATCH_S = float(os.environ.get("RCB_MAX_WATCH_S", "30"))
+MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10"))
 LOCK = threading.Lock()
 E = {"ready": False, "step": 0, "calls": 0, "done": False, "reason": None, "success": False, "t0": time.time(), "error": None,
      "t_first": None}   # t_first: the agent's first request to this service (its clock starts there; main's #163 rule)
@@ -355,7 +355,7 @@ SPEC = {
     "gripper_space": S.gripper_space,
     "instance_binding_id": (S.runtime_binding or {}).get("binding_id"),
     "protocol": PROTOCOL, "protocol_compat": L.COMPAT, "simulator": f"topogym ({S.engine_name(True)}, Nyx RGB)", "robot": R_SPEC["name"],
-    "task_text": S.spec["text"], "control_hz": CTRL_HZ, "physics_substeps": SUBSTEPS, "max_chunk_s": MAX_CHUNK_S, "max_watch_s": MAX_WATCH_S,
+    "task_text": S.spec["text"], "control_hz": CTRL_HZ, "physics_substeps": SUBSTEPS, "max_chunk_s": MAX_CHUNK_S,
     "max_frames_per_call": MAX_FRAMES,
     "cameras": {c: {"rgb": True, "depth": True, "mounted": MOUNT[c], "resolution": list(CAM_INFO[c]["image_size"]), "calibration_in_obs": OBS_CALIBRATION,
                     "intrinsic_cv": CAM_INFO[c]["intrinsic_cv"], "mount": camera_to_robot(CAM_INFO[c]["mount"]), "depth_range_m": CAM_INFO[c]["depth_range_m"]} for c in CAMS},
@@ -720,7 +720,7 @@ def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
 def do_observe(meta: dict) -> tuple[dict, list]:
     cams, fps, _ = request_fields(meta)
     seconds = number(meta, "seconds", 0); video = meta.get("video", "frames")
-    if seconds < 0 or seconds > MAX_WATCH_S: raise ValueError(f"seconds must be in [0, {MAX_WATCH_S}]")
+    if seconds < 0 or seconds > MAX_CHUNK_S: raise ValueError(f"seconds must be in [0, {MAX_CHUNK_S}] (max_chunk_s)")
     if video not in ("mp4", "frames", "both", "none"): raise ValueError("video must be mp4|frames|both|none")
     watch = seconds > 0 and not E["done"]
     frames_ok(cams, int(round(seconds * CTRL_HZ)) if watch else 0, fps, meta)

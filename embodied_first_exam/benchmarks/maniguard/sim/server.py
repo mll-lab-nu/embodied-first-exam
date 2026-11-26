@@ -50,7 +50,7 @@ os.makedirs(DATA, exist_ok=True); os.makedirs(os.path.join(DATA, "calls"), exist
 TASK = os.environ.get("RCB_TASK", "jar_transport/task_0014"); INSTANCE = os.environ.get("RCB_INSTANCE", os.path.join(os.path.dirname(__file__), "instance"))
 OBS_CALIBRATION = os.environ.get("RCB_OBS_CALIBRATION", "1") == "1"
 CTRL_HZ = 20; SUBSTEPS = 6; DIM = 8
-MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10")); MAX_WATCH_S = float(os.environ.get("RCB_MAX_WATCH_S", "30"))
+MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10"))
 LOCK = threading.Lock()
 E = {"ready": False, "step": 0, "calls": 0, "done": False, "reason": None, "success": False, "t0": time.time(), "error": None}
 EP = L.Episode(DATA, dim=DIM, resume="approx", persist=AE.persist())
@@ -152,9 +152,9 @@ if not S.instance_matches:
     EP.give_up(f"instance_mismatch: the rebuilt scene (state {S.instance_sha}) is not the frozen instance and its poses differ",
                infra=True)   # never returns
 CAMS = S.camera_names()                 # cam_opposite, cam_left, cam_right, cam_left_shoulder, wrist
-# /spec max_frames_per_call (PROTOCOL §3 "Images per call"): the longest /observe (max_watch_s at the control rate,
+# /spec max_frames_per_call (PROTOCOL §3 "Images per call"): the longest /observe (a 30 s window at the control rate,
 # + the first and the last frame) with every camera and its depth
-BUDGET_WATCH_S = 30.0   # the budget is a 30 s watch's whatever RCB_MAX_WATCH_S is: the sim memory cap and the instruction use it
+BUDGET_WATCH_S = 30.0   # the budget is a 30 s watch's whatever max_chunk_s is: the sim memory cap and the instruction use it
 MAX_FRAMES = (int(round(BUDGET_WATCH_S * CTRL_HZ)) + 2) * 2 * len(CAMS)
 VIDEO_CAMS = [c for c in ("cam_left", M.WRIST) if c in CAMS] or CAMS[:1]   # the replay video's view (Session.start_video)
 S.enable_depth(CAMS)                    # z-depth rendered alongside RGB from now on (attached before the episode)
@@ -195,7 +195,7 @@ def cam_spec(c: str) -> dict:
 SPEC = {
     "protocol": PROTOCOL, "protocol_compat": L.COMPAT, "simulator": "maniguard (BEHAVIOR-1K 3.7.2: OmniGibson on Isaac Sim 4.5)",
     "robot": "franka-panda-longfinger", "task_text": os.environ.get("RCB_TASK_TEXT", S.prompt),
-    "control_hz": CTRL_HZ, "physics_substeps": SUBSTEPS, "max_chunk_s": MAX_CHUNK_S, "max_watch_s": MAX_WATCH_S, "max_frames_per_call": MAX_FRAMES,
+    "control_hz": CTRL_HZ, "physics_substeps": SUBSTEPS, "max_chunk_s": MAX_CHUNK_S, "max_frames_per_call": MAX_FRAMES,
     "cameras": {c: cam_spec(c) for c in CAMS},
     "default_cameras": [c for c in ("cam_left", "wrist") if c in CAMS] or list(CAMS),
     "action_types": {
@@ -429,7 +429,7 @@ def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
 def do_observe(meta: dict) -> tuple[dict, list]:
     cams = cameras_of(meta)             # every check before anything moves, as in do_submit
     seconds = number(meta, "seconds", 0.0); fps = video_fps(meta); video = choice(meta, "video", "frames", ("mp4", "frames", "both", "none"))
-    if seconds < 0 or seconds > MAX_WATCH_S: raise ValueError(f"seconds must be in [0, {MAX_WATCH_S}]")
+    if seconds < 0 or seconds > MAX_CHUNK_S: raise ValueError(f"seconds must be in [0, {MAX_CHUNK_S}] (max_chunk_s)")
     frames_ok(cams, int(round(seconds * CTRL_HZ)), fps, meta)
     rec = recorder(cams, fps, meta); before = ctrl_steps()
     if seconds > 0 and not E["done"]:

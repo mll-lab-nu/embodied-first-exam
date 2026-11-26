@@ -58,11 +58,13 @@ and timing; `game rules` the complete rules):
   per robot.
 
 ### MCP tools
-- The same seat is also an MCP server, `efe-robot` (in your tool list), with one tool per `game` command: `spec`,
-  `start`, `observe`, `act`, `wait`, `ready`. Each result is the service's reply; images are written as files under
-  `/app/obs/`.
-- A call still running after 45 s returns `pending` with an `operation` id; `wait(operation=id)` collects it.
-- The `game` command and the tools play the same seat in the same match; use either, or both.
+- The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
+  `observe`, `submit`, `start`, `ready`. A tool takes its endpoint's request fields (any other field in `fields`) and
+  returns the service's reply `meta` unchanged; images are written as files under `/app/obs/` (`.png`, `.npy`) and the
+  result lists them. There is no `finish` tool: the match's rules end it.
+- `observe` returns at once; `submit` answers at once, as the endpoint does.
+- A call still running after 45 s returns `pending` with an `operation` id; `observe(operation=id)` collects its reply.
+- The client, the `game` command and the tools play the same seat in the same match; use any of them.
 
 ### Actions
 - You drive your robot with actuator-level (joint-level) commands, `joints` and `toss`, sent with `game act`

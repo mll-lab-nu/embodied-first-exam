@@ -266,7 +266,7 @@ def case_standard_3_0_observe_hold_ring():
         st["observe_meta"] = dict(meta)
         k, parts = run(int(round(float(meta.get("seconds") or 0) * 20)))
         return {"ok": True, "obs_id": st["calls"], "calls": st["calls"], "control_steps": st["step"], "control_steps_watch": k}, parts
-    spec = {"kinematics": {}, "control_hz": 20, "max_chunk_s": 10.0, "max_watch_s": 30.0, "cameras": {"top": {}},
+    spec = {"kinematics": {}, "control_hz": 20, "max_chunk_s": 10.0, "cameras": {"top": {}},
             "default_cameras": ["top"], "action_types": {"joint_position": {"dim": 2}}}
     svc = L.Service(spec=spec, lock=threading.Lock(), state={"done": False}, submit=submit, observe=observe,
                     kinematics=lambda req: {"ok": True}, status=lambda: {}, on_submit_error=lambda exc: None, log=lambda ev: None)

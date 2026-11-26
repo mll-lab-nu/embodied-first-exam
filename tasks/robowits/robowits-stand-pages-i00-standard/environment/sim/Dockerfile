@@ -3,12 +3,12 @@
 # FILES.json, scripts/files_image.py). .dockerignore keeps the build's own two files out of /srv.
 FROM ghcr.io/mll-lab-nu/efe:robowits-0.1.1
 COPY . /srv/
-COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.5.0@sha256:a6c2ac2ede9fe2c1744f9c6e67c6a49de9c5a8b8c2c9ae4f0d774b7dd72662ff \
+COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.5.0@sha256:ff602baf1ef852d21ecf0152d94cf210c8b691a5bdaa88d00dc381f6150b98cb \
      /rcb1.py \
      /rcb_limited.py \
      /run.sh \
      /srv/
-COPY --from=ghcr.io/mll-lab-nu/efe:robowits-files-0.5.0@sha256:8aa1b1ffe3a16aeabdd390a99dfcbddc912c9e19417000a75392b7d0792eb8cb \
+COPY --from=ghcr.io/mll-lab-nu/efe:robowits-files-0.5.0@sha256:9fd037f7a00a78a598499f74e8e05f352ec64a53cd36581949c9eea9f470f154 \
      /privileged/tests/rcb_robowits.py \
      /sim/server.py \
      /srv/

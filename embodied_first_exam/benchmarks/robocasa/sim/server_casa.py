@@ -61,7 +61,6 @@ os.makedirs(os.path.join(DATA, "calls"), exist_ok=True)
 TOOL = importlib.import_module(os.environ.get("RCB_TOOL", "casa_tool"))
 INSTANCE = os.environ.get("RCB_INSTANCE", os.path.join(os.path.dirname(__file__), "instance.npz"))
 MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10"))
-MAX_WATCH_S = float(os.environ.get("RCB_MAX_WATCH_S", "30"))
 MAX_CONTROL_STEPS = int(os.environ.get("RCB_MAX_CONTROL_STEPS", "0"))  # technical episode cap (0 = none)
 MAX_VIDEO_FPS = 30
 MAX_FRAMES_PER_CALL = 3000  # frames x cameras per response: bounds the service's memory
@@ -356,7 +355,6 @@ SPEC = {
     "task_text": S.inst.get("text", ""),
     "control_dt": CTRL_DT,
     "max_chunk_s": MAX_CHUNK_S,
-    "max_watch_s": MAX_WATCH_S,
     "max_control_steps": MAX_CONTROL_STEPS or None,
     "max_video_fps": MAX_VIDEO_FPS,
     "max_frames_per_call": MAX_FRAMES_PER_CALL,

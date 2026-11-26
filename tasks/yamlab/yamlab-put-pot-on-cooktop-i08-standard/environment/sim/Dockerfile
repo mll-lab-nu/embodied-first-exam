@@ -87,13 +87,13 @@ WORKDIR /app
 # their paths under /srv the files it shares with other tasks, from pinned files-only images (images/<name>/
 # FILES.json, scripts/files_image.py). .dockerignore keeps the build's own two files out of /srv.
 COPY . /srv/
-COPY --from=ghcr.io/mll-lab-nu/efe:yamlab-files-0.7.0@sha256:7a8dfddd636bd6c2eccdfd622b10a16ceda585198b5a3d2977e542317a740f22 \
+COPY --from=ghcr.io/mll-lab-nu/efe:yamlab-files-0.7.0@sha256:c1988349ac8e0080689f28d4ebfba9e31b69c06707ecddaa38deed8e4baa711d \
      /sim/finalize.sh \
      /sim/live_video.py \
      /privileged/environment/rcb_yamlab.py \
      /sim/server.py \
      /srv/
-COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.5.0@sha256:a6c2ac2ede9fe2c1744f9c6e67c6a49de9c5a8b8c2c9ae4f0d774b7dd72662ff \
+COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.5.0@sha256:ff602baf1ef852d21ecf0152d94cf210c8b691a5bdaa88d00dc381f6150b98cb \
      /rcb1.py \
      /rcb_limited.py \
      /run.sh \

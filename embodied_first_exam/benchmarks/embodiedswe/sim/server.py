@@ -44,7 +44,7 @@ TASK_FILE = os.environ.get("RCB_TASK_FILE", os.path.join(SRV, "task.json")); TAS
 PRESET = TASK["preset"]
 INSTANCE = os.environ.get("RCB_INSTANCE", os.path.join(os.path.dirname(TASK_FILE), "instance.json"))
 GRADER = os.path.join(os.path.dirname(TASK_FILE), TASK["grader"])
-MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10")); MAX_WATCH_S = float(os.environ.get("RCB_MAX_WATCH_S", "30"))
+MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10"))
 # images per call (cameras x frames, per-frame depth counted again): 240 RGB frames of 640x480 are 221 MB, so the largest
 # legal response stays under the shared layer's 256 MiB body limit (rcb_limited.MAX_RESP) with its mp4s, and nothing is dropped
 MAX_FRAMES = int(os.environ.get("RCB_MAX_FRAMES_PER_CALL", "240"))
@@ -129,7 +129,7 @@ CAMS = [v["name"] for v in CAMS_OBJ.views]
 # 30 s watch with raw frames, fits max_frames_per_call: every call legal at the defaults is answered in full
 MOUNTED_CAMS = [v["name"] for v in CAMS_OBJ.views if v.get("link_prim")]
 DEFAULT_CAMS = [next(c for c in ("front", "wide", "overview") if c in CAMS)] + MOUNTED_CAMS
-DEFAULT_FPS = next((f for f in range(5, 0, -1) if len(DEFAULT_CAMS) * (int(round(MAX_WATCH_S * CTRL_HZ))
+DEFAULT_FPS = next((f for f in range(5, 0, -1) if len(DEFAULT_CAMS) * (int(round(30.0 * CTRL_HZ))
                     // max(1, int(round(CTRL_HZ / f))) + 2) <= MAX_FRAMES), 0)
 if not DEFAULT_FPS:
     raise RuntimeError(f"no default video_fps fits max_frames_per_call = {MAX_FRAMES} with the cameras {DEFAULT_CAMS}")
@@ -187,7 +187,7 @@ STEP_S = 1.0 / CTRL_HZ
 SPEC = {
     "protocol": PROTOCOL, "protocol_compat": list(L.COMPAT), "simulator": "embodiedswe (robobench on Isaac Lab 2.3.2 / Isaac Sim 5.1, GPU PhysX)",
     "robot": RIG.robot_spec()["name"], "task_text": TASK["text"] + ("\n\n" + TASK["success"] if TASK.get("success") else ""), "control_hz": CTRL_HZ, "physics_substeps": SUBSTEPS, "physics_hz": 1.0 / env.dt,
-    "max_chunk_s": MAX_CHUNK_S, "max_watch_s": MAX_WATCH_S, "max_frames_per_call": MAX_FRAMES,
+    "max_chunk_s": MAX_CHUNK_S, "max_frames_per_call": MAX_FRAMES,
     "cameras": {c: {"rgb": True, "depth": True, "mounted": v["what"], "resolution": [X.W, X.H], "calibration_in_obs": True,
                     "intrinsic_cv": CAM0[c]["intrinsic_cv"], "mount": CALIB[c]["mount"], "depth_range_m": [0.01, 100.0]}
                 for c, v in ((v["name"], v) for v in CAMS_OBJ.views)},
@@ -539,8 +539,8 @@ def run_submit(A, dt, k, interp, cams, fps, video, note, depth) -> tuple[dict, l
 def parse_observe(meta: dict) -> tuple:
     cams = cameras(meta); seconds = number(meta, "seconds", 0.0); fps = video_fps(meta)
     video = choice(meta, "video", "frames", ("mp4", "frames", "both", "none")); depth = L.depth_mode(meta)
-    if seconds < 0 or seconds > MAX_WATCH_S:
-        raise ValueError(f"seconds must be in [0, {MAX_WATCH_S}]")
+    if seconds < 0 or seconds > MAX_CHUNK_S:
+        raise ValueError(f"seconds must be in [0, {MAX_CHUNK_S}] (max_chunk_s)")
     steps = int(round(seconds * CTRL_HZ))
     frames_ok(cams, steps, fps, depth, video)
     return cams, seconds, steps, fps, video, depth

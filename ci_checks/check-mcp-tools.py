@@ -12,7 +12,7 @@ tool.
      manifest.json what inject.manifest gives), the Dockerfile line, the task.toml entry and `### MCP tools` in Robot
      Interface; a task inject.EXCEPTIONS names (RoboEngineer, the matchlow matches) has none of them. A manifest's
      tools: spec, observe, submit and finish, reset where the task declares a reset budget, kinematics where its
-     service serves it.
+     service serves it; a match (kind eo-match): spec, observe, submit and the extension's calls, no finish.
 
     python3 ci_checks/check-mcp-tools.py [task dirs]      # default: every task
 Standard library only.
@@ -142,6 +142,10 @@ def check_task(task: Path) -> list[str]:
             errs.append(f"{task.name}: a reset tool {'without' if 'reset' in t else 'missing for'} a reset budget")
         if "status" in t or "operations" in t:
             errs.append(f"{task.name}: no status or operations tool (inject.NO_TOOL)")
+    elif m.get("kind") == "eo-match":
+        if t[:3] != ["spec", "observe", "submit"] or set(t) & {"finish", "reset", "kinematics", "act", "wait", "status"}:
+            errs.append(f"{task.name}: tools {t}: a match has spec, observe, submit and its extension's calls "
+                        "(start, ready; say, team), no finish")
     return errs
 
 

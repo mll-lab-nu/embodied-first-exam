@@ -47,7 +47,7 @@ DATA = os.environ.get("RCB_DATA", "/data"); os.makedirs(DATA, exist_ok=True); os
 TASK = os.environ.get("RCB_TASK", "put_pot_on_cooktop"); INSTANCE = os.environ.get("RCB_INSTANCE", os.path.join(os.path.dirname(__file__), "instance.json"))
 OBS_CALIBRATION = os.environ.get("RCB_OBS_CALIBRATION", "1") == "1"
 CTRL_HZ = 30; SUBSTEPS = 4; ACTION_DIM = 14
-MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10")); MAX_WATCH_S = float(os.environ.get("RCB_MAX_WATCH_S", "30"))
+MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10"))
 LOCK = threading.Lock(); PID_FILE = os.path.join(DATA, "server.pid")
 E = {"ready": False, "step": 0, "calls": 0, "done": False, "reason": None, "success": False, "t0": time.time(), "error": None}
 EP = L.Episode(DATA, dim=ACTION_DIM, resume="exact", persist=AE.persist())
@@ -150,9 +150,9 @@ VIDEO = live_video.LiveVideo(DATA, ctrl_hz=CTRL_HZ, frame=live_frame, log=EP.log
 ARMS = M.ARMS
 LAYOUT = [f"{a}_{j}" for a in ARMS for j in list(M.ARM_JOINTS) + ["gripper"]]
 CAMS = list(M.CAMERAS)
-# /spec max_frames_per_call (PROTOCOL §3 "Images per call"): the longest /observe (max_watch_s at the control rate,
+# /spec max_frames_per_call (PROTOCOL §3 "Images per call"): the longest /observe (a 30 s window at the control rate,
 # + the first and the last frame) with every camera and its depth
-BUDGET_WATCH_S = 30.0   # the budget is a 30 s watch's whatever RCB_MAX_WATCH_S is: the sim memory cap and the instruction use it
+BUDGET_WATCH_S = 30.0   # the budget is a 30 s watch's whatever max_chunk_s is: the sim memory cap and the instruction use it
 MAX_FRAMES = (int(round(BUDGET_WATCH_S * CTRL_HZ)) + 2) * 2 * len(CAMS)
 MOUNT = {"top": "static, above the table looking down at the workspace", "left_wrist": "on the left arm's wrist (link_6)",
          "right_wrist": "on the right arm's wrist (link_6)"}
@@ -179,7 +179,7 @@ PROPRIO_LAYOUT = (JPOS + [f"{a}_tcp_{k}" for a in ARMS for k in ("x", "y", "z", 
 
 SPEC = {
     "protocol": PROTOCOL, "protocol_compat": list(L.COMPAT), "simulator": "yamlab (YAMLab on Isaac Lab / Isaac Sim 5.1)", "robot": "i2rt-yam-bimanual",
-    "task_text": S.spec["text"], "control_hz": CTRL_HZ, "physics_substeps": SUBSTEPS, "max_chunk_s": MAX_CHUNK_S, "max_watch_s": MAX_WATCH_S, "max_frames_per_call": MAX_FRAMES,
+    "task_text": S.spec["text"], "control_hz": CTRL_HZ, "physics_substeps": SUBSTEPS, "max_chunk_s": MAX_CHUNK_S, "max_frames_per_call": MAX_FRAMES,
     "cameras": {c: {"rgb": True, "depth": True, "mounted": MOUNT[c], "resolution": [int(FIRST[c].shape[1]), int(FIRST[c].shape[0])],
                     "calibration_in_obs": OBS_CALIBRATION, "intrinsic_cv": CAM0[c]["intrinsic_cv"], "mount": CAM0[c]["mount"],
                     "depth_range_m": CAM0[c]["depth_range_m"]} for c in CAMS},
@@ -507,7 +507,7 @@ def parse_observe(meta: dict) -> tuple:
     """Every field of an /observe, checked; nothing is executed here."""
     cams = cameras(meta); seconds = number(meta, "seconds", 0.0); fps = video_fps(meta)
     video = choice(meta, "video", "frames", ("mp4", "frames", "both", "none")); L.depth_mode(meta)
-    if seconds < 0 or seconds > MAX_WATCH_S: raise ValueError(f"seconds must be in [0, {MAX_WATCH_S}]")
+    if seconds < 0 or seconds > MAX_CHUNK_S: raise ValueError(f"seconds must be in [0, {MAX_CHUNK_S}] (max_chunk_s)")
     frames_ok(cams, int(round(seconds * CTRL_HZ)), fps, meta)
     return cams, seconds, fps, video
 

@@ -45,7 +45,6 @@ DATA = os.environ.get("RCB_DATA", "/data")
 INSTANCE = os.environ.get("RCB_INSTANCE", os.path.join(os.path.dirname(os.path.abspath(__file__)), "instance.json"))
 WALL_CLOCK_S = float(os.environ.get("RCB_WALL_CLOCK_S", "3600"))
 MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10"))
-MAX_WATCH_S = float(os.environ.get("RCB_MAX_WATCH_S", "30"))
 MAX_FRAMES = L.MAX_FRAMES_PER_CALL  # /spec max_frames_per_call, 3000 images (cameras x frames, depth counted again)
 RESET_BUDGET = max(0, int(os.environ.get("RCB_RESET_BUDGET") or 0))  # the compose file's default: 10 (PROTOCOL §4.5)
 CAM_W, CAM_H = 320, 240
@@ -222,7 +221,6 @@ SPEC = {
     "control_hz": CTRL_HZ,
     "physics_substeps": SUBSTEPS,
     "max_chunk_s": MAX_CHUNK_S,
-    "max_watch_s": MAX_WATCH_S,
     "max_frames_per_call": MAX_FRAMES,
     "cameras": {c: {"rgb": True, "depth": True, "resolution": [CAM_W, CAM_H], "intrinsic_cv": _intrinsic(c),
                     **({"mounted": "follows the robot", "mount": {"type": "link", "link": S.robot["root"], "note":
@@ -543,8 +541,8 @@ def do_observe(meta: dict):
     cams, fps = cameras_of(meta), video_fps(meta)
     seconds = _num(meta, "seconds", 0)
     video = meta.get("video", "frames")
-    if not math.isfinite(seconds) or seconds < 0 or seconds > MAX_WATCH_S:
-        raise ValueError(f"seconds must be in [0, {MAX_WATCH_S}]")
+    if not math.isfinite(seconds) or seconds < 0 or seconds > MAX_CHUNK_S:
+        raise ValueError(f"seconds must be in [0, {MAX_CHUNK_S}] (max_chunk_s)")
     if video not in ("mp4", "frames", "both", "none"):
         raise ValueError("video must be mp4|frames|both|none")
     frames_ok(int(round(seconds / DT)), fps, cams, meta)

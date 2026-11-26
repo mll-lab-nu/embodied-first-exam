@@ -22,4 +22,6 @@ for i in range(0, len(Q), rows_per_chunk):
     if res.meta["done"]: done = True; print("done:", res.meta["reason"]); break
 if not done:
     obs = r.hold(1.0, cameras=["head_camera"], video="none"); print("settle:", obs.meta["done"], obs.meta["reason"])
+try: print("finish:", r.finish())                       # the agent ends the episode (eai-standard/3.0: POST /finish)
+except EpisodeOver as e: print("finish: the episode had already ended:", e)
 print("status:", r.status(), "wall %.0fs" % (time.time() - t0))

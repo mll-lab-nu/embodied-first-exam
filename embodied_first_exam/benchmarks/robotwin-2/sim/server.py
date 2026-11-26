@@ -24,7 +24,7 @@ DATA = os.environ.get("RCB_DATA", "/data"); os.makedirs(DATA, exist_ok=True); os
 TASK = os.environ.get("RCB_TASK", "stack_blocks_two"); INSTANCE = os.environ.get("RCB_INSTANCE", os.path.join(os.path.dirname(__file__), "instance.json"))
 TASK_TEXT = json.load(open(INSTANCE)).get("text", TASK)
 OBS_CALIBRATION = os.environ.get("RCB_OBS_CALIBRATION", "1") == "1"
-PHYS_HZ = 250; MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10")); MAX_WATCH_S = float(os.environ.get("RCB_MAX_WATCH_S", "30"))
+PHYS_HZ = 250; MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10"))
 MAX_BODY = 64 * 1024 * 1024; MAX_RESP = 256 * 1024 * 1024
 LOCK = threading.Lock()
 E = {"ready": False, "step": 0, "calls": 0, "done": False, "reason": None, "success": False, "t0": time.time(), "frames": [], "error": None}
@@ -262,7 +262,7 @@ assert len(PROPRIO_LAYOUT) == 82
 
 SPEC = {
     "protocol": PROTOCOL, "simulator": "robotwin-2.0", "robot": os.environ.get("RCB_EMBODIMENT", "aloha-agilex"), "task_text": TASK_TEXT,
-    "physics_hz": PHYS_HZ, "max_chunk_s": MAX_CHUNK_S, "max_watch_s": MAX_WATCH_S, "max_video_fps": MAX_VIDEO_FPS, "max_frames_per_call": MAX_FRAMES_PER_CALL,
+    "physics_hz": PHYS_HZ, "max_chunk_s": MAX_CHUNK_S, "max_video_fps": MAX_VIDEO_FPS, "max_frames_per_call": MAX_FRAMES_PER_CALL,
     "on_service_error": ("if a call fails with a connection error or 5xx, the service may have crashed and resumed the same episode "
                          "(never a reset): the state is the one after the last call that completed on the service, which you may "
                          "not have received; check GET /status before continuing"), "cameras": {c: {"rgb": True, "depth": c in ("head_camera", "front_camera", "left_camera", "right_camera"),

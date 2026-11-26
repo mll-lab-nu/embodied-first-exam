@@ -524,6 +524,9 @@ class RealtimeService(Service):
                            "apart, with the proprioception of their steps",
                 "recorder": {"cameras": list(self.sim.cameras), "fps": round(1.0 / (cdt * every), 3),
                              "buffer_s": LOOKBACK_S,
+                             "records": "continuously: every 1 / fps of robot time while the clock runs, and at the "
+                                        "episode's start and end",
+                             "depth": list(getattr(self.sim, "depth_cameras", ()) or ()),
                              "resolution": {c: (v.get("hw") if isinstance(v, dict) else None)
                                             for c, v in (spec.get("cameras") or {}).items()},
                              "rendered_by": ("a process of its own, from a copy of the state; never the simulator's "

@@ -6,13 +6,12 @@
 Tools (schema/tools.json, narrowed to the task by its manifest; rcb_tools.py): one per agent-facing endpoint of the
 task's robot service -- spec, observe, submit, finish, reset (where the task has a reset budget), kinematics (where the
 service offers it) -- the request fields and the reply as the service's client sends and receives them
-(docs/protocol/standard_mode.md "MCP tools"); another kind of service has its own (suites.py: an Embodied Olympics
-match's seat). Images, depth and video are written under /app/obs; results carry paths and the service's meta, and
-`tool_s` (the wall time the call took in this server, the request included). A call that runs longer than
---max-block-s returns {"pending": true, "operation": id}; `observe(operation=id)` (a match: `wait(operation=id)`) waits
-for it. Realtime mode: no tool holds the clock (submit answers at once, as the service does). A tool the manifest
-does not list but /spec shows the service has (kinematics, reset) is added at the first call, with a
-tools/list_changed notification.
+(docs/protocol/standard_mode.md "MCP tools"); a service with calls of its own adds their tools (suites.py: an
+Embodied Olympics match's start, ready, say, team). Images, depth and video are written under /app/obs; results carry
+paths and the service's meta, and `tool_s` (the wall time the call took in this server, the request included). A call that runs longer than
+--max-block-s returns {"pending": true, "operation": id}; `observe(operation=id)` waits for it. Realtime mode: no tool
+holds the clock (submit answers at once, as the service does). A tool the manifest does not list but /spec shows the
+service has (kinematics, reset) is added at the first call, with a tools/list_changed notification.
 
 Standard library + numpy + requests (+ pillow for images), what every standard agent container has.
 The server does not contact the robot before the first tools/call.
@@ -122,7 +121,7 @@ class Server:
         else:
             import suites
             self.adapter = suites.adapter_for(self.manifest)
-        self.ops = Ops(max_block, "observe" if kind == "rcb" else "wait")
+        self.ops = Ops(max_block, "observe")
         self._checked_spec = False
         self.log = None
         self.llock = threading.Lock()
@@ -228,17 +227,11 @@ class Server:
             if name not in self.by_name:
                 raise ToolError(f"unknown tool {name!r}")
             self.schema.validate_args(self.by_name[name]["inputSchema"], args)
-            if name in ("wait", "observe") and args.get("operation"):
+            if name == "observe" and args.get("operation"):
                 try:
                     result, extras = self.ops.wait_for(args["operation"])
                 except KeyError:
                     raise ToolError(f"no pending operation {args['operation']!r}")
-                if name == "wait" and not (isinstance(result, dict) and result.get("pending")) \
-                        and float(args.get("seconds") or 0) > 0:
-                    more, extras2 = self.ops.run("wait", self.adapter.wait,
-                                                 {k: v for k, v in args.items() if k != "operation"})
-                    result = {"operation_result": result, "then": more}
-                    extras = list(extras) + list(extras2)
             else:
                 fn = getattr(self.adapter, METHODS.get(name, name), None) or getattr(self.adapter, name)
                 result, extras = self.ops.run(name, fn, args)

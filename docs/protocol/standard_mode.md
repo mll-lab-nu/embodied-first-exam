@@ -42,20 +42,27 @@ otherwise about `/observe`, `/submit` or the clock, this section wins; the older
 - **A hold chunk lets time pass.** `/submit` with `{"type": <type>, "interpolate": "hold", "seconds": n}` and no rows
   holds the target in force (the last command, as 2.1's watch held it) for n seconds of robot time (whole control steps,
   at least one; at most `max_chunk_s`) and answers as any `/submit` (`meta.hold = true`, `executed_rows = 0`,
-  `duration_s`). Rows and `seconds` together, or no rows without a hold, are a 400. In realtime mode it answers at once
-  and plans the target in force for n seconds from `at`.
+  `duration_s`). `max_chunk_s` is the one cap of a chunk and of a hold chunk in every layer (2.1–2.4 and the match
+  extension; `max_watch_s` is gone). Rows and `seconds` together (any value, 0 too), or no rows without a hold, are a
+  400 in every layer. In realtime mode it answers at once and plans the target in force for n seconds from `at`.
 - **`/observe` only reads.** It never lets time pass, never waits and never changes the plan. `last_s = 0` (the default)
   returns the current frame and the proprioception of now; `last_s = n` the frames recorded in the last n robot seconds
   (at most `buffer_s`), `video_fps` apart, with the proprioception of their steps (`meta.last_s`: what they cover; none
-  recorded yet: the current frame). An answer with images adds `meta.frame_step`, the control step its newest image shows.
-  `seconds > 0` is a 400 that names the hold chunk.
-- **The recorder.** `/spec.timing.recorder` declares `cameras` (every camera), `fps` (`RCB_CAMERA_FPS`, default 10),
-  `buffer_s` (`RCB_LOOKBACK_S`, default 3). Standard mode records while a `/submit` runs (hold chunks too): every 1 /
-  `fps` of robot time, the RGB image of every camera and the proprioception, into a ring of the last `buffer_s`
-  seconds (`records: "during /submit"`), cleared at a reset; no process of its own. Realtime mode: Part 3's recorder
-  ("Cameras"); an adapter without its two hooks records on the simulator's thread into the same ring.
+  recorded yet: the current frame). Every answer with images (`/observe` and `/submit`, every layer) adds
+  `meta.frame_step`, the control step its newest image shows. `seconds > 0` is a 400 that names the hold chunk. Depth
+  with `last_s > 0` is served for the cameras whose recorder keeps depth (`/spec.timing.recorder.depth`); for any other
+  camera it is a 400 that says to ask for depth with `last_s = 0` (the current frame's depth, every layer).
+- **The recorder.** `/spec.timing.recorder` declares `cameras` (every camera), `fps`, `buffer_s` (`RCB_LOOKBACK_S`,
+  default 3), `records` (when it records) and `depth` (the cameras whose depth it keeps). Standard mode: 10 fps
+  (`RCB_CAMERA_FPS`, default 10), recorded while a `/submit` runs (hold chunks too): every 1 / `fps` of robot time, the
+  RGB image of every camera and the proprioception, into a ring of the last `buffer_s` seconds (`records: "during
+  /submit"`, `depth: []`), cleared at a reset; no process of its own. Realtime mode: 30 fps (`RCB_CAMERA_FPS`, default
+  30), Part 3's recorder ("Cameras"), recording continuously while the clock runs, with the depth of the depth cameras;
+  an adapter without its two hooks records on the simulator's thread into the same ring at 10 fps (each render there
+  costs the clock its time), which its `fps` says.
 - **The realtime clock** starts at the episode's first `/submit` (again after a reset and a crash recovery), never at an
-  `/observe`; `/submit` answers at once with `duration_s` and `end_step` (= `plan_end_step`).
+  `/observe`; `/submit` answers at once with `duration_s` and `end_step` (= `plan_end_step`). An `/observe` before the
+  simulator thread has published its first state is a 503 `{"error": "warming up"}` (retry).
 - **`/finish`** is required in the standard and realtime modes ("Agent-ended episodes"; RoboEngineer and Embodied
   Olympics - Match are exempt: a match ends by its rules, its `/finish` is a 404, and its clock starts at its `/start`
   barrier, a deviation it declares in `/spec.timing.deviations`).
@@ -86,7 +93,7 @@ connections are refused and the client retries.
 | method | path | body | response |
 |---|---|---|---|
 | GET | `/spec` | — | JSON: action types (dims, layouts, limits, semantics), cameras, proprio layout, budgets |
-| GET | `/status` | — | JSON: `{step, calls, physics_steps, done, reason, elapsed_s}` |
+| GET | `/status` | — | JSON: the shared sidecar (`rcb_service.py`): `{calls, rows, control_steps, done, reason, elapsed_s}`, plus `step_limit`, `steps_left` with a step limit and `episode`, `control_steps_total`, `resets_left` with a reset budget; a benchmark's own service: `{step, calls, physics_steps, done, reason, elapsed_s}` |
 | POST | `/observe` | RCB1 or JSON `{cameras, last_s, video_fps, include_depth, video}` (3.0; before: `seconds`) | RCB1 |
 | POST | `/submit` | RCB1: header `{type, dt, interpolate, cameras, video_fps, video, include_depth, note}` + part `actions` float32 (T, dim); a hold chunk (3.0): header `{type, interpolate: "hold", seconds, ...}`, no part | RCB1 |
 
@@ -102,24 +109,31 @@ kinds: "mp4" (fps, n) · "array" (dtype, shape; C-order raw bytes) · "jpeg" · 
 Response parts: `video/<cam>` (mp4), `frames/<cam>` (uint8 [N,H,W,3]), `last/<cam>` (uint8 [H,W,3], always),
 `depth/<cam>` (float16 [N,H,W], if requested), `cam2world_gl/<cam>` (float64 [N,4,4], for a camera that moves: its pose
 at each returned frame), `proprio` (float32 [N, len(proprio layout)], one row per video frame; the columns are the
-benchmark's). Requests over 64 MB → 413 (the client refuses to send one); a response over 256 MB drops
+benchmark's), `frame_step` (int64 [N]: the control step of each returned frame, on an `/observe` with `last_s > 0`). Requests over 64 MB → 413 (the client refuses to send one); a response over 256 MB drops
 `frames/`/`depth/` and says so in `meta.degraded`. `rcb1.py` (encode/decode, `python -m rcb1 unpack f dir`) is shipped
 with the client.
 
 ### `meta` (in every response)
 `step` (rows executed so far), `calls`, `physics_steps`, `sim_time_s`, `time_s`, `time_left_s`, `proprio` =
 `{"layout": [names], "now": [floats]}`, `cameras` (per camera `intrinsic_cv`, `extrinsic_cv`, `cam2world_gl`; the whole
-key omitted when the task sets `RCB_OBS_CALIBRATION=0`), `done`, `reason`. `cameras` is the calibration of the state the
+key omitted when the task sets `RCB_OBS_CALIBRATION=0`), `done`, `reason`. The shared sidecar (`rcb_service.py`) says
+`rows` and `control_steps` instead of `step` and `physics_steps`, and sends no `cameras` calibration (a benchmark's own
+service does). `cameras` is the calibration of the state the
 response ends in (the `last` frame, the final sample of `frames` / `depth`): static cameras never move, a camera on the
 robot moves with it, and for each requested moving camera the response carries the part `cam2world_gl/<cam>` (one
 pose per returned frame; `spec.camera_calibration`). `time_s` / `time_left_s` are the agent's clock (below; `/spec`
-states it in `budget.clock` or `budget.wall_clock_note`). `/submit` adds `chunk_id, type, executed_rows,
-physics_steps_chunk, clipped [{row,index,reason}], n_clipped, plan [...], ok`; `/observe` adds `obs_id, seconds,
-physics_steps_watch`.
+states it: the shared 2.1 sidecar in the top-level `clock`, the 2.2 layer in `budget.clock`, a benchmark's own service
+in `budget.clock` or `budget.wall_clock_note`).
+
+| answer | adds |
+|---|---|
+| `/submit` | `chunk_id`, `type`, `executed_rows`, `control_steps_chunk` (a benchmark's own service: `physics_steps_chunk`), `duration_s`, `planned_duration_s`, `hold` (a hold chunk), `clipped` `[{row,index,reason}]`, `n_clipped`, `plan` (where the service plans), `frame_step` (with images), `ok`; the shared sidecar also the adapter's step fields (never a success or progress field) |
+| `/observe` | `obs_id`, `last_s`, `frame_step` (with images), `seconds` (always 0), `control_steps_watch` (always 0; a benchmark's own service: `physics_steps_watch`), `ok` |
 
 ### `/submit` semantics
-- `joint_position` rows are `dt` seconds apart, `dt` a multiple of the physics or control step and at most 0.5 s;
-  anything else is rejected (400), never rounded. The service streams drive targets with `interpolate = "linear"`
+- `joint_position` rows are `dt` seconds apart, `dt` a positive whole multiple of the control step (`control_dt`);
+  anything else is rejected (400), never rounded. A service may cap `dt` further and says so in its doc (Embodied
+  Olympics - Match: at most 0.5 s). The service streams drive targets with `interpolate = "linear"`
   (default) or `"hold"` between rows, exactly as a real controller consumes a chunk. Out-of-limit values are clipped
   and reported (continuous joints have `null` limits and are never clipped). A chunk may cover at most `max_chunk_s`.
 - Planner-executed types such as `ee_pose` state their frame, quaternion order and end-effector reference in `/spec`;
@@ -133,7 +147,7 @@ physics_steps_watch`.
 
 ### `/observe` semantics
 From 3.0: `last_s` ("Version 3.0"); `seconds > 0` is a 400 and a hold chunk takes its place. Before 3.0:
-`seconds = 0` (default) returned the current frames, free (no physics); `seconds > 0` (≤ `max_watch_s`) held the last
+`seconds = 0` (default) returned the current frames, free (no physics); `seconds > 0` (≤ 30 s) held the last
 command, advanced physics and returned the video; the predicate was checked afterwards. Watching costs no budget beyond
 the wall clock; the simulated time is recorded as cost.
 
@@ -141,8 +155,9 @@ the wall clock; the simulated time is recorded as cost.
 | code | when |
 |---|---|
 | 400 | wrong type/dim, a chunk with no rows (other than a hold chunk), a hold chunk with rows, `/observe` with `seconds > 0` (3.0), NaN/inf, a field of the wrong JSON type (`dt`, `seconds` or `video_fps` not a finite number, `cameras` not a list), `dt` or `seconds` out of range or `dt` not a multiple of the physics step, chunk too long, bad interpolate/video value, `video_fps` outside [1, 30], more images than `max_frames_per_call` in one response (PROTOCOL §3), malformed body |
-| 409 | episode already finished (`done`); the trial is over |
+| 409 | episode already finished (`done`); the trial is over; after `/finish` every call but `GET /spec` and `GET /status` |
 | 413 | body over 64 MB (`rcb_client.py` raises before sending such a body) |
+| 503 | realtime (2.3): an `/observe` before the simulator thread has published its first state (`{"error": "warming up"}`; retry) |
 | 500 | simulator error; the episode ends with `reason = "error"` (the client raises `EpisodeOver`; the verifier reports `sim_error = 1`) |
 
 ### Episode semantics
@@ -353,16 +368,18 @@ the per-frame arrays always stay) and says so in `meta.degraded`. Requests over 
 2.1's keys (`step`, `calls`, `control_steps`, `physics_steps`, `sim_time_s`, `time_s`, `time_left_s`, `proprio`, `done`,
 `reason`), with `cameras` = per requested camera `intrinsic_cv`, `extrinsic_cv`, `cam2world_gl`, `image_size` at the last
 frame (omitted when the task sets `RCB_OBS_CALIBRATION=0`). `/submit` adds `chunk_id, type, executed_rows,
-control_steps_chunk, physics_steps_chunk, clipped [{row,index,reason}], n_clipped, plan [...], ok`; `/observe` adds
-`obs_id, seconds, control_steps_watch, physics_steps_watch`. Both add **`stopped`** (2.2): `null`, or why the service
+control_steps_chunk, physics_steps_chunk, duration_s, planned_duration_s, clipped [{row,index,reason}], n_clipped,
+plan [...], frame_step, ok`; `/observe` adds `obs_id, last_s, frame_step, seconds, control_steps_watch,
+physics_steps_watch`. Both add **`stopped`** (2.2): `null`, or why the service
 stopped the call early (§12).
 
 ### 5. `/spec`
 2.0/2.1 keys, unchanged: `protocol` (`"eai-standard/2.2"`), `simulator`, `robot`, `task_text`, `control_hz`,
-`physics_substeps`, `max_chunk_s`, `max_watch_s`, `cameras`, `action_types`, `proprio_layout`, `proprio_groups`, `static`
+`physics_substeps`, `max_chunk_s`, `cameras`, `action_types`, `proprio_layout`, `proprio_groups`, `static`
 (scene facts: names, sizes, colours; never a position), `budget` (`{"reset": N, "steps": null, "wall_clock_s",
 "clock"}`; `clock` says what `time_s` / `time_left_s` count from: the agent's first request, Part 1 "The agent's clock";
-the shared layer fills it in and keeps the clock, `rcb_limited.agent_time`). 2.2 adds:
+the shared layer fills it in and keeps the clock, `rcb_limited.agent_time`; the 2.4 layer has no clock of its own:
+its adapter keeps it and states it, as RoboArc's IKEA service does). 2.2 adds:
 
 | key | content |
 |---|---|
@@ -393,7 +410,7 @@ that frame; `cam2world_gl` (4×4) is the camera pose with OpenGL axes = inverse(
 | `tcp` | per tool frame: `{"parent_link", "link_T_frame", "definition"}`: the fingertip centre and the `ee_pose` frame, with the offset between them |
 
 ### 6. Actions
-As 2.1 (`joint_position` rows `dt` apart, a multiple of the control period, at most 0.5 s, `linear` or `hold`, clipped and
+As 2.1 (`joint_position` rows `dt` apart, a whole multiple of the control period, `linear` or `hold`, clipped and
 reported; a chunk covers at most `max_chunk_s`). `ee_pose` rows are end-effector targets solved by the benchmark's IK or
 planner (its doc); a failed row is reported in `plan`. Not yet: `joint_delta`, `joint_velocity`, `ee_delta`,
 `joint_torque` (`spec.action_types.not_yet`). After a chunk the task predicate is evaluated; the first success ends the
@@ -437,7 +454,7 @@ Accepted consequence: a calibrated camera aimed at the workspace tells roughly w
 
 ### 11. Errors (no physics executed)
 As 2.1: 400 malformed request (including a bad kinematics request), 409 episode over (`/observe` and `/kinematics` still
-answer), 413 body over 64 MB, 500 simulator error: **on `/submit` and `/observe` the episode ends** with `reason = "error"`.
+answer after any end but `/finish`; after `/finish` every call but `/spec` and `/status` is a 409), 413 body over 64 MB, 500 simulator error: **on `/submit` and `/observe` the episode ends** with `reason = "error"`.
 A negative `Content-Length` is a 400, answered without reading the body. The service listens on port 8000 of a network
 namespace that, under Harbor's egress control, the agent's container shares: if a process of the agent holds the port
 when the scene is built, the service waits for it (the agent's own time) instead of exiting.
@@ -592,7 +609,8 @@ are part of a result's configuration (running.md).
   no images, only proprioception.
 - **Cameras (the recorder).** Where the adapter can copy its state (`render_state()`) and draw such a copy
   (`render_from(state, cameras, depth)`), a recorder -- a process of its own, never the simulator's thread -- records
-  the cameras while time runs, and `/spec.timing.recorder` declares it: `cameras`, `fps`, `resolution`, `buffer_s`.
+  the cameras while time runs, and `/spec.timing.recorder` declares it: `cameras`, `fps` (`RCB_CAMERA_FPS`, default 30),
+  `resolution`, `buffer_s`, `records`, `depth` (the depth cameras: their depth is recorded too).
   The simulator thread hands it a copy of the state every 1 / `fps` of robot time (a recorder that is slower skips
   copies; it never holds the clock back); it draws the copy with its own copy of the scene, so recording cannot change
   the journal, the trajectory or the verdict. The frames go into a ring of the last `buffer_s` robot seconds, each
@@ -605,7 +623,9 @@ are part of a result's configuration (running.md).
   field, `frame_step`: the control step the newest image shows (the recorder may be behind `control_steps`); at most 8
   answers with images are built at a time (past that: without frames, `frames_skipped`). A recorder that dies is
   restarted; meanwhile answers come without frames (`frames_pending`). final.json adds `camera_worker` (frames
-  rendered, copies skipped, render time). Adapters without the two hooks render on the simulator's thread into the same ring (3.0), as below.
+  rendered, copies skipped, render time). Adapters without the two hooks render on the simulator's thread into the same
+  ring (3.0) at 10 fps (each render costs the clock its time; `fps` says so), as below. Before the simulator thread has
+  published its first state, an `/observe` is a 503 `{"error": "warming up"}`.
 - **Grading** is 2.1's: the live episode, judged by the service (PROTOCOL H.4). The journal holds the sim row the
   simulator applied at every control step, so the graded episode's trajectory reproduces the live run whatever the
   timing (the video is rendered from it). Evidence
@@ -783,7 +803,10 @@ each row when it is sent, as the seat API does.
 
 **Not offered (404):** `/finish`, `/reset`, `/kinematics`. A match ends by its own rules (the final score, a forfeit, a
 review or start timeout, the session's end), never by the agent, so these tasks are exempt from agent-ended episodes
-(Part 1, "Optional agent-ended episodes"); there is one match per task and no reset.
+(Part 1, "Agent-ended episodes"); there is one match per task and no reset. Besides 2.1's codes, a match answers 403
+(`seat not authorized`: a request from a host its seat is not bound to) and 429 (too many requests of one seat in
+flight; empty body: retry more slowly), and refuses a request body over 8 MiB (413; `/spec.max_request_bytes`), all
+declared deviations (`/spec.timing.deviations`).
 
 ### 28. `meta`
 
@@ -812,13 +835,15 @@ from the first request and `RCB_WALL_CLOCK_S`, `done`, `reason`, `proprio`) and 
   (3.0) lets n seconds of game time pass with the commands in force (`game wait`); `/observe` only reads (`seconds > 0`:
   a 400). Between calls the world stands still.
 - **Turn-based (2.1).** `/submit` takes one row: the action of your turn (its review follows with `/ready`). A hold
-  chunk (3.0) waits up to n real seconds for your turn (`game wait`, at most `max_hold_s`; a declared deviation);
+  chunk (3.0) waits up to n real seconds for your turn (`game wait`; n at most `max_chunk_s`, which here counts real
+  seconds; a declared deviation);
   `/observe` only reads (`seconds > 0`: a 400).
 - **Freezes.** After every unit (a point, a phrase, a stoppage) the world freezes for the reviews until every due seat
   has sent `/ready`, at most `timing.review_timeout_s` of real time, else that side loses (`ready_timeout`); the match
   begins only after `/start`, within `timing.start.window_s` (else `no_show`). A realtime plan is cleared at a freeze. A
-  `/submit` while the world is frozen or not started answers `ok: false` with `not_now` and executes nothing; a request
-  after the match is over is a 409 (`done`, `reason`, `match_over`).
+  `/submit` while the world is frozen or not started answers `ok: false` with `not_now` and executes nothing; a
+  `/submit` after the match is over is a 409 (`done`, `reason`, `match_over`), while `/observe` still answers 200 with
+  the final state and no images, and `/spec`, `/status` answer as before.
 
 ### 30. Deviations from Part 3
 
@@ -860,14 +885,17 @@ these, but no endpoint is without its tool unless the table says why.
 | `GET /spec` | `spec` | every task (the spec also saved as a file, `spec_file`) |
 | `POST /observe` | `observe` | every task: what is already recorded, at once (`last_s`) |
 | `POST /submit` | `submit` | every task; rows inline or as a file (`actions_file`), or a hold chunk (`interpolate` "hold" + `seconds`, no rows); realtime adds `at`; the result's `step` repeats the reply's duration, end step, `steps_left` / `step_limit` and `done` |
-| `POST /reset` | `reset` | a task with a reset budget (Optional reset capability) |
+| `POST /reset` | `reset` | a task with a reset budget ("Optional reset capability") |
 | `POST /kinematics` | `kinematics` | a 2.2 / 2.4 task whose service serves it (§8) |
-| `POST /finish` | `finish` | every task; it sends the request only when `/spec.success_signal` is `"hidden"` (Optional agent-ended episodes), else it says so and sends nothing |
+| `POST /finish` | `finish` | every task; it sends the request only when `/spec.success_signal` is `"hidden"` ("Agent-ended episodes"), else it says so and sends nothing |
 | `GET /status` | none | its fields come back in every result's `meta` |
 | `GET /operations/<id>` | none | the tool server re-queries it itself when a 2.4 reply is lost (Part 4) |
 
-A match seat (Embodied Olympics - Match, its own protocols) has one tool per `game` command: `spec`, `start`,
-`observe`, `act`, `wait`, `ready` (and `say`, `team` in a team format); `GET /status` likewise has none.
+A match (Embodied Olympics - Match, `eai-standard/2.x+match/1.0`, Part 5) has the same `spec`, `observe` and `submit`
+(its rows are the match's JSON action objects; a hold chunk too) and the extension's calls as extra tools: `start`,
+`ready` (and `say`, `team` in a team format). It has no `finish` (its `/finish` is a 404: the match's rules end it), no
+`reset` and no `kinematics`; its declared deviations (`/spec.timing.deviations`: the clock from `/start`, `last_s` the
+frames of now) are the service's. `GET /status` likewise has no tool.
 `ci_checks/check-mcp-tools.py` holds the routes the layers and adapters serve to this table, and every task to its
 tool list. Two kinds of task keep only their own interface, and their docs say so: RoboEngineer (`eai-policy`: the
 agent hands in a policy, no live robot) and the matchlow matches (the player delivers skill code the platform runs).
@@ -875,8 +903,7 @@ agent hands in a policy, no live robot) and the matchlow matches (the player del
 **Time.** Standard mode: time passes only through `submit`; `observe` reads what is recorded and moves nothing.
 Realtime mode: no tool holds or slows the clock; `submit` answers at once as the endpoint does, and a call costs its
 own time. Each result carries `tool_s`, the tool's own wall time: on the toy 2.3 service an `observe` with `cameras = []` took 1.5-3 ms over HTTP and 1-3.5 ms more through the tool (`embodied_first_exam/standard/mcp/tests/test_realtime.py`), plus whatever the agent's harness takes per tool call, which is outside the task's control. A call still running after 45 s (`--max-block-s`; Codex's MCP calls time out at
-60 s) returns `{"pending": true, "operation": id}`; `observe(operation=id)` (a match seat: `wait(operation=id)`)
-collects the reply. Nothing is retried: a call is sent once.
+60 s) returns `{"pending": true, "operation": id}`; `observe(operation=id)` collects the reply. Nothing is retried: a call is sent once.
 
 **Shipping.** `scripts/task_conventions.py` `normalize` writes, from `embodied_first_exam/standard/mcp/inject.py`, into
 every standard and realtime task: `environment/efe_mcp/` (the server, copied unchanged, and the task's `manifest.json`:

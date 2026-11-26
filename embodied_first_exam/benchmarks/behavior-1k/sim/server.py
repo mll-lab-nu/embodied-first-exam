@@ -61,7 +61,7 @@ os.makedirs(DATA, exist_ok=True); os.makedirs(os.path.join(DATA, "calls"), exist
 TASK = os.environ.get("RCB_TASK", "picking_up_trash"); INSTANCE = os.environ.get("RCB_INSTANCE", os.path.join(os.path.dirname(__file__), "instance.json"))
 OBS_CALIBRATION = os.environ.get("RCB_OBS_CALIBRATION", "1") == "1"
 CTRL_HZ = 30; SUBSTEPS = 4
-MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10")); MAX_WATCH_S = float(os.environ.get("RCB_MAX_WATCH_S", "30"))
+MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10"))
 EE_POS_MAX_M = 1000.0                   # ee_pose positions beyond this are a 400 (a units slip; float32-safe for the IK)
 LOCK = threading.Lock()
 E = {"ready": False, "step": 0, "calls": 0, "done": False, "reason": None, "success": False, "t0": time.time(), "error": None}
@@ -185,9 +185,9 @@ PRIMS = S.primitives()
 S._curobo()                             # the ee_pose IK; built before the episode starts (it steps nothing)
 FIRST, _ = S._frames(sorted(S._cam_sensors()))
 CAMS = sorted(c for c, a in FIRST.items() if min(a.shape[:2]) >= 32)
-# /spec max_frames_per_call (PROTOCOL §3 "Images per call"): the longest /observe (max_watch_s at the control rate,
+# /spec max_frames_per_call (PROTOCOL §3 "Images per call"): the longest /observe (a 30 s window at the control rate,
 # + the first and the last frame) with every camera and its depth
-BUDGET_WATCH_S = 30.0   # the budget is a 30 s watch's whatever RCB_MAX_WATCH_S is: the sim memory cap and the instruction use it
+BUDGET_WATCH_S = 30.0   # the budget is a 30 s watch's whatever max_chunk_s is: the sim memory cap and the instruction use it
 MAX_FRAMES = (int(round(BUDGET_WATCH_S * CTRL_HZ)) + 2) * 2 * len(CAMS)
 S.enable_depth(CAMS)                    # z-depth rendered alongside RGB from now on (attached before the episode: no mid-episode USD edit)
 MOUNT = {c: ("head (moves with the base and trunk)" if "zed" in c else "left wrist" if "left" in c else "right wrist" if "right" in c else "on the robot") for c in CAMS}
@@ -338,7 +338,7 @@ def cam_spec(c: str) -> dict:
 
 SPEC = {
     "protocol": PROTOCOL, "protocol_compat": L.COMPAT, "simulator": "behavior-1k 3.9.2 (OmniGibson / Isaac Sim)", "robot": "r1pro", "task_text": S.spec["text"],
-    "control_hz": CTRL_HZ, "physics_substeps": SUBSTEPS, "max_chunk_s": MAX_CHUNK_S, "max_watch_s": MAX_WATCH_S, "max_frames_per_call": MAX_FRAMES,
+    "control_hz": CTRL_HZ, "physics_substeps": SUBSTEPS, "max_chunk_s": MAX_CHUNK_S, "max_frames_per_call": MAX_FRAMES,
     "max_control_steps": int(M.MAX_STEPS),   # the tooling's runaway guard (PROTOCOL §4.5): the episode ends there, reason "step_guard"
     "cameras": {c: cam_spec(c) for c in CAMS},
     "default_cameras": [c for c in S.VIDEO_CAMERAS if c in CAMS],   # the 2.0 client's default: head, left wrist, right wrist
@@ -611,7 +611,7 @@ def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
 def do_observe(meta: dict) -> tuple[dict, list]:
     cams = request_cameras(meta)
     seconds = request_number(meta, "seconds", 0.0); fps = video_fps(meta); video = meta.get("video", "frames")
-    if seconds < 0 or seconds > MAX_WATCH_S: raise ValueError(f"seconds must be in [0, {MAX_WATCH_S}]")
+    if seconds < 0 or seconds > MAX_CHUNK_S: raise ValueError(f"seconds must be in [0, {MAX_CHUNK_S}] (max_chunk_s)")
     frames_ok(cams, int(round(seconds * CTRL_HZ)), fps, meta)
     if video not in ("mp4", "frames", "both", "none"): raise ValueError("video must be mp4|frames|both|none")
     rec = recorder(cams, fps, meta); before = ctrl_steps()

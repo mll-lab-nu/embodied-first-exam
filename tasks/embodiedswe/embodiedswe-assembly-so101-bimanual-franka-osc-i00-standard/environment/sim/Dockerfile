@@ -5,13 +5,13 @@ COPY . /srv/
 COPY --from=ghcr.io/mll-lab-nu/efe:embodiedswe-files-0.3.1@sha256:ef309a60a26d8813914d4c5284eb9a1008d58f3123871491535f7cf11bbc743e \
      /rcb_embodiedswe.py \
      /srv/
-COPY --from=ghcr.io/mll-lab-nu/efe:embodiedswe-standard-files-0.3.0@sha256:e2a90a2531e4d3f8c66601760b1d1619b234a077c698a036c12694adcd86f3a1 \
+COPY --from=ghcr.io/mll-lab-nu/efe:embodiedswe-standard-files-0.3.0@sha256:11b1dd1dda4f0902b216fa2dda15057cb5952edd5851a6adabb419713a15026d \
      /sim/esw_std.py \
      /sim/finalize.sh \
      /sim/live_video.py \
      /sim/server.py \
      /srv/
-COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.5.0@sha256:a6c2ac2ede9fe2c1744f9c6e67c6a49de9c5a8b8c2c9ae4f0d774b7dd72662ff \
+COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.5.0@sha256:ff602baf1ef852d21ecf0152d94cf210c8b691a5bdaa88d00dc381f6150b98cb \
      /rcb1.py \
      /rcb_limited.py \
      /run.sh \

@@ -39,7 +39,7 @@ os.makedirs(DATA, exist_ok=True); os.makedirs(os.path.join(DATA, "calls"), exist
 INSTANCE = os.environ.get("RCB_INSTANCE", os.path.dirname(os.path.abspath(__file__)))
 TASK_TEXT = open(os.path.join(INSTANCE, "task_text.txt")).read().strip()
 OBS_CALIBRATION = os.environ.get("RCB_OBS_CALIBRATION", "1") == "1"
-MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10")); MAX_WATCH_S = float(os.environ.get("RCB_MAX_WATCH_S", "30"))
+MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10"))
 MAX_FRAMES = 300                        # images per response (cameras x frames): 1080x1080 RGB is 3.5 MB a frame
 LOCK = threading.Lock()
 E = {"ready": False, "step": 0, "calls": 0, "done": False, "reason": None, "success": False, "t0": time.time(), "error": None}
@@ -191,7 +191,7 @@ def cam_spec(c: str) -> dict:
 SPEC = {
     "protocol": PROTOCOL, "protocol_compat": L.COMPAT, "simulator": "iSpatialGym eval v1.0 (OmniGibson / Isaac Sim, BEHAVIOR-1K fork)",
     "robot": "r1pro", "task_text": TASK_TEXT, "control_hz": CTRL_HZ, "physics_substeps": SUBSTEPS,
-    "max_chunk_s": MAX_CHUNK_S, "max_watch_s": MAX_WATCH_S, "max_control_steps": S.max_steps, "max_frames_per_call": MAX_FRAMES,
+    "max_chunk_s": MAX_CHUNK_S, "max_control_steps": S.max_steps, "max_frames_per_call": MAX_FRAMES,
     "cameras": {c: cam_spec(c) for c in CAMS},
     "default_cameras": [S.head_camera],
     "goal_image": {"file": "/app/goal.png", "camera": S.head_camera,
@@ -387,7 +387,7 @@ def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
 def do_observe(meta: dict) -> tuple[dict, list]:
     cams = request_cameras(meta)
     seconds = request_number(meta, "seconds", 0.0); fps = video_fps(meta); video = meta.get("video", "frames")
-    if seconds < 0 or seconds > MAX_WATCH_S: raise ValueError(f"seconds must be in [0, {MAX_WATCH_S}]")
+    if seconds < 0 or seconds > MAX_CHUNK_S: raise ValueError(f"seconds must be in [0, {MAX_CHUNK_S}] (max_chunk_s)")
     if video not in ("mp4", "frames", "both", "none"): raise ValueError("video must be mp4|frames|both|none")
     L.check_frames(len(cams), int(round(seconds * CTRL_HZ)) // max(1, int(round(CTRL_HZ / max(1, fps)))) + 2, limit=MAX_FRAMES)
     rec = recorder(cams, fps, meta); before = ctrl_steps()

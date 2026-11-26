@@ -41,7 +41,6 @@ DATA = os.environ.get("RCB_DATA", "/data")
 INSTANCE = os.environ.get("RCB_INSTANCE", os.path.join(os.path.dirname(os.path.abspath(__file__)), "instance.json"))
 WALL_CLOCK_S = float(os.environ.get("RCB_WALL_CLOCK_S", "5400"))
 MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10"))
-MAX_WATCH_S = float(os.environ.get("RCB_MAX_WATCH_S", "30"))
 MAX_FPS = 30  # every second control step
 MAX_FRAMES = 1800  # /spec max_frames_per_call: images per call (cameras x frames, per-frame depth counted again)
 LOCK = threading.Lock()
@@ -146,7 +145,6 @@ SPEC = {
     "control_hz": CTRL_HZ,
     "physics_substeps": SUBSTEPS,
     "max_chunk_s": MAX_CHUNK_S,
-    "max_watch_s": MAX_WATCH_S,
     "max_control_steps": M.MAX_STEPS,
     "cameras": {
         c: {
@@ -572,8 +570,8 @@ def parse_observe(meta: dict):
     cams, fps = cameras_of(meta), video_fps(meta)
     seconds = number(meta, "seconds", 0.0)
     video = meta.get("video", "frames")
-    if seconds < 0 or seconds > MAX_WATCH_S:
-        raise ValueError(f"seconds must be in [0, {MAX_WATCH_S}]")
+    if seconds < 0 or seconds > MAX_CHUNK_S:
+        raise ValueError(f"seconds must be in [0, {MAX_CHUNK_S}] (max_chunk_s)")
     if not isinstance(video, str) or video not in ("mp4", "frames", "both", "none"):
         raise ValueError("video must be mp4|frames|both|none")
     frames_ok(int(round(seconds / DT)), fps, video, cams, meta)

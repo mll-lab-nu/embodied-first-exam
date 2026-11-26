@@ -658,7 +658,9 @@ def standard_3_0_observe_reads_hold_chunks_let_time_pass():
         sp = r.spec()
         expect(sp.get("standard") == "eai-standard/3.0", f"spec.standard {sp.get('standard')}")
         rec = (sp.get("timing") or {}).get("recorder") or {}
-        expect(rec.get("cameras") == ["top"] and rec.get("fps") == 10.0 and rec.get("buffer_s") == 3.0, f"recorder {rec}")
+        expect(rec.get("cameras") == ["top"] and rec.get("fps") == 10.0 and rec.get("buffer_s") == 3.0
+               and rec.get("records") == "during /submit" and rec.get("depth") == [], f"recorder {rec}")
+        expect("max_watch_s" not in sp, "one hold cap: max_chunk_s")
         post = lambda p, b: requests.post(c.url + p, json=b, timeout=30)          # noqa: E731
         x = post("/observe", {"seconds": 1.0})
         expect(x.status_code == 400 and "hold chunk" in x.json()["error"], f"observe seconds > 0: {x.status_code} {x.text[:200]}")
@@ -669,6 +671,12 @@ def standard_3_0_observe_reads_hold_chunks_let_time_pass():
         res = r.submit("joint_position", chunk(10, 0.3), dt=0.05, video="none")
         expect(res.meta.get("duration_s") == 0.5 and res.meta.get("planned_duration_s") == 0.5, f"durations {res.meta}")
         st = r.status()
+        expect(res.meta.get("frame_step") == st["control_steps"], f"submit answer's frame_step {res.meta.get('frame_step')}")
+        x = post("/observe", {})
+        expect(x.status_code == 200 and rcb1.decode(x.content)[0].get("frame_step") == st["control_steps"],
+               "observe last_s = 0: frame_step")
+        x = post("/observe", {"last_s": 0.4, "depth": "frames"})
+        expect(x.status_code == 400 and "last_s = 0" in x.json()["error"], f"depth frames with last_s: {x.status_code}")
         x = post("/observe", {"last_s": 0.4, "video": "frames"})
         m, p = rcb1.decode(x.content)
         steps = list(np.asarray(p["frame_step"]["data"]))
@@ -685,6 +693,7 @@ def standard_3_0_observe_reads_hold_chunks_let_time_pass():
                f"hold chunk reply {m}")
         expect(r.status()["control_steps"] == st["control_steps"] + 10, "the hold ran 0.5 s of control steps")
         for body, what in (({"type": "joint_position", "interpolate": "hold", "seconds": 0.5, "actions": [[0, 0, 0]]}, "rows + seconds"),
+                           ({"type": "joint_position", "seconds": 0, "dt": 0.05, "actions": [[0, 0, 0]]}, "rows + seconds 0"),
                            ({"type": "joint_position", "interpolate": "linear", "seconds": 0.5}, "no rows, not hold"),
                            ({"type": "ee_pose", "interpolate": "hold", "seconds": 0.5}, "a type not served"),
                            ({"type": "joint_position", "interpolate": "hold", "seconds": 99}, "past max_chunk_s"),

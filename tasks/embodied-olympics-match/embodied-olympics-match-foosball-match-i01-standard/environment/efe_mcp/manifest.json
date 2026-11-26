@@ -6,18 +6,16 @@
  "url_env": "SIM_URL",
  "seat": "A",
  "seat_env": "SEAT",
- "max_wait_s": 10,
- "notes": "The tools carry the seat's calls (the HTTP calls the `game` command makes). Locating the ball or the opponent is done by eye in the tile images, with the cameras' intrinsics and poses from `spec`.",
+ "notes": "The tools are those of every standard task (spec, observe, submit) on the seat's eai-standard service with the match extension, plus the match's own calls (start, ready; say, team in a team format). Locating the ball or the opponent is done by eye in the images, with the cameras' intrinsics and poses from `spec`.",
  "task": "embodied-olympics-match-foosball-match-i01-standard",
  "protocol": "eai-standard/2.1+match/1.0",
  "realtime": false,
  "turn": false,
  "tools": [
   "spec",
-  "start",
   "observe",
-  "act",
-  "wait",
+  "submit",
+  "start",
   "ready"
  ]
 }

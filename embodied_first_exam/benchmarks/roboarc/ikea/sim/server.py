@@ -81,7 +81,7 @@ TASK = os.environ.get("RCB_TASK", "lack")
 BINDING = json.load(open(os.environ.get("RCB_BINDING", os.path.join(HERE, "runtime_binding.json"))))
 RIG_SPEC = json.load(open(os.environ.get("RCB_RIG", os.path.join(HERE, "rig.json"))))
 OBS_CALIBRATION = os.environ.get("RCB_OBS_CALIBRATION", "1") == "1"
-MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10")); MAX_WATCH_S = float(os.environ.get("RCB_MAX_WATCH_S", "30"))
+MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10"))
 WALL_CLOCK_S = float(os.environ.get("RCB_WALL_CLOCK_S", "10800"))
 LIVE_FPS = int(os.environ.get("RCB_LIVE_FPS", "10")); LIVE_CAM = os.environ.get("RCB_LIVE_CAMERA", "cam_high")
 # /spec max_frames_per_call (PROTOCOL §3 "Images per call"): cameras x frames as the recorder takes them (one every 1/fps of
@@ -357,7 +357,7 @@ SPEC = {
     "protocol": PROTOCOL, "protocol_compat": L.COMPAT, "simulator": "mujoco 3.14.0 (CPU, float64; the scene's own runtime and mechanism)",
     "robot": R_SPEC["name"], "task_text": TEXTS["task_text"],
     "control_hz": CTRL_HZ, "control_dt": CTRL_DT, "physics_substeps": int(R.SUBSTEPS), "physics_dt": float(s.timestep),
-    "max_chunk_s": MAX_CHUNK_S, "max_watch_s": MAX_WATCH_S, "max_frames_per_call": MAX_FRAMES,
+    "max_chunk_s": MAX_CHUNK_S, "max_frames_per_call": MAX_FRAMES,
     "cameras": CAM_SPEC, "default_cameras": list(CAMS),
     "action_types": {
         "joint_position": {
@@ -881,8 +881,8 @@ def do_observe(meta: dict) -> tuple[dict, list]:
     except (TypeError, ValueError, OverflowError):
         raise ValueError("seconds must be a number")
     fps = meta.get("video_fps", 10); video = meta.get("video", "frames")
-    if not math.isfinite(seconds) or seconds < 0 or seconds > MAX_WATCH_S:
-        raise ValueError(f"seconds must be in [0, {MAX_WATCH_S}]")
+    if not math.isfinite(seconds) or seconds < 0 or seconds > MAX_CHUNK_S:
+        raise ValueError(f"seconds must be in [0, {MAX_CHUNK_S}] (max_chunk_s)")
     if video not in ("mp4", "frames", "both", "none"):
         raise ValueError("video must be mp4|frames|both|none")
     if not isinstance(fps, (int, float)) or not 1 <= fps <= 30:

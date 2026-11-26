@@ -55,7 +55,7 @@ HOLD_HINT_RT = ("observe reads the recorder only and never waits (eai-standard/3
 MAX_REQUEST_BYTES = 8 << 20
 MAX_JSON_ROWS = 1000
 MAX_CHUNK_S = 10.0                        # game seconds a chunk may cover
-TURN_WAIT_MAX_S = 60.0                    # real seconds a hold chunk may wait for your turn (turn-based)
+TURN_WAIT_MAX_S = 60.0                    # turn-based: max_chunk_s, the real seconds a hold chunk may wait for your turn
 MAX_AHEAD_S = 10.0                        # realtime: `at` at most this far ahead (game seconds)
 RECENT_EFFECTS = 64
 STATE_KEYS_SKIP = {"team_messages", "ready", "retired"}
@@ -389,8 +389,8 @@ class Adapter:
                "sport": svc.sport.name, "revision": core.get("revision"), "seat": self.seat, "side": core.get("side"),
                "format": core.get("format"), "action_level": core.get("action_level"),
                "control_hz": None if not self.dt else round(1.0 / self.dt, 6), "physics_substeps": None,
-               "control_dt": self.dt, "max_chunk_s": MAX_CHUNK_S, "max_chunk_rows": MAX_JSON_ROWS,
-               "max_hold_s": TURN_WAIT_MAX_S if self.clock == "turn" else MAX_CHUNK_S, "standard": EAI_STANDARD,
+               "control_dt": self.dt, "max_chunk_s": self.max_chunk_s, "max_chunk_rows": MAX_JSON_ROWS,
+               "standard": EAI_STANDARD,
                "max_request_bytes": MAX_REQUEST_BYTES, "entities": entities,
                "cameras": cams, "action_types": {**types, "not_yet": []}, "action_types_note": types_note,
                "proprio_layout": None,
@@ -493,14 +493,28 @@ class Adapter:
             raise BadRequest(f"at most {MAX_JSON_ROWS} rows")
         return {"hdr": hdr, "rows": rows}
 
+    @property
+    def max_chunk_s(self) -> float:
+        """The one cap of a chunk and of a hold chunk (eai-standard/3.0): game seconds; turn-based, where a chunk is one
+        action and a hold chunk waits for your turn, the real seconds that wait may take."""
+        return TURN_WAIT_MAX_S if self.clock == "turn" else MAX_CHUNK_S
+
+    @staticmethod
+    def frame_step(parts: list) -> int | None:
+        """The control step of an answer's newest image (meta.frame_step), from its frame_step part(s)."""
+        steps = [np.frombuffer(p[2], dtype=p[3]["dtype"]) for p in parts
+                 if p[1] == "array" and (p[0] == "frame_step" or p[0].startswith("frame_step/"))]
+        steps = [int(np.max(a)) for a in steps if len(a)]
+        return max(steps) if steps else None
+
     def hold_seconds(self, hdr: dict) -> float:
-        """A hold chunk's `seconds`: interpolate "hold", a finite number in (0, max_hold_s]."""
+        """A hold chunk's `seconds`: interpolate "hold", a finite number in (0, max_chunk_s]."""
         if hdr.get("interpolate") != "hold":
             raise BadRequest('a chunk without rows is a hold chunk: {"type": <type>, "interpolate": "hold", "seconds": n}')
         n = hdr.get("seconds")
-        limit = TURN_WAIT_MAX_S if self.clock == "turn" else MAX_CHUNK_S
+        limit = self.max_chunk_s
         if isinstance(n, bool) or not isinstance(n, (int, float)) or not math.isfinite(n) or not 0 < n <= limit + 1e-9:
-            raise BadRequest(f"a hold chunk's seconds: a finite number in (0, max_hold_s = {limit:g}]")
+            raise BadRequest(f"a hold chunk's seconds: a finite number in (0, max_chunk_s = {limit:g}]")
         return float(n)
 
     def build_rows(self, req) -> dict:
@@ -808,10 +822,15 @@ class Adapter:
             self.chunk_id += 1
             cid = self.chunk_id
         if req.get("hold") is not None:
-            return self.submit_hold(req, cid)
-        if self.clock == "realtime":
-            return self.submit_realtime(req, cid)
-        return self.submit_sync(req, cid)
+            code, meta, parts = self.submit_hold(req, cid)
+        elif self.clock == "realtime":
+            code, meta, parts = self.submit_realtime(req, cid)
+        else:
+            code, meta, parts = self.submit_sync(req, cid)
+        newest = self.frame_step(parts) if parts else None
+        if newest is not None and isinstance(meta, dict) and "frame_step" not in meta:
+            meta = {**meta, "frame_step": newest}   # eai-standard/3.0: every answer with images
+        return code, meta, parts
 
     def submit_hold(self, req, cid):
         """A rows-free hold chunk (eai-standard/3.0). Lockstep: n game seconds pass with the commands in force (the core's
@@ -1084,6 +1103,14 @@ ENDPOINTS = {
     "POST /team": "extension, team formats: {since} -> JSON {messages, ok, meta} (GET /team?since=N too)",
 }
 
+REQUEST_LIMIT = {"rule": "Part 1: a request body up to 64 MiB",
+                 "here": "at most max_request_bytes = 8 MiB (above it: 413)",
+                 "why": "a match's requests are commands and small images; the seat server bounds what one seat may send"}
+RATE_LIMIT = {"rule": "Part 1: every request is answered",
+              "here": "a seat with too many requests in flight is refused 429 (empty body: retry more slowly); a "
+                      "request from a host the seat is not bound to is a 403 (seat not authorized)",
+              "why": "several seats share one world; one seat must not slow the others down or act for another"}
+
 DEVIATIONS = {
     "realtime": [
         {"rule": "3.0: the clock starts at the first /submit",
@@ -1134,8 +1161,11 @@ DEVIATIONS = {
         {"rule": "2.1: /submit executes a chunk of rows", "here": "one action per turn, then /ready",
          "why": "a turn-based match"},
         {"rule": "3.0: a hold chunk {type, interpolate: hold, seconds: n} holds the current target for n seconds",
-         "here": "it waits up to n real seconds for your turn", "why": "nothing moves between turns"},
+         "here": "it waits up to n real seconds for your turn (n at most max_chunk_s, real seconds here)",
+         "why": "nothing moves between turns"},
         {"rule": "3.0: /observe last_s = n returns the frames recorded in the last n seconds",
          "here": "the sport's own frames of now", "why": "the core renders images only on observation"},
     ],
 }
+for _clock in DEVIATIONS.values():
+    _clock += [REQUEST_LIMIT, RATE_LIMIT]

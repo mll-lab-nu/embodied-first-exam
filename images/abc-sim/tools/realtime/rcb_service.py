@@ -100,7 +100,7 @@ ON_SERVICE_ERROR = ("if a call fails with a connection error or a 5xx, the servi
                     "same episode (never a reset): the state is the one after the last call that completed on the "
                     "service, which you may not have received; check GET /status before continuing")
 # Agent-ended episodes (docs/protocol/README.md §3 "Agent-ended episodes", standard_mode.md "Agent-ended episodes";
-# required for every standard and realtime task from protocol v2.5). RCB_AGENT_END=1: the service never shows the task's
+# required for every standard and realtime task from eai-standard/3.0). RCB_AGENT_END=1: the service never shows the task's
 # success and a success never ends the episode; POST /finish (JSON {}) ends it (reason "finished"), and so do the step
 # cap (reason "step_limit": the adapter's max_control_steps, or RCB_STEP_LIMIT=N when set, which may only lower it) and
 # the end of the agent's session ("timeout"); those three ends are judged on the state they leave. A done that step()
@@ -133,6 +133,8 @@ SUCCESS_SIGNAL_NOTE = ("hidden: the service never tells you whether you have suc
 EAI_STANDARD = "eai-standard/3.0"
 CAMERA_FPS = float(os.environ.get("RCB_CAMERA_FPS") or 10.0)    # the recorder: frames per robot second (all cameras)
 LOOKBACK_S = float(os.environ.get("RCB_LOOKBACK_S") or 3.0)     # robot seconds the recorder's ring keeps
+DEPTH_PAST = ("depth with last_s > 0: the recorder keeps no depth for these cameras (spec timing.recorder.depth lists "
+              "the cameras it keeps depth for): ask for depth with last_s = 0")
 SECONDS_GONE = ('observe never lets time pass (eai-standard/3.0): to let n seconds pass, submit a hold chunk '
                 '{"type": <type>, "interpolate": "hold", "seconds": n} with no rows; last_s = n returns the frames '
                 'recorded in the last n seconds')
@@ -426,10 +428,10 @@ class FrameRing:
         self.frames: collections.deque = collections.deque()                       # {step, rgb: {cam: img}, proprio}
 
     def spec(self) -> dict:
-        how = {True: "during every /submit, every camera at fps", "delivered": "during every /submit, the images the "
-               "submit's own answer carries", False: "nothing: last_s returns the current frame"}[self.mode]
+        how = {True: "during /submit", "delivered": "during /submit: the images the submit's own answer carries",
+               False: "nothing: last_s returns the current frame"}[self.mode]
         return {"cameras": self.cams if self.mode else [], "fps": round(self.fps, 3), "buffer_s": self.buffer_s,
-                "records": how}
+                "records": how, "depth": []}           # RGB only: depth comes with the current frame (last_s = 0)
 
     def clear(self) -> None:
         self.frames.clear()
@@ -462,7 +464,7 @@ class Service:
     """Episode bookkeeping, evidence and the HTTP endpoints around one `Sim`."""
 
     def __init__(self, sim, *, data: str = "/data", reset_budget: int = 0, wall_clock_s: float = 3600.0,
-                 max_chunk_s: float = 10.0, max_watch_s: float = 30.0, max_frames_per_call: int = MAX_FRAMES_PER_CALL,
+                 max_chunk_s: float = 10.0, max_frames_per_call: int = MAX_FRAMES_PER_CALL,
                  max_resumes: int = 2, agent_end: bool | None = None, step_limit: int | None = None):
         # agent-ended episodes (AGENT_END above; the arguments override the environment, for tests)
         self.agent_end = AGENT_END if agent_end is None else bool(agent_end)
@@ -481,7 +483,7 @@ class Service:
                             "to step() or live_verdict(), or set replay_free = True")
         self.sim, self.data = sim, data
         self.reset_budget, self.wall_clock_s = int(reset_budget), float(wall_clock_s)
-        self.max_chunk_s, self.max_watch_s = float(max_chunk_s), float(max_watch_s)
+        self.max_chunk_s = float(max_chunk_s)
         self.max_frames, self.max_resumes = int(max_frames_per_call), int(max_resumes)
         os.makedirs(os.path.join(data, "calls"), exist_ok=True)
         self.journal_path = os.path.join(data, "trajectory_live.f64")
@@ -506,7 +508,7 @@ class Service:
     def _spec(self) -> dict:
         own = self.sim.spec()
         core = {"protocol": PROTOCOL, "standard": EAI_STANDARD, "control_dt": self.sim.control_dt, "max_control_steps": self.cap,
-                "max_chunk_s": self.max_chunk_s, "max_watch_s": self.max_watch_s, "max_video_fps": MAX_VIDEO_FPS,
+                "max_chunk_s": self.max_chunk_s, "max_video_fps": MAX_VIDEO_FPS,
                 "max_frames_per_call": self.max_frames, "proprio_layout": list(self.sim.proprio_layout),
                 "budget": {"reset": self.reset_budget, "wall_clock_s": self.wall_clock_s},
                 "clock": "time_s and elapsed_s count from your first request to the service; time_left_s is "
@@ -520,7 +522,7 @@ class Service:
         spec["timing"] = {**(own["timing"] if isinstance(own.get("timing"), dict) else {}),
                           "submit": "blocks until its rows have run and answers with their video and duration_s; "
                                     'a hold chunk {"type": <type>, "interpolate": "hold", "seconds": n} with no rows '
-                                    "holds the current target for n seconds (at most max_watch_s)",
+                                    "holds the current target for n seconds (at most max_chunk_s)",
                           "observe": "a pure read, at once; no time passes: last_s = 0 (default) the current frame, "
                                      "last_s = n the frames recorded in the last n seconds (at most recorder.buffer_s)",
                           "recorder": self.ring.spec()}
@@ -955,8 +957,8 @@ class Service:
             sec = float(meta["seconds"])
         except (TypeError, ValueError, OverflowError):
             raise ValueError("seconds must be a number") from None
-        if not (np.isfinite(sec) and 0.0 < sec <= self.max_watch_s + 1e-9):
-            raise ValueError(f"a hold chunk's seconds must be in (0, {self.max_watch_s:g}] (max_watch_s)")
+        if not (np.isfinite(sec) and 0.0 < sec <= self.max_chunk_s + 1e-9):
+            raise ValueError(f"a hold chunk's seconds must be in (0, {self.max_chunk_s:g}] (max_chunk_s)")
         return sec
 
     def _submit(self, meta: dict, parts: dict) -> tuple[dict, list]:
@@ -1021,7 +1023,7 @@ class Service:
         out = {**self.meta(), "chunk_id": self.calls, "type": typ, "executed_rows": executed,
                "control_steps_chunk": ran, "duration_s": round(ran * cdt, 4),
                "planned_duration_s": round(len(A) * k * cdt, 4), "clipped": clipped[:200], "n_clipped": len(clipped),
-               **self._shown(info), "ok": True}
+               **({"frame_step": len(self.episode)} if cams else {}), **self._shown(info), "ok": True}
         self._checkpoint("submit", type=typ, n_rows=len(A), dt=dt, interpolate=interp, cameras=cams,
                          note=str(meta.get("note") or "")[:500], executed_rows=executed, n_clipped=len(clipped), **info)
         self._save_call(out, A)
@@ -1052,7 +1054,8 @@ class Service:
         ran = len(self.episode) - before
         out = {**self.meta(), "chunk_id": self.calls, "type": typ, "hold": True, "executed_rows": 0,
                "control_steps_chunk": ran, "duration_s": round(ran * cdt, 4), "planned_duration_s": round(seconds, 4),
-               "clipped": [], "n_clipped": 0, **self._shown(info), "ok": True}
+               "clipped": [], "n_clipped": 0, **({"frame_step": len(self.episode)} if cams else {}), **self._shown(info),
+               "ok": True}
         self._checkpoint("submit", type=typ, n_rows=0, hold=True, seconds=round(seconds, 4), cameras=cams,
                          note=str(meta.get("note") or "")[:500], executed_rows=0, n_clipped=0, **info)
         self._save_call(out, None)
@@ -1075,7 +1078,7 @@ class Service:
                 raise ValueError("last_s must be a number of seconds >= 0")
             cams, fps, video, depth = self._view(meta, "frames")
             if last_s > 0 and depth:
-                raise ValueError("depth comes with the current frame only: ask for it with last_s = 0")
+                raise ValueError(DEPTH_PAST)
             step = len(self.episode)
             window = self.ring.window(step, last_s, fps) if last_s > 0 else []
             if window:

@@ -46,7 +46,7 @@ TASK = os.environ.get("RCB_TASK", "stack_cubes"); INSTANCE = os.environ.get("RCB
 BACKEND = os.environ.get("RCB_ROBOWITS_BACKEND", "cpu")
 OBS_CALIBRATION = os.environ.get("RCB_OBS_CALIBRATION", "1") == "1"
 CTRL_HZ = 30; SUBSTEPS = 4
-MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10")); MAX_WATCH_S = float(os.environ.get("RCB_MAX_WATCH_S", "30"))
+MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10"))
 LOCK = threading.Lock()
 E = {"ready": False, "step": 0, "calls": 0, "done": False, "reason": None, "success": False, "t0": time.time(), "error": None}
 # Crash-safe episode bookkeeping, set up before the scene is built (start count, back-off, startup watchdog)
@@ -281,7 +281,7 @@ PROPRIO_GROUPS = {   # name: [first column, count, meaning]
 }
 SPEC = {
     "protocol": PROTOCOL, "protocol_compat": L.COMPAT, "simulator": "robowits (Genesis 0.4.7)", "robot": "marvin-bimanual", "task_text": S.spec["text"],
-    "control_hz": CTRL_HZ, "physics_substeps": SUBSTEPS, "max_chunk_s": MAX_CHUNK_S, "max_watch_s": MAX_WATCH_S,
+    "control_hz": CTRL_HZ, "physics_substeps": SUBSTEPS, "max_chunk_s": MAX_CHUNK_S,
     "max_frames_per_call": MAX_FRAMES,
     # not a step budget (budget.steps stays null: the wall clock is the budget) but the technical cap of one episode
     # (PROTOCOL §4.5, `max_control_steps`): the tooling's runaway guard, also the longest trajectory the graders accept
@@ -549,7 +549,7 @@ def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
 def do_observe(meta: dict) -> tuple[dict, list]:
     meta = req_dict(meta)
     cams = req_cameras(meta); seconds = req_number(meta, "seconds", 0); fps = req_fps(meta); video = req_choice(meta, "video", "frames", VIDEO_MODES)
-    if seconds < 0 or seconds > MAX_WATCH_S: raise ValueError(f"seconds must be in [0, {MAX_WATCH_S}]")
+    if seconds < 0 or seconds > MAX_CHUNK_S: raise ValueError(f"seconds must be in [0, {MAX_CHUNK_S}] (max_chunk_s)")
     watch = seconds > 0 and not E["done"]
     frames_ok(cams, int(round(seconds * CTRL_HZ)) if watch else 0, fps, meta)   # (the depth mode is checked here: ValueError)
     rec = recorder(cams, fps, meta); before = ctrl_steps(); settled = None

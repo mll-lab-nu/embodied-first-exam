@@ -1,9 +1,10 @@
 """The reference solution's seat client in the MCP-only variant of an Embodied Olympics match (kind eo-match): the
 task's own ro_client.py (core/client.py: the reference player's loop) with its Seat.call sent through the efe-robot
-MCP server as tool calls (spec, start, observe, act, wait, ready, say; GET /status answered from observe's state) instead of HTTP. The tools write the
-images as files; this client reads them back into the replies the player expects. sitecustomize.py puts it in place
-of `ro_client` (solution/solve.sh sets EFE_MCP_ORACLE=1), so a passing oracle shows the match is playable through the
-tools alone."""
+MCP server instead of the seat API: spec, observe, submit (an action: one JSON row; the player's wait: a hold chunk),
+start, ready, say, team; GET /status is answered from observe's meta.state. The tools write the images as files; this
+client reads them back into the replies the player expects (state, observation with its PNG). sitecustomize.py puts it
+in place of `ro_client` (solution/solve.sh sets EFE_MCP_ORACLE=1), so a passing oracle shows the match is playable
+through the tools alone."""
 from __future__ import annotations
 import base64, importlib.util, json, os, pathlib, sys
 
@@ -44,8 +45,8 @@ def _tool(name, **args):
     try:
         out = _CLIENT[0].call(name, **args)
     except _mc.McpToolError as e:
-        msg = str(e)
-        code = 400 if msg.startswith("HTTP 400") else 429 if "rate limit" in msg else 409
+        msg = str(e)                          # the tools' refusal: "<HTTP status> <path>: <the service's error>"
+        code = int(msg[:3]) if msg[:3].isdigit() else 409
         return {"error": msg, "http_status": code}
     if isinstance(out, dict) and isinstance(out.get("operation_result"), dict):
         out = out["operation_result"]
@@ -53,21 +54,47 @@ def _tool(name, **args):
 
 
 def _with_images(out):
-    """The service's reply as the HTTP client gets it: image files back to base64, the tools' own keys removed."""
+    """A tool's result as the seat API's reply: the match state under both `state` and `now` (the turn-based and the
+    lockstep / realtime spelling), the observation with the `view` image back as base64."""
     if not isinstance(out, dict):
         return out
-    out.pop("review_due", None)
-    out.pop("match_over", None)
-    out.pop("waited_game_s", None)
-    ob = out.get("observation")
-    if isinstance(ob, dict) and ob.get("image_file"):
-        ob["image_png_b64"] = base64.b64encode(pathlib.Path(ob.pop("image_file")).read_bytes()).decode()
-        for t in ob.get("tiles") or []:
-            if isinstance(t, dict):
-                t.pop("file", None)
-    for k in [k for k in list(out) if k.endswith("_image_file")]:
-        out[k[:-5] + "_b64"] = base64.b64encode(pathlib.Path(out.pop(k)).read_bytes()).decode()
-    return out
+    if out.get("episode_over"):              # a 409 after the end: the seat API's final state
+        st = {"done": True, **{k: out[k] for k in ("reason", "won", "winner", "scores") if k in out}}
+        return {**out, "state": st, "now": st}
+    if "error" in out and "http_status" in out:
+        return out
+    meta = out.get("meta") if isinstance(out.get("meta"), dict) else {}
+    st = meta.get("state") if isinstance(meta.get("state"), dict) else {}
+    reply = {k: v for k, v in out.items() if k not in ("meta", "parts", "step", "tool_s")}
+    reply.update(state=st, now=st)
+    view = (out.get("parts") or {}).get("view")
+    if isinstance(view, dict) and view.get("file"):
+        ob = dict(meta.get("observation") or {})
+        ob["image_png_b64"] = base64.b64encode(pathlib.Path(view["file"]).read_bytes()).decode()
+        reply["observation"] = ob
+    for k in ("ok", "not_now", "effects", "score"):
+        if k in meta:
+            reply.setdefault(k, meta[k])
+    if meta.get("effects"):
+        te = meta["effects"][0]
+        reply["took_effect"] = {k: v for k, v in te.items() if k != "row"}
+    return reply
+
+
+_TYPE = []
+
+
+def _hold_type():
+    """The type a hold chunk names (the first of the spec's action types) and its cap, the spec's max_chunk_s."""
+    if not _TYPE:
+        sp = _tool("spec")
+        spec = sp.get("spec") or {}
+        if not spec.get("action_types") and sp.get("spec_file"):
+            spec = json.loads(pathlib.Path(sp["spec_file"]).read_text())
+        types = [t for t in (spec.get("action_types") or {}) if t != "not_yet"]
+        cap = spec.get("max_chunk_s")
+        _TYPE.extend([types[0] if types else "hold", float(cap) if isinstance(cap, (int, float)) and cap > 0 else 10.0])
+    return _TYPE[0], _TYPE[1]
 
 
 class McpSeat(real.Seat):
@@ -75,24 +102,23 @@ class McpSeat(real.Seat):
         body = body or {}
         if ep == "spec":
             out = _tool("spec")
-            return json.loads(pathlib.Path(out["spec_file"]).read_text()) if "spec_file" in out else out
+            sp = json.loads(pathlib.Path(out["spec_file"]).read_text()) if "spec_file" in out else out.get("spec", out)
+            return sp.get("match") or sp
         if ep == "status":                   # no status tool: the state comes back with every result
-            out = _tool("observe")
-            return out.get("now") or out.get("state") or out
-        if ep == "start":
-            return _tool(ep)
-        if ep == "wait":
-            return _tool("wait") if "timeout_s" in body else _tool("wait", seconds=float(body.get("dt", 0.1)))
+            return _tool("observe", cameras=[]).get("state") or {}
+        if ep in ("start", "ready", "say", "team"):
+            args = {"why": body.get("why", ""), "plan": body.get("plan", "")} if ep == "ready" else \
+                {"text": body.get("text", "")} if ep == "say" else {"since": int(body.get("since", 0))} if ep == "team" \
+                else {}
+            return _tool(ep, **args)
+        if ep == "wait":                     # a hold chunk: turn-based, a wait for your turn; else dt game seconds
+            secs = float(body["timeout_s"]) if "timeout_s" in body else float(body.get("dt", 0.1))
+            typ, cap = _hold_type()          # a longer wait is the player's loop's: it waits again
+            return _tool("submit", type=typ, interpolate="hold", seconds=min(secs, cap))
         if ep == "observe":
-            return _tool("observe", **({"query": body["query"]} if body.get("query") else {}))
+            return _tool("observe", **({"fields": {"query": body["query"]}} if body.get("query") else {}))
         if ep == "act":
-            return _tool("act", action=body)
-        if ep == "ready":
-            return _tool("ready", why=body.get("why", ""), plan=body.get("plan", ""))
-        if ep == "say":
-            return _tool("say", text=body.get("text", ""))
-        if ep == "team":
-            return _tool("team", since=int(body.get("since", 0)))
+            return _tool("submit", type=str(body.get("type", "")), actions=[body])
         raise NotImplementedError(f"{ep}: no efe-robot tool for it")
 
 

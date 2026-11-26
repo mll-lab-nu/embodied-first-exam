@@ -102,11 +102,14 @@ in flight (sent before the previous one returned), or more than 20 requests per 
 (empty body: retry more slowly).
 
 ### MCP tools
-- The same seat is also an MCP server, `efe-robot` (in your tool list), with one tool per `game` command: `spec`,
-  `start`, `observe`, `act`, `wait`, `ready`. Each result is the service's reply; images are written as files under
-  `/app/obs/`.
-- A call still running after 45 s returns `pending` with an `operation` id; `wait(operation=id)` collects it.
-- The `game` command and the tools play the same seat in the same match; use either, or both.
+- The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
+  `observe`, `submit`, `start`, `ready`. A tool takes its endpoint's request fields (any other field in `fields`) and
+  returns the service's reply `meta` unchanged; images are written as files under `/app/obs/` (`.png`, `.npy`) and the
+  result lists them. There is no `finish` tool: the match's rules end it.
+- `observe` returns at once; time passes only through `submit`; a `submit` with `interpolate` "hold", `seconds` and no
+  rows lets it pass.
+- A call still running after 45 s returns `pending` with an `operation` id; `observe(operation=id)` collects its reply.
+- The client, the `game` command and the tools play the same seat in the same match; use any of them.
 
 ### Actions
 - Your actions are the sport's skill API (`hit`): the platform executes each one; `game spec` (`skill_contract`) says

@@ -38,7 +38,7 @@ DATA = os.environ.get("RCB_DATA", "/data"); os.makedirs(DATA, exist_ok=True); os
 TASK = os.environ.get("RCB_TASK", "calli_yong"); INSTANCE = os.environ.get("RCB_INSTANCE", os.path.join(os.path.dirname(__file__), "instance.json"))
 OBS_CALIBRATION = os.environ.get("RCB_OBS_CALIBRATION", "1") == "1"
 CTRL_HZ = 20; SUBSTEPS = 5
-MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10")); MAX_WATCH_S = float(os.environ.get("RCB_MAX_WATCH_S", "30"))
+MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10"))
 VIDEOS = ("mp4", "frames", "both", "none")
 MAX_VIDEO_FPS = 1000                   # the mp4 encoder's frame rate; the recorder keeps at most one frame per control step
 # The images one call may hold (PROTOCOL §3 "Images per call"): every frame a call records stays in memory until its
@@ -262,7 +262,7 @@ SPEC = {
     "protocol": PROTOCOL, "protocol_compat": L.COMPAT, "simulator": "maniskill 3.0.1 (SAPIEN 3.0.3, PhysX CPU) + a virtual brush",
     "robot": ROBOT_TEXT,
     "task_text": TASK_TEXT,
-    "control_hz": CTRL_HZ, "physics_substeps": SUBSTEPS, "physics_hz": CTRL_HZ * SUBSTEPS, "max_chunk_s": MAX_CHUNK_S, "max_watch_s": MAX_WATCH_S,
+    "control_hz": CTRL_HZ, "physics_substeps": SUBSTEPS, "physics_hz": CTRL_HZ * SUBSTEPS, "max_chunk_s": MAX_CHUNK_S,
     "max_frames_per_call": MAX_FRAMES,
     "cameras": {c: {"rgb": True, "depth": True, "mounted": MOUNT.get(c, "static"), "resolution": [int(FIRST[c].shape[1]), int(FIRST[c].shape[0])],
                     "calibration_in_obs": OBS_CALIBRATION, "intrinsic_cv": CALIB[c]["intrinsic_cv"], "depth_range_m": NEAR_FAR[c],
@@ -525,7 +525,7 @@ def parse_observe(meta: dict):
     cams = list(dict.fromkeys(c for c in (meta.get("cameras") or CAMS) if c in CAMS)) or CAMS    # each camera once
     seconds = number(meta, "seconds", 0.0); fps = video_fps(meta); video = meta.get("video", "frames")
     L.depth_mode(meta)
-    if not (0 <= seconds <= MAX_WATCH_S): raise ValueError(f"seconds must be in [0, {MAX_WATCH_S}]")
+    if not (0 <= seconds <= MAX_CHUNK_S): raise ValueError(f"seconds must be in [0, {MAX_CHUNK_S}] (max_chunk_s)")
     if video not in VIDEOS: raise ValueError("video must be mp4|frames|both|none")
     frames_ok(cams, 0 if E["done"] else int(round(seconds * CTRL_HZ)), fps, meta)
     return cams, seconds, fps, video

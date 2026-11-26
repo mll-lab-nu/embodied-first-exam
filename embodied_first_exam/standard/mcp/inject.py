@@ -52,11 +52,12 @@ NO_TOOL = {
     "GET /status": "its fields come back in every tool result's meta",
     "GET /operations/<id>": "the tool server re-queries it itself when a reply is lost",
 }
-# a match's seat service (kind "eo-match", suites.py): its commands and their tools
-EO_ENDPOINTS = {"GET /spec": "spec", "POST /start": "start", "POST /observe": "observe", "POST /act": "act",
-                "POST /wait": "wait", "POST /ready": "ready", "POST /say": "say", "GET /team": "team",
-                "GET /status": None}
-EO_TOOLS = ("spec", "start", "observe", "act", "wait", "ready")
+# a match's eai-standard service with the match extension (kind "eo-match", suites.py): the RCB endpoints' tools
+# (no /finish, /reset, /kinematics: 404 in a match) and the extension's calls
+EO_ENDPOINTS = {"GET /spec": "spec", "POST /observe": "observe", "POST /submit": "submit", "POST /start": "start",
+                "POST /ready": "ready", "POST /say": "say", "POST /team": "team", "GET /status": None,
+                "POST /finish": None}
+EO_TOOLS = ("spec", "observe", "submit", "start", "ready")
 # tasks that keep only their own interface, and why (their docs say so too)
 EXCEPTIONS = (
     (lambda folder, name, protocol: protocol.startswith("eai-policy/"),
@@ -231,10 +232,18 @@ def section(m: dict) -> str:
              "collects its reply.",
              "The client and the tools drive the same robot in the same episode; use either, or both."]
         return SECTION + "\n" + "\n".join(_wrap(x, "- ", "  ") for x in b) + "\n"
-    b = [f"The same seat is also an MCP server, `efe-robot` (in your tool list), with one tool per `game` command: "
-         f"{names}. Each result is the service's reply; images are written as files under `/app/obs/`.",
-         "A call still running after 45 s returns `pending` with an `operation` id; `wait(operation=id)` collects it.",
-         "The `game` command and the tools play the same seat in the same match; use either, or both."]
+    b = [f"The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: "
+         f"{names}. A tool takes its endpoint's request fields (any other field in `fields`) and returns the "
+         "service's reply `meta` unchanged; images are written as files under `/app/obs/` (`.png`, `.npy`) and the "
+         "result lists them. There is no `finish` tool: the match's rules end it.",
+         "`observe` returns at once; " + ("`submit` answers at once, as the endpoint does."
+                                          if m.get("realtime") else
+                                          "time passes only through `submit`; a `submit` with `interpolate` \"hold\", "
+                                          "`seconds` and no rows lets it pass" + (" (here: waits for your turn)."
+                                                                                   if m.get("turn") else ".")),
+         "A call still running after 45 s returns `pending` with an `operation` id; `observe(operation=id)` "
+         "collects its reply.",
+         "The client, the `game` command and the tools play the same seat in the same match; use any of them."]
     return SECTION + "\n" + "\n".join(_wrap(x, "- ", "  ") for x in b) + "\n"
 
 

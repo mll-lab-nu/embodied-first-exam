@@ -185,28 +185,34 @@ def test_v3(path: Path) -> None:
 
         sp = svc.spec
         check(sp.get("standard") == "eai-standard/3.0" and sp["timing"]["recorder"]["cameras"] == ["c"]
-              and sp["timing"]["recorder"]["fps"] == 10.0, f"{tag}: /spec standard / timing.recorder: {sp.get('timing')}")
+              and sp["timing"]["recorder"]["fps"] == 10.0 and sp["timing"]["recorder"]["records"] == "during /submit"
+              and sp["timing"]["recorder"]["depth"] == [] and "max_watch_s" not in sp,
+              f"{tag}: /spec standard / timing.recorder: {sp.get('timing')}")
         code, m, _ = post("/observe", {"seconds": 1.0})
         check(code == 400 and "hold chunk" in m.get("error", ""), f"{tag}: observe seconds > 0: {code} {m}")
         code, m, p = post("/observe", {"last_s": 1.0})
         check(code == 200 and m["last_s"] == 0.0 and m["frame_step"] == 0, f"{tag}: last_s before any submit: {code} {m}")
         mp4 = importlib.util.find_spec("imageio") is not None      # (the video encoder; frames without it)
         code, m, p = post("/submit", {"type": "joints", "dt": 0.02, "actions": [[0.01, 0]] * 10, "video": "frames"})
-        check(code == 200 and m["duration_s"] == 0.2 and m["planned_duration_s"] == 0.2 and m["control_steps_chunk"] == 20,
-              f"{tag}: submit duration: {code} {m}")
+        check(code == 200 and m["duration_s"] == 0.2 and m["planned_duration_s"] == 0.2 and m["control_steps_chunk"] == 20
+              and m.get("frame_step") == 20, f"{tag}: submit duration, frame_step: {code} {m}")
         code, m, p = post("/observe", {"last_s": 0.1, "video": "frames"})
         steps = p.get("frame_step", {}).get("data")
         check(code == 200 and m["frame_step"] == 20 and m["last_s"] == 0.1 and steps is not None
               and list(steps) == [10, 20] and p["frames/c"]["data"].shape[0] == 2 and p["proprio"]["data"].shape[0] == 2
               and m["control_steps"] == 20, f"{tag}: last_s after a submit: {code} {m} {steps}")
+        code, m, _ = post("/submit", {"type": "joints", "dt": 0.02, "actions": [[0.01, 0]], "seconds": 0})
+        check(code == 400 and "no rows" in m.get("error", ""), f"{tag}: rows with seconds 0: {code} {m}")
         code, m, p = post("/observe", {"last_s": 99, "video_fps": 30, "video": "mp4" if mp4 else "frames"})
         check(code == 200 and list(p["frame_step"]["data"]) == [0, 10, 20] and ("video/c" in p) == mp4,
               f"{tag}: last_s capped at the ring: {code} {m}")
         code, m, p = post("/submit", {"type": "joints", "interpolate": "hold", "seconds": 0.1,
                                       "video": "mp4" if mp4 else "frames"})
         check(code == 200 and m.get("hold") is True and m["control_steps_chunk"] == 10 and m["duration_s"] == 0.1
-              and m["executed_rows"] == 0 and m["control_steps"] == 30 and ("video/c" in p) == mp4,
-              f"{tag}: hold chunk: {code} {m}")
+              and m["executed_rows"] == 0 and m["control_steps"] == 30 and ("video/c" in p) == mp4
+              and m.get("frame_step") == 30, f"{tag}: hold chunk: {code} {m}")
+        code, m, _ = post("/submit", {"type": "joints", "interpolate": "hold", "seconds": sp["max_chunk_s"] + 1})
+        check(code == 400 and "max_chunk_s" in m.get("error", ""), f"{tag}: hold past max_chunk_s: {code} {m}")
         code, m, _ = post("/submit", {"type": "joints", "interpolate": "hold", "seconds": 0.1, "actions": [[0, 0]]})
         check(code == 400 and "no rows" in m.get("error", ""), f"{tag}: rows with seconds: {code} {m}")
         code, m, _ = post("/submit", {"type": "joints", "seconds": 0.1})

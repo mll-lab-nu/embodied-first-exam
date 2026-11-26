@@ -4,7 +4,7 @@
 # the verdict.
 FROM ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0
 COPY instance.json test.sh /tests/
-COPY --from=ghcr.io/mll-lab-nu/efe:pandadyn-files-0.6.0@sha256:7eb2cefbf55ba592819cacfb25056ff48f9dff954428efdbc2623a9f2d7ab2d5 /privileged/environment/rcb_pandadyn.py /privileged/tests/grade.py /tests/
+COPY --from=ghcr.io/mll-lab-nu/efe:pandadyn-files-0.6.0@sha256:c266edbcba1f577757ec8b790ba93aa5b043f6d6f9e0ea4c94909b931f4ccb98 /privileged/environment/rcb_pandadyn.py /privileged/tests/grade.py /tests/
 RUN chmod +x /tests/test.sh && mkdir -p /app/output /logs/verifier
 ENV PYTHONPATH=/tests:/opt/pandadyn
 # OPENBLAS_CORETYPE: this task's start depends on the BLAS kernel (tasks/pandadyn/README.md "Determinism")

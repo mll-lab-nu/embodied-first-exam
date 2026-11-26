@@ -53,7 +53,7 @@ DATA = os.environ.get("RCB_DATA", "/data"); os.makedirs(DATA, exist_ok=True); os
 TASK = os.environ.get("RCB_TASK", "stack_bowls"); INSTANCE = os.environ.get("RCB_INSTANCE", os.path.join(os.path.dirname(__file__), "instance.json"))
 OBS_CALIBRATION = os.environ.get("RCB_OBS_CALIBRATION", "1") == "1"
 CTRL_HZ = 25; SUBSTEPS = 10; ACTION_DIM = 14
-MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10")); MAX_WATCH_S = float(os.environ.get("RCB_MAX_WATCH_S", "30"))
+MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10"))
 MAX_FRAMES = L.MAX_FRAMES_PER_CALL   # images one call may capture (cameras x frames, per-frame depth counted again; 3000):
                          # every one is held in memory until the response is sent (L.check_frames; /spec max_frames_per_call)
 LOCK = threading.Lock(); PID_FILE = os.path.join(DATA, "server.pid")
@@ -186,7 +186,7 @@ STEP_LIMIT = AE.STEP_LIMIT is not None
 SPEC = {
     "protocol": PROTOCOL, "protocol_compat": list(L.COMPAT), "simulator": "robodojo (RoboDojo's evaluator on Isaac Lab / Isaac Sim 5.1)",
     "robot": "arx-x5-bimanual", "task_text": S.inst.get("goal_text") or S.instruction(), "control_hz": CTRL_HZ,
-    "physics_substeps": SUBSTEPS, "max_chunk_s": MAX_CHUNK_S, "max_watch_s": MAX_WATCH_S, "max_frames_per_call": MAX_FRAMES,
+    "physics_substeps": SUBSTEPS, "max_chunk_s": MAX_CHUNK_S, "max_frames_per_call": MAX_FRAMES,
     "cameras": {c: {"rgb": True, "depth": True, "mounted": MOUNT[c], "resolution": [int(FIRST[c].shape[1]), int(FIRST[c].shape[0])],
                     "calibration_in_obs": OBS_CALIBRATION, "intrinsic_cv": CAM0[c]["intrinsic_cv"], "mount": CAM0[c]["mount"]} for c in CAMS},
     "default_cameras": list(CAMS),
@@ -517,7 +517,7 @@ def parse_observe(meta: dict) -> tuple:
     """Every field of an /observe, checked; nothing is executed here."""
     cams = cameras(meta); seconds = number(meta, "seconds", 0.0); fps = video_fps(meta)
     video = choice(meta, "video", "frames", ("mp4", "frames", "both", "none")); depth = L.depth_mode(meta)
-    if seconds < 0 or seconds > MAX_WATCH_S: raise ValueError(f"seconds must be in [0, {MAX_WATCH_S}]")
+    if seconds < 0 or seconds > MAX_CHUNK_S: raise ValueError(f"seconds must be in [0, {MAX_CHUNK_S}] (max_chunk_s)")
     check_frames(cams, fps, depth, int(round(seconds * CTRL_HZ)))
     return cams, seconds, fps, video
 

@@ -2,7 +2,7 @@
 # only the declared artifacts (/app/output/) arrive from the agent.
 FROM ghcr.io/mll-lab-nu/efe:metaworld-0.1.0
 COPY test.sh instance.npz /tests/
-COPY --from=ghcr.io/mll-lab-nu/efe:metaworldplus-files-0.5.0@sha256:a7a34f554f39fd58856a86da127d69fb803a78938f98319a350b8680380bb4a9 /privileged/environment/mw_tool.py /privileged/tests/grade.py /tests/
+COPY --from=ghcr.io/mll-lab-nu/efe:metaworldplus-files-0.5.0@sha256:379b43aef66e446c44b47d9e9e2eee16bde8d15a37b1fd0095dc4858f3f19377 /privileged/environment/mw_tool.py /privileged/tests/grade.py /tests/
 RUN chmod +x /tests/test.sh && mkdir -p /app/output /logs/verifier
 ENV PYTHONPATH=/tests
 WORKDIR /tests

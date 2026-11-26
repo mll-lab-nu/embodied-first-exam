@@ -5,7 +5,7 @@
     c.call("describe_robot")
     c.call("move_robot", goals=[{"target": "arm", "gripper": 1}])
 
-call() resolves a pending operation by calling wait(operation=...) until it completes, so it returns the final
+call() resolves a pending operation by calling observe(operation=...) until it completes, so it returns the final
 result; a tool error raises McpToolError."""
 from __future__ import annotations
 import json, os, pathlib, subprocess, sys, threading
@@ -60,7 +60,7 @@ class McpClient:
         if r.get("isError"):
             raise McpToolError(payload)
         while isinstance(payload, dict) and payload.get("pending"):
-            r = self.call_raw("wait", operation=payload["operation"])
+            r = self.call_raw("observe", operation=payload["operation"])
             payload = json.loads(r["content"][0]["text"])
             if r.get("isError"):
                 raise McpToolError(payload)

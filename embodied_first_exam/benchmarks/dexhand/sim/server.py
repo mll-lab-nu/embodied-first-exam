@@ -219,7 +219,6 @@ SPEC = {
     "control_hz": HZ,
     "physics_substeps": SUBSTEPS,
     "max_chunk_s": 10.0,
-    "max_watch_s": 30.0,
     "max_frames_per_call": 1000,
     "cameras": {camera: camera_spec(camera) for camera in CAMERAS},
     "default_cameras": DEFAULT_CAMERAS,
