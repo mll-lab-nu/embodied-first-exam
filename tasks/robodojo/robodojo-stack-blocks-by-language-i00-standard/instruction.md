@@ -101,7 +101,7 @@ most 3000 images.
   pose in this frame.
 
 ## Others
-### Exact numbers
+### Detailed success criteria
 - The three cubes are the same size, 3.5 cm on each edge. At the start each is turned 15° to 24° about the vertical.
 - A cube's position, as the check measures it, is its centre, the middle of the cube.
 - Tower in order: the yellow cube's centre at most 0.0175 m horizontally from the blue cube's centre and at least 0.005

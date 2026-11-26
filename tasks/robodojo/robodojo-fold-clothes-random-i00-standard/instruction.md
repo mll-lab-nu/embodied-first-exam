@@ -103,7 +103,7 @@ most 3000 images.
   pose in this frame.
 
 ## Others
-### Exact numbers
+### Detailed success criteria
 - The shirt is about 50 cm across the spread sleeves and 29 cm from hem to collar, turned about 4° anticlockwise seen
   from above. Nineteen other objects lie around it; the check ignores them.
 - Measured points: eight vertices of the cloth mesh, which move with the cloth; on each side a sleeve point, a chest

@@ -101,7 +101,7 @@ most 3000 images.
   pose in this frame.
 
 ## Others
-### Exact numbers
+### Detailed success criteria
 - The dustpan is 18 cm wide and 28 cm long with its short handle. The broom is 25.0 cm long. The three small cubes are 2
   cm on each edge.
 - At the start the broom's centre is 17 cm to the left of the dustpan's centre.

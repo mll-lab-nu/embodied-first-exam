@@ -101,7 +101,7 @@ most 3000 images.
   pose in this frame.
 
 ## Others
-### Exact numbers
+### Detailed success criteria
 - The five nesting dolls are 5, 7, 9, 11 and 13 cm tall. Seen from above, the smallest is 3.5 × 3.4 cm and the largest
   9.0 × 8.7 cm.
 - A doll's position, as the check measures it, is its centre: the middle of its bounding box, half its height above its

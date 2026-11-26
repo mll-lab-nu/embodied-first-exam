@@ -104,7 +104,7 @@ most 3000 images.
   pose in this frame.
 
 ## Others
-### Exact numbers
+### Detailed success criteria
 - The three buttons, each 6.1 cm across and 3 cm tall, stand in a row 15 cm apart. Each card is a 10 cm square showing
   one digit from 1 to 9, 12 cm behind its red button.
 - A button's cap position, as the check measures it, is the fraction r of its 1.0 cm travel from fully down (r = 0) to

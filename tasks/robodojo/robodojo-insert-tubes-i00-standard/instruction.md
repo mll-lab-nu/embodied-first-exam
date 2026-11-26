@@ -100,7 +100,7 @@ most 3000 images.
   pose in this frame.
 
 ## Others
-### Exact numbers
+### Detailed success criteria
 - The three test tubes are the same model, 14 cm long and 3.3 cm across; they lie with their caps pointing away from
   you, turned up to 36° to either side. The rack is 20.5 cm wide, 9.6 cm deep and 6 cm tall, with two rows of five
   holes.

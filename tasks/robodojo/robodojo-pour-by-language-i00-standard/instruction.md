@@ -103,7 +103,7 @@ most 3000 images.
   pose in this frame.
 
 ## Others
-### Exact numbers
+### Detailed success criteria
 - Each bottle is 8.2 cm across and 21.8 cm tall; each bowl is 11 cm across and 4 cm tall.
 - A pour is judged at an action at which its bottle's axis, from its base up through its neck, is less than 30° from
   straight up, having been 30° or more at the previous action.

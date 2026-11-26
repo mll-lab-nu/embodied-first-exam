@@ -102,7 +102,7 @@ most 3000 images.
   pose in this frame.
 
 ## Others
-### Exact numbers
+### Detailed success criteria
 - Sizes: the box is 29 cm long (left-right), 17 cm deep and 18 cm tall; the car is 13 cm long, the toothbrush 17.5 cm,
   the hammer 14.3 cm and the shoe 17.5 cm.
 - At the start, seen from above, the car's and the hammer's front ends point right, the toothbrush's about 127° and the

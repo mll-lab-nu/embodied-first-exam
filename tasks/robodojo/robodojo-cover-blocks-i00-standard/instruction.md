@@ -102,7 +102,7 @@ most 3000 images.
   pose in this frame.
 
 ## Others
-### Exact numbers
+### Detailed success criteria
 - The three blocks are cubes 2.5 cm on each side, in a left-to-right row 20 cm apart. The three cups are identical, 7.2
   cm across and 7.2 cm tall; each starts mouth-down 10 cm in front of a block, nearer to you.
 - Covered: seen from above, a cup's bounding box (a 7.2 × 7.2 cm square around the cup, turned with it) fully contains

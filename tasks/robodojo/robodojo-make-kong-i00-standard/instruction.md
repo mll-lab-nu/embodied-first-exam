@@ -105,7 +105,7 @@ most 3000 images.
 ## Others
 - The opponent's arm starts after your first action and moves only while your actions run, in lock-step with them.
 
-### Exact numbers
+### Detailed success criteria
 - Every tile is the same block, 4.5 cm wide, 6.5 cm long and 3.3 cm thick.
 - Your row is 14 tiles standing on their short ends, 4.6 cm apart centre to centre: four sets of three, then a pair at
   the right end. The opponent's row has 4 tiles.

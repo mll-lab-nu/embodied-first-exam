@@ -101,7 +101,7 @@ most 3000 images.
   pose in this frame.
 
 ## Others
-### Exact numbers
+### Detailed success criteria
 - The dustpan is 18 cm wide and 28 cm long with its short handle. The broom is 25.0 cm long. The toy brick is 4 cm
   across; the two paper balls are 6.1 × 4.2 × 4.3 cm and 4.6 × 4.0 × 4.0 cm.
 - At the start the broom's centre is 24.5 cm to the left of the dustpan's centre.

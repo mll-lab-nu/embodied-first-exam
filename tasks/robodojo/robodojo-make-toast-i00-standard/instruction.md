@@ -101,7 +101,7 @@ most 3000 images.
   pose in this frame.
 
 ## Others
-### Exact numbers
+### Detailed success criteria
 - The four bread slices are identical, 11.7 × 11.6 cm and 1.2 cm thick. The bread shelf is 16 × 8 cm and 8 cm tall; the
   toaster is 25 cm front to back, 14 cm wide and 15 cm tall.
 - A slice's position, as the check measures it, is its centre: the middle of one of its two big faces, so for an upright

@@ -101,7 +101,7 @@ most 3000 images.
   pose in this frame.
 
 ## Others
-### Exact numbers
+### Detailed success criteria
 - The two T-shaped blocks are the same shape: 8 cm long, 6 cm across the crossbar and 1.5 cm thick.
 - At the start, seen from above: the red T's stem points along world -x, turned 3° toward you; the blue T lies about 16
   cm to its right (centre to centre), its stem pointing toward you, turned 40° toward +x.

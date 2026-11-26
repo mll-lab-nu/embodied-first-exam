@@ -101,7 +101,7 @@ most 3000 images.
   pose in this frame.
 
 ## Others
-### Exact numbers
+### Detailed success criteria
 - The toolbox is 27.7 cm wide, 27.4 cm deep and 5 cm tall. The hammer is 22.8 cm long, the wrench 17 cm and the pliers
   15.5 cm; the tape measure is 6.15 × 6.10 × 3.07 cm.
 - At the start each tool lies close to its slot's required orientation: the hammer 0.4° from it, the tape measure 3.7°,

@@ -100,7 +100,7 @@ most 3000 images.
   pose in this frame.
 
 ## Others
-### Exact numbers
+### Detailed success criteria
 - The base is 26 cm long and 6.5 cm deep; its four pegs stand in a row about 6.5 cm apart, the tallest reaching 6.5 cm
   above the table.
 - The blocks, each 1.3 cm thick with a hole through its middle: four stars 5.9 cm across, three rectangular blocks 5.8 ×

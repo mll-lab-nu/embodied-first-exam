@@ -99,7 +99,7 @@ most 3000 images.
   pose in this frame.
 
 ## Others
-### Exact numbers
+### Detailed success criteria
 - The scissors are 23.2 cm long. Eight other objects lie on the table; the check ignores them.
 - The scissors' position, as the check measures it, is their centre, halfway along the scissors.
 - Lifted: that centre more than 0.10 m higher than it was at the start.

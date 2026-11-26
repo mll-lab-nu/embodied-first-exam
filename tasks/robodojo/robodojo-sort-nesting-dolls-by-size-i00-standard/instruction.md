@@ -101,7 +101,7 @@ most 3000 images.
   pose in this frame.
 
 ## Others
-### Exact numbers
+### Detailed success criteria
 - The five yellow rubber ducks are 5, 7, 9, 11 and 13 cm tall. Seen from above, the smallest is 3.7 × 4.8 cm and the
   largest 9.6 × 12.4 cm.
 - At the start the second smallest duck stands about 12 cm to the right of the smallest one.

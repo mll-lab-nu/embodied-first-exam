@@ -102,7 +102,7 @@ most 3000 images.
   pose in this frame.
 
 ## Others
-### Exact numbers
+### Detailed success criteria
 - The headphone stand is 27.5 cm tall and 17.8 cm wide. The laptop is about 18 cm wide; at the start it is open, its
   screen 110° from closed.
 - The laptop rack is 13.7 cm long, 5.3 cm across and 4.9 cm tall; its long side points away from you, about 15° off

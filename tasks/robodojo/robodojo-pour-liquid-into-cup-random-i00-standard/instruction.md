@@ -99,7 +99,7 @@ most 3000 images.
   pose in this frame.
 
 ## Others
-### Exact numbers
+### Detailed success criteria
 - The bottle is 8.2 cm across and 21.8 cm tall. The cup, a mug, is 10.5 cm across with its handle, 7.5 cm the other way
   and 8.2 cm tall.
 - The pour is judged at an action at which the bottle's axis, from its base up through its neck, is less than 30° from

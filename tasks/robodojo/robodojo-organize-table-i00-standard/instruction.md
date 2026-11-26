@@ -103,7 +103,7 @@ most 3000 images.
   pose in this frame.
 
 ## Others
-### Exact numbers
+### Detailed success criteria
 - Sizes: the keyboard is 32 × 15 cm, the frame outline on the table 24 × 10 cm, the mouse pad 24 × 19 cm and the small
   square pad 5 × 5 cm; the drawer's top is 0.227 m above the table.
 - Measured points: the mouse, keyboard, cactus toy and alarm clock are each measured at the middle of their bounding

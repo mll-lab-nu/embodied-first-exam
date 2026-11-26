@@ -101,7 +101,7 @@ most 3000 images.
   pose in this frame.
 
 ## Others
-### Exact numbers
+### Detailed success criteria
 - The nuts are hexagonal, about 4 cm across the corners and 2 cm thick. The bolts are 5.25 cm tall.
 - A nut's position, as the check measures it, is its centre: on the axis of its hole, 0.9 cm above its underside. A
   bolt's position is the middle of its base, on its axis, at table level.

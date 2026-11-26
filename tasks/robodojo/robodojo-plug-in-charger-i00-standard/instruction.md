@@ -100,7 +100,7 @@ most 3000 images.
   pose in this frame.
 
 ## Others
-### Exact numbers
+### Detailed success criteria
 - The power strip is 15.7 × 3.6 cm and 2.1 cm tall; it lies flat, its long side turned 20° from left-right so that its
   right end is nearer to you.
 - The charger is 4.2 × 6.3 × 2.7 cm, the 6.3 cm along the prongs and including them. The box the check uses for it is

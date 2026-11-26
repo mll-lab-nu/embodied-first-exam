@@ -99,7 +99,7 @@ most 3000 images.
   pose in this frame.
 
 ## Others
-### Exact numbers
+### Detailed success criteria
 - The basket is 36 cm front to back, 24 cm wide and 22 cm tall overall. Four objects, each different, ride the belt with
   it; one of them is the object in the photo.
 - The object's position, as the check measures it, is its centre, the middle of its bounding box.

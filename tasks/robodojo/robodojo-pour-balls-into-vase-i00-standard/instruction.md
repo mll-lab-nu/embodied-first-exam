@@ -100,7 +100,7 @@ most 3000 images.
   pose in this frame.
 
 ## Others
-### Exact numbers
+### Detailed success criteria
 - The balls are 1.0 cm across. The cup is 7.2 cm across and 7.2 cm tall. The vase's opening is 14.8 cm above the table.
 - A ball's position, as the check measures it, is a point on its surface 0.5 cm from its middle.
 - In the vase: a ball counts when, seen from above, its measured point is strictly inside a six-sided outline around the

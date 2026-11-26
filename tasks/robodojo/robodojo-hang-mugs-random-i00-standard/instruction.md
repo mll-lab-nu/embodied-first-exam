@@ -102,7 +102,7 @@ most 3000 images.
   pose in this frame.
 
 ## Others
-### Exact numbers
+### Detailed success criteria
 - The mug rack is about 30 cm tall, with six arms at three heights; each arm has one hook point, 3.5 to 4 cm out from
   the pole's axis and about 15, 22 or 29 cm above the table.
 - Besides the three mugs and the mug rack, 20 other objects lie on the table as clutter.

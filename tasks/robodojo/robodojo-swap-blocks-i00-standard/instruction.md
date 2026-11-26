@@ -102,7 +102,7 @@ most 3000 images.
   pose in this frame.
 
 ## Others
-### Exact numbers
+### Detailed success criteria
 - The three mats are 8 cm across and 0.5 cm thick, in a row 11.5 cm apart; the cubes are 3.5 cm on a side; the spring
   button is 6.1 cm across and 3 cm tall.
 - On a mat: the cube's centre less than 0.03 m (in 3-D) from the mat's centre. A cube resting on a mat has its centre

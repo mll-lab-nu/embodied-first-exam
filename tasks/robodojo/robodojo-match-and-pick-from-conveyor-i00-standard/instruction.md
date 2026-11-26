@@ -100,7 +100,7 @@ most 3000 images.
   pose in this frame.
 
 ## Others
-### Exact numbers
+### Detailed success criteria
 - Besides the first object, four objects come along the belt later: its identical copy and three others that each look
   different.
 - The copy's position, as the check measures it, is its centre, the middle of its bounding box.

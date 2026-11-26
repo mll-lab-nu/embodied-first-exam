@@ -101,7 +101,7 @@ most 3000 images.
   pose in this frame.
 
 ## Others
-### Exact numbers
+### Detailed success criteria
 - The key is 6.3 cm long, 2.3 cm wide and 1.0 cm thick. The keyhole block is round, 10.0 cm across and 5.5 cm tall.
 - At the start the key lies flat with its teeth pointing about 6° clockwise from world +x (seen from above); the block's
   own x direction points 15° anticlockwise from world +x.

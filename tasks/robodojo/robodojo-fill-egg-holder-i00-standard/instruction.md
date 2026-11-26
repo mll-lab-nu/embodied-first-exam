@@ -100,7 +100,7 @@ most 3000 images.
   pose in this frame.
 
 ## Others
-### Exact numbers
+### Detailed success criteria
 - The four eggs are the same model, 5.8 cm long and 4.1 to 4.2 cm thick. The egg holder, with four cups, is 9 cm wide.
 - An egg's position, as the check measures it, is its centre, the middle of the egg.
 - In the holder: each egg's centre, seen from above, inside a 9 × 17.7 cm rectangle that moves with the holder; it spans

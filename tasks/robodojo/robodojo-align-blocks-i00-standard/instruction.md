@@ -101,7 +101,7 @@ most 3000 images.
   pose in this frame.
 
 ## Others
-### Exact numbers
+### Detailed success criteria
 - The three cubes are identical, 3.5 cm on each side; the checks measure each at its centre, the middle of the cube. At
   the start the rightmost cube is turned about 30° from square to the table's edges.
 - The set square is 55 cm long.

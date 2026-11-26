@@ -101,7 +101,7 @@ most 3000 images.
   pose in this frame.
 
 ## Others
-### Exact numbers
+### Detailed success criteria
 - The xylophone is 42 × 21 cm and 2.3 cm tall; its keys run from 11 cm long at the left end to 7 cm at the right end.
   The mallet is about 21 cm long, with a ball head 2.6 cm across.
 - The mallet's head point, as the check measures it: either of two points 1 cm from the ball's centre, on opposite sides

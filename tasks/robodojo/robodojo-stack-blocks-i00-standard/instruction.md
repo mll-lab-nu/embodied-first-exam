@@ -99,7 +99,7 @@ most 3000 images.
   pose in this frame.
 
 ## Others
-### Exact numbers
+### Detailed success criteria
 - The three blocks are cubes of the same size, 3.5 cm on each edge. At the start one of them lies 11 to 17 cm farther
   from you (along y) than the other two.
 - A block's position, as the check measures it, is its centre, the middle of the cube.

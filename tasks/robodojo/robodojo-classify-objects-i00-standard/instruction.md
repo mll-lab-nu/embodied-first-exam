@@ -100,7 +100,7 @@ most 3000 images.
   pose in this frame.
 
 ## Others
-### Exact numbers
+### Detailed success criteria
 - The three baskets are open-top bins, 25.2 × 16.8 cm and 7.7 cm high.
 - The objects are two pens, 18.5 cm (black and gold) and 14.5 cm (white) long, two watches, and three identical bunny
   figurines, 12.2 cm long, lying on their sides.

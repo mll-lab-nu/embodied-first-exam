@@ -99,7 +99,7 @@ most 3000 images.
   pose in this frame.
 
 ## Others
-### Exact numbers
+### Detailed success criteria
 - The three blocks are cubes of the same size, 3.0 cm on each edge.
 - A block's position, as the check measures it, is its centre, the middle of the cube.
 - One tower: taking the blocks in order of the height of their centres, each centre is at most 0.015 m horizontally from

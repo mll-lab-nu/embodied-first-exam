@@ -103,7 +103,7 @@ most 3000 images.
   pose in this frame.
 
 ## Others
-### Exact numbers
+### Detailed success criteria
 - The long board is 37.5 cm long, 6.5 cm wide and 2 cm thick; the short board is the same but 24.4 cm long.
 - The four pillars are 3.8 × 6.2 × 3.8 cm, each lying on a 3.8 × 6.2 cm face (3.8 cm tall). The thin plank is 9.7 × 5 cm
   and 1.4 cm thick.

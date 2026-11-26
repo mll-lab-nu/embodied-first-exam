@@ -101,7 +101,7 @@ most 3000 images.
   pose in this frame.
 
 ## Others
-### Exact numbers
+### Detailed success criteria
 - The five pads are 8 cm across, in a left-to-right row with their centres 8.5 cm apart.
 - Loose tiles: four operator tiles, discs 6.0 cm across and 0.8 cm thick, starting in a row 27 cm nearer to you than the
   pads, and ten digit tiles, 0 to 9.

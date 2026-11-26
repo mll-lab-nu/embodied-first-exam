@@ -99,7 +99,7 @@ most 3000 images.
   pose in this frame.
 
 ## Others
-### Exact numbers
+### Detailed success criteria
 - The block is a T 8 cm long, 6 cm across its crossbar and 1.5 cm thick. The pad is a flat T, 8.4 × 6.8 cm, drawn on the
   table.
 - At the start, seen from above: the block's stem points 21° clockwise from world +x (turned toward you); the pad lies

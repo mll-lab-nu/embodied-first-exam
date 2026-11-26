@@ -99,7 +99,7 @@ most 3000 images.
   pose in this frame.
 
 ## Others
-### Exact numbers
+### Detailed success criteria
 - The three bowls are the same model, 12.0 cm across and 5.0 cm tall. At the start their centres are 0.2 to 0.5 m apart.
 - A bowl's position, as the check measures it, is its centre: on its axis, 2.5 cm above the bottom of its foot.
 - Upright: each bowl's axis less than 45° from straight up, and the lowest bowl's (the one whose centre is lowest) less

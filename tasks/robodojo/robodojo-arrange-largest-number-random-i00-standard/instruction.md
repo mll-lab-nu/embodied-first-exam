@@ -101,7 +101,7 @@ most 3000 images.
   pose in this frame.
 
 ## Others
-### Exact numbers
+### Detailed success criteria
 - The four digit blocks are about 3.4 to 3.8 cm wide, 5 cm tall and 1.5 to 1.7 cm thick. At the start each lies face up,
   turned less than 45° from upright as read from the arms' side, the one at the far left by about 40°.
 - The four mats are 8 cm across and 0.5 cm thick, in a left-to-right row with their centres about 8.5 cm apart.

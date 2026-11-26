@@ -105,7 +105,7 @@ most 3000 images.
 - The opponent arm moves only while you keep sending actions (holding still counts), and it waits while a piece sits
   near a cell without being centred in it.
 
-### Exact numbers
+### Detailed success criteria
 - The board is a square 22.3 cm across and 1.6 cm thick; the centres of its nine cells are 7.4 cm apart.
 - Your gold rings are 5.0 cm across and 1.0 cm thick; the opponent's crosses are 5.0 cm across and 1.0 cm thick.
 - A piece's centre, as the checks measure it, is the middle of its underside (for a ring, the middle of its hole);

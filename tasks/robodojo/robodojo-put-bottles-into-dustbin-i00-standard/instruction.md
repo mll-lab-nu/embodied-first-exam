@@ -99,7 +99,7 @@ most 3000 images.
   pose in this frame.
 
 ## Others
-### Exact numbers
+### Detailed success criteria
 - The bottles: the yellow juice bottle is 18.5 cm tall, the white bottle with a green logo 19 cm tall, the clear tea
   bottle (lying on its side) 20 cm long and the pink metal water bottle 24 cm tall.
 - The dustbin is 47 × 47 cm and 65 cm tall; its rim is 4 cm below the table top.

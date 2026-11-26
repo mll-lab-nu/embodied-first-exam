@@ -102,7 +102,7 @@ most 3000 images.
 ## Others
 - The black-and-gold pen's cap end is the end with the clip.
 
-### Exact numbers
+### Detailed success criteria
 - The pen holder is a hexagonal cup 8 cm across and 12 cm tall. The black-and-gold pen is 18.5 cm long, the white
   ballpoint 14.5 cm, the light-blue marker 14 cm and the purple marker 15 cm.
 - Measured points: the holder's centre is the middle of its base, and its axis runs through it along the cup. A pen's

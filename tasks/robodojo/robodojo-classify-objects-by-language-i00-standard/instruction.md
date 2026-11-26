@@ -100,7 +100,7 @@ most 3000 images.
   pose in this frame.
 
 ## Others
-### Exact numbers
+### Detailed success criteria
 - The three baskets are open-top bins, 25.2 × 16.8 cm and 7.7 cm high.
 - The objects are two toy cars, two watches and two identical wooden toys, 6.4 cm tall.
 - In a basket: an object's centre (the middle of its bounding box), seen from above, is inside the basket's 25.2 × 16.8

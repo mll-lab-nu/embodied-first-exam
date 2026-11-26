@@ -100,7 +100,7 @@ most 3000 images.
   pose in this frame.
 
 ## Others
-### Exact numbers
+### Detailed success criteria
 - The coin is 2.9 cm across and 0.2 cm thick.
 - The piggy bank is 21.0 cm long (its body runs left-right), 15 cm deep and 11.5 cm tall; its slot, on top and running
   along the body, is about 11 cm above the table.

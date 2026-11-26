@@ -105,7 +105,7 @@ most 3000 images.
 ## Others
 - The opponent's arm starts after your first action and moves only while your actions run, in lock-step with them.
 
-### Exact numbers
+### Detailed success criteria
 - The two baskets are the same model, 30 × 20 cm and 8 cm tall.
 - In a basket: the object's centre, seen from above, inside the basket's 30 × 20 cm outline and above the basket's
   underside; the centre is the object's middle, but the middle of the base for the action camera and, for the phone, the
