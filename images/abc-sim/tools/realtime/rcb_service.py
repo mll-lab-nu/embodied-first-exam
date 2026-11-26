@@ -12,7 +12,8 @@ belongs to the thread that made it (MuJoCo renders black frames from any other).
 The episode starts when the service is ready. It ends on success, by the task's own rule ("failed": the robot fell,
 the episode's control steps ran out), on a simulator error ("error"), or at SIGUSR1 ("timeout": the collect hook, once
 the agent's container is gone). With a reset budget, POST /reset abandons the running episode and starts another from
-the frozen instance; only the last episode is graded, and a success ends the trial.
+the frozen instance; only the last episode is graded, and (without agent-ended episodes, below) a success ends the
+trial.
 
 A request is checked in full before anything runs: whatever is wrong with it is a 400 and nothing ran. Once it runs,
 any failure is the simulator's: a 500, and the episode ends ("error").
@@ -104,10 +105,12 @@ ON_SERVICE_ERROR = ("if a call fails with a connection error or a 5xx, the servi
 # success and a success never ends the episode; POST /finish (JSON {}) ends it (reason "finished"), and so do the step
 # cap (reason "step_limit": the adapter's max_control_steps, or RCB_STEP_LIMIT=N when set, which may only lower it) and
 # the end of the agent's session ("timeout"); those three ends are judged on the state they leave. A done that step()
-# returns without a success is the task's failure rule ("failed", 0, after a success too). The adapter may declare:
+# returns without a success is the task's failure rule ("failed"): 0 on a goal judged on the end state, after a success
+# too; on a goal of events it ends the episode with the events reached so far. The adapter may declare:
 #   end_judgement = "state"   (default) the task's success as things stand at the end;
 #                 = "events"  a goal made of moments (a scored goal, a referee's call, a sequence of strikes): any
-#                             success the episode reached counts (still 0 after a failure end);
+#                             success the episode reached counts, also when a failure rule ends it afterwards (an
+#                             event that happened stands); a simulator error or a reset still gives 0;
 #   end_window_steps = K      a settle or hold window: K control steps of sim.hold() run from the end state after an
 #                             end-state end (in finalize, after the agent is gone), the success judged at its last step;
 #                             a hold counter in step() counts the steps already held;
@@ -223,6 +226,17 @@ class Refused(Exception):
     def __init__(self, code: int, body: dict):
         super().__init__(body.get("error"))
         self.code, self.body = code, body
+
+
+def real(meta: dict, key: str, default=None):
+    """meta[key] as a float: a JSON number (not a boolean, not a string), finite; absent or null -> `default`.
+    ValueError (a 400 inside bad_request) otherwise."""
+    v = meta.get(key)
+    if v is None:
+        return default
+    if isinstance(v, bool) or not isinstance(v, (int, float)) or not np.isfinite(float(v)):
+        raise ValueError(f"{key} must be a finite number (got {v!r:.60})")
+    return float(v)
 
 
 @contextlib.contextmanager
@@ -446,15 +460,20 @@ class FrameRing:
         while self.frames and self.frames[0]["step"] < step - self.keep:
             self.frames.popleft()
 
-    def window(self, now: int, last_s: float, fps: float) -> list[dict]:
+    def window(self, now: int, last_s: float, fps: float, cameras=None) -> list[dict]:
         """The frames of the last `last_s` robot seconds before control step `now` (at most buffer_s), at least
-        1 / fps apart, newest last; [] when none was recorded in it."""
+        1 / fps apart, newest last; [] when none was recorded in it. Only frames that hold an image of every camera in
+        `cameras` count ("delivered" keeps the cameras each submit asked for, so a frame may lack one): the answer's
+        frames/<cam>, proprio and frame_step then share one frame axis."""
         n = int(round(min(float(last_s), self.buffer_s) / self.cdt))
         every = max(self.every, int(round(1.0 / (self.cdt * max(float(fps), 1e-9)))))
+        need = list(cameras or ())
         sel: list[dict] = []
         for f in reversed(self.frames):
             if f["step"] < now - n or f["step"] > now:
                 break
+            if any(c not in f["rgb"] for c in need):
+                continue
             if not sel or sel[-1]["step"] - f["step"] >= every:
                 sel.append(f)
         return sel[::-1]
@@ -551,9 +570,16 @@ class Service:
         if self.step_limit:
             out.update(step_limit=self.cap, steps_left=max(0, self.cap - len(self.episode)))
         if self.reset_budget:
-            out.update(episode=self.resets + 1, control_steps_total=self.journal_rows,
-                       resets_left=0 if self._success_shown() or self.stopping else self.reset_budget - self.resets)
+            out.update(episode=self.resets + 1, control_steps_total=self.journal_rows, resets_left=self._resets_left())
         return out
+
+    def _resets_left(self) -> int:
+        """The resets /reset would still grant: 0 whenever it is a 409 whatever the budget (a success shown, the
+        agent's time up, /finish or the session's end, a service that gave up)."""
+        if (self._success_shown() or self.stopping or self.finalized
+                or (self.agent_end and self.done and self.reason in ("finished", "timeout"))):
+            return 0
+        return max(0, self.reset_budget - self.resets)
 
     def status(self) -> dict:
         return {**self._counters(), "elapsed_s": round(self.clock(), 1)}
@@ -778,6 +804,8 @@ class Service:
         if method == "GET" and path in ("/spec", "/status"):
             return self._reply_json(200, self.spec if path == "/spec" else self.status())
         if self.agent_end and method == "POST" and path == "/finish":
+            if (len(body) if content_length is None else content_length) > MAX_BODY:   # as every POST (its body unread)
+                return self._reply_json(413, {"error": f"request body over {MAX_BODY} bytes"})
             self.log("call_begin", path=path, call=self.calls + 1)
             try:
                 return self._reply_json(200, self._agent_finish())
@@ -844,12 +872,10 @@ class Service:
         # Each camera once, in the order asked for. A name repeated N times would be rendered into one list N times and
         # returned N times (N * N images), which the frame budget counted as N: a small request could exhaust the memory.
         cams = list(dict.fromkeys(map(str, cams)))
-        try:
-            fps = int(meta.get("video_fps", 10))
-        except (TypeError, ValueError, OverflowError):
-            raise ValueError("video_fps must be an integer") from None
+        fps = real(meta, "video_fps", 10.0)
         if not 1 <= fps <= MAX_VIDEO_FPS:
             raise ValueError(f"video_fps must be in [1, {MAX_VIDEO_FPS}]")
+        fps = int(fps)
         video = meta.get("video", default_video)
         if video not in VIDEOS:
             raise ValueError(f"video must be one of {list(VIDEOS)}")
@@ -869,7 +895,7 @@ class Service:
             return Refused(409, {"error": "trial finished: your time is up", "reason": self.reason})
         body = {"error": "episode finished", "reason": self.reason}
         if self.reset_budget:
-            body["resets_left"] = 0 if self._success_shown() else self.reset_budget - self.resets
+            body["resets_left"] = self._resets_left()
         return Refused(409, body)
 
     def _step(self, typ: str, row: np.ndarray) -> dict:
@@ -922,7 +948,16 @@ class Service:
         step. `fresh`: rec's newest images show this step (reused, not rendered again)."""
         ring = self.ring
         step = len(self.episode)
-        if not ring.mode or ring.has(step) or not (force or step % ring.every == 0):
+        if not ring.mode:
+            return
+        if ring.has(step):                           # recorded already: the same state (nothing ran since), so the
+            if fresh and rec is not None:            # images this call rendered fill the cameras the frame lacks
+                have = ring.frames[-1]["rgb"]        # ("delivered" keeps what each call asked for)
+                for c in rec.cams:
+                    if c in ring.cams and c not in have and rec.frames.get(c):
+                        have[c] = rec.frames[c][-1]
+            return
+        if not (force or step % ring.every == 0):
             return
         rgb = {}
         if fresh and rec is not None:
@@ -953,11 +988,8 @@ class Service:
         if meta.get("interpolate") != "hold":
             raise ValueError('a chunk without rows is a hold chunk: {"type": <type>, "interpolate": "hold", '
                              '"seconds": n}')
-        try:
-            sec = float(meta["seconds"])
-        except (TypeError, ValueError, OverflowError):
-            raise ValueError("seconds must be a number") from None
-        if not (np.isfinite(sec) and 0.0 < sec <= self.max_chunk_s + 1e-9):
+        sec = real(meta, "seconds")
+        if not 0.0 < sec <= self.max_chunk_s + 1e-9:
             raise ValueError(f"a hold chunk's seconds must be in (0, {self.max_chunk_s:g}] (max_chunk_s)")
         return sec
 
@@ -982,10 +1014,7 @@ class Service:
             if not np.all(np.isfinite(A)):
                 raise ValueError("actions contain NaN or inf")
             cdt = self.sim.control_dt
-            try:
-                dt = cdt if meta.get("dt") is None else float(meta["dt"])
-            except (TypeError, ValueError):
-                raise ValueError("dt must be a number of seconds") from None
+            dt = real(meta, "dt", cdt)
             k = round(dt / cdt) if np.isfinite(dt / cdt) else 0
             if k < 1 or abs(k * cdt - dt) > 1e-9:
                 raise ValueError(f"dt must be a positive whole multiple of control_dt = {cdt} s (never rounded)")
@@ -1046,7 +1075,7 @@ class Service:
             info = self._step(htyp, hrow)
             rec.step()
             self._record(rec, rec.images and rec.grabbed_at == rec.k)
-            if self.done or self.stopping:
+            if self.done or self.stopping or info.get("blocked"):     # as a chunk with rows stops
                 break
         rec.finish()
         self._record(rec, True, force=True)
@@ -1067,20 +1096,16 @@ class Service:
         if self.agent_end and self.done and self.reason == "finished":
             raise self._conflict()                   # after /finish every call but /spec and /status is refused
         with bad_request():
-            try:
-                seconds = float(meta.get("seconds") or 0.0)
-                last_s = float(meta.get("last_s") or 0.0)
-            except (TypeError, ValueError, OverflowError):
-                raise ValueError("last_s must be a number of seconds") from None
-            if seconds != 0.0:
+            if real(meta, "seconds", 0.0) != 0.0:
                 raise ValueError(SECONDS_GONE)
-            if not (np.isfinite(last_s) and last_s >= 0.0):
+            last_s = real(meta, "last_s", 0.0)
+            if not last_s >= 0.0:
                 raise ValueError("last_s must be a number of seconds >= 0")
             cams, fps, video, depth = self._view(meta, "frames")
             if last_s > 0 and depth:
                 raise ValueError(DEPTH_PAST)
             step = len(self.episode)
-            window = self.ring.window(step, last_s, fps) if last_s > 0 else []
+            window = self.ring.window(step, last_s, fps, cams) if last_s > 0 else []
             if window:
                 n = len(cams) * len(window)
                 if n > self.max_frames:
@@ -1105,17 +1130,15 @@ class Service:
         return out, parts_out
 
     def _window_parts(self, window: list[dict], cams: list[str], fps: int, video: str) -> list:
-        """An /observe answer's RCB1 parts from recorded frames (FrameRing.window): per camera its video / frames as
-        asked and the newest image as last/, the frames' proprio rows and their control steps."""
+        """An /observe answer's RCB1 parts from recorded frames (FrameRing.window, which keeps only frames holding every
+        requested camera): per camera its video / frames as asked and the newest image as last/, the frames' proprio
+        rows and their control steps, one frame axis for all of them."""
         cdt = self.sim.control_dt
         gap = (window[-1]["step"] - window[0]["step"]) / max(1, len(window) - 1) if len(window) > 1 else 0
         rate = 1.0 / (cdt * gap) if gap else float(fps)
         out = []
         for c in cams:
-            imgs = [f["rgb"][c] for f in window if c in f["rgb"]]
-            if not imgs:                             # a camera the recorder did not keep: the current image
-                got, _ = self.sim.images([c], False)
-                imgs = [got[c]]
+            imgs = [f["rgb"][c] for f in window]
             stack = np.stack([np.asarray(i, np.uint8) for i in imgs])
             if video in ("mp4", "both"):
                 out.append((f"video/{c}", "mp4", encode_mp4(stack, rate), {"fps": round(rate, 3), "n": int(len(stack))}))

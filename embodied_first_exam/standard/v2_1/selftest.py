@@ -14,7 +14,11 @@ and, for every distinct copy (also humanclaw's and abc-sim's realtime base), the
 seconds > 0 is a 400 that names the hold chunk; a /submit answers duration_s and planned_duration_s; the recorder keeps
 the submit's frames and /observe last_s = n returns them (frame_step, proprio rows); a hold chunk (no rows, "hold",
 seconds) runs round(seconds / control_dt) control steps and is answered as a submit; rows with seconds, or no rows
-without "hold", are a 400; a reset empties the recorder; /spec states standard and timing.recorder.
+without "hold", are a 400; a reset empties the recorder; /spec states standard and timing.recorder; seconds, last_s, dt
+and video_fps must be JSON numbers (true, "0.1": 400); a step's info["blocked"] stops a hold chunk as it stops a chunk
+with rows; record_frames = "delivered" with two cameras sent in turn: /observe last_s keeps frames/<cam>, proprio and
+frame_step on one frame axis; with agent-ended episodes, resets_left is 0 after /finish (in /status and in the 409
+bodies), a /finish body over 64 MiB is a 413, and the first episode's first_success is its own end judgement.
 """
 import hashlib
 import importlib.util
@@ -225,6 +229,120 @@ def test_v3(path: Path) -> None:
         check(code == 200 and m.get("frame_step") == 0, f"{tag}: reset (3.0: frame_step on an answer with images): {code} {m}")
         code, m, p = post("/observe", {"last_s": 1.0})
         check(code == 200 and m["last_s"] == 0.0 and m["frame_step"] == 0, f"{tag}: last_s after a reset: {code} {m}")
+    finally:
+        shutil.rmtree(d)
+    test_v3_more(S, tag)
+
+
+class Toy2(Toy):
+    """Toy with two cameras; with record_frames "delivered" the recorder keeps only what a submit rendered."""
+    cameras = ["a", "b"]
+    record_frames = "delivered"
+    max_control_steps = 1000
+
+
+class Blocky(Toy):
+    """Toy whose step() reports the robot blocked from the 4th step of the episode on."""
+    def step(self, row):
+        out = super().step(row)
+        return out[0], out[1], ({"blocked": True} if self.n >= 4 else {})
+
+
+def test_v3_more(S, tag) -> None:
+    """The fixes of the 3.0 review on one copy (module docstring, the last sentences)."""
+    import rcb1
+
+    def poster(svc):
+        def post(path_, obj, raw=None, length=None):
+            body = raw if raw is not None else json.dumps(obj).encode()
+            code, ctype, out = svc.handle("POST", path_, body, content_length=length)
+            if ctype == "application/json":
+                return code, json.loads(out), {}
+            m, p = rcb1.decode(out)
+            return code, m, p
+        return post
+
+    d = tempfile.mkdtemp()
+    try:                                         # strict numbers, a blocked hold chunk
+        svc = S.Service(Blocky(), data=d, agent_end=False)
+        svc.start()
+        post = poster(svc)
+        for bad in ({"type": "joints", "interpolate": "hold", "seconds": True},
+                    {"type": "joints", "interpolate": "hold", "seconds": "0.1"},
+                    {"type": "joints", "actions": [[0, 0]], "dt": "0.01"},
+                    {"type": "joints", "actions": [[0, 0]], "video_fps": True}):
+            code, m, _ = post("/submit", bad)
+            check(code == 400, f"{tag}: {bad} is not a 400: {code} {m}")
+        for bad in ({"seconds": True}, {"last_s": "1"}, {"video_fps": "10"}, {"video_fps": 0.5}):
+            code, m, _ = post("/observe", bad)
+            check(code == 400, f"{tag}: observe {bad} is not a 400: {code} {m}")
+        check(svc.status()["control_steps"] == 0, f"{tag}: a refused request ran steps")
+        code, m, _ = post("/submit", {"type": "joints", "interpolate": "hold", "seconds": 0.1, "video": "none"})
+        check(code == 200 and m["control_steps_chunk"] == 4 and m["duration_s"] == 0.04 and m["planned_duration_s"] == 0.1,
+              f"{tag}: a hold chunk did not stop where the robot is blocked: {code} {m}")
+    finally:
+        shutil.rmtree(d)
+
+    d = tempfile.mkdtemp()
+    try:                                         # record_frames "delivered", two cameras asked for in turn
+        svc = S.Service(Toy2(), data=d, agent_end=False)
+        svc.start()
+        post = poster(svc)
+        for cam in ("a", "b"):
+            code, m, _ = post("/submit", {"type": "joints", "actions": [[0.001, 0]] * 10, "cameras": [cam],
+                                          "video": "frames", "video_fps": 10})
+            check(code == 200, f"{tag}: delivered submit {cam}: {code} {m}")
+        code, m, p = post("/observe", {"last_s": 3, "cameras": ["a", "b"], "video": "frames"})
+        n = {k: int(v["data"].shape[0]) for k, v in p.items() if k.startswith(("frames/", "proprio", "frame_step"))}
+        check(code == 200 and set(n.values()) == {1} and list(p["frame_step"]["data"]) == [10] and m["last_s"] == 0
+              and m["frame_step"] == 10, f"{tag}: delivered, one frame holds both cameras (step 10): {n} {m}")
+        code, m, _ = post("/submit", {"type": "joints", "actions": [[0.001, 0]] * 10, "cameras": ["a", "b"],
+                                      "video": "frames", "video_fps": 10})
+        code, m, p = post("/observe", {"last_s": 3, "cameras": ["a", "b"], "video": "frames"})
+        n = {k: int(v["data"].shape[0]) for k, v in p.items() if k.startswith(("frames/", "proprio", "frame_step"))}
+        check(code == 200 and len(set(n.values())) == 1 and n["proprio"] == 3 and m["frame_step"] == 30
+              and list(p["frame_step"]["data"]) == [10, 20, 30],
+              f"{tag}: delivered: frames, proprio and frame_step on different frame axes: {n} {m.get('frame_step')}")
+        code, m, p = post("/observe", {"last_s": 3, "cameras": ["a"], "video": "frames"})
+        n = {k: int(v["data"].shape[0]) for k, v in p.items() if k.startswith(("frames/", "proprio", "frame_step"))}
+        check(code == 200 and len(set(n.values())) == 1 and list(p["frame_step"]["data"]) == [0, 10, 20, 30],
+              f"{tag}: delivered, camera a alone: {n} {p.get('frame_step', {}).get('data')}")
+    finally:
+        shutil.rmtree(d)
+
+    d = tempfile.mkdtemp()
+    try:                                         # agent-ended: resets_left after /finish, a /finish body over the limit
+        svc = S.Service(Toy(), data=d, reset_budget=1, agent_end=True)
+        svc.start()
+        post = poster(svc)
+        code, m, _ = post("/finish", None, raw=b"", length=S.MAX_BODY + 1)
+        check(code == 413 and not svc.done, f"{tag}: /finish with a body over 64 MiB: {code} {m}")
+        code, m, _ = post("/finish", {})
+        check(code == 200 and m["resets_left"] == 0, f"{tag}: /finish answer resets_left: {m}")
+        st = svc.status()
+        check(st["resets_left"] == 0 and st["reason"] == "finished", f"{tag}: /status resets_left after /finish: {st}")
+        for path_ in ("/submit", "/reset"):
+            code, m, _ = post(path_, {"type": "joints", "actions": [[0, 0]]} if path_ == "/submit" else {})
+            check(code == 409 and m.get("resets_left", 0) == 0, f"{tag}: {path_} after /finish: {code} {m}")
+    finally:
+        shutil.rmtree(d)
+
+    d = tempfile.mkdtemp()
+    try:                                         # agent-ended: the first episode's own end judgement
+        svc = S.Service(Toy(), data=d, reset_budget=1, agent_end=True, step_limit=3)
+        svc.start()
+        post = poster(svc)
+        code, m, _ = post("/submit", {"type": "joints", "actions": [[0.5, 0], [0.6, 0], [0.0, 0]], "video": "none"})
+        check(code == 200 and m["reason"] == "step_limit" and m["resets_left"] == 1, f"{tag}: step limit: {code} {m}")
+        code, m, _ = post("/reset", {"cameras": []})
+        check(code == 200, f"{tag}: reset after the step limit: {code} {m}")
+        post("/submit", {"type": "joints", "actions": [[0.1, 0]], "video": "none"})
+        svc.stopping = True
+        svc.poll()
+        fin = json.load(open(os.path.join(d, "final.json")))
+        if "first_success" in S.RESERVED:
+            check(fin.get("first_success") is True and fin.get("first_reason") == "step_limit" and fin["success"] is False,
+                  f"{tag}: agent-ended first episode (a success at the step limit, then a reset): {fin}")
     finally:
         shutil.rmtree(d)
 
