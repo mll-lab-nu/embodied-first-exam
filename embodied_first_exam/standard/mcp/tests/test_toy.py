@@ -1,5 +1,5 @@
 """End-to-end test of the efe-robot MCP server against the toy eai-standard/2.2 service (CPU, ~10 s): the endpoint
-tools' request and reply, a hold chunk (no rows), a refusal, the end of the episode, finish refused where the success is not hidden, a tool
+tools' request and reply, a hold chunk (no rows), a refusal, the end of the episode, finish refused where the success is not hidden (and sent where it is: test_agent_end.py, run at the end), a tool
 added from /spec (kinematics), and a pending call collected with observe(operation=...).
 
     python3 embodied_first_exam/standard/mcp/tests/test_toy.py
@@ -10,6 +10,7 @@ HERE = pathlib.Path(__file__).resolve().parent
 MCP = HERE.parent
 STD = MCP.parent
 sys.path.insert(0, str(MCP))
+sys.path.insert(0, str(HERE))
 from mcp_client import McpClient, McpToolError  # noqa: E402
 
 
@@ -95,6 +96,8 @@ def main():
               "collected, the refusal's status kept")
     finally:
         sim.terminate(); sim.wait(10)
+    import test_agent_end                  # finish where it is the agent's: an agent-ended toy (ci runs this file)
+    test_agent_end.main()
 
 
 if __name__ == "__main__":

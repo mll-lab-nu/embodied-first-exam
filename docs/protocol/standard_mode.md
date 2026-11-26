@@ -895,7 +895,7 @@ these, but no endpoint is without its tool unless the table says why.
 | `POST /submit` | `submit` | every task; rows inline or as a file (`actions_file`), or a hold chunk (`interpolate` "hold" + `seconds`, no rows); realtime adds `at`; the result's `step` repeats the reply's duration, end step, `steps_left` / `step_limit` and `done` |
 | `POST /reset` | `reset` | a task with a reset budget ("Optional reset capability") |
 | `POST /kinematics` | `kinematics` | a 2.2 / 2.4 task whose service serves it (§8) |
-| `POST /finish` | `finish` | every task; it sends the request only when `/spec.success_signal` is `"hidden"` ("Agent-ended episodes"), else it says so and sends nothing |
+| `POST /finish` | `finish` | every task; it sends the request only when `/spec.success_signal` starts with `"hidden"` ("Agent-ended episodes"), else it says so and sends nothing |
 | `GET /status` | none | its fields come back in every result's `meta` |
 | `GET /operations/<id>` | none | the tool server re-queries it itself when a 2.4 reply is lost (Part 4) |
 

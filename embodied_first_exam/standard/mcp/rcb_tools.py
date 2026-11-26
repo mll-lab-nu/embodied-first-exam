@@ -7,7 +7,7 @@
                                    duration, end step, steps left and done (SUBMIT_SURFACE)
     reset       POST /reset        where the task has a reset budget
     kinematics  POST /kinematics   where the service offers it (spec `kinematics`)
-    finish      POST /finish       where the episode is the agent's to end (spec success_signal "hidden")
+    finish      POST /finish       where the episode is the agent's to end (spec success_signal starts with "hidden")
 
 GET /status has no tool: its fields are in every reply's meta. GET /operations/<id> has none either: against a 2.4
 service every request carries an operation id and a request deadline (as the 2.4 client sends them), and when a reply
@@ -343,9 +343,9 @@ class RcbTools:
 
     def finish(self, **_):
         self.connect()
-        if (self.spec or {}).get("success_signal") != "hidden":
-            raise ToolError("nothing sent: in this task the episode is not yours to end (its spec has no "
-                            "success_signal \"hidden\"); it ends as the task text says", "not_served")
+        if not str((self.spec or {}).get("success_signal") or "").startswith("hidden"):
+            raise ToolError("nothing sent: in this task the episode is not yours to end (its spec's success_signal "
+                            "does not start with \"hidden\"); it ends as the task text says", "not_served")
         return self.post_json("/finish", {}), []
 
 
