@@ -1005,7 +1005,8 @@ V2_AGENT_END_STATE = "Only the state at that point counts."
 V2_AGENT_END_REST = "Everything else counts only as it stands at that point."
 # the latched wording of 11-24, retired with D216, and the finish wording retired on 11-26: no Goal may carry it
 V2_AGENT_END_RETIRED = ("The episode succeeds if the goal is reached before it ends", "once done, stays counted",
-                        "call finish (Limits)", "The robot never tells you whether you have succeeded",
+                        "call finish (Limits)", "call finish (Robot Interface)", "ends when you call finish",
+                        "if you never call finish", "The robot never tells you whether you have succeeded",
                         "Success is judged on how things stand when the episode ends")
 V2_HAND_IN = {   # owner 11-24: a standard mode hands nothing in and is not asked for a script (no `/app/output/gen.py`)
     "standard-mcp": "The tool server records your calls.",
