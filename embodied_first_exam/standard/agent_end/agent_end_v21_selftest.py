@@ -14,7 +14,9 @@ simulator (numpy only, CPU, a few seconds):
     end_window_steps: the settle window decides;
   - hidden_keys: step() info keys of progress never reach a meta;
   - a crash: the restart resumes the hidden success with the episode;
-  - realtime: /finish stops the clock and ends the episode; the verdict is the state's.
+  - realtime: /finish stops the clock and ends the episode; the verdict is the state's; a /finish body over 64 MiB
+    is a 413 (as every POST); a hold chunk answers executed_rows 0; /spec.timing.recorder is declared also by a service
+    without a recorder (record_frames False).
 """
 import hashlib
 import importlib.util
@@ -332,6 +334,7 @@ for h, path in copies.items():
 for h, path in copies.items():
     sys.modules["rcb_service"] = load(path, "rcb_service")
     R = load(STD / "realtime/rcb_realtime.py", "rcb_realtime")
+    rcb1_max = R.MAX_BODY
     tag = f"2.3 on {path.relative_to(ROOT)}"
     for want, rows in ((True, [[0.5, 0], [0.5, 0]]), (False, [[1.0, 0], [-0.5, 0]])):
         d = tempfile.mkdtemp()
@@ -367,6 +370,36 @@ for h, path in copies.items():
             check(False, f"{tag}: raised {exc!r}")
         finally:
             shutil.rmtree(d, ignore_errors=True)
+    d = tempfile.mkdtemp()                      # eai-standard/3.0 review: the wire of the realtime layer
+    try:
+        svc = R.RealtimeService(Toy(), data=d, slowdown=1.0, agent_end=True)
+        svc.start()
+        big = R._Job("POST", "/finish", b"", content_length=rcb1_max + 1)
+        svc.dispatch(big)
+        check(big.reply[1] == 413 and not svc.done, f"{tag}: /finish over 64 MiB is {big.reply[1]}")
+        hold = R._Job("POST", "/submit", json.dumps({"type": "joints", "interpolate": "hold", "seconds": 0.1,
+                                                        "cameras": []}).encode())
+        svc.dispatch(hold)
+        m = rcb1.decode(bytes(svc._reply_rcb1(*hold.reply[1:])[2]))[0] if hold.reply[0] == "rcb1" else {}
+        check(m.get("hold") is True and m.get("executed_rows") == 0 and m.get("duration_s") == 0.1,
+              f"{tag}: realtime hold chunk answer {hold.reply[0]} {m}")
+        for bad in (b'{"type": "joints", "interpolate": "hold", "seconds": true}',
+                    b'{"type": "joints", "interpolate": "hold", "seconds": "0.1"}', b'{"last_s": "1"}'):
+            j = R._Job("POST", "/observe" if b"last_s" in bad else "/submit", bad)
+            svc.dispatch(j)
+            check(j.reply[1] == 400, f"{tag}: {bad!r} is {j.reply[1]}")
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
+    d = tempfile.mkdtemp()
+    try:
+        class NoRec(Toy):
+            record_frames = False
+        svc = R.RealtimeService(NoRec(), data=d, slowdown=1.0, agent_end=True)
+        rec = svc.spec["timing"].get("recorder", {})
+        check(rec.get("cameras") == [] and rec.get("depth") == [] and "nothing" in rec.get("records", ""),
+              f"{tag}: no recorder: /spec.timing.recorder {rec}")
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
     # off: /finish is a 404 in realtime too
     d = tempfile.mkdtemp()
     try:

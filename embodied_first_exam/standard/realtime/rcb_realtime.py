@@ -151,6 +151,17 @@ CAMERA_WORKER_RESPAWNS = 3       # a worker that dies is started again this many
 # The child process that parses a body with more than INLINE_JSON bytes of JSON text (argv: the most elements a valid
 # `actions` can have, INLINE_JSON, CHILD_MEM; stdin: the body). It answers with the fields the service reads and the
 # actions as float64 -- or only their shape when no action type takes that many -- or the error a malformed body gets.
+def _real(meta: dict, key: str, default=None):
+    """meta[key] as a float: a JSON number (not a boolean, not a string), finite; absent or null -> `default`; else
+    ValueError (a 400 inside bad_request), as rcb_service's own fields."""
+    v = meta.get(key)
+    if v is None:
+        return default
+    if isinstance(v, bool) or not isinstance(v, (int, float)) or not np.isfinite(float(v)):
+        raise ValueError(f"{key} must be a finite number (got {v!r:.60})")
+    return float(v)
+
+
 _CHILD = r"""
 import json, struct, sys
 FIELDS = %r
@@ -513,7 +524,11 @@ class RealtimeService(Service):
                        "proprioception of now (this service records no frames: last_s is answered with the current "
                        "frame, meta.last_s = 0); `seconds` > 0 is refused",
             "max_ahead_steps": self.max_ahead,
-            "no_images": "cameras = [] returns no images, only proprioception (the fastest call)"}
+            "no_images": "cameras = [] returns no images, only proprioception (the fastest call)",
+            # declared also without a recorder (as the 2.1 sidecar's record_frames = False): nothing is recorded
+            "recorder": {"cameras": [], "fps": round(1.0 / (cdt * max(1, int(round(1.0 / (cdt * THREAD_CAMERA_FPS))))), 3),
+                         "buffer_s": LOOKBACK_S,
+                         "records": "nothing: last_s returns the current frame", "depth": []}}
         if self.recording:                           # (the recorder itself is made after the spec)
             every = max(1, int(round(1.0 / (cdt * (CAMERA_FPS if self.decoupled else THREAD_CAMERA_FPS)))))
             spec["timing"].update({
@@ -739,7 +754,11 @@ class RealtimeService(Service):
         if method == "GET" and path == "/status":
             return ("/status", None)
         if method == "POST" and path == "/finish" and self.agent_end:   # agent-ended episodes (rcb_service.AGENT_END)
-            return ("/finish", None)                 # its body is not read: the simulator thread ends the episode
+            if n < 0:                                # its body is not read (the simulator thread ends the episode),
+                return self._refusal(Refused(400, {"error": "bad Content-Length"}))   # but its length is checked as
+            if n > MAX_BODY:                                                          # every POST's
+                return self._refusal(Refused(413, {"error": f"request body over {MAX_BODY} bytes"}))
+            return ("/finish", None)
         if method != "POST" or path not in ("/submit", "/observe") + (("/reset",) if self.reset_budget else ()):
             return self._refusal(Refused(404, {"error": "no such endpoint"}))
         if n < 0:
@@ -891,10 +910,7 @@ class RealtimeService(Service):
             shape_ok(A)
             if not np.all(np.isfinite(A)):
                 raise ValueError("actions contain NaN or inf")
-            try:
-                dt = cdt if meta.get("dt") is None else float(meta["dt"])
-            except (TypeError, ValueError):
-                raise ValueError("dt must be a number of seconds") from None
+            dt = _real(meta, "dt", cdt)
             k = round(dt / cdt) if np.isfinite(dt / cdt) else 0
             if k < 1 or abs(k * cdt - dt) > 1e-9:
                 raise ValueError(f"dt must be a positive whole multiple of control_dt = {cdt} s (never rounded)")
@@ -928,11 +944,8 @@ class RealtimeService(Service):
                              '{"type": <type>, "interpolate": "hold", "seconds": n} has no rows')
         if meta.get("interpolate") != "hold":
             raise ValueError('a chunk without rows is a hold chunk: {"type": <type>, "interpolate": "hold", "seconds": n}')
-        try:
-            sec = float(meta["seconds"])
-        except (TypeError, ValueError, OverflowError):
-            raise ValueError("seconds must be a number") from None
-        if not (np.isfinite(sec) and 0.0 < sec <= self.max_chunk_s + 1e-9):
+        sec = _real(meta, "seconds")
+        if not 0.0 < sec <= self.max_chunk_s + 1e-9:
             raise ValueError(f"a hold chunk's seconds must be in (0, {self.max_chunk_s:g}] (max_chunk_s)")
         cdt = self.sim.control_dt
         return {"type": typ, "actions": None, "hold_steps": max(1, int(round(sec / cdt))), "seconds": sec, "dt": cdt,
@@ -942,14 +955,10 @@ class RealtimeService(Service):
     def _check_observe(self, meta: dict) -> dict:
         """/observe is a pure read (eai-standard/3.0): last_s looks back, nothing waits; `seconds` > 0 is refused."""
         with bad_request():
-            try:
-                seconds = float(meta.get("seconds") or 0.0)
-                last_s = float(meta.get("last_s") or 0.0)
-            except (TypeError, ValueError, OverflowError):
-                raise ValueError("last_s must be a number of seconds") from None
-            if seconds != 0.0:
+            if _real(meta, "seconds", 0.0) != 0.0:
                 raise ValueError(SECONDS_GONE)
-            if not 0.0 <= last_s < float("inf"):
+            last_s = _real(meta, "last_s", 0.0)
+            if not 0.0 <= last_s:
                 raise ValueError("last_s must be >= 0")
             view = self._view_rt(meta, "frames")
             # depth with last_s > 0 (as 2.1 and 2.2/2.4): only for cameras the recorder keeps depth for
@@ -1050,7 +1059,7 @@ class RealtimeService(Service):
                 return job.finish("raw", *job.req[1:])
             if route == "/status":
                 return job.finish("raw", *self._reply_json(200, self.status()))
-            if route == "/finish":                   # the clock stops with the episode; pending watches are answered
+            if route == "/finish":                   # the clock stops with the episode (no watch is pending from 3.0)
                 try:
                     out = self._agent_finish()
                 except Refused as exc:
@@ -1162,7 +1171,7 @@ class RealtimeService(Service):
                  "start_step": max(at, nxt), "late_steps": late, "plan_end_step": nxt + len(self.plan),
                  "end_step": nxt + len(self.plan), "duration_s": round(ran * cdt, 4),
                  "planned_duration_s": round(req["seconds"] if hold else len(A) * k * cdt, 4),
-                 **({"hold": True} if hold else {}),
+                 **({"hold": True, "executed_rows": 0} if hold else {}),
                  "clipped": clipped[:200], "n_clipped": len(clipped), "ok": True}
         if self.recording:                           # the frames of now: the newest rendered ones, read, not rendered
             pub = self._pub
