@@ -913,8 +913,11 @@ match exported without the extension (`eai-standard-lockstep/1.0`, `eai-standard
 
 **Time.** Standard mode: time passes only through `submit`; `observe` reads what is recorded and moves nothing.
 Realtime mode: no tool holds or slows the clock; `submit` answers at once as the endpoint does, and a call costs its
-own time. Each result carries `tool_s`, the tool's own wall time: on the toy 2.3 service an `observe` with `cameras = []` took 1.5-3 ms over HTTP and 1-3.5 ms more through the tool (`embodied_first_exam/standard/mcp/tests/test_realtime.py`), plus whatever the agent's harness takes per tool call, which is outside the task's control. A call still running after 45 s (`--max-block-s`; Codex's MCP calls time out at
-60 s) returns `{"pending": true, "operation": id}`; `observe(operation=id)` collects the reply. Nothing is retried: a call is sent once.
+own time. Each result carries `tool_s`, the tool's own wall time: on the toy 2.3 service an `observe` with `cameras = []` took 1.5-3 ms over HTTP and 1-3.5 ms more through the tool (`embodied_first_exam/standard/mcp/tests/test_realtime.py`), plus whatever the agent's harness takes per tool call, which is outside the task's control. Every call answers within 45 s of its arrival (`--max-block-s`, one deadline that includes any wait for an
+earlier call; Codex's MCP calls time out at 60 s): one still running then returns `{"pending": true, "operation": id}`
+and `observe(operation=id)` collects the reply; a call that arrives while an earlier one is still running at that
+deadline is not sent (an error result, `{"sent": false, "operation": <the running one>}`). Nothing is retried: a call is
+sent once.
 
 **Shipping.** `scripts/task_conventions.py` `normalize` writes, from `embodied_first_exam/standard/mcp/inject.py`, into
 every standard and realtime task: `environment/efe_mcp/` (the server, copied unchanged, and the task's `manifest.json`:
