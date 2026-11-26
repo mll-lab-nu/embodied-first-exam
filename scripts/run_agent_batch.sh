@@ -322,8 +322,8 @@ for trial in jobs.glob(f"{batch}-*/*__*"):
     wall = "" if wtr.span(ae) is None else wtr.span(ae)
     task = tc.canonical_name((r.get("task_name") or trial.name.split("__")[0]).split("/")[-1])
     if r and (tc.task_dir(task, R / "tasks") / "task.toml").is_file():
-        status, why, _ = wtr.classify(trial, r, rw)
         cfg = wtr.trial_config(trial, task, r)
+        status, why, _ = wtr.classify(trial, r, rw, agent_ended=wtr.agent_ended_trial(tc.task_dir(task, R / "tasks"), cfg))
     else:
         status, why, cfg = ("not_a_result", "no result.json", {}) if not r else ("legacy", None, {"mode": tc.mode_of(pathlib.Path(task))})
     key = tc.config_key(cfg)

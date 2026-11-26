@@ -40,7 +40,8 @@ def check(cond, what):
         print("FAIL", what)
 
 
-def result_line(td: Path, result: dict, reward=None, gateway=None, codex=None, down=False, task: str = TASK) -> str:
+def result_line(td: Path, result: dict, reward=None, gateway=None, codex=None, down=False, task: str = TASK,
+                digest: str | None = None) -> str:
     TASK = task
     jobs = td / "jobs"; job = f"j{len(list(jobs.glob('*'))) if jobs.exists() else 0}"
     trial = jobs / job / f"{TASK}__abc"
@@ -48,6 +49,8 @@ def result_line(td: Path, result: dict, reward=None, gateway=None, codex=None, d
     if down:                                   # run_agent_batch.sh found the usage gateway dead after the job
         (jobs / job / "gateway_down.json").write_text("{}")
     (trial / "result.json").write_text(json.dumps({"task_name": TASK, **result}))
+    if digest is not None:                     # the version of the task the trial ran (Harbor's lock.json)
+        (trial / "lock.json").write_text(json.dumps({"task": {"name": TASK, "digest": "sha256:" + digest}}))
     if reward is not None:
         (trial / "verifier").mkdir()
         (trial / "verifier/reward.json").write_text(reward if isinstance(reward, str) else json.dumps(reward))
@@ -74,7 +77,6 @@ def test_results():
             ("the agent's 0", {}, {"success": 0}, None, None, "**0**"),
             ("0 at the cutoff", timeout, {"success": 0}, None, None, "**0**"),
             ("a success at the cutoff", timeout, {"success": 1}, None, None, "**1 (success)**"),
-            ("an agent-ended episode over the token budget", {}, {"success": 1}, {"over_token_budget": True}, None, "**1 (success)**"),
             ("infra_error", {}, {"success": 0, "infra_error": 1}, None, None, "not a result"),
             ("grader_error", timeout, {"success": 0, "grader_error": 1}, None, None, "not a result"),
             ("compose up failed, no reward.json",
@@ -109,7 +111,19 @@ def test_results():
             if want != "not a result":
                 check("not a result" not in line, f"write_task_results: {name} is a result: {line}")
         # an agent-ended episode (every standard task, PROTOCOL §3) is graded on the state its session ended in, the
-        # token budget's end included; a privileged task over the budget is failed
+        # token budget's end included; a privileged task over the budget is failed. The rule of the checkout holds only
+        # for a trial of the task's current version (its DIGEST); an older version's trial keeps the rules it ran under
+        # (reward.json's ended_session_end where its service wrote one)
+        dg = (tc.task_dir(TASK) / "DIGEST").read_text().strip().removeprefix("sha256:")
+        line = result_line(td, {}, {"success": 1}, {"over_token_budget": True}, digest=dg)
+        check("**1 (success)**" in line, f"write_task_results: an agent-ended episode over the token budget: {line}")
+        line = result_line(td, {}, {"success": 1}, {"over_token_budget": True}, digest="3" * 64)
+        check("over the token budget" in line and "**1 (success)**" not in line,
+              f"write_task_results: an older version's trial over the token budget: {line}")
+        line = result_line(td, {}, {"success": 1}, {"over_token_budget": True})
+        check("over the token budget" in line, f"write_task_results: a trial of an unknown version over the token budget: {line}")
+        line = result_line(td, {}, {"success": 1, "ended_session_end": 1}, {"over_token_budget": True}, digest="3" * 64)
+        check("**1 (success)**" in line, f"write_task_results: an older agent-ended trial over the token budget: {line}")
         line = result_line(td, {}, {"success": 1}, {"over_token_budget": True}, task=PRIV_TASK)
         check("over the token budget" in line and "**1 (success)**" not in line, f"write_task_results: a privileged task over the token budget: {line}")
         line = result_line(td, {}, {"success": 0}, down=True)
