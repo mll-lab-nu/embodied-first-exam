@@ -2,11 +2,12 @@
 
     from mcp_client import McpClient
     c = McpClient()                                  # spawns python3 /opt/tools/efe_mcp/server.py
-    c.call("describe_robot")
-    c.call("move_robot", goals=[{"target": "arm", "gripper": 1}])
+    c.call("spec")
+    c.call("submit", type="joint_position", actions=[[0.1, 0.0, 0.0]], dt=0.05)
 
 call() resolves a pending operation by calling observe(operation=...) until it completes, so it returns the final
-result; a tool error raises McpToolError."""
+result; a call the server did not send because an earlier one is still running ("sent": false) is sent again once that
+one has been collected; a tool error raises McpToolError."""
 from __future__ import annotations
 import json, os, pathlib, subprocess, sys, threading
 
@@ -54,17 +55,25 @@ class McpClient:
     def call_raw(self, name, **args):
         return self.request("tools/call", {"name": name, "arguments": args})
 
-    def call(self, name, **args):
-        r = self.call_raw(name, **args)
-        payload = json.loads(r["content"][0]["text"])
-        if r.get("isError"):
-            raise McpToolError(payload)
+    def _collect(self, payload):
         while isinstance(payload, dict) and payload.get("pending"):
             r = self.call_raw("observe", operation=payload["operation"])
             payload = json.loads(r["content"][0]["text"])
             if r.get("isError"):
                 raise McpToolError(payload)
         return payload
+
+    def call(self, name, **args):
+        r = self.call_raw(name, **args)
+        payload = json.loads(r["content"][0]["text"])
+        if r.get("isError") and isinstance(payload, dict) and payload.get("sent") is False and payload.get("operation"):
+            # not sent: an earlier call is still running; collect it (its result is not this call's), then send again
+            self._collect({"pending": True, "operation": payload["operation"]})
+            r = self.call_raw(name, **args)
+            payload = json.loads(r["content"][0]["text"])
+        if r.get("isError"):
+            raise McpToolError(payload)
+        return self._collect(payload)
 
     def close(self):
         try:
