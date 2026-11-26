@@ -13,7 +13,7 @@ Either way, the executed (journaled, recorded) row is DexJoCo's own row, so the 
 privileged tooling unchanged. As in DexJoCo's evaluation the episode ends at the first success or task failure;
 otherwise when the agent's time is over (the collect hook's SIGUSR1). With agent-ended episodes (RCB_AGENT_END=1,
 PROTOCOL §3) a success never ends the episode and is never shown: it ends at the agent's POST /finish, at a task failure
-(a failure, never a success, even after a success), at the runaway guard (reason step_limit) or when the agent's time
+(a failure, even after a success; on an event task the event seen before it stands), at the runaway guard (reason step_limit) or when the agent's time
 is over, and is judged on the state it ends in (END_JUDGEMENT / END_WINDOW below). Nothing about the objects leaves this process: a
 camera that rides on a body of the scene (bimanual_photograph's `cam_pos_z`, on the camera the hands pick up) gives
 images and depth only, its pose would be that object's (SCENE_CAMS). One call returns at most MAX_FRAMES images.
@@ -481,7 +481,8 @@ def write_final() -> None:
 # watered for DexJoCo's 30 steps). END_WINDOW: a task whose check is a hold (DexJoCo's own trigger counters: 10 to 50
 # control steps) runs its hold on from the end state, the robot holding its last command, for at most that many control
 # steps, and succeeds if the check holds within them (the steps already held count). A task failure (task_text) ends the
-# episode as a failure, also after a success.
+# episode as a failure, also after a success; on an event task the event that happened before it stands (the episode ends
+# with the events reached so far, standard_mode.md "Agent-ended episodes").
 END_JUDGEMENT = {"bimanual_microwave_cook": "event", "bimanual_photograph": "event", "water_plant": "event"}
 END_WINDOW = {t: int(1.2 * CTRL_HZ) for t in ("bimanual_assembly", "bimanual_hanoi", "bimanual_unlock_ipad", "click_mouse",
                                              "fold_glasses", "pinch_tongs")}   # control steps (1.2 s > fold_glasses' 50)
@@ -494,11 +495,12 @@ def end_fields() -> dict:
 
 def judge_end(reason: str) -> bool:
     """An agent-ended episode's verdict (lock held): the end state's success, or for an event task whether it happened;
-    a hold task's window first runs on from the end state (journaled and recorded: the trajectory has its rows)."""
-    if S.done:                                   # a task failure ended it: never a success
-        return False
+    a hold task's window first runs on from the end state (journaled and recorded: the trajectory has its rows). An
+    event that happened stands: a task failure after it does not take it back (standard_mode.md "Agent-ended episodes")."""
     if END_JUDGEMENT.get(TASK, "state") == "event":
         return E.get("seen_step") is not None
+    if S.done:                                   # a task failure ended it: an end-state task is never a success
+        return False
     ok = bool(S.now_success)
     if not ok and END_WINDOW.get(TASK) and S.steps < S.max_steps:
         n = 0
@@ -518,9 +520,10 @@ def finish(reason: str) -> None:
     E["done"] = True
     E["reason"] = reason
     E["t_end"] = time.time()
-    if AE.ENABLED:   # agent-ended: the state it ends in; a task failure or a simulator error is never a success
-        try:
-            E["success"] = reason in AE.END_STATE_REASONS and judge_end(reason)
+    if AE.ENABLED:   # agent-ended: the state it ends in; on an event task a task failure keeps the events seen before
+        try:             # it (as rcb_service._end); a simulator error is never a success
+            event_failure = END_JUDGEMENT.get(TASK, "state") == "event" and reason not in AE.ENDED_BY
+            E["success"] = (reason in AE.END_STATE_REASONS or event_failure) and judge_end(reason)
         except Exception:
             traceback.print_exc()
             E["success"] = False
