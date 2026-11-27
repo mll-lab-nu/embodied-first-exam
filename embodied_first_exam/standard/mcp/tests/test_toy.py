@@ -1,4 +1,5 @@
-"""End-to-end test of the efe-robot MCP server against the toy eai-standard/2.2 service (CPU, ~10 s): the endpoint
+"""End-to-end test of the efe-robot MCP server against the toy eai-standard/2.2 service (CPU, ~10 s), run without
+RCB_AGENT_END (the toy is an agent-ended adapter; without the feature a success ends its episode): the endpoint
 tools' request and reply, a hold chunk (no rows), a refusal, the end of the episode, finish refused where the success is not hidden (and sent where it is: test_agent_end.py, run at the end), a tool added from /spec (kinematics: tools/list after the first call), a pending call collected with
 observe(operation=...), one deadline per call (the wait for an earlier call included) and a call that finds an earlier
 one still running not sent (`sent` false).
@@ -22,8 +23,8 @@ def free_port():
 def main():
     tmp = pathlib.Path(tempfile.mkdtemp(prefix="efe_mcp_toy_"))
     port = free_port()
-    env = {**os.environ, "RCB_DATA": str(tmp / "data"), "RCB_TOY_PORT": str(port), "PYTHONPATH": str(STD),
-           "RCB_TOY_STEP_S": "0.02"}
+    env = {k: v for k, v in os.environ.items() if k not in ("RCB_AGENT_END", "RCB_STEP_LIMIT")}
+    env.update({"RCB_DATA": str(tmp / "data"), "RCB_TOY_PORT": str(port), "PYTHONPATH": str(STD), "RCB_TOY_STEP_S": "0.02"})
     sim = subprocess.Popen([sys.executable, str(STD / "toy_server.py")], env=env, stdout=subprocess.DEVNULL,
                            stderr=subprocess.DEVNULL)
     try:

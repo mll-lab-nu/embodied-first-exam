@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
-"""rcb_agent_end.py (agent-ended episodes, PROTOCOL §3) over HTTP, on toy_server.py of the 2.2 layer made an agent-ended
-adapter the way an adapter uses the module (numpy only, CPU, about 20 s):
+"""rcb_agent_end.py (agent-ended episodes, PROTOCOL §3) over HTTP, on toy_server.py of the 2.2 layer, an agent-ended
+adapter that uses the module the way every adapter does (numpy only, CPU, about 20 s):
 
-  - feature off: the adapter answers a fixed request script exactly as toy_server.py does with rcb_limited.serve alone
-    (RCB_AGENT_END unset or "0"), /finish is a 404 and final.json has none of the feature's fields;
+  - feature off: the adapter answers a fixed request script exactly as the toy does with rcb_limited.serve alone
+    (PLAIN; RCB_AGENT_END unset or "0"), /finish is a 404 and final.json has none of the feature's fields;
   - feature on: a success changes no answer (done, reason, executed rows, 409s); POST /finish ends the episode and every
     call after it but GET /spec and /status is a 409; the verdict is the end state's (a success undone is 0; a success at
     /finish or at the session's end is 1); /spec's success_signal is SUCCESS_SIGNAL_NOTE, which says so; final.json records
     ended_by;
-  - RCB_STEP_LIMIT: the episode ends by itself at the limit (reason step_limit, the chunk cut there), graded as it stands;
+  - RCB_STEP_LIMIT, enforced by the layer (the toy has no cap of its own): the episode ends by itself at the limit
+    (reason step_limit, the chunk or hold chunk cut there), graded as it stands; /finish after it is a 409;
+  - a finish() that raises: a 500 with a JSON error, the episode ends "error" (on_submit_error), checkpointed;
   - fail closed: an adapter without finish(), and RCB_STEP_LIMIT without RCB_AGENT_END, do not start.
 """
 from __future__ import annotations
@@ -35,26 +37,37 @@ import rcb_agent_end as AE  # noqa: E402   (only its SUCCESS_SIGNAL_NOTE: the ad
 VOLATILE = {"time_s", "time_left_s", "elapsed_s"}
 fails: list[str] = []
 
-# toy_server.py -> an agent-ended adapter: (old, new), each found exactly once
-PATCH = [
-    ("import rcb_limited as L  # noqa: E402\n", "import rcb_limited as L  # noqa: E402\nimport rcb_agent_end as AE  # noqa: E402\n"),
-    ('persist=("last_note",))', 'persist=AE.persist(("last_note",)))'),
-    ("                **EP.final_fields()})\n    L._write_json", "                **EP.final_fields(), **AE.final_fields(E, ctrl_steps())})\n    L._write_json"),
-    ('    E["done"] = True; E["reason"] = reason; E["t_end"] = time.time()\n',
-     '    E["done"] = True; E["reason"] = reason; E["t_end"] = time.time()\n'
-     '    if AE.ENABLED:                                      # the end state is judged (no settle window in this toy)\n'
-     '        E["success"] = reason in AE.END_STATE_REASONS and S.success()\n'),
-    ('    if S.success() and not E["success"]:\n        E["success"] = True; finish("success")\n',
-     '    if AE.ENABLED:\n        AE.hidden_success(E, S.success(), EP.log, ctrl_steps())\n'
-     '        if AE.STEP_LIMIT is not None and ctrl_steps() >= AE.STEP_LIMIT:\n            finish("step_limit")\n'
-     '    elif S.success() and not E["success"]:\n        E["success"] = True; finish("success")\n'),
-    ('            "reason": E["reason"], "proprio"', '            "reason": E["reason"], **AE.steps_left(ctrl_steps()), "proprio"'),
-    ('"done": E["done"], "reason": E["reason"],\n            "proprio"',
-     '"done": E["done"], "reason": E["reason"], **AE.steps_left(ctrl_steps()),\n            "proprio"'),
-    ('"last_note": E.get("last_note")}', '"last_note": E.get("last_note"), **AE.steps_left(ctrl_steps())}'),
-    ("L.serve(L.Service(", "AE.serve(AE.Service("),
-    ("proprio=proprio_row), port=", "proprio=proprio_row, **({\"finish\": lambda: finish(\"finished\")} if AE.ENABLED else {})), port="),
+# toy_server.py is an agent-ended adapter; PLAIN undoes that, (agent-ended text, rcb_limited-alone text), each found
+# exactly once: the toy as it would be with rcb_limited.serve alone, the reference the feature-off answers must equal
+PLAIN = [
+    ('HERE = os.path.dirname(os.path.abspath(__file__))\nsys.path[:0] = [HERE, os.path.join(HERE, "agent_end")]'
+     '   # rcb_agent_end.py: next to it in a task, in agent_end/ here\n'
+     "import rcb_limited as L  # noqa: E402\nimport rcb_agent_end as AE  # noqa: E402\n",
+     "sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))\nimport rcb_limited as L  # noqa: E402\n"),
+    ('persist=AE.persist(("last_note",)))', 'persist=("last_note",))'),
+    ("                **EP.final_fields(), **AE.final_fields(E, ctrl_steps())})\n    L._write_json",
+     "                **EP.final_fields()})\n    L._write_json"),
+    ('    if AE.ENABLED:                                      # the end state is judged (no settle window in this toy)\n'
+     '        E["success"] = reason in AE.END_STATE_REASONS and S.success()\n', ""),
+    ('    if AE.ENABLED:                                      # agent-ended: the success is only recorded\n'
+     '        AE.hidden_success(E, S.success(), EP.log, ctrl_steps())\n'
+     '    elif S.success() and not E["success"]:\n        E["success"] = True; finish("success")\n',
+     '    if S.success() and not E["success"]:\n        E["success"] = True; finish("success")\n'),
+    ('            "reason": E["reason"], **AE.steps_left(ctrl_steps()), "proprio"', '            "reason": E["reason"], "proprio"'),
+    ('"done": E["done"], "reason": E["reason"], **AE.steps_left(ctrl_steps()),\n            "proprio"',
+     '"done": E["done"], "reason": E["reason"],\n            "proprio"'),
+    ('"last_note": E.get("last_note"), **AE.steps_left(ctrl_steps())}', '"last_note": E.get("last_note")}'),
+    ("AE.serve(AE.Service(", "L.serve(L.Service("),
+    ("proprio=proprio_row, **({\"finish\": lambda: finish(\"finished\")} if AE.ENABLED else {})), port=", "proprio=proprio_row), port="),
 ]
+DROP_FINISH = ', **({"finish": lambda: finish("finished")} if AE.ENABLED else {})'
+# variants: a finish() that raises before it ends anything; an adapter with a step cap of its own (it ends the episode
+# itself at RCB_STEP_LIMIT, as RoboPaint or DexJoCo do: the layer must not end it again)
+VARIANT = {"raise_finish": ('{"finish": lambda: finish("finished")}', '{"finish": lambda: 1 / 0}'),
+           "own_cap": ('        AE.hidden_success(E, S.success(), EP.log, ctrl_steps())\n',
+                       '        AE.hidden_success(E, S.success(), EP.log, ctrl_steps())\n'
+                       '        if AE.STEP_LIMIT is not None and ctrl_steps() >= AE.STEP_LIMIT:\n'
+                       '            finish("step_limit")\n')}
 
 
 def check(cond, what):
@@ -69,16 +82,22 @@ def free_port() -> int:
         return s.getsockname()[1]
 
 
-def adapter(patched: bool, drop_finish: bool = False) -> str:
-    """A directory with the toy service: toy_server.py as it is, or made an agent-ended adapter (PATCH)."""
+def adapter(patched: bool, drop_finish: bool = False, variant: str | None = None) -> str:
+    """A directory with the toy service: toy_server.py as it is (an agent-ended adapter), or as it would be with
+    rcb_limited alone (PLAIN); drop_finish: the agent-ended toy without its finish() (it must not start)."""
     d = tempfile.mkdtemp()
     s = open(os.path.join(STD, "toy_server.py")).read()
-    if patched:
-        for old, new in PATCH:
-            assert s.count(old) == 1, f"toy_server.py changed: patch the selftest ({old[:60]!r})"
-            s = s.replace(old, new)
-        if drop_finish:
-            s = s.replace(', **({"finish": lambda: finish("finished")} if AE.ENABLED else {})', "")
+    if not patched:
+        for ae, plain in PLAIN:
+            assert s.count(ae) == 1, f"toy_server.py changed: update the selftest's PLAIN ({ae[:60]!r})"
+            s = s.replace(ae, plain)
+    elif drop_finish:
+        assert s.count(DROP_FINISH) == 1, "toy_server.py changed: update the selftest's DROP_FINISH"
+        s = s.replace(DROP_FINISH, "")
+    if variant:
+        old, new = VARIANT[variant]
+        assert s.count(old) == 1, f"toy_server.py changed: update the selftest's VARIANT {variant}"
+        s = s.replace(old, new)
     open(os.path.join(d, "toy_server.py"), "w").write(s)
     for f in ("rcb_limited.py", "rcb1.py"):
         shutil.copy(os.path.join(STD, f), d)
@@ -139,6 +158,14 @@ class Toy:
         return fin
 
 
+def events(t) -> list:
+    """The toy's episode.jsonl so far (read before Toy.end removes its data)."""
+    try:
+        return [json.loads(x) for x in open(os.path.join(t.data, "episode.jsonl")) if x.strip()]
+    except OSError:
+        return []
+
+
 def sub(rows):
     return {"type": "joint_position", "actions": rows, "video": "none"}
 
@@ -160,6 +187,7 @@ def script(src, env=None):
 
 def main() -> None:
     plain, ae, ae_nofinish = adapter(False), adapter(True), adapter(True, drop_finish=True)
+    ae_raise, ae_own = adapter(True, variant="raise_finish"), adapter(True, variant="own_cap")
     try:
         ref, fin_ref = script(plain)
         for env in (None, {"RCB_AGENT_END": "0"}):
@@ -208,16 +236,44 @@ def main() -> None:
             fin = t.end()
             check(fin.get("success") is True and fin.get("ended_by") == how, f"on: a success held to the {how}: {fin}")
 
-        t = Toy(ae, {"RCB_AGENT_END": "1", "RCB_STEP_LIMIT": "30"})   # the step limit: 12 + 18 of 24 rows, then 409
-        a = [t.call("POST", "/submit", sub(TO_BLOCK)), t.call("POST", "/submit", sub(PUSH * 2))]
-        late = [t.call("POST", "/submit", sub(BACK)), t.call("POST", "/finish", {}), t.call("POST", "/observe", {})]
+        for src, who in ((ae, "the layer"), (ae_own, "the adapter's own cap")):   # 12 + 18 of 24 rows, then 409
+            t = Toy(src, {"RCB_AGENT_END": "1", "RCB_STEP_LIMIT": "30"})
+            a = [t.call("POST", "/submit", sub(TO_BLOCK)), t.call("POST", "/submit", sub(PUSH * 2))]
+            late = [t.call("POST", "/submit", sub(BACK)), t.call("POST", "/finish", {}), t.call("POST", "/observe", {}),
+                    t.call("GET", "/status")]
+            ends = [e for e in events(t) if e.get("ev") == "end"]
+            fin = t.end()
+            check(a[0]["meta"]["steps_left"] == 18 and a[1]["meta"]["executed_rows"] == 18 and a[1]["meta"]["done"]
+                  and a[1]["meta"]["reason"] == "step_limit" and a[1]["meta"]["steps_left"] == 0
+                  and a[1]["meta"]["control_steps"] == 30 and a[1]["meta"].get("duration_s") == 0.9,
+                  f"step limit ({who}): the chunk at the limit: {a[1]['meta']}")
+            check(late[0]["code"] == 409 and late[1]["code"] == 409 and late[2]["code"] == 200
+                  and late[2]["meta"]["reason"] == "step_limit" and late[3]["json"]["reason"] == "step_limit"
+                  and late[3]["json"]["steps_left"] == 0, f"step limit ({who}): after it: {late}")
+            check([e.get("reason") for e in ends] == ["step_limit"] and ends[0].get("control_steps") == 30,
+                  f"step limit ({who}): one end, at step 30: {ends}")
+            check(fin.get("ended_by") == "step_limit" and fin.get("step_limit") == 30 and fin.get("steps_used") == 30
+                  and fin.get("success") is True, f"step limit ({who}): final.json: {fin}")
+
+        t = Toy(ae, {"RCB_AGENT_END": "1", "RCB_STEP_LIMIT": "12"})   # the limit reached exactly at a chunk's end
+        a = [t.call("POST", "/submit", sub(TO_BLOCK)), t.call("POST", "/submit", sub(BACK)), t.call("POST", "/finish", {})]
         fin = t.end()
-        check(a[0]["meta"]["steps_left"] == 18 and a[1]["meta"]["executed_rows"] == 18 and a[1]["meta"]["done"]
-              and a[1]["meta"]["reason"] == "step_limit" and a[1]["meta"]["steps_left"] == 0,
-              f"step limit: the chunk at the limit: {a[1]['meta']}")
-        check(late[0]["code"] == 409 and late[1]["code"] == 409 and late[2]["code"] == 200, f"step limit: after it: {late}")
-        check(fin.get("ended_by") == "step_limit" and fin.get("step_limit") == 30 and fin.get("steps_used") == 30
-              and fin.get("success") is True, f"step limit: final.json: {fin}")
+        check(a[0]["code"] == 200 and a[0]["meta"]["executed_rows"] == 12 and a[0]["meta"]["reason"] == "step_limit"
+              and a[1]["code"] == 409 and a[2]["code"] == 409 and fin.get("steps_used") == 12,
+              f"step limit at a chunk's last row: {[x.get('meta', x.get('json')) for x in a]} {fin}")
+
+        t = Toy(ae_raise, {"RCB_AGENT_END": "1"})   # finish() raises: a 500 with a JSON error, the episode ends "error"
+        a = [t.call("POST", "/submit", sub(TO_BLOCK)), t.call("POST", "/finish", {}), t.call("GET", "/status"),
+             t.call("POST", "/submit", sub(BACK))]
+        ev = events(t)
+        fin = t.end()
+        cps = [e for e in ev if e.get("ev") == "checkpoint"]
+        check(a[1]["code"] == 500 and "error" in a[1]["json"] and a[2]["json"]["done"] and a[2]["json"]["reason"] == "error"
+              and a[3]["code"] == 409, f"finish() raising: {[(x['code'], x.get('json')) for x in a]}")
+        check(cps and cps[-1].get("done") is True and cps[-1].get("reason") == "error"
+              and any(e.get("ev") == "call_end" and e.get("path") == "/finish" for e in ev),
+              f"finish() raising: no checkpoint of the end: {cps[-1:]}")
+        check(fin.get("ended_by") == "error" and fin.get("success") is False, f"finish() raising: final.json {fin}")
 
         t = Toy(ae, {"RCB_AGENT_END": "1", "RCB_STEP_LIMIT": "30"})   # eai-standard/3.0: a hold chunk is a chunk
         hold = {"type": "joint_position", "interpolate": "hold", "seconds": 1.0, "video": "none"}
@@ -245,13 +301,14 @@ def main() -> None:
             check(t.p.poll() is not None and t.p.returncode != 0, f"fail closed: {what} served")
             t.end()
     finally:
-        for d in (plain, ae, ae_nofinish):
+        for d in (plain, ae, ae_nofinish, ae_raise, ae_own):
             shutil.rmtree(d, ignore_errors=True)
     if fails:
         print(f"{len(fails)} failure(s)")
         sys.exit(1)
     print("ok agent-ended episodes (rcb_agent_end.py on toy_server.py): off = rcb_limited alone, on = no success shown, "
-          "/finish, end-state verdict, step limit, fail closed, 3.0 observe / hold chunks")
+          "/finish, end-state verdict, step limit (the layer's, or the adapter's own: one end), a finish() error, fail closed, "
+          "3.0 observe / hold chunks")
 
 
 if __name__ == "__main__":

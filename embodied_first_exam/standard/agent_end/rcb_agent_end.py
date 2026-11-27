@@ -6,7 +6,11 @@ episodes", docs/protocol/standard_mode.md "Agent-ended episodes"). A task opts i
                          goal made of moments (key strikes, button presses) or judged at a trigger is judged on those as
                          they happened, as the task's instruction says; a failure rule that ends the episode gives 0
   RCB_STEP_LIMIT: "<N>"  (only with RCB_AGENT_END) the episode also ends by itself after N control steps (reason
-                         "step_limit"), graded as it stands; what one step is, is the adapter's (its /spec and instruction)
+                         "step_limit"), graded as it stands; what one step is, is the adapter's (its /spec and instruction).
+                         Service enforces it: a /submit (a hold chunk too) stops at the step that reaches the limit
+                         (Episode.row_cap: one journaled row per control step), the adapter's finish("step_limit") ends
+                         the episode there and the answer says so (done, reason "step_limit", duration_s of the steps
+                         run); an adapter that ends the episode at its own cap first is left alone (one end only)
 
 Without RCB_AGENT_END nothing here is used: an adapter that imports this module answers exactly as without it.
 
@@ -14,12 +18,16 @@ An adapter (robodojo's sim/server.py is the reference): records the state's succ
 hidden_success() instead of ending the episode, judges the end state in its own finish() for the ends in
 END_STATE_REASONS (a settle or hold window, where the task has one, runs from that state), adds final_fields() to
 final.json, builds its rcb_limited.Episode with persist=persist(...) and serves with
-serve(Service(..., finish=lambda: finish("finished"))) instead of rcb_limited's. Tests: agent_end_selftest.py.
+serve(Service(..., finish=lambda: finish("finished"))) instead of rcb_limited's. The step limit's end is the same call
+with reason "step_limit" (Service end_step_limit=, by default made from that finish callable); the episode's control steps are
+its status()["control_steps"]. Tests: agent_end_selftest.py.
 """
 from __future__ import annotations
 
 import os
 import time
+import traceback
+import types
 from typing import Callable
 
 import rcb_limited as L
@@ -82,17 +90,75 @@ def steps_left(used: int) -> dict:
     return {"step_limit": STEP_LIMIT, "steps_left": max(0, STEP_LIMIT - int(used))} if STEP_LIMIT is not None else {}
 
 
+def end_from_finish(finish: Callable | None) -> Callable | None:
+    """The adapter's end with reason "step_limit", from its finish callable: the same call with the constant "finished"
+    replaced (lambda: finish("finished") -> finish("step_limit"); lambda: on_main(finish, "finished") likewise). None
+    when the callable names no "finished" constant."""
+    code = getattr(finish, "__code__", None)
+    if code is None or "finished" not in code.co_consts:
+        return None
+    consts = tuple("step_limit" if c == "finished" else c for c in code.co_consts)
+    return types.FunctionType(code.replace(co_consts=consts), finish.__globals__, "end_step_limit",
+                              finish.__defaults__, finish.__closure__)
+
+
 class Service(L.Service):
     """rcb_limited.Service with finish() (the adapter ends the episode, reason "finished": POST /finish) and hidden_keys
-    (meta / status keys that would tell the agent about the task's success or progress, dropped from every answer)."""
+    (meta / status keys that would tell the agent about the task's success or progress, dropped from every answer).
+    With RCB_STEP_LIMIT it enforces the limit around the adapter's submit / observe (a hold chunk runs as an observe
+    watch): end_step_limit() (default: end_from_finish(finish)) ends the episode, reason "step_limit"."""
 
-    def __init__(self, *, finish: Callable | None = None, hidden_keys=(), **kw):
+    def __init__(self, *, finish: Callable | None = None, hidden_keys=(), end_step_limit: Callable | None = None, **kw):
         super().__init__(**kw)
         self.finish, self.hidden_keys = finish, frozenset(hidden_keys or ())
+        self.end_step_limit = end_step_limit or end_from_finish(finish)
+        if ENABLED and STEP_LIMIT is not None:
+            self.submit, self.observe = self._limited(self.submit), self._limited(self.observe)
 
     def hide(self, d: dict) -> dict:
         """An answer's meta or /status without the adapter's hidden_keys."""
         return {k: v for k, v in d.items() if k not in self.hidden_keys} if ENABLED else d
+
+    def steps_used(self) -> int:
+        """The episode's control steps as the adapter counts them (status()["control_steps"], per episode where the
+        adapter has resets), else the journal's rows."""
+        try:
+            n = self.status().get("control_steps")
+            if isinstance(n, (int, float)) and not isinstance(n, bool):
+                return int(n)
+        except Exception:  # noqa: BLE001
+            traceback.print_exc()
+        return int(self.episode.rows) if self.episode is not None else 0
+
+    def at_step_limit(self) -> bool:
+        """The lock held: end the episode (reason "step_limit") if its control steps reached RCB_STEP_LIMIT and nothing
+        ended it yet (an adapter with a cap of its own ends it itself, first). True if this call ended it."""
+        E = self.state
+        if STEP_LIMIT is None or E.get("done") or E.get("exiting") or self.steps_used() < STEP_LIMIT:
+            return False
+        if self.end_step_limit is None:
+            raise RuntimeError("RCB_STEP_LIMIT reached, but this service has no end_step_limit()")
+        self.end_step_limit()
+        return bool(E.get("done"))
+
+    def _limited(self, call: Callable) -> Callable:
+        """submit(meta, A) / observe(meta) under the step limit: the journal stops the call at the limit
+        (Episode.row_cap), then the episode ends there and the answer's done / reason / steps_left say so."""
+        def limited(*a):
+            ep = self.episode
+            if ep is not None:
+                ep.row_cap = ep.rows + max(0, STEP_LIMIT - self.steps_used())
+            try:
+                out, blobs = call(*a)
+            finally:
+                if ep is not None:
+                    ep.row_cap = None
+            if self.at_step_limit() and isinstance(out, dict):
+                E = self.state
+                out = {**out, "done": True, "reason": E.get("reason"),
+                       **(steps_left(self.steps_used()) if "steps_left" in out else {})}
+            return out, blobs
+        return limited
 
 
 def make_handler(svc: Service):
@@ -132,6 +198,11 @@ def make_handler(svc: Service):
 
         def do_POST(self):
             E, ep = svc.state, svc.episode
+            if STEP_LIMIT is not None and self.path == "/submit" and not E.get("done") and svc.lock.acquire(blocking=False):
+                try:                             # a limit reached without an end (a step outside a call): end it now,
+                    svc.at_step_limit()          # so the /submit is a 409 (never waits: a call in progress checks
+                finally:                         # the limit itself when it ends)
+                    svc.lock.release()
             if self.path not in ("/submit", "/observe", "/kinematics", "/finish") or not (
                     finished(E) or self.path == "/finish"):
                 return super().do_POST()
@@ -148,14 +219,27 @@ def make_handler(svc: Service):
                 if E.get("exiting") or E.get("done"):
                     return self._json(409, {"error": "episode finished", "reason": E.get("reason")})
                 cid = ep.call_begin(self.path) if ep else 0
+                err = None
                 try:
                     E["finish_t"] = time.time()
                     svc.finish()
-                    if ep:
-                        ep.checkpoint(E, svc.state_sha, svc.proprio)
+                except Exception as exc:  # noqa: BLE001   the adapter's end failed: as a simulator error (§4.6)
+                    traceback.print_exc(); E["error"] = repr(exc)
+                    svc.log({"ev": "error", "path": self.path, "error": repr(exc)})
+                    try:
+                        svc.on_submit_error(exc)         # ends the episode, reason "error"
+                    except Exception:  # noqa: BLE001
+                        traceback.print_exc()
+                    err = (500, {"error": "simulator error", "detail": repr(exc)[:200]})
                 finally:
                     if ep:
+                        try:
+                            ep.checkpoint(E, svc.state_sha, svc.proprio)
+                        except Exception:  # noqa: BLE001
+                            traceback.print_exc()
                         ep.call_end(cid, self.path)
+                if err is not None:
+                    return self._json(*err)
                 return self._json(200, {"ok": True, **svc.hide(svc.status())})
     return H
 
@@ -170,5 +254,8 @@ def serve(svc: Service, port: int = 8000) -> None:
         if getattr(svc, "finish", None) is None:
             raise RuntimeError("RCB_AGENT_END=1, but this service has no finish(): it does not implement agent-ended episodes")
         svc.spec["success_signal"] = SUCCESS_SIGNAL_NOTE
+        if STEP_LIMIT is not None and getattr(svc, "end_step_limit", None) is None:
+            raise RuntimeError("RCB_STEP_LIMIT is set, but this service's finish() gives no end_step_limit(): pass "
+                               "Service(end_step_limit=...)")
     L.check_spec(svc.spec)
     L.bind(port, make_handler(svc)).serve_forever()

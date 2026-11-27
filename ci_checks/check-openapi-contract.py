@@ -11,8 +11,8 @@
      2.2  rcb_limited.py (the shared 2.2 layer)                    embodied_first_exam/standard/toy_server.py
      2.4  v2_4/rcb_limited.py (toy_server.py staged next to it in the work directory)
    2.1 and 2.3 run with RCB_AGENT_END=1 and a reset budget of 1; 2.2 and 2.4 without the feature, and again as
-   agent-ended adapters (2.2-ae, 2.4-ae: toy_server.py made one with agent_end/agent_end_selftest.py's PATCH and
-   rcb_agent_end.py staged next to it): /finish validated against FinishResponse, then the 409s after it. With a step
+   agent-ended adapters (2.2-ae, 2.4-ae: toy_server.py is one, with rcb_agent_end.py staged next to it, run with
+   RCB_AGENT_END=1): /finish validated against FinishResponse, then the 409s after it. With a step
    limit (2.1-limit, 2.2-limit, 2.4-limit: RCB_STEP_LIMIT): steps_left, the chunk cut at the limit (reason
    step_limit), then /submit and /finish 409 while /observe answers. A service that gave up (2.2-gaveup:
    RCB_TOY_REFUSE): every endpoint 409 with gave_up. Every request is sent, and every answer is checked:
@@ -678,23 +678,12 @@ def gave_up(t: Target) -> None:
 
 
 def stage(work: pathlib.Path, std: pathlib.Path, name: str, layer: str, agent_end: bool) -> pathlib.Path:
-    """toy_server.py staged with a layer (2.2: rcb_limited.py; 2.4: v2_4/rcb_limited.py) and rcb1.py; agent_end: made
-    an agent-ended adapter with agent_end_selftest.py's PATCH (the way an adapter uses rcb_agent_end.py), which is
-    staged too. Returns the directory."""
+    """toy_server.py staged with a layer (2.2: rcb_limited.py; 2.4: v2_4/rcb_limited.py), rcb1.py and rcb_agent_end.py
+    (the toy is an agent-ended adapter; agent_end: the target runs it with RCB_AGENT_END=1). Returns the directory."""
     d = work / f"stage_{name}"
     d.mkdir(exist_ok=True)
-    src = (std / "toy_server.py").read_text()
-    if agent_end:
-        import importlib.util
-        spec = importlib.util.spec_from_file_location("agent_end_selftest", std / "agent_end/agent_end_selftest.py")
-        mod = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(mod)
-        for old, new in mod.PATCH:
-            if src.count(old) != 1:
-                raise RuntimeError(f"toy_server.py and agent_end_selftest.PATCH disagree ({old[:60]!r})")
-            src = src.replace(old, new)
-        shutil.copy2(std / "agent_end/rcb_agent_end.py", d / "rcb_agent_end.py")
-    (d / "toy_server.py").write_text(src)
+    shutil.copy2(std / "toy_server.py", d / "toy_server.py")
+    shutil.copy2(std / "agent_end/rcb_agent_end.py", d / "rcb_agent_end.py")
     shutil.copy2(std / layer, d / "rcb_limited.py")
     shutil.copy2(std / "rcb1.py", d / "rcb1.py")
     (d / "launch_toy.py").write_text(LAUNCH_24)

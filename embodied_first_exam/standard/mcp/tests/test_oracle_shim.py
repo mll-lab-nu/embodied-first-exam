@@ -49,6 +49,7 @@ def layer(tmp, version):
         "import rcb_limited as L  # noqa: E402\nL.agent_time = getattr(L, 'agent_time', lambda E: 0.0)", 1)
     (d / "toy_server.py").write_text(src)
     shutil.copy(STD / "v2_4/rcb_limited.py", d / "rcb_limited.py"); shutil.copy(STD / "v2_4/rcb_client.py", d / "rcb_client.py")
+    shutil.copy(STD / "agent_end/rcb_agent_end.py", d / "rcb_agent_end.py")   # the toy is an agent-ended adapter
     m = json.loads((HERE / "toy_manifest.json").read_text()); m["protocol"] = "eai-standard/2.4"
     (d / "manifest.json").write_text(json.dumps(m))
     return d, d, d / "manifest.json"
