@@ -93,7 +93,8 @@ add bash ci_checks/check-tooling-identity.sh                # shared sources (PR
 add bash ci_checks/check-standard-client.sh                 # standard agent + verifier images: the pinned client base and pins
 add python3 ci_checks/check-recipe-copies.py               # base-image recipes inside other images' recipes: byte-identical to their source
 # PROTOCOL §6: the caps of every container ([environment], the compose files, x-gpu-memory-gb), the rules of
-# scripts/task_resources.toml applied, and the instruction's and README's `## Resources` rendered from them
+# scripts/task_resources.toml applied, and the Resources line of the instruction's `## Limits` and the README's
+# `## Resources` rendered from them
 add python3 ci_checks/check-resources.py"$pargs"
 # PROTOCOL §2: the agent's time cutoff, each task's own `[agent] timeout_sec` (no table): at most 14400 s, the Time line
 # of instruction.md's `## Limits`, the README row and the standard modes' sim service say it, nothing else states
@@ -109,6 +110,9 @@ add python3 ci_checks/check-mcp-tools.py"$pargs"
 # docs/protocol/eai-standard-3.0.openapi.yaml says (paths, status codes, bodies against the schemas); in CI the
 # unit-tests job runs it with its modules installed (RCB_SKIP_UNIT_TESTS=1 here)
 [ "${RCB_SKIP_UNIT_TESTS:-0}" = 1 ] || add python3 ci_checks/check-openapi-contract.py
+# the same document against the benchmarks' own 2.1 servers (their own HTTP layer, no shared layer), read from
+# their source: the keys /status, every answer meta and /spec must carry (static: no simulator)
+add python3 ci_checks/check-v21-servers.py
 # PROTOCOL §4: every task renders a video and the runner can collect it; a declared video time bound is not
 # shorter than the verdict replay's (privileged)
 add python3 ci_checks/check-video.py"$targs"

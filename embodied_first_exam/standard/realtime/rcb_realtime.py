@@ -145,6 +145,8 @@ SECONDS_GONE = ("observe reads the recorder only and never waits (eai-standard/3
                 '{"type": <type>, "interpolate": "hold", "seconds": n} plans holding the current target')
 CAMERA_WORKER_START_S = 300.0    # the worker builds its own copy of the scene; no frames until it is up
 CAMERA_WORKER_RESPAWNS = 3       # a worker that dies is started again this many times, then the answers come without frames
+CAMERA_RENDER_TIMEOUT_S = float(os.environ.get("RCB_CAMERA_RENDER_TIMEOUT_S") or 120.0)   # one job's frames; longer: a hung
+                                 # worker, killed and started again (its frames are lost, the clock goes on)
 
 # The child process that parses a body with more than INLINE_JSON bytes of JSON text (argv: the most elements a valid
 # `actions` can have, INLINE_JSON, CHILD_MEM; stdin: the body). It answers with the fields the service reads and the
@@ -357,6 +359,8 @@ class _Cameras:
                         self.cv.wait()
                     job, self.pending = self.pending, None
                 self.conn.send(job)
+                if not self.conn.poll(CAMERA_RENDER_TIMEOUT_S):   # a hung worker: killed and respawned below
+                    raise TimeoutError(f"the camera worker sent no frames in {CAMERA_RENDER_TIMEOUT_S:g} s")
                 kind, (key, rgb, dep, took) = self.conn.recv()
                 frame = {"epoch": key[0], "step": key[1], "rgb": rgb, "dep": dep, "done_t": time.monotonic()}
                 with self.cv:
@@ -371,6 +375,12 @@ class _Cameras:
                 try:
                     if self.proc is not None:
                         self.proc.kill()
+                        self.proc.join(5.0)
+                except Exception:  # noqa: BLE001
+                    pass
+                try:
+                    if self.conn is not None:
+                        self.conn.close()            # the dead worker's pipe end (a respawn opens a new one)
                 except Exception:  # noqa: BLE001
                     pass
                 self.proc = self.conn = None
@@ -663,6 +673,14 @@ class RealtimeService(Service):
     def _end(self, reason: str) -> None:
         super()._end(reason)
         self._stop_clock(reason)
+        pub = self._pub
+        if self.recording and pub is not None:      # what /observe reads as now: the end (done, reason) at once, also
+            try:                                     # after an error end (no control step publishes it then)
+                m = self.meta()
+            except Exception:  # noqa: BLE001 -- a broken simulator: the last published meta, with the end
+                traceback.print_exc()
+                m = {**pub["meta"], "done": True, "reason": reason}
+            self._pub = {**pub, "meta": m}
 
     def due_in(self, now: float) -> float | None:
         """Seconds until the next control step is due (<= 0: due now); None while the clock is stopped."""
@@ -1113,6 +1131,8 @@ class RealtimeService(Service):
         if hold:                                     # a hold chunk: the target of `typ` in force at `at`, n seconds
             clipped = []
             held = self._in_force(at - 1, nxt, typ) if self._interp[typ] else None
+            if held is not None and held.shape != (int(self.types[typ]["dim"]),):
+                held = None                          # (an adapter whose command() has not the type's layout: as rows)
             steps = [HELD if held is None else (typ, held, -1)] * hold
             head = list(self.plan)[:keep]
             head += [HELD if held is None else (typ, held, -1)] * (keep - len(head))

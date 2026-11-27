@@ -1,6 +1,6 @@
-"""finish through the efe-robot tools in an agent-ended episode (CPU, ~20 s): the toy eai-standard/2.2 service made an
-agent-ended adapter (agent_end/agent_end_selftest.py's patch, RCB_AGENT_END=1; /spec success_signal is the sentence
-SUCCESS_SIGNAL_NOTE, which starts with "hidden"):
+"""finish through the efe-robot tools in an agent-ended episode (CPU, ~20 s): the toy eai-standard/2.2 service, an
+agent-ended adapter, run with RCB_AGENT_END=1 (/spec success_signal is the sentence SUCCESS_SIGNAL_NOTE, which starts
+with "hidden"):
 
 1. the tools: `finish` sends POST /finish and the episode ends ("finished"; final.json ended_by "finish"); a submit after
    it comes back as episode_over;

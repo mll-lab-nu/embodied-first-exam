@@ -1,8 +1,9 @@
 """eai-standard/2.2 (formerly rcb-limited/2.2): the HTTP layer, the protocol helpers and the crash recovery that every
 2.2 sim service shares (docs/protocol/standard_mode.md, Part 2; the 2.1 base is its Part 1).
 
-The source is embodied_first_exam/standard/rcb_limited.py, copied unchanged into every 2.2 task's
-environment/sim/ (its benchmark's files image, scripts/files_image.py; ci_checks/check-tooling-identity.sh).
+The source is embodied_first_exam/standard/rcb_limited.py; every 2.2 task's sim image takes it unchanged from the
+files-only image standard-files (`COPY --from`, images/standard-files/FILES.json, scripts/files_image.py;
+ci_checks/check-tooling-identity.sh checks the pin).
 A service keeps its simulator to itself (scene, action execution, cameras, kinematic model) and hands
 this module plain callables:
 
@@ -618,6 +619,7 @@ class Episode:
         self.f_events, self.f_journal, self.f_final, self.f_pid, self.f_startups = (
             p("episode.jsonl"), p("journal.f64"), p("final.json"), p("server.pid"), p("startups.jsonl"))
         self.rows = 0                       # control steps executed in this episode (journaled)
+        self.row_cap: int | None = None     # a layer's cap on this call: it stops at this many rows (rcb_agent_end's RCB_STEP_LIMIT)
         self.max_call_wall_s = MAX_CALL_WALL_S
         self.n_startups = 0; self.resumes = 0; self.mismatches = 0; self.max_tcp_dev = 0.0; self.max_joint_dev = 0.0
         self._jf = None; self._call: dict | None = None; self._ids = 0; self._ck: tuple | None = None
@@ -684,12 +686,18 @@ class Episode:
                 c["polled"] = now
                 if _peer_closed(c["sock"]):
                     c["stopped"] = "client_disconnected"
-        return c["stopped"] is not None
+        return c["stopped"] is not None or self.capped
+
+    @property
+    def capped(self) -> bool:
+        """The call in progress reached row_cap (the episode's step limit): it stops at this step boundary, as for
+        meta.stopped, but no `stopped` is reported (the layer that set the cap ends the episode there)."""
+        return self._call is not None and self.row_cap is not None and self.rows >= self.row_cap
 
     @property
     def stopping(self) -> bool:
         """The call in progress must stop (adapters whose loops test E["done"] test this too)."""
-        return bool(self._call and self._call["stopped"])
+        return bool(self._call and (self._call["stopped"] or self.capped))
 
     @property
     def stop_reason(self) -> str | None:
@@ -1135,6 +1143,7 @@ def configure_standard(spec: dict, record_frames: bool = True) -> None:
     if not isinstance(timing, dict):
         timing = spec["timing"] = {}
     timing.setdefault("recorder", RING.spec())
+    spec.setdefault("max_video_fps", int(max_video_fps(spec)))   # /spec always states it (the default where the adapter states none)
 
 
 def _spec_types(spec: dict) -> list:

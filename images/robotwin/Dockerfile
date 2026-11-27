@@ -1,5 +1,5 @@
 # robotwin: RoboTwin 2.0 (SAPIEN 3 / PhysX + CuRobo, dual-arm ALOHA-AgileX by default) environment.
-# Infrastructure only — contains no benchmark code; tasks `FROM` it and COPY their own tooling. Tag = images/VERSION.
+# Infrastructure only — contains no benchmark code; tasks `FROM` it and COPY their own tooling. Tag = images/robotwin/VERSION.
 # Needs an NVIDIA GPU at runtime (CuRobo planning on CUDA, SAPIEN rendering on Vulkan): tasks pass it through
 # with environment/docker-compose.yaml (see docs). NVIDIA_DRIVER_CAPABILITIES=all makes the container runtime
 # mount the driver's Vulkan/EGL libraries; the ICD json files below point the loaders at them.

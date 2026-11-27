@@ -42,11 +42,18 @@ Guide for maintainers. The contract is [protocol/README.md](protocol/README.md);
 - Does the verifier depend on anything the agent controlled besides the declared artifacts?
 - Is the predicate checked at the end of the replay (privileged) or of the live episode (standard), and can it be true
   without doing the task?
-- Standard mode (Appendix H.3, H.4): four endpoints only, RCB1 responses, resets within the declared budget, the
+- Standard mode (Appendix H.3, H.4): five endpoints only (`/spec`, `/status`, `/observe`, `/submit`, `/finish`; plus
+  `/kinematics` where served and `/reset` within a declared budget), RCB1 responses, resets within the declared budget, the
   verdict from the sidecar's record of the live episode (`success` = the live episode's, with any settle or hold the
   task declares run on the live simulator; `graded_by_live = 1`; no grading replay), the frozen start state checked
   when the episode begins, the agent's processes stopped (a `main` collect hook) before the sidecar is signalled and
   every later request refused, the video recorded live or rendered from the trajectory after the verdict.
+- Agent-ended episodes (eai-standard/3.0, PROTOCOL §3; docs/protocol/standard_mode.md "Agent-ended episodes"): is
+  `RCB_AGENT_END: "1"` in the `sim` service's environment (`ci_checks/check-agent-end.py`), and does nothing the agent
+  sees depend on the task's success (no `done` / `reason = "success"`, no early end of a chunk, no progress field)?
+  Does `POST /finish` end the episode and is the end state judged as the task says (its settle or hold window from
+  there; events judged as they happened)? Does `RCB_STEP_LIMIT`, where set, match the instruction? Does the
+  instruction's `## Limits` end with the Finish line?
 - Does the task run with Harbor's native agents, without custom adapters or runners, and without any gateway other than
   the recording-only usage gateway (protocol/running.md "Official runs")?
 - Are images pinned, published (or marked `BUILD_ONLY`), and shared with the other tasks of the same simulator?

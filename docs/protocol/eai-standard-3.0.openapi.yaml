@@ -11,15 +11,15 @@ info:
 
     | `/spec.protocol` | version: what it adds | reference implementation (what it serves) |
     |---|---|---|
-    | `eai-standard/2.1` | base: `/spec` `/status` `/observe` `/submit`, RCB1 frames, optional `/reset` | the shared sidecar `rcb_service.py` (one file copied into each benchmark that runs it) |
+    | `eai-standard/2.1` | base: `/spec` `/status` `/observe` `/submit`, RCB1 frames, optional `/reset` | the shared sidecar `rcb_service.py` (one file copied into each benchmark that runs it), and the same wire served by some benchmarks' own servers: RoboTwin 2.0 (`embodied_first_exam/benchmarks/robotwin-2/sim/server.py`), DexToolBench and MuJoCo Playground (`dextoolbench/sim/server_mj.py`, one file), MetaWorld+ (`metaworldplus/sim/server_mw.py`), RoboCasa (`robocasa/sim/server_casa.py`) |
     | `eai-standard/2.2` | 2.1 + depth modes, per-frame steps/extrinsics, `robot_spec`, `world`, `/kinematics`, per-call wall bound | `embodied_first_exam/standard/rcb_limited.py` (+ `agent_end/rcb_agent_end.py`) |
     | `eai-standard/2.3` | 2.2 + the realtime capability: a clock that does not stop (realtime mode) | `embodied_first_exam/standard/realtime/rcb_realtime.py` over the 2.1 sidecar `rcb_service.py`: 2.1's surface plus the clock (2.2's capabilities stay optional and are not served: no `/kinematics`, no `depth` modes) |
     | `eai-standard/2.4` | 2.3 + the operations capability: operation ids, request deadlines, `GET /operations/{id}` | `embodied_first_exam/standard/v2_4/rcb_limited.py` (+ `agent_end/rcb_agent_end.py`): the 2.2 layer plus operations (standard mode only: the realtime capability stays optional and is not served; realtime tasks stay on 2.3) |
+    | `eai-standard/2.x+match/1.0` | the match extension (`/start`, `/ready`, `/say`, `/team`) | `embodied_first_exam/benchmarks/embodied-olympics-match/eai_std/` |
 
     Minor versions only add, and every capability a version adds stays optional for the versions after it
     (docs/protocol/standard_mode.md, the version table and Part 4 §19); the third column says which ones each
     reference layer serves.
-    | `eai-standard/2.x+match/1.0` | the match extension (`/start`, `/ready`, `/say`, `/team`) | `embodied_first_exam/benchmarks/embodied-olympics-match/eai_std/` |
 
     **Modes.** Standard mode is Gym's `env.step`: the world stands still between calls, time passes only
     inside `/submit` (a chunk of rows, or a hold chunk), which blocks until it has run. Realtime mode
@@ -697,7 +697,7 @@ components:
           enum: [mp4, frames, both, none]
           description: "Default: mp4 for a standard /submit, none for a realtime /submit, frames for /observe and /reset. /observe and /reset never encode video for the current frame (mp4 is answered as frames)."
         video_fps:
-          type: integer
+          type: number
           minimum: 1
           default: 10
           description: |
@@ -806,7 +806,6 @@ components:
       $ref: "#/components/schemas/ViewFields"
     FinishRequest:
       type: object
-      maxProperties: 0
       description: "`{}`, what clients send. The body is ignored by every layer, so anything else is accepted too."
     KinematicsRequest:
       oneOf:
@@ -1036,7 +1035,7 @@ components:
         protocol_compat: {type: array, items: {type: string}, x-eai-layer: "2.2"}
         control_dt: {type: [number, "null"], description: "seconds per control step (2.1, 2.3, match)"}
         control_hz: {type: [number, "null"], description: "(2.2, match)"}
-        max_control_steps: {type: integer, description: "2.1: the episode's step cap (lowered to the step limit when there is one)"}
+        max_control_steps: {type: integer, description: "2.1 and 2.2/2.4: the episode's step cap where the service has one (2.1: rcb_service.py and the benchmarks' own 2.1 servers; 2.2/2.4: an adapter with a cap of its own), lowered to the step limit when there is one; its end is reason step_limit. Absent: no cap but the step limit (step_limit / steps_left) and the wall clock"}
         max_chunk_s: {type: number, description: "the robot seconds a chunk, and a hold chunk, may cover (every layer; max_watch_s is gone)"}
         max_video_fps: {type: integer}
         max_frames_per_call: {type: integer, description: "images one answer may carry (cameras x frames, depth counted again)"}
