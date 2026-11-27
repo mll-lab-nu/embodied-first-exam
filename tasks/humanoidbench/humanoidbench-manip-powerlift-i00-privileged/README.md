@@ -1,65 +1,37 @@
-# humanoidbench-manip-powerlift-i00-privileged
+# HumanoidBench · powerlift (privileged)
 
 | | |
 |---|---|
-| Benchmark | HumanoidBench |
+| Task ID | `humanoidbench-manip-powerlift-i00-privileged` |
+| Benchmark | [HumanoidBench](https://humanoid-bench.github.io/) (Sferrazza et al., 2024), upstream `carlosferrazza/humanoid-bench@cb11890` |
+| Robot | Unitree H1 humanoid with two Shadow dexterous hands, 61 position-controlled actuators (HumanoidBench `h1hand`) |
 | Mode | privileged |
-| Twin | `humanoidbench-manip-powerlift-i00-standard` |
-| Simulator / robot | `humanoidbench` / `unitree-h1hand` |
-| Family / instance | `powerlift` / seed 0 |
-| Oracle | `none` — none known: no run has passed it, and published RL reaches 41% of the bar (paper 286, FastTD3 325, bar 800) with upstream's 104 kg dumbbell (53.7 kg since image 0.2.0); human review in PR #9 |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:humanoidbench-0.2.0` |
+| Instance | `powerlift`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | None |
 
 ## Task
 Lift the dumbbell off the floor to overhead and hold it there.
 
-HumanoidBench powerlift: produce one replayable trajectory that lifts a dumbbell overhead with the Unitree H1, frozen scene instance 00.
+## Success criteria
+Pass mark: an episode return of at least 800, upstream's success bar, where the return is the sum of
+HumanoidBench's per-step `powerlift` reward over the episode. Each control step earns between 0 and 1, mostly from how
+close the dumbbell (53.7 kg) is to overhead height, about 2 m above the floor, and the rest from the robot standing
+upright with little actuator effort. An episode is at most 1,000 control steps (20 s at 50 Hz).
 
-## Difficulty
-The pass mark is a **threshold on the whole episode's return** (`>= 800` over 1000 steps), not a
-predicate on the final state.
+Termination (the episode ends at once as a failure): the robot falls, its pelvis below 0.2 m.
 
-- **🚩 Kept although RL does poorly on it.** Upstream shapes the lift with
-  `tolerance(height, bounds=(1.9, 2.1), margin=2)`, a broad Gaussian: the dumbbell on the floor already
-  scores ~0.19 of the term, and at 1.5 m ~0.91. FastTD3 reaches 41% — **less than holding the starting
-  pose would score if the robot stayed standing** (about 0.35 a step). The hypothesis behind keeping it is
-  that an agent *told the goal in words* is not held back the way RL is.
-- **Load-bearing, not momentum.** The rest of C5 is about timing a burst of energy; this is about holding
-  a mass against gravity through a long range of motion — the dumbbell weighs 53.7 kg, as much as the
-  robot. Holding the start pose, the robot falls over within about 150 steps without lifting it, and the
-  episode ends at step 423, when the pelvis sinks below the 0.2 m termination height.
-- **61 actuators**, because the dumbbell needs hands to grip.
+Graded file: `/app/output/trajectory.npz`, as `s.save_trajectory(...)` writes it: this task's name (`powerlift`) and at
+most 1,000 rows of 61 finite servo targets, one row per control step (values outside [-1, 1] are
+clipped). After the agent's session it is replayed once, open-loop, from the frozen start (`tests/instance.npz`) in a
+fresh process of a separate verifier container without network, the only place the reward exists. The task is passed
+if the replayed episode's return reaches the pass mark. The replay stops at the first of the terminations above; rows
+after it are not run. Only the trajectory is scored (`gen.py` and `NOTES.md` are not). A missing file, a file for
+another task, or one that is not such an array scores 0; an error inside the grader is reported as `grader_error`
+(infrastructure), not as a score.
 
-**Measured floors** (this instance): an all-zero
-trajectory scores **20.39 / 800** (the episode terminates at step 71 of 1000). Holding the starting
-pose instead — the floor a competent agent gets before writing a controller — scores **10.6%** of
-the bar; that is the number this task was selected on (the benchmark's give-away limit). **External evidence**: published RL results reach **41%** of the bar (paper 286, FastTD3
-325, bar 800) — training runs of millions of environment steps, not a one-hour coding session, so
-treat it as proof that the task *has* a solution rather than as a target.
-
-**The agent does not see the reward function.** It is deleted from the image and restored only
-inside the verifier (`images/humanoidbench/scrub_oracles.py`, `tests/rcb_rewards.py`), so the
-numbers above are upstream's own scoring (on our physics: see *Physics vs upstream*) while the agent
-works from the task statement and the physical state alone.
-
-## Reference solution
-None. Requiring one would cap the benchmark at what we can already solve, which systematically
-removes the interesting tasks. What replaces it (docs/protocol/README.md §4): the floor above
-(doing nothing cannot pass), the evidence that the task has a solution (`oracle_evidence` in
-task.toml), and a human reviewer.
-
-## Verification
-In its own container, built from `tests/Dockerfile` (no network): the agent's container is gone by
-then, and only `/app/output/` crosses over. Open-loop replay of `/app/output/trajectory.npz` from
-`tests/instance.npz` in a fresh process, once; pass iff the replay's episode return reaches
-`success_bar`. `tests/grade.py` also
-writes `/logs/verifier/replay.mp4` and, because Harbor promotes every `reward.json` key to a
-leaderboard metric, keeps the per-task numbers (`episode_return`, `success_bar`) in
-`/logs/verifier/diagnostics.json`. No oracle; human review in PR #9. `nop` scores 0.
-
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -68,19 +40,9 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Capability class | C5 · whole-body power and momentum |
-| Physics vs upstream | upstream's model (HumanoidBench cb11890) on MuJoCo 3.3.7, not the 3.1.6 upstream pins, whose convex collision reported wrong contacts; results on image 0.1.6 or earlier are other physics and are reported apart (tasks/humanoidbench/README.md, Physics). Also fixed here: **dumbbell mass**: upstream's plates have density="500" on geoms whose class sets mass="0", so it never applied and the dumbbell weighed 104 kg; it is 53.7 kg (`images/humanoidbench/upstream-fixes.patch`). |
-
-### GPU
-Optional, and passing never depends on it: MuJoCo physics is CPU-only, so a GPU only speeds up the
-agent's own offscreen rendering (osmesa ~130 ms/frame, egl ~0.4 ms). Hand one to the agent's
-container with `--extra-docker-compose environment/gpu.docker-compose.yaml`; `rcb_hb.py` then picks
-EGL by itself unless `MUJOCO_GL` says otherwise. The overlay is not named `docker-compose.yaml`
-because Harbor would load that on every machine, and a device reservation the host cannot satisfy
-stops the container from starting.
-
-### Provenance
-The instance (`environment/instance.npz` and its byte copy `tests/instance.npz`) is seed 0 (sha `9bc0690a75d6`).
+## License
+HumanoidBench (Sferrazza et al., 2024; <https://github.com/carlosferrazza/humanoid-bench>) is released under the MIT
+License, copyright (c) 2024 Robot Learning Lab, UC Berkeley. The image's notice is
+`images/humanoidbench/LICENSE.humanoid-bench`; this task's `rewards.json` carries upstream's code under that license.
+Robot models shipped with upstream: the Unitree H1 model (BSD 3-Clause, copyright Unitree Robotics) and, on the
+two-handed H1, the Shadow Hand model from MuJoCo Menagerie (Apache License 2.0). No non-commercial terms apply.

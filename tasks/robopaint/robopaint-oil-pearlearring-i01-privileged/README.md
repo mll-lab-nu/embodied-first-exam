@@ -1,54 +1,54 @@
-# robopaint-oil-pearlearring-i01-privileged
+# RoboPaint · oil painting from a reference · Girl with a Pearl Earring (after Vermeer) (privileged)
 
 | | |
 |---|---|
-| Benchmark | RoboPaint |
+| Task ID | `robopaint-oil-pearlearring-i01-privileged` |
+| Benchmark | [RoboPaint](https://www.embodied-first-exam.ai/suite/robopaint/) (Wang et al., 2026), upstream `mll-lab-nu/embodied-first-exam@b2280d8` |
+| Robot | Franka Emika Panda arm (ManiSkill PandaStick) holding a brush or pen |
 | Mode | privileged |
-| Twin | `robopaint-oil-pearlearring-i01-standard` |
-| Simulator / robot | `maniskill` / `franka-panda` |
-| Family / instance | `robopaint_oil_pearlearring` / seed 0 |
-| Oracle | `partial` — Reference solution in solution/: the stroke program for the pointed brush, executed by the robot at generation time (tasks/robopaint/README.md, Targets). The verifier scores it 1 (tests/grade.py with rcb_brush_strict.py, two fresh replays, the efe:robopaint-0.2.0 runtime, 2026-10-09): path_mm 28809 of the 86500 mm budget; its strokes are sweeps. Harbor oracle and nop runs: tasks/robopaint/README.md (Oil: the pointed brush). |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:robopaint-0.2.0` |
+| Instance | `robopaint_oil_pearlearring`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | Pipeline check only |
 
 ## Task
-Paint the picture in `/app/target.png` (a square crop of Johannes Vermeer's Girl with a Pearl Earring) onto the main sheet with the oil paints, in at most 2453 strokes.
+Paint the picture in `/app/target.png` (a square crop of Johannes Vermeer's Girl with a Pearl Earring) onto the main
+sheet with the oil paints, in at most 2453 strokes.
 
-**Process rules** (tasks/robopaint/README.md) on top of the picture rule, so that the exemplar has to be made with strokes rather
-than coloured in: the brush tip's path while it presses on the main sheet with paint (`path_mm`) is at most 86500 mm (3 ×
-the reference solution's 28809 mm), and at most 10 % of it lies in strokes longer than
-2.5 × the diagonal of their bounding box (zigzags, back-and-forth fills, spirals, loops). They are part of the frozen instance (the rules added to its `target.success`); the graders'
-`rcb_brush_strict.py` applies them (the verifier and the scoring service).
+## Success criteria
+Graded on the main sheet's colours and paint coverage against the picture. Both are converted to CIELAB and blurred
+with a Gaussian of σ = 1 mm. The sheet is first moved by the whole-pixel shift, at most 5 mm along each
+axis, that gives the smallest mean colour difference over the picture's central window (a best shift on the edge of
+that window counts as no shift); every measure is taken at that shift, on the overlap of the two pictures, inside the part of the sheet at least 8 mm in from its edges.
+Success needs all of these:
 
-The instance: paint the picture in `/app/target.png` (a square crop of Johannes Vermeer's Girl with a Pearl Earring, c. 1665: a public-domain masterpiece, cropped and downscaled to the 227 mm main sheet) in at most 2453 strokes, with 16 premixed paints (the picture's colours quantised) on a plate and a practice sheet beside it; the brush starts dry; start pose = PandaStick's rest keyframe; everything frozen in `environment/instance.json`.
+- mean ΔE (CIELAB 1976) ≤ 4.4 and its 90th percentile ≤ 8.5, over the area where the sheet or
+  the picture has paint (coverage ≥ 0.5), widened by about 2 mm;
+- SSIM of the blurred L* channel (Gaussian windows, σ = 1.5 mm) ≥ 0.84;
+- edge correlation ≥ 0.76: the correlation of the blurred L* gradient magnitudes of the sheet and the
+  picture over that area;
+- paint IoU ≥ 0.96: the sheet's painted area (coverage ≥ 0.5) against the exemplar's paint coverage;
+- at most 2453 painted contacts with the main sheet (a contact is one continuous stretch of the tip below
+  the sheet's surface; it is painted when the brush was loaded at the touch-down);
+- path budget: `path_mm` ≤ 86500 mm, the total length of the tip's path in all painted contacts with the
+  main sheet (100 Hz physics samples);
+- sweeps: contacts longer than 2.5 × the diagonal of their bounding box (the diagonal taken as at
+  least 10 mm) hold at most 10 % of `path_mm`.
 
-Paint the picture: mean CIELAB ΔE <= 4.4, p90 ΔE <= 8.5, SSIM of L* >= 0.84, edge correlation >= 0.76, paint IoU >= 0.96 (all after the best single shift of the sheet, at most 5 mm along each axis, inside the central area 8 mm in from the sheet's edges) and at most 2453 strokes. `final_reward` = max(0, 1 - mean ΔE / 20) (× 2453 / strokes above 2453). The thresholds are the reference solution's execution by this robot (1638 strokes: mean ΔE 3.98, p90 7.59, SSIM 0.884, edge correlation 0.813, paint IoU 1.000) with a margin (ΔE x 1.1, SSIM - 0.04, edge correlation - 0.05, paint IoU - 0.03).
+The practice sheet is never scored.
 
-## Difficulty
-There is no exact solution: the picture is a real painting, the paint is wet (strokes pick up and blend what is under them), the brush makes 2-11 mm marks (the fine ones need a light, exact press), 16 premixed paints are all there is, and fine work costs robot time: the reference solution's 1638 strokes take 52 of the episode's 60 simulated minutes (62015 of the 72000 control steps). The rule is set by the reference solution executed by this robot, with a margin; the measured axes are in task.toml [metadata].
+What is graded is the main sheet after one open-loop replay of the delivered trajectory. The verifier, in a separate
+sandbox without network, replays `/app/output/trajectory.npz` (array `actions`, shape (T, 7): absolute joint targets,
+one row per 20 Hz control step, T at most 72,000) once, in a fresh process, from its own copy of the frozen instance; a
+contact still on the paper after the last row is ended there, and the sheet is then scored as above. Meeting the
+conditions earlier in the replay does not count.
 
-## Reference solution
-The reference solution is our baseline painter's stroke program (made at generation time by a stroke optimiser with libmypaint in the loop against the picture: a ground of parallel rows in the nearest paints, then 4 layers of curved strokes along the picture's isophotes with ever lighter presses (marks of about 6, 3.6, 2.6 and 2.1 mm), placed where the canvas is furthest from the picture, each paint's strokes of a layer in a nearest-neighbour order) executed by the robot (with the program's motion settings: a 6 mm hover between strokes, quick dips, short holds); the rule was calibrated on exactly that execution: mean ΔE ≤ 4.4, p90 ΔE ≤ 8.5, SSIM ≥ 0.84, edge correlation ≥ 0.76 and paint IoU ≥ 0.96. The plan is frozen at generation time (`solution/oracle_qpos.npy`); `solution/solve.sh` replays it:
-62015 control steps, 1638 strokes, mean ΔE 3.984, p90 ΔE 7.593, SSIM 0.8842, paint IoU 0.9998.
+A missing file scores 0, and so does an invalid one: not a readable `.npz` (pickled or object arrays included), no
+`actions` array, a shape other than (T, 7), a NaN or infinite value, more than 72,000 rows, or a `task` entry that names
+another task. A replay that gives no result within 1650 s, or a verifier that cannot rebuild the frozen instance, is an
+infrastructure failure, not a score.
 
-## Verification
-"The rule" below is the picture rule and the process rules (Task); the replays run
-`/tests/rcb_brush_strict.py` (`rcb_brush.py` with the rules), and `reward.json` adds the rules' quantities (`path_mm`,
-`max_path_mm`; paintings: `scribble_share`), `image_success` (the picture rule alone) and `strict_ok` (the process rules).
-Oracle label `partial`: the reference solution, scored under the process rules (task.toml `oracle_evidence`).
-Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in one fresh process (`/tests/grade.py`); pass iff
-the replayed main sheet meets the rule and the rebuilt frozen instance matches the recorded one.
-PhysX and libmypaint (single-threaded, with the image's
-determinism patch) run on the CPU: a live run, in-process replays and fresh-process replays end in the same state bit for bit
-(`rcb_brush.py selftest`); camera rendering does not change it. `/logs/verifier/replay.mp4` and `canvas.png` never affect the verdict.
-A file that is not a readable trajectory (not an npz, no `actions`, a wrong shape, NaN, more than 72,000 rows) scores 0 as
-`bad_trajectory`; `grader_error` (with `infra_error`) is left for the verifier's own failures (a replay process without a result
-or past its 1650 s, a frozen instance that does not rebuild in the verifier: `instance_ok` 0).
-The verifier has 3600 s: a replay of the 72,000 control steps a trajectory may have takes up to 18 min at the measured
-67-102 steps/s (tasks/robopaint/README.md).
-
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -59,8 +59,8 @@ Caps per container (PROTOCOL §6).
 - GPU: any NVIDIA GPU, held by `main` and `scorer`.
 - Recommended GPU: any 8 GB+ NVIDIA GPU (RTX 4090 / L4).
 
-## Details
-| | |
-|---|---|
-| Simulator, tool and robot | ManiSkill 3.0.1 (SAPIEN 3.0.3, PhysX on the CPU) + libmypaint 1.6.1 (ISC; the mypaint-brushes 2.0.2 preset `tanda/oil-03-paint`, CC0, made pointed: its random dab offset and tracking noise follow the pressure, frozen as `brush.preset_json`) through `rcb_brush.py`'s MyPaintPainter (CPU) / franka-panda holding a paint brush (PandaStick's rigid stick as the handle + a 15 mm collision-free tuft; TCP = the tuft's tip) |
-| Base image and GPU | 0.1.1 + libmypaint + the shim + the presets. Physics and paint run on the CPU; SAPIEN still needs the NVIDIA GPU (Vulkan) to build the scene and render: `environment/docker-compose.yaml` |
+## License
+RoboPaint (its scenes, tooling and graders) is part of this repository, MIT License. It runs on ManiSkill 3.0.1
+([haosulab/ManiSkill](https://github.com/haosulab/ManiSkill) @ `a4a4f92`) and SAPIEN 3.0.3, both Apache License 2.0.
+The paint engine is libmypaint 1.6.1 (ISC License, with a one-line determinism patch) with a preset of mypaint-brushes 2.0.2 (CC0-1.0). The base image also carries Spline-FRIDA (GPL-3.0), which this task does not use.
+The exemplar: a square crop of Johannes Vermeer's Girl with a Pearl Earring (Wikimedia Commons `File:1665 Girl with a Pearl Earring.jpg`, public domain), downscaled to the sheet. No non-commercial terms apply.

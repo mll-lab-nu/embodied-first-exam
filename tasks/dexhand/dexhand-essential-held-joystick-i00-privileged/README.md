@@ -1,40 +1,58 @@
-# dexhand-essential-held-joystick-i00-privileged
+# DexHand · Held Joy-Con thumbstick sequence (privileged)
 
 | | |
 |---|---|
-| Benchmark | DexHand |
+| Task ID | `dexhand-essential-held-joystick-i00-privileged` |
+| Benchmark | [DexHand](https://www.embodied-first-exam.ai/suite/dexhand/) (Wang et al., 2026), upstream `mll-lab-nu/embodied-first-exam@b2280d8` |
+| Robot | A dexterous right hand on a six-DoF actuated wrist stage, no arm: Sharpa Wave (22 finger actuators) by default, or Wuji Hand 2.2 (20) |
 | Mode | privileged |
-| Twin | `dexhand-essential-held-joystick-i00-standard` |
-| Simulator / robot | `mujoco` / `sharpa-wave-floating` |
-| Family / instance | `essential_held_joystick` / seed 0 |
-| Oracle | `full` — solution/trajectory.npz is the validated Sharpa Wave actuator trajectory of this frozen instance (415 controls at 50 Hz, physical contact only). The privileged oracle hands it in; the standard oracle submits the same rows as float64 through the client's request path (the service executes the validated targets bit for bit). Both replay to success in two fresh processes with identical final state hashes; float32-rounded copies of all six oracles also score 1. Human solvability review is pending; release status stays provisional. solution/wuji/trajectory.npz is a validated Wuji Hand 2.2 trajectory of this instance (146 controls, motor targets only, physical contact only); the oracle uses it when the run selects wuji (privileged: DEXHAND_HAND=wuji; standard: the sim service's hand), and it replays to success in two fresh processes with identical state hashes. |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:dexhand-0.2.0@sha256:0d42994b83d95ab5301c592b35586550c9ee426490115e4b43f3b8cf8cc43350` |
+| Instance | `essential_held_joystick`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | Included |
 
 ## Task
-Keep the wrist locked and hold the controller steady with your other fingers. Tilt the joystick about halfway (not to its stop) toward the wrist, then toward the little-finger side, then toward the fingertips, then toward the thumb side, then bring it back to the center, pausing at each position and holding it still at the center.
+Keep the wrist locked and hold the controller steady with your other fingers. Tilt the joystick about halfway (not to
+its stop) toward the wrist, then toward the little-finger side, then toward the fingertips, then toward the thumb side,
+then bring it back to the center, pausing at each position and holding it still at the center.
 
-Keep the wrist locked and the controller steady. Tilt the joystick left (toward the wrist), then front (toward the little-finger side), then right (toward the fingertips), then back (toward the thumb side), and then return it to the center, holding it at each of these five checkpoints. Checkpoints are joint angles relative to the shell, not world tilt.
+## Success criteria
+The six wrist targets are locked at (-0.08, 0, 0.29, 0, 0, 0) (metres, then radians).
+A trajectory with a row that changes any of them beyond float32 rounding is rejected.
 
-## Difficulty
-hard: Stabilize a real Joy-Con mesh while independently steering and releasing its passive spring-centered two-axis thumbstick.
-The scene uses free_controller_passive_gimbal and independently controlled fingers with the wrist locked; every ordered stage and
-a terminal hold must be reached through contact alone.
+The stick's tilt is measured as its two hinge angles x and y relative to the controller's shell (each stops at ±0.48
+rad). A finger holds the shell when any of its links presses the shell with at least 0.005 N. Every check below runs
+after each 2 ms physics substep (ten per control step). Five stages, in this order, then a final hold. Each stage needs
+5 consecutive control steps, and a control step counts only when its conditions held at every substep of that step. In
+every stage at least one finger holds the shell.
+1. Toward the wrist: x between -0.4 and -0.2 rad, y within ±0.1 rad.
+2. Toward the little-finger side: x within ±0.1 rad, y between 0.2 and 0.4 rad.
+3. Toward the fingertips: x between 0.2 and 0.4 rad, y within ±0.1 rad.
+4. Toward the thumb side: x within ±0.1 rad, y between -0.4 and -0.2 rad.
+5. Centre: x and y within ±0.1 rad.
+6. Final hold, for 15 consecutive control steps: x and y within ±0.08 rad, at least one finger holds the shell, and no
+   part of the controller moves faster than 0.12 (m/s or rad/s).
 
-## Reference solution
-`solution/trajectory.npz` is the validated Sharpa Wave actuator trajectory of this frozen instance: 415 finger-target rows at 50 Hz (8.3 s) with the six wrist targets locked, executed through physical contact only. `solve.sh` hands it in unchanged as `/app/output/trajectory.npz`. It was derived offline by authoring controllers (not part of the repository) and is bound to the validated evidence (byte-identical trajectory, model hash, two fresh-process replays with the validated final state hash). Wuji Hand 2.2: `solution/wuji/trajectory.npz` is a validated Wuji Hand 2.2 trajectory of this instance (146 rows of motor targets, physical contact only). With `DEXHAND_HAND=wuji` set for the oracle, `solve.sh` hands it in instead of the Sharpa Wave rows; the verifier replays it with the Wuji Hand 2.2.
+The episode fails at once when: any contact force on the controller exceeds 80 N; any part of it moves faster than
+20 (m/s or rad/s); the palm moves more than 6 mm or turns more than 0.035 rad from its start; the controller touches
+anything other than the hand with more than 0.01 N; the controller's shell moves more than 20 mm or turns more than
+0.35 rad from its start; or the physics becomes unstable. There is no step budget.
 
-## Verification
-The separate verifier replays the submitted numeric rows in one fresh process, with the hand recorded in the archive.
-Reward 1 needs every ordered stage and the terminal hold with no invariant or guard violation. Invariants and guards are checked at every 2 ms
-physics substep and fail the episode immediately (a dropped, slipped or knocked-away object ends it as a failure);
-partial completion fails. Rows of the wrong width for the recorded hand, a forged or unknown hand label, non-finite
-or out-of-range targets and wrist motion are rejected with reward 0. The verifier is tested
-on the oracle, no-op, truncated, dropped-object, forged-metadata and wrong-width cases for both hands.
-Release status is provisional until independent solvability review.
+The graded file is `/app/output/trajectory.npz`, as `s.save_trajectory` writes it: a finite numeric `actions` array
+with one row of motor targets per control step (28 values for the Sharpa Wave hand, 26 for
+the Wuji Hand 2.2), 1 to 50,000 rows, and a `hand` member that names the hand (an archive without it counts as
+Sharpa Wave). After the agent's session, the verifier rebuilds the frozen scene with that hand in a fresh process of a
+separate container without network and replays the rows once, open-loop. The replay stops at the first success or the
+first failure, and later rows are not run. The task is passed if the replay ends in success; rows that run out first,
+or the step budget reached first, leave it failed. Only the motor targets are read: no other member of the archive
+changes the verdict.
 
-## Resources
-Caps per container (PROTOCOL §6).
+A missing file scores 0, and so does a rejected one: larger than 64 MB, a row width that does not match the hand, a
+non-finite value, no rows or too many, a target outside its actuator's range, or a `task` or `actuator_names` member
+that does not match this task. A frozen scene that does not build to its recorded start is an infrastructure error,
+not a score.
+
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -43,12 +61,14 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-
-### Notes
-Source: the DexHand essential task `essential_held_joystick`; the image recipe is `images/dexhand/`. Both
-modes use the identical frozen `instance.json`. The Sharpa Wave model and meshes are pinned to MuJoCo Menagerie commit
-`0059d4335f8156206f63a35662313385f7ad6d74` (Apache-2.0). Wuji Hand 2.2 is the manufacturer's `hand2/hand2_2` model
-from `wuji-technology/wuji-description` commit `829c9aa27cb12c3a49d5b8d63c9869dd8f656702` (MIT), mounted unchanged in
-the same wrist frame; its collision geoms are renamed to the predicate's finger/palm roles only. Object assets carry
-their own licenses and checksums under `object_assets/`. Renderer output is evidence; it never determines the verdict.
+## License
+DexHand's scenes, checkers and graders are original to this repository (MIT License). Robot models: the Sharpa Wave
+hand from [MuJoCo Menagerie](https://github.com/google-deepmind/mujoco_menagerie/tree/0059d4335f8156206f63a35662313385f7ad6d74/sharpa_wave)
+@ `0059d43` (Apache License 2.0); the Wuji Hand 2.2 from
+[wuji-technology/wuji-description](https://github.com/wuji-technology/wuji-description/tree/829c9aa27cb12c3a49d5b8d63c9869dd8f656702)
+@ `829c9aa` (MIT License); the Tianji Marvin arm meshes from DexForce `embodichain_data` (Apache License 2.0) with
+inertias from Genesis' `dual_arms_primitives.urdf` (MIT License), see `images/dexhand/tianji/NOTICE.md`. Object
+assets are original geometry of this repository, CC0 (the Poly Haven rubber boot, the Innerscene stockpot, Monet's
+public-domain Water Lilies, original page and letter artwork) or CC BY 4.0 (the Joy-Con, pen, rotary-knob and walnut
+meshes; credits in each task's `object_assets/*/CREDITS.txt`); printed text uses the DejaVu fonts (Bitstream Vera
+license). No non-commercial terms apply.

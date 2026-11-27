@@ -1,39 +1,48 @@
-# roboarc-ikea-lack-i00-privileged
+# RoboARC · LACK side table (privileged)
 
 | | |
 |---|---|
-| Benchmark | RoboARC |
+| Task ID | `roboarc-ikea-lack-i00-privileged` |
+| Benchmark | [RoboARC](https://github.com/mll-lab-nu/RoboARC) (The RoboARC authors, 2026), upstream `mll-lab-nu/RoboARC@153eb8c` |
+| Robot | Two 7-DoF Franka Panda arms, each with the Panda hand (MuJoCo Menagerie) |
 | Mode | privileged |
-| Twin | `roboarc-ikea-lack-i00-standard` |
-| Simulator / robot | `mujoco` / `franka-panda-bimanual` |
-| Family / instance | `ikea_lack` / seed 0 |
-| Oracle | `full` |
-| Agent time budget | 10800 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:ikea-mujoco-0.3.0` |
+| Instance | `ikea_lack`, seed 0 |
+| Time limit | 3 h |
+| Reference solution | Included |
 
 ## Task
-IKEA LACK side table (AA-207276-4, four legs) in plain MuJoCo 3.14.0 (CPU, float64) with two 7-DoF Franka Panda arms, each with the MuJoCo Menagerie Panda hand (two-finger, tendon-coupled): produce one replayable trajectory. Screw the four legs onto the four studs of the tabletop, one leg per stud. Then let go of everything and move both arms clear.
+Screw the four legs onto the four studs of the tabletop, one leg per stud. Then let go of everything and move both arms
+clear.
 
-## Difficulty
-Bimanual furniture assembly with physical grasps (no assist), 16-D actuator action at 400 Hz
-(4 physics steps of 0.625 ms per row); the reference needs 63697 rows
-(159.2 s of simulated time).
+## Success criteria
+Success needs all of these:
+- Each leg (nut end down) is screwed onto a stud of the tabletop; any leg may go on any stud, one leg per stud.
+- Every leg is seated and latched on a distinct stud, and at the end, measured in the tabletop frame: the leg origin is
+  0 to 12 mm above the slab top, within 20 mm laterally of its stud, and the leg axis is within 10 degrees of the
+  tabletop axis.
 
-## Reference solution
-`solution/solve.sh` copies `solution/trajectory.npz` (sha256 `2943cd2c15536c0c…`) to `/app/output/`: the task's one reference, shared with the standard twin (its `solution/oracle_actions.npz`, the same rows): the robot demo of the IKEA MuJoCo tree (`demos/lack/actions.npz`), time-dilated to the robots' real joint-speed limits, so the joint-speed clamp never changes a row. The demo itself commands faster than the limits and fails under the clamp.
+Also required, at the end: no robot link touches any part; every part is at rest (at most 0.01 m/s and 0.05 rad/s);
+and the simulation never broke down at any time (no non-finite state, no MuJoCo BADQACC / BADQPOS / BADQVEL warning, no
+contact of a part deeper than 10 mm).
 
-## Verification
-Open-loop replay of `/app/output/trajectory.npz` from the scene's initial state in one fresh process
-(`tests/grade.py`, `tests/rcb_ikea.py replay`: per row `data.ctrl[:] = row; S.step(4)` with the scene's mechanism, then
-`final_check()`: `success.py`, released, at rest and no breakdown at the end of the rows and again after a 1.0 s hold of
-the last row). Pass iff the replay passes. The
-scene in the verifier image must match `tests/runtime_binding.json` file by file (`instance_exact`) and build to its
-initial-state hash (`instance_ok`). Replay video (evidence only, never the verdict): another process replays the same rows and renders `/logs/verifier/replay.mp4` (CPU OSMesa, 512 x 288, at most 750 frames over the episode and the 1.0 s hold; `video_rendered`).
+The verifier, in a separate sandbox without network, replays `/app/output/trajectory.npz` once, open-loop, in a fresh
+process from its own copy of the frozen start.
 
-Harbor checks (2026-10-16, workstation B (Ryzen 9 7950X; shared, loaded), Docker, Harbor 0.23.0, a fresh mtime base, image 0.3.0 sha256:ed950d079b63, the replay-video verifier, image `ghcr.io/mll-lab-nu/efe:ikea-mujoco-0.3.0` id `ed950d079b63`): `oracle` scored 1 (two replays, 979.6 s wall); `nop` scored 0. Reference timing against the 10800 s budget: one unobserved replay 923 s (8.5 %, inside the 40 % bar) on a dedicated Xeon Gold 6230R core of a CPU cluster (2.1 GHz, a slow trial-class CPU), end and settled hashes equal to the Harbor runs'.
+Every row runs, one per control step (4 physics steps of the scene). The checks above are made on the state after the
+last row, and again after the verifier holds the last row for 1.0 s more; both must pass. A replay in which the
+simulator crashes, or the scene's code or MuJoCo raises an error, is a breakdown and scores 0.
 
-## Resources
-Caps per container (PROTOCOL §6).
+A missing file scores 0. So does an invalid one:
+- not a readable `.npz` archive of at most 64 members;
+- no `ctrl` array of shape (N, number of actuators) with numeric, finite values and N at least 1;
+- a `substeps` entry other than 4, or a `timestep` entry other than the scene's;
+- more than 240,000 rows.
+
+Before the replay the verifier checks the rebuilt scene against the task's runtime binding (its files and its initial
+state); a mismatch is an infrastructure failure, not a score.
+
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -42,26 +51,12 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Grasping | physical (finger friction), no assist |
-| Success rule | the scene's `success.py` + the terminal rules (released, at rest, no breakdown), at the end of the rows and after a 1.0 s hold |
-| Scene | `/opt/ikea/scenes/lack/` in the image; digest `b8e0348698b0a26d…` (images/ikea-mujoco/assets.json) |
-| Initial state | sha256 `0bddce57c9bcaf34…` of the mjSTATE_INTEGRATION vector |
-
-### Goal
-Screw the four legs onto the four studs of the tabletop, one leg per stud. Then let go of everything and move both arms clear.
-
-### Success requirements
-- The tabletop lies studs up. Each leg (nut end down) is screwed onto a stud; any leg may go on any stud, one leg per stud.
-- Every leg is seated and latched on a distinct stud, and at the end, measured in the tabletop frame: the leg origin is 0 to 12 mm above the slab top, within 20 mm laterally of its stud, and the leg axis is within 10 degrees of the tabletop axis.
-
-### Mechanism
-The M16 x 2 right-hand threads are exact convex pieces: a leg advances only by being turned (about six turns from first thread contact to the seat). A leg that is seated on a vacant stud and descends slower than 0.05 m/s is latched to the tabletop at its current pose (a weld, the source's fixed joint).
-
-### Provenance
-- Scene and demo: the IKEA MuJoCo tree (`scenes/lack/`, `demos/lack/actions.npz`), MuJoCo 3.14.0, RoboARC rigid settings
-  (timestep 0.625 ms, Newton, 100 iterations, elliptic cones).
-- The scene files are not in this repository: the image carries them (`images/ikea-mujoco/README.md`, build context from
-  `images/ikea-mujoco/stage_context.py`, pinned by `images/ikea-mujoco/assets.json`).
+## License
+RoboARC ([mll-lab-nu/RoboARC](https://github.com/mll-lab-nu/RoboARC) @ `153eb8c`) is released under the MIT License
+(Copyright (c) 2026 The RoboARC authors). The robot models are MuJoCo Menagerie's: ALOHA 2 (BSD-3-Clause, Trossen
+Robotics), Franka Emika Panda (Apache License 2.0) and Robotiq 2F-85 (BSD-2-Clause, ROS-Industrial). The furniture part
+meshes of the furniture-assembly scenes are CC BY 4.0 (Hugging Face dataset `MLL-Lab/embodied-first-exam-public`,
+`ikea-mujoco/`). The simulator is MuJoCo 3.14.0 (Apache License 2.0). RGB images are rendered with Nyx (`gs-nyx`), used
+in the images with its owners' permission; the studio lighting is a CC0 HDRI from Poly Haven. Puzzle designs modelled
+after Hanayama's Huzzle Cast puzzles and the IKEA product names and designs are used with the owners' permission. No
+non-commercial terms apply.

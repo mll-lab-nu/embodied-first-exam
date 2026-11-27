@@ -1,0 +1,257 @@
+# README data for tasks/humanoidbench/*/README.md (scripts/task_conventions.py render_readme_v3)
+#
+# Sources checked for every text below (upstream at cb11890, read-only clone):
+#   pass mark      humanoid_bench/envs/<task>.py `success_bar` (class attribute), compared by rcb_hb.Session.status():
+#                  `success = episode_return >= success_bar` (images/humanoidbench/rcb_hb.py L408-430)
+#   episode length humanoid_bench/tasks.py Task.max_episode_steps = 1000 (cube.py overrides 500); frame_skip 10 x
+#                  MuJoCo dt 0.002 s = one 20 ms control step (50 Hz); rcb_hb.Session.max_steps = env.spec value
+#   terminations   humanoid_bench/envs/<task>.py `get_terminated` (left in the image: images/humanoidbench/
+#                  scrub_oracles.py removes get_reward only); qpos[2] is the pelvis free joint's height
+#   reward         images/humanoidbench/rewards.json (restored by rcb_rewards.py in tests/ or environment/sim/ only);
+#                  every per-step reward here lies in [0, 1] except bookshelf's placement bonus, so the return only
+#                  grows: "reached at some step" (live) and "the replay's final return" (privileged) agree
+#   graders        embodied_first_exam/benchmarks/humanoidbench/privileged/tests/grade.py (privileged);
+#                  embodied_first_exam/benchmarks/humanoidbench/sim/server.py step() + rcb_service.py _end()
+#                  (standard; RCB_AGENT_END=1, end_judgement "events"); embodied_first_exam/standard/realtime/
+#                  rcb_realtime.py (realtime, copied into each realtime task's environment/sim/ by its Dockerfile)
+
+[benchmark]
+name = "HumanoidBench"
+citation = "Sferrazza et al., 2024"
+url = "https://humanoid-bench.github.io/"
+repo = "carlosferrazza/humanoid-bench"
+commit = "cb11890"
+
+[license]
+text = """
+HumanoidBench (Sferrazza et al., 2024; <https://github.com/carlosferrazza/humanoid-bench>) is released under the MIT
+License, copyright (c) 2024 Robot Learning Lab, UC Berkeley. The image's notice is
+`images/humanoidbench/LICENSE.humanoid-bench`; this task's `rewards.json` carries upstream's code under that license.
+Robot models shipped with upstream: the Unitree H1 model (BSD 3-Clause, copyright Unitree Robotics) and, on the
+two-handed H1, the Shadow Hand model from MuJoCo Menagerie (Apache License 2.0). No non-commercial terms apply.
+"""
+
+[robots]
+unitree-h1 = "Unitree H1 humanoid, 19 position-controlled actuators (HumanoidBench `h1`)"
+unitree-h1hand = "Unitree H1 humanoid with two Shadow dexterous hands, 61 position-controlled actuators (HumanoidBench `h1hand`)"
+
+[modes.privileged]
+# grade.py main() / load_actions(): missing file -> missing_trajectory; npz `task` != family -> wrong_family; not a
+# (T, nu) finite array with T <= max_steps -> bad_trajectory (all success 0, grader_error 0); any exception ->
+# grader_error 1 (docs/protocol/README.md H.5: a void attempt, rerun). rcb_hb.Session.replay() L432-443: reset to the
+# frozen instance, step until done (term or trunc), status(); step() clips each row to [-1, 1].
+success = """
+Graded file: `/app/output/trajectory.npz`, as `s.save_trajectory(...)` writes it: this task's name (`{family}`) and at
+most {vars[steps]} rows of {vars[nu]} finite servo targets, one row per control step (values outside [-1, 1] are
+clipped). After the agent's session it is replayed once, open-loop, from the frozen start (`tests/instance.npz`) in a
+fresh process of a separate verifier container without network, the only place the reward exists. The task is passed
+if the replayed episode's return reaches the pass mark. The replay stops at the first of the terminations above; rows
+after it are not run. Only the trajectory is scored (`gen.py` and `NOTES.md` are not). A missing file, a file for
+another task, or one that is not such an array scores 0; an error inside the grader is reported as `grader_error`
+(infrastructure), not as a score.
+"""
+
+[modes.standard]
+# server.py HumanoidBench.step(): success = status()["success"] after every control step; a done at the episode's
+# length or bookshelf's terminated_reason 1 -> step_cap (reason step_limit), any other done -> failed.
+# rcb_service.py _end() L960-967 with end_judgement "events": finished / timeout / step_limit / failed -> success iff the
+# pass mark was reached at some step of the episode (seen_step); error (a simulator error) and reset -> 0.
+# Reset budget: RCB_RESET_BUDGET default in environment/docker-compose.yaml; only the episode after the last reset is graded.
+success = """
+Graded: the live episode, judged by the simulator service as it runs; nothing is replayed. The pass mark is judged as
+an event: once the episode's return reaches it at some control step, the episode is a success, even if a fall or
+another termination above ends it afterwards; a termination before the mark is reached scores 0. Reaching the mark
+neither ends the episode nor is shown to the agent. Otherwise the episode ends at the agent's `/finish`, at the end of
+its control steps, or when the agent's time ({timeout}) runs out, and is judged on the return reached by then. The
+agent has {resets} resets, each starting a new episode from the frozen start; only the last episode (the one after the
+last reset) is graded. A simulator error raised by the agent's own call ends the episode with 0. An episode that does
+not start from the frozen instance, or a service crash outside the agent's calls, is an infrastructure failure, not a
+score.
+"""
+
+[modes.realtime]
+# As [modes.standard] (rcb_realtime.py extends rcb_service.Service; the verdict is 2.1's), plus the clock
+# (rcb_realtime.py docstring: paused until the first /submit, one control step every control_dt x slowdown s, zero-order
+# hold when the plan runs out) and its error rule (after the first command a simulator error or a crash inside a
+# control step is the agent's; before it, a kill, a failed resume, a reset that does not rebuild: infrastructure).
+success = """
+Graded: the live episode, judged by the simulator service as it runs; nothing is replayed. The clock does not stop:
+an episode starts paused at the frozen start, and from the agent's first `submit` one control step runs every 20 ms
+× S of wall time (slowdown S = {slowdown}) whether or not the agent sends anything; when the planned targets run out
+the last ones are held. The pass mark is judged as an event: once the episode's return reaches it at some control step, the episode
+is a success, even if a fall or another termination above ends it afterwards; a termination before the mark is
+reached scores 0. Reaching the mark neither ends the episode nor is shown to the agent. Otherwise the episode ends at
+the agent's `/finish`, at the end of its control steps, or when the agent's time ({timeout}) runs out, and is judged on
+the return reached by then. The agent has {resets} resets, each starting a new, paused episode from the frozen start;
+only the last episode (the one after the last reset) is graded. After the agent's first command, a simulator error or
+a simulator crash inside a control step is the agent's 0; anything before the first command, a killed service, a
+failed resume or a reset that does not rebuild the scene is an infrastructure failure, not a score.
+"""
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Families. `bar` = upstream success_bar, `steps` = max_episode_steps, `seconds` = steps x 0.02 s, `nu` = actuators.
+
+[families.walk]
+# basic_locomotion_envs.py Walk: success_bar = 700 (L31), _move_speed = _WALK_SPEED = 1 m/s; get_terminated L96-97:
+# qpos[2] < 0.2. Reward (rewards.json walk): head at standing height x torso upright x small actuator forces x forward
+# centre-of-mass speed up to 1 m/s.
+vars = { bar = 700, steps = "1,000", seconds = 20, nu = 19 }
+success = """
+Pass mark: an episode return of at least {vars[bar]}, upstream's success bar, where the return is the sum of
+HumanoidBench's per-step `walk` reward over the episode. Each control step earns between 0 and 1, more the closer the
+robot is to walking forward at 1 m/s or faster with its head at standing height, its torso upright and little actuator
+effort. An episode is at most {vars[steps]} control steps ({vars[seconds]} s at 50 Hz).
+
+Termination (the episode ends at once as a failure): the robot falls, its pelvis below 0.2 m.
+"""
+
+[families.hurdle]
+# basic_locomotion_envs.py Hurdle(Walk): _move_speed = _RUN_SPEED = 5 m/s (L229), success_bar inherited 700 (L31),
+# get_terminated inherited (L96-97: qpos[2] < 0.2). Reward (rewards.json hurdle): Walk's terms with the speed term at
+# 5 m/s, times 0.1 on any step with a contact on the left, right or back wall; the hurdles are not read.
+vars = { bar = 700, steps = "1,000", seconds = 20, nu = 19 }
+success = """
+Pass mark: an episode return of at least {vars[bar]}, upstream's success bar, where the return is the sum of
+HumanoidBench's per-step `hurdle` reward over the episode. Each control step earns between 0 and 1, more the closer the
+robot is to running forward down the track at 5 m/s or faster with its head at standing height, its torso upright and
+little actuator effort; a step on which anything touches the side or back walls earns a tenth of that. The hurdles are
+solid obstacles across the track but are not part of the reward. An episode is at most {vars[steps]} control steps
+({vars[seconds]} s at 50 Hz).
+
+Termination (the episode ends at once as a failure): the robot falls, its pelvis below 0.2 m. Touching a wall does not
+end the episode.
+"""
+
+[families.sit_simple]
+# basic_locomotion_envs.py Sit: success_bar = 750 (L305); get_terminated L356-357: qpos[2] < 0.5. Reward (rewards.json
+# sit_simple): pelvis at seat height, over the chair, seated posture, torso upright, small actuator forces, no
+# horizontal centre-of-mass motion.
+vars = { bar = 750, steps = "1,000", seconds = 20, nu = 19 }
+success = """
+Pass mark: an episode return of at least {vars[bar]}, upstream's success bar, where the return is the sum of
+HumanoidBench's per-step `sit_simple` reward over the episode. Each control step earns between 0 and 1, more the closer
+the robot is to sitting on the chair behind it: pelvis at seat height above the seat, a seated upright posture, no
+horizontal motion and little actuator effort. An episode is at most {vars[steps]} control steps ({vars[seconds]} s at
+50 Hz).
+
+Termination (the episode ends at once as a failure): the robot falls, its pelvis below 0.5 m (lower than when seated).
+"""
+
+[families.balance_hard]
+# balance.py BalanceBase: success_bar = 800 (L13); BalanceHard (L120): the board on a free sphere. get_terminated:
+# qpos[2] < 0.8; a contact of pivot_sphere_collision with any geom but the floor (geom 0) and stand_board_collision; any
+# floor contact without the sphere. Reward (rewards.json balance_hard): head 0.37 m above standing height (on the
+# board), torso upright, small actuator forces, no horizontal centre-of-mass motion.
+vars = { bar = 800, steps = "1,000", seconds = 20, nu = 19 }
+success = """
+Pass mark: an episode return of at least {vars[bar]}, upstream's success bar, where the return is the sum of
+HumanoidBench's per-step `balance_hard` reward over the episode. Each control step earns between 0 and 1, more the
+closer the robot is to standing tall on the board, which rests on a free-rolling sphere: head at full standing height
+above the board, torso upright, no horizontal motion and little actuator effort. An episode is at most {vars[steps]}
+control steps ({vars[seconds]} s at 50 Hz).
+
+Terminations (each ends the episode at once as a failure):
+- the robot falls, its pelvis below 0.8 m;
+- anything other than the sphere touches the floor (a foot or the board included);
+- the sphere touches anything other than the floor and the board.
+"""
+
+[families.door]
+# door.py Door: success_bar = 600 (L48); get_terminated L134-135: qpos[2] < 0.58. Reward (rewards.json door): standing
+# upright with small forces, the door's hinge opening, the handle (hatch) turned, a hand near the handle, the pelvis
+# IMU past the doorway (x >= 1.2 m for full credit).
+vars = { bar = 600, steps = "1,000", seconds = 20, nu = 19 }
+success = """
+Pass mark: an episode return of at least {vars[bar]}, upstream's success bar, where the return is the sum of
+HumanoidBench's per-step `door` reward over the episode. Each control step earns between 0 and 1, from how far the
+door is swung open (the largest share), how far its handle is turned, a hand near the handle, the robot standing
+upright with little actuator effort, and the robot's torso being through the doorway. An episode is at most
+{vars[steps]} control steps ({vars[seconds]} s at 50 Hz).
+
+Termination (the episode ends at once as a failure): the robot falls, its pelvis below 0.58 m.
+"""
+
+[families.powerlift]
+# powerlift.py Powerlift: success_bar = 800 (L46); get_terminated: qpos[2] < 0.2. Reward (rewards.json powerlift): a
+# small share for standing upright with small forces, the rest for the dumbbell's height near 2 m. The dumbbell weighs
+# 53.7 kg (images/humanoidbench/upstream-fixes.patch).
+vars = { bar = 800, steps = "1,000", seconds = 20, nu = 61 }
+success = """
+Pass mark: an episode return of at least {vars[bar]}, upstream's success bar, where the return is the sum of
+HumanoidBench's per-step `powerlift` reward over the episode. Each control step earns between 0 and 1, mostly from how
+close the dumbbell (53.7 kg) is to overhead height, about 2 m above the floor, and the rest from the robot standing
+upright with little actuator effort. An episode is at most {vars[steps]} control steps ({vars[seconds]} s at 50 Hz).
+
+Termination (the episode ends at once as a failure): the robot falls, its pelvis below 0.2 m.
+"""
+
+[families.window]
+# window.py Window: success_bar = 650 (L45); get_terminated: qpos[2] < 0.58, or window_wiping_tool's z < 0.58. Reward
+# (rewards.json window): half for the tool's wiping face flat on the glass while it touches the pane, half for standing
+# upright with small forces at a set head distance, the tool moving vertically at a set pace, both hands on the tool.
+vars = { bar = 650, steps = "1,000", seconds = 20, nu = 61 }
+success = """
+Pass mark: an episode return of at least {vars[bar]}, upstream's success bar, where the return is the sum of
+HumanoidBench's per-step `window` reward over the episode. Each control step earns between 0 and 1: half from the
+wiping tool's face lying flat against the glass, earned only while the tool touches the pane, and half from the tool
+moving up or down at a steady wiping pace, both hands at the tool, and the robot standing upright in front of the
+window with little actuator effort. An episode is at most {vars[steps]} control steps ({vars[seconds]} s at 50 Hz).
+
+Terminations (each ends the episode at once as a failure):
+- the robot falls, its pelvis below 0.58 m;
+- the wiping tool drops, its centre below 0.58 m.
+"""
+
+[families.cube]
+# cube.py Cube: max_episode_steps = 500 (L43), success_bar = 370 (L45); get_terminated: qpos[2] < 0.58, or either
+# cube's (left_cube_to_rotate / right_cube_to_rotate) z < 0.6. Reward (rewards.json cube): standing still and upright
+# with small forces, each cube's orientation close to the target cube's, each hand near its cube.
+vars = { bar = 370, steps = 500, seconds = 10, nu = 61 }
+success = """
+Pass mark: an episode return of at least {vars[bar]}, upstream's success bar, where the return is the sum of
+HumanoidBench's per-step `cube` reward over the episode. Each control step earns between 0 and 1, mostly from how
+closely both cubes match the orientation of the see-through target cube, then from each hand being at its cube, and
+the rest from the robot standing upright and still with little actuator effort. An episode is at most {vars[steps]}
+control steps ({vars[seconds]} s at 50 Hz).
+
+Terminations (each ends the episode at once as a failure):
+- the robot falls, its pelvis below 0.58 m;
+- either cube drops, its centre below 0.6 m.
+"""
+
+[families.room]
+# room.py Room: success_bar = 400 (L63); get_terminated: qpos[2] < 0.3. Reward (rewards.json room): a small share for
+# standing upright with small forces, the rest for the six objects' positions being tightly grouped (the larger of the
+# x and y variances of chair, trophy, headphone, package_a, package_b, snow_globe, near 0).
+vars = { bar = 400, steps = "1,000", seconds = 20, nu = 61 }
+success = """
+Pass mark: an episode return of at least {vars[bar]}, upstream's success bar, where the return is the sum of
+HumanoidBench's per-step `room` reward over the episode. Each control step earns between 0 and 1, mostly from how
+tightly the six loose objects in the room (a chair, a trophy, headphones, two packages, a snow globe) are grouped
+together on the floor plan, anywhere in the room, and the rest from the robot standing upright with little actuator
+effort. An episode is at most {vars[steps]} control steps ({vars[seconds]} s at 50 Hz).
+
+Termination (the episode ends at once as a failure): the robot falls, its pelvis below 0.3 m.
+"""
+
+[families.bookshelf_simple]
+# bookshelf.py BookshelfBase: success_bar = 2000 (L100); BookshelfSimple fixed = True (L249-250). get_reward: the
+# current object counts as placed once its centre is within 0.15 m of its goal, then task_index += 1 and a bonus of
+# 100 x task_index is added (100 + 200 + 300 + 400 + 500 over the five). get_terminated: qpos[2] < 0.58
+# (terminated_reason 0), task_index == 5 (reason 1: server.py treats it as the step cap, judged on the score so far),
+# the current object's z < 0.5 (reason 2).
+vars = { bar = 2000, steps = "1,000", seconds = 20, nu = 61 }
+success = """
+Pass mark: an episode return of at least {vars[bar]}, upstream's success bar, where the return is the sum of
+HumanoidBench's per-step `bookshelf_simple` reward over the episode. The five objects are to be placed in a fixed order,
+palest first, each on its own place on the shelves (its see-through copy). Each control step earns up to 1 from the
+current object's closeness to its place, a hand's closeness to that object, and the robot standing upright with little
+actuator effort. An object counts as placed once its centre comes within 15 cm of its place; the next object then
+becomes the current one, and each placement adds a one-time bonus that grows with the number of objects placed. An
+episode is at most {vars[steps]} control steps ({vars[seconds]} s at 50 Hz); placing the fifth object also ends it, as
+the end of its steps would, not as a failure.
+
+Terminations (each ends the episode at once as a failure):
+- the robot falls, its pelvis below 0.58 m;
+- the object being moved drops, its centre below 0.5 m.
+"""

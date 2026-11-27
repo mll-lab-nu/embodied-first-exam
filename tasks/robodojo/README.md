@@ -1,354 +1,211 @@
 # RoboDojo
 
-[RoboDojo](https://github.com/RoboDojo-Benchmark/RoboDojo) @ cb2a37d (MIT): the simulation part of RoboDojo's
-sim-and-real benchmark for generalist manipulation policies, on its Isaac Lab 2.3 fork (@ afca7b0) and Isaac Sim 5.1.0,
-with its cuRobo fork (@ d17b54c) for IK. Two ARX X5 arms (6 joints each, parallel two-finger grippers) at a table.
-`simulator = "robodojo"`, `robot = "arx-x5-bimanual"`. Every task of the simulation benchmark is included: RoboDojo's 42
-tasks over five capability dimensions (Generalization 12, Memory 6, Precision 8, Long-Horizon 8, Open 8) and the 12
-`_random` variants of the Generalization tasks (other models, lighting, backgrounds, ~15-20 clutter objects): 54 families.
+## Overview
 
-## Quick start
+The simulation part of RoboDojo's sim-and-real benchmark for generalist manipulation policies: two ARX X5 arms at a
+table, in Isaac Sim. Every task of RoboDojo's simulation benchmark is here: its 42 tasks over five capability
+dimensions and the 12 `_random` variants of the Generalization tasks, 54 families. Each family has one frozen instance
+in two modes: 108 task directories, `tasks/robodojo/robodojo-<family>-i00-privileged` and `-standard`.
+
+| | |
+|---|---|
+| upstream | [RoboDojo](https://github.com/RoboDojo-Benchmark/RoboDojo) (Chen et al., 2026) at `cb2a37d`, on its Isaac Lab 2.3 fork (`afca7b0`) and Isaac Sim 5.1.0, with its cuRobo fork (`d17b54c`) for IK |
+| simulator | Isaac Sim 5.1, GPU PhysX (RoboDojo forces GPU dynamics for its cloth and liquids), RTX rendering |
+| robot | two ARX X5 arms, 6 joints each, parallel two-finger grippers; RoboDojo's 14-D joint action at 25 Hz |
+| score | RoboDojo's own reward manager for the task: its check stages, run after every action |
+| instance | RoboDojo's own evaluation layout `Assets/Eval_Layout/RoboDojo/arx_x5/0/<task>_0.json` (seed 0) |
+| image | built from public sources by every task (`images/robodojo/`, about 75 GB with RoboDojo's 41 GB of assets) |
+
+Quick start:
 ```bash
 harbor run -d embodied-first-exam@all -p tasks/robodojo -a codex -m openai/gpt-6-astra
 ```
-The first task builds the simulator image from public sources (below); later tasks reuse it.
+The first task builds the simulator image (below); later tasks reuse it from Docker's build cache.
 
-## Before you run
+| mode | the agent gets | resets | graded |
+|---|---|---|---|
+| privileged | RoboDojo's evaluator environment through `rcb_robodojo.py`: object poses, the checks, IK, replay | unlimited | its `trajectory.npz`, replayed in up to 3 fresh processes, any success counting |
+| standard | the three cameras and both arms' proprioception, through `rcb_client.py`; no object poses, no success signal | 0 | the episode as it ran (live; nothing replayed) |
 
-- **Licence.** The simulator image contains NVIDIA Isaac Sim 5.1 / Omniverse Kit and the Isaac stack's wheels from
-  pypi.nvidia.com, and cuRobo: building and running it accepts the [NVIDIA Isaac Sim / Omniverse licence](https://docs.isaacsim.omniverse.nvidia.com/latest/common/NVIDIA_Omniverse_License_Agreement.html),
-  NVIDIA's terms for those wheels and NVIDIA's cuRobo licence (the recipe sets `OMNI_KIT_ACCEPT_EULA=YES`). Read them before
-  your first run. RoboDojo (MIT), its Isaac Lab fork (BSD-3-Clause) and its assets (Apache-2.0) are open. No account,
-  login or token is needed.
-- **GPU and driver.** Linux x86_64, Docker with BuildKit and the NVIDIA Container Toolkit, an RTX-class NVIDIA GPU (Isaac
-  renders with RTX even headless; RoboDojo runs PhysX on the GPU) with a driver Isaac Sim 5.1 supports (checked on an RTX
-  4090, driver 580.x), ~5-10 GB of GPU memory per Isaac process.
-- **Disk.** About 150 GB free for the first build (the image is ~75 GB, 41 GB of it RoboDojo's assets).
-- **Data.** RoboDojo's assets (Hugging Face dataset `RoboDojo-Benchmark/RoboDojo`, `Assets/` at a pinned revision, 15365
-  files, ~41 GB, Apache-2.0) are downloaded by the image build itself, anonymously through the dataset's git LFS; nothing
-  to download by hand or mount.
-- **First build.** The image is not on a public registry (NVIDIA does not allow anyone to redistribute Isaac Sim), so the
-  first task builds it with Docker from public sources: about 30-90 min (most of it the 41 GB download), network access to
-  github.com, snapshot.ubuntu.com, pypi.org, download.pytorch.org, pypi.nvidia.com, huggingface.co (+ its LFS storage),
-  NVIDIA's extension registry and its asset bucket. Every task's Dockerfile starts with that recipe
-  (`images/robodojo/Dockerfile`), so the build runs once per Docker host and later tasks take it from Docker's build cache.
-  Maintainers who can pull `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` get its layers instead (compose
-  `build.cache_from`). The tasks have no reference solution (Oracle, below); to build the image ahead of the run, run one
-  task with `-a nop` (reward 0).
+### Before you run
 
-## Tasks
-One frozen default instance per task, RoboDojo's own evaluation layout `Assets/Eval_Layout/RoboDojo/arx_x5/0/<task>_0.json`
-(seed 0; seeds 1 and 2, below), each a privileged task `robodojo-<task>-i00-privileged` and its standard twin `robodojo-<task>-i00-standard`
-(`eai-standard/3.0`), the six tasks whose physics does not replay bit for bit (Determinism, below) included: their
-privileged twins are graded as every privileged task, on up to 3 fresh replays, any success counting (PROTOCOL §4).
-54 privileged + 54 standard = 108 task directories. `oracle = "none"` for every task (below).
+- **Licence.** The image contains NVIDIA Isaac Sim 5.1 / Omniverse Kit, the Isaac stack's wheels from
+  pypi.nvidia.com, and cuRobo. Building and running it accepts the
+  [NVIDIA Isaac Sim / Omniverse licence](https://docs.isaacsim.omniverse.nvidia.com/latest/common/NVIDIA_Omniverse_License_Agreement.html),
+  NVIDIA's terms for those wheels and NVIDIA's cuRobo licence (the recipe sets `OMNI_KIT_ACCEPT_EULA=YES`). Read them
+  before your first run. No account, login or token is needed.
+- **GPU and driver.** Linux x86_64, Docker with BuildKit and the NVIDIA Container Toolkit, an RTX-class NVIDIA GPU
+  (Isaac renders with RTX even headless; RoboDojo runs PhysX on the GPU) with a driver Isaac Sim 5.1 supports (checked
+  on an RTX 4090, driver 580.x), about 5-10 GB of GPU memory per Isaac process. Isaac hangs instead of exiting when
+  the GPU runs out of memory, so a shared GPU runs few tasks at once.
+- **Disk.** About 150 GB free for the first build.
+- **Data.** RoboDojo's assets (Hugging Face dataset `RoboDojo-Benchmark/RoboDojo`, `Assets/` at a pinned revision,
+  15365 files, about 41 GB) are downloaded by the image build itself, anonymously through the dataset's git LFS.
+  Nothing to download by hand or mount.
+- **First build.** NVIDIA does not allow Isaac Sim to be redistributed, so the image is not on a public registry. The
+  first task builds it with Docker from public sources: about 30-90 min, most of it the 41 GB download, with network
+  access to github.com, snapshot.ubuntu.com, pypi.org, download.pytorch.org, pypi.nvidia.com, huggingface.co (and its
+  LFS storage), NVIDIA's extension registry and its asset bucket. Every task's Dockerfile starts with that recipe, so
+  the build runs once per Docker host. Maintainers who can pull `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` get
+  its layers instead (compose `build.cache_from`). To build the image ahead of a run, run one task with `-a nop`
+  (reward 0).
 
-The task directories are the deliverable; the tooling that built them is kept outside this repository. Each task carries:
-- its instruction, in the sections of every v2 instruction (Task, Goal, Robot Interface, Limits, and Others only
-  for what the robot cannot see for itself): briefly, in plain words, what to do and what success looks like, the
-  way one person asks another to do a chore. Every condition RoboDojo's check tests is stated without its thresholds
-  or function names, and the only numbers in that text are object counts (Robot Interface and Limits keep theirs).
-  The check's code (`task/RoboDojo/tasks/<benchmark>/<task>.py`, its config, `env/reward_manager/`) is the reference
-  for the exact thresholds and logic.
-- its instance's `instance.json` (`environment/sim/instance.json`): the evaluation layout verbatim (with its sha256),
-  the state hash after RoboDojo's reset, RoboDojo's language instruction for the layout, and per-task fields
-  (`physics`, `determinism`) from the determinism test's output (`rcb_robodojo.py make-instance --task T --seed 0
-  --layout 0 [--physx key=value]`). The committed standard tasks are the list of instances.
+## Upstream and license
 
-### Seeds
-Every task allows its default seed 0 and seeds 1 and 2 (`[metadata.seeds]`). Seed k is layout 0 of RoboDojo's own
-evaluation seed k, `Assets/Eval_Layout/RoboDojo/arx_x5/<k>/<task>_0.json` (RoboDojo's own evaluation runs seeds 0, 1 and
-2). Upstream's files for some seeds repeat seed 0's layout (`cover_blocks` seed 1; `play_tic_tac_toe` seeds 1 and 2, whose
-opponent is seeded by the layout index too, so they replay the same game): those seeds are repeats of seed 0. A seed moves the objects, can swap object models and the clutter, and in the language and number tasks changes
-RoboDojo's instruction (target, colours, numbers, order); the robot's start stays. RoboDojo passes the evaluation seed on
-to the task, so the support arm's recorded moves in `imitate_sorting_sequence` are that seed's too. Each seed's instance
-(`make-instance --seed <k> --layout 0`, with the default instance's `physics` and `determinism` fields) and its
-instruction changes (`seed.toml`) are in `tests/seeds/<k>/` of the privileged task; `scripts/task_seed.py materialize` puts them in place. Each seed passed the default's determinism
-test (a second fresh process rebuilds the recorded state hash, and the 120-action driver ends in the same state in both
-processes; the six verdict tasks are recorded, not compared), on an L40S, except `store_laptop_and_headphones_random` seed 1:
-its laptop settles in one of two states about 2 µm apart (4 of 9 fresh rebuilds), so that seed's instance is graded by
-verdict (`"determinism": "verdict"`: a replay or the standard service is not refused for the hash; the grading is as
-below). No reference solution, as for seed 0.
+- Upstream: RoboDojo, [RoboDojo-Benchmark/RoboDojo](https://github.com/RoboDojo-Benchmark/RoboDojo) at `cb2a37d`, MIT
+  License.
+- Assets: Hugging Face `RoboDojo-Benchmark/RoboDojo`, Apache License 2.0.
+- RoboDojo's Isaac Lab fork: BSD 3-Clause License. RoboDojo's cuRobo fork: NVIDIA's cuRobo licence.
+- Isaac Sim 5.1 and its wheels: NVIDIA proprietary, no redistribution. The image is therefore build-only
+  (`images/robodojo/BUILD_ONLY` has the licences, the pinned inputs and the check of a build). No non-commercial terms
+  apply to RoboDojo's own code and assets.
 
-## Success (RoboDojo's own check)
-RoboDojo's reward manager for the task, unchanged: its `run_reward()` check list (registered at the start of every episode,
-as RoboDojo's evaluator does), evaluated after every action; stages count in order, at most one per action; a failed
-query ends the episode as a failure. The episode ends at the first action where every stage has passed. No task of the 54
-registers an end-of-episode check: RoboDojo's per-task `step_lim` only ends a policy's episode in its evaluation.
+## Changes from upstream
 
-Standard mode follows RoboDojo's evaluation, except that its tasks' episodes are agent-ended (PROTOCOL §3 "Agent-ended
-episodes"; `RCB_AGENT_END`, and `RCB_STEP_LIMIT` = the task's `step_lim`, in each sim service). RoboDojo's evaluator
-never shows a policy the reward; it ends the episode at the first action where the reward reaches 1 or after `step_lim`
-actions (one step = one 14-D action at 25 Hz, the unit of `take_action_cnt`). Here the agent sees no success either, the
-episode ends after `step_lim` steps (or at the agent's `/finish`, its time limit or token budget, or a failed check,
-which is a 0), and it is judged on how things stand when it ends (owner 11-25). RoboDojo's stages are latched (a stage
-that has passed is popped and never checked again), so for the 47 tasks judged on their end state the task's last check
-stage is checked again, with RoboDojo's own check function, after every action once it has passed, and must still hold
-after the last one (for a one-stage task: the whole goal; the earlier stages of an ordered task count as they happened).
-The 7 tasks whose goal is a sequence of moments (`play_Xylophone`, `press_by_number`) or is judged at a trigger (the
-three pouring tasks, the two folding tasks) keep RoboDojo's verdict as the episode ran. `rcb_robodojo.py`
-`END_JUDGEMENT` lists all 54 with the reason; each task's Goal says the same in plain words. Privileged mode applies no
-step limit; a technical cap ends an episode after 15,000 actions (10 min of simulated time; reason `step_guard`), the
-most a trajectory may hold.
+- RoboDojo's reward manager for each task is unchanged: its `run_reward()` check list, registered at the start of
+  every episode as RoboDojo's evaluator does it, and evaluated after every action. Stages count in order, at most one
+  per action; a passed stage is popped and not checked again; a failed check ends the episode as a failure.
+- `Session` builds RoboDojo's own evaluator environment (`src/eval_client/eval_env.py`: one env, the policy-server
+  client replaced by a stub) and resets it onto the frozen layout exactly as RoboDojo's evaluator starts an episode.
+- Each instance's `instance.json` (`environment/sim/instance.json`) holds the evaluation layout verbatim (with its
+  sha256), the state hash after RoboDojo's reset, RoboDojo's language instruction for the layout, and the fields
+  `physics` and `determinism`.
+- `make_toast` runs with PhysX enhanced determinism (RoboDojo's own sim setting, off by default upstream): one of
+  three fresh resets differed without it. Its instance records `"physics": {"enable_enhanced_determinism": true}`, and
+  every session, the service and the verifier use it.
+- Standard episodes are agent-ended. RoboDojo's evaluator ends an episode at the first action where the reward
+  reaches 1, or after the task's `step_lim` actions. Here the agent sees no success signal, passing the checks does not
+  end the episode, and the episode ends at `/finish`, after `step_lim` actions, at the end of the agent's time, or at a
+  failed check (0). It is judged when it ends, by the task's class in `rcb_robodojo.py` `END_JUDGEMENT`:
+  - **end** (47 tasks): the staged reward is 1, and the last check stage, checked again with RoboDojo's own function
+    after every action once it has passed, still holds after the last action. The earlier stages of an ordered task
+    count as they happened.
+  - **history** (7 tasks: `play_Xylophone`, `press_by_number`, the three pouring tasks, the two folding tasks): the
+    goal is a sequence of moments or is judged at a trigger, so RoboDojo's verdict stands as the episode ran.
+- Privileged mode applies no step limit. A technical cap ends an episode after 15,000 actions (10 min of simulated
+  time; reason `step_guard`), the most a trajectory may hold.
+- The instructions state RoboDojo's checks in plain physical terms, without changing them. Where RoboDojo's own text
+  misleads, the instruction follows the check:
+  - `sort_nesting_dolls_by_size(_random)`: the config's comments call index mod 5 = 4 the largest doll; the dolls'
+    measured sizes say it is the smallest.
+  - `swap_blocks`: the button rests at about 0.79 of its travel, below the 0.9 / 0.95 its stages and press counter
+    need.
+  - `hang_mugs(_random)`: the orientation conditions use the first functional point of each tag.
+  - `pack_objects_into_box(_random)`: the check reads the car, toothbrush and hammer through an asset frame (the
+    'checkpoint' point) and the shoe through its body frame, with opposite signs in code. Physically all four want their
+    front end to the left (car: the end that points right at the start in the non-random layout; brush head, hammer
+    head, shoe toe).
 
-## Oracle
-None: RoboDojo releases no expert or planner script, and its training demonstrations (Hugging Face, `data/`) record no
-initial state or layout, so none replays on a frozen layout. Every task is `oracle = "none"` and needs human review
-(CONTRIBUTING.md; the review is in pull request #142). Model trials gave positive examples (privileged
-`general_pickup`, `deposit_coin`, `match_and_pick_from_conveyor`, `stack_blocks_by_language`; standard
-`general_pickup` and `align_blocks`, each within its 200-step limit: 106 and 190 steps); the screening table below lists
-the bases solved by the screening runs.
+## Interface
 
-## Tooling (`rcb_robodojo.py`)
-`Session(task, instance=...)` builds RoboDojo's own evaluator environment (`src/eval_client/eval_env.py`: one env, the
-policy-server client replaced by a stub) and resets it onto the frozen layout exactly as RoboDojo's evaluator starts an
-episode. Action: RoboDojo's 14-D joint action `[left joint1..6, left gripper, right joint1..6, right gripper]` at 25 Hz
-(physics dt 4 ms, 10 physics steps per action, RoboDojo's controller interpolating to the targets); grippers are RoboDojo's
-normalised command (1 = open, 0 = closed). Privileged helpers: hold, joint moves, gripper ramps, RoboDojo's cuRobo IK
-(`ik`, `move_ee`); object poses and bounding boxes; the three cameras (`cam_head` static, `cam_left_wrist`,
-`cam_right_wrist`, 640×480, optional z-depth); proprioception; numpy FK/IK of both arms from the X5 URDF; recording,
-fresh-process `replay` CLI, video. A reset right after a reset changes nothing, so the first episode in a process is
-exactly the grader's; after actions RoboDojo's reset settles the scene again from where it is (same layout and start, not
-bit-for-bit the same state), which the instructions say.
+**Privileged.** `rcb_robodojo.py`: `Session(task, instance=...)`. Action: RoboDojo's 14-D joint action
+`[left joint1..6, left gripper, right joint1..6, right gripper]` at 25 Hz (physics dt 4 ms, 10 physics steps per
+action, RoboDojo's controller interpolating to the targets). Grippers are RoboDojo's normalised command (1 open, 0
+closed). Helpers: hold, joint moves, gripper ramps, RoboDojo's cuRobo IK (`ik`, `move_ee`); object poses and bounding
+boxes; the three cameras (`cam_head` static, `cam_left_wrist`, `cam_right_wrist`, 640×480, optional z-depth);
+proprioception; numpy FK/IK of both arms from the X5 URDF; recording, a fresh-process `replay` CLI, video. A reset
+right after a reset changes nothing, so the first episode in a process is exactly the grader's. After actions,
+RoboDojo's reset settles the scene again from where it is: same layout and start, not bit for bit the same state.
+A `s.reset()` in a long-lived process is not always reliable after an articulated object moved ("articulation not
+found", or "All scene Unstable Error"); a fresh process, as the verifier uses, always builds the frozen start.
 
-## Determinism (measured on Isaac Sim 5.1, RoboDojo's GPU PhysX)
-RoboDojo forces PhysX GPU dynamics for every task (`overwrite_gpu_setting(1)`, needed for its cloth and liquids); kept.
-Test per task (`make-instance`, then two fresh-process replays of a 120-action trajectory moving both arms and grippers):
-- 47 tasks: the three resets and the two replays' end states bit-identical (including the conveyor tasks and the
-  support-arm tasks);
-- `fold_clothes` and `fold_clothes_random` passed that test too, but the test's trajectory moves the arms without handling
-  the garment. Once the cloth is handled it does not replay bit for bit (GPU PhysX cloth: a live episode and two
-  fresh-process replays from the exact frozen state ended in three different states), so both are in the class below
-  (their resets are bit-identical, so `instance_exact` stays meaningful for them);
-- `make_toast`: 1 of 3 fresh resets differed; with PhysX enhanced determinism (RoboDojo's own sim setting, off by default)
-  all agree, so its instance records `"physics": {"enable_enhanced_determinism": true}` and every session, the service and
-  the verifier run with it;
-- `make_toast_random` (resets differ even with enhanced determinism) and the three liquid tasks (`pour_liquid_into_cup`,
-  its random variant, `pour_by_language`: GPU PhysX particles, not bit-reproducible). Their rebuilt layout hashes
-  differently in every process by design, so the tooling reports it (`instance_exact` false) and never refuses the
-  instance for it (the standard service starts strict otherwise: a rebuilt layout that hashes differently from the
-  recorded one is refused on every other task).
+**Standard.** The `sim` sidecar serves the robot through `rcb_client.py` and the `efe-robot` MCP tools (wire
+protocol `eai-standard/3.0`).
+- Actions: `joint_position` (14 values: RoboDojo's action, rows `dt` apart, a multiple of 1/25 s) and `ee_pose` (16
+  values: both arms' link6 targets and gripper commands, solved by the arms' kinematic model and executed as a joint
+  move of at most 0.25 m/s).
+- Observations: cameras `cam_head`, `cam_left_wrist`, `cam_right_wrist` (640×480, z-depth); 58 proprioception
+  columns; `/kinematics` (FK/IK of both arms from the X5 URDF, matching the simulator's link6 poses).
+- Request checks: every field of a `/submit` or `/observe` is read and checked before the first action. A malformed
+  request (a wrong type, a value out of range, an `ee_pose` position more than 3 m from the world origin on any axis, a
+  zero quaternion) is a 400 and executes nothing. Cameras are taken once each; one call returns at most 3000 images.
+- Not given: object poses, the scene layout, the checks or their parts, any success signal.
+- The joint limits in `/spec` and `robot_spec()` are the articulation's soft limits as Isaac Lab reports them (about
+  ±10 rad for several joints). The arm's joint4 may stop at about ±1.78 rad.
 
-**The six tasks whose physics does not replay bit for bit** (`fold_clothes`, `fold_clothes_random`, `make_toast_random`,
-`pour_liquid_into_cup`, `pour_liquid_into_cup_random`, `pour_by_language`; instance.json `"determinism": "verdict"` with
-the reason): the same trajectory can succeed in one fresh replay and fail in the next. PROTOCOL v2.4 §4 grades such a
-privileged task on up to N fresh replays, stopping at the first success, the attempt succeeding if any replay succeeds;
-RoboDojo declares N = 3 for every task (`[metadata] replays`, Grading below), so their privileged twins (added
-2026-11-16; standard only from 2026-10-11, #154, until then) are graded like the other 48. `"determinism": "verdict"` only
-means that the rebuilt layout's hash is recorded, not compared (`instance_exact`): neither a replay nor the standard
-service refuses the instance for it. A success may include some luck of the physics, in either mode. In standard mode
-the live result is the verdict, as for every standard task; an episode of the six that resumed after a service crash
-(resume class `approx`) is graded on its live state after the resume; `reward.json` reports `resumes` and
-`resume_state_mismatch` (docs/protocol/standard_mode.md §13.1).
-Frozen on one RTX 4090. Across GPU models (L40S, L40, L4) the frozen layouts rebuild to the recorded hashes and a
-120-action driver trajectory ends in the same state as on the 4090; every graded trial reports `instance_exact`.
+World-frame information: the instructions give the world frame (axes, the arm bases, the table, the head camera) and
+state RoboDojo's check in physical terms, with absolute coordinates where the check uses them. Standard tasks never
+give object poses; privileged tasks give them through the tooling. The instructions do not say what the task asks
+the agent to work out (for example which tile completes an equation, or which object the language names), nor which
+step of RoboDojo's task sentence the check does not read.
+
+Tooling holds thin wrappers only: joint moves, gripper commands, hold, RoboDojo's IK, and the frozen instance, state,
+recording, replay and rendering. No task-level skill.
 
 ## Grading
-- privileged: **up to 3 replays** (`[metadata] replays`, PROTOCOL §4). `tests/grade.py` replays
-  `/app/output/trajectory.npz` in a fresh process each time (`test.sh`: `--repeat 3`) and stops at the first success;
-  reward 1 iff a replay succeeds. `no-network`. A file that is not a trajectory of the task (not an
-  npz, pickled or object arrays, another shape, NaN/inf, more than 15,000 rows) is the agent's 0 (`bad_trajectory`,
-  `wrong_task`); a replay process that ends without a result or runs out of its time is the verifier's (`grader_error` =
-  `infra_error` = 1, `replay_failed` / `replay_timed_out`: no verdict on the agent). Only the file's `task` and `actions`
-  entries are read (their sizes checked in the archive before anything is decompressed); any other entry is ignored.
-  `replays` = the replays run, `replays_succeeded` and `success_replay` (1-based, 0 for none) say which succeeded;
-  `deterministic` and `state_identical` compare the end states of the replays run (evidence only, never the verdict;
-  `determinism_checked` = 0 when only one ran). A replay whose process rebuilt the frozen layout to
-  another state than `instance.json` records (`instance_exact` = 0) did not start from the frozen state and gives no
-  verdict (`instance_mismatch`, `grader_error` = `infra_error` = 1), except where `instance.json` sets
-  `"determinism": "verdict"` (the six tasks above, `store_laptop_and_headphones_random` seed 1): there the hash is
-  recorded, not compared. Measured on one host, the physics of 48 of the 54 tasks replays bit for bit, and of the six
-  above it does not; graded replays run on other hosts and GPU models too, hence up to 3 for every task.
-- standard: graded by the **live episode**, with no grading replay (PROTOCOL H.4), the same rule for every task:
-  `success = live_success`, RoboDojo's check as the service ran it after every action of the episode the agent ran, the
-  task's last check stage checked again on the final state where `END_JUDGEMENT` says "end" (no hold window: RoboDojo
-  has none). The service writes `trajectory.npz` (the deliverable) and `episode.json` on
-  the collect hook's signal and exits; `finalize.sh` writes `final.json` from it (`graded_by` "live", `replays` 0)
-  before anything else. `no-network`. A missing, unreadable or unfinalized `final.json`, no `episode.json`, a give-up
-  after crashes between calls and the episode never ending for the hook are `infra_error`; a crash inside the agent's
-  calls and a simulator error raised by them stay its 0. The start state: before it serves, the service compares the
-  rebuilt layout's state hash with `instance.json`'s `state_sha` (`instance_exact`); a mismatch is a give-up as infra
-  (`instance_mismatch`, 409 to every request). The six tasks graded by verdict reset to states that are not
-  bit-identical by design: their hash is recorded (`instance_checked` = 0), not compared; what is checked for them is
-  only that the layout is `instance.json`'s own (the Session loads it from there).
-- The video (standard) comes from the live episode (`live_video.py`, `live.mp4`). Rendering is not free here (a filmed
-  replay runs at about 7 actions/s against 10 unfilmed), and RoboDojo's observation renders all three cameras with
-  depth at once. So the service never renders for the video: it keeps `cam_head` (640×480, JPEG in
-  `/data/live_video/`) at the actions whose observation a call of the agent already rendered (its frames at its
-  `video_fps`, 5 per simulated second by default, and the proprioception at each call's end), at most one per 5
-  actions; only the end state is rendered once more, at the dump. The video's rate is the agent's (at least one frame
-  per call); a resume's journal replay adds none and deletes the frames of the call lost in the crash. The collect hook
-  encodes it after the verdict (CPU, at most 600 s); a frame or an encode that fails costs the video only. Privileged:
-  every replay is filmed and the last one run is kept (`replay.mp4`); a video that cannot be written gives `video_ok` false and the replay
-  stands.
-- Time limits (wall clock only; the verdict rules do not depend on them). A replay process takes up to ~7 min until the
-  layout is ready (a cold first start, which every privileged verifier's replay is) and runs at about 5-11 actions/s
-  filmed. A replay's allowance is max(1800 s, 1200 s + rows / 2.5), so 7200 s for the 15,000 rows a trajectory may
-  have; `[verifier] timeout_sec` (privileged) is **22200 s** (three replays of 15,000 rows + 600 s for the grader and the
-  resource step). The standard collect hook is **3600 s** (`finalize.sh`'s `HOOK_BUDGET_S`, equal to
-  `[[verifier.collect]] timeout_sec`: the episode end, up to 2700 s through a resume, + the video encode, no replay);
-  the standard verifier keeps 1200 s (it only reads files).
-- **Re-scoring a standard trial recorded while a grading replay still decided**: its live verdict is `final.json`
-  `success` (the live result, merged from `episode.json`); `infra_error` only when the live record is missing (no or
-  unfinalized `final.json`, the service never ended the episode) or the service gave up with `infra_error`;
-  `replay_error`, `gpu_lost` and an `instance_mismatch` found by a replay are not the live episode's.
 
-## Crash recovery (standard mode, docs/protocol/standard_mode.md §13)
-Resume class `exact` (the resumed service is a fresh process whose journal replay is that process's first run), `approx` for
-the six tasks whose physics does not replay bit for bit. `RCB_STARTUP_TIMEOUT_S = 1800`. Acceptance test: RoboDojo
-has no oracle, so a driver client (12 joint_position chunks; not a solution) runs as Harbor's oracle on a copy of
-`robodojo-general-pickup-i00-standard`, and the service is killed with SIGKILL inside the 6th call, after 5 checkpoints.
-Expected: one exact resume (the checkpoint's state hash), the killed call rolled back, the driver's other chunks run,
-finalized, no infrastructure error. The driver does not solve the task (success 0 is expected).
+- **Privileged.** `tests/grade.py` replays `/app/output/trajectory.npz` open-loop from the frozen start, each time in
+  a fresh process of a verifier container without network, up to 3 times (`[metadata] replays`), stopping at the first
+  success. Reward 1 if any replay succeeds. Only the file's `task` and `actions` entries are read, their sizes checked
+  in the archive before anything is decompressed. A file that is not an npz, holds pickled or object arrays, has
+  another shape, NaN or inf, more than 15,000 rows, or another task's name is the agent's 0 (`bad_trajectory`,
+  `wrong_task`). A replay process that ends without a result or runs out of its time is the verifier's
+  (`grader_error`, an infrastructure failure). A replay whose process rebuilt the frozen layout to another state than
+  `instance.json` records did not start from the frozen state and gives no verdict (`instance_mismatch`,
+  infrastructure), except where `instance.json` sets `"determinism": "verdict"`: there the hash is recorded, not
+  compared.
+- **Standard.** The sidecar judges the live episode with RoboDojo's checks after every action and the end rule above;
+  `final.json` records the verdict (`graded_by` "live", `replays` 0). No reset. A crash inside the agent's calls and a
+  simulator error raised by them are the agent's (the episode is judged on the state it left). A missing or
+  unfinalized `final.json`, no `episode.json`, a give-up after crashes between calls, and an episode the collect hook
+  never sees end are infrastructure failures. Before it serves, the service compares the rebuilt layout's state hash
+  with `instance.json`'s (`instance_exact`); a mismatch is an infrastructure give-up (`instance_mismatch`), except for
+  the instances graded by verdict, whose layout is still checked to be `instance.json`'s own.
+- **Crash recovery (standard).** A crashed service is restarted inside the trial and replays its journal from the last
+  checkpoint. Resume class `exact` (a fresh process whose first run is bit-exact) for 48 tasks, `approx` for the six
+  tasks below; for those, the verdict after a resume is the live state the resumed service continued from, and
+  `reward.json` reports `resumes` and `resume_state_mismatch`. At most two resumes.
+- **Determinism.** Measured with two fresh-process replays of a 120-action trajectory moving both arms and grippers:
+  48 of the 54 tasks replay bit for bit, `make_toast` with enhanced determinism. Six do not (`"determinism":
+  "verdict"` in their `instance.json`): `fold_clothes` and `fold_clothes_random` (GPU PhysX cloth, once the garment is
+  handled), `make_toast_random` (resets differ even with enhanced determinism), and the three liquid tasks
+  `pour_liquid_into_cup`, `pour_liquid_into_cup_random` and `pour_by_language` (GPU PhysX particles). The same
+  trajectory can succeed in one fresh replay and fail in the next, so a success may include some luck of the physics,
+  in either mode. Frozen on an RTX 4090; on L40S, L40 and L4 the frozen layouts rebuild to the recorded hashes and the
+  120-action trajectory ends in the same state. Every graded trial reports `instance_exact`.
+- **Videos.** Standard: `live.mp4` from the frames of `cam_head` that the agent's own calls already rendered (at most
+  one per 5 actions) plus the end state, encoded by the collect hook after the verdict. Privileged: every replay is
+  filmed and the last one run is kept (`replay.mp4`). A video never changes the verdict.
+- **Time limits.** The agent has 3600 s in both modes. Every Python process pays about 2.5-4 min of Isaac Sim launch,
+  scene build and RoboDojo's settling, so an hour holds about a dozen simulator starts at most. A replay takes up to
+  about 7 min until the layout is ready and then runs at about 5-11 actions per second, filmed; its allowance is
+  max(1800 s, 1200 s + rows / 2.5). The privileged verifier has 22200 s (three replays of 15,000 rows, plus 600 s).
+  The standard collect hook has 3600 s (the episode end, up to 2700 s through a resume, plus the video encode); the
+  standard verifier keeps 1200 s.
 
-## Time budget
-3600 s for every task of both modes: each task's own `[agent] timeout_sec` (PROTOCOL §2,
-docs/protocol/running.md "The agent's time"). Every Python process pays ~2.5-4 min of Isaac Sim launch, scene build and RoboDojo's
-settling (a trial's first start also compiles shaders and materials), and many tasks are long (RoboDojo gives policies
-up to 1900 actions), so an hour holds about a dozen simulator starts at most.
-Every instruction states the cutoff in the Time line of the closing `## Limits` (written by `task_conventions.normalize`
-from `[agent] timeout_sec`, like the README row and the standard service's `RCB_WALL_CLOCK_S`, which only reports the
-budget: `spec["budget"]`, `meta["time_left_s"]`; the service never ends an episode on it). RoboDojo's own text adds,
-right after the task's introduction and without a number: privileged, `/app/output/trajectory.npz` must be written
-before the time limit is up and every `Session` start counts; standard, the task must be completed before it and the
-wait for the service counts. Nothing else is derived from the agent's limit: the verifier and collect-hook limits above
-come from the 15,000-action cap and the replay speed, `RCB_STARTUP_TIMEOUT_S` from the scene build.
+## Tasks
 
-## Standard mode (eai-standard/3.0)
-`joint_position` (14: RoboDojo's action, rows `dt` apart, a multiple of 1/25 s) and `ee_pose` (16: both arms' link6 targets
-+ gripper commands, solved by the arms' kinematic model and executed as a joint move at most 0.25 m/s); cameras `cam_head`,
-`cam_left_wrist`, `cam_right_wrist` (640×480, z-depth); `/kinematics` (FK/IK of both arms from the X5 URDF; matches the
-simulator's link6 poses); 58 proprio columns. Request checks: every field of a `/submit` or `/observe` is
-read and checked before the first action; a malformed request (a wrong type, a value out of range, an `ee_pose` position
-more than 3 m from the world origin on any axis, a zero quaternion) is a 400 and executes nothing. Cameras are taken once
-each, and one call returns at most 3000 images (`max_frames_per_call`, PROTOCOL §3 "Images per call").
+One frozen instance per family: RoboDojo's evaluation layout 0 of seed 0. Every task also allows seeds 1 and 2
+(`[metadata.seeds]`): layout 0 of RoboDojo's evaluation seeds 1 and 2, which RoboDojo's own evaluation runs. A seed
+moves the objects, can swap object models and the clutter, and in the language and number tasks changes RoboDojo's
+instruction (target, colours, numbers, order); the robot's start stays. Upstream's files for `cover_blocks` seed 1 and
+`play_tic_tac_toe` seeds 1 and 2 repeat seed 0's layout. Each seed's instance and its instruction changes
+(`seed.toml`) are in `tests/seeds/<k>/` of the privileged task; `scripts/task_seed.py materialize` puts them in place.
+Each seed passed the same determinism test, except `store_laptop_and_headphones_random` seed 1, whose laptop settles
+in one of two states about 2 µm apart; that seed's instance is graded by verdict.
 
-## Known issues
-- **Joint limits in `/spec` and `robot_spec()`** are the articulation's soft limits as Isaac Lab reports them (about
-  +-10 rad for several joints). Two trials found the arm's joint4 stopping at about +-1.78 rad. Not verified in the
-  simulator here, so neither the instructions nor the limits have been changed.
-- **Privileged `s.reset()`** in a long-lived process is not always reliable after an articulated object moved ("articulation
-  not found", or "All scene Unstable Error"); a fresh process (as the verifier uses) always builds the frozen start.
-- **`pack_objects_into_box(_random)`**: the check reads the car, toothbrush and hammer through an asset frame
-  (the 'checkpoint' point) and the shoe through its body frame, with opposite signs in code; physically all four
-  want their front end (car: the end that points right at the start in the non-random layout; brush head, hammer head,
-  shoe toe) to the left, which the instructions now say.
-- The instructions state, where RoboDojo's own text misleads (its checks unchanged): `sort_nesting_dolls_by_size(_random)`'s
-  size order (the config's comments call index mod 5 = 4 the largest doll; the dolls' measured sizes say it is the
-  smallest); `swap_blocks`' button rests at about 0.79 of its travel, below the 0.9 / 0.95 its stages and press counter
-  need; `hang_mugs(_random)`' orientation conditions use the first functional point of each tag.
+| dimension | families |
+|---|---|
+| Generalization (12, each with its `_random` variant) | `stack_bowls`, `push_T`, `pack_objects_into_box`, `fold_clothes`, `hang_mugs`, `sweep_blocks`, `pour_liquid_into_cup`, `make_toast`, `arrange_largest_number`, `sort_nesting_dolls_by_size`, `store_laptop_and_headphones`, `stack_blocks` |
+| Memory (6) | `cover_blocks`, `match_and_pick_from_conveyor`, `swap_blocks`, `swap_T`, `press_by_number`, `imitate_sorting_sequence` |
+| Precision (8) | `fasten_screws`, `plug_in_charger`, `insert_tubes`, `pour_balls_into_vase`, `play_Xylophone`, `deposit_coin`, `insert_key`, `build_tower` |
+| Long-Horizon (8) | `fill_pen_holder`, `classify_objects`, `put_bottles_into_dustbin`, `play_tic_tac_toe`, `fill_egg_holder`, `organize_table`, `make_kong`, `play_stacking_toy` |
+| Open (8) | `align_blocks`, `general_pickup`, `solve_equation`, `stack_blocks_by_language`, `classify_objects_by_language`, `pick_from_conveyor_by_image`, `store_tools_in_toolbox`, `pour_by_language` |
 
-## Declarations
-- **Tooling: thin wrappers only.** Joint moves, gripper commands, hold, RoboDojo's IK, plus the frozen instance, state,
-  recording, replay and rendering. Task-level skills are never added.
-- **World-frame information.** Instructions give the world frame (axes, the arm bases, the table, the head camera) and
-  state RoboDojo's check exactly, in physical terms, including absolute coordinates where the check uses them (e.g.
-  `make_kong`'s target spot); standard tasks never give object poses (privileged tasks give them through the tooling).
-- **What the instructions leave to the agent.** As in RoboDojo's own one-sentence instructions, the texts state the check
-  exactly but not what the task asks the agent to work out: which tile completes `solve_equation`'s equation, which
-  group of `play_stacking_toy` goes on which peg, the size order of the dolls, which objects of `classify_objects` form
-  a kind, the start headings and the turns of the T tasks, and, in the Open tasks, which object the language names,
-  where it is, or which recess of the toolbox belongs to which tool. Nor do they say which step of the task's sentence
-  (a hand-over, the tool, one by one, the reset) the check does not read.
+The `_random` variants use other object models, lighting and backgrounds, with about 15-20 clutter objects. Each
+task's README states its exact checks, its step limit and its end rule.
 
-## Resources (scripts/task_resources.toml)
-Measured on the heaviest scene (`pour_liquid_into_cup_random`: GPU PhysX liquid and 15-20 clutter objects), RTX 4090,
-with the trial's monitor and a per-container sampler (docker stats, cgroup anon memory, nvidia-smi every 10 s):
-one Isaac Session (privileged main container, or the standard sim sidecar) peaks at 16.0-16.1 GiB of memory and 9.0-9.5 GiB
-of GPU memory and uses every core it is given while Isaac starts; a verifier replay (filmed) 15.7 GiB and 9.6 GiB. The
-determinism runs over all 54 tasks used 4.6-8.4 GB of GPU memory per process. An RTX-class GPU (`gpu_types`). The
-privileged GPU-memory cap holds one Session: a second one at once can go over it (past trials peaked at 30.7 GiB).
+## Others
 
-## Image and host
-`images/robodojo/` (~75 GB, with RoboDojo's 41 GB of assets): a recipe that needs no build context, copied verbatim into
-every task's Dockerfile (privileged: environment/ and tests/; standard: the `sim` sidecar's `environment/sim/Dockerfile`)
-as the stage `robodojo-base`. It contains Isaac Sim: **BUILD_ONLY** (`images/robodojo/BUILD_ONLY` has the licences, the
-pinned inputs and the check of a build); the organization's private copy
-`ghcr.io/mll-lab-nu/efe-private:robodojo-<images/robodojo/VERSION>` (built with inline cache) is the tasks'
-`build.cache_from`. Needs an
-RTX-class GPU and ~5-10 GB of GPU memory per Isaac process; Isaac hangs instead of exiting when the GPU runs out of memory,
-so a shared GPU runs few at once. Isaac keeps generated Python in its Kit cache: the verifier and the standard sidecar mount
-their own `*_trusted` cache volumes, scoped to the trial's compose project.
-
-## Licences
-RoboDojo: MIT. Its assets (Hugging Face `RoboDojo-Benchmark/RoboDojo`): Apache-2.0. Isaac Lab fork: BSD-3-Clause. cuRobo
-fork: NVIDIA's cuRobo licence. Isaac Sim 5.1 and its wheels: NVIDIA proprietary (no redistribution), hence BUILD_ONLY.
-
-## Standard-mode service details
-
-Serves `eai-standard/3.0`. Resume class `exact` (Isaac Lab, GPU PhysX: the resumed service is a fresh process, whose first run is bit-exact, measured on 48 of its 54 tasks; `make_toast` with PhysX enhanced determinism); `approx` for its six tasks whose physics does not replay bit for bit (`make_toast_random`, the three liquid tasks and the two cloth tasks: GPU PhysX particles and cloth do not replay bit for bit). For those six the verdict after a resume is the live state the resumed service continued from; `reward.json` reports `resumes` and `resume_state_mismatch`, at most two resumes are allowed as everywhere, and a success with `resumes > 0` is reported with those fields. `max_frames_per_call` = 3000.
-
-## Screening
-
-The benchmark owner's screening (ten runs, one trial per run and task directory). A directory is **easy** when a run solved it: a graded success within the task's time limit.
-Where only one or two of the later runs solved a directory Luna had failed, their logs were checked for shortcuts and
-for any access to tests, solutions or graders. It is **hard** when GPT-6 Luna and every later run that attempted it
-failed, GPT-6 Astra and Claude Opus 5.5 among them; a standard directory that only Astra solved is hard as well. It is
-**unverified** when only Luna attempted it and failed (the later runs only take bases Luna solved in no mode). The 17 bases GPT-6 Luna solved in some mode are left out of the core set (`docs/core_set.toml`); the other 37 are in it, whatever their later verdicts. The left-out tasks keep their names.
-
-Runs: Luna `codex-gpt6_luna-xhigh`; Astra `codex-gpt6_astra-high`; Opus `claude_code-opus_5_5-high`; Sol 6.1
-`codex-gpt6_1_sol-high`; Sol `codex-gpt6_sol-high`; Gemini 3.8 Flash `antigravity_cli-gemini_3_8_flash-high`; Gemini 4
-Argon `antigravity_cli-gemini_4_argon-high`; DeepSeek V4.1 Flash `dsh-deepseek_v4_1_flash-high`; GLM 5.3 Flash
-`claude_code-glm_5_3_flash-high`; Qwen3.8 27B `claude_code-qwen3_8_27b-high`.
-
-By directory: 86 easy, 13 hard, 9 unverified.
-
-| base | privileged | standard |
-|---|---|---|
-| `robodojo-align-blocks-i00` | easy: Astra, Opus, DeepSeek V4.1 Flash, GLM 5.3 Flash | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, GLM 5.3 Flash |
-| `robodojo-arrange-largest-number-i00` | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon |
-| `robodojo-arrange-largest-number-random-i00` | easy: Astra, Opus, Gemini 3.8 Flash | easy: Astra, Opus, Gemini 4 Argon |
-| `robodojo-build-tower-i00` | easy: Astra, Opus, Gemini 4 Argon | easy: Opus, Gemini 4 Argon |
-| `robodojo-classify-objects-by-language-i00` | easy: Astra, Opus, Gemini 4 Argon | easy: Astra, Opus, Gemini 4 Argon |
-| `robodojo-classify-objects-i00` | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, GLM 5.3 Flash | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon |
-| `robodojo-cover-blocks-i00` | easy: Luna | unverified |
-| `robodojo-deposit-coin-i00` | easy: Astra, Opus, Gemini 4 Argon | easy: Astra, Opus |
-| `robodojo-fasten-screws-i00` | easy: Luna | easy: Luna |
-| `robodojo-fill-egg-holder-i00` | easy: Astra | hard |
-| `robodojo-fill-pen-holder-i00` | easy: Astra | easy: Astra, Gemini 4 Argon |
-| `robodojo-fold-clothes-i00` | easy: Astra, Opus, Gemini 4 Argon | easy: Astra, Gemini 3.8 Flash, Gemini 4 Argon |
-| `robodojo-fold-clothes-random-i00` | easy: Luna, Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash | easy: Astra, Opus, Gemini 4 Argon |
-| `robodojo-general-pickup-i00` | easy: Luna | easy: Luna |
-| `robodojo-hang-mugs-i00` | easy: Astra, Opus | hard |
-| `robodojo-hang-mugs-random-i00` | hard | easy: Gemini 4 Argon |
-| `robodojo-imitate-sorting-sequence-i00` | easy: Luna | unverified |
-| `robodojo-insert-key-i00` | easy: Astra, Gemini 4 Argon | hard |
-| `robodojo-insert-tubes-i00` | easy: Luna | unverified |
-| `robodojo-make-kong-i00` | easy: Astra, Opus, Gemini 3.8 Flash | hard (only Astra) |
-| `robodojo-make-toast-i00` | easy: Astra | hard |
-| `robodojo-make-toast-random-i00` | easy: Astra, Opus | easy: Opus, Gemini 4 Argon |
-| `robodojo-match-and-pick-from-conveyor-i00` | easy: Luna | easy: Luna |
-| `robodojo-organize-table-i00` | easy: Astra, Gemini 4 Argon | easy: Opus, Gemini 4 Argon |
-| `robodojo-pack-objects-into-box-i00` | easy: Astra, Opus, Gemini 4 Argon | hard |
-| `robodojo-pack-objects-into-box-random-i00` | easy: Astra, Opus, Gemini 4 Argon | easy: Gemini 4 Argon |
-| `robodojo-pick-from-conveyor-by-image-i00` | easy: Astra, Opus | easy: Opus |
-| `robodojo-play-stacking-toy-i00` | easy: Astra, Opus, Gemini 4 Argon | easy: Astra, Opus, Gemini 4 Argon |
-| `robodojo-play-tic-tac-toe-i00` | easy: Luna | unverified |
-| `robodojo-play-xylophone-i00` | unverified | easy: Luna |
-| `robodojo-plug-in-charger-i00` | easy: Astra, Opus, GLM 5.3 Flash | easy: Opus, Gemini 4 Argon |
-| `robodojo-pour-balls-into-vase-i00` | easy: Astra, Opus, Gemini 4 Argon | easy: Astra, Opus, Gemini 3.8 Flash |
-| `robodojo-pour-by-language-i00` | easy: Astra, Opus, Gemini 4 Argon | easy: Opus |
-| `robodojo-pour-liquid-into-cup-i00` | easy: Astra, Opus, Gemini 4 Argon | easy: Astra, Gemini 3.8 Flash, Gemini 4 Argon |
-| `robodojo-pour-liquid-into-cup-random-i00` | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash | easy: Astra, Opus, Gemini 3.8 Flash |
-| `robodojo-press-by-number-i00` | easy: Luna | unverified |
-| `robodojo-push-t-i00` | easy: Astra, Opus, Gemini 3.8 Flash, DeepSeek V4.1 Flash, GLM 5.3 Flash | easy: Astra, Opus |
-| `robodojo-push-t-random-i00` | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash |
-| `robodojo-put-bottles-into-dustbin-i00` | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon | easy: Opus, Gemini 3.8 Flash, Gemini 4 Argon |
-| `robodojo-solve-equation-i00` | easy: Luna | unverified |
-| `robodojo-sort-nesting-dolls-by-size-i00` | easy: Astra, Opus, Gemini 4 Argon | easy: Astra, Opus |
-| `robodojo-sort-nesting-dolls-by-size-random-i00` | easy: Luna | unverified |
-| `robodojo-stack-blocks-by-language-i00` | easy: Luna | easy: Luna |
-| `robodojo-stack-blocks-i00` | easy: Luna | easy: Luna |
-| `robodojo-stack-blocks-random-i00` | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash, GLM 5.3 Flash | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash, GLM 5.3 Flash |
-| `robodojo-stack-bowls-i00` | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon |
-| `robodojo-stack-bowls-random-i00` | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon | easy: Astra, Opus |
-| `robodojo-store-laptop-and-headphones-i00` | easy: Astra | hard |
-| `robodojo-store-laptop-and-headphones-random-i00` | hard | hard |
-| `robodojo-store-tools-in-toolbox-i00` | easy: Astra | hard |
-| `robodojo-swap-blocks-i00` | easy: Astra | hard |
-| `robodojo-swap-t-i00` | easy: Luna | easy: Luna |
-| `robodojo-sweep-blocks-i00` | easy: Luna | unverified |
-| `robodojo-sweep-blocks-random-i00` | easy: Astra, Opus | hard (only Astra) |
-
-Judgment calls: `robodojo-put-bottles-into-dustbin-i00`: the standard solves by Opus and Gemini 3.8 Flash relayed a
-bottle over the table instead of the suggested handover, which the task text says is not enforced.
+- **No reference solution.** RoboDojo releases no expert or planner script, and its training demonstrations (Hugging
+  Face, `data/`) record no initial state or layout, so none replays on a frozen layout. Every task is
+  `oracle = "none"`.
+- **Resources.** Measured on the heaviest scene (`pour_liquid_into_cup_random`: GPU PhysX liquid and 15-20 clutter
+  objects) on an RTX 4090: one Isaac session (the privileged main container, or the standard sidecar) peaks at about
+  16 GiB of memory and 9.0-9.5 GiB of GPU memory and uses every core it is given while Isaac starts; a filmed verifier
+  replay 15.7 GiB and 9.6 GiB. The privileged GPU-memory cap holds one session; a second one at once can go over it.
+  The caps are in `scripts/task_resources.toml`.
+- **Image.** `images/robodojo/` is a recipe that needs no build context, copied verbatim into every task's Dockerfile
+  (privileged: `environment/` and `tests/`; standard: the sidecar's `environment/sim/Dockerfile`) as the stage
+  `robodojo-base`. Isaac keeps generated Python in its Kit cache: the verifier and the standard sidecar mount their own
+  `*_trusted` cache volumes, scoped to the trial's compose project.

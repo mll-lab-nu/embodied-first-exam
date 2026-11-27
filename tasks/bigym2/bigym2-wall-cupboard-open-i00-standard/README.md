@@ -1,37 +1,37 @@
-# bigym2-wall-cupboard-open-i00-standard
+# BiGym 2.0 · wall-cupboard-open (standard)
 
 | | |
 |---|---|
-| Benchmark | BiGym 2.0 |
-| Mode | standard (`eai-standard/3.0`) |
-| Twin | `bigym2-wall-cupboard-open-i00-privileged` |
-| Simulator / robot | `bigym2` / `unitree-g1-dex1` |
-| Family / instance | `wall-cupboard-open` / seed 0 |
-| Oracle | `none` — no reference solution (BiGym 2.0 ships no expert or planner; its demonstrations and its agents' programs stay off the agent's network); positive example graded 1 by the separate verifier: bigym2-wall-cupboard-open-i00-pr__mcuR6nu (run codex-gpt6_luna-medium, 2026-10-08, on an earlier text of the privileged task; regraded by its current verifier); human review in PR #123 |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:bigym2-0.1.1` |
+| Task ID | `bigym2-wall-cupboard-open-i00-standard` |
+| Benchmark | [BiGym 2.0](https://github.com/swirl-uk/BiGym2) (Zhang et al., 2026), upstream `swirl-uk/BiGym2@93ad4b3` |
+| Robot | Unitree G1 humanoid (29 DoF) with Dex1-1 two-finger grippers; legs and waist driven by NVIDIA's GR00T-WBC walking policy |
+| Mode | standard |
+| Instance | `wall-cupboard-open`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | None |
 
 ## Task
-Open both doors of the wall cabinet all the way. (BiGym 2.0 `wall_cupboard_open`; the robot as a service: its three onboard cameras and its proprioception only, one
-episode.)
+Open both doors of the wall cabinet all the way.
 
-## Difficulty
-Two hinged doors above the counter, both opened to within about 9 degrees of fully open at the same time. In standard mode the agent sees only the robot's cameras (the head camera looks down at the hands at the
-start) and proprioception, acts through the client, and gets one episode, no reset.
+## Success criteria
+Success predicate (upstream `WallCupboardOpenG1`): both doors of the wall cabinet are each open to within 10% of
+their travel from fully open, at the same time. Held for 1 s (50 consecutive control steps), with no fall in the
+episode: the pelvis tilting past about 53° or dropping below 0.30 m makes the episode a failure without ending it.
 
-## Reference solution
-None (as `bigym2-wall-cupboard-open-i00-privileged`).
+Failure (ends the episode at once with 0): the pelvis more than 10 m from the scene's origin.
 
-## Verification
-The sim sidecar judges the live episode with BiGym's own success check (`is_success`: the task's success held for 1 s,
-no fall) and writes that verdict to `/data/final.json` (`graded_by = "live"`); nothing is replayed to grade it (owner,
-2026-10-17). The scene's start is checked against the frozen instance (`instance.json`'s `t0`) when an
-episode begins (a mismatch is `instance_mismatch`, infrastructure). `tests/grade.py` reads `final.json`: pass iff the
-live episode succeeded. The video (`replay.mp4`) is rendered from `trajectory.npz` in one pass after the verdict and
-never changes it. Success condition: both doors of the wall cabinet are open to within 10% of their travel (within about 9 degrees of fully open), at the same time. No oracle; human review in PR #123 (PROTOCOL §4).
+Graded: the live episode, judged by the simulator service; nothing is replayed. Reaching the goal does not end the
+episode and is not shown to the agent. The episode ends at the agent's `/finish`, at the horizon (1,450
+control steps, 29 s of robot time), when the agent's time (1 h) runs out, or at a failure above,
+which scores 0. After it ends, the robot holds its last command, standing still, for 1 s more (50 control steps).
+The task is passed if at the end of that second upstream's success predicate has held for 50 consecutive control
+steps and the robot has not fallen at any time in the episode or the hold; a failure during the hold scores 0.
+Resets granted: 0. A reset starts a new episode from the frozen start; only the episode after the last reset
+is graded. A simulator error raised by the agent's own call ends the episode with 0. An episode that does not start
+from the frozen instance, or a service crash outside the agent's calls, is an infrastructure failure, not a score.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -42,9 +42,10 @@ Caps per container (PROTOCOL §6).
 - GPU: any NVIDIA GPU, held by `sim`.
 - Recommended GPU: any 8 GB+ NVIDIA GPU (RTX 4090 / L4).
 
-## Details
-| | |
-|---|---|
-| Service | `environment/sim/server.py` (the BiGym 2.0 adapter) on `rcb_service.py` (eai-standard/3.0), `rcb_bigym2.py`, `instance.json` (= the privileged twin's) |
-| Observations | three onboard RGB cameras (`RCB_IMAGE_HW`, default 84 px square, as upstream renders them, 60° field of view); upstream's low-dimensional observation (joints, grippers, tracked pelvis pose) |
-| Horizon | 1450 control steps (29 s at 50 Hz) |
+## License
+BiGym 2.0 ([swirl-uk/BiGym2](https://github.com/swirl-uk/BiGym2) @ `93ad4b3`, `bigym` 1.0.0) is released under the
+Apache License 2.0. Bundled components keep their own licences: the Unitree G1 description (BSD 3-Clause) in AMO's
+MuJoCo packaging (Apache License 2.0); the scene props (CC0 or CC BY 4.0, attributions in upstream's
+`bigym/envs/xmls/3D_MODELS_ATTRIBUTION.md`); NVIDIA's GR00T-WBC weights, redistributed under the NVIDIA Open Model
+License (upstream's `NOTICE` and `THIRD_PARTY_NOTICES.md`). The simulator is MuJoCo 3.8.1 (Apache License 2.0). No
+non-commercial terms apply.

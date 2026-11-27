@@ -1,0 +1,319 @@
+# README data for tasks/dextoolbench/*/README.md (scripts/task_conventions.py render_readme_v3)
+#
+# Sources checked for every success text:
+#   rule      embodied_first_exam/benchmarks/dextoolbench/privileged/environment/rcb_dtb.py (the tooling, copied into
+#             the privileged task's image, its verifier and the standard sim sidecar): SUCCESS_TOL_M = 0.01 * 1.5 (L49),
+#             KEYPOINT_HALF / CORNERS (L50-51: one box for every tool, 1.5 x (0.141, 0.03025, 0.0271) m, centred on the
+#             body "object" frame), keypoint_distance() L119-123 (max over the 8 corners), Session._track() L223-231
+#             (only goal_index is tested, `< SUCCESS_TOL_M`; reached -> goal_index + 1 and steps_on_goal = 0; else
+#             steps_on_goal >= GOAL_TIMEOUT_STEPS -> failed), GOAL_TIMEOUT_STEPS L48 (RCB_DTB_GOAL_TIMEOUT_S, default
+#             30 s = 1800 control steps), Session.step() L212-221 (targets clipped to the actuator ranges), replay()
+#             L270-278 (stops at done or failed).
+#   graders   embodied_first_exam/benchmarks/dextoolbench/privileged/tests/grade.py (one replay; success = done);
+#             embodied_first_exam/benchmarks/dextoolbench/sim/server_mj.py _ctrl_step() L624-633, finalize() L846-890,
+#             do_reset() L824-840, and .../standard/tests/grade.py (success = final.json success AND live AND no infra
+#             AND reason != "error").
+#   upstream  tylerlum/simtoolreal @ 313d5ae: dextoolbench/eval_isaacsim.py L158-160 (eval_success_tolerance 0.01,
+#             success_steps 1), isaacgymenvs/cfg/task/SimToolReal.yaml (keypointScale 1.5, episodeLength 600 = the
+#             per-goal limit, 10 s at 60 Hz), isaacgymenvs/tasks/simtoolreal/env.py L2131-2143 (fixed-size keypoints),
+#             L2606-2611 (near goal: max keypoint distance <= tolerance x keypoint scale).
+#   goals     the number of goal poses = len(instance.json "goals") = len(goals) of upstream's
+#             dextoolbench/trajectories/<category>/<object>/<task>.json (checked for all 21).
+
+[benchmark]
+name = "DexToolBench"
+citation = "Kedia, Lum et al., 2026"     # upstream README "Citation": SimToolReal (Kedia, Lum, Bohg, Liu), arXiv:2602.16863
+url = "https://simtoolreal.github.io/"
+repo = "tylerlum/simtoolreal"
+commit = "313d5ae"
+
+[license]
+text = """
+DexToolBench is part of SimToolReal ([tylerlum/simtoolreal](https://github.com/tylerlum/simtoolreal) @ `313d5ae`),
+released under the [MIT License](https://github.com/tylerlum/simtoolreal/blob/313d5aea1f507c6cfe097b672b62945d7b0bbff5/LICENSE)
+(Copyright (c) 2026 Tyler Lum). The tool meshes, the goal trajectories and the Sharpa HA4 hand model used here ship in
+that repository. The KUKA iiwa 14 model is from [MuJoCo Menagerie](https://github.com/google-deepmind/mujoco_menagerie/tree/1b86ece576591213e2b666ebf59508454200ca97/kuka_iiwa_14)
+@ `1b86ece` (BSD 3-Clause License). The simulator is MuJoCo 3.3.7 (Apache License 2.0). No non-commercial terms apply.
+SimToolReal's training code and pretrained policy are not part of the task image.
+"""
+
+[robots]
+kuka-iiwa14-sharpa-ha4 = "KUKA iiwa 14 arm with a left Sharpa HA4 dexterous hand (22 joints): 29 position-controlled joints"
+
+# A pose is reached: rcb_dtb.py keypoint_distance() < SUCCESS_TOL_M = 0.015 m, tested in _track() after every
+# Session.step() for the current goal only; at most one goal per control step (the next goal is tested from the next step).
+# privileged/tests/grade.py main(): no file -> missing_trajectory; np.load(allow_pickle=False)["actions"] as float64
+# fails, or not 2-D, or shape[1] != 29, or > MAX_TRAJ_STEPS = 360,000 rows, or not finite -> bad_trajectory (success 0);
+# Session("/tests/instance.json").replay(A) (rcb_dtb.py L270-278: reset, step each row, stop at done or failed);
+# success = r1["done"]; GOAL_TIMEOUT_STEPS = 1800 (no RCB_DTB_GOAL_TIMEOUT_S in tests/: the default 30 s); any exception
+# -> grader_error 1, success 0. tests/Dockerfile: the verifier's own rcb_dtb.py, grade.py and instance.json;
+# task.toml [verifier] network_mode = "no-network".
+[modes.privileged]
+success = """
+A pose is reached at a control step when each of the 8 corners of a box fixed to the tool (21.15 × 4.54 × 4.07 cm,
+centred on the tool's frame origin; the same box for every tool) is less than 1.5 cm from where that corner is with the
+tool at the pose. Only the current pose is tested, once after every control step; when it is reached, the next pose
+becomes current from the next control step on.
+
+Graded file: `/app/output/trajectory.npz`, array `actions` of shape (T, 29) with T at most 360,000: one row of joint
+position targets per control step (1/60 s); targets outside the joint limits are clipped. After the agent's session
+the verifier, in a separate container without network, replays it once, open-loop, from the frozen start with its own
+copy of the tooling and the instance. Each pose must be reached within 1,800 control steps (30 s) after the previous
+one was reached (the first pose: after the start); otherwise the replay stops there and the task fails. The replay also
+stops when the last pose is reached; later rows are not run. A trajectory whose rows run out before the last pose is
+reached fails.
+
+A missing file scores 0, and so does one that cannot be read as an `.npz` with a numeric `actions` array, or whose
+array has another shape, more than 360,000 rows, or a NaN or infinite value. An error inside the grader also scores 0
+and is flagged as `grader_error`.
+"""
+
+# sim/server_mj.py (environment/docker-compose.yaml: RCB_AGENT_END=1, RCB_DTB_GOAL_TIMEOUT_S=0, RCB_MAX_CONTROL_STEPS=
+# 360000, RCB_RESET_BUDGET default 20, RCB_START_SHA): _ctrl_step() runs S.step() (the tracker) on every executed control
+# step; reaching every goal only sets the hidden success (never shown: meta["task"] keeps the last goal, goals_reached
+# stops at n_goals - 1); len(RECORD) >= 360,000 -> finish("step_limit"). /finish -> "finished"; SIGUSR1 at the session's
+# end -> "timeout". do_reset(): the episode ends with "reset", S.reset() (goal_index 0), RECORD cleared. finalize():
+# success = S.progress()["done"] (the tracker stops once done, so later motion cannot undo it) AND reason in
+# ("finished", "timeout", "step_limit"); reason "error" (a 500 / a failed reset) -> 0; give-up after MAX_RESUMES = 2
+# resumes: sim_crashed_on_call (all crashes inside calls) -> the agent's 0, else sim_crashed / resume_failed ->
+# infra_error. A start-state hash other than RCB_START_SHA -> instance_mismatch (infra_error). standard/tests/grade.py:
+# missing / unreadable / unfinalized final.json -> infra_error.
+[modes.standard]
+success = """
+A pose is reached at a control step when each of the 8 corners of a box fixed to the tool (21.15 × 4.54 × 4.07 cm,
+centred on the tool's frame origin; the same box for every tool) is less than 1.5 cm from where that corner is with the
+tool at the pose. Only the current pose is tested, once after every control step; when it is reached, the next pose
+becomes current from the next control step on.
+
+Graded: the live episode, judged by the simulator service as it runs; nothing is replayed. The service tests the
+current pose after every control step it executes, and poses have no time limit. Reaching the last pose neither ends
+the episode nor is shown to the agent. The episode ends at the agent's `/finish`, after 360,000 control steps of the
+episode (100 min of robot time), or when the agent's session ends (at the latest after {timeout}). It passes if every
+pose was reached in order at some control step before it ended; moving the tool afterwards does not undo that. The
+agent has {resets} resets; each abandons the running episode and starts a new one from the frozen start, with the first
+pose current again. Only the last episode is graded.
+
+An episode ended by a simulator error scores 0, and so does one ended because the service crashed repeatedly inside
+the agent's own calls. An episode that does not start from the frozen instance (its state hash), a service that
+crashes between calls or cannot resume the episode, or a missing verdict is an infrastructure failure, not a score.
+"""
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Families: the goal sequence (the rule and the graded episode: [modes]). goals = len(instance.json "goals"), equal to
+# upstream's dextoolbench/trajectories/<category>/<object>/<task>.json; tool = the instruction's name for the tool.
+
+
+# rcb_dtb.Session: goals = instance.json "goals" (34); upstream trajectories/brush/blue_brush/sweep_forward.json goals: 34.
+[families."dextoolbench/brush/blue_brush/sweep_forward"]
+vars = { tool = "blue brush", demo = "blue_brush / sweep_forward", goals = 34 }
+success = """
+The goal is a fixed sequence of {vars[goals]} poses of the {vars[tool]} (position and orientation in the
+world frame), from DexToolBench's `{vars[demo]}` demonstration; the scene shows the current
+pose as a green ghost tool. The task passes only when all {vars[goals]} poses have been reached, one after
+another in the given order.
+"""
+
+# rcb_dtb.Session: goals = instance.json "goals" (38); upstream trajectories/brush/red_brush/sweep_forward.json goals: 38.
+[families."dextoolbench/brush/red_brush/sweep_forward"]
+vars = { tool = "red brush", demo = "red_brush / sweep_forward", goals = 38 }
+success = """
+The goal is a fixed sequence of {vars[goals]} poses of the {vars[tool]} (position and orientation in the
+world frame), from DexToolBench's `{vars[demo]}` demonstration; the scene shows the current
+pose as a green ghost tool. The task passes only when all {vars[goals]} poses have been reached, one after
+another in the given order.
+"""
+
+# rcb_dtb.Session: goals = instance.json "goals" (38); upstream trajectories/brush/red_brush/sweep_right.json goals: 38.
+[families."dextoolbench/brush/red_brush/sweep_right"]
+vars = { tool = "red brush", demo = "red_brush / sweep_right", goals = 38 }
+success = """
+The goal is a fixed sequence of {vars[goals]} poses of the {vars[tool]} (position and orientation in the
+world frame), from DexToolBench's `{vars[demo]}` demonstration; the scene shows the current
+pose as a green ghost tool. The task passes only when all {vars[goals]} poses have been reached, one after
+another in the given order.
+"""
+
+# rcb_dtb.Session: goals = instance.json "goals" (31); upstream trajectories/eraser/handle_eraser/wipe_c.json goals: 31.
+[families."dextoolbench/eraser/handle_eraser/wipe_c"]
+vars = { tool = "handle eraser", demo = "handle_eraser / wipe_c", goals = 31 }
+success = """
+The goal is a fixed sequence of {vars[goals]} poses of the {vars[tool]} (position and orientation in the
+world frame), from DexToolBench's `{vars[demo]}` demonstration; the scene shows the current
+pose as a green ghost tool. The task passes only when all {vars[goals]} poses have been reached, one after
+another in the given order.
+"""
+
+# rcb_dtb.Session: goals = instance.json "goals" (29); upstream trajectories/eraser/handle_eraser/wipe_smile.json goals: 29.
+[families."dextoolbench/eraser/handle_eraser/wipe_smile"]
+vars = { tool = "handle eraser", demo = "handle_eraser / wipe_smile", goals = 29 }
+success = """
+The goal is a fixed sequence of {vars[goals]} poses of the {vars[tool]} (position and orientation in the
+world frame), from DexToolBench's `{vars[demo]}` demonstration; the scene shows the current
+pose as a green ghost tool. The task passes only when all {vars[goals]} poses have been reached, one after
+another in the given order.
+"""
+
+# rcb_dtb.Session: goals = instance.json "goals" (37); upstream trajectories/hammer/claw_hammer/swing_down.json goals: 37.
+[families."dextoolbench/hammer/claw_hammer/swing_down"]
+vars = { tool = "claw hammer", demo = "claw_hammer / swing_down", goals = 37 }
+success = """
+The goal is a fixed sequence of {vars[goals]} poses of the {vars[tool]} (position and orientation in the
+world frame), from DexToolBench's `{vars[demo]}` demonstration; the scene shows the current
+pose as a green ghost tool. The task passes only when all {vars[goals]} poses have been reached, one after
+another in the given order.
+"""
+
+# rcb_dtb.Session: goals = instance.json "goals" (40); upstream trajectories/hammer/claw_hammer/swing_side.json goals: 40.
+[families."dextoolbench/hammer/claw_hammer/swing_side"]
+vars = { tool = "claw hammer", demo = "claw_hammer / swing_side", goals = 40 }
+success = """
+The goal is a fixed sequence of {vars[goals]} poses of the {vars[tool]} (position and orientation in the
+world frame), from DexToolBench's `{vars[demo]}` demonstration; the scene shows the current
+pose as a green ghost tool. The task passes only when all {vars[goals]} poses have been reached, one after
+another in the given order.
+"""
+
+# rcb_dtb.Session: goals = instance.json "goals" (36); upstream trajectories/hammer/mallet_hammer/swing_down.json goals: 36.
+[families."dextoolbench/hammer/mallet_hammer/swing_down"]
+vars = { tool = "mallet hammer", demo = "mallet_hammer / swing_down", goals = 36 }
+success = """
+The goal is a fixed sequence of {vars[goals]} poses of the {vars[tool]} (position and orientation in the
+world frame), from DexToolBench's `{vars[demo]}` demonstration; the scene shows the current
+pose as a green ghost tool. The task passes only when all {vars[goals]} poses have been reached, one after
+another in the given order.
+"""
+
+# rcb_dtb.Session: goals = instance.json "goals" (32); upstream trajectories/hammer/mallet_hammer/swing_side.json goals: 32.
+[families."dextoolbench/hammer/mallet_hammer/swing_side"]
+vars = { tool = "mallet hammer", demo = "mallet_hammer / swing_side", goals = 32 }
+success = """
+The goal is a fixed sequence of {vars[goals]} poses of the {vars[tool]} (position and orientation in the
+world frame), from DexToolBench's `{vars[demo]}` demonstration; the scene shows the current
+pose as a green ghost tool. The task passes only when all {vars[goals]} poses have been reached, one after
+another in the given order.
+"""
+
+# rcb_dtb.Session: goals = instance.json "goals" (36); upstream trajectories/marker/sharpie_marker/draw_smile.json goals: 36.
+[families."dextoolbench/marker/sharpie_marker/draw_smile"]
+vars = { tool = "sharpie marker", demo = "sharpie_marker / draw_smile", goals = 36 }
+success = """
+The goal is a fixed sequence of {vars[goals]} poses of the {vars[tool]} (position and orientation in the
+world frame), from DexToolBench's `{vars[demo]}` demonstration; the scene shows the current
+pose as a green ghost tool. The task passes only when all {vars[goals]} poses have been reached, one after
+another in the given order.
+"""
+
+# rcb_dtb.Session: goals = instance.json "goals" (25); upstream trajectories/marker/sharpie_marker/write_c.json goals: 25.
+[families."dextoolbench/marker/sharpie_marker/write_c"]
+vars = { tool = "sharpie marker", demo = "sharpie_marker / write_c", goals = 25 }
+success = """
+The goal is a fixed sequence of {vars[goals]} poses of the {vars[tool]} (position and orientation in the
+world frame), from DexToolBench's `{vars[demo]}` demonstration; the scene shows the current
+pose as a green ghost tool. The task passes only when all {vars[goals]} poses have been reached, one after
+another in the given order.
+"""
+
+# rcb_dtb.Session: goals = instance.json "goals" (49); upstream trajectories/marker/staples_marker/draw_smile.json goals: 49.
+[families."dextoolbench/marker/staples_marker/draw_smile"]
+vars = { tool = "staples marker", demo = "staples_marker / draw_smile", goals = 49 }
+success = """
+The goal is a fixed sequence of {vars[goals]} poses of the {vars[tool]} (position and orientation in the
+world frame), from DexToolBench's `{vars[demo]}` demonstration; the scene shows the current
+pose as a green ghost tool. The task passes only when all {vars[goals]} poses have been reached, one after
+another in the given order.
+"""
+
+# rcb_dtb.Session: goals = instance.json "goals" (29); upstream trajectories/marker/staples_marker/write_c.json goals: 29.
+[families."dextoolbench/marker/staples_marker/write_c"]
+vars = { tool = "staples marker", demo = "staples_marker / write_c", goals = 29 }
+success = """
+The goal is a fixed sequence of {vars[goals]} poses of the {vars[tool]} (position and orientation in the
+world frame), from DexToolBench's `{vars[demo]}` demonstration; the scene shows the current
+pose as a green ghost tool. The task passes only when all {vars[goals]} poses have been reached, one after
+another in the given order.
+"""
+
+# rcb_dtb.Session: goals = instance.json "goals" (31); upstream trajectories/screwdriver/long_screwdriver/spin_horizontal.json goals: 31.
+[families."dextoolbench/screwdriver/long_screwdriver/spin_horizontal"]
+vars = { tool = "long screwdriver", demo = "long_screwdriver / spin_horizontal", goals = 31 }
+success = """
+The goal is a fixed sequence of {vars[goals]} poses of the {vars[tool]} (position and orientation in the
+world frame), from DexToolBench's `{vars[demo]}` demonstration; the scene shows the current
+pose as a green ghost tool. The task passes only when all {vars[goals]} poses have been reached, one after
+another in the given order.
+"""
+
+# rcb_dtb.Session: goals = instance.json "goals" (100); upstream trajectories/screwdriver/long_screwdriver/spin_vertical.json goals: 100.
+[families."dextoolbench/screwdriver/long_screwdriver/spin_vertical"]
+vars = { tool = "long screwdriver", demo = "long_screwdriver / spin_vertical", goals = 100 }
+success = """
+The goal is a fixed sequence of {vars[goals]} poses of the {vars[tool]} (position and orientation in the
+world frame), from DexToolBench's `{vars[demo]}` demonstration; the scene shows the current
+pose as a green ghost tool. The task passes only when all {vars[goals]} poses have been reached, one after
+another in the given order.
+"""
+
+# rcb_dtb.Session: goals = instance.json "goals" (38); upstream trajectories/screwdriver/short_screwdriver/spin_horizontal.json goals: 38.
+[families."dextoolbench/screwdriver/short_screwdriver/spin_horizontal"]
+vars = { tool = "short screwdriver", demo = "short_screwdriver / spin_horizontal", goals = 38 }
+success = """
+The goal is a fixed sequence of {vars[goals]} poses of the {vars[tool]} (position and orientation in the
+world frame), from DexToolBench's `{vars[demo]}` demonstration; the scene shows the current
+pose as a green ghost tool. The task passes only when all {vars[goals]} poses have been reached, one after
+another in the given order.
+"""
+
+# rcb_dtb.Session: goals = instance.json "goals" (76); upstream trajectories/screwdriver/short_screwdriver/spin_vertical.json goals: 76.
+[families."dextoolbench/screwdriver/short_screwdriver/spin_vertical"]
+vars = { tool = "short screwdriver", demo = "short_screwdriver / spin_vertical", goals = 76 }
+success = """
+The goal is a fixed sequence of {vars[goals]} poses of the {vars[tool]} (position and orientation in the
+world frame), from DexToolBench's `{vars[demo]}` demonstration; the scene shows the current
+pose as a green ghost tool. The task passes only when all {vars[goals]} poses have been reached, one after
+another in the given order.
+"""
+
+# rcb_dtb.Session: goals = instance.json "goals" (45); upstream trajectories/spatula/flat_spatula/flip_over.json goals: 45.
+[families."dextoolbench/spatula/flat_spatula/flip_over"]
+vars = { tool = "flat spatula", demo = "flat_spatula / flip_over", goals = 45 }
+success = """
+The goal is a fixed sequence of {vars[goals]} poses of the {vars[tool]} (position and orientation in the
+world frame), from DexToolBench's `{vars[demo]}` demonstration; the scene shows the current
+pose as a green ghost tool. The task passes only when all {vars[goals]} poses have been reached, one after
+another in the given order.
+"""
+# instance.json start_pose differs from upstream's (z 0.5704 vs 0.5508 m); the old README's "start pose" row.
+others = """
+The spatula's start pose is not the demonstration's: the demonstration's pose, flat on a bare table, would put it
+inside the plate and bowl on this table, so the spatula starts resting on the plate and the bowl's rim.
+"""
+
+# rcb_dtb.Session: goals = instance.json "goals" (33); upstream trajectories/spatula/flat_spatula/serve_plate.json goals: 33.
+[families."dextoolbench/spatula/flat_spatula/serve_plate"]
+vars = { tool = "flat spatula", demo = "flat_spatula / serve_plate", goals = 33 }
+success = """
+The goal is a fixed sequence of {vars[goals]} poses of the {vars[tool]} (position and orientation in the
+world frame), from DexToolBench's `{vars[demo]}` demonstration; the scene shows the current
+pose as a green ghost tool. The task passes only when all {vars[goals]} poses have been reached, one after
+another in the given order.
+"""
+
+# rcb_dtb.Session: goals = instance.json "goals" (40); upstream trajectories/spatula/spoon_spatula/flip_over.json goals: 40.
+[families."dextoolbench/spatula/spoon_spatula/flip_over"]
+vars = { tool = "spoon spatula", demo = "spoon_spatula / flip_over", goals = 40 }
+success = """
+The goal is a fixed sequence of {vars[goals]} poses of the {vars[tool]} (position and orientation in the
+world frame), from DexToolBench's `{vars[demo]}` demonstration; the scene shows the current
+pose as a green ghost tool. The task passes only when all {vars[goals]} poses have been reached, one after
+another in the given order.
+"""
+
+# rcb_dtb.Session: goals = instance.json "goals" (48); upstream trajectories/spatula/spoon_spatula/serve_plate.json goals: 48.
+[families."dextoolbench/spatula/spoon_spatula/serve_plate"]
+vars = { tool = "spoon spatula", demo = "spoon_spatula / serve_plate", goals = 48 }
+success = """
+The goal is a fixed sequence of {vars[goals]} poses of the {vars[tool]} (position and orientation in the
+world frame), from DexToolBench's `{vars[demo]}` demonstration; the scene shows the current
+pose as a green ghost tool. The task passes only when all {vars[goals]} poses have been reached, one after
+another in the given order.
+"""

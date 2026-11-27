@@ -1,242 +1,213 @@
 # MuJoCo Playground
 
-GPU-scale RL environments from Google DeepMind, here in plain MuJoCo on the CPU. This page covers the quadruped
-locomotion tasks; the four manipulation tasks (`mujoco_playground_{aloha,panda}_*`,
-ALOHA and Franka Panda, scripted IK references, `eai-standard/3.0`) predate it and are made by hand.
+## Overview
 
-## Quick start
+Environments from MuJoCo Playground (Zakka et al., 2025), Google DeepMind's GPU-scale RL suite, rebuilt in plain MuJoCo
+on the CPU: nine quadruped locomotion environments and four manipulation environments. Each one is a task family with
+one frozen instance and a binary pass condition that this benchmark defines (Playground has shaped rewards only).
+
+| | |
+|---|---|
+| upstream | [MuJoCo Playground](https://playground.mujoco.org/) (`google-deepmind/mujoco_playground` @ `4057c14`, Apache-2.0), with MuJoCo Menagerie @ `1b86ece` (the commit Playground pins) |
+| simulator | MuJoCo 3.3.7, CPU physics (bit-exact replay); EGL rendering on a GPU, else OSMesa |
+| robots | `unitree-go1` (Unitree Go1), `boston-dynamics-spot` (Boston Dynamics Spot), `google-barkour-vb` (Google Barkour vB): 12 joint position actuators each; `aloha-2` (ALOHA 2, two arms, 14 actuators); `franka-panda` (Franka Emika Panda, 8 actuators) |
+| score | binary: the pass condition of each environment, defined here (Changes from upstream) |
+| tasks | 13 families, 27 task directories: `tasks/mujoco-playground/mujoco_playground_<env>-privileged` and `-standard` for every family; BarkourJoystick, the one dynamic environment, also `-realtime` |
+| images | `ghcr.io/mll-lab-nu/efe:mujoco-0.1.3` (quadrupeds; `images/mujoco/`: 0.1.2 plus Playground's `locomotion/{go1,spot}` scenes and Menagerie's Go1, Spot and Barkour, every 0.1.2 file unchanged); `ghcr.io/mll-lab-nu/efe:mujoco-0.1.2` (manipulation) |
+| oracle | full, every task |
+
+Quick start:
 ```bash
-harbor run -d embodied-first-exam@all -p tasks/mujoco-playground -a codex -m openai/gpt-6-astra
+harbor run -d embodied-first-exam@all -p tasks/mujoco-playground -a <agent> -m <model>
 ```
 Every image is public: Harbor pulls it.
 
-| | |
+| mode | the agent gets | resets | graded |
+|---|---|---|---|
+| privileged | the simulator (`rcb_quadruped`, `rcb_aloha` or `rcb_panda` `Session`) and its full state | unlimited | its `trajectory.npz`, replayed once in the verifier |
+| standard | cameras and the robot's own sensors through a client; quadrupeds also the feet's kinematics | quadrupeds 10 (`RCB_RESET_BUDGET`); manipulation none | the last episode, as the service ran it (live; nothing replayed) |
+| realtime (BarkourJoystick only) | as standard, minus the kinematics, plus the joystick command in the proprioception; time does not stop (S = 1) | 10 (`RCB_RESET_BUDGET`) | the last episode, as the service ran it (live) |
+
+## Upstream and license
+
+- MuJoCo Playground, [google-deepmind/mujoco_playground](https://github.com/google-deepmind/mujoco_playground), pinned at
+  `4057c14`: Apache License 2.0. Citation: Zakka et al., 2025, "MuJoCo Playground: An open-source framework for
+  GPU-accelerated robot learning and sim-to-real transfer".
+- Robot models from MuJoCo Menagerie, [google-deepmind/mujoco_menagerie](https://github.com/google-deepmind/mujoco_menagerie)
+  @ `1b86ece`, each under its own license: Unitree Go1 (BSD 3-Clause, Unitree Robotics), Boston Dynamics Spot
+  (BSD 3-Clause, Clearpath Robotics), Google Barkour vB (Apache License 2.0, DeepMind), ALOHA 2 (BSD 3-Clause, Trossen
+  Robotics), Franka Emika Panda (Apache License 2.0).
+- The rough-terrain texture is Poly Haven's (CC0). No non-commercial terms apply anywhere.
+- `images/mujoco/prepare_assets.sh` clones both repositories at those commits and copies only the scene XMLs, the robot
+  models and their licenses into the image (`/opt/rcb_mj`); Playground's training code and policies are not in it.
+
+## Changes from upstream
+
+### Success: defined by this benchmark
+
+Upstream MuJoCo Playground defines, for every one of these 13 environments, only a shaped training reward and a
+termination rule: there is no success test. The binary pass condition of each family is this benchmark's own,
+built from Playground's termination rules, reward targets and scene geometry. It is defined in the tooling's
+`Session.check()` and applied by the graders:
+
+| families | condition defined in | privileged grader | standard / realtime verdict |
+|---|---|---|---|
+| quadrupeds | `privileged/environment/rcb_quadruped.py` (`check`, `terminated`) | `privileged/tests/grade.py` | `sim/server.py` + `standard/tests/grade.py`; realtime: the task's `environment/sim/server.py` on the sidecar service `rcb_service.py` (`standard-files`) |
+| ALOHA | `privileged/environment/rcb_aloha.py` (`check`, `_check_handover`) | `privileged/tests/variants/72df271117/grade.py` | `sim/server_mj.py` + DexToolBench's `standard/tests/grade.py` (shared MuJoCo verifier) |
+| Panda | `privileged/environment/rcb_panda.py` (`check`) | `privileged/tests/variants/c5bde2d42e/grade.py` | as ALOHA |
+
+Paths are under `embodied_first_exam/benchmarks/mujoco-playground/` (DexToolBench's under
+`embodied_first_exam/benchmarks/dextoolbench/`). The conditions in short (each task README has the full text):
+
+| family | pass condition |
 |---|---|
-| upstream | [MuJoCo Playground](https://playground.mujoco.org/) (Apache-2.0) @ `4057c14`, with MuJoCo Menagerie @ `1b86ece` (the commit Playground pins) |
-| simulator | MuJoCo 3.3.7, CPU physics (bit-exact replay); EGL rendering on a GPU, else OSMesa |
-| robots | `unitree-go1` (Unitree Go1), `boston-dynamics-spot` (Boston Dynamics Spot), `google-barkour-vb` (Google Barkour vB); 12 joint position actuators each |
-| score | binary, defined here from Playground's termination rules and reward targets (Playground has shaped RL rewards only) |
-| tasks | Playground's 9 quadruped environments × 2 modes: `tasks/mujoco-playground/mujoco_playground_<env>-privileged` and `-standard` (`eai-standard/3.0`); BarkourJoystick, the one dynamic environment, also `-realtime` (`eai-standard/3.0`) |
-| image | `ghcr.io/mll-lab-nu/efe:mujoco-0.1.3` (`images/mujoco/`: 0.1.2 plus Playground's `locomotion/{go1,spot}` scenes and Menagerie's Go1, Spot and Barkour; every 0.1.2 file is unchanged; the four manipulation tasks build on `efe:mujoco-0.1.2`) |
-| oracle | full, both modes |
+| joystick (Go1 flat and rough, Spot flat, Spot gait tracking, Barkour) | all 1000 control steps with no termination; in every command segment, after its first 25 control steps, mean planar velocity error ≤ 0.2 m/s and mean yaw-rate error ≤ 0.3 rad/s (IMU velocimeter and gyro); gait tracking also mean RMS foot-height error to Playground's gait curve (`gait.get_rz`) ≤ 0.05 m |
+| getup (Go1, Spot) | the last 25 control steps all with the trunk tilted ≤ 10° and the IMU ≥ 0.22 m (Go1; it stands at 0.255-0.26 m with Playground's gains) or ≥ 0.40 m (Spot; 0.44 m) above the floor |
+| handstand / footstand (Go1) | no termination; the last 100 control steps (2 s) all with the trunk's forward axis within 30° of straight down / up, the IMU ≥ 0.40 m (Playground aims at 0.55 / 0.53 m) and the feet of the lifted pair off the floor |
+| AlohaHandOver | at the end: the box < 3 cm from the target, touching a right-gripper finger and nothing of the left arm, its centre ≥ 0.05 m high |
+| AlohaSinglePegInsertion | at the end: the peg tip < 5 mm from the socket axis, axial parameter −0.875 ≤ t ≤ 0.75 (inside the cavity, at least 12 mm in from the open end) |
+| PandaPickCubeOrientation | at the end: the box < 2 cm and < 15° from the target |
+| PandaOpenCabinet | at the end: the handle < 1.5 cm from the target along the slide (x) |
 
-## Tasks
+Terminations: Playground's own fall rules are kept (Go1 joystick: the trunk's up axis below the horizon; Spot: up
+axis z below 0.85, about 32°; Barkour: up axis below the horizon, a joint outside its box, the torso under 0.18 m;
+Go1 handstand / footstand: up axis z below −0.25 or a front-leg thigh, calf or hip on the floor). Playground's
+energy terminations (getup, handstand, footstand) and the manipulation environments' out-of-bounds termination are not
+applied. A termination is a failure at any step; the getup families have none.
 
-| robot | environment | what it asks | horizon | instance | reference |
-|---|---|---|---|---|---|
-| Go1 | Go1JoystickFlatTerrain | track a joystick schedule (4 segments) on flat ground | 1000 steps, 20 s | seed 0 | Playground's Go1 policy |
-| | Go1JoystickRoughTerrain | the same (7 segments) on a 20 x 20 m heightfield, bumps up to 5 cm | 1000, 20 s | seed 1 | Playground's Go1 policy |
-| | Go1Getup | get up from a drop (lying tilted 110 deg) and stand | 300, 6 s | seed 5 | trained policy + scripted stand |
-| | Go1Handstand | balance on the front legs, nose down, for 2 s | 500, 10 s | seed 0 | trained policy |
-| | Go1Footstand | stand on the hind legs, nose up, for 2 s | 500, 10 s | seed 0 | trained policy (training-only changes) |
-| Spot | SpotFlatTerrainJoystick | track a joystick schedule (5 segments) | 1000, 20 s | seed 0 | trained policy |
-| | SpotGetup | get up from a 1 m drop (lying tilted 128 deg) and stand | 300, 6 s | seed 1 | trained policy |
-| | SpotJoystickGaitTracking | joystick tracking with a commanded gait (here pace at 3.66 Hz, 0.129 m swing) | 1000, 20 s | seed 0 | trained policy (command observed) |
-| Barkour | BarkourJoystick | joystick tracking (2 segments) through 12 pushes of up to 35 N | 1000, 10 s | seed 2 | trained policy |
+ALOHA peg insertion: site `socket_rear` is at the tube's centre (t = 0; 0.048 m per unit of t, t = 1 at
+`socket_entrance`); the lower bound is the inner face of the rear wall read from the model (t = −0.833) minus
+`REAR_MARGIN_M` = 2 mm for the contact's give: −0.875. Playground's shaped reward for it peaks at the tube's centre.
 
-## Task definition
+### Scenes, instances and actions
+
 - **Scene.** Playground's scene XML and asset set, loaded the way Playground's `get_assets()` does (bare file names from
   its `xmls/` and Menagerie's robot directory; Barkour: Menagerie's scene plus the foot-contact sensors its environment
   adds), with the drive gains Playground's environment sets (`Kp` as the actuator gain, `Kd` as joint damping; an
-  actuator's own `kv` stays). One control step = 5 physics steps: 20 ms (Go1, Spot), 10 ms (Barkour, see below).
-- **Instance.** One episode as Playground's own `reset` draws it with `jax.random.PRNGKey(seed)` (Playground's
-  code): the start state and, for the joystick tasks, the command schedule (and Barkour's pushes, Spot gait
-  tracking's gait) that the environment's command process draws over the episode, its per-step key splits replayed
-  exactly; the draws do not depend on the physics while the episode does not terminate. Getup: the drop's start state;
-  the 0.5 s settle runs in the task's own MuJoCo. `instance.json` holds the start, the schedule, the t = 0 state hash
-  and the numbers the texts quote.
-- **Selection** (never looking at an agent's result): seeds in order; skip a joystick schedule
-  that is mostly standstill (under half the episode commanding |v_xy| >= 0.3 m/s or |w_z| >= 0.3 rad/s), Barkour pushes
-  that are null or weak (peak under 20% of the torso's weight), a getup start that is not a fall (no drop, or tilted
-  under 90 deg), and any seed whose reference fails.
-- **Actions.** 12 absolute joint position targets per control step, in actuator order; clipped to the actuator ranges.
+  actuator's own `kv` stays). Quadrupeds: one control step = 5 physics steps, 20 ms (Go1, Spot) or 10 ms (Barkour,
+  below). ALOHA: 50 Hz control, 8 physics steps (peg insertion, 400 Hz) or 4 (hand-over, 200 Hz); Panda: 50 Hz, 4
+  physics steps (200 Hz).
+- **Instance.** Quadrupeds: one episode as Playground's own `reset` draws it with `jax.random.PRNGKey(seed)`: the start
+  state and, for the joystick tasks, the command schedule (and Barkour's pushes, Spot gait tracking's gait) that the
+  environment's command process draws over the episode, its per-step key splits replayed exactly. Getup: the drop's
+  start state; the 0.5 s settle runs in the task's own MuJoCo. Manipulation: Playground's reset randomization drawn with
+  numpy from the seed (box, peg, socket offsets, targets, the Panda cabinet's arm perturbation). `instance.json` holds
+  the start, the schedule, the t = 0 state hash and the numbers the instructions quote.
+- **Actions.** Absolute position targets, one row per control step, in actuator order, clipped to the actuator ranges.
 
-## Success
-- **Joystick.** T = horizon rows; the robot never meets its environment's termination rule (Go1: the trunk's up axis
-  below the horizon; Spot: tilted by more than about 32 deg; Barkour: up axis below the horizon, a joint outside its box
-  or the torso under 0.18 m); in every command segment, after its first 25 control steps, the mean planar velocity error
-  |v_xy - cmd_xy| <= 0.2 m/s (the IMU's velocimeter, trunk frame) and the mean yaw-rate error |w_z - cmd_wz| <= 0.3 rad/s
-  (the IMU's gyro). Gait tracking adds: the mean RMS height error of the feet to Playground's gait curve
-  (`gait.get_rz`) at most 0.05 m.
-- **Getup.** The trajectory ends with 25 control steps in a row with the trunk tilted at most 10 deg and the IMU at least
-  0.22 m (Go1; it stands at 0.255-0.26 m with Playground's gains) or 0.40 m (Spot; 0.44 m) above the floor.
-- **Hand/footstand.** The trajectory ends with 100 control steps (2 s) in a row with the trunk's forward axis within 30 deg
-  of straight down (handstand) or up (footstand), the IMU at least 0.40 m high (Playground aims at 0.55 / 0.53 m) and the
-  feet of the lifted pair off the ground; no termination before: the up axis below -0.25, or a front leg's thigh, calf
-  or hip on the floor (Playground's rule), and for the footstand the same for a hind leg (see below).
-- Standard episodes end at the agent's `POST /finish` (or `done`), at the horizon, on a termination (a failure) or on
-  timeout; a success never ends them ("Agent-ended episodes" below). The joystick schedule is in `spec["command_schedule"]` and every response's `meta["command_now"]`; the gait
-  in `spec["gait"]`. Pushes are not announced in standard mode.
+### Playground behaviour kept, and where these tasks depart from it
 
-## Modes
-
-| mode | the agent gets | resets | graded |
-|---|---|---|---|
-| privileged | the simulator (`rcb_quadruped.Session`) and its full state | unlimited | its `trajectory.npz`, replayed in one fresh process |
-| standard (2.2) | cameras (Go1, Spot: four that follow the robot; Barkour: one that follows it and its head camera; RGB, optional depth), joints, IMU (gyro, accelerometer, gravity's direction, velocimeter), foot contacts; the feet's FK/IK in the trunk frame | 10 (`RCB_RESET_BUDGET`) | the live episode's verdict: the task's check on the last episode as the service ran it |
-| realtime (BarkourJoystick only) | as standard, minus FK/IK, plus the joystick command in force in the proprioception; time does not stop (S = 1) | 10 (`RCB_RESET_BUDGET`) | the live episode's verdict, as standard |
-
-## Reference solutions
-- **Go1 joystick:** MuJoCo Playground's own Go1 joystick policy (`experimental/sim2sim/onnx/go1_policy.onnx`, the one its
-  `play_go1_joystick.py` runs in native MuJoCo), closed loop on the frozen instance, its targets recorded.
-- **The rest:** Playground ships no other quadruped policy. Policies are trained here with PPO on the CPU
-  (rsl_rl with Playground's hyperparameters; each environment re-implemented in numpy
-  with Playground's reset, action mapping, observations and rewards), then run closed loop on the frozen instance.
-  - Go1 getup: the policy turns the robot belly-down and level but stops in a crouch (a local optimum of the reward); the
-    reference then moves the joint targets linearly to `home` in 1 s.
-  - Go1 footstand: trained with three training-only changes: the hind-leg termination this task uses, half of the episodes
-    starting in Playground's `footstand` keyframe, and a steeper height reward (with Playground's own it squats at 0.2 m).
-  - Spot gait tracking: trained with the command added to the observation (see below).
-- Every reference row is float32-exact: the standard client sends actions as float32, so the standard oracle (streaming
-  the rows through the client) records exactly the privileged reference.
-- Policies only make the references: no image contains one, and the agent's egress is the model APIs and the package
-  registries only (Playground's policies are public). The four manipulation pairs (scripted references of our own) are
-  on the same allowlist; nothing in their containers needs the network at run time (the `ghcr.io/mll-lab-nu/efe:mujoco-<version>` image holds the Playground
-  and Menagerie files the tooling loads, `/opt/rcb_mj`). The PyPI packages `playground` and `envpool` carry
-  Playground's task sources (the honour rule, PROTOCOL §5).
-
-## Playground behaviour kept, and where these tasks depart from it
 - **Barkour's control step is 10 ms.** Its environment loads Menagerie's scene as is (2 ms timestep) while it takes
-  round(ctrl_dt / sim_dt) = 5 substeps with sim_dt = 4 ms, so one step advances 10 ms. Kept: the robot's dynamics are the
-  environment's (the push formula still uses ctrl_dt = 20 ms, as upstream).
-- **A 1-step Barkour push is zero.** The push is 0.5 sin(pi i / duration) for i = 0 .. duration - 1. Kept; selection skips
-  instances whose pushes are null or weak.
+  round(ctrl_dt / sim_dt) = 5 substeps with sim_dt = 4 ms, so one step advances 10 ms. Kept: the robot's dynamics are
+  the environment's (the push formula still uses ctrl_dt = 20 ms, as upstream).
+- **A 1-step Barkour push is zero.** The push is 0.5 sin(pi i / duration) for i = 0 .. duration - 1. Kept; instance
+  selection skips instances whose pushes are null or weak.
 - **Footstand's termination reads the front-leg list.** `Footstand._post_init` assigns the hind-leg geoms to
   `_unwanted_contact_geom_ids`, but the termination reads the front-leg sensors it inherits. A policy trained on that
   sits on a hind hip with its feet in the air. The task adds the hind-leg rule.
-- **Spot gait tracking does not observe the command.** Its observation (69) has no command, yet its reward tracks one;
-  a policy trained on it marches in place. The task keeps the command (the agent sees it); the reference's policy
-  observes it.
-- **Hand/footstand targets accumulate** (ctrl + 0.3 action, unclipped); the references follow that, the task's actions
-  are absolute targets.
+- **Spot gait tracking does not observe the command.** Its observation (69) has no command, yet its reward tracks one.
+  The task gives the command (and the gait) to the agent.
+- **Hand/footstand targets accumulate** in Playground (ctrl + 0.3 action, unclipped); here actions are absolute targets.
 
-## Verification (Harbor)
+### Added
 
-| | oracle | nop |
-|---|---|---|
-| all 9 environments, privileged | 1 (both fresh-process replays succeed, deterministic, video) | 0 (no trajectory) |
-| all 9 environments, standard | 1 (live check, video) | 0 |
+The standard and realtime modes (a sim sidecar serving the robot), frozen instances, and agent-ended episodes;
+upstream has only the RL environments.
 
-The references' own margins (worst joystick segment, end pose):
+## Interface
 
-| environment | reference |
-|---|---|
-| Go1JoystickFlatTerrain | 0.073 m/s, 0.091 rad/s |
-| Go1JoystickRoughTerrain | 0.079 m/s, 0.114 rad/s |
-| Go1Getup | upright after 136 steps, IMU 0.257 m |
-| Go1Handstand | 115 steps, 13.8 deg from straight down, IMU 0.531 m |
-| Go1Footstand | 113 steps, 9.6 deg from straight up, IMU 0.541 m |
-| SpotFlatTerrainJoystick | 0.156 m/s, 0.072 rad/s |
-| SpotGetup | upright after 63 steps, IMU 0.478 m |
-| SpotJoystickGaitTracking | 0.183 m/s, 0.136 rad/s, foot height 0.038 m |
-| BarkourJoystick | 0.033 m/s, 0.028 rad/s |
+**Privileged.** The tooling in the agent's container: `rcb_quadruped.Session` (quadrupeds), `rcb_aloha.Session`,
+`rcb_panda.Session` (`embodied_first_exam/benchmarks/mujoco-playground/privileged/environment/`): the full simulator on
+the frozen instance, its state, unlimited resets, `replay()` and `save_trajectory()`. The deliverable is
+`/app/output/trajectory.npz` (`actions`, (T, 12) for a quadruped, (T, 14) ALOHA, (T, 8) Panda), one row per control
+step.
 
-Outside Harbor, the standard service run on each reference (`std_local` check): live verdict success.
+**Standard.** The robot is a service in the `sim` sidecar (wire protocol `eai-standard/3.0`), reached through `rcb_client.py` or the `efe-robot` MCP
+tools; episodes are agent-ended (`POST /finish`).
 
-## Task-specific rules
-- **ALOHA single peg insertion** (both modes): the peg tip's axial parameter `t_min <= t <= 0.75`, within 5 mm of the
-  axis. Site `socket_rear` is at the tube's centre (t = 0 mid-tube, 0.048 m per unit of t); `t_min` is read from the
-  model (the inner face of the rear wall, −0.833) minus `REAR_MARGIN_M` = 2 mm for the contact's give: −0.875. A tip
-  behind the wall is a failure. Upstream has no success predicate; its shaped reward peaks at the tube's centre.
-- **Privileged graders** (`tests/grade.py`): a `trajectory.npz` that cannot be read as an npz with a numeric `actions`
-  array is `bad_trajectory`; quadrupeds: a replay process that died or timed out (`replay_failed`), a rebuilt start that
-  does not match the instance's hash (`instance_mismatch`) and an exception of the verifier write `infra_error = 1`
-  beside `grader_error = 1`.
-- **Resets.** The quadruped standard tasks allow 10 resets: `RCB_RESET_BUDGET` (the compose files' default 10; 0 = a
-  single episode), `POST /reset` (JSON or RCB1 `{cameras, video_fps, depth}`, no physics) abandons the running or ended
-  episode and restarts from the frozen start; 409 after `/finish`, once the agent's time is up and once the budget is
-  spent; only the last episode is graded (`trajectory.npz` holds its rows); `meta` / `/status` add `episode`,
-  `resets_left`, `control_steps_total`; `final.json` and `reward.json` add `resets`, `reset_budget`, `episodes`. Crash
-  recovery replays the journal with the committed resets. `server_mj.py` has the same optional capability (default 0):
-  the two ALOHA and two Panda standard tasks set none (`/reset` is a 404, `budget.reset` 0).
+- Quadrupeds: `sim/server.py`, the adapter of the shared layer `embodied_first_exam/standard/rcb_limited.py`. Action
+  types `joint_position` (12 absolute targets per row) and `done` (ends the episode, as `/finish`). Cameras: Go1 and
+  Spot four that follow the robot (`track`, `side`, `back`, `top`); Barkour one that follows it and its head camera;
+  RGB 320×240, optional depth. Proprioception: joint positions, velocities and torques, the IMU (gyro, accelerometer,
+  gravity's direction, velocimeter), foot contacts; `POST /kinematics`: the feet's FK/IK in the trunk frame. The
+  joystick schedule is in `spec["command_schedule"]` and every response's `meta["command_now"]`, the gait in
+  `spec["gait"]`; pushes are not announced. 10 resets: `POST /reset` restarts from the frozen start (409 after
+  `/finish`, once the agent's time is up and once the budget is spent); the client has no `reset()`, so the
+  instructions call `POST /reset` through `Robot._post`. One call returns at most 3000 images (`max_frames_per_call`).
+  CPU only: no GPU is reserved.
+- Manipulation: `sim/server_mj.py`, shared with DexToolBench. One action type, `joint_position` with the task's own
+  actuator layout (ALOHA 14, Panda 8), rows `dt` apart (a multiple of the 1/50 s control step), hold or linear
+  interpolation per control step; send actions as float64. `meta.task` carries the target; `meta.cameras` each
+  camera's intrinsics (`intrinsic_cv` for the returned image; fx ≠ fy for a camera defined by its sensor size: ALOHA's
+  overhead and wrist cameras, 158.52 and 216.45 px) and its camera-to-world pose per returned frame (`cam2world_gl/<cam>`;
+  ALOHA's wrist cameras carry `moving`). No reset and no step limit. A GPU on the sidecar renders the cameras (EGL).
+- Not given in standard mode: object or target poses, the robot's world pose, the success signal.
 
-## Grading (standard modes)
-- **2.2 quadrupeds** (each standard task's `environment/sim/`): the service runs `rcb_quadruped.Session.check()` on the live simulator when
-  the episode ends (`finish()`; a getup / stand episode ends the moment its hold is met, a joystick episode passes only
-  at the horizon) and writes it to `episode.json`; `finalize.sh` makes it `final.json`'s `success` (`graded_by =
-  "live"`), then `video.py` renders `replay.mp4` in one fresh process (at most the horizon, ~150 frames: well under a
-  minute on the CPU). `server.py` builds the scene with `check_hash=False` and gives up before serving the agent when the
-  start's hash is not the instance's `state_sha` (`instance_mismatch`, infrastructure).
-- **Realtime** (BarkourJoystick): the shared layer's live verdict (`rcb_service._finalize`); `server.py`'s
-  `step()` reports `check()` after every control step (joystick: success only at the horizon), its `start_sha` is the
-  instance's `state_sha`, and it has no `live_verdict()`. The video is
-  the layer's render pass on the service's own simulator after the verdict.
-- **`server_mj.py`** (ALOHA, Panda; DexToolBench, [`dextoolbench.md`](../dextoolbench/README.md)): `finalize()` reads the
-  tooling's `check()` of the live final state (ALOHA, Panda) or the goal tracker's progress (DexToolBench), writes the
-  verdict, then renders `replay.mp4` in one pass over the trajectory on its own simulator (EGL on the sidecar's GPU).
-- **Collect hooks** wait for the verdict 900 s (2.2 quadrupeds, `RCB_COLLECT_END_TIMEOUT_S`), 300 s (realtime), 840 s (`server_mj.py`, since a service that crashed late in
-  a long episode resumes it from the journal first), then for the video. `final.json` / `reward.json` have `graded_by`
-  (`graded_by_live = 1`), `replays = 0`, `live_success`.
-- **Infrastructure** (`infra_error = 1`, no verdict on the agent): a missing, unreadable or unfinalized `final.json`, a
-  give-up after crashes between calls or a failed resume, a frozen start that did not build, a service that did not end
-  its episode for the collect hook, a service-side failure writing the verdict (`finalize_error`). Crashes all inside
-  the agent's calls (`sim_crashed_on_call`), a simulator error from a call (2.2 / 2.1: `sim_error`, the agent's 0; 2.3:
-  the layer's own rule, PROTOCOL §3), a fall, a timeout are the agent's result. A video that fails is only a missing
-  video.
+**Realtime (BarkourJoystick).** The shared realtime layer (`rcb_realtime.py`, `rcb_client.py` from
+`embodied_first_exam/standard/realtime/`; `rcb_service.py` from `embodied_first_exam/standard/sidecar/`, all in `standard-files`) with the task's own `environment/sim/server.py`, which
+implements the simulator on `rcb_quadruped.Session`: the same instance, schedule, pushes, termination rule and check.
+The proprioception adds `cmd_vx`, `cmd_vy`, `cmd_wz` (the command in force). Not served: `/kinematics`, per-frame
+camera poses, depth modes and the `done` action. Slowdown S = 1 (one 10 ms control step every 10 ms of wall time),
+10 resets; the service's RTF on 4 CPUs is 31.6 with the clock flat out. The `sim` service reserves a GPU for EGL
+rendering.
 
-### Agent-ended episodes
+## Grading
 
-Every standard and realtime task sets `RCB_AGENT_END "1"` in its sim service (PROTOCOL §3; ALOHA and Panda:
-`server_mj.py`; the quadrupeds' standard tasks: `sim/server.py` with the shared layer `rcb_agent_end.py`; realtime:
-`rcb_service.py`). A success never ends the episode and is never shown: the task's check is still run (after every call,
-or for the quadrupeds after every control step) and only recorded. The agent ends the episode with `POST /finish`
-(reason `finished`; a quadruped's `done` action is the same end); the end of its session (`timeout`) and the horizon
-(`step_limit`) end it too, and each is judged on the state it ends in (end judgement `state`: the task's check on the
-steps executed, so a getup or two-leg stand must have held its pose through the last steps, and a joystick episode
-passes only at the end of its schedule). The termination rule (a fall, a joint out of range) still ends the episode with
-0. Resets stay possible until `POST /finish`. `final.json` adds the shared fields (`success_signal`, `ended_by`,
-`end_judgement`, `hidden_success_seen`, `hidden_success_first_step`, `trial_hidden_success_seen`, `finish_time_s`).
-Without `RCB_AGENT_END` the service behaves as described above.
+- **Privileged.** `tests/grade.py` in a separate sandbox without network: one open-loop replay of `trajectory.npz`
+  from the verifier's own copy of the instance (`tests/instance.json`; the start state is checked against its hash),
+  in a fresh process; pass iff the check holds on that replay. A file that cannot be read as an npz with a numeric
+  `actions` array of the right width, more rows than allowed (the horizon for a quadruped, 3000 for manipulation) or a
+  non-finite value is `bad_trajectory` (0). A replay process that died or timed out (`replay_failed`), a rebuilt start
+  that does not match the instance's hash (`instance_mismatch`) and an exception of the verifier set `grader_error = 1`
+  (the quadruped grader also `infra_error = 1`). A video is rendered after the verdict and never changes it.
+- **Standard.** The verdict is the live episode's: the service runs the task's check on the episode it ran, when the
+  episode ends, and writes it to `final.json` (`graded_by = "live"`, `replays = 0`); `tests/grade.py` passes iff that
+  check succeeded. Quadrupeds: the episode ends at `/finish` or `done`, at the horizon, on a termination (0) or when the
+  agent's time is up; the check is `rcb_quadruped.Session.check()` on the steps executed, so a getup or stand pose
+  must be held through the last steps and a joystick episode passes only at the horizon. Manipulation: the episode ends
+  at `/finish` or when the agent's time is up; the check is the tooling's `check()` of the final state. A simulator
+  error from a call is the agent's 0. A start state that does not hash to the instance's `state_sha` gets no episode
+  (`instance_mismatch`, `infra_error = 1`).
+- **Realtime.** The shared layer's live verdict (`rcb_service`): `server.py`'s `step()` reports `check()` after every
+  control step (joystick: success only at the horizon); its `start_sha` is the instance's `state_sha`.
 
-## Realtime (`eai-standard/3.0`)
-The dynamic families (PROTOCOL §2: each task's `[metadata] dynamics`) get a `-realtime` twin. Among the quadrupeds that is **BarkourJoystick** (its torso is pushed 12 times at
-frozen moments: an external force that is neither the robot's nor gravity).
-- **Service.** The shared realtime layer, unchanged (`rcb_realtime.py` and `rcb_client.py` from
-  `embodied_first_exam/standard/realtime/`; `rcb_service.py` and `grade.py`, byte-identical to HumanoidBench's realtime
-  tasks' copies; `check-tooling-identity.sh`), with the twin's `environment/sim/server.py`, which implements `rcb_service.Sim` on `rcb_quadruped.Session`: the standard twin's
-  instance, schedule, pushes, termination rule, check and replay; the proprioception adds `cmd_vx`, `cmd_vy`, `cmd_wz`
-  (the command in force; standard mode has it in `meta["command_now"]`). Not served: the shared layer's additions (`/kinematics`,
-  per-frame camera poses, depth modes) and the `done` action. Graded on the live episode; the clock's record is
-  evidence only. The `sim` service reserves a GPU for EGL
-  rendering (`server.py` writes the NVIDIA EGL ICD manifest when the image has none and `rcb_quadruped` probes EGL).
-- **Slowdown S = 1, resets 10, cutoff 1800 s** (the standard twin's). RTF of the service (4 CPUs): 31.6 with the clock
-  flat out.
-- **Checked at S = 1**: the reference (`solution/oracle_plan.py`, the privileged rows planned from step 0 in one
-  `submit(at=0)`) succeeds live, no stall, graded 1 by `tests/grade.py`;
-  the same rows streamed one per call with a camera image every 0.25 s (7.7 ms each over EGL) succeed with no stall;
-  nop (no request) ends `timeout`, not a success.
+## Tasks
 
-## Files
-| | |
-|---|---|
-| the privileged task's `environment/instance.json` and `tests/instance.json`, a standard or realtime twin's `environment/sim/instance.json` | the frozen instance (byte-identical copies) |
-| privileged and standard `solution/` (`oracle.npy`, `oracle_replay.py`, `solve.sh`) | the reference rows and their replay (privileged: into `trajectory.npz`; standard: through the client) |
-| the realtime twin's `environment/sim/server.py`, `solution/` | its service (the realtime adapter) and its reference (`oracle.npy`, `oracle_plan.py`, `solve.sh`) |
-| `embodied_first_exam/benchmarks/mujoco-playground/` (files-only image `efe:mujoco-playground-files-<images/mujoco-playground-files/VERSION>`, copied by digest) | `privileged/environment/rcb_quadruped.py` (the tooling, the verifier's replay CLI and the services' simulator), `privileged/tests/grade.py`, `standard/tests/grade.py`, `sim/server.py` (the standard adapter on `embodied_first_exam/standard/rcb_limited.py`), `sim/video.py`, `sim/finalize.sh` (the collect hook), `sim/rcb_service.py` (the realtime twin's simulator service); the manipulation tasks' `rcb_aloha.py`, `rcb_panda.py` and `sim/server_mj.py` |
+| robot | environment | what it asks | horizon | instance |
+|---|---|---|---|---|
+| Go1 | Go1JoystickFlatTerrain | track a joystick schedule (4 segments) on flat ground | 1000 steps, 20 s | seed 0 |
+| | Go1JoystickRoughTerrain | the same (7 segments) on a 20 x 20 m heightfield, bumps up to 5 cm | 1000, 20 s | seed 1 |
+| | Go1Getup | get up from a drop (lying tilted 110°) and stand | 300, 6 s | seed 5 |
+| | Go1Handstand | balance on the front legs, nose down, for 2 s | 500, 10 s | seed 0 |
+| | Go1Footstand | stand on the hind legs, nose up, for 2 s | 500, 10 s | seed 0 |
+| Spot | SpotFlatTerrainJoystick | track a joystick schedule (5 segments) | 1000, 20 s | seed 0 |
+| | SpotGetup | get up from a 1 m drop (lying tilted 128°) and stand | 300, 6 s | seed 1 |
+| | SpotJoystickGaitTracking | joystick tracking with a commanded gait (here pace at 3.66 Hz, 0.129 m swing) | 1000, 20 s | seed 0 |
+| Barkour | BarkourJoystick | joystick tracking (2 segments) through 12 pushes of up to 35 N | 1000, 10 s | seed 2 |
+| ALOHA 2 | AlohaHandOver | pick up the box with the left arm, pass it to the right arm, hold it at the target | at most 3000 rows (privileged) | seed 60417 |
+| | AlohaSinglePegInsertion | push the peg into the open end of the socket | at most 3000 rows (privileged) | seed 60417 |
+| Panda | PandaPickCubeOrientation | put the box at the target box, in its orientation | at most 3000 rows (privileged) | seed 60417 |
+| | PandaOpenCabinet | pull the handle along its slide to the target | at most 3000 rows (privileged) | seed 60417 |
 
-The task directories are the deliverable; the tooling that built them is kept outside this repository.
+The manipulation tasks also allow seeds 60418 and 60419 (`[metadata.seeds]`; committed under the privileged task's
+`tests/seeds/`).
 
-## Standard-mode service details
+## Others
 
-**MuJoCo service (DexToolBench, MuJoCo Playground manipulation; `eai-standard/3.0`).** Same endpoints and RCB1 frames,
-served by `embodied_first_exam/benchmarks/mujoco-playground/sim/server_mj.py`. Differences: one action type, `joint_position` with the task's own
-actuator layout (DexToolBench 29, ALOHA 14, Panda 8), rows `dt` apart where `dt` is a multiple of `control_dt` (1/60 s
-DexToolBench, 1/50 s Playground), hold or linear interpolation per control step. Actions are sent as **float64** (MuJoCo
-on CPU replays bit-exactly, and float32 rounding changes a chaotic tool swing). `meta.task` carries the task definition
-(DexToolBench: current goal pose and index; Playground: the target) and `meta.cameras` each camera's intrinsics
-(`intrinsic_cv` for the returned image; fx = fy for a camera defined by its field of view, fx ≠ fy for one defined by its
-sensor size, `cam_sensorsize` > 0: fx = W × focal_x / sensor_x, fy = H × focal_y / sensor_y, cx = W / 2 − W ×
-principal_x / sensor_x, cy = H / 2 + H × principal_y / sensor_y; ALOHA's overhead and wrist cameras, 158.52 and
-216.45 px) and camera-to-world pose: the viewpoint the image is rendered from (not MuJoCo's left-eye camera), in the
-state the response ends in, one pose per returned frame (`cam2world_gl/<cam>`). Cameras carry `moving` (true for ALOHA's wrist cameras). `final.json` is `finalized` as soon as the
-live episode's verdict is in it; the video is rendered afterwards and sets `video_done`, which is what the collect hook waits
-for (the MetaWorld+ service, `embodied_first_exam/benchmarks/metaworldplus/sim/server_mw.py`, follows the same rules). DexToolBench's own eval
-gives each goal 10 s; here the standard twins have **no per-goal limit** and **20 resets** (the optional reset
-capability) and an episode cap of 360,000 control steps (100 min of
-robot time, `spec.max_control_steps`), while the privileged tasks give each goal 30 s (replayed offline, free resets).
-DexToolBench episodes end when all goals are reached, at the cap, or when the agent's time is up; Playground episodes
-run to the end of the agent phase and the final state is graded. The service journals and resumes like the shared
-layer (journal `record.f64`; startup watchdog `RCB_STARTUP_TIMEOUT_S`, default 300 s) and grades the live episode
-(Grading, above). It implements the optional reset capability.
-
-**Quadrupeds (`eai-standard/3.0`).** MuJoCo Playground's quadruped tasks serve the shared layer. Their service implements the optional reset capability; the shared client has no `reset()`, so the instructions call `POST /reset` through `Robot._post`. One call returns at most 3000 images (`max_frames_per_call`, PROTOCOL §3 "Images per call"), in the realtime twin too.
+- **Instance selection** (never looking at an agent's result): seeds in order; skip a joystick schedule that is mostly
+  standstill (under half the episode commanding |v_xy| >= 0.3 m/s or |w_z| >= 0.3 rad/s), Barkour pushes that are null
+  or weak (peak under 20% of the torso's weight), a getup start that is not a fall (no drop, or tilted under 90°), and
+  any seed whose reference fails.
+- **Reference solutions.** Go1 joystick: Playground's own Go1 joystick policy (`experimental/sim2sim/onnx/go1_policy.onnx`),
+  closed loop on the frozen instance, its targets recorded. The other quadruped references come from policies trained
+  here on re-implementations of Playground's environments; the manipulation references are scripted. No image contains
+  a policy, and every reference row is float32-exact, so the standard oracle (streaming the rows through the client)
+  records exactly the privileged reference. The PyPI packages `playground` and `envpool` carry Playground's task
+  sources (the honour rule, PROTOCOL §5).
+- **Files.** The privileged task's `environment/instance.json` and `tests/instance.json` and a standard or realtime
+  task's `environment/sim/instance.json` are byte-identical copies of the frozen instance. The shared code lives in
+  `embodied_first_exam/benchmarks/mujoco-playground/` and reaches the tasks through the files-only image
+  `efe:mujoco-playground-files` (`images/mujoco-playground-files/FILES.json`): the tooling (`privileged/environment/`),
+  the graders (`privileged/tests/`, `standard/tests/grade.py`), the standard services (`sim/server.py`,
+  `sim/server_mj.py`), the collect hook (`sim/finalize.sh`) and the video pass (`sim/video.py`). The realtime service base
+  (`rcb_service.py`) comes from `standard-files`.

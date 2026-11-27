@@ -1,34 +1,51 @@
-# embodied-olympics-fun-high-jump-i00-standard
+# Embodied Olympics · high jump (standard)
 
 | | |
 |---|---|
-| Benchmark | Embodied Olympics - Fun |
-| Mode | standard (`eai-standard/3.0`) |
-| Twin | `embodied-olympics-fun-high-jump-i00-privileged` |
-| Simulator / robot | `mujoco` / `unitree-h1-2` |
-| Family / instance | `high_jump` / seed 0 |
-| Oracle | `none` — no reference solution; the referee is tested: positive by injection (one foot lifted by its motors, 1.5 m/s forward and 5.0 m/s up: over 1.00 m with 0.28 m to spare, every part beyond the bar's plane before the first contact, onto the mat); negatives: walking under or round, a two-foot take-off, the bar off its supports, onto the mat without a flight. The clearance is judged in one flight (TR 27.2(b)): crossings made on the ground or after a landing never count, and any contact with the mat or ground beyond the plane before the clearance fails; the pelvis must rise at least 0.08 m (kept within the H1-2's reach: its two-foot squat jump leaves the ground at about 1.8 m/s). A fall head-first onto the mat that rolls over the bar afterwards (0.06 m of rise) fails. The landing mat is fitted to soft PU foam (about 5 kPa at 25 % compression, plateau): the H1-2 landing at 3.7 m/s sinks 0.46 m without rebound. The take-off from one foot (TR 27.1) is judged every 1 ms on the ground's forces: in the last 0.15 s before lift-off the free foot's ground normal force stays below 5 % of the robot's weight, or the free foot is off the ground for the whole take-off contact; nothing else touches the ground then. A model run's attempt with a crouch, both legs pushing and the right alone for the last 0.11 s fails ('not from one foot': the free foot loaded 0.108 s before lift-off); an injected staggered push fails too. Reachable with the H1-2's own motors: the same rows with only the left leg's commands played 0.06 s earlier (no injection) make a valid one-foot take-off (free foot unloaded 0.165 s before lift-off), the pelvis over the bar's plane in flight, 0.55 s of air and 0.50 m of pelvis rise (the rule asks 0.08 m); that edit lands on the mat before the feet clear, so there is no full reference clearance. Every rule above is judged in the family's own 1 ms substep hook.; human review in the pull request that adds the benchmark (PROTOCOL §4) |
-| Agent time budget | 7200 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
+| Task ID | `embodied-olympics-fun-high-jump-i00-standard` |
+| Benchmark | [Embodied Olympics - Fun](https://github.com/CHIGUI0/roboolympics) (Embodied Olympics authors, 2026), upstream `CHIGUI0/roboolympics@7df999b` |
+| Robot | Unitree H1-2 humanoid (1.78 m, 67 kg, 27 joints), with Unitree's walking policy |
+| Mode | standard |
+| Instance | `high_jump`, seed 0 |
+| Time limit | 2 h |
+| Reference solution | None |
 
 ## Task
-Do a high jump: run up, take off from one foot and clear the bar without knocking it off. (Embodied Olympics `high-jump`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Do a high jump: run up, take off from one foot and clear the bar without knocking it off.
 
-## Difficulty
-The bar is at the height of the robot's hip joints: the whole 67 kg body has to be thrown over it from one leg. The robot has no running or jumping gait at all; its walking gait reaches 0.7 m/s. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 5 resets (only the last attempt is graded).
+## Success criteria
+The bar (4.00 m long, 2.0 kg) rests with its upper side 1.00 m above the ground on two flat supports between uprights
+4.02 m apart; a soft landing mat lies behind it. The approach is free. A flight is a time of at least 0.05 s in which
+nothing of the robot touches anything but the bar. The referee's stages, in order: take-off, clearance, bar stays.
+- Take-off: the jump is the flight in which the pelvis crosses the bar's plane. It must be from one foot: in the last
+  0.15 s before lift-off the other foot presses on the ground with less than 5% of the robot's weight (or is off the
+  ground), and nothing else of the robot touches the ground.
+- Clearance: in that one flight the pelvis and both ankle joints cross the plane between the uprights and higher than
+  the bar's upper side, and every part of the robot gets beyond the plane. A point that comes back over the plane must
+  cross it again. At the landing the pelvis must have risen at least 0.08 m above its height at lift-off, and the
+  landing must not touch the ground on the take-off side. The landing may be on any part of the body.
+- Bar stays: 2 s after the clearance and the landing the bar lies on both supports, within 0.02 m of its resting
+  place along the run and 0.005 m of its resting height, slower than 0.05 m/s and turning slower than 0.5 rad/s.
 
-## Reference solution
-None (as `embodied-olympics-fun-high-jump-i00-privileged`).
+Fouls (each fails the attempt): the bar drops more than 0.05 m at any time, or is not on its supports at the judgement;
+the robot touches the bar for more than 0.3 s in all, or the bar pushes it with more than 2.0 N s in all; the pelvis
+or an ankle crosses the plane outside the uprights or not higher than the bar; the take-off is not from one foot; the
+robot touches the ground or the mat beyond the plane before clearing the bar; the jump's flight ends before the bar is
+cleared; the flight was not a jump (a rise under 0.08 m); after the clearance the landing touches the ground on the
+take-off side. A fall is not a failure by itself; the generic fall rule is off. Time limit: 60 s (6,000 control steps).
 
-## Verification
-The sim sidecar's referee judges the live attempt, and that is the verdict (`final.json`: `graded_by` live, `replays` 0;
-no grading replay, owner 2026-10-17); the frozen start is checked on the live simulator (`instance_mismatch`:
-infrastructure), and the video is rendered from the recorded attempt afterwards. `/tests/grade.py` reads
-`/data/final.json`: pass iff the live attempt succeeded. The
-rules: World Athletics rules for the high jump. The bar (4.0 m long, 0.03 m thick, 2.0 kg) rests with its upper side 1.0 m above the ground on two flat supports (0.04 m wide, 0.06 m long) that face each other from two uprights 4.02 m apart; pushed more than half a support's width forwards or backwards, or lifted, it falls. The bar lies across y in the plane x = 0; the plane the rules mean is that of its nearer edge, x = -0.03/2. Behind it lies the landing mat: 6.0 m wide, 4.0 m deep, 0.7 m high, soft, beginning 0.1 m behind that plane. The approach is free (any direction, any distance on the 15.0 m of level runway). A flight is a time of at least 0.05 s in which nothing of you touches anything but the bar. Your jump is the flight in which your pelvis crosses the bar's plane. Its take-off must be from one foot: in the last 0.15 s before lift-off your other foot presses on the ground with less than 0.05 of your weight (or it is off the ground for the whole of the take-off foot's last ground contact), and nothing else of you touches the ground; and in it your pelvis must rise at least 0.08 m above its height at lift-off. The clearance is judged in that one flight, between the take-off and your first contact with anything but the bar: your pelvis and both feet (the ankle joints) must cross the plane between the uprights and higher than the bar's upper side (one that comes back over the plane has not passed it and must pass it again), and every part of you must get beyond the plane. A crossing made while you touch the ground or the mat, or after the flight has ended, never counts. You have cleared the bar when all of that has happened in the flight. You may touch the bar, for at most 0.3 s in all, and it may push you with a normal impulse of at most 2.0 N s in all (a real bar falls under any weight: it does not carry you or throw you up), and after the clearance you may land on any part of your body, on the mat or not. You succeed when you have cleared the bar and landed, and 2.0 s later the bar still lies on its supports: touching both, its centre within half a support's width of its resting place along x and within 0.005 m of its resting height, and at rest (its centre slower than 0.05 m/s, turning slower than 0.5 rad/s); a bar knocked up or off counts as off. A fall is not a failure by itself. You fail if the bar drops more than 0.05 m at any time, or is not lying on its supports at that judgement; if you are in contact with the bar for more than 0.3 s in all, or it pushes you with more than 2.0 N s; if you touch the ground or the mat beyond the plane before you have cleared the bar, with or without a jump; if your jump's flight ends (you touch anything but the bar) before you have cleared the bar; if the take-off is not from one foot; if the flight is not a jump; if your pelvis or a foot passes the plane outside the uprights or not higher than the bar; if your landing after the clearance touches the ground on the take-off side; or after 60 s (the time allowed for a trial). No oracle; human review in the pull request that adds the benchmark (PROTOCOL §4).
+Graded: the live attempt, judged by the referee in the simulator service as it runs; nothing is replayed. The referee's
+success call is an event: once it is made at some control step, the attempt is a success. It is never shown to the
+agent and does not end the attempt: the physics goes on until the agent's `/finish`, the attempt's time limit, or the
+end of the agent's time (2 h), and nothing after the call undoes it. A failure the referee calls before any
+success (a foul, a fall, the physics diverging) ends the attempt at once with 0. Reaching the time limit or the end of
+the session without a success call scores 0. The agent has 5 resets, each starting a new attempt from the
+frozen start; only the last attempt (the one after the last reset) is graded, and a success in an earlier attempt does
+not count. A simulator error raised by the agent's own call ends the attempt with 0. An attempt that does not start
+from the frozen instance, or a service crash outside the agent's calls, is an infrastructure failure, not a score.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -38,13 +55,10 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Category | track-and-jumps |
-| Rule book | World Athletics Competition and Technical Rules, 2024 edition: TR 26 (26.3-26.7 the uprights 4.00 to 4.04 m apart, the 4.00 m bar of at most 2 kg and 30 mm diameter on flat supports 4 cm wide and 6 cm long, 1 cm clear of the uprights), TR 27.1 (the take-off from one foot), TR 27.2 (failures: the bar does not remain on the supports; touching the ground or the landing area beyond the plane of the bar's nearer edge without first clearing the bar), TR 27.3 (a runway of at least 15 m), TR 27.10 (a landing area of at least 6 m x 4 m x 0.7 m), TR 25.17 (one minute for a trial); deviations: TR 27.1 ("The athlete shall take off from one foot") is judged on the ground's forces, after every 1 ms physics step: during the last 0.15 s before the lift-off of the jump's flight the other (free) foot's ground force stays below 0.05 of the robot's weight, or the free foot is off the ground for the whole of the take-off foot's last ground contact; nothing else of the robot touches the ground in that time (or in that contact); a break of at most 0.03 s in a foot's contact is not a new contact. A staggered two-foot push, with the free foot leaving just before the lift-off, is a take-off from both feet · TR 27.2(b) is judged geometrically, in one flight: the robot's pelvis and feet (the ankle joints) must pass the plane between the uprights and above the height of the bar's upper side, and every part of the robot must get beyond the plane, all in the same flight (from the take-off to the first contact with anything but the bar); a crossing made while touching the ground or the mat, or after a landing, never counts; any contact with the ground or the mat beyond the plane before that clearance is the rule's failure; the rule's allowance for a foot that touches the landing area without advantage is not used · TR 27.2(a) (the bar does not remain on the supports): judged 2.0 s after the clearance and the landing, the bar must lie on its supports: touching both, its centre within half a support's width (0.04/2 m) of its resting place along the runway and within 0.005 m of its resting height, and at rest (its centre slower than 0.05 m/s, turning slower than 0.5 rad/s); at any time before, it is off its supports when its centre is more than 0.05 m below its resting height · TR 27.10 (the landing area): the mat is one box whose contact follows soft polyurethane foam (about 5 kPa at 25 % compression, then a plateau: a body landing at 4 m/s sinks about 0.4 m and does not bounce back); MuJoCo's contact fitted to it on this robot: a time constant of 0.8 s, damping ratio 1.0, an impedance falling from 0.4 to 0.05 over 0.08 m, friction 1.0; the foam does not spring back after the landing, and its shock absorption is not a certified one (the rule book sets only the size); it begins 0.1 m behind the bar's plane · the bar is rigid (no sag); no wind; the athlete alone, one trial at one height, 1.0 m (FAMILIES.md: a school competition's opening height; the men's world record is 2.45 m) · TR 27 does not define a jump; here its flight lasts at least 0.05 s and raises the pelvis at least 0.08 m above its height at lift-off (a fall from a stand raises it by nothing); the number is kept within this robot's reach: an open-loop two-foot squat jump leaves the ground at about 1.8 m/s (0.17 m of rise); a one-foot take-off of an agent's own on the declared H2-class legs (2.5 kW, 295 N m per joint) left the ground at 2.78 m/s (0.39 m of rise of the centre of mass) · the bar is rigid and its supports are fixed, so unlike a real bar it would carry a body: touching it is allowed, as in the rules, but contact with it for more than 0.3 s in all is a failure, and so is a push from it: the normal impulse of the bar on the robot, summed over the attempt, may be at most 2.0 N s (a real bar sags and falls under any weight; a free 2 kg bar given that much momentum across its 4 cm supports slides off them, and here one already leaves them at about 0.7 N s; on the 67 kg robot it is 0.03 m/s); a pelvis or a foot that comes back over the plane has not passed it |
-| Stages | take-off → clearance → bar stays |
-| Service | `environment/sim/server.py` (the Embodied Olympics adapter) on `rcb_service.py` (eai-standard/3.0), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
-| Observations | `head_left`, `head_right` (RGB 270 × 480, depth on `head_left`), `venue` (fixed); proprioception: joints, torques, targets, two IMUs, grip state |
-| Episode | 6000 control steps (60 s at 100 Hz); 5 resets, the last attempt graded |
-| Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md) |
+## License
+The Embodied Olympics robot library and running-policy port ([CHIGUI0/roboolympics](https://github.com/CHIGUI0/roboolympics)
+@ `7df999b`, a private repository) is released under the MIT License (`LICENSE.roboolympics` in the image); this
+benchmark's venues and referees are MIT too. Third-party parts in the image: the Unitree G1 model and meshes from MuJoCo
+Menagerie (BSD-3-Clause), the Unitree H1-2 model, meshes and walking policy and the G1 walking policy from
+unitree_rl_gym (BSD-3-Clause), the G1 running policy from C1801SYQ/g1_running (Apache-2.0), FALCON's G1 walking policy
+from LeCAR-Lab/FALCON (MIT) and the WBC-AGILE G1 walking policy from NVIDIA (Apache-2.0). No non-commercial terms apply.

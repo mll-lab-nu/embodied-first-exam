@@ -1,34 +1,48 @@
-# embodied-olympics-fun-long-jump-i00-standard
+# Embodied Olympics · long jump (standard)
 
 | | |
 |---|---|
-| Benchmark | Embodied Olympics - Fun |
-| Mode | standard (`eai-standard/3.0`) |
-| Twin | `embodied-olympics-fun-long-jump-i00-privileged` |
-| Simulator / robot | `mujoco` / `unitree-g1` |
-| Family / instance | `long_jump` / seed 0 |
-| Oracle | `none` — no reference solution; the referee is tested: positive by injection (at the board, 3.6 m/s forward and 2.5 m/s up: a mark of 1.50 m in the sand); negatives: running through, walking over the line, a foot over the line, short, beside the pit, beside the board, feet pulled up (no rise), into the sand without a flight, back out behind the mark. The sand follows a published resistive-force law of dry silica sand (2.02 N/cm^3, phi 34 deg): the G1 sinks 7.4 mm standing and 75 mm landing at 2.5 m/s, with a 0.10 m/s rebound. Nothing known jumps out of a run; human review in the pull request that adds the benchmark (PROTOCOL §4) |
-| Agent time budget | 7200 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
+| Task ID | `embodied-olympics-fun-long-jump-i00-standard` |
+| Benchmark | [Embodied Olympics - Fun](https://github.com/CHIGUI0/roboolympics) (Embodied Olympics authors, 2026), upstream `CHIGUI0/roboolympics@7df999b` |
+| Robot | Unitree G1 humanoid (1.32 m, 33 kg, 29 joints), with Unitree's walking and running policies |
+| Mode | standard |
+| Instance | `long_jump`, seed 0 |
+| Time limit | 2 h |
+| Reference solution | None |
 
 ## Task
-Do a long jump: run up, take off behind the take-off line and land in the sand pit. (Embodied Olympics `long-jump`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Do a long jump: run up, take off behind the take-off line and land in the sand pit.
 
-## Difficulty
-The sand begins a metre beyond the line: with the foot kept behind the line the robot has to fly about 1.2 m. Its running strides are in the air for less than 0.1 s and 0.4 m, its best published standing jump is 0.9 m. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 5 resets (only the last attempt is graded).
+## Success criteria
+A runway 40 m long and 1.22 m wide leads to the take-off line (x = 0, the pit-side edge of the take-off board) and a
+sand pit 9 m long and 2.75 m wide that begins 1.0 m beyond the line. The referee's stages, in order: take-off,
+landing.
+- Take-off: the robot's first contact with the sand ends a flight (nothing of it touching anything for at least
+  0.05 s) whose last ground contact before lift-off was within the runway's width and during which the pelvis rose at
+  least 0.05 m above its height at lift-off. Taking off before the board is allowed.
+- Landing: 2 s after the first sand contact the jump is complete. The mark is the point nearest the take-off line at
+  which any part of the robot touched the sand in those 2 s; since the sand begins 1.0 m beyond the line, a valid jump
+  is always at least 1.0 m. The success is called then.
 
-## Reference solution
-None (as `embodied-olympics-fun-long-jump-i00-privileged`).
+Fouls (each fails the attempt): before the landing, a foot on the ground with any part of it on or over the take-off
+line's plane; any part touching the ground at or beyond the line outside the sand; touching the sand without such a
+flight, or after a flight that took off outside the runway's width or rose less than 0.05 m; in the 2 s after the
+landing, touching the ground outside the pit nearer the take-off line than the mark; leaving the venue (any part on
+the ground beyond the level area). The robot may land on any part of its body: the generic fall rule is off. Time
+limit: 60 s (6,000 control steps).
 
-## Verification
-The sim sidecar's referee judges the live attempt, and that is the verdict (`final.json`: `graded_by` live, `replays` 0;
-no grading replay, owner 2026-10-17); the frozen start is checked on the live simulator (`instance_mismatch`:
-infrastructure), and the video is rendered from the recorded attempt afterwards. `/tests/grade.py` reads
-`/data/final.json`: pass iff the live attempt succeeded. The
-rules: World Athletics rules for the long jump. The runway is 40.0 m long and 1.22 m wide along +x. The take-off line is x = 0, the edge of the white take-off board (0.2 m long, level with the runway) that is nearer the pit. The landing area is a pit of sand, level with the runway, that begins 1.0 m beyond the take-off line and is 9.0 m long and 2.75 m wide, centred on y = 0. Before your landing in the sand: no foot that is on the ground may have any part of it on or over the take-off line's plane (TR 30.1.1; the whole foot counts, also the parts of it that are in the air), and nothing of you may touch the ground at x >= 0 outside the sand (TR 30.1.4: the runway beyond the line and the ground beside the pit). Your jump is the flight (nothing of you touches anything, for at least 0.05 s) that ends with your first contact with the sand: its last ground contact before lift-off must have been within the runway's width (TR 30.1.2), and during it your pelvis must rise at least 0.05 m above its height at lift-off. Taking off before the board is allowed; the jump is measured from the take-off line all the same. You may land on any part of your body. The mark is the point nearest the take-off line at which any part of you touches the sand in the first 2.0 s after the first contact; in that time you may not touch the ground outside the pit nearer the take-off line than the mark (TR 30.1.5). You succeed when that time has passed after a valid jump: the mark is then at least 1.0 m. A fall is not a failure by itself. You fail on any of the faults above, when you touch the sand without such a flight, if you leave the venue (the level ground ends 8 m to each side of the runway's axis, 45 m behind the take-off line and 6 m beyond the pit), or after 60 s (the time allowed for a trial). No oracle; human review in the pull request that adds the benchmark (PROTOCOL §4).
+Graded: the live attempt, judged by the referee in the simulator service as it runs; nothing is replayed. The referee's
+success call is an event: once it is made at some control step, the attempt is a success. It is never shown to the
+agent and does not end the attempt: the physics goes on until the agent's `/finish`, the attempt's time limit, or the
+end of the agent's time (2 h), and nothing after the call undoes it. A failure the referee calls before any
+success (a foul, a fall, the physics diverging) ends the attempt at once with 0. Reaching the time limit or the end of
+the session without a success call scores 0. The agent has 5 resets, each starting a new attempt from the
+frozen start; only the last attempt (the one after the last reset) is graded, and a success in an earlier attempt does
+not count. A simulator error raised by the agent's own call ends the attempt with 0. An attempt that does not start
+from the frozen instance, or a service crash outside the agent's calls, is an infrastructure failure, not a score.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -38,13 +52,10 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Category | track-and-jumps |
-| Rule book | World Athletics Competition and Technical Rules, 2024 edition: TR 29 (the runway, the take-off board, the landing area), TR 30.1 (failures: 30.1.1 the take-off line, 30.1.2 the board's ends, 30.1.4 the ground between the line and the landing area, 30.1.5 the ground outside the landing area), TR 30.3 (the measurement), TR 25.17 (one minute for a trial); deviations: TR 30.1.3 (somersaulting) and TR 30.1.6 / 30.2 (how the athlete leaves the landing area) are not judged; the landing is judged for 2.0 s from the first contact with the sand · TR 29.3 (the plasticine indicator board): no imprint; the take-off line is judged geometrically: a foot on the ground with any part of it (also a part in the air) on or over the line's plane is a failure · TR 29.6 (the sand): the pit is a box whose contact follows the sinking of a plate into dry silica sand (a resistance growing in proportion to depth, Agarwal et al. 2019; friction 0.67, the sand's internal friction; MuJoCo's contact fitted to that law on this robot: a time constant of 0.15 s, damping ratio 2.0, an impedance falling from 0.95 to 0.4 over 0.05 m): it gives 7 mm under the standing robot and about 7 cm under a landing at 2.5 m/s and does not push back; it is not loose damp sand that flows, it is not raked, and it keeps no imprint, so the mark is the contact with the sand nearest the take-off line · TR 30 does not define a jump; here the flight into the pit must raise the pelvis at least 0.05 m above its height at lift-off (pulling the feet up and falling into the pit is no jump) · the rule book's wind gauge: there is no wind; the athlete alone, one trial |
-| Stages | take-off → landing |
-| Service | `environment/sim/server.py` (the Embodied Olympics adapter) on `rcb_service.py` (eai-standard/3.0), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
-| Observations | `head_left`, `head_right` (RGB 270 × 480, depth on `head_left`), `venue` (fixed); proprioception: joints, torques, targets, two IMUs, grip state |
-| Episode | 6000 control steps (60 s at 100 Hz); 5 resets, the last attempt graded |
-| Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md) |
+## License
+The Embodied Olympics robot library and running-policy port ([CHIGUI0/roboolympics](https://github.com/CHIGUI0/roboolympics)
+@ `7df999b`, a private repository) is released under the MIT License (`LICENSE.roboolympics` in the image); this
+benchmark's venues and referees are MIT too. Third-party parts in the image: the Unitree G1 model and meshes from MuJoCo
+Menagerie (BSD-3-Clause), the Unitree H1-2 model, meshes and walking policy and the G1 walking policy from
+unitree_rl_gym (BSD-3-Clause), the G1 running policy from C1801SYQ/g1_running (Apache-2.0), FALCON's G1 walking policy
+from LeCAR-Lab/FALCON (MIT) and the WBC-AGILE G1 walking policy from NVIDIA (Apache-2.0). No non-commercial terms apply.

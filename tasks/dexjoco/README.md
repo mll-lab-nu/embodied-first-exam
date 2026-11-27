@@ -1,213 +1,152 @@
 # DexJoCo
 
-Dexterous manipulation with a 16-DoF Allegro hand on a Franka Panda arm (or two of them), from DexJoCo
-([brave-eai/dexjoco](https://github.com/brave-eai/dexjoco), MIT): its 11 tasks, each on one frozen scene instance taken
-from a public human demonstration, in both modes.
+## Overview
 
-## Quick start
+Dexterous manipulation with a 16-DoF Allegro hand on a Franka Panda arm, or with two of them side by side, from
+DexJoCo: its 11 tasks, each on one frozen scene instance taken from a public human demonstration, in two modes. That
+makes 22 task directories, `tasks/dexjoco/dexjoco-<family>-i00-privileged` and `-standard`.
+
+- **privileged**: the agent has the full simulator (`rcb_dexjoco.Session`) and hands in one trajectory of action rows,
+  which the verifier replays open-loop from the frozen instance.
+- **standard**: the robot is a service in a `sim` sidecar that the agent cannot open. The agent gets camera images with
+  their calibration, proprioception and forward / inverse kinematics, in one live episode with no reset. The live
+  episode is graded.
+
+Both modes use DexJoCo's own success check of the task, with the changes listed below. Physics and rendering run on
+the CPU (MuJoCo 3.4.0, OSMesa): no GPU is needed.
+
+Image: `ghcr.io/mll-lab-nu/efe:dexjoco-0.1.2` (`images/dexjoco/`: DexJoCo at `8d23b0f` and its pinned dependency
+closure; no demonstrations, no policies). Every image is public, and Harbor pulls it:
 ```bash
-harbor run -d embodied-first-exam@all -p tasks/dexjoco -a codex -m openai/gpt-6-astra
+harbor run -d embodied-first-exam@all -p tasks/dexjoco -a codex -m <provider>/<model>
 ```
-Every image is public: Harbor pulls it.
 
-| | |
-|---|---|
-| upstream | DexJoCo @ `8d23b0f` (MIT); human demonstrations: Hugging Face dataset `DexJoCo/DexJoCo-Datasets-Raw` (public) |
-| simulator | `dexjoco`: DexJoCo's gymnasium envs on MuJoCo 3.4.0, CPU physics (bit-exact replay in a fresh process), OSMesa rendering; no GPU |
-| robots | `franka-allegro` (6 tasks), `franka-allegro-bimanual` (5 tasks, two arms side by side) |
-| score | binary: DexJoCo's own success check (its episode ends at the first success (privileged) or task failure); `water_plant` adds an aiming condition (below) |
-| tasks | 11 families × 2 modes: `tasks/dexjoco/dexjoco-<family>-i00-privileged` and `-standard` (`eai-standard/3.0`) |
-| image | `ghcr.io/mll-lab-nu/efe:dexjoco-0.1.2` (`images/dexjoco/`: DexJoCo @ 8d23b0f and its pinned dependency closure; no demonstrations, no policies) |
-| oracle | full, both modes: the demonstration's own actions |
-| agent time budget | 3600 s for every task, one number for both modes; each task's own `[agent] timeout_sec`, stated in the Time line of every instruction's closing `## Limits` (PROTOCOL §2) |
-| egress | allowlisted to the model APIs and the package registries in both modes: the reference demonstrations are public (PROTOCOL H.2) |
+## Upstream and license
+
+- Upstream: DexJoCo, [brave-eai/dexjoco](https://github.com/brave-eai/dexjoco) at `8d23b0f`
+  (`8d23b0fab23b17a58c4b55f3942e17013aaf8267`), cloned when the image is built. Citation: Wang et al., 2026, "DexJoCo:
+  A Benchmark and Toolkit for Task-Oriented Dexterous Manipulation on MuJoCo", arXiv:2605.16257.
+- License: MIT (copyright 2026 Dexjoco contributors). Bundled robot models: Franka Emika Panda (Apache License 2.0),
+  Wonik Allegro hand (BSD 2-Clause). Upstream's teleoperation stack includes GeoRT under a **non-commercial** license
+  (CC BY-NC); the image deletes it (`rm -rf teleoperation`), so no non-commercial component is in any task.
+- Demonstrations: the Hugging Face dataset `DexJoCo/DexJoCo-Datasets-Raw` (public). Each instance is the initial state
+  of one of them, and each reference solution is that demonstration's actions. Neither the image nor the agent's files
+  name the demonstration.
+
+## Changes from upstream
+
+- **Instance as a snapshot.** DexJoCo's reset samples poses from the global RNG, and its state restorers edit the
+  MuJoCo model (table height, fixed bodies), so a scene cannot be rebuilt from a seed. `instance.npz` holds the full
+  physics state (`mjSTATE_INTEGRATION`), the mocap targets, the controls, every numeric `MjModel` array a task can
+  change, and the env's Python-side task state (counters, flags), after DexJoCo's own restorer has applied the
+  demonstration's `state[0]`. Its hash is checked whenever a task rebuilds it. Its `meta` never says which
+  demonstration the scene came from (`rcb_dexjoco.check_instance_meta`).
+- **Episode limits lifted.** DexJoCo's episode caps (1000-1500 control steps), its real-time pacing, its per-step camera
+  rendering and the Hanoi env's wall-clock auto-reset after an illegal stack are disabled in `rcb_dexjoco.py`. The
+  wall clock is the agent's budget; `MAX_STEPS` (10,000,000 control steps) only stops a runaway episode.
+- **water_plant aim.** Upstream's check (nozzle in the zone around the plant while the trigger is held, 30 steps) also
+  passes with the bottle lying on the table and spraying away from the plant. The task additionally requires the spray
+  direction (the bottle's local +z) within 45° of the line from the nozzle to the plant, counted with the rest for
+  30 consecutive steps; upstream's own success alone no longer ends the episode. The demonstration sprays 33° off.
+- **Agent-ended standard episodes.** A success never ends a standard episode and is never shown
+  (`Session(hide_success=True)`); task failures still end it. How each family is judged at the end is in its README
+  (an event during the episode for microwave, photograph and water_plant; the end state, with up to 1.2 s of holding
+  the last command for a hold count to complete, for assembly, Hanoi, unlock-iPad, click-mouse, fold-glasses and
+  pinch-tongs; the end state alone for hammer_nail and pick_bucket).
+- **Threads.** DexJoCo's operational-space controller does its linear algebra in numpy, and OpenBLAS splits a product
+  differently on 1, on 2-3 and on 4 or more threads: three different final states, and the references of
+  `bimanual_assembly` and `fold_glasses` fail on fewer than 4. Every container that runs the simulator sets
+  `OPENBLAS_NUM_THREADS=4`. OpenBLAS never runs more threads than the CPUs in the process's affinity, so the 4 CPUs
+  must be visible (a cpuset, `taskset` or a 2-CPU Slurm allocation narrows that; a `cpus:` quota does not).
+  `rcb_dexjoco.blas_threads()` asks the loaded OpenBLAS for its count; with fewer than 4 no verdict is produced (below).
+- **Image pruning.** The image removes upstream's git history, the OpenPI examples and assets (policy configs and norm
+  statistics), the teleoperation stack and the docs' pictures.
+
+## Interface
+
+World frame: z up, metres; the robot stands at low x and reaches towards +x (bimanual: the right arm at y < 0, the left
+at y > 0); quaternions are wxyz. Control runs at 50 Hz, 10 physics substeps of 2 ms.
+
+An action row is DexJoCo's own: per arm the tcp target pose (xyz, quaternion wxyz, world frame), which DexJoCo's
+operational-space controller tracks, and 16 Allegro joint targets (rad; the simulator clamps them to the actuator
+ranges). Single arm 23 values, bimanual 46 (right arm first; the left hand's fingers in DexJoCo's mirrored order: ring,
+middle, index, thumb).
+
+**Privileged.** `/opt/tools/rcb_dexjoco.py` (`from rcb_dexjoco import Session`) on the frozen instance: unlimited exact
+resets, live object poses (`s.objects()`), DexJoCo's state dict (`s.state()`), thin primitives (tcp-target moves,
+hand-joint interpolation, hold, raw rows), rendering, recording, `s.status()` (with DexJoCo's `info`, and `aim_deg` for
+water_plant), `s.replay()` (as the grader does) and `s.save_trajectory()`, which refuses more than 50,000 rows
+(`MAX_TRAJECTORY_ROWS`, 1000 s of robot time; the longest reference has 1085). Each instruction gives the table height
+and the arm bases. Sessions append one line per start / reset / record / replay / exit to
+`/app/output/rcb_session_log.jsonl`, which the verifier reports as self-reported cost.
+
+**Standard** (`eai-standard/3.0`). The adapter is `embodied_first_exam/benchmarks/dexjoco/sim/server.py` (each standard
+task's `environment/sim/server.py`) on the shared layer `embodied_first_exam/standard/`, resume class `exact`.
+- Actions: `ee_pose` (DexJoCo's own row) and `joint_position` (per arm 7 arm and 16 hand joint targets; the arm part
+  becomes a tcp target by forward kinematics and the same controller tracks it, so the measured joints may differ in
+  the arm's redundant direction). Either way the executed, journaled and recorded row is DexJoCo's own, so the
+  recorded `trajectory.npz` replays in the privileged tooling unchanged.
+- Observations: every camera of the scene (static `front`, `back`, `left`, `right`, `top0`; the hand cameras on each
+  hand's mount) at 640 × 480, with calibration and optional z-depth. A camera on a body that is neither fixed in the
+  world nor moved by the robot's own joints gives images and depth only (no mount or extrinsics):
+  bimanual_photograph's `cam_pos_z`, on the camera the hands pick up. At most 1000 images per call (`/spec`
+  `max_frames_per_call`), checked before anything runs. Proprioception: `joint_pos`, `joint_vel`, `joint_effort` (7 + 16
+  per arm), `tcp_pose`, `tcp_target`, `hand_target`; no gripper-opening column.
+- Kinematics: stateless FK of the arm links, the hand mount and the tcp; IK of each tcp over its arm's 7 joints.
+  `robot_spec` gives joint limits, the hand drives' gains, the tcp (DexJoCo's `attachment_site`, the flange) and the
+  arm bases.
+- Not given: object poses, the table height, workspace coordinates, the success signal, resets. The goals state their
+  thresholds as relative distances.
+
+## Grading
+
+**Privileged.** `tests/grade.py` replays `/app/output/trajectory.npz` once in a fresh process of the verifier's own
+container (no network), from `tests/instance.npz`. As in DexJoCo's evaluation, the episode ends at the first success
+or task failure; success = the replay ends in success. `deterministic` = 1, `determinism_checked` = 0 and `replays` = 1
+(`--repeat N` is kept for a determinism measurement by hand). A missing file (`missing_trajectory`), a file for another
+task (`wrong_family`) or a file that is not a readable trajectory within the cap (`bad_trajectory`) is the agent's 0.
+`grader_error` = 1 comes with `infra_error` = 1: an exception in the grader, an instance that does not rebuild to its
+hash (`instance_mismatch`), or fewer than 4 OpenBLAS threads (`too_few_cpus`, with `visible_cpus` and
+`blas_threads`). The verdict is written before `replay.mp4` is rendered, and the video stops 2700 s after the grader
+started.
+
+**Standard.** The service judges the live episode with DexJoCo's check (`Session.step`, with this benchmark's changes)
+and records the verdict; `tests/grade.py` reads it from `final.json` (`graded_by = "live"`, `replays = 0`). Nothing is
+replayed to grade it. The frozen instance is checked when the episode begins: a scene that does not rebuild to the
+instance's hash gets no episode (`instance_mismatch`, `infra_error` = 1). A sidecar with fewer than 4 OpenBLAS threads
+starts no episode either (`too_few_cpus`, `grader_error` and `infra_error` = 1). A simulator error raised by the
+agent's call ends the episode with 0 (`sim_error` = 1). The video is one pass over the recorded trajectory after the
+verdict (`environment/sim/video.py`: the default static camera and the right hand camera); it never changes the
+verdict.
 
 ## Tasks
 
-| family | robot | asks | oracle rows (50 Hz) |
-|---|---|---|---|
-| water_plant | single | spray the plant: the trigger held while the nozzle is near the plant and aimed at it, 30 steps | 307 |
-| click_mouse | single | put the mouse on the pad and click, then keep it there 10 steps | 560 |
-| hammer_nail | single | drive the nail at least 4 cm deep with counted strikes | 202 |
-| pick_bucket | single | put the boxed food into the bucket and lift the bucket 15 cm | 580 |
-| pinch_tongs | single | three pinches with the tongs held 10 cm up, then 30 steps | 375 |
-| fold_glasses | single | fold both temples and put the glasses into the case, 50 steps | 612 |
-| bimanual_hanoi | bimanual | the three-disk tower moved to post C, 20 steps; an illegal stack fails | 1085 |
-| bimanual_microwave_cook | bimanual | hot dog in, door closed, start pressed | 815 |
-| bimanual_unlock_ipad | bimanual | enter 1-2-3 with a fingertip, unlocked 10 steps; a wrong digit fails | 392 |
-| bimanual_assembly | bimanual | peg into the tray's socket, touching the bottom 30 steps | 586 |
-| bimanual_photograph | bimanual | camera held 0.4 m in front of the logo, axis within 10 deg, shutter pressed | 260 |
-
-## Screening
-The families below are left out of the core set (`docs/core_set.toml`) because the screening runs (GPT-6 Luna, Codex
-xhigh, or GPT-6 Astra, Codex high) solved them in both modes; every base Luna solved in some mode is left out too. Their
-tasks keep their names.
-
-| family | privileged solved by | standard solved by |
+| family | robot | task |
 |---|---|---|
-| click_mouse | Luna | Luna |
-| bimanual_assembly | Astra (Luna failed) | Astra (Luna failed) |
-| bimanual_hanoi | Astra (Luna failed) | Astra (Luna failed) |
-| bimanual_microwave_cook | Astra (Luna failed) | Astra (Luna failed) |
+| water_plant | single arm | spray the plant: trigger held with the nozzle near the plant and aimed at it, 30 steps |
+| click_mouse | single arm | mouse on the pad, clicked there, then on the pad for 10 steps |
+| hammer_nail | single arm | drive the nail at least 4 cm deep with strikes |
+| pick_bucket | single arm | boxed food in the bucket and the bucket lifted 15 cm |
+| pinch_tongs | single arm | three pinches with the tongs, then held 10 cm up for 30 steps |
+| fold_glasses | single arm | both temples folded and the glasses in the case, 50 steps |
+| bimanual_hanoi | bimanual | the three-disk tower on post C, 20 steps; an illegal stack fails |
+| bimanual_microwave_cook | bimanual | hot dog in, door closed, start button pressed |
+| bimanual_unlock_ipad | bimanual | 1-2-3 entered with right-hand fingertips, unlocked 10 steps; a wrong digit fails |
+| bimanual_assembly | bimanual | the peg touching the socket's bottom for 30 steps |
+| bimanual_photograph | bimanual | camera 0.4 m in front of the logo, axis within 10°, shutter pressed |
 
-## Task definition
-- **Instance.** The task's env after DexJoCo's reset, with the initial object poses and table height of one human
-  demonstration restored by DexJoCo's own state restorer (demo `state[0]`). DexJoCo's reset samples poses from the
-  global RNG and its restorers edit the MuJoCo model (table height, fixed bodies), so the instance is a snapshot, not a
-  seed: `instance.npz` holds the full physics state (`mjSTATE_INTEGRATION`), mocap targets, controls, every numeric
-  `MjModel` array a task can change, and the env's Python-side task state (counters, flags). Its hash is checked
-  whenever a task rebuilds it (privileged verifier and its replays, the standard service when its episode begins). Its `meta` entry never says which
-  demonstration the scene came from (the reference is that demonstration's actions, and the agent reads
-  `/app/instance.npz`; PROTOCOL H.2): `rcb_dexjoco.save_instance` refuses such keys and values, and `ci_checks/check-agent-pointers.py` reads the
-  archive's string members. The demonstration is named in the task READMEs, which the agent does not read.
-- **Action.** DexJoCo's own row per control step (50 Hz, 10 physics substeps of 2 ms): per arm the tcp target pose
-  (xyz, quaternion wxyz, world frame), which DexJoCo's operational-space controller tracks, and 16 Allegro joint targets.
-  Single arm 23 values, bimanual 46 (right first; the left hand's fingers in DexJoCo's mirrored order).
-- **Episode.** In privileged mode, as in DexJoCo's evaluation, it ends at the first success or task failure (standard
-  mode: "Agent-ended episodes"). DexJoCo's episode cap, its
-  real-time pacing, its per-step camera rendering and hanoi's wall-clock auto-reset are lifted (`rcb_dexjoco.py`):
-  the wall clock is the only budget.
-- **Threads.** The replay is bit-exact for one OpenBLAS thread count. DexJoCo's operational-space controller does its
-  linear algebra in numpy, and OpenBLAS splits a product differently on 1 thread, on 2-3 threads and on 4 or more: three
-  different final-state hashes, and the references of `bimanual_assembly` and `fold_glasses` fail on fewer than 4
-  (4, 8, 16, 32 and 64 threads agree on all 11 references). Every container that runs the simulator therefore sets
-  `OPENBLAS_NUM_THREADS=4` (the sim sidecar: service, resume and the hook's video pass; the privileged agent container
-  and verifier): the references' numerics on any host that lets the container run on 4 CPUs. It also stops the default
-  from spinning against the containers' 4-CPU quota: `bimanual_hanoi` ran at 35 control steps/s that way on the
-  32-thread host, 150 with 4 threads.
-  - **4 visible CPUs are needed** by the agent's container and by the sim sidecar (their caps: main's in each task's
-    `task.toml`, the sidecar's in its `environment/docker-compose.yaml`; PROTOCOL §6). The
-    variable is an upper bound only: OpenBLAS never runs more threads than the CPUs the process may run on (its
-    affinity, `os.sched_getaffinity`). A cpuset narrows that (`docker --cpuset-cpus`, `taskset`, a Slurm allocation of
-    2 CPUs); a CFS quota does not (the tasks' `cpus: 4` caps, `docker --cpus 2`: the process still sees every host CPU
-    and OpenBLAS still runs 4 threads, only slower). Measured in the image (`openblas_get_num_threads64_` of numpy's
-    own library): `--cpuset-cpus 0,1` with `OPENBLAS_NUM_THREADS=4` runs 2 threads, `--cpuset-cpus 0-2`
-    runs 3, `--cpus 2` runs 4, and the `fold_glasses` reference fails on 2 (final-state hash `0abf8081…` instead of
-    `fd58ca0b…`), with `deterministic = 1` and the instance exact: it would read as the agent's failure.
-  - **The guard.** `rcb_dexjoco.blas_threads()` asks the loaded OpenBLAS for its thread count (if that cannot be
-    read: min(visible CPUs, `OPENBLAS_NUM_THREADS`)). With fewer than 4 no verdict on the agent is produced:
-    the privileged verifier replays nothing and writes `too_few_cpus = 1`, `grader_error = 1`, `infra_error = 1`
-    (a missing or malformed file is still the agent's 0: that needs no simulation); the standard service starts no
-    episode (`final.json`: `reason = "too_few_cpus"`, `gave_up`, `infra_error = 1`; the service answers every request
-    with the refusal, 409), the collect hook checks the live episode's count, and `tests/grade.py`
-    reports `too_few_cpus = 1` with `grader_error = 1` and `infra_error = 1`. `visible_cpus` and `blas_threads` are in
-    every `reward.json` that had a simulation. In the privileged agent's container the tooling only warns (stderr): the
-    agent's own runs are the agent's business, the verdict is the verifier's.
-- **water_plant.** Upstream's zone + trigger test passes with the bottle lying on the table and spraying away from the
-  plant (two Opus 5.5 runs did exactly that). The task also requires the spray direction (the bottle's local +z) within
-  45 deg of the nozzle-to-plant line, held with the rest for 30 steps; the demonstration sprays 33 deg off.
+Robots: `franka-allegro` (6 families), `franka-allegro-bimanual` (5 families). Each family has one privileged and one
+standard task on the same instance (`instance_seed` 0); the other allowed seeds' instances and references are in the
+privileged task's `tests/seeds/` (`[metadata.seeds]` in each `task.toml`). Each task's README states its exact success
+condition. Every task's agent time is its own `[agent] timeout_sec` (1 h). Agent egress is the model APIs and the
+package registries only, in both modes: the demonstrations are public.
 
-## Privileged mode
-`rcb_dexjoco.Session` on the frozen instance: unlimited exact resets, live object poses (`s.objects()`), DexJoCo's state
-dict, thin primitives (tcp-target moves, hand-joint interpolation, hold), rendering, recording and self-replay. The
-deliverable is `/app/output/trajectory.npz`; the verifier replays it once in a fresh process from its own copy of the
-instance: success = the replay succeeds. An instance that does not rebuild exactly (its hash
-differs: the image no longer builds the scene) is no verdict: nothing is replayed, `instance_mismatch`, `grader_error`
-and `infra_error` = 1.
-- **Hand-in cap.** A trajectory has at most 50,000 rows (`rcb_dexjoco.MAX_TRAJECTORY_ROWS`: 1000 s of robot time; the
-  longest reference has 1085). `save_trajectory` refuses a longer one and the verifier scores it 0 (`bad_trajectory`).
-  The cap is what the verifier can replay: the slowest family (`bimanual_hanoi`) runs about 140 control steps/s, so a
-  replay of 50,000 rows takes 6 min of the verifier's 3600 s on an idle host. The agent's own sessions have no step
-  budget.
-- **What is the agent's 0 and what is not.** A file that is not a readable trajectory (not an npz, pickled or object
-  arrays, no `task` or `actions`, a wrong shape, NaN/inf, over the cap) is `bad_trajectory = 1`; `grader_error = 1` is
-  left for the verifier's own failures and comes with `infra_error = 1` (an exception in the grader, or fewer than 4
-  OpenBLAS threads: `too_few_cpus`, Threads above). The verdict is written before `replay.mp4` is rendered, and the
-  video stops 2700 s after the grader started.
+## Others
 
-## Standard mode (`eai-standard/3.0`)
-The adapter (each standard task's `environment/sim/server.py`) on the shared layer (`embodied_first_exam/standard/`, copied
-unchanged), resume class `exact`:
-- **actions:** `ee_pose` (DexJoCo's own row) and `joint_position` (per arm 7 arm + 16 hand joint targets; the arm part
-  becomes a tcp target by forward kinematics, the same controller tracks it). The service journals and records the
-  executed DexJoCo row, so the recorded trajectory replays in the privileged tooling unchanged.
-- **observations:** every camera of the scene (static `front`, `back`, `left`, `right`, `top0`; the hand cameras on each
-  hand's mount) at 640 x 480 with calibration (static pose or mount link), optional z-depth from the same renderer;
-  a camera whose body is neither fixed in the world nor moved by the robot's own joints alone (`scene_camera` in
-  `server.py`, decided from the model as MyoSuite's service does) gives images
-  and depth only: no mount, `extrinsic_cv` / `cam2world_gl` null, NaN per frame. In the 11 families that is
-  bimanual_photograph's `cam_pos_z`, the lens of the camera the hands pick up;
-- **frames per call:** at most 1000 images (cameras x frames, per-frame depth counted again; `/spec`
-  `max_frames_per_call`), checked before anything is executed (400). Every frame is held until the response is sent;
-  measured on the layer's Recorder with 640 x 480 frames: 2.7 GB per 1000 RGB frames, 5.1 GB per 1000 images of one
-  camera with per-frame depth, on top of the simulator's 1.9 GB. The default camera at
-  the default 10 fps needs 102 images for the longest chunk or hold chunk (10 s, `max_chunk_s`);
-  proprioception `joint_pos`, `joint_vel`, `joint_effort` (7 + 16 per arm), `tcp_pose`, plus `tcp_target` and
-  `hand_target` (the targets being tracked); no gripper-opening column (a dexterous hand).
-- **kinematics:** stateless FK of the arm links, the hand mount and the tcp; IK of each tcp over its arm's 7 joints
-  (damped least squares within the joint ranges).
-- **robot_spec:** joints with the simulator's limits (arm torque limits; hand position actuators unlimited in effort),
-  the hand drives' gains, the tcp definition (DexJoCo's `attachment_site`, the flange), the arm bases.
-- **grading: the live episode.** `success` = DexJoCo's own success check
-  (`Session.step`, with this benchmark's tightened checks such as water_plant's aim and 30-step hold) on the episode the
-  service ran, recorded by the service in `episode.json` when the episode ends; `final.json` has `graded_by = "live"`,
-  `replays = 0`, `live_success`, `live_sha` (the final-state hash). Nothing is replayed to grade it. The end window:
-  "Agent-ended episodes".
-- **start state:** the service checks the frozen instance when the episode begins (`server.py`, before
-  `Episode.begin`): a scene that does not rebuild to the instance's recorded state hash (`instance_exact`) gets no
-  episode; the service gives up (`instance_mismatch = 1`, `infra_error = 1`, 409 to every request) before the agent is
-  served. A resume after a crash is checked against its checkpoint's hash.
-- **video:** the collect hook (`finalize.sh`) ends the service, writes the verdict into `final.json` (`finalized`,
-  `video_pending = true`), then renders `replay.mp4` in one video-only pass (`environment/sim/video.py`, a fresh
-  process: the trajectory stepped once from the frozen instance, the default static camera and the right hand camera,
-  at most ~1500 frames). It compares nothing and decides nothing; a video that fails or runs out of time is only a
-  missing video (`video = false`). Cost: about 9 CPU-minutes per trial (median 530 s, at most 960 s, physics
-  included).
-- **the hook's time:** `[[verifier.collect]] timeout_sec` = 5580 s (`RCB_COLLECT_BUDGET_S`): up to 900 s for the service
-  to end and dump the episode (seconds in practice), then the video, bounded by `RCB_COLLECT_VIDEO_MAX_S` = 4500 s (the
-  3600 s cutoff + 900 s: the physics of the longest episode the cutoff allows, rendered). `final.json` is written whole
-  (temporary file + rename).
-- **no verdict is infrastructure:** `tests/grade.py` reports `infra_error = 1` (never the agent's 0) when `final.json` is
-  missing, unreadable, or without a verdict (not `finalized`, or neither the live verdict `graded_by` nor a give-up),
-  when the service did not end and dump its episode for the hook, after a give-up following crashes that were not all
-  inside the agent's calls (`sim_crashed`, `resume_failed`), on `instance_mismatch`, and when the sidecar ran fewer than
-  4 OpenBLAS threads (`too_few_cpus`, with `grader_error = 1`; Threads above). Crashes all inside the agent's calls
-  (`sim_crashed_on_call`), a task failure and the timeout are the agent's 0. An episode that a simulator error ended
-  (`reason = "error"`) is reported as `sim_error = 1` and stays the trial's result: `eai-standard/3.0` has no rule that
-  makes it an infrastructure failure (that rule is realtime's).
-- **malformed requests:** a request is checked in full before anything is executed (`parse_submit` / `parse_observe`
-  under `checked`): a field of the wrong JSON type (a number or an object as `note`, a string or
-  a list as `dt` / `seconds` / `video_fps`, a string as `cameras`), a number too large for a float, NaN, a bad `depth`
-  is a 400, no physics, the episode goes on; `null` for `dt`, `seconds`, `video_fps`, `cameras` or `note` is the
-  default (what the shared client sends for an argument left out).
-- `embodied_first_exam/standard/check-standard-protocol.py` passes against a live service of a single-arm and a bimanual task (velocity limits are null:
-  WARN only). Crash recovery: the service killed between calls and inside a call resumes the same episode
-  (`resumes = 2`, exact hash) and the oracle still ends in success.
-
-### Agent-ended episodes
-
-Standard episodes are agent-ended (PROTOCOL §3 "Agent-ended episodes"; `RCB_AGENT_END` in the sim service,
-`/srv/rcb_agent_end.py`). The agent never sees a success: no `success` or progress in any meta, status or spec, and a
-success never ends the episode. The episode ends at the agent's `POST /finish` (reason `finished`), when its time runs
-out (`timeout`), at the runaway guard (`step_limit`), on a failure rule of the task (a 0, even after a success) or
-on a simulator error (judged as without the feature). It is then judged on how things stand when it ends; `episode.json`
-records `ended_by`, `hidden_success_seen` and the step of the first hidden success as evidence. No `RCB_STEP_LIMIT` is
-set: the runaway guard (`rcb_dexjoco.MAX_STEPS`) maps to `step_limit`.
-
-`rcb_dexjoco.Session(hide_success=True)` records DexJoCo's `succeed` (`now_success`) without ending the episode; its
-other terminations stay failures. The microwave, photograph and water-plant tasks are judged as events (seen during the
-episode, with its conditions at that moment); the assembly, Hanoi, unlock-iPad, click-mouse, fold-glasses and
-pinch-tongs tasks get up to 1.2 s with the hands held still at the end for a success that is completing; the rest are
-judged on the end state.
-
-## World-frame information
-Privileged mode gives world coordinates (object poses through the tooling, the table height and the arm bases in the
-instruction). Standard mode gives the robot's own pose only: each arm's base pose in `robot_spec`, the tcp in
-proprioception, the cameras' calibration; no table height, no object or workspace coordinates in `/spec` or the texts.
-The goals state their thresholds as relative distances (e.g. "within 0.20 m of the plant").
-
-## Reference solutions
-The demonstration's own actions (`solution/oracle_trajectory.npz`),
-replayed until the episode ends in success. The standard client sends float32, so
-the rows are rounded to float32 for both modes; every family still succeeds, `bimanual_hanoi` after holding its last row
-8 more steps (the rounded rows end its 20-step hold count short). Standard mode streams the same rows through the client
-as `ee_pose` chunks; the recorded trajectory is then exactly the privileged reference.
-
-## Task files
-The task directories are the deliverable; the tooling that built them is kept outside this repository. The committed
-`instance.npz` and `oracle_trajectory.npz` of a family are the ones in its privileged task dir
-(`tasks/dexjoco/dexjoco-<family>-i00-privileged/environment/instance.npz`, `.../solution/oracle_trajectory.npz`).
-
-## Standard-mode service details
-
-Serves `eai-standard/3.0`; `max_frames_per_call` = 1000. The service refuses the episode at its start with fewer than 4 CPUs (a give-up answered at once, docs/protocol/standard_mode.md §13).
+- **Reference solutions** (`solution/`, never in the image): the demonstration's own actions
+  (`solution/oracle_trajectory.npz`), rounded to float32 (the standard client's precision) and cut where the replay
+  ends in success; `bimanual_hanoi` holds its last row 8 more steps, since the rounded rows end its 20-step count short.
+  Standard mode streams the same rows as `ee_pose` chunks, so the recorded trajectory is exactly the privileged
+  reference.
+- **Resources:** the caps are in each task's README. The 4 CPUs of the agent's container (privileged) and of the sim
+  sidecar (standard) must be visible to the process (Threads, above).

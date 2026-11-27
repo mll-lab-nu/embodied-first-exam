@@ -1,0 +1,839 @@
+# README data for tasks/myosuite/*/README.md (scripts/task_conventions.py render_readme_v3)
+#
+# Sources checked for every success text: MyoSuite 2.12.2 (MyoHub/myosuite tag v2.12.2 = 5635e1a; the PyPI wheel the
+# image installs, read unpacked), files under myosuite/envs/myo/ named in each family's comment; the tooling
+# embodied_first_exam/benchmarks/myosuite/:
+#   rules       privileged/environment/rcb_myosuite.py: HOLD_S L68, RULE L110-112, TRACK_* L114-116, Session.step
+#               L436-489 (hold: `solved` for hold_steps in a row, `done` a failure; event: the first `solved`, bimanual
+#               with its contact check L475, L506-510; track: judged at track_steps), AGENT_END rules L491-504, baoding's
+#               1000 target points L482-488, replay L558-569 (until the episode ends or the rows run out)
+#   privileged  privileged/tests/grade.py main L114-218: missing -> missing_trajectory; not an npz, an entry larger than
+#               MAX_ROWS (360 s x STEPS_PER_S, L41-47) allows, wrong family, not (T, nu), T = 0 or > MAX_ROWS, NaN/inf ->
+#               0; one fresh-process replay (REPLAY_TIMEOUT_S 780); no result -> replay_failed, grader_error 1;
+#               instance hash mismatch -> grader_error 1 (infra_error = grader_error, L50-51)
+#   standard    sim/server.py finish() L568-596 (AGENT_END: /finish or timeout run out a begun hold, the last command
+#               held, at most hold_steps; at_limit -> step_limit; reason error -> 0), ctrl_step L621-633; reset budget
+#               RCB_RESET_BUDGET in environment/docker-compose.yaml (10)
+#   realtime    tasks/myosuite/myosuite-table-tennis-i00-realtime/environment/sim/server.py L129-130 (end_judgement
+#               "events" for the event rule), the shared rcb_realtime.py / rcb_service.py layer; RCB_SLOWDOWN 1,
+#               RCB_RESET_BUDGET 10 in its docker-compose.yaml
+
+[benchmark]
+name = "MyoSuite"
+citation = "Caggiano et al., 2022"
+url = "https://github.com/MyoHub/myosuite"
+repo = "MyoHub/myosuite"
+commit = "5635e1a"
+
+[license]
+text = """
+MyoSuite ([MyoHub/myosuite](https://github.com/MyoHub/myosuite), version 2.12.2, tag `v2.12.2` = `5635e1a`) is
+released under the Apache License 2.0, as are the models it bundles (MyoSim, the MPL prosthetic arm, the object,
+furniture and YCB models). The MyoDex reference motions (the `dex_*` families) derive from the GRAB motion-capture
+dataset; MyoSuite asks their users to comply with GRAB's licence, which allows non-commercial scientific research
+only. The simulator is MuJoCo (Apache License 2.0).
+"""
+
+[robots]
+myohand = "MyoHand: musculoskeletal model of the human forearm and hand, 39 muscles"
+myoarm = "MyoArm: musculoskeletal model of the human shoulder, arm and hand"
+myoarm-torso = "MyoArm with torso: MyoSuite's table tennis player, 273 muscles and two pelvis slides, holding a paddle"
+myoarm-mpl = "MyoArm (63 muscles) next to a motorized prosthetic arm (MPL, 17 motors)"
+myolegs = "MyoLegs: musculoskeletal model of the human legs and pelvis"
+myoleg-osl = "MyoLeg with a powered knee-ankle prosthesis (OSL) on the right leg, 54 muscles"
+
+[modes.privileged]
+success = """
+Graded file: `/app/output/trajectory.npz` with `actions`, a numeric array with one row per control step and one column
+per actuator (muscles first, in the layout the tooling gives), as `s.save_trajectory(...)` writes it, at most
+{vars[rows]} rows. After the agent's session it is replayed once, open-loop, from the frozen start in a fresh process
+of a separate verifier container without network. The replay runs the rows in order until the episode ends as above;
+later rows are not run. If the rows run out before the episode has ended in success, the task fails. A missing file,
+a file that is not such an array, a file for another family, a wrong row width, an empty array, more rows than the
+limit, a non-finite value, or an `.npz` entry larger than the row limit allows scores 0. A replay that gives no result
+(it times out or dies), or a frozen start that does not rebuild with its recorded hash, is reported as
+`grader_error` (infrastructure), not as a score.
+"""
+
+[modes.standard]
+success = """
+Graded: the live episode, judged by the simulator service; nothing is replayed. No success signal is shown to the
+agent. The episode ends at the agent's `/finish`, at a failure above, at the episode's own end where the rule above
+has one, or when the agent's time ({timeout}) runs out. Resets granted: {resets}. A reset starts a new episode from
+the frozen start; only the episode running at the end is graded. A simulator error raised by the agent's own call
+ends the episode with 0. An episode that does not start from the frozen instance, or a service crash outside the
+agent's calls, is an infrastructure failure, not a score.
+"""
+
+[modes.realtime]
+success = """
+Graded: the live episode, judged by the simulator service; nothing is replayed. The clock does not stop: an episode
+starts paused at the frozen start, and from the agent's first `submit` one control step runs every 10 ms × S of wall
+time (slowdown S = {slowdown}) whether or not the agent sends anything; when the planned rows run out, the last row is
+held. No success signal is shown to the agent. The episode ends at the agent's `/finish`, at a failure above, or when
+the agent's time ({timeout}) runs out. Resets granted: {resets}. A reset starts a new episode from the frozen start;
+only the episode running at the end is graded. After the agent's first command, a simulator error or a simulator crash
+inside a control step is the agent's 0; anything before the first command, a killed service, a failed resume or a
+reset that does not rebuild the scene is an infrastructure failure, not a score.
+"""
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Families: one MyoSuite env each (rcb_myosuite.py TASKS). Each text = the env's own predicate (or ours for MyoDex) and
+# how the mode ends the episode. `rows`: privileged/tests/grade.py MAX_ROWS (360 s x STEPS_PER_S).
+
+[families.key_turn]
+# myobase/key_turn_v0.py get_reward_dict L117-151: solved key_qpos > goal_th (3.14, L58); done |IF/TH tip-to-key-head
+# distance - 0.030| > far_th 0.1 (L117-150). dt 20 ms; HOLD_S 1.0 -> 50 steps (rcb_myosuite.py L68, L281).
+vars = { rows = "612,000" }
+privileged = """
+Success rule (MyoSuite `myoHandKeyTurnFixed-v0`, its `solved` held): the key's joint angle is above 3.14 rad (half a
+turn), held for 50 consecutive control steps (1 s at 20 ms per step).
+
+Failure (MyoSuite's `done`, ends the episode with 0): the index fingertip or the thumb tip is more than 0.13 m from
+the key head (MyoSuite: its distance differs from 0.03 m by more than 0.1 m).
+
+The replay ends in success at the first control step at which the goal has held for 50 consecutive control steps, or
+with 0 at a failure.
+"""
+standard = """
+Success rule (MyoSuite `myoHandKeyTurnFixed-v0`, its `solved` held): the key's joint angle is above 3.14 rad (half a
+turn), held for 50 consecutive control steps (1 s at 20 ms per step).
+
+Failure (MyoSuite's `done`, ends the episode with 0): the index fingertip or the thumb tip is more than 0.13 m from
+the key head (MyoSuite: its distance differs from 0.03 m by more than 0.1 m).
+
+Reaching the goal does not end the episode. When the agent sends `/finish` or its time runs out while the goal is
+being held but not yet for the full 50 steps, the service keeps stepping from that state with the last command held
+until the hold is complete, the goal is lost or a failure happens (at most 50 more steps). The task is passed if the
+goal has then held for at least 50 consecutive control steps up to the end. A failure ends the episode with 0, also
+after a held goal.
+"""
+
+[families.sarc_key_turn]
+# the same reward as key_turn (key_turn_v0.py L117-151) on myoSarcHandKeyTurnFixed-v0 (MyoSuite's sarcopenia variant:
+# every muscle's force halved). dt 20 ms; HOLD_S 1.0 -> 50 steps.
+vars = { rows = "648,000" }
+privileged = """
+Success rule (MyoSuite `myoSarcHandKeyTurnFixed-v0`, its `solved` held): the key's joint angle is above 3.14 rad (half
+a turn), held for 50 consecutive control steps (1 s at 20 ms per step). Every muscle has half its normal force
+(MyoSuite's sarcopenia model).
+
+Failure (MyoSuite's `done`, ends the episode with 0): the index fingertip or the thumb tip is more than 0.13 m from
+the key head (MyoSuite: its distance differs from 0.03 m by more than 0.1 m).
+
+The replay ends in success at the first control step at which the goal has held for 50 consecutive control steps, or
+with 0 at a failure.
+"""
+standard = """
+Success rule (MyoSuite `myoSarcHandKeyTurnFixed-v0`, its `solved` held): the key's joint angle is above 3.14 rad (half
+a turn), held for 50 consecutive control steps (1 s at 20 ms per step). Every muscle has half its normal force
+(MyoSuite's sarcopenia model).
+
+Failure (MyoSuite's `done`, ends the episode with 0): the index fingertip or the thumb tip is more than 0.13 m from
+the key head (MyoSuite: its distance differs from 0.03 m by more than 0.1 m).
+
+Reaching the goal does not end the episode. When the agent sends `/finish` or its time runs out while the goal is
+being held but not yet for the full 50 steps, the service keeps stepping from that state with the last command held
+until the hold is complete, the goal is lost or a failure happens (at most 50 more steps). The task is passed if the
+goal has then held for at least 50 consecutive control steps up to the end. A failure ends the episode with 0, also
+after a held goal.
+"""
+
+[families.obj_hold]
+# myobase/obj_hold_v0.py get_reward_dict L98-116: solved |goal site - object site| < 0.010; done > 0.300.
+# dt 20 ms; 50 steps.
+vars = { rows = "612,000" }
+privileged = """
+Success rule (MyoSuite `myoHandObjHoldFixed-v0`, its `solved` held): the object's reference point is less than 0.01 m
+from the goal point, held for 50 consecutive control steps (1 s at 20 ms per step).
+
+Failure (MyoSuite's `done`, ends the episode with 0): the object is more than 0.3 m from the goal point (dropped).
+
+The replay ends in success at the first control step at which the goal has held for 50 consecutive control steps, or
+with 0 at a failure.
+"""
+standard = """
+Success rule (MyoSuite `myoHandObjHoldFixed-v0`, its `solved` held): the object's reference point is less than 0.01 m
+from the goal point, held for 50 consecutive control steps (1 s at 20 ms per step).
+
+Failure (MyoSuite's `done`, ends the episode with 0): the object is more than 0.3 m from the goal point (dropped).
+
+Reaching the goal does not end the episode. When the agent sends `/finish` or its time runs out while the goal is
+being held but not yet for the full 50 steps, the service keeps stepping from that state with the last command held
+until the hold is complete, the goal is lost or a failure happens (at most 50 more steps). The task is passed if the
+goal has then held for at least 50 consecutive control steps up to the end. A failure ends the episode with 0, also
+after a held goal.
+"""
+
+[families.arm_reach]
+# myobase/reach_v0.py get_reward_dict L118-146 with myoedits/__init__.py L92-104 (one tip IFtip, far_th 1.0):
+# near_th 1 x 0.0125; far_th 1 x 1.0, off while time <= 2 dt. dt 20 ms; 50 steps.
+vars = { rows = "720,000" }
+privileged = """
+Success rule (MyoSuite `myoArmReachFixed-v0`, its `solved` held): the index fingertip is less than 0.0125 m from the
+target point, held for 50 consecutive control steps (1 s at 20 ms per step).
+
+Failure (MyoSuite's `done`, ends the episode with 0): from the third control step on, the index fingertip is more than
+1 m from the target point.
+
+The replay ends in success at the first control step at which the goal has held for 50 consecutive control steps, or
+with 0 at a failure.
+"""
+standard = """
+Success rule (MyoSuite `myoArmReachFixed-v0`, its `solved` held): the index fingertip is less than 0.0125 m from the
+target point, held for 50 consecutive control steps (1 s at 20 ms per step).
+
+Failure (MyoSuite's `done`, ends the episode with 0): from the third control step on, the index fingertip is more than
+1 m from the target point.
+
+Reaching the goal does not end the episode. When the agent sends `/finish` or its time runs out while the goal is
+being held but not yet for the full 50 steps, the service keeps stepping from that state with the last command held
+until the hold is complete, the goal is lost or a failure happens (at most 50 more steps). The task is passed if the
+goal has then held for at least 50 consecutive control steps up to the end. A failure ends the episode with 0, also
+after a held goal.
+"""
+
+[families.hand_reach]
+# myobase/reach_v0.py get_reward_dict L118-146 with myobase/__init__.py L523-538 (5 tips, far_th 0.044):
+# reach_dist = norm of the stacked 15 tip-to-target errors; near_th 5 x 0.0125 = 0.0625; far_th 5 x 0.044 = 0.22, off
+# while time <= 2 dt. dt 20 ms; 50 steps.
+vars = { rows = "504,000" }
+privileged = """
+Success rule (MyoSuite `myoHandReachFixed-v0`, its `solved` held): the five fingertips are near their five target
+points: the length of the combined error vector (all five fingertip-to-target offsets together) is less than 0.0625 m,
+held for 50 consecutive control steps (1 s at 20 ms per step).
+
+Failure (MyoSuite's `done`, ends the episode with 0): from the third control step on, that combined error is more than
+0.22 m.
+
+The replay ends in success at the first control step at which the goal has held for 50 consecutive control steps, or
+with 0 at a failure.
+"""
+standard = """
+Success rule (MyoSuite `myoHandReachFixed-v0`, its `solved` held): the five fingertips are near their five target
+points: the length of the combined error vector (all five fingertip-to-target offsets together) is less than 0.0625 m,
+held for 50 consecutive control steps (1 s at 20 ms per step).
+
+Failure (MyoSuite's `done`, ends the episode with 0): from the third control step on, that combined error is more than
+0.22 m.
+
+Reaching the goal does not end the episode. When the agent sends `/finish` or its time runs out while the goal is
+being held but not yet for the full 50 steps, the service keeps stepping from that state with the last command held
+until the hold is complete, the goal is lost or a failure happens (at most 50 more steps). The task is passed if the
+goal has then held for at least 50 consecutive control steps up to the end. A failure ends the episode with 0, also
+after a held goal.
+"""
+
+[families.hand_pose]
+# myobase/pose_v0.py get_reward_dict L113-135 with myobase/__init__.py L260-297 (pose_thd 0.7): pose_dist = norm of
+# target_jnt_value - qpos; far_th 4 pi / 2 = 2 pi. dt 20 ms; 50 steps.
+vars = { rows = "648,000" }
+privileged = """
+Success rule (MyoSuite `myoHandPoseFixed-v0`, its `solved` held): the hand and wrist joints are near the target pose:
+the length of the vector of joint-angle errors over all the hand's joints is less than 0.7 rad, held for 50
+consecutive control steps (1 s at 20 ms per step).
+
+Failure (MyoSuite's `done`, ends the episode with 0): that error is more than 2π rad.
+
+The replay ends in success at the first control step at which the goal has held for 50 consecutive control steps, or
+with 0 at a failure.
+"""
+standard = """
+Success rule (MyoSuite `myoHandPoseFixed-v0`, its `solved` held): the hand and wrist joints are near the target pose:
+the length of the vector of joint-angle errors over all the hand's joints is less than 0.7 rad, held for 50
+consecutive control steps (1 s at 20 ms per step).
+
+Failure (MyoSuite's `done`, ends the episode with 0): that error is more than 2π rad.
+
+Reaching the goal does not end the episode. When the agent sends `/finish` or its time runs out while the goal is
+being held but not yet for the full 50 steps, the service keeps stepping from that state with the last command held
+until the hold is complete, the goal is lost or a failure happens (at most 50 more steps). The task is passed if the
+goal has then held for at least 50 consecutive control steps up to the end. A failure ends the episode with 0, also
+after a held goal.
+"""
+
+[families.pen_twirl]
+# myobase/pen_v0.py get_reward_dict L139-165: rot_align = cosine of the pen's and the target pen's axes (top minus
+# bottom marker, L96-108); pos_align = |pen position - its target position|; solved rot_align > 0.95 and not
+# dropped; done dropped = pos_align > 0.075. dt 10 ms; HOLD_S 1.0 -> 100 steps.
+vars = { rows = "864,000" }
+privileged = """
+Success rule (MyoSuite `myoHandPenTwirlFixed-v0`, its `solved` held): the cosine of the angle between the pen's axis
+and the target pen's axis is above 0.95 (within about 18°), and the pen is within 0.075 m of its target position, held
+for 100 consecutive control steps (1 s at 10 ms per step).
+
+Failure (MyoSuite's `done`, ends the episode with 0): the pen is more than 0.075 m from its target position (dropped).
+
+The replay ends in success at the first control step at which the goal has held for 100 consecutive control steps, or
+with 0 at a failure.
+"""
+standard = """
+Success rule (MyoSuite `myoHandPenTwirlFixed-v0`, its `solved` held): the cosine of the angle between the pen's axis
+and the target pen's axis is above 0.95 (within about 18°), and the pen is within 0.075 m of its target position, held
+for 100 consecutive control steps (1 s at 10 ms per step).
+
+Failure (MyoSuite's `done`, ends the episode with 0): the pen is more than 0.075 m from its target position (dropped).
+
+Reaching the goal does not end the episode. When the agent sends `/finish` or its time runs out while the goal is
+being held but not yet for the full 100 steps, the service keeps stepping from that state with the last command held
+until the hold is complete, the goal is lost or a failure happens (at most 100 more steps). The task is passed if the
+goal has then held for at least 100 consecutive control steps up to the end. A failure ends the episode with 0, also
+after a held goal.
+"""
+
+[families.obj_reorient]
+# myobase/reorient_sar_v0.py get_reward_dict L139-174 (obj_rot = axis between the object's two marker geoms, L115-131):
+# solved cosine > 0.95 and not dropped; done pos_align > 0.075. dt 10 ms; 100 steps.
+vars = { rows = "720,000" }
+privileged = """
+Success rule (MyoSuite `myoHandReorient8-v0`, its `solved` held): the cosine of the angle between the object's axis
+and its target copy's axis is above 0.95 (within about 18°), and the object is within 0.075 m of its target position,
+held for 100 consecutive control steps (1 s at 10 ms per step).
+
+Failure (MyoSuite's `done`, ends the episode with 0): the object is more than 0.075 m from its target position
+(dropped).
+
+The replay ends in success at the first control step at which the goal has held for 100 consecutive control steps, or
+with 0 at a failure.
+"""
+standard = """
+Success rule (MyoSuite `myoHandReorient8-v0`, its `solved` held): the cosine of the angle between the object's axis
+and its target copy's axis is above 0.95 (within about 18°), and the object is within 0.075 m of its target position,
+held for 100 consecutive control steps (1 s at 10 ms per step).
+
+Failure (MyoSuite's `done`, ends the episode with 0): the object is more than 0.075 m from its target position
+(dropped).
+
+Reaching the goal does not end the episode. When the agent sends `/finish` or its time runs out while the goal is
+being held but not yet for the full 100 steps, the service keeps stepping from that state with the last command held
+until the hold is complete, the goal is lost or a failure happens (at most 100 more steps). The task is passed if the
+goal has then held for at least 100 consecutive control steps up to the end. A failure ends the episode with 0, also
+after a held goal.
+"""
+
+[families.die_reorient]
+# myochallenge/reorient_v0.py get_reward_dict L139-173 (pos_th 0.025, rot_th 0.262, drop_th 0.200, L59-61):
+# pos_err = goal - die - display offset (L124-126); rot_err = difference of the Euler angles (L127-133).
+# dt 10 ms; 100 steps.
+vars = { rows = "612,000" }
+privileged = """
+Success rule (MyoChallenge 2022 `myoChallengeDieReorientP1-v0`, its `solved` held): the die is within 0.025 m of the
+target die's position (MyoSuite corrects for the display offset between the two), and the length of the difference
+between the die's and the target's Euler angles is below 0.262 rad, held for 100 consecutive control steps (1 s at 10
+ms per step).
+
+Failure (MyoSuite's `done`, ends the episode with 0): the die is more than 0.2 m from the target position (dropped).
+
+The replay ends in success at the first control step at which the goal has held for 100 consecutive control steps, or
+with 0 at a failure.
+"""
+standard = """
+Success rule (MyoChallenge 2022 `myoChallengeDieReorientP1-v0`, its `solved` held): the die is within 0.025 m of the
+target die's position (MyoSuite corrects for the display offset between the two), and the length of the difference
+between the die's and the target's Euler angles is below 0.262 rad, held for 100 consecutive control steps (1 s at 10
+ms per step).
+
+Failure (MyoSuite's `done`, ends the episode with 0): the die is more than 0.2 m from the target position (dropped).
+
+Reaching the goal does not end the episode. When the agent sends `/finish` or its time runs out while the goal is
+being held but not yet for the full 100 steps, the service keeps stepping from that state with the last command held
+until the hold is complete, the goal is lost or a failure happens (at most 100 more steps). The task is passed if the
+goal has then held for at least 100 consecutive control steps up to the end. A failure ends the episode with 0, also
+after a held goal.
+"""
+
+[families.baoding]
+# myochallenge/baoding_v1.py get_reward_dict L216-260 (proximity_th 0.015, drop_th 1.25, L58-60; P1 registration
+# __init__.py L316-326, goal period 5 s): solved both ball-to-target distances < 0.015 and no ball below 1.25 m;
+# done a ball below 1.25 m. dt 25 ms; HOLD_S 5.0 -> 200 steps. The targets' trajectory has 1000 points: the episode
+# ends there (rcb_myosuite.py L482-488).
+vars = { rows = "540,000" }
+privileged = """
+Success rule (MyoChallenge 2022 `myoChallengeBaodingP1-v1`, its `solved` held): each of the two balls is within 0.015
+m of its own target marker, while the two markers circle the palm once every 5 s, held for 200 consecutive control
+steps (5 s at 25 ms per step: one full circle).
+
+Failure (MyoSuite's `done`, ends the episode with 0): a ball's height is below 1.25 m (it fell out of the hand).
+
+The replay ends in success at the first control step at which the goal has held for 200 consecutive control steps, or
+with 0 at a failure. The markers' path has 1,000 points: a replay that reaches step 1,000 without success fails.
+"""
+standard = """
+Success rule (MyoChallenge 2022 `myoChallengeBaodingP1-v1`, its `solved` held): each of the two balls is within 0.015
+m of its own target marker, while the two markers circle the palm once every 5 s, held for 200 consecutive control
+steps (5 s at 25 ms per step: one full circle).
+
+Failure (MyoSuite's `done`, ends the episode with 0): a ball's height is below 1.25 m (it fell out of the hand).
+
+Reaching the goal does not end the episode. When the agent sends `/finish` or its time runs out while the goal is
+being held but not yet for the full 200 steps, the service keeps stepping from that state with the last command held
+until the hold is complete, the goal is lost or a failure happens (at most 200 more steps). The task is passed if the
+goal has then held for at least 200 consecutive control steps up to the end. A failure ends the episode with 0, also
+after a held goal. The markers' path has 1,000 points: after 1,000 control steps (25 s) the episode ends and is judged
+as it stands, with no extra steps: passed if the goal has held for 200 consecutive control steps up to then.
+"""
+
+[families.relocate]
+# myochallenge/relocate_v0.py get_reward_dict L108-140 with the P1 registration __init__.py L151-163 (pos_th 0.1,
+# rot_th inf): solved |object - target| < 0.1; done |palm (S_grasp) - object| > drop_th 0.50 (L57, L95, L117).
+# dt 10 ms; 100 steps.
+vars = { rows = "504,000" }
+privileged = """
+Success rule (MyoChallenge 2023 `myoChallengeRelocateP1-v0`, its `solved` held): the object is less than 0.1 m from
+the target point in the receptacle (its orientation is not checked), held for 100 consecutive control steps (1 s at 10
+ms per step).
+
+Failure (MyoSuite's `done`, ends the episode with 0): the palm is more than 0.5 m from the object.
+
+The replay ends in success at the first control step at which the goal has held for 100 consecutive control steps, or
+with 0 at a failure.
+"""
+standard = """
+Success rule (MyoChallenge 2023 `myoChallengeRelocateP1-v0`, its `solved` held): the object is less than 0.1 m from
+the target point in the receptacle (its orientation is not checked), held for 100 consecutive control steps (1 s at 10
+ms per step).
+
+Failure (MyoSuite's `done`, ends the episode with 0): the palm is more than 0.5 m from the object.
+
+Reaching the goal does not end the episode. When the agent sends `/finish` or its time runs out while the goal is
+being held but not yet for the full 100 steps, the service keeps stepping from that state with the last command held
+until the hold is complete, the goal is lost or a failure happens (at most 100 more steps). The task is passed if the
+goal has then held for at least 100 consecutive control steps up to the end. A failure ends the episode with 0, also
+after a held goal.
+"""
+
+[families.table_tennis]
+# myochallenge/tabletennis_v0.py: solved = evaluate_pingpong_trajectory(contact history) is None (L169, L616-656):
+# OPPONENT contact after a PADDLE contact, with no paddle contact after the ball has left the paddle
+# (DOUBLE_TOUCH) and the ball on the own half for at most 2 steps of one first bounce (OWN_HALF) before it; no
+# own-half bounce is required. _get_done L267-277: time > MAX_TIME 3.0 s (L25), ball below 0.3 m, or solved; the
+# contact-issue test at L275 compares enum members with ints and never ends the episode. dt 10 ms; event rule.
+vars = { rows = "108,000" }
+privileged = """
+Success event (MyoChallenge 2025 `myoChallengeTableTennisP1-v0`, its contact test on the ball): the ball touches the
+opponent's half of the table after it has touched the paddle, and before that:
+- the ball did not touch the paddle again after it had left the paddle;
+- the ball touched the robot's own half only in one bounce, at most two control steps long.
+
+A bounce on the robot's own half before the hit is not required. Contacts with the net or anything else are not
+checked.
+
+Failure (MyoSuite's `done`, ends the episode with 0): 3 s of simulated time pass without the event, or the ball is
+below 0.3 m. A rally that has gone wrong (a second paddle touch, a second bounce on the robot's half) does not end the
+episode by itself: it can then no longer succeed, and it ends at one of these two.
+
+The replay ends in success at the first control step at which the success event happens, or with 0 at a failure.
+"""
+standard = """
+Success event (MyoChallenge 2025 `myoChallengeTableTennisP1-v0`, its contact test on the ball): the ball touches the
+opponent's half of the table after it has touched the paddle, and before that:
+- the ball did not touch the paddle again after it had left the paddle;
+- the ball touched the robot's own half only in one bounce, at most two control steps long.
+
+A bounce on the robot's own half before the hit is not required. Contacts with the net or anything else are not
+checked.
+
+Failure (MyoSuite's `done`, ends the episode with 0): 3 s of simulated time pass without the event, or the ball is
+below 0.3 m. A rally that has gone wrong (a second paddle touch, a second bounce on the robot's half) does not end the
+episode by itself: it can then no longer succeed, and it ends at one of these two.
+
+The success event does not end the episode. Once it has happened the task is passed, even if a failure above ends the
+episode later. Before it, a failure ends the episode with 0.
+"""
+realtime = """
+Success event (MyoChallenge 2025 `myoChallengeTableTennisP1-v0`, its contact test on the ball): the ball touches the
+opponent's half of the table after it has touched the paddle, and before that:
+- the ball did not touch the paddle again after it had left the paddle;
+- the ball touched the robot's own half only in one bounce, at most two control steps long.
+
+A bounce on the robot's own half before the hit is not required. Contacts with the net or anything else are not
+checked.
+
+Failure (MyoSuite's `done`, ends the episode with 0): 3 s of simulated time pass without the event, or the ball is
+below 0.3 m. A rally that has gone wrong (a second paddle touch, a second bounce on the robot's half) does not end the
+episode by itself: it can then no longer succeed, and it ends at one of these two.
+
+The success event does not end the episode. Once it has happened the task is passed, even if a failure above ends the
+episode later. Before it, a failure ends the episode with 0.
+"""
+
+[families.bimanual]
+# myochallenge/bimanual_v0.py get_reward_dict L285-369: solved = |object - goal| < proximity_th 0.17 (L69, L330) and
+# goal_touch >= 10 (steps with goal contact, counted over the episode, L337-339, L19-20); _get_done L371-379: time >
+# MAX_TIME 10 s (L21), object below 0.3 m, solved. rcb_myosuite.py L475, L494-497 applies
+# evaluate_contact_trajectory (bimanual_v0.py L600-620) at the first solved step: no ENV contact ever, >= 100
+# steps of MYO contact, >= 100 steps of PROSTH contact, only GOAL for the last 8 steps (contact_trajectory[-8:]).
+# The order of the two hands is not checked. dt 10 ms.
+vars = { rows = "216,000" }
+privileged = """
+Success event (MyoChallenge 2024 `myoChallengeBimanual-v0`, its `solved` and its contact check): the event is the
+first control step at which the object's centre is less than 0.17 m from the goal point on the goal pillar and the
+object has touched the goal pillar on at least 10 control steps of the episode so far. At that step the object's
+contact history must also pass MyoChallenge's contact check:
+- the object has touched the MyoArm's hand on at least 100 control steps (1 s at 10 ms per step);
+- the object has touched the prosthetic arm on at least 100 control steps;
+- on each of the last 8 control steps the object touched the goal pillar and nothing else;
+- the object never touched anything other than the MyoArm, the prosthesis, the start pillar and the goal pillar (the
+  table and the floor included).
+
+The order of the two hands is not checked. If the contact check fails at the step of the event, the episode ends with
+0.
+
+Failure (MyoSuite's `done`, ends the episode with 0): 10 s of simulated time pass without the event, or the object is
+below 0.3 m.
+
+The replay ends in success at the first control step at which the success event happens, or with 0 at a failure.
+"""
+standard = """
+Success event (MyoChallenge 2024 `myoChallengeBimanual-v0`, its `solved` and its contact check): the event is the
+first control step at which the object's centre is less than 0.17 m from the goal point on the goal pillar and the
+object has touched the goal pillar on at least 10 control steps of the episode so far. At that step the object's
+contact history must also pass MyoChallenge's contact check:
+- the object has touched the MyoArm's hand on at least 100 control steps (1 s at 10 ms per step);
+- the object has touched the prosthetic arm on at least 100 control steps;
+- on each of the last 8 control steps the object touched the goal pillar and nothing else;
+- the object never touched anything other than the MyoArm, the prosthesis, the start pillar and the goal pillar (the
+  table and the floor included).
+
+The order of the two hands is not checked. If the contact check fails at the step of the event, the episode ends with
+0.
+
+Failure (MyoSuite's `done`, ends the episode with 0): 10 s of simulated time pass without the event, or the object is
+below 0.3 m.
+
+The success event does not end the episode. Once it has happened the task is passed, even if a failure above ends the
+episode later. Before it, a failure ends the episode with 0.
+"""
+
+[families.soccer]
+# myochallenge/soccer_v0.py: solved = _goal_scored_condition L602-613 (ball centre x >= GOAL_X_POS, |y| <= 3.3,
+# 0 <= z <= 2.2; L29-30, L226-230); done L436-445: goal, time >= max_time 10 s (L285), pelvis below 0.2 m
+# (L615-623). Goalkeeper: P1 registration __init__.py L35-45, goalkeeper_probabilities (0, 0, 1) -> 'stationary'
+# (L137-176: zero velocity), its position on the goal line drawn at the frozen reset (L178-200). dt 10 ms.
+vars = { rows = "144,000" }
+opponent = "Goalkeeper on the goal line (scripted, MyoChallenge 2025's P1 policy `stationary`): it stays where the frozen start placed it"
+privileged = """
+Success event (MyoChallenge 2025 `myoChallengeSoccerP1-v0`, a goal): the ball's centre crosses the goal line, between
+the posts (at most 3.3 m to either side of the goal's centre) and from 0 to 2.2 m high.
+
+Failure (MyoSuite's `done`, ends the episode with 0):
+- 10 s of simulated time pass without a goal;
+- the pelvis is below 0.2 m (a fall).
+
+The replay ends in success at the first control step at which the success event happens, or with 0 at a failure.
+"""
+standard = """
+Success event (MyoChallenge 2025 `myoChallengeSoccerP1-v0`, a goal): the ball's centre crosses the goal line, between
+the posts (at most 3.3 m to either side of the goal's centre) and from 0 to 2.2 m high.
+
+Failure (MyoSuite's `done`, ends the episode with 0):
+- 10 s of simulated time pass without a goal;
+- the pelvis is below 0.2 m (a fall).
+
+The success event does not end the episode. Once it has happened the task is passed, even if a failure above ends the
+episode later. Before it, a failure ends the episode with 0.
+"""
+
+[families.chase_tag]
+# myochallenge/chasetag_v0.py (task CHASE, FLAT terrain; P1 registration __init__.py L207-223, win_distance 0.5):
+# solved = _chase_win_condition L878-882 (horizontal pelvis-to-opponent distance <= 0.5 m); lose L853-873: pelvis
+# below 0.5 m (L956-963), time >= maxTime 20 s (L525), |x| or |y| > 6.5 m. The opponent policy is drawn at reset
+# (L119-134); the frozen instance holds `stationary` (zero velocity, L136-147). dt 10 ms.
+vars = { rows = "432,000" }
+opponent = "Opponent body in the arena (scripted, MyoChallenge 2023's opponent; the frozen start drew its `stationary` policy): it stands still"
+privileged = """
+Success event (MyoChallenge 2023 `myoChallengeChaseTagP1-v0`, chase task: a tag): the pelvis comes within 0.5 m of the
+opponent, measured horizontally.
+
+Failure (MyoSuite's `done`, ends the episode with 0):
+- 20 s of simulated time pass without a tag;
+- the pelvis is below 0.5 m (a fall);
+- the pelvis leaves the arena: more than 6.5 m from its centre along either axis.
+
+The replay ends in success at the first control step at which the success event happens, or with 0 at a failure.
+"""
+standard = """
+Success event (MyoChallenge 2023 `myoChallengeChaseTagP1-v0`, chase task: a tag): the pelvis comes within 0.5 m of the
+opponent, measured horizontally.
+
+Failure (MyoSuite's `done`, ends the episode with 0):
+- 20 s of simulated time pass without a tag;
+- the pelvis is below 0.5 m (a fall);
+- the pelvis leaves the arena: more than 6.5 m from its centre along either axis.
+
+The success event does not end the episode. Once it has happened the task is passed, even if a failure above ends the
+episode later. Before it, a failure ends the episode with 0.
+"""
+
+[families.osl_run]
+# myochallenge/run_track_v0.py (myoChallengeOslRunFixed-v0, __init__.py L110-127: flat, start_pos 14, end_pos -15):
+# root = qpos[:2] (L305); win y < -15 (L552-556); lose L558-567: |x| > real_width 1, y > start_pos + 2 = 16, fall
+# L569-585 (head less than 0.2 m above the mean foot height, or below 0.2 m). The frozen start has the root at
+# y = 15 (instance.npz physics). No time limit (MyoSuite's 1000-step limit is lifted, rcb_myosuite.py L272).
+# dt 5 ms.
+vars = { rows = "216,000" }
+privileged = """
+Success event (MyoChallenge 2024 `myoChallengeOslRunFixed-v0`, the finish): the body's root crosses the finish line, y
+= -15 m, 30 m down the flat track from where it starts (y = 15 m). There is no time limit.
+
+Failure (MyoSuite's `done`, ends the episode with 0):
+- the root is more than 1 m to the side of the track's centre line;
+- the root goes back past y = 16 m (1 m behind the start);
+- a fall: the head is less than 0.2 m above the mean height of the two feet, or less than 0.2 m above the ground.
+
+The prosthetic leg's knee and ankle are driven by MyoSuite's own controller; the agent's commands for them are
+ignored.
+
+The replay ends in success at the first control step at which the success event happens, or with 0 at a failure.
+"""
+standard = """
+Success event (MyoChallenge 2024 `myoChallengeOslRunFixed-v0`, the finish): the body's root crosses the finish line, y
+= -15 m, 30 m down the flat track from where it starts (y = 15 m). There is no time limit.
+
+Failure (MyoSuite's `done`, ends the episode with 0):
+- the root is more than 1 m to the side of the track's centre line;
+- the root goes back past y = 16 m (1 m behind the start);
+- a fall: the head is less than 0.2 m above the mean height of the two feet, or less than 0.2 m above the ground.
+
+The prosthetic leg's knee and ankle are driven by MyoSuite's own controller; the agent's commands for them are
+ignored.
+
+The success event does not end the episode. Once it has happened the task is passed, even if a failure above ends the
+episode later. Before it, a failure ends the episode with 0.
+"""
+
+[families.dex_apple_lift]
+# rcb_myosuite.py step L456-472, track_errors L512-519 (TRACK_POS_M 0.03, TRACK_ROT_RAD 0.5, TRACK_FRAC 0.9,
+# TRACK_MAX_M 0.05, rotation not checked: L114-116); 57 steps = myodm/data/MyoHand_apple_lift.npz
+# time span / 20 ms (_track_steps L328-330). Termination: myodm/myodm_v0.py check_termination L337-363
+# (obj_fail_thresh 0.25, base_fail_thresh 0.25; posture termination off, L109-110). MyoDex's own `solved` is 0.
+vars = { rows = "180,000" }
+privileged = """
+Success rule (ours, on MyoDex `MyoHandAppleLift-v0` and its recorded reference motion of the apple; MyoDex itself
+defines no success): over the 57 control steps of the reference motion (20 ms each), the apple's motion follows the
+reference's. A step is on track when its errors are within these bounds:
+- the apple's displacement since the start is within 0.03 m of the reference's displacement since its start.
+
+The task is passed if at least 90% of the 57 steps are on track, the last step is on track, and the displacement error
+is never above 0.05 m. The apple's orientation is not checked.
+
+Failure (MyoDex's termination, ends the episode with 0): the apple's centre of mass is 0.25 m or more from the
+reference's, or 0.25 m or more from the wrist.
+
+The replay lasts 57 control steps (1.14 s), the length of the reference motion, and is judged at its last step; it
+ends earlier, with 0, at MyoDex's termination. A trajectory of fewer rows fails.
+"""
+standard = """
+Success rule (ours, on MyoDex `MyoHandAppleLift-v0` and its recorded reference motion of the apple; MyoDex itself
+defines no success): over the 57 control steps of the reference motion (20 ms each), the apple's motion follows the
+reference's. A step is on track when its errors are within these bounds:
+- the apple's displacement since the start is within 0.03 m of the reference's displacement since its start.
+
+The task is passed if at least 90% of the 57 steps are on track, the last step is on track, and the displacement error
+is never above 0.05 m. The apple's orientation is not checked.
+
+Failure (MyoDex's termination, ends the episode with 0): the apple's centre of mass is 0.25 m or more from the
+reference's, or 0.25 m or more from the wrist.
+
+The episode lasts 57 control steps (1.14 s), the length of the reference motion, and is judged when it ends. An
+episode ended earlier by `/finish` or by the end of the agent's time fails. MyoDex's termination ends the episode with
+0.
+"""
+
+[families.dex_cylinder_pass]
+# rcb_myosuite.py step L456-472, track_errors L512-519 (TRACK_POS_M 0.03, TRACK_ROT_RAD 0.5, TRACK_FRAC 0.9,
+# TRACK_MAX_M 0.05, rotation not checked: L114-116); 86 steps = myodm/data/MyoHand_cylindersmall_pass1.npz
+# time span / 20 ms (_track_steps L328-330). Termination: myodm/myodm_v0.py check_termination L337-363
+# (obj_fail_thresh 0.25, base_fail_thresh 0.25; posture termination off, L109-110). MyoDex's own `solved` is 0.
+vars = { rows = "216,000" }
+privileged = """
+Success rule (ours, on MyoDex `MyoHandCylindersmallPass-v0` and its recorded reference motion of the cylinder; MyoDex
+itself defines no success): over the 86 control steps of the reference motion (20 ms each), the cylinder's motion
+follows the reference's. A step is on track when its errors are within these bounds:
+- the cylinder's displacement since the start is within 0.03 m of the reference's displacement since its start.
+
+The task is passed if at least 90% of the 86 steps are on track, the last step is on track, and the displacement error
+is never above 0.05 m. The cylinder's orientation is not checked.
+
+Failure (MyoDex's termination, ends the episode with 0): the cylinder's centre of mass is 0.25 m or more from the
+reference's, or 0.25 m or more from the wrist.
+
+The replay lasts 86 control steps (1.72 s), the length of the reference motion, and is judged at its last step; it
+ends earlier, with 0, at MyoDex's termination. A trajectory of fewer rows fails.
+"""
+standard = """
+Success rule (ours, on MyoDex `MyoHandCylindersmallPass-v0` and its recorded reference motion of the cylinder; MyoDex
+itself defines no success): over the 86 control steps of the reference motion (20 ms each), the cylinder's motion
+follows the reference's. A step is on track when its errors are within these bounds:
+- the cylinder's displacement since the start is within 0.03 m of the reference's displacement since its start.
+
+The task is passed if at least 90% of the 86 steps are on track, the last step is on track, and the displacement error
+is never above 0.05 m. The cylinder's orientation is not checked.
+
+Failure (MyoDex's termination, ends the episode with 0): the cylinder's centre of mass is 0.25 m or more from the
+reference's, or 0.25 m or more from the wrist.
+
+The episode lasts 86 control steps (1.72 s), the length of the reference motion, and is judged when it ends. An
+episode ended earlier by `/finish` or by the end of the agent's time fails. MyoDex's termination ends the episode with
+0.
+"""
+
+[families.dex_bunny_inspect]
+# rcb_myosuite.py step L456-472, track_errors L512-519 (TRACK_POS_M 0.03, TRACK_ROT_RAD 0.5, TRACK_FRAC 0.9,
+# TRACK_MAX_M 0.05, rotation checked: L114-116); 99 steps = myodm/data/MyoHand_stanfordbunny_inspect1.npz
+# time span / 20 ms (_track_steps L328-330). Termination: myodm/myodm_v0.py check_termination L337-363
+# (obj_fail_thresh 0.25, base_fail_thresh 0.25; posture termination off, L109-110). MyoDex's own `solved` is 0.
+vars = { rows = "144,000" }
+privileged = """
+Success rule (ours, on MyoDex `MyoHandStanfordbunnyInspect-v0` and its recorded reference motion of the bunny; MyoDex
+itself defines no success): over the 99 control steps of the reference motion (20 ms each), the bunny's motion follows
+the reference's. A step is on track when its errors are within these bounds:
+- the bunny's displacement since the start is within 0.03 m of the reference's displacement since its start;
+- the bunny's rotation since the start is within 0.5 rad of the reference's rotation since its start.
+
+The task is passed if at least 90% of the 99 steps are on track, the last step is on track, and the displacement error
+is never above 0.05 m.
+
+Failure (MyoDex's termination, ends the episode with 0): the bunny's centre of mass is 0.25 m or more from the
+reference's, or 0.25 m or more from the wrist.
+
+The replay lasts 99 control steps (1.98 s), the length of the reference motion, and is judged at its last step; it
+ends earlier, with 0, at MyoDex's termination. A trajectory of fewer rows fails.
+"""
+standard = """
+Success rule (ours, on MyoDex `MyoHandStanfordbunnyInspect-v0` and its recorded reference motion of the bunny; MyoDex
+itself defines no success): over the 99 control steps of the reference motion (20 ms each), the bunny's motion follows
+the reference's. A step is on track when its errors are within these bounds:
+- the bunny's displacement since the start is within 0.03 m of the reference's displacement since its start;
+- the bunny's rotation since the start is within 0.5 rad of the reference's rotation since its start.
+
+The task is passed if at least 90% of the 99 steps are on track, the last step is on track, and the displacement error
+is never above 0.05 m.
+
+Failure (MyoDex's termination, ends the episode with 0): the bunny's centre of mass is 0.25 m or more from the
+reference's, or 0.25 m or more from the wrist.
+
+The episode lasts 99 control steps (1.98 s), the length of the reference motion, and is judged when it ends. An
+episode ended earlier by `/finish` or by the end of the agent's time fails. MyoDex's termination ends the episode with
+0.
+"""
+
+[families.dex_hammer_use]
+# rcb_myosuite.py step L456-472, track_errors L512-519 (TRACK_POS_M 0.03, TRACK_ROT_RAD 0.5, TRACK_FRAC 0.9,
+# TRACK_MAX_M 0.05, rotation checked: L114-116); 99 steps = myodm/data/MyoHand_hammer_use1.npz
+# time span / 20 ms (_track_steps L328-330). Termination: myodm/myodm_v0.py check_termination L337-363
+# (obj_fail_thresh 0.25, base_fail_thresh 0.25; posture termination off, L109-110). MyoDex's own `solved` is 0.
+vars = { rows = "180,000" }
+privileged = """
+Success rule (ours, on MyoDex `MyoHandHammerUse-v0` and its recorded reference motion of the hammer; MyoDex itself
+defines no success): over the 99 control steps of the reference motion (20 ms each), the hammer's motion follows the
+reference's. A step is on track when its errors are within these bounds:
+- the hammer's displacement since the start is within 0.03 m of the reference's displacement since its start;
+- the hammer's rotation since the start is within 0.5 rad of the reference's rotation since its start.
+
+The task is passed if at least 90% of the 99 steps are on track, the last step is on track, and the displacement error
+is never above 0.05 m.
+
+Failure (MyoDex's termination, ends the episode with 0): the hammer's centre of mass is 0.25 m or more from the
+reference's, or 0.25 m or more from the wrist.
+
+The replay lasts 99 control steps (1.98 s), the length of the reference motion, and is judged at its last step; it
+ends earlier, with 0, at MyoDex's termination. A trajectory of fewer rows fails.
+"""
+standard = """
+Success rule (ours, on MyoDex `MyoHandHammerUse-v0` and its recorded reference motion of the hammer; MyoDex itself
+defines no success): over the 99 control steps of the reference motion (20 ms each), the hammer's motion follows the
+reference's. A step is on track when its errors are within these bounds:
+- the hammer's displacement since the start is within 0.03 m of the reference's displacement since its start;
+- the hammer's rotation since the start is within 0.5 rad of the reference's rotation since its start.
+
+The task is passed if at least 90% of the 99 steps are on track, the last step is on track, and the displacement error
+is never above 0.05 m.
+
+Failure (MyoDex's termination, ends the episode with 0): the hammer's centre of mass is 0.25 m or more from the
+reference's, or 0.25 m or more from the wrist.
+
+The episode lasts 99 control steps (1.98 s), the length of the reference motion, and is judged when it ends. An
+episode ended earlier by `/finish` or by the end of the agent's time fails. MyoDex's termination ends the episode with
+0.
+"""
+
+[families.dex_cup_pour]
+# rcb_myosuite.py step L456-472, track_errors L512-519 (TRACK_POS_M 0.03, TRACK_ROT_RAD 0.5, TRACK_FRAC 0.9,
+# TRACK_MAX_M 0.05, rotation checked: L114-116); 81 steps = myodm/data/MyoHand_cup_pour1.npz
+# time span / 20 ms (_track_steps L328-330). Termination: myodm/myodm_v0.py check_termination L337-363
+# (obj_fail_thresh 0.25, base_fail_thresh 0.25; posture termination off, L109-110). MyoDex's own `solved` is 0.
+vars = { rows = "144,000" }
+privileged = """
+Success rule (ours, on MyoDex `MyoHandCupPour-v0` and its recorded reference motion of the cup; MyoDex itself defines
+no success): over the 81 control steps of the reference motion (20 ms each), the cup's motion follows the reference's.
+A step is on track when its errors are within these bounds:
+- the cup's displacement since the start is within 0.03 m of the reference's displacement since its start;
+- the cup's rotation since the start is within 0.5 rad of the reference's rotation since its start.
+
+The task is passed if at least 90% of the 81 steps are on track, the last step is on track, and the displacement error
+is never above 0.05 m.
+
+Failure (MyoDex's termination, ends the episode with 0): the cup's centre of mass is 0.25 m or more from the
+reference's, or 0.25 m or more from the wrist.
+
+The replay lasts 81 control steps (1.62 s), the length of the reference motion, and is judged at its last step; it
+ends earlier, with 0, at MyoDex's termination. A trajectory of fewer rows fails.
+"""
+standard = """
+Success rule (ours, on MyoDex `MyoHandCupPour-v0` and its recorded reference motion of the cup; MyoDex itself defines
+no success): over the 81 control steps of the reference motion (20 ms each), the cup's motion follows the reference's.
+A step is on track when its errors are within these bounds:
+- the cup's displacement since the start is within 0.03 m of the reference's displacement since its start;
+- the cup's rotation since the start is within 0.5 rad of the reference's rotation since its start.
+
+The task is passed if at least 90% of the 81 steps are on track, the last step is on track, and the displacement error
+is never above 0.05 m.
+
+Failure (MyoDex's termination, ends the episode with 0): the cup's centre of mass is 0.25 m or more from the
+reference's, or 0.25 m or more from the wrist.
+
+The episode lasts 81 control steps (1.62 s), the length of the reference motion, and is judged when it ends. An
+episode ended earlier by `/finish` or by the end of the agent's time fails. MyoDex's termination ends the episode with
+0.
+"""
+
+[families.dex_airplane_fly]
+# rcb_myosuite.py step L456-472, track_errors L512-519 (TRACK_POS_M 0.03, TRACK_ROT_RAD 0.5, TRACK_FRAC 0.9,
+# TRACK_MAX_M 0.05, rotation checked: L114-116); 99 steps = myodm/data/MyoHand_airplane_fly1.npz
+# time span / 20 ms (_track_steps L328-330). Termination: myodm/myodm_v0.py check_termination L337-363
+# (obj_fail_thresh 0.25, base_fail_thresh 0.25; posture termination off, L109-110). MyoDex's own `solved` is 0.
+vars = { rows = "108,000" }
+privileged = """
+Success rule (ours, on MyoDex `MyoHandAirplaneFly-v0` and its recorded reference motion of the airplane; MyoDex itself
+defines no success): over the 99 control steps of the reference motion (20 ms each), the airplane's motion follows the
+reference's. A step is on track when its errors are within these bounds:
+- the airplane's displacement since the start is within 0.03 m of the reference's displacement since its start;
+- the airplane's rotation since the start is within 0.5 rad of the reference's rotation since its start.
+
+The task is passed if at least 90% of the 99 steps are on track, the last step is on track, and the displacement error
+is never above 0.05 m.
+
+Failure (MyoDex's termination, ends the episode with 0): the airplane's centre of mass is 0.25 m or more from the
+reference's, or 0.25 m or more from the wrist.
+
+The replay lasts 99 control steps (1.98 s), the length of the reference motion, and is judged at its last step; it
+ends earlier, with 0, at MyoDex's termination. A trajectory of fewer rows fails.
+"""
+standard = """
+Success rule (ours, on MyoDex `MyoHandAirplaneFly-v0` and its recorded reference motion of the airplane; MyoDex itself
+defines no success): over the 99 control steps of the reference motion (20 ms each), the airplane's motion follows the
+reference's. A step is on track when its errors are within these bounds:
+- the airplane's displacement since the start is within 0.03 m of the reference's displacement since its start;
+- the airplane's rotation since the start is within 0.5 rad of the reference's rotation since its start.
+
+The task is passed if at least 90% of the 99 steps are on track, the last step is on track, and the displacement error
+is never above 0.05 m.
+
+Failure (MyoDex's termination, ends the episode with 0): the airplane's centre of mass is 0.25 m or more from the
+reference's, or 0.25 m or more from the wrist.
+
+The episode lasts 99 control steps (1.98 s), the length of the reference motion, and is judged when it ends. An
+episode ended earlier by `/finish` or by the end of the agent's time fails. MyoDex's termination ends the episode with
+0.
+"""

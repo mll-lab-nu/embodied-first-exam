@@ -1,44 +1,32 @@
-# molmospaces-navigate-to-i00-standard
+# MolmoSpaces · navigate-to (standard)
 
 | | |
 |---|---|
-| Benchmark | MolmoSpaces |
-| Mode | standard (`eai-standard/3.0`) |
-| Twin | `molmospaces-navigate-to-i00-privileged` |
-| Simulator / robot | `molmospaces` / `rainbow-rby1` |
-| Family / instance | `navigate-to` / seed 0 |
-| Oracle | `none` — no reference solution (MolmoSpaces' planners and grasp files are not shipped); positive example graded 1 by the separate verifier: molmospaces-navigate-to-i00-priv__YWMd22o (run codex-gpt6_1_sol-high, batch molmo-v2-sol-rby1, 2026-10-16); human review in PR #276 |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:molmospaces-0.2.5` |
+| Task ID | `molmospaces-navigate-to-i00-standard` |
+| Benchmark | [MolmoSpaces](https://github.com/allenai/molmospaces) (Kim et al., 2026), upstream `allenai/molmospaces@7351388` |
+| Robot | Rainbow Robotics RB-Y1 mobile manipulator: holonomic base, 6-joint torso, two 7-joint arms with grippers |
+| Mode | standard |
+| Instance | `navigate-to`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | None |
 
 ## Task
-Standard-mode twin of `molmospaces-navigate-to-i00-privileged` (the same frozen MolmoSpaces episode): Go to one of the two table lamps and stop close by, with the lamp in view of the head camera. The agent gets only the
-`eai-standard/3.0` client (docs/protocol/standard_mode.md); the simulator runs in the `sim` sidecar
-(`environment/docker-compose.yaml`), which owns the episode, serves cameras, proprioception and upstream's kinematic
-model, and records every executed row. The collect hook (`environment/sim/finalize.sh`) ends the episode, lets the
-service exit and writes `final.json` from the live episode's result (nothing is replayed to grade it), then renders
-`replay.mp4`; the verifier grades those artifacts in a separate sandbox (`tests/Dockerfile`).
+Go to one of the two table lamps and stop close by, with the lamp in view of the head camera.
 
-## Difficulty
-That of `molmospaces-navigate-to-i00-privileged` (its README), without resets, object poses or a success check: every move is planned from camera
-images, depth and the robot's own proprioception, within the benchmark's 100 s of simulated time.
+## Success criteria
+Success check (upstream `NavToObjTask`): of the two table lamps, take the one nearest the robot's base (horizontal
+distance). It is less than 1.5 m from the base, measured horizontally, and some of it is visible in the head camera.
 
-## Reference solution
-None is shipped (see `molmospaces-navigate-to-i00-privileged`).
+Graded: the live episode, judged by the simulator service; nothing is replayed. Meeting the goal does not end the
+episode and is not shown to the agent. The episode ends at the agent's `/finish` (or the `done` action, which is the
+same), at the horizon (500 control steps, 100 s of robot time), or when the agent's time
+(1 h) runs out. It is passed if upstream's success check holds on the state the episode ends in; a success
+reached earlier and then undone does not count. No reset: the one episode is graded. A simulator error raised by the
+agent's actions ends the episode with 0. A frozen start that does not rebuild, or a service crash between the
+agent's calls, is an infrastructure failure, not a score.
 
-## Verification
-`success` = the live episode's success, judged by the sim service (graded live, no replay). The episode
-follows upstream's evaluation: one upstream `Task.step` per executed row; it ends at upstream's `is_done()`
-(500 control steps), at the agent's `done`, or when the agent's time is up; then upstream's
-`judge_success()` on the final state: for the one of the 2 target objects nearest to the robot base (horizontal distance), the horizontal distance from the base to its position (the origin of its body, not its nearest surface) is less than 1.5 m and at least one of its pixels shows in head_camera. The service checks the frozen start (the instance's t = 0 state hash)
-when it builds the scene, before the agent is served. `replay.mp4` is rendered by one video-only pass from
-`trajectory.npz` after the verdict, which it never changes. `infra_error = 1` (no verdict on the agent): no, an
-unreadable or an unfinished `final.json`, a service that gave up after crashes between calls or never ended the
-episode, a frozen start the image no longer builds (`instance_mismatch`). No oracle; human review in PR #276 (PROTOCOL §4: per family, this task
-and its twin, a positive example and the `nop` result).
-
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -49,9 +37,10 @@ Caps per container (PROTOCOL §6).
 - GPU: any NVIDIA GPU, held by `sim`.
 - Recommended GPU: any 8 GB+ NVIDIA GPU (RTX 4090 / L4 / L40S).
 
-## Details
-| | |
-|---|---|
-| Upstream | molmo-spaces 0.2.9, benchmark `molmospaces-bench-v2/20260415`, package `holodeck-objaverse/NavToObjDataGenConfig/NavToObjHolodeckBench_20260115_json_benchmark` (Navigation, Holodeck houses (MolmoSpaces benchmarks; the ProcTHOR-10k package was built on scene version 20251121, 0.2.9 loads 20251217 and its episodes miss objects)), episode 237 |
-| World-frame information | none in the texts: object names and the goal only; the robot's own pose and the camera calibration come from the service (tasks/molmospaces/README.md) |
-| Benchmark notes | tasks/molmospaces/README.md |
+## License
+MolmoSpaces ([allenai/molmospaces](https://github.com/allenai/molmospaces), molmo-spaces 0.2.9, tag `v0.2.9` @
+`7351388`) is released under the Apache License 2.0 (Allen Institute for Artificial Intelligence). Assets: the scenes
+and AI2-THOR objects are CC BY 4.0; Objaverse objects are ODC-BY 1.0, each also under its creator's CC BY, CC BY-SA or
+CC0 licence, listed with its attribution in the image's `/opt/molmospaces/ATTRIBUTION.md`. The image build refuses
+any asset with non-commercial terms, so no non-commercial terms apply. The simulator is MuJoCo 3.5.0 (Apache License
+2.0).

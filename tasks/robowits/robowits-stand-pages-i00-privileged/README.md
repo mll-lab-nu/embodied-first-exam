@@ -1,50 +1,43 @@
-# robowits-stand-pages-i00-privileged
+# RoboWits · stand_pages (privileged)
 
 | | |
 |---|---|
-| Benchmark | RoboWits |
+| Task ID | `robowits-stand-pages-i00-privileged` |
+| Benchmark | [RoboWits](https://github.com/UMass-Embodied-AGI/RoboWits) (Lin et al., 2026), upstream `UMass-Embodied-AGI/RoboWits@9cc30ae` |
+| Robot | Bimanual Marvin: two 7-DoF arms with Pika parallel grippers |
 | Mode | privileged |
-| Twin | `robowits-stand-pages-i00-standard` |
-| Simulator / robot | `robowits` / `marvin-bimanual` |
-| Family / instance | `stand_pages` / seed 0 (allowed seeds: [0, 1, 2]; PROTOCOL §2) |
-| Oracle | `none` — No reference solution: RoboWits ships no expert or planner for its seed tasks. Solvable: model trial robowits-stand-pages-i00__npAKeQv (calib-high-1944, privileged) graded success=1, deterministic=1 by the separate verifier; nop scored 0. These records are from earlier versions of the task (before protocol v1.0, on the same frozen instance and predicate); not re-run on this version (static validation only, 2026-10-01). Human review per family (protocol §4). Re-graded with the current grader (two AMD workstations; the earlier positives were graded on the Intel laptop, so a trajectory that fails the earlier grader on AMD too says nothing either way): the cited robowits-stand-pages-i00__npAKeQv fails the earlier grader on AMD as well (inconclusive); __ZfFjKom passes the earlier grader but fails the current one: it ends at the first control step where the predicate holds (row 549 of 549) and the pages fall within the settle second. No positive confirmed under the current grader yet (the 10-14 standard A trial of Opus stood them as a tent; its trajectory is not in our hands). |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:robowits-0.1.1` |
+| Instance | `stand_pages`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | None |
 
 ## Task
-Stand the two pages upright on the table and let go of them and the bar so they stay standing. They start joined like an open book: the
-stabilizing bar already runs through the eyelets of both pages as a hinge pin, so nothing has to be inserted. One
-replayable trajectory from the frozen instance (evaluation scene 0 of RoboWits task 7), with the privileged tooling
-(`rcb_robowits.py`: the scene's state, resets, thin primitives, replay); the success criterion as graded is in
-`instruction.md`.
+Stand the two pages upright on the table and let go of them and the bar so they stay standing.
 
-## Difficulty
-Physical reasoning with a mechanical constraint: two thin, light pages (meshes with eyelets along one edge) lie flat
-on the table, joined like an open book by a 20 cm bar that already runs through the eyelets of both. A page cannot
-stand on its own; the hinged pages have to be stood up so that they brace each other, and at the end both pages must
-stand upright (Euler x and y within 15° of 0° or 180°), rest on the table, lie inside the table bounds, and be
-released (no robot contact with the pages or the bar) and at rest. It takes bimanual coordination with thin objects,
-and the tooling's primitives are thin (IK moves, joint moves, gripper, hold).
+## Success criteria
+The goal, for each of the two pages with eyelets: its roll and pitch angles are each within 15° of 0° or 180°; its
+footprint lies inside the table area; its bounding-box bottom is within 3 cm of the table top; and neither gripper's
+end-effector point is inside its bounding box grown by 3 cm on every side. No part of the robot touches either page
+or the stabilizing bar. Graded objects: the two pages.
 
-## Reference solution
-None: RoboWits ships no expert or planner, and none is written for this family (`oracle = "none"`). Evidence that it
-is solvable: `oracle_evidence` in `task.toml` and the positive example cited in the review table of PR #3 (the trial
-is published on the results site).
+The verifier, in a separate sandbox without network, replays `/app/output/trajectory.npz` once in a fresh process
+from its own copy of the frozen instance: a reset, then the rows open-loop, one per 1/30 s control step. A settle
+window follows the last row. The robot holds the last row's joint targets for 30 control steps (1 s), and nothing is
+checked. For 60 more control steps (2 s) the goal must then hold at every 6th step and at the last one. Through those
+60 steps the set of graded objects must not change, and no graded object may move more than 2 mm from where it was
+when they began. The task scores 1 only if the window passes.
 
-## Verification
-Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in a fresh process, once; pass iff
-RoboWits' `_check_success` holds after the replay and the rebuilt frozen scene matches
-the recorded one (`tests/grade.py`; a scene that does not match is the host's failure, `infra_error = 1`, never the
-agent's 0), plus `/logs/verifier/replay.mp4`. What the predicate checks, in words:
-`instruction.md`, "Success criterion (as graded)". The trajectory is the per-control-step JOINT_ABS record (T, 16);
-Genesis' CPU backend restores the frozen snapshot exactly, so in-process repeats and fresh processes agree bit for bit
-on one CPU vendor (tasks/robowits/README.md).
+Where the goal names the table area, it is the world-frame rectangle 0.21 ≤ x ≤ 1.00 m, −0.69 ≤ y ≤ 0.69 m;
+the table top is at z = 0.76 m.
 
-No oracle; human review in PR #3 (PROTOCOL §4): the positive example, the `nop` result and the predicate
-summary are in the PR's review table.
+A missing file scores 0, and so does an invalid one. Invalid means: not a readable `.npz`, no `task` or `actions`
+entry, an entry over 256 MB, a `task` other than this family, `actions` that are not finite numbers of shape (T, 16),
+or T over 200,000. The rows and the window share the cap of 200,000 control steps; a window cut short by the cap does
+not pass. The rebuilt scene must match the frozen instance: the same state hash, or every object within 2 mm and 0.02
+(quaternion components) and every joint within 0.002 rad of the recorded pose. A scene that does not match, or does
+not build, is an infrastructure error, not a score.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -54,10 +47,14 @@ Caps per container (PROTOCOL §6).
 - GPU: any NVIDIA GPU, held by `main`.
 - Recommended GPU: any 8 GB+ NVIDIA GPU (RTX 4090 / L4).
 
-## Details
-| | |
-|---|---|
-| RoboWits task | `07-stand-pages-v0` (RoboWits @ 9cc30ae, Genesis 0.4.7: CPU physics backend, EGL rendering on the GPU) |
-| Instance | entry 0 of RoboWits' `eval_dataset_50/07.json`; object poses and the expected state hash in `environment/instance.json` (the verifier's copy in `tests/`) |
-| Robot | Marvin bimanual: 2 × 7-DoF arms with Pika parallel grippers; JOINT_ABS actions (T, 16) at 30 Hz |
-| GPU | EGL camera rendering only (`environment/docker-compose.yaml`, `tests/docker-compose.yaml`) |
+## Others
+The frozen scene is entry 0 of RoboWits' `eval_dataset_50/07.json` (RoboWits task
+`robowits/07-stand-pages-v0`).
+
+## License
+RoboWits ([UMass-Embodied-AGI/RoboWits](https://github.com/UMass-Embodied-AGI/RoboWits) @ `9cc30ae`) is MIT-licensed,
+as declared in its `pyproject.toml`. Genesis 0.4.7 is under the Apache License 2.0, and RoboWits' asset bundle
+(`XHRlyb2001/RoboWits_assets`) also under Apache-2.0. Most families also load BlenderKit models. BlenderKit licenses
+each model to the account that downloads it, and these models may not be redistributed, so they are not in the image
+or the repository. Users fetch them with their own BlenderKit key, or use the encrypted research bundle, whose terms
+allow **non-commercial academic research only** (`images/robowits/NOTICE`).

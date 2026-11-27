@@ -1,46 +1,39 @@
-# dexjoco-click-mouse-i00-privileged
+# DexJoCo · click_mouse (privileged)
 
 | | |
 |---|---|
-| Benchmark | DexJoCo |
+| Task ID | `dexjoco-click-mouse-i00-privileged` |
+| Benchmark | [DexJoCo](https://dexjoco.github.io/) (Wang et al., 2026), upstream `brave-eai/dexjoco@8d23b0f` |
+| Robot | Franka Emika Panda arm with a 16-DoF Wonik Allegro hand |
 | Mode | privileged |
-| Twin | `dexjoco-click-mouse-i00-standard` |
-| Simulator / robot | `dexjoco` / `franka-allegro` |
-| Family / instance | `click_mouse` / seed 0 (allowed seeds: [0, 1, 2]; PROTOCOL §2) |
-| Oracle | `full` |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:dexjoco-0.1.2` |
+| Instance | `click_mouse`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | Included |
 
 ## Task
-DexJoCo `click_mouse` (a Franka Panda arm with a 16-DoF Allegro hand): Put the computer mouse on the mousepad, click its button there and leave the mouse on the pad.
-Privileged mode: the agent works in the simulator's container with live object poses, unlimited resets and thin motion
-primitives, and hands in one trajectory replayed open-loop from the frozen instance.
+Put the computer mouse on the mousepad, click its button there and leave the mouse on the pad.
 
-## Difficulty
-First-pass rating: medium. Dexterous manipulation with a 16-DoF hand on a 7-DoF arm (23 action values per control step);
-the primitives only move tcp and hand-joint targets, so grasping, pressing and every other skill is the agent's. The
-reference (the human teleoperator's demonstration) takes 560 control steps (11.2 s at 50 Hz).
+## Success criteria
+Success: for 10 consecutive control steps (0.2 s), the mouse is on the mousepad and the monitor is blue, at the end of
+each step. The mouse is on the pad when the mouse's position is at most the pad's radius (0.15 m) from the pad's centre
+horizontally and within ±0.05 m of it vertically. The monitor turns blue at the end of the first control step on which
+the mouse is on the pad and its button is pressed (the button joint `mouse_button` more than 0.001 rad past its
+starting angle), and stays blue for the rest of the episode. There is no task failure.
 
-## Reference solution
-`solution/oracle_trajectory.npz` = the human demonstration's own actions, rounded to float32 (the standard client's
-precision; the rounded rows still succeed) and replayed from the frozen instance until the episode ends in success
-(560 rows). The demonstration is public (DexJoCo-Datasets-Raw on Hugging Face), so agent egress is
-limited to the model APIs.
+Graded file: `/app/output/trajectory.npz`, as `s.save_trajectory(...)` writes it: this task's name (`click_mouse`) and at
+most 50,000 action rows of 23 finite values, one row per control step (50 Hz). After the agent's session the
+verifier replays it once, open-loop, from its own copy of the frozen start (`tests/instance.npz`), in a fresh process
+of a separate container without network. As in DexJoCo's own evaluation, the replay ends at the first control step on
+which the success check above passes or a task failure above happens; rows after that step are not run. The task is
+passed if the replay ends in success; a replay whose rows run out before that scores 0. A missing file scores 0, and so
+does a file for another task or one that is not such an array (not an npz, pickled or object arrays, no `task` or
+`actions` entry, a wrong number of columns, NaN or infinite values, more than 50,000 rows, a row with a zero tcp
+quaternion). Only the trajectory is scored (`gen.py` is not). A start that does not rebuild to the instance's recorded
+state hash, a verifier that runs fewer than 4 OpenBLAS threads, or an error inside the grader is an infrastructure
+failure, not a score.
 
-## Verification
-Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.npz`, once in a fresh process in the verifier's own
-sandbox (no network); pass iff the episode ends in success (`tests/grade.py`); plus
-`/logs/verifier/replay.mp4`, rendered after the verdict is written. A rebuilt instance that does not match its recorded
-hash (the image no longer rebuilds the scene) replays nothing and gives no verdict: `instance_mismatch`, `grader_error`
-and `infra_error` = 1, not the agent's 0.
-A file that is not a readable trajectory (not an npz, no `task` / `actions`, a wrong shape, NaN) or has more than
-50,000 rows scores 0 as `bad_trajectory`: the cap keeps a replay of the slowest family well inside the verifier's
-3600 s. A verifier that runs fewer than 4 OpenBLAS threads (fewer than 4 CPUs visible to it) replays
-nothing and gives no verdict: `too_few_cpus`, `grader_error` and `infra_error` = 1, not the agent's 0.
-Oracle: success after 560 control steps.
-
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -49,18 +42,16 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Upstream | DexJoCo @ 8d23b0f (brave-eai/dexjoco, MIT) on MuJoCo 3.4.0; CPU physics, OSMesa rendering, no GPU |
-| Instance | the initial state of the human demonstration `monitor_mousepad_demo_10_2026-03-10_20-07-29_950914` (DexJoCo-Datasets-Raw), restored with DexJoCo's own state restorer; instance sha `ad73bedaf42257f0` |
-| Resources | 4 CPUs, 8 GB, no GPU; `OPENBLAS_NUM_THREADS=4` in the agent's container and the verifier's (the simulation's result depends on the thread count below 4: tasks/dexjoco/README.md). The 4 CPUs must be visible to the container (its cpuset / affinity; a `cpus:` quota does not matter): OpenBLAS runs no more threads than that |
+## Others
+The simulation repeats exactly only for one OpenBLAS thread count (DexJoCo's controller does its linear algebra in
+numpy): every container that runs it sets `OPENBLAS_NUM_THREADS=4` and needs at least 4 CPUs in its CPU affinity (a
+cpuset or `taskset` narrows it; a CPU quota does not). A grading process that runs fewer than 4 OpenBLAS threads gives
+no verdict (`too_few_cpus`, an infrastructure failure).
 
-### Tooling notes
-DexJoCo's reset samples object poses from the global RNG and its state restorer edits the MuJoCo model (table height,
-fixed bodies), so `instance.npz` stores the full physics state (`mjSTATE_INTEGRATION`), the mocap targets, the controls,
-every numeric model array a task can change, and the env's Python-side task state. Its per-step camera rendering,
-real-time sleep, episode cap and hanoi's wall-clock auto-reset are disabled in the tooling (`rcb_dexjoco.py`).
-
-### Provenance
-Generated from the frozen instance (`environment/instance.npz`), restored from DexJoCo's demonstration of the task.
+## License
+DexJoCo ([brave-eai/dexjoco](https://github.com/brave-eai/dexjoco) @ `8d23b0f`; Wang et al., 2026, "DexJoCo: A
+Benchmark and Toolkit for Task-Oriented Dexterous Manipulation on MuJoCo", arXiv:2605.16257) is released under the MIT
+License (copyright 2026 Dexjoco contributors). Bundled robot models keep their own terms: the Franka Emika Panda model
+(Apache License 2.0) and the Wonik Allegro hand model (BSD 2-Clause). Upstream's teleoperation stack includes GeoRT
+under a **non-commercial** license (CC BY-NC); it is removed from the task image and not used. The simulator is MuJoCo
+3.4.0 (Apache License 2.0).

@@ -1,41 +1,51 @@
-# robodojo-swap-blocks-i00-privileged
+# RoboDojo · swap_blocks (privileged)
 
 | | |
 |---|---|
-| Benchmark | RoboDojo |
+| Task ID | `robodojo-swap-blocks-i00-privileged` |
+| Benchmark | [RoboDojo](https://github.com/RoboDojo-Benchmark/RoboDojo) (Chen et al., 2026), upstream `RoboDojo-Benchmark/RoboDojo@cb2a37d` |
+| Robot | Two ARX X5 arms (6 joints each, parallel two-finger grippers) at a table |
 | Mode | privileged |
-| Twin | `robodojo-swap-blocks-i00-standard` |
-| Simulator / robot | `robodojo` / `arx-x5-bimanual` |
-| Family / instance | `swap_blocks` / seed 0 (allowed seeds: [0, 1, 2]; PROTOCOL §2) |
-| Oracle | `none` — no positive example yet; no reference solution (RoboDojo releases no expert, and its training demonstrations carry no initial state); marked unvalidated (PROTOCOL §2 `validated`); human review in PR #142 |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
+| Instance | `swap_blocks`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | None |
 
 ## Task
-Swap the two cubes in three moves, lifting each cube and using the empty mat as a parking spot. After each move, pull the button's cap up and press it once. Finish with the cap pulled up while both arms are back where they started. (RoboDojo's `swap_blocks`). RoboDojo capability dimension: Memory. Instance i00 is RoboDojo's own evaluation layout
-`arx_x5/0/swap_blocks_0.json` (sha256 `fa3f3809370d58c0`), frozen in `instance.json`. The deliverable is one replayable trajectory of
-RoboDojo's 14-D joint action at 25 Hz (`/app/output/trajectory.npz`), graded by RoboDojo's own reward check for the task,
-with no step cap (RoboDojo's own evaluation gives a policy 700 actions; PROTOCOL §3).
+Swap the two cubes in three moves, lifting each cube and using the empty mat as a parking spot. After each move, pull
+the button's cap up and press it once. Finish with the cap pulled up while both arms are back where they started.
 
-## Difficulty
-A RoboDojo Memory task (mixed: rigid cubes, static mats, articulated spring button (joint with spring return) objects), graded by RoboDojo's own success thresholds (its evaluation gives a policy 700 actions; no step cap here, PROTOCOL §3). Privileged mode gives every object's pose and bounding box, the check's code, unlimited resets and
-self-replay; the helpers are only joint moves, gripper commands and RoboDojo's IK. This mode is the control for the
-standard twin.
+## Success criteria
+"On a mat" below: the cube's centre is less than 0.03 m from the mat's centre (straight-line distance). "Lifted": the
+cube is more than 0.03 m higher than its reference height (its start height, replaced by its current height when
+stages 2 and 6 pass). The button's position is a fraction of its travel. Twelve check stages, in order:
+1. One cube is still on its own start mat, and one cube is lifted.
+2. One cube is on the empty mat, and one cube is on its own start mat.
+3. The button is below 0.5. 4. The button is above 0.9.
+5. One cube is on the empty mat, and one cube is lifted.
+6. One cube is on the empty mat, and one cube is on the other cube's start mat.
+7. The button is below 0.5. 8. The button is above 0.9.
+9. One cube is on the other cube's start mat, and one cube is lifted.
+10. Each cube is on the other cube's start mat.
+11. The button is below 0.5.
+12. The button is above 0.9, and both arms are back home: each arm's end effector is within 0.15 m of its start
+    position along each of x, y and z, and within 20 degrees of its start orientation.
+Press counter, after every action: a press counts when the button goes below 0.5 after it was last above 0.95. Until
+the button first goes above 0.95 or below 0.5, nothing is counted, and a first fall below 0.5 without a rise above
+0.95 before it does not count. The task needs exactly 3 counted presses at the end; a 4th counted press fails the
+task for good.
 
-## Reference solution
-None. RoboDojo releases no expert or planner script, and its training demonstrations (Hugging Face
-`RoboDojo-Benchmark/RoboDojo`, `data/`) record no initial state or layout, so none replays on a frozen layout. The task is
-marked unvalidated (PROTOCOL §2 `validated`).
+Graded file: `/app/output/trajectory.npz` with `task` (this task's name) and `actions`, an array of at most 15,000
+rows of 14 finite numbers, one per 25 Hz action, as `s.save_trajectory(...)` writes it. After the agent's session it
+is replayed open-loop from the frozen start in a fresh process of a separate verifier container without network, up
+to 3 times (each in a new process), stopping at the first replay that succeeds; the task is passed if any
+replay succeeds. A replay runs the rows until every check stage has passed (success), a check fails for good (0), or
+the rows run out (0); rows after the success are not run. Privileged mode applies no step limit beyond the 15,000
+rows. A missing file, a file for another task, or a file that is not such an array scores 0. A replay that gives no
+result or runs over its time limit, or a frozen layout that rebuilds to another state than the instance records, is
+an infrastructure failure, not a score.
 
-## Verification
-`tests/grade.py` replays `/app/output/trajectory.npz` from the frozen layout up to 3 times (`[metadata] replays`), each in a
-fresh process (`rcb_robodojo.py replay`), stopping at the first success; reward 1 iff a replay ends in RoboDojo's success (`replays_succeeded`; a replay that did not start from the frozen layout's recorded state hash is `instance_mismatch`, no verdict). No oracle; human review in
-PR #142 (no positive example yet). `nop` (no
-trajectory) scores 0. The success description in `instruction.md` was written from RoboDojo's code
-(`task/RoboDojo/tasks/swap_blocks.py`, `env/reward_manager/`); the code is the reference.
-
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -45,10 +55,10 @@ Caps per container (PROTOCOL §6).
 - GPU: an RTX-class NVIDIA GPU (ray-tracing cores), one of the models in `gpu_types`: L40S, L40, L4, RTX 4090, RTX 6000 Ada, held by `main`.
 - Recommended GPU: L40S 48GB / L4 24GB / RTX 4090 24GB.
 
-## Details
-
-### Notes
-- Source: RoboDojo @ `cb2a37d` (MIT), its Isaac Lab 2.3 fork @ `afca7b0`, its cuRobo fork @ `d17b54c`; assets from the
-  Hugging Face dataset `RoboDojo-Benchmark/RoboDojo` @ `35efbc7` (Apache-2.0). The environment is RoboDojo's own evaluator
-  (`src/eval_client/eval_env.py`) with one env and no policy server.
-- tasks/robodojo/README.md has the benchmark's details (determinism, grading, the step limit, the image).
+## License
+RoboDojo ([RoboDojo-Benchmark/RoboDojo](https://github.com/RoboDojo-Benchmark/RoboDojo) @ `cb2a37d`) is released
+under the MIT License; its assets (Hugging Face `RoboDojo-Benchmark/RoboDojo`) under the Apache License 2.0; its Isaac
+Lab fork under the BSD 3-Clause License. The image also contains NVIDIA Isaac Sim 5.1 and its wheels (NVIDIA
+proprietary, no redistribution) and RoboDojo's cuRobo fork (NVIDIA's cuRobo licence): each user builds the image from
+public sources and accepts those terms (`images/robodojo/BUILD_ONLY`). No non-commercial terms apply to RoboDojo's
+own code and assets.

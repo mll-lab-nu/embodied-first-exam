@@ -1,37 +1,67 @@
-# roboarc-rope-threading-04-i01-standard
+# RoboARC · rope_threading (standard)
 
 | | |
 |---|---|
-| Benchmark | RoboARC |
-| Mode | standard (`eai-standard/3.0`) |
-| Twin | `roboarc-rope-threading-04-i01-privileged` |
-| Simulator / robot | `roboarc` / `aloha-2` |
-| Family / instance | `rope_threading` / seed 0 |
-| Oracle | `full` |
-| Agent time budget | 10800 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:roboarc-0.2.0` |
+| Task ID | `roboarc-rope-threading-04-i01-standard` |
+| Benchmark | [RoboARC](https://github.com/mll-lab-nu/RoboARC) (The RoboARC authors, 2026), upstream `mll-lab-nu/RoboARC@153eb8c` |
+| Robot | ALOHA 2: two 6-DoF ViperX 300 s arms with parallel-jaw grippers (MuJoCo Menagerie) |
+| Mode | standard |
+| Instance | `rope_threading`, seed 0 |
+| Time limit | 3 h |
+| Reference solution | Included |
 
 ## Task
-Standard-mode twin of `roboarc-rope-threading-04-i01-privileged` (same frozen instance): the agent gets only the `eai-standard/3.0` client
-(docs/protocol/standard_mode.md); the simulator runs in the `sim` sidecar (`environment/docker-compose.yaml`, GPU on the
-sidecar), which owns the scene and records the episode as a (T, 14) trajectory; its collect hook
-(`environment/sim/finalize.sh`) writes the live episode's verdict, then renders the video in one video-only
-replay of the recorded rows (no grading replay). The verifier runs in a separate sandbox (`tests/Dockerfile`) over the sidecar's artifacts. Compare against
-the privileged task to measure the cost of losing resets, privileged state and the tooling's primitives.
+Thread the rope, from its end that started farther from the rings, through the cyan grommet in the wall (G1), then the
+green ring (A), then the purple grommet in the wall (G2), then the amber ring (B), in that order, each the way given
+below.
 
-## Difficulty
-Same scene, instance and success rule as `roboarc-rope-threading-04-i01-privileged` (see its Difficulty). In standard mode the agent loses resets, privileged state and planning primitives: it sees camera images and proprioception only, acts through the client, and gets one episode, so it has to estimate the scene from images and recover from its own mistakes without starting over.
+## Success criteria
+Success needs all of these:
+- The rope goes through the holes in the order the task gives, counted from its material start, each in this
+  direction: cyan grommet in the wall (G1): cross away from the side containing the amber ring (B); green ring (A):
+  cross toward the side containing the purple grommet in the wall (G2); purple grommet in the wall (G2): cross away
+  from the side containing the green ring (A); amber ring (B): cross toward the side containing the cyan grommet in
+  the wall (G1). A crossing in the other direction does not count.
+- Pass fully through each required hole exactly once, with no extra crossings or ambiguous tangencies. Keep the full
+  rope thickness clear of the rim, with an additional 0.1 mm radial margin; the passage must clear both sides of each
+  ring's thickness, not just its middle plane.
+- Keep every rope point at or below 10 mm/s. Holding is allowed; release is not required.
+- Keep the rope intact; collapsed or inverted rope volume is not accepted.
+- Confirmation window: all of these conditions hold together for at least 0.5 s of simulated time. If one stops
+  holding, the window starts again.
 
-## Reference solution
-`solution/solve.sh` streams the rows of the standard reference (`solution/oracle_qpos.npy`, one `joint_position` row per control step, `hold`) through the client (`solution/oracle_replay.py`): the released reference moved an arm joint target more than the standard service's joint-speed rule (0.04 rad per control step) in 897 rows; the standard reference is re-recorded from the frozen instance within the rule (its rows are the joint targets the simulator applied, every arm joint step at most 0.04 rad), so the service runs every row as it is (the privileged reference is unchanged). That episode scored 1 (live and fresh replay, end state `4c03879dec745ef3`) on the release image efe:roboarc-0.1.0, which holds the same frozen instance and reference rows (efe:roboarc-0.2.0 adds speed cuts in the simulator's host code only; its physics is bit-identical) (2026-10-14; simulator source 37aa7ac0, tooling d8692e15).
+How the grader measures it:
+- Simulator breakdown (a MuJoCo instability: a non-finite or diverging acceleration, position or velocity): the
+  episode ends as an infrastructure error, not the agent's failure, unless an arm was forcing (even for one tick)
+  within the 0.25 s before it: then it is the agent's failure (forced_breakdown: what broke and what forced it).
+- Sizes (rope radius 4 mm): G1: inner radius 50 mm, tube radius 6 mm, centreline passage radius 46.9 mm on the middle
+  plane and 49.2 mm on the two tube-offset planes; A: inner radius 50 mm, tube radius 6 mm, centreline passage radius
+  46.9 mm on the middle plane and 49.2 mm on the two tube-offset planes; G2: inner radius 50 mm, tube radius 6 mm,
+  centreline passage radius 46.9 mm on the middle plane and 49.2 mm on the two tube-offset planes; B: inner radius 50
+  mm, tube radius 6 mm, centreline passage radius 46.9 mm on the middle plane and 49.2 mm on the two tube-offset
+  planes.
+- Aperture check: round_ring, compression allowance 1 mm. This allowance changes the geometric passage test; the
+  collision geometry stays as declared.
+- The material start is the rope end that is farther from the rings at the start.
+- Forcing: an arm drive (not a gripper drive) at 95% or more of its torque cap while that arm's gripper, or a part it
+  holds, presses on anything else with 20 N or more in total. Forcing alone never ends the episode and never changes
+  the score.
 
-## Verification
-See `tests/grade.py`.
+The graded episode is the one live episode in the `sim` service; nothing is replayed, and there is no reset. The
+episode ends when the agent sends `/finish` or when the agent's session ends (at the latest after 3 h, which the
+service counts from the agent's first request), or after 200,000 control steps (holds count).
 
-`nop` scored 0 on this base in both modes (the release image efe:roboarc-0.1.0; harbor run -a nop with rendering off; 2026-10-14).
+These ends are judged on the end state. The conditions above must hold when the episode ends and keep holding, with
+the last targets held, until they have held for the whole confirmation window; the time they already held before the
+end counts. Meeting them earlier in the episode does not count, and the service never reports success while the
+episode runs. A task failure (above) ends the episode at once and scores 0, even after a success; so does a simulator
+error caused by the agent's actions.
 
-## Resources
-Caps per container (PROTOCOL §6).
+Before the agent is served, the service checks the scene against the frozen instance; a mismatch is an infrastructure
+failure, not a score.
+
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -42,40 +72,12 @@ Caps per container (PROTOCOL §6).
 - GPU: any NVIDIA GPU, held by `sim`.
 - Recommended GPU: L40S 48GB / RTX 4090 24GB / L4 24GB (sm_86 or newer).
 
-## Details
-
-### Goal
-Thread the rope, from its end that started farther from the rings, through the cyan grommet in the wall (G1), then the green ring (A), then the purple grommet in the wall (G2), then the amber ring (B), in that order, each the way given below.
-
-### Success requirements
-- Required directions along that material order: cyan grommet in the wall (G1): cross away from the side containing the amber ring (B); green ring (A): cross toward the side containing the purple grommet in the wall (G2); purple grommet in the wall (G2): cross away from the side containing the green ring (A); amber ring (B): cross toward the side containing the cyan grommet in the wall (G1). Do not reverse the crossing directions.
-- Pass fully through each required hole exactly once, with no extra crossings or ambiguous tangencies. Keep the full rope thickness clear of the rim, with an additional 0.1 mm radial margin; the passage must clear both sides of each ring's thickness, not just its middle plane.
-- Keep every rope point at or below 10 mm/s. Holding is allowed; release is not required.
-- Keep the rope intact; collapsed or inverted rope volume is not accepted.
-- Keep all final conditions satisfied together for at least 0.5 s of simulation time. If any final condition stops holding, the confirmation interval starts again. A brief qualifying pose is not enough; let the simulation advance through the full interval.
-
-### Grader details (in addition to the requirements above)
-- The rope is a chain of 399 rigid capsule links (5.49 mm long, 8 mm thick) joined end to end; each joint bends and twists against a spring set by the rope's material, with damping, and stops bending at 0.9 rad, where neighbouring links touch. The links do not deform: nothing about the rope's shape or volume ends the episode. A link moving faster than 6 m/s or spinning faster than 300 rad/s is slowed by extra damping (a speed clamp); this is not reported and does not end the episode. Pulled harder than about 1e+03 N, the rope's links get extra rotational inertia (a tension guard), which only removes energy and is not reported.
-- Robot safety (this benchmark's tooling): no gripper target goes lower than 15 mm below the tabletop; a commanded target that would bring any part of a gripper lower is stopped there, on the commanded path. The fingertips reach about 16 mm beyond the tool frame (TCP) along its approach axis, open or closed. Arm drive torques are capped (the effort limits in robot_spec), so an arm pushing against an obstacle stalls at that torque. If any part of an arm goes more than 5 mm into a fixed object, such as a fixture or the table, the arm is stopped where it is. For that control step its joint targets are set to its measured joint positions, so it stops pushing. The response does not report these stops.
-- Forcing is recorded, not judged: an arm drive (not a gripper drive) at 95% of its torque cap or more while that arm's gripper, or a part it holds, presses on anything else with 20 N or more in total is forcing; 0.5 s of it on every physics tick is a forcing event in the evidence (`meta["safety"]`), shown to the reviewer when a success is reviewed. Forcing does not end the episode and does not change the grade by itself.
-- Simulator breakdown (a MuJoCo instability: a non-finite or diverging acceleration, position or velocity): the episode ends as an infrastructure error, not your failure, unless an arm was forcing (even for one tick) within the 0.25 s before it: then it is your failure (forced_breakdown: what broke and what forced it).
-- Sizes (rope radius 4 mm): G1: inner radius 50 mm, tube radius 6 mm, centreline passage radius 46.9 mm on the middle plane and 49.2 mm on the two tube-offset planes; A: inner radius 50 mm, tube radius 6 mm, centreline passage radius 46.9 mm on the middle plane and 49.2 mm on the two tube-offset planes; G2: inner radius 50 mm, tube radius 6 mm, centreline passage radius 46.9 mm on the middle plane and 49.2 mm on the two tube-offset planes; B: inner radius 50 mm, tube radius 6 mm, centreline passage radius 46.9 mm on the middle plane and 49.2 mm on the two tube-offset planes.
-- Aperture check: round_ring, compression allowance 1 mm. This allowance changes the geometric passage test; the collision geometry stays as declared.
-- The material start is the rope end that is farther from the rings at the start.
-- Only the grippers' fingers collide with the rope and the rings: every other robot part (palms, wrists, arm links, bases) passes through them without contact, so only the fingers can push, pinch or hold the rope.
-- Grasp regions for assisted grasping, described under Grasping in instruction.md, with one or more spheres per graspable part: rope: 399 spheres of radius 8 mm. Both finger contacts must lie inside one of the part's spheres; a part touched elsewhere is grasped physically.
-- Grading: the live episode is the verdict: success needs it to succeed with the thresholds above (within its confirmation time); a live failure is final. Nothing is replayed to grade it: the video is rendered afterwards from the recorded rows and never changes the grade.
-
-| | |
-|---|---|
-| mode | standard (RGB, optional depth, proprioception, calibrated cameras, no reset) |
-| action space | `eai-standard/3.0`: `submit` chunks of `joint_position` (14, streamed at the 25 Hz control rate with the agent's `dt`) or `ee_pose` (16, IK per row); `observe` the current frames or those recorded over the last seconds (`last_s`); hold chunks (`hold(s)`); binary RCB1 responses |
-| oracle | `full` (`solution/`) |
-| verification | `success` = the live success: the task predicate on the live simulator with the instance's own thresholds (its confirmation time included), as the sim service recorded it (`final.json`: `graded_by` live, `replays` 0); no grading replay. The frozen instance is checked when the service builds it (`instance_mismatch`: infrastructure). After the verdict is written, one video-only fresh-process replay in the sidecar's collect hook renders `/logs/verifier/replay.mp4` (and, for a success held for review, the frames around its live review events); a failed video never changes the verdict |
-| crash recovery | `eai-standard/3.0` §13: journal + per-call checkpoints, `restart: on-failure:6`, resume class `approx` |
-
-### Provenance
-- Frozen instance: a MuJoCo instance (`simulator.physics_engine` "mujoco", its scene frozen under `instance_assets/mujoco/`), built by TopoGym source `a018f53a` (MuJoCo instance made before this image was built (TopoGym source a018f53a; its bytes are bound into the release image efe:roboarc-0.2.0)); bound to this release's runtime (source `c9171f79`, tooling `d8692e15`).
-- Frozen instance files (`instance.json`, `instance_assets/`): not in this directory. The public image carries them in `/opt/robotangle/instances/rope-threading-04-i01/` (`images/roboarc/assets.json` pins each file's sha256), and `/opt/robotangle/stage_instance.py` copies this task's instance next to its `runtime_binding.json`, which names the instance's canonical sha256 and every asset's sha256. The tooling checks them again at every session start.
-- Release: dev/robotangle_mujoco `7947eaa7b`, image `ghcr.io/mll-lab-nu/efe:roboarc-0.2.0` (images/roboarc/).
-- Name: RoboARC is the published name of this benchmark. Code identifiers keep the simulator's name: the simulator package `topogym`, the tooling `rcb_topogym.py`, `TOPOGYM_*` variables.
+## License
+RoboARC ([mll-lab-nu/RoboARC](https://github.com/mll-lab-nu/RoboARC) @ `153eb8c`) is released under the MIT License
+(Copyright (c) 2026 The RoboARC authors). The robot models are MuJoCo Menagerie's: ALOHA 2 (BSD-3-Clause, Trossen
+Robotics), Franka Emika Panda (Apache License 2.0) and Robotiq 2F-85 (BSD-2-Clause, ROS-Industrial). The furniture part
+meshes of the furniture-assembly scenes are CC BY 4.0 (Hugging Face dataset `MLL-Lab/embodied-first-exam-public`,
+`ikea-mujoco/`). The simulator is MuJoCo 3.14.0 (Apache License 2.0). RGB images are rendered with Nyx (`gs-nyx`), used
+in the images with its owners' permission; the studio lighting is a CC0 HDRI from Poly Haven. Puzzle designs modelled
+after Hanayama's Huzzle Cast puzzles and the IKEA product names and designs are used with the owners' permission. No
+non-commercial terms apply.

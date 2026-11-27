@@ -1,44 +1,38 @@
-# ambench-push-slider-fahexa-i00-privileged
+# AM-Bench · ambench-push-slider-fahexa-i00 (privileged)
 
 | | |
 |---|---|
-| Benchmark | AM-Bench |
+| Task ID | `ambench-push-slider-fahexa-i00-privileged` |
+| Benchmark | [AM-Bench](https://github.com/ambench/ambench) (Wang et al., 2026), upstream `ambench/ambench@60bf5b7` |
+| Robot | AM-Bench's FA-Hexa: a fully actuated hexarotor with a 4-joint arm and a two-finger gripper |
 | Mode | privileged |
-| Twin | `ambench-push-slider-fahexa-i00-standard` |
-| Simulator / robot | `ambench` / `ambench-fahexa` |
-| Family / instance | `push_slider_fahexa` / seed 0 |
-| Oracle | `full` |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:ambench-0.3.1` |
+| Instance | `push_slider_fahexa`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | Included |
 
 ## Task
-Push the red knob along the rail all the way to its right end, as seen from you. AM-Bench environment `PushSlider-Am-FAHexa-Abs-PID-Direct-v0` (the fully actuated hexarotor with the 4-joint arm, AM-Bench's PID
-controller), its seeded reset with seed 0. The deliverable is one replayable trajectory of AM-Bench's absolute
-end-effector pose actions at 120 Hz (`/app/output/trajectory.npz`), graded by AM-Bench's own success check within the
-task's episode length of 26 s.
+Push the red knob along the rail all the way to its right end, as seen from you.
 
-## Difficulty
-The knob has to be driven 0.95 m, almost the whole length of the rail, in one direction against joint friction and damping, and the fixture's place on the wall changes per instance. Privileged mode gives the full simulator state, unlimited resets and self-replay; the tooling offers only the
-environment's own action, its state and its cameras.
+## Success criteria
+At one control step, the knob's slider joint is at 0.45 m or more along the rail (it starts at -0.5 m, so
+that is 0.95 m of travel toward the right end as seen from the robot). The first such step ends the replay as a success.
 
-## Reference solution
-`solution/oracle_actions.npy` (run by `solution/oracle.py` through the agent's own tooling): AM-Bench's scripted expert
-for this task, run on this instance (it reads the simulator's state in closed loop) and recorded, followed by 2 s of
-holding its last command (a replay may succeed a step later than the live run; rows after success never run). The image
-has no expert (`images/ambench/Dockerfile` removes them), and the agent's network reaches only the
-model APIs and the package registries.
+The verifier replays `/app/output/trajectory.npz` (`task` = the environment's id, `actions` of shape (T, 8) with
+T ≤ 8000) open-loop, in a fresh process in a separate sandbox without network, from its own copy of the frozen
+instance, and does so up to 3 times, each in a new process. It stops at the first replay that succeeds, and one is
+enough. Each row is one control step of 1/120 s: AM-Bench's end-effector pose action (position, quaternion, gripper;
+the gripper value is clipped to [-1, 1]). In a replay, the condition above is checked after every control step, and
+the first step at which it holds ends the replay as a success. Rows after it are not executed. AM-Bench's own time-out
+ends a replay as a failure: after 26 s of simulated time (control step 3119), or when the rows run out.
 
-## Verification
-`tests/grade.py` in a separate sandbox: up to 3 replays (`[metadata] replays`), each in a fresh process, stopping at the first success, from the verifier's own copy of the
-instance (`tests/instance.json`; the rebuilt start is checked against its hash); pass iff AM-Bench's success check holds
-in any of them (`replays_succeeded`; tasks/ambench/README.md, Determinism). `/logs/verifier/replay.mp4` (both onboard cameras) is filmed after the verdict
-by the `film` CLI, the same rows drawn by the render worker, an illustration only. Oracle: success at control step
-1353 (11.275 s simulated) in both fresh-process replays, which end in the frozen end state (hash
-`01a85d356fead490`; a rare race can change the last bits of one, never measured to change the outcome). `nop`: no
-trajectory, reward 0.
+A missing file scores 0, and so does an invalid one: not a readable `.npz`, no `task` or `actions` entry, a `task`
+that names another environment, the wrong shape, more than 8000 rows, a non-finite value, or a row whose quaternion
+has zero length. A replay that gives no result or runs out of its time, a replay whose output shows GPU faults
+(PhysX kernels that failed to launch, CUDA out of memory), and a replay whose rebuilt start does not match the frozen
+instance are infrastructure failures, not a score.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -48,15 +42,10 @@ Caps per container (PROTOCOL §6).
 - GPU: an RTX-class NVIDIA GPU (ray-tracing cores), one of the models in `gpu_types`: L40S, L40, RTX 4090, held by `main`.
 - Recommended GPU: L40S 48GB / RTX 4090 24GB.
 
-## Details
-| | |
-|---|---|
-| Upstream | AM-Bench @ 60bf5b7 (Apache-2.0) on Isaac Lab @ f4aa17f / Isaac Sim 5.1.0; Pyroki @ 2eafc99, acados @ fa0af20 |
-| Instance | `PushSlider-Am-FAHexa-Abs-PID-Direct-v0`, seed 0, the start's state hash in `environment/instance.json` (`initial_sha` 9bd26bad8cd1cd81) |
-| Actions | 8 per control step (1/120 s): end-effector target x y z (m), quaternion w x y z (command frame), gripper (-1 closed .. +1 open) |
-| Physics | PhysX on the GPU (dt 1/120 s, one physics step per action), bit-reproducible in a fresh process; the onboard cameras (`Session(cameras=True)`) are drawn by a second, render-only Isaac process from the physics state |
-| Image | built locally on every host (`images/ambench/BUILD_ONLY`: it contains Isaac Sim); needs an RTX-class NVIDIA GPU (`environment/docker-compose.yaml`) |
-| Budget | the agent's cutoff is the `Agent time budget` row above (this task's `[agent] timeout_sec`); out of it, every Python process pays ~2-6 min of Isaac Sim launch + scene build |
-
-### Provenance
-The frozen instance and the expert's rows were recorded in `ghcr.io/mll-lab-nu/efe-private:ambench-0.2.0`.
+## License
+AM-Bench ([ambench/ambench](https://github.com/ambench/ambench) @ `60bf5b7`) is released under the
+[Apache License 2.0](https://github.com/ambench/ambench/blob/60bf5b73041df4eab571f7d9f0a297aeecbf2e0d/LICENSE); its
+third-party notices are in `THIRD_PARTY_NOTICES.md` of that commit. It runs on Isaac Lab (BSD-3-Clause) and NVIDIA
+Isaac Sim 5.1.0, under the [NVIDIA Isaac Sim / Omniverse licence](https://docs.isaacsim.omniverse.nvidia.com/latest/common/NVIDIA_Omniverse_License_Agreement.html);
+Isaac Sim may not be redistributed, so the simulator image is built locally and never published. The scenes load files
+from NVIDIA's public asset buckets (baked into the image), under NVIDIA's terms.

@@ -1,42 +1,46 @@
-# embodied-olympics-match-badminton-match-i04-realtime
+# Embodied Olympics · robot badminton, match against level 5 (realtime)
 
 | | |
 |---|---|
-| Benchmark | Embodied Olympics - Match |
-| Mode | realtime (`eai-standard/3.0`) |
-| Twin | `embodied-olympics-match-badminton-match-i04-privileged` |
-| Simulator / robot | `mujoco` / `franka-panda` |
-| Family / instance | `badminton_match` / seed 1034 (allowed seeds: [1034, 1, 2]; PROTOCOL §2) |
-| Oracle | `partial` — TOPBM calibration 2026-10-16 (a CPU cluster, S = 20, perception-free players, seeds 1001-1040): the reference's own prediction and strokes placing every shot short to a random front corner won 5 of 40 (this seed 11:8), the reference itself 0 of 40 (this seed 1:11), short alternating 0 of 40 (the other simple baselines: Embodied Olympics PR #181); our camera-only reference does not win level 2, so the oracle run checks the pipeline (a valid, replayed match), not a win |
-| Agent time budget | 14400 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Real time | slowdown S = 20 (the world runs at 1/S of real speed: one control step every S x control_dt s of wall time; `RO_SLOWDOWN`'s default) (PROTOCOL §3) |
-| Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-match-0.1.0` |
+| Task ID | `embodied-olympics-match-badminton-match-i04-realtime` |
+| Benchmark | [Embodied Olympics - Match](https://github.com/CHIGUI0/roboolympics) (Embodied Olympics authors, 2026), upstream `CHIGUI0/roboolympics@0d7f680` |
+| Robot | Franka Emika Panda arm on a moving base (an x-y rail in table tennis, a gantry in badminton), holding a paddle or racket |
+| Mode | realtime, slowdown 20 |
+| Opponent | Scripted robot at level 5 (a tier above the sport's levels 1-3) with the same arm, racket and gantry limits: it plays from the simulator's true state, predicts the shuttle's flight exactly, reacts 0.22 s after your hit, returns every shuttle it can reach, places most shots away from your base and reads habits in your shots |
+| Instance | `badminton_match`, seed 1034 |
+| Time limit | 4 h |
+| Reference solution | Pipeline check only |
 
 ## Task
 Win a game of singles badminton to 11 points against the scripted opponent.
 
-Robot badminton against the scripted opponent (level 5), program play: robot singles badminton on a small court (the BWF court's lengths x 0.4, the net at its BWF height 1.524 m) in real time (slowed down): a Franka Panda arm held to the real Panda's limits, with a racket, on an x-y gantry of ball-screw axes (2 m/s, 15 m/s^2), a point-mass shuttle with the real shuttle's high quadratic drag (terminal speed 6.8 m/s) and no bounce, a racket contact law of gain 4 (shuttles leave the racket at up to about 10 m/s); rally scoring, one game to 11 points; the players' robots serve (the rally winner serves next): the server tosses the shuttle (from rest or rising up to 0.5 m) at a point it chooses and hits it underhand, below 1.15 m, into the diagonal service court; format match-wallclock: you against a scripted computer opponent (levels 1-3, `game spec` match.opponent_level), format duel-wallclock: two players.
+## Success criteria
+One game of singles badminton with rally scoring against the scripted opponent; you serve the first point. The first
+to 11 points wins; from 10-10 a player must lead by 2, and at 14-14 the next point wins (at most 15). The match also
+ends after 400 hits (both sides) or 40 points played (lets included): then the player with more points wins; at equal
+points, the winner of the last point that was not a let; if no point was won, the opponent. There are no draws.
 
-**Opponent level 5.** Level 5 is a tier of this exported task only (the sport's own levels 1-3 are described under Rules): the level 2 opponent (reach 0.85 m, level 2's attacks, 0.25 s to spare on its shots except its kills) with a reaction of 0.22 s (level 2: 0.25 s, level 3: 0.20 s), level 3's walk back after its own stroke (2 m/s instead of 0.6 m/s) and level 3's kills, in 90 % of its attacks (level 2: 50 %). Like every level it predicts the shuttle's flight exactly; its base and arm obey the same limits as yours. `game spec` match.opponent_level is 5.
+You lose a point when your shot goes into the net, comes down on your own side or lands outside the opponent's singles
+court (lines are in); when a shuttle that is yours to hit lands in your court, or is still unplayed 6 s after the
+opponent played it; and on your own service fault: no toss within 3 s (the window opens 1 s after play resumes), a
+miss (the shuttle lands, or 6 s pass after the toss), a hit above 1.15 m or not upwards, a serve into the net or outside
+the opponent's diagonal service court. Your base more than 5 cm from its serve spot before the serve is delivered also
+loses you the point. You win the point when the opponent's shot lands out or in the net, or its serve is a fault.
 
-## Difficulty
-Frozen development instance: seed 1034, level 5, slowdown S = 20. Not one of
-the sport's official (hidden) seeds, so results here are previews, not official Embodied Olympics results.
+Success: the match ends by these rules and you won it. Your side loses the match at once, a valid 0, if you do not send
+`game start` within 1800 s of real time after the match service starts or before your session ends (`no_show`); if a
+review is not sent with `game ready` within 300 s of real time after a point (`ready_timeout`, even when you are
+ahead); or if your session ends before the match is over (`abandoned`).
 
-## Reference solution
-`solution/`: our camera-only reference player through the same HTTP interface. TOPBM calibration 2026-10-16 (a CPU cluster, S = 20, perception-free players, seeds 1001-1040): the reference's own prediction and strokes placing every shot short to a random front corner won 5 of 40 (this seed 11:8), the reference itself 0 of 40 (this seed 1:11), short alternating 0 of 40 (the other simple baselines: Embodied Olympics PR #181); our camera-only reference does not win level 2, so the oracle run checks the pipeline (a valid, replayed match), not a win.
+A simulator error in a control step, after the agent's first applied action, is a valid 0 too.
 
-## Verification
-Separate sandbox, no network. The match is graded live (owner, 2026-10-17): the sim service records the
-match's scores, winner and reason as it plays it and nothing replays it to grade it (`final.json` `graded_by` live,
-`replays` 0; the replay video is drawn after the verdict). The verifier (`tests/grade.py`, our core's grader) applies
-the validity rule
-(technical failures void the trial, a player's own problems are a valid loss), and writes reward.json; success = a
-valid, finished match that the agent won. `tests/fexam_reward.py` adds the hub's fields (`infra_error`, `realtime`,
-`slowdown`, `opponent_level`).
+Graded: the live match, as the trusted match service recorded it while it was played; nothing is replayed. The world
+runs on a clock that does not stop: one second of game time takes 20 s of real time. There is one match and no reset,
+and the agent cannot end it with `/finish`: the match's rules end it. A technical failure of the match service (a
+crash, an error in its bookkeeping, rendering or metering) voids the trial as an infrastructure failure, not a score.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -46,9 +50,12 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
+## Others
+Exported by the Embodied Olympics task exporter from its task `roboolympics/badminton-match-wallclock-program-standard` (upstream commit
+`62333496959f`). The files changed here after the export are listed for this task in
+`ci_checks/benchmarks/embodied-olympics-match/exported.toml`.
 
-### Notes
-Source: Embodied Olympics task `badminton-match-wallclock-program-standard`, revision `badminton-wallclock-12+duel-14+core-0.2`. The rules, the referee, the scripted
-opponent, the observation, the review between points and the grader are ours, unchanged; only the seat is
-unmetered (Harbor records the model's usage) and the instance is frozen.
+## License
+Embodied Olympics ([CHIGUI0/roboolympics](https://github.com/CHIGUI0/roboolympics), a private repository) is released
+under the MIT License; its exported match services, referees, scripted opponents and graders inside this task are MIT
+too. The simulator is MuJoCo (Apache License 2.0). No non-commercial terms apply.

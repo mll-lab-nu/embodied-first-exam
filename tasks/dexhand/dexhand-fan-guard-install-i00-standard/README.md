@@ -1,56 +1,53 @@
-# dexhand-fan-guard-install-i00-standard
+# DexHand · Install a desk fan front guard (standard)
 
 | | |
 |---|---|
-| Benchmark | DexHand |
-| Mode | standard (`eai-standard/3.0`) |
-| Twin | `dexhand-fan-guard-install-i00-privileged` |
-| Simulator / robot | `mujoco` / `sharpa-wave-floating` |
-| Family / instance | `fan_guard_install` / seed 0 |
-| Oracle | `full` — solution/ replays the recorded Sharpa Wave episode in both modes (2,665 controls; success after 2,485; all four clips start open and are closed by the hand): two fresh-process replays with identical state hashes, float32 rows succeed. |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:dexhand-0.2.0@sha256:0d42994b83d95ab5301c592b35586550c9ee426490115e4b43f3b8cf8cc43350` |
+| Task ID | `dexhand-fan-guard-install-i00-standard` |
+| Benchmark | [DexHand](https://www.embodied-first-exam.ai/suite/dexhand/) (Wang et al., 2026), upstream `mll-lab-nu/embodied-first-exam@b2280d8` |
+| Robot | A dexterous right hand on a six-DoF actuated wrist stage, no arm: Sharpa Wave (22 finger actuators) by default, or Wuji Hand 2.2 (20) |
+| Mode | standard |
+| Instance | `fan_guard_install`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | Included |
 
 ## Task
-Install the front guard on the desk fan. The unpowered fan stands on the worktop facing the operator (its axis points along world -x); its rear wire guard carries four perimeter U clips at 45, 135, 225 and 315 degrees. All four clips start swung open (hinge angle 1.40 rad); the hand has to close every one of them. A closed lower clip (225 or 315 degrees) forms an open-topped U channel that can carry the guard's rim. The detached front guard (0.369 m wire cage, 185 g, with a raised hub cap at its centre) lies flat on the worktop, dome up. Lift the guard, turn it upright with its dome facing the operator, seat its rim on the rear rim, close all 4 clips over the two rims and take the hand away. The 2 lower clips can be closed before or after the guard is seated; the 2 upper clips lock only over a seated guard. Success requires, in order: (1) the guard seated: guard centre within 5 mm of the fan axis, axial seat error within 2.5 mm and guard axis within 5 degrees of the fan axis; (2) the guard still seated, all four clip hinges in their locked range (hinge angle at most 0.12 rad) and the guard rim inside every clip's U channel (in each clip's frame, with origin at its hinge, x toward the operator along world -x and y radially outward, the guard-rim point nearest that clip lies at x from 6.8 to 9.9 mm for the upper clips and 6.8 to 8.6 mm for the lower clips and y from -4.8 to -2.2 mm, i.e. between the rear rim and the clip's lip and inside its bridge), each upper clip having locked at or after the first control at which the guard was seated; (3) the complete condition with no hand contact on the guard, the clips or the fan, guard speed at most 0.02 m/s and angular speed at most 0.2 rad/s, for 50 consecutive controls (1 s). The episode ends with success at that moment; a guard that is only placed, or clips that are only partly closed, never count. The episode ends immediately with failure, checked after every 2 ms physics substep, when the fan moves more than 3 cm from its start or tilts more than 0.10 rad, when the guard touches the worktop, a table leg or the floor after its centre of mass has been lifted more than 5 cm above its resting height (dropped or set back down), or at the first substep at which the guard touches nothing while its centre of mass falls faster than 0.2 m/s (dropped, even if caught again), when the guard touches the fan's base, stem, neck, motor housing, feet or buttons, when the guard's centre of mass falls below the worktop (z < 0.65 m) or leaves the workspace box x in [0.20, 1.10] m, y in [-0.55, 0.55] m, z in [0.60, 1.40] m, or when the physics becomes unstable; later actions cannot undo a failure. Only robot actuator targets are allowed; no object teleports, grasp welds, scripted object motion or direct object forces. The clips are rigid U channels on passive hinges held by an elastic over-centre spring (a modelled snap detent); the guard is a rigid wire cage. The episode allows at most 6000 controls at 50 Hz; reaching that limit without success is a failure.
+Install the front guard on the desk fan.
 
-## Difficulty
-All four perimeter clips start swung open, as in the source scene, and nothing holds the guard on the fan until clips
-are closed. With one hand, the two lower clips have to be swung closed first (a fingertip reaches behind each open
-clip beside the rim and pushes it past its elastic over-centre point), which turns them into open-topped channels.
-The 0.369 m wire guard must then be picked up from flat on the worktop, turned upright with its dome toward the
-operator and placed on the fan's rear rim within a 0.65 mm axial window above those two channels, released so that it
-hangs by itself, and the two upper clips swung closed over both rims, without pushing the 2.15 kg fan off its feet or
-knocking the guard out of its seat; then the hand must leave the installed guard. The predicate checks the seat
-(concentric, axial and parallel tolerances), all four clip hinges with the rim inside every clip's channel, the order
-of the stages and a released stable hold. A dropped guard or a displaced or tipped fan ends the episode as a failure
-at once.
+## Success criteria
+One final condition, checked at the end of each control step (50 Hz), must hold for 50 consecutive control steps
+(1 s):
+- Seated: the guard's origin is within 5 mm of the fan's axis and within 2.5 mm of the seated position along it, and
+  the guard's axis is within 5° (0.0873 rad) of the fan's axis, dome facing out.
+- Clipped: all four clips are closed (hinge angle at most 0.12 rad), the guard's rim lies inside each clip's U channel
+  (between the fan's rear rim and the clip's lip along the axis, and between the lip's end and the clip's bridge
+  radially), and each of the two upper clips has stayed closed since a control step at or after the one at which the
+  guard was first seated (the lower clips may close earlier).
+- Released: the hand touches neither the guard, a clip nor the fan, and the guard moves at most 0.02 m/s and turns
+  at most 0.2 rad/s.
 
-## Reference solution
-`solution/` holds a validated Sharpa Wave trajectory (2,665 controls; the replay ends at success after 2,485 controls,
-leaving 180 rows of slack): the index fingertip closes the lower clips (225 then 315 degrees), the hand grips the hub
-cap, lifts and turns the guard, hangs it in the two lower channels, lets go and closes the upper clips (45 then
-135 degrees). Privileged mode re-saves these rows; standard mode submits the same rows as float64 through
-`rcb_client` (one row per 50 Hz control, `hold`). It is an open-loop recording: it is deterministic and survives
-float32 rounding. It was recorded from a closed-loop authoring controller that computes wrist-stage and finger targets only from
-robot kinematics and the simulator state; it never drives an object pose or applies an object force, and it is never
-copied into the agent's environment or image.
+The episode fails at once, checked after every 2 ms physics substep, when: the fan moves more than 30 mm from its
+start or tilts more than 0.1 rad; the guard's centre of mass is below the worktop top (z = 0.65 m) or leaves the box
+x 0.20 to 1.10 m, y -0.55 to 0.55 m, z 0.60 to 1.40 m; once the guard's centre of mass has been more than 50 mm above
+its start, the guard touches the worktop, a table leg or the floor; the guard touches nothing while its centre of mass
+falls faster than 0.2 m/s; the guard touches the fan's base, stem, neck, motor housing, oscillation knob, feet or
+speed buttons; or the physics becomes unstable. The step budget is 6,000 control steps (120 s).
 
-## Verification
-Standard mode. The trusted sim service judges the episode it ran (the last one after resets) with the task's predicate and
-the selected hand, after the agent's container is stopped; its record (`final.json`, `graded_by = "live"`) is the
-verdict, and nothing is replayed to grade it. The isolated verifier reads only the service's artifacts. The
-service then renders `replay.mp4` from the recorded trajectory in one video-only pass, which never changes the
-verdict. A missing or unfinished record, a give-up after crashes between the agent's calls and a frozen instance
-that does not build at the episode's start are infrastructure errors.
-Failures are fail-fast and permanent: the fan moved by more than 3 cm or tilted by more than 0.10 rad, the guard back
-on the worktop, a table leg or the floor after it was lifted, the guard touching nothing while its centre of mass
-falls faster than 0.2 m/s (a drop fails at once, even if the guard is caught again), the guard striking the fan base, stem, neck, motor
-housing, feet or buttons, the guard below the worktop or outside the workspace box, or unstable physics. At the 6,000-control budget the episode ends and is judged on the state it leaves. The frozen thresholds come from the task, never from an agent archive. A no-op fails. Human
-review and full agent-trial calibration remain pending; report this task as provisional.
+Graded is the live episode on the simulator service; nothing is replayed. The service runs the hand the runner
+selects (Sharpa Wave unless the Wuji Hand 2.2 is selected; `spec()["hand"]` names it). The agent may reset up to
+20 times, each reset starting a new episode from the same frozen start; only the last episode is graded. An
+episode ends at the agent's `POST /finish`, when the agent's session ends (at the latest after 1 h), at the first
+failure above (a score of 0), at the step budget where the task has one, or on a simulator error (a score of 0). A
+success neither ends the episode nor is shown to the agent.
 
-## Resources
-Caps per container (PROTOCOL §6).
+Each stage before the last counts at the moment it is completed. The last stage, with its full hold, must be met on
+the state the episode ends in: every check goes on after it is first met, and a failure after it still scores 0. If
+it is not met at `/finish` or at the session's end, the robot holds its current targets for up to 3 s of simulated
+time, and the episode passes if the last stage completes within that time without a failure. At the step budget it
+must be met at that step. Targets outside an actuator's range are clipped. Each episode's start is checked against
+the frozen instance; a mismatch is an infrastructure error, not a score.
+
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -60,20 +57,14 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-
-### Notes
-Source: the DexHand family of this task. The scene is
-adapted from the scene-expansion T26 desk-fan front-guard scene (an HTF1220-style estimate: cage radius, wire layout,
-three-paddle blade meshes, fan body, masses and the four perimeter U clips are kept). All four clips start open, as in the source, and
-the hand closes all of them. Modelling choices, stated plainly: the guard's centre badge is enlarged into a 22 mm
-raised hub cap (source: a 6 mm badge disc) so a fingertip grip fits in front of the dish wires (the source badge stands
-only about 2 mm proud of the inner spoke ends, which an 8 mm fingertip cannot pinch reliably); the clip snap leaf is
-represented by an elastic over-centre tendon detent on each clip hinge (a passive spring, not an actuator); the lower
-clips' lips sit 1.3 mm deeper than the upper clips' so a guard hung in them cannot tip forward; the dish wires collide
-with the hand, the rims, the clips and the table but not with the other cage's dish wires; the plug and cord are
-static decoration. The Sharpa Wave assets are pinned to MuJoCo Menagerie commit
-`0059d4335f8156206f63a35662313385f7ad6d74` (Apache-2.0). The Wuji Hand 2.2 model (`hand2/hand2_2`) is pinned to
-wuji-technology/wuji-description commit `829c9aa27cb12c3a49d5b8d63c9869dd8f656702` (MIT) and mounted on the same
-wrist stage with its vendor joints, actuators and contact geometry unchanged. This is a rigid-wire, rigid-clip
-assembly model on a floating wrist stage, not a model of wire or snap-leaf elasticity or a full-arm claim.
+## License
+DexHand's scenes, checkers and graders are original to this repository (MIT License). Robot models: the Sharpa Wave
+hand from [MuJoCo Menagerie](https://github.com/google-deepmind/mujoco_menagerie/tree/0059d4335f8156206f63a35662313385f7ad6d74/sharpa_wave)
+@ `0059d43` (Apache License 2.0); the Wuji Hand 2.2 from
+[wuji-technology/wuji-description](https://github.com/wuji-technology/wuji-description/tree/829c9aa27cb12c3a49d5b8d63c9869dd8f656702)
+@ `829c9aa` (MIT License); the Tianji Marvin arm meshes from DexForce `embodichain_data` (Apache License 2.0) with
+inertias from Genesis' `dual_arms_primitives.urdf` (MIT License), see `images/dexhand/tianji/NOTICE.md`. Object
+assets are original geometry of this repository, CC0 (the Poly Haven rubber boot, the Innerscene stockpot, Monet's
+public-domain Water Lilies, original page and letter artwork) or CC BY 4.0 (the Joy-Con, pen, rotary-knob and walnut
+meshes; credits in each task's `object_assets/*/CREDITS.txt`); printed text uses the DejaVu fonts (Bitstream Vera
+license). No non-commercial terms apply.

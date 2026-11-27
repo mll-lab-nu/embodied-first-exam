@@ -1,31 +1,54 @@
-# embodied-olympics-fun-dribble-slalom-i00-privileged
+# Embodied Olympics · dribble slalom (privileged)
 
 | | |
 |---|---|
-| Benchmark | Embodied Olympics - Fun |
+| Task ID | `embodied-olympics-fun-dribble-slalom-i00-privileged` |
+| Benchmark | [Embodied Olympics - Fun](https://github.com/CHIGUI0/roboolympics) (Embodied Olympics authors, 2026), upstream `CHIGUI0/roboolympics@7df999b` |
+| Robot | Unitree G1 humanoid (1.32 m, 33 kg, 29 joints), with Unitree's walking and running policies |
 | Mode | privileged |
-| Twin | `embodied-olympics-fun-dribble-slalom-i00-standard` |
-| Simulator / robot | `mujoco` / `unitree-g1` |
-| Family / instance | `dribble_slalom` / seed 0 |
-| Oracle | `none` — no reference solution; the referee is tested: positive by injection (the robot really walks the whole course in 54 s, the ball escorted 0.45 m ahead of it); negatives: the ball or the robot on the wrong side, straight back instead of weaving, the ball more than 2 m away, a cone touched, a handball. A walking kick gives the ball about 2 m/s: kick-and-chase inside the 2 m limit was not attempted; human review in the pull request that adds the benchmark (PROTOCOL §4) |
-| Agent time budget | 7200 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
+| Instance | `dribble_slalom`, seed 0 |
+| Time limit | 2 h |
+| Reference solution | None |
 
 ## Task
-Dribble the football out through the six cones, passing each on the side of its yellow mark, round the last one and back the other way over the start line, keeping the ball within 2 m of you and touching no cone. (Embodied Olympics `dribble-slalom`: one Unitree G1 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
+Dribble the football out through the six cones, passing each on the side of its yellow mark, round the last one and back
+the other way over the start line, keeping the ball within 2 m of you and touching no cone.
 
-## Difficulty
-About 30 m of path with a tight turn in 90 s leaves little slack for a robot that walks at 0.6 m/s, and its running policy does not know the ball. Every step that meets the ball kicks it, a 0.43 kg ball kicked at walking speed rolls metres, and it has to be steered through gaps of 2 m without the feet or the ball touching a cone.
+## Success criteria
+A football lies ahead of the robot, behind a start line; six free-standing cones stand on the robot's forward line, the
+first 2.0 m beyond the start line and then every 2.0 m. Each cone has a plane through it, square to the course. The
+referee's stages, in order: out 1 to out 6, back 6 to back 1, finish.
+- Out: the ball's centre and the pelvis each cross the plane of cone 1 to the robot's starting left, cone 2 to its
+  right, and so on alternately to cone 6 (to the right).
+- Back: round cone 6, then the planes of cones 6 to 1 again, each on its other side (cone 6 to the left as seen from
+  the start, cone 5 to the right, and so on, cone 1 to the right).
+- For each plane, the first crossing in the direction of travel after the previous plane decides, for the ball and the
+  pelvis separately; a stage latches when both have passed that plane on the correct side.
+- Finish: after all twelve planes, the whole ball and the pelvis are back over the start line. The success is called
+  then.
 
-## Reference solution
-None. No reference controller exists for this family yet: positive by injection (the robot really walks the whole course in 54 s, the ball escorted 0.45 m ahead of it); negatives: the ball or the robot on the wrong side, straight back instead of weaving, the ball more than 2 m away, a cone touched, a handball. A walking kick gives the ball about 2 m/s: kick-and-chase inside the 2 m limit was not attempted.
+Fouls (each fails the attempt at once): the ball or the pelvis crosses a plane on the wrong side; the ball's centre is
+more than 2.0 m from the pelvis, measured along the ground; the robot or the ball touches a cone; a hand or arm touches
+the ball (any other part may play it). Fall (a failure at any time): the pelvis below 0.35 m, or any part other than
+the feet on the ground. Time limit: 90 s (9,000 control steps).
 
-## Verification
-`/tests/grade.py` replays `/app/output/trajectory.npz` from the frozen start in one fresh process (`rcb_rfo.py replay`:
-one sim row per control step until the referee ends the attempt). Pass iff the referee's verdict is a success. The rules: A size-5 football (0.22 m across, 0.43 kg) lies 0.5 m ahead of you, behind the start line, which is 1.0 m ahead of you and square to the way you face. Six cones (0.3 m high, base radius 0.11 m, free-standing) stand on the line you face along, the first 2.0 m beyond the start line and then every 2.0 m. Each cone has a plane through it, square to the course. On the way out the ball's centre and your pelvis must each cross the plane of cone 1 to its left (your left at the start), of cone 2 to its right, and so on in turn, cone 6 to its right; then round cone 6 and back: the plane of cone 6 to its other side (the left as seen from the start), of cone 5 to the right as seen from the start, and so on in turn, cone 1 to the right as seen from the start; and finally back over the start line, the whole ball and your pelvis. For each plane the first crossing in the direction of travel after the plane before it decides, for the ball and for you separately. You succeed when the whole ball and your pelvis are back over the start line after all twelve planes. You fail if the ball or you cross a plane on the wrong side, if the ball's centre is ever more than 2.0 m from your pelvis (measured along the ground), if you or the ball touch a cone, if a hand or an arm touches the ball (handball; any other part of you may play it), if you fall (your pelvis lower than 0.35 m above the ground, or any part of you other than the feet on the ground), or after 90 s. No oracle; human review in the pull request that adds the benchmark (PROTOCOL §4).
+Graded file: `/app/output/trajectory.npz`, as `s.save_trajectory()` writes it: an `actions` array of sim rows, one per
+10 ms control step, and the task's family name. After the agent's session it is replayed once, open-loop, from the
+frozen start, in a fresh process of a separate verifier container without network. Rows run one per control step
+until the referee calls the attempt; rows after the call, and rows past the attempt's time limit, are not run. The
+task is passed if the referee has called a success when the replay stops. If the rows run out before the referee's
+call, the task is not passed. A row the robot cannot run (its first value, the mode, is not one of the robot's modes)
+ends the replay at that row without a pass.
 
-## Resources
-Caps per container (PROTOCOL §6).
+The physics diverging (a non-finite state, a bad acceleration, or the robot or a prop faster than 150 m/s) ends the
+attempt as a failure, unless a success was called in an earlier control step. Only the trajectory is scored (`gen.py`
+and `NOTES.md` are not). A missing file, a file that is not such an array (a link, over 64 MB, more than 40,000 rows,
+the wrong row width), a file for another task, or a non-finite value in the rows that are used scores 0. An image that
+no longer rebuilds the frozen start, or a replay that crashes or runs over 600 s, is an infrastructure failure, not a
+score.
+
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -34,14 +57,10 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Category | football-and-volleyball |
-| Rule book | The slalom dribble of football skill tests (a line of cones, out through them, round the last and back through them, against the clock); it is a drill, not an event of the Laws: the course is six cones 2 m apart with 90 s allowed. IFAB Laws of the Game 2025/26 for the ball (Law 2: size 5, 68-70 cm round, 410-450 g) and for handling (Law 12: the hand or the arm); deviations: The line the ball and the player must weave is made exact: the ball's centre and the robot's pelvis must each pass every cone on the prescribed side, judged where they cross the line through that cone square to the course; a tester's eye is replaced by these planes. · The pitch is level and uniform (the official ball's rolling resistance), no wind. |
-| Stages | out 1 → out 2 → out 3 → out 4 → out 5 → out 6 → back 6 → back 5 → back 4 → back 3 → back 2 → back 1 → finish |
-| Instance | `environment/instance.json` = `tests/instance.json`: the family's parameters, t = 0 state hash `d027195893b56f26eded334d2c02fb6272244c21e13a3ddfb5d0afcb576f9de4` |
-| Episode | 9000 control steps (90 s at 100 Hz) |
-| Action | sim rows of 151 floats per control step (`rfo/world.py`); six action types are views of it |
-| Tooling | `/opt/tools/rcb_rfo.py`, `/opt/tools/rfo/` (the world, the action layer, the referee's toolkit; from the files-only image images/embodied-olympics-fun-files/, built from embodied_first_exam/benchmarks/embodied-olympics-fun/) and `environment/rfo_task.py` (this family's rules), the same files in the verifier's `/tests/` |
-| Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md) |
+## License
+The Embodied Olympics robot library and running-policy port ([CHIGUI0/roboolympics](https://github.com/CHIGUI0/roboolympics)
+@ `7df999b`, a private repository) is released under the MIT License (`LICENSE.roboolympics` in the image); this
+benchmark's venues and referees are MIT too. Third-party parts in the image: the Unitree G1 model and meshes from MuJoCo
+Menagerie (BSD-3-Clause), the Unitree H1-2 model, meshes and walking policy and the G1 walking policy from
+unitree_rl_gym (BSD-3-Clause), the G1 running policy from C1801SYQ/g1_running (Apache-2.0), FALCON's G1 walking policy
+from LeCAR-Lab/FALCON (MIT) and the WBC-AGILE G1 walking policy from NVIDIA (Apache-2.0). No non-commercial terms apply.

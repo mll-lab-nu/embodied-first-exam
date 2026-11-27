@@ -24,9 +24,10 @@ What it does:
   robot's and gravity, else `static`) is the task's own declaration: kept as written; a re-render that lost it gets the
   committed task's line back (normalize_dynamics).
 - from the agent's time cutoff (§2), the task's own `[agent] timeout_sec`: the standard modes' `RCB_WALL_CLOCK_S` in
-  `environment/docker-compose.yaml`, the README's "Agent time budget" row and the Time line of `## Limits`.
-- `README.md` in the standard layout (docs/protocol/README.md §1): title, key table, Task, Difficulty, Reference solution,
-  Verification, Resources (the caps of every container, rendered), and Details for everything else.
+  `environment/docker-compose.yaml`, the README's "Time limit" row and the Time line of `## Limits`.
+- `README.md` (docs/protocol/README.md §1): rendered whole from instruction.md, task.toml and
+  tasks/<benchmark>/readme.toml (render_readme: key table, Task, Success criteria, Resource requirements, Others,
+  License; a missing success text fails).
 - last, `DIGEST`: the task's content digest (PROTOCOL Appendix H.8; the digest Harbor publishes it under, `digest()`), one
   line `sha256:<hex>`. Each task carries its own, so pull requests that change different tasks never touch a shared file;
   the release manifest `tasks/dataset.toml` is generated from them (`scripts/dataset_manifest.py`, not committed).
@@ -112,8 +113,8 @@ BENCHMARKS = [(p, label) for p, label, _ in BENCHMARK_TABLE]   # (directory pref
 NO_WORLD_FRAME_TEXTS = ("autobio", "behavior-1k", "labutopia", "maniguard", "molmospaces", "roboarc", "robolab",
                         "robopaint", "robowits", "yamlab")
 # Modes (PROTOCOL §3): a benchmark ships any subset of the modes. A standard or realtime
-# task without a privileged twin says why in its README's Twin row ("— (none: ...)"), the task's own declaration:
-# no_twin_reason() reads it back, so no list of such tasks is kept here.
+# task without a privileged twin says why in its benchmark's readme.toml (`no_twin`, a family or task entry):
+# no_twin_reason() reads it, so no list of such tasks is kept here.
 # Embodied Olympics' exported tasks (PROTOCOL §3) have a Time line of their own (LIMITS_TIME_TASK below): the
 # directories its manifest ci_checks/benchmarks/embodied-olympics-match/exported.toml lists in a mode that serves its own
 # protocol (its [protocols] table: their session talks to its own service). The privileged twins listed there
@@ -162,9 +163,6 @@ for _m, _d in MODE_REGISTRY.items():   # a registry that cannot parse names is r
         f"mode {_m!r}: lower-case words joined by '-', not ending in another mode's suffix (PROTOCOL §3)"
     assert _d["limit_scope"] in ("trial", "agent") and _d["twin"] in (None, *MODE_REGISTRY) \
         and _d["same_cutoff_as"] in (None, *MODE_REGISTRY), f"mode {_m!r}: a bad registry field (PROTOCOL §3)"
-HEADER_KEYS = {"Benchmark", "Mode", "Twin", "Simulator / robot", "Family / instance", "Oracle", "Agent time budget",
-               "Real time", "Base image"}
-DROP_ROWS = {"simulator / robot", "family / instance", "base image"}   # header rows another README spelled in lower case
 # PROTOCOL §6: the resource caps of every task, as rules (scripts/task_resources.toml); normalize writes them where
 # Harbor and docker read them (normalize_resources, images/monitor/rcb_monitor/inject.py)
 RESOURCES_FILE = Path(__file__).resolve().parent / "task_resources.toml"
@@ -186,7 +184,7 @@ RULE_KEYS = {"match": str, "gpu_types": list, "recommended_gpu": str, "measured"
 # NVIDIA GPU sets none (ci_checks/check-resources.py)
 RTX_GPU_MODELS = ("L40S", "L40", "L4", "RTX 4090", "RTX 6000 Ada", "RTX PRO 6000 Blackwell", "A40", "RTX A6000")
 ENFORCE_ENV = "RCB_LIMITS_ENFORCE"   # §6: run-time switch (compose default 0 = record only; 1 = the monitor's backstop)
-RESOURCES_HEADING = "## Resources"   # the README's section (readme_resources)
+RESOURCES_HEADING = "## Resource requirements"   # the README's section (readme_resources)
 # PROTOCOL §5 (owner 11-24): the one anti-cheating rule, emphasized, first in Goal's rules (V2_RULE_OWN). Rendered words:
 # edit them here, never in a task.
 NO_CHEATING = ("**No cheating.** Do not search for, download or use any existing solution (published or reference "
@@ -328,7 +326,8 @@ FOLDER_MAX = 1000                                 # GitHub's web UI lists at mos
 def check_layout(tasks_dir: Path | None = None) -> list[str]:
     """What is wrong with the tree's layout (`benchmarks --check`): a BENCHMARKS label without its folder (or a folder
     without its label, or two labels on one folder), anything at the top of tasks/ besides the benchmark folders and
-    TASKS_TOP_FILES, anything in a benchmark folder besides task dirs and its pages (BENCH_DOC_SUFFIXES), a task dir in
+    TASKS_TOP_FILES, anything in a benchmark folder besides task dirs, its pages (BENCH_DOC_SUFFIXES) and its README data
+    (README_DATA), a task dir in
     another benchmark's folder or nested deeper, a folder over FOLDER_MAX entries."""
     tasks_dir = tasks_dir or TASKS_DIR
     labels = {label for _, label in BENCHMARKS}
@@ -348,8 +347,8 @@ def check_layout(tasks_dir: Path | None = None) -> list[str]:
         if len(entries) > FOLDER_MAX:
             bad.append(f"tasks/{p.name}: {len(entries)} entries, over {FOLDER_MAX} (GitHub lists no more)")
         for t in entries:
-            if t.is_file() and t.suffix in BENCH_DOC_SUFFIXES:
-                continue                     # the benchmark's pages, not task dirs
+            if t.is_file() and (t.suffix in BENCH_DOC_SUFFIXES or t.name == README_DATA):
+                continue                     # the benchmark's pages and its README data, not task dirs
             if not (t / "task.toml").is_file():
                 bad.append(f"tasks/{p.name}/{t.name}: not a task dir")
             elif bench_dir(t.name) != p.name:
@@ -391,11 +390,15 @@ def write_if_changed(p: Path, s: str) -> None:
 
 # ---------------------------------------------------------------------------------------------------------------------
 def dtb_goals(task: Path) -> tuple[int, int] | None:
-    """(goals reached, goals) by the DexToolBench oracle, from the privileged twin's README oracle row."""
+    """(goals reached, goals) by the DexToolBench oracle, from `[metadata] oracle_evidence` ("reaches N/M goals") of
+    the task's own task.toml, else of its privileged task's."""
     priv = task.with_name(base_of(task) + "-privileged")
-    for f in (priv / "README.md", task / "README.md"):
-        s = read_text(f) or ""
-        m = re.search(r"\*\*(\d+)/(\d+) goals\*\*", s)
+    for f in (task / "task.toml", priv / "task.toml"):
+        try:
+            ev = str(tomllib.loads(read_text(f) or "").get("metadata", {}).get("oracle_evidence", ""))
+        except tomllib.TOMLDecodeError:
+            continue
+        m = re.search(r"\b(\d+)/(\d+) goals\b", ev)
         if m:
             return int(m.group(1)), int(m.group(2))
     return None
@@ -413,7 +416,7 @@ def oracle_level(task: Path) -> tuple[str, str] | None:
         if g[0] >= g[1]:
             return "full", ""
         return "partial", (f"SimToolReal's pretrained policy, replayed in this scene, reaches {g[0]}/{g[1]} goals "
-                           f"(solution/; README of {base_of(task)}-privileged)")
+                           "(solution/)")
     return None
 
 
@@ -643,7 +646,7 @@ def _gb(v) -> str:
 
 
 def readme_resources(task: Path, old_readme: str = "") -> list[str]:
-    """README `## Resources` (PROTOCOL §6): the caps of every container, as applied, and the rule's recommended GPU (a task
+    """README `## Resource requirements` (PROTOCOL §6): the caps of every container, as applied, and the rule's recommended GPU (a task
     no rule matches keeps the `- Measured` / `- Recommended GPU` lines of its README). A rule's `measured` and
     `caps_measured` stay in the rules file: they are the benchmark's, not each task's."""
     caps = task_caps(task)
@@ -676,7 +679,7 @@ def readme_resources(task: Path, old_readme: str = "") -> list[str]:
         sec = section(old_readme, RESOURCES_HEADING[3:])
         notes += [ln for ln in (sec.splitlines() if sec else [])
                   if ln.startswith(("- Recommended GPU:", "- Measured:"))]
-    return [RESOURCES_HEADING, "Caps per container (PROTOCOL §6).", "", *rows, "", *notes]
+    return [RESOURCES_HEADING, "Caps per container.", "", *rows, "", *notes]
 
 
 VERIFIER_NETWORK_LINE = 'network_mode = "no-network"       # PROTOCOL H.6: the verifier has no network'
@@ -725,19 +728,20 @@ def bench_has_mode(bench: str, mode: str) -> bool:
 
 
 def no_twin_reason(task: Path) -> str | None:
-    """Why a standard or realtime task has no privileged twin `<base>-privileged` (PROTOCOL §3), as its
-    README's Twin row says it; None for a privileged task and for one that names its twin. The reason is the task's own
-    declaration: its README's Twin row ("— (none: ...)"), kept by every render (the committed task's row when a
-    task is rendered into a scratch directory); a benchmark without a privileged mode gets the generic reason. Whether
-    the twin exists is not looked at: the answer is the same before and after the twin has been rendered."""
+    """Why a standard or realtime task has no privileged twin `<base>-privileged` (PROTOCOL §3); None for a privileged
+    task and for one that has no reason recorded. The reason is the benchmark's declaration: `no_twin` of the task's
+    entry in tasks/<benchmark>/readme.toml (a family or task entry); a benchmark without a privileged mode gets the
+    generic reason. Whether the twin exists is not looked at: the answer is the same before and after the twin has been
+    rendered."""
     twin = MODE_REGISTRY[mode_of(task)]["twin"]
     if twin is None:
         return None
-    committed = task_dir(task.name) / "README.md"
-    for f in (task / "README.md", committed):
-        m = re.search(r"(?m)^\| Twin \| (— \(none:[^\n]*?\)) \|\s*$", read_text(f) or "")
-        if m:
-            return m.group(1)
+    try:
+        r = readme_field(task, readme_data(bench_dir(task)), "no_twin")
+    except ReadmeError:
+        r = None
+    if r:
+        return f"— (none: {r})"
     bench = bench_of(task)
     if bench and not bench_has_mode(bench, twin):
         return f"— (none: {bench} has no {twin} mode, PROTOCOL §2)"
@@ -1411,157 +1415,211 @@ def normalize_test_sh(task: Path) -> None:
 
 
 # ---------------------------------------------------------------------------------------------------------------------
-def parse_readme(s: str) -> tuple[str, list[tuple[str, str]], list[tuple[str, str]]]:
-    """(intro text, table rows, sections) of a README; understands both the old layouts and the standard one."""
-    lines = s.splitlines()
-    if lines and lines[0].startswith("# "):
-        lines = lines[1:]
-    sections: list[tuple[str, list[str]]] = [("", [])]
-    in_details = False
-    for ln in lines:
-        m = re.match(r"^(##|###) (.+)$", ln)
-        if m and m.group(1) == "##":
-            in_details = m.group(2).strip() == "Details"
-            sections.append((m.group(2).strip(), []))
-        elif m and in_details:
-            sections.append((m.group(2).strip(), []))
-        else:
-            sections[-1][1].append(ln)
-    rows: list[tuple[str, str]] = []
-    out: list[tuple[str, str]] = []
-    intro = ""
-    for title, body in sections:
-        if title == RESOURCES_HEADING[3:]:   # rendered (readme_resources), never carried over
-            continue
-        text = "\n".join(body)
-        body_rows, rest = [], []
-        for ln in body:
-            m = re.match(r"^\| ([^|]*?) \| (.*) \|$", ln)
-            if m and m.group(1).strip() and set(m.group(1).strip()) != {"-"}:
-                body_rows.append((m.group(1).strip(), m.group(2).strip()))
-            elif ln.strip() in ("| | |", "|---|---|"):
+# The per-task README (docs/protocol/README.md §1; the owner's format of 11-27). Each task's README describes that task
+# alone, for a reader who has not seen any other task: no other task's name, no protocol version, no Twin / Difficulty /
+# Baselines rows, no word on how the reference solution or any strategy works. It is rendered whole from three sources:
+#   instruction.md   the H1 (verbatim) and the `## Task` body (verbatim)
+#   task.toml        Task ID (the directory), Mode (the directory's suffix; realtime: the slowdown S of its compose file),
+#                    Instance (`[metadata] family`, `instance_seed`), Time limit (`[agent] timeout_sec`), Reference
+#                    solution (README_REFERENCE), Robot (`[metadata] robot`, its display name from readme.toml)
+#   readme.toml      tasks/<benchmark>/readme.toml (README_DATA_KEYS): the benchmark's name, citation, upstream repo and
+#                    commit, license, robot names, the success text of every family and mode, optional `others`
+# Every benchmark is on this format (ci_checks/check-readmes.py and check-task-layout.py check it).
+README_DATA = "readme.toml"
+README_SECTIONS = ("Task", "Success criteria", "Resource requirements", "Others", "License")   # in this order
+README_OPTIONAL = ("Others",)                                                               # left out when empty
+README_ROWS = ("Task ID", "Benchmark", "Robot", "Mode", "Opponent", "Instance", "Time limit", "Reference solution")
+README_ROWS_OPTIONAL = ("Opponent",)
+# words no per-task README of the format may carry (ci_checks/check-readmes.py): retired rows and protocol versions
+README_FORBIDDEN = re.compile(r"eai-standard/2\.|\bTwin\b|\bDifficulty\b|\bBaselines?\b")
+# The benchmark README (tasks/<benchmark>/README.md) of a migrated benchmark: these H2 sections in this order (Others
+# optional), the facts every task of the benchmark shares (ci_checks/check-readmes.py)
+BENCH_README_SECTIONS = ("Overview", "Upstream and license", "Changes from upstream", "Interface", "Grading", "Tasks",
+                         "Others")
+# readme.toml's schema: top-level tables and, per family / task entry, the keys it may set
+README_DATA_KEYS = {"benchmark": {"name", "citation", "repo", "url", "commit", "others"},
+                    "license": {"text"}, "robots": None, "modes": None, "families": None, "tasks": None}
+README_ENTRY_KEYS = {"success", *MODE_REGISTRY, "vars", "opponent", "others", "no_twin"}
+
+
+class ReadmeError(ValueError):
+    """readme.toml lacks what a task's README needs (a success text, a robot name, ...): the README is not rendered and
+    `--check` fails, never a placeholder."""
+
+
+@functools.cache
+def _readme_data(path: str, mtime: int) -> dict:
+    try:
+        d = tomllib.loads(Path(path).read_text(encoding="utf-8"))
+    except (OSError, tomllib.TOMLDecodeError) as e:
+        raise ReadmeError(f"{path}: {e}") from None
+    errs = [f"unknown table [{k}]" for k in d if k not in README_DATA_KEYS]
+    for k, keys in README_DATA_KEYS.items():
+        if keys and isinstance(d.get(k), dict):
+            errs += [f"[{k}] has unknown key {x!r}" for x in d[k] if x not in keys]
+    for k in ("families", "tasks"):
+        for name, e in (d.get(k) or {}).items():
+            if not isinstance(e, dict):
+                errs.append(f"[{k}.{name!r}] is not a table")
                 continue
-            else:
-                rest.append(ln)
-        rest_text = "\n".join(rest).strip()
-        if title in ("", "Task"):
-            rows += body_rows
-            intro = (intro + "\n\n" + rest_text).strip() if rest_text else intro
-        elif title == "Details":
-            rows += body_rows
-            if rest_text:
-                out.append(("Notes", rest_text))
-        else:
-            if body_rows and not rest_text:
-                rows += body_rows
-            else:
-                out.append((title, text.strip()))
-    return intro, rows, out
+            errs += [f"[{k}.{name!r}] has unknown key {x!r}" for x in e if x not in README_ENTRY_KEYS]
+    for m in d.get("modes") or {}:
+        if m not in MODE_REGISTRY or set(d["modes"][m]) - {"success"}:
+            errs.append(f"[modes.{m}]: a mode of MODE_REGISTRY with the one key `success`")
+    if errs:
+        raise ReadmeError(f"{path}: " + "; ".join(errs))
+    return d
 
 
-def image_of(task: Path) -> str:
-    c = read_text(task / "environment/docker-compose.yaml") or ""
-    m = re.search(r"""^\s*cache_from:\s*(?:\[\s*|\n\s*-\s*)["']?([^"',\]\s]+)""", c, re.M)
-    if m:                       # the prebuilt image of a base stage the task builds when it cannot pull it (normalize_base_stages)
-        return m.group(1)
-    if mode_of(task) in SIDECAR_MODES:
-        imgs = [i for i in re.findall(r"^\s*image:\s*(\S+)", c, re.M) if not re.search(r"/(?:eai|efe)-monitor[:@]|/efe:monitor-", i)]   # not the monitor's
-        if imgs:
-            return imgs[0]
-        for sub in ("sim", "scorer"):   # a sidecar built from its own directory: the base image of its Dockerfile
-            m = re.search(r"^FROM\s+(\S+)", read_text(task / "environment" / sub / "Dockerfile") or "", re.M)
-            if m:
-                return m.group(1)
-    d = read_text(task / "environment/Dockerfile") or ""
-    m = re.search(r"^FROM\s+(\S+)", d, re.M)
-    return m.group(1) if m else ""
+def readme_data(bench: str) -> dict:
+    """tasks/<bench>/readme.toml of the repository's tree (also for a task rendered in a scratch directory)."""
+    p = TASKS_DIR / bench / README_DATA
+    if not p.is_file():
+        raise ReadmeError(f"tasks/{bench}/{README_DATA} is missing")
+    return _readme_data(str(p), p.stat().st_mtime_ns)
 
 
-def default_difficulty(task: Path, rows: dict[str, str]) -> str:
-    twin = base_of(task) + "-privileged"
-    if mode_of(task) == "standard":
-        return (f"Same scene, instance and success rule as `{twin}` (see its Difficulty). In standard mode the agent "
-                "loses resets, privileged state and planning primitives: it sees camera images and proprioception only, "
-                "acts through the client, and gets one episode, so it has to estimate the scene from images and "
-                "recover from its own mistakes without starting over.")
-    if task.name.startswith("dextoolbench_"):
-        g = dtb_goals(task)
-        ref = f" SimToolReal's pretrained policy reaches {g[0]}/{g[1]} goals here." if g else ""
-        return ("Dexterous tool use: a KUKA iiwa 14 arm with a 22-DoF Sharpa HA4 hand (29 position-controlled joints) "
-                "must carry the tool along DexToolBench's goal trajectory, every goal within 1.5 cm on all keypoints, "
-                f"and success needs every goal.{ref}")
-    if task.name.startswith("mujoco_playground_"):
-        return ("MuJoCo Playground defines only a shaped RL reward; this task scores a binary success defined from it "
-                f"({re.sub(r'^Playground has only a shaped RL reward(?: [(][^)]*[)])?; defined here[^:]*: ', '', rows.get('success', 'see Verification'))}), so a trajectory has to actually finish the manipulation "
-                "rather than collect partial reward.")
-    return "Not documented yet."
+def readme_entries(task: Path, data: dict) -> list[dict]:
+    """The readme.toml entries that apply to the task, most specific first: [tasks."<dir>"], [tasks."<base>"],
+    [families."<family>"]."""
+    fam = str(metadata_of(task).get("family", ""))
+    return [e for e in ((data.get("tasks") or {}).get(task.name), (data.get("tasks") or {}).get(base_of(task)),
+                        (data.get("families") or {}).get(fam)) if e]
+
+
+def readme_field(task: Path, data: dict, key: str, mode: str | None = None):
+    """The first entry's `mode` key, else its `key`, most specific entry first; None when no entry sets it."""
+    for e in readme_entries(task, data):
+        for k in ((mode,) if mode else ()) + (key,):
+            if e.get(k) not in (None, ""):
+                return e[k]
+    return None
+
+
+def duration_text(sec: int) -> str:
+    """1800 -> "30 min", 3600 -> "1 h", 5400 -> "1 h 30 min", 45 -> "45 s"."""
+    h, rest = divmod(int(sec), 3600)
+    m, s = divmod(rest, 60)
+    parts = ([f"{h} h"] if h else []) + ([f"{m} min"] if m else []) + ([f"{s} s"] if s else [])
+    return " ".join(parts) or "0 s"
+
+
+def readme_time_row(task: Path) -> str:
+    """The Time limit row (ci_checks/check-cutoffs.py compares it with `[agent] timeout_sec`)."""
+    return f"| Time limit | {duration_text(cutoff_for(task) or 0)} |"
+
+
+def reference_status(task: Path) -> str:
+    """The Reference solution row: "Included" (`oracle = "full"`: solution/solve.sh solves the task on its oracle seeds),
+    "Pipeline check only" (`oracle = "partial"`: solution/solve.sh runs the pipeline end to end without solving it),
+    "None" (`oracle = "none"`, or no solution/solve.sh)."""
+    oracle = metadata_of(task).get("oracle")
+    if not (task / "solution/solve.sh").is_file():
+        return "None"
+    return {"full": "Included", "partial": "Pipeline check only"}.get(oracle, "None")
+
+
+def readme_fields(task: Path, data: dict) -> dict:
+    """The {placeholders} a readme.toml text may use."""
+    md = metadata_of(task)
+    fam = str(md.get("family", ""))
+    sec = cutoff_for(task) or 0
+    v: dict = {}
+    for e in reversed(readme_entries(task, data)):      # the more specific entry's vars win
+        v.update(e.get("vars") or {})
+    sd = seeds_of(md)
+    return {"task": task.name, "base": base_of(task), "mode": mode_of(task), "family": fam,
+            "env": fam.rsplit("/", 1)[-1], "seed": sd["default"], "timeout": duration_text(sec), "timeout_s": sec,
+            "resets": reset_budget_of(task), "slowdown": slowdown_text(slowdown_of(task) or 1),
+            "md": md, "vars": v}
+
+
+def readme_format(text: str, fields: dict, what: str) -> str:
+    try:
+        return text.format_map(fields).strip()
+    except (KeyError, IndexError, AttributeError, ValueError) as e:
+        raise ReadmeError(f"{what}: bad placeholder ({e!r}) in {text[:60]!r}") from None
 
 
 def render_readme(task: Path) -> str:
-    meta = tomllib.loads((task / "task.toml").read_text())
-    md, ag = meta.get("metadata", {}), meta.get("agent", {})
+    bench = bench_dir(task)
+    data = readme_data(bench)
+    where = f"tasks/{bench}/{README_DATA}"
+    md, mode = metadata_of(task), mode_of(task)
+    fields = readme_fields(task, data)
+    ins = read_text(task / "instruction.md") or ""
+    h1 = ins.splitlines()[0] if ins.startswith("# ") else ""
+    body = section(ins, "Task")
+    if not h1 or body is None or not body.strip():
+        raise ReadmeError(f"{task.name}: instruction.md has no `# ` title or no `## Task` section")
+    b = data.get("benchmark") or {}
+    if not all(b.get(k) for k in ("name", "citation", "repo", "commit")):
+        raise ReadmeError(f"{where}: [benchmark] needs name, citation, repo and commit")
+    name = f"[{b['name']}]({b['url']})" if b.get("url") else b["name"]
+    robot = (data.get("robots") or {}).get(str(md.get("robot", "")))
+    if not robot:
+        raise ReadmeError(f"{where}: [robots] has no display name for `{md.get('robot', '')}` ({task.name})")
+    mode_txt = mode + (f", slowdown {slowdown_text(slowdown_of(task))}" if mode == "realtime" and slowdown_of(task) else "")
+    rows = [("Task ID", f"`{task.name}`"), ("Benchmark", f"{name} ({b['citation']}), upstream `{b['repo']}@{b['commit']}`"),
+            ("Robot", robot), ("Mode", mode_txt)]
+    opp = readme_field(task, data, "opponent")
+    if opp:
+        rows.append(("Opponent", readme_format(str(opp), fields, f"{where} opponent")))
+    rows += [("Instance", f"`{fields['family']}`, seed {fields['seed']}"),
+             ("Time limit", duration_text(cutoff_for(task) or 0)), ("Reference solution", reference_status(task))]
+    cond = readme_field(task, data, "success", mode)
+    if not cond:
+        raise ReadmeError(f"{where}: no success text for {task.name} (family `{fields['family']}`, mode {mode}): "
+                          f"[families.\"{fields['family']}\"] success, or a [tasks] entry")
+    tail = ((data.get("modes") or {}).get(mode) or {}).get("success")
+    if not tail:
+        raise ReadmeError(f"{where}: [modes.{mode}] success is missing ({task.name})")
+    lic = (data.get("license") or {}).get("text")
+    if not lic:
+        raise ReadmeError(f"{where}: [license] text is missing")
+    others = readme_field(task, data, "others")
+    if others is None:
+        others = b.get("others")
     old = read_text(task / "README.md") or ""
-    intro, rows, sections = parse_readme(old)
-    rows = [(k, v) for k, v in rows if k not in HEADER_KEYS and k.lower() not in DROP_ROWS]
-    rowd = {k.lower(): v for k, v in rows}
-    secd = {t: b for t, b in sections}
-    mode = mode_of(task)
-    twin = base_of(task) + ("-privileged" if mode in SIDECAR_MODES else "-standard")
-    if mode not in SIDECAR_MODES and not task.with_name(twin).is_dir():   # a privileged twin of a realtime task
-        twin = next((base_of(task) + f"-{m}" for m in SIDECAR_MODES if task.with_name(base_of(task) + f"-{m}").is_dir()),
-                    twin)
-    sd = seeds_of(md)
-    seed = sd["default"]
-    oracle = md.get("oracle", "")
-    ev = md.get("oracle_evidence", "")
-    head = [("Benchmark", bench_of(task) or "—"),
-            ("Mode", mode + (f" (`{md['protocol']}`)" if mode in SIDECAR_MODES and md.get("protocol") else ""))]
-    # a standard or realtime task has its privileged twin unless no_twin_reason() says why not (PROTOCOL §3), even
-    # when it is rendered first (an exempted name whose twin still exists, e.g. before a removal lands, keeps it)
-    no_twin = None if task.with_name(twin).is_dir() else no_twin_reason(task)
-    head.append(("Twin", no_twin or (f"`{twin}`" if mode in SIDECAR_MODES or task.with_name(twin).is_dir()
-                                     else "— (privileged only)")))
-    head += [("Simulator / robot", f"`{md.get('simulator', '')}` / `{md.get('robot', '')}`"),
-             ("Family / instance", f"`{md.get('family', '')}` / seed {seed}"
-              + (f" (allowed seeds: {seeds_text(sd['allowed'])}; PROTOCOL §2)" if sd["allowed"] != [sd["default"]] else "")),
-             ("Oracle", f"`{oracle}`" + (f" — {ev}" if ev else "") if oracle else "—"),
-             ("Agent time budget", f"{int(float(ag.get('timeout_sec', 0)))} s; tokens: protocol default (docs/protocol/running.md \"Official runs\")")]
-    rt = realtime_of(task)
-    if rt is not None:
-        head.append(("Real time", f"slowdown S = {slowdown_text(rt[0])} (the world runs at 1/S of real speed: one control "
-                                  f"step every S x control_dt s of wall time; `{slowdown_var(task)}`'s default)"
-                                  + (f"; reset budget {rt[1]} (`RCB_RESET_BUDGET`'s default)" if rt[1] is not None else "")
-                                  + " (PROTOCOL §3)"))
-    head.append(("Base image", f"`{image_of(task)}`"))
-    used = set()
-    task_text = intro or meta.get("task", {}).get("description", "")
-    difficulty = secd.get("Difficulty") or default_difficulty(task, rowd)
-    ref = secd.get("Reference solution")
-    if not ref:
-        ref = rowd.get("oracle", "")
-        used.add("oracle")
-    ver = secd.get("Verification")
-    if not ver:
-        parts = [rowd[k] for k in ("verification", "grading", "metric", "success") if k in rowd]
-        ver = "\n\n".join(parts)
-        used.update({"verification", "grading", "metric", "success"})
-    ref = ref or "See `solution/`."
-    ver = ver or "See `tests/grade.py`."
-    extra_rows = [(k, v) for k, v in rows if k.lower() not in used]
-    # (a task's history is not kept in its README: git log and the pull requests have it; docs describe the current state)
-    extra_secs = [(t, b) for t, b in sections if t not in ("Difficulty", "Reference solution", "Verification", "Change Log") and b]
-    out = [f"# {task.name}", "", "| | |", "|---|---|"] + [f"| {k} | {v} |" for k, v in head]
-    out += ["", "## Task", task_text.strip(), "", "## Difficulty", difficulty.strip(), "",
-            "## Reference solution", ref.strip(), "", "## Verification", ver.strip()]
-    out += [""] + readme_resources(task, old)
-    if extra_rows or extra_secs:
-        out += ["", "## Details"]
-        if extra_rows:
-            out += ["| | |", "|---|---|"] + [f"| {k} | {v} |" for k, v in extra_rows]
-        for t, b in extra_secs:
-            out += ["", f"### {t}", b.strip()]
+    out = [h1, "", "| | |", "|---|---|"] + [f"| {k} | {v} |" for k, v in rows]
+    out += ["", "## Task", body.strip(), "",
+            "## Success criteria", readme_format(cond, fields, f"{where} success"), "",
+            readme_format(tail, fields, f"{where} [modes.{mode}]"), ""]
+    out += readme_resources(task, old)
+    if others and str(others).strip():
+        out += ["", "## Others", readme_format(str(others), fields, f"{where} others")]
+    out += ["", "## License", readme_format(lic, fields, f"{where} [license]")]
     s = "\n".join(out).rstrip() + "\n"
     return re.sub(r"\n{3,}", "\n\n", s)
+
+
+def readme_format_errors(task: Path, text: str) -> list[str]:
+    """What a per-task README breaks: its H2 headings are README_SECTIONS in order (Others
+    optional, nothing else), its key table the rows of README_ROWS in order (Opponent optional), no README_FORBIDDEN word.
+    Other task names: ci_checks/check-readmes.py (it holds the list of every task)."""
+    errs = []
+    heads = re.findall(r"(?m)^## (.+?)\s*$", text)
+    want = [h for h in README_SECTIONS if h not in README_OPTIONAL or h in heads]
+    if heads != want:
+        errs.append(f"sections must be {', '.join('## ' + h for h in README_SECTIONS)} in this order (Others optional, "
+                    f"no other heading); found {', '.join('## ' + h for h in heads) or 'none'}")
+    m = section_match(text, "Task")   # `## Task` is instruction.md's, verbatim: its own ### headings stay
+    rest = text[:m.start()] + text[m.end():] if m else text
+    if re.search(r"(?m)^#{3,} ", rest):
+        errs.append("no sub-headings (### ...) outside `## Task` (the instruction's copy): the format has none")
+    ins = read_text(task / "instruction.md") or ""
+    if ins.startswith("# ") and not text.startswith(ins.splitlines()[0] + "\n"):
+        errs.append("the first line must be instruction.md's `# ` title, verbatim")
+    head = text.split("\n## ", 1)[0]
+    keys = re.findall(r"(?m)^\| ([^|]+?) \| .* \|$", head)
+    keys = [k for k in keys if k.strip()]
+    wantk = [k for k in README_ROWS if k not in README_ROWS_OPTIONAL or k in keys]
+    if keys != wantk:
+        errs.append(f"key table rows must be {', '.join(README_ROWS)} in this order (Opponent: match tasks only); "
+                    f"found {', '.join(keys) or 'none'}")
+    for m in sorted(set(README_FORBIDDEN.findall(text))):
+        errs.append(f"retired wording {m!r} (Twin / Difficulty / Baselines rows, protocol versions): not in a task README")
+    return errs
 
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -1680,13 +1738,6 @@ def realtime_of(task: Path) -> tuple[float, int | None] | None:
     if not m:
         return None
     return float(m.group(1)), (int(r.group(1) or r.group(2)) if r else None)
-
-
-def slowdown_var(task: Path) -> str:
-    """The setting S comes from: `RCB_SLOWDOWN`, or that of a benchmark's own service (PROTOCOL §3; Embodied Olympics
-    `RO_SLOWDOWN`)."""
-    c = read_text(task / "environment/docker-compose.yaml") or ""
-    return "RCB_SLOWDOWN" if SLOWDOWN_RE.search(c) or not OWN_SLOWDOWN_RE.search(c) else "RO_SLOWDOWN"
 
 
 def slowdown_text(S: float) -> str:
@@ -2207,7 +2258,12 @@ def main(argv: list[str]) -> int:
                 for sib in d.resolve().parent.glob(base_of(d) + "-*"):   # the twin, read for the README's key table
                     if sib.name != d.name:
                         (Path(td) / sib.name).symlink_to(sib)
-                normalize(tmp)
+                try:
+                    normalize(tmp)
+                except ReadmeError as e:
+                    print(f"FAIL {d}: README.md not rendered: {e}")
+                    bad = 1
+                    continue
                 if snapshot(tmp) != snapshot(d):
                     print(f"FAIL {d}: not normalized (run scripts/task_conventions.py {d})")
                     bad = 1
@@ -2216,7 +2272,11 @@ def main(argv: list[str]) -> int:
                 print(f"FAIL {d}: instruction.md {e}")
                 bad = 1
         else:
-            normalize(d)
+            try:
+                normalize(d)
+            except ReadmeError as e:
+                print(f"FAIL {d}: README.md not rendered: {e}", file=sys.stderr)
+                bad = 1
     return bad
 
 

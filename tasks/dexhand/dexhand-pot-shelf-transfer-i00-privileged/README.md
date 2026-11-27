@@ -1,54 +1,55 @@
-# dexhand-pot-shelf-transfer-i00-privileged
+# DexHand · Place a two-handle pot into a shelf (privileged)
 
 | | |
 |---|---|
-| Benchmark | DexHand |
+| Task ID | `dexhand-pot-shelf-transfer-i00-privileged` |
+| Benchmark | [DexHand](https://www.embodied-first-exam.ai/suite/dexhand/) (Wang et al., 2026), upstream `mll-lab-nu/embodied-first-exam@b2280d8` |
+| Robot | Tianji Marvin fixed stand with two 7-joint arms and a dexterous hand on each wrist: Sharpa Wave (22 finger actuators each) by default, or Wuji Hand 2.2 (20 each) |
 | Mode | privileged |
-| Twin | `dexhand-pot-shelf-transfer-i00-standard` |
-| Simulator / robot | `mujoco` / `marvin-bimanual-sharpa-wave` |
-| Family / instance | `pot_shelf_transfer` / seed 0 |
-| Oracle | `full` — solution/trajectory.npz: the 8,850 authoring rows of the accepted episode (bit-for-bit replay of the recorded states). Harbor 0.23 oracle reward 1 in both modes on 2026-10-14 (two fresh-process replays with identical state hashes; standard: live = replay). solution/wuji/trajectory.npz is a validated Wuji Hand 2.2 trajectory of this instance (8,266 controls, motor targets only, physical contact only); the oracle uses it when the run selects wuji (privileged: DEXHAND_HAND=wuji; standard: the sim service's hand), and it replays to success in two fresh processes with identical state hashes. |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:dexhand-0.2.0@sha256:0d42994b83d95ab5301c592b35586550c9ee426490115e4b43f3b8cf8cc43350` |
+| Instance | `pot_shelf_transfer`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | Included |
 
 ## Task
-A fixed dual-arm robot (two 7-joint arms, a dexterous hand on each wrist) stands at a kitchen worktop. A freely moving 1 kg two-handle stockpot (286 mm vessel diameter, 438 mm across its two loop handles) rests on the worktop; an open kitchen shelf is to the robot's left. Lift the pot by its two handles with both hands, carry it into the shelf on the left and set it down upright on the shelf board at the target, then open both hands and move them away. The pot must never be dropped, tipped over, knocked against the furniture, the floor or a non-hand robot link, or leave its support while no hand carries it. Only the robot's position-controlled joint targets act on the world: there are no attachments, object actuators, scripted object motion or applied forces.
+Lift the pot by its two handles with both hands, carry it into the shelf on the left and set it down upright on the
+shelf board at the target, then open both hands and move them away.
 
-Mode `privileged`. A fixed Tianji Marvin dual-arm stand (two 7-joint arms) carries a dexterous hand on each wrist:
-Sharpa Wave by default (58 targets per row), Wuji Hand 2.2 selectable (54 targets per row). One row is one 2 ms
-physics step (500 Hz). The pot is a free 1 kg rigid body; only the robot's position servos act on the world.
+## Success criteria
+Here a control step is one 2 ms physics step (500 Hz), and every check below runs after each one. The pot's position is
+the centre of its base. A contact carries load when its normal force is at least 0.02 N. Two stages, in this order:
+1. Lifted, for 250 physics steps (0.5 s) in total, not necessarily in a row: the pot's base is above z = 0.785 m; no
+   loaded contact joins the pot to the worktop or the shelf board; and each hand pushes the pot upward with at least
+   0.5 N.
+2. Placed, held for 1,000 consecutive physics steps (2 s): the pot's base is within 40 mm horizontally of the target
+   (0.46, 0.31) m and within 12 mm of its height (z = 0.79 m); the pot is tilted at most 0.1 rad; it moves at most
+   0.03 m/s and turns at most 0.15 rad/s; the vessel (radius 0.143 m) lies within the shelf board's outline; the pot has
+   a loaded contact with the shelf board and touches nothing else; the pot's collision shape lies inside the shelf
+   compartment (between the side walls, from 50 mm in front of the board's front edge to the back wall, below the
+   shelf top, and no lower than 12 mm below the board top); and no part of either hand is within 40 mm of the pot.
 
-## Difficulty
-Hard. Both hands must hook the two thin (14 mm) loop handles of a 438 mm wide pot, lift it clear of the worktop, keep
-it level while the two arms carry it 0.36 m sideways and 0.04 m up into an open shelf compartment, set it down at a
-4 cm target, then release and withdraw without dragging it. The arm servos have no gravity compensation, the episode
-fails on the first drop, tip, collision or furniture contact, and the 2 s released hold must be reached within 60 s
-of simulated time.
+The episode fails at once when: the pot's base falls below z = 0.7 m or leaves the work box x -0.1 to 1.1 m, y -0.5
+to 0.85 m, z 0.7 to 1.45 m; the pot tilts more than 0.5 rad; the pot touches nothing for more than 30 physics steps in
+a row, or falls faster than 0.6 m/s; with load, the pot touches anything other than the two hands, the worktop and the
+shelf board, or any robot part other than a hand; with load, a robot part touches the furniture, the floor or another
+robot part, other than two parts of the same hand; a hand presses more than 3 mm into the pot; any joint passes its
+range by more than 0.005 rad; or the physics becomes unstable. The step budget is 30,000 physics steps (60 s).
 
-## Reference solution
-`solution/trajectory.npz` holds an authoring controller's 8,850 Sharpa rows (17.7 s at 500 Hz): supported approach,
-both-handle grasp, loaded lift, levelling, carry into the compartment, placement, release and withdrawal. The
-episode reaches the 2 s released hold at row 8,602, where it ends. The rows are replayed bit for bit by the packaged
-scene (every physics state equals the authoring recording). Privileged: `solve.sh` re-saves the rows as the
-deliverable. Standard: `solve.sh` submits them through the client with `dt = 0.002 s`. The solution is never copied
-into the agent's environment or image.
+The graded file is `/app/output/trajectory.npz`, as `s.save_trajectory` writes it: a finite numeric `actions` array
+with one row of motor targets per control step (58 values for the Sharpa Wave hand, 54 for
+the Wuji Hand 2.2), 1 to 30,000 rows, and a `hand` member that names the hand (an archive without it counts as
+Sharpa Wave). After the agent's session, the verifier rebuilds the frozen scene with that hand in a fresh process of a
+separate container without network and replays the rows once, open-loop. The replay stops at the first success or the
+first failure, and later rows are not run. The task is passed if the replay ends in success; rows that run out first,
+or the step budget reached first, leave it failed. Only the motor targets are read: no other member of the archive
+changes the verdict.
 
-Wuji Hand 2.2: `solution/wuji/trajectory.npz` is a validated Wuji Hand 2.2 trajectory of this instance (8,266 rows of motor targets, physical contact only). With `DEXHAND_HAND=wuji` set for the oracle, `solve.sh` hands it in instead of the Sharpa Wave rows; the verifier replays it with the Wuji Hand 2.2.
+A missing file scores 0, and so does a rejected one: larger than 64 MB, a row width that does not match the hand, a
+non-finite value, no rows or too many, a target outside its actuator's range, or a `task` or `actuator_names` member
+that does not match this task. A frozen scene that does not build to its recorded start is an infrastructure error,
+not a score.
 
-## Verification
-Privileged: the isolated verifier rebuilds the frozen scene with the trajectory's `hand` (default `sharpa`) and replays
-only the `actions` rows in one fresh process; reward 1 iff that replay succeeds.
-Standard: the trusted service judges the live episode it ran; nothing is replayed. Rows of the wrong width for the recorded
-hand, non-finite or out-of-range targets, a wrong `task` or `actuator_names` label and oversized archives are rejected
-(reward 0, `bad_trajectory = 1`). The predicate is evaluated after every physics step from simulator state only
-(contacts, contact forces, poses, velocities, geometric distances): two ordered stages (bimanual carry, released hold
-on the shelf) and fail-fast invariants (drop, fall, tip, collision, furniture contact, penetration, joint overshoot,
-unstable physics, step budget); nothing else fails early, so setting the pot back down on the worktop and regrasping
-it is allowed. Partial completion fails. A `nop` agent scores 0 (no archive; in standard mode the
-untouched pot never leaves the worktop).
-
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -57,24 +58,14 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-
-### Notes
-Source: the DexHand family of this task. The frozen MJCF is
-the manager-accepted scene-expansion model of this task (two-handle stockpot to shelf); freezing it rewrote
-only its mesh paths and appended three static cameras, and the 8,850 authoring rows were checked to
-replay to the accepted initial and final integration-state digests with every recorded qpos/qvel equal.
-
-Assets: the pot is "Harvest Pot - Cookware" by Innerscene (CC0 1.0) at source scale, lid omitted; it is one 1 kg rigid
-body (0.8 kg vessel + 0.2 kg dry payload), each hollow loop handle collides as 24 capsule chords, the vessel as 32 wall
-boxes plus the source base mesh. Tianji Marvin arm geometry from DexForce's TianjiMarvin release (Apache-2.0) with
-Genesis public inertia estimates (MIT); Sharpa Wave from MuJoCo Menagerie `0059d4335f8156206f63a35662313385f7ad6d74`
-(Apache-2.0; the left hand is a declared mirror of the right model); Wuji Hand 2.2 from wuji-description
-`829c9aa27cb12c3a49d5b8d63c9869dd8f656702` (MIT). Every mesh is checked against `assets/manifest.json` (sha256) before
-the scene compiles; the arm and hand meshes come from the `efe:dexhand` image, the pot meshes from the task.
-
-Modelling scope: estimated mass, inertia and contact compliance, no fluid, heat or deformation, internal hand
-self-contact is not judged. Open kitchen shelf, not a narrow-cupboard challenge. The pot's 438 mm handles span the
-board's depth direction, so at the target the front handle reaches about 32 mm past the board's open front edge; the
-compartment test therefore admits at most 50 mm of overhang at the open front (all other faces are strict). Wuji Hand
-2.2 composes on the same arm mounts with neutral fingers.
+## License
+DexHand's scenes, checkers and graders are original to this repository (MIT License). Robot models: the Sharpa Wave
+hand from [MuJoCo Menagerie](https://github.com/google-deepmind/mujoco_menagerie/tree/0059d4335f8156206f63a35662313385f7ad6d74/sharpa_wave)
+@ `0059d43` (Apache License 2.0); the Wuji Hand 2.2 from
+[wuji-technology/wuji-description](https://github.com/wuji-technology/wuji-description/tree/829c9aa27cb12c3a49d5b8d63c9869dd8f656702)
+@ `829c9aa` (MIT License); the Tianji Marvin arm meshes from DexForce `embodichain_data` (Apache License 2.0) with
+inertias from Genesis' `dual_arms_primitives.urdf` (MIT License), see `images/dexhand/tianji/NOTICE.md`. Object
+assets are original geometry of this repository, CC0 (the Poly Haven rubber boot, the Innerscene stockpot, Monet's
+public-domain Water Lilies, original page and letter artwork) or CC BY 4.0 (the Joy-Con, pen, rotary-knob and walnut
+meshes; credits in each task's `object_assets/*/CREDITS.txt`); printed text uses the DejaVu fonts (Bitstream Vera
+license). No non-commercial terms apply.

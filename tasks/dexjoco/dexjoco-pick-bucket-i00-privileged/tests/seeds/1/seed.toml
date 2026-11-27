@@ -3,9 +3,5 @@ old = "### Scene\nWorld frame, metres; z up; the robot stands at low x and reach
 new = "### Scene\nWorld frame, metres; z up; the robot stands at low x and reaches towards +x. The table top is at z = 0.964. Arm base\n(`link0`): link0 [-0.75, 0.0, 0.924]. Quaternions are WXYZ. `s.objects()` gives the live poses of the task objects\n(`bucket`, `bucket_handle`, `boxed_food`, `table_top`)."
 
 [[replace]]
-old = "`bucket_pick_demo_10_2026-03-10_18-19-00_120725`"
-new = "`bucket_pick_demo_10_2026-03-11_20-12-38_921506`"
-
-[[replace]]
-old = "`1cb042bf6d46ad45`"
-new = "`41e261be91b1db27`"
+old = "`, seed 0 |"
+new = "`, seed 1 |"

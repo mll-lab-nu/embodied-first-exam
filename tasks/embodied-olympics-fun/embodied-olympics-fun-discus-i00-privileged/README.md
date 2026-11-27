@@ -1,31 +1,56 @@
-# embodied-olympics-fun-discus-i00-privileged
+# Embodied Olympics · discus (privileged)
 
 | | |
 |---|---|
-| Benchmark | Embodied Olympics - Fun |
+| Task ID | `embodied-olympics-fun-discus-i00-privileged` |
+| Benchmark | [Embodied Olympics - Fun](https://github.com/CHIGUI0/roboolympics) (Embodied Olympics authors, 2026), upstream `CHIGUI0/roboolympics@7df999b` |
+| Robot | Unitree H1-2 humanoid (1.78 m, 67 kg, 27 joints), with Unitree's walking policy |
 | Mode | privileged |
-| Twin | `embodied-olympics-fun-discus-i00-standard` |
-| Simulator / robot | `mujoco` / `unitree-h1-2` |
-| Family / instance | `discus` / seed 0 |
-| Oracle | `none` — no reference solution; the referee is tested: The 2 kg discus lies flat on the upturned palm of the H1-2's own right Inspire hand (its default forces, 20 N per fingertip, 30 N the thumb), the fingertips curled over its rim (searched: hanging from the fingers with the arm down it slides out wherever it is placed). A swing searched by CMA-ES (about 60 generations) lets the discus leave the palm early (best 6 m; the mark is 15 m). Positive by a declared magic action: real stance on the walking policy and the hand opening; injected once, the discus moved 0.4 m forwards and up and given 13.5 m/s at 38 deg spinning at 30 rad/s: it lands 18.7 m from the rim inside the sector; the real walk backwards out of the rear half and stand; the same state hash twice. Negatives: nop (time, discus held), the hand opened at the start (it slides off unheld), walking out with the discus, leaving before the landing, outside the sector, short, touched after the release, leaving through the front half, a fall. Stress: random arm targets with the hand closed: at most 0.2 mm into the fingers. The clean release (the same rule as javelin): brushes by the right hand in the 0.2 s grace after the release may change the discus' velocity by at most 0.5 m/s in all; an injected blow on the palm (0.95 m/s) fails as 'struck after the release'. An agent's own-motor throw of 17.1 m from a model run succeeds under it (it gains less than 0.2 m/s from brushes). Every rule above is judged in the family's own 1 ms substep hook.; human review in the pull request that adds the benchmark (PROTOCOL §4) |
-| Agent time budget | 7200 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
+| Instance | `discus`, seed 0 |
+| Time limit | 2 h |
+| Reference solution | None |
 
 ## Task
-Throw the discus from the circle so that it lands inside the sector at least 15 m out, then leave the circle from its back half and stand. (Embodied Olympics `discus`: one Unitree H1-2 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
+Throw the discus from the circle so that it lands inside the sector at least 15 m out, then leave the circle from its
+back half and stand.
 
-## Difficulty
-15.0 m needs a release at about 12 m/s near 35 to 40 degrees with the discus flat to its flight and spinning, or the air turns it over. The H1-2's arm motors give 40 N m at the shoulder, so the speed has to come from the trunk's turn, inside a circle of 2.5 m that the robot may not leave until the discus is down. At that speed the discus pulls on the hand with some 300 N, held only by fingertips curled over its rim and the palm under it: the hand's path has to keep the discus pressed into the palm and the fingers until the release.
+## Success criteria
+The 2.0 kg discus starts on the right hand; the circle is 2.5 m across inside its rim, and the sector is 34.92 degrees
+wide, symmetric about the robot's starting direction. The referee's stages, in order: release, landing, exit.
+- Before the release only the right hand (fingers, palm, wrist) may touch the discus, and the discus may not rest on
+  the hand without the hand's hold (fingers and thumb or palm on it) for more than 0.2 s.
+- Release: the hand's last hold before the discus has touched nothing of the robot for 0.03 s. After it the discus may
+  not be held again; nothing but the right hand may touch it, the right hand only in the first 0.2 s, and those
+  brushes may change its velocity by at most 0.5 m/s in all.
+- Landing: the discus' first touch of the ground is inside the sector lines (on a line is out) and at least 15.0 m
+  from the inside of the rim, measured along the line through the circle's centre. Otherwise the attempt fails.
+- Exit: after the landing, the robot's first touch of the rim's top or the ground outside the circle is in the rear
+  half (behind the line through the circle's centre across the throwing direction).
+- The success is called when, after the exit, the robot has stood for 1.0 s without a break (only the feet on the
+  ground, the torso within about 20 degrees of vertical, the pelvis slower than 0.35 m/s).
 
-## Reference solution
-None. No reference controller exists for this family yet: The 2 kg discus lies flat on the upturned palm of the H1-2's own right Inspire hand (its default forces, 20 N per fingertip, 30 N the thumb), the fingertips curled over its rim (searched: hanging from the fingers with the arm down it slides out wherever it is placed). A swing searched by CMA-ES (about 60 generations) lets the discus leave the palm early (best 6 m; the mark is 15 m). Positive by a declared magic action: real stance on the walking policy and the hand opening; injected once, the discus moved 0.4 m forwards and up and given 13.5 m/s at 38 deg spinning at 30 rad/s: it lands 18.7 m from the rim inside the sector; the real walk backwards out of the rear half and stand; the same state hash twice. Negatives: nop (time, discus held), the hand opened at the start (it slides off unheld), walking out with the discus, leaving before the landing, outside the sector, short, touched after the release, leaving through the front half, a fall. Stress: random arm targets with the hand closed: at most 0.2 mm into the fingers. The clean release (the same rule as javelin): brushes by the right hand in the 0.2 s grace after the release may change the discus' velocity by at most 0.5 m/s in all; an injected blow on the palm (0.95 m/s) fails as 'struck after the release'. An agent's own-motor throw of 17.1 m from a model run succeeds under it (it gains less than 0.2 m/s from brushes). Every rule above is judged in the family's own 1 ms substep hook..
+Fouls (each fails the attempt at once): the robot touches the rim's top (a contact within 0.003 m of it counts) or the
+ground outside the circle before the discus has landed, or in the front half before the exit; any of the discus rules
+above is broken. Fall (a failure at any time): the pelvis below 0.5 m above the circle's floor, or any part other than
+the feet on the ground. Time limit: 60 s (6,000 control steps).
 
-## Verification
-`/tests/grade.py` replays `/app/output/trajectory.npz` from the frozen start in one fresh process (`rcb_rfo.py replay`:
-one sim row per control step until the referee ends the attempt). Pass iff the referee's verdict is a success. The rules: The men's discus (2.0 kg, 0.22 m across, 0.045 m thick at its centre) starts flat on the palm of your right hand, the fingertips curled over its rim (the row's right grip value is the hand's closure command, 0 open to 1 closed; nothing is welded or grippable: contact and friction alone hold it, and it slips, turns or flies out when the throw pulls harder than the fingers hold). The circle is 2.5 m across inside its rim; the ground outside is 0.02 m higher than its inside. The sector opens from the circle's centre, 34.92 degrees wide, symmetric about the direction you face at the start. Holding: the discus touches the right hand's fingers and its thumb or palm. Before the release nothing of you but your right hand (the fingers, the palm and the wrist) may touch it, and it may not stay on the hand without the hand's hold for more than 0.2 s. The release is the hand's last hold before the discus has touched nothing of you for 0.03 s; there is one release: after it the discus may not be held by the hand again, nothing of you but the right hand may touch it, and the right hand only during the first 0.2 s (brushing it as it leaves), if those touches change its velocity by at most 0.5 m/s in all (the sum of their contact impulses over its mass: the release must be clean). Its first touch of the ground must be inside the sector lines (on a line is out); the throw is measured from that point to the inside of the rim along the line through the circle's centre. You succeed when a valid throw measures at least 15.0 m and you have then left the circle correctly and stood for 1.0 s. Leaving correctly: after the discus has landed, your first touch of the rim's top or of the ground outside the circle is behind the line through the circle's centre across the throwing direction (the rear half). Standing: only your feet on the ground, the torso within about 20 degrees of upright, the pelvis slower than 0.35 m/s. You fail if any part of you touches the rim's top (its top inside edge included) or the ground outside the circle before the discus has landed, or in the front half before you have left correctly; if the discus is touched by anything but the right hand before the release, stays on the hand without the hand's hold, is held again or touched after the release (but for the right hand's brush); if it lands outside the sector or short of 15.0 m; if you fall (your pelvis lower than 0.5 m above the circle's floor, or any part of you other than your feet on the ground); or after 60 s. Where you touch the ground is judged on the points of contact; a contact within 0.003 m of the rim's top counts as on it. No oracle; human review in the pull request that adds the benchmark (PROTOCOL §4).
+Graded file: `/app/output/trajectory.npz`, as `s.save_trajectory()` writes it: an `actions` array of sim rows, one per
+10 ms control step, and the task's family name. After the agent's session it is replayed once, open-loop, from the
+frozen start, in a fresh process of a separate verifier container without network. Rows run one per control step
+until the referee calls the attempt; rows after the call, and rows past the attempt's time limit, are not run. The
+task is passed if the referee has called a success when the replay stops. If the rows run out before the referee's
+call, the task is not passed. A row the robot cannot run (its first value, the mode, is not one of the robot's modes)
+ends the replay at that row without a pass.
 
-## Resources
-Caps per container (PROTOCOL §6).
+The physics diverging (a non-finite state, a bad acceleration, or the robot or a prop faster than 150 m/s) ends the
+attempt as a failure, unless a success was called in an earlier control step. Only the trajectory is scored (`gen.py`
+and `NOTES.md` are not). A missing file, a file that is not such an array (a link, over 64 MB, more than 40,000 rows,
+the wrong row width), a file for another task, or a non-finite value in the rows that are used scores 0. An image that
+no longer rebuilds the frozen start, or a replay that crashes or runs over 600 s, is an infrastructure failure, not a
+score.
+
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -34,14 +59,10 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Category | throwing-catching-striking |
-| Rule book | World Athletics Competition and Technical Rules 2024: TR 32.5-32.8 (the circle, 2.50 m for the discus), TR 32.12 (the 34.92 degree sector), TR 32.13, 32.14, 32.16, 32.17 and 32.20 (throwing events: the start, failures, the landing, leaving the circle, the measurement), TR 34 (the men's discus), TR 35 (the discus cage); deviations: TR 34 (the discus; the thrower's hand): the right hand is the H1-2's own Inspire five-finger hand (six drives: four fingers, the thumb's flexion and rotation; fingertip forces 20 N, the thumb 30 N, at 1.0 times these forces; one closure command for the whole hand). The discus lies flat on its palm, the fingertips curled over the rim, held by contact and friction only: nothing is welded or grippable, and the discus slips, turns in the hand or flies out when the throw pulls harder than the fingers hold. The release is the hand's last hold (the discus touching the hand's fingers and its thumb or palm) before it is clear of the robot. · TR 34 (the discus' shape): an ellipsoid of the official diameter, thickness and mass (no separate metal rim: its moment of inertia is that of a uniform body; near the rim it is 13 to 19 mm thick, as the rule book's rim). · TR 35 (the cage): there is no cage. · TR 32.5-32.6: the ground outside the circle is level with the rim's top for 1 m and then falls to the field's level over 1 m (the circle's inside is the field's level, 0.02 m below the rim, instead of the field being level with the rim). · TR 32.20: the mark is the point where the discus first touches the ground. · TR 32.15 (interrupting a trial, laying the implement down): not modelled; the first release is the throw, and the discus may not be gripped again. · TR 34 / TR 32 (the throw is the hand's alone): the rule book has no article on touching the discus after it has left the hand; here the right hand may still brush it during 0.2 s after the release, but those touches may change its velocity by at most 0.5 m/s in all (the sum of their contact impulses over its mass): a harder touch is a second propulsion of a released implement, and fails the throw. · TR 32.14 names no fall: here a fall ends the trial as a failure, as in every task of this benchmark; the trial ends when the robot has left the circle correctly and stands. · TR 25.17 (one minute for a trial): the whole trial, leaving the circle included, has 60 s. · Flight: quasi-steady aerodynamics (MuJoCo's ellipsoid fluid model: drag, lift and the pitching moment of an ellipsoid, coefficients of the order of the published wind-tunnel data), still air, no wind. · The qualifying mark of 15.0 m is this benchmark's (a school standard for the 2 kg discus); the rule book only measures. |
-| Stages | release → landing → exit |
-| Instance | `environment/instance.json` = `tests/instance.json`: the family's parameters, t = 0 state hash `e957be30f1ab11113954beabb341be85466b85a898e0e64439a9269efe5ff72f` |
-| Episode | 6000 control steps (60 s at 100 Hz) |
-| Action | sim rows of 141 floats per control step (`rfo/world.py`); six action types are views of it |
-| Tooling | `/opt/tools/rcb_rfo.py`, `/opt/tools/rfo/` (the world, the action layer, the referee's toolkit; from the files-only image images/embodied-olympics-fun-files/, built from embodied_first_exam/benchmarks/embodied-olympics-fun/) and `environment/rfo_task.py` (this family's rules), the same files in the verifier's `/tests/` |
-| Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md) |
+## License
+The Embodied Olympics robot library and running-policy port ([CHIGUI0/roboolympics](https://github.com/CHIGUI0/roboolympics)
+@ `7df999b`, a private repository) is released under the MIT License (`LICENSE.roboolympics` in the image); this
+benchmark's venues and referees are MIT too. Third-party parts in the image: the Unitree G1 model and meshes from MuJoCo
+Menagerie (BSD-3-Clause), the Unitree H1-2 model, meshes and walking policy and the G1 walking policy from
+unitree_rl_gym (BSD-3-Clause), the G1 running policy from C1801SYQ/g1_running (Apache-2.0), FALCON's G1 walking policy
+from LeCAR-Lab/FALCON (MIT) and the WBC-AGILE G1 walking policy from NVIDIA (Apache-2.0). No non-commercial terms apply.

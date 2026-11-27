@@ -1,48 +1,47 @@
-# roboarc-ikea-vesken-i00-standard
+# RoboARC · VESKEN shelf unit (standard)
 
 | | |
 |---|---|
-| Benchmark | RoboARC |
-| Mode | standard (`eai-standard/3.0`) |
-| Twin | `roboarc-ikea-vesken-i00-privileged` |
-| Simulator / robot | `mujoco` / `franka-panda-bimanual` |
-| Family / instance | `ikea_vesken` / seed 0 |
-| Oracle | `full` |
-| Agent time budget | 10800 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:ikea-mujoco-sim-0.4.0` |
+| Task ID | `roboarc-ikea-vesken-i00-standard` |
+| Benchmark | [RoboARC](https://github.com/mll-lab-nu/RoboARC) (The RoboARC authors, 2026), upstream `mll-lab-nu/RoboARC@153eb8c` |
+| Robot | Two 7-DoF Franka Panda arms, each with the Panda hand (MuJoCo Menagerie) |
+| Mode | standard |
+| Instance | `ikea_vesken`, seed 0 |
+| Time limit | 3 h |
+| Reference solution | Included |
 
 ## Task
-IKEA VESKEN shelf unit (AA-1842283-5), body steps 1-8 in plain MuJoCo 3.14.0 (CPU, float64) with two 7-DoF Franka Panda arms, each with the MuJoCo Menagerie Panda hand (two-finger, tendon-coupled), through the robot service (eai-standard/3.0): RGB from four ALOHA-style cameras (optional depth), proprioception, `joint_position`
-chunks, stateless kinematics, every pose in the robot's frame; no reset and no privileged state. Build the VESKEN shelf unit: snap the four feet into the bottom tray from below, then four columns into the bottom tray, the second tray onto them, four columns and a tray for each of the two upper levels, and last the four caps into the top tray. Then let go of everything and move both arms clear.
+Build the VESKEN shelf unit: snap the four feet into the bottom tray from below, then four columns into the bottom tray,
+the second tray onto them, four columns and a tray for each of the two upper levels, and last the four caps into the top
+tray. Then let go of everything and move both arms clear.
 
-## Difficulty
-The privileged twin's bimanual assembly with physical grasps, from cameras and proprioception only, in one episode
-without reset; 16-D actuator action at 400 Hz, joint targets within the robot's joint
-velocity limits (joints 1-4 2.175 rad/s, joints 5-7 2.61 rad/s). The reference needs 352000 control steps (880.0 s of simulated
-time).
+## Success criteria
+Success needs all of these:
+- All 23 snap connections are made in the source order (each depends on the previous: feet, columns, tray, columns,
+  tray, columns, tray, caps) and, at the end, each connector is within its gates (axial gap 0.6 mm, lateral 0.8 mm,
+  outward-axis tilt 2 degrees). Identical parts may take any of their places, one part per place.
+- The feet stand on the bench (summed vertical contact force above 0.1 N) and the bottom tray is within 3 degrees of
+  its upright, unrotated assembly orientation.
+- No arm link touches any furniture part or jaw at the end.
 
-## Reference solution
-`solution/solve.sh` runs `solution/oracle_replay.py`: it submits the control steps of `solution/oracle_actions.npz` through
-the client as `joint_position` chunks of 10 s, `hold`, one control step per row, as float64 (the client's transport;
-`Robot.submit` sends float32), so the service executes exactly those rows. The rows are the task's one reference, the same file as the privileged twin's `solution/trajectory.npz`: a closed-loop reference built on the final physics: the demo as the phase guide, one operation per snap; each grasp approach offset to where the part really is, each carried part held on its reference pose (near the host: on its connector error) by an integral loop through damped-least-squares IK, a gentle press until the weld engages, one arm move re-pathed in joint space to avoid a self-contact; the rows are the targets executed within the joint-speed limits,
-so the service's speed limiter never has to act (`n_clipped` 0).
+Also required, at the end: no robot link touches any part; every part is at rest (at most 0.01 m/s and 0.05 rad/s);
+and the simulation never broke down at any time (no non-finite state, no MuJoCo BADQACC / BADQPOS / BADQVEL warning, no
+contact of a part deeper than 10 mm).
 
-## Verification
-The sim service (`environment/sim/server.py`) steps the scene's own runtime (`rcb_ikea.Session.step`: `data.ctrl[:] =
-row; S.step(4)`), applies the joint-speed rule, evaluates the grader's terminal rules (`rcb_ikea.Session.status()`:
-success.py, released, at rest, no breakdown) after every call and, when they hold, `Session.final_check()` (the same after
-a 1.0 s hold of the last row), both on a snapshot restored bit-exactly afterwards, ends the episode at the first settled
-success or at a breakdown, and journals every executed control step; at the end it writes
-`/data/trajectory.npz` (all executed control steps, float64: the replayable deliverable) and the final state hash; an
-episode that ends otherwise (timeout) is judged as it stands by the same two checks. Before the episode the service checks
-the scene file by file against `runtime_binding.json` and by its initial-state hash (`instance_mismatch`, infrastructure).
-The verifier (`tests/grade.py`, separate sandbox, no network, the shared client base) transcribes `final.json`: pass iff
-the live episode succeeded (`graded_by_live` 1, `replays` 0). No grading replay runs.
+The graded episode is the one live episode in the `sim` service; nothing is replayed, and there is no reset. The
+episode ends when the agent sends `/finish` or when the agent's session ends (at the latest after 3 h, which the
+service counts from the agent's first request).
 
-Earlier validation, under the former grading by two verifier replays (not re-run under the live grading): Harbor checks on workstation B (Ryzen 9 7950X, RTX 4090; shared, loaded) (oracle), workstation B (nop), Harbor 0.23.0, image 0.3.0 sha256:ed950d079b63 / -sim 0.4.0 (Nyx RGB; built per host from one context: B a466a594c463, C 53d8800bfa22, A 3f9218fb9864); the live, replay and settled hashes equal the 0.3.0 (EGL) run's (2026-10-16): `oracle` scored 1 (sim 0.4.0 (Nyx): live settled success at control step 352000 (88 calls), both replays pass final_check() and end in the live state (live_matches_replay 1, deterministic 1), live end hash = the 0.3.0 run's; live service time 1145 s, verifier replays 628 s); `nop` scored 0.
+An end at `/finish` or at the session's end is judged on the end state, by the checks above: on the live state, then
+again on a copy with the last row held for 1.0 s more; both must pass. Ordered steps count as they happened during the
+episode; everything else must hold at the end. The service never reports success while the episode runs. A simulator
+breakdown or a simulator error ends the episode at once and scores 0, even after a success.
 
-## Resources
-Caps per container (PROTOCOL §6).
+Before the agent is served, the service checks the scene against the frozen instance; a mismatch is an infrastructure
+failure, not a score.
+
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -53,37 +52,12 @@ Caps per container (PROTOCOL §6).
 - GPU: any NVIDIA GPU, held by `sim`.
 - Recommended GPU: RTX 4090 24GB / L4 24GB (an NVIDIA GPU with Vulkan and EGL).
 
-## Details
-| | |
-|---|---|
-| Grasping | physical (finger friction), no assist |
-| Success rule | the scene's `success.py` + the terminal rules (released, at rest, no breakdown), on the live episode: after every call and at its end, at the last row and again after a 1.0 s hold of it (on a copy) |
-| Frame | every pose the agent gets or gives is in the robot frame: origin at the left arm's base link, +z up (`spec.world`); the scene's own world frame never leaves the sim service |
-| Speed rule | targets within the robot's real limits (joints 1-4 2.175 rad/s, joints 5-7 2.61 rad/s; the table and its sources: `rcb_ikea.JOINT_SPEED_LIMITS_RAD_S` / `GRIPPER_SPEED_LIMITS`), clamped per control step, as the privileged twin's Session; faster rows take the control steps they need (`meta.clipped`), as RoboARC's rule |
-| Cameras | `cam_high`, `cam_low` (static), `cam_left_wrist`, `cam_right_wrist` (on the hands); 848 x 480, fovy 58 deg; added at service start (`environment/sim/ikea_rig.py`, `rig.json`), the model is unchanged; RGB: Nyx, RoboARC's renderer and look (path tracer, 32 spp, denoised; studio HDRI and point lights; `environment/sim/ikea_nyx.py` with RoboARC's `nyx_direct.py`); depth: MuJoCo's raster; on the sidecar's GPU |
-| Video | `/data/live.mp4` (cam_high, 10 frames per simulated second, recorded during the live episode), copied to the verifier logs; never affects the verdict |
-| Scene | `/opt/ikea/scenes/vesken/` in the images; digest `237d67be6d9be327…` |
-| Initial state | sha256 `66aaaacbc3da0fb3…` of the mjSTATE_INTEGRATION vector |
-
-### Budget
-The wall clock only, the privileged twin's cutoff (PROTOCOL H.7): `[agent] timeout_sec` = 10800 s. The service
-counts the same limit from the agent's first request (`spec.budget.wall_clock_s`, `meta.time_left_s`) and ends the
-episode with reason `timeout` when it runs out; that count never runs out before Harbor's.
-
-### Deviations
-- `ee_pose` is not offered (only `joint_position`, the scene's actuator layout); `/kinematics` gives FK / IK.
-- Graded by the live episode (the settled check on the live simulator); no grading replay, in the sidecar or the
-  verifier.
-
-### Goal
-Build the VESKEN shelf unit: snap the four feet into the bottom tray from below, then four columns into the bottom tray, the second tray onto them, four columns and a tray for each of the two upper levels, and last the four caps into the top tray. Then let go of everything and move both arms clear.
-
-### Success requirements
-- All 23 snap connections are made in the source order (each depends on the previous: feet, columns, tray, columns, tray, columns, tray, caps) and, at the end, each connector is within its gates (axial gap 0.6 mm, lateral 0.8 mm, outward-axis tilt 2 degrees).
-- The feet stand on the bench (summed vertical contact force above 0.1 N) and the bottom tray is within 3 degrees of its upright, unrotated assembly orientation.
-- No arm link touches any furniture part or jaw at the end.
-
-The benchmark's terminal rules, the same in every IKEA MuJoCo task, come on top of these requirements. When your rows end: (1) the requirements above hold; (2) the parts are released: no robot link touches any part; (3) every part is at rest: at most 0.01 m/s and 0.05 rad/s; (4) the simulation never broke down: no non-finite state, no MuJoCo BADQACC / BADQPOS / BADQVEL warning, no contact of a part deeper than 10 mm, at any time. The grader then holds your last row for 1.0 s more and requires (1)-(4) again at its end.
-
-### Mechanism
-32 spring jaws (slide joints with springs, 1200 N/m, 2.5 mm travel) are deflected by the hooked snap pins through contact. A retention weld per connection switches on when the acceptance gates hold for 0.15 s (snap passed, jaw returned, seated, at rest).
+## License
+RoboARC ([mll-lab-nu/RoboARC](https://github.com/mll-lab-nu/RoboARC) @ `153eb8c`) is released under the MIT License
+(Copyright (c) 2026 The RoboARC authors). The robot models are MuJoCo Menagerie's: ALOHA 2 (BSD-3-Clause, Trossen
+Robotics), Franka Emika Panda (Apache License 2.0) and Robotiq 2F-85 (BSD-2-Clause, ROS-Industrial). The furniture part
+meshes of the furniture-assembly scenes are CC BY 4.0 (Hugging Face dataset `MLL-Lab/embodied-first-exam-public`,
+`ikea-mujoco/`). The simulator is MuJoCo 3.14.0 (Apache License 2.0). RGB images are rendered with Nyx (`gs-nyx`), used
+in the images with its owners' permission; the studio lighting is a CC0 HDRI from Poly Haven. Puzzle designs modelled
+after Hanayama's Huzzle Cast puzzles and the IKEA product names and designs are used with the owners' permission. No
+non-commercial terms apply.

@@ -1,34 +1,50 @@
-# embodied-olympics-fun-standing-long-jump-i00-standard
+# Embodied Olympics · standing long jump (standard)
 
 | | |
 |---|---|
-| Benchmark | Embodied Olympics - Fun |
-| Mode | standard (`eai-standard/3.0`) |
-| Twin | `embodied-olympics-fun-standing-long-jump-i00-privileged` |
-| Simulator / robot | `mujoco` / `unitree-g1` |
-| Family / instance | `standing_long_jump` / seed 0 |
-| Oracle | `none` — no reference solution; the referee is tested: positive by injection (3.5 m/s forward and 2.5 m/s up from the stance, a perfect landing: a mark of 1.54 m, the stand is the robot's own); negatives: too short, a fall, a dive, a foot over the line, a step or shuffle before the take-off, a leg tuck. The published best for this robot is 0.90 m; a real open-loop push-off of ours takes off legally and lands on its head; human review in the pull request that adds the benchmark (PROTOCOL §4) |
-| Agent time budget | 7200 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
+| Task ID | `embodied-olympics-fun-standing-long-jump-i00-standard` |
+| Benchmark | [Embodied Olympics - Fun](https://github.com/CHIGUI0/roboolympics) (Embodied Olympics authors, 2026), upstream `CHIGUI0/roboolympics@7df999b` |
+| Robot | Unitree G1 humanoid (1.32 m, 33 kg, 29 joints), with Unitree's walking and running policies |
+| Mode | standard |
+| Instance | `standing_long_jump`, seed 0 |
+| Time limit | 2 h |
+| Reference solution | None |
 
 ## Task
-Do a standing long jump: from both feet, without a step, jump at least your own height (1.32 m) past the line, land on your feet and stand. (Embodied Olympics `standing-long-jump`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Do a standing long jump: from both feet, without a step, jump at least your own height (1.32 m) past the line, land on
+your feet and stand.
 
-## Difficulty
-Neither built-in gait can jump. The take-off needs both legs' full power in one coordinated push with the body leaning well ahead of the feet, and a jump of the robot's own height comes down at more than 3 m/s: the legs have to absorb it without a hand or the pelvis going down. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 5 resets (only the last attempt is graded).
+## Success criteria
+The robot stands with its feet side by side, their front ends 0.05 m behind the take-off line, facing the jump
+direction. The jump is the first flight (no part of the robot on the ground) of at least 0.1 s. The referee's stages,
+in order: take-off, landing, stand.
+- Take-off: until the jump, no part of a foot on the ground is on or over the line (the whole foot counts, also its
+  parts in the air); every ground contact of a foot is within 0.03 m of where that sole stood at the start (no run-up,
+  no step); neither foot is off the ground for more than 0.05 s while the other is on it, so both feet leave within
+  0.05 s of each other. Rising on the toes is allowed. The pelvis rises at least 0.05 m above its height at lift-off.
+- Landing: the first contact after the flight is with the feet only. The mark is the point nearest the line at which
+  any part of the robot touches the ground from that landing until the stand; it must stay at least 1.32 m beyond the
+  line.
+- Stand: steps after the landing are allowed; then for 1 s without a break, only the feet on the ground, the torso
+  within 20 degrees of vertical, the pelvis slower than 0.35 m/s. The success is called when the 1 s is complete.
 
-## Reference solution
-None (as `embodied-olympics-fun-standing-long-jump-i00-privileged`).
+Fouls (each fails the attempt): a foot on or over the line, a step or shuffle, or one foot leaving the ground more than
+0.05 s before the other, before the take-off; a flight whose pelvis does not rise 0.05 m; a landing not on the feet;
+a mark short of 1.32 m. Fall (a failure at any time): the pelvis below 0.35 m, or any part other than the feet on the
+ground. Time limit: 20 s (2,000 control steps).
 
-## Verification
-The sim sidecar's referee judges the live attempt, and that is the verdict (`final.json`: `graded_by` live, `replays` 0;
-no grading replay, owner 2026-10-17); the frozen start is checked on the live simulator (`instance_mismatch`:
-infrastructure), and the video is rendered from the recorded attempt afterwards. `/tests/grade.py` reads
-`/data/final.json`: pass iff the live attempt succeeded. The
-rules: The take-off line is x = 0; you jump towards +x. Your jump is your first flight (nothing of you touches the ground) of at least 0.1 s. Until then: no part of a foot that is on the ground may be on or over the line (the whole foot counts, also the parts of it that are in the air); no run-up and no step: every point where a foot touches the ground must lie within 0.03 m of the place where that foot's sole stood at t = 0, and neither foot may be off the ground for more than 0.05 s while the other is on it (so both feet leave the ground within 0.05 s of each other: a two-foot take-off). Rising on the toes is allowed. The flight must be a jump: your pelvis has to rise at least 0.05 m above its height at lift-off. The first contact after the flight must be with your feet only. The mark is the point nearest the take-off line at which any part of you touches the ground from that landing until you have stood; it must be at least 1.32 m beyond the line. After the landing you may step; you succeed once you stand for 1.0 s without a break: only your feet on the ground, your torso within about 20 degrees of vertical, your pelvis slower than 0.35 m/s. A fall fails the attempt at any time: your pelvis lower than 0.35 m, or any part of you other than your feet on the ground. You fail on a foot on or over the line, a step or shuffle before the take-off, a foot that leaves the ground before the other, a flight that is not a jump, a landing that is not on the feet, a mark short of 1.32 m, a fall, or after 20 s. No oracle; human review in the pull request that adds the benchmark (PROTOCOL §4).
+Graded: the live attempt, judged by the referee in the simulator service as it runs; nothing is replayed. The referee's
+success call is an event: once it is made at some control step, the attempt is a success. It is never shown to the
+agent and does not end the attempt: the physics goes on until the agent's `/finish`, the attempt's time limit, or the
+end of the agent's time (2 h), and nothing after the call undoes it. A failure the referee calls before any
+success (a foul, a fall, the physics diverging) ends the attempt at once with 0. Reaching the time limit or the end of
+the session without a success call scores 0. The agent has 5 resets, each starting a new attempt from the
+frozen start; only the last attempt (the one after the last reset) is graded, and a success in an earlier attempt does
+not count. A simulator error raised by the agent's own call ends the attempt with 0. An attempt that does not start
+from the frozen instance, or a service crash outside the agent's calls, is an infrastructure failure, not a score.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -38,13 +54,10 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Category | track-and-jumps |
-| Rule book | The standing long jump (standing broad jump) of school and club fitness test batteries (Eurofit, ALPHA-Fitness, the Chinese National Student Physical Health Standard): the feet side by side behind the take-off line, a two-foot take-off with no step or preliminary hop, a landing on the feet; the jump is measured from the take-off line to the nearest point of contact at the landing; deviations: the athlete cannot walk up to the line: any step before the take-off is a foul, so the robot is placed with the front ends of its feet 0.05 m behind the line (a rigid foot that pivots on its toes at the push-off swings up to 3 cm forward of where they stood) · the measurement: the mark is the contact nearest the line of any part of the robot from the landing until it has stood for 1.0 s (a step or a hand put back shortens the jump; a fall voids it), where the test measures the heels at the landing · a jump is told from a loss of contact by two numbers the test does not have: a flight of at least 0.1 s in which the pelvis rises at least 0.05 m above its height at lift-off · the qualifying mark, 1.32 m, is the robot's own standing height (FAMILIES.md); the school standards scale with the athlete: adolescent pass marks are roughly 1.0 to 1.3 times body height |
-| Stages | take-off → landing → stand |
-| Service | `environment/sim/server.py` (the Embodied Olympics adapter) on `rcb_service.py` (eai-standard/3.0), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
-| Observations | `head_left`, `head_right` (RGB 270 × 480, depth on `head_left`), `venue` (fixed); proprioception: joints, torques, targets, two IMUs, grip state |
-| Episode | 2000 control steps (20 s at 100 Hz); 5 resets, the last attempt graded |
-| Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md) |
+## License
+The Embodied Olympics robot library and running-policy port ([CHIGUI0/roboolympics](https://github.com/CHIGUI0/roboolympics)
+@ `7df999b`, a private repository) is released under the MIT License (`LICENSE.roboolympics` in the image); this
+benchmark's venues and referees are MIT too. Third-party parts in the image: the Unitree G1 model and meshes from MuJoCo
+Menagerie (BSD-3-Clause), the Unitree H1-2 model, meshes and walking policy and the G1 walking policy from
+unitree_rl_gym (BSD-3-Clause), the G1 running policy from C1801SYQ/g1_running (Apache-2.0), FALCON's G1 walking policy
+from LeCAR-Lab/FALCON (MIT) and the WBC-AGILE G1 walking policy from NVIDIA (Apache-2.0). No non-commercial terms apply.

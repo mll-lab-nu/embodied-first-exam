@@ -1,32 +1,34 @@
-# mujoco_playground_panda_pick_cube_orientation-standard
+# MuJoCo Playground · Panda pick cube with orientation (standard)
 
 | | |
 |---|---|
-| Benchmark | MuJoCo Playground |
-| Mode | standard (`eai-standard/3.0`) |
-| Twin | `mujoco_playground_panda_pick_cube_orientation-privileged` |
-| Simulator / robot | `mujoco` / `franka-panda` |
-| Family / instance | `mujoco_playground/PandaPickCubeOrientation` / seed 60417 (allowed seeds: [60417, 60418, 60419]; PROTOCOL §2) |
-| Oracle | `full` |
-| Agent time budget | 1800 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:mujoco-0.1.2` |
+| Task ID | `mujoco_playground_panda_pick_cube_orientation-standard` |
+| Benchmark | [MuJoCo Playground](https://playground.mujoco.org/) (Zakka et al., 2025), upstream `google-deepmind/mujoco_playground@4057c14` |
+| Robot | Franka Emika Panda arm with its two-finger gripper (7 joint and 1 finger position actuators) |
+| Mode | standard |
+| Instance | `mujoco_playground/PandaPickCubeOrientation`, seed 60417 |
+| Time limit | 30 min |
+| Reference solution | Included |
 
 ## Task
 Pick up the green box and hold it at the see-through red box, tilted the same way.
 
-Standard-mode twin of `mujoco_playground_panda_pick_cube_orientation-privileged` (see its README): the same scene, instance and scoring, served as a robot service (`embodied_first_exam/benchmarks/mujoco-playground/sim/server_mj.py`, protocol eai-standard/3.0, tooling `rcb_panda`). The agent sees camera RGB-D and proprioception only.
+## Success criteria
+Pass condition, defined by this benchmark (MuJoCo Playground's `PandaPickCubeOrientation` has only a shaped training reward and no success
+test), checked on one state, the one after the episode's last control step: the green box's centre is less than 2 cm
+from the centre of the see-through red target box, and the box's orientation is less than 15° from the target's (the
+angle of the rotation between them). Meeting the condition at an earlier step does not count.
 
-## Difficulty
-Same scene, instance and success rule as `mujoco_playground_panda_pick_cube_orientation-privileged` (see its Difficulty). In standard mode the agent loses resets, privileged state and planning primitives: it sees camera images and proprioception only, acts through the client, and gets one episode, so it has to estimate the scene from images and recover from its own mistakes without starting over.
+Graded: the live episode, judged by the simulator service when it ends; nothing is replayed. The condition is checked
+on the episode's control steps as the service executed them. The service never reports success while the episode
+runs, and meeting the condition does not end the episode. The episode ends at the agent's `/finish`, or
+when the agent's session ends (at the latest after 30 min). There is one episode, with no reset and no step limit. An episode ended by a simulator error
+(a call that makes the simulation fail) scores 0. Before the agent is served, the service checks that the scene starts
+at the frozen instance (its state hash); a mismatch, or a service that cannot record its verdict, is an
+infrastructure failure, not a score.
 
-## Reference solution
-`solution/`: the privileged-mode oracle's recorded targets submitted through the client (one row per control step)
-
-## Verification
-the live episode's verdict (`graded_by = "live"`, no grading replay): the task's check of the live final state. The frozen start is checked when the episode begins (instance `state_sha`)
-
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -37,7 +39,11 @@ Caps per container (PROTOCOL §6).
 - GPU: any NVIDIA GPU, held by `sim`.
 - Recommended GPU: any 8 GB+ NVIDIA GPU (RTX 4090 / L4).
 
-## Details
-| | |
-|---|---|
-| video | `replay.mp4`: one render pass over the trajectory from the frozen start after the verdict (in the sidecar, EGL on its GPU); it never changes the verdict |
+## License
+MuJoCo Playground ([google-deepmind/mujoco_playground](https://github.com/google-deepmind/mujoco_playground) @
+`4057c14`) is released under the Apache License 2.0. The robot models come from MuJoCo Menagerie
+([google-deepmind/mujoco_menagerie](https://github.com/google-deepmind/mujoco_menagerie) @ `1b86ece`, the commit
+Playground pins), each under its own license: Unitree Go1 (BSD 3-Clause, Unitree Robotics), Boston Dynamics Spot
+(BSD 3-Clause, Clearpath Robotics), Google Barkour vB (Apache License 2.0, DeepMind), ALOHA 2 (BSD 3-Clause, Trossen
+Robotics), Franka Emika Panda (Apache License 2.0). The rough-terrain texture is from Poly Haven (CC0). No
+non-commercial terms apply. The simulator is MuJoCo 3.3.7 (Apache License 2.0).

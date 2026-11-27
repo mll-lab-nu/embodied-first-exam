@@ -4,8 +4,9 @@
   files     the Harbor task contract: the canonical files exist and the scripts are executable; solution/solve.sh is
             required unless the task declares `oracle = "none"` (§1, §4); no results/ (agent results are published on
             the results site, §1);
-  README    the standard layout (§1, §6): `# <folder>`, the key table rows, the sections in order; a standard or realtime
-            task without its privileged twin says why in its Twin row (§3);
+  README    the per-task format (§1, §6; task_conventions.readme_format_errors): the instruction's title, the key table
+            rows and the sections in order; a standard or realtime task without its privileged twin says why
+            (`no_twin` in its benchmark's readme.toml, §3);
   task.toml the name matches the folder, the required metadata, the deliverable dir, the task's declared scene dynamics
             (no central table); no copies of what another source says (mode, reset_budget, slowdown, tier). The agent's
             timeout: check-cutoffs.py.
@@ -15,15 +16,12 @@ Standard library only. Exit 1 when any task has a finding."""
 from __future__ import annotations
 
 import os
-import re
 import sys
 import tomllib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 CANONICAL = ("task.toml", "instruction.md", "README.md", "environment/Dockerfile", "tests/test.sh")
-README_ROWS = ("Benchmark", "Mode", "Twin", "Simulator / robot", "Family / instance", "Oracle", "Agent time budget", "Base image")
-README_SECTIONS = ("Task", "Difficulty", "Reference solution", "Verification", "Resources")
 _TC = None
 
 
@@ -65,22 +63,14 @@ def structure(t: str) -> list[str]:
 def readme(t: str) -> list[str]:
     p = Path(t)
     s = (p / "README.md").read_text() if (p / "README.md").is_file() else ""
-    bad = []
-    if not s.startswith(f"# {p.name}\n"):
-        bad.append(f"first line must be '# {p.name}'")
-    for k in README_ROWS:
-        if not re.search(rf"^\| {re.escape(k)} \| ", s, re.M):
-            bad.append(f"key table row '{k}' missing")
-    pos = [s.find(f"\n## {h}\n") for h in README_SECTIONS]
-    if -1 in pos or pos != sorted(pos):
-        bad.append("sections ## Task, ## Difficulty, ## Reference solution, ## Verification, ## Resources (in this order) "
-                   "required (Resources: PROTOCOL §6)")
-    try:   # PROTOCOL §3: a standard or realtime task without its privileged twin says why in its Twin row
+    bad = tc().readme_format_errors(p, s)
+    try:   # PROTOCOL §3: a standard or realtime task without its privileged twin says why (readme.toml `no_twin`)
         tw = tc().twin_of(p)
     except ValueError:
         tw = None
-    if tw is not None and not (tw / "task.toml").is_file() and not re.search(r"(?m)^\| Twin \| — \(none:", s):
-        bad.append(f"its twin {tw.name} is missing and the Twin row does not say why (`— (none: <reason>)`, PROTOCOL §3)")
+    if tw is not None and not (tw / "task.toml").is_file() and not tc().no_twin_reason(p):
+        bad.append(f"its twin {tw.name} is missing and nothing says why (`no_twin` in tasks/{tc().bench_dir(p)}/"
+                   f"{tc().README_DATA}, PROTOCOL §3)")
     return [f"README.md: {b}" for b in bad]
 
 

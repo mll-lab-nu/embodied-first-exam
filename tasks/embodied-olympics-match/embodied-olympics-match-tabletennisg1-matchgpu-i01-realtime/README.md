@@ -1,42 +1,39 @@
-# embodied-olympics-match-tabletennisg1-matchgpu-i01-realtime
+# Embodied Olympics · table tennis on Unitree G1s (GPU tier), match against level 4 (realtime)
 
 | | |
 |---|---|
-| Benchmark | Embodied Olympics - Match |
-| Mode | realtime (`eai-standard/3.0`) |
-| Twin | `embodied-olympics-match-tabletennisg1-matchgpu-i01-privileged` |
-| Simulator / robot | `mujoco` / `unitree-g1` |
-| Family / instance | `tabletennisg1_match` / seed 4 (allowed seeds: [4, 1, 2]; PROTOCOL §2) |
-| Oracle | `partial` — the sport's reference player (solution/: builtin_players:OpenReference, camera images and /spec only, the learned striker of the release on CPU) over HTTP: the camera-only reference won this seed 7:6 live (x1i: 2 of 5 seeds against level 4: 4, 5); in this repository (CPU tier) it lost 2:5 (realtime) and 5:7 (standard): no winning oracle; GPU tier on an EPYC host with L40S GPUs under the pool's load: standard (lockstep) won 5:1, realtime 3 matches all voided by R-INTEGRITY (late step p99 0.053-0.178 s). Embodied First Exam's local Harbor runs: see the benchmark README; nop 0 |
-| Agent time budget | 7200 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Real time | slowdown S = 1 (the world runs at 1/S of real speed: one control step every S x control_dt s of wall time; `RO_SLOWDOWN`'s default) (PROTOCOL §3) |
-| Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-match-tabletennisg1-0.1.0@sha256:8bc6d02f91aa5730bbf93bc5c1c4a477feee6f5846ff8c609aaa3a25e0eb36af` |
+| Task ID | `embodied-olympics-match-tabletennisg1-matchgpu-i01-realtime` |
+| Benchmark | [Embodied Olympics - Match](https://github.com/CHIGUI0/roboolympics) (Embodied Olympics authors, 2026), upstream `CHIGUI0/roboolympics@0d7f680` |
+| Robot | Unitree G1 humanoid |
+| Mode | realtime, slowdown 1 |
+| Opponent | Scripted Unitree G1 at level 4 of 4 (the BOSS), which reads the ball's true position, velocity and spin |
+| Instance | `tabletennisg1_match`, seed 4 |
+| Time limit | 2 h |
+| Reference solution | Pipeline check only |
 
 ## Task
 Win a game of table tennis to 5 points against the other robot.
 
-Table tennis between two Unitree G1 humanoids (Embodied Olympics' sport `tabletennis_g1`), Engineer track: the agent's
-program drives all 29 joints of its G1 at 100 Hz (no walking service) from two cameras, against the platform's G1 at
-level 4 of 4, in real time (x1). The benchmark README's "Table tennis on two Unitree G1s" says what was ported and
-what Embodied First Exam changed.
+## Success criteria
+The instance: the agent's G1 (seat A) against the scripted G1 at level 4, seed 4. One game of table tennis between two Unitree G1s: the first to 5 points with a lead of 2, or the first to 7, wins. At 16 points played (lets included) the player ahead wins; at a level score, the player who won the last point. A player's third undue-delay fault loses it the match. There are no draws.
 
-## Difficulty
-Frozen development instance: seed 4, level 4, x1. Not one of the sport's official (hidden) seeds, so results
-here are previews, not official Embodied Olympics results.
+Success: the match ends with the agent's side as the winner. The agent's side loses, a valid 0, by:
+- `no_show`: no `game start` within the 1800 s preparation counted from the seat's first `game` request, or the
+  session ends before the start;
+- `abandoned`: the agent's session ends while the match is in play;
+- `resigned`: the agent sends `game resign`.
 
-## Reference solution
-`solution/`: the sport's camera-only reference player (`builtin_players:OpenReference`, the release's learned striker
-on CPU) through the same HTTP interface; the camera-only reference won this seed 7:6 live (x1i: 2 of 5 seeds against level 4: 4, 5); in this repository (CPU tier) it lost 2:5 (realtime) and 5:7 (standard): no winning oracle; GPU tier on an EPYC host with L40S GPUs under the pool's load: standard (lockstep) won 5:1, realtime 3 matches all voided by R-INTEGRITY (late step p99 0.053-0.178 s).
+A missed review never loses: the match resumes at the review's 300 s deadline. A failure of the world, the match
+service or the platform, a breach of the real-time integrity checks, and a match the wall-clock cap stops, void the
+trial as an infrastructure failure; a simulator error is one of these, never the agent's 0.
 
-## Verification
-Separate sandbox, no network. Graded by the live match (`final.json` `graded_by` live, no grading replay; the replay
-video is drawn after the verdict): the Embodied Olympics Judge (`tests/grade.py`, `tests/eo_judge/`) applies the
-sport's validity rules (a platform fault, including an integrity breach of the real-time world, voids the trial; the
-player's own problems are a valid loss) and writes reward.json; success = a valid, finished match that the agent won.
-`tests/fexam_reward.py` adds `infra_error`, `graded_by_live`, `realtime`, `opponent_level`.
+Graded: the live match, as the trusted match service recorded it while it was played; nothing is replayed. The world
+runs on a clock that does not stop: one second of game time takes 1 s of real time. There is one match and no reset,
+and the agent cannot end it with `/finish`: the match's rules end it. A technical failure of the match service (a
+crash, an error in its bookkeeping, rendering or metering) voids the trial as an infrastructure failure, not a score.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -48,3 +45,13 @@ Caps per container (PROTOCOL §6).
 
 - GPU: any NVIDIA GPU, held by `main`.
 - Recommended GPU: L40S 48GB / RTX 4090 24GB / L4 24GB.
+
+## Others
+Ported from Embodied Olympics core 0.5, which has no exporter: its task `roboolympics/tabletennis_g1-match-wallclock-program-engineer-standard` (revision
+`g1tt-10+core-0.5`, upstream commit `45ed806a5`). The files changed here are listed for this task in
+`ci_checks/benchmarks/embodied-olympics-match/exported.toml`.
+
+## License
+Embodied Olympics ([CHIGUI0/roboolympics](https://github.com/CHIGUI0/roboolympics), a private repository) is released
+under the MIT License; its exported match services, referees, scripted opponents and graders inside this task are MIT
+too. The simulator is MuJoCo (Apache License 2.0). No non-commercial terms apply.

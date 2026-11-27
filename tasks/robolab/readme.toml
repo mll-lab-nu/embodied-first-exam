@@ -1,0 +1,960 @@
+# README data for tasks/robolab/*/README.md (scripts/task_conventions.py render_readme_v3)
+#
+# Sources checked for every success text:
+#   upstream  NVIDIA RoboLab @ 9db0aaf (v0.3.1, images/robolab/Dockerfile): robolab/tasks/benchmark/<task>.py (each
+#             family's `success` termination term and its params), robolab/core/task/conditionals.py,
+#             predicate_logic.py, hull_check.py, robolab/core/world/world_state.py (contact, support, bounding boxes),
+#             robolab/core/environments/env.py L65-118 (a termination freezes the env; the result is the success term).
+#             Line numbers below are those of the pinned upstream files.
+#   tooling   embodied_first_exam/benchmarks/robolab/rcb_robolab.py: GRIPPER_CONTACT L664 ("gripper" = either inner
+#             finger, RoboLab's alias group: world_state.py L588-619), ON_TABLE L670 + Session.__init__ L965-970
+#             (take_measuring_spoon_out, cooking_clear_plate: object_outside_of_and_on_surface with surface "table"),
+#             SETTLE_STEPS = 30 L674, MAX_STEPS = 100,000 L654, episode_length_s stretched past MAX_STEPS L953-960,
+#             AGENT_END / _hide_success_term L1122-1135, step L1142-1162, settle L1201-1208, replay L1210-1225,
+#             cmd_replay L2109-2137.
+#   graders   privileged tests/grade.py (identical in every task) and tests/test.sh (--repeat 3);
+#             embodied_first_exam/benchmarks/robolab/sim/server.py finish() L89-127 and ctrl_step() L370-379;
+#             standard tests/grade.py (identical in every task).
+
+[benchmark]
+name = "RoboLab"
+citation = "Yang et al., 2026"       # upstream README "Citation": RoboLab, RSS 2026 (arXiv:2604.09860)
+url = "https://github.com/NVlabs/RoboLab"
+repo = "NVlabs/RoboLab"
+commit = "9db0aaf"
+
+[license]
+text = """
+RoboLab ([NVlabs/RoboLab](https://github.com/NVlabs/RoboLab) @ `9db0aaf`, v0.3.1) is released under the
+[Apache License 2.0](https://github.com/NVlabs/RoboLab/blob/9db0aaf09d9fe5d4f37b168320788258c7012463/LICENSE). Its bundled
+assets carry their own licences
+([THIRD_PARTY_NOTICES.md](https://github.com/NVlabs/RoboLab/blob/9db0aaf09d9fe5d4f37b168320788258c7012463/THIRD_PARTY_NOTICES.md)):
+the scenes, fixtures, materials, robots and most object sets are **CC BY-NC-SA 4.0 (non-commercial, share-alike)**; the
+YCB objects are MIT, the HOT3D objects CC BY-SA 4.0 with a non-sale restriction, the VOMP objects CC BY 4.0 and the
+backgrounds CC0 1.0. The simulator is NVIDIA Isaac Sim 5.1 with Isaac Lab 2.3.2 (Isaac Lab's source is BSD-3-Clause;
+Isaac Sim and the Isaac Lab wheels are NVIDIA proprietary software that may not be redistributed, so the simulator image
+is built locally and never published).
+"""
+
+[robots]
+franka-robotiq-2f85 = "Franka Emika Panda arm with a Robotiq 2F-85 gripper (RoboLab's DROID setup)"
+
+# privileged tests/grade.py: no file -> missing_trajectory (0); load_trajectory L47-74: not a zip, no task.npy /
+# actions.npy, a member over MAX_STEPS x 8 x 8 bytes + 1 MiB (too_large), allow_pickle=False errors, task != family
+# (wrong_family), shape != (T, 8), T > MAX_STEPS = 100,000, NaN/inf -> 0. L126-150: up to --repeat 3 replays
+# (tests/test.sh), each `rcb_robolab.py replay` in a fresh process, stop at the first success; L151-155 success = a
+# replay succeeded AND every run's instance_matches; no result / time-out / instance_ok 0 -> grader_error = infra_error.
+# rcb_robolab.py Session.replay: reset, rows stepped until the env terminates (the success term holds: RoboLab freezes
+# the env, env.py L75-118), then settle() holds the last row up to 30 control steps while not terminated; status()
+# success = RoboLab's env result (the success term terminated the episode). AGENT_END is not set in the verifier.
+[modes.privileged]
+success = """
+The condition above is RoboLab's own success term for `{family}`, evaluated after every control step. The verifier, in a
+separate sandbox without network, replays `/app/output/trajectory.npz` open-loop from its own copy of the frozen start,
+one row per control step (15 Hz), up to 3 times, each in a fresh process, and stops at the first replay that succeeds. A
+replay succeeds as soon as the condition holds at one control step: RoboLab then ends the episode and later rows are not
+executed. After the last row, the last row is held for 30 more control steps (2 s) and the condition is still checked at
+each of them. The task passes if any replay succeeds.
+
+A missing file scores 0, and so does an invalid one: not an `.npz` archive, no `task` or `actions` array, a `task` other
+than `{family}`, pickled or object arrays, an array larger than 100,000 × 8 numbers, `actions` not of shape (T, 8) with
+T ≤ 100,000, or a NaN or infinite value. If the rebuilt start scene does not match the frozen instance (its state hash,
+or else every object pose and robot joint within tolerance), or a replay process fails or runs out of time, the trial is
+an infrastructure failure, not a score.
+"""
+
+# sim/server.py (RCB_AGENT_END=1 in the compose): ctrl_step L370-378: the success term is hidden (rcb_robolab
+# _hide_success_term: evaluated every step, never terminates, value in term_now); S.step over -> finish("step_limit")
+# at MAX_STEPS, else "failed" (a RoboLab termination other than success: only the stretched time_out exists).
+# finish() L89-127: for "finished" (POST /finish) and "timeout" (collect hook at the session's end) with steps run,
+# the last command held for SETTLE_STEPS = 30 control steps (a simulator error in the hold: judged as it stands);
+# success = reason in (finished, timeout, step_limit, error) AND term_now (the term at the last control step).
+# Instance check before serving (L136-141): instance_matches false -> give-up, infra_error. standard tests/grade.py:
+# success = final.json success AND not infra_error AND finalized AND reason != "error".
+[modes.standard]
+success = """
+The condition above is RoboLab's own success term for `{family}`, applied to one state: the live simulator's state at
+the last control step of the one episode; nothing is replayed. The episode ends when the agent sends `/finish` or when
+the agent's session ends (at the latest after {timeout}). The agent's last command is then held for 30 more control
+steps (2 s), and the condition is judged at the last of them. There is no reset. The service evaluates the condition
+after every control step but never reports it and never ends the episode on it, so meeting the condition earlier in the
+episode does not count.
+
+The episode also ends at a technical cap of 100,000 control steps; that state is judged as it stands, with no hold. An
+episode ended by a simulator error scores 0, and so does one the service gives up on after repeated crashes inside the
+agent's calls. The scene is checked to start at the frozen instance (its state hash, or else every object pose and robot
+joint within tolerance) before the agent is served; a mismatch, a give-up after crashes between calls or a failed resume
+is an infrastructure failure, not a score.
+"""
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Families: the condition only (which state is graded and when: [modes]). Each text repeats the definitions it uses, so
+# every task README stands alone. "gripper" is both inner fingers (rcb_robolab.py GRIPPER_CONTACT) in every family.
+
+# robolab/tasks/benchmark/apple_and_yogurt_in_bowl_task.py L18-28: object_in_container { "object": ["apple_01",
+# "yogurt_cup"], "container": "wooden_bowl", "logical": "all", "require_gripper_detached": True }
+# robolab/core/task/conditionals.py L273-314 (in_opentop_container: robolab/core/task/predicate_logic.py L333-407
+# centroid-in-hull, robolab/core/task/hull_check.py open_top_planes threshold 0.7; the `tolerance` argument is unused
+# there)
+[families."apple_and_yogurt_in_bowl"]
+success = """
+The red apple (`apple_01`) and the yogurt cup (`yogurt_cup`) are each in the wooden bowl (`wooden_bowl`) and are
+released.
+
+An object is in a container when the centre of the object's convex hull lies inside the container's convex hull with its
+upward-facing faces removed (faces whose outward normal has a component of at least 0.7 along the container's own up
+axis): the space above the rim counts as inside, to any height, and the test moves with the container when it tips.
+Released means that neither inner finger of the Robotiq gripper touches the object (no contact-force component above
+0.1 N with either finger).
+"""
+
+# robolab/tasks/benchmark/banana_in_bowl_task.py L19-23: object_in_container {"object": "banana", "container": "bowl",
+# "gripper_name": "gripper", "tolerance": 0.0, "require_contact_with": True, "require_gripper_detached": True}
+# robolab/core/task/conditionals.py L273-314 (in_opentop_container: robolab/core/task/predicate_logic.py L333-407
+# centroid-in-hull, robolab/core/task/hull_check.py open_top_planes threshold 0.7; the `tolerance` argument is unused
+# there)
+[families."banana_in_bowl"]
+success = """
+The banana (`banana`) is in the bowl (`bowl`), touches it and is released.
+
+An object is in a container when the centre of the object's convex hull lies inside the container's convex hull with its
+upward-facing faces removed (faces whose outward normal has a component of at least 0.7 along the container's own up
+axis): the space above the rim counts as inside, to any height, and the test moves with the container when it tips. Two
+bodies touch when a component of the contact force between them is above 0.1 N. Released means that neither inner finger
+of the Robotiq gripper touches the object (no contact-force component above 0.1 N with either finger).
+"""
+
+# robolab/tasks/benchmark/banana_then_rubiks_cube.py L20-30: objects_placed_in_container_in_order { "objects":
+# ["banana", "rubiks_cube"], "container": "bowl", "tolerance": 0.0, "require_contact_with": True,
+# "require_gripper_detached": True, }
+# robolab/core/task/conditionals.py L1224-1328 (latched first placement step, `<=`, contact and detached required)
+[families."banana_then_rubiks_cube"]
+success = """
+The banana (`banana`) and the Rubik's cube (`rubiks_cube`) are each in the bowl (`bowl`), touching it and released, and
+the banana was put in first: the first control step at which the banana was in the bowl, touching it and released, is no
+later than the first such step for the cube (the same step counts). That first step is kept for the whole episode, so
+taking an object out again does not undo it.
+
+An object is in a container when the centre of the object's convex hull lies inside the container's convex hull with its
+upward-facing faces removed (faces whose outward normal has a component of at least 0.7 along the container's own up
+axis): the space above the rim counts as inside, to any height, and the test moves with the container when it tips. Two
+bodies touch when a component of the contact force between them is above 0.1 N. Released means that neither inner finger
+of the Robotiq gripper touches the object (no contact-force component above 0.1 N with either finger).
+"""
+
+# robolab/tasks/benchmark/bananas_in_bin_one_more.py L20-23: object_in_container {"object": ["banana", "banana_01",
+# "banana_03"], "container": "grey_bin", "logical": "choose", "K": 1, "require_gripper_detached": True,
+# 'require_contact_with': False}
+# robolab/core/task/conditionals.py L273-314 (in_opentop_container: robolab/core/task/predicate_logic.py L333-407
+# centroid-in-hull, robolab/core/task/hull_check.py open_top_planes threshold 0.7; the `tolerance` argument is unused
+# there)
+[families."bananas_in_bin_one_more"]
+success = """
+Exactly one of the three bananas that start outside the grey bin (`banana`, `banana_01`, `banana_03`) is both in the
+grey bin (`grey_bin`) and released, no more and no fewer. The two bananas that start in the bin (`banana_02`,
+`banana_04`) are not checked.
+
+An object is in a container when the centre of the object's convex hull lies inside the container's convex hull with its
+upward-facing faces removed (faces whose outward normal has a component of at least 0.7 along the container's own up
+axis): the space above the rim counts as inside, to any height, and the test moves with the container when it tips.
+Released means that neither inner finger of the Robotiq gripper touches the object (no contact-force component above
+0.1 N with either finger).
+"""
+
+# robolab/tasks/benchmark/bananas_in_bin_three.py L20-23: object_in_container {"object": ["banana", "banana_01",
+# "banana_03"], "container": "grey_bin", "logical": "choose", "K": 1, "require_gripper_detached": True,
+# 'require_contact_with': False}
+# robolab/core/task/conditionals.py L273-314 (in_opentop_container: robolab/core/task/predicate_logic.py L333-407
+# centroid-in-hull, robolab/core/task/hull_check.py open_top_planes threshold 0.7; the `tolerance` argument is unused
+# there)
+[families."bananas_in_bin_three_total"]
+success = """
+Exactly one of the three bananas that start outside the grey bin (`banana`, `banana_01`, `banana_03`) is both in the
+grey bin (`grey_bin`) and released, no more and no fewer. The two bananas that start in the bin (`banana_02`,
+`banana_04`) are not checked.
+
+An object is in a container when the centre of the object's convex hull lies inside the container's convex hull with its
+upward-facing faces removed (faces whose outward normal has a component of at least 0.7 along the container's own up
+axis): the space above the rim counts as inside, to any height, and the test moves with the container when it tips.
+Released means that neither inner finger of the Robotiq gripper touches the object (no contact-force component above
+0.1 N with either finger).
+"""
+
+# robolab/tasks/benchmark/bananas_out_of_bin.py L20-24: object_outside_of {"object": ["banana_02", "banana_04"],
+# "container": "grey_bin", "logical": "all", "tolerance": 0.00, "require_gripper_detached": True}
+# robolab/core/task/conditionals.py L697-728 (not in_opentop_container, robolab/core/task/predicate_logic.py L397)
+[families."bananas_out_of_bin"]
+success = """
+The two bananas that start in the grey bin (`banana_02`, `banana_04`) are each out of the grey bin (`grey_bin`) and are
+released.
+
+An object is out of a container when the centre of the object's convex hull is not inside the container's convex hull
+with its upward-facing faces removed (faces whose outward normal has a component of at least 0.7 along the container's
+own up axis), so the space above the rim, to any height, still counts as inside. Released means that neither inner
+finger of the Robotiq gripper touches the object (no contact-force component above 0.1 N with either finger).
+"""
+
+# robolab/tasks/benchmark/bbq_sauce_in_bin_task.py L19-29: object_in_container { "object": ["bbq_sauce_bottle",
+# "bbq_sauce_bottle_01"], "container": "grey_bin", "logical": "all", "require_gripper_detached": True }
+# robolab/core/task/conditionals.py L273-314 (in_opentop_container: robolab/core/task/predicate_logic.py L333-407
+# centroid-in-hull, robolab/core/task/hull_check.py open_top_planes threshold 0.7; the `tolerance` argument is unused
+# there)
+[families."bbq_sauce_in_bin"]
+success = """
+The two red BBQ sauce bottles (`bbq_sauce_bottle`, `bbq_sauce_bottle_01`) are each in the grey bin (`grey_bin`) and are
+released.
+
+An object is in a container when the centre of the object's convex hull lies inside the container's convex hull with its
+upward-facing faces removed (faces whose outward normal has a component of at least 0.7 along the container's own up
+axis): the space above the rim counts as inside, to any height, and the test moves with the container when it tips.
+Released means that neither inner finger of the Robotiq gripper touches the object (no contact-force component above
+0.1 N with either finger).
+"""
+
+# robolab/tasks/benchmark/block_stacking_order_agnostic_task.py L20-21: stacked {"objects": ["red_block",
+# "blue_block", "green_block", "yellow_block"], "order": "None"}
+# robolab/core/task/conditionals.py L1202-1221; robolab/core/task/predicate_logic.py L739-798 check_stacked (in_contact
+# AND (above_top tol 0.01 OR above_bottom tol 0)); no gripper term
+[families."block_stacking_order_agnostic"]
+success = """
+The red, blue, green and yellow blocks (`red_block`, `blue_block`, `green_block`, `yellow_block`) form one tower, in any
+order: ranked by the height of their origins, each block is on the next lower one.
+
+A block (or cube) is on the one below it when the two touch (a contact-force component above 0.1 N) and either every
+corner of the upper one's bounding box is at or above the top of the lower one's bounding box, with the upper box's
+centre within the lower box's x-y extent widened by 1 cm, or every corner of the upper box is at or above the bottom of
+the lower box, with the upper box's centre within the lower box's x-y extent. Bounding boxes are each body's own
+bounding box, oriented with the body in its current pose. Nothing about the gripper is checked: the tower counts while
+it is held.
+"""
+
+# robolab/tasks/benchmark/block_stacking_specified_order_task.py L20-21: stacked {"objects": ["red_block",
+# "blue_block", "green_block", "yellow_block"], "order": "bottom_to_top"}
+# robolab/core/task/conditionals.py L1202-1221; robolab/core/task/predicate_logic.py L739-798 check_stacked (in_contact
+# AND (above_top tol 0.01 OR above_bottom tol 0)); no gripper term
+[families."block_stacking_specified_order"]
+success = """
+The blocks form one tower from bottom to top red (`red_block`), blue (`blue_block`), green (`green_block`), yellow
+(`yellow_block`): blue is on red, green on blue and yellow on green.
+
+A block (or cube) is on the one below it when the two touch (a contact-force component above 0.1 N) and either every
+corner of the upper one's bounding box is at or above the top of the lower one's bounding box, with the upper box's
+centre within the lower box's x-y extent widened by 1 cm, or every corner of the upper box is at or above the bottom of
+the lower box, with the upper box's centre within the lower box's x-y extent. Bounding boxes are each body's own
+bounding box, oriented with the body in its current pose. Nothing about the gripper is checked: the tower counts while
+it is held.
+"""
+
+# robolab/tasks/benchmark/blocks_in_bin.py L18-28: object_in_container { "object": ["yellow_block", "red_block",
+# "green_block", "blue_block"], "container": "grey_bin", "logical": "all", "require_gripper_detached": True }
+# robolab/core/task/conditionals.py L273-314 (in_opentop_container: robolab/core/task/predicate_logic.py L333-407
+# centroid-in-hull, robolab/core/task/hull_check.py open_top_planes threshold 0.7; the `tolerance` argument is unused
+# there)
+[families."blocks_in_bin"]
+success = """
+The yellow, red, green and blue blocks (`yellow_block`, `red_block`, `green_block`, `blue_block`) are each in the grey
+bin (`grey_bin`) and are released.
+
+An object is in a container when the centre of the object's convex hull lies inside the container's convex hull with its
+upward-facing faces removed (faces whose outward normal has a component of at least 0.7 along the container's own up
+axis): the space above the rim counts as inside, to any height, and the test moves with the container when it tips.
+Released means that neither inner finger of the Robotiq gripper touches the object (no contact-force component above
+0.1 N with either finger).
+"""
+
+# robolab/tasks/benchmark/butter_above_raisin_task.py L21-25: object_on_top {"object": "butter", "reference_object":
+# "raisin_box", "require_gripper_detached": True}
+# robolab/core/task/conditionals.py L317-353; world_state.py L722 is_supported_on_surface;
+# robolab/core/task/predicate_logic.py L217 centroid_in_footprint (tolerance 0.01)
+[families."butter_above_raisin"]
+success = """
+The butter box (`butter`) rests on the raisin box (`raisin_box`), is over it and is released.
+
+An object rests on a surface when the contact force of that surface on the object is at least 0.1 N, points upward and
+lies within 45° of vertical. Over a body means that the centre of the object's bounding box lies within the x-y extent
+of that body's bounding box, widened by 1 cm on every side; height is not compared. Bounding boxes are each body's own
+bounding box, oriented with the body in its current pose. Released means that neither inner finger of the Robotiq
+gripper touches the object (no contact-force component above 0.1 N with either finger).
+"""
+
+# robolab/tasks/benchmark/clutter_plastic_task.py L18-19: object_in_container {"object": [ "whitepackerbottle_a01",
+# "milkjug_a01","utilityjug_a03"], "container": "right_bin", "logical": "all", "require_gripper_detached": True}
+# robolab/core/task/conditionals.py L273-314 (in_opentop_container: robolab/core/task/predicate_logic.py L333-407
+# centroid-in-hull, robolab/core/task/hull_check.py open_top_planes threshold 0.7; the `tolerance` argument is unused
+# there)
+[families."clutter_plastic"]
+success = """
+The small white bottle (`whitepackerbottle_a01`), the milk jug (`milkjug_a01`) and the utility jug (`utilityjug_a03`)
+are each in the blue bin (`right_bin`) and are released.
+
+An object is in a container when the centre of the object's convex hull lies inside the container's convex hull with its
+upward-facing faces removed (faces whose outward normal has a component of at least 0.7 along the container's own up
+axis): the space above the rim counts as inside, to any height, and the test moves with the container when it tips.
+Released means that neither inner finger of the Robotiq gripper touches the object (no contact-force component above
+0.1 N with either finger).
+"""
+
+# robolab/tasks/benchmark/clutter_pumpkin_task.py L18-19: object_in_container {"object": ["pumpkinlarge",
+# "pumpkinsmall"], "container": "right_bin", "logical": "all", "require_gripper_detached": True}
+# robolab/core/task/conditionals.py L273-314 (in_opentop_container: robolab/core/task/predicate_logic.py L333-407
+# centroid-in-hull, robolab/core/task/hull_check.py open_top_planes threshold 0.7; the `tolerance` argument is unused
+# there)
+[families."clutter_pumpkin"]
+success = """
+The large pumpkin (`pumpkinlarge`) and the small pumpkin (`pumpkinsmall`) are each in the blue bin (`right_bin`) and are
+released.
+
+An object is in a container when the centre of the object's convex hull lies inside the container's convex hull with its
+upward-facing faces removed (faces whose outward normal has a component of at least 0.7 along the container's own up
+axis): the space above the rim counts as inside, to any height, and the test moves with the container when it tips.
+Released means that neither inner finger of the Robotiq gripper touches the object (no contact-force component above
+0.1 N with either finger).
+"""
+
+# robolab/tasks/benchmark/condiments_in_bin_task.py L18-28: object_in_container { "object": ["mustard",
+# "ranch_dressing", "bbq_sauce_bottle", "bbq_sauce_bottle_01"], "container": "grey_bin", "logical": "all",
+# "require_gripper_detached": True }
+# robolab/core/task/conditionals.py L273-314 (in_opentop_container: robolab/core/task/predicate_logic.py L333-407
+# centroid-in-hull, robolab/core/task/hull_check.py open_top_planes threshold 0.7; the `tolerance` argument is unused
+# there)
+[families."condiments_in_bin"]
+success = """
+The mustard (`mustard`), the ranch dressing (`ranch_dressing`) and the two red BBQ sauce bottles (`bbq_sauce_bottle`,
+`bbq_sauce_bottle_01`) are each in the grey bin (`grey_bin`) and are released.
+
+An object is in a container when the centre of the object's convex hull lies inside the container's convex hull with its
+upward-facing faces removed (faces whose outward normal has a component of at least 0.7 along the container's own up
+axis): the space above the rim counts as inside, to any height, and the test moves with the container when it tips.
+Released means that neither inner finger of the Robotiq gripper touches the object (no contact-force component above
+0.1 N with either finger).
+"""
+
+# robolab/tasks/benchmark/cooking_clear_plate_specific.py L18-22: object_outside_of {"object": ["spoon_1",
+# "measuring_cups_1"], "container": "clay_plates", "logical": "all", "tolerance": 0.0, "require_gripper_detached": True}
+# robolab/core/task/conditionals.py L697-728 (not in_opentop_container, robolab/core/task/predicate_logic.py L397)
+# rcb_robolab.py ON_TABLE L670 / L965-970: upstream's object_outside_of becomes object_outside_of_and_on_surface (surface "table", same params)
+[families."cooking_clear_plate"]
+success = """
+The orange measuring cup (`measuring_cups_1`) and the small blue measuring scoop (`spoon_1`) are each out of the clay
+plate (`clay_plates`), rest on the table (`table`) and are released.
+
+An object is out of a container when the centre of the object's convex hull is not inside the container's convex hull
+with its upward-facing faces removed (faces whose outward normal has a component of at least 0.7 along the container's
+own up axis), so the space above the rim, to any height, still counts as inside. An object rests on a surface when the
+contact force of that surface on the object is at least 0.1 N, points upward and lies within 45° of vertical. Released
+means that neither inner finger of the Robotiq gripper touches the object (no contact-force component above 0.1 N with
+either finger).
+"""
+
+# robolab/tasks/benchmark/cubes_and_blocks_in_bin.py L18-31: object_in_container { "object": [ "rubiks_cube",
+# "rubiks_cube_1", "rubiks_cube_2", "yellow_block", "red_block", "green_block", "blue_block" ], "container": "grey_bin",
+# "logical": "all", "require_gripper_detached": True }
+# robolab/core/task/conditionals.py L273-314 (in_opentop_container: robolab/core/task/predicate_logic.py L333-407
+# centroid-in-hull, robolab/core/task/hull_check.py open_top_planes threshold 0.7; the `tolerance` argument is unused
+# there)
+[families."cubes_and_blocks_in_bin"]
+success = """
+The three Rubik's cubes (`rubiks_cube`, `rubiks_cube_1`, `rubiks_cube_2`) and the yellow, red, green and blue blocks
+(`yellow_block`, `red_block`, `green_block`, `blue_block`) are each in the grey bin (`grey_bin`) and are released.
+
+An object is in a container when the centre of the object's convex hull lies inside the container's convex hull with its
+upward-facing faces removed (faces whose outward normal has a component of at least 0.7 along the container's own up
+axis): the space above the rim counts as inside, to any height, and the test moves with the container when it tips.
+Released means that neither inner finger of the Robotiq gripper touches the object (no contact-force component above
+0.1 N with either finger).
+"""
+
+# robolab/tasks/benchmark/foodpacking_1bin_2can.py L18-19: object_in_container {"object": [ "tomato_soup_can",
+# "tuna_can"], "container": "bin_a06", "logical": "all", "require_gripper_detached": True}
+# robolab/core/task/conditionals.py L273-314 (in_opentop_container: robolab/core/task/predicate_logic.py L333-407
+# centroid-in-hull, robolab/core/task/hull_check.py open_top_planes threshold 0.7; the `tolerance` argument is unused
+# there)
+[families."food_packing2_cans"]
+success = """
+The tomato soup can (`tomato_soup_can`) and the tuna can (`tuna_can`) are each in the dark grey bin (`bin_a06`) and are
+released.
+
+An object is in a container when the centre of the object's convex hull lies inside the container's convex hull with its
+upward-facing faces removed (faces whose outward normal has a component of at least 0.7 along the container's own up
+axis): the space above the rim counts as inside, to any height, and the test moves with the container when it tips.
+Released means that neither inner finger of the Robotiq gripper touches the object (no contact-force component above
+0.1 N with either finger).
+"""
+
+# robolab/tasks/benchmark/foodpacking_1bin_3can.py L18-19: object_in_container {"object": [ "spam_can",
+# "tomato_soup_can", "tuna_can"], "container": "bin_a06", "logical": "all", "require_gripper_detached": True}
+# robolab/core/task/conditionals.py L273-314 (in_opentop_container: robolab/core/task/predicate_logic.py L333-407
+# centroid-in-hull, robolab/core/task/hull_check.py open_top_planes threshold 0.7; the `tolerance` argument is unused
+# there)
+[families."food_packing3_cans"]
+success = """
+The Spam can (`spam_can`), the tomato soup can (`tomato_soup_can`) and the tuna can (`tuna_can`) are each in the dark
+grey bin (`bin_a06`) and are released.
+
+An object is in a container when the centre of the object's convex hull lies inside the container's convex hull with its
+upward-facing faces removed (faces whose outward normal has a component of at least 0.7 along the container's own up
+axis): the space above the rim counts as inside, to any height, and the test moves with the container when it tips.
+Released means that neither inner finger of the Robotiq gripper touches the object (no contact-force component above
+0.1 N with either finger).
+"""
+
+# robolab/tasks/benchmark/fruits_green_limes_on_plate.py L18-22: object_on_top {"object": ["lime01", "lime01_01"],
+# "reference_object": "clay_plates", "logical": "all", "require_gripper_detached": True}
+# robolab/core/task/conditionals.py L317-353; world_state.py L722 is_supported_on_surface;
+# robolab/core/task/predicate_logic.py L217 centroid_in_footprint (tolerance 0.01)
+[families."fruits_green_limes_on_plate"]
+success = """
+The two limes (`lime01`, `lime01_01`) each rest on the plate (`clay_plates`), are over it and are released.
+
+An object rests on a surface when the contact force of that surface on the object is at least 0.1 N, points upward and
+lies within 45° of vertical. Over a body means that the centre of the object's bounding box lies within the x-y extent
+of that body's bounding box, widened by 1 cm on every side; height is not compared. Bounding boxes are each body's own
+bounding box, oriented with the body in its current pose. Released means that neither inner finger of the Robotiq
+gripper touches the object (no contact-force component above 0.1 N with either finger).
+"""
+
+# robolab/tasks/benchmark/fruits_to_plate_3.py L19-23: object_on_top {"object": ["lemon_01", "lemon_02", "lime01",
+# "lime01_01", "orange_01", "orange_02", "pomegranate01"], "reference_object": "clay_plates", "logical": "choose", "K":
+# 3, "require_gripper_detached": True}
+# robolab/core/task/conditionals.py L317-353; world_state.py L722 is_supported_on_surface;
+# robolab/core/task/predicate_logic.py L217 centroid_in_footprint (tolerance 0.01)
+[families."fruits_on_plate3"]
+success = """
+Exactly three of the seven fruits, no more and no fewer, each rest on the plate (`clay_plates`), are over it and are
+released. The seven fruits are the lemons (`lemon_01`, `lemon_02`), the limes (`lime01`, `lime01_01`), the oranges
+(`orange_01`, `orange_02`) and the pomegranate (`pomegranate01`).
+
+An object rests on a surface when the contact force of that surface on the object is at least 0.1 N, points upward and
+lies within 45° of vertical. Over a body means that the centre of the object's bounding box lies within the x-y extent
+of that body's bounding box, widened by 1 cm on every side; height is not compared. Bounding boxes are each body's own
+bounding box, oriented with the body in its current pose. Released means that neither inner finger of the Robotiq
+gripper touches the object (no contact-force component above 0.1 N with either finger).
+"""
+
+# robolab/tasks/benchmark/keyboard_out_of_bin_task.py L18-28: object_outside_of_and_on_surface { "object": "keyboard",
+# "container": "grey_bin", "surface": "table", "require_gripper_detached": True }
+# robolab/core/task/conditionals.py L955-984; is_supported_on_surface robolab/core/world/world_state.py L722-756 (|F| >=
+# 0.1 N, Fz > 0, within 45 deg)
+[families."keyboard_out_of_bin"]
+success = """
+The keyboard (`keyboard`) is out of the grey bin (`grey_bin`), rests on the table (`table`) and is released.
+
+An object is out of a container when the centre of the object's convex hull is not inside the container's convex hull
+with its upward-facing faces removed (faces whose outward normal has a component of at least 0.7 along the container's
+own up axis), so the space above the rim, to any height, still counts as inside. An object rests on a surface when the
+contact force of that surface on the object is at least 0.1 N, points upward and lies within 45° of vertical. Released
+means that neither inner finger of the Robotiq gripper touches the object (no contact-force component above 0.1 N with
+either finger).
+"""
+
+# robolab/tasks/benchmark/bigger_object.py L19-23: object_in_container {"object": "raisin_box", "container":
+# "grey_bin", "tolerance": 0.02, "require_gripper_detached": True}
+# robolab/core/task/conditionals.py L273-314 (in_opentop_container: robolab/core/task/predicate_logic.py L333-407
+# centroid-in-hull, robolab/core/task/hull_check.py open_top_planes threshold 0.7; the `tolerance` argument is unused
+# there)
+[families."larger_object_raisin_box_in_bin"]
+success = """
+The raisin box (`raisin_box`) is in the grey bin (`grey_bin`) and is released.
+
+An object is in a container when the centre of the object's convex hull lies inside the container's convex hull with its
+upward-facing faces removed (faces whose outward normal has a component of at least 0.7 along the container's own up
+axis): the space above the rim counts as inside, to any height, and the test moves with the container when it tips.
+Released means that neither inner finger of the Robotiq gripper touches the object (no contact-force component above
+0.1 N with either finger).
+"""
+
+# robolab/tasks/benchmark/marker_in_mug_task.py L19-28: object_in_container { "object": "marker", "container":
+# "ceramic_mug", "require_gripper_detached": True }
+# robolab/core/task/conditionals.py L273-314 (in_opentop_container: robolab/core/task/predicate_logic.py L333-407
+# centroid-in-hull, robolab/core/task/hull_check.py open_top_planes threshold 0.7; the `tolerance` argument is unused
+# there)
+[families."marker_in_mug"]
+success = """
+The whiteboard marker (`marker`) is in the ceramic mug (`ceramic_mug`) and is released.
+
+An object is in a container when the centre of the object's convex hull lies inside the container's convex hull with its
+upward-facing faces removed (faces whose outward normal has a component of at least 0.7 along the container's own up
+axis): the space above the rim counts as inside, to any height, and the test moves with the container when it tips.
+Released means that neither inner finger of the Robotiq gripper touches the object (no contact-force component above
+0.1 N with either finger).
+"""
+
+# robolab/tasks/benchmark/mustard_above_raisin_task.py L21-25: object_on_top {"object": "mustard_bottle",
+# "reference_object": "raisin_box", "require_gripper_detached": True}
+# robolab/core/task/conditionals.py L317-353; world_state.py L722 is_supported_on_surface;
+# robolab/core/task/predicate_logic.py L217 centroid_in_footprint (tolerance 0.01)
+[families."mustard_above_raisin"]
+success = """
+The mustard bottle (`mustard_bottle`) rests on the raisin box (`raisin_box`), is over it and is released.
+
+An object rests on a surface when the contact force of that surface on the object is at least 0.1 N, points upward and
+lies within 45° of vertical. Over a body means that the centre of the object's bounding box lies within the x-y extent
+of that body's bounding box, widened by 1 cm on every side; height is not compared. Bounding boxes are each body's own
+bounding box, oriented with the body in its current pose. Released means that neither inner finger of the Robotiq
+gripper touches the object (no contact-force component above 0.1 N with either finger).
+"""
+
+# robolab/tasks/benchmark/mustard_in_left_bin.py L18-27: object_in_container { "object": "mustard", "container":
+# "grey_bin_left", "require_gripper_detached": True }
+# robolab/core/task/conditionals.py L273-314 (in_opentop_container: robolab/core/task/predicate_logic.py L333-407
+# centroid-in-hull, robolab/core/task/hull_check.py open_top_planes threshold 0.7; the `tolerance` argument is unused
+# there)
+[families."mustard_in_left_bin"]
+success = """
+The mustard bottle (`mustard`) is in the left bin (`grey_bin_left`) and is released.
+
+An object is in a container when the centre of the object's convex hull lies inside the container's convex hull with its
+upward-facing faces removed (faces whose outward normal has a component of at least 0.7 along the container's own up
+axis): the space above the rim counts as inside, to any height, and the test moves with the container when it tips.
+Released means that neither inner finger of the Robotiq gripper touches the object (no contact-force component above
+0.1 N with either finger).
+"""
+
+# robolab/tasks/benchmark/mustard_in_right_bin.py L18-27: object_in_container { "object": "mustard", "container":
+# "grey_bin_right", "require_gripper_detached": True }
+# robolab/core/task/conditionals.py L273-314 (in_opentop_container: robolab/core/task/predicate_logic.py L333-407
+# centroid-in-hull, robolab/core/task/hull_check.py open_top_planes threshold 0.7; the `tolerance` argument is unused
+# there)
+[families."mustard_in_right_bin"]
+success = """
+The mustard bottle (`mustard`) is in the right bin (`grey_bin_right`) and is released.
+
+An object is in a container when the centre of the object's convex hull lies inside the container's convex hull with its
+upward-facing faces removed (faces whose outward normal has a component of at least 0.7 along the container's own up
+axis): the space above the rim counts as inside, to any height, and the test moves with the container when it tips.
+Released means that neither inner finger of the Robotiq gripper touches the object (no contact-force component above
+0.1 N with either finger).
+"""
+
+# robolab/tasks/benchmark/pick_glasses_task.py L20-22: object_picked_up {"object": "glasses", "surface": "table",
+# "distance": 0.05}
+# robolab/core/task/conditionals.py L244-270: object_grabbed (in_contact with "gripper", 0.1 N) AND object_above(table,
+# z_margin 0.05): robolab/core/task/predicate_logic.py L410-472 _vertical_check bbox mode, tolerance 0.01
+[families."pick_glasses"]
+success = """
+The eyeglasses (`glasses`) are grasped and lifted: at least one inner finger of the Robotiq gripper touches it (a
+contact-force component above 0.1 N), every corner of its bounding box is at least 5 cm above the top of the table's
+(`table`) bounding box, and the centre of its bounding box lies within the table's x-y extent widened by 1 cm on every
+side. Bounding boxes are each body's own bounding box, oriented with the body in its current pose.
+"""
+
+# robolab/tasks/benchmark/cooking_orange_object.py L20-24: object_picked_up {"object": "measuring_cups_1", "surface":
+# "table", "distance": 0.05}
+# robolab/core/task/conditionals.py L244-270: object_grabbed (in_contact with "gripper", 0.1 N) AND object_above(table,
+# z_margin 0.05): robolab/core/task/predicate_logic.py L410-472 _vertical_check bbox mode, tolerance 0.01
+[families."pick_orange_object"]
+success = """
+The orange measuring cup (`measuring_cups_1`) is grasped and lifted: at least one inner finger of the Robotiq gripper
+touches it (a contact-force component above 0.1 N), every corner of its bounding box is at least 5 cm above the top of
+the table's (`table`) bounding box, and the centre of its bounding box lies within the table's x-y extent widened by
+1 cm on every side. Bounding boxes are each body's own bounding box, oriented with the body in its current pose.
+"""
+
+# robolab/tasks/benchmark/pick_up_blue_pitcher.py L20-21: object_picked_up {"object": "pitcher", "surface": "table",
+# "distance": 0.05}
+# robolab/core/task/conditionals.py L244-270: object_grabbed (in_contact with "gripper", 0.1 N) AND object_above(table,
+# z_margin 0.05): robolab/core/task/predicate_logic.py L410-472 _vertical_check bbox mode, tolerance 0.01
+[families."pick_up_blue_pitcher"]
+success = """
+The large blue pitcher (`pitcher`) is grasped and lifted: at least one inner finger of the Robotiq gripper touches it (a
+contact-force component above 0.1 N), every corner of its bounding box is at least 5 cm above the top of the table's
+(`table`) bounding box, and the centre of its bounding box lies within the table's x-y extent widened by 1 cm on every
+side. Bounding boxes are each body's own bounding box, oriented with the body in its current pose.
+"""
+
+# robolab/tasks/benchmark/bottles_on_shelf_task.py L18-28: object_in_container { "object": ["whitepackerbottle_a01",
+# "whitepackerbottle_a02", "whitepackerbottle_a03"], "container": "squarepail_a01", "logical": "all",
+# "require_gripper_detached": True }
+# robolab/core/task/conditionals.py L273-314 (in_opentop_container: robolab/core/task/predicate_logic.py L333-407
+# centroid-in-hull, robolab/core/task/hull_check.py open_top_planes threshold 0.7; the `tolerance` argument is unused
+# there)
+[families."plastic_bottles_in_square_pail"]
+success = """
+The three small white plastic bottles (`whitepackerbottle_a01`, `whitepackerbottle_a02`, `whitepackerbottle_a03`) are
+each in the square pail (`squarepail_a01`) and are released.
+
+An object is in a container when the centre of the object's convex hull lies inside the container's convex hull with its
+upward-facing faces removed (faces whose outward normal has a component of at least 0.7 along the container's own up
+axis): the space above the rim counts as inside, to any height, and the test moves with the container when it tips.
+Released means that neither inner finger of the Robotiq gripper touches the object (no contact-force component above
+0.1 N with either finger).
+"""
+
+# robolab/tasks/benchmark/put_two_mugs_on_shelf.py L18-19: object_in_container {"object": ["ceramic_mug", "mug",
+# "mug_01"], "container": "wireshelving_a01", "require_contact_with": True, "require_gripper_detached": True, "logical":
+# "choose", "K": 2}
+# robolab/core/task/conditionals.py L273-314 (in_opentop_container: robolab/core/task/predicate_logic.py L333-407
+# centroid-in-hull, robolab/core/task/hull_check.py open_top_planes threshold 0.7; the `tolerance` argument is unused
+# there)
+[families."put_two_mugs_on_shelf"]
+success = """
+Exactly two of the three mugs (`ceramic_mug`, `mug`, `mug_01`), no more and no fewer, are each in the wire shelf
+(`wireshelving_a01`), touching it and released. The shelf's whole convex hull is the container; a mug's orientation is
+not checked.
+
+An object is in a container when the centre of the object's convex hull lies inside the container's convex hull with its
+upward-facing faces removed (faces whose outward normal has a component of at least 0.7 along the container's own up
+axis): the space above the rim counts as inside, to any height, and the test moves with the container when it tips. Two
+bodies touch when a component of the contact force between them is above 0.1 N. Released means that neither inner finger
+of the Robotiq gripper touches the object (no contact-force component above 0.1 N with either finger).
+"""
+
+# robolab/tasks/benchmark/recycle_cartons.py L18-19: object_in_container {"object": ["milk_carton",
+# "orange_juice_carton"], "container": "container_a01", "logical": "all", "require_gripper_detached": True}
+# robolab/core/task/conditionals.py L273-314 (in_opentop_container: robolab/core/task/predicate_logic.py L333-407
+# centroid-in-hull, robolab/core/task/hull_check.py open_top_planes threshold 0.7; the `tolerance` argument is unused
+# there)
+[families."recycle_carton"]
+success = """
+The milk carton (`milk_carton`) and the orange juice carton (`orange_juice_carton`) are each in the grey bin
+(`container_a01`) and are released.
+
+An object is in a container when the centre of the object's convex hull lies inside the container's convex hull with its
+upward-facing faces removed (faces whose outward normal has a component of at least 0.7 along the container's own up
+axis): the space above the rim counts as inside, to any height, and the test moves with the container when it tips.
+Released means that neither inner finger of the Robotiq gripper touches the object (no contact-force component above
+0.1 N with either finger).
+"""
+
+# robolab/tasks/benchmark/recycle_cartons_vertical_crate.py L18-19: object_inside {"object": ["milk_carton",
+# "orange_juice_carton"], "container": "container_a01", "logical": "all", "require_gripper_detached": True}
+# robolab/core/task/conditionals.py L668-694 (robolab/core/task/predicate_logic.py L382 inside = the same
+# centroid-in-open-top-hull test)
+[families."recycle_cartons_vertical_crate"]
+success = """
+The milk carton (`milk_carton`) and the orange juice carton (`orange_juice_carton`) are each in the vertical crate
+(`container_a01`) and are released.
+
+An object is in a container when the centre of the object's convex hull lies inside the container's convex hull with its
+upward-facing faces removed (faces whose outward normal has a component of at least 0.7 along the container's own up
+axis): the space above the rim counts as inside, to any height, and the test moves with the container when it tips.
+Released means that neither inner finger of the Robotiq gripper touches the object (no contact-force component above
+0.1 N with either finger).
+"""
+
+# robolab/tasks/benchmark/red_dishes_in_bin.py L18-19: object_in_container {"object": ["mug", "bowl"], "container":
+# "grey_bin", "logical": "all", "require_gripper_detached": True}
+# robolab/core/task/conditionals.py L273-314 (in_opentop_container: robolab/core/task/predicate_logic.py L333-407
+# centroid-in-hull, robolab/core/task/hull_check.py open_top_planes threshold 0.7; the `tolerance` argument is unused
+# there)
+[families."red_dishes_in_bin"]
+success = """
+The red mug (`mug`) and the red bowl (`bowl`) are each in the grey bin (`grey_bin`) and are released.
+
+An object is in a container when the centre of the object's convex hull lies inside the container's convex hull with its
+upward-facing faces removed (faces whose outward normal has a component of at least 0.7 along the container's own up
+axis): the space above the rim counts as inside, to any height, and the test moves with the container when it tips.
+Released means that neither inner finger of the Robotiq gripper touches the object (no contact-force component above
+0.1 N with either finger).
+"""
+
+# robolab/tasks/benchmark/reorient_red_mugs_task.py L20-21: object_upright {"object": ["red_mug"], "up_axis": "z",
+# "logical": "all", "require_gripper_detached": True}
+# robolab/core/task/conditionals.py L731-760; robolab/core/task/predicate_logic.py L704 upright (tolerance 0.1 rad: up_z
+# >= cos 0.1)
+[families."reorient_red_mug"]
+success = """
+The red mug (`red_mug`) is upright and released: the mug's own up axis (its local z axis) is within 0.1 rad (about 5.7°)
+of the world's vertical. Nothing checks what the mug stands on.
+
+Released means that neither inner finger of the Robotiq gripper touches the object (no contact-force component above
+0.1 N with either finger).
+"""
+
+# robolab/tasks/benchmark/rubiks_cube_and_banana_task.py L19-23: object_in_container {"object": ["rubiks_cube",
+# "banana"], "container": "bowl", "logical": "all", "tolerance": 0.0, "require_contact_with": True,
+# "require_gripper_detached": True}
+# robolab/core/task/conditionals.py L273-314 (in_opentop_container: robolab/core/task/predicate_logic.py L333-407
+# centroid-in-hull, robolab/core/task/hull_check.py open_top_planes threshold 0.7; the `tolerance` argument is unused
+# there)
+[families."rubiks_cube_and_banana"]
+success = """
+The Rubik's cube (`rubiks_cube`) and the banana (`banana`) are each in the bowl (`bowl`), touch it and are released.
+
+An object is in a container when the centre of the object's convex hull lies inside the container's convex hull with its
+upward-facing faces removed (faces whose outward normal has a component of at least 0.7 along the container's own up
+axis): the space above the rim counts as inside, to any height, and the test moves with the container when it tips. Two
+bodies touch when a component of the contact force between them is above 0.1 N. Released means that neither inner finger
+of the Robotiq gripper touches the object (no contact-force component above 0.1 N with either finger).
+"""
+
+# robolab/tasks/benchmark/rubiks_cube_behind_bowl.py L22-23: object_behind {"object": "rubiks_cube",
+# "reference_object": "bowl", "frame_of_reference": "robot", "mirrored": False, "require_contact_with": "table",
+# "require_gripper_detached": True}
+# robolab/core/task/conditionals.py L416-446; robolab/core/task/predicate_logic.py L132-185;
+# robolab/core/utils/geometry_utils.py L95-155 (cone 45 deg on object origins in the robot frame); no level term
+# (require_gripper_detached is set)
+[families."rubiks_cube_behind_bowl"]
+success = """
+The Rubik's cube (`rubiks_cube`) is behind the bowl (`bowl`), touches the table (`table`) and is released.
+
+Directions are measured in the robot's base frame (x forward, away from the robot's base; y to the robot's left), from
+the bowl's origin to the cube's origin, ignoring height: the horizontal offset must be non-zero and point within 45° of
+the robot's +x (behind the bowl, on the far side from the robot); how far does not matter. Two bodies touch when a
+component of the contact force between them is above 0.1 N. Released means that neither inner finger of the Robotiq
+gripper touches the object (no contact-force component above 0.1 N with either finger).
+"""
+
+# robolab/tasks/benchmark/rubiks_cube_in_front_of_bowl.py L22-23: object_in_front_of {"object": "rubiks_cube",
+# "reference_object": "bowl", "frame_of_reference": "robot", "mirrored": False, "require_gripper_detached": True}
+# robolab/core/task/conditionals.py L416-446; robolab/core/task/predicate_logic.py L132-185;
+# robolab/core/utils/geometry_utils.py L95-155 (cone 45 deg on object origins in the robot frame); no level term
+# (require_gripper_detached is set)
+[families."rubiks_cube_in_front_of_bowl"]
+success = """
+The Rubik's cube (`rubiks_cube`) is in front of the bowl (`bowl`) and is released.
+
+Directions are measured in the robot's base frame (x forward, away from the robot's base; y to the robot's left), from
+the bowl's origin to the cube's origin, ignoring height: the horizontal offset must be non-zero and point within 45° of
+the robot's -x (in front of the bowl, between it and the robot); how far does not matter. Released means that neither
+inner finger of the Robotiq gripper touches the object (no contact-force component above 0.1 N with either finger).
+"""
+
+# robolab/tasks/benchmark/rubiks_cube_left_of_bowl.py L22-23: object_left_of {"object": "rubiks_cube",
+# "reference_object": "bowl", "frame_of_reference": "robot", "mirrored": False, "require_gripper_detached": True}
+# robolab/core/task/conditionals.py L416-446; robolab/core/task/predicate_logic.py L132-185;
+# robolab/core/utils/geometry_utils.py L95-155 (cone 45 deg on object origins in the robot frame); no level term
+# (require_gripper_detached is set)
+[families."rubiks_cube_left_of_bowl"]
+success = """
+The Rubik's cube (`rubiks_cube`) is to the left of the bowl (`bowl`) and is released.
+
+Directions are measured in the robot's base frame (x forward, away from the robot's base; y to the robot's left), from
+the bowl's origin to the cube's origin, ignoring height: the horizontal offset must be non-zero and point within 45° of
+the robot's +y (to the robot's left); how far does not matter. Released means that neither inner finger of the Robotiq
+gripper touches the object (no contact-force component above 0.1 N with either finger).
+"""
+
+# robolab/tasks/benchmark/rubiks_cube_right_of_bowl.py L21-22: object_right_of {"object": "rubiks_cube",
+# "reference_object": "bowl", "frame_of_reference": "robot", "mirrored": False, "require_gripper_detached": True}
+# robolab/core/task/conditionals.py L416-446; robolab/core/task/predicate_logic.py L132-185;
+# robolab/core/utils/geometry_utils.py L95-155 (cone 45 deg on object origins in the robot frame); no level term
+# (require_gripper_detached is set)
+[families."rubiks_cube_right_of_bowl"]
+success = """
+The Rubik's cube (`rubiks_cube`) is to the right of the bowl (`bowl`) and is released.
+
+Directions are measured in the robot's base frame (x forward, away from the robot's base; y to the robot's left), from
+the bowl's origin to the cube's origin, ignoring height: the horizontal offset must be non-zero and point within 45° of
+the robot's -y (to the robot's right); how far does not matter. Released means that neither inner finger of the Robotiq
+gripper touches the object (no contact-force component above 0.1 N with either finger).
+"""
+
+# robolab/tasks/benchmark/rubiks_cube_then_banana.py L20-30: objects_placed_in_container_in_order { "objects":
+# ["rubiks_cube", "banana"], "container": "bowl", "tolerance": 0.0, "require_contact_with": True,
+# "require_gripper_detached": True, }
+# robolab/core/task/conditionals.py L1224-1328 (latched first placement step, `<=`, contact and detached required)
+[families."rubiks_cube_then_banana"]
+success = """
+The Rubik's cube (`rubiks_cube`) and the banana (`banana`) are each in the bowl (`bowl`), touching it and released, and
+the cube was put in first: the first control step at which the cube was in the bowl, touching it and released, is no
+later than the first such step for the banana (the same step counts). That first step is kept for the whole episode, so
+taking an object out again does not undo it.
+
+An object is in a container when the centre of the object's convex hull lies inside the container's convex hull with its
+upward-facing faces removed (faces whose outward normal has a component of at least 0.7 along the container's own up
+axis): the space above the rim counts as inside, to any height, and the test moves with the container when it tips. Two
+bodies touch when a component of the contact force between them is above 0.1 N. Released means that neither inner finger
+of the Robotiq gripper touches the object (no contact-force component above 0.1 N with either finger).
+"""
+
+# robolab/tasks/benchmark/rubiks_cubes_in_bin.py L18-28: object_in_container { "object": ["rubiks_cube",
+# "rubiks_cube_1", "rubiks_cube_2"], "container": "grey_bin", "logical": "all", "require_gripper_detached": True }
+# robolab/core/task/conditionals.py L273-314 (in_opentop_container: robolab/core/task/predicate_logic.py L333-407
+# centroid-in-hull, robolab/core/task/hull_check.py open_top_planes threshold 0.7; the `tolerance` argument is unused
+# there)
+[families."rubiks_cubes_in_bin"]
+success = """
+The three Rubik's cubes (`rubiks_cube`, `rubiks_cube_1`, `rubiks_cube_2`) are each in the grey bin (`grey_bin`) and are
+released.
+
+An object is in a container when the centre of the object's convex hull lies inside the container's convex hull with its
+upward-facing faces removed (faces whose outward normal has a component of at least 0.7 along the container's own up
+axis): the space above the rim counts as inside, to any height, and the test moves with the container when it tips.
+Released means that neither inner finger of the Robotiq gripper touches the object (no contact-force component above
+0.1 N with either finger).
+"""
+
+# robolab/tasks/benchmark/spoon_in_mug_task.py L18-27: object_in_container { "object": "spoon_big", "container":
+# "ceramic_mug", "require_gripper_detached": True }
+# robolab/core/task/conditionals.py L273-314 (in_opentop_container: robolab/core/task/predicate_logic.py L333-407
+# centroid-in-hull, robolab/core/task/hull_check.py open_top_planes threshold 0.7; the `tolerance` argument is unused
+# there)
+[families."spoon_in_mug"]
+success = """
+The metal spoon (`spoon_big`) is in the ceramic mug (`ceramic_mug`) and is released.
+
+An object is in a container when the centre of the object's convex hull lies inside the container's convex hull with its
+upward-facing faces removed (faces whose outward normal has a component of at least 0.7 along the container's own up
+axis): the space above the rim counts as inside, to any height, and the test moves with the container when it tips.
+Released means that neither inner finger of the Robotiq gripper touches the object (no contact-force component above
+0.1 N with either finger).
+"""
+
+# robolab/tasks/benchmark/rubiks_cube_stacking_task.py L20-21: stacked {"objects": ["rubiks_cube", "rubiks_cube_1",
+# "rubiks_cube_2"], "order": "None"}
+# robolab/core/task/conditionals.py L1202-1221; robolab/core/task/predicate_logic.py L739-798 check_stacked (in_contact
+# AND (above_top tol 0.01 OR above_bottom tol 0)); no gripper term
+[families."stack3_rubiks_cube"]
+success = """
+The three Rubik's cubes (`rubiks_cube`, `rubiks_cube_1`, `rubiks_cube_2`) form one tower, in any order: ranked by the
+height of their origins, each cube is on the next lower one.
+
+A block (or cube) is on the one below it when the two touch (a contact-force component above 0.1 N) and either every
+corner of the upper one's bounding box is at or above the top of the lower one's bounding box, with the upper box's
+centre within the lower box's x-y extent widened by 1 cm, or every corner of the upper box is at or above the bottom of
+the lower box, with the upper box's centre within the lower box's x-y extent. Bounding boxes are each body's own
+bounding box, oriented with the body in its current pose. Nothing about the gripper is checked: the tower counts while
+it is held.
+"""
+
+# robolab/tasks/benchmark/stack_yellow_on_red.py L20-25: stacked {"objects": ["red_block", "yellow_block"], "order":
+# "bottom_to_top"}
+# robolab/core/task/conditionals.py L1202-1221; robolab/core/task/predicate_logic.py L739-798 check_stacked (in_contact
+# AND (above_top tol 0.01 OR above_bottom tol 0)); no gripper term
+[families."stack_yellow_on_red"]
+success = """
+The yellow block (`yellow_block`) is on the red block (`red_block`).
+
+A block (or cube) is on the one below it when the two touch (a contact-force component above 0.1 N) and either every
+corner of the upper one's bounding box is at or above the top of the lower one's bounding box, with the upper box's
+centre within the lower box's x-y extent widened by 1 cm, or every corner of the upper box is at or above the bottom of
+the lower box, with the upper box's centre within the lower box's x-y extent. Bounding boxes are each body's own
+bounding box, oriented with the body in its current pose. Nothing about the gripper is checked: the tower counts while
+it is held.
+"""
+
+# robolab/tasks/benchmark/take_measuring_spoon_out.py L20-21: object_outside_of {"object": ["measuring_cup"],
+# "container": "bowl", "logical": "all", "require_gripper_detached": True}
+# robolab/core/task/conditionals.py L697-728 (not in_opentop_container, robolab/core/task/predicate_logic.py L397)
+# rcb_robolab.py ON_TABLE L670 / L965-970: upstream's object_outside_of becomes object_outside_of_and_on_surface (surface "table", same params)
+[families."take_measuring_spoon_out"]
+success = """
+The white measuring spoon (`measuring_cup`) is out of the red bowl (`bowl`), rests on the table (`table`) and is
+released.
+
+An object is out of a container when the centre of the object's convex hull is not inside the container's convex hull
+with its upward-facing faces removed (faces whose outward normal has a component of at least 0.7 along the container's
+own up axis), so the space above the rim, to any height, still counts as inside. An object rests on a surface when the
+contact force of that surface on the object is at least 0.1 N, points upward and lies within 45° of vertical. Released
+means that neither inner finger of the Robotiq gripper touches the object (no contact-force component above 0.1 N with
+either finger).
+"""
+
+# robolab/tasks/benchmark/take_mugs_off_of_shelf.py L18-19: object_outside_of_and_on_surface {"object":
+# ["ceramic_mug", "mug"], "container": "rack_l04", "surface": "table", "logical": "all", "require_gripper_detached":
+# True}
+# robolab/core/task/conditionals.py L955-984; is_supported_on_surface robolab/core/world/world_state.py L722-756 (|F| >=
+# 0.1 N, Fz > 0, within 45 deg)
+[families."take_mugs_off_of_shelf"]
+success = """
+The two mugs on the shelf (`ceramic_mug`, `mug`) are each out of the shelf (`rack_l04`), rest on the table (`table`) and
+are released.
+
+An object is out of a container when the centre of the object's convex hull is not inside the container's convex hull
+with its upward-facing faces removed (faces whose outward normal has a component of at least 0.7 along the container's
+own up axis), so the space above the rim, to any height, still counts as inside. An object rests on a surface when the
+contact force of that surface on the object is at least 0.1 N, points upward and lies within 45° of vertical. Released
+means that neither inner finger of the Robotiq gripper touches the object (no contact-force component above 0.1 N with
+either finger).
+"""
+
+# robolab/tasks/benchmark/take_spatula_off_shelf.py L18-19: object_outside_of_and_on_surface {"object":
+# ["spatula_01"], "container": "wireshelving_a01", "surface": "table", "logical": "all", "require_gripper_detached":
+# True}
+# robolab/core/task/conditionals.py L955-984; is_supported_on_surface robolab/core/world/world_state.py L722-756 (|F| >=
+# 0.1 N, Fz > 0, within 45 deg)
+[families."take_spatula_off_shelf"]
+success = """
+The spatula (`spatula_01`) is out of the wire shelf (`wireshelving_a01`), rests on the table (`table`) and is released.
+
+An object is out of a container when the centre of the object's convex hull is not inside the container's convex hull
+with its upward-facing faces removed (faces whose outward normal has a component of at least 0.7 along the container's
+own up axis), so the space above the rim, to any height, still counts as inside. An object rests on a surface when the
+contact force of that surface on the object is at least 0.1 N, points upward and lies within 45° of vertical. Released
+means that neither inner finger of the Robotiq gripper touches the object (no contact-force component above 0.1 N with
+either finger).
+"""
+
+# robolab/tasks/benchmark/throw_away_snacks_task.py L18-28: object_in_container { "object": ["apple_01",
+# "yogurt_cup"], "container": "plasticpail_a02", "logical": "all", "require_gripper_detached": True }
+# robolab/core/task/conditionals.py L273-314 (in_opentop_container: robolab/core/task/predicate_logic.py L333-407
+# centroid-in-hull, robolab/core/task/hull_check.py open_top_planes threshold 0.7; the `tolerance` argument is unused
+# there)
+[families."throw_away_snacks"]
+success = """
+The red apple (`apple_01`) and the yogurt cup (`yogurt_cup`) are each in the plastic pail (`plasticpail_a02`) and are
+released.
+
+An object is in a container when the centre of the object's convex hull lies inside the container's convex hull with its
+upward-facing faces removed (faces whose outward normal has a component of at least 0.7 along the container's own up
+axis): the space above the rim counts as inside, to any height, and the test moves with the container when it tips.
+Released means that neither inner finger of the Robotiq gripper touches the object (no contact-force component above
+0.1 N with either finger).
+"""
+
+# robolab/tasks/benchmark/tools_picking_drill.py L19-23: object_outside_of_and_on_surface {"object":
+# ["cordless_drill"], "container": "left_bin", "surface": "table", "logical": "all", "tolerance": 0.0,
+# "require_gripper_detached": True}
+# robolab/core/task/conditionals.py L955-984; is_supported_on_surface robolab/core/world/world_state.py L722-756 (|F| >=
+# 0.1 N, Fz > 0, within 45 deg)
+[families."tools_picking_drill"]
+success = """
+The cordless drill (`cordless_drill`) is out of the left bin (`left_bin`), rests on the table (`table`) and is released.
+Only the left bin is tested; the bin the drill starts in is not.
+
+An object is out of a container when the centre of the object's convex hull is not inside the container's convex hull
+with its upward-facing faces removed (faces whose outward normal has a component of at least 0.7 along the container's
+own up axis), so the space above the rim, to any height, still counts as inside. An object rests on a surface when the
+contact force of that surface on the object is at least 0.1 N, points upward and lies within 45° of vertical. Released
+means that neither inner finger of the Robotiq gripper touches the object (no contact-force component above 0.1 N with
+either finger).
+"""
+
+# robolab/tasks/benchmark/unstack_rubiks_cube.py L23-24: object_outside_of_and_on_surface {"object":
+# ["rubiks_cube_middle", "rubiks_cube_top", "rubiks_cube_bottom"], "container": "grey_bin", "surface": "table",
+# "logical": "all", "require_gripper_detached": True}
+# robolab/core/task/conditionals.py L955-984; is_supported_on_surface robolab/core/world/world_state.py L722-756 (|F| >=
+# 0.1 N, Fz > 0, within 45 deg)
+[families."unstack_rubiks_cube"]
+success = """
+The three Rubik's cubes of the tower (`rubiks_cube_bottom`, `rubiks_cube_middle`, `rubiks_cube_top`) are each out of the
+grey bin (`grey_bin`), rest on the table (`table`) and are released.
+
+An object is out of a container when the centre of the object's convex hull is not inside the container's convex hull
+with its upward-facing faces removed (faces whose outward normal has a component of at least 0.7 along the container's
+own up axis), so the space above the rim, to any height, still counts as inside. An object rests on a surface when the
+contact force of that surface on the object is at least 0.1 N, points upward and lies within 45° of vertical. Released
+means that neither inner finger of the Robotiq gripper touches the object (no contact-force component above 0.1 N with
+either finger).
+"""
+
+# robolab/tasks/benchmark/utensils_in_mug.py L18-28: object_in_container { "object": ["fork_big", "spoon_big"],
+# "container": "ceramic_mug", "logical": "all", "require_gripper_detached": True }
+# robolab/core/task/conditionals.py L273-314 (in_opentop_container: robolab/core/task/predicate_logic.py L333-407
+# centroid-in-hull, robolab/core/task/hull_check.py open_top_planes threshold 0.7; the `tolerance` argument is unused
+# there)
+[families."utensils_in_mug"]
+success = """
+The fork (`fork_big`) and the spoon (`spoon_big`) are each in the ceramic mug (`ceramic_mug`) and are released.
+
+An object is in a container when the centre of the object's convex hull lies inside the container's convex hull with its
+upward-facing faces removed (faces whose outward normal has a component of at least 0.7 along the container's own up
+axis): the space above the rim counts as inside, to any height, and the test moves with the container when it tips.
+Released means that neither inner finger of the Robotiq gripper touches the object (no contact-force component above
+0.1 N with either finger).
+"""
+
+# robolab/tasks/benchmark/white_mug_in_center_of_table.py L20-21: object_on_center {"object": "mug",
+# "reference_object": "table", "tolerance": 0.05, "require_contact_with": True, "require_gripper_detached": True}
+# robolab/core/task/conditionals.py L387-413; robolab/core/task/predicate_logic.py L500 center_of (|dx|, |dy| <=
+# tolerance 0.05 between OBB centres)
+[families."white_mug_in_center_of_table"]
+success = """
+The white mug (`mug`) is at the centre of the table (`table`), touches the table and is released: the centres of the two
+bodies' bounding boxes differ by at most 5 cm in x and at most 5 cm in y. The mug's orientation is not checked.
+
+Bounding boxes are each body's own bounding box, oriented with the body in its current pose. Two bodies touch when a
+component of the contact force between them is above 0.1 N. Released means that neither inner finger of the Robotiq
+gripper touches the object (no contact-force component above 0.1 N with either finger).
+"""

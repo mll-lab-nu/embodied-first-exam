@@ -1,47 +1,40 @@
-# robowits-collect-screws-i00-standard
+# RoboWits · collect_screws (standard)
 
 | | |
 |---|---|
-| Benchmark | RoboWits |
-| Mode | standard (`eai-standard/3.0`) |
-| Twin | `robowits-collect-screws-i00-privileged` |
-| Simulator / robot | `robowits` / `marvin-bimanual` |
-| Family / instance | `collect_screws` / seed 0 (allowed seeds: [0, 1, 2]; PROTOCOL §2) |
-| Oracle | `none` — No reference solution: RoboWits ships no expert or planner for its seed tasks. Solvable: model trial robowits-collect-screws-i00-limi__xxcMFF8 (robowits-lunaxh-limited-0929, standard) graded success=1, deterministic=1 by the separate verifier; nop scored 0. These records are from earlier versions of the task (before protocol v1.0, on the same frozen instance and predicate); not re-run on this version (static validation only, 2026-10-01). Human review per family (protocol §4). Re-graded with the current grader (two AMD workstations; the earlier positives were graded on the Intel laptop, so a trajectory that fails the earlier grader on AMD too says nothing either way): the cited __xxcMFF8 passes the earlier grader but fails the current one: the screw is still in the gripper. The privileged positive __BQiUvZm, streamed as joint rows, scored 1 under Harbor on this version (2026-10-14; nop 0). |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:robowits-0.1.1` |
+| Task ID | `robowits-collect-screws-i00-standard` |
+| Benchmark | [RoboWits](https://github.com/UMass-Embodied-AGI/RoboWits) (Lin et al., 2026), upstream `UMass-Embodied-AGI/RoboWits@9cc30ae` |
+| Robot | Bimanual Marvin: two 7-DoF arms with Pika parallel grippers |
+| Mode | standard |
+| Instance | `collect_screws`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | None |
 
 ## Task
-Put the screw into the container. The same frozen instance as `robowits-collect-screws-i00-privileged`, as a robot
-service (`eai-standard/3.0`): the simulator runs in the `sim` sidecar, which the agent cannot open; the agent gets one
-episode, no reset and no privileged state, only the client (calibrated RGB-D cameras, proprioception, `joint_position`
-/ `ee_pose` chunks, stateless kinematics). The sidecar judges the live episode, records it as the trajectory and
-renders the video from it; the success criterion as graded is in `instruction.md`.
+Put the screw into the container.
 
-## Difficulty
-That of `robowits-collect-screws-i00-privileged` (its Difficulty), without resets, privileged state or the tooling's
-primitives: the agent perceives the scene through calibrated RGB-D cameras and its own proprioception, and every
-action it sends is part of the one graded episode.
+## Success criteria
+The goal: the screw's centre is over the table area enlarged by 2 cm on every side, no more than 5 cm below the table
+top, and inside the container's bounding box, enlarged by 1 mm horizontally and by 2 cm up and down. No part of the
+robot touches the screw. Graded object: the screw.
 
-## Reference solution
-None: RoboWits ships no expert or planner, and none is written for this family (`oracle = "none"`). Evidence that it
-is solvable: `oracle_evidence` in `task.toml` and the positive example cited in the review table of PR #3 (the trial
-is published on the results site).
+Graded: the live episode the simulator service ran; nothing is replayed. There is one episode and no reset. The
+episode ends when the agent sends `/finish` or when its session ends (at the latest after 1 h). Success is never
+shown and never ends the episode. The verdict is a settle window on the live simulator, from the state the episode
+ends in. The robot holds the last command for 30 control steps (1 s), and nothing is checked. For 60 more control
+steps (2 s) the goal must then hold at every 6th step and at the last one. Through those 60 steps the set of graded
+objects must not change, and no graded object may move more than 2 mm from where it was when they began. The window's
+steps are part of the recorded episode.
 
-## Verification
-`success` = the live episode's: the settle window that ended it passed on the sidecar's simulator (inside the agent's
-last call, or after its last command when its phase is over, once the collect hook has stopped the agent's container),
-and no infrastructure failure (`tests/grade.py` reads the sidecar's `final.json`: `graded_by = "live"`, `replays =
-0`); nothing is replayed to grade it. The frozen instance is checked when the scene is built, before the agent is
-served (`instance_mismatch`, an infrastructure failure). After the verdict the sidecar renders the recorded trajectory
-once into `/logs/verifier/replay.mp4`; a failed video never changes the verdict. What is checked, in words:
-`instruction.md`, "Success criterion (as graded)".
+Where the goal names the table area, it is a fixed rectangle, 0.79 m deep (away from the robot) and 1.38 m wide,
+that the predicates use as the table's extent. Heights are measured from the table top.
 
-No oracle; human review in PR #3 (PROTOCOL §4), with its privileged twin: the positive example, the `nop` result and the predicate
-summary are in the PR's review table.
+The episode also ends on a simulator error, which scores 0. It also ends after 200,000 control steps: the goal is then
+judged as it stands, with no window. A window cut short by that cap does not pass. The scene is checked against the
+frozen instance before the agent is served; a mismatch is an infrastructure failure, not a score.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -52,11 +45,14 @@ Caps per container (PROTOCOL §6).
 - GPU: any NVIDIA GPU, held by `sim`.
 - Recommended GPU: any 8 GB+ NVIDIA GPU (RTX 4090 / L4).
 
-## Details
-| | |
-|---|---|
-| Protocol | `eai-standard/3.0` (docs/protocol/standard_mode.md): `submit` chunks of `joint_position` (16, streamed at the 30 Hz control rate with the agent's `dt`) or `ee_pose` (16, IK per row); `observe` the current frames or those recorded over the last seconds (`last_s`); hold chunks (`hold(s)`); stateless `kinematics`; binary RCB1 responses |
-| Crash recovery | `restart: on-failure:6`; the service replays its journal and resumes the same episode (resume class `exact`, docs/protocol/standard_mode.md §13) |
-| Agent and verifier image | `docker.io/library/python:3.12.14-slim@sha256:f77ac9e44ae96ef2c90b8053ea08c31f8be030f824196b0ae4db6d462c84e51f` with the shared pins (`environment/client-requirements.txt`) |
-| Instance | the privileged twin's frozen instance (`environment/sim/instance.json`): entry 0 of RoboWits' `eval_dataset_50/10.json` |
-| BlenderKit models | not redistributable, so not in the image: mounted read-only into the `sim` sidecar from `$RCB_ROBOWITS_BLENDERKIT` (how to obtain them: `images/robowits/NOTICE`) |
+## Others
+The frozen scene is entry 0 of RoboWits' `eval_dataset_50/10.json` (RoboWits task
+`robowits/10-collect-screws-v0`).
+
+## License
+RoboWits ([UMass-Embodied-AGI/RoboWits](https://github.com/UMass-Embodied-AGI/RoboWits) @ `9cc30ae`) is MIT-licensed,
+as declared in its `pyproject.toml`. Genesis 0.4.7 is under the Apache License 2.0, and RoboWits' asset bundle
+(`XHRlyb2001/RoboWits_assets`) also under Apache-2.0. Most families also load BlenderKit models. BlenderKit licenses
+each model to the account that downloads it, and these models may not be redistributed, so they are not in the image
+or the repository. Users fetch them with their own BlenderKit key, or use the encrypted research bundle, whose terms
+allow **non-commercial academic research only** (`images/robowits/NOTICE`).

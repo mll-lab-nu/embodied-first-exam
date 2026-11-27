@@ -3,21 +3,13 @@ old = "## Task\nMove the 50 mL tube to the other rack, into the row farther from
 new = "## Task\nMove the 50 mL tube to the other rack, into the row nearer the robot, in the middle slot."
 
 [[replace]]
-old = "`reset(seed=0)`"
-new = "`reset(seed=2)`"
-
-[[replace]]
-old = "`26cdc6033fab7de6`"
-new = "`af4edbb07ebcf45f`"
-
-[[replace]]
-old = "/ seed 0 (allowed"
-new = "/ seed 2 (allowed"
-
-[[replace]]
 old = "into the row farther from the robot, at the end next to the first rack"
 new = "into the row nearer the robot, in the middle slot"
 
 [[replace]]
 old = "Move the 50 mL tube to the other rack, into the row farther from the robot, at the end next to the first rack."
 new = "Move the 50 mL tube to the other rack, into the row nearer the robot, in the middle slot."
+
+[[replace]]
+old = "`insert`, seed 0 |"
+new = "`insert`, seed 2 |"

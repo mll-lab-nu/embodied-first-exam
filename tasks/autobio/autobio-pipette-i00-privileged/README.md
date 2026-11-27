@@ -1,31 +1,41 @@
-# autobio-pipette-i00-privileged
+# AutoBio · pipette (privileged)
 
 | | |
 |---|---|
-| Benchmark | AutoBio |
+| Task ID | `autobio-pipette-i00-privileged` |
+| Benchmark | [AutoBio](https://github.com/autobio-bench/AutoBio) (Lan et al., 2025), upstream `autobio-bench/AutoBio@0850421` |
+| Robot | Two UR5e arms: one with a DexHand021 hand that holds a pipette, one with a Robotiq 2F-85 gripper |
 | Mode | privileged |
-| Twin | `autobio-pipette-i00-standard` |
-| Simulator / robot | `autobio` / `ur5e-dexhand-2f85-bimanual` |
-| Family / instance | `pipette` / seed 0 (allowed seeds: [0, 1, 2]; PROTOCOL §2) |
-| Oracle | `full` |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:autobio-0.1.0` |
+| Instance | `pipette`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | Included |
 
 ## Task
-AutoBio's `pipette` (Aspirate with pipette), with two UR5e arms fixed to the bench: `arm1` carries a dexterous hand that holds a pipette (its thumb presses the plunger); `arm2` has a Robotiq 2F-85 gripper: Draw up liquid from the 50 mL tube with the pipette: press the plunger, push the tip down into the liquid near the middle of the tube, let the plunger go, then lift the tip well out of the tube.
-On the bench, between the arms: a rack with an open, part-filled 50 mL tube standing in it. AutoBio's prompt for this task: "one arm lifts centrifuge tube, the other aligns pipette tip and aspirates liquid"; the test itself does not ask for the tube to be lifted. The deliverable is one replayable trajectory of joint position targets (`/app/output/trajectory.npz`, `(T, 14)`, one row per 2 ms control step).
+Draw up liquid from the 50 mL tube with the pipette: press the plunger, push the tip down into the liquid near the
+middle of the tube, let the plunger go, then lift the tip well out of the tube.
 
-## Difficulty
-AutoBio's level: medium. Two arms. The pipette tip has to enter a 50 mL tube within 6.5 mm of its axis and reach below the liquid surface, with the plunger pressed before and released there. The agent has full access to the simulator and to AutoBio's task code, but not to its scripted expert: it has to build the motion itself from joint position targets at the physics rate.
+## Success criteria
+Three steps, in this order; the first two are latched once they happen:
+1. Dip: the pipette's tip is within 6.5 mm horizontally of the tube's axis (its body origin), more than 5 mm below the
+   liquid's surface, and the plunger thumb's command (the position target, not the joint's position) is above 0.70 rad.
+2. Release: the tip is below the liquid's surface and the thumb's command is below 0.45 rad.
+3. Lift: the tip is more than 0.05 m higher than the liquid's surface.
+The first control step at which step 3 holds after steps 1 and 2 ends the replay as a success.
 
-## Reference solution
-AutoBio's scripted expert (mani_pipette.py @ 0850421), seed 0: the position targets it sends, recorded at every physics step, clipped to the actuators' ranges, rounded to float32 (so the standard twin's client executes the same rows), cut at the first success: `solution/oracle.npz`, 6973 rows, success after 6973 control steps. Replayed and saved by `solution/solve.sh`; re-checked by the privileged verifier (`harbor run -a oracle`: two fresh-process replays, same final state).
+The verifier replays `/app/output/trajectory.npz` (array `actions`, shape (T, n) with n the robot's controlled
+actuators, 1 ≤ T ≤ 600,000, finite values) once, open-loop, in a fresh process in a separate sandbox without network,
+from its own copy of the frozen instance. Each row is one control step of 2 ms (one physics step), with one position
+target per actuator, clipped to the actuators' ranges. AutoBio's `check()` is evaluated after every control step. A
+MuJoCo physics warning (an unstable state) ends the replay at once as a failure; the renderer's own warning
+(`VGEOMFULL`) does not count. A replay that reaches 600,000 control steps ends there.
 
-## Verification
-`tests/grade.py` in a separate sandbox without network: one replay of `/app/output/trajectory.npz`, in a fresh process, from the verifier's own copy of the instance (`tests/instance.json`; the compiled model and the rebuilt start state are checked against its recorded hashes); pass iff the episode succeeds (the first control step at which AutoBio's check holds ends the episode in success). `nop`: no trajectory, reward 0.
+A missing file scores 0, and so does an invalid one: not a readable `.npz`, no `actions` array, a `task` entry that
+names another task, the wrong shape, a non-finite value, or more than 600,000 rows. A replay that gives no result, and
+a replay whose model or start state does not match the instance's recorded hashes, are infrastructure failures, not a
+score.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -34,10 +44,11 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Upstream | AutoBio (github.com/autobio-bench/AutoBio @ 0850421, no licence stated: the image is built locally, images/autobio/BUILD_ONLY) on MuJoCo 3.3.0 |
-| Instance | `Pipette` (`mani_pipette.py`) after AutoBio's `reset(seed=0)`; model hash `40806bc5f581ca3e`, start-state hash `228ededc6af93404`, checked on every load |
-| Actions | 14 position targets per control step (2 ms, one physics step); success rule `first` (tasks/autobio/README.md) |
-| Resources | 4 CPUs, no GPU (CPU physics, OSMesa rendering) |
+## License
+AutoBio ([autobio-bench/AutoBio](https://github.com/autobio-bench/AutoBio) @ `0850421`) states **no licence** for its
+code or its own assets (the digitized instruments, tubes, racks and pipette, and two binaries without source: the
+thread and detent MuJoCo plugins `libmjlab.so.3.3.0` and the liquid-surface solver `meshplane.so`). No file of AutoBio
+is in this repository, and the simulator image is built locally and never published; it is used here for research
+evaluation only. The robot models AutoBio bundles keep their own licences: UR5e and Robotiq 2F-85 (BSD), ALOHA 2
+(BSD), DexHand021 (Apache-2.0); the display font is under the SIL OFL. The simulator is MuJoCo 3.3.0 (Apache License
+2.0). Details: `images/autobio/BUILD_ONLY`.

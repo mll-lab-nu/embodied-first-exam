@@ -238,7 +238,8 @@ placeholder.
 ```
 
 The headings appear in exactly this order. `## Others` is the only optional section, and it is left out when it has
-no text. No other heading is allowed, `###` sub-headings included.
+no text. No other heading is allowed, nor any `###` sub-heading outside `## Task` (whose body is the instruction's,
+verbatim, its own sub-headings included).
 
 ### Title and key table
 
@@ -387,7 +388,8 @@ task. Results are attributed by digest, so a changed file is a changed task, und
 ## Checks
 
 `bash ci_checks/run_all.sh <task dirs>` runs every check below. `ci_checks/run_invariants.sh` runs the invariant
-ones alone. "The task-structure check" is the shared per-task check of files, names and `task.toml` fields.
+ones alone. "The task-structure check" is `ci_checks/check-task-layout.py`, the shared per-task check of files,
+names, the README's layout and `task.toml` fields.
 
 | Rule | Tier | Enforced by |
 |---|---|---|

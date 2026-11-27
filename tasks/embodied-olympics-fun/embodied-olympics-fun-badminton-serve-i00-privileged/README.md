@@ -1,31 +1,62 @@
-# embodied-olympics-fun-badminton-serve-i00-privileged
+# Embodied Olympics · badminton serve (privileged)
 
 | | |
 |---|---|
-| Benchmark | Embodied Olympics - Fun |
+| Task ID | `embodied-olympics-fun-badminton-serve-i00-privileged` |
+| Benchmark | [Embodied Olympics - Fun](https://github.com/CHIGUI0/roboolympics) (Embodied Olympics authors, 2026), upstream `CHIGUI0/roboolympics@7df999b` |
+| Robot | Unitree G1 humanoid (1.32 m, 33 kg, 29 joints), with Unitree's walking and running policies |
 | Mode | privileged |
-| Twin | `embodied-olympics-fun-badminton-serve-i00-standard` |
-| Simulator / robot | `mujoco` / `unitree-g1` |
-| Family / instance | `badminton_serve` / seed 0 |
-| Oracle | `none` — no reference solution; the referee is tested: The racket and the shuttle are held by contact and friction in the G1's own Dex3-1 hands at the device's joint torques (no weld, no force factor): the racket's handle across the right palm, the shuttle hanging cork down across the left palm. No real serve with these hands is known: a key-pose search of about 45 minutes found none. Positive by a declared injection: real, the robot stands in its service court, opens the left hand (the shuttle falls clear) and swings the right arm forwards and up with the forearm turned so that the strings face forwards and up (head about 4-9 m/s); injected, 20 ms before the racket head gets there the falling shuttle is put cork towards the strings on the head's path, falling at 1.5 m/s; real, the hit base first at 0.80 m, the flight (10.7 m/s, 49 deg) over the net and the landing in the receiver's right service court; the same state hash twice; the racket at most 0.23 mm into the hand. The shuttle's flight checks (terminal velocity 6.795 m/s, quadratic-drag decay, Law 3 speeds) pass. Negatives: nop (time), the shuttle let fall, the racket let go, the racket onto the held shuttle, let go and caught again, the shuttle on the right hand, a still racket, a feint, feathers first, a hit above the service height (the height lowered for it: the swung head does not reach 1.15 m moving forwards), thrown at the racket, the racket thrown, a hit that adds no speed, the feet (off the floor, moved, on the lines), hit twice, carried, downwards, back onto the server, a flat real hit that lands on the own side, a real swing whose face looks further left (out), under the net, outside the posts, a post, the lines in and out by 1 cm, a net cord that drops in (good), thrown over unstruck, the robot in the net, the racket on the net, a fall.; human review in the pull request that adds the benchmark (PROTOCOL §4) |
-| Agent time budget | 7200 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
+| Instance | `badminton_serve`, seed 0 |
+| Time limit | 2 h |
+| Reference solution | None |
 
 ## Task
-Serve the shuttle: from your right service court, let it go from your left hand and hit it, cork first and below 1.15 m, with the racket in your right hand over the net into the service court diagonally opposite. (Embodied Olympics `badminton-serve`: one Unitree G1 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
+Serve the shuttle: from your right service court, let it go from your left hand and hit it, cork first and below 1.15 m,
+with the racket in your right hand over the net into the service court diagonally opposite.
 
-## Difficulty
-The shuttle must leave the strings at about 9 m/s or more, 40 to 55 degrees upwards, to clear a 1.52 m net 2 m away from a hit below 1.15 m, and the G1 meets it only in the lower part of a swing whose racket is held by friction in a three-finger hand; the left hand's reach and the racket's path barely overlap, and the shuttle falls through it in a few hundredths of a second. The swing must leave the feet where they stand and the robot on them, on a stand without balance feedback.
+## Success criteria
+A BWF court, singles. The shuttle starts held by its feathers in the left hand; the racket is held in the right hand
+by contact and friction. The robot serves from its right service court into the receiver's right service court,
+diagonally opposite. The referee's stages, in order: release, hit, over the net, in.
+- Racket, at all times: it stays in the right hand (a break of more than 0.05 s is a fault) and never touches the
+  floor, the net or a post.
+- Release: the left hand lets the shuttle go; it is let go once it has touched nothing of the robot for 0.03 s. Before
+  that the racket may not touch it; after it nothing of the robot but the racket may touch it.
+- Hit: the racket hits the shuttle before it reaches the floor, the net or the net's plane. At the first instant of
+  contact the cork base touches the racket, the whole shuttle is lower than 1.15 m, the shuttle moves at most 4.0 m/s,
+  and the racket head is in a forward movement (its speed towards the net rose above 0.5 m/s and has not fallen below
+  0.1 m/s). The service starts at the earlier of the release and the start of that movement; a forward movement that
+  starts after the release and stops before the hit is a fault. From the start of the service to the hit, both feet
+  stand inside the server's service court, touching neither its lines nor anything outside it, each foot on the floor
+  all the time (gaps of at most 0.02 s) and moving at most 0.03 m. The hit is one contact (contacts less than 0.03 s
+  apart are one), lasts at most 0.02 s, and when it is over the shuttle is faster than when it reached the racket and
+  rising.
+- Over the net: the shuttle passes the net's plane above the net's top edge, between the posts (it may touch the net).
+- In: its first contact with the floor is inside the receiver's right service court, lines included. The success is
+  called then.
 
-## Reference solution
-None. No reference controller exists for this family yet: The racket and the shuttle are held by contact and friction in the G1's own Dex3-1 hands at the device's joint torques (no weld, no force factor): the racket's handle across the right palm, the shuttle hanging cork down across the left palm. No real serve with these hands is known: a key-pose search of about 45 minutes found none. Positive by a declared injection: real, the robot stands in its service court, opens the left hand (the shuttle falls clear) and swings the right arm forwards and up with the forearm turned so that the strings face forwards and up (head about 4-9 m/s); injected, 20 ms before the racket head gets there the falling shuttle is put cork towards the strings on the head's path, falling at 1.5 m/s; real, the hit base first at 0.80 m, the flight (10.7 m/s, 49 deg) over the net and the landing in the receiver's right service court; the same state hash twice; the racket at most 0.23 mm into the hand. The shuttle's flight checks (terminal velocity 6.795 m/s, quadratic-drag decay, Law 3 speeds) pass. Negatives: nop (time), the shuttle let fall, the racket let go, the racket onto the held shuttle, let go and caught again, the shuttle on the right hand, a still racket, a feint, feathers first, a hit above the service height (the height lowered for it: the swung head does not reach 1.15 m moving forwards), thrown at the racket, the racket thrown, a hit that adds no speed, the feet (off the floor, moved, on the lines), hit twice, carried, downwards, back onto the server, a flat real hit that lands on the own side, a real swing whose face looks further left (out), under the net, outside the posts, a post, the lines in and out by 1 cm, a net cord that drops in (good), thrown over unstruck, the robot in the net, the racket on the net, a fall..
+Fouls (each fails the attempt at once): any rule above broken; a second hit; the shuttle touching the robot after the
+hit, touching a post, passing through or under the net or outside the posts, or landing on the robot's side or
+outside that service court; any part of the robot touching the net or a post. Fall (a failure at any time): the pelvis
+below 0.35 m, or any part other than the feet on the floor. Time limit: 15 s (1,500 control steps).
 
-## Verification
-`/tests/grade.py` replays `/app/output/trajectory.npz` from the frozen start in one fresh process (`rcb_rfo.py replay`:
-one sim row per control step until the referee ends the attempt). Pass iff the referee's verdict is a success. The rules: The court is the BWF court: 13.4 m long and 6.1 m wide (between the doubles side lines), with the singles side lines 5.18 m apart, a short service line 1.98 m from the net on each side, a centre line from each short service line to the back boundary line, and a doubles long service line 0.76 m inside each back boundary line; every line is 0.04 m wide and is part of the area it bounds (the centre line is shared by the two service courts). This is singles: a service court reaches from the short service line to the back boundary line and from the centre line to the singles side line. The net stands across the middle, its top 1.524 m high at the centre and rising to 1.55 m at the posts on the doubles side lines (the cord sags under the net's weight); it is 0.76 m deep, with open space under it. The shuttle is a feathered shuttle (5.1 g, a cork base 26 mm across, 16 feathers whose tips form a circle 64 mm across) with a shuttle's heavy air drag (it falls at 6.8 m/s at most) that turns it to fly cork first; it starts held by its feathers in your left hand. The racket (0.67 m, 85 g, strung area 0.27 m by 0.21 m) is held in your right hand by contact and friction alone: it can slip, turn and fall. Both hands are three-finger hands (a thumb, an index and a middle finger). You serve from your right service court into the receiver's right service court, the one diagonally opposite. The racket must stay in your right hand all the time: it touches the hand's fingers and its thumb or palm, and a break of more than 0.05 s is a fault. In order: (1) the release: your left hand lets the shuttle go; it is let go once it has touched nothing of yours for 0.03 s (the release is the moment it came free; until then it is still held), and from then on nothing of yours but the racket may touch it. (2) the hit: the racket hits the shuttle before it reaches the floor. At the first instant of contact the cork base is touching the racket (the feathers touching it first, alone, is a fault), the whole shuttle is lower than 1.15 m above the floor, the shuttle moves at most 4.0 m/s, and the racket head is moving towards the net. A forward movement of the racket head starts when its speed towards the net rises above 0.5 m/s and lasts until that speed falls below 0.1 m/s. The service starts at the earlier of the release and the start of the racket head's forward movement that brings it to the hit; a forward movement that starts after the release and stops before the hit is a fault. From the start of the service to the hit both feet stand in your service court, touching neither its lines nor anything outside it, each foot touching the floor all the time (a gap of at most 0.02 s still counts as touching) and moving at most 0.03 m. The hit is one contact: racket contacts less than 0.03 s apart are one hit, it lasts at most 0.02 s, and when it is over (0.03 s after its last contact) the shuttle is faster than it was when it reached the racket and is rising. (3) the shuttle passes the net's plane over the net's top edge, between the posts (it may touch the net). (4) its first contact with the floor (contacts less than 0.02 s apart are one) is inside the receiver's right service court, the lines included: that is the success. You fail on any fault: the shuttle reaching the floor, touching the net or passing the net's plane without a hit; the racket touching the shuttle before you let it go; the shuttle touching you, or touched by anything of yours but the racket, after the release; a hit that breaks a rule of (2); a second hit; a carry; the shuttle passing through or under the net or outside the posts, touching a post, landing on your side or outside that service court; the racket leaving your right hand, or touching the floor, the net or a post, at any time; any part of you touching the net or a post; a fall; or 15 s passing. A fall is: your pelvis lower than 0.35 m above the floor, or any part of you other than your feet touching the floor. No oracle; human review in the pull request that adds the benchmark (PROTOCOL §4).
+Graded file: `/app/output/trajectory.npz`, as `s.save_trajectory()` writes it: an `actions` array of sim rows, one per
+10 ms control step, and the task's family name. After the agent's session it is replayed once, open-loop, from the
+frozen start, in a fresh process of a separate verifier container without network. Rows run one per control step
+until the referee calls the attempt; rows after the call, and rows past the attempt's time limit, are not run. The
+task is passed if the referee has called a success when the replay stops. If the rows run out before the referee's
+call, the task is not passed. A row the robot cannot run (its first value, the mode, is not one of the robot's modes)
+ends the replay at that row without a pass.
 
-## Resources
-Caps per container (PROTOCOL §6).
+The physics diverging (a non-finite state, a bad acceleration, or the robot or a prop faster than 150 m/s) ends the
+attempt as a failure, unless a success was called in an earlier control step. Only the trajectory is scored (`gen.py`
+and `NOTES.md` are not). A missing file, a file that is not such an array (a link, over 64 MB, more than 40,000 rows,
+the wrong row width), a file for another task, or a non-finite value in the rows that are used scores 0. An image that
+no longer rebuilds the frozen start, or a replay that crashes or runs over 600 s, is an infrastructure failure, not a
+score.
+
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -34,14 +65,10 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Category | basketball-and-rackets |
-| Rule book | BWF Laws of Badminton (BWF Statutes, Section 4.1, the edition in force in 2025): Law 1 (the court and the court equipment: 13.40 m x 6.10 m, 40 mm lines that are part of the area they bound, the singles side lines 5.18 m apart, the short service lines 1.98 m from the net; the net 1.524 m high at the centre and 1.55 m over the doubles side lines, 760 mm deep; the posts on the doubles side lines), Law 2 (the shuttle: 16 feathers, a cork base 25-28 mm across, 4.74-5.50 g), Law 3 (testing a shuttle for speed), Law 4 (the racket: at most 680 mm long and 230 mm wide), Law 9 (the service: 9.1 a correct service, 9.2 its start), Law 10 (singles: the service courts), Law 13 (faults); deviations: Laws 7, 8, 10.2-10.3, 11 (the toss, the scoring, the rally, the receiver): one service only, with no receiver; a fault ends the attempt as a failure, a correct service that lands in the receiver's service court is the success; singles at the score 0 (so from the right service court, into the diagonally opposite one) · Law 9.1 (no undue delay; the receiver ready): there is no receiver; the service may come at any time within the episode · Law 9.2 (the start of the service is the first forward movement of the server's racket head once the players have taken their positions): taking position cannot be told from the robot's other arm movements; made measurable: a forward movement of the racket head starts when its speed towards the net rises above 0.5 m/s and lasts until that speed falls below 0.1 m/s; the service starts at the earlier of the release of the shuttle and the start of the head's forward movement that brings it to the hit; a forward movement of the head that starts after the release and stops before the hit is a fault (Law 9.1: the racket's movement continues forwards until the service is delivered) · Law 9.1 (some part of both feet in contact with the court in a stationary position): made measurable: from the start of the service to the hit each foot touches the floor (a gap of at most 0.02 s, the chatter of a contact, still counts as touching) and moves at most 0.03 m · Law 9.1 (the server lets go of the shuttle and hits it): the shuttle starts held by its feathers in the left hand (the G1's three-finger hand) and is let go by opening it; it counts as let go once it has touched nothing of yours for 0.03 s (the release is the moment it came free), so that the fingers' last brush as they open is part of the holding; so that the hand does not throw the service, the shuttle may move at most 4.0 m/s when it reaches the racket and must leave it faster than it came; one release per service (a shuttle that has been let go may be touched by nothing of yours but the racket) · Law 9.1 (the server's racket initially hits the base of the shuttle): judged at the physics step (1 ms) of the racket's first contact: the cork base must be touching the racket then (the feathers may touch it in the same step) · Law 9.1 (the server's racket): the racket must be held in the right hand throughout the attempt: it counts as held while it touches the right hand's fingers and its thumb or palm, and a break of at most 0.05 s (the contact chatter of a fast swing) is still held; the hands are the G1's own Dex3-1 three-finger hands at the device's joint torques · Law 13 ('caught and held on the racket and then slung', 'hit twice'): made measurable: racket contacts less than 0.03 s apart are one hit, a later one is a second hit, and a contact longer than 0.02 s is a carry · Law 9.1 (the flight upwards from the racket): judged when the hit is over (0.03 s after its last contact): the shuttle is then rising · Law 13 (the shuttle landing outside the boundary lines; lines are in): the landing point is where the shuttle first touches the floor · Law 4 (the racket): a rigid racket (no string-bed deflection, no frame flex); its strings meet the shuttle with a restitution of 0.5 · Law 1 (the net): a net of cord hung from its tensioned top cord, modelled as strips of mesh 0.5 m wide, each a chain of 2 rigid panels 2 cm thick hinged under the tape, the tape and cord a string of beads across the net (the net's mass, its sag and the cord's tension as in the venue text); the strips are not joined to each other below the cord and the mesh does not stretch; a shuttle meets the mesh with its own contact (it cannot pass through it) · the hall's air: still (no draught), at sea level and 15 C; the shuttle's spin about its axis is not driven by its feathers |
-| Stages | release → hit → over the net → in |
-| Instance | `environment/instance.json` = `tests/instance.json`: the family's parameters, t = 0 state hash `ed8059790e757c5dec6530d9fcdcb7eabe45fa5aec35ea2161c96449d5cdc806` |
-| Episode | 1500 control steps (15 s at 100 Hz) |
-| Action | sim rows of 151 floats per control step (`rfo/world.py`); six action types are views of it |
-| Tooling | `/opt/tools/rcb_rfo.py`, `/opt/tools/rfo/` (the world, the action layer, the referee's toolkit; from the files-only image images/embodied-olympics-fun-files/, built from embodied_first_exam/benchmarks/embodied-olympics-fun/) and `environment/rfo_task.py` (this family's rules), the same files in the verifier's `/tests/` |
-| Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md) |
+## License
+The Embodied Olympics robot library and running-policy port ([CHIGUI0/roboolympics](https://github.com/CHIGUI0/roboolympics)
+@ `7df999b`, a private repository) is released under the MIT License (`LICENSE.roboolympics` in the image); this
+benchmark's venues and referees are MIT too. Third-party parts in the image: the Unitree G1 model and meshes from MuJoCo
+Menagerie (BSD-3-Clause), the Unitree H1-2 model, meshes and walking policy and the G1 walking policy from
+unitree_rl_gym (BSD-3-Clause), the G1 running policy from C1801SYQ/g1_running (Apache-2.0), FALCON's G1 walking policy
+from LeCAR-Lab/FALCON (MIT) and the WBC-AGILE G1 walking policy from NVIDIA (Apache-2.0). No non-commercial terms apply.

@@ -1,39 +1,46 @@
-# embodied-olympics-match-soccerssl-match-i01-standard
+# Embodied Olympics · wheeled robot soccer 5 v 5 (RoboCup SSL Division B), match against level 4 (standard)
 
 | | |
 |---|---|
-| Benchmark | Embodied Olympics - Match |
-| Mode | standard (`eai-standard/3.0`) |
-| Twin | `embodied-olympics-match-soccerssl-match-i01-privileged` |
-| Simulator / robot | `mujoco` / `ssl-robot` |
-| Family / instance | `soccer_ssl_match` / seed 7 (allowed seeds: [7, 1, 2]; PROTOCOL §2) |
-| Oracle | `partial` — RLSSL 2026-10-16 (doc rlssl): L-RL against L3 25 W 5 D 10 L over 40 matches on fresh seeds (64 W 11 D 25 L over 100 with the screening), goals +1.7 per match; mirror match 29 W 5 D 46 L over 80 (two 40-match seed sets: 25 % and 48 %; L3 against itself on the first set 60 %); the truth reference against it 10 W of 20; replay identical; limits through World.execute (0.014 % of commands clipped, as L3). The oracle run checks the pipeline |
-| Agent time budget | 14400 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-match-0.1.0` |
+| Task ID | `embodied-olympics-match-soccerssl-match-i01-standard` |
+| Benchmark | [Embodied Olympics - Match](https://github.com/CHIGUI0/roboolympics) (Embodied Olympics authors, 2026), upstream `CHIGUI0/roboolympics@0d7f680` |
+| Robot | RoboCup Small Size League omnidirectional wheeled robots (the agent's team of five) |
+| Mode | standard |
+| Opponent | Yellow team at level 4: the scripted level 3 team (man marking, a blocker, passes) with a trained network choosing each field robot's option every 0.2 s; it reads the simulator's true state with no reaction delay and commands its robots with the same skills and limits as yours |
+| Instance | `soccer_ssl_match`, seed 7 |
+| Time limit | 4 h |
+| Reference solution | Pipeline check only |
 
 ## Task
 Win a 5 v 5 wheeled robot soccer match against the yellow team.
 
-Wheeled robot soccer 5 v 5 (RoboCup SSL Division B) against the opponent team at level 4 (the reinforcement-learned tier), program play: wheeled robot soccer 5 v 5 under the RoboCup Small Size League rules (Division B): ten omnidirectional SSL robots after TIGERs Mannheim's v2020 (kicker, chip kicker, dribbler; their real speed, acceleration, kick and dribbler limits) and an orange golf ball on the 9 x 6 m field, two halves of 300 s of playing time, a shoot-out when level, an automatic referee for every rule an SSL auto-referee judges; you command your robots with three skills (move to a pose, optionally by a time and at a speed; kick flat or chipped along the robot's heading, now or the moment the ball reaches it; spin the dribbler) and see the game through the four overhead cameras of the shared vision, 40 ms late; in the `match` format you command the blue team against a scripted team, in the `duel` format another player commands the yellow team, in the `team` format each robot has its own player.
+## Success criteria
+One 5 v 5 match under the RoboCup SSL Division B rules, with an automatic referee: two halves of 300 s of playing time
+(the clock stops whenever no team may play the ball), ends changed at half time. The team with more goals after two
+halves wins; a team with 10 goals and a lead of more than one wins at once. Level after two halves: a shoot-out of 5
+penalty kicks each (decided as soon as one team cannot be caught), then sudden death; still level after 10 kicks each,
+a coin toss drawn from the seed. There are no draws. A goal counts only if the ball fully entered the goal between the
+posts, was never higher than 0.15 m after the scoring team's last touch, and the scoring team had no more robots on the
+field than allowed and committed no non-stopping foul in the last 2 s.
 
-## Difficulty
-Frozen development instance: seed 7, level 4, in lockstep (its realtime twin: S = 10). Not one of
-the sport's official (hidden) seeds, so results here are previews, not official Embodied Olympics results.
+The world runs in lockstep: it advances only during the agent's waits and up to the step at which its action
+takes effect.
 
-## Reference solution
-`solution/`: our camera-only reference player through the same HTTP interface. RLSSL 2026-10-16 (doc rlssl): L-RL against L3 25 W 5 D 10 L over 40 matches on fresh seeds (64 W 11 D 25 L over 100 with the screening), goals +1.7 per match; mirror match 29 W 5 D 46 L over 80 (two 40-match seed sets: 25 % and 48 %; L3 against itself on the first set 60 %); the truth reference against it 10 W of 20; replay identical; limits through World.execute (0.014 % of commands clipped, as L3). The oracle run checks the pipeline.
+Success: the match ends by these rules and the blue team (yours) won it. Your side loses the match at once, a valid 0,
+if you do not send `game start` within 1800 s of real time after the match service starts or before your session ends
+(`no_show`); if a review is not sent with `game ready` within 600 s of real time after a stoppage (a goal, half time,
+full time before the shoot-out, each shoot-out kick; `ready_timeout`, even when you are ahead); or if your session ends
+before the match is over (`abandoned`).
 
-## Verification
-Separate sandbox, no network. The match is graded live (owner, 2026-10-17): the sim service records the
-match's scores, winner and reason as it plays it and nothing replays it to grade it (`final.json` `graded_by` live,
-`replays` 0; the replay video is drawn after the verdict). The verifier (`tests/grade.py`, our core's grader) applies
-the validity rule
-(technical failures void the trial, a player's own problems are a valid loss), and writes reward.json; success = a
-valid, finished match that the agent won. `tests/fexam_reward.py` adds the hub's fields (`infra_error`, `realtime`,
-`slowdown`, `opponent_level`).
+A simulator error in a control step, after the agent's first applied action, is a valid 0 too.
 
-## Resources
-Caps per container (PROTOCOL §6).
+Graded: the live match, as the trusted match service recorded it while it was played; nothing is replayed. There is
+one match and no reset, and the agent cannot end it with `/finish`: the match's rules end it. A technical failure of
+the match service (a crash, an error in its bookkeeping, rendering or metering) voids the trial as an infrastructure
+failure, not a score.
+
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -43,11 +50,12 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
+## Others
+Exported by the Embodied Olympics task exporter from its task `roboolympics/soccer_ssl-match-wallclock-program-standard` (upstream commit
+`91156213b0de`). The files changed here after the export are listed for this task in
+`ci_checks/benchmarks/embodied-olympics-match/exported.toml`.
 
-### Notes
-Source: Embodied Olympics task `soccer_ssl-match-wallclock-program-standard`, revision `soccer_ssl-1`. The rules, the referee, the scripted
-opponent, the observation, the review between points and the grader are ours, unchanged; only the seat is
-unmetered (Harbor records the model's usage) and the instance is frozen.
-
-Standard twin of `embodied-olympics-match-soccerssl-match-i01-realtime`: the same export, the world in lockstep (`environment/sim/core/lockstep.py`; `eai-standard/3.0` in tasks/embodied-olympics-match/README.md).
+## License
+Embodied Olympics ([CHIGUI0/roboolympics](https://github.com/CHIGUI0/roboolympics), a private repository) is released
+under the MIT License; its exported match services, referees, scripted opponents and graders inside this task are MIT
+too. The simulator is MuJoCo (Apache License 2.0). No non-commercial terms apply.

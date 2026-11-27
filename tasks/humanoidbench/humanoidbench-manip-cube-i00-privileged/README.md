@@ -1,66 +1,41 @@
-# humanoidbench-manip-cube-i00-privileged
+# HumanoidBench · cube (privileged)
 
 | | |
 |---|---|
-| Benchmark | HumanoidBench |
+| Task ID | `humanoidbench-manip-cube-i00-privileged` |
+| Benchmark | [HumanoidBench](https://humanoid-bench.github.io/) (Sferrazza et al., 2024), upstream `carlosferrazza/humanoid-bench@cb11890` |
+| Robot | Unitree H1 humanoid with two Shadow dexterous hands, 61 position-controlled actuators (HumanoidBench `h1hand`) |
 | Mode | privileged |
-| Twin | `humanoidbench-manip-cube-i00-standard` |
-| Simulator / robot | `humanoidbench` / `unitree-h1hand` |
-| Family / instance | `cube` / seed 0 |
-| Oracle | `none` — none known: no run has passed it, and published RL reaches 60% of the bar (paper 135, FastTD3 221, bar 370); human review in PR #9 |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:humanoidbench-0.2.0` |
+| Instance | `cube`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | None |
 
 ## Task
-Turn the two cubes on your palms until each sits the same way round as the see-through cube floating above your hands, without dropping either.
+Turn the two cubes on your palms until each sits the same way round as the see-through cube floating above your hands,
+without dropping either.
 
-HumanoidBench cube: produce one replayable trajectory that reorients two cubes in the Unitree H1's hands, frozen scene instance 00.
+## Success criteria
+Pass mark: an episode return of at least 370, upstream's success bar, where the return is the sum of
+HumanoidBench's per-step `cube` reward over the episode. Each control step earns between 0 and 1, mostly from how
+closely both cubes match the orientation of the see-through target cube, then from each hand being at its cube, and
+the rest from the robot standing upright and still with little actuator effort. An episode is at most 500
+control steps (10 s at 50 Hz).
 
-## Difficulty
-The pass mark is a **threshold on the whole episode's return** (`>= 370` over 500 steps), not a
-predicate on the final state.
+Terminations (each ends the episode at once as a failure):
+- the robot falls, its pelvis below 0.58 m;
+- either cube drops, its centre below 0.6 m.
 
-- **The only true in-hand reorientation in the benchmark.** Both hands work at once, and the object
-  has to be rotated *within* the grasp — fingers must release and re-grip without letting the cube fall,
-  which is a qualitatively different skill from `insert_normal`'s rigid-grip transport.
-- **A sharp objective with a cliff on both sides.** The orientation term decays fast, and dropping a
-  cube ends the episode; holding the start pose lasts only 83 steps.
-- **Goal state outside `(qpos, qvel)`.** Upstream puts the target orientation in `model.body_quat[-1]`,
-  drawn from the global `np.random` that `reset(seed=)` does not reach. The instance snapshot covers
-  `body_quat` for exactly this task; without it, agent and verifier would
-  be rotating towards different targets.
-- **One instance only**: `env.py` forces `randomness = 0` for this family, as it does for
-  `bookshelf_*` and `kitchen`.
+Graded file: `/app/output/trajectory.npz`, as `s.save_trajectory(...)` writes it: this task's name (`cube`) and at
+most 500 rows of 61 finite servo targets, one row per control step (values outside [-1, 1] are
+clipped). After the agent's session it is replayed once, open-loop, from the frozen start (`tests/instance.npz`) in a
+fresh process of a separate verifier container without network, the only place the reward exists. The task is passed
+if the replayed episode's return reaches the pass mark. The replay stops at the first of the terminations above; rows
+after it are not run. Only the trajectory is scored (`gen.py` and `NOTES.md` are not). A missing file, a file for
+another task, or one that is not such an array scores 0; an error inside the grader is reported as `grader_error`
+(infrastructure), not as a score.
 
-**Measured floors** (this instance): an all-zero
-trajectory scores **5.00 / 370** (the episode terminates at step 17 of 500). Holding the starting
-pose instead — the floor a competent agent gets before writing a controller — scores **10.2%** of
-the bar; that is the number this task was selected on (the benchmark's give-away limit). **External evidence**: published RL results reach **60%** of the bar (paper 135, FastTD3
-221, bar 370) — training runs of millions of environment steps, not a one-hour coding session, so
-treat it as proof that the task *has* a solution rather than as a target.
-
-**The agent does not see the reward function.** It is deleted from the image and restored only
-inside the verifier (`images/humanoidbench/scrub_oracles.py`, `tests/rcb_rewards.py`), so the
-numbers above are upstream's own scoring (on our physics: see *Physics vs upstream*) while the agent
-works from the task statement and the physical state alone.
-
-## Reference solution
-None. Requiring one would cap the benchmark at what we can already solve, which systematically
-removes the interesting tasks. What replaces it (docs/protocol/README.md §4): the floor above
-(doing nothing cannot pass), the evidence that the task has a solution (`oracle_evidence` in
-task.toml), and a human reviewer.
-
-## Verification
-In its own container, built from `tests/Dockerfile` (no network): the agent's container is gone by
-then, and only `/app/output/` crosses over. Open-loop replay of `/app/output/trajectory.npz` from
-`tests/instance.npz` in a fresh process, once; pass iff the replay's episode return reaches
-`success_bar`. `tests/grade.py` also
-writes `/logs/verifier/replay.mp4` and, because Harbor promotes every `reward.json` key to a
-leaderboard metric, keeps the per-task numbers (`episode_return`, `success_bar`) in
-`/logs/verifier/diagnostics.json`. No oracle; human review in PR #9. `nop` scores 0.
-
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -69,19 +44,9 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Capability class | C7 · in-hand precision |
-| Physics vs upstream | upstream's model (HumanoidBench cb11890) on MuJoCo 3.3.7, not the 3.1.6 upstream pins, whose convex collision reported wrong contacts; results on image 0.1.6 or earlier are other physics and are reported apart (tasks/humanoidbench/README.md, Physics). |
-
-### GPU
-Optional, and passing never depends on it: MuJoCo physics is CPU-only, so a GPU only speeds up the
-agent's own offscreen rendering (osmesa ~130 ms/frame, egl ~0.4 ms). Hand one to the agent's
-container with `--extra-docker-compose environment/gpu.docker-compose.yaml`; `rcb_hb.py` then picks
-EGL by itself unless `MUJOCO_GL` says otherwise. The overlay is not named `docker-compose.yaml`
-because Harbor would load that on every machine, and a device reservation the host cannot satisfy
-stops the container from starting.
-
-### Provenance
-The instance (`environment/instance.npz` and its byte copy `tests/instance.npz`) is seed 0 (sha `6d64a2c0cdbd`).
+## License
+HumanoidBench (Sferrazza et al., 2024; <https://github.com/carlosferrazza/humanoid-bench>) is released under the MIT
+License, copyright (c) 2024 Robot Learning Lab, UC Berkeley. The image's notice is
+`images/humanoidbench/LICENSE.humanoid-bench`; this task's `rewards.json` carries upstream's code under that license.
+Robot models shipped with upstream: the Unitree H1 model (BSD 3-Clause, copyright Unitree Robotics) and, on the
+two-handed H1, the Shadow Hand model from MuJoCo Menagerie (Apache License 2.0). No non-commercial terms apply.

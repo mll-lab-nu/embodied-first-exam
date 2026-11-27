@@ -1,96 +1,106 @@
 # AutoBio
 
-Nine tasks of [AutoBio](https://github.com/autobio-bench/AutoBio) (commit `0850421`, the "preliminary version" of the
-ICLR 2026 benchmark, [arXiv:2505.14030](https://arxiv.org/abs/2505.14030)) on MuJoCo 3.3.0, CPU only, in both modes: 18
-task directories, `tasks/autobio/autobio-<family>-i00-{privileged,standard}`. `simulator = "autobio"`. The scene is a
-biology laboratory bench: a thermal cycler with a lid and a locking lever, a thermal mixer with a working button panel
-and display, a centrifuge with a 30-slot rotor, tube racks, tubes with real screw threads, a pipette. The robots are
-UR5e arms with a Robotiq 2F-85, ALOHA arms, and a UR5e pair of which one arm holds the pipette in a dexterous hand.
-The tasks are in the `all` set only (not in `docs/core_set.toml`). Results are attributed by DIGEST (PROTOCOL H.8).
+## Overview
+Nine tasks of [AutoBio](https://github.com/autobio-bench/AutoBio) (Lan et al., 2025; the repository's "preliminary
+version" of the ICLR 2026 benchmark, [arXiv:2505.14030](https://arxiv.org/abs/2505.14030)) on MuJoCo 3.3.0, CPU only,
+in both modes: 18 task directories, `tasks/autobio/autobio-<family>-i00-{privileged,standard}`. `simulator =
+"autobio"`. The scene is a biology laboratory bench: a thermal cycler with a lid and a locking lever, a thermal mixer
+with a working button panel and display, a centrifuge with a 30-slot rotor, tube racks, tubes with real screw threads,
+a pipette. The robots are UR5e arms with a Robotiq 2F-85, ALOHA arms, and a UR5e pair of which one arm holds the
+pipette in a dexterous hand.
 
-AutoBio's repository states **no licence** for its code or its own assets. Nothing of it is in this repository, and its
-image is never published (below, "Before you run").
-
-## Quick start
 ```bash
-harbor run -d embodied-first-exam@all -p tasks/autobio -a codex -m openai/gpt-6-astra
+harbor run -d embodied-first-exam@all -p tasks/autobio -a codex -m <model>
 ```
-The first task builds the simulator image from public sources (below); later tasks reuse it.
+The first task builds the simulator image from public sources; later tasks reuse it.
 
-## Before you run
+| | |
+|---|---|
+| upstream | AutoBio @ `08504213356cbfe9a82bcd33a43cd282945a45df` (no licence stated) |
+| simulator | MuJoCo 3.3.0 with AutoBio's thread, detent and liquid-surface plugins; OSMesa rendering; CPU only |
+| image | `ghcr.io/mll-lab-nu/efe-private:autobio-0.1.0` (`images/autobio/`), never published: built locally |
+| host | Linux x86_64, Docker with BuildKit, no GPU; about 1 GB of RAM per simulator process |
+| time limit | 3600 s in both modes (`[agent] timeout_sec`) |
+| oracle | `full` in every task: AutoBio's own scripted expert, recorded |
 
-- **Licence.** AutoBio's repository has no LICENSE file and no licence statement for its code or for its own assets
-  (the digitized instruments, tubes, racks and pipette, and two binaries without source: `libmjlab.so.3.3.0`, the
-  thread and detent MuJoCo plugins, and `meshplane.so`, the liquid-surface solver). Building and running the image uses
-  them for research evaluation on your own machine. The robot models it bundles keep their own licences (UR5e and
-  Robotiq 2F-85: BSD; ALOHA 2: BSD; DexHand021: Apache-2.0; the display font: SIL OFL). `images/autobio/BUILD_ONLY` has
-  the details. No account, login or token is needed.
-- **Host.** Linux x86_64 and Docker with BuildKit. No GPU: MuJoCo physics and OSMesa rendering run on the CPU. About
-  1 GB of RAM per simulator process.
-- **First build.** The image is not on a public registry, so the first task builds it with Docker from AutoBio's
-  public repository: a few minutes, about 3 GB of free disk, network access to github.com and pypi.org. Every task's
-  Dockerfile starts with that recipe (`images/autobio/Dockerfile`), so the build runs once per Docker host and later
-  tasks take it from Docker's build cache. Maintainers who can pull `ghcr.io/mll-lab-nu/efe-private:autobio-0.1.0` get
-  its layers instead (compose `build.cache_from`). To build it ahead of the run:
-  `harbor run -p tasks/autobio/autobio-pickup-i00-privileged -a oracle` (reward 1).
+**First build.** The image is not on a public registry, so the first task builds it with Docker from AutoBio's public
+repository: a few minutes, about 3 GB of free disk, network access to github.com and pypi.org. Every task's Dockerfile
+starts with that recipe (`images/autobio/Dockerfile`), so the build runs once per Docker host and later tasks take it
+from Docker's build cache. Maintainers who can pull the private image get its layers instead (compose
+`build.cache_from`). To build it ahead of a run: `harbor run -p tasks/autobio/autobio-pickup-i00-privileged -a oracle`
+(reward 1).
 
-## Tasks
-| family (AutoBio's task id) | AutoBio's name and level | robot (`robot`) | action entries | rule | reference rows (2 ms each) |
-|---|---|---|---|---|---|
-| `thermal_cycler_close` | Close thermal cycler lid, easy | UR5e + 2F-85 (`ur5e-robotiq-2f85`) | 7 | first | 5068 |
-| `thermal_cycler_open` | Open thermal cycler lid, easy | UR5e + 2F-85 | 7 | first | 8251 |
-| `pickup` | Pick up centrifuge tube, easy | one ALOHA arm (`aloha-2-arm`) | 7 | first | 3945 |
-| `screw_loose` | Unscrew centrifuge tube cap, medium | two ALOHA arms (`aloha-2`) | 14 | first | 13568 |
-| `pipette` | Aspirate with pipette, medium | UR5e with a pipette-holding hand + UR5e with a 2F-85 (`ur5e-dexhand-2f85-bimanual`) | 14 | first | 6973 |
-| `insert` | Transfer centrifuge tube, medium | UR5e + 2F-85 | 7 | first | 4162 |
-| `screw_tighten` | Screw on centrifuge tube cap, hard | two ALOHA arms | 14 | first | 7638 |
-| `thermal_mixer` | Operate thermal mixer panel, hard | UR5e + 2F-85 | 7 | final | 8094 |
-| `insert_centrifuge_5430` | Load centrifuge rotor, hard | UR5e + 2F-85 | 7 | first | 4582 |
+## Upstream and license
+[AutoBio](https://github.com/autobio-bench/AutoBio) at commit `08504213356cbfe9a82bcd33a43cd282945a45df`. The
+repository has **no LICENSE file and no licence statement** for its code or for its own assets: the digitized
+instruments, tubes, racks and pipette, and two binaries without source (`libmjlab.so.3.3.0`, the thread and detent
+MuJoCo plugins, and `meshplane.so`, the liquid-surface solver). Building and running the image uses them for research
+evaluation on your own machine. No file of AutoBio is in this repository: the tooling imports it from the image, the
+instances are a seed and two hashes, and the reference solutions are control sequences recorded by running AutoBio's
+experts. The robot models it bundles keep their own licences: UR5e and Robotiq 2F-85 (BSD), ALOHA 2 (BSD),
+DexHand021 (Apache-2.0); the display font is under the SIL OFL. `images/autobio/BUILD_ONLY` has the details. A licence
+from the authors that allows redistribution would make the image public and change nothing else.
 
-Every family has `oracle = "full"`: AutoBio's own scripted expert. The benchmark's own fields: `difficulty` (`easy` ·
-`medium` · `hard`, the level AutoBio's paper gives the task) and `success_rule` (below).
+## Changes from upstream
+- **Success checks: none.** The verdict is AutoBio's own `check()` of each task module, unchanged. The physics and
+  assets are AutoBio's at the pinned commit.
+- **Rules of evaluation.** AutoBio's `early_stop` tasks (eight families, rule `first`) end in privileged mode at the
+  first step at which `check()` holds, as AutoBio's evaluator scores them. The thermal mixer (rule `final`), whose
+  `check()` is a score in [0, 1] that AutoBio reads at the end, succeeds when the score is 1 in the state the episode
+  ends in. Standard episodes are agent-ended and judged by rule `final` in every family (Grading).
+- **Time limits lifted.** AutoBio's limits (15 to 45 s of simulated time) are replaced by one technical cap: 600,000
+  control steps (1200 s of simulated time), stated in the instructions and in `/spec` (`max_control_steps`).
+- **Control rate.** One control step = one physics step, 2 ms. AutoBio evaluates policies at 50 Hz (10 physics steps per
+  action), but its experts write their targets at arbitrary physics steps, so 2 ms is the rate at which an expert's
+  run replays bit for bit. An agent that wants 50 Hz repeats a row ten times.
+- **Mixer display.** The tooling uploads the panel drawing itself (`rcb_autobio.PanelTexture`). The helper in
+  AutoBio's evaluator (`make_thermal_mixer_extra`) stops redrawing once two frames in a row find the panel unchanged,
+  after which every frame shows a stale display; frames rendered here follow the panel.
+- **Experts removed.** `images/autobio/strip_experts.py` deletes, from every module of the checkout, each class that
+  derives from `Expert`, the `X.Expert = ...` binding and the `__main__` demonstration generator, in the same image
+  layer as the clone; the build fails if a class `...Expert` is left. Everything else stays: the agent can read each
+  task's scene code and `check()`.
+- **Added.** Frozen instances, the privileged tooling (`rcb_autobio.Session`), and the standard-mode service.
 
-## Selection
-These are the nine tasks AutoBio's paper evaluates (its Table 3), and they are exactly the tasks whose `check()` is
-implemented in the repository. Left out:
-- four task modules whose `check()` is a placeholder (`return True` or `return False`): the lids of the three centrifuges
-  (`mani_centrifuge_5430.py`, `mani_centrifuge_5910.py`, `mani_centrifuge_mini.py`) and the vortex mixer
-  (`mani_vortex_mixer.py`). They have experts, so they could come in with a success rule of ours and human review;
-- the rest of the paper's 16 tasks, which the repository does not contain (its `task.py` registry names six modules
-  that are not there).
-
-For orientation, the paper's vision-language-action policies trained on 100 demonstrations per task reach (Table 3,
-success in % of 100 episodes, pi0 / RDT): close lid 99.7 / 100.0, open lid 96.0 / 99.0, pick up 53.7 / 57.7, unscrew
-21.3 / 2.7, aspirate 42.7 / 0.3, transfer 40.7 / 2.0, screw on 2.0 / 8.3, mixer panel 7.5 / 1.6 (AutoBio's score, not a
-success rate), load rotor 14.7 / 1.0.
-
-## Task definition
-- **Instance.** One frozen instance per family: AutoBio's own `Task(Task.load())` then `reset(seed=0)`, which draws the
+## Interface
+- **Instance.** One frozen instance per family: AutoBio's own `Task(Task.load())`, then `reset(seed)`, which draws the
   arm's start pose, the tube's rack slot, the target slot, the rotor's angle and slot, the mixer's target settings or
-  the liquid volume, depending on the task. The task's `instance.json` records the seed and two hashes: of the compiled
-  MuJoCo model and of the start state. Every load compares both (`instance_ok`); a mismatch is an infrastructure
-  failure, never a silent change. Nothing else is stored: the scene is rebuilt from AutoBio in the image.
+  the liquid volume, depending on the task. `instance.json` records the seed and two hashes, of the compiled MuJoCo
+  model and of the start state; every load compares both (`instance_ok`). Each task allows seeds 0, 1 and 2, with the
+  other seeds' instances and references under the privileged task's `tests/seeds/<seed>/`.
 - **Action.** One position target per controlled actuator, AutoBio's own `action_indices` (the interface its policies
-  use): 6 arm joints per arm plus the gripper command (Robotiq: 0 open .. 255 closed; ALOHA: the finger position in m)
+  use): 6 arm joints per arm plus the gripper command (Robotiq: 0 open to 255 closed; ALOHA: the finger position in m)
   or, for the pipette arm, the thumb joint that presses the plunger. Targets are clipped to the actuators' ranges.
-- **Control step = one physics step, 2 ms.** AutoBio evaluates policies at 50 Hz (10 physics steps per action), but its
-  experts write their targets at arbitrary physics steps (every 25 steps, with offsets), so 2 ms is the rate at which
-  an expert's run replays bit for bit. An agent that wants 50 Hz repeats a row ten times (privileged: `s.step(a, n=10)`;
-  standard: `dt=0.02`).
-- **Success** is AutoBio's own `check()`, evaluated after every control step (the upstream's rule stays):
-  - rule `first`, AutoBio's `early_stop` tasks (eight families): in privileged mode the first step at which it holds
-    ends the episode in success ("success at any step", how AutoBio's evaluator scores these tasks). Standard episodes
-    are agent-ended and judged on the end state with the `final` rule ("Agent-ended episodes" below).
-  - rule `final`, the thermal mixer: `check()` is a score in [0, 1] (0.5 x temperature + 0.3 x time + 0.2 x speed, each
-    the fraction of the way from the initial to the target setting), and AutoBio scores the state at the end. Here:
-    success iff the score is 1 in the state in which the episode ends (privileged: after the last row; standard: at the
-    agent's `POST /finish` or `done`, or when its time is over); the score is reported as `progress`.
-  - AutoBio's time limits (15 to 45 s of simulated time) are lifted: the wall clock is the budget. One technical cap
-    bounds an episode: it ends after 600000 control steps (1200 s of simulated time), stated in the instructions and in
-    `/spec` (`max_control_steps`).
-  - A MuJoCo physics warning (an unstable state) ends the episode as a failure, as AutoBio's evaluator does. The
-    renderer's own warning (`VGEOMFULL`) is not counted, so that looking never changes a verdict.
-- **The checks, in words** (thresholds are AutoBio's):
+- **Privileged mode.** `rcb_autobio.Session` in the agent's container: AutoBio's task object (`s.task`: its scene
+  helpers and `check()`), the MuJoCo model and data, reset, step, recording, self-replay, the tool frames, forward and
+  inverse kinematics of the arm joints, rendering (RGB and depth, every camera). Deliverable:
+  `/app/output/trajectory.npz`, `(T, n)` position targets, one row per control step.
+- **Standard mode** (`eai-standard/3.0`), the same adapter `environment/sim/server.py` in all nine families:
+  - action types `joint_position` (the action above; rows `dt` apart, a multiple of 2 ms) and `done` (the same as
+    `POST /finish`);
+  - every camera of the scene at 640 × 480, depth on request: `table_cam_front` and `table_cam_left` (static) and one
+    wrist camera per arm. The mixer's display is drawn into the images by AutoBio's own panel code; its digits are
+    readable from the wrist camera once the gripper is near the panel. The liquid's surface is drawn by AutoBio's own
+    helper;
+  - proprioception = the robot's own joints (positions, velocities, efforts), gripper openings, tool-frame poses and
+    the targets in effect; never a tube, rack or instrument, and no instrument state;
+  - `/kinematics`: the tool frames (the gripper's pinch point; for the pipette arm, the pipette's tip) and the links the
+    wrist cameras sit on, and damped-least-squares IK per arm; `robot_spec` with the arms' base poses, joint limits,
+    drive gains and gripper commands;
+  - one episode, no reset.
+- **Looking never changes the physics.** Observations (rendering, camera poses, tool poses) are computed on a scratch
+  copy of the state; nothing calls `mj_forward` on the live data. A replay with rendering ends in the same state as one
+  without.
+- **World-frame information.** The privileged task gives the simulator itself, world heights and MuJoCo names included.
+  A standard instruction states the goal with every threshold relative ("more than a hand's width", "near the middle of
+  the tube", "the row farther from the robot") and never a world coordinate, an object pose or an instrument state;
+  the robot's own base poses are in `/spec` (`robot_spec.base`). `ci_checks/check-world-frame-texts.sh`
+  checks the standard texts.
+- **Texts.** The instructions describe each check in our own words and point to its source in the image
+  (`/opt/AutoBio/autobio/<module>.py`); AutoBio's code is not quoted (no licence).
+
+## Grading
+- **The checks** (thresholds are AutoBio's; each task's README states its check exactly):
 
   | family | success |
   |---|---|
@@ -101,136 +111,72 @@ success rate), load rotor 14.7 / 1.0.
   | `screw_loose` | cap > 0.15 m above the tube body's origin (screwed on: 0.1197 m), the first arm's left finger on the cap, cap thread and tube thread not in contact |
   | `screw_tighten` | cap < 0.123 m above the tube body's origin, cap axis within 5 mm of the tube's, threads in contact |
   | `insert` | tube within 15 mm (horizontally) of the target slot's centre, its height between 0.829 and 0.831 m |
-  | `thermal_mixer` | final panel settings equal to the three targets (30 s, 33 °C, 600 rpm; from 60 s, 25 °C, 900 rpm) |
+  | `thermal_mixer` | final panel settings equal to the three targets (seed 0: 30 s, 33 °C, 600 rpm; from 60 s, 25 °C, 900 rpm) |
   | `insert_centrifuge_5430` | tube within 5 mm of its seated position in the slot opposite the loaded one, its height between 0.955 and 0.961 m |
 
-- **World-frame information.** A privileged instruction gives AutoBio's thresholds as they are in its code, world
-  heights and MuJoCo names included: that mode reads the simulator anyway. A standard instruction states the same goal
-  with every threshold relative ("lift it at least 9.5 cm", "within 15 mm of the slot's centre", "the row farther from
-  the robot's base"), and never a world coordinate, an object pose or an instrument state; the robot's own base poses
-  are in `/spec` (`robot_spec.base`). `ci_checks/check-world-frame-texts.sh` checks the standard texts.
-- **Texts.** The instructions describe each check in our own words and point to its source in the image
-  (`/opt/AutoBio/autobio/<module>.py`); AutoBio's code is not quoted (no licence).
-- **Budget: 3600 s**, both modes (each task's `[agent] timeout_sec`, stated in the Time line of its
-  instruction's closing `## Limits`).
+- **Physics warnings.** A MuJoCo physics warning (an unstable state) ends the episode as a failure, as AutoBio's
+  evaluator does, also after a success in standard mode. The renderer's own warning (`VGEOMFULL`) is not counted, so
+  that looking never changes a verdict.
+- **Privileged mode: one replay.** `tests/grade.py`, in a separate sandbox without network, copies the trajectory's rows
+  into a clean file and replays them once in a fresh process with its own copy of the tooling and of the instance. Rule
+  `first`: the replay ends at the first step at which `check()` holds; rule `final`: it is judged after the last row. A
+  deliverable that cannot be read (not an npz, no `actions`, the wrong shape, more than 600,000 rows) is the agent's 0.
+  A replay without a result and an instance mismatch are `grader_error` and `infra_error`. The longest episode replays
+  in 1000 s in the slowest family; a verdict replay may take 2400 s, and `[verifier] timeout_sec` 5400 covers it, the
+  video replay and a margin. A second replay renders `replay.mp4` after the verdict is on disk.
+- **Standard mode: the live episode, agent-ended.** The agent never sees a success, and a success never ends the
+  episode. The episode ends at `POST /finish` (or `done`), at the end of the agent's session, at the 600,000-step cap,
+  on a physics warning (a failure) or on a simulator error (a 0). The service applies `check()` after every control
+  step with rule `final` and judges the state the episode ends in. AutoBio's checks are state checks; the pipette's
+  latches (the dip, then the release) count as they happened, and the final lift must hold at the end. The collect
+  hook (`environment/sim/finalize.sh`) writes `final.json` from the service's record and then, after the verdict is
+  on disk, replays the recorded trajectory once to render `replay.mp4`. A live episode that did not start in the
+  instance's recorded state (`instance_mismatch`), a missing or unfinished `final.json`, and no `episode.json` are
+  `infra_error`, not the agent's 0.
 
-## Modes
-- **Privileged:** `rcb_autobio.Session` in the agent's container: AutoBio's task object (`s.task`: its scene helpers and
-  `check()`), the MuJoCo model and data, reset, step, recording, self-replay, the tool frames, forward and inverse
-  kinematics of the arm joints, rendering (RGB and depth, every camera). Deliverable `/app/output/trajectory.npz`,
-  `(T, n)` position targets, one row per control step. AutoBio's code other than the experts is in the image (inverse
-  kinematics, path timing, scene helpers). The verifier replays the rows in one fresh process in its own sandbox: the
-  episode must succeed.
-- **Standard (`eai-standard/3.0`):** the shared layer of `embodied_first_exam/standard/` and the adapter
-  `environment/sim/server.py`, the same in all nine families:
-  - action types `joint_position` (the action above; rows `dt` apart, a multiple of 2 ms, `linear` or `hold`; clipped
-    values reported) and `done` (ends the episode in its current state: how the thermal mixer's episode is handed in);
-  - every camera of the scene, 640 x 480, depth on request: `table_cam_front` and `table_cam_left` (static) and one
-    wrist camera per arm (mounted on the arm's last link). The mixer's display is rendered into the images, drawn by
-    AutoBio's own panel code: at 640 x 480 its digits are readable from the wrist camera once the gripper is near the
-    panel. The tooling uploads the drawing itself (`rcb_autobio.PanelTexture`): the helper in AutoBio's evaluator
-    (`make_thermal_mixer_extra`) stops redrawing for good once two frames in a row find the panel unchanged, after which
-    every frame shows a stale display. The liquid's surface is drawn by AutoBio's own helper;
-  - proprioception = the robot's own joints (`q_`, `qd_`, `effort_`), gripper openings, tool-frame poses and the targets
-    in effect (`cmd_`); never a tube, rack or instrument;
-  - `/kinematics` = the tool frames (the gripper's pinch point; for the pipette arm, the pipette's tip) and the links
-    the wrist cameras sit on, for arm joint positions, and damped-least-squares IK per arm; `robot_spec` with the arms'
-    base poses, joint limits, drive gains and gripper commands;
-  - crash recovery with resume class `exact` (MuJoCo on the CPU is bit-exact in a fresh process);
-  - a request is checked in full before anything is executed: a malformed field (null or a wrong type for `dt`,
-    `seconds`, `cameras`, `note`, `video`, `interpolate`, `depth`; a `dt` that is not finite or not a whole multiple of
-    2 ms) is a 400 and the episode goes on. Null for `dt`, `seconds`, `video_fps`, `cameras` or `note` means the
-    default.
-- **Grading, standard mode.** The trial is graded by its live episode (docs/protocol/README.md H.4): `success` = the
-  live episode's success, judged by the sim service on the episode the agent ran, with no grading replay; an
-  episode that ended in a simulator error scores 0. The collect
-  hook (`environment/sim/finalize.sh`) ends the episode, writes `final.json` from the service's record and then, after
-  the verdict is on disk, replays the recorded trajectory once to render `replay.mp4` (a failed video replay costs the
-  video only). Its `timeout_sec` is 3000 = 900 (the episode's end, through a resume) + the video replay (at most
-  1800 s) + 300 s.
-- **Time limits, privileged mode.** The longest episode, 600000 rows, replays in 1000 s in the slowest family
-  (`insert_centrifuge_5430`, 600 control steps/s); a verdict replay may take 2400 s and is killed at that limit.
-  `[verifier] timeout_sec` 5400 = 2400 (the verdict replay) + the video replay (what is left, at most 1800 s; skipped under 120 s) +
-  300 s, so `tests/grade.py` always writes a reward before Harbor's timeout.
-- **What is not the agent's 0** (`infra_error = 1` in `reward.json`, PROTOCOL §4). Standard: `final.json` missing
-  (the service writes it as soon as its scene is up), unreadable, or not finalized (the collect hook was killed before
-  it wrote the verdict); the service never ending its episode for the hook; a give-up after crashes between calls or a
-  failed resume; a live episode that did not start in the instance's recorded state (`instance_mismatch`); no
-  `episode.json`. A crash inside a call (`sim_crashed_on_call`) stays the agent's failure. `final.json` is written
-  whole (temporary file, then rename). Privileged: a replay without a result and an instance mismatch set
-  `grader_error` and `infra_error`; a deliverable that cannot be read (not an npz, no `actions`, object arrays, the
-  wrong shape, more than 600000 rows) is the agent's 0 (`bad_trajectory`), never a grader error.
-- **Looking never changes the physics.** Observations (rendering, camera poses, tool poses) are computed on a scratch
-  copy of the state; nothing calls `mj_forward` on the live data (that would change the solver's warm start and with
-  it the trajectory). A replay with rendering ends in the same state as one without.
+## Tasks
+| family (AutoBio's task id) | AutoBio's name | robot (`robot`) | action entries | rule | reference rows (2 ms each) |
+|---|---|---|---|---|---|
+| `thermal_cycler_close` | Close thermal cycler lid | UR5e + 2F-85 (`ur5e-robotiq-2f85`) | 7 | first | 5068 |
+| `thermal_cycler_open` | Open thermal cycler lid | UR5e + 2F-85 | 7 | first | 8251 |
+| `pickup` | Pick up centrifuge tube | one ALOHA arm (`aloha-2-arm`) | 7 | first | 3945 |
+| `screw_loose` | Unscrew centrifuge tube cap | two ALOHA arms (`aloha-2`) | 14 | first | 13568 |
+| `pipette` | Aspirate with pipette | UR5e with a pipette-holding hand + UR5e with a 2F-85 (`ur5e-dexhand-2f85-bimanual`) | 14 | first | 6973 |
+| `insert` | Transfer centrifuge tube | UR5e + 2F-85 | 7 | first | 4162 |
+| `screw_tighten` | Screw on centrifuge tube cap | two ALOHA arms | 14 | first | 7638 |
+| `thermal_mixer` | Operate thermal mixer panel | UR5e + 2F-85 | 7 | final | 8094 |
+| `insert_centrifuge_5430` | Load centrifuge rotor | UR5e + 2F-85 | 7 | first | 4582 |
 
-## Agent-ended episodes
+The `rule` column is the task's `[metadata] success_rule`.
 
-Standard episodes are agent-ended (PROTOCOL §3 "Agent-ended episodes"; `RCB_AGENT_END` in the sim service,
-`/srv/rcb_agent_end.py`). The agent never sees a success: no `success` or progress in any meta, status or spec, and a
-success never ends the episode. The episode ends at the agent's `POST /finish` (reason `finished`), when its time runs
-out (`timeout`), at the service's technical cap on control steps (`step_limit`), on a failure rule of the task (a 0,
-even after a success) or on a simulator error (judged as without the feature). It is then judged on how things stand
-when it ends; `episode.json` records `ended_by`, `hidden_success_seen` and the step of the first hidden success as
-evidence. No `RCB_STEP_LIMIT` is set: AutoBio states no step count; its cap is technical.
+- **Selection.** These are the nine tasks AutoBio's paper evaluates, and they are exactly the tasks whose `check()` is
+  implemented in the repository. Left out: four task modules whose `check()` is a placeholder (`return True` or
+  `return False`): the lids of the three centrifuges (`mani_centrifuge_5430.py`, `mani_centrifuge_5910.py`,
+  `mani_centrifuge_mini.py`) and the vortex mixer (`mani_vortex_mixer.py`); and the rest of the paper's 16 tasks, which
+  the repository does not contain.
+- **Reference solutions.** AutoBio's scripted experts (`class <Task>Expert` in each task module), run from the frozen
+  instance in a checkout that still has them: the targets in effect at every physics step, clipped to the actuators'
+  ranges, rounded to float32 (what the standard client sends, so both modes execute the same rows) and, for rule
+  `first`, cut at the first success: `solution/oracle.npz` in every task. The privileged oracle hands the rows in; the
+  standard oracle streams them through the client and ends the episode with `r.finish()`. Replayed through
+  `ctrl[action_indices]` alone on a task without its expert, the unrounded rows reproduce the expert's own run bit for
+  bit (final state and the whole `check()` timeline), in all nine families.
 
-Under the feature the service checks AutoBio's own `check()` with the `final` rule after every control step
-(`native_rule` in the record keeps the task's own rule); the action type `done` is the same as `POST /finish`. AutoBio's
-checks are state checks; the pipette's latches (the dip and the drawing of liquid) count as they happened, and the final
-lift must hold at the end. A simulator warning (unstable state) is a failure, also after a success.
-
-## Reference solutions
-AutoBio's scripted experts (`class <Task>Expert` in each task module), run from the frozen instance in a checkout that
-still has them: the targets in effect at every physics step, clipped to the actuators' ranges, rounded to float32 (what
-the standard client sends, so both modes execute the same rows) and, for rule `first`, cut at the first success:
-`solution/oracle.npz` in every task. The privileged oracle hands the rows in; the standard oracle streams them through
-the client and ends the episode with `r.finish()`. Replayed through `ctrl[action_indices]` alone on a task without
-its expert, the unrounded rows reproduce the expert's own run bit for bit (final state and the whole `check()`
-timeline), in all nine families; rounded to float32 they still succeed (the success step moves by at most 22 control
-steps).
-
-## Integrity
-- **Experts removed.** `images/autobio/strip_experts.py` deletes, from every module of the checkout, each class that
-  derives from `Expert`, the `X.Expert = ...` binding and the `__main__` demonstration generator, in the same image
-  layer as the clone (no layer holds them); the build fails if a class `...Expert` is left. Everything else stays as it
-  is: the agent can read each task's scene code and `check()`.
-- **Agent egress is the model APIs and the package registries, in both modes.** The experts are in AutoBio's public
-  repository and its recorded demonstrations on Hugging Face; a standard-mode agent could also rebuild the simulator
-  from the repository.
-- **Only rows cross to the verifier.** The privileged grader copies the trajectory's rows into a clean file and replays
-  them with its own copy of the tooling and of the instance, in a sandbox the agent never saw.
-- **No file of AutoBio is in this repository:** the tooling imports it from the image; the instances are a seed and two
-  hashes; the reference solutions are control sequences recorded by running AutoBio's experts (data produced by the
-  program, like the demonstrations its authors publish under MIT).
-
-## Known limits
+## Others
+### Known limits
 - **The pipette task moves no liquid.** AutoBio models the liquid's surface in a container (volume, level, sloshing),
   not its transfer: the check is on the tip's position relative to the surface and on the plunger command.
 - **The rotor check holds only while the tube is held, in this instance.** After AutoBio's own expert lets go, the tube
   rests 5.0 to 5.1 mm from the check's reference point, just outside its 5 mm; the check holds for 0.41 s while the
-  tube is being lowered. Under rule `first` that moment is the success. Both instructions state this, with the height
-  window (0.955-0.961 m) and the fact that the reference is computed at the episode's start (a rotor turned by the
-  agent moves the slot away from it).
+  tube is being lowered. The reference is computed at the episode's start, so a rotor turned by the agent moves the
+  slot away from it. Both instructions say the tube must be pushed all the way down.
 - **Contact with a named finger.** `pickup` and `screw_loose` look for contact between the cap and the first arm's
-  left finger; a grasp between both fingers satisfies it, and the instructions say so.
-- **AutoBio's own evaluator shows a frozen mixer display** after its first two frames (the helper described under
-  Modes); frames rendered here follow the panel. Worth knowing when comparing with AutoBio's numbers for that task.
+  left finger; a grasp between both fingers satisfies it.
 - **`check-standard-protocol.py`** (the live conformance test) reports one false positive on the UR5e tasks:
-  `placeholder_limits`, because five UR5e joints share a +-2 pi range. That is their range in AutoBio's model, as on the
+  `placeholder_limits`, because five UR5e joints share a ±2π range. That is their range in AutoBio's model, as on the
   real arm.
-- **No licence upstream**, hence a private image; a licence from the authors that allows redistribution would change
-  that and nothing else.
 
-## Verification
-On the image built locally (Intel Xeon Platinum 8559C, 8 vCPUs, no GPU): `harbor run -a oracle` scored 1 on all 18
-task directories (both fresh-process replays and, in standard mode, the live episode ending in the reference's
-recorded state) and `harbor run -a nop` scored 0 on all 18. With the standard tasks graded live
-(on an RTX 4090 host, driver 580.178.04, their agents on the shared client the tasks now take from `standard-files`), `harbor run -a oracle` scored 1 and `harbor run -a nop` 0 on all 9 standard
-tasks (live verdicts, no infrastructure, grader or sim error), and the privileged oracle scored 1 on pickup.
-
-## Files
-Every task directory is self-contained: `environment/rcb_autobio.py` (privileged; the verifier's own copy in `tests/`)
-or `environment/sim/` (standard: the adapter `server.py`, `rcb_autobio.py`, the collect hook),
-`instance.json`, `solution/oracle.npz`; the standard tasks take the shared layer and the agent's client
-(`rcb_limited.py`, `run.sh`, `rcb1.py`, `rcb_client.py`) from the pinned `standard-files` image. `images/autobio/` has the image recipe (Dockerfile, VERSION, BUILD_ONLY,
-requirements.txt, strip_experts.py).
+### Egress
+Agent egress is the model APIs and the package registries, in both modes (`[agent] network_mode = "allowlist"`). The
+experts are in AutoBio's public repository and its recorded demonstrations on Hugging Face; a standard-mode agent could
+also rebuild the simulator from the repository.

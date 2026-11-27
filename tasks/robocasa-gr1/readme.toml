@@ -1,0 +1,534 @@
+# README data for tasks/robocasa-gr1/*/README.md (scripts/task_conventions.py render_readme_v3)
+#
+# Sources checked for every success text:
+#   upstream  robocasa/robocasa-gr1-tabletop-tasks @ 4840e67 and robosuite @ 51cc017 (the commits that
+#             images/robocasa-gr1/Dockerfile pins): robocasa/environments/tabletop/{tabletop_24dc,
+#             tabletop_cabinet_pnp,tabletop_drawer_pnp,tabletop_microwave_pnp}.py `_check_success` and
+#             robocasa/utils/object_utils.py (OU) helpers;
+#             fixtures in robocasa/models/fixtures/{cabinets,microwave}.py; robosuite @ 51cc017 (base.py check_contact
+#             L634-646; robots/fixed_base_robot.py L118: eef_site_id = the gripper's grip_site). Line numbers
+#             below are those of the pinned upstream files.
+#   ours      embodied_first_exam/benchmarks/robocasa/ (published as robocasa-files-0.7.0, images/robocasa-files/
+#             FILES.json, same SHA-256): privileged/environment/casa_tool.py, privileged/tests/grade.py,
+#             sim/server_casa.py, standard/tests/grade.py.
+#   instances environment/instance.npz of each task: config (no horizon set; Tabletop default ignore_done=True,
+#             tabletop.py L279-280, so robosuite never ends an episode), ep_meta fixture_refs counter =
+#             table_main_group, the object names (the distractor_obj body exists in exactly the 9 families whose
+#             posttrain distractor config lists "distractor_obj", tabletop_24dc.py L891-930, used at L968-976),
+#             and the spawn geoms of the tiered containers.
+# Every upstream check used here is a pure function of the state (no timers, no latches), so the verdict is the one
+# state's.
+
+[benchmark]
+name = "RoboCasa-GR1"
+citation = "NVIDIA et al., 2025"     # upstream README "Citation": GR00T N1, arXiv:2503.14734; built on RoboCasa
+url = "https://github.com/robocasa/robocasa-gr1-tabletop-tasks"
+repo = "robocasa/robocasa-gr1-tabletop-tasks"
+commit = "4840e67"
+
+[license]
+text = """
+The scenes, task definitions and success checks are those of RoboCasa's GR1 tabletop tasks
+([robocasa/robocasa-gr1-tabletop-tasks](https://github.com/robocasa/robocasa-gr1-tabletop-tasks) @ `4840e67`, MIT
+License, copyright 2025 the NVIDIA GEAR group; paper: NVIDIA et al., 2025, "GR00T N1: An Open Foundation Model for
+Generalist Humanoid Robots", arXiv:2503.14734), built on robosuite
+([ARISE-Initiative/robosuite](https://github.com/ARISE-Initiative/robosuite) @ `51cc017`, MIT License). Assets are
+downloaded when the image is built and are not in this repository: RoboCasa's fixture, texture and object archives
+(CC BY 4.0) and NVIDIA's
+[PhysicalAI-DigitalCousin-Assets](https://huggingface.co/datasets/nvidia/PhysicalAI-DigitalCousin-Assets)
+(`lightwheel` and `sketchfab` object meshes), licensed **CC BY-NC 4.0: non-commercial use only**.
+"""
+
+[robots]
+fourier-gr1 = "Fourier GR1 humanoid (two arms, waist and two six-command dexterous Fourier hands; fixed base)"
+
+# privileged/tests/grade.py main L57-121: missing file -> missing_trajectory; check_file L46-54 (casa_tool.load_npz
+# L237-249: <= 8 MB, .npy members only, <= 64 members, no pickle; ndim 2, 1 <= T <= MAX_STEPS = 3000 (casa_tool L78),
+# finite) and the child's as_actions(actions, 24) (casa_tool L782-790; exit 2) -> invalid_trajectory; replay
+# L27-38 in a fresh subprocess (L92-99): Session(/tests/instance.npz) (load_instance hash check), Session.replay
+# L643-655 = reset (one _check_success, initial_success L581-582), then step() per row (clip to limits L593,
+# _check_success twice L595-596); success = not initial_success and success after the last row (L106); a failed
+# replay -> grader_error, 0.
+[modes.privileged]
+success = """
+The graded file is `/app/output/trajectory.npz`: an `actions` array of shape (T, 24) with 1 ≤ T ≤ 3000, one row per
+control step (1/20 s); values outside the channel limits are clipped. The verifier, in a separate sandbox without
+network, replays it once, open-loop, in a fresh process from its own copy of the frozen start, and checks the
+conditions above once, with the environment's own `_check_success`, on the state after the last row. Meeting them
+earlier in the replay does not count, no step is simulated after the last row, and a scene that already met them at
+the start would not count either.
+
+A missing file scores 0, and so does an invalid one: not a plain `.npz` of at most 8 MB holding only arrays (at most
+64), no `actions` array, a shape other than (T, 24), a NaN or infinite value, or T outside 1 to 3000. A replay that
+does not run to its end (a simulator error, or a frozen instance that fails its hash check) scores 0.
+"""
+
+# environment/docker-compose.yaml: RCB_AGENT_END "1", no RCB_MAX_CONTROL_STEPS / RCB_STEP_LIMIT (server_casa.py L67:
+# no cap), restart on-failure:6. sim/server_casa.py: /finish -> finish("finished") L1203-1207; collect hook SIGUSR1 ->
+# finish("timeout") L1235-1239; an exception while executing -> finish("error") L1225-1231; no reset endpoint; the
+# success is only recorded, never shown (_hidden_success L101-107). finalize L1045-1094: success = S.check() on the
+# live state after the last executed control step AND not initial_success AND reason != "error" AND reason in
+# END_STATE_REASONS (L1071-1072). _start_mismatch L1246-1262 (RCB_INSTANCE_SHA, RCB_START_SHA, solved at start) ->
+# _give_up(instance_mismatch, infra) L1283; _resume_or_start L1265-1311: more than MAX_RESUMES = 2 (L156) crashes ->
+# sim_crashed_on_call (all in calls: the agent's 0) or sim_crashed (infra); resume_failed (infra).
+# standard/tests/grade.py L59-63: success = graded_by live AND success AND live_success AND not infra AND reason !=
+# "error"; infra = infra_error OR finalize_error OR not finalized; no final.json -> infra_error.
+[modes.standard]
+success = """
+Graded is the one live episode in the simulator service: no reset, no step limit, nothing replayed. It ends when the
+agent sends `POST /finish` or when its session ends (at the latest after {timeout}); the conditions above are then
+checked once, with the environment's own `_check_success`, on the state after the last executed control step. A
+success earlier in the episode neither ends it nor counts, and the service never reports success while the episode
+runs. Control steps run by hold chunks belong to the episode like any others.
+
+An episode ended by a simulator error during an agent's call scores 0, as do more than two service crashes that all
+happened while serving the agent's calls. Before the agent is served, the scene is checked to start at the frozen
+instance (instance and start-state hashes, not already solved). A mismatch there, a crash the episode cannot be
+resumed from, or a missing verdict is an infrastructure error, not a score.
+"""
+
+# -------------------------------------------------------------------------------------------------------------------
+# Families (24): the pass condition only (which state is graded: [modes]). An object's "origin" is the world position
+# of its root body (env.obj_body_id: `obj_main`, `container_main`, ...); a hand's grip site is robosuite's eef site.
+
+# tabletop_cabinet_pnp.py _check_success L117-130: OU.obj_inside_of(obj, self.cabinet, partial_check=True) and
+# is_door_closed L139-144 (door <= 0.005); self.cabinet = FixtureType.DOOR_HINGE_SINGLE = `cabinet_tabletop`
+# (single_cabinet, tabletop_with_cabinet.yaml); SingleCabinet.get_door_state cabinets.py L363-381: door = hinge /
+# (pi/2), so closed = hinge <= 0.005 * 90 deg = 0.45 deg. OU.obj_inside_of L9-58 with partial_check: the object's
+# body position only, threshold 0; int sites = cabinet_tabletop_main_group_int_p0/px/py/pz. No hand, contact or
+# uprightness term.
+[families."robocasa-gr1/PnPBottleToCabinetClose"]
+success = """
+Both hold: the bottled water's origin (the position of its body `obj_main`) lies inside the cabinet's interior box,
+the box spanned by the cabinet's interior sites (`cabinet_tabletop_main_group_int_p0`, `_int_px`, `_int_py`,
+`_int_pz`) with no margin; and the cabinet door is shut: its hinge is open by at most 0.5 % of 90 degrees (0.45
+degrees). The hands, contacts and the bottled water's orientation are not checked.
+"""
+
+# tabletop_cabinet_pnp.py _check_success L117-130: OU.obj_inside_of(obj, self.cabinet, partial_check=True) and
+# is_door_closed L139-144 (door <= 0.005); self.cabinet = FixtureType.DOOR_HINGE_SINGLE = `cabinet_tabletop`
+# (single_cabinet, tabletop_with_cabinet.yaml); SingleCabinet.get_door_state cabinets.py L363-381: door = hinge /
+# (pi/2), so closed = hinge <= 0.005 * 90 deg = 0.45 deg. OU.obj_inside_of L9-58 with partial_check: the object's
+# body position only, threshold 0; int sites = cabinet_tabletop_main_group_int_p0/px/py/pz. No hand, contact or
+# uprightness term.
+[families."robocasa-gr1/PnPWineToCabinetClose"]
+success = """
+Both hold: the wine's origin (the position of its body `obj_main`) lies inside the cabinet's interior box, the box
+spanned by the cabinet's interior sites (`cabinet_tabletop_main_group_int_p0`, `_int_px`, `_int_py`, `_int_pz`) with
+no margin; and the cabinet door is shut: its hinge is open by at most 0.5 % of 90 degrees (0.45 degrees). The hands,
+contacts and the wine's orientation are not checked.
+"""
+
+# tabletop_drawer_pnp.py _check_success L134-148: OU.obj_inside_of(obj, self.drawer, partial_check=True) and door <=
+# 0.005; self.drawer = `drawer_tabletop_main_group` (size [0.45, 0.30, 0.25], instance caches);
+# Drawer.get_door_state cabinets.py L858-878: door = slide / (0.30 * 0.55), so closed = pulled out by at most 0.005
+# * 0.165 m = 0.83 mm. OU.obj_inside_of L9-58 with partial_check: the object's body position only, threshold 0; int
+# sites = drawer_tabletop_main_group_int_p0/px/py/pz. No hand, contact or uprightness term.
+[families."robocasa-gr1/PnPCanToDrawerClose"]
+success = """
+Both hold: the can's origin (the position of its body `obj_main`) lies inside the drawer's interior box, the box
+spanned by the drawer's interior sites (`drawer_tabletop_main_group_int_p0`, `_int_px`, `_int_py`, `_int_pz`) with no
+margin; and the drawer is shut: it is pulled out by at most 0.5 % of its 16.5 cm travel (0.83 mm). The hands, contacts
+and the can's orientation are not checked.
+"""
+
+# tabletop_drawer_pnp.py _check_success L134-148: OU.obj_inside_of(obj, self.drawer, partial_check=True) and door <=
+# 0.005; self.drawer = `drawer_tabletop_main_group` (size [0.45, 0.30, 0.25], instance caches);
+# Drawer.get_door_state cabinets.py L858-878: door = slide / (0.30 * 0.55), so closed = pulled out by at most 0.005
+# * 0.165 m = 0.83 mm. OU.obj_inside_of L9-58 with partial_check: the object's body position only, threshold 0; int
+# sites = drawer_tabletop_main_group_int_p0/px/py/pz. No hand, contact or uprightness term.
+[families."robocasa-gr1/PnPCupToDrawerClose"]
+success = """
+Both hold: the cup's origin (the position of its body `obj_main`) lies inside the drawer's interior box, the box
+spanned by the drawer's interior sites (`drawer_tabletop_main_group_int_p0`, `_int_px`, `_int_py`, `_int_pz`) with no
+margin; and the drawer is shut: it is pulled out by at most 0.5 % of its 16.5 cm travel (0.83 mm). The hands, contacts
+and the cup's orientation are not checked.
+"""
+
+# tabletop_microwave_pnp.py _check_success L106-120: OU.obj_inside_of(obj, self.microwave, partial_check=True) and
+# door <= 0.005; Microwave.get_door_state microwave.py L59-76: door = -hinge / (pi/2), so closed = hinge <= 0.45
+# deg. OU.obj_inside_of L9-58 with partial_check: the object's body position only, threshold 0; int sites =
+# microwave_main_group_int_p0/px/py/pz. No hand, contact or uprightness term.
+[families."robocasa-gr1/PnPMilkToMicrowaveClose"]
+success = """
+Both hold: the milk's origin (the position of its body `obj_main`) lies inside the microwave's interior box, the box
+spanned by the microwave's interior sites (`microwave_main_group_int_p0`, `_int_px`, `_int_py`, `_int_pz`) with no
+margin; and the microwave door is shut: its hinge is open by at most 0.5 % of 90 degrees (0.45 degrees). The hands,
+contacts and the milk's orientation are not checked.
+"""
+
+# tabletop_microwave_pnp.py _check_success L106-120: OU.obj_inside_of(obj, self.microwave, partial_check=True) and
+# door <= 0.005; Microwave.get_door_state microwave.py L59-76: door = -hinge / (pi/2), so closed = hinge <= 0.45
+# deg. OU.obj_inside_of L9-58 with partial_check: the object's body position only, threshold 0; int sites =
+# microwave_main_group_int_p0/px/py/pz. No hand, contact or uprightness term.
+[families."robocasa-gr1/PnPPotatoToMicrowaveClose"]
+success = """
+Both hold: the potato's origin (the position of its body `obj_main`) lies inside the microwave's interior box, the box
+spanned by the microwave's interior sites (`microwave_main_group_int_p0`, `_int_px`, `_int_py`, `_int_pz`) with no
+margin; and the microwave door is shut: its hinge is open by at most 0.5 % of 90 degrees (0.45 degrees). The hands,
+contacts and the potato's orientation are not checked.
+"""
+
+# tabletop_24dc.py _check_success L626-665: OU.any_gripper_obj_far(container) and (obj) L517-536 (th 0.25, both grip
+# sites, > th); OU.check_obj_fixture_contact(obj, counter) L499-505 (robosuite check_contact: any contact of their
+# contact geoms); counter = table_main_group; OU.check_obj_upright(container, 0.8) L550-557 (z axis world-z
+# component > 0.8); target not tiered -> spawn_regions [None]; the container has no spawn geoms (instance xml), so
+# OU.check_obj_in_receptacle L458-496 takes the contact path L489-496: check_contact(obj, container) and |obj xy -
+# container xy| < 0.7 * container.horizontal_radius. no distractor_obj region for this family (tabletop_24dc.py
+# L891-930, used at L968-976): that term is False.
+[families."robocasa-gr1/PosttrainPnPNovelFromCuttingboardToBasketSplitA"]
+success = """
+All of these hold:
+- The croissant touches the basket, and its origin is less than 70 % of the basket's horizontal radius (the radius
+  given by the basket model's horizontal-radius site) from the basket's origin in x and y.
+- The croissant does not touch the counter (the table, `table_main_group`).
+- The basket is upright: its z axis has a world-z component above 0.8 (tilted less than about 37 degrees).
+- Each hand's grip site (`gripper0_right_grip_site`, `gripper0_left_grip_site`) is more than 0.25 m from the
+  croissant's origin and more than 0.25 m from the basket's origin.
+"""
+
+# tabletop_24dc.py _check_success L626-665: OU.any_gripper_obj_far(container) and (obj) L517-536 (th 0.25, both grip
+# sites, > th); OU.check_obj_fixture_contact(obj, counter) L499-505 (robosuite check_contact: any contact of their
+# contact geoms); counter = table_main_group; OU.check_obj_upright(container, 0.8) L550-557 (z axis world-z
+# component > 0.8); target not tiered -> spawn_regions [None]; the container has no spawn geoms (instance xml), so
+# OU.check_obj_in_receptacle L458-496 takes the contact path L489-496: check_contact(obj, container) and |obj xy -
+# container xy| < 0.7 * container.horizontal_radius. distractor_obj in distractor_config regions (tabletop_24dc.py
+# L891-930, used at L968-976) -> not check_obj_in_receptacle(distractor, container, same spawn_regions) L645-657.
+[families."robocasa-gr1/PosttrainPnPNovelFromCuttingboardToCardboardboxSplitA"]
+success = """
+All of these hold:
+- The squash touches the cardboard box, and its origin is less than 70 % of the cardboard box's horizontal radius
+  (the radius given by the cardboard box model's horizontal-radius site) from the cardboard box's origin in x and y.
+- The squash does not touch the counter (the table, `table_main_group`).
+- The cardboard box is upright: its z axis has a world-z component above 0.8 (tilted less than about 37 degrees).
+- Each hand's grip site (`gripper0_right_grip_site`, `gripper0_left_grip_site`) is more than 0.25 m from the
+  squash's origin and more than 0.25 m from the cardboard box's origin.
+- The other item that started on the cutting board with the squash (`distractor_obj_distractor_obj_type_0_num_0`) is
+  not in the cardboard box by the same rule as the squash.
+"""
+
+# tabletop_24dc.py _check_success L626-665: OU.any_gripper_obj_far(container) and (obj) L517-536 (th 0.25, both grip
+# sites, > th); OU.check_obj_fixture_contact(obj, counter) L499-505 (robosuite check_contact: any contact of their
+# contact geoms); counter = table_main_group; OU.check_obj_upright(container, 0.8) L550-557 (z axis world-z
+# component > 0.8); target not tiered -> spawn_regions [None]; the container has no spawn geoms (instance xml), so
+# OU.check_obj_in_receptacle L458-496 takes the contact path L489-496: check_contact(obj, container) and |obj xy -
+# container xy| < 0.7 * container.horizontal_radius. no distractor_obj region for this family (tabletop_24dc.py
+# L891-930, used at L968-976): that term is False.
+[families."robocasa-gr1/PosttrainPnPNovelFromCuttingboardToPanSplitA"]
+success = """
+All of these hold:
+- The bell pepper touches the pan, and its origin is less than 70 % of the pan's horizontal radius (the radius given
+  by the pan model's horizontal-radius site) from the pan's origin in x and y.
+- The bell pepper does not touch the counter (the table, `table_main_group`).
+- The pan is upright: its z axis has a world-z component above 0.8 (tilted less than about 37 degrees).
+- Each hand's grip site (`gripper0_right_grip_site`, `gripper0_left_grip_site`) is more than 0.25 m from the bell
+  pepper's origin and more than 0.25 m from the pan's origin.
+"""
+
+# tabletop_24dc.py _check_success L626-665: OU.any_gripper_obj_far(container) and (obj) L517-536 (th 0.25, both grip
+# sites, > th); OU.check_obj_fixture_contact(obj, counter) L499-505 (robosuite check_contact: any contact of their
+# contact geoms); counter = table_main_group; OU.check_obj_upright(container, 0.8) L550-557 (z axis world-z
+# component > 0.8); target not tiered -> spawn_regions [None]; the container has no spawn geoms (instance xml), so
+# OU.check_obj_in_receptacle L458-496 takes the contact path L489-496: check_contact(obj, container) and |obj xy -
+# container xy| < 0.7 * container.horizontal_radius. no distractor_obj region for this family (tabletop_24dc.py
+# L891-930, used at L968-976): that term is False.
+[families."robocasa-gr1/PosttrainPnPNovelFromCuttingboardToPotSplitA"]
+success = """
+All of these hold:
+- The bell pepper touches the pot, and its origin is less than 70 % of the pot's horizontal radius (the radius given
+  by the pot model's horizontal-radius site) from the pot's origin in x and y.
+- The bell pepper does not touch the counter (the table, `table_main_group`).
+- The pot is upright: its z axis has a world-z component above 0.8 (tilted less than about 37 degrees).
+- Each hand's grip site (`gripper0_right_grip_site`, `gripper0_left_grip_site`) is more than 0.25 m from the bell
+  pepper's origin and more than 0.25 m from the pot's origin.
+"""
+
+# tabletop_24dc.py _check_success L626-665: OU.any_gripper_obj_far(container) and (obj) L517-536 (th 0.25, both grip
+# sites, > th); OU.check_obj_fixture_contact(obj, counter) L499-505 (robosuite check_contact: any contact of their
+# contact geoms); counter = table_main_group; OU.check_obj_upright(container, 0.8) L550-557 (z axis world-z
+# component > 0.8); target in (tiered_basket, tiered_shelf) -> spawn_regions = [OU.get_highest_spawn_region]
+# L393-402 (highest geom centre z); OU.check_obj_in_receptacle L458-496 spawn path: OU.obj_in_region_with_keypoints
+# L229-299 (8 bbox corners + 6 face centres + centre, eroded 20 % toward the centre; min_num_points 2), box L560-592
+# / cylinder L595-623; spawn geoms container_spawn_1/2 are cylinders (instance xml; top = spawn_2, radius 0.0845,
+# half height 0.0325); OU.calculate_spawn_region L405-455 cylinder: (geom centre, 2*half_height*z_axis, radius).
+# distractor_obj in distractor_config regions (tabletop_24dc.py L891-930, used at L968-976) -> not
+# check_obj_in_receptacle(distractor, container, same spawn_regions) L645-657.
+[families."robocasa-gr1/PosttrainPnPNovelFromCuttingboardToTieredbasketSplitA"]
+success = """
+All of these hold:
+- At least 2 of 15 key points of the sweet potato lie in the tiered basket's top zone (of its spawn zones, one per
+  tier, the one whose centre is highest): a cylinder of radius 8.4 cm along the basket's own vertical axis, from
+  that zone's centre up to 6.5 cm above it. The key points are the 8 corners of the sweet potato model's bounding
+  box, the centres of its 6 faces and its centre, each moved 20 % of the way toward the centre. Contact with the
+  tiered basket is not required.
+- The sweet potato does not touch the counter (the table, `table_main_group`).
+- The tiered basket is upright: its z axis has a world-z component above 0.8 (tilted less than about 37 degrees).
+- Each hand's grip site (`gripper0_right_grip_site`, `gripper0_left_grip_site`) is more than 0.25 m from the sweet
+  potato's origin and more than 0.25 m from the tiered basket's origin.
+- The other item that started on the cutting board with the sweet potato
+  (`distractor_obj_distractor_obj_type_0_num_0`) does not meet that same top-zone rule; on a lower tier it does not
+  count against the task.
+"""
+
+# tabletop_24dc.py _check_success L626-665: OU.any_gripper_obj_far(container) and (obj) L517-536 (th 0.25, both grip
+# sites, > th); OU.check_obj_fixture_contact(obj, counter) L499-505 (robosuite check_contact: any contact of their
+# contact geoms); counter = table_main_group; OU.check_obj_upright(container, 0.8) L550-557 (z axis world-z
+# component > 0.8); target not tiered -> spawn_regions [None]; the container has no spawn geoms (instance xml), so
+# OU.check_obj_in_receptacle L458-496 takes the contact path L489-496: check_contact(obj, container) and |obj xy -
+# container xy| < 0.7 * container.horizontal_radius. no distractor_obj region for this family (tabletop_24dc.py
+# L891-930, used at L968-976): that term is False.
+[families."robocasa-gr1/PosttrainPnPNovelFromPlacematToBasketSplitA"]
+success = """
+All of these hold:
+- The croissant touches the basket, and its origin is less than 70 % of the basket's horizontal radius (the radius
+  given by the basket model's horizontal-radius site) from the basket's origin in x and y.
+- The croissant does not touch the counter (the table, `table_main_group`).
+- The basket is upright: its z axis has a world-z component above 0.8 (tilted less than about 37 degrees).
+- Each hand's grip site (`gripper0_right_grip_site`, `gripper0_left_grip_site`) is more than 0.25 m from the
+  croissant's origin and more than 0.25 m from the basket's origin.
+"""
+
+# tabletop_24dc.py _check_success L626-665: OU.any_gripper_obj_far(container) and (obj) L517-536 (th 0.25, both grip
+# sites, > th); OU.check_obj_fixture_contact(obj, counter) L499-505 (robosuite check_contact: any contact of their
+# contact geoms); counter = table_main_group; OU.check_obj_upright(container, 0.8) L550-557 (z axis world-z
+# component > 0.8); target not tiered -> spawn_regions [None]; the container has no spawn geoms (instance xml), so
+# OU.check_obj_in_receptacle L458-496 takes the contact path L489-496: check_contact(obj, container) and |obj xy -
+# container xy| < 0.7 * container.horizontal_radius. distractor_obj in distractor_config regions (tabletop_24dc.py
+# L891-930, used at L968-976) -> not check_obj_in_receptacle(distractor, container, same spawn_regions) L645-657.
+[families."robocasa-gr1/PosttrainPnPNovelFromPlacematToBowlSplitA"]
+success = """
+All of these hold:
+- The can touches the bowl, and its origin is less than 70 % of the bowl's horizontal radius (the radius given by
+  the bowl model's horizontal-radius site) from the bowl's origin in x and y.
+- The can does not touch the counter (the table, `table_main_group`).
+- The bowl is upright: its z axis has a world-z component above 0.8 (tilted less than about 37 degrees).
+- Each hand's grip site (`gripper0_right_grip_site`, `gripper0_left_grip_site`) is more than 0.25 m from the can's
+  origin and more than 0.25 m from the bowl's origin.
+- The other item that started on the placemat with the can (`distractor_obj_distractor_obj_type_0_num_0`) is not in
+  the bowl by the same rule as the can.
+"""
+
+# tabletop_24dc.py _check_success L626-665: OU.any_gripper_obj_far(container) and (obj) L517-536 (th 0.25, both grip
+# sites, > th); OU.check_obj_fixture_contact(obj, counter) L499-505 (robosuite check_contact: any contact of their
+# contact geoms); counter = table_main_group; OU.check_obj_upright(container, 0.8) L550-557 (z axis world-z
+# component > 0.8); target not tiered -> spawn_regions [None]; the container has no spawn geoms (instance xml), so
+# OU.check_obj_in_receptacle L458-496 takes the contact path L489-496: check_contact(obj, container) and |obj xy -
+# container xy| < 0.7 * container.horizontal_radius. distractor_obj in distractor_config regions (tabletop_24dc.py
+# L891-930, used at L968-976) -> not check_obj_in_receptacle(distractor, container, same spawn_regions) L645-657.
+[families."robocasa-gr1/PosttrainPnPNovelFromPlacematToPlateSplitA"]
+success = """
+All of these hold:
+- The tomato touches the plate, and its origin is less than 70 % of the plate's horizontal radius (the radius given
+  by the plate model's horizontal-radius site) from the plate's origin in x and y.
+- The tomato does not touch the counter (the table, `table_main_group`).
+- The plate is upright: its z axis has a world-z component above 0.8 (tilted less than about 37 degrees).
+- Each hand's grip site (`gripper0_right_grip_site`, `gripper0_left_grip_site`) is more than 0.25 m from the
+  tomato's origin and more than 0.25 m from the plate's origin.
+- The other item that started on the placemat with the tomato (`distractor_obj_distractor_obj_type_0_num_0`) is not
+  in the plate by the same rule as the tomato.
+"""
+
+# tabletop_24dc.py _check_success L626-665: OU.any_gripper_obj_far(container) and (obj) L517-536 (th 0.25, both grip
+# sites, > th); OU.check_obj_fixture_contact(obj, counter) L499-505 (robosuite check_contact: any contact of their
+# contact geoms); counter = table_main_group; OU.check_obj_upright(container, 0.8) L550-557 (z axis world-z
+# component > 0.8); target in (tiered_basket, tiered_shelf) -> spawn_regions = [OU.get_highest_spawn_region]
+# L393-402 (highest geom centre z); OU.check_obj_in_receptacle L458-496 spawn path: OU.obj_in_region_with_keypoints
+# L229-299 (8 bbox corners + 6 face centres + centre, eroded 20 % toward the centre; min_num_points 2), box L560-592
+# / cylinder L595-623; spawn geoms container_spawn_1..3 are boxes (instance xml; top = spawn_1, half sizes 0.1239 x
+# 0.0569 x 0.0224); OU.calculate_spawn_region L405-455 box: the geom's full box. distractor_obj in distractor_config
+# regions (tabletop_24dc.py L891-930, used at L968-976) -> not check_obj_in_receptacle(distractor, container, same
+# spawn_regions) L645-657.
+[families."robocasa-gr1/PosttrainPnPNovelFromPlacematToTieredshelfSplitA"]
+success = """
+All of these hold:
+- At least 2 of 15 key points of the tomato lie in the tiered shelf's top zone (of its spawn zones, one per tier,
+  the one whose centre is highest): a box 24.8 cm by 11.4 cm, 4.5 cm high. The key points are the 8 corners of the
+  tomato model's bounding box, the centres of its 6 faces and its centre, each moved 20 % of the way toward the
+  centre. Contact with the tiered shelf is not required.
+- The tomato does not touch the counter (the table, `table_main_group`).
+- The tiered shelf is upright: its z axis has a world-z component above 0.8 (tilted less than about 37 degrees).
+- Each hand's grip site (`gripper0_right_grip_site`, `gripper0_left_grip_site`) is more than 0.25 m from the
+  tomato's origin and more than 0.25 m from the tiered shelf's origin.
+- The other item that started on the placemat with the tomato (`distractor_obj_distractor_obj_type_0_num_0`) does
+  not meet that same top-zone rule; on a lower tier it does not count against the task.
+"""
+
+# tabletop_24dc.py _check_success L626-665: OU.any_gripper_obj_far(container) and (obj) L517-536 (th 0.25, both grip
+# sites, > th); OU.check_obj_fixture_contact(obj, counter) L499-505 (robosuite check_contact: any contact of their
+# contact geoms); counter = table_main_group; OU.check_obj_upright(container, 0.8) L550-557 (z axis world-z
+# component > 0.8); target not tiered -> spawn_regions [None]; the container has no spawn geoms (instance xml), so
+# OU.check_obj_in_receptacle L458-496 takes the contact path L489-496: check_contact(obj, container) and |obj xy -
+# container xy| < 0.7 * container.horizontal_radius. distractor_obj in distractor_config regions (tabletop_24dc.py
+# L891-930, used at L968-976) -> not check_obj_in_receptacle(distractor, container, same spawn_regions) L645-657.
+[families."robocasa-gr1/PosttrainPnPNovelFromPlateToBowlSplitA"]
+success = """
+All of these hold:
+- The bell pepper touches the bowl, and its origin is less than 70 % of the bowl's horizontal radius (the radius
+  given by the bowl model's horizontal-radius site) from the bowl's origin in x and y.
+- The bell pepper does not touch the counter (the table, `table_main_group`).
+- The bowl is upright: its z axis has a world-z component above 0.8 (tilted less than about 37 degrees).
+- Each hand's grip site (`gripper0_right_grip_site`, `gripper0_left_grip_site`) is more than 0.25 m from the bell
+  pepper's origin and more than 0.25 m from the bowl's origin.
+- The other item that started on the plate with the bell pepper (`distractor_obj_distractor_obj_type_0_num_0`) is
+  not in the bowl by the same rule as the bell pepper.
+"""
+
+# tabletop_24dc.py _check_success L626-665: OU.any_gripper_obj_far(container) and (obj) L517-536 (th 0.25, both grip
+# sites, > th); OU.check_obj_fixture_contact(obj, counter) L499-505 (robosuite check_contact: any contact of their
+# contact geoms); counter = table_main_group; OU.check_obj_upright(container, 0.8) L550-557 (z axis world-z
+# component > 0.8); target not tiered -> spawn_regions [None]; the container has no spawn geoms (instance xml), so
+# OU.check_obj_in_receptacle L458-496 takes the contact path L489-496: check_contact(obj, container) and |obj xy -
+# container xy| < 0.7 * container.horizontal_radius. distractor_obj in distractor_config regions (tabletop_24dc.py
+# L891-930, used at L968-976) -> not check_obj_in_receptacle(distractor, container, same spawn_regions) L645-657.
+[families."robocasa-gr1/PosttrainPnPNovelFromPlateToCardboardboxSplitA"]
+success = """
+All of these hold:
+- The lemon touches the cardboard box, and its origin is less than 70 % of the cardboard box's horizontal radius
+  (the radius given by the cardboard box model's horizontal-radius site) from the cardboard box's origin in x and y.
+- The lemon does not touch the counter (the table, `table_main_group`).
+- The cardboard box is upright: its z axis has a world-z component above 0.8 (tilted less than about 37 degrees).
+- Each hand's grip site (`gripper0_right_grip_site`, `gripper0_left_grip_site`) is more than 0.25 m from the lemon's
+  origin and more than 0.25 m from the cardboard box's origin.
+- The other item that started on the plate with the lemon (`distractor_obj_distractor_obj_type_0_num_0`) is not in
+  the cardboard box by the same rule as the lemon.
+"""
+
+# tabletop_24dc.py _check_success L626-665: OU.any_gripper_obj_far(container) and (obj) L517-536 (th 0.25, both grip
+# sites, > th); OU.check_obj_fixture_contact(obj, counter) L499-505 (robosuite check_contact: any contact of their
+# contact geoms); counter = table_main_group; OU.check_obj_upright(container, 0.8) L550-557 (z axis world-z
+# component > 0.8); target not tiered -> spawn_regions [None]; the container has no spawn geoms (instance xml), so
+# OU.check_obj_in_receptacle L458-496 takes the contact path L489-496: check_contact(obj, container) and |obj xy -
+# container xy| < 0.7 * container.horizontal_radius. distractor_obj in distractor_config regions (tabletop_24dc.py
+# L891-930, used at L968-976) -> not check_obj_in_receptacle(distractor, container, same spawn_regions) L645-657.
+[families."robocasa-gr1/PosttrainPnPNovelFromPlateToPanSplitA"]
+success = """
+All of these hold:
+- The pear touches the pan, and its origin is less than 70 % of the pan's horizontal radius (the radius given by the
+  pan model's horizontal-radius site) from the pan's origin in x and y.
+- The pear does not touch the counter (the table, `table_main_group`).
+- The pan is upright: its z axis has a world-z component above 0.8 (tilted less than about 37 degrees).
+- Each hand's grip site (`gripper0_right_grip_site`, `gripper0_left_grip_site`) is more than 0.25 m from the pear's
+  origin and more than 0.25 m from the pan's origin.
+- The other item that started on the plate with the pear (`distractor_obj_distractor_obj_type_0_num_0`) is not in
+  the pan by the same rule as the pear.
+"""
+
+# tabletop_24dc.py _check_success L626-665: OU.any_gripper_obj_far(container) and (obj) L517-536 (th 0.25, both grip
+# sites, > th); OU.check_obj_fixture_contact(obj, counter) L499-505 (robosuite check_contact: any contact of their
+# contact geoms); counter = table_main_group; OU.check_obj_upright(container, 0.8) L550-557 (z axis world-z
+# component > 0.8); target not tiered -> spawn_regions [None]; the container has no spawn geoms (instance xml), so
+# OU.check_obj_in_receptacle L458-496 takes the contact path L489-496: check_contact(obj, container) and |obj xy -
+# container xy| < 0.7 * container.horizontal_radius. no distractor_obj region for this family (tabletop_24dc.py
+# L891-930, used at L968-976): that term is False.
+[families."robocasa-gr1/PosttrainPnPNovelFromPlateToPlateSplitA"]
+success = """
+All of these hold:
+- The sweet potato touches the empty plate, and its origin is less than 70 % of the empty plate's horizontal radius
+  (the radius given by the empty plate model's horizontal-radius site) from the empty plate's origin in x and y.
+- The sweet potato does not touch the counter (the table, `table_main_group`).
+- The empty plate is upright: its z axis has a world-z component above 0.8 (tilted less than about 37 degrees).
+- Each hand's grip site (`gripper0_right_grip_site`, `gripper0_left_grip_site`) is more than 0.25 m from the sweet
+  potato's origin and more than 0.25 m from the empty plate's origin.
+"""
+
+# tabletop_24dc.py _check_success L626-665: OU.any_gripper_obj_far(container) and (obj) L517-536 (th 0.25, both grip
+# sites, > th); OU.check_obj_fixture_contact(obj, counter) L499-505 (robosuite check_contact: any contact of their
+# contact geoms); counter = table_main_group; OU.check_obj_upright(container, 0.8) L550-557 (z axis world-z
+# component > 0.8); target not tiered -> spawn_regions [None]; the container has no spawn geoms (instance xml), so
+# OU.check_obj_in_receptacle L458-496 takes the contact path L489-496: check_contact(obj, container) and |obj xy -
+# container xy| < 0.7 * container.horizontal_radius. no distractor_obj region for this family (tabletop_24dc.py
+# L891-930, used at L968-976): that term is False.
+[families."robocasa-gr1/PosttrainPnPNovelFromTrayToCardboardboxSplitA"]
+success = """
+All of these hold:
+- The squash touches the cardboard box, and its origin is less than 70 % of the cardboard box's horizontal radius
+  (the radius given by the cardboard box model's horizontal-radius site) from the cardboard box's origin in x and y.
+- The squash does not touch the counter (the table, `table_main_group`).
+- The cardboard box is upright: its z axis has a world-z component above 0.8 (tilted less than about 37 degrees).
+- Each hand's grip site (`gripper0_right_grip_site`, `gripper0_left_grip_site`) is more than 0.25 m from the
+  squash's origin and more than 0.25 m from the cardboard box's origin.
+"""
+
+# tabletop_24dc.py _check_success L626-665: OU.any_gripper_obj_far(container) and (obj) L517-536 (th 0.25, both grip
+# sites, > th); OU.check_obj_fixture_contact(obj, counter) L499-505 (robosuite check_contact: any contact of their
+# contact geoms); counter = table_main_group; OU.check_obj_upright(container, 0.8) L550-557 (z axis world-z
+# component > 0.8); target not tiered -> spawn_regions [None]; the container has no spawn geoms (instance xml), so
+# OU.check_obj_in_receptacle L458-496 takes the contact path L489-496: check_contact(obj, container) and |obj xy -
+# container xy| < 0.7 * container.horizontal_radius. no distractor_obj region for this family (tabletop_24dc.py
+# L891-930, used at L968-976): that term is False.
+[families."robocasa-gr1/PosttrainPnPNovelFromTrayToPlateSplitA"]
+success = """
+All of these hold:
+- The cupcake touches the plate, and its origin is less than 70 % of the plate's horizontal radius (the radius given
+  by the plate model's horizontal-radius site) from the plate's origin in x and y.
+- The cupcake does not touch the counter (the table, `table_main_group`).
+- The plate is upright: its z axis has a world-z component above 0.8 (tilted less than about 37 degrees).
+- Each hand's grip site (`gripper0_right_grip_site`, `gripper0_left_grip_site`) is more than 0.25 m from the
+  cupcake's origin and more than 0.25 m from the plate's origin.
+"""
+
+# tabletop_24dc.py _check_success L626-665: OU.any_gripper_obj_far(container) and (obj) L517-536 (th 0.25, both grip
+# sites, > th); OU.check_obj_fixture_contact(obj, counter) L499-505 (robosuite check_contact: any contact of their
+# contact geoms); counter = table_main_group; OU.check_obj_upright(container, 0.8) L550-557 (z axis world-z
+# component > 0.8); target not tiered -> spawn_regions [None]; the container has no spawn geoms (instance xml), so
+# OU.check_obj_in_receptacle L458-496 takes the contact path L489-496: check_contact(obj, container) and |obj xy -
+# container xy| < 0.7 * container.horizontal_radius. no distractor_obj region for this family (tabletop_24dc.py
+# L891-930, used at L968-976): that term is False.
+[families."robocasa-gr1/PosttrainPnPNovelFromTrayToPotSplitA"]
+success = """
+All of these hold:
+- The lemon touches the pot, and its origin is less than 70 % of the pot's horizontal radius (the radius given by
+  the pot model's horizontal-radius site) from the pot's origin in x and y.
+- The lemon does not touch the counter (the table, `table_main_group`).
+- The pot is upright: its z axis has a world-z component above 0.8 (tilted less than about 37 degrees).
+- Each hand's grip site (`gripper0_right_grip_site`, `gripper0_left_grip_site`) is more than 0.25 m from the lemon's
+  origin and more than 0.25 m from the pot's origin.
+"""
+
+# tabletop_24dc.py _check_success L626-665: OU.any_gripper_obj_far(container) and (obj) L517-536 (th 0.25, both grip
+# sites, > th); OU.check_obj_fixture_contact(obj, counter) L499-505 (robosuite check_contact: any contact of their
+# contact geoms); counter = table_main_group; OU.check_obj_upright(container, 0.8) L550-557 (z axis world-z
+# component > 0.8); target in (tiered_basket, tiered_shelf) -> spawn_regions = [OU.get_highest_spawn_region]
+# L393-402 (highest geom centre z); OU.check_obj_in_receptacle L458-496 spawn path: OU.obj_in_region_with_keypoints
+# L229-299 (8 bbox corners + 6 face centres + centre, eroded 20 % toward the centre; min_num_points 2), box L560-592
+# / cylinder L595-623; spawn geoms container_spawn_1/2 are cylinders (instance xml; top = spawn_2, radius 0.0845,
+# half height 0.0325); OU.calculate_spawn_region L405-455 cylinder: (geom centre, 2*half_height*z_axis, radius). no
+# distractor_obj region for this family (tabletop_24dc.py L891-930, used at L968-976): that term is False.
+[families."robocasa-gr1/PosttrainPnPNovelFromTrayToTieredbasketSplitA"]
+success = """
+All of these hold:
+- At least 2 of 15 key points of the lemon lie in the tiered basket's top zone (of its spawn zones, one per tier,
+  the one whose centre is highest): a cylinder of radius 8.4 cm along the basket's own vertical axis, from that
+  zone's centre up to 6.5 cm above it. The key points are the 8 corners of the lemon model's bounding box, the
+  centres of its 6 faces and its centre, each moved 20 % of the way toward the centre. Contact with the tiered
+  basket is not required.
+- The lemon does not touch the counter (the table, `table_main_group`).
+- The tiered basket is upright: its z axis has a world-z component above 0.8 (tilted less than about 37 degrees).
+- Each hand's grip site (`gripper0_right_grip_site`, `gripper0_left_grip_site`) is more than 0.25 m from the lemon's
+  origin and more than 0.25 m from the tiered basket's origin.
+"""
+
+# tabletop_24dc.py _check_success L626-665: OU.any_gripper_obj_far(container) and (obj) L517-536 (th 0.25, both grip
+# sites, > th); OU.check_obj_fixture_contact(obj, counter) L499-505 (robosuite check_contact: any contact of their
+# contact geoms); counter = table_main_group; OU.check_obj_upright(container, 0.8) L550-557 (z axis world-z
+# component > 0.8); target in (tiered_basket, tiered_shelf) -> spawn_regions = [OU.get_highest_spawn_region]
+# L393-402 (highest geom centre z); OU.check_obj_in_receptacle L458-496 spawn path: OU.obj_in_region_with_keypoints
+# L229-299 (8 bbox corners + 6 face centres + centre, eroded 20 % toward the centre; min_num_points 2), box L560-592
+# / cylinder L595-623; spawn geoms container_spawn_1..3 are boxes (instance xml; top = spawn_1, half sizes 0.1645 x
+# 0.0449 x 0.0088); OU.calculate_spawn_region L405-455 box: the geom's full box. distractor_obj in distractor_config
+# regions (tabletop_24dc.py L891-930, used at L968-976) -> not check_obj_in_receptacle(distractor, container, same
+# spawn_regions) L645-657.
+[families."robocasa-gr1/PosttrainPnPNovelFromTrayToTieredshelfSplitA"]
+success = """
+All of these hold:
+- At least 2 of 15 key points of the bell pepper lie in the tiered shelf's top zone (of its spawn zones, one per
+  tier, the one whose centre is highest): a box 32.9 cm by 9.0 cm, 1.8 cm high. The key points are the 8 corners of
+  the bell pepper model's bounding box, the centres of its 6 faces and its centre, each moved 20 % of the way toward
+  the centre. Contact with the tiered shelf is not required.
+- The bell pepper does not touch the counter (the table, `table_main_group`).
+- The tiered shelf is upright: its z axis has a world-z component above 0.8 (tilted less than about 37 degrees).
+- Each hand's grip site (`gripper0_right_grip_site`, `gripper0_left_grip_site`) is more than 0.25 m from the bell
+  pepper's origin and more than 0.25 m from the tiered shelf's origin.
+- The other item that started on the tray with the bell pepper (`distractor_obj_distractor_obj_type_0_num_0`) does
+  not meet that same top-zone rule; on a lower tier it does not count against the task.
+"""

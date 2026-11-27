@@ -1,34 +1,40 @@
-# bigym2-flip-cutlery-i00-privileged
+# BiGym 2.0 · flip-cutlery (privileged)
 
 | | |
 |---|---|
-| Benchmark | BiGym 2.0 |
+| Task ID | `bigym2-flip-cutlery-i00-privileged` |
+| Benchmark | [BiGym 2.0](https://github.com/swirl-uk/BiGym2) (Zhang et al., 2026), upstream `swirl-uk/BiGym2@93ad4b3` |
+| Robot | Unitree G1 humanoid (29 DoF) with Dex1-1 two-finger grippers; legs and waist driven by NVIDIA's GR00T-WBC walking policy |
 | Mode | privileged |
-| Twin | `bigym2-flip-cutlery-i00-standard` |
-| Simulator / robot | `bigym2` / `unitree-g1-dex1` |
-| Family / instance | `flip-cutlery` / seed 0 (allowed seeds: [0, 620100, 620101]; PROTOCOL §2) |
-| Oracle | `none` — no reference solution (BiGym 2.0 ships no expert or planner; its demonstrations and its agents' programs stay off the agent's network); positive example graded 1 by the separate verifier: bigym2-flip-cutlery-i00-privileg__GQkcmXU (run codex-gpt6_luna-medium, 2026-10-08, on an earlier text of the privileged task; regraded by its current verifier); human review in PR #123 |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:bigym2-0.1.1` |
+| Instance | `flip-cutlery`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | None |
 
 ## Task
-Take the spoon out of the mug, put it back in the other way round, and let go of the spoon and the mug. (BiGym 2.0 `flip_cutlery`, a Unitree G1 humanoid whose legs and waist NVIDIA's GR00T whole-body controller drives.)
+Take the spoon out of the mug, put it back in the other way round, and let go of the spoon and the mug.
 
-## Difficulty
-Three stages with a thin object: pull a spoon out of a mug, turn it end over end, and put it back into the mug, released.
+## Success criteria
+Success predicate (upstream `FlipCutleryG1`), all at once: the spoon's end that pointed up at the start points
+within 50° of straight down, the spoon touches the mug, and no finger of either gripper touches the spoon or the mug.
+Where the spoon touches the mug, and whether the mug is upright, are not checked. Held for 1 s (50 consecutive
+control steps), with no fall in the episode: the pelvis tilting past about 53° or dropping below 0.30 m makes the
+episode a failure without ending it.
 
-## Reference solution
-None. BiGym 2.0 has no scripted expert or planner; its human demonstrations and its coding agents' programs are public
-on the Hugging Face Hub and never reach the agent (no network but the model APIs; seed 0 is none of their seeds).
+Failure (ends the episode at once with 0): the pelvis more than 10 m from the scene's origin.
 
-## Verification
-`tests/grade.py` replays `/app/output/trajectory.npz` from the frozen instance in one fresh process (`rcb_bigym2.py
-replay`: upstream's official env, one step per row until upstream ends the episode). Pass iff upstream's `is_success`
-holds (the task's success held for 1 s, no fall). Success condition: the spoon is the other way round: the end that points up out of the mug at the start now points down (within 50 degrees of straight down), the spoon touching the mug, neither the spoon nor the mug held by a gripper.
-No oracle; human review in PR #123 (PROTOCOL §4).
+Graded file: `/app/output/trajectory.npz`, as `s.save_trajectory(...)` writes it: this task's name and at most
+1,950 rows of finite actions, one row per 50 Hz control step (values outside the action bounds are
+clipped). After the agent's session it is replayed once, open-loop, from the frozen start (`tests/instance.json`) in
+a fresh process of a separate verifier container without network. The replay runs until upstream ends the episode
+(the success held for 1 s, a failure above, or the horizon of 1,950 control steps, 39 s) or
+the rows run out. The task is passed if, at that point, upstream's success has been held for 1 s and the robot has
+not fallen at any time in the replay. Rows after the end are not run. Only the trajectory is scored (`gen.py` and
+`NOTES.md` are not). A missing file, a file for another task, or one that is not such an array scores 0. A replay
+that crashes or times out, or a frozen start that does not rebuild, is reported as `grader_error` (infrastructure),
+not as a score.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -38,11 +44,10 @@ Caps per container (PROTOCOL §6).
 - GPU: any NVIDIA GPU, held by `main`.
 - Recommended GPU: any 8 GB+ NVIDIA GPU (RTX 4090 / L4).
 
-## Details
-| | |
-|---|---|
-| Upstream | BiGym 2.0 (swirl-uk/BiGym2 at 93ad4b3, bigym 1.0.0, Apache-2.0), task `flip_cutlery` ("table-top"), official configuration |
-| Instance | `environment/instance.json` = `tests/instance.json`: the task reset with seed 0, t = 0 state hash `307253371fb98a8b26f086398d1d0ff9ee8fd0a9` |
-| Horizon | 1950 control steps (39 s at 50 Hz), upstream's budget for this task |
-| Action | 21 floats per control step (`instance.json` `t0.layout`) |
-| Tooling | `rcb_bigym2.py`, the same file in the agent's `/opt/tools/` and the verifier's `/tests/` (files image `bigym2-files`, from `embodied_first_exam/benchmarks/bigym2/`) |
+## License
+BiGym 2.0 ([swirl-uk/BiGym2](https://github.com/swirl-uk/BiGym2) @ `93ad4b3`, `bigym` 1.0.0) is released under the
+Apache License 2.0. Bundled components keep their own licences: the Unitree G1 description (BSD 3-Clause) in AMO's
+MuJoCo packaging (Apache License 2.0); the scene props (CC0 or CC BY 4.0, attributions in upstream's
+`bigym/envs/xmls/3D_MODELS_ATTRIBUTION.md`); NVIDIA's GR00T-WBC weights, redistributed under the NVIDIA Open Model
+License (upstream's `NOTICE` and `THIRD_PARTY_NOTICES.md`). The simulator is MuJoCo 3.8.1 (Apache License 2.0). No
+non-commercial terms apply.

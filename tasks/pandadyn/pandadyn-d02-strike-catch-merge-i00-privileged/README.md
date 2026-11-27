@@ -1,43 +1,83 @@
-# pandadyn-d02-strike-catch-merge-i00-privileged
+# Panda Dynamic Scenes · Strike, catch and merge two balls (D02) (privileged)
 
 | | |
 |---|---|
-| Benchmark | Panda Dynamic Scenes |
+| Task ID | `pandadyn-d02-strike-catch-merge-i00-privileged` |
+| Benchmark | [Panda Dynamic Scenes](https://www.embodied-first-exam.ai/suite/pandadyn/) (Wang et al., 2026), upstream `mll-lab-nu/embodied-first-exam@b2280d8` |
+| Robot | Two Franka Emika Panda (FER) arms, each with 7 joints and its standard two-finger hand |
 | Mode | privileged |
-| Twin | `pandadyn-d02-strike-catch-merge-i00-standard` |
-| Simulator / robot | `maniskill` / `franka-panda-bimanual` |
-| Family / instance | `d02_strike_catch_merge` / seed 0 |
-| Oracle | `full` |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0` |
+| Instance | `d02_strike_catch_merge`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | Included |
 
 ## Task
-Two balls roll down two lanes, one after the other. Touch each one with the left paddle once it has flown off its lane, catch the first in the right cup and carry it away, then catch the second in the same cup and put both balls into the basin. The deliverable is one replayable trajectory of 100 Hz joint-target actions (`/app/output/trajectory.npz`,
-16 values per row), graded by the task's own staged success check: 6 phases (`first_redirect`, `first_catch`, `loaded_cup_relocation`, `second_redirect`, `second_catch`, `both_delivery`), in order,
-with no failure event and no safety-limit violation, within the task's horizon of 25 s.
+Two balls roll down two lanes, one after the other. Touch each one with the left paddle once it has flown off its lane,
+catch the first in the right cup and carry it away, then catch the second in the same cup and put both balls into the
+basin.
 
-## Difficulty
-The balls arrive on a schedule the robot cannot change: the first strike, catch and loaded relocation must fit before the second shutter opens. The second catch must then take a ball deflected by the paddle into a cup that already holds the first ball, without spilling it. Privileged mode gives the full simulator state (every object's pose and velocity, the fixtures, the
-announced goals), the parameters, unlimited exact resets and snapshots, and self-replay; the tooling offers only joint
-targets and kinematics. This mode is the control for the standard twin.
+## Success criteria
+The left paddle is panda-0's tool and the right cup panda-1's; the cup is 0.14 m square inside with 55 mm walls, and its
+frame has its origin at the centre of its floor's top surface. Ball 1 starts on the lane at y = -0.09 m, ball 2 on the
+lane at y = 0.09 m; each ball's radius r is 16 mm. The lane gates open by themselves.
 
-## Reference solution
-`solution/oracle_actions.npy` (1755 control steps, run by `solution/oracle.py` through the agent's own tooling): a
-recorded rollout of this instance by the benchmark's reference controller, which reads the simulator's true state in closed
-loop, replayed open-loop. The reference controllers and their recordings are not in the image, and the agent's network
-reaches only the model APIs and the package registries.
+Phases, in order:
+1. `first_redirect`: the paddle touches ball 1, after ball 1 has been free of all contact for more than 25 ms at some
+   moment of this phase.
+2. `first_catch`: the cup catches ball 1.
+3. `loaded_cup_relocation`: the cup's frame is more than 0.06 m from where it was when phase 2 completed, with ball 1
+   contained in the cup.
+4. `second_redirect`: the paddle touches ball 2, after ball 2 has been free of all contact for more than 25 ms at some
+   moment of this phase.
+5. `second_catch`: the cup catches ball 2 while ball 1 is contained in the cup.
+6. `both_delivery`: both balls are contained in the basin (inner half-width 0.08 m, wall height 0.075 m) and neither
+   touches the cup, for 0.7 s.
 
-## Verification
-`tests/grade.py` in a separate sandbox: one replay, in a fresh process, from the verifier's own copy of the instance
-(`tests/instance.json`; the rebuilt start is checked against its hash); pass iff the task's success check holds in it
-(every phase complete, no failure), plus `/logs/verifier/replay.mp4`
-(overview camera). Oracle: 1755 control steps (17.55 s simulated), success at the last one; the oracle
-run and two fresh-process replays end in the same state (hash `8cb60683ef8fb56b`), and the rollout reproduces the physical
-state the benchmark recorded for it after every control step, bit for bit. `nop`: no trajectory, reward 0; a trajectory that
-holds the arm still fails (the benchmark's parked controls never succeeded).
+A catch: after at least 25 ms without touching anything, the ball's centre passes downward through the plane r above
+the cup's rim height (cup frame) while more than r inside the inner walls in x and y; after that the ball is contained
+in the cup for 0.18 s. Contained in a receptacle of inner half-width h and wall height H: in the receptacle's frame
+(origin at the centre of its floor), the ball's centre is less than h - 0.45 r from the centre in x and in y and
+between r - 4 mm and H - 0.12 r above the floor, the ball touched the receptacle within the last 25 ms, and its speed
+relative to the receptacle is below 0.09 m/s.
 
-## Resources
-Caps per container (PROTOCOL §6).
+Task failure: during phases 3 to 5, ball 1's centre more than 0.07 m from the cup's centre in x or y, or more than 10
+mm below the cup floor (cup frame).
+Allowed contacts: the paddle and the cup may touch the balls; no other robot part may touch anything.
+Horizon: 25 s of simulated time (2,500 control steps).
+
+Phases count only in order: each phase's condition is checked after every 1 ms physics step, and only once the phase
+before it is complete. A condition "for t s" must hold at every physics step over t s; a break restarts it. Positions
+are in the world frame (metres, z up, the table top is the plane z = 0); "horizontally" means in x and y.
+
+Failures shared by every task (each ends the episode at once, in any phase):
+- a forbidden contact: two arms touching each other (tools included); an arm touching itself, except its two fingers
+  touching each other (a finger touching the arm's own tool counts); any robot part, tool included, touching anything
+  the allowed contacts above do not list (the table, the floor and the arm pedestals included); any contact in the
+  scene that penetrates deeper than 4 mm;
+- a violation of the Franka Panda's safety limits by an arm, checked at every physics step: a joint more than 0.002 rad
+  beyond its position limits; measured joint speeds above 101 % of the limits (2.175 rad/s for joints 1-4, 2.61 rad/s
+  for joints 5-7); a finger faster than 0.051 m/s; the hand's TCP faster than 1.01 x 1.7 m/s or 1.01 x 2.5 rad/s,
+  measured or in the servo's reference motion; a motor torque above 87 N m (joints 1-4) or 12 N m (joints 5-7), or one
+  changing faster than 1000 N m/s; reference joint speeds, accelerations or jerks above the Panda's limits; measured
+  joint accelerations or jerks, or measured or reference TCP accelerations (13 m/s², 25 rad/s²), averaged over 20 ms,
+  above 105 % of the limits;
+- an object leaving the workspace (its centre below z = -0.2 m or more than 1.8 m from the world origin horizontally),
+  or a non-finite object position;
+- the task's horizon (above) reached before the last phase is complete.
+
+Graded file: `/app/output/trajectory.npz`, as `Session.save_trajectory(...)` writes it: `task` naming this task and
+`actions`, a finite array with one row per 10 ms control step (8 values per arm: 7 joint-position targets and the total
+gripper aperture) and at most 4,500 rows. Each row's joint targets are clipped to the joint limits and its aperture to
+[0, 0.08] m before it runs. After the agent's session the verifier replays the file once, open-loop, in a fresh process
+of a separate container without network, from its own copy of the frozen instance. The replay stops at the end of the
+first control step in which the task has completed or failed (later rows are never run), or when the rows run out. The
+task is passed if, at that point, the last phase is complete and no failure has been recorded. A missing file, a file
+for another task, a file that is not such an array, a replay that ends without completing every phase, and a simulator
+error on the agent's rows (for example the servo's trajectory generator failing) score 0. A rebuilt start that does not
+match the frozen instance's state hash, a replay that gives no result or runs past its time limit (300 s plus 0.1 s per
+row), or any other error in the grader is an infrastructure error, not a score.
+
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -47,15 +87,8 @@ Caps per container (PROTOCOL §6).
 - GPU: any NVIDIA GPU, held by `main`.
 - Recommended GPU: any 8 GB+ NVIDIA GPU with Vulkan (RTX 4090 / L4).
 
-## Details
-| | |
-|---|---|
-| Benchmark source | Panda Dynamic Scenes (the environment package `images/pandadyn/panda_dynamics/`, from `images/pandadyn/sync_env.py`); task `PandaMultiStage/D02-StrikeCatchMerge-v0` |
-| Instance | difficulty `nominal`, seed 0, the resolved parameters and the start's state hash in `environment/instance.json` (`initial_sha` 5af2753df0137ee5) |
-| Actions | 16 per control step (10 ms): per arm 7 absolute joint targets (rad) + the total aperture (m); a Ruckig + torque servo per arm |
-| Physics | CPU PhysX at 1000 Hz with enhanced determinism (single thread); SAPIEN renders on the GPU only when a frame is asked for |
-| Image | `images/pandadyn/` (public); needs an NVIDIA GPU with Vulkan for SAPIEN (`environment/docker-compose.yaml`) |
-| Budget | the agent's cutoff is the `Agent time budget` row above (this task's `[agent] timeout_sec`); a scene builds in ~5-15 s |
-
-### Provenance
-Scene description `D02`, frozen instance `D02-StrikeCatchMerge-i00`, chosen and frozen in `ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0`.
+## License
+Panda Dynamic Scenes is an original suite of Embodied First Exam. Its environment package (`images/pandadyn/panda_dynamics/`) is released
+with this repository under the repository's MIT License. The simulation stack in the image: ManiSkill 3 and its Franka
+Panda model (Apache License 2.0), SAPIEN (MIT), Ruckig community version (MIT), PyTorch (BSD 3-Clause). No
+non-commercial terms apply.

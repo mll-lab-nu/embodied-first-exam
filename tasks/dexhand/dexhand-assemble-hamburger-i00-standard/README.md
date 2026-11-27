@@ -1,46 +1,50 @@
-# dexhand-assemble-hamburger-i00-standard
+# DexHand · Assemble a neatly aligned hamburger (standard)
 
 | | |
 |---|---|
-| Benchmark | DexHand |
-| Mode | standard (`eai-standard/3.0`) |
-| Twin | `dexhand-assemble-hamburger-i00-privileged` |
-| Simulator / robot | `mujoco` / `sharpa-wave-floating` |
-| Family / instance | `assemble_hamburger` / seed 0 |
-| Oracle | `full` — solution/ replays the validated Sharpa Wave authoring trajectory (privileged: 6,090 controls, success after 5,794; standard: the recorded 5,793-control public-client episode). Both pass two fresh-process replays with identical state hashes. solution/wuji/trajectory.npz is a validated Wuji Hand 2.2 trajectory of this instance (5,847 controls, motor targets only, physical contact only); the oracle uses it when the run selects wuji (privileged: DEXHAND_HAND=wuji; standard: the sim service's hand), and it replays to success in two fresh processes with identical state hashes. |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:dexhand-0.2.0@sha256:0d42994b83d95ab5301c592b35586550c9ee426490115e4b43f3b8cf8cc43350` |
+| Task ID | `dexhand-assemble-hamburger-i00-standard` |
+| Benchmark | [DexHand](https://www.embodied-first-exam.ai/suite/dexhand/) (Wang et al., 2026), upstream `mll-lab-nu/embodied-first-exam@b2280d8` |
+| Robot | A dexterous right hand on a six-DoF actuated wrist stage, no arm: Sharpa Wave (22 finger actuators) by default, or Wuji Hand 2.2 (20) |
+| Mode | standard |
+| Instance | `assemble_hamburger`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | Included |
 
 ## Task
-Build a hamburger on the serving plate, every layer upright and centred over the plate. The bottom bun already rests on the plate; the beef patty, cheese slice, tomato slice, lettuce leaf and top bun start separately on preparation supports. Stack them from bottom to top in exactly this order: bottom bun, patty, cheese, tomato, lettuce, top bun. Success requires all six layers at the same time: every ingredient center within 12 mm horizontally of the plate center, every layer upright within 0.22 radians, heights strictly increasing in recipe order, all five consecutive pairs in physical contact and the bottom bun touching the plate. Then release the hamburger: with no hand contact on any ingredient, every ingredient linear speed at most 0.025 m/s and angular speed at most 0.25 rad/s, the complete condition must hold for 100 consecutive controls (2 s). The episode ends with success at that moment; a partial stack never counts. The episode ends immediately with failure, checked after every 2 ms physics substep, when any ingredient touches the table top or the floor (dropped, or knocked off its support, the plate or the stack), when any ingredient body falls below the table top (z < 0.30 m) or leaves the workspace box x in [-0.64, 0.64] m, y in [-0.52, 0.52] m, z in [0.30, 0.80] m, when a passive cheese or lettuce bending angle exceeds 0.65 radians, or when the physics becomes unstable; later actions cannot undo a failure. Only robot actuator targets are allowed; no object teleports, grasp welds, scripted object motion or direct ingredient forces. Lettuce and cheese use three passive elastic strips; other ingredients are rigid contact proxies. This task evaluates assembly under that approximation, not continuum food deformation or ingredient damage. The episode allows at most 7500 controls at 50 Hz; reaching that limit without success is a failure.
+Build a hamburger on the serving plate, every layer upright and centred over the plate.
 
-## Difficulty
-Thin layers need controlled contact pickup, transport and release, and every later placement must preserve the
-earlier layers. The predicate checks all six centers, the complete recipe order, five neighboring contacts, the bun on
-the plate and a released stable hold. Any dropped, fallen or escaped ingredient ends the episode as a failure at once.
+## Success criteria
+The six layers are the bottom bun, patty, cheese, tomato, lettuce and top bun, in that order from the bottom. The cheese
+and the lettuce each have two hinged side wings. There are no stages. Success needs one condition, held for 100
+consecutive control steps (2 s), checked at the end of each control step (50 Hz):
+- the centre of every layer is within 12 mm, horizontally, of the plate centre (x = -0.16 m, y = 0);
+- the layer centres rise in recipe order, and each layer touches the next one up;
+- the bottom bun touches the plate;
+- no part of the hand touches any layer;
+- every layer is tilted at most 0.22 rad (12.6°) from level;
+- every part of every layer moves at most 0.025 m/s and turns at most 0.25 rad/s.
 
-## Reference solution
-`solution/` replays the validated Sharpa Wave authoring trajectory: in privileged mode the 6,090-control witness
-(the replay ends at success after 5,794 controls), in standard mode the recorded 5,793-control episode of the public
-client, submitted through `rcb_client` in 250-row chunks. The authoring controller that produced it computes robot kinematics and motor targets only; it never
-drives an object pose or applies an object force, and it is never copied into the agent's environment or image.
+The episode fails at once, checked after every 2 ms physics substep, when: any part of a layer has its origin below
+the table top (z = 0.3 m) or outside the work box x -0.64 to 0.64 m, y -0.52 to 0.52 m, z 0.3 to 0.8 m; any layer
+touches the table top or the floor; a wing of the cheese or the lettuce bends more than 0.65 rad; or the physics
+becomes unstable. The step budget is 7,500 control steps (150 s).
 
-Wuji Hand 2.2: `solution/wuji/trajectory.npz` is a validated Wuji Hand 2.2 trajectory of this instance (5,847 rows of motor targets, physical contact only). When the sim service runs the Wuji Hand 2.2 (`DEXHAND_HAND=wuji`, `spec()["hand"]`), `solve.sh` submits these rows as float64 instead of the Sharpa Wave rows.
+Graded is the live episode on the simulator service; nothing is replayed. The service runs the hand the runner
+selects (Sharpa Wave unless the Wuji Hand 2.2 is selected; `spec()["hand"]` names it). The agent may reset up to
+20 times, each reset starting a new episode from the same frozen start; only the last episode is graded. An
+episode ends at the agent's `POST /finish`, when the agent's session ends (at the latest after 1 h), at the first
+failure above (a score of 0), at the step budget where the task has one, or on a simulator error (a score of 0). A
+success neither ends the episode nor is shown to the agent.
 
-## Verification
-Standard mode. The trusted sim service judges the episode it ran (the last one after resets) with the task's predicate and
-the selected hand, after the agent's container is stopped; its record (`final.json`, `graded_by = "live"`) is the
-verdict, and nothing is replayed to grade it. The isolated verifier reads only the service's artifacts. The
-service then renders `replay.mp4` from the recorded trajectory in one video-only pass, which never changes the
-verdict. A missing or unfinished record, a give-up after crashes between the agent's calls and a frozen instance
-that does not build at the episode's start are infrastructure errors.
-Failures are fail-fast and permanent: an ingredient touching the table or floor, falling below the table top or
-leaving the workspace box, a cheese/lettuce bend above 0.65 rad, or unstable physics. At the 7,500-control budget the episode ends and is judged on the state it leaves.
-The frozen recipe and thresholds come from the task, never from an agent archive. A no-op fails. Human review and
-full agent-trial calibration remain pending; report this task as provisional.
+Each stage before the last counts at the moment it is completed. The last stage, with its full hold, must be met on
+the state the episode ends in: every check goes on after it is first met, and a failure after it still scores 0. If
+it is not met at `/finish` or at the session's end, the robot holds its current targets for up to 3 s of simulated
+time, and the episode passes if the last stage completes within that time without a failure. At the step budget it
+must be met at that step. Targets outside an actuator's range are clipped. Each episode's start is checked against
+the frozen instance; a mismatch is an infrastructure error, not a score.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -50,16 +54,14 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-
-### Notes
-Source: the DexHand family of this task.
-The Sharpa Wave assets are pinned to MuJoCo Menagerie commit `0059d4335f8156206f63a35662313385f7ad6d74` (Apache-2.0),
-derived from Sharpa Robotics commit `6eea427eb24189519f32b9f21674cd534d3f973c`; finger inertias, geometry, limits
-and effort bounds are retained. The Wuji Hand 2.2 model (`hand2/hand2_2`) is pinned to wuji-technology/wuji-description
-commit `829c9aa27cb12c3a49d5b8d63c9869dd8f656702` (MIT) and mounted on the same wrist stage with its vendor joints,
-actuators and contact geometry unchanged. Ingredient visuals are original procedural geometry. Bun halves, patty and
-tomato have rigid cylinder contacts; cheese and lettuce have three passive elastic strips. This is an articulated
-approximation of thin-sheet bending, not continuum soft-food, crushing or tearing simulation. The bottom bun starts on
-the plate; preparation supports give access to the other ingredients. This is assembly feasibility on a floating wrist
-stage, not a gripper-superiority, full-arm or zero-shot claim.
+## License
+DexHand's scenes, checkers and graders are original to this repository (MIT License). Robot models: the Sharpa Wave
+hand from [MuJoCo Menagerie](https://github.com/google-deepmind/mujoco_menagerie/tree/0059d4335f8156206f63a35662313385f7ad6d74/sharpa_wave)
+@ `0059d43` (Apache License 2.0); the Wuji Hand 2.2 from
+[wuji-technology/wuji-description](https://github.com/wuji-technology/wuji-description/tree/829c9aa27cb12c3a49d5b8d63c9869dd8f656702)
+@ `829c9aa` (MIT License); the Tianji Marvin arm meshes from DexForce `embodichain_data` (Apache License 2.0) with
+inertias from Genesis' `dual_arms_primitives.urdf` (MIT License), see `images/dexhand/tianji/NOTICE.md`. Object
+assets are original geometry of this repository, CC0 (the Poly Haven rubber boot, the Innerscene stockpot, Monet's
+public-domain Water Lilies, original page and letter artwork) or CC BY 4.0 (the Joy-Con, pen, rotary-knob and walnut
+meshes; credits in each task's `object_assets/*/CREDITS.txt`); printed text uses the DejaVu fonts (Bitstream Vera
+license). No non-commercial terms apply.

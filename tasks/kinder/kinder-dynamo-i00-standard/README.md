@@ -1,43 +1,34 @@
-# kinder-dynamo-i00-standard
+# KinDER · dynamo (standard)
 
 | | |
 |---|---|
-| Benchmark | KinDER |
-| Mode | standard (`eai-standard/3.0`) |
-| Twin | `kinder-dynamo-i00-privileged` |
-| Simulator / robot | `kinder` / `tidybot-plus-plus` |
-| Family / instance | `dynamo` / seed 0 (allowed seeds: [0, 1, 2]; PROTOCOL §2) |
-| Oracle | `full` |
-| Agent time budget | 1800 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:kinder-0.1.6` |
+| Task ID | `kinder-dynamo-i00-standard` |
+| Benchmark | [KinDER](https://github.com/Princeton-Robot-Planning-and-Learning/kindergarden) (Huang et al., 2026), upstream `Princeton-Robot-Planning-and-Learning/kindergarden@5b2dbac` |
+| Robot | TidyBot++ mobile manipulator: holonomic base, Kinova Gen3 7-DoF arm, Robotiq 2F-85 gripper |
+| Mode | standard |
+| Instance | `dynamo`, seed 0 |
+| Time limit | 30 min |
+| Reference solution | Included |
 
 ## Task
-Standard mode (robot as a service, `eai-standard/3.0`) of `kinder-dynamo-i00-privileged`: the same KinDER instance (`kinder/Dynamo3D-o3-v0`, seed
-0) runs in the `sim` sidecar; the agent gets a client and the robot's own sensors -- two
-cameras, joint encoders, the base's odometry -- and
-never the scene's state or the goal check. No reset: one episode, which is graded.
+Drive into the green square marked on the floor, a few metres away ahead and slightly to your right. You may push the
+three chairs in the way.
 
-Task: Drive into the green square marked on the floor, a few metres away ahead and slightly to your right. You may push the three chairs in the way.
+## Success criteria
+Goal check (KinDER `Dynamo3D-o3`): the centre of the robot's base lies inside the green square marked on the floor,
+0.85 m on a side. Nothing else is checked: the chairs may be pushed anywhere, and the arm and gripper may be in any
+pose.
 
-## Difficulty
-Nonprehensile: three chairs stand between the robot and the floor square, and the base can push them. The benchmark's fixture: the pipeline check, with an oracle in both modes.
+Graded: the live episode, judged by the simulator service; nothing is replayed. Reaching the goal does not end the
+episode and is not shown to the agent. The episode ends at the agent's `/finish`, after 1,000 control steps (100 s
+of robot time), or when the agent's time (30 min) runs out. It is passed if KinDER's goal check holds in the state
+the episode ends in. Resets granted: 0. A reset starts a new episode from the frozen start; only the episode
+after the last reset is graded. A simulator error raised by the agent's own call ends the episode with 0. An episode that does not
+start from the frozen instance, or a service crash outside the agent's calls, is an infrastructure failure, not a
+score.
 
-## Reference solution
-`solution/oracle_replay.py` sends the privileged oracle's 101 moves, turned into the odometry frame (`solution/oracle_actions.npy`), through the client: success at step 101, no privileged information at run time.
-
-## Verification
-The sidecar runs the episode live: it ends at the agent's `POST /finish`, at the step cap, when the agent's time is up, or on a simulator error (a success never ends it and is never shown), and KinDER's goal check is judged on the state it ends in. The sidecar,
-when the collect hook ends the trial, writes that verdict to `/data/final.json` (`graded_by = "live"`): nothing is
-replayed to grade it (owner, 2026-10-17). The scene's start is checked against the frozen instance's
-recorded state (`scene_sha`) when the episode begins (a mismatch is `instance_mismatch`, infrastructure).
-`tests/grade.py` grades `final.json` in a container of its own with no network: success = live success. The video
-(`replay.mp4`) is rendered from `trajectory.npz` in one pass after the verdict and never changes it.
-The oracle (`solution/solve.sh`) scores 1; `nop` scores 0.
-
-Benchmark notes: `tasks/kinder/README.md`.
-
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -47,3 +38,9 @@ Caps per container (PROTOCOL §6).
 
 - GPU: any NVIDIA GPU, held by `sim`.
 - Recommended GPU: any 8 GB+ NVIDIA GPU (RTX 4090 / L4).
+
+## License
+KinDER ([Princeton-Robot-Planning-and-Learning/kindergarden](https://github.com/Princeton-Robot-Planning-and-Learning/kindergarden)
+@ `5b2dbac`) is released under the MIT License (copyright (c) 2025 Tom Silver). The lab scenes are MimicLabs
+([Gatech-RL2/mimiclabs](https://github.com/Gatech-RL2/mimiclabs), MIT License), fetched by upstream's own download
+script when the image is built. The simulator is MuJoCo (Apache License 2.0). No non-commercial terms apply.

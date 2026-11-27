@@ -1,40 +1,48 @@
-# behavior-picking-up-trash-i00-standard
+# BEHAVIOR-1K · picking_up_trash (standard)
 
 | | |
 |---|---|
-| Benchmark | BEHAVIOR-1K |
-| Mode | standard (`eai-standard/3.0`) |
-| Twin | `behavior-picking-up-trash-i00-privileged` |
-| Simulator / robot | `behavior` / `r1pro` |
-| Family / instance | `picking_up_trash` / seed 301 |
-| Oracle | `partial` — solution/ streams the privileged oracle's joint targets (oracle_qpos.npy, 5115 rows) through the client. Recorded Harbor oracle runs: 3 of 3 scored 1 on an RTX 4090 workstation (job v22-oracle-picking-up-trash-1741, best behavior-picking-up-trash-i00-li__eg8GdNj) on the dev branch 9eb18edf version of this task (eai-standard/3.0, no crash recovery); 2026-09-25 behavior-picking-up-trash-i00-li__fyYUXt4 (laptop, an older version) scored 1 with live_matches_replay 1. The sim service, collect hook, grader and oracle client changed since (crash recovery); not re-run on this version (static validation only). Measured 2026-10-10 on main 332bf8080 (a cloud L40S host): scored 1 (5114 control steps; live, both replays and deterministic 1) once the oracle waited long enough for the service (the simulator took 620-682 s to start on those hosts, longer than the client's 600 s default wait at the time, which gave two 0-step runs; the default is 3600 s since). |
-| Agent time budget | 7200 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
+| Task ID | `behavior-picking-up-trash-i00-standard` |
+| Benchmark | [BEHAVIOR-1K](https://behavior.stanford.edu/) (Li et al., 2024), upstream `StanfordVL/BEHAVIOR-1K@b197991` |
+| Robot | Galaxea R1 Pro mobile bimanual manipulator (holonomic wheeled base, 4-joint trunk, two 7-joint arms with parallel-jaw grippers) |
+| Mode | standard |
+| Instance | `picking_up_trash`, seed 301 |
+| Time limit | 2 h |
+| Reference solution | Pipeline check only |
 
 ## Task
-Standard-mode twin of `behavior-picking-up-trash-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Put the three soda cans into the kitchen trash can.
+Put the three soda cans into the kitchen trash can.
 
-## Difficulty
-Same scene, frozen instance and success rule as `behavior-picking-up-trash-i00-privileged` (see its Difficulty). In standard mode the agent has no reset, no privileged state and no planning primitives: it sees the robot's cameras (RGB, depth on request) and its proprioception only, acts through the client, and gets one episode.
+## Success criteria
+All three soda cans are inside the trash can.
 
-## Reference solution
-`solution/`: streams the privileged oracle's joint targets (one row per control step, `hold`) as `joint_position` chunks through the client; it uses no privileged information at run time, and after a service crash it waits for the resumed episode and continues from the control step it reached (`on_service_error`).
+The relations above are OmniGibson's object states, evaluated on the simulator after every control step (30 Hz). An
+object is *on* another (`ontop`) when the two touch and the other is directly below it; *inside* when the centre of its
+bounding box lies in one of the other's container volumes; *next to* (`nextto`) when their bounding boxes are no farther
+apart than a sixth of their mean side length and one is a horizontal neighbour of the other; *under* when the other is
+directly above it; *touching* when the two are in contact. An object is *closed* when none of its openable joints is
+more than 5 % of its range away from closed, and *switched on* when its toggle state is on.
 
-## Verification
-`success` = the live episode's success, judged by the sim sidecar (graded live, no replay: 2026-10-17): the success
-rule (the BDDL goal held 1 s, released and at rest) at every control step; when the agent's episode is still running at
-its end, the sidecar holds the robot still for up to 5 s on the live simulator after the agent's container is stopped
-and a goal that settles there counts (`settled_success`). The frozen start is checked when the sidecar builds the scene,
-before the agent is served. The crash-recovery fields (`sim_startups`, `resumes`, `resume_state_mismatch`) are
-reported; the video (`/logs/verifier/live.mp4`) is recorded during the episode (a video-only render, `replay.mp4`, only
-when it is missing) and never decides anything. `infra_error` = 1 (no verdict on the agent) when `final.json` is
-missing, unreadable or not finalized, the service never ended the episode, it gave up after crashes not all inside the
-agent's calls, or the frozen start did not rebuild (`instance_mismatch`).
+Success needs more than these conditions: they hold for 30 consecutive control steps (1 s of simulated time), and on
+each of those steps no object they name (furniture and floors included; a substance has no pose and is not checked) is
+held by a gripper's assisted grasp, and each of those objects moves slower than 0.05 m/s. There is no partial credit.
 
-Oracle `partial`: the reference solution scored 1 on earlier versions of this task (`task.toml` `oracle_evidence`) and was not re-run on this one; the family is reviewed by a maintainer (PROTOCOL §4) in the pull request that adds it.
+Graded is the one live episode (no reset), judged by the simulator service; nothing is replayed. A success during the
+episode neither ends it nor is reported. The episode ends at the agent's `/finish` or when the time limit (2 h)
+is up. The robot then holds its last command with the base still for up to 150 control steps (5 s), and the task passes
+if the success rule holds at the end of that window (it stops as soon as the rule holds; steps that held before the end
+count toward the 30). The episode also ends, with 0, when the robot has fallen over (its base more than 3 cm below the
+floor, or its up axis tilted more than 41.4° from vertical, for 300 consecutive control steps, also within the window),
+on a simulator breakdown (a non-finite robot state, the robot or a named object more than 10 km from the origin, or the
+base faster than 100 m/s), or on a simulator error raised by an agent's call. At the runaway guard of 200,000 control
+steps the episode ends and is judged as it stands, without the window.
 
-## Resources
-Caps per container (PROTOCOL §6).
+Repeated service crashes that all happened while serving the agent's calls score 0. A frozen start that does not rebuild
+(checked before the agent is served), a crash the episode cannot be resumed from, or a service that leaves no finalized
+result is an infrastructure error, not a score.
+
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -45,20 +53,12 @@ Caps per container (PROTOCOL §6).
 - GPU: an RTX-class NVIDIA GPU (ray-tracing cores), one of the models in `gpu_types`: L40S, L40, L4, RTX 4090, RTX 6000 Ada, held by `sim`.
 - Recommended GPU: L40S 48GB / L4 24GB / RTX 4090 24GB.
 
-## Details
-| | |
-|---|---|
-| Protocol | `eai-standard/3.0`: RGB-D + proprioception through the client; no reset, no object poses, no success predicate |
-| Action space | `submit` chunks of `joint_position` (25, streamed at the 30 Hz control rate with the agent's `dt`; base entries are per-step targets) or of `ee_pose` (16, both end effectors, cuRobo IK per row); `observe` the current frames or those recorded over the last seconds (`last_s`); hold chunks (`hold(s)`); binary RCB1 responses |
-| Crash recovery | `restart: on-failure:6`; the service journals every control step (`journal.f64`) and resumes the same episode after a crash (resume class `approx`, docs/protocol/standard_mode.md §13.1); startup watchdog `RCB_STARTUP_TIMEOUT_S` = 1800 s |
-| Dataset | the licensed BEHAVIOR dataset, mounted read-only into the sidecar from `$RCB_BEHAVIOR_DATA` (a precondition) |
-| Budget | the agent's time is the `Agent time budget` row (the number is this task's `[agent] timeout_sec`; tasks/behavior-1k/README.md) |
-| Collect hook time | 23400 s: the episode end (up to 2 h through a resume, with the 5 s settle window) + a video-only render after the verdict, only when the live video is missing (up to 4 h) + 30 min |
-
-### Sidecar and grading
-The agent gets only the `eai-standard/3.0` client (docs/protocol/standard_mode.md); the simulator runs in the `sim` sidecar
-(`environment/docker-compose.yaml`: GPU on the sidecar, the licensed dataset mounted read-only at `/data`, the service's own
-record in `/out`), which owns the scene, judges the episode and records it as a (T, 25) trajectory and a video. The
-collect hook (`environment/sim/finalize.sh`) ends the episode (the settle window on the live simulator when it was still
-running), lets the service exit and writes `final.json` from the live result; nothing replays the episode. The
-verifier runs in a separate sandbox (`tests/Dockerfile`) over those artifacts.
+## License
+The task definitions (BDDL activity definitions) and the simulator are BEHAVIOR-1K's
+([StanfordVL/BEHAVIOR-1K](https://github.com/StanfordVL/BEHAVIOR-1K) v3.9.2: OmniGibson and bddl, MIT License; paper: Li
+et al., 2024, "BEHAVIOR-1K: A Human-Centered, Embodied AI Benchmark with 1,000 Everyday Activities and Realistic
+Simulation", arXiv:2403.09227). The scenes, objects, robot assets and task instances are the BEHAVIOR Data Bundle, under
+the BEHAVIOR Data Bundle End User License Agreement: **non-commercial academic research use only (NC)**, no
+redistribution, use only within OmniGibson. It is never in an image or in this repository; each user downloads it after
+accepting that licence and mounts it read-only. The simulator image contains NVIDIA Isaac Sim 5.1 and Omniverse Kit
+(NVIDIA proprietary licence terms, accepted when the image is built).

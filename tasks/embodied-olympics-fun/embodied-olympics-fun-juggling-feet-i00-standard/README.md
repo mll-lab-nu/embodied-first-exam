@@ -1,34 +1,50 @@
-# embodied-olympics-fun-juggling-feet-i00-standard
+# Embodied Olympics · juggling with the feet (standard)
 
 | | |
 |---|---|
-| Benchmark | Embodied Olympics - Fun |
-| Mode | standard (`eai-standard/3.0`) |
-| Twin | `embodied-olympics-fun-juggling-feet-i00-privileged` |
-| Simulator / robot | `mujoco` / `unitree-g1` |
-| Family / instance | `juggling_feet` / seed 0 |
-| Oracle | `none` — no reference solution; the referee is tested: positive by injection (the ball held for real between the palms while the right leg rises; the drop: the ball taken from the palms to 0.25 m over the toe, the pelvis held where it stands; ten real strikes of the right foot by its own motors, about 3 m/s in and out); negatives: a still foot, soft strikes, the knee-height rule, shin, thigh, chest, head, hands, a ball resting on the toe, a carry, a hand during a touch, the real drop to the ground, trapped between the feet, out of the grid, a fall; human review in the pull request that adds the benchmark (PROTOCOL §4) |
-| Agent time budget | 7200 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
+| Task ID | `embodied-olympics-fun-juggling-feet-i00-standard` |
+| Benchmark | [Embodied Olympics - Fun](https://github.com/CHIGUI0/roboolympics) (Embodied Olympics authors, 2026), upstream `CHIGUI0/roboolympics@7df999b` |
+| Robot | Unitree G1 humanoid (1.32 m, 33 kg, 29 joints), with Unitree's walking and running policies |
+| Mode | standard |
+| Instance | `juggling_feet`, seed 0 |
+| Time limit | 2 h |
+| Reference solution | None |
 
 ## Task
-Drop the football from your hands and juggle it with your feet for ten touches in a row, each sending it above your knees, without it touching the ground. (Embodied Olympics `juggling-feet`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Drop the football from your hands and juggle it with your feet for ten touches in a row, each sending it above your
+knees, without it touching the ground.
 
-## Difficulty
-Each touch is an upward strike of a foot, timed to a falling 0.43 kg ball and aimed so that the ball comes down on a foot again, ten times in a row, and the robot's thick lower leg leaves only the front few centimetres of the foot where a falling ball meets the foot and not the shin, a spot where a few millimetres decide whether the ball goes up, forward or back onto the leg. To bring a foot under the ball the robot has to stand on the other leg, which neither built-in gait does, and a ball that merely bounces off a still foot loses most of its height and wanders off. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 5 resets (only the last attempt is graded).
+## Success criteria
+A size 5 football starts pressed between the robot's open palms, in the middle of a 5 m x 5 m grid on grass. The
+referee's stages, in order: touch 1, touch 2, ..., touch 10.
+- Drop: the ball has touched nothing of the robot for 0.03 s. Before the drop only the hands may touch it. A hand or
+  arm may still touch it for 0.15 s after the drop.
+- A touch is contact with a foot: the part below the ankle joint, or the lower leg where it lies over the foot (from
+  0.08 m behind to 0.15 m ahead of the ankle joint along the foot, and at most 0.12 m above it). Contacts less than
+  0.05 s apart are one touch; a touch lasts at most 0.05 s.
+- A touch counts when, before anything touches the ball again, its centre has risen at least 0.22 m above its height
+  at the start of the touch and its lowest point is above 0.36 m (knee height), and it left the touch with at least
+  0.95 times the speed it came in with. A slower touch is not counted, and is not a fault.
 
-## Reference solution
-None (as `embodied-olympics-fun-juggling-feet-i00-privileged`).
+Fouls (each fails the attempt): the ball touches the ground (also before the drop); a part other than the hands
+touches it before the drop; a hand or arm touches it later than 0.15 s after the drop, or while a touch is going on
+or not yet judged; any other part touches it (the lower leg above or beside the foot area above included); both feet
+touch it at once; a touch lasts longer than 0.05 s; it is touched again before the last touch is judged; an ankle
+leaves the grid. Fall rule: on, the pelvis below 0.35 m or any part other than the feet on the ground. Time limit:
+60 s (6,000 control steps).
 
-## Verification
-The sim sidecar's referee judges the live attempt, and that is the verdict (`final.json`: `graded_by` live, `replays` 0;
-no grading replay, owner 2026-10-17); the frozen start is checked on the live simulator (`instance_mismatch`:
-infrastructure), and the video is rendered from the recorded attempt afterwards. `/tests/grade.py` reads
-`/data/final.json`: pass iff the live attempt succeeded. The
-rules: A size-5 football (0.22 m across, 0.43 kg, in air) starts pressed between your two open palms; you stand in the middle of a square grid 5.0 m on each side, marked on the grass. Your hands have no fingers and no grip (the grip columns of the action rows do nothing in this task): only the squeeze of your arms and friction hold the ball, and it slips out when they press too little. Until the drop only your hands (the palm pads and the wrists) may touch the ball. The drop: the ball has touched no part of you for 0.03 s; it is the end of the ball's last contact with a hand. A hand or an arm may still be in contact with the ball for 0.15 s after the drop (the ball leaving the hand); after that a hand or an arm on the ball is a handball. From the drop on, only your feet may touch the ball: a foot is the part below the ankle joint (sole, instep, sides, toe and heel); a contact with your lower leg also counts as the foot where it lies over the foot (from 0.08 m behind to 0.15 m ahead of the ankle joint along the foot) and no more than 0.12 m above the ankle joint (along the foot's up direction), because your leg's collision shape covers the instep; the leg above that (shin, knee, thigh), the trunk, the head and the arms are other surfaces. A touch is a contact of the ball with a foot (contacts less than 0.05 s apart are one touch). It counts when, before anything touches the ball again, the ball's centre has risen at least 0.22 m above the height it had when the touch began and the whole ball (its lowest point) has risen above 0.36 m, your knee height; and when the ball left the touch with at least 0.95 of the speed it had when the touch began (both taken at the height where the touch began): a ball that only bounces off a still foot leaves slower, and such a touch is not counted, and is not a fault. You succeed at the moment the tenth touch counts. You fail if the ball touches the ground (before the drop too), if a part of you other than the hands touches it before the drop, if a hand or an arm touches it later than 0.15 s after the drop, or at all while a foot touches it or before a foot's touch has counted or been judged a bounce, if any part of you other than a foot touches it, if both feet touch it at once (the ball trapped), if one touch lasts longer than 0.05 s (the ball resting, rolling or balanced on a foot), if the ball is touched again before a touch has counted or been judged a bounce, if a foot (its ankle) leaves the grid, if you fall (your pelvis lower than 0.35 m above the ground, or any part of you other than the feet on the ground; standing on one foot is not a fall), or after 60 s. No oracle; human review in the pull request that adds the benchmark (PROTOCOL §4).
+Graded: the live attempt, judged by the referee in the simulator service as it runs; nothing is replayed. The referee's
+success call is an event: once it is made at some control step, the attempt is a success. It is never shown to the
+agent and does not end the attempt: the physics goes on until the agent's `/finish`, the attempt's time limit, or the
+end of the agent's time (2 h), and nothing after the call undoes it. A failure the referee calls before any
+success (a foul, a fall, the physics diverging) ends the attempt at once with 0. Reaching the time limit or the end of
+the session without a success call scores 0. The agent has 5 resets, each starting a new attempt from the
+frozen start; only the last attempt (the one after the last reset) is graded, and a success in an earlier attempt does
+not count. A simulator error raised by the agent's own call ends the attempt with 0. An attempt that does not start
+from the frozen instance, or a service crash outside the agent's calls, is an infrastructure failure, not a score.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -38,13 +54,10 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Category | football-and-volleyball |
-| Rule book | Ontario Soccer, OPDL Player Technical Benchmark Exercises (2015): Ball Mastery, juggled on the instep (the exercise list's 'one attempt on each instep', the warm-up's 'instep right juggling' and 'instep left juggling'): the ball starts in the hands, the player works in a 5 m x 5 m grid and has 60 seconds, the maximum number of consecutive juggles is recorded, and the ground, another surface or stepping out of the grid stops the count; the test sets no pass mark, so the family's standard is 10 consecutive foot juggles (the first milestone of youth juggling ladders and the standard of the existing juggling family). IFAB Laws of the Game 2025/26 for the ball (Law 2: size 5, 68-70 cm round, 410-450 g) and for handling (Law 12: the hand or the arm); deviations: The test's either-instep attempts are one attempt here in which either foot may play, in any order. · The foot is the robot's ankle-roll link, the shoe-like part below the ankle joint: its sole, its top (the instep and laces), its sides, toe and heel; the robot has no separate toes and no laces, so the whole part counts. The G1's collision hull of the lower leg is wider and deeper than its shin and covers the instep: a ball lying on the top of the foot touches it. A contact with the lower leg's hull therefore counts as the foot where its point lies over the foot (between 0.08 m behind and 0.15 m ahead of the ankle joint along the foot) and at most 0.12 m above the ankle joint (measured along the foot's up direction: where the ball's equator is when it lies on the instep, plus 1 cm); a contact higher up the leg is the shin, the knee or the thigh: another surface, which the test's count does not allow. · A counter's eye is replaced by numbers: contacts less than 0.05 s apart are one touch, a touch may last at most 0.05 s (a juggle is a strike, the ball may not rest, be cushioned or be balanced on the foot; a real instep kick's contact lasts about 0.01 s, Nunome et al. 2006, J. Sports Sci. 24: 11-22, and the robot's strikes last 0.011-0.013 s), and a touch counts when the ball's centre has then risen at least 0.22 m (one ball diameter) above where it was when the touch began and the whole ball has risen above the robot's knee height (0.36 m above the ground standing), before anything touches it again. · A juggle is a strike: so that a ball that merely bounces off a still foot is not juggling, a touch must send the ball off with at least 0.95 of the speed it arrived with (a still foot returns at most the ball's own restitution, 0.85, and a raised leg held by its motors about 0.55); a touch that does not is not counted, and is not a fault. · The ball's contact with the foot keeps the ball's own restitution (0.85, from the rule book's drop test): the robot's foot is rigid, like the metal pendulum with which Andersen, Kristensen and Sorensen (Football Science 5: 45-50, 2008) measured 0.82, and the compliance of a human foot and ankle (whose kicks they and earlier studies measured at 0.45-0.65) is here the compliance of the robot's own joints: a raised leg held by its motors returns about 0.55 of the ball's speed. · The ball starts pressed between the robot's two open palms in front of its hips (the robot has flat palm pads, no fingers and no grip): only the arms' squeeze and friction hold it, and it slips out when they press too little. The drop is the hands' own movement (the palms parting); a referee's eye for 'the ball has left the hand' is replaced by a number: the ball touches no part of the robot for 0.03 s, and the drop is the end of its last contact. Before the drop only the hands may touch the ball (a ball held against the body, an arm or a leg is not in the hand). The palm pads' contact with the ball is that of a ball on a human hand (a ball thrown at a still palm keeps 0.10 of its speed, as a volleyball dropped onto a supported, relaxed hand does: Ivanova, ISBS 2000); every other contact keeps the ball's rule-book rebound. No wind. |
-| Stages | touch 1 → touch 2 → touch 3 → touch 4 → touch 5 → touch 6 → touch 7 → touch 8 → touch 9 → touch 10 |
-| Service | `environment/sim/server.py` (the Embodied Olympics adapter) on `rcb_service.py` (eai-standard/3.0), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
-| Observations | `head_left`, `head_right` (RGB 270 × 480, depth on `head_left`), `venue` (fixed); proprioception: joints, torques, targets, two IMUs, grip state |
-| Episode | 6000 control steps (60 s at 100 Hz); 5 resets, the last attempt graded |
-| Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md) |
+## License
+The Embodied Olympics robot library and running-policy port ([CHIGUI0/roboolympics](https://github.com/CHIGUI0/roboolympics)
+@ `7df999b`, a private repository) is released under the MIT License (`LICENSE.roboolympics` in the image); this
+benchmark's venues and referees are MIT too. Third-party parts in the image: the Unitree G1 model and meshes from MuJoCo
+Menagerie (BSD-3-Clause), the Unitree H1-2 model, meshes and walking policy and the G1 walking policy from
+unitree_rl_gym (BSD-3-Clause), the G1 running policy from C1801SYQ/g1_running (Apache-2.0), FALCON's G1 walking policy
+from LeCAR-Lab/FALCON (MIT) and the WBC-AGILE G1 walking policy from NVIDIA (Apache-2.0). No non-commercial terms apply.

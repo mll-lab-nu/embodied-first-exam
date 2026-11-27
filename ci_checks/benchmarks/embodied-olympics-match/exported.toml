@@ -8,6 +8,10 @@
 # Every task: the standard modes are graded by the live episode: core/service.py, core/grading.py = tests/grade.py,
 # core/realtime.py (real-time: the control step's own error), spectator/sport_video.py (where present),
 # docker-compose.yaml (RO_VERDICT_REPLAY=0), task.toml, README.md.
+# Every task's README.md is not the export's: `scripts/task_conventions.py` renders it from
+# tasks/embodied-olympics-match/readme.toml (with instruction.md and task.toml), so a re-export's README.md is
+# replaced by that rendering. The benchmark README's "Changes from upstream", "Interface" and "Grading" describe the
+# patches the comments below name.
 # Every task: provenance text only (no code, number or field a grader or simulator reads): machine names,
 # review-server links and the exporter repository's name in comments, docstrings, scene-file comments and free-text
 # metadata fields (policy / weights / reference-parameter notes, sport.toml comments, oracle_evidence), the bundle

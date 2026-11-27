@@ -1,32 +1,38 @@
-# mujoco_playground_aloha_single_peg_insertion-privileged
+# MuJoCo Playground · ALOHA single peg insertion (privileged)
 
 | | |
 |---|---|
-| Benchmark | MuJoCo Playground |
+| Task ID | `mujoco_playground_aloha_single_peg_insertion-privileged` |
+| Benchmark | [MuJoCo Playground](https://playground.mujoco.org/) (Zakka et al., 2025), upstream `google-deepmind/mujoco_playground@4057c14` |
+| Robot | ALOHA 2 bimanual robot (two ViperX 300 S arms, 6 joints and a gripper each; 14 position actuators) |
 | Mode | privileged |
-| Twin | `mujoco_playground_aloha_single_peg_insertion-standard` |
-| Simulator / robot | `mujoco` / `aloha-2` |
-| Family / instance | `mujoco_playground/AlohaSinglePegInsertion` / seed 60417 (allowed seeds: [60417, 60418, 60419]; PROTOCOL §2) |
-| Oracle | `full` |
-| Agent time budget | 1800 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:mujoco-0.1.2` |
+| Instance | `mujoco_playground/AlohaSinglePegInsertion`, seed 60417 |
+| Time limit | 30 min |
+| Reference solution | Included |
 
 ## Task
 Push the red peg well into the open end of the blue socket.
 
-MuJoCo Playground's `AlohaSinglePegInsertion` ported to plain MuJoCo (CPU, deterministic) for this benchmark.
+## Success criteria
+Pass condition, defined by this benchmark (MuJoCo Playground's `AlohaSinglePegInsertion` has only a shaped training reward and no success
+test), checked on one state, the one after the episode's last control step: the peg's tip (site `peg_end2`) is less
+than 5 mm from the socket's axis, the line through sites `socket_rear` and `socket_entrance`, and lies inside the
+cavity. Inside means the tip's position t along the axis is from −0.875 to 0.75, where t = 0 at `socket_rear` (the
+tube's centre), t = 1 at `socket_entrance` (the open end) and one unit is 48 mm: at least 12 mm in from the open end,
+and at most 2 mm past the inner face of the rear wall (t = −0.833). Both the peg and the socket can move; the sites
+are taken where they are in that state. Meeting the condition at an earlier step does not count.
 
-## Difficulty
-MuJoCo Playground defines only a shaped RL reward; this task scores a binary success defined from it (peg tip ≤ 5 mm from the socket axis and inside the cavity at least 12 mm from its open end (axial −0.875 ≤ t ≤ 0.75; t = 0 at the tube's centre, 1 at the entrance, −0.833 at the rear wall) at the end), so a trajectory has to actually finish the manipulation rather than collect partial reward.
+Graded file: `/app/output/trajectory.npz`, array `actions` of shape (T, 14) with T at most 3,000: one row
+of actuator targets per control step, all finite (values outside the actuator ranges are clipped). After the agent's
+session the verifier, in a separate sandbox without network, replays it once, open-loop, from its own copy of the
+frozen start (`tests/instance.json`), and checks the condition on that replay. Only the trajectory is scored (`gen.py`
+is not). A missing file, a file that is not an `.npz` with a numeric `actions` array, or an array of another width, with
+more rows or with a NaN or infinite value scores 0. A replay that does not rebuild the frozen start (its state hash
+differs) and any other error inside the grader, such as a replay that dies or times out, are reported as a grader
+error, not as the agent's score.
 
-## Reference solution
-`solution/oracle_ik.py`: top-down grasps with DLS IK + gravity feedforward, lift, rate-limited visual servo of the peg tip onto the socket axis, push in (tip 1.8 mm from the axis, t = 0.44, 470 control steps)
-
-## Verification
-Playground has only a shaped RL reward; defined here from its insertion geometry: peg tip ≤ 5 mm from the socket axis and inside the cavity at least 12 mm from its open end (axial −0.875 ≤ t ≤ 0.75; t = 0 at the tube's centre, 1 at the entrance, −0.833 at the rear wall) at the end
-
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -36,11 +42,11 @@ Caps per container (PROTOCOL §6).
 - GPU: any NVIDIA GPU, held by `main`.
 - Recommended GPU: any 8 GB+ NVIDIA GPU (RTX 4090 / L4).
 
-## Details
-| | |
-|---|---|
-| source | [MuJoCo Playground](https://github.com/google-deepmind/mujoco_playground) @ 4057c14 (Apache-2.0): `manipulation/aloha/xmls/mjx_single_peg_insertion.xml`; ALOHA 2 from MuJoCo Menagerie @ 1b86ece |
-| physics | MuJoCo 3.3.7, 400 Hz (Playground's sim_dt), implicitfast; control 50 Hz (8 substeps) |
-| instance | Playground's reset randomization (peg, socket xy ± 0.1 m) drawn with seed 60417; initial-state hash in instance.json |
-| success | Playground has only a shaped RL reward; defined here from its insertion geometry: peg tip ≤ 5 mm from the socket axis and inside the cavity at least 12 mm from its open end (axial −0.875 ≤ t ≤ 0.75; t = 0 at the tube's centre, 1 at the entrance, −0.833 at the rear wall) at the end |
-| deliverable | `(T, 14)` actuator targets per control step, T ≤ 3000; bit-exact replay |
+## License
+MuJoCo Playground ([google-deepmind/mujoco_playground](https://github.com/google-deepmind/mujoco_playground) @
+`4057c14`) is released under the Apache License 2.0. The robot models come from MuJoCo Menagerie
+([google-deepmind/mujoco_menagerie](https://github.com/google-deepmind/mujoco_menagerie) @ `1b86ece`, the commit
+Playground pins), each under its own license: Unitree Go1 (BSD 3-Clause, Unitree Robotics), Boston Dynamics Spot
+(BSD 3-Clause, Clearpath Robotics), Google Barkour vB (Apache License 2.0, DeepMind), ALOHA 2 (BSD 3-Clause, Trossen
+Robotics), Franka Emika Panda (Apache License 2.0). The rough-terrain texture is from Poly Haven (CC0). No
+non-commercial terms apply. The simulator is MuJoCo 3.3.7 (Apache License 2.0).

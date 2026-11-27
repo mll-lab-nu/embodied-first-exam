@@ -1,30 +1,42 @@
-# robocasa365-tong-buffet-setup-i00-privileged
+# RoboCasa365 · TongBuffetSetup (privileged)
 
 | | |
 |---|---|
-| Benchmark | RoboCasa365 |
+| Task ID | `robocasa365-tong-buffet-setup-i00-privileged` |
+| Benchmark | [RoboCasa365](https://github.com/robocasa/robocasa) (Nasiriany et al., 2026), upstream `robocasa/robocasa@4f8a298` |
+| Robot | Franka Panda arm on an Omron mobile base with a torso lift (PandaOmron), parallel-jaw gripper |
 | Mode | privileged |
-| Twin | `robocasa365-tong-buffet-setup-i00-standard` |
-| Simulator / robot | `robosuite` / `franka-panda-omron` |
-| Family / instance | `robocasa365/TongBuffetSetup` / seed 0 |
-| Oracle | `full` |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:robocasa365-0.1.0` |
+| Instance | `robocasa365/TongBuffetSetup`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | Included |
 
 ## Task
-RoboCasa365's `TongBuffetSetup` kitchen task with a Franka Panda arm on an Omron mobile base (with a torso lift): Take the tongs from the drawer and put them on the dining counter next to the tray with the hot dog, and move your hand away. Produce one replayable trajectory of the robot's native controller commands on one frozen instance; graded on the state after the last action. Benchmark notes in `tasks/robocasa365/README.md`.
+Take the tongs from the drawer and put them on the dining counter next to the tray with the hot dog, and move your hand
+away.
 
-## Difficulty
-Full privileged state, unlimited resets and self-replay; a mobile manipulator in one of RoboCasa365's large, cluttered kitchens, long-horizon contact-rich manipulation with a 20 Hz controller. The standard twin removes the privileged state.
+## Success criteria
+The tongs and the tray both touch the dining counter (the island), with their centres at most 50 cm apart
+horizontally. The gripper's grip point is more than 15 cm from the tongs and from the tray. Whether the hot dog is
+still on the tray, and the drawer, are not checked.
 
-## Reference solution
-Retargeted by PR #4 from official demonstration episode 0 (`demo_0`, 1222 recorded actions; RoboCasa365's demonstrations use a different arm controller): it follows the demonstration's recorded arm joint positions as this controller's absolute joint targets, with the base and torso commands corrected by feedback (PR #4 method `demo_feedback`). Executed from the frozen scene by the robot's own controller: 1222 actions in `solution/oracle.npz`. Neither the demonstration nor the reference is in the image; the agent cannot reach them.
+In the conditions above, an object's centre is its body origin in the simulator; touching is a MuJoCo contact between the two
+models' collision geoms; an object's horizontal radius is half the diagonal of its bounding box seen from above; the
+gripper's grip point is the robot's end-effector site; a joint's opening is its position as a fraction of the joint's
+range. The environment's check runs three times per control step (once inside the environment's step, before the
+fixtures update their state, and twice after it) and once at the frozen start; counts of checks above are counts of
+these runs.
 
-## Verification
-`tests/grade.py` in a separate sandbox without network: one replay in a fresh process from the verifier's own copy of the instance; `success = success on the final state ∧ not solved at the start`. Reference: a fresh-process replay ends in the live run's state (hash `006fb8568e2f…`) and succeeds. `nop`: no trajectory, reward 0; the instance is not solved at the start.
+The graded file is `/app/output/trajectory.npz`: an array `actions` of shape (T, 13), finite, with 1 ≤ T ≤ 3000, one
+row per control step (1/20 s); each row is clipped to the controller's limits when it is executed. The verifier replays
+it once, open-loop, in a fresh process from its own copy of the frozen instance, and takes the check's result on the
+state after the last row; nothing earlier in the replay counts, except where the conditions above say a count or a
+moment counts as it happens. It scores 1 when that result is a success and the check did not already hold at the
+frozen start. A missing file scores 0, and so does an invalid one: over 8 MB, not an archive of at most 64 plain `.npy`
+arrays, no `actions`, a shape other than (T, 13), a NaN or infinite value, or T outside 1 to 3000. A replay that fails
+with an error (a simulator error, or the verifier's frozen instance failing its hash check) scores 0.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -33,10 +45,12 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Source | [RoboCasa365](https://github.com/robocasa/robocasa) @ 4f8a298 (robocasa 1.0.1; MIT), robosuite @ 5ce6643 (1.5.2), MuJoCo 3.3.1; [environment source](https://github.com/robocasa/robocasa/blob/4f8a2980def75a55dff96b990745b83540425f09/robocasa/environments/kitchen/composite/arranging_buffet/tong_buffet_setup.py#L5) |
-| Instance | the initial state of official demonstration episode 0 (`demo_0`); MuJoCo state, model arrays, task state and RNG frozen in `instance.npz` (SHA-256 `8651564b226f…`, checked on load) |
-| Deliverable | `(T, 13)` native controller commands, 1 ≤ T ≤ 3000, 20 Hz |
-| Success | the environment's own check (`_check_success`) on the state after the last action: the tongs and the tray both touch the dining counter with their centres at most 0.5 m apart (horizontally), and the gripper ends more than 0.15 m from both. |
+## License
+The kitchen tasks, scenes and success checks are RoboCasa365's ([robocasa/robocasa](https://github.com/robocasa/robocasa)
+@ `4f8a298`, robocasa 1.0.1), released under the MIT License (Copyright (c) 2026 the RoboCasa Team); the simulation
+framework is [robosuite](https://github.com/ARISE-Initiative/robosuite) @ `5ce6643` (1.5.2, MIT License) on MuJoCo 3.3.1
+(Apache License 2.0). RoboCasa's assets (fixtures, object meshes, textures, including the Objaverse and AI-generated
+objects) are under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) as RoboCasa states (credit: RoboCasa,
+robocasa.ai); no non-commercial terms apply. They are downloaded, pinned by SHA-256, when the image is built and are not
+redistributed in this repository. Paper: Nasiriany et al., 2026, "RoboCasa365: A Large-Scale Simulation Framework for
+Training and Benchmarking Generalist Robots", ICLR 2026.

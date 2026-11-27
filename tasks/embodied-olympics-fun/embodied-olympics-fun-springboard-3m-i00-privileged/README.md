@@ -1,31 +1,61 @@
-# embodied-olympics-fun-springboard-3m-i00-privileged
+# Embodied Olympics · 3 m springboard dive (privileged)
 
 | | |
 |---|---|
-| Benchmark | Embodied Olympics - Fun |
+| Task ID | `embodied-olympics-fun-springboard-3m-i00-privileged` |
+| Benchmark | [Embodied Olympics - Fun](https://github.com/CHIGUI0/roboolympics) (Embodied Olympics authors, 2026), upstream `CHIGUI0/roboolympics@7df999b` |
+| Robot | Unitree G1 humanoid (1.32 m, 33 kg, 29 joints), with Unitree's walking and running policies |
 | Mode | privileged |
-| Twin | `embodied-olympics-fun-springboard-3m-i00-standard` |
-| Simulator / robot | `mujoco` / `unitree-g1` |
-| Family / instance | `springboard_3m` / seed 0 |
-| Oracle | `full` — Reference: a scripted dive (ankle-strategy balance on the bent board while the arms rise, a balanced crouch, a 0.27 s lean, a push that depresses the board 0.18 m), the lean time found by bisection: 170 deg at the first touch, 5.3 deg at the hips, entry 1.44 m out. The board has a tip stiffness of 5449 N/m (built for a published 5446) and a first mode of 3.93 Hz (sqrt(k/m_eff) 3.94). Referee test negatives as in platform-10m plus a double bounce; nop topples off at 18.5 s (a fall). Measured: success after 5.67 s of the 20 s limit, live and in a fresh replay, ending in the same state. |
-| Agent time budget | 7200 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
+| Instance | `springboard_3m`, seed 0 |
+| Time limit | 2 h |
+| Reference solution | Included |
 
 ## Task
-Dive from the 3 m springboard: take off from both feet, do a forward half somersault with your body straight, and go into the water head first, straight and vertical. (Embodied Olympics `springboard-3m`: one Unitree G1 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
+Dive from the 3 m springboard: take off from both feet, do a forward half somersault with your body straight, and go
+into the water head first, straight and vertical.
 
-## Difficulty
-The robot must time its push with a board that bends and recoils under its 33 kg, take off high with exactly the right forward rotation, and then hold a straight body with the legs drawn together, the toes pointed and the short arms stretched overhead through a 1 s fall. Nothing can be corrected once it is in the air.
+## Success criteria
+The robot stands at the end of a 3 m springboard facing the water; the board bends and springs back under it. The water
+is not simulated (its surface is the plane z = 0, passed without resistance). The dive is a forward dive straight. The
+referee's stages, in order: take-off, entry, under water.
+- Take-off: the robot is in the air (both feet stayed on the board until then) and its centre of mass has risen at
+  least 0.1 m above its height at the start.
+- Entry: the first part to reach the water surface is a hand or the head; by then the body line (ankles' middle to
+  shoulders' middle) has turned 180 degrees forwards, within 45 degrees, from the upright start; the middle of the
+  palms at that moment is 0.5 m to 3.0 m in front of the board's tip (at rest) and within 0.5 m to either side of the
+  line the robot faced at the start.
+- Under water: the whole robot is below the surface, with the entry kept clean until then (below). The success is
+  called then.
 
-## Reference solution
-`solution/oracle.py` drives the robot through the task's own tooling, closed loop on the privileged state, and writes the trajectory (`solution/solve.sh`). Reference: a scripted dive (ankle-strategy balance on the bent board while the arms rise, a balanced crouch, a 0.27 s lean, a push that depresses the board 0.18 m), the lean time found by bisection: 170 deg at the first touch, 5.3 deg at the hips, entry 1.44 m out. The board has a tip stiffness of 5449 N/m (built for a published 5446) and a first mode of 3.93 Hz (sqrt(k/m_eff) 3.94). Referee test negatives as in platform-10m plus a double bounce; nop topples off at 18.5 s (a fall). Measured: success after 5.67 s of the 20 s limit, live and in a fresh replay, ending in the same state.
+Through the entry: when the pelvis reaches the surface the body line is within 15 degrees of vertical, head down; the
+shoulders' axis stays within 20 degrees of the board's width direction (no twist); both palms are at least 0.15 m
+beyond the centre of the head along the body line, at most 0.2 m apart and each within 0.15 m of the body line. From
+the moment the body line passes the horizontal until the dive is complete the robot is straight: hips and knees each
+bent less than 20 degrees, the ankles at most 0.12 m apart, each ankle pitched at least 0.3 rad towards the toes.
 
-## Verification
-`/tests/grade.py` replays `/app/output/trajectory.npz` from the frozen start in one fresh process (`rcb_rfo.py replay`:
-one sim row per control step until the referee ends the attempt). Pass iff the referee's verdict is a success. The rules: You stand at the end of the 3 m springboard facing the water (+x). The board bends and springs back under you: you may rock it with your feet on it. The dive: take off from both feet at once (both feet stay on the board until the take-off: a foot off it for more than 0.1 s while the other is on it, or any flight of 0.1 s or more that lands on the board again (a double bounce), fails; the take-off counts when you are in the air and your centre of mass has risen at least 0.1 m above its height at the start), turn forwards through half a somersault (180.0 degrees, within 45.0, counted from your upright start) and enter the water head first. From the moment your body line (from the middle of your ankles to the middle of your shoulders) passes the horizontal until the dive is complete you must be in the straight position: hips and knees each bent less than 20.0 degrees from straight, the ankles at most 0.12 m apart, the toes pointed (each ankle pitched at least 0.3 rad towards the toes). The entry starts when the first part of you reaches the water surface (z = 0) and the dive is complete when the whole of you is under it; that first part must be a hand or the head (feet first fails); when your pelvis reaches the surface your body line must be within 15.0 degrees of vertical, head down; through the entry: not twisted (your shoulders' axis within 20.0 degrees of the board's width direction); both palms at least 0.15 m beyond the centre of your head along the body line, at most 0.2 m apart and each within 0.15 m of the body line; and the straight position. The entry point (the middle of your palms when the first part of you touches the water) must be between 0.5 m and 3.0 m in front of the board's tip at rest (closer is unsafely close) and within 0.5 m to either side of the line you face at the start. You fail if, after the take-off, any part of you touches the board, its stand or the railings. Before the take-off any part other than the feet on the board, or anything on the railings, fails. The water is not simulated: nothing after the dive is complete is judged. Success: a complete dive that keeps all of these. The attempt ends after 20 s.
+Fouls (each fails the attempt): before the take-off, any part above the ankles touching the board or its stand,
+anything touching the railings, a foot off the board for more than 0.1 s while the other is on it, or a flight of
+0.1 s or more that lands on the board again (a double bounce); after the take-off, any touch of the board, its stand
+or the railings; reaching the water without a take-off, feet first, outside the distances, or outside any limit
+above. The generic fall rule is off. Time limit: 20 s (2,000 control steps).
 
-## Resources
-Caps per container (PROTOCOL §6).
+Graded file: `/app/output/trajectory.npz`, as `s.save_trajectory()` writes it: an `actions` array of sim rows, one per
+10 ms control step, and the task's family name. After the agent's session it is replayed once, open-loop, from the
+frozen start, in a fresh process of a separate verifier container without network. Rows run one per control step
+until the referee calls the attempt; rows after the call, and rows past the attempt's time limit, are not run. The
+task is passed if the referee has called a success when the replay stops. If the rows run out before the referee's
+call, the task is not passed. A row the robot cannot run (its first value, the mode, is not one of the robot's modes)
+ends the replay at that row without a pass.
+
+The physics diverging (a non-finite state, a bad acceleration, or the robot or a prop faster than 150 m/s) ends the
+attempt as a failure, unless a success was called in an earlier control step. Only the trajectory is scored (`gen.py`
+and `NOTES.md` are not). A missing file, a file that is not such an array (a link, over 64 MB, more than 40,000 rows,
+the wrong row width), a file for another task, or a non-finite value in the rows that are used scores 0. An image that
+no longer rebuilds the frozen start, or a replay that crashes or runs over 600 s, is an infrastructure failure, not a
+score.
+
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -34,14 +64,10 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Category | parkour-apparatus-balance |
-| Rule book | World Aquatics (FINA) Diving Rules 2022-2025 (in force 3 December 2022): D 1.5 (dive numbers: 101 = front group, no flying action, one half somersault; A = straight), D 6.5.4 (a double bounce on the springboard is a failed dive), D 6.5.6 (a take-off from the springboard not from both feet simultaneously: failed), D 6.5.7 (a twist of 90 degrees or more at the entry: failed), D 6.5.8 / 6.5.8.1 (head first: arms below the head, maximum 4.5 points; the feet entering before the head or hands: failed), D 8.1.1 (awards 0 to 10), D 8.2.4 (standing dives: the starting position on the front end, the feet stay on the springboard until the take-off), D 8.4.2-8.4.4 (the take-off from both feet simultaneously, bold, balanced and high, from the end of the springboard), D 8.5.1-8.5.5 (the direct line of flight; touching the springboard; unsafely close: at most 2 points; straight: not bent at the knees or hips, feet together, toes pointed), D 8.6.1-8.6.3 and 8.6.7 (the entry vertical, not twisted, the body straight, feet together, toes pointed; head first with the arms stretched beyond the head in line with the body, the hands close together; complete when the whole body is under the surface). World Aquatics Facilities Rules FR 5.1 (the springboard at least 4.88 m long and 0.5 m wide, a movable fulcrum, its top 0.35 m above the concrete platform that carries the fulcrum, handrails at the back and the sides of 3 m springboards) and FR 5.3.3 (3 m above the water). The board is the Maxiflex Model B (Duraflex), the board of World Aquatics competitions; deviations: FR 5.1 (the springboard): a flexible board, not a rigid one: the 4.88 m board is fixed from its rear hinge to the fulcrum, 1.88 m from the hinge (Miller et al. 1998, J Sports Sci 16: 571-583, as quoted at ISB 2011), and beyond the fulcrum it is a chain of 8 rigid segments on hinges with rotational springs: a uniform beam whose bending stiffness gives the Maxiflex B's measured tip stiffness, 5446.0 N/m, and whose mass per metre gives its measured effective mass, 8.87 kg (Kong, Yeadon and King, ISBS 2004, fulcrum setting 7.5), so the unloaded board rings at about 3.9 Hz; the real board is tapered (stiffer near the fulcrum), twists, and the fulcrum is not adjustable here · FR 5.1 (the board's damping): the measured models have none; the chain has a small stiffness-proportional damping, a 0.01 damping ratio in its first mode, so that it rings out · D 8.1.1 (the judges' award): the panel's 0-10 award is replaced by pass/fail lines that stand for a dive with no failed-dive call and no capped award: the entry within 15.0 degrees of vertical, hips and knees bent less than 20.0 degrees, the ankles at most 0.12 m apart, the toes pointed (each ankle extended at least 0.3 rad of the robot's 0.52), both palms at least 0.15 m beyond the head along the body line, at most 0.2 m apart and within 0.15 m of the body line, a twist under 20.0 degrees; the rule book gives the qualities, not these numbers · D 8.6 and D 8.1.2 (the entry): the water is not simulated. The pool's surface is a plane the robot passes through without resistance; the entry is judged from the first touch of the surface until the whole body is under it (D 8.6.7), and nothing after that is judged (D 8.1.2: no movement beneath the surface counts). With no water the body keeps turning through the entry (the water stops a diver's rotation), so the entry's angle is taken at one moment, when the hips (the pelvis) reach the surface; the shape is judged through the whole passage · D 8.4.4 (a high take-off): a take-off counts once the robot's centre of mass rises at least 0.1 m above its height at the start, so that a fall forward is not a dive · D 8.5.5 (the straight position): judged from the moment the body line passes the horizontal until the entry (the last quarter somersault; D 8.5.7's quarter somersault for flying dives), with the entry's limits · D 8.5.3 / 8.5.4 / 8.4.4 (touching the springboard; unsafely close; a take-off from the end): any touch of the board, its stand or the railings after the take-off fails, and the distance is judged at the water surface: the entry point (the middle of the palms at the first touch of the water) between 0.5 m and 3.0 m in front of the board's tip at rest (the rule book leaves 'unsafely close' and 'from the end' to the judges) · D 8.5.1 (the direct line of flight): the entry point must be within 0.5 m to either side of the line the robot faces at the start · D 8.2.4.2 / 6.5.4 / 6.5.6 (the feet stay on the board; no double bounce; both feet at once): rocking the board with the feet on it is allowed; a flight of 0.1 s or more that lands on the board again fails, and neither foot may be off the board for more than 0.1 s while the other is on it · D 8.2.1 (the starting position): the robot is placed at the front end at t = 0 instead of walking there, on the board as it bends under the robot's weight; it stands as its rest pose stands (the arms in front) · D 1.5 (the dive): the half somersault is checked as the body line's turn in the vertical plane from the start to the entry, 180.0 degrees within 45.0 · FR 5.1.3 / Annex DV (the pool): the pool's edge is the front of the concrete platform (FR 5.1.3.4: aligned with the pool wall); the water is a drawn surface over a floor that nothing collides with, the pool's depth and the other boards are not built |
-| Stages | take-off → entry → under water |
-| Instance | `environment/instance.json` = `tests/instance.json`: the family's parameters, t = 0 state hash `1a58fcc822bd292a60820af6c592566119e049db29a73f7c92f73c5804ef6c62` |
-| Episode | 2000 control steps (20 s at 100 Hz) |
-| Action | sim rows of 151 floats per control step (`rfo/world.py`); six action types are views of it |
-| Tooling | `/opt/tools/rcb_rfo.py`, `/opt/tools/rfo/` (the world, the action layer, the referee's toolkit; from the files-only image images/embodied-olympics-fun-files/, built from embodied_first_exam/benchmarks/embodied-olympics-fun/) and `environment/rfo_task.py` (this family's rules), the same files in the verifier's `/tests/` |
-| Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md) |
+## License
+The Embodied Olympics robot library and running-policy port ([CHIGUI0/roboolympics](https://github.com/CHIGUI0/roboolympics)
+@ `7df999b`, a private repository) is released under the MIT License (`LICENSE.roboolympics` in the image); this
+benchmark's venues and referees are MIT too. Third-party parts in the image: the Unitree G1 model and meshes from MuJoCo
+Menagerie (BSD-3-Clause), the Unitree H1-2 model, meshes and walking policy and the G1 walking policy from
+unitree_rl_gym (BSD-3-Clause), the G1 running policy from C1801SYQ/g1_running (Apache-2.0), FALCON's G1 walking policy
+from LeCAR-Lab/FALCON (MIT) and the WBC-AGILE G1 walking policy from NVIDIA (Apache-2.0). No non-commercial terms apply.

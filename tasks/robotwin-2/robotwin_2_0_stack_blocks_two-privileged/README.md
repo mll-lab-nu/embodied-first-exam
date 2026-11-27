@@ -1,40 +1,37 @@
-# robotwin_2_0_stack_blocks_two-privileged
+# RoboTwin 2.0 · stack_blocks_two (privileged)
 
 | | |
 |---|---|
-| Benchmark | RoboTwin 2.0 |
+| Task ID | `robotwin_2_0_stack_blocks_two-privileged` |
+| Benchmark | [RoboTwin 2.0](https://github.com/RoboTwin-Platform/RoboTwin) (Chen et al., 2025), upstream `RoboTwin-Platform/RoboTwin@6dde571` |
+| Robot | ALOHA-AgileX dual-arm robot (two 6-joint arms with parallel-jaw grippers) |
 | Mode | privileged |
-| Twin | `robotwin_2_0_stack_blocks_two-standard` |
-| Simulator / robot | `robotwin` / `aloha-agilex` |
-| Family / instance | `stack_blocks_two` / seed 60417 |
-| Oracle | `full` |
-| Agent time budget | 1800 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:robotwin-0.1.2` |
+| Instance | `stack_blocks_two`, seed 60417 |
+| Time limit | 30 min |
+| Reference solution | Included |
 
 ## Task
-RoboTwin 2.0 stack_blocks_two (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory for the task "Stack the green block on top of the red block, then let go." on a frozen scene instance (RoboTwin seed 60417).
+Stack the green block on top of the red block, then let go.
 
-## Difficulty
-The red block starts on the robot's right (x ≈ +0.24) and the green block on its left (x ≈ -0.23), so the expert
-uses both arms: the right arm picks the red block and places it at the table centre, then the left arm picks the
-green block while the right arm retreats to its home pose, and places it on the red block's *functional point*
-precisely enough for the 2.5 cm / 1.2 cm predicate, finishing with both grippers open. The agent has to get
-RoboTwin's grasp machinery right (contact-point grasps the CuRobo planner accepts, lift before translating) and
-coordinate the two arms so they do not collide over the centre of the table. The trajectory is the raw per-step
-drive-target record, so any plan failure (`env.plan_success`) or a grasp that slips during replay scores 0.
+## Success criteria
+The green block's centre is within 2.5 cm of the red block's in x and in y and 5 cm (± 1.2 cm) above it; both grippers
+are open.
 
-## Reference solution
-RoboTwin 2.0's expert `play_once` for `stack_blocks_two` (scrubbed from the image), rewritten in
-`solution/oracle_stack_blocks_two.py`; `solution/solve.sh` records it into a trajectory.
+Positions are in the world frame: the table centre at the origin, +x to the robot's right, +y away from the robot, +z
+up; the table top is at z ≈ 0.74 m. Where a gripper must be open or closed, a gripper counts as open when the position
+targets of both its fingers command an opening above 0.8 (0 = closed, 1 = open) and as closed when both command less
+than 0.2; the two gripper-command columns of a row are not read.
 
-## Verification
-Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in a fresh process, once;
-pass iff RoboTwin's `check_success` holds after the replay (`tests/grade.py`).
-The trajectory is the per-physics-step drive-target record (T, 34) captured by hooking `scene.step()`; the
-instance is rebuilt from the RoboTwin seed and checked against the stored initial-state hash on every reset.
+The graded file is `/app/output/trajectory.npz`: `actions`, a finite (T, 34) array with one row per physics step
+(1/250 s) and at most 200,000 rows, and `task` = `stack_blocks_two`. The verifier replays it once, open-loop, in a fresh process
+from the frozen start (the scene is rebuilt from the instance and its initial-state hash is checked) and checks the
+conditions above once, on the state after the last row; nothing earlier in the replay counts. A missing file, a file
+that is not a readable npz, a wrong `task`, a wrong shape, a non-finite value, more than 200,000 rows or a simulator
+error during the replay scores 0. A host on which the frozen instance does not rebuild is an infrastructure error, not
+a score.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -43,3 +40,11 @@ Caps per container (PROTOCOL §6).
 
 - GPU: any NVIDIA GPU, held by `main`.
 - Recommended GPU: RTX 4090 24GB / L4 24GB.
+
+## License
+The scenes, task definitions and success checks are RoboTwin 2.0's ([RoboTwin-Platform/RoboTwin](https://github.com/RoboTwin-Platform/RoboTwin),
+MIT License, copyright 2025 Tianxing Chen; paper: Chen et al., 2025, "RoboTwin 2.0: A Scalable Data Generator and
+Benchmark with Strong Domain Randomization for Robust Bimanual Robotic Manipulation", arXiv:2506.18088). The robot and
+object assets come from RoboTwin's asset dataset on Hugging Face
+([TianxingChen/RoboTwin2.0](https://huggingface.co/datasets/TianxingChen/RoboTwin2.0), revision `981c92a`,
+`embodiments.zip` and `objects.zip`), downloaded when the image is built and not redistributed in this repository.

@@ -3,9 +3,5 @@ old = "### Scene\nWorld frame, metres; z up; the robot stands at low x and reach
 new = "### Scene\nWorld frame, metres; z up; the robot stands at low x and reaches towards +x. The table top is at z = 0.955. Arm base\n(`link0`): link0 [-0.75, 0.0, 0.924]. Quaternions are WXYZ. `s.objects()` gives the live poses of the task objects\n(`spray_bottle`, `spray_trigger`, `spray_nozzle`, `plant`, `table_top`)."
 
 [[replace]]
-old = "`water_plant_demo_10_2026-02-05_19-50-27_886249`"
-new = "`water_plant_demo_10_2026-02-05_21-14-32_009457`"
-
-[[replace]]
-old = "`04f14553ced4b0ed`"
-new = "`a926d9528c9791f8`"
+old = "`, seed 0 |"
+new = "`, seed 2 |"

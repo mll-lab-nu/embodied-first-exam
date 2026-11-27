@@ -1,31 +1,58 @@
-# embodied-olympics-fun-juggle-three-i00-privileged
+# Embodied Olympics · three-ball juggling (privileged)
 
 | | |
 |---|---|
-| Benchmark | Embodied Olympics - Fun |
+| Task ID | `embodied-olympics-fun-juggle-three-i00-privileged` |
+| Benchmark | [Embodied Olympics - Fun](https://github.com/CHIGUI0/roboolympics) (Embodied Olympics authors, 2026), upstream `CHIGUI0/roboolympics@7df999b` |
+| Robot | Unitree G1 humanoid (1.32 m, 33 kg, 29 joints), with Unitree's walking and running policies |
 | Mode | privileged |
-| Twin | `embodied-olympics-fun-juggle-three-i00-standard` |
-| Simulator / robot | `mujoco` / `unitree-g1` |
-| Family / instance | `juggle_three` / seed 0 |
-| Oracle | `none` — no reference solution; the referee is tested: Positive by a declared magic action (both hands the G1's own Dex3-1 at the device's torques, palms up; no weld): the red ball's real lob from the ball machine into the left hand and every catch are real (the hand closes when the ball reaches the palm and holds it between thumb and fingers for 0.05 s); injected: each throw (the opened hand's ball put 0.10 m above and 0.12 m inwards with the velocity of a 0.45 m arc onto the other hand) and a correction 0.15 m above each catching hand (the ball over the palm, its horizontal speed zeroed): ten catches in the cascade's order, the same state hash twice; the hands closing 0.02 s before the ball reaches the palm also make ten, closing earlier lets it bounce off the closed fingers. Negatives: nop (the red ball comes down on the closed left hand and hits the body), the waiting ball pushed in the machine, a low throw that comes back to its own hand, the wrong ball thrown (not caught), a fall. Stress: random arm targets with the balls in the hands: the balls fall out (a ball touched the ground at 0.77 s), nothing more than 9.6 mm into anything. RTF with the two Dex3-1 hands (71 degrees of freedom): 0.41-0.57 on a slower host, about 0.9-1.6 on the workstation (below the 1.5 a realtime twin needs).; human review in the pull request that adds the benchmark (PROTOCOL §4) |
-| Agent time budget | 7200 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
+| Instance | `juggle_three`, seed 0 |
+| Time limit | 2 h |
+| Reference solution | None |
 
 ## Task
-Juggle 3 balls in a cascade, throwing each from one hand to the other and catching it there, until you have made 10 catches in a row. (Embodied Olympics `juggle-three`: one Unitree G1 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
+Juggle 3 balls in a cascade, throwing each from one hand to the other and catching it there, until you have made 10
+catches in a row.
 
-## Difficulty
-Each throw has to come down into a palm that is hardly wider than the ball, 0.4 m away, about 0.6 s later, the fingers must close on it within a few hundredths of a second before it bounces off, and the catching hand must have thrown its own ball before: three balls, two hands, never two in one. A throw is the hand opening while the arm moves, and errors add up from throw to throw, because a ball is thrown from wherever it was caught.
+## Success criteria
+Three balls (0.07 m, 0.13 kg): the blue ball starts in the left hand, the yellow ball in the right hand, and the red
+ball in a small ball machine 1.0 m in front of the robot, which lobs it at about 2 s onto the left hand; its launch
+counts as a throw by the right hand. The referee's stages, in order: first catch, half way (the fifth catch), ten
+catches.
+- A ball is in a hand from its catch (blue and yellow from the start) until it has touched nothing of that hand for
+  0.02 s; the release is its last contact with the hand. A ball in a hand may touch nothing of the robot but that
+  hand.
+- A throw: after the release the ball, touching nothing of the robot, rises at least 0.30 m above the point where it
+  left the hand; only the rise before it first touches the robot again counts.
+- A catch: the other hand holds the ball between its thumb and its index or middle finger (both touching it) for
+  0.05 s without a break, starting at most 0.15 s after the ball first touched the robot again.
+- The order: the catches alternate between the hands, the left hand first, and take the balls in the order red, blue,
+  yellow, red, and so on. The tenth catch is success.
 
-## Reference solution
-None. No reference controller exists for this family yet: Positive by a declared magic action (both hands the G1's own Dex3-1 at the device's torques, palms up; no weld): the red ball's real lob from the ball machine into the left hand and every catch are real (the hand closes when the ball reaches the palm and holds it between thumb and fingers for 0.05 s); injected: each throw (the opened hand's ball put 0.10 m above and 0.12 m inwards with the velocity of a 0.45 m arc onto the other hand) and a correction 0.15 m above each catching hand (the ball over the palm, its horizontal speed zeroed): ten catches in the cascade's order, the same state hash twice; the hands closing 0.02 s before the ball reaches the palm also make ten, closing earlier lets it bounce off the closed fingers. Negatives: nop (the red ball comes down on the closed left hand and hits the body), the waiting ball pushed in the machine, a low throw that comes back to its own hand, the wrong ball thrown (not caught), a fall. Stress: random arm targets with the balls in the hands: the balls fall out (a ball touched the ground at 0.77 s), nothing more than 9.6 mm into anything. RTF with the two Dex3-1 hands (71 degrees of freedom): 0.41-0.57 on a slower host, about 0.9-1.6 on the workstation (below the 1.5 a realtime twin needs)..
+Fouls (each fails the attempt): a ball touches the ground; the waiting red ball is touched (by the robot or a ball)
+before its launch; a ball in a hand touches any other part of the robot (the other hand included); a ball in flight
+touches a part other than a hand, or touches the hand that released it later than 0.10 s after the release; a ball
+is caught by the hand that released it, or before it has risen 0.30 m; a ball that has touched the robot again is not
+caught within 0.15 s; a catch is out of order (the wrong hand or the wrong ball). Fall rule: on, the pelvis below
+0.35 m or any part other than the feet on the ground. Time limit: 20 s (2,000 control steps).
 
-## Verification
-`/tests/grade.py` replays `/app/output/trajectory.npz` from the frozen start in one fresh process (`rcb_rfo.py replay`:
-one sim row per control step until the referee ends the attempt). Pass iff the referee's verdict is a success. The rules: Three balls (0.07 m across, 0.13 kg). Both your hands are three-finger hands (a thumb, an index and a middle finger) that hold things only by contact and friction. At the start your forearms point forwards, your palms up; the blue ball is held in your left hand, the yellow ball in your right hand, and the red ball rests in a small ball machine on the ground 1.0 m in front of you: it stands for the second ball of the right hand and is thrown for you at about t = 2.0 s (it is thrown when it has left the machine's wheels), on a lob about 0.4 m above your hand that comes down on where the centre of your left hand's grasp is at the start. Before that it may not be touched (by you or by a ball you hold). A catch: a hand holds a ball between its thumb and its fingers (the ball touches the thumb and the index or middle finger: a ball lying on the palm or on the fingers alone is not caught) for 0.05 s without a break, on a ball that has been thrown by the other hand (the red ball's first throw counts as the right hand's), the hold beginning at the latest 0.15 s after the ball first touched you again. A ball is in a hand from its catch (the blue and the yellow ball from the start) until it has touched nothing of that hand for 0.02 s: its release, at its last contact with the hand; a ball in a hand may touch nothing of you but that hand. A throw: after the release the ball, touching nothing but air, rises at least 0.3 m above the point where it left the hand; only the rise before the ball first touches you again counts. The cascade's order: the catches alternate between the hands, the left hand first, and take the balls in the order red, blue, yellow, red, ... You succeed at the 10th catch. You fail if a ball touches the ground; if a ball in a hand touches any part of you other than that hand (the other hand included); if a ball in flight touches any part of you other than a hand, or still touches the hand that released it later than 0.1 s after the release; if a ball is caught by the hand that released it, or before it has risen 0.3 m; if a ball that has touched a hand again is not held within 0.15 s (it rests on the hand or bounces off it); if a catch is out of the cascade's order (the wrong hand or the wrong ball); if the waiting ball is touched before its launch; if you fall (your pelvis lower than 0.35 m above the ground, or any part of you other than your feet on the ground); or after 20 s. No oracle; human review in the pull request that adds the benchmark (PROTOCOL §4).
+Graded file: `/app/output/trajectory.npz`, as `s.save_trajectory()` writes it: an `actions` array of sim rows, one per
+10 ms control step, and the task's family name. After the agent's session it is replayed once, open-loop, from the
+frozen start, in a fresh process of a separate verifier container without network. Rows run one per control step
+until the referee calls the attempt; rows after the call, and rows past the attempt's time limit, are not run. The
+task is passed if the referee has called a success when the replay stops. If the rows run out before the referee's
+call, the task is not passed. A row the robot cannot run (its first value, the mode, is not one of the robot's modes)
+ends the replay at that row without a pass.
 
-## Resources
-Caps per container (PROTOCOL §6).
+The physics diverging (a non-finite state, a bad acceleration, or the robot or a prop faster than 150 m/s) ends the
+attempt as a failure, unless a success was called in an earlier control step. Only the trajectory is scored (`gen.py`
+and `NOTES.md` are not). A missing file, a file that is not such an array (a link, over 64 MB, more than 40,000 rows,
+the wrong row width), a file for another task, or a non-finite value in the rows that are used scores 0. An image that
+no longer rebuilds the frozen start, or a replay that crashes or runs over 600 s, is an infrastructure failure, not a
+score.
+
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -34,14 +61,10 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Category | throwing-catching-striking |
-| Rule book | No rule book: the three-ball cascade as jugglers define and count it (siteswap 3; the International Jugglers' Association counts a run in catches): each ball is thrown from one hand and caught by the other, the hands throw in turn, the balls follow one another in a fixed order; a run ends with a drop; deviations: The hands are the G1's own Dex3-1 three-finger hands (a thumb, an index and a middle finger; 1.37 N m back-driven per finger joint, at the device's torques); nothing is welded. The robot holds one ball per hand, so "two balls in one hand at the start" is modelled: the third ball (the red one) is thrown into the left hand by a small two-wheel ball machine on the ground 1.0 m in front of you at about t = 2.0 s, on a lob about 0.4 m above the hand that comes down on where the left hand's grasp centre is at the start; its first catch counts as a catch of a ball thrown by the right hand. Until it is thrown it may not be touched. · A catch is the catching hand holding the ball between its thumb and its fingers (the ball touching the thumb and the index or middle finger) for 0.05 s without a break, the hold beginning at the latest 0.15 s after the ball first touched you again; a ball is in a hand from its catch until it has touched nothing of that hand for 0.02 s (released, at its last contact: a ball that rattles in the hand is not released), and it may touch nothing of you but that hand. · A throw is a release after which the ball, touching nothing, rises at least 0.3 m above where it left the hand; a hand-to-hand pass is not a throw. So that a ball laid on the other hand and lifted is not one, the rise counts only until the ball first touches you again. · The balls are spheres of a juggling ball's size and mass with a soft bounce; they fly in air (MuJoCo's ellipsoid fluid model: drag, a quasi-steady model), still air. |
-| Stages | first catch → half way → ten catches |
-| Instance | `environment/instance.json` = `tests/instance.json`: the family's parameters, t = 0 state hash `01dc685deb3780324086ab4832490807c99885fe48df7fe005477b1e1fe5c90f` |
-| Episode | 2000 control steps (20 s at 100 Hz) |
-| Action | sim rows of 151 floats per control step (`rfo/world.py`); six action types are views of it |
-| Tooling | `/opt/tools/rcb_rfo.py`, `/opt/tools/rfo/` (the world, the action layer, the referee's toolkit; from the files-only image images/embodied-olympics-fun-files/, built from embodied_first_exam/benchmarks/embodied-olympics-fun/) and `environment/rfo_task.py` (this family's rules), the same files in the verifier's `/tests/` |
-| Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md) |
+## License
+The Embodied Olympics robot library and running-policy port ([CHIGUI0/roboolympics](https://github.com/CHIGUI0/roboolympics)
+@ `7df999b`, a private repository) is released under the MIT License (`LICENSE.roboolympics` in the image); this
+benchmark's venues and referees are MIT too. Third-party parts in the image: the Unitree G1 model and meshes from MuJoCo
+Menagerie (BSD-3-Clause), the Unitree H1-2 model, meshes and walking policy and the G1 walking policy from
+unitree_rl_gym (BSD-3-Clause), the G1 running policy from C1801SYQ/g1_running (Apache-2.0), FALCON's G1 walking policy
+from LeCAR-Lab/FALCON (MIT) and the WBC-AGILE G1 walking policy from NVIDIA (Apache-2.0). No non-commercial terms apply.

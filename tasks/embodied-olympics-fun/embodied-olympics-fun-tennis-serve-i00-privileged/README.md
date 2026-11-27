@@ -1,31 +1,75 @@
-# embodied-olympics-fun-tennis-serve-i00-privileged
+# Embodied Olympics · tennis serve (privileged)
 
 | | |
 |---|---|
-| Benchmark | Embodied Olympics - Fun |
+| Task ID | `embodied-olympics-fun-tennis-serve-i00-privileged` |
+| Benchmark | [Embodied Olympics - Fun](https://github.com/CHIGUI0/roboolympics) (Embodied Olympics authors, 2026), upstream `CHIGUI0/roboolympics@7df999b` |
+| Robot | Unitree H1-2 humanoid (1.78 m, 67 kg, 27 joints), with Unitree's walking policy |
 | Mode | privileged |
-| Twin | `embodied-olympics-fun-tennis-serve-i00-standard` |
-| Simulator / robot | `mujoco` / `unitree-h1-2` |
-| Family / instance | `tennis_serve` / seed 0 |
-| Oracle | `full` — Reference: an underarm key-pose technique with the H1-2's own Inspire hands at their default forces (20 N per fingertip, 30 N the thumb; the racket's handle across the right palm, the ball in the left hand; no weld), the right arm's swing keys, three key times and the release searched by CMA-ES (any arm more than 3 mm into the body rejected), then a narrow search around the first success. The left hand opens at 1.27 s while the robot stands at rest, the racket meets the ball and sends it off at 12.3 m/s over the net into the box at (14.40, 2.22); success at 3.20 s; deepest self-overlap 0.1 mm; live, replay and the state hash agree. It is fragile in time: it also succeeds with all servo gains x0.97 and x1.03, but the key times 10 ms earlier or later miss (0 of 2). Measured: success after 3.2 s of the 20 s limit, live and in a fresh replay, ending in the same state. |
-| Agent time budget | 7200 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
+| Instance | `tennis_serve`, seed 0 |
+| Time limit | 2 h |
+| Reference solution | Included |
 
 ## Task
-Serve: toss the ball with your left hand and hit it with the racket in your right hand over the net into the service box diagonally opposite. (Embodied Olympics `tennis-serve`: one Unitree H1-2 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
+Serve: toss the ball with your left hand and hit it with the racket in your right hand over the net into the service box
+diagonally opposite.
 
-## Difficulty
-Nothing is fixed to the hands: the swing that gives a ball well over 10 m/s through a free 0.30 kg racket must not twist it out of fingers that hold it by friction, the left hand has to let go of the ball cleanly while the arm rises, and the strings must meet the falling ball within a few tenths of a second, aimed into a box 6.4 m deep beyond a net 11.9 m away. All of it on a body that stands without a balance controller and may not move its feet.
+## Success criteria
+An ITF singles court (23.77 m by 8.23 m; service lines 6.4 m from the net; the net 0.914 m high at its centre, 1.07 m
+at the posts). Both hands are five-finger hands that hold things by contact and friction only: the ball starts in the
+left hand, a free racket (0.685 m long, 0.30 kg) in the right. The robot serves from the right of the centre mark
+into the far service box on the left of the centre line; a spare ball waits in a cup on a stand. The referee's
+stages, in order: toss, strike, over the net, in.
+- Toss: the ball is released, i.e. it has touched nothing at all for 0.1 s. At that moment the robot stands at rest
+  in the server's position: both feet on the ground behind the baseline, between the extensions of the centre mark
+  and the right sideline, neither foot having left the ground or moved more than 0.02 m in the last 0.5 s (so not
+  before 0.5 s after the start).
+- Strike: the racket hits the ball before it reaches the ground (any part of the racket counts), the ball having
+  touched nothing of the robot for the last 0.1 s and moving at most 5.0 m/s when it reaches the racket. The hit must
+  speed the ball up: 0.05 s after its last racket contact it is faster than when it reached the racket.
+- Over the net: the ball's centre passes the net's plane between the posts, above the net's top edge.
+- In: its first ground contact is inside the service box, the lines included (the point under the ball's centre
+  decides; ground contacts less than 0.02 s apart are one). The success is called at that contact.
+Let: a serve that touched the net and lands in the box does not count; the robot serves again under the same rules
+with the spare ball, taken from its cup with the left hand. This happens at most once; a second let fails.
 
-## Reference solution
-`solution/oracle.py` drives the robot through the task's own tooling, closed loop on the privileged state, and writes the trajectory (`solution/solve.sh`). Reference: an underarm key-pose technique with the H1-2's own Inspire hands at their default forces (20 N per fingertip, 30 N the thumb; the racket's handle across the right palm, the ball in the left hand; no weld), the right arm's swing keys, three key times and the release searched by CMA-ES (any arm more than 3 mm into the body rejected), then a narrow search around the first success. The left hand opens at 1.27 s while the robot stands at rest, the racket meets the ball and sends it off at 12.3 m/s over the net into the box at (14.40, 2.22); success at 3.20 s; deepest self-overlap 0.1 mm; live, replay and the state hash agree. It is fragile in time: it also succeeds with all servo gains x0.97 and x1.03, but the key times 10 ms earlier or later miss (0 of 2). Measured: success after 3.2 s of the 20 s limit, live and in a fresh replay, ending in the same state.
+Fouls (each fails the attempt at once):
+- the racket is unheld (its handle not touching both the right hand's fingers and its thumb or palm) for more than
+  0.05 s, at any time;
+- the racket touches the ball before it is released; the release happens when the robot is not at rest in the
+  server's position;
+- foot fault, from the release to the strike: a foot touches the baseline or the court, the ground beyond the
+  sideline's or centre mark's extension, or the ground more than 0.3 m from where it stood at the release;
+- the tossed ball touches the robot for more than 0.05 s (caught again), touches anything other than the robot and
+  the racket, reaches the ground or passes the net unstruck;
+- the racket strikes the ball less than 0.1 s after the robot last touched it, the ball reaches the racket faster
+  than 5.0 m/s, or the hit does not speed it up;
+- the racket touches the struck ball again (contacts less than 0.05 s apart are one hit) or stays on it longer than
+  0.05 s;
+- the served ball touches the robot (the hands included) or a net post, passes the net's plane anywhere but over the
+  net, or first touches the ground on the robot's side or outside the service box;
+- any part of the robot or the racket touches the net or a post; the robot or the racket touches the spare ball
+  before a let.
+Fall (a failure at any time): the pelvis lower than 0.35 m, or any part of the robot other than the feet on the
+ground; the racket may touch the ground. Time limit: 20 s (2,000 control steps).
 
-## Verification
-`/tests/grade.py` replays `/app/output/trajectory.npz` from the frozen start in one fresh process (`rcb_rfo.py replay`:
-one sim row per control step until the referee ends the attempt). Pass iff the referee's verdict is a success. The rules: The court is the ITF singles court: 23.77 m long and 8.23 m wide, measured to the outside of the lines, with a service line 6.4 m from the net on each side and a centre service line that divides the space between the net and each service line into two service boxes. The net stands across the middle, 0.914 m high at its centre and rising in a straight line to 1.07 m at the posts, which stand 0.914 m outside the sidelines. The ball is the ITF ball (radius 0.0335 m, 0.0577 kg, with air drag and spin lift). Both your hands are five-finger hands that hold things only by contact and friction: the ball starts held in your left hand, the racket (0.685 m long, 0.30 kg, its balance 0.33 m from the butt, strung surface 0.33 m by 0.25 m, an octagonal handle 33.5 mm across) starts held by its handle in your right hand; either can slip or fall. The racket is held while its handle touches your right hand's fingers and its thumb or palm; it must never go unheld for more than 0.05 s, from the start to the end of the attempt. You serve from the right of the centre mark into the far service box on the left of the centre line. In order: (1) the toss: the ball is released when it has touched nothing at all for 0.1 s (a ball resting on something is not released; the racket touching the ball before the release is a fault); at the end of those 0.1 s you must stand at rest, both feet on the ground behind the baseline, between the extension of the centre mark and the extension of the right sideline, neither foot having left the ground or moved more than 0.02 m in the last 0.5 s (so not before 0.5 s after the start); (2) the strike: the racket hits the ball before it reaches the ground (any part of the racket counts: strings or frame), the ball having touched nothing of you for the last 0.1 s and moving at most 5.0 m/s when it reaches the racket (a toss, not a throw), and the hit speeds the ball up (0.05 s after its last contact with the racket it is faster than it was when it reached the racket); (3) the ball's centre passes the net's plane between the posts above the net's top edge; (4) its first contact with the ground is inside that service box, the lines included (the point under the ball's centre decides; ground contacts less than 0.02 s apart are one): that is the success. From the release to the strike your feet may not touch the baseline or the court, the ground beyond the sideline's extension or the centre mark's extension, nor the ground more than 0.3 m from where each stood at the release (a foot fault); after the strike you may step anywhere on your side. A serve that touches the net and still lands in the box is a let: it does not count, and you serve again, under the same rules, with the spare ball, which you take from its cup with your left hand (before a let you may not touch it); this happens at most 1 time(s), a further let fails. You fail on any fault: releasing the ball when not at rest in the server's position, a foot fault, the tossed ball touching you for more than 0.05 s (caught again: one toss per serve), touching anything but you and the racket (the spare ball, its cup or stand, the net), reaching the ground or passing the net unstruck, the racket striking the ball before it is clear of you, a ball that reaches the racket faster than 5.0 m/s, a hit that does not speed it up, the racket touching the struck ball again (contacts less than 0.05 s apart are one hit) or staying on it longer than 0.05 s, the served ball touching you (your hands included), a net post, the ground on your side or the ground outside the service box, or passing the net's plane anywhere but over the net. You also fail if the racket goes unheld (dropped, thrown, or slipped out of the hand), if any part of you or the racket touches the net or a post, if you touch the spare ball before a let, if you fall, or after 20 s. A fall is: your pelvis lower than 0.35 m above the ground, or any part of you other than your feet touching the ground; the racket may touch the ground.
+Graded file: `/app/output/trajectory.npz`, as `s.save_trajectory()` writes it: an `actions` array of sim rows, one per
+10 ms control step, and the task's family name. After the agent's session it is replayed once, open-loop, from the
+frozen start, in a fresh process of a separate verifier container without network. Rows run one per control step
+until the referee calls the attempt; rows after the call, and rows past the attempt's time limit, are not run. The
+task is passed if the referee has called a success when the replay stops. If the rows run out before the referee's
+call, the task is not passed. A row the robot cannot run (its first value, the mode, is not one of the robot's modes)
+ends the replay at that row without a pass.
 
-## Resources
-Caps per container (PROTOCOL §6).
+The physics diverging (a non-finite state, a bad acceleration, or the robot or a prop faster than 150 m/s) ends the
+attempt as a failure, unless a success was called in an earlier control step. Only the trajectory is scored (`gen.py`
+and `NOTES.md` are not). A missing file, a file that is not such an array (a link, over 64 MB, more than 40,000 rows,
+the wrong row width), a file for another task, or a non-finite value in the rows that are used scores 0. An image that
+no longer rebuilds the frozen start, or a replay that crashes or runs over 600 s, is an infrastructure failure, not a
+score.
+
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -34,14 +78,10 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Category | basketball-and-rackets |
-| Rule book | ITF Rules of Tennis 2024: Rule 1 (the court), Rule 3 and Appendix I (the ball), Rule 4 and Appendix II (the racket), Rule 12 (a ball on a line), Rules 16-19 (the service, its order, the foot fault, the service fault), Rule 22 (the let), Rule 24 h and i (the ball touching the player; the ball touching the racket when the player does not hold it); deviations: Rules 5-11, 20, 23-26 (the point): one first serve only, with no receiver; a fault ends the attempt as a failure (there is no second serve after a fault), a good serve ends it as the success · Rule 22 (the let is replayed, as often as it happens): a let is replayed 1 time(s), with the spare ball that waits in a cup on a stand 0.6 m to your left; a further let ends the attempt as a failure · Rule 16 ('stand at rest ... immediately before starting the service motion'): made measurable: both feet on the ground and neither moved more than 0.02 m during the 0.5 s before the ball leaves the hand; the service motion is the time from that release to the racket's strike · Rule 18 a ('slight movements of the feet are permitted', no walking or running): made measurable: during the service motion no foot may touch the ground more than 0.3 m from where it stood at the release · Rule 19 Case 1 (a toss that the server does not try to hit may be caught or let drop and tossed again): the intention cannot be judged: one toss per serve; a tossed ball that reaches the ground unstruck is a fault, and so is a tossed ball caught again (touching you for more than 0.05 s) · Rule 16 (release 'by hand'): the ball is released when it has touched nothing at all for 0.1 s (a ball resting on a tee is not released), and the tossed ball may touch nothing but you and the racket; so that a ball struck out of the hand is not a serve, it must have touched nothing of you for 0.1 s when the racket strikes it · Rule 16 ('hit the ball with the racket'): so that a ball thrown past the racket is not a serve, the hit must add speed: 0.05 s after its last contact with the racket the ball must be faster than it was when it reached the racket; and the ball may move at most 5.0 m/s when it reaches the racket (the speed of a ball that has fallen about 1.3 m: a toss, not a throw) · the player's hands: the H1-2's own Inspire five-finger hands (six drives: four fingers, the thumb's flexion and rotation; fingertip forces 20 N, the thumb 30 N), closed by one command per hand; they hold the racket and the ball by contact and friction only · Rule 24 i (the racket held): made measurable: the racket is held while its handle touches your right hand's fingers and its thumb or palm; it must not go unheld for more than 0.05 s at any time of the attempt · Rule 12 (a ball touching a line is in): the ball's footprint is one point, the point under its centre at its first contact with the ground (a real ball's footprint is about 5 cm across) · Rule 24 f (deliberately touching the ball twice, carrying it): intention cannot be judged: racket contacts less than 0.05 s apart are one hit, a later one is a second hit, and a contact longer than 0.05 s is a carry · Rule 1 (the net): a net of cord hung from a steel cable, modelled as strips of mesh 0.5 m wide, each a chain of 3 rigid panels 2 cm thick hinged under the band, the band and cable a string of beads across the net under 1890 N of tension, held down at the centre by the strap; the strips are not joined to each other below the cable and the mesh does not stretch; a ball meets the twine with its own rule-book restitution (it cannot pass through the mesh) · wind and weather: none; the air is still (sea level, 15 C) |
-| Stages | toss → strike → over the net → in |
-| Instance | `environment/instance.json` = `tests/instance.json`: the family's parameters, t = 0 state hash `e7a1070a20fb163f251e8494ad93b233245129b8a097c720d13a5e6151e15f4f` |
-| Episode | 2000 control steps (20 s at 100 Hz) |
-| Action | sim rows of 141 floats per control step (`rfo/world.py`); six action types are views of it |
-| Tooling | `/opt/tools/rcb_rfo.py`, `/opt/tools/rfo/` (the world, the action layer, the referee's toolkit; from the files-only image images/embodied-olympics-fun-files/, built from embodied_first_exam/benchmarks/embodied-olympics-fun/) and `environment/rfo_task.py` (this family's rules), the same files in the verifier's `/tests/` |
-| Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md) |
+## License
+The Embodied Olympics robot library and running-policy port ([CHIGUI0/roboolympics](https://github.com/CHIGUI0/roboolympics)
+@ `7df999b`, a private repository) is released under the MIT License (`LICENSE.roboolympics` in the image); this
+benchmark's venues and referees are MIT too. Third-party parts in the image: the Unitree G1 model and meshes from MuJoCo
+Menagerie (BSD-3-Clause), the Unitree H1-2 model, meshes and walking policy and the G1 walking policy from
+unitree_rl_gym (BSD-3-Clause), the G1 running policy from C1801SYQ/g1_running (Apache-2.0), FALCON's G1 walking policy
+from LeCAR-Lab/FALCON (MIT) and the WBC-AGILE G1 walking policy from NVIDIA (Apache-2.0). No non-commercial terms apply.

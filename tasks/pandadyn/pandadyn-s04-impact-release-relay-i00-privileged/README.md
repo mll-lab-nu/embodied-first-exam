@@ -1,43 +1,76 @@
-# pandadyn-s04-impact-release-relay-i00-privileged
+# Panda Dynamic Scenes · Impact release, interception and passage relay (S04) (privileged)
 
 | | |
 |---|---|
-| Benchmark | Panda Dynamic Scenes |
+| Task ID | `pandadyn-s04-impact-release-relay-i00-privileged` |
+| Benchmark | [Panda Dynamic Scenes](https://www.embodied-first-exam.ai/suite/pandadyn/) (Wang et al., 2026), upstream `mll-lab-nu/embodied-first-exam@b2280d8` |
+| Robot | Franka Emika Panda (FER), one 7-joint arm with its standard two-finger hand |
 | Mode | privileged |
-| Twin | `pandadyn-s04-impact-release-relay-i00-standard` |
-| Simulator / robot | `maniskill` / `franka-panda` |
-| Family / instance | `s04_impact_release_relay` / seed 0 |
-| Oracle | `full` |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0` |
+| Instance | `s04_impact_release_relay`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | Included |
 
 ## Task
-Strike the sliding block with the paddle so that it hits the gate's latch and releases the ball on the chute. Once the ball has left the chute, hit it through the passage between the two walls, then touch it again and stop it in the target zone beyond the passage. The deliverable is one replayable trajectory of 100 Hz joint-target actions (`/app/output/trajectory.npz`,
-8 values per row), graded by the task's own staged success check: 5 phases (`cue_strike`, `mechanical_unlatch`, `payload_interception`, `passage_redirection`, `payload_braking`), in order,
-with no failure event and no safety-limit violation, within the task's horizon of 25 s.
+Strike the sliding block with the paddle so that it hits the gate's latch and releases the ball on the chute. Once the
+ball has left the chute, hit it through the passage between the two walls, then touch it again and stop it in the target
+zone beyond the passage.
 
-## Difficulty
-The cue must be struck so that it hits the narrow trigger tail hard enough to open the spring-held gate promptly (the ball has to be on its way within 1 s), and the ball leaves the chute fast, so interception, redirection through a 0.09 m passage and braking to rest follow each other quickly. Privileged mode gives the full simulator state (every object's pose and velocity, the fixtures, the
-announced goals), the parameters, unlimited exact resets and snapshots, and self-replay; the tooling offers only joint
-targets and kinematics. This mode is the control for the standard twin.
+## Success criteria
+The paddle is the arm's tool. The cue is the sliding block; the ball (radius 18 mm) rests behind the latch gate at the
+top of the chute. The latch turns about a pivot at (-0.185, 0, 0.17); q is its angle.
 
-## Reference solution
-`solution/oracle_actions.npy` (441 control steps, run by `solution/oracle.py` through the agent's own tooling): a
-recorded rollout of this instance by the benchmark's reference controller, which reads the simulator's true state in closed
-loop, replayed open-loop. The reference controllers and their recordings are not in the image, and the agent's network
-reaches only the model APIs and the package registries.
+Phases, in order:
+1. `cue_strike`: the paddle touches the cue.
+2. `mechanical_unlatch`: the cue hits the latch; then the latch opens beyond |q| = 0.45 rad while the ball's centre is
+   at x > -0.165 m; and, within 1.0 s of the cue's first hit on the latch, the ball's centre is more than 0.125 m × sin
+   |q| + 24 mm beyond the pivot in x, moving down the chute at 0.4 m/s or faster. If the 1.0 s passes first, the task
+   fails.
+3. `payload_interception`: after the ball has touched the chute in this phase, the paddle touches the ball while its
+   centre is at x > 0.10 m.
+4. `passage_redirection`: the ball, not touching the paddle, is more than 0.105 m into the passage between the two
+   walls and within 45 mm of the passage's centre line, measured from the passage entry (0.285, -0.163) along the
+   direction (0.551, -0.835).
+5. `payload_braking`: after the paddle has touched the ball in this phase, the ball's centre is within 50 mm of the
+   target (0.399, -0.345) horizontally, the ball moves slower than 0.035 m/s and touches the table, for 0.5 s.
 
-## Verification
-`tests/grade.py` in a separate sandbox: one replay, in a fresh process, from the verifier's own copy of the instance
-(`tests/instance.json`; the rebuilt start is checked against its hash); pass iff the task's success check holds in it
-(every phase complete, no failure), plus `/logs/verifier/replay.mp4`
-(overview camera). Oracle: 441 control steps (4.41 s simulated), success at the last one; the oracle
-run and two fresh-process replays end in the same state (hash `1d9b3d9306995778`), and the rollout reproduces the physical
-state the benchmark recorded for it after every control step, bit for bit. `nop`: no trajectory, reward 0; a trajectory that
-holds the arm still fails (the benchmark's parked controls never succeeded).
+Task failure: the paddle touching the latch at any time.
+Allowed contacts: the paddle may touch the cue and the ball; no other robot part may touch anything.
+Horizon: 25 s of simulated time (2,500 control steps).
 
-## Resources
-Caps per container (PROTOCOL §6).
+Phases count only in order: each phase's condition is checked after every 1 ms physics step, and only once the phase
+before it is complete. A condition "for t s" must hold at every physics step over t s; a break restarts it. Positions
+are in the world frame (metres, z up, the table top is the plane z = 0); "horizontally" means in x and y.
+
+Failures shared by every task (each ends the episode at once, in any phase):
+- a forbidden contact: two arms touching each other (tools included); an arm touching itself, except its two fingers
+  touching each other (a finger touching the arm's own tool counts); any robot part, tool included, touching anything
+  the allowed contacts above do not list (the table, the floor and the arm pedestals included); any contact in the
+  scene that penetrates deeper than 4 mm;
+- a violation of the Franka Panda's safety limits by an arm, checked at every physics step: a joint more than 0.002 rad
+  beyond its position limits; measured joint speeds above 101 % of the limits (2.175 rad/s for joints 1-4, 2.61 rad/s
+  for joints 5-7); a finger faster than 0.051 m/s; the hand's TCP faster than 1.01 x 1.7 m/s or 1.01 x 2.5 rad/s,
+  measured or in the servo's reference motion; a motor torque above 87 N m (joints 1-4) or 12 N m (joints 5-7), or one
+  changing faster than 1000 N m/s; reference joint speeds, accelerations or jerks above the Panda's limits; measured
+  joint accelerations or jerks, or measured or reference TCP accelerations (13 m/s², 25 rad/s²), averaged over 20 ms,
+  above 105 % of the limits;
+- an object leaving the workspace (its centre below z = -0.2 m or more than 1.8 m from the world origin horizontally),
+  or a non-finite object position;
+- the task's horizon (above) reached before the last phase is complete.
+
+Graded file: `/app/output/trajectory.npz`, as `Session.save_trajectory(...)` writes it: `task` naming this task and
+`actions`, a finite array with one row per 10 ms control step (8 values per arm: 7 joint-position targets and the total
+gripper aperture) and at most 4,500 rows. Each row's joint targets are clipped to the joint limits and its aperture to
+[0, 0.08] m before it runs. After the agent's session the verifier replays the file once, open-loop, in a fresh process
+of a separate container without network, from its own copy of the frozen instance. The replay stops at the end of the
+first control step in which the task has completed or failed (later rows are never run), or when the rows run out. The
+task is passed if, at that point, the last phase is complete and no failure has been recorded. A missing file, a file
+for another task, a file that is not such an array, a replay that ends without completing every phase, and a simulator
+error on the agent's rows (for example the servo's trajectory generator failing) score 0. A rebuilt start that does not
+match the frozen instance's state hash, a replay that gives no result or runs past its time limit (300 s plus 0.1 s per
+row), or any other error in the grader is an infrastructure error, not a score.
+
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -47,15 +80,8 @@ Caps per container (PROTOCOL §6).
 - GPU: any NVIDIA GPU, held by `main`.
 - Recommended GPU: any 8 GB+ NVIDIA GPU with Vulkan (RTX 4090 / L4).
 
-## Details
-| | |
-|---|---|
-| Benchmark source | Panda Dynamic Scenes (the environment package `images/pandadyn/panda_dynamics/`, from `images/pandadyn/sync_env.py`); task `PandaMultiStage/S04-ImpactReleaseRelay-v0` |
-| Instance | difficulty `nominal`, seed 0, the resolved parameters and the start's state hash in `environment/instance.json` (`initial_sha` 83eae09aec3383b6) |
-| Actions | 8 per control step (10 ms): per arm 7 absolute joint targets (rad) + the total aperture (m); a Ruckig + torque servo per arm |
-| Physics | CPU PhysX at 1000 Hz with enhanced determinism (single thread); SAPIEN renders on the GPU only when a frame is asked for |
-| Image | `images/pandadyn/` (public); needs an NVIDIA GPU with Vulkan for SAPIEN (`environment/docker-compose.yaml`) |
-| Budget | the agent's cutoff is the `Agent time budget` row above (this task's `[agent] timeout_sec`); a scene builds in ~5-15 s |
-
-### Provenance
-Scene description `S04`, frozen instance `S04-ImpactReleaseRelay-i00`, chosen and frozen in `ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0`.
+## License
+Panda Dynamic Scenes is an original suite of Embodied First Exam. Its environment package (`images/pandadyn/panda_dynamics/`) is released
+with this repository under the repository's MIT License. The simulation stack in the image: ManiSkill 3 and its Franka
+Panda model (Apache License 2.0), SAPIEN (MIT), Ruckig community version (MIT), PyTorch (BSD 3-Clause). No
+non-commercial terms apply.

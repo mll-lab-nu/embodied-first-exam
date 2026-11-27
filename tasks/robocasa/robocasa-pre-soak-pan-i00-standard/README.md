@@ -1,32 +1,39 @@
-# robocasa-pre-soak-pan-i00-standard
+# RoboCasa · PreSoakPan (standard)
 
 | | |
 |---|---|
-| Benchmark | RoboCasa |
-| Mode | standard (`eai-standard/3.0`) |
-| Twin | `robocasa-pre-soak-pan-i00-privileged` |
-| Simulator / robot | `robosuite` / `franka-panda-omron` |
-| Family / instance | `robocasa/PreSoakPan` / seed 0 |
-| Oracle | `full` |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:robocasa-0.1.0` |
+| Task ID | `robocasa-pre-soak-pan-i00-standard` |
+| Benchmark | [RoboCasa](https://github.com/robocasa/robocasa) (Nasiriany et al., 2024), upstream `robocasa/robocasa@756598a` |
+| Robot | Franka Emika Panda arm with a parallel-jaw gripper on an Omron mobile base with a torso lift (robosuite `PandaMobile`) |
+| Mode | standard |
+| Instance | `robocasa/PreSoakPan`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | Included |
 
 ## Task
 Put the pan and the sponge in the sink, turn the sink faucet on, nearly all the way, and move your hand away.
 
-Standard mode (robot as a service, `eai-standard/3.0`) of `robocasa-pre-soak-pan-i00-privileged`: the same frozen instance and success check, served by the `sim` sidecar (`embodied_first_exam/benchmarks/robocasa/sim/server_casa.py`, tool module `casa_tool`), which records the episode and judges it live (nothing is replayed); the verifier grades the sidecar's record in a container of its own. The agent sees the robot's cameras (RGB-D, calibrated), its own joints and end effector, and the instruction.
+## Success criteria
+The pan and the sponge are both inside the sink: each of the 8 corners of each one's bounding box (the box of its
+model, at its current pose) lies within the sink's interior box, which is widened at both ends of each of its three
+edges by 0.05 m² divided by that edge's length (10 cm for an edge 0.5 m long). The water is on: the faucet handle's
+on/off joint (range 0 to 0.52 rad) is more than 0.40 rad and less than π rad; the handle's temperature joint is not
+read. The gripper's grip site is more than 25 cm from the pan's position (its body origin); its distance from the
+sponge is not checked.
 
-## Difficulty
-The agent has to find the fixtures and objects in the robot's camera images, drive a mobile manipulator with its native controller, and finish in one episode without a reset.
+Graded is the one live episode: no reset, no step limit. It ends when the agent sends `POST /finish`, or when the
+agent's session ends (at the latest after 1 h); the environment's own check (`_check_success`) is evaluated on
+the state after the last control step the service executed, and nothing is replayed. Meeting the conditions earlier
+in the episode does not count, and the service never reports success while the episode runs. A scene already solved
+at the start would not count (the frozen start is not solved).
 
-## Reference solution
-`solution/`: the privileged reference's 1007 actions submitted through the client, one row per control step.
+A simulator error raised while executing an agent's call ends the episode with 0, as do repeated service crashes that
+all happened while serving the agent's calls. Before the agent is served, the service checks that the scene starts at
+the frozen instance (the instance file's hash and the start state's hash); a mismatch, a service crash the episode
+cannot be resumed from, or a missing or unfinished verdict is an infrastructure error, not a score.
 
-## Verification
-The sim service judges the live episode when it ends (the agent's `POST /finish`, or the end of its session; the environment's success check on the state after the last executed control step; nothing is replayed) and writes the verdict, final at once; `tests/grade.py` (separate sandbox, no network) reads its `final.json` (`graded_by = live`): `success = live_success ∧ not solved at the start ∧ no simulator error`. The episode's start is checked against the frozen instance before the agent is served (`RCB_INSTANCE_SHA`, `RCB_START_SHA`; a mismatch is an infrastructure failure, `instance_mismatch`). The video is rendered from the trajectory after the verdict (one render pass) and never decides it.
-
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -36,8 +43,14 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Action type | `ee_delta` (12 channels, `control_dt` 0.05 s) |
-| Cameras | `robot0_agentview_center`, `robot0_agentview_left`, `robot0_agentview_right`, `robot0_eye_in_hand` (robot-mounted; calibration in every response) |
+## License
+RoboCasa ([robocasa/robocasa](https://github.com/robocasa/robocasa) @ `756598a`, v0.2) is released under the
+[MIT License](https://github.com/robocasa/robocasa/blob/756598a5be52e052339bb2d957426e39015c2afb/LICENSE) (Copyright (c)
+2024 the RoboCasa Team); paper: Nasiriany et al., 2024, "RoboCasa: Large-Scale Simulation of Everyday Tasks for
+Generalist Robots", RSS 2024. robosuite 1.5.1 is MIT-licensed and MuJoCo 3.2.6 is under the Apache License 2.0. The
+kitchen assets are downloaded when the image is built and are not in this repository: fixtures and textures from
+[robocasa/robocasa-assets](https://huggingface.co/datasets/robocasa/robocasa-assets) (CC-BY-4.0), v0.2 fixtures from a
+mirror, [jianzhang96/robocasa-assets](https://huggingface.co/datasets/jianzhang96/robocasa-assets) (Apache-2.0),
+RoboCasa's objaverse and AI-generated object archives (CC-BY-4.0), and the lightwheel and sketchfab object sets of
+[nvidia/PhysicalAI-DigitalCousin-Assets](https://huggingface.co/datasets/nvidia/PhysicalAI-DigitalCousin-Assets) under
+**CC-BY-NC-4.0: non-commercial use only**.

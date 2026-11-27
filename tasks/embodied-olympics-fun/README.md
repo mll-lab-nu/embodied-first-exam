@@ -1,186 +1,204 @@
 # Embodied Olympics - Fun
 
-Seventy-nine single-robot sports for a humanoid: one Unitree G1 or H1-2 sprints the indoor 50 m, jumps rope, takes a
-penalty against a keeper, returns a table-tennis serve, dunks, swings a giant on the high bar, skis a slalom, flies a
-big air or dives from the 10 m platform. A referee decides from the simulator's state whether it did the sport. The
-physics is real and the robot is its own, so most tasks have no known solution with the robot's own controls: the
-benchmark is meant to find the ceiling of coding agents, which may use the robot's built-in walking (and, on the G1,
-running) policy, drive every joint, and search for and download public tools and pretrained controllers.
+## Overview
 
-## Quick start
-```bash
-harbor run -d embodied-first-exam@all -p tasks/embodied-olympics-fun -a codex -m openai/gpt-6-astra
-```
-Every image is public: Harbor pulls it. Each task dir's README carries its family's rule book, deviations, evidence
-and numbers.
+Seventy-nine single-robot sports for a humanoid. One Unitree G1 or Unitree H1-2 sprints the indoor 50 m, jumps rope,
+takes a penalty against a keeper, returns a table-tennis serve, dunks, swings a giant on the high bar, skis a slalom,
+flies a big air or dives from the 10 m platform. A referee for each sport decides from the simulator's state whether
+the robot did the sport. The physics is real and the robot is its own; the agent may use the robot's built-in walking
+(and, on the G1, running) policies, drive every joint, and find and adapt public tools and pretrained controllers.
 
 | | |
 |---|---|
-| tasks | 79 families: 79 `-privileged`, 79 `-standard` (`eai-standard/3.0`) and 21 `-realtime` (`eai-standard/3.0`, the dynamic families), 179 dirs, `embodied-olympics-fun-<family>-i00-<mode>`; core set 56 |
-| simulator | MuJoCo 3.3.7 on the CPU (1 ms physics, 10 ms control), on [Embodied Olympics](https://github.com/CHIGUI0/roboolympics)' robot library and running policy (MIT), unchanged in the image |
-| image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-<images/embodied-olympics-fun/VERSION>`; shared files (tooling `rcb_rfo.py`, the `rfo` core, graders, the standard service, the dynamic families' modules) from `efe:embodied-olympics-fun-files-<VERSION>` (`images/embodied-olympics-fun-files/FILES.json`); source `embodied_first_exam/benchmarks/embodied-olympics-fun/` |
-| actions | one sim row per 10 ms: `stand`, `walk`, `joints`, `lowcmd` (Unitree's LowCmd), on the G1 also `walk_falcon`, `walk_agile`, `run`, `run_arms`; `grip_left`, `grip_right` |
-| score | the referee's binary verdict (every stage in order, no rule broken, within the time limit), with `progress` and the family's metrics beside it |
-| agent budget | 7200 s in every mode (each task's `[agent] timeout_sec`) |
-| network | open (below) |
+| tasks | 79 families, one frozen instance each (seed 0): 79 `-privileged`, 79 `-standard` and 21 `-realtime` task directories, `embodied-olympics-fun-<family>-i00-<mode>` |
+| simulator | MuJoCo 3.3.7 on the CPU, 1 ms physics steps, 10 ms control steps, on the Embodied Olympics robot library |
+| robots | Unitree G1 (1.32 m, 33 kg, 29 joints; Unitree's walking policy, FALCON and WBC-AGILE walking policies, a running policy) and Unitree H1-2 (1.78 m, 67 kg, 27 joints; Unitree's walking policy), each family on the one its official venue needs |
+| score | the referee's binary verdict: every stage of the sport in order, no rule broken, within the attempt's time limit |
+| image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-<images/embodied-olympics-fun/VERSION>`; the shared files (`rcb_rfo.py`, the `rfo` package, the graders, the standard service, each family's referee module) come from `efe:embodied-olympics-fun-files-<VERSION>` (`images/embodied-olympics-fun-files/FILES.json`); source `embodied_first_exam/benchmarks/embodied-olympics-fun/` |
+| agent time | 7200 s in every mode (each task's `[agent] timeout_sec`) |
 
-## Robots and hands
+Quick start:
+```bash
+harbor run -d embodied-first-exam@all -p tasks/embodied-olympics-fun -a codex -m openai/gpt-6-astra
+```
+Every image is public: Harbor pulls it.
 
-- **Unitree G1** (1.32 m, 33 kg, 29 joints; three walking policies and a running policy) with its **Dex3-1**
-  three-finger hands, and the **Unitree H1-2** (1.78 m, 67 kg, 27 joints; a walking policy) where the venue needs an
-  adult-size body, with its **Inspire** five-finger hands (20 N per fingertip, 30 N the thumb).
-- Unitree's measured actuator data (torque-speed curves, rotor inertia, friction); the H1-2's legs and arms are
-  H2-class actuators from Unitree's H2 data (hips and knees 360 N m), its torso keeps 200 N m and its wrists 19 N m.
-  Real self-collision; contact with the ground stays MuJoCo's soft default by design.
-- Nothing a hand holds is welded and nothing is grippable. In 23 families the finger hands hold rackets, balls, bars,
-  poles and handles by contact and friction (one closure command per hand); in 5 ball families (`bowling`,
-  `juggling`, `juggling-feet`, `shot-put`, `volleyball-serve`) the ball is pressed between or carried on the hands' flat
-  palm pads; elsewhere the hands hold nothing.
+## Upstream and license
 
-## Design rules
+- Upstream: the Embodied Olympics robot library ([CHIGUI0/roboolympics](https://github.com/CHIGUI0/roboolympics), a
+  private repository, MIT), commit `7df999b` (branch `athletics-v3`; the G1 at revision g1-4 and the H1-2 at revision
+  h1-4 of its robot library), copied unchanged into the image (`images/embodied-olympics-fun/roboolympics/`, checked
+  against `manifest.sha256` at build time; `SOURCE.md` lists every file).
+- The sports, venues and referees (`rfo/`, one module per family under `rfo/tasks/`) are this benchmark's own, MIT.
+- Third-party parts, each with its licence file next to it in the image: the Unitree G1 model and meshes from MuJoCo
+  Menagerie `unitree_g1` (BSD-3-Clause, modified by Embodied Olympics); the Unitree H1-2 model, meshes and walking policy
+  and the G1 walking policy from unitree_rl_gym (BSD-3-Clause); the G1 running policy from C1801SYQ/g1_running
+  (Apache-2.0); FALCON's G1 policy from LeCAR-Lab/FALCON (MIT); the WBC-AGILE G1 velocity-height policy from NVIDIA
+  (Apache-2.0). No non-commercial terms apply.
 
-- **Real physics.** No welds of held objects, no pins, no mocap bodies, no velocities written after the start: balls
-  come from two-wheel ball machines, keepers and rope turners are force-limited mechanisms, material numbers are sourced.
-- **The native body.** Each robot with its own hands and actuators.
-- **Raised parameters at most 1.5-2 times native**, declared with the measured need; the one exception is
-  `high-bar-swing`'s grip (5 times: a giant swing pulls four or more body weights at the bottom).
-- **Official venues where the hardware can reach them**, else the demand lowered only to near the measured physical
-  limit, and declared. For example:
-  - `dunk`, `dunk-between-legs`: the ring at 2.39 m, where an own-motor dunk from the start hold is shown by search;
-  - `clean-and-jerk`: a 5 kg aluminium technique bar lifted from 0.35 m blocks;
-  - `javelin`: the women's 600 g javelin;
-  - `sprint`, `hurdles-freestanding`: the indoor 50 m.
+## Changes from upstream
 
-Every family names its rule book and lists each deviation with its reason in its task's instruction and README.
+- **Left out of the image**: the robots' high-resolution meshes and tools, the G1's `policy/motion.pt` and its kick
+  skill (`kick.py`, a task-level skill; the arbiter's `kick()` answers "no kick skill").
+- **Actuators**: Unitree's measured actuator data (torque-speed curves, rotor inertia, friction) on both robots
+  (`rfo/world.py` `unitree_actuators`). The H1-2's legs and arms use H2-class actuators from Unitree's H2 data (hips
+  and knees 360 N m); its torso keeps 200 N m and its wrists 19 N m.
+- **Collision shells**: where a robot's visible body has no collision geometry (the H1-2's thighs, shins, knees, hips
+  and wrist housings, the G1's waist and outer shoulder housings), its visual mesh gets a massless convex shell that
+  touches the props, so a bar, rope, ball, hurdle or opponent cannot pass through it. Real self-collision; contact with
+  the ground stays MuJoCo's soft default.
+- **Hands** (`rfo/realhand.py`): nothing a hand holds is welded. In 23 families the robot's own finger hands (the G1's
+  Dex3-1, the H1-2's Inspire RH56DFX) hold rackets, balls, bars, poles and handles by contact and friction, one closure
+  command per hand; in other families a ball is pressed between or carried on flat palm pads, or a tool (racket, paddle,
+  club) sits on the wrist mount.
+- **Raised parameters** are at most 1.5 to 2 times native, each declared with its measured need; the one exception is
+  `high_bar_swing`'s grip (5 times: a giant swing pulls four or more body weights at the bottom).
+- **Venues**: official dimensions where the hardware can reach them; otherwise the demand is lowered only to near the
+  measured physical limit and declared (for example the ring at 2.39 m in `dunk` and `dunk_between_legs`, a 5 kg
+  technique bar from 0.35 m blocks in `clean_and_jerk`, the women's 600 g javelin, the indoor 50 m in `sprint` and
+  `hurdles_freestanding`). Balls come from two-wheel ball machines; keepers, rope turners and opponents are
+  force-limited mechanisms. No held object is welded, nothing is pinned or moved by mocap, and no velocity is written
+  after the start. Each family's instruction names its rule book and every deviation from it with its reason.
 
-## Modes
+## Interface
 
-- **privileged**: the world in the agent's container (full state, the referee's live record, the rules as code,
-  unlimited resets); the deliverable is `trajectory.npz` (sim rows).
-- **standard**: a client only (head cameras with depth, joint encoders, torques, IMUs, the hands' state, the venue's
-  camera; action chunks); the rule book and the venue as an athlete knows them, never the robot's or an object's pose
-  during an attempt or the referee's state; each attempt ends with the referee's call.
-- **realtime** (21 dynamic families: a ball, keeper, rope, boom or opponent that moves on the venue's clock):
-  standard on a clock that does not stop, 100 Hz control, slowdown S = 1 in every family (real time); rendered with EGL on the
-  sidecar's GPU.
+**Actions** (both modes): one sim row per 10 ms control step, in one of the robot's action types: `stand` (waist and arm
+targets, the legs held in the stance), `walk` (a velocity command for Unitree's walking policy, plus waist and arm
+targets), `joints` (a target for every joint), `lowcmd` (Unitree's LowCmd: q, dq, tau, kp, kd for every joint), and on
+the G1 also `walk_falcon`, `walk_agile` (the FALCON and WBC-AGILE walking policies), `run` and `run_arms` (the running
+policy). Every type ends with `grip_left`, `grip_right`: a palm-pad grip (≥ 0.5 closes it) or a finger hand's closure
+command (0 open to 1 closed). A sim row is 151 floats on the G1 and 141 on the H1-2.
 
-**Reset budget 5** in standard and realtime: a sport is attempts, and 5 is about the trials a field event
-gives an athlete, enough to correct from the referee's call and too few to search for a plan by trial and error. The
-last attempt is graded; a success ends nothing, `POST /finish` ends the trial ("Agent-ended episodes" below). With resets the first attempt is kept (`trajectory.first.npz`,
-`replay.first.mp4`; `first_success` in `final.json` and `reward.json`): the no-reset view.
+- **privileged**: `/opt/tools/rcb_rfo.py` (`from rcb_rfo import Session`): the frozen instance with the full world
+  (`s.world`: MuJoCo model and data, the robot, the referee and its live record), `s.state()` (the pelvis, the joints,
+  the task's objects), `s.step(type, row)`, `s.reset()` (unlimited), `s.replay()` (what the verifier does) and
+  `s.save_trajectory()`. The deliverable is `/app/output/trajectory.npz`.
+- **standard**: the robot as a service in a `sim` sidecar, through `rcb_client.py` or the `efe-robot` MCP tools, on the
+  eai-standard/3.0 endpoints. The agent gets the robot's two head cameras (270 × 480 RGB, depth on the left one), joint
+  encoders, motor torques, the pelvis and torso IMUs, whether each hand holds something, and the venue's fixed cameras;
+  action chunks of any of the action types. It never gets the robot's or an object's pose during an attempt or the
+  referee's state. The rule book and the venue are described as an athlete knows them. When the referee ends an attempt
+  on a foul or a fall, every later reply names the rule broken (`meta["outcome"]`); a success and the stages reached are
+  never shown. Reset budget: 5 (`RCB_RESET_BUDGET`; 0 gives one attempt), each a new attempt from the frozen start.
+- **realtime** (21 families with a ball, keeper, rope, boom or opponent that moves on the venue's clock): standard mode
+  on a clock that does not stop, one control step every 10 ms of wall time (slowdown S = 1 in every family). The
+  sidecar renders the cameras with EGL on its GPU.
+
+Egress is open in every mode (`[agent] network_mode = "public"`): the agent may search for, vet and adapt public tools,
+robot models and pretrained controllers, but must not use an existing solution to the task (the instruction's **No
+cheating.** rule; trials are reviewed).
 
 ## Grading
 
-- **The referee** (`rfo/referee.py`) judges from the simulator's state after every 1 ms physics step: stages that
-  latch in order, contact events and legal body parts, crossings found between physics steps, flight phases; a foul,
-  a fall, the time limit or a physics blow-up ends the attempt. Its record is part of the state hash.
-- **Privileged**: `tests/grade.py` replays the trajectory in one fresh process, which must succeed.
-- **Standard and realtime**: the sidecar's referee calls the live attempt (`final.json`, `graded_by` live,
-  no grading replay); the start is checked against the instance's state hash, and a crash resumes the attempt from the
-  sidecar's journal.
+- **The referee** (`rfo/referee.py`, with the family's rules in `rfo/tasks/<family>.py`) judges from the simulator's
+  state after every 1 ms physics step: stages that latch in the sport's order, contact events and legal body parts,
+  crossings found between physics steps, flight phases. A success needs every stage latched with no rule broken. A
+  foul, a fall (for most families: the pelvis below a set height, or any part but the legal ones on the ground), the
+  attempt's time limit or the physics diverging ends the attempt as a failure. Once the referee has called the
+  attempt, its record no longer changes. Its record is part of the state hash.
+- **Privileged**: `tests/grade.py` replays the trajectory once, in a fresh process of a separate verifier container
+  without network, from the frozen start until the referee calls the attempt; pass if it called a success.
+- **Standard and realtime**: the referee in the sidecar judges the live attempt; nothing is replayed. The success
+  call is an event: it counts the moment it is made, is never shown, and does not end the attempt, which goes on until
+  the agent's `/finish`, the time limit or the end of the session. A failure called before any success ends the
+  attempt with 0. Only the last attempt is graded. The start is checked against the instance's state hash.
 
-### Agent-ended episodes
+## Tasks
 
-Every standard and realtime task sets `RCB_AGENT_END "1"` in its sim service (PROTOCOL §3, the shared `rcb_service.py`;
-realtime through `rcb_realtime.py`): the referee's success call is never shown and does not end the attempt. The
-referee's call is an event (`end_judgement` "events"): a success counts the moment the referee makes it, and since the
-referee does nothing more once it has called the attempt, nothing after it undoes it; the physics goes on
-(`rfo.World.run_after_done`) until the agent's `POST /finish` (reason `finished`), the end of its session (`timeout`), a
-reset (the attempt is abandoned, only the last is graded) or the attempt's time limit (the service's step cap,
-`step_limit`). A foul, a fall or a physics blow-up the referee calls before a success ends the attempt at once as a
-failure (`failed`, 0), and only then does a reply carry the call (`meta["outcome"]`, the rule broken); `stages_reached`
-and a success are never shown. The privileged replay (`rcb_rfo.replay`) is unchanged; the standard video replays every
-row with `after_done`. This differs from the generic rule (a failure after a success gives 0): the referee is Embodied
-Olympics' own and is frozen at its call. `final.json` adds the shared fields (`ended_by`, `hidden_success_seen`,
-`hidden_success_first_step`, `end_judgement`, ...). Without `RCB_AGENT_END` the service behaves as before (the referee's
-call ends the attempt and is shown).
+One row per family; "ref." marks the 19 families with a reference solution (`oracle = "full"`: `solution/solve.sh`
+succeeds in the task's own setting); the other 60 have none. Every family's referee has a
+test with a declared positive and negative controls. Each task's README states its family's exact success conditions.
 
-## Reference solutions
+| family | robot | event | modes | ref. |
+|---|---|---|---|---|
+| `alpine_slalom` | G1 | Alpine skiing: slalom | privileged, standard |  |
+| `backflip` | G1 | Backflip | privileged, standard |  |
+| `badminton_serve` | G1 | Badminton: singles service | privileged, standard |  |
+| `balance_beam` | G1 | Balance beam | privileged, standard |  |
+| `balance_board` | G1 | Balance board | privileged, standard |  |
+| `basketball_dribble` | H1-2 | Basketball: dribble to the frontcourt | privileged, standard |  |
+| `bowling` | H1-2 | Ten-pin bowling: a strike | privileged, standard |  |
+| `box_jump` | H1-2 | Box jump | privileged, standard |  |
+| `boxing` | H1-2 | Boxing: one clean punch on the heavy bag | privileged, standard | yes |
+| `breaking_windmill` | G1 | Breaking: windmills | privileged, standard |  |
+| `catch_and_shoot` | H1-2 | Basketball: catch and shoot | privileged, standard, realtime |  |
+| `catch` | H1-2 | Baseball: catch a fly ball | privileged, standard, realtime |  |
+| `clean_and_jerk` | H1-2 | Weightlifting: clean and jerk | privileged, standard | yes |
+| `crawl` | G1 | Low-wire crawl | privileged, standard |  |
+| `discus` | H1-2 | Athletics: discus throw | privileged, standard |  |
+| `dodgeball` | G1 | Dodgeball: dodge five throws | privileged, standard, realtime | yes |
+| `double_dutch` | G1 | Double Dutch (enter two turning ropes and jump them) | privileged, standard, realtime |  |
+| `dribble_slalom` | G1 | Football: slalom dribble | privileged, standard |  |
+| `dunk_between_legs` | H1-2 | Basketball: between-the-legs dribble and dunk | privileged, standard |  |
+| `dunk` | H1-2 | Basketball: two-hand dunk, lowered ring | privileged, standard |  |
+| `first_time_shot` | G1 | Football: first-time shot | privileged, standard, realtime | yes |
+| `free_kick_wall` | G1 | Football: direct free kick over or around the wall | privileged, standard |  |
+| `free_throw` | H1-2 | Basketball: free throw | privileged, standard |  |
+| `freeski_360` | G1 | Freeski big air: 360 spin | privileged, standard |  |
+| `freeski_straight_air` | G1 | Freeski big air: straight air | privileged, standard |  |
+| `giant_slalom` | G1 | Alpine skiing: giant slalom | privileged, standard |  |
+| `goalkeeper_save` | H1-2 | Football: goalkeeper, save three penalties | privileged, standard, realtime | yes |
+| `golf_putt` | G1 | Golf: a 3 m putt | privileged, standard | yes |
+| `handstand` | G1 | Handstand | privileged, standard |  |
+| `header` | H1-2 | Football: header | privileged, standard, realtime |  |
+| `high_bar_swing` | G1 | High bar: jump to the bar and giant swing | privileged, standard |  |
+| `high_jump` | H1-2 | High jump | privileged, standard |  |
+| `hurdles_freestanding` | H1-2 | 50 m hurdles, free-standing hurdles | privileged, standard |  |
+| `inline_slalom` | G1 | Inline speed slalom | privileged, standard |  |
+| `javelin` | H1-2 | Athletics: javelin throw | privileged, standard |  |
+| `juggle_three` | G1 | Juggling: a three-ball cascade | privileged, standard, realtime |  |
+| `juggling_feet` | G1 | Football: keepie-uppie with the feet | privileged, standard |  |
+| `juggling_head` | G1 | Football: head juggling | privileged, standard, realtime |  |
+| `juggling` | G1 | Football: keepie-uppie | privileged, standard |  |
+| `jump_rope` | G1 | Rope skipping (one minute) | privileged, standard |  |
+| `kick_target` | H1-2 | Kick the heavy bag at trunk height | privileged, standard |  |
+| `layup` | H1-2 | Basketball: layup | privileged, standard |  |
+| `long_jump` | G1 | Long jump | privileged, standard |  |
+| `long_rope` | G1 | Long rope (jumping a rope turned by two turners) | privileged, standard, realtime | yes |
+| `paddle_bounce` | G1 | Table tennis: keep the ball bouncing on a paddle | privileged, standard, realtime | yes |
+| `penalty_kick` | G1 | Football: penalty kick | privileged, standard, realtime |  |
+| `pitch_target` | H1-2 | Baseball: pitch a strike | privileged, standard |  |
+| `platform_10m` | G1 | 10 m platform: forward dive straight (101A) | privileged, standard | yes |
+| `pole_vault` | G1 | Pole vault | privileged, standard |  |
+| `round_off` | G1 | Round-off | privileged, standard |  |
+| `rugby_conversion` | G1 | Rugby: conversion kick over the crossbar | privileged, standard | yes |
+| `shot_put` | H1-2 | Athletics: shot put | privileged, standard |  |
+| `shuttle_run` | G1 | 4 x 10 m shuttle run | privileged, standard |  |
+| `skateboard_ollie` | G1 | Skateboard ollie | privileged, standard |  |
+| `slalom` | G1 | Illinois agility test | privileged, standard |  |
+| `sled_push` | H1-2 | Sled push: one 12.5 m length on turf | privileged, standard |  |
+| `snowboard` | G1 | Snowboard: parallel slalom | privileged, standard |  |
+| `springboard_3m` | G1 | 3 m springboard: forward dive straight (101A) | privileged, standard | yes |
+| `sprint` | G1 | 50 m | privileged, standard | yes |
+| `standing_long_jump` | G1 | Standing long jump | privileged, standard |  |
+| `steeplechase` | H1-2 | Steeplechase: the water jump | privileged, standard |  |
+| `sumo` | G1 | Sumo (one bout against a pushing robot) | privileged, standard, realtime | yes |
+| `sweeper_jump` | G1 | Sweeper jump (jumping the boom of a Meltdown sweeper) | privileged, standard, realtime | yes |
+| `table_tennis_return` | G1 | Table tennis: return a service | privileged, standard, realtime |  |
+| `taekwondo_kick` | G1 | Taekwondo: a scoring kick to the trunk protector | privileged, standard |  |
+| `tennis_return` | H1-2 | Tennis: return of serve | privileged, standard, realtime |  |
+| `tennis_serve` | H1-2 | Tennis: serve | privileged, standard | yes |
+| `toes_to_bar` | G1 | High bar: toes-to-bar | privileged, standard | yes |
+| `trampoline` | G1 | Trampoline: tuck jump and stop | privileged, standard | yes |
+| `trap_ball` | H1-2 | Football: trap a pass | privileged, standard, realtime |  |
+| `triple_jump` | G1 | Triple jump | privileged, standard |  |
+| `vault` | H1-2 | Vault | privileged, standard |  |
+| `vertical_jump` | G1 | Vertical jump (jump and reach) | privileged, standard |  |
+| `volley_shot` | H1-2 | Football: volley shot | privileged, standard, realtime |  |
+| `volleyball_bump` | H1-2 | Volleyball: serve receive | privileged, standard, realtime | yes |
+| `volleyball_serve` | H1-2 | Volleyball: serve | privileged, standard | yes |
+| `volleyball_set` | H1-2 | Volleyball: set | privileged, standard, realtime |  |
+| `volleyball_spike` | H1-2 | Volleyball: spike | privileged, standard, realtime |  |
+| `wall_ball` | H1-2 | Wall ball: throw, rebound, catch | privileged, standard |  |
 
-19 families have a real controller that succeeds in the task's own setting (`oracle = "full"`, marked below); the
-other 60 have none (`oracle = "none"`, human review). Every family has a referee test with a declared positive (a real
-controller or a magic action that makes the sport's events happen in physics) and negative controls.
+The matches Embodied Olympics exports with its own service are the separate benchmark
+[Embodied Olympics - Match](../embodied-olympics-match/README.md).
 
-## Network: open
+## Others
 
-The tasks declare open egress, `[agent] network_mode = "public"`: the instruction encourages the agent to find, vet and adapt public
-tools, robot models and pretrained controllers (fair equipment, as a published walking controller is for a real G1)
-and asks only that it not use an existing solution to the task, such as this repository's reference solutions
-(its **No cheating.** rule; trials are reviewed). Results are open-network results; the harness's web search stays off in
-official runs; trial rows stay private (a passing trajectory is a complete solution).
-
-## Compute
-
-Privileged and standard: CPU only (MuJoCo on the CPU, OSMesa rendering); one world steps about 0.8 to 3.6 times real time on one core, depending on the host (the finger-hand families slowest) and holds about 0.4 GB.
-Realtime: the sidecar needs an NVIDIA GPU, which renders the cameras with EGL (the physics stays on the CPU).
-Privileged: agent 8 CPUs / 16 GiB, verifier 4 CPUs / 8 GiB; standard: sidecar 4 CPUs / 5 GiB, agent 4 CPUs / 10 GiB;
-realtime: sidecar 4 CPUs / 8 GiB and 4 GiB of GPU memory, agent 4 CPUs / 10 GiB (`scripts/task_resources.toml`).
-
-## Run
-
-```bash
-harbor run -p tasks/embodied-olympics-fun/embodied-olympics-fun-sprint-i00-privileged -a oracle        # or -a nop: scores 0
-harbor run -p tasks/embodied-olympics-fun/embodied-olympics-fun-penalty-kick-i00-standard -a codex -m openai/gpt-6-astra --env-file .env
-```
-Build the image with `scripts/images.sh build` (context `images/embodied-olympics-fun/`); after a change to a shared
-file, rebuild and re-pin the files image (`scripts/files_image.py build|pin embodied-olympics-fun-files`).
-
-## The 79 families
-
-One row per family; "ref." marks the 19 with a reference solution. The robot is the family's `Task.robot`.
-
-| family | robot | event | ref. | family | robot | event | ref. |
-|---|---|---|---|---|---|---|---|
-| `sprint` | G1 | 50 m | yes | `tennis-return` | H1-2 | Tennis: return of serve |  |
-| `hurdles-freestanding` | H1-2 | 50 m hurdles, free-standing hurdles |  | `tennis-serve` | H1-2 | Tennis: serve | yes |
-| `shuttle-run` | G1 | 4 x 10 m shuttle run |  | `badminton-serve` | G1 | Badminton: singles service |  |
-| `slalom` | G1 | Illinois agility test |  | `table-tennis-return` | G1 | Table tennis: return a service |  |
-| `high-jump` | H1-2 | High jump |  | `paddle-bounce` | G1 | Table tennis: keep the ball bouncing on a paddle | yes |
-| `long-jump` | G1 | Long jump |  | `golf-putt` | G1 | Golf: a 3 m putt | yes |
-| `standing-long-jump` | G1 | Standing long jump |  | `javelin` | H1-2 | Athletics: javelin throw |  |
-| `triple-jump` | G1 | Triple jump |  | `shot-put` | H1-2 | Athletics: shot put |  |
-| `vertical-jump` | G1 | Vertical jump (jump and reach) |  | `discus` | H1-2 | Athletics: discus throw |  |
-| `jump-rope` | G1 | Rope skipping (one minute) |  | `pitch-target` | H1-2 | Baseball: pitch a strike |  |
-| `long-rope` | G1 | Long rope (jumping a rope turned by two turners) | yes | `bowling` | H1-2 | Ten-pin bowling: a strike |  |
-| `pole-vault` | G1 | Pole vault |  | `catch` | H1-2 | Baseball: catch a fly ball |  |
-| `alpine-slalom` | G1 | Alpine skiing: slalom |  | `juggle-three` | G1 | Juggling: a three-ball cascade |  |
-| `giant-slalom` | G1 | Alpine skiing: giant slalom |  | `wall-ball` | H1-2 | Wall ball: throw, rebound, catch |  |
-| `freeski-360` | G1 | Freeski big air: 360 spin |  | `boxing` | H1-2 | Boxing: one clean punch on the heavy bag | yes |
-| `snowboard` | G1 | Snowboard: parallel slalom |  | `kick-target` | H1-2 | Kick the heavy bag at trunk height |  |
-| `freeski-straight-air` | G1 | Freeski big air: straight air |  | `taekwondo-kick` | G1 | Taekwondo: a scoring kick to the trunk protector |  |
-| `double-dutch` | G1 | Double Dutch (enter two turning ropes and jump them) |  | `dodgeball` | G1 | Dodgeball: dodge five throws | yes |
-| `penalty-kick` | G1 | Football: penalty kick |  | `sumo` | G1 | Sumo (one bout against a pushing robot) | yes |
-| `dribble-slalom` | G1 | Football: slalom dribble |  | `balance-beam` | G1 | Balance beam |  |
-| `trap-ball` | H1-2 | Football: trap a pass |  | `steeplechase` | H1-2 | Steeplechase: the water jump |  |
-| `volley-shot` | H1-2 | Football: volley shot |  | `box-jump` | H1-2 | Box jump |  |
-| `juggling` | G1 | Football: keepie-uppie |  | `vault` | H1-2 | Vault |  |
-| `juggling-feet` | G1 | Football: keepie-uppie with the feet |  | `backflip` | G1 | Backflip |  |
-| `juggling-head` | G1 | Football: head juggling |  | `crawl` | G1 | Low-wire crawl |  |
-| `header` | H1-2 | Football: header |  | `high-bar-swing` | G1 | High bar: jump to the bar and giant swing |  |
-| `volleyball-bump` | H1-2 | Volleyball: serve receive | yes | `toes-to-bar` | G1 | High bar: toes-to-bar | yes |
-| `volleyball-set` | H1-2 | Volleyball: set |  | `clean-and-jerk` | H1-2 | Weightlifting: clean and jerk | yes |
-| `volleyball-serve` | H1-2 | Volleyball: serve | yes | `balance-board` | G1 | Balance board |  |
-| `volleyball-spike` | H1-2 | Volleyball: spike |  | `platform-10m` | G1 | 10 m platform: forward dive straight (101A) | yes |
-| `rugby-conversion` | G1 | Rugby: conversion kick over the crossbar | yes | `springboard-3m` | G1 | 3 m springboard: forward dive straight (101A) | yes |
-| `free-kick-wall` | G1 | Football: direct free kick over or around the wall |  | `trampoline` | G1 | Trampoline: tuck jump and stop | yes |
-| `goalkeeper-save` | H1-2 | Football: goalkeeper, save three penalties | yes | `handstand` | G1 | Handstand |  |
-| `first-time-shot` | G1 | Football: first-time shot | yes | `round-off` | G1 | Round-off |  |
-| `free-throw` | H1-2 | Basketball: free throw |  | `breaking-windmill` | G1 | Breaking: windmills |  |
-| `catch-and-shoot` | H1-2 | Basketball: catch and shoot |  | `sled-push` | H1-2 | Sled push: one 12.5 m length on turf |  |
-| `layup` | H1-2 | Basketball: layup |  | `skateboard-ollie` | G1 | Skateboard ollie |  |
-| `dunk` | H1-2 | Basketball: two-hand dunk, lowered ring |  | `inline-slalom` | G1 | Inline speed slalom |  |
-| `dunk-between-legs` | H1-2 | Basketball: between-the-legs dribble and dunk |  | `sweeper-jump` | G1 | Sweeper jump (jumping the boom of a Meltdown sweeper) | yes |
-| `basketball-dribble` | H1-2 | Basketball: dribble to the frontcourt |  |  |  |  |  |
-
-## Tasks exported by Embodied Olympics
-
-The matches Embodied Olympics exports with its own service (PROTOCOL §3), listed in
-`ci_checks/benchmarks/embodied-olympics-match/exported.toml`, and their standard and privileged twins are the benchmark
-[Embodied Olympics - Match](../embodied-olympics-match/README.md) (task prefix `embodied-olympics-match-`).
-
-## Licences
-
-This benchmark's code: MIT. Embodied Olympics (robot library, running policy port, freeski course and ski-snow model):
-MIT. Unitree G1 model with the Dex3-1 hands: MuJoCo Menagerie, BSD-3-Clause. H1-2 model and Unitree's walking policy
-(unitree_rl_gym): BSD-3-Clause. Running policy (C1801SYQ/g1_running): Apache-2.0. FALCON (LeCAR-Lab): MIT. WBC-AGILE
-(NVIDIA): Apache-2.0. Licence files sit next to their files in the image (`images/embodied-olympics-fun/roboolympics/SOURCE.md`).
+- Compute: privileged and standard are CPU only (MuJoCo on the CPU, OSMesa rendering); one world steps about 0.8 to
+  3.6 times real time on one core, depending on the host (the finger-hand families slowest), and holds about 0.4 GB.
+  Realtime needs an NVIDIA GPU with EGL in the sidecar. Caps per container: `scripts/task_resources.toml` (each task's
+  README lists them).
+- Rebuild the image with `scripts/images.sh build` (context `images/embodied-olympics-fun/`); after a change to a
+  shared file, rebuild and re-pin the files image (`scripts/files_image.py build|pin embodied-olympics-fun-files`).

@@ -1,102 +1,38 @@
-# humanoidbench-loco-sit-simple-i00-privileged
+# HumanoidBench · sit_simple (privileged)
 
 | | |
 |---|---|
-| Benchmark | HumanoidBench |
+| Task ID | `humanoidbench-loco-sit-simple-i00-privileged` |
+| Benchmark | [HumanoidBench](https://humanoid-bench.github.io/) (Sferrazza et al., 2024), upstream `carlosferrazza/humanoid-bench@cb11890` |
+| Robot | Unitree H1 humanoid, 19 position-controlled actuators (HumanoidBench `h1`) |
 | Mode | privileged |
-| Twin | `humanoidbench-loco-sit-simple-i00-standard` |
-| Simulator / robot | `humanoidbench` / `unitree-h1` |
-| Family / instance | `sit_simple` / seed 0 |
-| Oracle | `full` |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:humanoidbench-0.2.0` |
+| Instance | `sit_simple`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | Included |
 
 ## Task
 Sit down on the chair right behind you and stay seated, upright and still.
 
-HumanoidBench sit_simple: produce one replayable trajectory that sits the Unitree H1 on the chair, frozen scene instance 00.
+## Success criteria
+Pass mark: an episode return of at least 750, upstream's success bar, where the return is the sum of
+HumanoidBench's per-step `sit_simple` reward over the episode. Each control step earns between 0 and 1, more the closer
+the robot is to sitting on the chair behind it: pelvis at seat height above the seat, a seated upright posture, no
+horizontal motion and little actuator effort. An episode is at most 1,000 control steps (20 s at
+50 Hz).
 
-## Difficulty
-The pass mark is a **threshold on the whole episode's return** (`>= 750` over 1000 steps), not a
-predicate on the final state.
+Termination (the episode ends at once as a failure): the robot falls, its pelvis below 0.5 m (lower than when seated).
 
-- **No pose to snap to.** Reaching the chair late still forfeits the reward of every step spent
-  standing, so the agent has to sit *early* and then stay still — a partial credit landscape, not a
-  goal test.
-- **Doing nothing already gets 80% of the bar.** An all-zero action commands the mid-point of every
-  actuator's range, which slumps the robot back against the chair's backrest with the pelvis just above
-  the seat, and it stays there for the full episode: **601.2 /
-  750**, measured. Holding the *starting* pose instead scores 578.51 (77.1%). That is the single clearest
-  reason this task is a fixture and not a scored task — the gap a solution has to close is small enough
-  that almost anything coherent closes it.
-- **19 coupled DoF under gravity.** The agent has to work out *which* joints put a humanoid on a chair
-  and how to get there without falling — from the raw state vector and the MuJoCo model, with no
-  primitives.
+Graded file: `/app/output/trajectory.npz`, as `s.save_trajectory(...)` writes it: this task's name (`sit_simple`) and at
+most 1,000 rows of 19 finite servo targets, one row per control step (values outside [-1, 1] are
+clipped). After the agent's session it is replayed once, open-loop, from the frozen start (`tests/instance.npz`) in a
+fresh process of a separate verifier container without network, the only place the reward exists. The task is passed
+if the replayed episode's return reaches the pass mark. The replay stops at the first of the terminations above; rows
+after it are not run. Only the trajectory is scored (`gen.py` and `NOTES.md` are not). A missing file, a file for
+another task, or one that is not such an array scores 0; an error inside the grader is reported as `grader_error`
+(infrastructure), not as a score.
 
-**Measured difficulty** (`mini-swe-agent` + `meta/muse-spark-1.3`, first attempt): **solved, 979.03
-/ 750** in 26 steps, 337 s of agent time and $0.36. It did not search — it read the model, picked a
-seated joint target by hand (hip −1.4, knee 1.7, ankle −0.35), cosine-blended into it over 30 steps
-and held, then self-checked with `Session.replay`. That beat this task's CEM-MPC oracle of the time
-(820.28; 818.41 since image 0.2.0) and the published SAC baseline (861), which needs millions of
-environment steps.
-
-🚩 That run also read `Sit.get_reward()` and quoted its bounds back at us, which is the measurement
-that led to the reward function being removed from the image entirely
-(`images/humanoidbench/scrub_oracles.py`, `tasks/humanoidbench/README.md`). The 979.03 is
-therefore a number from the old, reward-visible setup and is not reproducible as-is.
-
-So this instance is **easier than it looks**, and honestly so: `sit_simple` rewards a static seated
-pose, and a static pose is exactly what a competent agent can reason out. It earns its place as the
-first task in the family — it proves the whole pipeline end to end with a solvable target — but it
-is **not part of the scored subset**. It is kept as the template every other task is generated from
-and as the CI fixture that distinguishes "the agent is broken" from "the task is hard".
-
-⏳ **Scheduled for removal.** Delete this task once all 9 scored tasks are `verified` and at least
-two of them, from different capability classes, have been passed end to end by different agents. The
-original condition — "any scored task passed by a real agent" — was met by `walk` (784.54/700,
-`claude-sonnet-5`), but that was a single run by a single model under the old reward-visible setup,
-and the whole point of the fixture is to tell "the agent is broken" apart from "the task is hard".
-That distinction is worth most while 23 task directories are being generated for the first time, and
-this is the only task carrying an oracle, so it is also the only one where the oracle = 1 path can
-be exercised.
-
-**Measured floors** (this instance): an all-zero
-trajectory scores **601.23 / 750**. Holding the starting pose instead — the floor a competent agent
-gets before writing a controller — scores **77.1%** of the bar; that is the number this task was
-selected on (the benchmark's give-away limit). **External evidence**: published RL
-results reach **124%** of the bar (paper 861, FastTD3 929, bar 750) — training runs of millions of
-environment steps, not a one-hour coding session, so treat it as proof that the task *has* a
-solution rather than as a target.
-
-**The agent does not see the reward function.** It is deleted from the image and restored only
-inside the verifier (`images/humanoidbench/scrub_oracles.py`, `tests/rcb_rewards.py`), so the
-numbers above are upstream's own scoring (on our physics: see *Physics vs upstream*) while the agent
-works from the task statement and the physical state alone.
-
-## Reference solution
-`solution/sit_simple_actions.npy` — a 999-step action sequence that scores **818.41 / 750**,
-replayed by `solution/oracle_sit_simple.py`. HumanoidBench ships no reference solutions (its
-"solutions" are training curves), so this one was produced by training-free CEM-MPC against the
-simulator itself, from the frozen instance: `solution/cem_mpc.py` reruns that search in ~3 minutes
-on 32 cores (last run, MuJoCo 3.3.7: 818.4/750). It is a fresh search, not a replay, so it produces
-an equivalent passing trajectory rather than this exact file. `solve.sh` replays the recording
-instead of searching, so the oracle is deterministic and costs one episode.
-
-⚠️ The oracle searches against the reward function, which the task image no longer has. It runs with
-the verifier's restore path (`tests/rcb_rewards.py`) or outside the container; it is a development
-tool and a CI fixture, not something an agent could reproduce from inside.
-
-## Verification
-In its own container, built from `tests/Dockerfile` (no network): the agent's container is gone by
-then, and only `/app/output/` crosses over. Open-loop replay of `/app/output/trajectory.npz` from
-`tests/instance.npz` in a fresh process, once; pass iff the replay's episode return reaches
-`success_bar`. `tests/grade.py` also
-writes `/logs/verifier/replay.mp4` and, because Harbor promotes every `reward.json` key to a
-leaderboard metric, keeps the per-task numbers (`episode_return`, `success_bar`) in
-`/logs/verifier/diagnostics.json`. The oracle (`solution/solve.sh`) scores 1; `nop` scores 0.
-
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -105,19 +41,9 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Capability class | fixture (C3 · quasi-static stabilisation, too easy to score) |
-| Physics vs upstream | upstream's model (HumanoidBench cb11890) on MuJoCo 3.3.7, not the 3.1.6 upstream pins, whose convex collision reported wrong contacts; results on image 0.1.6 or earlier are other physics and are reported apart (tasks/humanoidbench/README.md, Physics). |
-
-### GPU
-Optional, and passing never depends on it: MuJoCo physics is CPU-only, so a GPU only speeds up the
-agent's own offscreen rendering (osmesa ~130 ms/frame, egl ~0.4 ms). Hand one to the agent's
-container with `--extra-docker-compose environment/gpu.docker-compose.yaml`; `rcb_hb.py` then picks
-EGL by itself unless `MUJOCO_GL` says otherwise. The overlay is not named `docker-compose.yaml`
-because Harbor would load that on every machine, and a device reservation the host cannot satisfy
-stops the container from starting.
-
-### Provenance
-The instance (`environment/instance.npz` and its byte copy `tests/instance.npz`) is seed 0 (sha `ef2c205ae550`).
+## License
+HumanoidBench (Sferrazza et al., 2024; <https://github.com/carlosferrazza/humanoid-bench>) is released under the MIT
+License, copyright (c) 2024 Robot Learning Lab, UC Berkeley. The image's notice is
+`images/humanoidbench/LICENSE.humanoid-bench`; this task's `rewards.json` carries upstream's code under that license.
+Robot models shipped with upstream: the Unitree H1 model (BSD 3-Clause, copyright Unitree Robotics) and, on the
+two-handed H1, the Shadow Hand model from MuJoCo Menagerie (Apache License 2.0). No non-commercial terms apply.

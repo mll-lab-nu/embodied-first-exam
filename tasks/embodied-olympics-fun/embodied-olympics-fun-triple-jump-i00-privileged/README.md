@@ -1,31 +1,66 @@
-# embodied-olympics-fun-triple-jump-i00-privileged
+# Embodied Olympics · triple jump (privileged)
 
 | | |
 |---|---|
-| Benchmark | Embodied Olympics - Fun |
+| Task ID | `embodied-olympics-fun-triple-jump-i00-privileged` |
+| Benchmark | [Embodied Olympics - Fun](https://github.com/CHIGUI0/roboolympics) (Embodied Olympics authors, 2026), upstream `CHIGUI0/roboolympics@7df999b` |
+| Robot | Unitree G1 humanoid (1.32 m, 33 kg, 29 joints), with Unitree's walking and running policies |
 | Mode | privileged |
-| Twin | `embodied-olympics-fun-triple-jump-i00-standard` |
-| Simulator / robot | `mujoco` / `unitree-g1` |
-| Family / instance | `triple_jump` / seed 0 |
-| Oracle | `none` — no reference solution; the referee is tested: positive by injection (three take-offs, the legs swapped by the robot's own motors: hop 2.64 m, step 5.87 m, a mark of 8.65 m), in the same sand as long-jump; negatives: a foot over the line, a two-foot hop, the wrong feet, another part on the ground, travelling between phases, not into the sand. No single-leg take-off exists for this robot; human review in the pull request that adds the benchmark (PROTOCOL §4) |
-| Agent time budget | 7200 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
+| Instance | `triple_jump`, seed 0 |
+| Time limit | 2 h |
+| Reference solution | None |
 
 ## Task
-Do a triple jump: run up, then hop, step and jump into the sand pit, landing at least 7 m from the take-off line. (Embodied Olympics `triple-jump`: one Unitree G1 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
+Do a triple jump: run up, then hop, step and jump into the sand pit, landing at least 7 m from the take-off line.
 
-## Difficulty
-Seven metres in three flights, each from one foot: every phase has to be more than twice this robot's best published two-foot jump, taken from a single leg, and landed on a single leg with enough balance and speed left to take off again. Nothing built in hops on one foot at all.
+## Success criteria
+A runway 40.0 m long and 1.22 m wide leads to a sand pit level with it; the take-off line is the pit-side edge of a
+0.2 m take-off board, and the pit begins 7.0 m beyond it (9.0 m long, 2.75 m wide). A flight is a time of at least
+0.05 s in which nothing of the robot touches anything. "On the runway" means every point of the contact within the
+runway's width and before the pit. Until the hop no foot on the ground may have any part of it on or over the
+take-off line's plane, and nothing of the robot may touch the ground beyond the line. The referee's stages, in
+order: hop, step, jump, landing.
+- Hop: the flight that ends with the first contact beyond the line. It is taken off from one foot (the other foot
+  left the ground at least 0.05 s before it) within the runway's width; the pelvis rises at least 0.05 m above its
+  height at lift-off; its first contact is the take-off foot alone, on the runway.
+- Step: the next flight. Until it starts only the hop's landing foot touches the ground; its first contact is the
+  other foot alone, on the runway.
+- Jump: the next flight. Until it starts only the step's landing foot touches the ground; its first contact is in
+  the sand (any part of the robot), with nothing on the ground outside the pit.
+- Landing: the mark is the point nearest the take-off line at which any part of the robot touches the sand in the
+  first 2.0 s after the jump's first contact. The success is called when those 2.0 s have passed; as the sand begins
+  7.0 m beyond the line, the mark is at least 7.0 m.
 
-## Reference solution
-None. No reference controller exists for this family yet: positive by injection (three take-offs, the legs swapped by the robot's own motors: hop 2.64 m, step 5.87 m, a mark of 8.65 m), in the same sand as long-jump; negatives: a foot over the line, a two-foot hop, the wrong feet, another part on the ground, travelling between phases, not into the sand. No single-leg take-off exists for this robot.
+Fouls (each fails the attempt at once):
+- before the hop, a foot on the ground with any part on or over the take-off line, or any touch of the ground beyond
+  the line that does not end a flight;
+- a hop taken off from both feet, taken off outside the runway's width, with a pelvis rise below 0.05 m, or landing
+  other than on the take-off foot alone on the runway;
+- before the step or the jump, any part other than the landing foot on the ground, or the landing foot's centre more
+  than 0.3 m from where it came down;
+- a step landing other than on the other foot alone on the runway; a jump whose first contact is not in the sand;
+- in the 2.0 s after the jump's landing, a touch of the ground outside the pit nearer the take-off line than the mark;
+- leaving the venue (the level ground ends 8 m to each side of the runway's axis, 45 m behind the take-off line and
+  6 m beyond the pit).
+The generic fall rule is off: a fall is not a failure by itself. Time limit: 60 s (6,000 control steps).
 
-## Verification
-`/tests/grade.py` replays `/app/output/trajectory.npz` from the frozen start in one fresh process (`rcb_rfo.py replay`:
-one sim row per control step until the referee ends the attempt). Pass iff the referee's verdict is a success. The rules: World Athletics rules for the triple jump. The runway is 40.0 m long and 1.22 m wide along +x and goes on to the pit. The take-off line is x = 0, the edge of the white take-off board (0.2 m long) that is nearer the pit. The landing area is a pit of sand, level with the runway, that begins 7.0 m beyond the take-off line and is 9.0 m long and 2.75 m wide, centred on y = 0. A flight is a time of at least 0.05 s in which nothing of you touches anything. Until the hop: no foot that is on the ground may have any part of it on or over the take-off line's plane (the whole foot counts, also the parts of it that are in the air), and nothing of you may touch the ground at x >= 0. (1) The hop is the flight that ends with your first contact beyond the line. It must be taken off from one foot within the runway's width: the other foot has left the ground at least 0.05 s before the take-off foot; your pelvis must rise at least 0.05 m above its height at lift-off; and its first contact must be the take-off foot alone, on the runway. (2) The step is the next flight: until it starts only the foot you landed on may touch the ground, and its first contact must be the other foot alone, on the runway. (3) The jump is the next flight: until it starts only the foot the step landed on may touch the ground, and its first contact must be with the sand (any part of your body). Between the landing of the hop or of the step and the next flight the landing foot stays where it came down: you fail if it touches the ground with its centre more than 0.3 m from where it was at the landing (no sliding along and no travelling in hops shorter than a flight). On the runway means: every point of that contact within the runway's width and before the pit. The mark is the point nearest the take-off line at which any part of you touches the sand in the first 2.0 s after the jump's first contact; in that time you may not touch the ground outside the pit nearer the take-off line than the mark. You succeed when that time has passed after a valid hop, step and jump: the mark is then at least 7.0 m. A fall is not a failure by itself. You fail on any of the faults above, if you leave the venue (the level ground ends 8 m to each side of the runway's axis, 45 m behind the take-off line and 6 m beyond the pit) or after 60 s (the time allowed for a trial). No oracle; human review in the pull request that adds the benchmark (PROTOCOL §4).
+Graded file: `/app/output/trajectory.npz`, as `s.save_trajectory()` writes it: an `actions` array of sim rows, one per
+10 ms control step, and the task's family name. After the agent's session it is replayed once, open-loop, from the
+frozen start, in a fresh process of a separate verifier container without network. Rows run one per control step
+until the referee calls the attempt; rows after the call, and rows past the attempt's time limit, are not run. The
+task is passed if the referee has called a success when the replay stops. If the rows run out before the referee's
+call, the task is not passed. A row the robot cannot run (its first value, the mode, is not one of the robot's modes)
+ends the replay at that row without a pass.
 
-## Resources
-Caps per container (PROTOCOL §6).
+The physics diverging (a non-finite state, a bad acceleration, or the robot or a prop faster than 150 m/s) ends the
+attempt as a failure, unless a success was called in an earlier control step. Only the trajectory is scored (`gen.py`
+and `NOTES.md` are not). A missing file, a file that is not such an array (a link, over 64 MB, more than 40,000 rows,
+the wrong row width), a file for another task, or a non-finite value in the rows that are used scores 0. An image that
+no longer rebuilds the frozen start, or a replay that crashes or runs over 600 s, is an infrastructure failure, not a
+score.
+
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -34,14 +69,10 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Category | track-and-jumps |
-| Rule book | World Athletics Competition and Technical Rules, 2024 edition: TR 31 (31.1 the hop, step and jump in that order; 31.2 the hop lands on the take-off foot, the step on the other foot; the rules of the long jump apply: TR 29 the runway, the board, the landing area; TR 30.1.1, 30.1.2, 30.1.5 failures; TR 30.3 the measurement), TR 25.17 (one minute for a trial); deviations: TR 31.3 (the take-off line at least 13 m from the pit for men, 11 m for women in international competition; nearer boards for other levels): the board is 7.0 m before the pit, a school competition's board (FAMILIES.md) · TR 31.2, note (a touch of the ground by the 'sleeping' leg is no failure): not applied: between the hop's landing and the step's take-off, and between the step's landing and the jump's take-off, only the foot the phase landed on may touch the ground; a referee without eyes cannot tell a scrape from a supporting step · TR 31.1 (the event is one hop, one step and one jump): between a phase's landing and the next take-off the landing foot is on one place: a touch of it more than 0.3 m from where it landed is a failure (hops too short to be flights, or a slide, would otherwise cover the distance) · the take-off of the hop from one foot (implied by TR 31.2) is judged by a number: the other foot must have left the ground at least 0.05 s before the take-off foot does · TR 30.1.3 (somersaulting) and TR 30.1.6 / 30.2 (how the athlete leaves the landing area) are not judged; the landing is judged for 2.0 s from the first contact with the sand · TR 29.3 (the plasticine indicator board): no imprint; the take-off line is judged geometrically: a foot on the ground with any part of it (also a part in the air) on or over the line's plane is a failure · TR 29.6 (the sand): the pit is a box whose contact follows the sinking of a plate into dry silica sand (a resistance growing in proportion to depth, Agarwal et al. 2019; friction 0.67, the sand's internal friction; MuJoCo's contact fitted to that law on this robot: a time constant of 0.15 s, damping ratio 2.0, an impedance falling from 0.95 to 0.4 over 0.05 m): it gives 7 mm under the standing robot and about 7 cm under a landing at 2.5 m/s and does not push back; it is not loose damp sand that flows, it is not raked, and it keeps no imprint, so the mark is the contact with the sand nearest the take-off line · TR 31 does not define a hop; here each phase is a flight of at least 0.05 s, and the hop must raise the pelvis at least 0.05 m above its height at lift-off; no wind; one trial |
-| Stages | hop → step → jump → landing |
-| Instance | `environment/instance.json` = `tests/instance.json`: the family's parameters, t = 0 state hash `2ac824042293a441f3bf633a86084a5184eb65e095899067e233e447ed8f5f9c` |
-| Episode | 6000 control steps (60 s at 100 Hz) |
-| Action | sim rows of 151 floats per control step (`rfo/world.py`); six action types are views of it |
-| Tooling | `/opt/tools/rcb_rfo.py`, `/opt/tools/rfo/` (the world, the action layer, the referee's toolkit; from the files-only image images/embodied-olympics-fun-files/, built from embodied_first_exam/benchmarks/embodied-olympics-fun/) and `environment/rfo_task.py` (this family's rules), the same files in the verifier's `/tests/` |
-| Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md) |
+## License
+The Embodied Olympics robot library and running-policy port ([CHIGUI0/roboolympics](https://github.com/CHIGUI0/roboolympics)
+@ `7df999b`, a private repository) is released under the MIT License (`LICENSE.roboolympics` in the image); this
+benchmark's venues and referees are MIT too. Third-party parts in the image: the Unitree G1 model and meshes from MuJoCo
+Menagerie (BSD-3-Clause), the Unitree H1-2 model, meshes and walking policy and the G1 walking policy from
+unitree_rl_gym (BSD-3-Clause), the G1 running policy from C1801SYQ/g1_running (Apache-2.0), FALCON's G1 walking policy
+from LeCAR-Lab/FALCON (MIT) and the WBC-AGILE G1 walking policy from NVIDIA (Apache-2.0). No non-commercial terms apply.

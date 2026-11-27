@@ -1,15 +1,19 @@
 [[replace]]
-old = "state hash `6cdaa86a450092e7`"
-new = "state hash `2cd6488df455f7fd`"
-
-[[replace]]
-old = "`solution/oracle.npy`, 453 rows"
-new = "`solution/oracle.npy`, 582 rows"
-
-[[replace]]
 old = "an 11-second countdown"
 new = "a 15-second countdown"
 
 [[replace]]
-old = "balancing for 11 s"
-new = "balancing for 15 s"
+old = "countdown (11 s"
+new = "countdown (15 s"
+
+[[replace]]
+old = "within 12.9 cm of"
+new = "within 12.4 cm of"
+
+[[replace]]
+old = "and 12.4 cm along its y axis"
+new = "and 11.9 cm along its y axis"
+
+[[replace]]
+old = "`ball_tray`, seed 0 |"
+new = "`ball_tray`, seed 19 |"

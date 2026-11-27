@@ -1,43 +1,33 @@
-# kinder-scoop-pour-i01-standard
+# KinDER · scoop-pour (standard)
 
 | | |
 |---|---|
-| Benchmark | KinDER |
-| Mode | standard (`eai-standard/3.0`) |
-| Twin | `kinder-scoop-pour-i01-privileged` |
-| Simulator / robot | `kinder` / `tidybot-plus-plus` |
-| Family / instance | `scoop-pour` / seed 0 (allowed seeds: [0, 1, 2]; PROTOCOL §2) |
-| Oracle | `none` — none yet: no positive example is known for this instance (human review pending) |
-| Agent time budget | 1800 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:kinder-0.1.6` |
+| Task ID | `kinder-scoop-pour-i01-standard` |
+| Benchmark | [KinDER](https://github.com/Princeton-Robot-Planning-and-Learning/kindergarden) (Huang et al., 2026), upstream `Princeton-Robot-Planning-and-Learning/kindergarden@5b2dbac` |
+| Robot | TidyBot++ mobile manipulator: holonomic base, Kinova Gen3 7-DoF arm, Robotiq 2F-85 gripper |
+| Mode | standard |
+| Instance | `scoop-pour`, seed 0 |
+| Time limit | 30 min |
+| Reference solution | None |
 
 ## Task
-Standard mode (robot as a service, `eai-standard/3.0`) of `kinder-scoop-pour-i01-privileged`: the same KinDER instance (`kinder/ScoopPour3D-o50-v0`, seed
-0) runs in the `sim` sidecar; the agent gets a client and the robot's own sensors -- two
-cameras, joint encoders, the base's odometry -- and
-never the scene's state or the goal check. No reset: one episode, which is graded.
+Move all 50 small cubes from the yellow bin into the green bin. There is a scoop you can use.
 
-Task: Move all 50 small cubes from the yellow bin into the green bin. There is a scoop you can use.
+## Success criteria
+Goal check (KinDER `ScoopPour3D-o50`): the centre of every one of the 50 cubes lies inside the green bin's goal
+region, a box 0.37 m by 0.22 m centred in the bin, from 3 cm to 5.5 cm above the bin's base frame, so a cube resting
+on the rim or stacked high does not count. Nothing else is checked: the scoop and the yellow bin may be anywhere.
 
-## Difficulty
-Nonprehensile, tool use, dynamics: move 50 small cubes from one bin to another with a scoop, each ending well inside the target bin. The variant is upstream's o50 (both cube families use theirs, tasks/kinder/README.md).
+Graded: the live episode, judged by the simulator service; nothing is replayed. Reaching the goal does not end the
+episode and is not shown to the agent. The episode ends at the agent's `/finish`, after 1,000 control steps (100 s
+of robot time), or when the agent's time (30 min) runs out. It is passed if KinDER's goal check holds in the state
+the episode ends in. Resets granted: 0. A reset starts a new episode from the frozen start; only the episode
+after the last reset is graded. A simulator error raised by the agent's own call ends the episode with 0. An episode that does not
+start from the frozen instance, or a service crash outside the agent's calls, is an infrastructure failure, not a
+score.
 
-## Reference solution
-None, and no positive example yet: the task is unvalidated (`validated = false`, docs/protocol/README.md §2, §4) until a human review records one.
-
-## Verification
-The sidecar runs the episode live: it ends at the agent's `POST /finish`, at the step cap, when the agent's time is up, or on a simulator error (a success never ends it and is never shown), and KinDER's goal check is judged on the state it ends in. The sidecar,
-when the collect hook ends the trial, writes that verdict to `/data/final.json` (`graded_by = "live"`): nothing is
-replayed to grade it (owner, 2026-10-17). The scene's start is checked against the frozen instance's
-recorded state (`scene_sha`) when the episode begins (a mismatch is `instance_mismatch`, infrastructure).
-`tests/grade.py` grades `final.json` in a container of its own with no network: success = live success. The video
-(`replay.mp4`) is rendered from `trajectory.npz` in one pass after the verdict and never changes it.
-No oracle; no positive example yet (human review pending). `nop` scores 0.
-
-Benchmark notes: `tasks/kinder/README.md`.
-
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -47,3 +37,9 @@ Caps per container (PROTOCOL §6).
 
 - GPU: any NVIDIA GPU, held by `sim`.
 - Recommended GPU: any 8 GB+ NVIDIA GPU (RTX 4090 / L4).
+
+## License
+KinDER ([Princeton-Robot-Planning-and-Learning/kindergarden](https://github.com/Princeton-Robot-Planning-and-Learning/kindergarden)
+@ `5b2dbac`) is released under the MIT License (copyright (c) 2025 Tom Silver). The lab scenes are MimicLabs
+([Gatech-RL2/mimiclabs](https://github.com/Gatech-RL2/mimiclabs), MIT License), fetched by upstream's own download
+script when the image is built. The simulator is MuJoCo (Apache License 2.0). No non-commercial terms apply.

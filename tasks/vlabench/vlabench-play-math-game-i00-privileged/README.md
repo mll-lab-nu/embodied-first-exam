@@ -1,42 +1,43 @@
-# vlabench-play-math-game-i00-privileged
+# VLABench · play_math_game (privileged)
 
 | | |
 |---|---|
-| Benchmark | VLABench |
+| Task ID | `vlabench-play-math-game-i00-privileged` |
+| Benchmark | [VLABench](https://github.com/OpenMOSS/VLABench) (Zhang et al., 2024), upstream `OpenMOSS/VLABench@cf588fe` |
+| Robot | Franka Emika Panda arm (7 joints) with its two-finger gripper, VLABench's model on a fixed base |
 | Mode | privileged |
-| Twin | `vlabench-play-math-game-i00-standard` |
-| Simulator / robot | `vlabench` / `franka-panda` |
-| Family / instance | `vlabench/play_math_game` / seed 0 |
-| Oracle | `full` |
-| Agent time budget | 1800 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:vlabench-0.2.0` |
+| Instance | `vlabench/play_math_game`, seed 0 |
+| Time limit | 30 min |
+| Reference solution | Included |
 
 ## Task
-VLABench's `play_math_game`: a Franka Panda arm at a table, instructed **"Answer this question with the number cubes, side by side on the placemat so that the answer reads from the robot's left to its right: A mechanic charges different rates to repair the tires of trucks and cars. For each truck tire that is repaired, the mechanic will charge $60 and for each car tire that is repaired, the mechanic will charge $40. On Thursday, the mechanic repairs 6 truck tires and 4 car tires. On Friday, the mechanic repairs 12 car tires and doesn't repair any truck tires. How much more revenue did the mechanic earn on the day with higher revenue?"** (a direct command). One
-frozen scene instance (VLABench's own episode configuration for the task, seed 0); the deliverable is one
-replayable trajectory of joint-position control steps (`/app/output/trajectory.npz`, `(T, 9)`, T ≤ 4000), graded by
-VLABench's own success check at its end.
+Answer this question with the number cubes, side by side on the placemat so that the answer reads from the robot's left
+to its right: A mechanic charges different rates to repair the tires of trucks and cars. For each truck tire that is
+repaired, the mechanic will charge $60 and for each car tire that is repaired, the mechanic will charge $40. On
+Thursday, the mechanic repairs 6 truck tires and 4 car tires. On Friday, the mechanic repairs 12 car tires and doesn't
+repair any truck tires. How much more revenue did the mechanic earn on the day with higher revenue?
 
-## Difficulty
-Privileged mode: the agent has every entity's pose and grasp and place points, VLABench's general skills (pick, place,
-pull, press, …) as planning primitives, inverse kinematics, unlimited resets and self-replay. What remains hard is the
-task's own reasoning (the instruction is a direct command) and making the skills or a hand-written controller
-succeed on this scene. The standard twin removes the privileged state.
+## Success criteria
+Condition (VLABench's `contain` and `order`, all at once): the origins of the number cubes `4` and `0` both lie
+horizontally within the rectangle spanned by the placemat's (`placemat_seen`) keypoint sites and between 0 and 0.1 m
+above the lowest of those sites (both bounds excluded); the cube `4` has the smaller x (it is to the robot's left of
+`0`); and the cube `4`'s y and z are each less than 0.1 m larger than those of the cube `0`. The other cubes are not
+checked.
 
-## Reference solution
-167 control steps on this instance (`solution/oracle.npy`), replayed by `solution/solve.sh`. Source:
-VLABench's own expert (get_expert_skill_sequence) driving its general skills, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head). VLABench's experts are removed from the image. Re-verified: the
-replay ends with the task's success at its last step.
+Positions are object origins in the world frame of the instruction (metres, z up). A control step is 0.1 s (100 physics
+steps of 1 ms), and VLABench checks the condition after every control step.
 
-## Verification
-`tests/grade.py` in a separate sandbox without network: one replay in a fresh process from the verifier's own copy of
-the instance (`tests/instance.json`); pass iff the task succeeds at
-the last action (VLABench's termination condition; actions after it make the trajectory invalid). Oracle: the replay
-ends in the live state (hash `6fb120d94d5e…`) and succeeds. `nop`: no trajectory, reward 0; the instance is not solved at
-the start (checked on every load).
+The graded file is `/app/output/trajectory.npz`: key `actions`, a finite (T, 9) array with 1 ≤ T ≤ 4000, one row of
+joint and finger targets per control step (rows are clipped into the actuators' bounds). The verifier replays it once,
+open-loop, in a fresh process from the frozen start. VLABench ends the episode at the first control step after which
+the condition holds. The trajectory passes when that is its last row. A row after that step makes the trajectory
+invalid (score 0), and a replay whose rows run out before the condition holds scores 0. A missing file, a file that is
+not a pickle-free npz of at most 8 MiB, or an `actions` array of another shape, with a non-finite value or with more
+than 4000 rows scores 0. A replay that fails with an error, runs over 3600 s, or finds a frozen scene that does not
+rebuild with the recorded model and initial-state hashes is a grader error, not a score.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -45,15 +46,9 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Upstream | VLABench @ cf588fe (MIT), assets `lerobot/vlabench-assets` @ 08d7a44; MuJoCo 3.2.2, dm_control 1.0.22 |
-| Actions | 9 absolute position targets per 0.1 s control step: 7 arm joints (rad), 2 fingers (m, 0 … 0.04) |
-| Resources | 4 CPUs, no GPU (CPU physics, OSMesa rendering) |
-| Instruction | restated; VLABench's own: "Please give the answer of the following question by rearrange the number cube in placemat_seen:A mechanic charges different rates to repair the tires of trucks and cars.  For each truck tire that is repaired, the mechanic will charge $60 and for each car tire that is repaired, the mechanic will charge $40.  On Thursday, the mechanic repairs 6 truck tires and 4 car tires.  On Friday, the mechanic repairs 12 car tries and doesn't repair any truck tires.  How much more revenue did the mechanic earn on the day with higher revenue?" (graded: the answer's digit cubes inside placemat_seen and ordered along +x (contain and order); the upstream text does not say how the answer is read) |
-
-### Provenance
-The instance (`environment/instance.json`, byte copy in `tests/`) and the
-reference come from PR #4 (closed without merging; commit ad3c510, still fetchable as `refs/pull/4/head`) and were re-verified in
-`ghcr.io/mll-lab-nu/efe-private:vlabench-0.1.0`.
+## License
+VLABench ([OpenMOSS/VLABench](https://github.com/OpenMOSS/VLABench) @ `cf588fe`; Zhang et al., 2024, arXiv:2412.18194)
+code: MIT License (its `LICENSE.txt`). The scene and object assets come from the Hugging Face dataset
+[lerobot/vlabench-assets](https://huggingface.co/datasets/lerobot/vlabench-assets) @ `08d7a44`, which states no licence:
+they are downloaded when the image is built and are never redistributed by this repository or in a published image.
+MuJoCo 3.2.2 and dm_control 1.0.22: Apache-2.0. No non-commercial terms apply.

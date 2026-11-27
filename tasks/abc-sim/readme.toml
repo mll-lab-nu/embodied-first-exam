@@ -1,0 +1,436 @@
+# README data for tasks/abc-sim/*/README.md (scripts/task_conventions.py render_readme_v3)
+#
+# Sources checked for every success text:
+#   upstream  ABC Sim (amazon-far/abc @ d0832d1): abc_sim/task_specs.py (each catalogue task's evaluator_name and
+#             evaluator_options), abc_sim/task_eval/<evaluator>.py (the success of evaluate_qpos_batch /
+#             evaluate_model_data: the current state's, not `ever_success`), abc_sim/task_runtime/ball_tray.py (the tray's
+#             countdown), abc_sim/env.py L451-458 (info["task_success"] = the evaluator's success after each env.step).
+#   tooling   images/abc-sim/tools/rcb_abc.py: Session.step L297-340 (HOLD_STEPS = 30, L92: the success must hold 30
+#             consecutive control steps; hang_mug adds hanging() L342-347; the ball tray's rule L314-330 with
+#             TRAY_GRACE_S = 0.1, L93), Session.replay L454-466 (stops at the step the episode ends).
+#   graders   privileged: images/abc-sim/tools/grade.py (one fresh-process replay); standard: images/abc-sim/tools/
+#             standard/server.py finish() / judge_end() L361-400 and embodied_first_exam/standard/sidecar/grade.py L98-128;
+#             realtime: images/abc-sim/tools/realtime/server.py L60-75, rcb_service.py _finalize() L1286-1333.
+# The per-instance values (the count directive, the drawer search's target order, the start side of the in-hand transfer,
+# the ball tray's duration and usable area) are read from each task's environment/instance.npz randomization record.
+# Line numbers of upstream files are those at d0832d1.
+
+[benchmark]
+name = "ABC Sim"
+citation = "Allshire et al., 2026"     # upstream README "Citation": abc2026, arXiv:2606.27375
+url = "https://github.com/amazon-far/abc"
+repo = "amazon-far/abc"
+commit = "d0832d1"
+
+[license]
+text = """
+ABC Sim (`abc_sim` of [amazon-far/abc](https://github.com/amazon-far/abc) @ `d0832d1`) is released under the
+[Apache License 2.0](https://github.com/amazon-far/abc/blob/d0832d12651d1b260a652861a14648dc5f3660c7/LICENSE). Its
+simulator assets are under CC BY 4.0 (RoboCasa's Objaverse, LightWheel and AI-generated packs, Google Scanned Objects,
+individually credited Sketchfab creators), CC0 (freepoly.org), MIT (the I2RT YAM robot model, a LIBERO drawer fixture)
+and Apache-2.0 (everything modelled in-house); no non-commercial terms apply. The licences and credits ship in the image
+at `/opt/abc/ASSET_LICENSES.md` (`images/abc-sim/ASSET_LICENSES.md`). The simulator is MuJoCo 3.6.0 (Apache License
+2.0).
+"""
+
+[robots]
+i2rt-yam-bimanual = "Two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each), side by side at a table"
+
+# grade.py main() L104-123: missing -> missing_trajectory; np.load / ["actions"] fails -> bad_trajectory; a `family`
+# member other than the instance's -> wrong_family; ndim != 2, T outside 1..MAX_ROWS = 20,000 (L32), width != 14, NaN/inf
+# -> bad_trajectory; then one replay process (rcb_abc.py replay: Session.replay from the instance, stops when step()
+# returns False); success = replay success AND instance_ok (start state hash = the instance's recorded sha); no result
+# within REPLAY_TIMEOUT_S = 2400 s -> replay_failed, grader_error = infra_error = 1; instance_ok 0 -> grader_error.
+[modes.privileged]
+success = """
+The verifier, in a separate sandbox without network, replays `/app/output/trajectory.npz` (array `actions`, shape
+(T, 14) with 1 ≤ T ≤ 20,000, all values finite) once, open-loop, in a fresh process from its own copy of the frozen
+instance, one row per 0.034 s control step. The rule above is checked after every control step. Where the condition
+must hold for 30 consecutive control steps, the episode ends in success at the 30th of them. The replay stops at the
+step the episode ends; later rows are not run. The task scores 1 when the replayed episode ends in success; a
+trajectory whose rows run out first scores 0.
+
+A missing file scores 0, and so does an invalid one: not a readable `.npz`, no `actions` array, a shape other than
+(T, 14), a NaN or infinite value, T outside 1 to 20,000, or a `family` entry that names another family. A replay that
+does not start at the instance's recorded state hash, or that gives no result within 40 min, is a grader error, not a
+score.
+"""
+
+# standard/server.py: RCB_AGENT_END=1 (docker-compose), RCB_RESET_BUDGET default 0; ends: POST /finish -> finish
+# ("finished"), the collect hook's SIGUSR1 -> finish("timeout") L659, a submit error -> finish("error") L751, the task's
+# failure (ball tray: Session.step returns False) -> finish(S.reason) L423. finish() L370-375: success = reason in
+# END_STATE_REASONS ("finished", "timeout", "step_limit"; rcb_agent_end.py L40) AND judge_end(); judge_end() L382-400:
+# HOLD_STEPS steps of last_command() on a snapshot, success = S.success (success_run >= 30) at the window's end; ball
+# tray: S.success and not S.done. Start: a fresh episode whose scene hash != the instance's -> instance_mismatch,
+# infra_error (L690-700). sidecar/grade.py L107-113: success = final.json success AND live_success AND not infra AND
+# reason != "error".
+[modes.standard]
+success = """
+Graded: the live episode the simulator service ran; nothing is replayed. There is one episode and no reset. The
+episode ends when the agent sends `/finish` or when its session ends (at the latest after {timeout}); the task's own
+failure, where the rule above has one, and a simulator error also end it. Success is never shown and never ends the
+episode. The verdict is on the state the episode ends in. Where the condition must hold for 30 consecutive control
+steps, the service, after the agent is gone, keeps the robot's last command for 30 more control steps (1.02 s), and
+the condition must hold at every one of them. An episode ended by the task's failure or by a simulator error scores 0.
+
+The scene is checked to start at the frozen instance (its state hash) before the agent is served; a mismatch is an
+infrastructure failure, not a score.
+"""
+
+# realtime/server.py L60-75 (end_judgement "state", end_window_steps = HOLD_STEPS except the tray, 0) on rcb_service.py
+# _finalize() L1319-1333 (the window: K steps of sim.hold() after an end in END_STATE_REASONS, success at its last step);
+# embodied_first_exam/standard/realtime/rcb_realtime.py docstring L9-18 (paused until the first /submit, one control step
+# every control_dt x slowdown s, the last target held when the plan runs out); RCB_SLOWDOWN default 1, RCB_RESET_BUDGET 0.
+[modes.realtime]
+success = """
+Graded: the live episode the simulator service ran; nothing is replayed. The clock does not stop: the episode starts
+paused at the frozen start, and from the agent's first `submit` one control step runs every 0.034 s × S of wall time
+(slowdown S = {slowdown}) whether or not the agent sends anything; when the planned targets run out, the last ones
+are held. There is one episode and no reset. The episode ends when the agent sends `/finish` or when its session ends
+(at the latest after {timeout}); the task's own failure, where the rule above has one, and a simulator error also end
+it. Success is never shown and never ends the episode. The verdict is on the state the episode ends in. Where the
+condition must hold for 30 consecutive control steps, the service, after the agent is gone, keeps the robot's last
+command for 30 more control steps (1.02 s), and the condition must hold at every one of them. An episode ended by the
+task's failure or by a simulator error scores 0.
+
+The scene is checked to start at the frozen instance (its state hash) before the agent is served; a mismatch is an
+infrastructure failure, not a score.
+"""
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Families: the pass condition. "Origin" = the object's free-joint position. Every family but the ball tray ends with the
+# 30-step hold of rcb_abc.py (HOLD_STEPS); the modes say how it is applied.
+
+# task_eval/ball_tray.py L22-24 (dropped_local_z_threshold_m = 0.008), L120-160 (inside_tray: |local xy| <= the usable
+# half extents, here the instance's usable_half_extents_m 0.1290 / 0.1244 m; ball_dropped: local z < 0.008 m; success =
+# alive, latched false at the first step off the tray); task_runtime/ball_tray.py L123-148 (the countdown starts at the
+# first step _both_posts_gripped: the left fingers on one handle geom and the right fingers on the other, L334-341;
+# duration = the instance's balance_duration_s = 11), L343-353 ("complete" at the deadline); rcb_abc.py L314-330 (held =
+# both handles touched within TRAY_GRACE_S = 0.1 s; off the tray -> failure; started and not held -> failure, in agent_end
+# mode only before the countdown completed; complete -> success, in agent_end mode a success that stands).
+[families.ball_tray]
+privileged = """
+The ball stays on the tray, and both handles are held for the whole countdown. The countdown (11 s) starts at the
+first control step at which the left gripper's fingers touch one handle bar and the right gripper's fingers touch the
+other. During it, both handles count as held at a control step when both were touched within the last 0.1 s. The ball
+is on the tray while its origin, in the frame of the tray's centre, is within 12.9 cm of the centre along the tray's
+x axis and 12.4 cm along its y axis, and at least 8 mm above the centre along the tray's normal.
+
+The episode ends in success at the control step the countdown completes. It ends as a failure at the first control
+step at which the ball is off the tray (before or during the countdown), or at which a handle is not held during the
+countdown. There is no hold window.
+"""
+standard = """
+The ball stays on the tray, and both handles are held for the whole countdown. The countdown (11 s) starts at the
+first control step at which the left gripper's fingers touch one handle bar and the right gripper's fingers touch the
+other. During it, both handles count as held at a control step when both were touched within the last 0.1 s. The ball
+is on the tray while its origin, in the frame of the tray's centre, is within 12.9 cm of the centre along the tray's
+x axis and 12.4 cm along its y axis, and at least 8 mm above the centre along the tray's normal.
+
+Success: when the episode ends, the countdown has completed and the ball has been on the tray at every control step.
+The episode ends as a failure at the first control step at which the ball is off the tray (also after the countdown
+has completed), or at which a handle is not held during the countdown; after the countdown, letting go of a handle is
+no failure. There is no hold window.
+"""
+realtime = """
+The ball stays on the tray, and both handles are held for the whole countdown. The countdown (11 s of simulated time)
+starts at the first control step at which the left gripper's fingers touch one handle bar and the right gripper's
+fingers touch the other. During it, both handles count as held at a control step when both were touched within the
+last 0.1 s. The ball is on the tray while its origin, in the frame of the tray's centre, is within 12.9 cm of the
+centre along the tray's x axis and 12.4 cm along its y axis, and at least 8 mm above the centre along the tray's
+normal.
+
+Success: when the episode ends, the countdown has completed and the ball has been on the tray at every control step.
+The episode ends as a failure at the first control step at which the ball is off the tray (also after the countdown
+has completed), or at which a handle is not held during the countdown; after the countdown, letting go of a handle is
+no failure. There is no hold window.
+"""
+
+# task_eval/chess.py L51-65 (position_tolerance_m 0.028, height_tolerance_m 0.05, upright_z_min 0.85), L200-258 (greedy
+# nearest-first matching within a piece class to that class's goal squares, in the board's current frame; planar /
+# normal split from the board's spawn orientation; upright = rot[2, 2] >= 0.85), L290-303 (success = every target
+# placed); the instance: target_count 6, color_mode black_only, scenario table_setup, tin inactive.
+[families.chess]
+success = """
+Each of the six black target pieces stands upright on a starting square of its own kind that it left empty. Pieces
+of one kind are matched to that kind's empty squares, nearest first. A matched piece counts when its origin is within
+2.8 cm of the square's centre in the board's plane and within 5 cm of it along the board's normal (the squares are
+taken in the board's current frame, so they move with the board), and it stands upright: its own vertical axis
+points up with a component of at least 0.85 (about 32° from vertical). The other pieces are not checked. All the target
+pieces must count at once, for 30 consecutive control steps (1.02 s).
+"""
+
+# task_eval/conveyor.py L14-28 (floor_tolerance_m 0.01), L95-185 (the bin's interior from its box geoms: x / y between
+# the walls' inner faces, floor top, rim = the walls' top), L195-210 (origin in the box; success = all objects);
+# task_runtime/conveyor_pick.py L9 (_OBJECT_COUNT = 3).
+[families.conveyor_pick]
+success = """
+All three objects from the conveyor belt are in the bin at once: each object's origin lies between the bin's inner
+wall faces in x and y, no lower than 1 cm below the top of its floor plate and no higher than the top of its walls.
+This must hold for 30 consecutive control steps (1.02 s).
+"""
+
+# task_eval/count_box.py L18-30 (floor_tolerance_m 0.01), L96-175 (interior: between the walls' inner faces, from the
+# floor plate's top to the lowest lid underside), L205-218 (success = eligible in box == target_count AND no ineligible
+# object in it); the instance: prompt_type all_color_shape, eligible = the one yellow triangle, target_count 1, 12 objects.
+[families.count]
+success = """
+The box holds every yellow triangular piece (one in this scene) and no other object. An object counts as in the box
+when its origin lies between the box's inner wall faces in x and y, no lower than 1 cm below the top of its floor plate
+and no higher than the underside of its lid. This must hold for 30 consecutive control steps (1.02 s).
+"""
+
+# count_box.py as for count; the instance: prompt_type exact_color_count, eligible = the 2 red objects, target_count 1.
+[families.count_one]
+success = """
+The box holds exactly one red object and no other object. An object counts as in the box when its origin
+lies between the box's inner wall faces in x and y, no lower than 1 cm below the top of its floor plate and no higher
+than the underside of its lid. This must hold for 30 consecutive control steps (1.02 s).
+"""
+
+# count_box.py as for count; the instance: prompt_type exact_count, eligible = all 12 objects, target_count 2.
+[families.count_two]
+success = """
+The box holds exactly two of the twelve objects, of any kind. An object counts as in the box when its origin lies
+between the box's inner wall faces in x and y, no lower than 1 cm below the top of its floor plate and no higher than
+the underside of its lid. This must hold for 30 consecutive control steps (1.02 s).
+"""
+
+# count_box.py as for count; the instance: prompt_type exact_count, eligible = all 12 objects, target_count 3.
+[families.count_three]
+success = """
+The box holds exactly three of the twelve objects, of any kind. An object counts as in the box when its origin lies
+between the box's inner wall faces in x and y, no lower than 1 cm below the top of its floor plate and no higher than
+the underside of its lid. This must hold for 30 consecutive control steps (1.02 s).
+"""
+
+# count_box.py as for count; the instance: prompt_type exact_count, eligible = all 12 objects, target_count 4.
+[families.count_four]
+success = """
+The box holds exactly four of the twelve objects, of any kind. An object counts as in the box when its origin lies
+between the box's inner wall faces in x and y, no lower than 1 cm below the top of its floor plate and no higher than
+the underside of its lid. This must hold for 30 consecutive control steps (1.02 s).
+"""
+
+# task_specs.py L304-316 (margin_m 0.05, height_min_m -0.06, height_max_m 0.45, upright_normal_z_max 0.55);
+# task_eval/dishrack.py L142-162 (the rack's half extents: its geoms' bounding spheres in the rack frame), L240-257
+# (spatially in the rack, rack contact, no gripper contact; upright = |normal z| <= 0.55), L282-283 (success = every
+# plate upright in the rack); the instance: plate_count 1.
+[families.dish_rack]
+success = """
+The plate stands on edge in the dish rack: its face is within about 33° of vertical (the vertical component of its
+normal at most 0.55 in size); its origin, in the rack's frame, lies within the rack's footprint widened by 5 cm on
+each side and between 6 cm below and 45 cm above the rack's origin; it touches the rack; and it touches neither
+gripper. This must hold for 30 consecutive control steps (1.02 s).
+"""
+
+# task_eval/multi_drawer.py L100-150 (an object counts when its origin is inside the goal-region site of the bin, in the
+# bin's frame; _completed_target_count advances in sequence order, only while the current target is in the region, and
+# is latched; success = completed >= target_count); the instance's target_sequence: measuring cup, then dish brush.
+[families.drawer_search]
+success = """
+The measuring cup and then the dish brush have been counted in the bin. An object counts when its origin lies inside
+the bin's goal region (a box fixed in the bin's frame). The dish brush is looked at only from the control step at which
+the measuring cup is first counted: at that step or any later one at which it is in the region, it is counted too.
+Once both are counted, the condition stays met for the rest of the episode, whether or not they stay in the bin; it
+must then hold for 30 consecutive control steps (1.02 s).
+"""
+
+# task_eval/grab_clutter.py L60-95 (target_object_joint origin in the box frame within the half sizes of the site
+# grab_clutter_target_box_goal_region around its centre); the instance: target ketchup.
+[families.grab_clutter]
+success = """
+The ketchup is in the box: its origin lies inside the box's goal region (a box-shaped region fixed in the box's
+frame). This must hold for 30 consecutive control steps (1.02 s).
+"""
+
+# task_eval/mug_tree.py L33-49 (hang_radius_m 0.115, base_clearance_m 0.005, top_clearance_m 0.05), L74-89 (the axis:
+# the mean x/y of the tree's collision-mesh vertices; the band from the lowest vertex + 0.005 to the highest + 0.05),
+# L180-194; rcb_abc.py hanging() L342-347 and L240-243 (no mug geom touches the table plane or a finger link's geoms).
+[families.hang_mug]
+success = """
+The mug hangs on the mug tree, released: its origin is within 11.5 cm horizontally of the tree's axis (the mean
+position of the tree's collision mesh) and between 5 mm above the tree's lowest point and 5 cm above its highest
+point, and the mug touches neither the table nor a finger of either gripper. This must hold for 30 consecutive control
+steps (1.02 s).
+"""
+
+# task_eval/inhand_transfer.py L14-24 (other_side_min_y_m 0.10, max_resting_height_m 0.10), L95-108 (the table plane's
+# footprint), L118-130 (crossed: y * start_sign <= -0.10; placed: z <= table z + 0.10; on the table footprint); the
+# instance: side "right" (start sign -1), so the stick must reach y >= +0.10 m; the arms' bases sit at y = +/-0.3
+# (abc_sim/config.py L96, L111): y = 0 is the middle line.
+[families.inhand_transfer]
+success = """
+The cream cheese stick is on the left arm's side of the table: its origin is at least 10 cm past the middle line
+between the arms toward the left arm (it starts on the right arm's side), within the table top's edges, and no more
+than 10 cm above the table's surface. This must hold for 30 consecutive control steps (1.02 s).
+"""
+
+# task_eval/lego_blocks.py L111-128 (origin inside the bin's goal-region site, in the bin's frame), L140-161 (success =
+# every active block in its colour's bin and none in another colour's bin); the instance: 6 red, 3 yellow, 3 blue.
+[families.lego]
+success = """
+Every LEGO block (red, yellow or blue) is in the bin of its own colour, and no block is in a bin of another
+colour. A block counts as in a bin when its origin lies inside that bin's goal region (a box fixed in
+the bin's frame). This must hold for 30 consecutive control steps (1.02 s).
+"""
+
+# task_eval/nuts_bolts.py L96-115 (origin inside the bin's goal-region site, in the bin's frame), L130-173 (success = a
+# complete partition in either orientation: every active nut in one bin and every active bolt in the other); the
+# instance: 9 nuts, 10 bolts.
+[families.nuts_bolts]
+success = """
+All the nuts and all the bolts are sorted into the two bins: every nut is in one bin and every bolt is in the other,
+either way round. A part counts as in a bin when its origin lies inside that bin's goal region (a box fixed in the
+bin's frame); a part in the other bin or in neither fails. This must hold for 30 consecutive control steps (1.02 s).
+"""
+
+# task_eval/pour.py L31-85 (allowed_escapes 1: success_count = 10 - 1 = 9; target_upright_z_min 0.5; radius_tolerance_frac
+# 0.05), L146-212 (the cup's wall radius, floor and rim from its collision mesh), L225-270 (a bead's origin in the cup's
+# frame within 1.05 x the wall radius of its axis, between floor and rim; the cup's z axis up component >= 0.5).
+[families.pouring]
+success = """
+At least nine of the ten beads are in the cup while the cup stands upright. A bead counts when its origin, in the
+cup's frame, is within 1.05 times the cup's wall radius of the cup's axis and between the bottom and the top of the
+cup's collision mesh. The cup is upright when its axis is at most 60° from vertical. This must hold for 30 consecutive
+control steps (1.02 s).
+"""
+
+# task_eval/bottles.py PutBottlesInBinEvaluator L404-435, _resolve_bin_cone L454-503 (the tub's height axis = its local
+# y; radii from the bottom and top quarters of the collision hull), _allowed_radius L505-512, L560-585 (centre of mass
+# within the radius at its height, between the hull's bottom and its top plus the bottle's reach; success = all bottles);
+# _resolve_bottle_reaches L157-193; the instance: 2 bottles.
+[families.put_bottles]
+success = """
+Both plastic bottles are in the bin at once: each bottle's centre of mass, in the bin's frame, lies between the bottom
+of the bin's collision hull and its top (raised by the bottle's own reach: the farthest extent of its collision
+geometry from its centre of mass) along the bin's height axis, and within the bin's wall radius at that height
+(linear between the radii measured at the bottom and at the top of the hull). This must hold for 30 consecutive
+control steps (1.02 s).
+"""
+
+# task_eval/put_relative.py L35-45 (along_min_m 0.06, along_max_m 0.30, perp_max_m 0.08, placed_z_tolerance_m 0.03),
+# L150-168 (offset from the reference's current x/y along the directive axis, perpendicular distance, z <= spawn z +
+# 0.03; no orientation check); the instance: mover soap dispenser, reference boxed food, direction right (axis -y).
+[families.put_relative]
+success = """
+The soap dispenser is set down to the right of the boxed food, as the arms face the table: its origin is 6 to 30 cm
+to the right (-y) of the boxed food's origin, measured where the boxed food is now, and at most 8 cm in front of or
+behind that line (x), and it is no more than 3 cm above its starting height. Its orientation is not checked. This
+must hold for 30 consecutive control steps (1.02 s).
+"""
+
+# task_eval/sweep.py L41-60 (bin_radial_margin_m 0.005, bin_height_margin_m 0.005), L175-193 (the can's inner mesh
+# gc_inner: radius in the can's local x/z, height along local y), L204-247 (success = every active scrap in the can);
+# the instance: trash_joints = 2 scraps (3 or 4 on the other seeds).
+[families.sweep]
+success = """
+All the paper scraps are in the trash can at once: each scrap's origin, in the can's frame, is within the radius of the
+can's inner mesh plus 5 mm of its axis, and between 5 mm below the bottom and 5 mm above the top of that mesh. This
+must hold for 30 consecutive control steps (1.02 s).
+"""
+
+# task_eval/bottles.py BottlesInBinEvaluator L216-250 (floor_tolerance_m 0.005; success_count = every bottle),
+# _resolve_bin_inner_apothem L270-288 (the walls' inner faces), floor top L290-304, rim L306-319, L321-377 (centre of
+# mass in the bin frame; the reach as for put_bottles); the scene: bottle_1..4.
+[families.throw_bottles]
+success = """
+All four plastic bottles are in the bin at once: each bottle's centre of mass, in the bin's frame, is no farther from
+the bin's axis than the nearest inner wall face, no lower than 5 mm below the top of the bin's floor, and no higher
+above the top of its walls than the bottle's own reach (the farthest extent of its collision geometry from its centre
+of mass). This must hold for 30 consecutive control steps (1.02 s).
+"""
+
+# task_eval/mugs.py L63-86 (upright_z_min 0.95, max_lift_m 0.03; the rest height is taken at the first evaluation after
+# a reset: after the first control step), L138-155 (local z up component >= 0.95 AND z <= rest + 0.03; success = all
+# mugs); the instance: 2 mugs.
+[families.turn_mug]
+success = """
+Both mugs stand right side up and are set down: each mug's own vertical axis points up with a component of at least
+0.95 (about 18° from vertical), and its origin is no more than 3 cm above its height after the episode's first
+control step. This must hold for 30 consecutive control steps (1.02 s).
+"""
+
+# task_eval/spell.py L35-47 (gap_min_m 0.015, gap_max_m 0.060, row_dx_max_m 0.03, z_tolerance_m 0.02, upright_dot_min
+# 0.85), L105-125 (rest height = table plane z + the block's box half-height), L136-161 (consecutive letters: dy in
+# [-0.060, -0.015] (reading left to right = decreasing y), |dx| <= 0.03; each letter within 0.02 of its rest height with
+# |local x . up| >= 0.85; other blocks ignored); task_specs.py L336-398 (each spell_<word>'s word option).
+[families.spell_abc]
+vars = { letters = "A, B and C" }
+success = """
+The letter blocks {vars[letters]} form a row in that order, from left to right as the arms face the table: each
+block's origin is 1.5 to 6 cm to the right (-y) of the previous block's and at most 3 cm in front of or behind it (x).
+Each of these blocks rests at table height (its origin within 2 cm of the table's surface plus the block's own
+half-height) with a letter face up or down (that face's normal within about 32° of vertical). The other blocks are not
+checked. This must hold for 30 consecutive control steps (1.02 s).
+"""
+
+[families.spell_agi]
+vars = { letters = "A, G and I" }
+success = """
+The letter blocks {vars[letters]} form a row in that order, from left to right as the arms face the table: each
+block's origin is 1.5 to 6 cm to the right (-y) of the previous block's and at most 3 cm in front of or behind it (x).
+Each of these blocks rests at table height (its origin within 2 cm of the table's surface plus the block's own
+half-height) with a letter face up or down (that face's normal within about 32° of vertical). The other blocks are not
+checked. This must hold for 30 consecutive control steps (1.02 s).
+"""
+
+[families.spell_bair]
+vars = { letters = "B, A, I and R" }
+success = """
+The letter blocks {vars[letters]} form a row in that order, from left to right as the arms face the table: each
+block's origin is 1.5 to 6 cm to the right (-y) of the previous block's and at most 3 cm in front of or behind it (x).
+Each of these blocks rests at table height (its origin within 2 cm of the table's surface plus the block's own
+half-height) with a letter face up or down (that face's normal within about 32° of vertical). The other blocks are not
+checked. This must hold for 30 consecutive control steps (1.02 s).
+"""
+
+[families.spell_cat]
+vars = { letters = "C, A and T" }
+success = """
+The letter blocks {vars[letters]} form a row in that order, from left to right as the arms face the table: each
+block's origin is 1.5 to 6 cm to the right (-y) of the previous block's and at most 3 cm in front of or behind it (x).
+Each of these blocks rests at table height (its origin within 2 cm of the table's surface plus the block's own
+half-height) with a letter face up or down (that face's normal within about 32° of vertical). The other blocks are not
+checked. This must hold for 30 consecutive control steps (1.02 s).
+"""
+
+[families.spell_dog]
+vars = { letters = "D, O and G" }
+success = """
+The letter blocks {vars[letters]} form a row in that order, from left to right as the arms face the table: each
+block's origin is 1.5 to 6 cm to the right (-y) of the previous block's and at most 3 cm in front of or behind it (x).
+Each of these blocks rests at table height (its origin within 2 cm of the table's surface plus the block's own
+half-height) with a letter face up or down (that face's normal within about 32° of vertical). The other blocks are not
+checked. This must hold for 30 consecutive control steps (1.02 s).
+"""
+
+[families.spell_fish]
+vars = { letters = "F, I, S and H" }
+success = """
+The letter blocks {vars[letters]} form a row in that order, from left to right as the arms face the table: each
+block's origin is 1.5 to 6 cm to the right (-y) of the previous block's and at most 3 cm in front of or behind it (x).
+Each of these blocks rests at table height (its origin within 2 cm of the table's surface plus the block's own
+half-height) with a letter face up or down (that face's normal within about 32° of vertical). The other blocks are not
+checked. This must hold for 30 consecutive control steps (1.02 s).
+"""
+
+[families.spell_xdof]
+vars = { letters = "X, D, O and F" }
+success = """
+The letter blocks {vars[letters]} form a row in that order, from left to right as the arms face the table: each
+block's origin is 1.5 to 6 cm to the right (-y) of the previous block's and at most 3 cm in front of or behind it (x).
+Each of these blocks rests at table height (its origin within 2 cm of the table's surface plus the block's own
+half-height) with a letter face up or down (that face's normal within about 32° of vertical). The other blocks are not
+checked. This must hold for 30 consecutive control steps (1.02 s).
+"""
+
+[families.spell_yam]
+vars = { letters = "Y, A and M" }
+success = """
+The letter blocks {vars[letters]} form a row in that order, from left to right as the arms face the table: each
+block's origin is 1.5 to 6 cm to the right (-y) of the previous block's and at most 3 cm in front of or behind it (x).
+Each of these blocks rests at table height (its origin within 2 cm of the table's surface plus the block's own
+half-height) with a letter face up or down (that face's normal within about 32° of vertical). The other blocks are not
+checked. This must hold for 30 consecutive control steps (1.02 s).
+"""

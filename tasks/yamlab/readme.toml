@@ -1,0 +1,153 @@
+# README data for tasks/yamlab/*/README.md (scripts/task_conventions.py render_readme_v3)
+#
+# Sources checked for every success text:
+#   upstream  YAMLab @ ec0455d (github.com/ARISE-Initiative/yamlab): yamlab/envs/tasks/put_pot_on_cooktop_manager.py
+#             update_stage_success L201-243, hang_mug_on_tree_manager.py __init__ L69-117 and update_stage_success
+#             L194-305, yamlab/utils/task_logic.py check_pick_success L7-57, check_ontop_success L60-136,
+#             check_hang_success L139-200, check_obj_below_table L203-216; configs/tasks/put_pot_on_cooktop.yaml
+#             `success:` L89-95; configs/robot/yam.yaml `grasp:` L36-40 (normal_force_thresh 0.1 N, check_pad);
+#             yamlab/robot/robot.py Gripper.is_grasping L317-360; yamlab/utils/assets.py OBJ_Z_OFFSET = 0.005.
+#   tooling   embodied_first_exam/benchmarks/yamlab/privileged/environment/rcb_yamlab.py: _make_env L447-460 (the
+#             `<object>_below_table` terminations end the episode instead of resetting), step L601-629, LAST_STAGE /
+#             _reopen_last_stage L116-125 and L631-637, fallen L644-650, replay L676-686, MAX_STEPS = 100,000 L129.
+#   graders   privileged/tests/grade.py (one fresh-process replay); sim/server.py finish L93-125, end_reason L380-383,
+#             ctrl_step L386-394; standard/tests/grade.py.
+# The per-instance numbers ({vars[...]}) are the `success_params` of each task's environment/instance.json.
+# Standard texts give no world coordinates (ci_checks/check-world-frame-texts.sh): heights are relative.
+
+[benchmark]
+name = "YAMLab"
+citation = "Dai, 2026"            # no paper; the upstream LICENSE's copyright holder (Tianyuan Dai, ARISE Initiative)
+url = "https://github.com/ARISE-Initiative/yamlab"
+repo = "ARISE-Initiative/yamlab"
+commit = "ec0455d"
+
+[license]
+text = """
+YAMLab ([ARISE-Initiative/yamlab](https://github.com/ARISE-Initiative/yamlab) @ `ec0455d`), its scene and object USDs
+and its dataset (`yamlab/yamlab_datasets` on Hugging Face) are released under the MIT License (Copyright (c) 2026
+Tianyuan Dai). Isaac Lab is BSD-3-Clause; YAMLab's LeRobot fork is Apache-2.0. NVIDIA Isaac Sim 5.1 and its wheels are
+proprietary: NVIDIA licenses them for use, not for redistribution, so the simulator image is built on your machine and
+building it accepts NVIDIA's Isaac Sim / Omniverse licence terms. No non-commercial terms apply.
+"""
+
+[robots]
+i2rt-yam-bimanual = "Two I2RT YAM arms (6 joints each) with parallel two-finger grippers, on a workstation table"
+
+# privileged/tests/grade.py: no file -> missing_trajectory; load_trajectory (zip npz, `task` and `actions` members, no
+# pickle, size cap, task == family else wrong_family, shape (T, 14), finite, T <= MAX_STEPS) -> bad_trajectory; one
+# `rcb_yamlab.py replay` subprocess (Session.replay: reset, step each row, stop at the first step where
+# Session.step returns True); success = all_success AND instance_matches; a replay process without a result, a replay
+# time-out or instance_ok = 0 -> grader_error = infra_error = 1. RCB_AGENT_END is unset in the verifier: step() ends the
+# replay at the first success (rcb_yamlab.py L623-624) or when a task object fell (L625-626).
+[modes.privileged]
+success = """
+The graded file is `/app/output/trajectory.npz`: `task` = `{family}` and `actions`, a finite (T, 14) array with at most
+100,000 rows, one row per control step (1/30 s). The verifier replays it once, open-loop, in a fresh process from the
+frozen start, and the task succeeds when every stage above has latched at some control step of that replay. The replay
+stops at that step; later rows are not run. The replay ends as a failure, at the step it happens, when {vars[objs]}
+falls more than 1 cm below the table top. A trajectory that ends before every stage has
+latched scores 0.
+
+A missing file, a file that is not a plain npz with `task` and `actions`, a wrong `task`, a wrong shape, a NaN or
+infinite value or more than 100,000 rows scores 0. A replay that gives no result or runs out of its time limit, or a
+frozen scene that does not rebuild as recorded, is an infrastructure error, not a score.
+"""
+
+# sim/server.py (RCB_AGENT_END=1 in the compose file): finish("finished") at POST /finish, finish("timeout") when the
+# collect hook signals the session's end; finish L104-112: for finished / timeout a last-stage hold that has begun
+# (0 < counter < requirement) is run out with the last command held; end_reason L380-383: a fallen object
+# ("object_fell") or MAX_STEPS ("step_guard" -> "step_limit") end the episode; success = reason in
+# ("finished", "timeout", "step_limit", "error") and S.success() (L114), and standard/tests/grade.py gives 0 for
+# reason "error" and for any infra_error. rcb_yamlab.py _reopen_last_stage: before every control step the last stage's
+# latch is opened with its counter at requirement - 1, so it is latched after the step only while its condition holds.
+# Budget: reset 0 (no /reset endpoint).
+[modes.standard]
+success = """
+Graded is the one live episode (no reset). The earlier stages count from the control step they latch, and stay counted.
+The last stage must hold when the episode ends: its condition holds on the last control step and has held on every
+control step of a run of at least 30 consecutive steps (about 1 s) up to it. If such a run has begun but is shorter when
+the episode ends, the service holds the robot's last command until the run reaches 30 steps or breaks.
+
+The episode ends at the agent's `POST /finish`, when the agent's session ends, or after 100,000 control steps; the
+state at that moment is judged. It also ends, with 0, when {vars[objs]} falls more than 1 cm below the
+table top, even after the stages had latched, and on a simulator error raised by the agent's calls. The
+service never reports success while the episode runs. A frozen scene that does not rebuild as recorded at the start,
+or service crashes the episode cannot be resumed from, are infrastructure errors, not a score.
+"""
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Families. "Grasping" (both texts): Gripper.is_grasping (robot.py L317-360, yam.yaml grasp: normal_force_thresh 0.1,
+# check_pad true, pad 0..1): both fingers of that gripper touch the object with a contact force of at least 0.1 N, at a
+# point on their pads.
+
+# put_pot_on_cooktop_manager.py: pot_init_z = table + pot_h / 2 + 0.005 (L81); ontop_xy_threshold = max of the two
+# assets' half footprint diagonals (L90-92); pick = check_pick_success(lift > 0.05, check_contact, pick_by_two_hands) for
+# PICK_REQUIRED_CONSECUTIVE_STEPS = 8 consecutive steps (L201-217); place = check_ontop_success (|pot xy - cooktop xy| <
+# tol; |pot_z - (cooktop_z + cooktop_h / 2 + pot_h / 2)| < 0.02; acos(|z-axis . up|) < 0.2, so upside down also passes;
+# neither gripper grasping, gripper_release_mode "both") for ONTOP_REQUIRED_CONSECUTIVE_STEPS_EVAL = 30 steps, counted
+# only after pick latched (L219-237). Positions are the objects' root positions (the asset's centre).
+[families.put_pot_on_cooktop]
+vars = { objs = "the pot or the cooktop" }   # pot_below_table, cooktop_below_table (put_pot_on_cooktop_manager_cfg.py L148-165)
+success = """
+Two stages, in this order; a stage is counted only after the one before it has latched.
+
+1. Pick: both grippers are grasping the pot and the pot's centre is more than 5 cm above its resting height (the height
+   of its centre when it stands on the table, {vars[pot_rest]} above the table top), on 8 consecutive control steps.
+2. Place: the pot's centre is less than {vars[xy_tol]} from the cooktop's centre horizontally (the larger of the two
+   objects' half footprint diagonals), its height is within 2 cm of the cooktop's centre height plus half the
+   cooktop's height plus half the pot's height ({vars[pot_h]} pot, {vars[cooktop_h]} cooktop), the pot's vertical axis
+   is within 0.2 rad of vertical (upright or upside down), and neither gripper is grasping the pot, on 30 consecutive
+   control steps (about 1 s).
+
+A gripper is grasping the pot when both its fingers touch the pot with a contact force of at least 0.1 N, at a point
+on their pads.
+"""
+
+# hang_mug_on_tree_manager.py: mug_init_z = table + mug_h / 2 + 0.005 (L73); hang_xy_tolerance = max(half footprint
+# diagonal of the tree, 0.10) (L85-86); pick = check_pick_success(lift > 0.05, pick_arm "left": left grasping, the right
+# not checked), 8 steps (L218-232); handover = right grasping AND not left grasping AND mug_z > mug_init_z + 0.05, 30
+# steps in evaluation mode (L106, L236-264); hang = check_hang_success (|mug xy - tree xy| < tol, mug_z > table_z + mug_h
+# / 2 + 0.05, neither grasping) AND |mug_z - anchor_z| < 0.03 with the anchor = the mug's position on the run's first
+# step, 30 steps (L109-112, L269-303). Each stage counted only after the previous one latched.
+[families.hang_mug_on_tree]
+vars = { objs = "the mug or the mug tree" }  # mug_below_table, mug_tree_below_table (hang_mug_on_tree_manager_cfg.py L211-229)
+success = """
+Three stages, in this order; a stage is counted only after the one before it has latched.
+
+1. Pick: the left gripper is grasping the mug and the mug's centre is more than 5 cm above its resting height (the
+   height of its centre when it stands on the table, {vars[mug_rest]} above the table top), on 8 consecutive control
+   steps. The right gripper is not checked.
+2. Handover: the right gripper is grasping the mug, the left gripper is not, and the mug's centre is more than 5 cm
+   above its resting height, on 30 consecutive control steps (about 1 s).
+3. Hang: the mug's centre is less than {vars[xy_tol]} from the mug tree's centre horizontally (half the tree's footprint
+   diagonal, at least 10 cm), more than {vars[hang_min]} above the table top (half the mug's height plus 5 cm), neither
+   gripper is grasping the mug, and the mug's height stays within 3 cm of its height on the first step of the run, on 30
+   consecutive control steps (about 1 s).
+
+A gripper is grasping the mug when both its fingers touch the mug with a contact force of at least 0.1 N, at a point on
+their pads.
+"""
+
+# Per-instance numbers: environment/instance.json success_params of each task (pot_rest_z - table_z, place_xy_tol_m,
+# pot_height, cooktop_height; mug_rest_z - table_z, hang_xy_tol_m, hang_min_z - table_z), rounded to the millimetre.
+[tasks."yamlab-put-pot-on-cooktop-i00"]
+vars = { pot_rest = "7.4 cm", xy_tol = "23.4 cm", pot_h = "13.8 cm", cooktop_h = "6.7 cm" }
+[tasks."yamlab-put-pot-on-cooktop-i03"]
+vars = { pot_rest = "10.6 cm", xy_tol = "23.0 cm", pot_h = "20.2 cm", cooktop_h = "5.4 cm" }
+[tasks."yamlab-put-pot-on-cooktop-i04"]
+vars = { pot_rest = "6.8 cm", xy_tol = "20.7 cm", pot_h = "12.5 cm", cooktop_h = "5.6 cm" }
+[tasks."yamlab-put-pot-on-cooktop-i07"]
+vars = { pot_rest = "7.8 cm", xy_tol = "20.9 cm", pot_h = "14.7 cm", cooktop_h = "6.0 cm" }
+[tasks."yamlab-put-pot-on-cooktop-i08"]
+vars = { pot_rest = "8.7 cm", xy_tol = "21.6 cm", pot_h = "16.4 cm", cooktop_h = "6.5 cm" }
+[tasks."yamlab-hang-mug-on-tree-i10"]
+vars = { mug_rest = "4.3 cm", xy_tol = "11.4 cm", hang_min = "8.8 cm" }
+[tasks."yamlab-hang-mug-on-tree-i13"]
+vars = { mug_rest = "4.2 cm", xy_tol = "13.5 cm", hang_min = "8.7 cm" }
+[tasks."yamlab-hang-mug-on-tree-i15"]
+vars = { mug_rest = "5.3 cm", xy_tol = "11.5 cm", hang_min = "9.8 cm" }
+[tasks."yamlab-hang-mug-on-tree-i20"]
+vars = { mug_rest = "5.5 cm", xy_tol = "13.8 cm", hang_min = "10.0 cm" }
+[tasks."yamlab-hang-mug-on-tree-i21"]
+vars = { mug_rest = "4.7 cm", xy_tol = "13.1 cm", hang_min = "9.2 cm" }

@@ -1,0 +1,650 @@
+# README data for tasks/robocasa365/*/README.md (scripts/task_conventions.py render_readme_v3)
+#
+# Sources checked for every success text (clone of robocasa/robocasa @ 4f8a2980def75a55dff96b990745b83540425f09 and
+# ARISE-Initiative/robosuite @ 5ce6643f3092639d08f7b0f90ed1c6a84f50552c, the commits images/robocasa365/Dockerfile pins):
+#   upstream  robocasa/environments/kitchen/{atomic,composite/...}/<file>.py `_check_success` of each family, and the
+#             helpers it calls in robocasa/utils/object_utils.py (OU):
+#               check_obj_in_receptacle L587-601: env.check_contact(obj, recep) and |obj.xy - recep.xy| < th, th default
+#                 0.7 x recep.horizontal_radius (MJCFObject.horizontal_radius, robocasa/models/objects/objects.py
+#                 L387-391: the norm of the x and y half-sizes of the object's reg_bbox geom);
+#               gripper_obj_far L645-652: |grip site (robots[0].eef_site_id["right"]) - obj body origin| > th (3-D), th
+#                 default 0.25;
+#               obj_inside_of L14-64: all 8 bbox corners inside one of the fixture's interior regions, tolerance 0.05 m;
+#               check_obj_fixture_contact L623-629, check_obj_any_counter_contact L632-642 (any Counter fixture);
+#             fixture states in robocasa/models/fixtures/: fixture.py get_joint_state L660-685 (normalised over the
+#             joint range, inverted when the range starts below 0), is_open L712-721 (th 0.90), is_closed L723-732
+#             (th 0.005), door_joint_names L751-752 (every joint with "door" in its name).
+#             Thresholds that depend on an object's size were computed from the reg_bbox half-sizes in each task's
+#             frozen instance (environment/instance.npz, `xml`), rounded to 0.1 cm.
+#   call pattern  robosuite/environments/base.py step L467-521 -> _post_action L532-547 calls Kitchen.reward
+#             (robocasa/environments/kitchen/kitchen.py L1530-1540: _check_success once) BEFORE Kitchen._post_action
+#             (L1476-1493) runs every fixture's update_state; casa_tool.Session.step (privileged/environment/casa_tool.py
+#             L610-622) then calls _check_success twice more; Session.reset L594-608 once. So three runs per control
+#             step; the verdict is the third run's result (Session.success).
+#   graders   privileged: embodied_first_exam/benchmarks/robocasa/privileged/tests/grade.py (copied into every
+#             privileged task's verifier from the robocasa-files image) with casa_tool.py of
+#             embodied_first_exam/benchmarks/robocasa365; standard: embodied_first_exam/benchmarks/robocasa365/sim/
+#             server_casa.py and embodied_first_exam/benchmarks/robocasa/standard/tests/grade.py; realtime: the task's
+#             environment/sim/server.py on embodied_first_exam/standard/sidecar/rcb_service.py and
+#             embodied_first_exam/standard/realtime/rcb_realtime.py, graded by embodied_first_exam/standard/sidecar/grade.py.
+# Line numbers below are those of the pinned upstream files unless a repository path is given.
+
+[benchmark]
+name = "RoboCasa365"
+citation = "Nasiriany et al., 2026"     # upstream README "Citation": RoboCasa365 (ICLR 2026); RoboCasa: Nasiriany et al., 2024
+url = "https://github.com/robocasa/robocasa"
+repo = "robocasa/robocasa"
+commit = "4f8a298"
+
+[license]
+text = """
+The kitchen tasks, scenes and success checks are RoboCasa365's ([robocasa/robocasa](https://github.com/robocasa/robocasa)
+@ `4f8a298`, robocasa 1.0.1), released under the MIT License (Copyright (c) 2026 the RoboCasa Team); the simulation
+framework is [robosuite](https://github.com/ARISE-Initiative/robosuite) @ `5ce6643` (1.5.2, MIT License) on MuJoCo 3.3.1
+(Apache License 2.0). RoboCasa's assets (fixtures, object meshes, textures, including the Objaverse and AI-generated
+objects) are under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) as RoboCasa states (credit: RoboCasa,
+robocasa.ai); no non-commercial terms apply. They are downloaded, pinned by SHA-256, when the image is built and are not
+redistributed in this repository. Paper: Nasiriany et al., 2026, "RoboCasa365: A Large-Scale Simulation Framework for
+Training and Benchmarking Generalist Robots", ICLR 2026.
+"""
+
+[robots]
+franka-panda-omron = "Franka Panda arm on an Omron mobile base with a torso lift (PandaOmron), parallel-jaw gripper"
+
+# Terms shared by every family text; each mode text starts with them.
+# privileged: embodied_first_exam/benchmarks/robocasa/privileged/tests/grade.py main L57-121 (missing file ->
+# missing_trajectory; check_file L46-54: 2-D, 1 <= T <= MAX_STEPS = 3000, finite -> else invalid_trajectory; the child's
+# casa_tool.as_actions(actions, 13) -> exit INVALID = 2 -> invalid_trajectory; any other child failure, including a
+# simulator error or the 3600 s child timeout -> grader_error, success 0); replay L27-38 in a fresh process from
+# /tests/instance.npz (casa_tool.load_instance checks its SHA-256); ok = not initial_success and success L106.
+# casa_tool.py load_npz L237-249 (<= 8,000,000 bytes, <= 64 members, .npy only, <= 64,000,000 bytes expanded, no
+# pickle); Session.step L610-622 clips each row to the action limits; Session.replay L665-677.
+[modes.privileged]
+success = """
+In the conditions above, an object's centre is its body origin in the simulator; touching is a MuJoCo contact between the two
+models' collision geoms; an object's horizontal radius is half the diagonal of its bounding box seen from above; the
+gripper's grip point is the robot's end-effector site; a joint's opening is its position as a fraction of the joint's
+range. The environment's check runs three times per control step (once inside the environment's step, before the
+fixtures update their state, and twice after it) and once at the frozen start; counts of checks above are counts of
+these runs.
+
+The graded file is `/app/output/trajectory.npz`: an array `actions` of shape (T, 13), finite, with 1 ≤ T ≤ 3000, one
+row per control step (1/20 s); each row is clipped to the controller's limits when it is executed. The verifier replays
+it once, open-loop, in a fresh process from its own copy of the frozen instance, and takes the check's result on the
+state after the last row; nothing earlier in the replay counts, except where the conditions above say a count or a
+moment counts as it happens. It scores 1 when that result is a success and the check did not already hold at the
+frozen start. A missing file scores 0, and so does an invalid one: over 8 MB, not an archive of at most 64 plain `.npy`
+arrays, no `actions`, a shape other than (T, 13), a NaN or infinite value, or T outside 1 to 3000. A replay that fails
+with an error (a simulator error, or the verifier's frozen instance failing its hash check) scores 0.
+"""
+
+# embodied_first_exam/benchmarks/robocasa365/sim/server_casa.py: RCB_AGENT_END=1 in the compose file, no
+# RCB_MAX_CONTROL_STEPS / RCB_STEP_LIMIT (MAX_CONTROL_STEPS = 0, L67: no step cap); /finish -> finish("finished")
+# L1203-1207; SIGUSR1 at the session's end -> finish("timeout") L1235-1239; a simulator error inside a call ->
+# finish("error") L1225-1231; run_submit L855-925 / do_hold: every row runs S.step (casa_tool); finalize L1045-1094:
+# success = S.check()["success"] (the last Session.step's result) and not initial_success and reason != "error" and
+# reason in END_STATE_REASONS (L90); no settle window (END_JUDGEMENT = "state", L144). _start_mismatch L1246-1262
+# (RCB_INSTANCE_SHA, RCB_START_SHA, solved at the start -> instance_mismatch, infra); _resume_or_start L1265-1336
+# (MAX_RESUMES = 2: the third crash gives up, sim_crashed_on_call when every crash was inside a call, else sim_crashed,
+# infra; resume_failed infra). embodied_first_exam/benchmarks/robocasa/standard/tests/grade.py main L40-85: success =
+# graded_by live and success and live_success and not infra and reason != "error".
+[modes.standard]
+success = """
+In the conditions above, an object's centre is its body origin in the simulator; touching is a MuJoCo contact between the two
+models' collision geoms; an object's horizontal radius is half the diagonal of its bounding box seen from above; the
+gripper's grip point is the robot's end-effector site; a joint's opening is its position as a fraction of the joint's
+range. The environment's check runs three times per control step (once inside the environment's step, before the
+fixtures update their state, and twice after it) and once at the start; counts of checks above are counts of these
+runs.
+
+Graded is the one live episode, judged by the simulator service on its own state; nothing is replayed. There is no
+reset and no step limit, and only control steps (the rows of an action chunk, or a hold chunk) move time. The episode
+ends at the agent's `POST /finish`, or when the agent's time ({timeout}) is up, and the verdict is the check's result
+after the last executed control step: it must be a success, and the check must not have held at the start. A success
+earlier in the episode neither ends it nor is shown to the agent. A simulator error raised while executing the agent's
+call ends the episode with 0, as do more than two service crashes that all happened while serving the agent's calls.
+A scene that does not start at the frozen instance (instance or start-state hash mismatch, or already solved), more
+than two crashes not all inside the agent's calls, a failed resume or a missing verdict is an infrastructure error,
+not a score.
+"""
+
+# The task's environment/sim/server.py (adapter: step L173-175 reports casa_tool's Session.success; live_verdict
+# L184-188: no success when initial_success) on embodied_first_exam/standard/sidecar/rcb_service.py:
+# _step L938-956 (AGENT_END: success only recorded; len(episode) >= cap -> "step_limit"), _end L958-972 (finished /
+# timeout / step_limit judged on now_success), _finalize L1284-1360 (no end_window_steps in the adapter; live_verdict
+# can only take a success away), _write_final L630-658. Compose: RCB_MAX_CONTROL_STEPS 3000, RCB_RESET_BUDGET 0,
+# RCB_SLOWDOWN 2, RCB_START_SHA. embodied_first_exam/standard/realtime/rcb_realtime.py docstring L8-17 (paused until
+# the first /submit, one control step every control_dt x S, zero-order hold when the plan runs out) and L87-98 (whose
+# failure an error or crash is). embodied_first_exam/standard/sidecar/grade.py main L97-137: success = success and
+# live_success and graded_by live and not infra and reason != "error".
+[modes.realtime]
+success = """
+The environment's check runs three times per control step: once inside the environment's step, before the fixtures
+update their state, and twice after it.
+
+Graded is the one live episode, judged by the simulator service on its own state; nothing is replayed. The clock does
+not stop: the episode starts paused at the frozen start, and from the agent's first `submit` one control step runs
+every 0.05 s × S of wall time (slowdown S = {slowdown}), whether or not the agent sends anything; when the planned
+commands run out the last one is held. There is no reset. The episode ends at the agent's `/finish`, after 3,000
+control steps (150 s of robot time), or when the agent's time ({timeout}) is up, and is judged on the state it ends
+in: the check's result after the last control step must be a success, and the check must not have held at the
+episode's start. A success earlier in the episode neither ends it nor is shown to the agent. After the agent's first
+command, a simulator error or repeated simulator crashes inside control steps are the agent's 0; a failure before the
+first command, a killed service, a failed resume, a start that is not the frozen instance's state or a missing
+verdict is an infrastructure error, not a score.
+"""
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Families (50): the pass condition only (which state is graded: [modes]). Paths are under robocasa/environments/kitchen/.
+# "less than" = <, "at most" = <=, "more than" = >, as in the source.
+
+[families."robocasa365/AddLemonToFish"]
+# composite/garnishing_dishes/add_lemon_to_fish.py _check_success L85-94: OU.check_obj_in_receptacle(lemon_wedge,
+# fish_container) and (fish, fish_container) (plate horizontal radius 17.39 cm), check_obj_fixture_contact(fish_container,
+# dining_counter = island_island_group_1), gripper_obj_far(lemon_wedge) (0.25).
+success = """
+The lemon wedge and the fish are both on the plate: each touches the plate, with its centre less than 70% of the
+plate's horizontal radius (about 12.2 cm) from the plate's centre horizontally. The plate touches the dining counter
+(the island). The gripper's grip point is more than 25 cm from the lemon wedge's centre.
+"""
+
+[families."robocasa365/AssembleCookingArray"]
+# composite/frying/assemble_cooking_array.py _check_success L107-125: check_obj_in_receptacle(meat = shrimp, pan,
+# th=0.07); gripper_obj_far(vegetable = broccoli), (condiment = syrup_bottle), (meat) (0.25); check_obj_fixture_contact
+# of vegetable and condiment with self.counter (L21-23: the counter next to the stove, counter_1_right_group_1).
+success = """
+The shrimp is in the pan: it touches the pan, with its centre less than 7 cm from the pan's centre horizontally. The
+syrup bottle and the broccoli each touch the counter the task assigns next to the stove (where the plate is; another
+counter does not count). The gripper's grip point is more than 25 cm from the shrimp, the syrup bottle and the
+broccoli. Where the pan is and where the plate is are not checked.
+"""
+
+[families."robocasa365/BeverageSorting"]
+# composite/restocking_supplies/beverage_sorting.py _check_success L131-149: gripper_obj_far of all four (0.25); for
+# (cab1, cab2) or (cab2, cab1): obj_inside_of(alcohol1 = liquor, c1) and (alcohol2 = beer, c1) and (non_alcohol1 = can,
+# c2) and (non_alcohol2 = bottled_drink, c2).
+success = """
+Both alcoholic drinks (the liquor and the beer) are inside one of the task's two cabinets and both non-alcoholic
+drinks (the can and the bottled drink) are inside the other, either way round. A drink is inside a cabinet when every
+corner of its bounding box lies within one of the cabinet's interior regions, with 5 cm tolerance. The gripper's grip
+point is more than 25 cm from each of the four drinks. The cabinet doors are not checked.
+"""
+
+[families."robocasa365/BreadAndCheese"]
+# composite/snack_preparation/bread_and_cheese.py _check_success L80-85: gripper_obj_far(obj = bread) (0.25);
+# check_obj_in_receptacle(obj, container = cutting_board) and (obj2 = cheese, container) (board radius 19.32 cm).
+success = """
+The bread and the cheese are both on the cutting board: each touches the board, with its centre less than 70% of the
+board's horizontal radius (about 13.5 cm) from the board's centre horizontally. The gripper's grip point is more than
+25 cm from the bread's centre; its distance from the cheese is not checked.
+"""
+
+[families."robocasa365/CandleCleanup"]
+# composite/clearing_table/candle_cleanup.py _check_success L114-118: obj_inside_of(obj1 = candle, cab), (obj2 = jar,
+# cab); cab.is_closed (fixture.py L723-732, th 0.005, both door hinges of microwave_cabinet_left_group_1).
+success = """
+The candle and the jar are both inside the cabinet the task uses: every corner of each one's bounding box lies within
+one of the cabinet's interior regions, with 5 cm tolerance. The cabinet is closed: each of its door hinges is at most
+0.5% open. The gripper's position is not checked.
+"""
+
+[families."robocasa365/CerealAndBowl"]
+# composite/snack_preparation/cereal_and_bowl.py _check_success L112-116: check_obj_fixture_contact(cereal, counter),
+# (bowl, counter) with self.counter = the counter registered next to the cabinet (L29-31); cab.is_closed (th 0.005,
+# both door hinges).
+success = """
+The cereal box and the bowl each touch the counter the task assigns next to the cabinet (another counter does not
+count). The cabinet is closed: each of its two door hinges is at most 0.5% open. The gripper's position is not
+checked.
+"""
+
+[families."robocasa365/ChooseMeasuringCup"]
+# composite/measuring_ingredients/choose_measuring_cup.py _check_success L74-93 with use_tablespoon = False (the
+# instance's task state): small cup touches self.counter (L12-14: the counter next to the drawer, island_island_group),
+# the large cup does not, gripper_obj_far(measuring_cup_small) (0.25).
+success = """
+The smaller measuring cup touches the counter the task assigns next to the drawer (the island), and the larger cup
+does not touch that counter. The gripper's grip point is more than 25 cm from the smaller cup's centre. The drawer is
+not checked.
+"""
+
+[families."robocasa365/ClearFoodWaste"]
+# composite/cleaning_sink/clear_food_waste.py _check_success L72-83: check_obj_in_receptacle(food_i, colander) for i = 0
+# (eggplant), 1 (cucumber) (colander radius 18.19 cm); gripper_obj_far of both (0.25).
+success = """
+Both food items (the eggplant and the cucumber) are in the colander: each touches the colander, with its centre less
+than 70% of the colander's horizontal radius (about 12.7 cm) from the colander's centre horizontally. The gripper's
+grip point is more than 25 cm from both.
+"""
+
+[families."robocasa365/ClearSink"]
+# composite/washing_dishes/clear_sink.py _check_success L99-126: obj_inside_of(food_i, sink) == False for food0 = corn,
+# food1 = carrot; obj_inside_of(dish_i, sink) for dish0 = bowl, dish1 = cup; gripper_obj_far of all four (0.25).
+success = """
+Neither the corn nor the carrot is inside the sink, and both the bowl and the cup are. An object is inside the sink
+when every corner of its bounding box lies within one of the sink's interior regions, with 5 cm tolerance, so an item
+that is only partly in the sink counts as out of it. The gripper's grip point is more than 25 cm from each of the four.
+"""
+
+[families."robocasa365/CloseDrawer"]
+# atomic/kitchen_drawer.py ManipulateDrawer._check_success L172-192 (behavior "close": every value of
+# drawer.get_door_state <= 0.05); robocasa/models/fixtures/cabinets.py Drawer.get_door_state L1061-1083: -slidejoint
+# qpos normalised over [0, 0.55 x size[1]].
+success = """
+The right drawer is at most 5% open: its slide is out by no more than 5% of its full travel, which is 55% of the
+drawer's depth.
+"""
+
+[families."robocasa365/CloseOven"]
+# atomic/kitchen_doors.py ManipulateDoor._check_success L62-72 (behavior "close": fxtr.is_closed); fixture.py
+# is_closed L723-732 (th 0.005) over door_joint_names (the oven's door_joint).
+success = """
+The oven door is closed: its hinge is at most 0.5% open.
+"""
+
+[families."robocasa365/CloseStandMixerHead"]
+# atomic/kitchen_stand_mixer.py CloseStandMixerHead._check_success L59-66: stand_mixer.get_state()["head"] < 0.01;
+# robocasa/models/fixtures/stand_mixer.py get_state L128-136 returns _head_value, which update_state L75-94 sets from the
+# head joint's normalised position after every control step.
+success = """
+The stand mixer's head is closed: its hinge is less than 1% open, as the mixer's state update reads it after the
+control step.
+"""
+
+[families."robocasa365/CookieDoughPrep"]
+# composite/baking/cookie_dough_prep.py _check_success L113-139: check_obj_any_counter_contact(egg), (butter);
+# |egg.xy - bowl.xy| and |butter.xy - bowl.xy| < bowl horizontal radius (16.35 cm) + 0.25; gripper_obj_far(egg),
+# (butter) with th=0.15.
+success = """
+The egg and the butter each touch a counter (any counter), and each one's centre is less than the bowl's horizontal
+radius plus 25 cm (about 41.4 cm) from the bowl's centre horizontally. The gripper's grip point is more than 15 cm from
+the egg and from the butter.
+"""
+
+[families."robocasa365/DeliverBrewedCoffee"]
+# composite/brewing/deliver_brewed_coffee.py _check_success L100-123: check_obj_fixture_contact(brewed_coffee,
+# dining_counter = island_island_group_1), (breakfast_plate, dining_counter); |coffee.xy - plate.xy| <= 0.3;
+# gripper_obj_far(brewed_coffee) (0.25).
+success = """
+The coffee mug and the breakfast plate both touch the dining counter (the island), with their centres at most 30 cm
+apart horizontally. The gripper's grip point is more than 25 cm from the mug's centre. Neither has to stand upright.
+"""
+
+[families."robocasa365/DessertUpgrade"]
+# composite/serving_food/dessert_upgrade.py _check_success L94-99: check_obj_in_receptacle(dessert1 = sugar_cube,
+# receptacle = tray), (dessert2 = cupcake, receptacle) (tray radius 22.85 cm); gripper_obj_far(receptacle) (0.25).
+success = """
+Both desserts (the sugar cube and the cupcake) are on the tray: each touches the tray, with its centre less than 70% of
+the tray's horizontal radius (about 16.0 cm) from the tray's centre horizontally. The gripper's grip point is more than
+25 cm from the tray's centre.
+"""
+
+[families."robocasa365/DisplayMeatVariety"]
+# composite/filling_serving_dishes/display_meat_variety.py _check_success L121-142: check_obj_in_receptacle(chicken,
+# shrimp, beef = steak; serving_tray) (tray radius 22.57 cm); check_obj_fixture_contact(serving_tray, dining_table =
+# counter_2_right_group_1); gripper_obj_far of the three (0.25).
+success = """
+The chicken drumstick, the shrimp and the steak are all on the serving tray: each touches the tray, with its centre
+less than 70% of the tray's horizontal radius (about 15.8 cm) from the tray's centre horizontally. The tray touches the
+dining counter. The gripper's grip point is more than 25 cm from each of the three.
+"""
+
+[families."robocasa365/DivideBasins"]
+# composite/washing_dishes/divide_basins.py _check_success L124-133: sink.get_obj_basin_loc(self, name, self.sink) ==
+# "left" for obj_to_wash (cup), == "right" for obj_drying (measuring_cup); the sink is passed as the third positional
+# argument, partial_check, so robocasa/models/fixtures/sink.py get_obj_basin_loc L222-314 tests only the object's
+# origin, with threshold 0, against the basin region's x and y extent in the sink's frame (no height test);
+# gripper_obj_far of both (0.25).
+success = """
+The measuring cup that was in the sink's left basin is now in the right basin, and the cup is in the left basin. An
+object counts as in a basin when its centre, seen from above, lies within that basin's region; its height is not
+checked. The gripper's grip point is more than 25 cm from both.
+"""
+
+[families."robocasa365/DrainVeggies"]
+# composite/washing_fruits_and_vegetables/drain_veggies.py _check_success L67-79: on every run, if obj_inside_of(obj =
+# lettuce, sink) and water_on: washed_time += 1 and vegetables_washed = washed_time > 10, else washed_time = 0 (the flag
+# kept); success = vegetables_washed and check_obj_in_receptacle(obj, obj_container = pot) (pot radius 20.74 cm) and
+# not water_on. robocasa/models/fixtures/sink.py get_handle_state L142-220: water_on = 0.40 < handle_joint mod 2 pi < pi
+# (L176); the instance's handle_joint range is 0 to 0.5. Three runs per control step on the same state: more than 10
+# consecutive runs = at least 4 consecutive control steps.
+success = """
+Two parts. The rinse counts as it happens: the lettuce is inside the sink (every corner of its bounding box within one
+of the sink's interior regions, with 5 cm tolerance) while the water is on, for more than 10 consecutive runs of the
+check, which is at least 4 consecutive control steps. Only the latest such stretch counts: if the lettuce is inside
+the sink with the water on again later, the count starts again from zero. At the end the lettuce is in the pot
+(touching it, with its centre less than 70% of the pot's horizontal radius, about 14.5 cm, from the pot's centre
+horizontally) and the water is off. The water is on while the faucet handle's on / off hinge (travel 0 to 0.5 rad) is
+turned more than 0.40 rad; the handle's temperature hinge does not count.
+"""
+
+[families."robocasa365/DrinkwareConsolidation"]
+# composite/clearing_table/drinkware_consolidation.py _check_success L74-84 with num_drinkware = 1 (the instance):
+# obj_inside_of(obj_0 = bottled_water, cab); gripper_obj_far(obj_0) (0.25).
+success = """
+The bottled water is inside the open cabinet: every corner of its bounding box lies within one of the cabinet's
+interior regions, with 5 cm tolerance. The gripper's grip point is more than 25 cm from the bottle's centre.
+"""
+
+[families."robocasa365/MakeIceLemonade"]
+# composite/adding_ice_to_beverages/make_ice_lemonade.py _check_success L131-147: check_obj_in_receptacle(lemon_wedge,
+# glass_cup, th=0.5), (ice_cube1 or ice_cube2, glass_cup, th=0.5); gripper_obj_far of the lemon wedge and both ice
+# cubes with th=0.15.
+success = """
+The lemon wedge and at least one of the two ice cubes are in the glass: each touches the glass, with its centre less
+than 50 cm from the glass's centre horizontally. The gripper's grip point is more than 15 cm from the lemon wedge and
+from each of the two ice cubes.
+"""
+
+[families."robocasa365/MakeLoadedPotato"]
+# composite/reheating_food/make_loaded_potato.py _check_success L101-112: gripper_obj_far(potato), (condiment =
+# syrup_bottle), (cheese) (0.25); check_obj_in_receptacle of the three on cutting_board (radius 19.32 cm).
+success = """
+The potato, the cheese and the condiment (the syrup bottle) are all on the cutting board: each touches the board, with
+its centre less than 70% of the board's horizontal radius (about 13.5 cm) from the board's centre horizontally. The
+gripper's grip point is more than 25 cm from all three.
+"""
+
+[families."robocasa365/MealPrepStaging"]
+# composite/frying/meal_prep_staging.py _check_success L120-137: (vegetable = corn in pan1 and meat = steak in pan2) or
+# the reverse, by check_obj_in_receptacle (pan radii 23.00 and 23.56 cm); _check_obj_location_on_stove L96-118 for each
+# pan: check_obj_fixture_contact(pan, stove) and the first burner site (stove.burner_sites order) with |burner.xy -
+# pan.xy| < 0.08; both not None and different. No knob is read.
+success = """
+Each pan touches the stove with its centre less than 8 cm from a burner's centre horizontally (a pan belongs to the
+first such burner in the stove's order), and the two pans belong to different burners. The corn is in one pan and the
+steak in the other: each touches its pan, with its centre less than 70% of that pan's horizontal radius (about 16.1 cm
+for one pan, 16.5 cm for the other) from the pan's centre horizontally. No burner has to be on, and the gripper's
+position is not checked.
+"""
+
+[families."robocasa365/MicrowaveDefrostMeat"]
+# composite/microwaving_food/microwave_defrost_meat.py _check_success L78-94: obj_inside_of(tupperware, microwave);
+# check_obj_in_receptacle(meat = chicken_drumstick, tupperware) (radius 12.89 cm); microwave.is_closed (th 0.005,
+# microjoint); microwave.get_state()["turned_on"]; gripper_obj_far(tupperware) (0.25). robocasa/models/fixtures/
+# microwave.py update_state L66-90 (after every control step: door is_open (th 0.90) -> off; else on when the right
+# gripper touches start_button, off when it touches stop_button).
+success = """
+The tupperware is inside the microwave (every corner of its bounding box within the microwave's interior region, with
+5 cm tolerance) and the chicken drumstick is in the tupperware (touching it, with its centre less than 70% of the
+tupperware's horizontal radius, about 9.0 cm, from the tupperware's centre horizontally). The microwave door is closed:
+its hinge is at most 0.5% open. The microwave is on: after each control step it turns on if the gripper touches its
+start button while the door is less than 90% open, and turns off if the gripper touches its stop button or the door
+is 90% or more open. The gripper's grip point is more than 25 cm from the tupperware's centre.
+"""
+
+[families."robocasa365/OpenDishwasher"]
+# atomic/kitchen_doors.py ManipulateDoor._check_success L62-72 (behavior "open": fxtr.is_open); fixture.py is_open
+# L712-721 (th 0.90) over door_joint_names (the dishwasher's door_joint).
+success = """
+The dishwasher door is at least 90% open.
+"""
+
+[families."robocasa365/OrganizeCoffeeCondiments"]
+# composite/brewing/organize_coffee_condiments.py _check_success L128-153: _close_to_mug L110-126 (3-D |obj - mug| <
+# 0.3) for obj1 = syrup_bottle and obj2 = honey_bottle; check_contact of each with coffee_machine_counter (L29-32: the
+# counter under the coffee machine); gripper_obj_far of both with th=0.15.
+success = """
+The syrup bottle and the honey bottle each touch the counter under the coffee machine, and each one's centre is less
+than 30 cm from the mug's centre (straight-line distance). The gripper's grip point is more than 15 cm from both.
+Neither has to stand upright.
+"""
+
+[families."robocasa365/OvenBroilFish"]
+# composite/broiling_fish/oven_broil_fish.py _check_success L79-93: success_timer >= 10 -> True (never reset after
+# that); else oven.check_rack_contact(obj = fish, rack_level = 0) (robocasa/models/fixtures/oven.py L152-187: contact with
+# the rack0 body's geoms) and oven.is_closed (th 0.005, door_joint) -> success_timer += 1, otherwise 0; returns False.
+# Three runs per control step on the same state: runs 1-10 count, run 11 (the 4th step's second) returns True.
+success = """
+The fish touches the oven's bottom rack while the oven door is closed (its hinge at most 0.5% open) for 10
+consecutive runs of the check; the run after that returns success, which in practice takes 4 consecutive control
+steps. From then on the check returns success for the rest of the episode, whatever happens afterwards.
+"""
+
+[families."robocasa365/PackDessert"]
+# atomic/kitchen_pick_place.py PackDessert._check_success L1950-1955: check_obj_in_receptacle(cooked_food = hot_dog,
+# cooked_food_container = tupperware), (dessert = marshmallow, ...) (tupperware radius 22.28 cm);
+# gripper_obj_far(dessert) (0.25).
+success = """
+The hot dog and the marshmallow are both in the tupperware: each touches it, with its centre less than 70% of the
+tupperware's horizontal radius (about 15.6 cm) from the tupperware's centre horizontally. The gripper's grip point is
+more than 25 cm from the marshmallow's centre.
+"""
+
+[families."robocasa365/PickPlaceCabinetToCounter"]
+# atomic/kitchen_pick_place.py PickPlaceCabinetToCounter._check_success L241-251: gripper_obj_far(obj = ice_cube)
+# (0.25); check_obj_fixture_contact(obj, counter) with self.counter = the counter registered next to the cabinet
+# (L164-167).
+success = """
+The ice cube touches the counter the task assigns next to the cabinet (another counter does not count). The gripper's
+grip point is more than 25 cm from the ice cube's centre.
+"""
+
+[families."robocasa365/PickPlaceSinkToCounter"]
+# atomic/kitchen_pick_place.py PickPlaceSinkToCounter._check_success L463-474: check_obj_in_receptacle(obj = egg,
+# container = plate) (radius 17.44 cm); check_contact(container, counter) with self.counter next to the sink (L387-390);
+# gripper_obj_far(obj) (0.25).
+success = """
+The egg is on the plate (touching it, with its centre less than 70% of the plate's horizontal radius, about 12.2 cm,
+from the plate's centre horizontally), and the plate touches the counter the task assigns next to the sink. The
+gripper's grip point is more than 25 cm from the egg's centre.
+"""
+
+[families."robocasa365/PlateSteakMeal"]
+# composite/plating_food/plate_steak_meal.py _check_success L144-162: check_obj_in_receptacle(steak, plate),
+# (asparagus, plate) (plate radius 16.48 cm), (random_food = chili_pepper, tray) (tray radius 24.56 cm);
+# gripper_obj_far of the three (0.25).
+success = """
+The steak and the asparagus are on the plate: each touches the plate, with its centre less than 70% of the plate's
+horizontal radius (about 11.5 cm) from the plate's centre horizontally. The chili pepper is still on the tray: it
+touches the tray, with its centre less than 70% of the tray's horizontal radius (about 17.2 cm) from the tray's centre
+horizontally. The gripper's grip point is more than 25 cm from all three.
+"""
+
+[families."robocasa365/PortionInTupperware"]
+# composite/portioning_meals/portion_in_tupperware.py _check_success L169-200: per tupperware, exactly one of
+# cooked_food1 / cooked_food2 (two hot dogs) and exactly one of vegetable1 (mushroom) / vegetable2 (lemon_wedge) by
+# check_obj_in_receptacle (radii 14.96 and 26.92 cm); gripper_obj_far of all four (0.25).
+success = """
+Each of the two tupperware containers holds exactly one of the two hot dogs and exactly one of the two vegetables (the
+mushroom and the lemon wedge). An item is in a container when it touches it, with its centre less than 70% of that
+container's horizontal radius from the container's centre horizontally: about 10.5 cm for the smaller container and
+18.8 cm for the larger. The gripper's grip point is more than 25 cm from all four items.
+"""
+
+[families."robocasa365/PreRinseStation"]
+# composite/washing_dishes/pre_rinse_station.py _check_success L122-131: sink.get_obj_basin_loc(self, left_obj =
+# stackable = glass_cup, self.sink) == "left", (right_obj = receptacle = kettle_non_electric) == "right"; the sink as the
+# third positional argument (partial_check) -> sink.py L222-314 tests only the object's origin (threshold 0) against the
+# basin region's x and y extent; gripper_obj_far of both (0.25).
+success = """
+The glass cup is in the sink's left basin and the kettle in its right basin. An object counts as in a basin when its
+centre, seen from above, lies within that basin's region; its height is not checked. The gripper's grip point is more
+than 25 cm from both.
+"""
+
+[families."robocasa365/PrepForSanitizing"]
+# composite/sanitizing_surface/prep_for_sanitizing.py _check_success L105-111: check_obj_fixture_contact(obj1 =
+# bar_soap, counter), (obj2 = dish_brush, counter) with self.counter next to the cabinet (L26-28); gripper_obj_far of
+# both (0.25).
+success = """
+The bar soap and the dish brush each touch the counter the task assigns next to the cabinet (another counter does not
+count). The gripper's grip point is more than 25 cm from both.
+"""
+
+[families."robocasa365/PrepMarinatingMeat"]
+# composite/meat_preparation/prep_marinating_meat.py _check_success L115-133: gripper_obj_far(condiment), (meat) (0.25);
+# check_contact(condiment, counter) with self.counter next to the cabinet (L30-32); check_obj_in_receptacle(meat =
+# shrimp, cutting_board) (radius 20.50 cm); check_obj_fixture_contact(cutting_board, counter).
+success = """
+The shrimp is on the cutting board: it touches the board, with its centre less than 70% of the board's horizontal
+radius (about 14.4 cm) from the board's centre horizontally. The cutting board and the condiment bottle each touch the
+counter the task assigns next to the cabinet. The gripper's grip point is more than 25 cm from the shrimp and from the
+bottle.
+"""
+
+[families."robocasa365/ReheatMeal"]
+# composite/microwaving_food/reheat_meal.py _check_success L88-108: obj_inside_of(tupperware, microwave);
+# check_obj_in_receptacle(meat = shrimp, tupperware), (vegetable = carrot, tupperware) (radius 13.37 cm);
+# microwave.is_closed (th 0.005); turned_on (microwave.py update_state L66-90); gripper_obj_far(tupperware) (0.25).
+success = """
+The tupperware is inside the microwave (every corner of its bounding box within the microwave's interior region, with
+5 cm tolerance), and the shrimp and the carrot are in the tupperware (each touching it, with its centre less than 70%
+of the tupperware's horizontal radius, about 9.4 cm, from the tupperware's centre horizontally). The microwave door is
+closed: its hinge is at most 0.5% open. The microwave is on: after each control step it turns on if the gripper
+touches its start button while the door is less than 90% open, and turns off if the gripper touches its stop button
+or the door is 90% or more open. The gripper's grip point is more than 25 cm from the tupperware's centre.
+"""
+
+[families."robocasa365/RetrieveMeat"]
+# composite/slicing_meat/retrieve_meat.py _check_success L102-107: check_obj_in_receptacle(meat = fish, receptacle =
+# cutting_board) (radius 20.50 cm); gripper_obj_far(meat) (0.25).
+success = """
+The fish is on the cutting board: it touches the board, with its centre less than 70% of the board's horizontal
+radius (about 14.4 cm) from the board's centre horizontally. The gripper's grip point is more than 25 cm from the
+fish's centre.
+"""
+
+[families."robocasa365/SanitizePrepCuttingBoard"]
+# composite/sanitizing_cutting_board/sanitize_prep_cutting_board.py _check_success L95-127: |spray.xy - board.xy| <=
+# 0.35, |dish_brush.xy - board.xy| <= 0.35; check_obj_any_counter_contact of spray, dish_brush and cutting_board;
+# gripper_obj_far(spray), (dish_brush) (0.25).
+success = """
+The spray bottle and the dish brush each touch a counter (any counter), with their centres at most 35 cm from the
+cutting board's centre horizontally, and the cutting board touches a counter. The gripper's grip point is more than
+25 cm from the spray bottle and from the brush.
+"""
+
+[families."robocasa365/ScrubBowl"]
+# composite/washing_dishes/scrub_bowl.py update_state L60-63 (once per control step, in Kitchen._post_action:
+# success_contact_time += 1 when OU.check_obj_scrubbed(sponge, bowl)); object_utils.py check_obj_scrubbed L389-413:
+# check_obj_in_receptacle(sponge, bowl) (bowl radius 19.80 cm), contact, and |sponge - prev_sponge_pos| > 0.001, where
+# prev_sponge_pos is stored only on steps that pass the receptacle test (absent at first: no movement);
+# _check_success L65-67: success_contact_time >= 15 and gripper_obj_far(bowl) (0.25).
+success = """
+The sponge has scrubbed the bowl on at least 15 control steps in all, not necessarily in a row. A control step counts
+when, after it, the sponge touches the bowl with its centre less than 70% of the bowl's horizontal radius (about
+13.9 cm) from the bowl's centre horizontally, and the sponge's centre has moved more than 1 mm since the previous
+control step on which it was found on the bowl that way (the first such step never counts). The scrubbing counts as it
+happens; at the end, the gripper's grip point is more than 25 cm from the bowl's centre.
+"""
+
+[families."robocasa365/SearingMeat"]
+# composite/frying/searing_meat.py _check_success L138-145: gripper_obj_far(meat = chicken_drumstick) (0.25);
+# stove.check_obj_location_on_stove(pan, threshold=0.15) == self.knob ("rear_right", the instance's task state);
+# check_obj_in_receptacle(meat, pan, th=0.07). robocasa/models/fixtures/stove.py check_obj_location_on_stove L194-226:
+# contact(pan, stove), then the first burner in burner_sites order with |burner.xy - pan.xy| < 0.15 and its knob on
+# (0.35 <= |knob angle mod 2 pi| <= 2 pi - 0.35; get_knobs_state L152-183).
+success = """
+The pan touches the stove, and the stove's location check names the rear right burner for it: going through the
+burners in the stove's order, the first one whose centre is less than 15 cm from the pan's centre horizontally and
+whose knob is on must be the rear right one. A knob is on when its angle, taken between 0 and 2π, is between 0.35 rad
+and 2π − 0.35 rad. The chicken drumstick is in the pan: it touches the pan, with its centre less than 7 cm from the
+pan's centre horizontally. The gripper's grip point is more than 25 cm from the drumstick's centre.
+"""
+
+[families."robocasa365/SeasoningSpiceSetup"]
+# composite/setting_the_table/seasoning_spice_setup.py _check_success L112-126: gripper_obj_far(condiment1 =
+# condiment_bottle), (condiment2 = ketchup) (0.25); check_obj_fixture_contact of both with dining_table
+# (island_island_group).
+success = """
+The condiment bottle and the ketchup each touch the dining counter (the island). The gripper's grip point is more than
+25 cm from both. Neither has to stand upright.
+"""
+
+[families."robocasa365/SetUpCuttingStation"]
+# composite/slicing_meat/set_up_cutting_station.py _check_success L95-105: check_obj_in_receptacle(meat =
+# chicken_drumstick, receptacle = cutting_board), (knife, receptacle) (radius 19.71 cm); gripper_obj_far(knife),
+# (receptacle) (0.25).
+success = """
+The knife and the meat (the chicken drumstick) are both on the cutting board: each touches the board, with its centre
+less than 70% of the board's horizontal radius (about 13.8 cm) from the board's centre horizontally. The gripper's
+grip point is more than 25 cm from the knife's centre and from the board's centre.
+"""
+
+[families."robocasa365/StockingBreakfastFoods"]
+# composite/restocking_supplies/stocking_breakfast_foods.py _check_success L210-217: obj_inside_of(obj1 = canned_food,
+# cab1), (obj2 = bar, cab2); gripper_obj_far of both (0.25). _get_obj_cfgs: obj1 starts on the counter by cab1, obj2 on
+# the counter by cab2.
+success = """
+The canned food is inside the cabinet next to where it started and the bar inside the cabinet next to where it
+started (the two cabinets the task assigns, one to each item): every corner of the item's bounding box lies within
+one of that cabinet's interior regions, with 5 cm tolerance. The gripper's grip point is more than 25 cm from both.
+"""
+
+[families."robocasa365/SweetenCoffee"]
+# composite/brewing/sweeten_coffee.py _check_success L107-131: check_obj_any_counter_contact(milk), (coffee = mug);
+# |milk.xy - coffee.xy| <= 0.25; check_obj_in_receptacle(sugar_cube, coffee) (mug radius 6.76 cm);
+# gripper_obj_far(milk), (sugar_cube) (0.25).
+success = """
+The sugar cube is in the coffee: it touches the mug, with its centre less than 70% of the mug's horizontal radius
+(about 4.7 cm) from the mug's centre horizontally. The milk and the mug each touch a counter (any counter), with their
+centres at most 25 cm apart horizontally. The gripper's grip point is more than 25 cm from the milk and from the sugar
+cube.
+"""
+
+[families."robocasa365/ThawInSink"]
+# composite/defrosting_food/thaw_in_sink.py _check_success L87-93: obj_inside_of(obj = orange, sink); sink
+# get_handle_state()["water_on"] (sink.py L176: 0.40 < handle_joint mod 2 pi < pi; range 0 to 0.5 in the instance).
+success = """
+The orange is inside the sink (every corner of its bounding box within one of the sink's interior regions, with 5 cm
+tolerance), and the water is on: the faucet handle's on / off hinge (travel 0 to 0.5 rad) is turned more than
+0.40 rad. The handle's temperature hinge does not count.
+"""
+
+[families."robocasa365/TongBuffetSetup"]
+# composite/arranging_buffet/tong_buffet_setup.py _check_success L130-150: check_obj_fixture_contact(tongs,
+# dining_counter), (food_container = tray, dining_counter); |tongs.xy - tray.xy| <= 0.5; gripper_obj_far(tongs),
+# (food_container) with th=0.15. The hot dog and the drawer are not read.
+success = """
+The tongs and the tray both touch the dining counter (the island), with their centres at most 50 cm apart
+horizontally. The gripper's grip point is more than 15 cm from the tongs and from the tray. Whether the hot dog is
+still on the tray, and the drawer, are not checked.
+"""
+
+[families."robocasa365/TurnOffMicrowave"]
+# atomic/kitchen_microwave.py MicrowavePressButton._check_success L64-79 (behavior "turn_off"): not turned_on and
+# microwave.gripper_button_far(stop_button) (robocasa/models/fixtures/microwave.py L92-115: |grip site - button geom| >
+# 0.15); turned_on from update_state L66-90.
+success = """
+The microwave is off, and the gripper's grip point is more than 15 cm from the stop button's centre. After each
+control step the microwave turns off if the gripper touches its stop button or its door is 90% or more open, and turns
+on if the gripper touches its start button while the door is less than 90% open.
+"""
+
+[families."robocasa365/TurnOnMicrowave"]
+# atomic/kitchen_microwave.py MicrowavePressButton._check_success L64-79 (behavior "turn_on"): turned_on and
+# gripper_button_far(start_button) (microwave.py L92-115, th 0.15); turned_on from update_state L66-90.
+success = """
+The microwave is on, and the gripper's grip point is more than 15 cm from the start button's centre. After each
+control step the microwave turns on if the gripper touches its start button while the door is less than 90% open, and
+turns off if the gripper touches its stop button or the door is 90% or more open.
+"""
+
+[families."robocasa365/TurnOnSinkFaucet"]
+# atomic/kitchen_sink.py ManipulateSinkFaucet._check_success L94-109 (behavior "turn_on": water_on);
+# robocasa/models/fixtures/sink.py get_handle_state L142-220, water_on L176 (0.40 < handle_joint mod 2 pi < pi); the
+# instance's handle_joint range is 0 to 0.5 (its model xml).
+success = """
+The water is on: the faucet handle's on / off hinge (travel 0 to 0.5 rad) is turned more than 0.40 rad. The handle's
+temperature hinge does not count.
+"""
+
+[families."robocasa365/TurnOnStove"]
+# atomic/kitchen_stove.py ManipulateStoveKnob._check_success L105-119 (behavior "turn_on", knob "rear_left": the
+# instance's task state); robocasa/models/fixtures/stove.py is_burner_on L185-192 (0.35 <= |angle| <= 2 pi - 0.35) on
+# get_knobs_state L152-183 (knob joint qpos mod 2 pi).
+success = """
+The stove's rear left burner is on: its knob's angle, taken between 0 and 2π, is between 0.35 rad and 2π − 0.35 rad.
+"""
+
+[families."robocasa365/TurnOnToasterOven"]
+# atomic/kitchen_toaster_oven.py TurnOnToasterOven._check_success L74-75: toaster_oven.get_state(self)["time"] >= 0.1;
+# robocasa/models/fixtures/toaster_oven.py get_state L315-346 returns _time, which update_state L201-252 sets after every
+# control step to the knob_time_joint's normalised position (range 0 to 4.01426 rad in the instance's model xml, so
+# 0.1 = 0.401 rad). update_state's run-down of a set timer (L241-249) never applies to this oven: the door and
+# temperature-knob entries, processed before "time" in the same loop, clear _last_time_update on every update.
+success = """
+The toaster oven's timer knob is turned at least 10% of its range (its hinge, travel 0 to 4.01 rad, at 0.40 rad or
+more), as the oven's state update reads it after the control step.
+"""

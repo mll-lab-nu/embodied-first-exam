@@ -1,43 +1,40 @@
-# mujoco_playground_spot_flat_terrain_joystick-standard
+# MuJoCo Playground · SpotFlatTerrainJoystick (standard)
 
 | | |
 |---|---|
-| Benchmark | MuJoCo Playground |
-| Mode | standard (`eai-standard/3.0`) |
-| Twin | `mujoco_playground_spot_flat_terrain_joystick-privileged` |
-| Simulator / robot | `mujoco` / `boston-dynamics-spot` |
-| Family / instance | `mujoco_playground/SpotFlatTerrainJoystick` / seed 0 |
-| Oracle | `full` |
-| Agent time budget | 1800 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:mujoco-0.1.3` |
+| Task ID | `mujoco_playground_spot_flat_terrain_joystick-standard` |
+| Benchmark | [MuJoCo Playground](https://playground.mujoco.org/) (Zakka et al., 2025), upstream `google-deepmind/mujoco_playground@4057c14` |
+| Robot | Boston Dynamics Spot quadruped, 12 joint position actuators |
+| Mode | standard |
+| Instance | `mujoco_playground/SpotFlatTerrainJoystick`, seed 0 |
+| Time limit | 30 min |
+| Reference solution | Included |
 
 ## Task
-MuJoCo Playground `SpotFlatTerrainJoystick` (Boston Dynamics Spot) on the same frozen instance as `mujoco_playground_spot_flat_terrain_joystick-privileged`: Make the robot follow the joystick's commands for the whole schedule without falling over.
-For 20 s the robot gets a joystick command schedule (5 segments: planar velocity and yaw rate in its own frame) and must track it without falling over. Standard mode (eai-standard/3.0): the agent drives the robot through a client, with 10 resets (only
-the last episode is graded), the robot's own sensors and the cameras that follow it.
+Make the robot follow the joystick's commands for the whole schedule without falling over.
 
-## Difficulty
-Same instance and success check as `mujoco_playground_spot_flat_terrain_joystick-privileged`. In standard mode the agent loses free resets, the simulator and
-the world state: it sees camera images and proprioception (joints, IMU, foot contacts), acts in joint position chunks,
-and gets 10 resets (`RCB_RESET_BUDGET`, the compose file's default; PROTOCOL §2), so it has to close the loop
-on the robot's own sensors; only the last episode is graded.
+## Success criteria
+Pass condition, defined by this benchmark (MuJoCo Playground's `SpotFlatTerrainJoystick` has only a shaped training reward and no success
+test): the episode runs all 1,000 control steps of the instance's command schedule (20 s at 50 Hz) with no
+termination, and in each of the schedule's 5 command segments the robot tracks the command on average. Over
+each segment, leaving out its first 25 control steps (0.5 s), the mean planar velocity error |(v_x, v_y) − (cmd_vx,
+cmd_vy)| is at most 0.2 m/s and the mean yaw-rate error |ω_z − cmd_wz| is at most 0.3 rad/s. The velocity is the IMU's
+velocimeter and the yaw rate its gyro, both in the body's IMU frame; the command is the schedule's (vx, vy, wz) in
+force at that control step.
 
-## Reference solution
-`solution/oracle_replay.py` streams the privileged reference's rows (`solution/oracle.npy`, 1000 rows, float32-exact)
-through the client in `hold` chunks; it uses no privileged information at run time. The service's recorded trajectory
-is then exactly the privileged reference, and the episode ends after the 1000 steps of the schedule, with success.
+Termination (a failure at any step; a live episode ends there): Playground's fall rule for this environment, the body
+tilted by more than about 32° (the IMU frame's z axis has a world z component below 0.85).
 
-## Verification
-The verdict is the live episode's (`graded_by = "live"`, `replays = 0`): the sim service runs the task's check on the
-episode it ran and records every executed control step. The collect hook (`environment/sim/finalize.sh`) ends the
-service, writes that verdict into `final.json` (nothing is replayed to grade it), then renders `replay.mp4` from the
-recorded trajectory in one video-only pass (`environment/sim/video.py`), which never changes the verdict;
-`tests/grade.py` (separate sandbox, no network) passes iff the live check succeeded. The service checks the frozen
-instance when it builds the scene: a start state that does not hash to the instance's `state_sha` gets no episode
-(`instance_mismatch`, `infra_error = 1`). Oracle: success, worst segment errors 0.155 m/s and 0.072 rad/s.
+Graded: the live episode, judged by the simulator service when it ends; nothing is replayed. The condition is checked
+on the episode's control steps as the service executed them. The service never reports success while the episode
+runs, and meeting the condition does not end the episode. The episode ends at the agent's `/finish`, at the `done` action (the same end), after its last control step, at a termination, or
+when the agent's session ends (at the latest after 30 min). The agent has 10 resets (`POST /reset`), each starting a new episode from the frozen start; only the last episode (the one after the last reset) is graded, and no reset is possible after `/finish`. An episode ended by a simulator error
+(a call that makes the simulation fail) scores 0. Before the agent is served, the service checks that the scene starts
+at the frozen instance (its state hash); a mismatch, or a service that cannot record its verdict, is an
+infrastructure failure, not a score.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -47,9 +44,11 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Upstream | MuJoCo Playground @ 4057c14 (Apache-2.0): `locomotion/spot/xmls/scene_mjx_feetonly_flat_terrain.xml`; MuJoCo Menagerie @ 1b86ece (`boston_dynamics_spot`); MuJoCo 3.3.7 on the CPU |
-| Service | `environment/sim/server.py` (the adapter) on the shared layer `rcb_limited.py` (`embodied_first_exam/standard/`); cameras `track`, `side`, `back`, `top` (they follow the robot) (320 x 240), the feet's kinematics in the trunk frame |
-| Resources | 4 CPUs, no GPU (CPU physics, EGL or OSMesa rendering); the collect hook replays nothing, its video pass takes well under a minute (at most the horizon, ~150 frames) |
+## License
+MuJoCo Playground ([google-deepmind/mujoco_playground](https://github.com/google-deepmind/mujoco_playground) @
+`4057c14`) is released under the Apache License 2.0. The robot models come from MuJoCo Menagerie
+([google-deepmind/mujoco_menagerie](https://github.com/google-deepmind/mujoco_menagerie) @ `1b86ece`, the commit
+Playground pins), each under its own license: Unitree Go1 (BSD 3-Clause, Unitree Robotics), Boston Dynamics Spot
+(BSD 3-Clause, Clearpath Robotics), Google Barkour vB (Apache License 2.0, DeepMind), ALOHA 2 (BSD 3-Clause, Trossen
+Robotics), Franka Emika Panda (Apache License 2.0). The rough-terrain texture is from Poly Haven (CC0). No
+non-commercial terms apply. The simulator is MuJoCo 3.3.7 (Apache License 2.0).

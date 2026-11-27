@@ -1,41 +1,44 @@
-# robodojo-press-by-number-i00-privileged
+# RoboDojo · press_by_number (privileged)
 
 | | |
 |---|---|
-| Benchmark | RoboDojo |
+| Task ID | `robodojo-press-by-number-i00-privileged` |
+| Benchmark | [RoboDojo](https://github.com/RoboDojo-Benchmark/RoboDojo) (Chen et al., 2026), upstream `RoboDojo-Benchmark/RoboDojo@cb2a37d` |
+| Robot | Two ARX X5 arms (6 joints each, parallel two-finger grippers) at a table |
 | Mode | privileged |
-| Twin | `robodojo-press-by-number-i00-standard` |
-| Simulator / robot | `robodojo` / `arx-x5-bimanual` |
-| Family / instance | `press_by_number` / seed 0 (allowed seeds: [0, 1, 2]; PROTOCOL §2) |
-| Oracle | `none` — no positive example yet; no reference solution (RoboDojo releases no expert, and its training demonstrations carry no initial state); marked unvalidated (PROTOCOL §2 `validated`); human review in PR #142 |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
+| Instance | `press_by_number`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | None |
 
 ## Task
-Press the left red button as many times as the left card shows, then the blue button once, then the middle red button as many times as the middle card shows, then the blue button once more. Release that last blue press with both arms back where they started. (RoboDojo's `press_by_number`). RoboDojo capability dimension: Memory. Instance i00 is RoboDojo's own evaluation layout
-`arx_x5/0/press_by_number_0.json` (sha256 `a7dc98bf795083bb`), frozen in `instance.json`. The deliverable is one replayable trajectory of
-RoboDojo's 14-D joint action at 25 Hz (`/app/output/trajectory.npz`), graded by RoboDojo's own reward check for the task,
-with no step cap (RoboDojo's own evaluation gives a policy 700 actions; PROTOCOL §3).
+Press the left red button as many times as the left card shows, then the blue button once, then the middle red button as
+many times as the middle card shows, then the blue button once more. Release that last blue press with both arms back
+where they started.
 
-## Difficulty
-A RoboDojo Memory task (articulated (prismatic spring buttons) with rigid robot contact objects), graded by RoboDojo's own success thresholds (its evaluation gives a policy 700 actions; no step cap here, PROTOCOL §3). Privileged mode gives every object's pose and bounding box, the check's code, unlimited resets and
-self-replay; the helpers are only joint moves, gripper commands and RoboDojo's IK. This mode is the control for the
-standard twin.
+## Success criteria
+Below, a button's position is its press joint's position as a share of the joint's range, measured from its lower
+limit. Let L be the number on the left card and M the number on the middle card. Check stages, in order:
+- The left red button below 50%, then above 90%: this pair of stages L times over.
+- The blue button below 50%, then above 90%.
+- The middle red button below 50%, then above 90%: M times over.
+- The blue button below 50%, then, at one action, above 90% with both arms home (each arm's end-effector within 0.15 m
+  of its start position along x, y and z, and less than 20° from its start orientation).
+Each button's presses are also counted over the whole episode: one press each time its position goes from above 95%
+to below 50% (positions in between change nothing). Fail for good: the left red button's count goes above L, the middle
+red button's above M, or the blue button's above 2. At the end each count must equal its number (L, M and 2).
 
-## Reference solution
-None. RoboDojo releases no expert or planner script, and its training demonstrations (Hugging Face
-`RoboDojo-Benchmark/RoboDojo`, `data/`) record no initial state or layout, so none replays on a frozen layout. The task is
-marked unvalidated (PROTOCOL §2 `validated`).
+Graded file: `/app/output/trajectory.npz` with `task` (this task's name) and `actions`, an array of at most 15,000
+rows of 14 finite numbers, one per 25 Hz action, as `s.save_trajectory(...)` writes it. After the agent's session it
+is replayed open-loop from the frozen start in a fresh process of a separate verifier container without network, up
+to 3 times (each in a new process), stopping at the first replay that succeeds; the task is passed if any
+replay succeeds. A replay runs the rows until every check stage has passed (success), a check fails for good (0), or
+the rows run out (0); rows after the success are not run. Privileged mode applies no step limit beyond the 15,000
+rows. A missing file, a file for another task, or a file that is not such an array scores 0. A replay that gives no
+result or runs over its time limit, or a frozen layout that rebuilds to another state than the instance records, is
+an infrastructure failure, not a score.
 
-## Verification
-`tests/grade.py` replays `/app/output/trajectory.npz` from the frozen layout up to 3 times (`[metadata] replays`), each in a
-fresh process (`rcb_robodojo.py replay`), stopping at the first success; reward 1 iff a replay ends in RoboDojo's success (`replays_succeeded`; a replay that did not start from the frozen layout's recorded state hash is `instance_mismatch`, no verdict). No oracle; human review in
-PR #142 (no positive example yet). `nop` (no
-trajectory) scores 0. The success description in `instruction.md` was written from RoboDojo's code
-(`task/RoboDojo/tasks/press_by_number.py`, `env/reward_manager/`); the code is the reference.
-
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -45,10 +48,10 @@ Caps per container (PROTOCOL §6).
 - GPU: an RTX-class NVIDIA GPU (ray-tracing cores), one of the models in `gpu_types`: L40S, L40, L4, RTX 4090, RTX 6000 Ada, held by `main`.
 - Recommended GPU: L40S 48GB / L4 24GB / RTX 4090 24GB.
 
-## Details
-
-### Notes
-- Source: RoboDojo @ `cb2a37d` (MIT), its Isaac Lab 2.3 fork @ `afca7b0`, its cuRobo fork @ `d17b54c`; assets from the
-  Hugging Face dataset `RoboDojo-Benchmark/RoboDojo` @ `35efbc7` (Apache-2.0). The environment is RoboDojo's own evaluator
-  (`src/eval_client/eval_env.py`) with one env and no policy server.
-- tasks/robodojo/README.md has the benchmark's details (determinism, grading, the step limit, the image).
+## License
+RoboDojo ([RoboDojo-Benchmark/RoboDojo](https://github.com/RoboDojo-Benchmark/RoboDojo) @ `cb2a37d`) is released
+under the MIT License; its assets (Hugging Face `RoboDojo-Benchmark/RoboDojo`) under the Apache License 2.0; its Isaac
+Lab fork under the BSD 3-Clause License. The image also contains NVIDIA Isaac Sim 5.1 and its wheels (NVIDIA
+proprietary, no redistribution) and RoboDojo's cuRobo fork (NVIDIA's cuRobo licence): each user builds the image from
+public sources and accepts those terms (`images/robodojo/BUILD_ONLY`). No non-commercial terms apply to RoboDojo's
+own code and assets.

@@ -1,41 +1,44 @@
-# robodojo-solve-equation-i00-privileged
+# RoboDojo · solve_equation (privileged)
 
 | | |
 |---|---|
-| Benchmark | RoboDojo |
+| Task ID | `robodojo-solve-equation-i00-privileged` |
+| Benchmark | [RoboDojo](https://github.com/RoboDojo-Benchmark/RoboDojo) (Chen et al., 2026), upstream `RoboDojo-Benchmark/RoboDojo@cb2a37d` |
+| Robot | Two ARX X5 arms (6 joints each, parallel two-finger grippers) at a table |
 | Mode | privileged |
-| Twin | `robodojo-solve-equation-i00-standard` |
-| Simulator / robot | `robodojo` / `arx-x5-bimanual` |
-| Family / instance | `solve_equation` / seed 0 (allowed seeds: [0, 1, 2]; PROTOCOL §2) |
-| Oracle | `none` — no positive example yet; no reference solution (RoboDojo releases no expert, and its training demonstrations carry no initial state); marked unvalidated (PROTOCOL §2 `validated`); human review in PR #142 |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
+| Instance | `solve_equation`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | None |
 
 ## Task
-Complete the equation on the pads: put the loose tile that makes it true on the empty pad, face up and the same way round as the tiles already there. Then move both arms back to where they started. (RoboDojo's `solve_equation`). RoboDojo capability dimension: Open. Instance i00 is RoboDojo's own evaluation layout
-`arx_x5/0/solve_equation_0.json` (sha256 `df2d8ee1b5e6b3d9`), frozen in `instance.json`. The deliverable is one replayable trajectory of
-RoboDojo's 14-D joint action at 25 Hz (`/app/output/trajectory.npz`), graded by RoboDojo's own reward check for the task,
-with no step cap (RoboDojo's own evaluation gives a policy 300 actions; PROTOCOL §3).
+Complete the equation on the pads: put the loose tile that makes it true on the empty pad, face up and the same way
+round as the tiles already there. Then move both arms back to where they started.
 
-## Difficulty
-A RoboDojo Open task (rigid (flat tiles) objects), graded by RoboDojo's own success thresholds (its evaluation gives a policy 300 actions; no step cap here, PROTOCOL §3). Privileged mode gives every object's pose and bounding box, the check's code, unlimited resets and
-self-replay; the helpers are only joint moves, gripper commands and RoboDojo's IK. This mode is the control for the
-standard twin.
+## Success criteria
+The empty pad and the correct tiles are worked out from the scene: the pad of the equation that has no tile on it,
+and every loose tile (digit or operator) that makes the equation true when placed there. One check stage, all of these
+at once:
+- A correct tile's centre is less than 0.018 m from the empty pad's centre, measured horizontally.
+- A correct tile's x axis is within 45 degrees of the world x axis.
+- A correct tile's y axis is within 45 degrees of the world y axis. With the x axis, this rules out a tile turned
+  over or turned half round.
+- Both arms are back home: each arm's end effector is within 0.15 m of its start position along each of x, y and z,
+  and within 20 degrees of its start orientation.
+Each of the first three conditions is met by any correct tile; when more than one tile is correct, they need not be
+met by the same one.
 
-## Reference solution
-None. RoboDojo releases no expert or planner script, and its training demonstrations (Hugging Face
-`RoboDojo-Benchmark/RoboDojo`, `data/`) record no initial state or layout, so none replays on a frozen layout. The task is
-marked unvalidated (PROTOCOL §2 `validated`).
+Graded file: `/app/output/trajectory.npz` with `task` (this task's name) and `actions`, an array of at most 15,000
+rows of 14 finite numbers, one per 25 Hz action, as `s.save_trajectory(...)` writes it. After the agent's session it
+is replayed open-loop from the frozen start in a fresh process of a separate verifier container without network, up
+to 3 times (each in a new process), stopping at the first replay that succeeds; the task is passed if any
+replay succeeds. A replay runs the rows until every check stage has passed (success), a check fails for good (0), or
+the rows run out (0); rows after the success are not run. Privileged mode applies no step limit beyond the 15,000
+rows. A missing file, a file for another task, or a file that is not such an array scores 0. A replay that gives no
+result or runs over its time limit, or a frozen layout that rebuilds to another state than the instance records, is
+an infrastructure failure, not a score.
 
-## Verification
-`tests/grade.py` replays `/app/output/trajectory.npz` from the frozen layout up to 3 times (`[metadata] replays`), each in a
-fresh process (`rcb_robodojo.py replay`), stopping at the first success; reward 1 iff a replay ends in RoboDojo's success (`replays_succeeded`; a replay that did not start from the frozen layout's recorded state hash is `instance_mismatch`, no verdict). No oracle; human review in
-PR #142 (no positive example yet). `nop` (no
-trajectory) scores 0. The success description in `instruction.md` was written from RoboDojo's code
-(`task/RoboDojo/tasks/solve_equation.py`, `env/reward_manager/`); the code is the reference.
-
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -45,10 +48,10 @@ Caps per container (PROTOCOL §6).
 - GPU: an RTX-class NVIDIA GPU (ray-tracing cores), one of the models in `gpu_types`: L40S, L40, L4, RTX 4090, RTX 6000 Ada, held by `main`.
 - Recommended GPU: L40S 48GB / L4 24GB / RTX 4090 24GB.
 
-## Details
-
-### Notes
-- Source: RoboDojo @ `cb2a37d` (MIT), its Isaac Lab 2.3 fork @ `afca7b0`, its cuRobo fork @ `d17b54c`; assets from the
-  Hugging Face dataset `RoboDojo-Benchmark/RoboDojo` @ `35efbc7` (Apache-2.0). The environment is RoboDojo's own evaluator
-  (`src/eval_client/eval_env.py`) with one env and no policy server.
-- tasks/robodojo/README.md has the benchmark's details (determinism, grading, the step limit, the image).
+## License
+RoboDojo ([RoboDojo-Benchmark/RoboDojo](https://github.com/RoboDojo-Benchmark/RoboDojo) @ `cb2a37d`) is released
+under the MIT License; its assets (Hugging Face `RoboDojo-Benchmark/RoboDojo`) under the Apache License 2.0; its Isaac
+Lab fork under the BSD 3-Clause License. The image also contains NVIDIA Isaac Sim 5.1 and its wheels (NVIDIA
+proprietary, no redistribution) and RoboDojo's cuRobo fork (NVIDIA's cuRobo licence): each user builds the image from
+public sources and accepts those terms (`images/robodojo/BUILD_ONLY`). No non-commercial terms apply to RoboDojo's
+own code and assets.

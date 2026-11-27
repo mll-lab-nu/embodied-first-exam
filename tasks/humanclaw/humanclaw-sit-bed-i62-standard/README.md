@@ -1,33 +1,37 @@
-# humanclaw-sit-bed-i62-standard
+# HumanCLAW · sit on the bed, i62 (standard)
 
 | | |
 |---|---|
-| Benchmark | HumanCLAW |
-| Mode | standard (`eai-standard/3.0`) |
-| Twin | `humanclaw-sit-bed-i62-privileged` |
-| Simulator / robot | `humanclaw` / `smplx-human` |
-| Family / instance | `sit-bed` / seed 0 |
-| Oracle | `none` — none: no reference solution searched for this episode yet (the navmesh oracle ran on 120 of the 1,218 canonical episodes); human review (PROTOCOL §4) |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:humanclaw-0.1.0` |
+| Task ID | `humanclaw-sit-bed-i62-standard` |
+| Benchmark | [HumanCLAW](https://github.com/Human-CLAW/HumanCLAW) (Siyao et al., 2026), upstream `Human-CLAW/HumanCLAW@fe3d376` |
+| Robot | SMPL-X neutral human body, moved by HumanCLAW's MotionDiT whole-body motion skills (no arm or gripper control) |
+| Mode | standard |
+| Instance | `sit-bed`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | None |
 
 ## Task
-HumanCLAW find-navigate-interact (bed), standard mode: the same frozen
-episode and success rule as `humanclaw-sit-bed-i62-privileged`, with the head camera only, one episode and no reset. Sit down on any bed in the house, and stop while you are still sitting on it.
-Modes and rules: `tasks/humanclaw/README.md`.
+Sit down on any bed in the house, and stop while you are still sitting on it.
 
-## Difficulty
-Same scene, instance and success rule as `humanclaw-sit-bed-i62-privileged` (see its Difficulty). In standard mode the agent loses resets, privileged state and planning primitives: it sees camera images and proprioception only, acts through the client, and gets one episode, so it has to estimate the scene from images and recover from its own mistakes without starting over.
+## Success criteria
+Success rule (HumanCLAW's InteractSR), all three:
+- the episode ends with a stop;
+- the episode contains at least one sit action;
+- on the last physics frame of the last motion before the stop, the body's pelvis touches the mesh of a bed
+  that the episode lists as a target.
+Ending without a stop fails. The episode allows 100 actions, the stop included; each action other than the stop is
+one 0.5 s motion skill.
 
-## Reference solution
-None: no reference solution searched for this episode yet (`tasks/humanclaw/README.md`, Reference solution).
+Graded: the live episode, judged by the simulator service with HumanCLAW's own metric code; nothing is replayed. The
+episode ends at the agent's stop action or `/finish` (the same thing: `/finish` runs the stop as the episode's last
+action), or when the agent's time (1 h) runs out, in which case the stop is run first and the episode is then
+judged. The 100th action ends the episode whatever it is; if it is not a stop, the episode fails. Holding still
+(`hold`) uses no action. No success signal is shown. No reset: the one episode is graded. A simulator error raised by
+the agent's own call ends the episode with 0. A frozen start that does not rebuild, or a service crash outside the
+agent's calls, is an infrastructure failure, not a score.
 
-## Verification
-The live episode's verdict: the sim service judges the episode it ran with HumanCLAW's metric code
-(HumanCLAW's InteractSR) and the verifier transcribes it; nothing is replayed. `nop` scores 0.
-
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -37,3 +41,13 @@ Caps per container (PROTOCOL §6).
 
 - GPU: any NVIDIA GPU, held by `sim`.
 - Recommended GPU: an NVIDIA GPU of compute capability 8.0-9.0 with EGL (RTX 4090 / L40S / L4).
+
+## License
+HumanCLAW's code ([Human-CLAW/HumanCLAW](https://github.com/Human-CLAW/HumanCLAW), the source snapshot `fe3d376`) is
+released under the Apache License 2.0. Habitat-Sim and its Half-Physics patch: MIT License; Bullet: zlib License.
+**Non-commercial terms apply** to the data in the private image this task runs on, which may be used but not
+redistributed: the HSSD scenes (`hssd/hssd-hab`) and HumanCLAW's val41 supplement (`HumanCLAW/HumanCLAW-HSSD`) are
+CC BY-NC 4.0 (gated, terms accepted per user on Hugging Face); the body model derives from SMPL-X / SMPL (model
+licences: non-commercial research, no redistribution); the MotionDiT `paper_fullval_v1` weights were trained on AMASS /
+BABEL (non-commercial research). The image is never published (`images/humanclaw/BUILD_ONLY`): each user builds it
+under their own acceptance of these terms.

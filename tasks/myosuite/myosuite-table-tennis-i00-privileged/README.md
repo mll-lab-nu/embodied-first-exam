@@ -1,31 +1,46 @@
-# myosuite-table-tennis-i00-privileged
+# MyoSuite · table_tennis (privileged)
 
 | | |
 |---|---|
-| Benchmark | MyoSuite |
+| Task ID | `myosuite-table-tennis-i00-privileged` |
+| Benchmark | [MyoSuite](https://github.com/MyoHub/myosuite) (Caggiano et al., 2022), upstream `MyoHub/myosuite@5635e1a` |
+| Robot | MyoArm with torso: MyoSuite's table tennis player, 273 muscles and two pelvis slides, holding a paddle |
 | Mode | privileged |
-| Twin | `myosuite-table-tennis-i00-standard` |
-| Simulator / robot | `myosuite` / `myoarm-torso` |
-| Family / instance | `table_tennis` / seed 0 (allowed seeds: [0, 1, 2]; PROTOCOL §2) |
-| Oracle | `none` — a successful model trial on this frozen instance: Claude Code + Claude Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-10-06), trial `myosuite-table-tennis-i00-privil__kdQdy89` (111 rows); today's verifier scores its trajectory 1 in two fresh trials (tasks/myosuite/README.md); human review in PR #65 |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:myosuite-0.1.1` |
+| Instance | `table_tennis`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | None |
 
 ## Task
-MyoSuite `myoChallengeTableTennisP1-v0` (MyoArm with torso, a musculoskeletal model of a human torso, right arm and hand on a pelvis that slides on the floor, 273 muscles and 2 other actuators): Return the served ball: after it bounces once on your half, hit it once with the paddle so that it lands on the opponent's half, with no second paddle touch and no second bounce on your half.
-You stand at a table-tennis table holding a paddle in the right hand; a ball is served toward you from the far side. The deliverable is one replayable trajectory of actuator commands (`/app/output/trajectory.npz`, `(T, 275)`, one row per 10 ms control step).
+Return the served ball: after it bounces once on your half, hit it once with the paddle so that it lands on the
+opponent's half, with no second paddle touch and no second bounce on your half.
 
-## Difficulty
-First-pass rating: hard. The action is muscle-level (273 muscles, each only pulling, several crossing more than one joint, with activation delays): the agent has to build its own joint control from muscle excitations. Success is the challenge's own event; nothing short of it counts, and the challenge's failure conditions and time limit apply.
+## Success criteria
+Success event (MyoChallenge 2025 `myoChallengeTableTennisP1-v0`, its contact test on the ball): the ball touches the
+opponent's half of the table after it has touched the paddle, and before that:
+- the ball did not touch the paddle again after it had left the paddle;
+- the ball touched the robot's own half only in one bounce, at most two control steps long.
 
-## Reference solution
-None. Solvability evidence: a successful model trial on this frozen instance: Claude Code + Claude Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-10-06), trial `myosuite-table-tennis-i00-privil__kdQdy89` (111 rows); today's verifier scores its trajectory 1 in two fresh trials (tasks/myosuite/README.md); human review in PR #65.
+A bounce on the robot's own half before the hit is not required. Contacts with the net or anything else are not
+checked.
 
-## Verification
-`tests/grade.py` in a separate sandbox without network: one replay of `/app/output/trajectory.npz`, in a fresh process, from the verifier's own copy of the instance (`tests/instance.npz`; the rebuilt start state is checked against its recorded hash); pass iff the episode ends in success (the challenge's own success event). No oracle; human review in PR #65. `nop`: no trajectory, reward 0.
+Failure (MyoSuite's `done`, ends the episode with 0): 3 s of simulated time pass without the event, or the ball is
+below 0.3 m. A rally that has gone wrong (a second paddle touch, a second bounce on the robot's half) does not end the
+episode by itself: it can then no longer succeed, and it ends at one of these two.
 
-## Resources
-Caps per container (PROTOCOL §6).
+The replay ends in success at the first control step at which the success event happens, or with 0 at a failure.
+
+Graded file: `/app/output/trajectory.npz` with `actions`, a numeric array with one row per control step and one column
+per actuator (muscles first, in the layout the tooling gives), as `s.save_trajectory(...)` writes it, at most
+108,000 rows. After the agent's session it is replayed once, open-loop, from the frozen start in a fresh process
+of a separate verifier container without network. The replay runs the rows in order until the episode ends as above;
+later rows are not run. If the rows run out before the episode has ended in success, the task fails. A missing file,
+a file that is not such an array, a file for another family, a wrong row width, an empty array, more rows than the
+limit, a non-finite value, or an `.npz` entry larger than the row limit allows scores 0. A replay that gives no result
+(it times out or dies), or a frozen start that does not rebuild with its recorded hash, is reported as
+`grader_error` (infrastructure), not as a score.
+
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -34,13 +49,9 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Upstream | MyoSuite 2.12.2 (Apache-2.0) on MuJoCo 3.6.0, the models that ship in its wheel |
-| Instance | `myoChallengeTableTennisP1-v0` after `seed(0)` and `reset(seed=0)` (`rcb_myosuite.py make-instance`); state hash `14e34ee52889f098`, checked on every load |
-| Actions | 275 actuator commands per control step (10 ms, 5 physics substeps); success rule `event` (tasks/myosuite/README.md) |
-| Resources | 4 CPUs, no GPU (CPU physics, OSMesa rendering) |
-
-### Provenance
-The frozen instance (`environment/instance.npz`) and its scene facts were made at generation time; see `tasks/myosuite/README.md`.
+## License
+MyoSuite ([MyoHub/myosuite](https://github.com/MyoHub/myosuite), version 2.12.2, tag `v2.12.2` = `5635e1a`) is
+released under the Apache License 2.0, as are the models it bundles (MyoSim, the MPL prosthetic arm, the object,
+furniture and YCB models). The MyoDex reference motions (the `dex_*` families) derive from the GRAB motion-capture
+dataset; MyoSuite asks their users to comply with GRAB's licence, which allows non-commercial scientific research
+only. The simulator is MuJoCo (Apache License 2.0).

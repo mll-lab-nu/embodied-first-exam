@@ -1,43 +1,79 @@
-# pandadyn-s05-sliding-receive-align-deliver-i00-privileged
+# Panda Dynamic Scenes · Sliding receive, inertial staging and moving hand-off (S05) (privileged)
 
 | | |
 |---|---|
-| Benchmark | Panda Dynamic Scenes |
+| Task ID | `pandadyn-s05-sliding-receive-align-deliver-i00-privileged` |
+| Benchmark | [Panda Dynamic Scenes](https://www.embodied-first-exam.ai/suite/pandadyn/) (Wang et al., 2026), upstream `mll-lab-nu/embodied-first-exam@b2280d8` |
+| Robot | Franka Emika Panda (FER), one 7-joint arm with its standard two-finger hand |
 | Mode | privileged |
-| Twin | `pandadyn-s05-sliding-receive-align-deliver-i00-standard` |
-| Simulator / robot | `maniskill` / `franka-panda` |
-| Family / instance | `s05_sliding_receive_align_deliver` / seed 0 |
-| Oracle | `full` |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0` |
+| Instance | `s05_sliding_receive_align_deliver`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | Included |
 
 ## Task
-Receive the cube that slides off the lane in the tray and slide it, keeping the tray level, to the staging point in the tray. Carry it through the two waypoints, bring the tray to the match point beside the sliding platform, moving with it, and put the cube onto the platform. The deliverable is one replayable trajectory of 100 Hz joint-target actions (`/app/output/trajectory.npz`,
-8 values per row), graded by the task's own staged success check: 5 phases (`source_to_tray`, `inertial_staging`, `transport_turn`, `match_receiver`, `support_transfer`), in order,
-with no failure event and no safety-limit violation, within the task's horizon of 25 s.
+Receive the cube that slides off the lane in the tray and slide it, keeping the tray level, to the staging point in the
+tray. Carry it through the two waypoints, bring the tray to the match point beside the sliding platform, moving with it,
+and put the cube onto the platform.
 
-## Difficulty
-The cube arrives fast, so the tray has to be in place within a fraction of a second; the staging slide on a slippery tray must be produced by the tray's own horizontal motion while it stays within 2.1 deg of level, and the final hand-off is to a platform that never stops moving for long. Privileged mode gives the full simulator state (every object's pose and velocity, the fixtures, the
-announced goals), the parameters, unlimited exact resets and snapshots, and self-replay; the tooling offers only joint
-targets and kinematics. This mode is the control for the standard twin.
+## Success criteria
+The tray is the arm's tool, 0.18 m square inside and open on its -x side; its frame's origin is the centre of its
+floor. The block is a 36 mm cube. The block is on the tray when it touched the tray within the last 25 ms.
 
-## Reference solution
-`solution/oracle_actions.npy` (1021 control steps, run by `solution/oracle.py` through the agent's own tooling): a
-recorded rollout of this instance by the benchmark's reference controller, which reads the simulator's true state in closed
-loop, replayed open-loop. The reference controllers and their recordings are not in the image, and the agent's network
-reaches only the model APIs and the package registries.
+Phases, in order:
+1. `source_to_tray`: after the block has touched the source lane, the block is on the tray, does not touch the lane,
+   its centre is at x > 0.12 m and it moves at less than 0.05 m/s relative to the tray, for 0.10 s. Its tray-frame
+   position at that moment is recorded.
+2. `inertial_staging`: at some moment of this phase the hand's TCP accelerates horizontally at more than 0.54 m/s², and
+   the block has slid more than 25 mm (horizontally, tray frame) from its recorded position; then the block is on the
+   tray, its centre within 14 mm of the staging point (0.03, 0) of the tray frame, moving at less than 0.045 m/s
+   relative to the tray, for 0.3 s. The tray tilted more than 2.1° from level during this phase fails the task.
+3. `transport_turn`: with the block on the tray, the tray's origin comes within 22 mm of waypoint A (0.08, 0.13,
+   0.22), and later within 22 mm of waypoint B (0.19, 0.20, 0.22).
+4. `match_receiver`: with the block on the tray, the tray's origin is within 12 mm of the point 0.34 m along +x and 8
+   mm above the sliding platform's origin, and the tray's velocity differs from the platform's by less than 0.05 m/s.
+   The platform slides at up to 0.04 m/s.
+5. `support_transfer`: the block touches the platform, is not on the tray, its centre is within 70 mm of the platform's
+   origin in x and in y, and it moves at less than 0.045 m/s relative to the platform, for 0.5 s.
 
-## Verification
-`tests/grade.py` in a separate sandbox: one replay, in a fresh process, from the verifier's own copy of the instance
-(`tests/instance.json`; the rebuilt start is checked against its hash); pass iff the task's success check holds in it
-(every phase complete, no failure), plus `/logs/verifier/replay.mp4`
-(overview camera). Oracle: 1021 control steps (10.21 s simulated), success at the last one; the oracle
-run and two fresh-process replays end in the same state (hash `bf9c5cd16d445bfa`), and the rollout reproduces the physical
-state the benchmark recorded for it after every control step, bit for bit. `nop`: no trajectory, reward 0; a trajectory that
-holds the arm still fails (the benchmark's parked controls never succeeded).
+Task failure: during phases 2 to 4, the block's centre more than 15 mm below the tray floor or more than 0.11 m from
+its centre in x or y (tray frame).
+Allowed contacts: the tray may touch the block; no other robot part may touch anything.
+Horizon: 25 s of simulated time (2,500 control steps).
 
-## Resources
-Caps per container (PROTOCOL §6).
+Phases count only in order: each phase's condition is checked after every 1 ms physics step, and only once the phase
+before it is complete. A condition "for t s" must hold at every physics step over t s; a break restarts it. Positions
+are in the world frame (metres, z up, the table top is the plane z = 0); "horizontally" means in x and y.
+
+Failures shared by every task (each ends the episode at once, in any phase):
+- a forbidden contact: two arms touching each other (tools included); an arm touching itself, except its two fingers
+  touching each other (a finger touching the arm's own tool counts); any robot part, tool included, touching anything
+  the allowed contacts above do not list (the table, the floor and the arm pedestals included); any contact in the
+  scene that penetrates deeper than 4 mm;
+- a violation of the Franka Panda's safety limits by an arm, checked at every physics step: a joint more than 0.002 rad
+  beyond its position limits; measured joint speeds above 101 % of the limits (2.175 rad/s for joints 1-4, 2.61 rad/s
+  for joints 5-7); a finger faster than 0.051 m/s; the hand's TCP faster than 1.01 x 1.7 m/s or 1.01 x 2.5 rad/s,
+  measured or in the servo's reference motion; a motor torque above 87 N m (joints 1-4) or 12 N m (joints 5-7), or one
+  changing faster than 1000 N m/s; reference joint speeds, accelerations or jerks above the Panda's limits; measured
+  joint accelerations or jerks, or measured or reference TCP accelerations (13 m/s², 25 rad/s²), averaged over 20 ms,
+  above 105 % of the limits;
+- an object leaving the workspace (its centre below z = -0.2 m or more than 1.8 m from the world origin horizontally),
+  or a non-finite object position;
+- the task's horizon (above) reached before the last phase is complete.
+
+Graded file: `/app/output/trajectory.npz`, as `Session.save_trajectory(...)` writes it: `task` naming this task and
+`actions`, a finite array with one row per 10 ms control step (8 values per arm: 7 joint-position targets and the total
+gripper aperture) and at most 4,500 rows. Each row's joint targets are clipped to the joint limits and its aperture to
+[0, 0.08] m before it runs. After the agent's session the verifier replays the file once, open-loop, in a fresh process
+of a separate container without network, from its own copy of the frozen instance. The replay stops at the end of the
+first control step in which the task has completed or failed (later rows are never run), or when the rows run out. The
+task is passed if, at that point, the last phase is complete and no failure has been recorded. A missing file, a file
+for another task, a file that is not such an array, a replay that ends without completing every phase, and a simulator
+error on the agent's rows (for example the servo's trajectory generator failing) score 0. A rebuilt start that does not
+match the frozen instance's state hash, a replay that gives no result or runs past its time limit (300 s plus 0.1 s per
+row), or any other error in the grader is an infrastructure error, not a score.
+
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -47,15 +83,8 @@ Caps per container (PROTOCOL §6).
 - GPU: any NVIDIA GPU, held by `main`.
 - Recommended GPU: any 8 GB+ NVIDIA GPU with Vulkan (RTX 4090 / L4).
 
-## Details
-| | |
-|---|---|
-| Benchmark source | Panda Dynamic Scenes (the environment package `images/pandadyn/panda_dynamics/`, from `images/pandadyn/sync_env.py`); task `PandaMultiStage/S05-SlidingReceiveAlignDeliver-v0` |
-| Instance | difficulty `nominal`, seed 0, the resolved parameters and the start's state hash in `environment/instance.json` (`initial_sha` 3e8c593a279d9176) |
-| Actions | 8 per control step (10 ms): per arm 7 absolute joint targets (rad) + the total aperture (m); a Ruckig + torque servo per arm |
-| Physics | CPU PhysX at 1000 Hz with enhanced determinism (single thread); SAPIEN renders on the GPU only when a frame is asked for |
-| Image | `images/pandadyn/` (public); needs an NVIDIA GPU with Vulkan for SAPIEN (`environment/docker-compose.yaml`) |
-| Budget | the agent's cutoff is the `Agent time budget` row above (this task's `[agent] timeout_sec`); a scene builds in ~5-15 s |
-
-### Provenance
-Scene description `S05`, frozen instance `S05-SlidingReceiveAlignDeliver-i00`, chosen and frozen in `ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0`.
+## License
+Panda Dynamic Scenes is an original suite of Embodied First Exam. Its environment package (`images/pandadyn/panda_dynamics/`) is released
+with this repository under the repository's MIT License. The simulation stack in the image: ManiSkill 3 and its Franka
+Panda model (Apache License 2.0), SAPIEN (MIT), Ruckig community version (MIT), PyTorch (BSD 3-Clause). No
+non-commercial terms apply.

@@ -1,39 +1,45 @@
-# embodied-olympics-match-soccer-match-i00-standard
+# Embodied Olympics · robot soccer 2 v 2, match against level 2 (standard)
 
 | | |
 |---|---|
-| Benchmark | Embodied Olympics - Match |
-| Mode | standard (`eai-standard/3.0`) |
-| Twin | `embodied-olympics-match-soccer-match-i00-privileged` |
-| Simulator / robot | `mujoco` / `booster-t1` |
-| Family / instance | `soccer_match` / seed 7 (allowed seeds: [7, 202, 212]; PROTOCOL §2) |
-| Oracle | `partial` — screening 2026-10-12 (soccer-2v2-9): our built-in camera reference does not beat level 2 (0/10; it cannot kick while walking); a model did (Astra 12:2 at level 2, camera only). The oracle run checks the pipeline (a valid, replayed match), not a win. S = 5 (an official match slowdown) so that 2 x 5 min of game time (3000 s of wall time) and the reviews fit the hub's 7200 s |
-| Agent time budget | 7200 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-match-soccer-0.1.0` |
+| Task ID | `embodied-olympics-match-soccer-match-i00-standard` |
+| Benchmark | [Embodied Olympics - Match](https://github.com/CHIGUI0/roboolympics) (Embodied Olympics authors, 2026), upstream `CHIGUI0/roboolympics@0d7f680` |
+| Robot | Booster T1 humanoids (the agent's team) |
+| Mode | standard |
+| Opponent | Scripted team B at level 2: two Booster T1s on the same walking policy and kick skill as yours; they read the simulator's true state, react to the ball 0.3 s late, walk at most 0.65 m/s and kick in their stride (the in-walk kick) |
+| Instance | `soccer_match`, seed 7 |
+| Time limit | 2 h |
+| Reference solution | Pipeline check only |
 
 ## Task
 Win a 2 v 2 robot soccer match against the other team.
 
-Robot soccer 2 v 2 against the scripted opponent (level 2), program play: robot soccer 2 v 2 under the RoboCup Humanoid Soccer League rules: four simulated Booster T1 humanoids (lower bodies on the released walking policy, held to the real robot's joint limits) and one ball on a boarded 10 x 7 m pitch with two goals, two halves of 5 minutes of game time, a penalty shoot-out when level; each robot takes a walk velocity command, stand or a swing-leg kick, and you see the game only through your robots' head cameras; in the `match` format you command both robots of team A against a scripted team, in the `duel` format another player commands team B, in the `team` format each robot has its own player and teammates talk only through the team channel, in the `team_match` format each robot of team A has its own player against the scripted team; `match_overhead` and `duel_overhead` are match and duel seen through fixed overhead cameras instead of the head cameras.
+## Success criteria
+One 2 v 2 match of two halves of 5 minutes of game time (a half runs on for up to 3 s while the ball still rolls). The
+team with more goals after two halves wins; a 10-goal lead wins at once. Level after two halves: a shoot-out of 3 kicks
+each (decided as soon as one team cannot be caught), then up to 3 sudden-death rounds, each won by the better kick
+(goal, saved, post, wide, other, no kick, in this order), then a coin toss drawn from the seed. There are no draws. In
+the shoot-out the striker has 20 s to touch the ball, and a keeper more than 0.6 m from its goal line before the touch
+concedes a goal. A kick-off team that scores before it touched the ball outside the centre circle gets no goal.
 
-## Difficulty
-Frozen development instance: seed 7, level 2, in lockstep (its realtime twin: S = 5). Not one of
-the sport's official (hidden) seeds, so results here are previews, not official Embodied Olympics results.
+The world runs in lockstep: it advances only during the agent's waits and up to the step at which its action
+takes effect.
 
-## Reference solution
-`solution/`: our camera-only reference player through the same HTTP interface. screening 2026-10-12 (soccer-2v2-9): our built-in camera reference does not beat level 2 (0/10; it cannot kick while walking); a model did (Astra 12:2 at level 2, camera only). The oracle run checks the pipeline (a valid, replayed match), not a win. S = 5 (an official match slowdown) so that 2 x 5 min of game time (3000 s of wall time) and the reviews fit the hub's 7200 s.
+Success: the match ends by these rules and team A won it. Your side loses the match at once, a valid 0, if you do not
+send `game start` within 1800 s of real time after the match service starts or before your session ends (`no_show`);
+if a review is not sent with `game ready` within 600 s of real time after a stoppage (a goal, half time, a dropped
+ball, full time when level, each shoot-out kick; `ready_timeout`, even when you are ahead); or if your session ends
+before the match is over (`abandoned`).
 
-## Verification
-Separate sandbox, no network. The match is graded live (owner, 2026-10-17): the sim service records the
-match's scores, winner and reason as it plays it and nothing replays it to grade it (`final.json` `graded_by` live,
-`replays` 0; the replay video is drawn after the verdict). The verifier (`tests/grade.py`, our core's grader) applies
-the validity rule
-(technical failures void the trial, a player's own problems are a valid loss), and writes reward.json; success = a
-valid, finished match that the agent won. `tests/fexam_reward.py` adds the hub's fields (`infra_error`, `realtime`,
-`slowdown`, `opponent_level`).
+A simulator error in a control step, after the agent's first applied action, is a valid 0 too.
 
-## Resources
-Caps per container (PROTOCOL §6).
+Graded: the live match, as the trusted match service recorded it while it was played; nothing is replayed. There is
+one match and no reset, and the agent cannot end it with `/finish`: the match's rules end it. A technical failure of
+the match service (a crash, an error in its bookkeeping, rendering or metering) voids the trial as an infrastructure
+failure, not a score.
+
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -43,11 +49,12 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
+## Others
+Exported by the Embodied Olympics task exporter from its task `roboolympics/soccer-match-wallclock-program-standard` (upstream commit
+`0d7f680cc049`). The files changed here after the export are listed for this task in
+`ci_checks/benchmarks/embodied-olympics-match/exported.toml`.
 
-### Notes
-Source: Embodied Olympics task `soccer-match-wallclock-program-standard`, revision `soccer-2v2-10+core-0.2`. The rules, the referee, the scripted
-opponent, the observation, the review between points and the grader are ours, unchanged; only the seat is
-unmetered (Harbor records the model's usage) and the instance is frozen.
-
-Standard twin of `embodied-olympics-match-soccer-match-i00-realtime`: the same export, the world in lockstep (`environment/sim/core/lockstep.py`; `eai-standard/3.0` in tasks/embodied-olympics-match/README.md).
+## License
+Embodied Olympics ([CHIGUI0/roboolympics](https://github.com/CHIGUI0/roboolympics), a private repository) is released
+under the MIT License; its exported match services, referees, scripted opponents and graders inside this task are MIT
+too. The simulator is MuJoCo (Apache License 2.0). No non-commercial terms apply.

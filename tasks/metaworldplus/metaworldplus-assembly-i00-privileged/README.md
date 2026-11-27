@@ -1,40 +1,35 @@
-# metaworldplus-assembly-i00-privileged
+# MetaWorld+ · assembly (privileged)
 
 | | |
 |---|---|
-| Benchmark | MetaWorld+ |
+| Task ID | `metaworldplus-assembly-i00-privileged` |
+| Benchmark | [Meta-World](https://github.com/Farama-Foundation/Metaworld) (McLean et al., 2025), upstream `Farama-Foundation/Metaworld@59fc34d` |
+| Robot | Rethink Robotics Sawyer arm with a two-finger gripper |
 | Mode | privileged |
-| Twin | `metaworldplus-assembly-i00-standard` |
-| Simulator / robot | `mujoco` / `sawyer` |
-| Family / instance | `metaworld/assembly` / seed 0 (allowed seeds: [0, 1, 2]; PROTOCOL §2) |
-| Oracle | `full` |
-| Agent time budget | 1800 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:metaworld-0.1.0` |
+| Instance | `metaworld/assembly`, seed 0 |
+| Time limit | 30 min |
+| Reference solution | Included |
 
 ## Task
-A Sawyer arm at a table, Meta-World's `assembly-v3` (reward v2) on one frozen instance: Put the nut onto the peg. The agent writes a
-trajectory of Meta-World's native actions with full privileged state and unlimited resets; it is graded by replay on
-the state after the last action. Benchmark notes in
-`tasks/metaworldplus/README.md`.
+Put the nut onto the peg.
 
-## Difficulty
-Full privileged state, unlimited resets and self-replay: this mode is the control for the standard twin
-(`metaworldplus-assembly-i00-standard`). It is reported, but not in the main (standard-mode) table, because it is
-saturated under final-state grading (decision on the benchmark proposal, #10). What remains hard here is planning the
-contacts (grasp, push, turn) with a mocap-driven hand whose wrist does not rotate, within 500 actions.
+## Success criteria
+The centre of the nut's ring (site `RoundNut`) is less than 2 cm from the target point horizontally (x and y) and
+lower than it: the ring is around the peg, below the target point at the peg's top.
 
-## Reference solution
-Meta-World's scripted policy for `assembly-v3` (`metaworld/policies/`, removed from the image), run on this instance up to
-its first success: 95 actions in `solution/oracle.npz`.
+The check is Meta-World's own success test for `assembly-v3` (`evaluate_state`, its `success` value), applied to one
+state: the state after the last action of the delivered trajectory. The verifier, in a separate sandbox without
+network, replays `/app/output/trajectory.npz` (array `actions`, shape (T, 4) with 1 ≤ T ≤ 500, values clipped to
+[-1, 1]) once, open-loop, in a fresh process from its own copy of the frozen start, one action per control step.
+Meeting the condition at an earlier step does not count. The target point is `target_pos` of `s.state()`; distances
+are straight-line distances in metres in the world frame unless the axes compared are named.
 
-## Verification
-`tests/grade.py` in a separate sandbox without network: one replay in a fresh process from the verifier's own copy of
-the instance; `success` = success on the final state. Oracle: a fresh-process replay ends in the
-live episode's state (hash `4a1be77a24d8…`) and succeeds. `nop`: no trajectory, reward 0; the instance is
-not solved at the start.
+A missing file scores 0, and so does an invalid one: not a plain `.npz` of at most 2 MB holding only arrays (at most
+64 members), no `actions` array, a shape other than (T, 4), a NaN or infinite value, or T outside 1 to 500. A replay
+during which the simulator becomes unstable scores 0.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -43,11 +38,9 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| source | [Meta-World](https://github.com/Farama-Foundation/Metaworld) @ 59fc34d (MIT) on MuJoCo 3.3.0; image `efe:metaworld-0.1.0` |
-| instance | Meta-World's reset randomization with seed 0; MuJoCo state, model arrays, env caches and RNG frozen in `instance.npz` (SHA-256 `89947f89b4e7…`, checked on load) |
-| deliverable | `(T, 4)` native actions `[dx, dy, dz, grip]`, 1 ≤ T ≤ 500 (Meta-World's `max_path_length`) |
-| success | Meta-World's own check (`evaluate_state`) on the state after the last action. The centre of the nut's ring is within 2 cm of the target point horizontally (x and y) and lower than it: the ring is around the peg, below the target point at the peg's top. |
-| actions | no `joint_position`: Meta-World's Sawyer has no arm actuators (the hand is a mocap body, the arm follows it) |
+## License
+Meta-World ([Farama-Foundation/Metaworld](https://github.com/Farama-Foundation/Metaworld) @ `59fc34d`) is released
+under the [MIT License](https://github.com/Farama-Foundation/Metaworld/blob/59fc34d7768af9785e4688c3e1db671424f4a6c3/LICENSE)
+(Copyright (c) 2019 Meta-World Team). The Sawyer robot and object models (MuJoCo XML and meshes) used here ship in that
+repository under the same license; no non-commercial terms apply. The simulator is MuJoCo 3.3.0 (Apache License 2.0).
+Meta-World's scripted policies (`metaworld/policies/`) are not part of the task image.

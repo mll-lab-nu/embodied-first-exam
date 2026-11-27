@@ -1,34 +1,59 @@
-# embodied-olympics-fun-freeski-360-i00-standard
+# Embodied Olympics · freeski 360 (standard)
 
 | | |
 |---|---|
-| Benchmark | Embodied Olympics - Fun |
-| Mode | standard (`eai-standard/3.0`) |
-| Twin | `embodied-olympics-fun-freeski-360-i00-privileged` |
-| Simulator / robot | `mujoco` / `unitree-g1` |
-| Family / instance | `freeski_360` / seed 0 |
-| Oracle | `none` — no reference solution; the referee is tested: Big air on a level-A FIS course (ICR Book VI 3102.4.1: a 6 m level start platform, a 38 m in-run at 35 degrees, a 2.1 m kicker at 25 degrees, a 15 m table, a 36 degree landing). The robot starts itself from the level platform and rides the in-run and the kicker on its own control (the Embodied Olympics freeski reference skier, its drop-in re-searched in this physics). Positive by a declared magic action: in the jump's flight only, the robot and its skis are turned as one rigid body about their centre of mass, first a yaw rate of 10.47 rad/s for 0.6 s (the 360), then an alignment of the skis to the landing slope at the predicted touchdown (about 68 degrees over 1.4 s); the take-off, the flight's path, the touchdown, the landing and the ride-away past the finish line are physics and the robot's own control. The referee measures the trick from the skis' heading change in the air (take-off to first snow contact), requires both skis within 45 degrees of forwards at touchdown and no more than 90 degrees of turn on the snow from 0.5 s after the landing to the finish: measured ski spin 356.2 degrees (a 360; pelvis 355.8), touchdown 0.0 / 3.6 degrees off forwards, 5.5 degrees of turn after the landing, the same in two runs. A pelvis-only spin with the skis turned 188 degrees in the air, a landing backwards and a spin on the snow each fail. Negatives: the same jump with a 540 or an under-rotated spin (180) fails as the wrong trick, a hand on the snow and a sit-down after the landing fail as fell, no jump, doing nothing (did not start). Contacts in the flight and the landing: ski edge spheres in the snow at most 10 mm, no ski-body, ski-ski or body-snow contact. Own-motor reach: in a short search, the robot's own arm and torso wind-up reaches about 255 degrees of spin in 1.8 s of air; the 360 is near the edge of its reach, not shown. Stress scan (a flailing robot on the start platform and the in-run, 5 episodes): no instability, no hook errors; the worst contact is a ski tip sphere 2.8 cm into the in-run snow (hard snow, solref 0.005).; human review in the pull request that adds the benchmark (PROTOCOL §4) |
-| Agent time budget | 7200 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
+| Task ID | `embodied-olympics-fun-freeski-360-i00-standard` |
+| Benchmark | [Embodied Olympics - Fun](https://github.com/CHIGUI0/roboolympics) (Embodied Olympics authors, 2026), upstream `CHIGUI0/roboolympics@7df999b` |
+| Robot | Unitree G1 humanoid (1.32 m, 33 kg, 29 joints), with Unitree's walking and running policies |
+| Mode | standard |
+| Instance | `freeski_360`, seed 0 |
+| Time limit | 2 h |
+| Reference solution | None |
 
 ## Task
-Ski down the in-run, jump off the kicker and spin one full turn in the air, then land on your skis and ride away over the finish line. (Embodied Olympics `freeski-360`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Ski down the in-run, jump off the kicker and spin one full turn in the air, then land on your skis and ride away over
+the finish line.
 
-## Difficulty
-The robot must start itself from a standstill on level snow, ride a 35 degree in-run to about 16 m/s and leave a 25 degree kicker with the right rotation for its trick, finish the rotation in about 1.5 s of air and land on a 36 degree slope with no balance controller of its own. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 5 resets (only the last attempt is graded).
+## Success criteria
+One big air jump on freestyle skis. The course: the level start platform (the robot's boots 0.30 m behind its edge),
+an in-run of 38 m at 35 degrees, a 5 m flat, the kicker rising to its lip at 25 degrees, a 15 m table, the knoll, a
+landing of 30 m at 36 degrees and the flat outrun; the finish line is 15 m into the outrun. The trick asked is the
+360: the skis turn 270 to 450 degrees about the vertical in the air, either way, and no flip. The referee's stages,
+in order: start, take-off, landing, ride-away.
+- Start: both skis pass the platform's edge, by the robot's own action, within 20 s.
+- Take-off: a flight (no contact with the snow for 30 ms) that starts within 4 m of the lip, rising at more than 10
+  degrees.
+- The trick is measured in the air only. Spin: the mean of the two skis' heading changes in the horizontal plane,
+  counted in half turns of 180 degrees, to the nearest one. Flip: the pelvis's rotation about the horizontal axis
+  across the take-off direction, less the 61 degrees a straight air turns anyway, counted in full turns, to the
+  nearest one, and only if the body went upside down. A take-off riding backwards is not this trick.
+- Landing: the first contact after the flight is by the skis, on the knoll or the landing hill (past the table), with
+  the jump measured as the 360 and both skis pointing within 45 degrees of forwards (down the course).
+- Ride-away: from 0.5 s after the landing each ski's heading stays within 90 degrees of its heading at that moment;
+  when both skis pass the finish line the pelvis is at least 0.40 m above the snow and both skis point within 30
+  degrees of forwards.
 
-## Reference solution
-None (as `embodied-olympics-fun-freeski-360-i00-privileged`).
+Fouls (each fails the attempt): no start within 20 s; the pelvis gets 4 m past the lip without a take-off; any other
+trick (more or less spin, any flip, a backwards take-off); the first contact after the flight is not by the skis, or
+is on the table; a ski more than 45 degrees from forwards at the landing; a ski turning more than 90 degrees on the
+snow after the landing; the pelvis lower than 0.40 m or a ski more than 30 degrees from forwards at the finish line;
+slower than 0.3 m/s for 3 s after the start. Fall rule (the snow's own, the generic one is off): any part other than
+the boots touches the snow, at any time; or the robot is down for 1.0 s in all (on the snow with the pelvis less than
+0.40 m above it, measured along its normal, or the trunk more than 70 degrees from the normal; the time down shrinks
+again at a quarter of the rate while it is up). Time limit: 40 s (4,000 control steps).
 
-## Verification
-The sim sidecar's referee judges the live attempt, and that is the verdict (`final.json`: `graded_by` live, `replays` 0;
-no grading replay, owner 2026-10-17); the frozen start is checked on the live simulator (`instance_mismatch`:
-infrastructure), and the video is rendered from the recorded attempt afterwards. `/tests/grade.py` reads
-`/data/final.json`: pass iff the live attempt succeeded. The
-rules: FIS big air, one jump, judged on one trick: the 360: one full turn of spin (your skis turn 270 to 450 degrees about the vertical in the air, either way) and no flip. Your feet are bound to freestyle skis (1.35 m twin tips). You stand on the level start platform with your boots 0.3 m behind its edge (the start line); the start signal is given at t = 0 and you must leave the platform by your own action (nothing holds or pushes you) within 20.0 s. The course: the platform's edge rounds onto the in-run (38.0 m at 35.0 degrees), a transition and a 5.0 m flat, then the kicker (it rises to its lip at 25.0 degrees, 2.1 m above the flat), a table 15.0 m long at the flat's level, the knoll, the landing (36.0 degrees, 30.0 m long), a transition and the flat outrun. The jump is your flight off the kicker: it starts within 4.0 m of the lip, rising at 10.0 degrees or more. The trick is measured in the air only (from the moment your last contact with the snow ends until the next contact). The spin is your skis' heading change: each ski's long axis (tail to tip) is followed in the horizontal plane (unwrapped, so whole turns add up; held while the ski points within 10 degrees of the vertical) and the spin is the mean of the two skis' changes, counted in half turns of 180 degrees (your pelvis's or trunk's own yaw does not count). The flip is your pelvis's rotation about the horizontal axis across your take-off direction, after removing the 61.0 degrees a straight air turns forward anyway, counted in full turns of 360 degrees and only if your body went upside down; each to the nearest unit (up to half a unit short or over still counts as that unit). A flip with half a turn of spin is still that flip. You succeed when the jump's rotation is the 360 and the landing is clean: the first contact after the flight is your skis', on the knoll or the landing hill (past the table), with both skis pointing forwards (down the course, +x) within 45.0 degrees at that first contact; from 0.5 s after it until both boots cross the finish line each ski's heading stays within 90.0 degrees of its heading at that moment (no spinning on the snow); from the first contact until both boots cross the finish line (15.0 m past the start of the outrun) no part of you but the boots touches the snow and you are not down for 1.0 s in all (down: on the snow with your pelvis less than 0.4 m above it, measured along its normal, or your trunk more than 70.0 degrees from its normal; the time down shrinks again at a quarter of the rate while you are up); and at the finish line your pelvis is at least 0.4 m above the snow and both skis point forwards (within 30.0 degrees). You fail: on any other trick (more or less rotation, a flip where none is asked, a different direction of flip, a take-off riding backwards), a landing with a ski pointing more than 45.0 degrees from forwards, a spin on the snow (a ski's heading more than 90.0 degrees from where it was 0.5 s after the landing), on a fall at any time (a part of you other than your boots on the snow, or down for 1.0 s in all), a landing on the table, the body first, a run with no jump, a stop (slower than 0.3 m/s for 3.0 s after the start), no start within 20.0 s, or at 40 s. No oracle; human review in the pull request that adds the benchmark (PROTOCOL §4).
+Graded: the live attempt, judged by the referee in the simulator service as it runs; nothing is replayed. The referee's
+success call is an event: once it is made at some control step, the attempt is a success. It is never shown to the
+agent and does not end the attempt: the physics goes on until the agent's `/finish`, the attempt's time limit, or the
+end of the agent's time (2 h), and nothing after the call undoes it. A failure the referee calls before any
+success (a foul, a fall, the physics diverging) ends the attempt at once with 0. Reaching the time limit or the end of
+the session without a success call scores 0. The agent has 5 resets, each starting a new attempt from the
+frozen start; only the last attempt (the one after the last reset) is graded, and a success in an earlier attempt does
+not count. A simulator error raised by the agent's own call ends the attempt with 0. An attempt that does not start
+from the frozen instance, or a service crash outside the agent's calls, is an infrastructure failure, not a score.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -38,13 +63,10 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Category | track-and-jumps |
-| Rule book | FIS International Competition Rules (ICR) Book VI (Joint Regulations for Snowboard, Freestyle, Freeski and Ski Cross), edition June 2026: 3101.3 (the start platform: a completely flat, level area), 3102.4.1 (the big air site, level A: start area at least 5 m, in-run at least 30 m at 20 degrees or more, a 5-10 m flat before the kicker, a kicker at least 2.0 m high with a take-off angle of 25 degrees or more, at least 15 m from the take-off to the landing, a landing of 28 degrees or more, at least 20 m long and wide, an outrun of at least 25 m), 3402 (big air judging: difficulty, execution, amplitude, the landing), 3610 (the start: the competitor drops in on the start referee's signal); FIS Snowboard & Freeski Park & Pipe Judges Handbook, edition 2025, 8-11 (tricks by their rotation: spins in 180 degree units, flips; a trick counts when it is landed on the skis and ridden away); FIS Specifications for Competition Equipment 2026/27 B.2.2 (freestyle skis: no limits); deviations: ICR 3402 / Park & Pipe Judges Handbook 8-11 (judges score each jump 0-100 by impression): one task is one trick, pass or fail: the trick is measured, not judged (the method of the Embodied Olympics freeski sport, MIT, with the spin taken from the skis), over the flight only (from the last contact with the snow to the next), so a rotation on the snow never counts and a wobble back and forth cancels; the spin is the skis' heading change (each ski's long axis, tail to tip, followed in the horizontal plane every 1 ms and unwrapped, so whole turns add up; held while a ski points within 10 degrees of the vertical; the mean of the two skis), counted in 180 degree units (not the pelvis's yaw: the pelvis turns against the skis on the hips and against the trunk at the waist, so its yaw can count turns the skis never made); the flip is the pelvis's angular velocity integrated about the horizontal axis across the take-off direction less the straight air's own forward turn (61.0 degrees: the lip's plus the landing's angle), counted in 360 degree units and only if the body went upside down; each to the nearest unit, so up to half a unit short or over still counts as that unit (a judge would deduct; a rotation half a unit or more off is the next or the previous trick). A flip with half a turn of spin is still that flip (freeski's rule: its own twist). A twist made while inverted is measured about the vertical like any spin (a cork and a twisting flip are not told apart). Grabs, amplitude, style and execution are not judged. · Park & Pipe Judges Handbook (a landed trick: on the skis, riding away in control): the landing must be clean: the first contact after the flight is the skis', with both skis pointing the way the trick lands (forwards after whole turns, backwards after an odd number of half turns) within 45.0 degrees (a judge sees a 360 landed sideways or switch as another trick or a crash); from 0.5 s after that contact (the landing's impact and its first correction) to the finish line each ski's heading stays within 90.0 degrees of its heading then (no spin on the snow: a judge does not credit rotation made on the landing, and a skier riding away straight needs at most the landing's 45.0 degrees plus the finish line's 30.0 degrees of correction; a quarter turn is above that and half the smallest spin, the 180 of a revert); no other part of the robot (hands included; the boots on their skis are allowed) touches the snow from then until the finish line 15.0 m past the outrun's start, the robot is not down (on the snow with the pelvis less than 0.4 m above it or the trunk more than 70.0 degrees from its normal) for 1.0 s in all (freeski's fall rule; a judge would deduct for sitting back), the landing is past the table (a landing on the table or the knuckle before the knoll fails), and the skis cross the finish line pointing the way the trick landed (within 30.0 degrees). · ICR 3102.4.1 (the big air site): the course is the Embodied Olympics freeski big air (MIT): a level start platform 6.0 m long, its edge rounded (radius 8.0 m, an estimate) onto a 38.0 m in-run at 35.0 degrees, a 30.0 m transition, a 5.0 m flat, a kicker of transition radius 18.0 m with a 1.0 m straight lip at 25.0 degrees (2.1 m above the flat, 6.0 m wide), a table 15.0 m long at the flat's level, an 8.0 m knoll rounding, a 36.0 degree landing 30.0 m long and 24.0 m wide, a 30.0 m transition and a 45.0 m outrun (30.0 m wide); every length within level A's limits, the transitions' radii estimates (FIS gives none); the snow is a profile of boxes (pieces of 25 cm along the arcs). · ICR 3610 (the start): there is no start gate and nothing holds or pushes the robot: it stands on its skis on the level start platform, its boots 0.3 m behind the platform's edge (the start line), and the start referee's signal is given at t = 0; the robot leaves by its own action (it must work itself over the edge); not started within 20.0 s is a DNS. · Equipment (EQ B.2.2): no limits for freestyle skis; the skis are the Faction Prodigy 1 Grom 135 cm (115/84/111 mm, radius 10 m, 1.19 kg), each three bodies (the middle rigid under the binding, the forebody and the afterbody on hinges with the ski's bending stiffness, EI 60 and 80 N m^2: estimates); binding 0.65 kg (stand height 35 mm) and boot 1.2 kg as mass on the ski (estimates); the binding holds the foot rigidly and never releases; the boot's forward flex is not modelled (the ankle joint moves inside it); no poles (big air athletes ski without them). The skis are solid against the robot's body and each other. · Snow and air: the ski-snow model of the Embodied Olympics freeski sport (MIT, ported): kinetic friction after Wolfsperger et al. 2021, the edge's hold after Mossner et al. 2013 with Federolf's race-piste snow, hard well-damped snow; still air at a mountain venue (1.052 kg/m^3), the air's drag and lift on every link (a normal-force model); no wind, no snow is moved. · Competition format (ICR 3501-3504: qualification and final runs, the best scores added): one jump, one attempt. |
-| Stages | start → take-off → landing → ride-away |
-| Service | `environment/sim/server.py` (the Embodied Olympics adapter) on `rcb_service.py` (eai-standard/3.0), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
-| Observations | `head_left`, `head_right` (RGB 270 × 480, depth on `head_left`), `venue` (fixed); proprioception: joints, torques, targets, two IMUs, grip state |
-| Episode | 4000 control steps (40 s at 100 Hz); 5 resets, the last attempt graded |
-| Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md) |
+## License
+The Embodied Olympics robot library and running-policy port ([CHIGUI0/roboolympics](https://github.com/CHIGUI0/roboolympics)
+@ `7df999b`, a private repository) is released under the MIT License (`LICENSE.roboolympics` in the image); this
+benchmark's venues and referees are MIT too. Third-party parts in the image: the Unitree G1 model and meshes from MuJoCo
+Menagerie (BSD-3-Clause), the Unitree H1-2 model, meshes and walking policy and the G1 walking policy from
+unitree_rl_gym (BSD-3-Clause), the G1 running policy from C1801SYQ/g1_running (Apache-2.0), FALCON's G1 walking policy
+from LeCAR-Lab/FALCON (MIT) and the WBC-AGILE G1 walking policy from NVIDIA (Apache-2.0). No non-commercial terms apply.

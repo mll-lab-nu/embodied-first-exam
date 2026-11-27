@@ -1,53 +1,47 @@
-# yamlab-hang-mug-on-tree-i20-standard
+# YAMLab · HangMugOnTree-v0 (standard)
 
 | | |
 |---|---|
-| Benchmark | YAMLab |
-| Mode | standard (`eai-standard/3.0`) |
-| Twin | `yamlab-hang-mug-on-tree-i20-privileged` |
-| Simulator / robot | `yamlab` / `i2rt-yam-bimanual` |
-| Family / instance | `hang_mug_on_tree` / seed 0 |
-| Oracle | `full` |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:yamlab-0.2.1` |
+| Task ID | `yamlab-hang-mug-on-tree-i20-standard` |
+| Benchmark | [YAMLab](https://github.com/ARISE-Initiative/yamlab) (Dai, 2026), upstream `ARISE-Initiative/yamlab@ec0455d` |
+| Robot | Two I2RT YAM arms (6 joints each) with parallel two-finger grippers, on a workstation table |
+| Mode | standard |
+| Instance | `hang_mug_on_tree`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | Included |
 
 ## Task
 Pick up the mug with the left arm, pass it to the right arm in the air, and hang it on the mug tree.
 
-Standard-mode twin of `yamlab-hang-mug-on-tree-i20-privileged` (same frozen instance: YAMLab's objects `mug` = `Mug/mug_020` and `mug_tree` = `MugTree/mug_tree_020` as placed in teleoperation
-demonstration `hangmug_020.hdf5 demo_2`, both arms at the home pose): the agent gets only the `eai-standard/3.0` client
-(docs/protocol/standard_mode.md); the simulator runs in the `sim` sidecar (`environment/docker-compose.yaml`, GPU on the
-sidecar), which owns the scene and records the episode as a (T, 14) trajectory of YAMLab's own actions. The collect hook
-(`environment/sim/finalize.sh`) ends the episode, lets the service exit, writes `final.json` from the live episode's record
-(no replay) and encodes the live video; the verifier runs in a separate sandbox (`tests/Dockerfile`) over those artifacts. Compare against
-the privileged task to measure the cost of losing resets, privileged state and primitives.
+## Success criteria
+Three stages, in this order; a stage is counted only after the one before it has latched.
 
-## Difficulty
-That of `yamlab-hang-mug-on-tree-i20-privileged` (its README), without resets, object poses or the success signal: every step of a two-arm
-manipulation is planned from three cameras (one static, two on the wrists), depth and the robot's own proprioception, and a
-missed grasp or a dropped object stays that way.
+1. Pick: the left gripper is grasping the mug and the mug's centre is more than 5 cm above its resting height (the
+   height of its centre when it stands on the table, 5.5 cm above the table top), on 8 consecutive control
+   steps. The right gripper is not checked.
+2. Handover: the right gripper is grasping the mug, the left gripper is not, and the mug's centre is more than 5 cm
+   above its resting height, on 30 consecutive control steps (about 1 s).
+3. Hang: the mug's centre is less than 13.8 cm from the mug tree's centre horizontally (half the tree's footprint
+   diagonal, at least 10 cm), more than 10.0 cm above the table top (half the mug's height plus 5 cm), neither
+   gripper is grasping the mug, and the mug's height stays within 3 cm of its height on the first step of the run, on 30
+   consecutive control steps (about 1 s).
 
-## Reference solution
-`solution/oracle_replay.py` streams the privileged oracle's actions (`solution/oracle_qpos.npy`: the 1 s ramp from the home
-pose and the recorded teleoperation demonstration `hangmug_020.hdf5 demo_2`, one row per control step, `hold`) as one-second
-`joint_position` chunks through the client; after a service crash it waits for the resumed episode and continues from the
-control step the service reports.
+A gripper is grasping the mug when both its fingers touch the mug with a contact force of at least 0.1 N, at a point on
+their pads.
 
-## Verification
-Graded by the live episode: `success` = the live episode's success, judged by the sim
-service on the episode the agent ran, with no grading replay. YAMLab's success check (evaluation thresholds) is evaluated
-after every control step; the episode ends at the first step where every stage has latched. Before serving, the service
-checks the rebuilt scene against the frozen instance (`instance.json` `state_sha`, else every object pose and joint within
-tolerance); a mismatch is an infrastructure failure (`instance_mismatch`). `tests/grade.py` reads `final.json` with no
-network and writes the reward fields (`graded_by_live` = 1, `replays` = 0, `infra_error`, the crash-recovery fields), plus
-`/logs/verifier/live.mp4`: the service keeps a frame (top + both wrist cameras) at the control steps the agent's own calls
-rendered (at most one per 6 steps; no extra render for the video), and the collect hook encodes it after the verdict (a
-failed encode costs the video only). Compute: the collect hook needs no GPU after the service exits. Oracle: the live episode ended in the privileged oracle's final
-state (hash `2fd1447a9bbdd3f5`). `nop`: the episode ends on the time-out with no
-stage reached, reward 0.
+Graded is the one live episode (no reset). The earlier stages count from the control step they latch, and stay counted.
+The last stage must hold when the episode ends: its condition holds on the last control step and has held on every
+control step of a run of at least 30 consecutive steps (about 1 s) up to it. If such a run has begun but is shorter when
+the episode ends, the service holds the robot's last command until the run reaches 30 steps or breaks.
 
-## Resources
-Caps per container (PROTOCOL §6).
+The episode ends at the agent's `POST /finish`, when the agent's session ends, or after 100,000 control steps; the
+state at that moment is judged. It also ends, with 0, when the mug or the mug tree falls more than 1 cm below the
+table top, even after the stages had latched, and on a simulator error raised by the agent's calls. The
+service never reports success while the episode runs. A frozen scene that does not rebuild as recorded at the start,
+or service crashes the episode cannot be resumed from, are infrastructure errors, not a score.
+
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -58,12 +52,9 @@ Caps per container (PROTOCOL §6).
 - GPU: an RTX-class NVIDIA GPU (ray-tracing cores), one of the models in `gpu_types`: L40S, L40, L4, RTX 4090, RTX 6000 Ada, RTX PRO 6000 Blackwell, held by `sim`.
 - Recommended GPU: L40S 48GB / L4 24GB / RTX 4090 24GB.
 
-## Details
-| | |
-|---|---|
-| Episode | one episode, no reset, no step budget: it ends at the first control step where every stage of YAMLab's success check has latched, when a task object falls off the table, when the agent's time is up, on a simulator error, or at the technical cap of 100,000 control steps (`spec.max_control_steps`, reason `step_guard`; 55.6 min of simulated time); the wall clock is the only budget |
-| Action space | `submit` chunks of `joint_position` (14: YAMLab's own action, streamed at the 30 Hz control rate with the agent's `dt`, a multiple of 1/30 s) or `ee_pose` (16: both tool frames, differential IK per row); `observe` the current frames or those recorded over the last seconds (`last_s`); hold chunks (`hold(s)`); `/kinematics` (FK / IK of both arms, stateless); binary RCB1 responses |
-| Cameras | `top` (static), `left_wrist`, `right_wrist` (on each arm's link_6), 640×480 RGB, z-depth on request |
-| Images | the `sim` sidecar runs efe-private:yamlab (BUILD_ONLY, `images/yamlab/BUILD_ONLY`); the agent container and the verifier run the shared client image with its pip pins (`embodied_first_exam/standard/client.env`) |
-| Crash recovery | resume class `exact`: every control step journaled, a checkpoint with the state hash after every call; `restart: on-failure:6`, the service resumes the same episode (docs/protocol/standard_mode.md §13) |
-| Benchmark notes | tasks/yamlab/README.md |
+## License
+YAMLab ([ARISE-Initiative/yamlab](https://github.com/ARISE-Initiative/yamlab) @ `ec0455d`), its scene and object USDs
+and its dataset (`yamlab/yamlab_datasets` on Hugging Face) are released under the MIT License (Copyright (c) 2026
+Tianyuan Dai). Isaac Lab is BSD-3-Clause; YAMLab's LeRobot fork is Apache-2.0. NVIDIA Isaac Sim 5.1 and its wheels are
+proprietary: NVIDIA licenses them for use, not for redistribution, so the simulator image is built on your machine and
+building it accepts NVIDIA's Isaac Sim / Omniverse licence terms. No non-commercial terms apply.

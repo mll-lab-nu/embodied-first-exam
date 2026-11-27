@@ -1,38 +1,41 @@
-# embodied-olympics-match-tabletennisg1-matchgpu-i01-privileged
+# Embodied Olympics · table tennis on Unitree G1s (GPU tier), match against level 4 (privileged)
 
 | | |
 |---|---|
-| Benchmark | Embodied Olympics - Match |
+| Task ID | `embodied-olympics-match-tabletennisg1-matchgpu-i01-privileged` |
+| Benchmark | [Embodied Olympics - Match](https://github.com/CHIGUI0/roboolympics) (Embodied Olympics authors, 2026), upstream `CHIGUI0/roboolympics@0d7f680` |
+| Robot | Unitree G1 humanoid |
 | Mode | privileged |
-| Twin | `embodied-olympics-match-tabletennisg1-matchgpu-i01-standard` |
-| Simulator / robot | `mujoco` / `unitree-g1` |
-| Family / instance | `tabletennisg1_match` / seed 4 (allowed seeds: [4, 1, 2]; PROTOCOL §2) |
-| Oracle | `partial` — the sport's camera-only reference player (solution/program.py: builtin_players:OpenReference in its in-process form, the learned striker of the release on CPU; it ignores the truth) won 5:3 on a Xeon Platinum 8488C (the CPU tier) and lost 6:7 on the GPU tier's EPYC host (the in-process match is replay-identical on one host, not across CPU architectures) (Embodied First Exam's local Harbor runs: see the benchmark README; replay identical); nop 0 |
-| Agent time budget | 7200 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-match-tabletennisg1-0.1.0@sha256:8bc6d02f91aa5730bbf93bc5c1c4a477feee6f5846ff8c609aaa3a25e0eb36af` |
+| Opponent | Scripted Unitree G1 at level 4 of 4 (the BOSS), which reads the ball's true position, velocity and spin |
+| Instance | `tabletennisg1_match`, seed 4 |
+| Time limit | 2 h |
+| Reference solution | Pipeline check only |
 
 ## Task
 Win a game of table tennis to 5 points against the other robot.
 
-Win one complete match against the platform's G1 at level 4 (the BOSS), seed 4: the same frozen instance as
-`embodied-olympics-match-tabletennisg1-matchgpu-i01-realtime` and its standard twin, with the full simulator in development and the full state (the ball's true state, both
-robots) in every view. The benchmark README (G1 table tennis) has the port and the oracle runs.
+## Success criteria
+The instance: the agent's G1 (seat A) against the scripted G1 at level 4, seed 4. One game of table tennis between two Unitree G1s: the first to 5 points with a lead of 2, or the first to 7, wins. At 16 points played (lets included) the player ahead wins; at a level score, the player who won the last point. A player's third undue-delay fault loses it the match. There are no draws.
 
-## Difficulty
-Level 4, seed 4, the release's frozen instance; the opponent reads the ball's true state, and so does the program.
+Deliverable: `/app/output/policy/program.py`, with any helper files in the same folder (at most 512 regular files and
+32 MiB; no links). It defines `make_policy(config)`; the object it returns gets `act(view)` with the seat's state, the
+camera images and the ground truth at every control step (10 ms of game time). The sport's in-process runner waits for
+each answer. An answer later than 0.5 s of wall time, a program error or no answer is no command at that step; after
+1800 s of the program's own time in total it sends no more commands. A missing `program.py` scores 0.
 
-## Reference solution
-`solution/solve.sh` submits `solution/program.py`: the sport's camera-only reference player in its in-process form
-(it ignores the truth); it won 5:3 on a Xeon Platinum 8488C (the CPU tier) and lost 6:7 on the GPU tier's EPYC host (the in-process match is replay-identical on one host, not across CPU architectures) (the world waits for it at every step, which its twins' world does not).
+Success: the match ends by the rules with the program's side as the winner. A match still unfinished after 636,000
+control steps is not won. A process of the program left running after the match scores 0. A failure of the trusted
+runner, or a fresh-process replay that disagrees with the match, is an infrastructure failure, not a score.
 
-## Verification
-Separate no-network verifier (`tests/formal.py`): the program as `nobody` in its own process against a fresh,
-unmodified match on the trusted simulator (root only) with the sport's in-process runner (`core/local.py`: the world
-waits for each answer, 0.5 s per call, 1800 s of program time in all); the core's fresh-process replay of the episode
-must agree; then the replay video (after the verdict). A process of the program's user left after the match: its 0.
+Graded: one formal match, played after the agent's session in a separate verifier container without network by the
+agent's final program, from a fresh, unmodified start against the same opponent; nothing the agent played during its
+session counts. The task is passed only if that match ends by the rules above with the program's side as the winner.
+A program that fails to load, raises, breaks the call rules above, or leaves a process behind scores 0. A failure of
+the verifier or of the trusted match service, or a replay of the match record that disagrees with the match, is an
+infrastructure failure, not a score.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -41,3 +44,13 @@ Caps per container (PROTOCOL §6).
 
 - GPU: any NVIDIA GPU, held by `main`.
 - Recommended GPU: L40S 48GB / RTX 4090 24GB / L4 24GB.
+
+## Others
+Ported from Embodied Olympics core 0.5, which has no exporter: its task `roboolympics/tabletennis_g1-match-wallclock-program-engineer-standard` (revision
+`g1tt-10+core-0.5`, upstream commit `45ed806a5`). The files changed here are listed for this task in
+`ci_checks/benchmarks/embodied-olympics-match/exported.toml`.
+
+## License
+Embodied Olympics ([CHIGUI0/roboolympics](https://github.com/CHIGUI0/roboolympics), a private repository) is released
+under the MIT License; its exported match services, referees, scripted opponents and graders inside this task are MIT
+too. The simulator is MuJoCo (Apache License 2.0). No non-commercial terms apply.

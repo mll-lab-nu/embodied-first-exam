@@ -1,34 +1,46 @@
-# embodied-olympics-fun-handstand-i00-standard
+# Embodied Olympics · handstand (standard)
 
 | | |
 |---|---|
-| Benchmark | Embodied Olympics - Fun |
-| Mode | standard (`eai-standard/3.0`) |
-| Twin | `embodied-olympics-fun-handstand-i00-privileged` |
-| Simulator / robot | `mujoco` / `unitree-g1` |
-| Family / instance | `handstand` / seed 0 |
-| Oracle | `none` — no reference solution; the referee is tested: positive by injection of the way up (the tuck placed by a state write at 0.2 s) and of the way down (the robot put standing); the unfold, the 2 s hold and the fold are the robot's own lowcmd control: an LQR (finite-difference linearisation of the 10 ms step, 29 joint-target inputs) about 7 IK equilibria on the fists, scheduled tuck to straight, holds the straight handstand at least 2 s and folds back (it survives 1.5 rad/s pushes in the tuck); negatives: nop, a tuck balance, a 1.5 s hold, a fall after the hold, a headstand, outside the area. A searched tuck jump from the crouch reached a 2 s LQR-held tuck once in 448 trials but did not reproduce; snap-down exits landed in a pike or crouch, but the rise to standing was a knife edge; human review in the pull request that adds the benchmark (PROTOCOL §4) |
-| Agent time budget | 7200 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
+| Task ID | `embodied-olympics-fun-handstand-i00-standard` |
+| Benchmark | [Embodied Olympics - Fun](https://github.com/CHIGUI0/roboolympics) (Embodied Olympics authors, 2026), upstream `CHIGUI0/roboolympics@7df999b` |
+| Robot | Unitree G1 humanoid (1.32 m, 33 kg, 29 joints), with Unitree's walking and running policies |
+| Mode | standard |
+| Instance | `handstand`, seed 0 |
+| Time limit | 2 h |
+| Reference solution | None |
 
 ## Task
-Do a handstand: get up onto your hands, hold a straight handstand still for 2 s, then come back down onto your feet and stand. (Embodied Olympics `handstand`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Do a handstand: get up onto your hands, hold a straight handstand still for 2 s, then come back down onto your feet and
+stand.
 
-## Difficulty
-Your whole 33 kg rests on two small fists and arms whose shoulders give 25 N m: the body has to be balanced over a support a few centimetres long, actively, as an inverted pendulum, and no built-in action does that. Getting from standing onto the hands, and from the hands back onto the feet, are as hard as the hold. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 5 resets (only the last attempt is graded).
+## Success criteria
+A flat 12 m x 12 m floor. The referee's stages, in order: handstand, held 2 s, on the feet, stand.
+- Handstand: only the hands touch the floor; the pelvis is above the middle of the hands' support and the ankles are
+  above the pelvis; the line from the hands' middle to the pelvis and the line from the pelvis to the ankles each lean
+  at most 45 degrees from vertical; the knees are bent at most 20 degrees and the hips at most 25 degrees.
+- Held 2 s: that handstand, with the pelvis moving at most 0.15 m/s, for 2 s in a row. A touch of the floor by any part
+  other than a hand restarts the count.
+- On the feet: after the hold, only the feet touch the floor.
+- Stand: the robot stands (only the feet on the floor, the torso within 20 degrees of vertical, the pelvis at most
+  0.35 m/s) for 1 s in a row.
 
-## Reference solution
-None (as `embodied-olympics-fun-handstand-i00-privileged`).
+Fouls (each fails the attempt): the pelvis leaves the 12 m x 12 m area. Fall rule: on, with the hands allowed on the
+floor as well as the feet: the pelvis below 0.25 m, or any other part on the floor, fails the attempt; it is checked
+at every physics step, not only at every control step. Time limit: 30 s (3,000 control steps).
 
-## Verification
-The sim sidecar's referee judges the live attempt, and that is the verdict (`final.json`: `graded_by` live, `replays` 0;
-no grading replay, owner 2026-10-17); the frozen start is checked on the live simulator (`instance_mismatch`:
-infrastructure), and the video is rendered from the recorded attempt afterwards. `/tests/grade.py` reads
-`/data/final.json`: pass iff the live attempt succeeded. The
-rules: A handstand is: only your hands on the floor (nothing else of you touches it), your pelvis above your hands and your ankles above your pelvis, and both lines of your body, from the middle of where your hands touch the floor to your pelvis and from your pelvis to the middle of your ankles, within 45.0 degrees of vertical (the Code of Points does not recognise a handstand that deviates more), and your body extended: your knees bent at most 20.0 degrees (the knee joints' angle, 0 is straight) and your hips bent at most 25.0 degrees (the angle, towards your front, between the line from the middle of your shoulder joints to the middle of your hip joints and the line from each hip joint to its knee joint); a tucked or piked balance is not a handstand. Any part of your hand counts as the hand (you have fists, not fingers). The handstand is held while you stay in it with your pelvis slower than 0.15 m/s (a complete stop); it counts once it has been held without a break for 2.0 s. After that you come back down so that only your feet touch the floor (your hands off it), and then you stand for 1.0 s without a break: only your feet on the floor, your torso within 20.0 degrees of vertical, your pelvis slower than 0.35 m/s. You fail if any part of you other than your hands and feet touches the floor, or your pelvis is lower than 0.25 m (a fall); if any part of you touches the floor outside the 12.0 m x 12.0 m floor area (its lines are inside); or after 30 s. Your feet may leave the floor in a jump; nothing limits how you get onto your hands or back to your feet. No oracle; human review in the pull request that adds the benchmark (PROTOCOL §4).
+Graded: the live attempt, judged by the referee in the simulator service as it runs; nothing is replayed. The referee's
+success call is an event: once it is made at some control step, the attempt is a success. It is never shown to the
+agent and does not end the attempt: the physics goes on until the agent's `/finish`, the attempt's time limit, or the
+end of the agent's time (2 h), and nothing after the call undoes it. A failure the referee calls before any
+success (a foul, a fall, the physics diverging) ends the attempt at once with 0. Reaching the time limit or the end of
+the session without a success call scores 0. The agent has 5 resets, each starting a new attempt from the
+frozen start; only the last attempt (the one after the last reset) is graded, and a success in an earlier attempt does
+not count. A simulator error raised by the agent's own call ends the attempt with 0. An attempt that does not start
+from the frozen instance, or a service crash outside the agent's calls, is an infrastructure failure, not a score.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -38,13 +50,10 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Category | parkour-apparatus-balance |
-| Rule book | FIG Men's Artistic Gymnastics Code of Points 2025-2028: floor exercise, element I.19 'Handstand (2 s.)' (EG I, non-acrobatic elements); Art. 9.2.15 (a hold element is held at least 2 s, measured from the moment a complete stop has been reached; no stop is not recognised); Art. 9.2.13 (a handstand deviating more than 45 degrees from the vertical is not recognised); Art. 10.1 (the floor area, 12 m x 12 m); Art. 10.2.1.2a (the exercise inside the floor area, the lines included); deviations: FIG Apparatus Norms, floor: the floor is rigid and level (friction 1.0), not the norm's sprung floor with its elastic surface, because the simulator's ground is rigid and no sourced stiffness of the sprung floor is used here (a sprung floor would give energy back at the jump into the handstand: this is not easier) · Art. 10.1 / I.19 (a handstand on the hands): the G1 has no fingers and no palm that opens; each hand is a rigid rubber fist (a 4.4 x 8 x 10 cm pad on the wrist). Any part of the hand (the pad, the wrist's housing) may bear the weight: a knuckle (fist) handstand counts as a handstand · Art. 9.2.13 (deviation from the perfect handstand): judged pass or fail with the Code's non-recognition limit of 45.0 degrees, on two lines of the body: from the middle of the hands' support to the pelvis and from the pelvis to the middle of the ankles; the 15 and 30 degree execution deductions are not applied, as there is no E-Jury · Art. 9.2.13 / I.19 (the handstand's shape: a straight body, legs together and extended): the Code treats bent legs and a bent body as execution faults and sets no number for when a balance stops being a handstand; here, judged pass or fail, the knees (the knee joints' angle, 0 = straight) may bend at most 20.0 degrees and the hips at most 25.0 degrees (the angle, measured towards the front, between the line from the middle of the shoulder joints to the middle of the hip joints and each line from a hip joint to its knee joint), during the whole hold; both limits lie in the medium band (15-30 degrees) of the Code's angle-fault scale, so a slightly bent handstand counts (its deductions are not applied) and a tucked or piked balance does not · Art. 9.2.15 (a complete stop): without judges a stop is the pelvis slower than 0.15 m/s · Art. 10.2.1.1 (the exercise begins from a still stand, legs together): the robot starts in its own stance, feet 0.24 m apart, because that is how it stands; the task is one element and the way back to the feet, not a 70 s exercise |
-| Stages | handstand → held 2 s → on the feet → stand |
-| Service | `environment/sim/server.py` (the Embodied Olympics adapter) on `rcb_service.py` (eai-standard/3.0), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
-| Observations | `head_left`, `head_right` (RGB 270 × 480, depth on `head_left`), `venue` (fixed); proprioception: joints, torques, targets, two IMUs, grip state |
-| Episode | 3000 control steps (30 s at 100 Hz); 5 resets, the last attempt graded |
-| Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md) |
+## License
+The Embodied Olympics robot library and running-policy port ([CHIGUI0/roboolympics](https://github.com/CHIGUI0/roboolympics)
+@ `7df999b`, a private repository) is released under the MIT License (`LICENSE.roboolympics` in the image); this
+benchmark's venues and referees are MIT too. Third-party parts in the image: the Unitree G1 model and meshes from MuJoCo
+Menagerie (BSD-3-Clause), the Unitree H1-2 model, meshes and walking policy and the G1 walking policy from
+unitree_rl_gym (BSD-3-Clause), the G1 running policy from C1801SYQ/g1_running (Apache-2.0), FALCON's G1 walking policy
+from LeCAR-Lab/FALCON (MIT) and the WBC-AGILE G1 walking policy from NVIDIA (Apache-2.0). No non-commercial terms apply.

@@ -1,46 +1,47 @@
-# dexjoco-water-plant-i00-privileged
+# DexJoCo · water_plant (privileged)
 
 | | |
 |---|---|
-| Benchmark | DexJoCo |
+| Task ID | `dexjoco-water-plant-i00-privileged` |
+| Benchmark | [DexJoCo](https://dexjoco.github.io/) (Wang et al., 2026), upstream `brave-eai/dexjoco@8d23b0f` |
+| Robot | Franka Emika Panda arm with a 16-DoF Wonik Allegro hand |
 | Mode | privileged |
-| Twin | `dexjoco-water-plant-i00-standard` |
-| Simulator / robot | `dexjoco` / `franka-allegro` |
-| Family / instance | `water_plant` / seed 0 (allowed seeds: [0, 1, 2]; PROTOCOL §2) |
-| Oracle | `full` |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:dexjoco-0.1.2` |
+| Instance | `water_plant`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | Included |
 
 ## Task
-DexJoCo `water_plant` (a Franka Panda arm with a 16-DoF Allegro hand): Spray the potted plant: pick up the spray bottle, hold its nozzle close to the plant and aimed at it, and keep the trigger squeezed for a moment. Success: the trigger is held pulled (trigger joint > 0.34 rad; it counts as released again below 0.25 rad) while the nozzle reference point is within 0.20 m of the plant horizontally and within +-0.20 m of the plant's height AND the spray points at the plant, all three for 30 consecutive control steps (0.6 s). The spray leaves the spray head horizontally forward: perpendicular to the bottle's long axis, on the side the trigger faces (the bottle's local +z; its long axis, bottom to head, is local +y). It points at the plant when that direction is within 45 degrees of the line from the nozzle to the plant, e.g. with the bottle held upright and its trigger side facing the plant. Pulling the trigger while the nozzle is outside the zone ends the episode as a failure.
-Privileged mode: the agent works in the simulator's container with live object poses, unlimited resets and thin motion
-primitives, and hands in one trajectory replayed open-loop from the frozen instance.
+Spray the potted plant: pick up the spray bottle, hold its nozzle close to the plant and aimed at it, and keep the
+trigger squeezed for a moment.
 
-## Difficulty
-First-pass rating: medium. Dexterous manipulation with a 16-DoF hand on a 7-DoF arm (23 action values per control step);
-the primitives only move tcp and hand-joint targets, so grasping, pressing and every other skill is the agent's. The
-reference (the human teleoperator's demonstration) takes 307 control steps (6.1 s at 50 Hz).
+## Success criteria
+Success: for 30 consecutive control steps (0.6 s), all of these hold at the end of each step:
+- the trigger is pulled: the trigger joint (`spray_trigger`) has risen above 0.34 rad and not dropped below 0.25 rad
+  since;
+- the nozzle is in the zone around the plant: the nozzle's reference point (`spray_nozzle`) is at most 0.20 m from the
+  plant's origin (`plant`) horizontally and within ±0.20 m of its height;
+- the spray points at the plant: the spray direction (the bottle body's local +z axis; its long axis, bottom to head, is
+  local +y) is within 45° of the line from the nozzle's reference point to the plant's origin.
 
-## Reference solution
-`solution/oracle_trajectory.npz` = the human demonstration's own actions, rounded to float32 (the standard client's
-precision; the rounded rows still succeed) and replayed from the frozen instance until the episode ends in success
-(307 rows). The demonstration is public (DexJoCo-Datasets-Raw on Hugging Face), so agent egress is
-limited to the model APIs.
+The trigger and zone conditions are DexJoCo's own check; the aim condition is added by this benchmark, and DexJoCo's
+own success (trigger and zone alone) does not end the episode.
 
-## Verification
-Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.npz`, once in a fresh process in the verifier's own
-sandbox (no network); pass iff the episode ends in success (`tests/grade.py`); plus
-`/logs/verifier/replay.mp4`, rendered after the verdict is written. A rebuilt instance that does not match its recorded
-hash (the image no longer rebuilds the scene) replays nothing and gives no verdict: `instance_mismatch`, `grader_error`
-and `infra_error` = 1, not the agent's 0.
-A file that is not a readable trajectory (not an npz, no `task` / `actions`, a wrong shape, NaN) or has more than
-50,000 rows scores 0 as `bad_trajectory`: the cap keeps a replay of the slowest family well inside the verifier's
-3600 s. A verifier that runs fewer than 4 OpenBLAS threads (fewer than 4 CPUs visible to it) replays
-nothing and gives no verdict: `too_few_cpus`, `grader_error` and `infra_error` = 1, not the agent's 0.
-Oracle: success after 307 control steps.
+Task failure (ends the episode at once, scoring 0): the trigger is pulled while the nozzle is outside the zone.
 
-## Resources
-Caps per container (PROTOCOL §6).
+Graded file: `/app/output/trajectory.npz`, as `s.save_trajectory(...)` writes it: this task's name (`water_plant`) and at
+most 50,000 action rows of 23 finite values, one row per control step (50 Hz). After the agent's session the
+verifier replays it once, open-loop, from its own copy of the frozen start (`tests/instance.npz`), in a fresh process
+of a separate container without network. As in DexJoCo's own evaluation, the replay ends at the first control step on
+which the success check above passes or a task failure above happens; rows after that step are not run. The task is
+passed if the replay ends in success; a replay whose rows run out before that scores 0. A missing file scores 0, and so
+does a file for another task or one that is not such an array (not an npz, pickled or object arrays, no `task` or
+`actions` entry, a wrong number of columns, NaN or infinite values, more than 50,000 rows, a row with a zero tcp
+quaternion). Only the trajectory is scored (`gen.py` is not). A start that does not rebuild to the instance's recorded
+state hash, a verifier that runs fewer than 4 OpenBLAS threads, or an error inside the grader is an infrastructure
+failure, not a score.
+
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -49,18 +50,16 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Upstream | DexJoCo @ 8d23b0f (brave-eai/dexjoco, MIT) on MuJoCo 3.4.0; CPU physics, OSMesa rendering, no GPU |
-| Instance | the initial state of the human demonstration `water_plant_demo_10_2026-02-05_19-50-27_886249` (DexJoCo-Datasets-Raw), restored with DexJoCo's own state restorer; instance sha `04f14553ced4b0ed` |
-| Resources | 4 CPUs, 8 GB, no GPU; `OPENBLAS_NUM_THREADS=4` in the agent's container and the verifier's (the simulation's result depends on the thread count below 4: tasks/dexjoco/README.md). The 4 CPUs must be visible to the container (its cpuset / affinity; a `cpus:` quota does not matter): OpenBLAS runs no more threads than that |
+## Others
+The simulation repeats exactly only for one OpenBLAS thread count (DexJoCo's controller does its linear algebra in
+numpy): every container that runs it sets `OPENBLAS_NUM_THREADS=4` and needs at least 4 CPUs in its CPU affinity (a
+cpuset or `taskset` narrows it; a CPU quota does not). A grading process that runs fewer than 4 OpenBLAS threads gives
+no verdict (`too_few_cpus`, an infrastructure failure).
 
-### Tooling notes
-DexJoCo's reset samples object poses from the global RNG and its state restorer edits the MuJoCo model (table height,
-fixed bodies), so `instance.npz` stores the full physics state (`mjSTATE_INTEGRATION`), the mocap targets, the controls,
-every numeric model array a task can change, and the env's Python-side task state. Its per-step camera rendering,
-real-time sleep, episode cap and hanoi's wall-clock auto-reset are disabled in the tooling (`rcb_dexjoco.py`).
-
-### Provenance
-Generated from the frozen instance (`environment/instance.npz`), restored from DexJoCo's demonstration of the task.
+## License
+DexJoCo ([brave-eai/dexjoco](https://github.com/brave-eai/dexjoco) @ `8d23b0f`; Wang et al., 2026, "DexJoCo: A
+Benchmark and Toolkit for Task-Oriented Dexterous Manipulation on MuJoCo", arXiv:2605.16257) is released under the MIT
+License (copyright 2026 Dexjoco contributors). Bundled robot models keep their own terms: the Franka Emika Panda model
+(Apache License 2.0) and the Wonik Allegro hand model (BSD 2-Clause). Upstream's teleoperation stack includes GeoRT
+under a **non-commercial** license (CC BY-NC); it is removed from the task image and not used. The simulator is MuJoCo
+3.4.0 (Apache License 2.0).

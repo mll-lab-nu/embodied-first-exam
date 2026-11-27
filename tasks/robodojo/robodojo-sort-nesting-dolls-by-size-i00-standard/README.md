@@ -1,40 +1,40 @@
-# robodojo-sort-nesting-dolls-by-size-i00-standard
+# RoboDojo · sort_nesting_dolls_by_size (standard)
 
 | | |
 |---|---|
-| Benchmark | RoboDojo |
-| Mode | standard (`eai-standard/3.0`) |
-| Twin | `robodojo-sort-nesting-dolls-by-size-i00-privileged` |
-| Simulator / robot | `robodojo` / `arx-x5-bimanual` |
-| Family / instance | `sort_nesting_dolls_by_size` / seed 0 (allowed seeds: [0, 1, 2]; PROTOCOL §2) |
-| Oracle | `none` — no positive example yet; no reference solution (RoboDojo releases no expert, and its training demonstrations carry no initial state); marked unvalidated (PROTOCOL §2 `validated`); human review in PR #142 |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
+| Task ID | `robodojo-sort-nesting-dolls-by-size-i00-standard` |
+| Benchmark | [RoboDojo](https://github.com/RoboDojo-Benchmark/RoboDojo) (Chen et al., 2026), upstream `RoboDojo-Benchmark/RoboDojo@cb2a37d` |
+| Robot | Two ARX X5 arms (6 joints each, parallel two-finger grippers) at a table |
+| Mode | standard |
+| Instance | `sort_nesting_dolls_by_size`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | None |
 
 ## Task
-Standard-mode twin of `robodojo-sort-nesting-dolls-by-size-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/sort_nesting_dolls_by_size_0.json`). Stand the five yellow rubber ducks upright in a straight left-to-right row, smallest on the left to largest on the right, a little apart. Then move both arms back to where they started. (RoboDojo's `sort_nesting_dolls_by_size`). The agent drives the
-robot only through the eai-standard/3.0 client (the simulator runs in the `sim` sidecar), which owns the scene and records
-the episode as a (T, 14) trajectory of RoboDojo's own joint action at 25 Hz.
+Stand the five yellow rubber ducks upright in a straight left-to-right row, smallest on the left to largest on the
+right, a little apart. Then move both arms back to where they started.
 
-## Difficulty
-A RoboDojo Generalization task (rigid (free-standing dolls) objects), graded by RoboDojo's own success thresholds (at most 1,050 steps here, one 25 Hz action each: RoboDojo's own step limit for this task). Here the agent sees only the three cameras (RGB, optional depth) and the arms' proprioception: no object
-poses, no success signal, no reset, one episode (at most 1,050 steps, RoboDojo's own step limit).
+## Success criteria
+The five figures are ranked from smallest to largest (RoboDojo ranks them by their model's index, which follows size).
+One check stage, all of these at once:
+- Row: the figures' centres differ by at most 0.035 m along the world y axis (forward), from the most forward to the
+  most rearward.
+- Order: each figure's centre is more than 0.03 m to the left (smaller world x) of the next larger one's, so the
+  smallest is leftmost and the largest rightmost.
+- Upright: each figure's up axis is within 15 degrees of vertical.
+- Both arms are back home: each arm's end effector is within 0.15 m of its start position along each of x, y and z,
+  and within 20 degrees of its start orientation.
 
-## Reference solution
-None (see the privileged twin): RoboDojo releases no expert or planner script, and its training demonstrations record no
-initial state, so none replays on a frozen layout. The task is marked unvalidated (PROTOCOL §2 `validated`).
+Graded: the live episode, judged by the simulator service with RoboDojo's own checks after every action; nothing is
+replayed. No success signal is shown to the agent, and passing the checks does not end the episode. The episode ends
+at the agent's `/finish`, after 1,050 actions (RoboDojo's own limit for this task, 25 actions per second),
+or when the agent's time (1 h) runs out; a check that fails for good ends it at once with 0. The task is passed if the check passed during the episode and still holds after the episode's last action.
+No reset: the one episode is graded. A simulator error raised by the agent's own call ends the episode, which is then
+judged on the state it left. An episode that does not start from the frozen layout, or a service crash outside the
+agent's calls, is an infrastructure failure, not a score.
 
-## Verification
-The sim service ends the episode at the agent's `/finish`, the step limit, a failed check or the time limit, judges it as the Episode row of Details says, and
-writes `/data/trajectory.npz` and `/data/episode.json` (the live result); the collect hook (`environment/sim/finalize.sh`)
-writes `final.json` from them (no replay) and encodes the video the service kept during the episode (`live.mp4`, a frame of
-`cam_head` at the actions the agent's calls rendered; a failed encode costs the video only); `tests/grade.py` scores 1 iff
-the live episode succeeded: every standard task is graded by its live episode, which the trusted service ran, with no grading replay. Before serving, the service checks the rebuilt layout's state hash against the frozen instance's
-(`instance_mismatch`: an infrastructure failure). The collect hook needs no GPU after the service exits. No oracle;
-human review in PR #142 (no positive example yet). `nop` (no actions) scores 0.
-
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -45,10 +45,10 @@ Caps per container (PROTOCOL §6).
 - GPU: an RTX-class NVIDIA GPU (ray-tracing cores), one of the models in `gpu_types`: L40S, L40, L4, RTX 4090, RTX 6000 Ada, held by `sim`.
 - Recommended GPU: L40S 48GB / L4 24GB / RTX 4090 24GB.
 
-## Details
-| | |
-|---|---|
-| Episode | one episode, no reset, ended by the agent (PROTOCOL §3 "Agent-ended episodes"): at its `/finish`, after RoboDojo's own step limit of 1050 steps (one 25 Hz action each), when its time is up, when a check fails for good (a 0) or on a simulator error; judged on how things stand when it ends: RoboDojo's check holds on the final state (`rcb_robodojo.py` `END_JUDGEMENT`) |
-| Action space | `submit` chunks of `joint_position` (14: RoboDojo's own action at 25 Hz, the agent's `dt` a multiple of 1/25 s) or `ee_pose` (16: both arms' link6 targets, IK per row); `observe` the current frames or those recorded over the last seconds (`last_s`); hold chunks (`hold(s)`); `/kinematics` (FK / IK of both arms, stateless); binary RCB1 responses |
-| Source | RoboDojo @ `cb2a37d` (MIT), its Isaac Lab 2.3 fork @ `afca7b0`, its cuRobo fork @ `d17b54c`; assets from `RoboDojo-Benchmark/RoboDojo` @ `35efbc7` (Apache-2.0) |
-| Benchmark notes | tasks/robodojo/README.md |
+## License
+RoboDojo ([RoboDojo-Benchmark/RoboDojo](https://github.com/RoboDojo-Benchmark/RoboDojo) @ `cb2a37d`) is released
+under the MIT License; its assets (Hugging Face `RoboDojo-Benchmark/RoboDojo`) under the Apache License 2.0; its Isaac
+Lab fork under the BSD 3-Clause License. The image also contains NVIDIA Isaac Sim 5.1 and its wheels (NVIDIA
+proprietary, no redistribution) and RoboDojo's cuRobo fork (NVIDIA's cuRobo licence): each user builds the image from
+public sources and accepts those terms (`images/robodojo/BUILD_ONLY`). No non-commercial terms apply to RoboDojo's
+own code and assets.

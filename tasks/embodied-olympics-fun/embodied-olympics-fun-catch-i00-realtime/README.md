@@ -1,38 +1,49 @@
-# embodied-olympics-fun-catch-i00-realtime
+# Embodied Olympics · fly-ball catch (realtime)
 
 | | |
 |---|---|
-| Benchmark | Embodied Olympics - Fun |
-| Mode | realtime (`eai-standard/3.0`) |
-| Twin | `embodied-olympics-fun-catch-i00-privileged` |
-| Simulator / robot | `mujoco` / `unitree-h1-2` |
-| Family / instance | `catch` / seed 0 |
-| Oracle | `none` — no reference solution; the referee is tested: Both hands are the H1-2's own Inspire five-finger hands at their default forces (20 N per fingertip, 30 N the thumb; no factor); a catch is one hand enclosing the ball (its fingers and its thumb or palm touching it from opposite sides, the two contact directions at least 90 degrees apart), held 1 s. The fly ball is thrown by the two-wheel pitching machine (21.4 m/s at the launch, it lands 1.32 m from the robot untouched). Positive by a declared magic action: real, the robot turns its palm up on stand rows and holds it there; injected once, when the descending ball is below 3 m it is put at rest on that palm; real, the hand closes round it, the catch and the 1 s hold (right and left hands; the same state hash twice). Negatives: nop (the ball lands within 3 m), onto the trunk, touched while still rising, the hand opened after the catch (the ball lies on the open palm: out of the hand), resting on the open palm never closed on (not caught in time), a fall. Stress: random arm targets with the ball in the hand, the ball at most 1.6 mm into the hand. Realtime: physics RTF about 2.1 on the reference workstation (estimated from a same-process comparison on a slower host), above 1.5.; human review in the pull request that adds the benchmark (PROTOCOL §4) |
-| Agent time budget | 7200 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Real time | slowdown S = 1 (the world runs at 1/S of real speed: one control step every S x control_dt s of wall time; `RCB_SLOWDOWN`'s default); reset budget 5 (`RCB_RESET_BUDGET`'s default) (PROTOCOL §3) |
-| Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
+| Task ID | `embodied-olympics-fun-catch-i00-realtime` |
+| Benchmark | [Embodied Olympics - Fun](https://github.com/CHIGUI0/roboolympics) (Embodied Olympics authors, 2026), upstream `CHIGUI0/roboolympics@7df999b` |
+| Robot | Unitree H1-2 humanoid (1.78 m, 67 kg, 27 joints), with Unitree's walking policy |
+| Mode | realtime, slowdown 1 |
+| Instance | `catch`, seed 0 |
+| Time limit | 2 h |
+| Reference solution | None |
 
 ## Task
-Catch the fly ball in one hand before it touches the ground or your body, and keep it in that hand. (Embodied Olympics `catch`; the robot as a service on a clock that does not stop, slowdown S = 1: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Catch the fly ball in one hand before it touches the ground or your body, and keep it in that hand.
 
-## Difficulty
-The ball is in the air for three seconds and comes down at about 17 m/s more than a metre away: the body has to walk there at 0.6 m/s and bring an open hand onto its line, and the fingers need a few tenths of a second to close round it, while a ball that meets the hand at that speed bounces off it in a few milliseconds. The scene is dynamic (A ball machine 40 m away throws the baseball toward the robot at launch_time_s.), and in realtime mode time does not stop: once an attempt's clock starts the venue's timed events happen whatever the agent does, so it has to plan or stream the robot's rows from a program of its own, with no simulator and no state, and 5 resets (only the last attempt is graded).
+## Success criteria
+A pitching machine 40 m in front of the robot throws a baseball at about 1.0 s, so that untouched it would come down
+within 3.0 m of the robot's start. The referee's stages, in order: catch, hold.
+- Catch: one hand's fingers and its thumb or palm touch the ball at the same time from opposite sides (the mean
+  directions of the two contacts at least 90 degrees apart; a ball lying on an open hand is not caught), after the ball
+  has passed the top of its arc and at most 0.5 s after it first touched the robot. Before the catch the ball may
+  touch only the hands and forearms.
+- Hold: from the catch, the ball stays enclosed in that hand for 1.0 s (breaks of at most 0.02 s allowed), touching
+  nothing but that hand. The success is called when the 1.0 s are complete.
 
-## Reference solution
-None (as `embodied-olympics-fun-catch-i00-privileged`).
+Fouls (each fails the attempt at once): before the catch, the ball touches the ground or a part other than a hand or a
+forearm; the ball is touched before it has passed the top of its arc; it is not caught within 0.5 s of first touching
+the robot; after the catch it is out of the hand for longer than 0.02 s, or touches anything but that hand (the other
+hand, a forearm, the body, the ground). Fall (a failure at any time): the pelvis below 0.5 m, or any part other than
+the feet on the ground. Time limit: 9 s (900 control steps).
 
-## Verification
-The sim sidecar (`rcb_realtime.py` + `rcb_service.py`, the realtime layer, with the standard twin's
-`server.py`) runs the attempt on its clock and its referee judges it live; every control step the simulator applied is
-recorded, and the live referee's call on the last attempt is the verdict (`final.json`: `graded_by` live, `replays` 0; no
-grading replay, owner 2026-10-17); the video is rendered from the recorded attempt afterwards.
-`/tests/grade.py` reads `/data/final.json`: pass iff the live attempt succeeded. The clock's record
-(`stalls`, `max_lag_s`, ...) is copied into `reward.json` and decides nothing. `nop`: the attempt never starts (its
-clock starts at the first submit), reward 0. The
-rules: A baseball (0.073 m across, 0.145 kg, it flies in air with drag) is thrown by a two-wheel pitching machine 40.0 m in front of you: it leaves the machine's wheels 1.0 m above the ground at about t = 1.0 s, at about 21.35 m/s, about 45.0 degrees above the horizon and 1.18 degrees to the left of the line from the machine to you (it is launched when it has left the wheels), so that untouched it would come down within 3.0 m of where you stand at the start. Both your hands are five-finger hands (a thumb and four fingers, one closure command per hand) that hold things only by contact and friction; they start open. A catch: one hand's fingers and its thumb or palm touch the ball at the same time from opposite sides (the mean directions of the fingers' contacts and of the thumb's and palm's contacts at least 90.0 degrees apart: a ball lying on an open hand is not caught), after the ball has passed the top of its arc and at the latest 0.5 s after it first touched you. Before the catch the ball may touch only your hands and forearms. You succeed when, from the catch, the ball has stayed enclosed in that hand for 1.0 s (apart from breaks of at most 0.02 s) touching nothing but that hand. You fail if the ball touches the ground, or any part of you other than a hand or a forearm, before the catch; if it is touched before it has passed the top of its arc; if it is not caught within 0.5 s of first touching you; if after the catch it is out of the hand for longer than 0.02 s (dropped, slipped out or let go: a ball caught again does not count) or touches anything but the hand that caught it (your other hand, a forearm, your body, the ground); if you fall (your pelvis lower than 0.5 m above the ground, or any part of you other than your feet on the ground) before the end; or after 9 s. No oracle; human review in the pull request that adds the benchmark (PROTOCOL §4).
+Graded: the live attempt, judged by the referee in the simulator service as it runs; nothing is replayed. The clock
+does not stop: an attempt starts paused at the frozen start, and from the agent's first `submit` one control step runs
+every 10 ms × S of wall time (slowdown S = 1) whether or not the agent sends anything; when the planned
+commands run out the last ones are held. The referee's success call is an event: once it is made at some control step,
+the attempt is a success. It is never shown to the agent and does not end the attempt: the physics goes on until the
+agent's `/finish`, the attempt's time limit, or the end of the agent's time (2 h), and nothing after the call
+undoes it. A failure the referee calls before any success (a foul, a fall, the physics diverging) ends the attempt at
+once with 0. Reaching the time limit or the end of the session without a success call scores 0. The agent has
+5 resets, each starting a new, paused attempt from the frozen start; only the last attempt (the one after the
+last reset) is graded. After the agent's first command, a simulator error or a simulator crash inside a control step
+is the agent's 0; anything before the first command, a killed service, a failed resume or a reset that does not
+rebuild the scene is an infrastructure failure, not a score.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -43,14 +54,10 @@ Caps per container (PROTOCOL §6).
 - GPU: any NVIDIA GPU, held by `sim`.
 - Recommended GPU: any NVIDIA GPU with EGL (RTX 4090 / L4).
 
-## Details
-| | |
-|---|---|
-| Category | throwing-catching-striking |
-| Rule book | Official Baseball Rules (MLB, 2024 edition): 3.01 (the ball), Definitions of Terms: "catch" (secure possession in the hand before the ball touches the ground, held long enough to show control), "in flight"; deviations: Definitions (catch): no glove; both hands are the H1-2's own Inspire five-finger hands (six self-locking drives; 20 N at each fingertip, 30 N at the thumb; a full close in about 0.8 s), bare. A catch is one hand enclosing the ball: its fingers and its thumb or palm touching the ball at the same time from opposite sides (the mean directions of the two contacts at least 90.0 degrees apart: the hand closed on it, not a ball lying on an open hand), at the latest 0.5 s after the ball first touched you; "held long enough" is 1.0 s in which the ball stays enclosed in that hand (breaks of at most 0.02 s) and touches nothing else, without falling. Nothing is welded: the ball is held only by the fingers' contact and friction and can slip out. · Definitions (catch): a ball that touches the body (any part other than the hands and the forearms) before it is caught is not a catch here (the rule would allow trapping it against the body), and neither is a ball held at the end by anything but the hand that caught it (the other hand, a forearm, the body). · The fly ball is not batted: a two-wheel pitching machine 40.0 m away throws it at about 21.35 m/s, about 45.0 degrees above the horizon, about 1.0 s after the start, with the little spin its wheels give it; where it comes down (within 3.0 m of where you stand) is this instance's draw. · Flight: quasi-steady aerodynamics (MuJoCo's ellipsoid fluid model: drag and Magnus lift), still air. |
-| Stages | catch → hold |
-| Service | `environment/sim/rcb_realtime.py` (the shared realtime layer, eai-standard/3.0) with the standard twin's `server.py` on `rcb_service.py`, `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's); EGL rendering on the GPU |
-| Slowdown | S = 1 (`RCB_SLOWDOWN`'s default): RTF 0.93 with the clock flat out (physics only, the start command held, 4 attempts) on the slowest evaluation host kind (AMD EPYC 7763, one thread; estimated from Xeon Gold 6338 measurements); S = 1 in every family: Embodied Olympics runs the venue in real time (PROTOCOL §2's default would slow these hosts down; a slower host may fall behind, which the clock's record reports) |
-| Observations | `head_left`, `head_right` (RGB 270 × 480, depth on `head_left`), `venue` (fixed); proprioception: joints, torques, targets, two IMUs, grip state |
-| Episode | 900 control steps (9 s at 100 Hz); 5 resets, the last attempt graded |
-| Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md) |
+## License
+The Embodied Olympics robot library and running-policy port ([CHIGUI0/roboolympics](https://github.com/CHIGUI0/roboolympics)
+@ `7df999b`, a private repository) is released under the MIT License (`LICENSE.roboolympics` in the image); this
+benchmark's venues and referees are MIT too. Third-party parts in the image: the Unitree G1 model and meshes from MuJoCo
+Menagerie (BSD-3-Clause), the Unitree H1-2 model, meshes and walking policy and the G1 walking policy from
+unitree_rl_gym (BSD-3-Clause), the G1 running policy from C1801SYQ/g1_running (Apache-2.0), FALCON's G1 walking policy
+from LeCAR-Lab/FALCON (MIT) and the WBC-AGILE G1 walking policy from NVIDIA (Apache-2.0). No non-commercial terms apply.

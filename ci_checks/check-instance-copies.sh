@@ -5,7 +5,7 @@
 # scorer sidecar holds the trusted copy and the agent's environment/ copy is reduced by design; standard and realtime:
 # the sim sidecar's environment/sim/, and their own tests/ copy where they carry one) are byte-identical. A standard or
 # realtime task shares its privileged twin's copy where the twin exists; without a twin (a benchmark may ship any subset
-# of the modes; the README's Twin row says why, an advisory check reads it) it carries its own, and its sim copy and its
+# of the modes; task_conventions.no_twin_reason says why, check-task-layout.py reads it) it carries its own, and its sim copy and its
 # tests/ copy, where both exist, are byte-identical.
 # The instance files (the names the suites freeze an instance under):
 #   instance.json, instance.npz   the frozen instance; neither copy exists without the other

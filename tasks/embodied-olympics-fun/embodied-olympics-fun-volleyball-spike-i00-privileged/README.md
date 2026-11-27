@@ -1,31 +1,69 @@
-# embodied-olympics-fun-volleyball-spike-i00-privileged
+# Embodied Olympics · volleyball spike (privileged)
 
 | | |
 |---|---|
-| Benchmark | Embodied Olympics - Fun |
+| Task ID | `embodied-olympics-fun-volleyball-spike-i00-privileged` |
+| Benchmark | [Embodied Olympics - Fun](https://github.com/CHIGUI0/roboolympics) (Embodied Olympics authors, 2026), upstream `CHIGUI0/roboolympics@7df999b` |
+| Robot | Unitree H1-2 humanoid (1.78 m, 67 kg, 27 joints), with Unitree's walking policy |
 | Mode | privileged |
-| Twin | `embodied-olympics-fun-volleyball-spike-i00-standard` |
-| Simulator / robot | `mujoco` / `unitree-h1-2` |
-| Family / instance | `volleyball_spike` / seed 0 |
-| Oracle | `none` — no reference solution; the referee is tested: positive by injection (a 3.2 m/s ghost jump, the ball's velocity set on the fist at 2.70 m, the landing softened); the set comes from a volleyball machine on a stand at the setter's place (exit 7.7 m/s, 55 deg, at 2.3 m), peaks at 4.49 m and comes down 0.5 m from the net at 2.8 m height, 1.21 s after it leaves; negatives: a leg tuck, a lift without a jump, a still fist in a jump (0.87 back), from the floor, below the net, before the apex, upward, into the net, long, the antenna, outside the antenna, a second touch, held, the net, the centre line, a fall, touching the machine. No jump or landing controller exists for the H1-2; human review in the pull request that adds the benchmark (PROTOCOL §4) |
-| Agent time budget | 7200 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
+| Instance | `volleyball_spike`, seed 0 |
+| Time limit | 2 h |
+| Reference solution | None |
 
 ## Task
-Spike the set: jump and hit the ball with a hand above the net down into the opponent's court, then land on your feet without touching the net and stand. (Embodied Olympics `volleyball-spike`: one Unitree H1-2 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
+Spike the set: jump and hit the ball with a hand above the net down into the opponent's court, then land on your feet
+without touching the net and stand.
 
-## Difficulty
-The robot reaches 2.24 m standing: its hand has to be above 2.43 m, so it must jump at least a quarter of a metre, after an approach of about 2 m on a walking policy, and swing through a ball that falls through the reachable window in under a tenth of a second, half a metre from a net it may not touch, then land a 67 kg body on its feet. No jumping skill is built in.
+## Success criteria
+An official volleyball court (9.0 m by 9.0 m on each side of the net; the net's top 2.43 m high, an antenna above each
+side line). The robot is the outside hitter, standing on its attack line facing the net 3.0 m ahead, the left side line
+1.0 m to its left. A volleyball (0.21 m across, 0.27 kg) is set by a ball machine from the robot's right 3.0 s after the
+start; it rises to about 4.5 m and comes down 0.5 m from the net in front of the robot. The referee's stages, in order:
+spike, over the net, in the court, landing.
+- Spike: the ball's first contact after the set, before it touches the floor, is with a hand (the parts beyond the
+  wrist; one or both), after the ball has passed its highest point, at contact points all higher than the net's top,
+  while the robot is in the air (nothing of it touching the floor or anything else). Its contacts last at most 0.1 s
+  (over when the ball has been clear of the robot for 0.03 s); the ball leaves the hand moving downward and at least 1.0
+  times as fast as just before the hand touched it.
+- Over the net: the ball's centre crosses the net's plane above the net's top and between the side lines (it may touch
+  the net).
+- In the court: the ball's first contact with the floor is in the opponent's court (9.0 m by 9.0 m, lines included).
+  From then on the ball is dead and what it touches is not judged.
+- Landing: the flight of the spike was a jump (when it lands, the pelvis had risen at least 0.1 m above its height when
+  the feet left the floor), and the robot then stands for 1.0 s without a break: only the feet on the floor, the trunk
+  within about 20 degrees of upright, the pelvis slower than 0.35 m/s. The success is called at the end of the 1.0 s.
 
-## Reference solution
-None. No reference controller exists for this family yet: positive by injection (a 3.2 m/s ghost jump, the ball's velocity set on the fist at 2.70 m, the landing softened); the set comes from a volleyball machine on a stand at the setter's place (exit 7.7 m/s, 55 deg, at 2.3 m), peaks at 4.49 m and comes down 0.5 m from the net at 2.8 m height, 1.21 s after it leaves; negatives: a leg tuck, a lift without a jump, a still fist in a jump (0.87 back), from the floor, below the net, before the apex, upward, into the net, long, the antenna, outside the antenna, a second touch, held, the net, the centre line, a fall, touching the machine. No jump or landing controller exists for the H1-2.
+Fouls (each fails the attempt at once):
+- the robot touches the ball machine or the ball waiting in it;
+- the ball touches the floor before the spike;
+- any part of the robot other than a hand touches the ball;
+- the first contact comes before the ball has passed its highest point, from the floor, with a contact point at or below
+  the net's top, or in a flight in which the pelvis does not rise 0.1 m;
+- the contacts last longer than 0.1 s; the ball leaves the hand upward or slower than it came;
+- a hand touches the ball again;
+- the ball touches an antenna, crosses the net's plane before the spike, under the net's top or outside the side lines,
+  or lands anywhere but in the opponent's court;
+- the robot touches the net, an antenna or a post at any time; a foot is on the floor wholly beyond the centre line.
+Fall (a failure at any time): the pelvis lower than 0.35 m, or any part other than the feet on the floor. Time limit: 12
+s (1,200 control steps).
 
-## Verification
-`/tests/grade.py` replays `/app/output/trajectory.npz` from the frozen start in one fresh process (`rcb_rfo.py replay`:
-one sim row per control step until the referee ends the attempt). Pass iff the referee's verdict is a success. The rules: You are the outside hitter on an official volleyball court (9.0 m by 9.0 m on each side of the net; the net's top 2.43 m high, an antenna above each side line). You stand on your attack line facing the net, which is 3.0 m ahead of you; the left side line is 1.0 m to your left. A volleyball (0.21 m across, 0.27 kg, in air) is set from your right 3.0 s after the start: it rises to 4.5 m and comes down 0.5 m from the net, in front of you. In order: (1) the spike: the ball's first contact after the set, before it touches the floor, is with a hand of yours (the parts beyond the wrist; one or both), after the ball has passed its highest point, at points that are all higher than the net's top, while you are in the air (nothing of you touches the floor or anything else) in a jump: during that flight your pelvis rises at least 0.1 m above the height it had when your feet left the floor. All contacts lie within 0.1 s (the strike is over when the ball has been clear of you for 0.03 s), and the ball leaves your hand moving downward and at least 1.0 times as fast as it was just before the hand touched it. (2) the ball crosses the net's plane above the net and between the antennas; it may touch the net. (3) the ball's first contact with the floor is in the opponent's court (9.0 m by 9.0 m, lines included); from then on the ball is dead and what it touches is not judged. (4) after that you stand for 1.0 s without a break (only your feet on the floor, your trunk within about 20 degrees of upright, your pelvis slower than 0.35 m/s): that is the success. You fail if you touch the ball machine or the ball waiting in it, if the ball touches the floor before the spike, if any part of you other than a hand touches it, if you touch it before it has passed its highest point, from the floor, below the height of the net's top, or in a flight in which your pelvis did not rise 0.1 m, if the contacts last longer than 0.1 s, if the ball leaves the hand upward or slower than that, if you touch the ball again, if it crosses the net's plane under the net or outside the antennas or touches an antenna, if it lands anywhere else, if you touch the net, an antenna or a post at any time, if a foot of yours is on the floor wholly beyond the centre line, if you fall (your pelvis lower than 0.35 m above the floor, or any part of you other than the feet on the floor), or after 12 s. The ball cannot be gripped. No oracle; human review in the pull request that adds the benchmark (PROTOCOL §4).
+Graded file: `/app/output/trajectory.npz`, as `s.save_trajectory()` writes it: an `actions` array of sim rows, one per
+10 ms control step, and the task's family name. After the agent's session it is replayed once, open-loop, from the
+frozen start, in a fresh process of a separate verifier container without network. Rows run one per control step
+until the referee calls the attempt; rows after the call, and rows past the attempt's time limit, are not run. The
+task is passed if the referee has called a success when the replay stops. If the rows run out before the referee's
+call, the task is not passed. A row the robot cannot run (its first value, the mode, is not one of the robot's modes)
+ends the replay at that row without a pass.
 
-## Resources
-Caps per container (PROTOCOL §6).
+The physics diverging (a non-finite state, a bad acceleration, or the robot or a prop faster than 150 m/s) ends the
+attempt as a failure, unless a success was called in an earlier control step. Only the trajectory is scored (`gen.py`
+and `NOTES.md` are not). A missing file, a file that is not such an array (a link, over 64 MB, more than 40,000 rows,
+the wrong row width), a file for another task, or a non-finite value in the rows that are used scores 0. An image that
+no longer rebuilds the frozen start, or a replay that crashes or runs over 600 s, is an infrastructure failure, not a
+score.
+
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -34,14 +72,10 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Category | football-and-volleyball |
-| Rule book | FIVB Official Volleyball Rules 2025-2028: Rule 1 (the court 18 m x 9 m, the attack lines), Rule 2 (the men's net, top at 2.43 m, the antennas), Rule 3 (the ball: 65-67 cm round, 260-280 g), Rule 8 (ball in and out: the lines belong to the court; a ball that touches an antenna or crosses outside the crossing space is out), Rule 9.2 (the hit: not caught or thrown, one contact), Rule 10.2 (the ball may touch the net), Rule 11.2-11.3 (the foot not wholly beyond the centre line; no contact with the net), Rule 13 (the attack hit); deviations: The set is played by a two-wheel volleyball machine on a stand at the setter's place (position 2/3) instead of a team-mate, the same in every attempt: its wheels, at equal speeds, drive the ball out 2.3 m above the floor at about 8 m/s without spin; it rises to about 4.5 m and comes down 0.5 m from the net at position 4. · The family asks for the spike, where Rule 13 allows any attack hit: the ball is struck with a hand (the parts beyond the wrist) at a point above the height of the net's top, while the robot is in the air in a jump (its pelvis rises at least 0.1 m above where it was when the feet left the floor: drawing the legs up is not a jump), after the ball has passed its highest point, and the ball leaves the hand moving downward and at least 1.0 times as fast as it arrived (a hand held in the ball's path returns it slower). 'Not caught or thrown' is a contact of at most 0.1 s. · Rule 11 is judged for the whole attempt, until the robot has landed and stood for 1.0 s after the ball is down: there is no rally to end the play. · Rule 2: the net is a rigid panel 1 m deep and the posts and antennas are rigid (a real net is a mesh under tension that gives); a robot touching any of them commits the Rule 11 fault all the same. A ball that touches it (Rule 10.2 allows it) rebounds as off a panel, not off a mesh. · No blockers or defenders, no wind. |
-| Stages | spike → over the net → in the court → landing |
-| Instance | `environment/instance.json` = `tests/instance.json`: the family's parameters, t = 0 state hash `ca9d7983863022f85da5a8e167b6d8252354822215b9d1886df63531b5342a7a` |
-| Episode | 1200 control steps (12 s at 100 Hz) |
-| Action | sim rows of 141 floats per control step (`rfo/world.py`); six action types are views of it |
-| Tooling | `/opt/tools/rcb_rfo.py`, `/opt/tools/rfo/` (the world, the action layer, the referee's toolkit; from the files-only image images/embodied-olympics-fun-files/, built from embodied_first_exam/benchmarks/embodied-olympics-fun/) and `environment/rfo_task.py` (this family's rules), the same files in the verifier's `/tests/` |
-| Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md) |
+## License
+The Embodied Olympics robot library and running-policy port ([CHIGUI0/roboolympics](https://github.com/CHIGUI0/roboolympics)
+@ `7df999b`, a private repository) is released under the MIT License (`LICENSE.roboolympics` in the image); this
+benchmark's venues and referees are MIT too. Third-party parts in the image: the Unitree G1 model and meshes from MuJoCo
+Menagerie (BSD-3-Clause), the Unitree H1-2 model, meshes and walking policy and the G1 walking policy from
+unitree_rl_gym (BSD-3-Clause), the G1 running policy from C1801SYQ/g1_running (Apache-2.0), FALCON's G1 walking policy
+from LeCAR-Lab/FALCON (MIT) and the WBC-AGILE G1 walking policy from NVIDIA (Apache-2.0). No non-commercial terms apply.

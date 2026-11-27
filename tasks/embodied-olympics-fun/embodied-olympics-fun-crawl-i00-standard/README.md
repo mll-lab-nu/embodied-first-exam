@@ -1,34 +1,41 @@
-# embodied-olympics-fun-crawl-i00-standard
+# Embodied Olympics · crawl (standard)
 
 | | |
 |---|---|
-| Benchmark | Embodied Olympics - Fun |
-| Mode | standard (`eai-standard/3.0`) |
-| Twin | `embodied-olympics-fun-crawl-i00-privileged` |
-| Simulator / robot | `mujoco` / `unitree-g1` |
-| Family / instance | `crawl` / seed 0 |
-| Oracle | `none` — no reference solution; the referee is tested: positive by injection (the robot laid prone, 0.27 m high, and dragged under the 21 wires by a force on the pelvis); negatives: walking upright into a wire, on hands and knees (0.46 m: a wire touched), round, over, not under, stopping inside. No crawling controller exists; human review in the pull request that adds the benchmark (PROTOCOL §4) |
-| Agent time budget | 7200 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
+| Task ID | `embodied-olympics-fun-crawl-i00-standard` |
+| Benchmark | [Embodied Olympics - Fun](https://github.com/CHIGUI0/roboolympics) (Embodied Olympics authors, 2026), upstream `CHIGUI0/roboolympics@7df999b` |
+| Robot | Unitree G1 humanoid (1.32 m, 33 kg, 29 joints), with Unitree's walking and running policies |
+| Mode | standard |
+| Instance | `crawl`, seed 0 |
+| Time limit | 2 h |
+| Reference solution | None |
 
 ## Task
-Crawl under all the low wires until you are past the last, yellow one, without touching a wire. (Embodied Olympics `crawl`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Crawl under all the low wires until you are past the last, yellow one, without touching a wire.
 
-## Difficulty
-Neither built-in gait works below 0.45 m, and on hands and knees this robot is about 0.46 m high, just too tall: it has to get down from standing and move 10.0 m and its own length flat on the ground with joint commands of its own, never lifting any part into a wire. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 5 resets (only the last attempt is graded).
+## Success criteria
+A lane 2.0 m wide runs along the robot's forward direction, with wires across it every 0.5 m over 10.0 m, the first
+1.0 m ahead of the pelvis' start; each wire's centre is 0.45 m above the ground. The referee's stages, in order: under
+the first wire (the whole body past the first wire, the pelvis under the wires), half way (the pelvis past the
+middle), through (every part of the robot past the last wire). The success is called at through.
 
-## Reference solution
-None (as `embodied-olympics-fun-crawl-i00-privileged`).
+Fouls (each fails the attempt at once): any part of the robot touches a wire; while the pelvis is between the first
+and the last wire, it is higher than 0.45 m or outside the lane; the whole body is past the last wire without the
+pelvis having passed under the wires and the half-way mark. Any part may touch the ground (there is no fall rule), and
+the posts may be touched. Time limit: 120 s (12,000 control steps).
 
-## Verification
-The sim sidecar's referee judges the live attempt, and that is the verdict (`final.json`: `graded_by` live, `replays` 0;
-no grading replay, owner 2026-10-17); the frozen start is checked on the live simulator (`instance_mismatch`:
-infrastructure), and the video is rendered from the recorded attempt afterwards. `/tests/grade.py` reads
-`/data/final.json`: pass iff the live attempt succeeded. The
-rules: The obstacle is a lane along +x, 2.0 m wide between two rows of posts, centred on y = 0. Horizontal wires cross it every 0.5 m over 10.0 m: the first is 1.0 m ahead of where your pelvis starts, the last 10.0 m further on. Each wire is 0.008 m thick with its centre 0.45 m above the ground. You succeed when your whole body (every part of you) is beyond the last wire, having passed under all of them. There is no fall rule: any part of you may touch the ground, and you need not stand up at the end. You fail the moment any part of you touches a wire; if your pelvis, while it is between the first and the last wire, is higher than 0.45 m (going over) or outside the lane (going round, beyond a row of posts); if your whole body is beyond the last wire without your pelvis having passed under the wires; or after 120 s. The posts may be touched. No oracle; human review in the pull request that adds the benchmark (PROTOCOL §4).
+Graded: the live attempt, judged by the referee in the simulator service as it runs; nothing is replayed. The referee's
+success call is an event: once it is made at some control step, the attempt is a success. It is never shown to the
+agent and does not end the attempt: the physics goes on until the agent's `/finish`, the attempt's time limit, or the
+end of the agent's time (2 h), and nothing after the call undoes it. A failure the referee calls before any
+success (a foul, a fall, the physics diverging) ends the attempt at once with 0. Reaching the time limit or the end of
+the session without a success call scores 0. The agent has 5 resets, each starting a new attempt from the
+frozen start; only the last attempt (the one after the last reset) is graded, and a success in an earlier attempt does
+not count. A simulator error raised by the agent's own call ends the attempt with 0. An attempt that does not start
+from the frozen instance, or a service crash outside the agent's calls, is an infrastructure failure, not a score.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -38,13 +45,10 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Category | parkour-apparatus-balance |
-| Rule book | No federation rule book: the low-wire crawl of military obstacle courses and obstacle-course racing (wires strung about 18 in, 0.45 m, above the ground; the athlete passes under all of them and may not go round or over). The layout is this benchmark's: wires every 0.5 m over 10 m; deviations: the wires: each wire is a rigid, fixed bar 8 mm thick between two posts, not a slack (barbed) wire, because the simulator has rigid bodies only; touching one fails the attempt, as a judge's fault for a snagged wire · the ground: level and rigid with a friction coefficient of 1.0, not sand or mud, because the simulator's ground is rigid |
-| Stages | under the first wire → half way → through |
-| Service | `environment/sim/server.py` (the Embodied Olympics adapter) on `rcb_service.py` (eai-standard/3.0), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
-| Observations | `head_left`, `head_right` (RGB 270 × 480, depth on `head_left`), `venue` (fixed); proprioception: joints, torques, targets, two IMUs, grip state |
-| Episode | 12000 control steps (120 s at 100 Hz); 5 resets, the last attempt graded |
-| Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md) |
+## License
+The Embodied Olympics robot library and running-policy port ([CHIGUI0/roboolympics](https://github.com/CHIGUI0/roboolympics)
+@ `7df999b`, a private repository) is released under the MIT License (`LICENSE.roboolympics` in the image); this
+benchmark's venues and referees are MIT too. Third-party parts in the image: the Unitree G1 model and meshes from MuJoCo
+Menagerie (BSD-3-Clause), the Unitree H1-2 model, meshes and walking policy and the G1 walking policy from
+unitree_rl_gym (BSD-3-Clause), the G1 running policy from C1801SYQ/g1_running (Apache-2.0), FALCON's G1 walking policy
+from LeCAR-Lab/FALCON (MIT) and the WBC-AGILE G1 walking policy from NVIDIA (Apache-2.0). No non-commercial terms apply.

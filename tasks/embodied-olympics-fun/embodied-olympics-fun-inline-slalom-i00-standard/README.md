@@ -1,34 +1,54 @@
-# embodied-olympics-fun-inline-slalom-i00-standard
+# Embodied Olympics · inline slalom (standard)
 
 | | |
 |---|---|
-| Benchmark | Embodied Olympics - Fun |
-| Mode | standard (`eai-standard/3.0`) |
-| Twin | `embodied-olympics-fun-inline-slalom-i00-privileged` |
-| Simulator / robot | `mujoco` / `unitree-g1` |
-| Family / instance | `inline_slalom` / seed 0 |
-| Oracle | `none` — no reference solution; the referee is tested: positive by injection (the floating base written every control step along a weaving path, one skate rolling, the other lifted; cones, skates and wheels are physics); the real run-up only: a scripted swizzle (IK) skates from the start box over the 12 m run-up in 12.3 s on two feet, which the referee voids at the second cone (7.4.2.2). No one-foot controller exists for the G1: one-skate glides steered by capture point last at most 2.2 s at 2 m/s; human review in the pull request that adds the benchmark (PROTOCOL §4) |
-| Agent time budget | 7200 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
+| Task ID | `embodied-olympics-fun-inline-slalom-i00-standard` |
+| Benchmark | [Embodied Olympics - Fun](https://github.com/CHIGUI0/roboolympics) (Embodied Olympics authors, 2026), upstream `CHIGUI0/roboolympics@7df999b` |
+| Robot | Unitree G1 humanoid (1.32 m, 33 kg, 29 joints), with Unitree's walking and running policies |
+| Mode | standard |
+| Instance | `inline_slalom`, seed 0 |
+| Time limit | 2 h |
+| Reference solution | None |
 
 ## Task
-Skate the speed slalom: from the start box, skate on one foot through the 20 cones, passing them alternately left and right, and over the end line. (Embodied Olympics `inline-slalom`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Skate the speed slalom: from the start box, skate on one foot through the 20 cones, passing them alternately left and
+right, and over the end line.
 
-## Difficulty
-Skating is pushing against wheels that only grip sideways: the robot has no skating gait and no balance on one foot, and on one skate it stands on a line of wheels, so it can only stay up by steering the skate under its weight while weaving through cones 0.8 m apart. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 5 resets (only the last attempt is graded).
+## Success criteria
+The robot wears inline skates (four wheels in a line on each). 20 free plastic cones (0.078 m high, 0.02 kg) stand on
+the line y = 0, one every 0.8 m from 12 m beyond the start line; the end line is 0.8 m beyond the last cone. The
+referee's stages, in order: start, cone line, cone 5, cone 10, cone 15, cone 20, finish.
+- Start: the front of the robot's body at 0.40 m above the ground (the gate beam's height) crosses the start line,
+  within 5 s of the start.
+- Cone line: the front wheel of either skate reaches the front edge of the first cone. If not exactly one skate is
+  on the ground at that moment, that is one penalty. The first skate that is alone on the ground is the supporting
+  skate; from then on the other (free) skate must not touch the ground, and a change of feet is not allowed.
+- Cones: a cone is passed when the supporting skate's centre reaches the cone; it is passed on the side of the line
+  where that skate is. Cone 5, 10, 15 and 20 are stages.
+- Finish: the front wheel of the supporting skate crosses the end line first, with that skate on the ground, after
+  all 20 cones are passed.
+- Penalties, counted at the finish: each kicked cone (its base centre more than 0.0335 m from its mark, or tilted more
+  than 30 degrees), each missed interval (two cones in a row passed on the same side), and the first-cone penalty
+  above (not counted again if the first cone is kicked). More than 4 penalties fail the attempt.
 
-## Reference solution
-None (as `embodied-olympics-fun-inline-slalom-i00-privileged`).
+Fouls (each fails the attempt): no start within 5 s; not on one skate when the second cone is passed; the free skate
+touches the ground; the free skate's front wheel crosses the end line first; the supporting skate is in the air at
+the end line; the end line is crossed before all 20 cones are passed. Fall rule: on, the pelvis below 0.45 m or any
+part of the robot other than the feet on the ground (the skates' wheels and frames may touch it). Time limit: 60 s
+(6,000 control steps), from the start, not from the gate beam.
 
-## Verification
-The sim sidecar's referee judges the live attempt, and that is the verdict (`final.json`: `graded_by` live, `replays` 0;
-no grading replay, owner 2026-10-17); the frozen start is checked on the live simulator (`instance_mismatch`:
-infrastructure), and the video is rendered from the recorded attempt afterwards. `/tests/grade.py` reads
-`/data/final.json`: pass iff the live attempt succeeded. The
-rules: You wear inline skates (rigid boots on your feet, four wheels in a line on each, the outer ones 0.064 m and the inner ones 0.062 m in diameter, 0.064 m apart). The course runs along +x on a level sports floor: the start line at x = 0 and a second line 0.4 m behind it (the start box), 20 cones on the line y = 0 every 0.8 m from x = 12.0 m, the end line 0.8 m beyond the last cone. The cones are free plastic cups 0.078 m high, 0.074 m across the base, 0.02 kg, standing on marking stickers. Time starts when any part of your body crosses the start line at the gate beam's height, 0.4 m above the ground; you must do that within 5.0 s of t = 0. The cone line begins at the front edge of the first cone: enter it on one foot (one skate's wheels on the ground, the other skate in the air), or the first cone counts as missed (a penalty); not being on one foot when your skate passes the second cone voids the run. From then on the free skate must not touch the ground until the end line (that voids the run; so does changing feet). Pass the cones alternately on the left and the right with the supporting skate: two consecutive cones on the same side are a missed interval. A cone whose marking centre is uncovered at the finish (its base centre moved more than 0.0335 m (the base's radius less the centre point's), or tilted more than 30.0 degrees) is kicked. Each kicked cone or missed interval adds 0.2 s; more than 4 penalties void the run. The run ends when the front wheel of your supporting skate crosses the end line with a wheel of that skate on the ground (crossing first with the free skate, or in the air, voids it); every cone must have been passed. Your time is the time from the beam to the end line plus the penalties. You succeed with a valid run that ends within 60 s of t = 0. You also fail if any part of you touches the ground (the skates' wheels and frames may) or your pelvis drops below 0.45 m (a fall). No oracle; human review in the pull request that adds the benchmark (PROTOCOL §4).
+Graded: the live attempt, judged by the referee in the simulator service as it runs; nothing is replayed. The referee's
+success call is an event: once it is made at some control step, the attempt is a success. It is never shown to the
+agent and does not end the attempt: the physics goes on until the agent's `/finish`, the attempt's time limit, or the
+end of the agent's time (2 h), and nothing after the call undoes it. A failure the referee calls before any
+success (a foul, a fall, the physics diverging) ends the attempt at once with 0. Reaching the time limit or the end of
+the session without a success call scores 0. The agent has 5 resets, each starting a new attempt from the
+frozen start; only the last attempt (the one after the last reset) is graded, and a success in an earlier attempt does
+not count. A simulator error raised by the agent's own call ends the attempt with 0. An attempt that does not start
+from the frozen instance, or a service crash outside the agent's calls, is an infrastructure failure, not a score.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -38,13 +58,10 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Category | parkour-apparatus-balance |
-| Rule book | World Skate Inline Freestyle Regulation (update of October 2025): 3.10 official cones (7.6-8.0 cm high, base 7.2-7.5 cm, top 2.4-2.7 cm); 4.2 the cone lines and their marking stickers (7.7 cm, a 0.7 cm centre point); 7 Speed Slalom (on one foot, as fast as possible): 7.1.1 20 cones 80 cm apart, 7.1.3 the start box (two start lines 40 cm apart), 7.1.5 the first cone 12 m from the start line and the end line 80 cm beyond the last cone, 7.3.1.1 the free start of the time trials (time starts when any part of the body crosses the gate beam, 40 cm above the ground), 7.3.2 the cone line entered on one foot, 7.3.3 the end line crossed by the supporting foot with a wheel on the ground, 7.4.2 first-cone penalties, 7.4.3 the free foot and changing foot, 7.4.4 end-line penalties, 7.4.5 +0.2 s per kicked cone or missed interval, more than 4 cone penalties void the run; deviations: 7.3.1.1 the start: "Ready" is t = 0 with the robot standing in the start box on both skates; it has 5.0 s to break the gate beam; a false start's warning and restart are not modelled (one run) · 7.1.1-7.1.4 one cone line, without the second line and the divider (one skater, one time-trial run) · 7.4.5.2 a kicked cone (its marking centre revealed) is judged at the finish: the cone's base centre more than 0.0335 m (the base's radius less the centre point's) from its mark, or the cone tilted more than 30.0 degrees · the missed interval and the side of each cone are judged on the supporting skate's centre: the side of the cone line it is on when it passes each cone; two consecutive cones on the same side are one missed interval · the finish gate (20 cm above the ground) is the supporting skate's front wheel reaching the end line · the skates are rigid bodies held to the feet by a rigid boot (no ankle flex in the boot); the wheels are ellipsoids (their rounded profile) on frictionless axles · success is a valid run within 60 s, the family's own round number for this robot: the rule book only ranks times |
-| Stages | start → cone line → cone 5 → cone 10 → cone 15 → cone 20 → finish |
-| Service | `environment/sim/server.py` (the Embodied Olympics adapter) on `rcb_service.py` (eai-standard/3.0), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
-| Observations | `head_left`, `head_right` (RGB 270 × 480, depth on `head_left`), `venue` (fixed); proprioception: joints, torques, targets, two IMUs, grip state |
-| Episode | 6000 control steps (60 s at 100 Hz); 5 resets, the last attempt graded |
-| Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md) |
+## License
+The Embodied Olympics robot library and running-policy port ([CHIGUI0/roboolympics](https://github.com/CHIGUI0/roboolympics)
+@ `7df999b`, a private repository) is released under the MIT License (`LICENSE.roboolympics` in the image); this
+benchmark's venues and referees are MIT too. Third-party parts in the image: the Unitree G1 model and meshes from MuJoCo
+Menagerie (BSD-3-Clause), the Unitree H1-2 model, meshes and walking policy and the G1 walking policy from
+unitree_rl_gym (BSD-3-Clause), the G1 running policy from C1801SYQ/g1_running (Apache-2.0), FALCON's G1 walking policy
+from LeCAR-Lab/FALCON (MIT) and the WBC-AGILE G1 walking policy from NVIDIA (Apache-2.0). No non-commercial terms apply.

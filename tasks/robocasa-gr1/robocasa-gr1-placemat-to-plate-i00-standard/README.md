@@ -1,32 +1,42 @@
-# robocasa-gr1-placemat-to-plate-i00-standard
+# RoboCasa-GR1 · PosttrainPnPNovelFromPlacematToPlateSplitA (standard)
 
 | | |
 |---|---|
-| Benchmark | RoboCasa-GR1 |
-| Mode | standard (`eai-standard/3.0`) |
-| Twin | `robocasa-gr1-placemat-to-plate-i00-privileged` |
-| Simulator / robot | `robosuite` / `fourier-gr1` |
-| Family / instance | `robocasa-gr1/PosttrainPnPNovelFromPlacematToPlateSplitA` / seed 0 |
-| Oracle | `full` |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:robocasa-gr1-0.1.0` |
+| Task ID | `robocasa-gr1-placemat-to-plate-i00-standard` |
+| Benchmark | [RoboCasa-GR1](https://github.com/robocasa/robocasa-gr1-tabletop-tasks) (NVIDIA et al., 2025), upstream `robocasa/robocasa-gr1-tabletop-tasks@4840e67` |
+| Robot | Fourier GR1 humanoid (two arms, waist and two six-command dexterous Fourier hands; fixed base) |
+| Mode | standard |
+| Instance | `robocasa-gr1/PosttrainPnPNovelFromPlacematToPlateSplitA`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | Included |
 
 ## Task
 Put the tomato from the placemat on the plate, and move both hands away.
 
-Standard mode (robot as a service, `eai-standard/3.0`) of `robocasa-gr1-placemat-to-plate-i00-privileged`: the same frozen instance and success check, served by the `sim` sidecar (`embodied_first_exam/benchmarks/robocasa/sim/server_casa.py`, tool module `casa_tool`), which records the episode and judges it live (nothing is replayed); the verifier grades the sidecar's record in a container of its own. The agent sees the robot's cameras (RGB-D, calibrated), its own joints and end effector, and the instruction.
+## Success criteria
+All of these hold:
+- The tomato touches the plate, and its origin is less than 70 % of the plate's horizontal radius (the radius given
+  by the plate model's horizontal-radius site) from the plate's origin in x and y.
+- The tomato does not touch the counter (the table, `table_main_group`).
+- The plate is upright: its z axis has a world-z component above 0.8 (tilted less than about 37 degrees).
+- Each hand's grip site (`gripper0_right_grip_site`, `gripper0_left_grip_site`) is more than 0.25 m from the
+  tomato's origin and more than 0.25 m from the plate's origin.
+- The other item that started on the placemat with the tomato (`distractor_obj_distractor_obj_type_0_num_0`) is not
+  in the plate by the same rule as the tomato.
 
-## Difficulty
-The agent has to find the objects in the humanoid's camera images, coordinate two arms and two dexterous hands through the IK controller, and finish in one episode without a reset.
+Graded is the one live episode in the simulator service: no reset, no step limit, nothing replayed. It ends when the
+agent sends `POST /finish` or when its session ends (at the latest after 1 h); the conditions above are then
+checked once, with the environment's own `_check_success`, on the state after the last executed control step. A
+success earlier in the episode neither ends it nor counts, and the service never reports success while the episode
+runs. Control steps run by hold chunks belong to the episode like any others.
 
-## Reference solution
-`solution/`: the privileged reference's 163 actions submitted through the client, one row per control step.
+An episode ended by a simulator error during an agent's call scores 0, as do more than two service crashes that all
+happened while serving the agent's calls. Before the agent is served, the scene is checked to start at the frozen
+instance (instance and start-state hashes, not already solved). A mismatch there, a crash the episode cannot be
+resumed from, or a missing verdict is an infrastructure error, not a score.
 
-## Verification
-The sim service judges the live episode when it ends (the agent's `POST /finish`, or the end of its session; the environment's success check on the state after the last executed control step; nothing is replayed) and writes the verdict, final at once; `tests/grade.py` (separate sandbox, no network) reads its `final.json` (`graded_by = live`): `success = live_success ∧ not solved at the start ∧ no simulator error`. The episode's start is checked against the frozen instance before the agent is served (`RCB_INSTANCE_SHA`, `RCB_START_SHA`; a mismatch is an infrastructure failure, `instance_mismatch`). The video is rendered from the trajectory after the verdict (one render pass) and never decides it.
-
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -36,8 +46,13 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Action type | `ee_pose` (24 channels, `control_dt` 0.05 s) |
-| Cameras | `robot0_agentview_center`, `robot0_agentview_left`, `robot0_agentview_right`, `egoview`, `robot0_eye_in_right_hand`, `robot0_eye_in_left_hand` (robot-mounted; calibration in every response) |
+## License
+The scenes, task definitions and success checks are those of RoboCasa's GR1 tabletop tasks
+([robocasa/robocasa-gr1-tabletop-tasks](https://github.com/robocasa/robocasa-gr1-tabletop-tasks) @ `4840e67`, MIT
+License, copyright 2025 the NVIDIA GEAR group; paper: NVIDIA et al., 2025, "GR00T N1: An Open Foundation Model for
+Generalist Humanoid Robots", arXiv:2503.14734), built on robosuite
+([ARISE-Initiative/robosuite](https://github.com/ARISE-Initiative/robosuite) @ `51cc017`, MIT License). Assets are
+downloaded when the image is built and are not in this repository: RoboCasa's fixture, texture and object archives
+(CC BY 4.0) and NVIDIA's
+[PhysicalAI-DigitalCousin-Assets](https://huggingface.co/datasets/nvidia/PhysicalAI-DigitalCousin-Assets)
+(`lightwheel` and `sketchfab` object meshes), licensed **CC BY-NC 4.0: non-commercial use only**.

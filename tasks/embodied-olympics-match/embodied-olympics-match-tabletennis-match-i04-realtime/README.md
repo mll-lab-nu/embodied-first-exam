@@ -1,40 +1,39 @@
-# embodied-olympics-match-tabletennis-match-i04-realtime
+# Embodied Olympics · robot table tennis, match against level 4 (realtime)
 
 | | |
 |---|---|
-| Benchmark | Embodied Olympics - Match |
-| Mode | realtime (`eai-standard/3.0`) |
-| Twin | `embodied-olympics-match-tabletennis-match-i04-privileged` |
-| Simulator / robot | `mujoco` / `franka-panda` |
-| Family / instance | `tabletennis_match` / seed 34 (allowed seeds: [34, 404, 414]; PROTOCOL §2) |
-| Oracle | `partial` — level 4 (the strongest official level, unchanged): a mirror match (the level-4 opponent copied onto the player's side, same limits, same true-state prediction) won 18 of 40 (seeds 1-20, each side serving first), so level 4 is beatable by a player of its own ability; our truth-state reference beat level 4 in 2 of 40 seeds (re-screen 2026-10-12, revision 15), this seed 5:3; our camera-only reference 0 of 40; every simple baseline 0 of 20; the live oracle run is in the export report |
-| Agent time budget | 7200 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Real time | slowdown S = 10 (the world runs at 1/S of real speed: one control step every S x control_dt s of wall time; `RO_SLOWDOWN`'s default) (PROTOCOL §3) |
-| Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-match-0.1.0` |
+| Task ID | `embodied-olympics-match-tabletennis-match-i04-realtime` |
+| Benchmark | [Embodied Olympics - Match](https://github.com/CHIGUI0/roboolympics) (Embodied Olympics authors, 2026), upstream `CHIGUI0/roboolympics@0d7f680` |
+| Robot | Franka Emika Panda arm on a moving base (an x-y rail in table tennis, a gantry in badminton), holding a paddle or racket |
+| Mode | realtime, slowdown 10 |
+| Opponent | Scripted robot at level 4 of 4, with the same robot and limits as the agent's |
+| Instance | `tabletennis_match`, seed 34 |
+| Time limit | 2 h |
+| Reference solution | Pipeline check only |
 
 ## Task
 Win a game of table tennis to 5 points against the scripted opponent.
 
-Table tennis against the scripted opponent (level 4), program play: robot table tennis in a continuous world slowed by a factor S (MuJoCo Franka Panda + paddle on an x-y rail base behind the end line, both held to the real robot's limits: the Panda's joint velocity, acceleration, jerk, torque and torque rate, the rail's speed, acceleration and jerk; DeepMind ball and table model), seen only through two cameras of four frames each; one game to 5 points (lead by 2 from 4:4, at 6:6 the next point wins); the players' robots serve by the ITTF service laws (a toss device on the robot projects the ball at least 16 cm up from a point you choose behind your end line, you strike it as it falls; 2 serves each, from 4:4 one each); format match: you against a scripted opponent (level 1-4; you serve first), format duel: two players.
+## Success criteria
+The instance: the agent's robot (seat A) against the scripted opponent at level 4, seed 34.
+One game of table tennis: the first to 5 points wins, with a lead of 2 from 4:4, or the first to 7 (at 6:6 the next point wins). At 40 points played (lets included) the player ahead wins; at a level score, the player who won the last point. A player's third undue-delay fault (no toss within 5 s of the serve opening) loses it the match. There are no draws.
 
-## Difficulty
-Frozen development instance: seed 34, level 4, slowdown S = 10. Not one of
-the sport's official (hidden) seeds, so results here are previews, not official Embodied Olympics results.
+Success: the match ends by the rules (`match_over`) with the agent's side as the winner. The agent's side loses the
+match, a valid 0, by any of these forfeits:
+- `no_show`: no `game start` within 1800 s of real time after the match service starts, or the session ends before
+  the start;
+- `ready_timeout`: no `game ready` review within 300 s of real time after a point, even when ahead;
+- `abandoned`: the agent's session ends while the match is in play.
 
-## Reference solution
-`solution/`: our camera-only reference player through the same HTTP interface. level 4 (the strongest official level, unchanged): a mirror match (the level-4 opponent copied onto the player's side, same limits, same true-state prediction) won 18 of 40 (seeds 1-20, each side serving first), so level 4 is beatable by a player of its own ability; our truth-state reference beat level 4 in 2 of 40 seeds (re-screen 2026-10-12, revision 15), this seed 5:3; our camera-only reference 0 of 40; every simple baseline 0 of 20; the live oracle run is in the export report.
+A simulator error in a control step, after the agent's first applied action, is a valid 0 too.
 
-## Verification
-Separate sandbox, no network. The match is graded live (owner, 2026-10-17): the sim service records the
-match's scores, winner and reason as it plays it and nothing replays it to grade it (`final.json` `graded_by` live,
-`replays` 0; the replay video is drawn after the verdict). The verifier (`tests/grade.py`, our core's grader) applies
-the validity rule
-(technical failures void the trial, a player's own problems are a valid loss), and writes reward.json; success = a
-valid, finished match that the agent won. `tests/fexam_reward.py` adds the hub's fields (`infra_error`, `realtime`,
-`slowdown`, `opponent_level`).
+Graded: the live match, as the trusted match service recorded it while it was played; nothing is replayed. The world
+runs on a clock that does not stop: one second of game time takes 10 s of real time. There is one match and no reset,
+and the agent cannot end it with `/finish`: the match's rules end it. A technical failure of the match service (a
+crash, an error in its bookkeeping, rendering or metering) voids the trial as an infrastructure failure, not a score.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -44,9 +43,12 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
+## Others
+Exported by the Embodied Olympics task exporter from its task `roboolympics/tabletennis-match-wallclock-program-standard` (upstream commit
+`e25d8cc11861`). The files changed here after the export are listed for this task in
+`ci_checks/benchmarks/embodied-olympics-match/exported.toml`.
 
-### Notes
-Source: Embodied Olympics task `tabletennis-match-wallclock-program-standard`, revision `wallclock-15+duel-wallclock-12+low-inloop-1+core-0.2`. The rules, the referee, the scripted
-opponent, the observation, the review between points and the grader are ours, unchanged; only the seat is
-unmetered (Harbor records the model's usage) and the instance is frozen.
+## License
+Embodied Olympics ([CHIGUI0/roboolympics](https://github.com/CHIGUI0/roboolympics), a private repository) is released
+under the MIT License; its exported match services, referees, scripted opponents and graders inside this task are MIT
+too. The simulator is MuJoCo (Apache License 2.0). No non-commercial terms apply.

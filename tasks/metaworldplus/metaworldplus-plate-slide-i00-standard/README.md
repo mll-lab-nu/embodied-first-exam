@@ -1,43 +1,34 @@
-# metaworldplus-plate-slide-i00-standard
+# MetaWorld+ · plate-slide (standard)
 
 | | |
 |---|---|
-| Benchmark | MetaWorld+ |
-| Mode | standard (`eai-standard/3.0`) |
-| Twin | `metaworldplus-plate-slide-i00-privileged` |
-| Simulator / robot | `mujoco` / `sawyer` |
-| Family / instance | `metaworld/plate-slide` / seed 0 (allowed seeds: [0, 1, 2]; PROTOCOL §2) |
-| Oracle | `full` |
-| Agent time budget | 1800 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:metaworld-0.1.0` |
+| Task ID | `metaworldplus-plate-slide-i00-standard` |
+| Benchmark | [Meta-World](https://github.com/Farama-Foundation/Metaworld) (McLean et al., 2025), upstream `Farama-Foundation/Metaworld@59fc34d` |
+| Robot | Rethink Robotics Sawyer arm with a two-finger gripper |
+| Mode | standard |
+| Instance | `metaworld/plate-slide`, seed 0 |
+| Time limit | 30 min |
+| Reference solution | Included |
 
 ## Task
-Standard-mode twin of `metaworldplus-plate-slide-i00-privileged`: the same instance and success check (Slide the plate forward, away from the robot, to the target.), served
-as a robot service (`embodied_first_exam/benchmarks/metaworldplus/sim/server_mw.py`, protocol eai-standard/3.0, tool module `mw_tool`). The
-agent sees camera RGB-D, the robot's own state and the target point; no object poses, no reset; one episode.
+Slide the plate forward, away from the robot, to the target.
 
-## Difficulty
-The agent has to find the objects in the images, place a mocap-driven hand whose wrist does not rotate, close the loop
-through the cameras and finish in one episode without a reset: a pushed-away object or a dropped part stays where it
-is. Success is judged on the final state, so the agent must also end the episode while the task is achieved.
+## Success criteria
+The plate's centre is within 7 cm of the target point.
 
-## Reference solution
-`solution/`: the privileged oracle's 53 actions (Meta-World's scripted policy, recorded offline)
-submitted through the client, one row per control step.
+The check is Meta-World's own success test for `plate-slide-v3` (`evaluate_state`, its `success` value), applied to one
+state: the live simulator's state after the last executed control step of the one episode; nothing is replayed. The
+episode ends when the agent sends `/finish`, or when the agent's session ends (at the latest after 30 min); there is
+no reset, no step limit and no other termination. Meeting the condition earlier in the episode does not count, and the
+service never reports success while the episode runs. The target point is `meta["task"]["target_pos"]`; distances are
+straight-line distances in metres in the world frame unless the axes compared are named.
 
-## Verification
-Graded by the live episode, nothing replayed: when the episode ends, the sim
-service applies Meta-World's success check to the live state after the last executed control step and writes the
-verdict to its `final.json` (`graded_by = "live"`, `replays = 0`); `tests/grade.py` (separate sandbox, no network)
-reads it: `success = live_success`, `infra_error = 1` when there is no verdict on the agent. The frozen start is
-checked when the episode begins (instance hash, starting-state hash). The video is rendered from the recorded
-trajectory in one pass after the verdict and decides nothing. After the agent's time the collect hooks stop the
-agent's processes; the service writes the verdict at once (no grading replay), then renders the video (a scene build,
-the episode's physics and at most about 600 frames of one camera, on the CPU; typically under a minute), all inside the
-sim hook's 840 s.
+An episode ended by a simulator error (actions that make the simulation unstable) scores 0. The scene is checked to
+start at the frozen instance (instance and starting-state hashes) before the agent is served; a mismatch is an
+infrastructure failure, not a score.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -47,10 +38,9 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| actions | `ee_delta` = Meta-World's native `[dx, dy, dz, grip]` (no `joint_position`: the Sawyer has no arm actuators) |
-| observations | four fixed cameras (RGB-D, calibration), proprioception, `meta.task.target_pos`; no object poses |
-| episode | no step limit; runs until the agent's time is up; the state after the last control step is graded |
-| success | Meta-World's own check (`evaluate_state`). The plate's centre is within 7 cm of the target point. |
+## License
+Meta-World ([Farama-Foundation/Metaworld](https://github.com/Farama-Foundation/Metaworld) @ `59fc34d`) is released
+under the [MIT License](https://github.com/Farama-Foundation/Metaworld/blob/59fc34d7768af9785e4688c3e1db671424f4a6c3/LICENSE)
+(Copyright (c) 2019 Meta-World Team). The Sawyer robot and object models (MuJoCo XML and meshes) used here ship in that
+repository under the same license; no non-commercial terms apply. The simulator is MuJoCo 3.3.0 (Apache License 2.0).
+Meta-World's scripted policies (`metaworld/policies/`) are not part of the task image.

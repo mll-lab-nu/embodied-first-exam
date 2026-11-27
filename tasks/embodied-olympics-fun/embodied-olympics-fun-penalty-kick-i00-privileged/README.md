@@ -1,31 +1,53 @@
-# embodied-olympics-fun-penalty-kick-i00-privileged
+# Embodied Olympics · penalty kick (privileged)
 
 | | |
 |---|---|
-| Benchmark | Embodied Olympics - Fun |
+| Task ID | `embodied-olympics-fun-penalty-kick-i00-privileged` |
+| Benchmark | [Embodied Olympics - Fun](https://github.com/CHIGUI0/roboolympics) (Embodied Olympics authors, 2026), upstream `CHIGUI0/roboolympics@7df999b` |
+| Robot | Unitree G1 humanoid (1.32 m, 33 kg, 29 joints), with Unitree's walking and running policies |
 | Mode | privileged |
-| Twin | `embodied-olympics-fun-penalty-kick-i00-standard` |
-| Simulator / robot | `mujoco` / `unitree-g1` |
-| Family / instance | `penalty_kick` / seed 0 |
-| Oracle | `none` — no reference solution; the referee is tested: positive by injection (a real walk-up and foot contact, the ball's velocity set at the contact to 20 m/s into the corner; also a chip over the keeper); the keeper is a board on a rail driven by a force-limited servo (at most 800 N, 3 m/s), never moved by state writes, and a 15 m/s ball pushes it 3 mm; negatives: an 8 m/s corner shot saved by the keeper, a weak kick, wide, over the bar, a second touch, in without a kick, a body contact. Beating the keeper takes about 12 m/s to a corner; a G1 foot running into the ball at 4 m/s gives 3 to 5 m/s; human review in the pull request that adds the benchmark (PROTOCOL §4) |
-| Agent time budget | 7200 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
+| Opponent | Goalkeeper dummy on a rail (scripted): after the kick it moves along the goal line to block the ball |
+| Instance | `penalty_kick`, seed 0 |
+| Time limit | 2 h |
+| Reference solution | None |
 
 ## Task
-Take a penalty kick: with one kick, send the ball past the goalkeeper dummy into the goal. (Embodied Olympics `penalty-kick`: one Unitree G1 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
+Take a penalty kick: with one kick, send the ball past the goalkeeper dummy into the goal.
 
-## Difficulty
-The dummy reaches any ball that needs more than about 1.45 s for the 11 m: the kick has to send a 0.43 kg ball off at about 12 m/s or more and into a corner (or over the dummy and under the bar). The robot weighs 33 kg and has no kicking skill; a foot that merely runs into the ball at the running policy's 4 m/s sends it off at 3 to 5 m/s.
+## Success criteria
+A size-5 football lies on the penalty mark, 3.0 m ahead of the robot; the goal (7.32 m wide, 2.44 m high) is 11 m
+beyond it. A goalkeeper dummy (a board 1.9 m high, 0.6 m wide, 80 kg) stands on the goal line at the centre of the goal
+on a carriage that runs on a rail. From 0.25 s after the kick its motor (at most 800 N) drives it at up to 3.0 m/s
+towards the point where the ball, going on as it moves at that moment, would cross the line; it blocks the ball, and a
+hit pushes it along the rail. The referee's stages, in order: kick, goal.
+- Kick: the first contact of a foot or an ankle (the parts below the shin) with the ball. Every such contact within
+  0.15 s of the first belongs to the one kick.
+- Goal: the whole ball is over the goal line between the posts and under the bar. It may touch the posts, the bar,
+  the dummy and the ground on the way. The success is called at that moment.
 
-## Reference solution
-None. No reference controller exists for this family yet: positive by injection (a real walk-up and foot contact, the ball's velocity set at the contact to 20 m/s into the corner; also a chip over the keeper); the keeper is a board on a rail driven by a force-limited servo (at most 800 N, 3 m/s), never moved by state writes, and a 15 m/s ball pushes it 3 mm; negatives: an 8 m/s corner shot saved by the keeper, a weak kick, wide, over the bar, a second touch, in without a kick, a body contact. Beating the keeper takes about 12 m/s to a corner; a G1 foot running into the ball at 4 m/s gives 3 to 5 m/s.
+Fouls (each fails the attempt): any other part of the robot touches the ball at any time; a foot touches the ball
+again more than 0.15 s after the first contact; the ball is not moving towards the goal line at the end of the kick;
+the whole ball crosses the goal line outside the goal; after the kick, the ball is slower than 0.1 m/s for 1.0 s
+without a goal. Fall (a failure at any time): the pelvis below 0.35 m, or any part other than the feet on the ground.
+Time limit: 15 s (1,500 control steps).
 
-## Verification
-`/tests/grade.py` replays `/app/output/trajectory.npz` from the frozen start in one fresh process (`rcb_rfo.py replay`:
-one sim row per control step until the referee ends the attempt). Pass iff the referee's verdict is a success. The rules: A size-5 football (0.22 m across, 0.43 kg, in air) lies at rest on the penalty mark, 3.0 m straight ahead of you; the goal line is 11.0 m beyond the mark. The goal is 7.32 m wide between the posts and 2.44 m high under the crossbar (posts and bar 0.12 m thick), centred on the line through you and the mark. A goalkeeper dummy, a board 1.9 m high, 0.6 m wide, 0.3 m thick and 80.0 kg, stands on the goal line at the centre of the goal on a carriage that runs on a rail along the line, driven by a motor of at most 800.0 N; from 0.25 s after your kick the motor drives it at up to 3.0 m/s towards the point where the ball, going on as it moves at that moment, would cross the line, and it blocks the ball (a hit pushes it along the rail). The kick is a contact of a foot or an ankle of yours with the ball (the parts below the shin); every such contact within 0.15 s of the first belongs to the one kick. You succeed at the moment the whole ball is over the goal line between the posts and under the bar; it may touch the posts, the bar, the dummy and the ground on the way. You fail if any other part of you touches the ball at any time, if a foot touches the ball again later than 0.15 s after the first contact (a second touch), if the ball is not moving towards the goal line at the end of the kick, if the whole ball crosses the goal line outside the goal, if after the kick the ball has been slower than 0.1 m/s for 1.0 s, if you fall (your pelvis lower than 0.35 m above the ground, or any part of you other than the feet on the ground), or after 15 s. No oracle; human review in the pull request that adds the benchmark (PROTOCOL §4).
+Graded file: `/app/output/trajectory.npz`, as `s.save_trajectory()` writes it: an `actions` array of sim rows, one per
+10 ms control step, and the task's family name. After the agent's session it is replayed once, open-loop, from the
+frozen start, in a fresh process of a separate verifier container without network. Rows run one per control step
+until the referee calls the attempt; rows after the call, and rows past the attempt's time limit, are not run. The
+task is passed if the referee has called a success when the replay stops. If the rows run out before the referee's
+call, the task is not passed. A row the robot cannot run (its first value, the mode, is not one of the robot's modes)
+ends the replay at that row without a pass.
 
-## Resources
-Caps per container (PROTOCOL §6).
+The physics diverging (a non-finite state, a bad acceleration, or the robot or a prop faster than 150 m/s) ends the
+attempt as a failure, unless a success was called in an earlier control step. Only the trajectory is scored (`gen.py`
+and `NOTES.md` are not). A missing file, a file that is not such an array (a link, over 64 MB, more than 40,000 rows,
+the wrong row width), a file for another task, or a non-finite value in the rows that are used scores 0. An image that
+no longer rebuilds the frozen start, or a replay that crashes or runs over 600 s, is an infrastructure failure, not a
+score.
+
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -34,14 +56,10 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Category | football-and-volleyball |
-| Rule book | IFAB Laws of the Game 2025/26: Law 1 (the goal 7.32 m x 2.44 m with posts and crossbar 12 cm wide, the penalty mark 11 m from the goal line, the penalty area, the goal area and the penalty arc), Law 2 (a size-5 ball: 68-70 cm round, 410-450 g), Law 14 (the penalty kick: the ball at rest on the mark, kicked forward, the goalkeeper on the goal line between the posts until the kick), Law 10 (kicks from the penalty mark: one kick, which is over when the ball stops moving or goes out of play; the kicker may not play the ball a second time) and the glossary (a kick is a contact with the foot or the ankle); deviations: Law 14 (the goalkeeper): the goalkeeper is a dummy, a rigid board 1.9 m high, 0.6 m wide and 80.0 kg on a carriage that runs on a rail along the goal line, driven by a linear servo motor of at most 800.0 N (at most 3.0 m/s); the rail's end stops keep it between the posts. It starts at the centre and, from 0.25 s after the kick, the motor drives it towards the point where the ball's velocity of that moment would take it over the goal line. The ball pushes it along the rail when it hits it; it neither dives, jumps nor uses hands. An opponent cannot be simulated otherwise. · Law 14 (the kick): the referee takes every contact of a foot with the ball within 0.15 s of the first as the one kick; any later contact is a second touch. A referee's eye is replaced by this number. · Law 14 says the ball is kicked; the Laws do not name the part of the leg. Here the kick is made with a foot or an ankle (the parts below the shin): a contact of the ball with a shin or any other part is a failure. · Law 1: only the goal end of the field is there (the penalty area, the goal area, the mark and the arc are painted); the goal's net is a rigid cage 2.0 m deep; there is no wind and no other player. |
-| Stages | kick → goal |
-| Instance | `environment/instance.json` = `tests/instance.json`: the family's parameters, t = 0 state hash `788a1a870bb9b5df82b10d1ac4df36d256ffae3a98a41f25248dca4801ffe92f` |
-| Episode | 1500 control steps (15 s at 100 Hz) |
-| Action | sim rows of 151 floats per control step (`rfo/world.py`); six action types are views of it |
-| Tooling | `/opt/tools/rcb_rfo.py`, `/opt/tools/rfo/` (the world, the action layer, the referee's toolkit; from the files-only image images/embodied-olympics-fun-files/, built from embodied_first_exam/benchmarks/embodied-olympics-fun/) and `environment/rfo_task.py` (this family's rules), the same files in the verifier's `/tests/` |
-| Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md) |
+## License
+The Embodied Olympics robot library and running-policy port ([CHIGUI0/roboolympics](https://github.com/CHIGUI0/roboolympics)
+@ `7df999b`, a private repository) is released under the MIT License (`LICENSE.roboolympics` in the image); this
+benchmark's venues and referees are MIT too. Third-party parts in the image: the Unitree G1 model and meshes from MuJoCo
+Menagerie (BSD-3-Clause), the Unitree H1-2 model, meshes and walking policy and the G1 walking policy from
+unitree_rl_gym (BSD-3-Clause), the G1 running policy from C1801SYQ/g1_running (Apache-2.0), FALCON's G1 walking policy
+from LeCAR-Lab/FALCON (MIT) and the WBC-AGILE G1 walking policy from NVIDIA (Apache-2.0). No non-commercial terms apply.

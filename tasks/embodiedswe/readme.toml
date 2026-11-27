@@ -1,0 +1,419 @@
+# README data for tasks/embodiedswe/*/README.md (scripts/task_conventions.py render_readme_v3)
+#
+# Sources checked for every success text:
+#   graders   each task's tests/grader/<scene>.py (privileged) = environment/sim/grader/<scene>.py (standard), byte
+#             for byte; both are byte-identical to EmbodiedSWE's robobench/suites/<suite>/grader/<scene>.py at the
+#             pinned commit. Each grader's check_success() decides; it calls the scene's own predicates in
+#             robobench/suites/<suite>/scenes/<scene>.py, with the thresholds of the scene cfg as the preset in
+#             robobench/suites/<suite>/configs/envs.py builds it (presets override layout only, never a threshold,
+#             unless a comment below says so). The image's scrub (images/embodiedswe/scrub_embodiedswe.py) changes
+#             comments only; it asserts the code's AST is unchanged.
+#   tooling   embodied_first_exam/benchmarks/embodiedswe/rcb_embodiedswe.py: TASKS (L69-98, the check each preset
+#             uses; cut_success L101-112 and so101_success L115-133 for the three scenes without success()),
+#             ToolOnlyMonitor L138-199 (spatula), the rollout verdict _final L908-935; privileged tests/grade.py (candidates,
+#             ROLLOUT_S = 1800, GRACE_S = 30, MAX_SUBMISSIONS = 64, selection L210-214); sim/server.py (episode ends
+#             ctrl_step L466-476 and L520-590, verdict and dump L268-307) and standard tests/grade.py (success = final.json success, no infra
+#             error, reason != "error").
+# Upstream line numbers are those of EmbodiedSWE @ 67f44e8 (robobench/...). Physics rates are each instance's
+# physics_dt (environment/instance.json).
+
+[benchmark]
+name = "EmbodiedSWE"
+citation = "Shen et al., 2026"      # upstream README "Citation" (arXiv 2609.27308)
+url = "https://github.com/EmbodiedSWE/EmbodiedSWE"
+repo = "EmbodiedSWE/EmbodiedSWE"
+commit = "67f44e8"
+
+[license]
+text = """
+EmbodiedSWE ([EmbodiedSWE/EmbodiedSWE](https://github.com/EmbodiedSWE/EmbodiedSWE) @ `67f44e8`): code under the
+Apache License 2.0. The scenes load EmbodiedSWE's asset bundle (Hugging Face `EmbodiedSWE/robobench-assets`, revision
+`62fab5b`), whose assets carry mixed licences, some of them **non-commercial (CC BY-NC)** or store-licensed (Fab /
+Objaverse models); each asset's licence ships with the bundle. The simulator is NVIDIA Isaac Sim 5.1 with Isaac Lab
+2.3.2, under NVIDIA's licence terms (use, no redistribution), built with RoboLab's recipe (Apache License 2.0). For
+these reasons the task image is built locally and never published.
+"""
+
+[robots]
+franka-panda = "Franka Emika Panda arm with its parallel-jaw gripper, under EmbodiedSWE's operational-space controller"
+franka-panda-bimanual = "Two Franka Emika Panda arms with parallel-jaw grippers, each under EmbodiedSWE's operational-space controller"
+unitree-g1-dex3 = "Unitree G1 humanoid with three-finger Dex3 hands, upper body driven by Pink IK (wrist poses and hand joints)"
+
+# privileged tests/grade.py: candidates() (submissions in name order, at most 64, then `final`), freeze() (receipt
+# check -> invalid_submission; no solve.py -> missing_solution; both score 0, not run), content_hash dedupe; rollout()
+# (fresh process, ROLLOUT_S = 1800 s of wall clock from its start, SIGTERM, GRACE_S = 30, SIGKILL; no rollout.json while
+# in phase "solve" -> no_verdict, 0); selection max(score, success, ran) = the first such (final last).
+# rcb_embodiedswe.py rollout: start-state check (instance_mismatch only on the freezing GPU model -> infra_error), the
+# grader records after every control step, solve(env) as `nobody` behind esw_proxy (env.step the only write), verdict
+# _final() L908-921: success = check_success on the state when the run ends, progress = the rubric's peak.
+[modes.privileged]
+success = """
+The graded runs: the verifier, in a separate sandbox without network, grades each checkpoint the agent froze with
+`submit` (`/app/output/submissions/NNNNNN/`, at most 64) and the final `/app/output/solution/`. Each distinct candidate
+runs once in a fresh process: the simulator is built from the frozen instance (seed 0, GPU PhysX) and the candidate's
+`solve(env)` drives it from another process, without network or GPU, through a proxy env in which `env.step(action)`
+is the only call that changes anything. The run ends when `solve` returns or raises, when its process ends, or 30 min
+after the grading process started (start-up and import count). The conditions above are checked on the state at that
+moment; a condition stated as having happened counts from the moment it happened in that run. There is no reset.
+
+A candidate without `solve.py`, a checkpoint whose files differ from its receipt (`submission.json`), and a run whose
+process ends without a verdict while solving score 0. Byte-identical candidates are graded once. The result is one
+candidate: the one with the highest progress (EmbodiedSWE's rubric score for the task, the peak recorded during its
+run), ties going to success, then to the earliest (the final folder counts last). That candidate's success is the
+task's. The rebuilt start state is compared with the frozen instance; on the GPU model that froze it (NVIDIA L40S) a
+mismatch is an infrastructure failure, not a score.
+"""
+
+# sim/server.py: RCB_AGENT_END=1 (docker-compose): ends at POST /finish ("finished"), the collect hook at the session's
+# end ("timeout"), a tool contact ("tool_contact", success forced False in dump()), ctrl_steps() >= R.MAX_STEPS = 400,000
+# ("step_limit"), a simulator error ("error"); finish() -> verdict() on the live state (grader check_success + rubric
+# peak); success is never shown (hidden). standard tests/grade.py: ok = final.json success AND not infra_error AND
+# finalized AND reason != "error". Start check: EP.give_up("instance_mismatch ...") -> infra_error.
+[modes.standard]
+success = """
+The graded episode: the one live episode, as it ran; nothing is replayed. There is no reset. The episode ends when
+the agent sends `/finish`, when the agent's session ends (at the latest after {timeout}), on a simulator error, at
+400,000 control steps (a technical cap), or, where the task has a tool-only rule, at the first touch. The conditions
+above are checked on the live state when the episode ends; a condition stated as having happened counts from the
+moment it happened in the episode. Meeting the conditions earlier does not end the episode, and the service never
+reports success while it runs.
+
+An episode ended by a simulator error scores 0. The rebuilt start state is compared with the frozen instance before
+the agent is served; on the GPU model that froze it (NVIDIA L40S) a mismatch is an infrastructure failure, not a score,
+and so is an episode the service never finalizes.
+"""
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Families: the pass condition only. Distances are between body origins unless a point is named; "within" = <=,
+# "less than" = <, as in the source. Speeds are linear speeds unless said otherwise.
+
+# grader/allen_bolt_assembly.py check_success L53 -> scene success() L419-422 = seated().all(); seated() L407-417:
+# (plate_top - tip z) >= seat_depth 0.022, lateral <= align_xy 0.004, axis cos >= cos(align_axis_deg 5.0), cfg L42-47;
+# the head bottoms out at thread_len 0.0248 (L73). Preset assembly.allen_bolt.franka.osc (configs/envs.py L543-566):
+# one platform and bolt, layout only.
+[families."assembly.allen_bolt.franka.osc"]
+success = """
+The bolt is seated in its platform's hole. Measured in the platform's frame: the bolt's tip is at least 22 mm below the
+plate top (the head bottoms out at 24.8 mm), within 4 mm of the hole's axis, and the bolt's axis is within 5° of the
+hole's axis.
+"""
+
+# grader/bulb_assembly.py check_success L46 = scene seated().all(); seated() L387-397: socket-frame z <= seat_z 0.027,
+# lateral to the nearest socket axis <= align_xy 0.015, axis cos >= cos(align_axis_deg 12.0) (cfg L36-41); the glow is
+# full at light_full_z = seat_z. Preset assembly.bulb.franka.osc (configs/envs.py L704-718): one socket, layout only.
+[families."assembly.bulb.franka.osc"]
+success = """
+The bulb is seated in the socket. Measured in the socket's frame: the bulb's origin is at most 27 mm above the
+socket's origin (the depth at which the bulb glows fully bright), within 15 mm of the socket's axis, and the bulb's
+screw axis is within 12° of the socket's axis.
+"""
+
+# grader/ikea_table_assembly.py check_success L44 -> scene success() L282-285 = seated().all(); seated() L267-280:
+# tabletop-frame z <= seat_z 0.012, distance to the nearest stud <= align_xy 0.02, axis cos >= cos(align_axis_deg 10.0)
+# (cfg L48-50), any leg on any stud; num_legs 4 (L55). Preset ...bimanual_franka.osc (configs/envs.py L1028-1049):
+# reset jitter 0 and the leg row, layout only.
+[families."assembly.ikea_table.bimanual_franka.osc"]
+success = """
+Each of the four legs is seated on a stud of the tabletop, any leg on any stud. Measured in the tabletop's frame: the
+leg's origin (at its threaded insert) is at most 12 mm above the tabletop's top face and within 2 cm of a stud's
+axis, and the leg's screw axis is within 10° of the stud's axis.
+"""
+
+# grader/nut_thread_assembly.py check_success L46 = scene seated().all(); seated() L278-292: bolt-frame z <= seat_z
+# 0.012, lateral <= align_xy 0.015, _nut_axis_cos L313-327 (nut +z vs bolt +z, signed: the nut's own up face) >=
+# cos(align_axis_deg 10.0) (cfg L42-47). Preset assembly.nut_thread.franka.osc (configs/envs.py L636-647): layout and
+# nut friction only.
+[families."assembly.nut_thread.franka.osc"]
+success = """
+The nut is seated on the bolt. Measured in the bolt's frame: the nut's origin is at most 12 mm above the bolt's origin
+(the nut fully threaded on, near the bolt's base), within 15 mm of the bolt's axis, and the nut's own axis, the one
+that pointed up at the start, is within 10° of the bolt's axis (pointing the same way, not flipped).
+"""
+
+# grader/pc_gpu_assembly.py check_success L52 = scene seated(); seated() L372-381: engaged() >= seat_depth 0.004,
+# |offset from seat_pos| (xy, case frame) <= align_xy 0.003, up-axis cos >= cos(3.0), length-axis cos (signed) >=
+# cos(align_yaw_deg 3.0) (cfg L24-27). Preset (configs/envs.py L822-842): layout, card on its stand, dt 1/240.
+[families."assembly.pc_gpu.franka.osc"]
+success = """
+The graphics card is seated in the motherboard's x16 slot. Measured in the case's frame: the card's edge connector is
+at least 4 mm below the slot's mouth (full travel is 5 mm), the card's origin is within 3 mm horizontally of its
+seated position, its up axis is within 3° of the slot's axis, and its length axis is within 3° of the seated heading,
+pointing the same way (a card turned end for end fails).
+"""
+
+# grader/pc_gpu_ram_assembly.py check_success L64 -> scene success() L478-481 = seated().all(); gpu_seated() L488-503
+# (gpu_seat_depth 0.004, gpu_align_xy 0.003, gpu_align_axis_deg 3.0, gpu_align_yaw_deg 3.0), ram_seated() L505-517
+# (ram_seat_depth 0.0037, ram_align_xy 0.003, ram_align_axis_deg 6.0, ram_align_yaw_deg 3.0), cfg L54-61; each stick
+# has its own slot. Preset (configs/envs.py L270-300): the card staged yawed +90° from its seated heading.
+[families."assembly.pc_gpu_ram.franka.osc"]
+success = """
+The graphics card and both memory sticks are seated, each at its own seated position, measured in the case's frame.
+The card: its edge connector at least 4 mm below the x16 slot's mouth, its origin within 3 mm horizontally of its
+seated position, its up axis within 3° of the slot's axis and its length axis within 3° of the seated heading,
+pointing the same way; the seated heading is a quarter turn clockwise, seen from above, from the way the card stands
+in its holder. Each stick in its assigned slot (the stick from the farther holder in the outermost slot, the other in
+the second slot from the CPU socket): its edge at least 3.7 mm below the slot's mouth, its origin within 3 mm
+horizontally of its seated position, its up axis within 6° of the slot's axis and its length axis within 3° of the
+seated heading, pointing the same way (a reversed stick fails).
+"""
+
+# grader/pc_motherboard_assembly.py check_success L58 -> scene success() L438-441 = seated().all(); seated() L425-436:
+# (board_top - tip z) >= seat_depth 0.011, lateral <= align_xy 0.003, axis within align_axis_deg 5.0 (cfg L46-48);
+# num_holes 7 (L72), each bolt judged at its nearest hole. Preset (configs/envs.py L155-176): layout, dt 1/240.
+[families."assembly.pc_motherboard.franka.osc"]
+success = """
+Each of the seven bolts is seated in a hole of the motherboard, judged at the hole nearest to it. Measured in the
+case's frame: the bolt's tip is at least 11 mm below the board's face, within 3 mm of the hole's axis, and the bolt's
+axis is within 5° of the hole's axis.
+"""
+
+# grader/pc_ram_assembly.py check_success L54 -> scene success() L476-479 = seated().all(); seated() L464-474:
+# engaged() >= seat_depth 0.0037, xy offset <= align_xy 0.003, up cos >= cos(6.0), length-axis cos (signed) >=
+# cos(align_yaw_deg 3.0) (cfg L60-63). Preset (configs/envs.py L375-395): layout, sticks on their stands, dt 1/240.
+[families."assembly.pc_ram.franka.osc"]
+success = """
+Both memory sticks are seated, each in its assigned slot: the stick from the farther holder in the outermost slot
+(farthest from the CPU socket), the other in the second slot from the socket. Measured in the case's frame, for each
+stick: its edge is at least 3.7 mm below the slot's mouth, its origin within 3 mm horizontally of its seated position,
+its up axis within 6° of the slot's axis, and its length axis within 3° of the seated heading, pointing the same way
+(a reversed stick fails).
+"""
+
+# grader/so101_assembly.py check_success L68-72 (= rcb_embodiedswe.so101_success L115-133; the scene has no
+# success()): (fastened >= 0).all() over num_screws = 4 elbow (M2) + 8 horn (M3); _motor_seated L75-84: |motor -
+# upper_arm pose| < motor_align_pos 0.004 and quat error < motor_align_deg 10.0; _fork_seated L86-93: |lower_arm -
+# its seat on the motor| < 0.004 and the residual off the horn axis < 10° (any elbow angle). scene cfg L84-85; holes
+# pair only within their group (_pair_ok L425-426). Preset bimanual_franka.osc (configs/envs.py L955-975): layout only.
+[families."assembly.so101.bimanual_franka.osc"]
+success = """
+The elbow is assembled. All twelve screws are fastened, each driven home and locked in a hole of its own group: the
+four M2 tab screws in the servo's four tab holes, the eight M3 screws in the eight holes around the horn, any screw in
+any hole of its group. The servo sits in the upper arm's pocket: its pose within 4 mm and 10° of the pocket's. The
+forearm sits on the servo's output horn: its origin within 4 mm of its seat on the servo, and its orientation within
+10° of the seat's once the rotation about the horn's axis is set aside (the elbow may stand at any angle).
+"""
+
+# grader/dice_food.py check_success L48-49 -> _diced L64-65 (= rcb_embodiedswe.cut_success L101-112):
+# pieces_count() (connected components of the live weld graph) >= target_pieces or len(pieces) = 9 (tomato 3 x 3),
+# AND every piece origin |x| < board_size[0]/2, |y| < board_size[1]/2 (0.60 x 0.26, slice_food.py L64) and z > the
+# board top. Welds are released only by the scene's knife cut gate (slice_food.py L12-17), sticky.
+[families."cutting.dice.franka.osc"]
+success = """
+The tomato is in at least 9 separate pieces (all nine cells of its 3 × 3 grid apart; a pair of neighbouring cells is
+released only by the knife cutting through their plane, and stays released), and every piece's origin is on the
+chopping board: inside the board's 60 cm × 26 cm footprint and above its top face.
+"""
+
+# grader/slice_food.py check_success L66-67 -> _sliced L79-80 (= cut_success): pieces_count() >= target 8 (carrot:
+# assets/carrot/manifest.json, 8 pieces, 7 planes) AND every piece on the board (board_size 0.60 x 0.26, L64).
+[families."cutting.slice.franka.osc"]
+success = """
+The carrot is in at least 8 separate pieces (all seven cut planes released; a plane is released only by the knife
+cutting through it, and stays released), and every piece's origin is on the chopping board: inside the board's
+60 cm × 26 cm footprint and above its top face.
+"""
+
+# grader/box_to_bin.py check_success L37 -> scene success() L414-418: _lifted & _transited & placed(). post_step
+# L340-354: lifted |= z > rest_z + lift_h 0.05, or held in the apron (y in (front - 0.40, front - 0.05), |x - start x|
+# < 0.50, z > carry_min_z 0.35); transited |= lifted & carried_fraction() > 0.9 (radial, L453-465). placed() L431-439:
+# origin in bin_pos +/- (place_half_x 0.14, place_half_y 0.26), z < table top + place_max_h 0.136, and every component
+# of root_vel_w (lin and ang) < settle_vel 0.20 (cfg L85-104). Default cfg (configs/envs.py L105-125).
+[families."locomanip.box_to_bin.g1.loco_pink_ik"]
+success = """
+Three conditions. Taken off the shelf (counted when it happens): at some physics step the box's origin rose more than
+5 cm above its resting height on the shelf board, or was held more than 0.35 m above the floor in the area in front of
+the shelf (5 to 40 cm out from the shelf's face, within 50 cm sideways of the box's starting position). Carried over
+(counted when it happens): after that, the box's horizontal distance to the bin's centre fell below 10 % of its
+starting distance. In the bin (on the final state): the box's origin lies within 14 cm (along x) and 26 cm (along y)
+of the bin's centre, so the whole box is inside the walls, and less than 13.6 cm above the table top (a box lying
+across the rim is higher), and every component of the box's linear (m/s) and angular (rad/s) velocity is below 0.20.
+Whether the robot still holds the box is not checked.
+"""
+
+# grader/fruit_delivery.py check_success L46-47 -> FruitsOnPlateScene.success() (packing/scenes/fruits_on_plate.py
+# L712-718): every present fruit placed() (L683-685: _on_plate L661-676 = plate-frame radial distance from the plate's
+# geometric centre <= radius_frac 0.88 x plate radius, z between the plate floor and rim + stack_local_z 0.10; and
+# |v| < settle_speed 0.06, cfg L106-121) and no non-fruit _on_plate. FruitDeliverySceneCfg (locomanip/scenes/
+# fruit_delivery.py L56-100): one fruit (the lemon) and seven non-fruit items; thresholds inherited.
+[families."locomanip.fruit_delivery.g1.loco_pink_ik"]
+success = """
+The lemon, the scene's only fruit, is on the clay plate and still: measured in the plate's frame, its origin is within
+88 % of the plate's radius from the plate's centre, between the plate's floor and 10 cm above its rim, and it moves
+slower than 0.06 m/s. No other item's origin is inside that same plate volume.
+"""
+
+# grader/wheel_carry.py check_success L37 -> scene success() L390-394: _lifted & _transited & placed(). post_step
+# L323-331: lifted |= z > surface_z + lift_h 0.05; transited |= lifted & carried_fraction() > 0.9 (x travel over
+# carry_dx 3.0, L429-434). placed() L407-415: origin in the place table's target box x (0.40, 0.85), y (-0.20, 0.05)
+# (table frame), z < surface + place_max_h 0.406, every velocity component < settle_vel 0.20 (cfg L63-77). Default cfg
+# (configs/envs.py L81-95).
+[families."locomanip.wheel_carry.g1.loco_pink_ik"]
+success = """
+Three conditions. Lifted (counted when it happens): at some physics step the steering wheel's origin rose more than
+5 cm above the table top. Carried over (counted when it happens): after that, the wheel travelled more than 90 % of
+the 3 m from the pick table towards the place table (along the line between them). In the basket (on the final
+state): the wheel's origin lies inside the target zone in the basket, a 45 cm × 25 cm area inset in the basket on
+the place table, less than 40.6 cm above the table top, and every component of the wheel's linear (m/s) and angular
+(rad/s) velocity is below 0.20. Whether the robot still holds the wheel is not checked.
+"""
+
+# grader/clear_organic_objects.py check_success L62-63: scene success() L859-873 (sort variant: every bin_target
+# cleared() L779-781 = _in_bin L759-772 (crate-frame interior box: |xy| <= the inner half-extents, z between floor and
+# rim) & |v| < settle_speed 0.06; every tray_target placed_on_tray() L801-803 = _on_tray L783-799 (tray-frame radial <=
+# tray_margin_frac 0.85 x mean half-extent, z in [0, plate top + tray_stack 0.14]) & |v| < 0.06; no distractor _in_bin)
+# AND _bin_upright L65-71 (the crate is kinematic, bin_kinematic True, so it holds). G1 cfg (packing/configs/envs.py
+# L198-300): sort_to_bin = (lemon_a, lemon_b), sort_to_tray = (lime_a, lime_b); thresholds are the defaults.
+[families."packing.clear_organic_objects.g1.pink_ik"]
+success = """
+The two lemons and the two limes that start in the front row are placed, and nothing that is not food is in the blue
+crate. Each lemon: its origin inside the crate's interior (within the inner walls, between the floor and the rim,
+judged in the crate's frame) and moving slower than 0.06 m/s. Each lime: its origin over the round tray's counted
+disc (85 % of the tray's radius), between the tray and 14 cm above its plate top, and moving slower than 0.06 m/s. No
+non-food item (the jugs, the bottle, the pen holder, the bowl) has its origin inside the crate's interior. The other
+food items may be anywhere. The crate is fixed in this scene and stays upright.
+"""
+
+# grader/egg_carton.py check_success L45-46 -> scene success() L518-520 = _stages_complete() & settled().
+# _seat_candidates L455-481 (carton-body frame: radial to a cavity <= seat_xy_tol 0.021; z in [seat_z_min 0.015,
+# seat_z_max 0.042]; |egg axis . carton z| >= cos(egg_tilt_max_deg 50.0); |v| < settle_speed 0.05); _stages_complete
+# L498-507: occupied pockets >= target_eggs 3 and seated eggs >= 3, and lid_closed() L450-451 (|lid joint| <=
+# lid_closed_deg 7.0, require_lid_closed True); settled() L491-496: every egg |v| < 0.05 and |lid joint vel| <
+# settle_joint_speed 0.10 (cfg L48-61, L83). G1 cfg (packing/configs/envs.py L515-520): layout only.
+[families."packing.egg_carton.g1.pink_ik"]
+success = """
+Three different pockets of the carton each hold a seated egg, the lid is closed, and everything is at rest. An egg is
+seated in a pocket when, measured in the carton's frame, its centre is within 21 mm of the pocket's axis and 15 to
+42 mm above the carton's base frame, its long axis is within 50° of the carton's vertical (either end up), and it
+moves slower than 0.05 m/s. The lid is closed when its hinge is within 7° of shut. At rest: every egg, the spare one
+included, moves slower than 0.05 m/s, and the lid's hinge turns slower than 0.10 rad/s.
+"""
+
+# grader/pen_holder.py check_success L47-48 -> scene success() L570-573 = all_inserted() & holder_placed().
+# all_inserted L537-539: every present pen counted() = inserted() L513-525 (holder frame: bottom end radial < xy_tol
+# 0.035; depth below the rim > depth_min 0.035 and above the cup floor - 5 mm; pen axis within pen_align_max_deg 45
+# of the holder axis, tip up; holder_up() within holder_tilt_max_deg 45) & settled() (pen and holder |v| <
+# settle_speed 0.05) & present. holder_placed L541-554: within placed_tilt_deg 10 of vertical, bottom within
+# placed_z_tol 0.010 of the surface, |v| < 0.05 (cfg L81-92). Franka cfg (packing/configs/envs.py L584-599): layout only.
+[families."packing.pen_holder.franka.osc"]
+success = """
+Every pencil in the scene stands in the holder, and the holder stands upright on the table, everything at rest. A
+pencil counts when, measured in the holder's frame, its button end is within 35 mm of the holder's axis, more than
+35 mm below the rim and not below the cup's floor, and its axis points tip up within 45° of the holder's axis. The
+holder: its axis within 10° of vertical and its bottom within 10 mm of the table top. Every pencil and the holder move
+slower than 0.05 m/s.
+"""
+
+# grader/tool_packing.py check_success L44-45 -> scene success() L541-545: stowed().all() (_item_in_tray L485-498:
+# origin inside the assigned drawer's tray box, drawer frame; |v| < settle_speed 0.05) & drawers_closed().all() (all
+# four drawers, joint > -drawer_closed_tol 0.015) & doors_closed() (the chest has no doors) & settled() (items |v| <
+# 0.05, drawer joint speeds < settle_joint_speed 0.05). Cabinet "chest" (L114-128): stapler -> top, scissors ->
+# second, knife -> third, bottom drawer unassigned. Franka cfg (packing/configs/envs.py L625-640): layout only.
+[families."packing.tool_packing.franka.osc"]
+success = """
+The stapler is in the top drawer, the scissors in the second and the utility knife in the third, each with its origin
+inside that drawer's tray (judged in the drawer's frame, wherever the drawer is) and moving slower than 0.05 m/s. All
+four drawers of the chest are shut: each within 15 mm of fully closed. At rest: every tool moves slower than 0.05 m/s
+and every drawer slides slower than 0.05 m/s.
+"""
+
+# grader/classify_objects.py check_success L35 -> scene success() L321-323 = sorted_mask().all(); sorted_mask L300-311:
+# radial to its own colour's (reset-jittered) zone centre < zone_half 0.055, |z - (surface + block_size/2)| < z_tol
+# 0.02, |v| < settle_speed 0.05 (cfg L49-51); three categories x per_category 1, block_size 0.045. G1 cfg
+# (puzzle/configs/envs.py L643-655): layout only.
+[families."puzzle.classify_objects.g1.pink_ik"]
+success = """
+Each of the three blocks (red, blue, green) is sorted: its centre is within 5.5 cm horizontally of the centre of the
+zone of its own colour, at resting height on the table (within 2 cm of half a block above the table top), and it
+moves slower than 0.05 m/s.
+"""
+
+# grader/coffee_service.py check_success L51 -> scene success() L1500-1503 = _filled & cup_on_tray() & cup_settled().
+# _filled latched by _machine_step L71-111 (start only on a START press edge with cover_closed (slide >=
+# cover_closed_pos -0.010), pod_seated (L1299-1311, pod_xy_tol 0.020, in the pocket band) and cup_under_spout
+# (L1313-1327: < cup_r_tol 0.050 of the spout axis, bottom within 0.02 of the platform, tilt <= served_tilt_deg 20);
+# aborts when the cover opens or the cup leaves the spout while running; completes after brew_steps 600 substeps at
+# 1/120 s). cup_on_tray L1329-1343: radial < tray_dish_r 0.205 - cup_outer_r 0.046, tilt <= 20, bottom within
+# served_z_tol 0.015 of the dish floor; cup_settled |v| < settle_speed 0.05 (cfg L483-499, L583-616). Franka cfg
+# (puzzle/configs/envs.py L476-505): layout and grasp weld only.
+[families."puzzle.coffee.franka.osc"]
+success = """
+Two conditions. A brew completed (counted when it happens): START was pressed while the pod bay's cover was closed (its
+slide within 1 cm of shut), the capsule sat in the bay's pocket (within 2 cm of its axis) and the mug stood under the
+spout (centre within 5 cm of the spout's axis, standing on the platform, tilted at most 20°), and the brew then ran its
+600 physics steps (5 s) with the cover closed and the mug under the spout throughout; opening the cover or moving the
+mug away during the brew aborts it. The mug on the tray (on the final state): its centre within 15.9 cm horizontally of
+the serving tray's centre, its bottom within 1.5 cm of the tray's dish floor, tilted at most 20° from upright, and
+moving slower than 0.05 m/s.
+"""
+
+# grader/push_shapes.py check_success L42 -> scene success() L451-455: per piece (t, x, l) seated() & settled().
+# seated() L412-421: position_error (xy to its own pad) <= xy_tolerance 0.007, orientation_error (full 3-D quaternion
+# angle to the pad) <= orientation_tolerance_deg 7.0, not_lifted (bottom <= board top + lift_tolerance 0.010 and >=
+# surface - 0.005), dropped (bottom <= surface + 0.002); settled() L402-406: |v| < 0.03 and |w| < 0.20 (cfg L48-56).
+# Default cfg (puzzle/configs/envs.py L140-152).
+[families."puzzle.push_shapes.g1.pink_ik"]
+success = """
+Each of the three blocks (the T, the cross and the L) is seated in the cutout of its own shape, all three at once. A
+block is seated when its centre is within 7 mm horizontally of its cutout's centre, its orientation is within 7° of
+the cutout's (full 3-D rotation), its underside has dropped into the recess (no more than 2 mm above the bench top
+under the board), and it moves slower than 0.03 m/s and turns slower than 0.20 rad/s.
+"""
+
+# grader/spatula_flip_serve.py check_success L62 -> scene success() L842-855 (goal "flip_serve", cfg L110):
+# _flipped & _served & served_now(). post_step L711-735 (every physics substep, 1/120 s): _flipped |= flipped_now()
+# (spawn-top normal z <= -cos(180 - flip_min_deg 150)) & on_pan() (L626-635: radial < pan_r_floor 0.1095, bottom
+# within rest_z_tol 0.012 of the pan floor, |up z| >= cos(flat_tilt_max_deg 15)) & settled() (|v| < 0.05); _served |=
+# served_now() & _since_loaded <= arrival_window 600, where loaded_now() L680-688 = on_blade() (L611-624: inside the
+# blade footprint, bottom 0.5-15 mm above it, within 30° of the blade normal) & bottom > surface + lift_gate 0.05.
+# served_now() L690-702: on_plate() (L643-652: radial < served_xy_frac 0.75 x plate_r 0.1504, bottom within 0.012 of
+# the plate rest height, flat within 15°) & settled(), either face. No order between the two latches is checked.
+# Tool-only rule: rcb_embodiedswe.ToolOnlyMonitor L138-199 (hand links panda_hand, panda_leftfinger,
+# panda_rightfinger; any nonzero contact force at any substep), verdict L917-919 (success False, progress 0);
+# sim/server.py ctrl_step L472-473 (ends the episode, "tool_contact") and dump() L278-279.
+[families."puzzle.spatula.franka.osc"]
+success = """
+Three conditions, plus a tool-only rule. Flipped (counted when it happens): at some physics step the bread's top face
+(the one up at the start) pointed within 30° of straight down while the bread lay flat in the pan (centre within
+10.95 cm of the pan's centre, bottom within 12 mm of the pan floor, tilted at most 15°) and moved slower than
+0.05 m/s. Served (counted when it happens): at some physics step the bread lay at rest on the plate (as below) within
+600 physics steps (5 s) after the last step at which it rode the spatula's blade (on the blade, bottom 0.5 to 15 mm
+above it, tilted at most 30° from the blade) with its bottom more than 5 cm above the table. On the plate (on the
+final state): the bread's centre within 11.3 cm (75 % of the plate's radius) of the plate's centre, its bottom within
+12 mm of the plate's resting height, tilted at most 15° from flat (either side up), moving slower than 0.05 m/s. The
+order of the flip and the serve is not checked.
+
+Tool-only rule: a contact with nonzero force between the bread and the hand or a finger (`panda_hand`,
+`panda_leftfinger`, `panda_rightfinger`) at any physics step scores 0, also after the conditions were met. The spatula
+may touch the bread.
+"""
+
+# grader/stack_blocks.py check_success L36-37 -> scene success() L385-389: every slot 0..n_blocks-1 filled by exactly
+# one block. _slots L340-361: xy within align_tol 0.030 of pad_pos, |level_f - level| x block_size < z_tol 0.020 (slot
+# L centre at surface + block/2 + L x block), level in [0, 4), _upright L328-338 (a body axis within upright_max_deg 25
+# of world up), block |v| < settle_speed 0.05 and every block |v| < 0.05 (cfg L56-61, n_blocks 4, block_size 0.045).
+# G1 cfg (puzzle/configs/envs.py L573-585): layout only.
+[families."puzzle.stack_blocks.g1.pink_ik"]
+success = """
+The four blocks form one tower on the pad: each of the tower's four levels holds exactly one block. A block fills a
+level when its centre is within 3 cm horizontally of the pad's centre and within 2 cm of that level's height (the
+4.5 cm blocks stacked from the table top), one of its faces is within 25° of level, and it moves slower than
+0.05 m/s; every block must move slower than 0.05 m/s for any level to count.
+"""
+
+# grader/syringe_dosing.py check_success L38-39 -> scene success() L788-789 = drawn() & doses_ok() & parked().
+# drawn: _drawn_ok latch L654 (seated on the reservoir, L441-457: tip within seat_tol 0.006 laterally, -12 mm to
+# seat_band 12 mm above the rim, barrel axis z > 0.85; seated within the last 10 substeps counts; liquid >= draw_min
+# 0.95). doses_ok L772-774: every tube's dose in dose_band [0.23, 0.43] of capacity (doses never decrease; a dose
+# lands in a tube only while the tip is seated on its mouth). parked L776-786: |xy - home_pos| < 0.06 (home_pos =
+# the reset position, L341-357), |barrel axis z| < 0.35, |z - surface| < 0.08, |v| < 0.05 (cfg L50-75). The
+# bimanual_franka preset (puzzle/configs/envs.py L254-277) uses the default cfg.
+[families."puzzle.syringe.bimanual_franka.osc"]
+success = """
+Three conditions. Drawn (counted when it happens): while the syringe's tip was seated on the beaker (within 6 mm of
+its axis, from 12 mm below to 12 mm above its rim, the barrel held near vertical), the barrel came to hold at least
+95 % of its capacity. Dosed (on the final state): each of the three tubes holds between 23 % and 43 % of the syringe's
+capacity; liquid counts for a tube only when it was pushed out with the tip seated on that tube's mouth, and a tube
+never loses what it got. Parked (on the final state): the syringe lies within 6 cm horizontally of its starting spot
+on the shelf, its barrel within about 20° of horizontal (axis vertical component below 0.35), within 8 cm of the shelf
+height, and moving slower than 0.05 m/s.
+"""

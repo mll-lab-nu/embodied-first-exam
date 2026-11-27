@@ -1,43 +1,34 @@
-# kinder-sweep-into-drawer-i00-standard
+# KinDER · sweep-into-drawer (standard)
 
 | | |
 |---|---|
-| Benchmark | KinDER |
-| Mode | standard (`eai-standard/3.0`) |
-| Twin | `kinder-sweep-into-drawer-i00-privileged` |
-| Simulator / robot | `kinder` / `tidybot-plus-plus` |
-| Family / instance | `sweep-into-drawer` / seed 0 (allowed seeds: [0, 1, 2]; PROTOCOL §2) |
-| Oracle | `none` — GPT-6 Luna's privileged-mode trajectory of 2026-10-04, run `codex-gpt6_luna-medium` on the results site, which today's privileged verifier scores 1 (it moves the base diagonally by up to 0.13 m a step, beyond standard mode's 0.1 m disc, so it is no standard-mode example); in standard mode, the graded episode of run `codex-gpt6_1_sol-high` of 2026-10-03 (960 control steps, no reset), which the standard service scored 1 (live, fresh replay, deterministic); human review in PR #8 |
-| Agent time budget | 1800 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:kinder-0.1.6` |
+| Task ID | `kinder-sweep-into-drawer-i00-standard` |
+| Benchmark | [KinDER](https://github.com/Princeton-Robot-Planning-and-Learning/kindergarden) (Huang et al., 2026), upstream `Princeton-Robot-Planning-and-Learning/kindergarden@5b2dbac` |
+| Robot | TidyBot++ mobile manipulator: holonomic base, Kinova Gen3 7-DoF arm, Robotiq 2F-85 gripper |
+| Mode | standard |
+| Instance | `sweep-into-drawer`, seed 0 |
+| Time limit | 30 min |
+| Reference solution | None |
 
 ## Task
-Standard mode (robot as a service, `eai-standard/3.0`) of `kinder-sweep-into-drawer-i00-privileged`: the same KinDER instance (`kinder/SweepIntoDrawer3D-o5-v0`, seed
-0) runs in the `sim` sidecar; the agent gets a client and the robot's own sensors -- two
-cameras, joint encoders, the base's odometry -- and
-never the scene's state or the goal check. No reset: one episode, which is graded.
+Get the five small cubes on top of the kitchen island into the middle drawer of the island's top row. There is a wiper
+you can use.
 
-Task: Get the five small cubes on top of the kitchen island into the middle drawer of the island's top row. There is a wiper you can use.
+## Success criteria
+Goal check (KinDER `SweepIntoDrawer3D-o5`): the centre of every one of the five cubes lies inside the goal region
+of the middle drawer of the kitchen island's top row, a box inside the drawer that stops short of its left and right
+walls. Nothing else is checked: the drawer may be left in any position, and the wiper anywhere.
 
-## Difficulty
-Nonprehensile, tool use, dynamics: open a closed drawer, then sweep five small cubes off the counter into it with a wiper. KinDER's paper reports at most 0.14 success for its best method on this variant and 0.00 for sampling MPC on the true simulator.
+Graded: the live episode, judged by the simulator service; nothing is replayed. Reaching the goal does not end the
+episode and is not shown to the agent. The episode ends at the agent's `/finish`, after 1,000 control steps (100 s
+of robot time), or when the agent's time (30 min) runs out. It is passed if KinDER's goal check holds in the state
+the episode ends in. Resets granted: 0. A reset starts a new episode from the frozen start; only the episode
+after the last reset is graded. A simulator error raised by the agent's own call ends the episode with 0. An episode that does not
+start from the frozen instance, or a service crash outside the agent's calls, is an infrastructure failure, not a
+score.
 
-## Reference solution
-None. Solvability rests on the positive example in `oracle_evidence` (task.toml), checked by a human reviewer (docs/protocol/README.md §4).
-
-## Verification
-The sidecar runs the episode live: it ends at the agent's `POST /finish`, at the step cap, when the agent's time is up, or on a simulator error (a success never ends it and is never shown), and KinDER's goal check is judged on the state it ends in. The sidecar,
-when the collect hook ends the trial, writes that verdict to `/data/final.json` (`graded_by = "live"`): nothing is
-replayed to grade it (owner, 2026-10-17). The scene's start is checked against the frozen instance's
-recorded state (`scene_sha`) when the episode begins (a mismatch is `instance_mismatch`, infrastructure).
-`tests/grade.py` grades `final.json` in a container of its own with no network: success = live success. The video
-(`replay.mp4`) is rendered from `trajectory.npz` in one pass after the verdict and never changes it.
-No oracle; human review in PR #8. `nop` scores 0.
-
-Benchmark notes: `tasks/kinder/README.md`.
-
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -47,3 +38,9 @@ Caps per container (PROTOCOL §6).
 
 - GPU: any NVIDIA GPU, held by `sim`.
 - Recommended GPU: any 8 GB+ NVIDIA GPU (RTX 4090 / L4).
+
+## License
+KinDER ([Princeton-Robot-Planning-and-Learning/kindergarden](https://github.com/Princeton-Robot-Planning-and-Learning/kindergarden)
+@ `5b2dbac`) is released under the MIT License (copyright (c) 2025 Tom Silver). The lab scenes are MimicLabs
+([Gatech-RL2/mimiclabs](https://github.com/Gatech-RL2/mimiclabs), MIT License), fetched by upstream's own download
+script when the image is built. The simulator is MuJoCo (Apache License 2.0). No non-commercial terms apply.

@@ -1,42 +1,39 @@
-# vlabench-friction-qa-i00-standard
+# VLABench · friction_qa (standard)
 
 | | |
 |---|---|
-| Benchmark | VLABench |
-| Mode | standard (`eai-standard/3.0`) |
-| Twin | `vlabench-friction-qa-i00-privileged` |
-| Simulator / robot | `vlabench` / `franka-panda` |
-| Family / instance | `vlabench/friction_qa` / seed 0 |
-| Oracle | `full` |
-| Agent time budget | 1800 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:vlabench-0.2.0` |
+| Task ID | `vlabench-friction-qa-i00-standard` |
+| Benchmark | [VLABench](https://github.com/OpenMOSS/VLABench) (Zhang et al., 2024), upstream `OpenMOSS/VLABench@cf588fe` |
+| Robot | Franka Emika Panda arm (7 joints) with its two-finger gripper, VLABench's model on a fixed base |
+| Mode | standard |
+| Instance | `vlabench/friction_qa`, seed 0 |
+| Time limit | 30 min |
+| Reference solution | Included |
 
 ## Task
-VLABench's `friction_qa` as a robot service: a Franka Panda arm at a table, instructed **"Press the button in front of the object that would slide down a steel ramp the slowest."**
-(a physics question, answered by pressing the button in front of the right object), on the same frozen instance as `vlabench-friction-qa-i00-privileged`. The simulator runs in the
-`sim` sidecar (`environment/sim/server.py` on main's `rcb_service.py`); the agent only has the client: four cameras
-(RGB 320×320, depth on request, calibrated), the robot's own state, and joint-position chunks. One episode, no reset,
-no object poses; nothing to hand in.
+Press the button in front of the object that would slide down a steel ramp the slowest.
 
-## Difficulty
-The agent has to find the objects in the images, close the loop through the cameras with joint-position targets, and
-finish in one episode without a reset, on top of the task's own reasoning (a physics question, answered by pressing the button in front of the right object).
+## Success criteria
+Condition (VLABench's `press_button`): button `button1`, the one in front of the metal box (the other two buttons have a
+metal cylinder each), is pressed: after the control step, the touch force on the button has been between 0.01 and
+100 N on each of at least the last 11 consecutive physics steps.
 
-## Reference solution
-`solution/`: the privileged oracle's 224 control steps (recorded offline; see the twin's README) submitted
-through the client; the episode ends with `reason = "success"` at the last of them.
+The press counts as it happens: the episode passes when the condition held after any one control step of it, even if
+the button is released before the episode ends.
 
-## Verification
-The sim service ends the episode at the task's success (or at the 9000-step technical cap, when the agent's
-time is up, or on a simulator error) and writes that live verdict to `/data/final.json` (`graded_by = "live"`);
-nothing is replayed to grade it. The scene is checked against the frozen instance (its
-initial state and compiled model hashes) when it is built, and its start state when the episode begins (a mismatch is
-`instance_mismatch`, infrastructure). `tests/grade.py` (separate sandbox, no network) grades `final.json`:
-`success = live_success`. The video (`replay.mp4`) is rendered from `trajectory.npz` in one pass after the verdict and
-never changes it.
+Positions are object origins in the world frame of the instruction (metres, z up). A control step is 0.1 s (100 physics
+steps of 1 ms), and the service checks the condition after every control step. It never reports it, and a success does
+not end the episode.
 
-## Resources
-Caps per container (PROTOCOL §6).
+Graded is the one live episode (no reset). It ends at the agent's `POST /finish`, after 9,000 control steps, when the
+agent's session ends, or on a simulator error. Unless stated otherwise above, it passes when the condition holds after
+the last control step of the episode. A simulator error raised by the agent's calls, or simulator crashes during its
+calls that the service cannot resume from, end the episode with 0. A frozen scene that does not rebuild with the
+recorded model and initial-state hashes, or service crashes outside the agent's calls, are infrastructure errors, not a
+score.
+
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -46,10 +43,9 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Actions | `joint_position` (9, float64): absolute targets for the 7 arm joints (rad) and the 2 fingers (m), 0.1 s per control step |
-| Episode cap | 9000 control steps (900 s of robot time; `spec.max_control_steps`, docs/protocol/standard_mode.md) |
-| Resources | 4 CPUs, no GPU (CPU physics, OSMesa rendering) |
-| Instruction | restated; VLABench's own: "We are going to test the friction of the different object. Choose the object that slides the slowest on a steel ramp." (graded: VLABench's press_button condition on the button in front of the right object (each object stands 0.1 m behind its own button); the upstream text does not say how to choose) |
+## License
+VLABench ([OpenMOSS/VLABench](https://github.com/OpenMOSS/VLABench) @ `cf588fe`; Zhang et al., 2024, arXiv:2412.18194)
+code: MIT License (its `LICENSE.txt`). The scene and object assets come from the Hugging Face dataset
+[lerobot/vlabench-assets](https://huggingface.co/datasets/lerobot/vlabench-assets) @ `08d7a44`, which states no licence:
+they are downloaded when the image is built and are never redistributed by this repository or in a published image.
+MuJoCo 3.2.2 and dm_control 1.0.22: Apache-2.0. No non-commercial terms apply.

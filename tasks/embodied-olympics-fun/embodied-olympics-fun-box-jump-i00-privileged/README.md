@@ -1,31 +1,52 @@
-# embodied-olympics-fun-box-jump-i00-privileged
+# Embodied Olympics · box jump (privileged)
 
 | | |
 |---|---|
-| Benchmark | Embodied Olympics - Fun |
+| Task ID | `embodied-olympics-fun-box-jump-i00-privileged` |
+| Benchmark | [Embodied Olympics - Fun](https://github.com/CHIGUI0/roboolympics) (Embodied Olympics authors, 2026), upstream `CHIGUI0/roboolympics@7df999b` |
+| Robot | Unitree H1-2 humanoid (1.78 m, 67 kg, 27 joints), with Unitree's walking policy |
 | Mode | privileged |
-| Twin | `embodied-olympics-fun-box-jump-i00-standard` |
-| Simulator / robot | `mujoco` / `unitree-h1-2` |
-| Family / instance | `box_jump` / seed 0 |
-| Oracle | `none` — no reference solution; the referee is tested: positive by injection (1.6 m/s forward and 3.7 m/s up onto the 0.61 m box, a perfect landing, the stand is the robot's own); negatives: touching the box before the jump, landing on the floor, a leg tuck, a one-foot take-off, the box's side, not on the feet, the floor after the landing, a fall. The H1-2's open-loop squat jump leaves the ground at 1.8 m/s; human review in the pull request that adds the benchmark (PROTOCOL §4) |
-| Agent time budget | 7200 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
+| Instance | `box_jump`, seed 0 |
+| Time limit | 2 h |
+| Reference solution | None |
 
 ## Task
-Jump onto the box in front of you from both feet, land on top with both feet and stand up straight on it. (Embodied Olympics `box-jump`: one Unitree H1-2 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
+Jump onto the box in front of you from both feet, land on top with both feet and stand up straight on it.
 
-## Difficulty
-No built-in action of this robot leaves the ground: the jump is whole-body joint control, and it must lift 67 kg far enough for the soles to clear 0.61 m, more than half the length of the legs. The landing has to be absorbed on a box only 0.51 m deep that is free to slide, and the robot must then straighten up on it.
+## Success criteria
+The box is a free 25 kg body, 0.61 m high, with a top 0.51 m by 0.76 m. The referee's stages, in order: take-off,
+landing, stand.
+- Take-off: the robot's first flight phase of at least 0.1 s. It counts only if nothing of the robot touched the box
+  before it, each foot was on the floor within the last 0.1 s before lift-off, and the pelvis rose at least 0.1 m
+  above its height at lift-off; otherwise the attempt fails.
+- Landing: over the 0.5 s after the first contact, only the feet touch anything, and only the box's top face (each
+  contact within 0.02 m of the top plane and pushing within 20 degrees of straight out of it); at the end of the 0.5 s
+  both feet are on the top. Otherwise the attempt fails.
+- Stand: for 2 s without a break, both feet on the top face and nothing else touching anything, the torso within 20
+  degrees of vertical, the pelvis slower than 0.35 m/s and at least 1.0 m above the box's top. The success is called
+  when the 2 s are complete.
 
-## Reference solution
-None. No reference controller exists for this family yet: positive by injection (1.6 m/s forward and 3.7 m/s up onto the 0.61 m box, a perfect landing, the stand is the robot's own); negatives: touching the box before the jump, landing on the floor, a leg tuck, a one-foot take-off, the box's side, not on the feet, the floor after the landing, a fall. The H1-2's open-loop squat jump leaves the ground at 1.8 m/s.
+Fouls (each fails the attempt at once): before the jump, any part other than the feet touching the floor, or anything
+touching the box; after the take-off, any part touching the floor, or any part other than a foot touching the box. The
+generic fall rule is off (no pelvis-height limit). Time limit: 20 s (2,000 control steps).
 
-## Verification
-`/tests/grade.py` replays `/app/output/trajectory.npz` from the frozen start in one fresh process (`rcb_rfo.py replay`:
-one sim row per control step until the referee ends the attempt). Pass iff the referee's verdict is a success. The rules: The box is a free rigid body of 25.0 kg (not fixed to the floor; friction coefficient 1.0, a stiff wooden surface: contact time constant 0.005 s): 0.61 m high, its top 0.51 m long (along +x, the way you face) and 0.76 m wide. You must get onto it with one jump. Your jump is your first flight phase of at least 0.1 s (nothing of you touches anything). It counts only if: nothing of you touched the box before it (no stepping or climbing up); it left the floor from both feet (each foot was on the floor within the last 0.1 s before lift-off); it was a real take-off (your pelvis rose at least 0.1 m above its height at lift-off: tucking the legs while falling is not a jump). The landing is judged over the 0.5 s that follow the first contact: in that time only your feet may touch anything, and only the box's top face (each contact within 0.02 m of the top plane and pushing within 20.0 degrees of straight out of it: a foot against a side face or jammed on an edge is not on the top), and at its end both feet are on the top. Then you stand up straight on the box for 2.0 s without a break: both feet on the top face and nothing else touching anything, your torso within 20.0 degrees of vertical, your pelvis moving no faster than 0.35 m/s and at least 1.0 m above the box's top (hips and knees extended). You fail if the jump breaks one of these rules, if any part of you touches the floor after the landing, if a part other than a foot touches the box, if you fall before the jump (a fall is any part of you other than your feet touching the floor; there is no pelvis-height limit, a deep squat is not a fall), or after 20 s. You may walk on the floor before the jump. No oracle; human review in the pull request that adds the benchmark (PROTOCOL §4).
+Graded file: `/app/output/trajectory.npz`, as `s.save_trajectory()` writes it: an `actions` array of sim rows, one per
+10 ms control step, and the task's family name. After the agent's session it is replayed once, open-loop, from the
+frozen start, in a fresh process of a separate verifier container without network. Rows run one per control step
+until the referee calls the attempt; rows after the call, and rows past the attempt's time limit, are not run. The
+task is passed if the referee has called a success when the replay stops. If the rows run out before the referee's
+call, the task is not passed. A row the robot cannot run (its first value, the mode, is not one of the robot's modes)
+ends the replay at that row without a pass.
 
-## Resources
-Caps per container (PROTOCOL §6).
+The physics diverging (a non-finite state, a bad acceleration, or the robot or a prop faster than 150 m/s) ends the
+attempt as a failure, unless a success was called in an earlier control step. Only the trajectory is scored (`gen.py`
+and `NOTES.md` are not). A missing file, a file that is not such an array (a link, over 64 MB, more than 40,000 rows,
+the wrong row width), a file for another task, or a non-finite value in the rows that are used scores 0. An image that
+no longer rebuilds the frozen start, or a replay that crashes or runs over 600 s, is an infrastructure failure, not a
+score.
+
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -34,14 +55,10 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Category | parkour-apparatus-balance |
-| Rule book | CrossFit's box jump movement standard (the CrossFit Games Open workout descriptions: both feet start on the floor, both feet end on the box, hips and knees fully extended on top) on the men's prescribed box: 24 in (0.61 m) high, the 20 x 24 x 30 in plyometric box standing on its 20 x 30 in face; deviations: the step-up that some Open workouts permit is not a box jump here: the take-off is from both feet and there is a flight (the family is the jump, not the step-up) · full extension on top is judged by the pelvis' height above the box's top (1.0 m; this robot's pelvis is 1.04 m above its soles with straight legs, 1.02 to 1.03 m in its own standing posture, whose knees stay bent 0.36 rad, and below 1.0 m once the knees bend more than about 0.65 rad) and by the torso's tilt: a referee cannot see "open hips" on a robot otherwise · one repetition, judged to a held stand of 2.0 s on the box (a workout counts repetitions; here the repetition is one attempt and the stand shows control) |
-| Stages | take-off → landing → stand |
-| Instance | `environment/instance.json` = `tests/instance.json`: the family's parameters, t = 0 state hash `45873bd911ac18123ca48a3fca064ec753e6cdda7f1dbc98972f924743aa65f2` |
-| Episode | 2000 control steps (20 s at 100 Hz) |
-| Action | sim rows of 141 floats per control step (`rfo/world.py`); six action types are views of it |
-| Tooling | `/opt/tools/rcb_rfo.py`, `/opt/tools/rfo/` (the world, the action layer, the referee's toolkit; from the files-only image images/embodied-olympics-fun-files/, built from embodied_first_exam/benchmarks/embodied-olympics-fun/) and `environment/rfo_task.py` (this family's rules), the same files in the verifier's `/tests/` |
-| Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md) |
+## License
+The Embodied Olympics robot library and running-policy port ([CHIGUI0/roboolympics](https://github.com/CHIGUI0/roboolympics)
+@ `7df999b`, a private repository) is released under the MIT License (`LICENSE.roboolympics` in the image); this
+benchmark's venues and referees are MIT too. Third-party parts in the image: the Unitree G1 model and meshes from MuJoCo
+Menagerie (BSD-3-Clause), the Unitree H1-2 model, meshes and walking policy and the G1 walking policy from
+unitree_rl_gym (BSD-3-Clause), the G1 running policy from C1801SYQ/g1_running (Apache-2.0), FALCON's G1 walking policy
+from LeCAR-Lab/FALCON (MIT) and the WBC-AGILE G1 walking policy from NVIDIA (Apache-2.0). No non-commercial terms apply.

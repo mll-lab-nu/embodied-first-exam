@@ -1,66 +1,39 @@
-# humanoidbench-manip-room-i00-privileged
+# HumanoidBench · room (privileged)
 
 | | |
 |---|---|
-| Benchmark | HumanoidBench |
+| Task ID | `humanoidbench-manip-room-i00-privileged` |
+| Benchmark | [HumanoidBench](https://humanoid-bench.github.io/) (Sferrazza et al., 2024), upstream `carlosferrazza/humanoid-bench@cb11890` |
+| Robot | Unitree H1 humanoid with two Shadow dexterous hands, 61 position-controlled actuators (HumanoidBench `h1hand`) |
 | Mode | privileged |
-| Twin | `humanoidbench-manip-room-i00-standard` |
-| Simulator / robot | `humanoidbench` / `unitree-h1hand` |
-| Family / instance | `room` / seed 0 |
-| Oracle | `none` — none known: no run has passed it, and published RL reaches 44% of the bar (paper 128, FastTD3 177, bar 400); human review in PR #9 |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:humanoidbench-0.2.0` |
+| Instance | `room`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | None |
 
 ## Task
-Gather the six loose things in the room (the chair, the trophy, the headphones, the two packages and the snow globe) close together, anywhere you like.
+Gather the six loose things in the room (the chair, the trophy, the headphones, the two packages and the snow globe)
+close together, anywhere you like.
 
-HumanoidBench room: produce one replayable trajectory that tidies six objects scattered around a room with the Unitree H1, frozen scene instance 00.
+## Success criteria
+Pass mark: an episode return of at least 400, upstream's success bar, where the return is the sum of
+HumanoidBench's per-step `room` reward over the episode. Each control step earns between 0 and 1, mostly from how
+tightly the six loose objects in the room (a chair, a trophy, headphones, two packages, a snow globe) are grouped
+together on the floor plan, anywhere in the room, and the rest from the robot standing upright with little actuator
+effort. An episode is at most 1,000 control steps (20 s at 50 Hz).
 
-## Difficulty
-The pass mark is a **threshold on the whole episode's return** (`>= 400` over 1000 steps), not a
-predicate on the final state.
+Termination (the episode ends at once as a failure): the robot falls, its pelvis below 0.3 m.
 
-- **The only task in the benchmark whose objective is a statistic, not a pose.** Upstream scores
-  `tolerance(max(variance of the objects' x and y), margin=3)` — there is no destination to reach and no
-  per-object goal. The agent has to invent the placement, which is a planning problem no other task in the
-  subset poses. (This is also why the old "= `package` six times over" reading was wrong: `Room` is an
-  independent `Task` with an independent reward.)
-- **Six objects, 42 DoF of task state** — the widest scene in the subset — on top of 61 actuators.
-  Every object moved is a chance to knock another one away.
-- **Mobile manipulation without a script.** The robot must walk to each object, pick or push it, and
-  return; the order is the agent's to choose, and a bad order costs the whole episode.
-- **Holding the start pose lasts 123 steps** and earns 5% of the bar, so nothing is given away.
+Graded file: `/app/output/trajectory.npz`, as `s.save_trajectory(...)` writes it: this task's name (`room`) and at
+most 1,000 rows of 61 finite servo targets, one row per control step (values outside [-1, 1] are
+clipped). After the agent's session it is replayed once, open-loop, from the frozen start (`tests/instance.npz`) in a
+fresh process of a separate verifier container without network, the only place the reward exists. The task is passed
+if the replayed episode's return reaches the pass mark. The replay stops at the first of the terminations above; rows
+after it are not run. Only the trajectory is scored (`gen.py` and `NOTES.md` are not). A missing file, a file for
+another task, or one that is not such an array scores 0; an error inside the grader is reported as `grader_error`
+(infrastructure), not as a score.
 
-**Measured floors** (this instance): an all-zero
-trajectory scores **8.84 / 400** (the episode terminates at step 70 of 1000). Holding the starting
-pose instead — the floor a competent agent gets before writing a controller — scores **5.0%** of the
-bar; that is the number this task was selected on (the benchmark's give-away limit).
-**External evidence**: published RL results reach **44%** of the bar (paper 128, FastTD3 177, bar
-400) — training runs of millions of environment steps, not a one-hour coding session, so treat it as
-proof that the task *has* a solution rather than as a target.
-
-**The agent does not see the reward function.** It is deleted from the image and restored only
-inside the verifier (`images/humanoidbench/scrub_oracles.py`, `tests/rcb_rewards.py`), so the
-numbers above are upstream's own scoring (on our physics: see *Physics vs upstream*) while the agent
-works from the task statement and the physical state alone.
-
-## Reference solution
-None. Requiring one would cap the benchmark at what we can already solve, which systematically
-removes the interesting tasks. What replaces it (docs/protocol/README.md §4): the floor above
-(doing nothing cannot pass), the evidence that the task has a solution (`oracle_evidence` in
-task.toml), and a human reviewer.
-
-## Verification
-In its own container, built from `tests/Dockerfile` (no network): the agent's container is gone by
-then, and only `/app/output/` crosses over. Open-loop replay of `/app/output/trajectory.npz` from
-`tests/instance.npz` in a fresh process, once; pass iff the replay's episode return reaches
-`success_bar`. `tests/grade.py` also
-writes `/logs/verifier/replay.mp4` and, because Harbor promotes every `reward.json` key to a
-leaderboard metric, keeps the per-task numbers (`episode_return`, `success_bar`) in
-`/logs/verifier/diagnostics.json`. No oracle; human review in PR #9. `nop` scores 0.
-
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -69,19 +42,9 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Capability class | C8 · mobile manipulation |
-| Physics vs upstream | upstream's model (HumanoidBench cb11890) on MuJoCo 3.3.7, not the 3.1.6 upstream pins, whose convex collision reported wrong contacts; results on image 0.1.6 or earlier are other physics and are reported apart (tasks/humanoidbench/README.md, Physics). Also fixed here: **reset**: upstream's reset loops over seven objects in a scene of six and wrote the seventh's x/y into the right little finger's two joints (it started bent through its own fingertip, pressing on it with about 1.4 kN), and left the tilted headphones and a package 5-8 cm inside the floor. The finger now starts in range and every object on the floor, at upstream's positions; the frozen instance was redrawn with the fix (`images/humanoidbench/upstream-fixes.patch`). |
-
-### GPU
-Optional, and passing never depends on it: MuJoCo physics is CPU-only, so a GPU only speeds up the
-agent's own offscreen rendering (osmesa ~130 ms/frame, egl ~0.4 ms). Hand one to the agent's
-container with `--extra-docker-compose environment/gpu.docker-compose.yaml`; `rcb_hb.py` then picks
-EGL by itself unless `MUJOCO_GL` says otherwise. The overlay is not named `docker-compose.yaml`
-because Harbor would load that on every machine, and a device reservation the host cannot satisfy
-stops the container from starting.
-
-### Provenance
-The instance (`environment/instance.npz` and its byte copy `tests/instance.npz`) is seed 0 (sha `b69705228ecf`).
+## License
+HumanoidBench (Sferrazza et al., 2024; <https://github.com/carlosferrazza/humanoid-bench>) is released under the MIT
+License, copyright (c) 2024 Robot Learning Lab, UC Berkeley. The image's notice is
+`images/humanoidbench/LICENSE.humanoid-bench`; this task's `rewards.json` carries upstream's code under that license.
+Robot models shipped with upstream: the Unitree H1 model (BSD 3-Clause, copyright Unitree Robotics) and, on the
+two-handed H1, the Shadow Hand model from MuJoCo Menagerie (Apache License 2.0). No non-commercial terms apply.

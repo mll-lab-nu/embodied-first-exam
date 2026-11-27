@@ -1,31 +1,58 @@
-# embodied-olympics-fun-pole-vault-i00-privileged
+# Embodied Olympics · pole vault (privileged)
 
 | | |
 |---|---|
-| Benchmark | Embodied Olympics - Fun |
+| Task ID | `embodied-olympics-fun-pole-vault-i00-privileged` |
+| Benchmark | [Embodied Olympics - Fun](https://github.com/CHIGUI0/roboolympics) (Embodied Olympics authors, 2026), upstream `CHIGUI0/roboolympics@7df999b` |
+| Robot | Unitree G1 humanoid (1.32 m, 33 kg, 29 joints), with Unitree's walking and running policies |
 | Mode | privileged |
-| Twin | `embodied-olympics-fun-pole-vault-i00-standard` |
-| Simulator / robot | `mujoco` / `unitree-g1` |
-| Family / instance | `pole_vault` / seed 0 |
-| Oracle | `none` — no reference solution; the referee is tested: No real solution: out of reach for the G1 with its own Dex3-1 hands at the device's torques (one hand lets the pole slide at about 157 N, two hold about 310 N of the robot's 341 N; a hand holds the pole only across its palm, square to the forearm, so the hang on a tilted pole asks the arms for two to six times their motors). Measured and computed in the simulator image: over all arm poses of both arms (the trunk upright, both grip points on the pole's line, half the weight on each hand), the smallest largest arm torque against its limit is 0.65 for a level pole, 1.47 at 20 degrees, 2.45 at 40, 4.46 at 60 and 5.83 at 80 (the 5 N m wrists, the 25 N m shoulders); a vault plants the pole at 45 degrees or more and swings it up to vertical, and the bar's height and the pole's length do not change this. With the run-up injected (3 and 4 m/s, the pole planted 30 and 45 degrees from vertical with its tip at the stop board, the right hand 2.0 m from the tip, the joints held) the rigid pole stops the run along it at once and the hand loses the pole within the plant (measured with a parallel gripper). The energy: the running policy's 4 m/s carries 0.82 m of height; what the plant leaves (2.8 m/s square to the pole at 45 degrees) carries 0.41 m: the centre of mass, about 0.65 m up when running, reaches about 1.06 m at best. Referee positive by a declared referee-only injection: the robot set hanging from the pole by its right hand (the hand really closed on it), the tip pressed 8 mm into the box, the assembly turned rigidly about the tip each control step over the bar after an injected 3 m/s run-up, then the hand opens and the robot falls onto the mat: plant, take-off (hang 0.19 s), clearance, the bar stays. Negatives: nop (time), no run-up, the pole near vertical at the take-off, a push on the pole (the hand below the pelvis), the pole not loaded, letting go before the bar, climbing the pole, a jump without the pole, round and under the bar, walking onto the mat with the pole, a hand steadying the bar, the bar pushed off its pegs. Physics: the pole stops on the robot's body, the box is sunk, the mat's foam.; human review in the pull request that adds the benchmark (PROTOCOL §4) |
-| Agent time budget | 7200 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
+| Instance | `pole_vault`, seed 0 |
+| Time limit | 2 h |
+| Reference solution | None |
 
 ## Task
-Pole vault: run up, plant the pole in the box, swing up on it and clear the bar without knocking it off. (Embodied Olympics `pole-vault`: one Unitree G1 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
+Pole vault: run up, plant the pole in the box, swing up on it and clear the bar without knocking it off.
 
-## Difficulty
-The bar is 1.0 m up and the robot 1.32 m tall: its whole body has to pass over it on a rigid pole that gives nothing back, from a run-up that the running policy makes at about 4 m/s, with arms whose motors give 25 N m, and three-finger hands that hold little along the pole: the plant's jolt slides the pole through the hands. Nothing built in grips, plants, swings or lets go.
+## Success criteria
+The robot carries a rigid 2.35 m pole in its right hand (three-finger hands that hold by contact and friction only).
+A runway leads to the box; the bar rests 1.0 m above the ground on two pegs 4.3 m apart, 0.2 m beyond the zero line
+(the box's stop board); the landing mat begins 0.15 m beyond the zero line. The referee's stages, in order: plant,
+take-off, clearance, bar stays.
+- Plant: the pole's tip is in the box while a hand grips the pole.
+- Take-off: the robot leaves the ground after a run-up (the pelvis' forward speed averaged over the last 0.5 s before
+  lift-off at least 2.5 m/s), with the pole at least 20 degrees from vertical at lift-off; then for at least 0.15 s of
+  that flight nothing of the robot touches anything but the pole and the bar while a hand grips the pole higher than
+  the pelvis and the pole's tip, in the box, carries at least half of the robot's weight.
+- Clearance: in that same flight the pelvis and both ankle joints cross the plane of the bar's nearer edge between the
+  pegs and higher than the bar's upper side (one that comes back over the plane has not passed it), and every part of
+  the robot gets beyond that plane. The robot may touch the bar.
+- Bar stays: 2 s after the landing (on any part of the body, with or without the pole) the bar is still on its pegs.
+  The success is called then.
 
-## Reference solution
-None. No reference controller exists for this family yet: No real solution: out of reach for the G1 with its own Dex3-1 hands at the device's torques (one hand lets the pole slide at about 157 N, two hold about 310 N of the robot's 341 N; a hand holds the pole only across its palm, square to the forearm, so the hang on a tilted pole asks the arms for two to six times their motors). Measured and computed in the simulator image: over all arm poses of both arms (the trunk upright, both grip points on the pole's line, half the weight on each hand), the smallest largest arm torque against its limit is 0.65 for a level pole, 1.47 at 20 degrees, 2.45 at 40, 4.46 at 60 and 5.83 at 80 (the 5 N m wrists, the 25 N m shoulders); a vault plants the pole at 45 degrees or more and swings it up to vertical, and the bar's height and the pole's length do not change this. With the run-up injected (3 and 4 m/s, the pole planted 30 and 45 degrees from vertical with its tip at the stop board, the right hand 2.0 m from the tip, the joints held) the rigid pole stops the run along it at once and the hand loses the pole within the plant (measured with a parallel gripper). The energy: the running policy's 4 m/s carries 0.82 m of height; what the plant leaves (2.8 m/s square to the pole at 45 degrees) carries 0.41 m: the centre of mass, about 0.65 m up when running, reaches about 1.06 m at best. Referee positive by a declared referee-only injection: the robot set hanging from the pole by its right hand (the hand really closed on it), the tip pressed 8 mm into the box, the assembly turned rigidly about the tip each control step over the bar after an injected 3 m/s run-up, then the hand opens and the robot falls onto the mat: plant, take-off (hang 0.19 s), clearance, the bar stays. Negatives: nop (time), no run-up, the pole near vertical at the take-off, a push on the pole (the hand below the pelvis), the pole not loaded, letting go before the bar, climbing the pole, a jump without the pole, round and under the bar, walking onto the mat with the pole, a hand steadying the bar, the bar pushed off its pegs. Physics: the pole stops on the robot's body, the box is sunk, the mat's foam..
+Fouls (each fails the attempt): the bar drops more than 0.05 m at any time, whoever knocked it; before the clearance,
+anything of the robot or the pole touches the ground or the mats beyond the zero line; the pelvis or an ankle passes
+the bar's plane outside the pegs or not higher than the bar; clearing the bar without such a take-off and hang; in the
+flight, a hand holding the pole more than 0.05 m farther from its tip than the upper hand did at lift-off (climbing);
+the hands touching the bar for more than 0.1 s in all. A fall is not a failure by itself: the generic fall rule is
+off. Time limit: 60 s (6,000 control steps).
 
-## Verification
-`/tests/grade.py` replays `/app/output/trajectory.npz` from the frozen start in one fresh process (`rcb_rfo.py replay`:
-one sim row per control step until the referee ends the attempt). Pass iff the referee's verdict is a success. The rules: World Athletics rules for the pole vault. You carry the pole (2.35 m long, 0.032 m thick, 1.1 kg; rigid: it does not bend) held at its middle in your right hand. Your hands are three-finger hands (a thumb, an index and a middle finger) that hold by contact and friction only, so the pole can slide in a hand, turn in it and drop; a hand holds the pole while the pole touches that hand's index or middle finger and its thumb or palm, anywhere along its length, and it can be let go and taken again. The pole touches the box, the mats, the uprights, the bar and your body (not the runway's surface around the box: it rests on the ground beside it as on a level floor). The runway (40.0 m, 1.22 m wide) leads along +x to the box, which is sunk into the ground: its bottom is 1.00 m long and slopes down from the runway's level at x = -1.08 m to 0.20 m below it at the foot of the stop board (x = -0.10 m); the stop board leans back to the zero line x = 0 at runway level; the box is 0.60 m wide at its front and 0.15 m at the foot of the stop board (your feet do not sink into it: for them it is covered). The bar (4.5 m long, 0.03 m thick, 2.25 kg) rests with its upper side 1.0 m above the ground on two pegs (0.055 m long, 0.013 m thick, 4.3 m apart) that point towards the landing area, 0.2 m beyond the zero line; pushed towards the landing area by half a peg's length, or lifted, it falls. The landing mat (5.0 m x 5.0 m, 0.8 m high, soft) begins 0.15 m beyond the zero line (behind the box its face slopes away at 45 degrees, so the pole can lean on over it); two front pieces of the same height flank the box for 2.0 m before it. The vault: (1) plant: the pole's tip is in the box while a hand grips the pole. (2) take-off: you leave the ground from a run-up, your pelvis' forward (+x) speed averaged over the last 0.5 s before the lift-off at least 2.5 m/s, with the pole at least 20.0 degrees from vertical at the lift-off; then you hang on the planted pole: for at least 0.15 s in that flight nothing of you touches anything but the pole and the bar while a hand grips the pole higher than your pelvis and the pole's tip rests in the box, pressed into it with at least 0.5 of your weight (the pole carries you: pushing down on its top with your pelvis above your hands is not a hang). (3) clearance: in that same flight your pelvis and both feet (the ankle joints) cross the plane of the bar's nearer edge between the pegs and higher than the bar's upper side (one that comes back over the plane has not passed it), and every part of you gets beyond that plane; you may touch the bar. (4) You come down, on any part of your body, with or without the pole. You succeed when 2.0 s after your landing the bar is still on its pegs. A fall is not a failure by itself. You fail if the bar drops more than 0.05 m at any time, whether you or the pole knocked it; if, before you have cleared the bar, anything of you or the pole touches the ground or the mats beyond the zero line; if your pelvis or a foot passes the bar's plane outside the pegs or not higher than the bar; if you clear the bar without such a take-off and hang (a jump without the pole, a standing jump on it, or a push on its top); if, in the flight of the vault, a hand holds the pole more than 0.05 m farther from its tip than your upper hand did at lift-off (climbing); if your hands touch the bar for more than 0.1 s in all (steadying it); or after 60 s (the time allowed for a trial). No oracle; human review in the pull request that adds the benchmark (PROTOCOL §4).
+Graded file: `/app/output/trajectory.npz`, as `s.save_trajectory()` writes it: an `actions` array of sim rows, one per
+10 ms control step, and the task's family name. After the agent's session it is replayed once, open-loop, from the
+frozen start, in a fresh process of a separate verifier container without network. Rows run one per control step
+until the referee calls the attempt; rows after the call, and rows past the attempt's time limit, are not run. The
+task is passed if the referee has called a success when the replay stops. If the rows run out before the referee's
+call, the task is not passed. A row the robot cannot run (its first value, the mode, is not one of the robot's modes)
+ends the replay at that row without a pass.
 
-## Resources
-Caps per container (PROTOCOL §6).
+The physics diverging (a non-finite state, a bad acceleration, or the robot or a prop faster than 150 m/s) ends the
+attempt as a failure, unless a success was called in an earlier control step. Only the trajectory is scored (`gen.py`
+and `NOTES.md` are not). A missing file, a file that is not such an array (a link, over 64 MB, more than 40,000 rows,
+the wrong row width), a file for another task, or a non-finite value in the rows that are used scores 0. An image that
+no longer rebuilds the frozen start, or a replay that crashes or runs over 600 s, is an infrastructure failure, not a
+score.
+
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -34,14 +61,10 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Category | track-and-jumps |
-| Rule book | World Athletics Competition and Technical Rules, 2024 edition: TR 28 (28.1 the bar may be moved up to 0.80 m from the zero line towards the landing area; 28.2 failures: (a) the bar does not remain on both pegs, (b) touching the ground or the landing area beyond the zero line with the body or the pole without first clearing the bar, (c) moving a hand up the pole after leaving the ground, (d) steadying the bar with a hand; 28.6 a runway of at least 40 m; 28.8 the box; 28.9-28.10 the uprights and pegs 4.28 to 4.37 m apart, the 4.50 m bar of at most 2.25 kg; 28.12 a landing area of at least 5 m x 5 m x 0.8 m with front pieces 2 m long), TR 25.17 (one minute for a trial); deviations: TR 28.11 (vaulting poles: any material, length and diameter, a smooth surface): the pole is a 2.35 m (7 ft 8 in) pole rated 40.8 kg (90 lb), UCS's Junior Spirit, the lightest rating at or above the robot's 34.8 kg with its hands (the makers' rule: a pole rated at or above the athlete's weight); its mass (1.1 kg) and thickness (0.032 m) are estimates, the makers give none; it is rigid: it does not bend and stores no energy (the simulator has no validated model of a bending pole) · the grip: each hand is the G1's own Dex3-1 three-finger hand (thumb 3 joints, index and middle 2 each, one motor per joint, at the device's torques); it holds the pole by its fingers' contact and friction alone (nothing is welded), so the pole can slide in the hand, turn in it and drop; a hand holds the pole while the pole touches its fingers and its thumb or palm. The pole collides with the robot's body as with everything else · TR 28.8 (the box): it is sunk below the runway as the rule draws it, but only the pole (and the bar) can enter it; for the robot's feet it is covered at runway level; its side walls are planes · TR 28.2(b), (c), (d) are judged geometrically: any contact of the robot or the pole with the ground or the mats beyond the zero line before the bar is cleared; a hand that holds the pole more than 0.05 m farther from its tip than the upper hand's grip was at lift-off; a hand on the bar for more than 0.1 s in all · a vault is told from a jump by numbers (TR 28 does not define one): the take-off (the robot's last ground contact before the flight that clears the bar) must end a run-up, the pelvis' forward speed averaged over the last 0.5 s before it at least 2.5 m/s (a novice's short run-up is some 4 to 6 m/s), with the pole at least 20.0 degrees from vertical then (a planted pole leans some 25 to 35 degrees at a vault's take-off); in that flight the robot must hang on the pole for at least 0.15 s: a hand gripping it higher than the pelvis, its tip in the box pressed into it with at least 0.5 of the robot's weight, nothing of the robot on the ground; pushing down on the top of a pole (the pelvis above the hands) is not a hang; the pelvis and the feet (the ankle joints) must pass the bar's plane between the pegs and above the bar; the bar is cleared when every part of the robot is beyond its plane · TR 28.2(a): the bar is judged 2.0 s after the landing; it is off its pegs when its centre is more than 0.05 m below its resting height; the pegs are square in section, the bar rigid · TR 28.12 (the landing area): the mats are rigid boxes with a soft contact set from a pit's urethane foam (23 lb ILD: about 12.7 kPa; under a 0.5 m^2 back landing on the 0.8 m mat, 7.9 kN/m: MuJoCo's contact time constant 0.069 s for the robot's mass, critically damped), not a deforming foam; the mat's face behind the box slopes away at 45 degrees as the rule asks, the front pieces' faces beside the box are vertical, and the uprights stand in the mat without a recess; no wind · TR 28 (the heights are the competition's: no rule sets a lowest one): one trial at one height, 1.0 m, set for this robot: its run-up (the running policy's 4 m/s) carries about 0.8 m of height above a centre of mass about 0.65 m up, and a rigid pole returns none of what the plant takes; a lower bar would lie on the landing area, which TR 28.12 makes 0.8 m high · TR 28.1 (the athlete chooses where the bar stands, 0 to 0.80 m beyond the zero line): it stands 0.2 m beyond it, set for the short pole (there is no choice: the task is one trial) |
-| Stages | plant → take-off → clearance → bar stays |
-| Instance | `environment/instance.json` = `tests/instance.json`: the family's parameters, t = 0 state hash `7591511d9a69211fc4dabfa8429beb263db452acd1a0eebf02cd88a7de87cafa` |
-| Episode | 6000 control steps (60 s at 100 Hz) |
-| Action | sim rows of 151 floats per control step (`rfo/world.py`); six action types are views of it |
-| Tooling | `/opt/tools/rcb_rfo.py`, `/opt/tools/rfo/` (the world, the action layer, the referee's toolkit; from the files-only image images/embodied-olympics-fun-files/, built from embodied_first_exam/benchmarks/embodied-olympics-fun/) and `environment/rfo_task.py` (this family's rules), the same files in the verifier's `/tests/` |
-| Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md) |
+## License
+The Embodied Olympics robot library and running-policy port ([CHIGUI0/roboolympics](https://github.com/CHIGUI0/roboolympics)
+@ `7df999b`, a private repository) is released under the MIT License (`LICENSE.roboolympics` in the image); this
+benchmark's venues and referees are MIT too. Third-party parts in the image: the Unitree G1 model and meshes from MuJoCo
+Menagerie (BSD-3-Clause), the Unitree H1-2 model, meshes and walking policy and the G1 walking policy from
+unitree_rl_gym (BSD-3-Clause), the G1 running policy from C1801SYQ/g1_running (Apache-2.0), FALCON's G1 walking policy
+from LeCAR-Lab/FALCON (MIT) and the WBC-AGILE G1 walking policy from NVIDIA (Apache-2.0). No non-commercial terms apply.

@@ -1,72 +1,52 @@
-# robopaint-lettering-liberty-i00-privileged
+# RoboPaint · lettering · Liberty. (privileged)
 
 | | |
 |---|---|
-| Benchmark | RoboPaint |
+| Task ID | `robopaint-lettering-liberty-i00-privileged` |
+| Benchmark | [RoboPaint](https://www.embodied-first-exam.ai/suite/robopaint/) (Wang et al., 2026), upstream `mll-lab-nu/embodied-first-exam@b2280d8` |
+| Robot | Franka Emika Panda arm (ManiSkill PandaStick) holding a brush or pen |
 | Mode | privileged |
-| Twin | `robopaint-lettering-liberty-i00-standard` |
-| Simulator / robot | `maniskill` / `franka-panda` |
-| Family / instance | `robopaint_lettering_liberty` / seed 0 |
-| Oracle | `partial` — Reference solution in solution/ (臨摹 of engraved round hand; generated with the current tooling on the native efe:robopaint-0.2.0 runtime): the generator's self-test replayed it on the graders' copy and through the scoring service (equal metrics, success); under the process rules the verifier scores it 1 (tests/grade.py with rcb_brush_strict.py, two fresh replays): path_mm 2644 and mark_width_mm 0.47, against the colouring-in limits 7940 mm and 0.13 mm. Harbor oracle and nop runs: tasks/robopaint/README.md (Lettering). |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:robopaint-0.2.0` |
+| Instance | `robopaint_lettering_liberty`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | Pipeline check only |
 
 ## Task
-Copy the flourished word "Liberty." (English round hand) in `/app/target.png` onto the main sheet with pen and ink, in at most 5 strokes.
+Copy the flourished word "Liberty." (English round hand) in `/app/target.png` onto the main sheet with pen and ink, in
+at most 5 strokes.
 
-**Process rules** (tasks/robopaint/README.md) on top of the picture rule, so that the exemplar has to be made with strokes rather
-than coloured in: colouring in fails: a pen-tip path on the main sheet (`path_mm`) longer than 7940 mm (3 × the reference
-solution's 2644 mm) made of marks narrower than 0.13 mm on average (`mark_width_mm`: each stroke's own
-inked area / `path_mm`; 0.3 × the reference's 0.47 mm). They are part of the frozen instance (the rules added to its `target.success`); the graders'
-`rcb_brush_strict.py` applies them (the verifier and the scoring service).
+## Success criteria
+Graded on the main sheet's ink (pixels with ink coverage ≥ 0.5 on the sheet's 1024 × 1024 raster, 0.222 mm per
+pixel) against the exemplar's ink. The sheet is first moved by the whole-pixel shift, at most 5 mm along each
+axis, that gives the largest overlap of its ink with the exemplar's (a best shift on the edge of that window counts as
+no shift); every measure is taken at that shift. Success needs all of these:
 
-Copy the flourished word **Liberty.** (engraved English round hand, 1741) (7 letters; 臨摹 of a public-domain engraved copybook plate: Sources) shown in `/app/target.png` onto the 227 mm main sheet in at most 5 strokes (the exemplar's own pen lifts: one stroke per connected piece of its ink), with ink from an ink well and a practice sheet beside it; the pen starts dry; start pose = PandaStick's rest keyframe; the scene frozen in `environment/instance.json` (the agent's copy: scene constants, the rule, the picture).
+- IoU of the inked areas ≥ 0.85;
+- boundary F-score ≥ 0.80: the harmonic mean of the share of the sheet's ink-edge pixels within 1 mm of the
+  exemplar's edge and the share of the exemplar's edge pixels within 1 mm of the sheet's;
+- each of the exemplar's 82 regions is at least 0.75 covered by ink;
+- stray ink (ink more than 1 mm from the exemplar's ink) at most 0.04 of the exemplar's ink area;
+- at most 5 inked contacts with the main sheet (a contact is one continuous stretch of the tip below the
+  sheet's surface; it is inked when the pen was loaded at the touch-down);
+- no colouring in: the task fails when `path_mm` > 7940 mm and also `mark_width_mm` < 0.13 mm.
+  `path_mm` is the total length of the tip's path in all inked contacts with the main sheet (100 Hz physics samples);
+  `mark_width_mm` is the area each contact inks on its own (coverage ≥ 0.5; where contacts overlap, each counts its
+  own), summed over the contacts and divided by `path_mm`.
 
-Copy the lettering, scored against the picture: the main sheet's inked area vs the exemplar's ink. The thinnest lines are 0.4 mm,
-so every term is measured after the best single shift of the sheet, at most 5 mm along each axis (the common RoboPaint registration: one translation,
-whole pixels; none at the limit). Success iff IoU ≥ 0.85, boundary F (edge precision / recall within 1 mm) ≥ 0.80, every region covered ≥ 0.75 (the exemplar's ink in 82 regions of at most 30 mm along its strokes), stray ink (> 1 mm away from the exemplar's ink) ≤ 0.04 of its inked area and at most 5 strokes (inked contacts) on the
-main sheet. `final_reward` = the IoU (× 5 / strokes above 5). Ink precision / recall, the plain IoU, missing ink and
-the mean region coverage are reported too.
+The practice sheet is never scored.
 
-## Difficulty
-臨摹 of engraved English round hand (Bickham, *The Universal Penman*, 1741), re-drawn with this pen so that every mark of the
-picture is one the pen can make:
-- **Pressure.** A pointed pen makes its shades from pressure: the press depth has to follow the picture's line width along every
-  stroke (a light touch on the hairlines, loops and joins, a deep press on the shaded downstrokes, swelling and fading on the
-  curves), while the path is tracked by a position-controlled arm (PD lag ~0.1 s, vertical as well). One constant press fails.
-- **Long connected strokes.** The cap (5) is the exemplar's own pen lifts, with no margin: every connected piece of its ink
-  (a whole word, a capital with its flourishes) has to be written in one contact, going back along a stroke where the route needs
-  it. An extra lift fails; patching fails.
-- **Every part counts.** The ink is divided into 82 regions of at most 30 mm along its strokes, each to be covered ≥ 0.75:
-  hairline joins, loops and flourishes as much as the shades.
+What is graded is the main sheet after one open-loop replay of the delivered trajectory. The verifier, in a separate
+sandbox without network, replays `/app/output/trajectory.npz` (array `actions`, shape (T, 7): absolute joint targets,
+one row per 20 Hz control step, T at most 72,000) once, in a fresh process, from its own copy of the frozen instance; a
+contact still on the paper after the last row is ended there, and the sheet is then scored as above. Meeting the
+conditions earlier in the replay does not count.
 
-## Reference solution
-Generated once on the graders' copy: every contact of the plan (one
-writing route per connected piece of the exemplar's ink, going back along a stroke where it has to, with the tines' spread at every
-point) written with the pen turned to the exemplar's spread axis, the press depth of each point from the spread, one dip, a vertical
-touch-down and lift, 2 cm/s (slower around sharp turns), lag feed-forward and iterative learning control, the arm parked at the end.
-The plan is frozen at generation time (`solution/oracle_qpos.npy`); `solution/solve.sh` replays it:
-13282 control steps, 5 strokes, IoU 0.964, boundary F 1.000, min stroke coverage 0.939, stray 0.0000.
+A missing file scores 0, and so does an invalid one: not a readable `.npz` (pickled or object arrays included), no
+`actions` array, a shape other than (T, 7), a NaN or infinite value, more than 72,000 rows, or a `task` entry that names
+another task. A replay that gives no result within 1650 s, or a verifier that cannot rebuild the frozen instance, is an
+infrastructure failure, not a score.
 
-## Verification
-"The rule" below is the picture rule and the process rules (Task); the replays run
-`/tests/rcb_brush_strict.py` (`rcb_brush.py` with the rules), and `reward.json` adds the rules' quantities (`path_mm`,
-`max_path_mm`; paintings: `scribble_share`), `image_success` (the picture rule alone) and `strict_ok` (the process rules).
-Oracle label `partial`: the reference solution, scored under the process rules (task.toml `oracle_evidence`).
-Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in one fresh process (`/tests/grade.py`); pass iff
-the replayed main sheet meets the rule and the
-rebuilt frozen instance matches the recorded one (target picture and scoring data included). Physics is PhysX on the CPU and the pen
-runs in float64 on the CPU: a live run, in-process replays and fresh-process replays end in the same state bit for bit
-(`rcb_brush.py selftest`); camera rendering does not change it. `/logs/verifier/replay.mp4` and `canvas.png` never affect the
-verdict.
-A file that is not a readable trajectory (not an npz, no `actions`, a wrong shape, NaN, more than 72,000 rows) scores 0 as
-`bad_trajectory`; `grader_error` (with `infra_error`) is left for the verifier's own failures (a replay process without a result
-or past its 1650 s, a frozen instance that does not rebuild in the verifier: `instance_ok` 0).
-The verifier has 3600 s: a replay of the 72,000 control steps a trajectory may have takes up to 18 min at the measured
-67-102 steps/s (tasks/robopaint/README.md).
-
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -77,23 +57,8 @@ Caps per container (PROTOCOL §6).
 - GPU: any NVIDIA GPU, held by `main` and `scorer`.
 - Recommended GPU: any 8 GB+ NVIDIA GPU (RTX 4090 / L4).
 
-## Details
-| | |
-|---|---|
-| Simulator, tool and robot | ManiSkill 3.0.1 (SAPIEN 3.0.3, PhysX on the CPU) + a pointed flexible pen model in `rcb_brush.py` (`PointedPenPainter`: the tines' spread along the tool's y axis grows linearly with the press depth from a 0.4 mm hairline (press ≤ 1.0 mm) to 2.0 mm (press ≥ 3.5 mm); the ink between the tines swept along the realized path; CPU) / franka-panda holding a pointed dip pen (PandaStick's rigid stick as the holder + a collision-free 6 mm steel point; TCP = the point) |
-| Privileged access | exact sheets, pen state, reset / replay, `s.score()` from the scoring service |
-| Containers | `main` (the agent: the tooling, the scene, the picture), `scorer` (`environment/scorer/`: the scoring service with the graders' copy of the instance; the agent reaches it only through `POST /score`, which returns metrics), the verifier's own sandbox (`tests/`) |
-| Base image and GPU | 2.5 GB. Physics and the pen run on the CPU; SAPIEN still needs the NVIDIA GPU (Vulkan) to build the scene and render: `environment/docker-compose.yaml` |
-
-### Scoring service (privileged mode)
-`environment/scorer/` holds `rcb_scorer.py`, the tooling and the graders' copy of the instance; compose runs it as the `scorer`
-service (GPU for SAPIEN, no ports published). `Session.score()` in the agent's container posts the actions executed since the last
-reset; the service replays them on its copy (the same deterministic simulation) and returns the metrics of the tooling's
-`agent_metrics()` — never images or target data. The agent's container holds nothing derived from the target except `target.png`
-(`ci_checks/benchmarks/robopaint/invariant-leak.sh`).
-
-### Licences
-The exemplar is a public-domain engraved copybook plate, re-drawn by RoboPaint with the task's pen: `environment/NOTICE-exemplar.md`.
-
-### Sources
-George Bickham, *The Universal Penman* (London, 1741), engraved plates of English round hand after the writing masters named on each plate; scan: Getty Research Institute, Internet Archive item gri_33125008538056 (https://archive.org/details/gri_33125008538056; possible-copyright-status NOT_IN_COPYRIGHT; the same book on Wikimedia Commons as a DjVu file under {{PD-scan}}). Public domain: the plates were engraved 1733-1741 (Bickham d. 1758) and the scan is a faithful reproduction of a public-domain two-dimensional work. This exemplar: the flourished heading 'Liberty.' of the plate numbered 4 that opens 'Liberty' (page n222 of the scan, G. Brooks scripsit), the word with all its flourishes, placed 205 mm wide on the sheet.
+## License
+RoboPaint (its scenes, tooling and graders) is part of this repository, MIT License. It runs on ManiSkill 3.0.1
+([haosulab/ManiSkill](https://github.com/haosulab/ManiSkill) @ `a4a4f92`) and SAPIEN 3.0.3, both Apache License 2.0.
+The pointed-pen model is this repository's own. The base image also carries Spline-FRIDA (GPL-3.0), which this task does not use.
+The exemplar: re-drawn with this task's pen from George Bickham, *The Universal Penman* (London, 1741), public domain (scan: Internet Archive `gri_33125008538056`, NOT_IN_COPYRIGHT); notice in `NOTICE-exemplar.md`. No non-commercial terms apply.

@@ -1,0 +1,321 @@
+# README data for tasks/mujoco-playground/*/README.md (scripts/task_conventions.py render_readme_v3)
+#
+# Upstream MuJoCo Playground (google-deepmind/mujoco_playground @ 4057c14) defines, for all 13 environments here, only a
+# shaped training reward and a termination rule: no success test (checked in the clone: no `success` in
+# _src/locomotion/{go1,spot,barkour} or in _src/manipulation/aloha, and in franka_emika_panda only in pick_cartesian.py,
+# an environment not used here). Every pass condition below is this benchmark's own, and is checked in:
+#   quadrupeds   embodied_first_exam/benchmarks/mujoco-playground/privileged/environment/rcb_quadruped.py
+#                (constants L60-73, ENVS L101-133, Session.step L261-299, terminated L305-317, check L331-374)
+#   ALOHA        .../privileged/environment/rcb_aloha.py (constants L55-63, check L165-171, _check_handover L173-183)
+#   Panda        .../privileged/environment/rcb_panda.py (constants L42-47, check L146-153)
+# Graders:
+#   privileged   .../privileged/tests/grade.py (quadrupeds: shape check L104-107, one replay in a fresh process
+#                `rcb_quadruped.py replay` L108-115); .../privileged/tests/variants/72df271117/grade.py (ALOHA) and
+#                variants/c5bde2d42e/grade.py (Panda): shape check L42-43, one replay Session.replay L44-45.
+#   standard     quadrupeds: .../sim/server.py (finish L346-363, after_step L378-391, RCB_AGENT_END=1 in every compose)
+#                + .../sim/finalize.sh + .../standard/tests/grade.py (ok L58);
+#                ALOHA / Panda: .../sim/server_mj.py (finalize L845-869, _end_from_signal L983-987; no
+#                RCB_RESET_BUDGET and no RCB_MAX_CONTROL_STEPS in their compose files) + the verifier
+#                embodied_first_exam/benchmarks/dextoolbench/standard/tests/grade.py (their tests/Dockerfile copies it
+#                from the dextoolbench files image; ok L33).
+#   realtime     tasks/mujoco-playground/mujoco_playground_barkour_joystick-realtime/environment/sim/server.py step()
+#                L233-240 on standard/sidecar/rcb_service.py (_end L959-966) and embodied_first_exam/standard/realtime/
+#                rcb_realtime.py (clock, error rules L85-97); verifier embodied_first_exam/standard/sidecar/grade.py.
+
+[benchmark]
+name = "MuJoCo Playground"
+citation = "Zakka et al., 2025"     # upstream README "Citation" (mujoco_playground_2025)
+url = "https://playground.mujoco.org/"
+repo = "google-deepmind/mujoco_playground"
+commit = "4057c14"
+
+[license]
+text = """
+MuJoCo Playground ([google-deepmind/mujoco_playground](https://github.com/google-deepmind/mujoco_playground) @
+`4057c14`) is released under the Apache License 2.0. The robot models come from MuJoCo Menagerie
+([google-deepmind/mujoco_menagerie](https://github.com/google-deepmind/mujoco_menagerie) @ `1b86ece`, the commit
+Playground pins), each under its own license: Unitree Go1 (BSD 3-Clause, Unitree Robotics), Boston Dynamics Spot
+(BSD 3-Clause, Clearpath Robotics), Google Barkour vB (Apache License 2.0, DeepMind), ALOHA 2 (BSD 3-Clause, Trossen
+Robotics), Franka Emika Panda (Apache License 2.0). The rough-terrain texture is from Poly Haven (CC0). No
+non-commercial terms apply. The simulator is MuJoCo 3.3.7 (Apache License 2.0).
+"""
+
+[robots]
+unitree-go1 = "Unitree Go1 quadruped, 12 joint position actuators"
+boston-dynamics-spot = "Boston Dynamics Spot quadruped, 12 joint position actuators"
+google-barkour-vb = "Google Barkour vB quadruped, 12 joint position actuators"
+aloha-2 = "ALOHA 2 bimanual robot (two ViperX 300 S arms, 6 joints and a gripper each; 14 position actuators)"
+franka-panda = "Franka Emika Panda arm with its two-finger gripper (7 joint and 1 finger position actuators)"
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Modes. Family vars used here: nu (actuators per row), tmax (privileged rows), std_end / std_more (standard episode),
+# ctrl_ms (realtime control step).
+
+# grade.py (quadrupeds) main(): missing file -> missing_trajectory; np.load(allow_pickle=False)["actions"] as float64,
+# ndim 2, width 12, len <= horizon, all finite, else bad_trajectory (all success 0, grader_error 0); one fresh-process
+# replay (rcb_quadruped.py replay: Session(check_hash=False), replay() -> check() over the whole trajectory); replay
+# died / timed out -> replay_failed, not instance_ok -> instance_mismatch, any exception -> grader_error 1, infra_error 1.
+# variants/72df271117 (ALOHA) and c5bde2d42e (Panda): the same file rules with width ra.N and len <= MAX_STEPS = 3000;
+# Session("/tests/instance.json") raises on a start-state hash mismatch -> grader_error 1; s.replay(A) -> check() of the
+# state after the last row. Session.step clips each row to the actuator ranges (rcb_quadruped L267, rcb_aloha L156,
+# rcb_panda L137).
+[modes.privileged]
+success = """
+Graded file: `/app/output/trajectory.npz`, array `actions` of shape (T, {vars[nu]}) with T at most {vars[tmax]}: one row
+of actuator targets per control step, all finite (values outside the actuator ranges are clipped). After the agent's
+session the verifier, in a separate sandbox without network, replays it once, open-loop, from its own copy of the
+frozen start (`tests/instance.json`), and checks the condition on that replay. Only the trajectory is scored (`gen.py`
+is not). A missing file, a file that is not an `.npz` with a numeric `actions` array, or an array of another width, with
+more rows or with a NaN or infinite value scores 0. A replay that does not rebuild the frozen start (its state hash
+differs) and any other error inside the grader, such as a replay that dies or times out, are reported as a grader
+error, not as the agent's score.
+"""
+
+# Quadrupeds (sim/server.py, RCB_AGENT_END=1): POST /finish or the `done` action -> finish("finished"); the horizon ->
+# finish("step_limit"); a termination (joystick, stand_on_two: S.fell_at) -> finish("fell"); SIGUSR1 from the collect
+# hook -> finish("timeout"); a 500 in a call -> finish("error"). finish(): success = S.check()["success"] and reason !=
+# "error" and reason in END_STATE_REASONS ("finished", "timeout", "step_limit"). The hidden success is only logged
+# (AE.hidden_success). Resets: RCB_RESET_BUDGET:-10 in every quadruped standard compose file; /reset 409 after
+# finished / timeout (L597-598). Start hash: S.instance_ok false -> no episode, instance_mismatch, infra_error.
+# standard/tests/grade.py: ok = success and graded_by live and not infra and reason != "error".
+# ALOHA / Panda (sim/server_mj.py): /finish -> "finished", SIGUSR1 -> "timeout", a 500 -> "error"; no step cap and no
+# reset (RCB_MAX_CONTROL_STEPS and RCB_RESET_BUDGET unset: 0); finalize(): success = S.check()["success"] on the live
+# state and reason in END_STATE_REASONS, never for "error"; instance hash mismatch -> _give_up("instance_mismatch").
+[modes.standard]
+success = """
+Graded: the live episode, judged by the simulator service when it ends; nothing is replayed. The condition is checked
+on the episode's control steps as the service executed them. The service never reports success while the episode
+runs, and meeting the condition does not end the episode. The episode ends at the agent's `/finish`{vars[std_end]}, or
+when the agent's session ends (at the latest after {timeout}). {vars[std_more]} An episode ended by a simulator error
+(a call that makes the simulation fail) scores 0. Before the agent is served, the service checks that the scene starts
+at the frozen instance (its state hash); a mismatch, or a service that cannot record its verdict, is an
+infrastructure failure, not a score.
+"""
+
+# Realtime (BarkourJoystick only): environment/sim/server.py Quadruped.step(): done = fell or s.done or success, success =
+# check()["success"] and (joystick: s.done), info step_cap at the horizon. rcb_service._end with AGENT_END: success only
+# for "finished" / "timeout" / "step_limit" (end_judgement "state"); a done without step_cap is "failed" -> 0.
+# rcb_realtime.py docstring: paused until the first /submit, one control step every control_dt x slowdown s (Barkour
+# control_dt = 0.01 s, rcb_quadruped ENVS), zero-order hold when the plan runs out; error rules L85-97.
+# RCB_RESET_BUDGET:-10 and RCB_SLOWDOWN:-1 in the realtime compose file.
+[modes.realtime]
+success = """
+Graded: the live episode, judged by the simulator service as it runs; nothing is replayed. The clock does not stop: an
+episode starts paused at the frozen start, and from the agent's first `submit` one control step runs every
+{vars[ctrl_ms]} ms × S of wall time (slowdown S = {slowdown}) whether or not the agent sends anything; when the planned
+targets run out the last ones are held. The service never reports success while the episode runs, and meeting the
+condition does not end the episode. The episode ends at the agent's `/finish`, after its last control step, at a
+termination, or when the agent's session ends (at the latest after {timeout}); the condition is checked on the
+episode's control steps as executed. The agent has {resets} resets, each starting a new, paused episode from the frozen
+start; only the last episode (the one after the last reset) is graded, and no reset is possible after `/finish`. After
+the agent's first command, a simulator error or a simulator crash inside a control step is the agent's 0; anything
+before the first command, a killed service, a failed resume, a reset that does not rebuild the scene or an episode that
+does not start from the frozen instance is an infrastructure failure, not a score.
+"""
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Families: the pass condition (mode-neutral). "at most" = <=, "less than" = <, as in the code.
+# Joystick (rcb_quadruped check L335-357): success = steps == horizon and fell_at is None and, for every command
+# segment i, over log rows [start_i + SETTLE_STEPS, next_start) (only if non-empty): mean |v_xy - cmd_xy| <= LIN_TOL 0.2
+# (sensor local_linvel), mean |w_z - cmd_wz| <= YAW_TOL 0.3 (sensor gyro), and with a gait mean RMS foot height error
+# <= GAIT_TOL 0.05. Termination (terminated L305-317): IMU site z axis world z < up_z_min (Go1 0, Spot 0.85, Barkour
+# 0), Barkour also a joint outside joint_box or the torso body below torso_min_z 0.18. Horizon 1000 (ENVS);
+# control_dt 0.02 (Barkour 0.01). Segment counts from each instance.json `commands`.
+
+[families."mujoco_playground/Go1JoystickFlatTerrain"]
+vars = { nu = 12, tmax = "1,000", segs = 4, std_end = ", at the `done` action (the same end), after its last control step, at a termination", std_more = "The agent has 10 resets (`POST /reset`), each starting a new episode from the frozen start; only the last episode (the one after the last reset) is graded, and no reset is possible after `/finish`." }
+success = """
+Pass condition, defined by this benchmark (MuJoCo Playground's `{env}` has only a shaped training reward and no success
+test): the episode runs all 1,000 control steps of the instance's command schedule (20 s at 50 Hz) with no
+termination, and in each of the schedule's {vars[segs]} command segments the robot tracks the command on average. Over
+each segment, leaving out its first 25 control steps (0.5 s), the mean planar velocity error |(v_x, v_y) − (cmd_vx,
+cmd_vy)| is at most 0.2 m/s and the mean yaw-rate error |ω_z − cmd_wz| is at most 0.3 rad/s. The velocity is the IMU's
+velocimeter and the yaw rate its gyro, both in the trunk's IMU frame; the command is the schedule's (vx, vy, wz) in
+force at that control step.
+
+Termination (a failure at any step; a live episode ends there): Playground's fall rule for this environment, the
+trunk's up axis pointing below the horizon (the IMU frame's z axis has a negative world z component).
+"""
+
+[families."mujoco_playground/Go1JoystickRoughTerrain"]
+vars = { nu = 12, tmax = "1,000", segs = 7, std_end = ", at the `done` action (the same end), after its last control step, at a termination", std_more = "The agent has 10 resets (`POST /reset`), each starting a new episode from the frozen start; only the last episode (the one after the last reset) is graded, and no reset is possible after `/finish`." }
+success = """
+Pass condition, defined by this benchmark (MuJoCo Playground's `{env}` has only a shaped training reward and no success
+test): the episode runs all 1,000 control steps of the instance's command schedule (20 s at 50 Hz) with no
+termination, and in each of the schedule's {vars[segs]} command segments the robot tracks the command on average. Over
+each segment, leaving out its first 25 control steps (0.5 s), the mean planar velocity error |(v_x, v_y) − (cmd_vx,
+cmd_vy)| is at most 0.2 m/s and the mean yaw-rate error |ω_z − cmd_wz| is at most 0.3 rad/s. The velocity is the IMU's
+velocimeter and the yaw rate its gyro, both in the trunk's IMU frame; the command is the schedule's (vx, vy, wz) in
+force at that control step. The ground is Playground's rough-terrain heightfield.
+
+Termination (a failure at any step; a live episode ends there): Playground's fall rule for this environment, the
+trunk's up axis pointing below the horizon (the IMU frame's z axis has a negative world z component).
+"""
+
+[families."mujoco_playground/SpotFlatTerrainJoystick"]
+vars = { nu = 12, tmax = "1,000", segs = 5, std_end = ", at the `done` action (the same end), after its last control step, at a termination", std_more = "The agent has 10 resets (`POST /reset`), each starting a new episode from the frozen start; only the last episode (the one after the last reset) is graded, and no reset is possible after `/finish`." }
+success = """
+Pass condition, defined by this benchmark (MuJoCo Playground's `{env}` has only a shaped training reward and no success
+test): the episode runs all 1,000 control steps of the instance's command schedule (20 s at 50 Hz) with no
+termination, and in each of the schedule's {vars[segs]} command segments the robot tracks the command on average. Over
+each segment, leaving out its first 25 control steps (0.5 s), the mean planar velocity error |(v_x, v_y) − (cmd_vx,
+cmd_vy)| is at most 0.2 m/s and the mean yaw-rate error |ω_z − cmd_wz| is at most 0.3 rad/s. The velocity is the IMU's
+velocimeter and the yaw rate its gyro, both in the body's IMU frame; the command is the schedule's (vx, vy, wz) in
+force at that control step.
+
+Termination (a failure at any step; a live episode ends there): Playground's fall rule for this environment, the body
+tilted by more than about 32° (the IMU frame's z axis has a world z component below 0.85).
+"""
+
+# + gait (Session.step L293-296: phase = phase0 + (step - 1) * phase_dt, wrapped to [-pi, pi); err = feet sites' world z
+# - gait_rz(phase, foot_height_m), RMS over the 4 feet; check L344-351 per segment over the same rows). Instance gait:
+# pace, phase_dt 0.4597 rad per 0.02 s = 3.66 Hz, foot_height_m 0.129.
+[families."mujoco_playground/SpotJoystickGaitTracking"]
+vars = { nu = 12, tmax = "1,000", segs = 5, std_end = ", at the `done` action (the same end), after its last control step, at a termination", std_more = "The agent has 10 resets (`POST /reset`), each starting a new episode from the frozen start; only the last episode (the one after the last reset) is graded, and no reset is possible after `/finish`." }
+success = """
+Pass condition, defined by this benchmark (MuJoCo Playground's `{env}` has only a shaped training reward and no success
+test): the episode runs all 1,000 control steps of the instance's command schedule (20 s at 50 Hz) with no
+termination, and in each of the schedule's {vars[segs]} command segments the robot tracks both the command and the
+gait on average. Over each segment, leaving out its first 25 control steps (0.5 s):
+
+- the mean planar velocity error |(v_x, v_y) − (cmd_vx, cmd_vy)| is at most 0.2 m/s and the mean yaw-rate error
+  |ω_z − cmd_wz| is at most 0.3 rad/s (the IMU's velocimeter and gyro, in the body's IMU frame; the command is the
+  schedule's (vx, vy, wz) in force at that control step);
+- the mean foot-height error is at most 0.05 m. At each control step this error is the root mean square, over the four
+  feet, of the foot's height above the floor minus its target height. The target follows Playground's gait curve
+  (`gait.get_rz`) over each foot's phase, for this instance's gait: `pace` at 3.66 Hz with a swing height of 0.129 m.
+
+Termination (a failure at any step; a live episode ends there): Playground's fall rule for this environment, the body
+tilted by more than about 32° (the IMU frame's z axis has a world z component below 0.85).
+"""
+
+# Barkour: control_dt 0.01 (10 ms; 5 substeps of Menagerie's 2 ms timestep), horizon 1000 = 10 s, SETTLE_STEPS 25 =
+# 0.25 s; terminated: up axis world z < 0, qpos[7:] outside joint_box tiled per leg, torso body world z < 0.18; 12
+# pushes (instance.json `kicks`, push_force L319-329).
+[families."mujoco_playground/BarkourJoystick"]
+vars = { nu = 12, tmax = "1,000", segs = 2, ctrl_ms = 10, std_end = ", at the `done` action (the same end), after its last control step, at a termination", std_more = "The agent has 10 resets (`POST /reset`), each starting a new episode from the frozen start; only the last episode (the one after the last reset) is graded, and no reset is possible after `/finish`." }
+success = """
+Pass condition, defined by this benchmark (MuJoCo Playground's `{env}` has only a shaped training reward and no success
+test): the episode runs all 1,000 control steps of the instance's command schedule (10 s: one control step is 10 ms)
+with no termination, and in each of the schedule's {vars[segs]} command segments the robot tracks the command on
+average. Over each segment, leaving out its first 25 control steps (0.25 s), the mean planar velocity error
+|(v_x, v_y) − (cmd_vx, cmd_vy)| is at most 0.2 m/s and the mean yaw-rate error |ω_z − cmd_wz| is at most 0.3 rad/s. The
+velocity is the IMU's velocimeter and the yaw rate its gyro, both in the torso's IMU frame; the command is the
+schedule's (vx, vy, wz) in force at that control step. The torso is pushed 12 times during the episode, at fixed
+moments of the frozen instance; the pushes are part of the scene, not of the condition.
+
+Termination (a failure at any step; a live episode ends there): Playground's rule for this environment, any of: the
+torso's up axis pointing below the horizon; a leg joint outside its range (abduction −0.7 to 0.52 rad, hip −1.0 to
+2.1 rad, knee 0.05 to 2.1 rad); the torso lower than 0.18 m.
+"""
+
+# Getup (check L367-373): the last HOLD_STEPS = 25 log rows all have tilt (IMU site z axis to world vertical) <=
+# TILT_MAX_DEG 10 and IMU site world z >= min_imu_height (Go1 0.22, Spot 0.40); fewer than 25 steps fails. No
+# termination is read (fell_at is not used for kind "getup"; server.py after_step applies the fall only to joystick and
+# stand_on_two). Horizon 300 (6 s). Start: Playground's drop, then a 0.5 s settle (Session.reset L248-250).
+[families."mujoco_playground/Go1Getup"]
+vars = { nu = 12, tmax = "300", std_end = ", at the `done` action (the same end), after its last control step", std_more = "The agent has 10 resets (`POST /reset`), each starting a new episode from the frozen start; only the last episode (the one after the last reset) is graded, and no reset is possible after `/finish`." }
+success = """
+Pass condition, defined by this benchmark (MuJoCo Playground's `{env}` has only a shaped training reward and no success
+test): the last 25 control steps (0.5 s) of the episode all have the trunk upright, its up axis (the IMU frame's z
+axis) within 10° of vertical, and the IMU at least 0.22 m above the floor. An episode is at most 300 control steps (6 s
+at 50 Hz); an episode of fewer than 25 control steps fails. There is no termination: no pose ends the episode early, and
+only its last 25 steps are judged.
+"""
+
+[families."mujoco_playground/SpotGetup"]
+vars = { nu = 12, tmax = "300", std_end = ", at the `done` action (the same end), after its last control step", std_more = "The agent has 10 resets (`POST /reset`), each starting a new episode from the frozen start; only the last episode (the one after the last reset) is graded, and no reset is possible after `/finish`." }
+success = """
+Pass condition, defined by this benchmark (MuJoCo Playground's `{env}` has only a shaped training reward and no success
+test): the last 25 control steps (0.5 s) of the episode all have the body upright, its up axis (the IMU frame's z axis)
+within 10° of vertical, and the IMU at least 0.40 m above the floor. An episode is at most 300 control steps (6 s at
+50 Hz); an episode of fewer than 25 control steps fails. There is no termination: no pose ends the episode early, and only
+its last 25 steps are judged.
+"""
+
+# Stand on two (check L358-366): len >= POSE_HOLD_STEPS 100, fell_at None, the last 100 rows all have the IMU site x
+# axis within fwd_tol_deg 30 of `forward` (Handstand [0, 0, -1], Footstand [0, 0, 1]), IMU site world z >=
+# min_imu_height 0.40, and no `<foot>_floor_found` contact for the air feet (Handstand RR, RL; Footstand FR, FL).
+# Termination (step L286-290): IMU z axis world z < -0.25, a `<geom>_floor_found` sensor of FRONT_LEG_GEOMS (thigh,
+# calf, hip of FR / FL), and for Footstand (hind_leg_contact) a floor contact of HIND_LEG_GEOMS. Horizon 500 (10 s).
+[families."mujoco_playground/Go1Handstand"]
+vars = { nu = 12, tmax = "500", std_end = ", at the `done` action (the same end), after its last control step, at a termination", std_more = "The agent has 10 resets (`POST /reset`), each starting a new episode from the frozen start; only the last episode (the one after the last reset) is graded, and no reset is possible after `/finish`." }
+success = """
+Pass condition, defined by this benchmark (MuJoCo Playground's `{env}` has only a shaped training reward and no success
+test): no termination at any step, and the last 100 control steps (2 s) of the episode all have the trunk's forward
+axis (the IMU frame's x axis) within 30° of straight down, the IMU at least 0.40 m above the floor, and neither hind
+foot touching the floor. An episode is at most 500 control steps (10 s at 50 Hz).
+
+Termination (a failure at any step; a live episode ends there): Playground's rule for this environment, either the
+trunk tipped over, its up axis more than about 15° below the horizon (the IMU frame's z axis has a world z component
+below −0.25), or a thigh, calf or hip of a front leg touching the floor.
+"""
+
+[families."mujoco_playground/Go1Footstand"]
+vars = { nu = 12, tmax = "500", std_end = ", at the `done` action (the same end), after its last control step, at a termination", std_more = "The agent has 10 resets (`POST /reset`), each starting a new episode from the frozen start; only the last episode (the one after the last reset) is graded, and no reset is possible after `/finish`." }
+success = """
+Pass condition, defined by this benchmark (MuJoCo Playground's `{env}` has only a shaped training reward and no success
+test): no termination at any step, and the last 100 control steps (2 s) of the episode all have the trunk's forward
+axis (the IMU frame's x axis) within 30° of straight up, the IMU at least 0.40 m above the floor, and neither front
+foot touching the floor. An episode is at most 500 control steps (10 s at 50 Hz).
+
+Termination (a failure at any step; a live episode ends there), any of: the trunk tipped over, its up axis more than
+about 15° below the horizon (the IMU frame's z axis has a world z component below −0.25); a thigh, calf or hip of a
+front leg touching the floor; a thigh, calf or hip of a hind leg touching the floor. The hind-leg rule is this
+benchmark's addition to Playground's.
+"""
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Manipulation: the state after the last control step only (replay(): check() after the last row; server_mj finalize():
+# S.check() of the live state). No termination in rcb_aloha / rcb_panda (Playground's out-of-bounds `done` is not used).
+# Privileged T <= MAX_STEPS = 3000 (60 s at 50 Hz); standard: no step cap.
+
+# rcb_aloha.py _check_handover L173-183: |box body pos - target_pos| < HANDOVER_TOL_M 0.03; a contact of geom "box" with
+# a geom of a body named "right/*finger*" (right) and none with a geom of a body named "left/*" (left); box z >= 0.05
+# (it rests at z 0.0308, upstream mjx_hand_over.xml home key).
+[families."mujoco_playground/AlohaHandOver"]
+vars = { nu = 14, tmax = "3,000", std_end = "", std_more = "There is one episode, with no reset and no step limit." }
+success = """
+Pass condition, defined by this benchmark (MuJoCo Playground's `{env}` has only a shaped training reward and no success
+test), checked on one state, the one after the episode's last control step: the red box's centre is less than 3 cm from
+the centre of the see-through target box; the box touches at least one finger of the right gripper and no part of the
+left arm (links, gripper or fingers); and the box's centre is at least 0.05 m high (it rests on the table at about
+0.03 m). Meeting the condition at an earlier step does not count.
+"""
+
+# rcb_aloha.py check L165-171: t = (tip - rear) . (ent - rear) / |ent - rear|^2 with tip = site peg_end2, rear = site
+# socket_rear, ent = site socket_entrance (live world positions); dist = |tip - (rear + t (ent - rear))| < LINE_TOL_M
+# 0.005 and t_min <= t <= DEPTH_T_MAX 0.75; t_min = (inner face of geom `wall` - REAR_MARGIN_M 0.002) / 0.048 = -0.875
+# (Session.__init__ L124-127; t_wall = -0.833).
+[families."mujoco_playground/AlohaSinglePegInsertion"]
+vars = { nu = 14, tmax = "3,000", std_end = "", std_more = "There is one episode, with no reset and no step limit." }
+success = """
+Pass condition, defined by this benchmark (MuJoCo Playground's `{env}` has only a shaped training reward and no success
+test), checked on one state, the one after the episode's last control step: the peg's tip (site `peg_end2`) is less
+than 5 mm from the socket's axis, the line through sites `socket_rear` and `socket_entrance`, and lies inside the
+cavity. Inside means the tip's position t along the axis is from −0.875 to 0.75, where t = 0 at `socket_rear` (the
+tube's centre), t = 1 at `socket_entrance` (the open end) and one unit is 48 mm: at least 12 mm in from the open end,
+and at most 2 mm past the inner face of the rear wall (t = −0.833). Both the peg and the socket can move; the sites
+are taken where they are in that state. Meeting the condition at an earlier step does not count.
+"""
+
+# rcb_panda.py check L146-151: |box body pos - target_pos| < PICK_POS_TOL 0.02 and the angle of the relative rotation
+# 2 acos |q_box . q_target| < PICK_ROT_TOL_DEG 15.
+[families."mujoco_playground/PandaPickCubeOrientation"]
+vars = { nu = 8, tmax = "3,000", std_end = "", std_more = "There is one episode, with no reset and no step limit." }
+success = """
+Pass condition, defined by this benchmark (MuJoCo Playground's `{env}` has only a shaped training reward and no success
+test), checked on one state, the one after the episode's last control step: the green box's centre is less than 2 cm
+from the centre of the see-through red target box, and the box's orientation is less than 15° from the target's (the
+angle of the rotation between them). Meeting the condition at an earlier step does not count.
+"""
+
+# rcb_panda.py check L152-153: |handle body x - target_pos x| < CABINET_TOL 0.015; only x (the slide's axis).
+[families."mujoco_playground/PandaOpenCabinet"]
+vars = { nu = 8, tmax = "3,000", std_end = "", std_more = "There is one episode, with no reset and no step limit." }
+success = """
+Pass condition, defined by this benchmark (MuJoCo Playground's `{env}` has only a shaped training reward and no success
+test), checked on one state, the one after the episode's last control step: the handle's centre is less than 1.5 cm
+from the red target ball along x, the direction of the handle's slide; only x is compared. Meeting the condition at an
+earlier step does not count.
+"""

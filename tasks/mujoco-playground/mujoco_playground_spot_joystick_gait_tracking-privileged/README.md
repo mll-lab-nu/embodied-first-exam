@@ -1,36 +1,46 @@
-# mujoco_playground_spot_joystick_gait_tracking-privileged
+# MuJoCo Playground · SpotJoystickGaitTracking (privileged)
 
 | | |
 |---|---|
-| Benchmark | MuJoCo Playground |
+| Task ID | `mujoco_playground_spot_joystick_gait_tracking-privileged` |
+| Benchmark | [MuJoCo Playground](https://playground.mujoco.org/) (Zakka et al., 2025), upstream `google-deepmind/mujoco_playground@4057c14` |
+| Robot | Boston Dynamics Spot quadruped, 12 joint position actuators |
 | Mode | privileged |
-| Twin | `mujoco_playground_spot_joystick_gait_tracking-standard` |
-| Simulator / robot | `mujoco` / `boston-dynamics-spot` |
-| Family / instance | `mujoco_playground/SpotJoystickGaitTracking` / seed 0 |
-| Oracle | `full` |
-| Agent time budget | 1800 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:mujoco-0.1.3` |
+| Instance | `mujoco_playground/SpotJoystickGaitTracking`, seed 0 |
+| Time limit | 30 min |
+| Reference solution | Included |
 
 ## Task
-MuJoCo Playground `SpotJoystickGaitTracking` (Boston Dynamics Spot), rebuilt in plain MuJoCo from Playground's scene files: Make the robot follow the joystick's commands for the whole schedule without falling over, moving its feet in the commanded gait: the same stepping pattern, rhythm and foot height.
-For 20 s the robot gets a joystick command schedule (5 segments: planar velocity and yaw rate in its own frame) and must track it without falling over. Its feet must follow a pace gait. The deliverable is one replayable trajectory of joint position targets
-(`/app/output/trajectory.npz`, `(T, 12)`, T = 1000 (the whole schedule)).
+Make the robot follow the joystick's commands for the whole schedule without falling over, moving its feet in the
+commanded gait: the same stepping pattern, rhythm and foot height.
 
-## Difficulty
-Velocity tracking for 20 s: the agent has to make a 12-joint quadruped walk (a gait, not one motion) and steer it through the schedule's changes of speed, direction and turning rate, and an open-loop trajectory of 1000 steps only works if it is computed against the simulator. On top of the velocity commands the feet have to follow a commanded gait: which feet swing together, at a fixed frequency and to a commanded height.
+## Success criteria
+Pass condition, defined by this benchmark (MuJoCo Playground's `SpotJoystickGaitTracking` has only a shaped training reward and no success
+test): the episode runs all 1,000 control steps of the instance's command schedule (20 s at 50 Hz) with no
+termination, and in each of the schedule's 5 command segments the robot tracks both the command and the
+gait on average. Over each segment, leaving out its first 25 control steps (0.5 s):
 
-## Reference solution
-A policy trained here on Playground's SpotJoystickGaitTracking reward (PPO on the CPU; the training code is not in the image), with the command added to its observation (SpotJoystickGaitTrackingCmd: Playground's observation leaves the command out, so a policy trained on it marches in place and cannot track the joystick its reward asks for), its targets recorded: worst segment errors 0.183 m/s and 0.136 rad/s, foot height 0.038 m. Replayed by `solution/solve.sh` (`solution/oracle.npy`, 1000 rows); the rows are float32-exact, so the
-standard twin's client executes the same targets. Re-verified: two
-fresh-process replays succeed and end in the same state.
+- the mean planar velocity error |(v_x, v_y) − (cmd_vx, cmd_vy)| is at most 0.2 m/s and the mean yaw-rate error
+  |ω_z − cmd_wz| is at most 0.3 rad/s (the IMU's velocimeter and gyro, in the body's IMU frame; the command is the
+  schedule's (vx, vy, wz) in force at that control step);
+- the mean foot-height error is at most 0.05 m. At each control step this error is the root mean square, over the four
+  feet, of the foot's height above the floor minus its target height. The target follows Playground's gait curve
+  (`gait.get_rz`) over each foot's phase, for this instance's gait: `pace` at 3.66 Hz with a swing height of 0.129 m.
 
-## Verification
-`tests/grade.py` in a separate sandbox without network: one replay, in a fresh process, from the verifier's own
-copy of the instance (`tests/instance.json`; the start state is checked against its hash on every load); pass iff it
-succeeds. Oracle: success, worst segment errors 0.183 m/s and 0.136 rad/s. `nop`: no trajectory, reward 0.
+Termination (a failure at any step; a live episode ends there): Playground's fall rule for this environment, the body
+tilted by more than about 32° (the IMU frame's z axis has a world z component below 0.85).
 
-## Resources
-Caps per container (PROTOCOL §6).
+Graded file: `/app/output/trajectory.npz`, array `actions` of shape (T, 12) with T at most 1,000: one row
+of actuator targets per control step, all finite (values outside the actuator ranges are clipped). After the agent's
+session the verifier, in a separate sandbox without network, replays it once, open-loop, from its own copy of the
+frozen start (`tests/instance.json`), and checks the condition on that replay. Only the trajectory is scored (`gen.py`
+is not). A missing file, a file that is not an `.npz` with a numeric `actions` array, or an array of another width, with
+more rows or with a NaN or infinite value scores 0. A replay that does not rebuild the frozen start (its state hash
+differs) and any other error inside the grader, such as a replay that dies or times out, are reported as a grader
+error, not as the agent's score.
+
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -39,10 +49,11 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Upstream | MuJoCo Playground @ 4057c14 (Apache-2.0): `locomotion/spot/xmls/scene_mjx_feetonly_flat_terrain.xml`; MuJoCo Menagerie @ 1b86ece (`boston_dynamics_spot`); simulated in MuJoCo 3.3.7 on the CPU |
-| Instance | Playground's `reset` with `jax.random.PRNGKey(0)` and Playground's command process over the 1000 steps; chosen (seed 0; the first candidate) |
-| Actions | 12 joint position targets per control step (0.02 s of simulated time); kp = 400 N m/rad, joint damping 10 N m s/rad, plus the actuators' own damping of 20 N m s/rad |
-| Resources | 4 CPUs, no GPU (CPU physics, EGL or OSMesa rendering) |
+## License
+MuJoCo Playground ([google-deepmind/mujoco_playground](https://github.com/google-deepmind/mujoco_playground) @
+`4057c14`) is released under the Apache License 2.0. The robot models come from MuJoCo Menagerie
+([google-deepmind/mujoco_menagerie](https://github.com/google-deepmind/mujoco_menagerie) @ `1b86ece`, the commit
+Playground pins), each under its own license: Unitree Go1 (BSD 3-Clause, Unitree Robotics), Boston Dynamics Spot
+(BSD 3-Clause, Clearpath Robotics), Google Barkour vB (Apache License 2.0, DeepMind), ALOHA 2 (BSD 3-Clause, Trossen
+Robotics), Franka Emika Panda (Apache License 2.0). The rough-terrain texture is from Poly Haven (CC0). No
+non-commercial terms apply. The simulator is MuJoCo 3.3.7 (Apache License 2.0).

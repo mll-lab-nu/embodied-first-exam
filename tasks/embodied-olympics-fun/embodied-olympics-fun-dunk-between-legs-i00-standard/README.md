@@ -1,34 +1,62 @@
-# embodied-olympics-fun-dunk-between-legs-i00-standard
+# Embodied Olympics · dunk between the legs (standard)
 
 | | |
 |---|---|
-| Benchmark | Embodied Olympics - Fun |
-| Mode | standard (`eai-standard/3.0`) |
-| Twin | `embodied-olympics-fun-dunk-between-legs-i00-privileged` |
-| Simulator / robot | `mujoco` / `unitree-h1-2` |
-| Family / instance | `dunk_between_legs` / seed 0 |
-| Oracle | `none` — no reference solution; the referee is tested: No real solution (no own jump of our searches dunks; an own-motor two-hand dunk from the same open-hand hold at this ring height is shown by search in dunk, the pass between the legs is not). Positive by a declared injection: real two-hand hold and release, the right hand swung behind the hip, the ball's path round the left leg and the push through the leg gate injected (velocities between control steps), the bounce through the gate real, the gather (the arms and both hands closing on the ball rising between the open palms) real after an injected rise, the raise overhead real, then the dunk's ghost jump, teleport over the ring and landing: dribble, between the legs, gather, dunk, stand; the same state hash twice. Negatives: a bounce beside the leg, a rolled ball, through and back, a gather before any bounce between the legs, a ball at rest on the upturned palm (carrying), a touch before the floor, a palm from above, a ball pushed at the shin, a ball that gets away, the ball on the floor while held, travelling before the release and after the gather, a release after the gather, a second dribble, a shot during the dribble, a dunk without the dribble, a drop over the ring, a one-hand entry from the side, up through the ring, a miss, hanging on the ring, out of bounds, a fall; nop (time, the ball still in the hands after 40 s).; human review in the pull request that adds the benchmark (PROTOCOL §4) |
-| Agent time budget | 7200 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
+| Task ID | `embodied-olympics-fun-dunk-between-legs-i00-standard` |
+| Benchmark | [Embodied Olympics - Fun](https://github.com/CHIGUI0/roboolympics) (Embodied Olympics authors, 2026), upstream `CHIGUI0/roboolympics@7df999b` |
+| Robot | Unitree H1-2 humanoid (1.78 m, 67 kg, 27 joints), with Unitree's walking policy |
+| Mode | standard |
+| Instance | `dunk_between_legs`, seed 0 |
+| Time limit | 2 h |
+| Reference solution | None |
 
 ## Task
-Dribble from the top of the key, bounce the ball once between your legs, gather it in both hands and, with at most two steps, dunk it. Then let go, land on your feet and stand. (Embodied Olympics `dunk-between-legs`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Dribble from the top of the key, bounce the ball once between your legs, gather it in both hands and, with at most two
+steps, dunk it. Then let go, land on your feet and stand.
 
-## Difficulty
-Every touch of the dribble has to push the ball down with a hand, and one bounce has to go through the narrow gap between the robot's own feet and come out where a hand can meet it, without touching a leg; then both hands have to catch the moving ball and hold it, with only the hands' contact and friction holding it. After at most two steps the 67 kg body has to rise about 0.4 m with the ball held overhead and bring it down into a ring only 0.21 m wider than the ball, and land; the robot has a walking gait (which steps on the spot even at a zero command) and nothing that jumps or lands. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 5 resets (only the last attempt is graded).
+## Success criteria
+A FIBA court with the official basket (ring top 2.39 m above the floor); the robot starts standing, the ball held
+between its hands. A hand is on the ball while it touches it (gaps shorter than 0.03 s included). The referee's
+stages, in order: dribble, between the legs, gather, dunk, stand.
+- Start: the first foot lifted makes the other the pivot foot; the pivot foot (before any lift, either foot) may not
+  slide more than 0.2 m, nor leave the floor before the ball has left the hands; the ball may not touch the floor
+  while in the hands.
+- Dribble: the ball, out of the hands, touches the floor with no hand on it. During the dribble the robot plays it with
+  one hand at a time; between two hand touches (the release counts as one) the ball must touch the floor; one hand's
+  touch lasts at most 0.3 s; the ball touches no part but the hands, and its centre stays within 2.0 m horizontally of
+  the pelvis.
+- Between the legs: at a hand touch, the ball's last passage through the plane of the leg gate since the previous touch
+  was inside the gate (the triangle of the two soles and the crotch, up to the lower knee joint, with an area of at
+  least 0.02 m2), with no hand on the ball and the ball moving through the plane at 1.0 m/s or more, and the ball is now
+  on the other side of the plane from the previous touch.
+- Gather: both hands on the ball at the same moment ends the dribble; before a bounce between the legs this fails the
+  attempt. After the gather the ball stays in the hands until its centre has entered the ring, and may not touch the
+  floor. At most 2 steps (a foot touching down after at least 0.03 s off the floor; both feet within 0.03 s are one
+  step; never the same foot twice in a row), and a foot on the floor may not slide more than 0.2 m.
+- Dunk: the ball's centre goes down through the ring's plane inside the ring while both hands are on it, or a hand
+  whose latest contact is at least 0.06 m above the ball's centre, and on down to one ball diameter below the ring.
+- Stand: after the dunk, no hand on the ball and, for 1.0 s without a break, only the feet on the ground, the torso
+  upright (tilt cosine at least 0.94), the pelvis slower than 0.35 m/s. The success is called when the 1.0 s are
+  complete.
 
-## Reference solution
-None (as `embodied-olympics-fun-dunk-between-legs-i00-privileged`).
+Fouls (each fails the attempt at once): any rule above broken; the ball through the ring before the gather; the ball
+coming up through the ring from below; the ball or any part of the robot touching the floor on or outside the end line
+or a side line; the robot touching the basket (ring, plate or backboard) for more than 0.3 s in all. Fall (a failure
+at any time): the pelvis below 0.35 m, or any part other than the feet on the floor. Time limit: 40 s (4,000 control
+steps).
 
-## Verification
-The sim sidecar's referee judges the live attempt, and that is the verdict (`final.json`: `graded_by` live, `replays` 0;
-no grading replay, owner 2026-10-17); the frozen start is checked on the live simulator (`instance_mismatch`:
-infrastructure), and the video is rendered from the recorded attempt afterwards. `/tests/grade.py` reads
-`/data/final.json`: pass iff the live attempt succeeded. The
-rules: A FIBA court (15.0 m wide inside its side lines, lines 0.05 m wide); the official basket: a rigid ring of 0.45 m inner diameter (0.018 m metal), its top edge 2.39 m above the floor, its centre 0.375 m in front of a backboard 1.8 m wide and 1.05 m high whose lower edge is 2.24 m above the floor. The ball is a size-7 basketball (0.239 m across, 0.62 kg, it keeps 0.85 of its speed in a bounce on the floor). Your hands are five-finger hands: the ball starts held between them, the palms pressed on its sides and the hands open, and only the hands' contact and friction hold it; it can slip out. A hand is the palm, the fingers and the wrist; a hand is on the ball while it touches the ball, gaps shorter than 0.03 s included; the ball is in your hands while at least one hand is on it. Starting the dribble: you stand still with the ball in your hands; the first foot you lift makes the other your pivot foot; the pivot foot, and before a foot is lifted either foot, may not slide more than 0.2 m along the floor, and the pivot foot may not leave the floor before the ball has left your hands (a foot has left the floor when it has not touched it for 0.03 s). The ball may not touch the floor while it is in your hands. The dribble starts when the ball has left your hands and touched the floor. The dribble: you play the ball by touches of one hand at a time that push it to the floor: between two touches by your hands the ball must have touched the floor (the ball leaving your hands at the start counts as a touch); contacts of your hands less than 0.03 s apart are one touch; a touch of one hand may last at most 0.3 s (longer: the ball has come to rest in the hand); the ball may touch no part of you but your hands; its centre must stay within 2.0 m (horizontally) of your pelvis; there is no limit to your steps. Between the legs: the leg gate is the triangle whose corners are the soles of your two feet (each foot's sole point) and your crotch (the point midway between your two hip joints), wherever your legs are, up to the height of your lower knee joint, while the triangle's area is at least 0.02 m2 (a thinner one, with a sole on the line from the other sole to the crotch, is no gate). A bounce goes between your legs when, between two touches of your hands, the ball touches the floor, its centre passes through the leg gate from one side of the gate's plane to the other while no hand touches it, the ball itself (not you) moving through that plane in the direction of the pass at 1.0 m/s or more, this is the last time its centre passes the gate's plane before the next touch, and at that next touch the ball is on the other side of the plane from where it was at the touch before. At least one bounce of your dribble must go between your legs. The gather: the dribble ends when both your hands are on the ball at the same moment; it must end so, and only after a bounce between your legs. From then on the ball must stay in your hands until its centre has gone down into the ring, and it may not touch the floor (a second dribble). Travelling: after the gather you may take at most 2 steps with the ball in your hands. A step is a foot touching the floor after it has been off it for at least 0.03 s; both feet landing within 0.03 s of each other are one step; the same foot may not touch down twice in a row; a foot on the floor may not slide more than 0.2 m from where it stood or was put down; after that no foot may touch the floor again until the ball is through the ring. The dunk: the ball's centre goes down through the ring's plane inside the ring while both your hands are on the ball, or while a hand is on it whose latest contact with it is at least 0.06 m above the ball's centre (pressing it down from above), and on down to one ball diameter below the ring (in the hands, or let go once its centre is inside the ring). A ball whose centre comes up through the ring from below is a violation. Hanging on the ring: you may touch the basket (the ring, its plate, the backboard) with any part of you for at most 0.3 s in all. After the dunk let go of the ball (no hand on it) and stand: for 1.0 s without a break only your feet touch the ground, your torso is upright (the cosine of its tilt at least 0.94) and your pelvis moves slower than 0.35 m/s. Then you have succeeded. You fail if you travel; if the ball touches the floor while in your hands before the dribble, or goes through the ring before it; if during the dribble a hand touches the ball twice without the ball touching the floor in between, a touch of one hand lasts too long, the ball touches a part of you other than a hand, or the ball gets further from you than the control distance; if you gather the ball before a bounce between your legs; if after the gather the ball leaves your hands before its centre has entered the ring or touches the floor; if the ball goes through the ring after an entry at which neither both hands nor a hand from above were on it (a shot, a tip from below or the side, a drop); if, let go inside the ring, it touches the floor without having gone through; if the ball comes up through the ring from below; if the ball or any part of you touches the floor on or outside a boundary line (the end line or a side line); if you hang on the ring; if you fall at any time (a fall: your pelvis lower than 0.35 m above the floor, or any part of you other than your feet on the floor); or after 40 s. No oracle; human review in the pull request that adds the benchmark (PROTOCOL §4).
+Graded: the live attempt, judged by the referee in the simulator service as it runs; nothing is replayed. The referee's
+success call is an event: once it is made at some control step, the attempt is a success. It is never shown to the
+agent and does not end the attempt: the physics goes on until the agent's `/finish`, the attempt's time limit, or the
+end of the agent's time (2 h), and nothing after the call undoes it. A failure the referee calls before any
+success (a foul, a fall, the physics diverging) ends the attempt at once with 0. Reaching the time limit or the end of
+the session without a success call scores 0. The agent has 5 resets, each starting a new attempt from the
+frozen start; only the last attempt (the one after the last reset) is graded, and a success in an earlier attempt does
+not count. A simulator error raised by the agent's own call ends the attempt with 0. An attempt that does not start
+from the frozen instance, or a service crash outside the agent's calls, is an infrastructure failure, not a score.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -38,13 +66,10 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Category | basketball-and-rackets |
-| Rule book | FIBA Official Basketball Rules 2024: Art. 2 (court), Art. 3 and the Basketball Equipment appendix (backboard, ring, size-7 ball), Art. 13 (how the ball is played), Art. 14 (control: a player holds a live ball), Art. 15 (a dunk: the ball forced downwards into the basket with one or both hands), Art. 16 (goal; a ball that passes through the basket from below is a violation), Art. 23 (out of bounds), Art. 24 (dribbling: its start, its end, no second dribble), Art. 25 (travelling, 25.2.1.2: two steps upon completion of a dribble), Art. 26 (three seconds), Art. 36 (technical foul: hanging on the ring); FIBA Mini-Basketball Rules (the ring at 2.60 m); deviations: Basketball Equipment (basket): the basket is lowered: the ring's top edge is 2.39 m above the floor, below FIBA Mini-Basketball's 2.60 m (FIBA's own ring: 3.05 m), set at the robot's measured own-motor reach (H1-2 with H2-class leg actuators), at the edge of the robot's reach, and the pass between the legs is the harder part; the full-size backboard keeps its size and its height relative to the ring (lower edge 2.24 m). The ball stays the size-7 ball. · Art. 3 (equipment, the hands): the hands are the H1-2's own Inspire five-finger hands (six drives: four fingers, the thumb's flexion and rotation), closed by one command per hand; the ball is held by the hands' contact and friction alone (the open palms pressed on its sides by the arms) and slips or drops when they do not hold it. It is dribbled by pushing it with a hand (the palm and the fingers). · Art. 24.1.2 (the ball 'comes to rest' in a hand) is read as: a touch of one hand that lasts longer than 0.3 s. The dribble ends when both hands touch the ball at the same time (the gather); a dribble ended by a ball at rest in one hand ends the attempt (no dribble can be started again, Art. 24.2). · Art. 13: during the dribble every touch of the ball by a part of you other than a hand is a violation; intent (an accidental touch of a leg is legal in the rule book) cannot be judged. · The rule book has no 'between the legs': this task's definition (the leg gate: the triangle of your two feet and your crotch below your knees, crossed by the ball's centre during a bounce, no hand on it, the ball moving through it at 1.0 m/s or more, and the ball on the other side at the next touch) is this task's own requirement. · Art. 15 defines a dunk only as forcing the ball downwards into the basket with one or both hands: here, at the moment its centre enters the ring, both hands are on the ball, or a hand is on it whose latest contact is at least 0.06 m above its centre (a hand pressing it from above). · Art. 14 / 24 give no distance for 'control' of a dribbled ball: here the ball's centre must stay within 2.0 m (horizontally) of your pelvis while it is dribbled. · Basketball Equipment (basket): the ring is rigid (no pressure release) and the net is only drawn: it does not slow the ball. The ball is through the basket when its centre has gone down through the ring's plane inside the ring and on to one ball diameter below it. · Art. 26 (three seconds) is not applied: the attempt is a single action without opponents (as in the other basketball families, which start in or next to the restricted area). · Art. 36: hanging on the ring is judged by time: the robot may touch the basket (ring, its plate, the backboard) for at most 0.3 s in all. · The landing (on the feet, standing 1.0 s) is this task's own requirement; the rule book asks nothing of a player after a goal. |
-| Stages | dribble → between the legs → gather → dunk → stand |
-| Service | `environment/sim/server.py` (the Embodied Olympics adapter) on `rcb_service.py` (eai-standard/3.0), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
-| Observations | `head_left`, `head_right` (RGB 270 × 480, depth on `head_left`), `venue` (fixed); proprioception: joints, torques, targets, two IMUs, grip state |
-| Episode | 4000 control steps (40 s at 100 Hz); 5 resets, the last attempt graded |
-| Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md) |
+## License
+The Embodied Olympics robot library and running-policy port ([CHIGUI0/roboolympics](https://github.com/CHIGUI0/roboolympics)
+@ `7df999b`, a private repository) is released under the MIT License (`LICENSE.roboolympics` in the image); this
+benchmark's venues and referees are MIT too. Third-party parts in the image: the Unitree G1 model and meshes from MuJoCo
+Menagerie (BSD-3-Clause), the Unitree H1-2 model, meshes and walking policy and the G1 walking policy from
+unitree_rl_gym (BSD-3-Clause), the G1 running policy from C1801SYQ/g1_running (Apache-2.0), FALCON's G1 walking policy
+from LeCAR-Lab/FALCON (MIT) and the WBC-AGILE G1 walking policy from NVIDIA (Apache-2.0). No non-commercial terms apply.

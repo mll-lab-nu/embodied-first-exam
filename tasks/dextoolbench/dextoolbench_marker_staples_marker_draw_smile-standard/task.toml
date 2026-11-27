@@ -24,6 +24,7 @@ instance_seed = 0                 # DexToolBench fixes the start pose and goals 
 expert_time_estimate_hours = 4.0
 protocol = "eai-standard/3.0"
 oracle = "full"
+oracle_evidence = "SimToolReal's pretrained policy, replayed in this scene, reaches 49/49 goals (solution/)"
 
 [verifier]
 timeout_sec = 1200.0

@@ -12,7 +12,7 @@ every task):
     "wall-clock budget is 90 min (5400 s)", "You have 60 minutes of wall-clock time", "Time limit: one hour", ...; and
     the obvious other shapes: "You have one hour.", "The limit is 3600 seconds.", "Finish within 60 minutes."): two
     limits in one instruction are worse than none;
-  - the README's "Agent time budget" row has the number;
+  - the README's "Time limit" row (task_conventions.readme_time_row) has the number;
   - standard modes: the `sim` service is told the same number (`RCB_WALL_CLOCK_S` in environment/docker-compose.yaml,
     what its `/spec` budget and `meta["time_left_s"]` report; docs/protocol/running.md "The agent's time");
 ADVISORY (the required CI job runs the twins' equal cutoffs, an invariant, in ci_checks/check-twins.py).
@@ -116,8 +116,8 @@ def check_task(task: Path) -> list[str]:
     errs += [f"instruction.md states the agent's limit a second time, outside `{tc.LIMITS_HEADING}` ({x}); say "
              f"\"{tc.V2_CUTOFF_REF}\" instead of a number" for x in other_limits(ins)]
     readme = (task / "README.md").read_text(encoding="utf-8") if (task / "README.md").is_file() else ""
-    if f"| Agent time budget | {sec} s;" not in readme:
-        errs.append(f"README.md's `Agent time budget` row does not say {sec} s")
+    if tc.readme_time_row(task) not in readme:   # `| Time limit | 30 min |`
+        errs.append(f"README.md's `Time limit` row does not say {tc.duration_text(sec)} ({sec} s)")
     c = task / "environment/docker-compose.yaml"
     text = c.read_text() if c.is_file() else ""
     if mode in tc.SIDECAR_MODES and re.search(r"(?m)^  sim:", text):   # a task without a sim service has no budget to tell

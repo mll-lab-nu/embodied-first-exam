@@ -1,0 +1,385 @@
+# README data for tasks/robocasa/*/README.md (scripts/task_conventions.py render_readme_v3)
+#
+# Sources checked for every success text:
+#   upstream  RoboCasa @ 756598a (robocasa/robocasa, the commit images/robocasa/Dockerfile checks out): the env's
+#             `_check_success` and the helpers it calls, in robocasa/utils/object_utils.py (OU) and
+#             robocasa/models/fixtures/*.py; robosuite 1.5.1 (pip pin in the same Dockerfile): MujocoEnv.step
+#             (robosuite/environments/base.py L420-474) and check_contact (robosuite/utils/sim_utils.py L8-40).
+#             Fixture states (microwave and coffee machine on/off) are updated once per control step, after its last
+#             physics substep: Kitchen._post_action -> update_state -> every fixture's update_state
+#             (robocasa/environments/kitchen/kitchen.py L1303-1320, L1343-1351). None of the 29 checks keeps a timer or
+#             changes state itself, so the number of `_check_success` calls per step does not matter here.
+#             The frozen instances' configs set ignore_done = True (no horizon end; robosuite base.py L495-497).
+#   graders   embodied_first_exam/benchmarks/robocasa/privileged/tests/grade.py and .../privileged/environment/casa_tool.py
+#             (Session.reset / step / replay); .../sim/server_casa.py finalize() and .../standard/tests/grade.py.
+#             These files match images/robocasa-files/FILES.json (robocasa-files-0.7.0) byte for byte (SHA-256).
+# Helpers used below (upstream line numbers):
+#   OU.gripper_obj_far L349-356: |grip site - object body origin| > 0.25 m (the right-hand eef site, the only gripper).
+#   OU.check_obj_fixture_contact L340-346 and env.check_contact: any MuJoCo contact between the two models' contact
+#     geoms in the current state.
+#   OU.check_obj_in_receptacle L323-337: contact, and the x-y distance of the two body origins < th (default 0.7 x the
+#     receptacle's horizontal radius, objects.py horizontal_radius L149-154).
+#   OU.obj_inside_of L12-60: the 8 corners of the object's bounding box (objects.py get_bbox_points L156-192, at its
+#     pose) inside the fixture's interior box (get_int_sites); th = 0.05 is added to the dot products with the box's
+#     unnormalised edge vectors, so the slack along an edge of length L is 0.05 / L metres. partial_check=True: the
+#     body origin only, th = 0.
+# Line numbers below are those of the pinned upstream files.
+
+[benchmark]
+name = "RoboCasa"
+citation = "Nasiriany et al., 2024"     # upstream README "Citation": RoboCasa, RSS 2024
+url = "https://github.com/robocasa/robocasa"
+repo = "robocasa/robocasa"
+commit = "756598a"
+
+[license]
+text = """
+RoboCasa ([robocasa/robocasa](https://github.com/robocasa/robocasa) @ `756598a`, v0.2) is released under the
+[MIT License](https://github.com/robocasa/robocasa/blob/756598a5be52e052339bb2d957426e39015c2afb/LICENSE) (Copyright (c)
+2024 the RoboCasa Team); paper: Nasiriany et al., 2024, "RoboCasa: Large-Scale Simulation of Everyday Tasks for
+Generalist Robots", RSS 2024. robosuite 1.5.1 is MIT-licensed and MuJoCo 3.2.6 is under the Apache License 2.0. The
+kitchen assets are downloaded when the image is built and are not in this repository: fixtures and textures from
+[robocasa/robocasa-assets](https://huggingface.co/datasets/robocasa/robocasa-assets) (CC-BY-4.0), v0.2 fixtures from a
+mirror, [jianzhang96/robocasa-assets](https://huggingface.co/datasets/jianzhang96/robocasa-assets) (Apache-2.0),
+RoboCasa's objaverse and AI-generated object archives (CC-BY-4.0), and the lightwheel and sketchfab object sets of
+[nvidia/PhysicalAI-DigitalCousin-Assets](https://huggingface.co/datasets/nvidia/PhysicalAI-DigitalCousin-Assets) under
+**CC-BY-NC-4.0: non-commercial use only**.
+"""
+
+[robots]
+franka-panda-omron = "Franka Emika Panda arm with a parallel-jaw gripper on an Omron mobile base with a torso lift (robosuite `PandaMobile`)"
+
+# privileged/tests/grade.py main(): no file -> missing_trajectory (L75-76); check_file (L46-54): casa_tool.load_npz
+# (casa_tool.py L237-249: <= 8 MB, <= 64 members, .npy members only, no pickle), `actions` 2-D, 1 <= T <= MAX_STEPS =
+# 3000 (casa_tool.py L78), finite -> else invalid_trajectory; replay() in a child process (L27-38, L88-103):
+# as_actions (T, 12) else exit 2 -> invalid_trajectory; Session.replay (casa_tool.py L643-655: reset to the frozen
+# instance, then Session.step per row: clipped to the channel limits L593, env.step, _check_success twice, L594-596).
+# ok = not initial_success and success (L106; initial_success = the check at reset, casa_tool.py L581-582). A replay
+# that raises (a simulator error), times out or cannot import the tooling -> grader_error = 1, success 0 (L102-103,
+# L116-118). The video is rendered after reward.json is written (L120-132).
+[modes.privileged]
+success = """
+The graded file is `/app/output/trajectory.npz`: a plain `.npz` (at most 8 MB, at most 64 members, arrays only) with an
+array `actions` of shape (T, 12), finite numbers, 1 ≤ T ≤ 3000, one row per control step (1/20 s); each value is
+clipped to its channel's limits ([-1, 1]). The verifier, in a separate sandbox without network, replays it once,
+open-loop, in a fresh process from its own copy of the frozen start, and evaluates the environment's own check
+(`_check_success`) on the state after the last row; meeting the conditions at an earlier step does not count. A scene
+already solved at the start would not count either (the frozen start is not solved).
+
+A missing file scores 0, and so does an invalid one: not a readable `.npz` of that kind, no `actions`, a shape other
+than (T, 12), a NaN or infinite value, or T outside 1 to 3000. A replay that fails (a simulator error) scores 0.
+"""
+
+# sim/server_casa.py: RCB_AGENT_END=1 and no RCB_STEP_LIMIT / RCB_MAX_CONTROL_STEPS in any compose file (L67, L84-91:
+# no step cap); POST /finish -> finish("finished") (L1203-1207); the collect hook's SIGUSR1 after the agent's container
+# is stopped -> finish("timeout") (L1235-1239, finalize.sh); an exception while executing a call -> finish("error"),
+# 500 (L1225-1231). Every executed control step is S.step (casa_tool.Session.step, L708-718); a hold chunk steps
+# S.hold_targets() (L928-937). The success is only recorded, never shown (_hidden_success L101-107, L888, L943).
+# finalize() L1045-1094: success = S.check() (the check after the last executed control step) and not initial_success
+# and reason != "error" and reason in END_STATE_REASONS (finished, timeout, step_limit); nothing is replayed.
+# _start_mismatch L1246-1262 (RCB_INSTANCE_SHA, RCB_START_SHA, solved at start) -> _give_up(instance_mismatch,
+# infra=True) before the port is bound. _resume_or_start L1265-1336: more than RCB_MAX_RESUMES = 2 crashes ->
+# sim_crashed_on_call (all inside the agent's calls; infra=False) or sim_crashed (infra=True); journal mismatch ->
+# resume_failed (infra). standard/tests/grade.py L40-85: no final.json / unreadable / not finalized / infra_error /
+# finalize_error -> infra_error = 1; success = graded_by "live" and success and live_success and reason != "error".
+[modes.standard]
+success = """
+Graded is the one live episode: no reset, no step limit. It ends when the agent sends `POST /finish`, or when the
+agent's session ends (at the latest after {timeout}); the environment's own check (`_check_success`) is evaluated on
+the state after the last control step the service executed, and nothing is replayed. Meeting the conditions earlier
+in the episode does not count, and the service never reports success while the episode runs. A scene already solved
+at the start would not count (the frozen start is not solved).
+
+A simulator error raised while executing an agent's call ends the episode with 0, as do repeated service crashes that
+all happened while serving the agent's calls. Before the agent is served, the service checks that the scene starts at
+the frozen instance (the instance file's hash and the start state's hash); a mismatch, a service crash the episode
+cannot be resumed from, or a missing or unfinished verdict is an infrastructure error, not a score.
+"""
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Families: the pass condition only (which state is graded: [modes]). "the grip site" = the gripper's grip site,
+# env.robots[0].eef_site_id["right"]; an object's "position" = its body origin (env.obj_body_id); "touches" = a MuJoCo
+# contact between their contact geoms.
+
+# multi_stage/chopping_food/arrange_vegetables.py _check_success L96-109: OU.check_obj_in_receptacle(vegetable1 /
+# vegetable2, cutting_board) (default th) and OU.gripper_obj_far(obj_name="cutting_board"). Instance: vegetable1 =
+# carrot, vegetable2 = lemon (ep_meta object_cfgs).
+[families."robocasa/ArrangeVegetables"]
+success = """
+Each of the two vegetables (the carrot and the lemon) touches the cutting board, and the horizontal (x-y) distance
+between its position (its body origin) and the cutting board's is less than 0.7 times the cutting board's horizontal
+radius; and the gripper's grip site is more than 25 cm from the cutting board's position. How far the hand is from the
+vegetables is not checked, and nor is whether the gripper is open.
+"""
+
+# single_stage/kitchen_doors.py ManipulateDoor._check_success L67-87 (behavior "close": every door <= 0.05);
+# HingeCabinet.get_door_state (models/fixtures/cabinets.py L553-580): left and right hinge angles / (pi/2).
+# Instance: cab_1_right_group, a HingeCabinet.
+[families."robocasa/CloseDoubleDoor"]
+success = """
+Both doors of the cabinet are closed to within 5% of 90°: each door's hinge angle, measured from closed, is at most
+0.05 × π/2 rad (4.5°).
+"""
+
+# single_stage/kitchen_drawer.py ManipulateDrawer._check_success L162-182 (behavior "close": <= 0.05);
+# Drawer.get_door_state (models/fixtures/cabinets.py L858-882): slide joint / (0.55 x size[1]). Instance: the drawer
+# stack_4_main_group_3, size[1] = 0.60 m (instance caches), so the full stroke counted is 0.33 m.
+[families."robocasa/CloseDrawer"]
+success = """
+The drawer is pushed in to within 5% of its counted stroke: its slide joint is at most 1.65 cm out from closed (0.05 ×
+0.33 m, the stroke RoboCasa counts as fully open being 0.55 × the drawer's 0.60 m depth).
+"""
+
+# single_stage/kitchen_doors.py ManipulateDoor._check_success L67-87 (close: <= 0.05); the door fixture is the
+# microwave (microwave_front_group): Microwave.get_door_state (models/fixtures/microwave.py L59-76): -hinge / (pi/2).
+[families."robocasa/CloseSingleDoor"]
+success = """
+The microwave door is closed to within 5% of 90°: its hinge angle, measured from closed, is at most 0.05 × π/2 rad
+(4.5°).
+"""
+
+# single_stage/kitchen_coffee.py CoffeePressButton._check_success L181-189: turned_on and gripper_button_far;
+# CoffeeMachine.update_state (models/fixtures/accessories.py L74-94: turned on at the first contact of the gripper with
+# the start button, never turned off) and gripper_button_far (L118-141: > 0.15 m from the button geom's centre).
+[families."robocasa/CoffeePressButton"]
+success = """
+The coffee machine is on, and the gripper's grip site is more than 15 cm from the centre of its start button. The
+machine turns on at the end of the first control step in which the gripper touches the start button, and then stays
+on: nothing turns it off.
+"""
+
+# single_stage/kitchen_coffee.py PnPCoffee._check_success L92-106 (behavior "machine_to_counter", CoffeeServeMug
+# L118-124): OU.check_obj_fixture_contact(obj, counter) and OU.gripper_obj_far(obj); counter =
+# get_fixture(COUNTER, ref=coffee_machine) (L23-26; kitchen.py get_fixture L1481-1540: the counter under the machine).
+[families."robocasa/CoffeeServeMug"]
+success = """
+The mug touches the counter the coffee machine stands on, and the gripper's grip site is more than 25 cm from the mug's
+position (its body origin). Only the contact is checked: not where on the counter the mug is, whether it is upright, or
+whether the gripper is open.
+"""
+
+# single_stage/kitchen_coffee.py PnPCoffee._check_success L92-106 (behavior "counter_to_machine", CoffeeSetupMug
+# L109-115): CoffeeMachine.check_receptacle_placement_for_pouring (accessories.py L96-116: x-y distance to the site
+# receptacle_place_site < 0.04, |dz| < 0.10) and OU.gripper_obj_far(obj).
+[families."robocasa/CoffeeSetupMug"]
+success = """
+The mug's position (its body origin) is less than 4 cm from the coffee machine's mug place site (the point under its
+spout) horizontally (x-y) and less than 10 cm from it vertically, and the gripper's grip site is more than 25 cm from
+the mug's position. The mug's orientation and the gripper's opening are not checked.
+"""
+
+# multi_stage/defrosting_food/microwave_thawing.py _check_success L105-111: OU.obj_inside_of(obj, microwave) (full
+# bounding-box check), microwave.get_state()["turned_on"], OU.gripper_obj_far(obj). Microwave.update_state
+# (models/fixtures/microwave.py L96-122): door > 0.005 open -> off; else on + stop button touched -> off; off + start
+# button touched -> on.
+[families."robocasa/MicrowaveThawing"]
+success = """
+The squash is inside the microwave: each of the 8 corners of its bounding box (the box of its model, at its current
+pose) lies within the microwave's interior box, which is widened at both ends of each of its three edges by 0.05 m²
+divided by that edge's length (10 cm for an edge 0.5 m long). The microwave is on, and the gripper's grip site is
+more than 25 cm from the squash's position (its body origin). Whether the squash is on the plate is not checked.
+
+The microwave's on/off state is updated at the end of every control step: if the door is open more than 0.5% of 90°
+(0.45°) the microwave is off; otherwise it turns off if it was on and the gripper touches the stop button, and turns
+on if it was off and the gripper touches the start button. So it is on only with the door closed to within 0.45°.
+"""
+
+# single_stage/kitchen_doors.py ManipulateDoor._check_success L67-87 (behavior "open": every door >= 0.90);
+# HingeCabinet.get_door_state (models/fixtures/cabinets.py L553-580). Instance: cab_1_main_group, a HingeCabinet.
+[families."robocasa/OpenDoubleDoor"]
+success = """
+Both doors of the cabinet are open at least 90% of 90°: each door's hinge angle, measured from closed, is at least
+0.90 × π/2 rad (81°).
+"""
+
+# single_stage/kitchen_drawer.py ManipulateDrawer._check_success L162-182 (behavior "open": >= 0.95);
+# Drawer.get_door_state (models/fixtures/cabinets.py L858-882): slide joint / (0.55 x size[1]). Instance: the drawer
+# stack_3_right_group_4, size[1] = 0.60 m (instance caches), so the stroke counted is 0.33 m.
+[families."robocasa/OpenDrawer"]
+success = """
+The drawer is pulled out at least 95% of its counted stroke: its slide joint is at least 31.35 cm out from closed (0.95
+× 0.33 m, the stroke RoboCasa counts as fully open being 0.55 × the drawer's 0.60 m depth).
+"""
+
+# single_stage/kitchen_doors.py ManipulateDoor._check_success L67-87 (open: >= 0.90); SingleCabinet.get_door_state
+# (models/fixtures/cabinets.py L363-382). Instance: cab_1_left_group, a SingleCabinet.
+[families."robocasa/OpenSingleDoor"]
+success = """
+The cabinet door is open at least 90% of 90°: its hinge angle, measured from closed, is at least 0.90 × π/2 rad (81°).
+"""
+
+# single_stage/kitchen_pnp.py PnPCabToCounter._check_success L245-255: OU.gripper_obj_far(obj) and
+# OU.check_obj_fixture_contact(obj, counter); counter = the counter registered with ref = the cabinet
+# (counter_1_left_group, ep_meta fixture_refs).
+[families."robocasa/PnPCabToCounter"]
+success = """
+The hot dog touches the counter below the cabinet (`counter_1_left_group`), and the gripper's grip site is more than 25
+cm from the hot dog's position (its body origin). Only the contact is checked, not where on the counter it lies or
+whether the gripper is open.
+"""
+
+# single_stage/kitchen_pnp.py PnPCounterToCab._check_success L129-139: OU.obj_inside_of(obj, cab) (full bounding-box
+# check) and OU.gripper_obj_far(obj). Instance: cab_2_left_group (a SingleCabinet). The interior box is the Python-side
+# fixture model's (get_int_sites), built from the image's assets; the instance XML need not carry it (the sinks' does
+# not), so no per-fixture size is given.
+[families."robocasa/PnPCounterToCab"]
+success = """
+The cake is inside the cabinet: each of the 8 corners of its bounding box (the box of its model, at its current pose)
+lies within the cabinet's interior box, which is widened at both ends of each of its three edges by 0.05 m² divided by
+that edge's length (10 cm for an edge 0.5 m long). The gripper's grip site is more than 25 cm from the cake's
+position (its body origin).
+"""
+
+# single_stage/kitchen_pnp.py PnPCounterToMicrowave._check_success L589-603: check_contact(obj, container) and
+# check_contact(container, microwave) and OU.gripper_obj_far(obj); container = the plate placed in the microwave.
+[families."robocasa/PnPCounterToMicrowave"]
+success = """
+The corn touches the plate that started inside the microwave, that plate touches the microwave (any of its collision
+geoms), and the gripper's grip site is more than 25 cm from the corn's position (its body origin). Where the corn lies
+on the plate, and whether the gripper is open, are not checked.
+"""
+
+# single_stage/kitchen_pnp.py PnPCounterToSink._check_success L356-366: OU.obj_inside_of(obj, sink,
+# partial_check=True) (the body origin only, no slack) and OU.gripper_obj_far(obj).
+[families."robocasa/PnPCounterToSink"]
+success = """
+The apple's position (its body origin) lies inside the sink's interior box (no margin), and the gripper's grip site is
+more than 25 cm from it.
+"""
+
+# single_stage/kitchen_pnp.py PnPCounterToStove._check_success L805-816: OU.check_obj_in_receptacle(obj, container,
+# th=0.07) and OU.gripper_obj_far(obj); container = the pan on the stove.
+[families."robocasa/PnPCounterToStove"]
+success = """
+The potato touches the pan, the horizontal (x-y) distance between the potato's position (its body origin) and the
+pan's is less than 7 cm, and the gripper's grip site is more than 25 cm from the potato's position. Where the pan is,
+and whether the gripper is open, are not checked.
+"""
+
+# single_stage/kitchen_pnp.py PnPMicrowaveToCounter._check_success L715-725: OU.check_obj_in_receptacle(obj, container)
+# (default th) and OU.gripper_obj_far(obj); container = the plate placed on the counter.
+[families."robocasa/PnPMicrowaveToCounter"]
+success = """
+The onion touches the plate that started on the counter, the horizontal (x-y) distance between the onion's position
+(its body origin) and the plate's is less than 0.7 times the plate's horizontal radius, and the gripper's grip site is
+more than 25 cm from the onion's position. Where the plate is, and whether the gripper is open, are not checked.
+"""
+
+# single_stage/kitchen_pnp.py PnPSinkToCounter._check_success L467-478: OU.check_obj_in_receptacle(obj, container)
+# (default th), check_contact(container, counter), OU.gripper_obj_far(obj); counter = counter_main_main_group.
+[families."robocasa/PnPSinkToCounter"]
+success = """
+The tomato touches the plate, the horizontal (x-y) distance between the tomato's position (its body origin) and the
+plate's is less than 0.7 times the plate's horizontal radius, the plate touches the counter (`counter_main_main_group`),
+and the gripper's grip site is more than 25 cm from the tomato's position. Whether the gripper is open is not checked.
+"""
+
+# single_stage/kitchen_pnp.py PnPStoveToCounter._check_success L897-908: OU.check_obj_in_receptacle(obj, container,
+# th=0.07) and OU.gripper_obj_far(obj); container = the plate on the counter.
+[families."robocasa/PnPStoveToCounter"]
+success = """
+The steak touches the plate, the horizontal (x-y) distance between the steak's position (its body origin) and the
+plate's is less than 7 cm, and the gripper's grip site is more than 25 cm from the steak's position. Where the plate
+is, and whether the gripper is open, are not checked.
+"""
+
+# multi_stage/washing_dishes/pre_soak_pan.py _check_success L75-85: sink.get_handle_state()["water_on"]
+# (models/fixtures/sink.py L67-108: 0.40 < handle_joint mod 2 pi < pi; handle_joint range 0-0.52 rad in the instance
+# XML), OU.obj_inside_of(obj1 / obj2, sink) (full bounding-box check), OU.gripper_obj_far(obj1). obj1 = the pan, obj2 =
+# the sponge. The sink's interior box comes from the fixture model built in the image (not in the instance XML), so
+# its size is not given here.
+[families."robocasa/PreSoakPan"]
+success = """
+The pan and the sponge are both inside the sink: each of the 8 corners of each one's bounding box (the box of its
+model, at its current pose) lies within the sink's interior box, which is widened at both ends of each of its three
+edges by 0.05 m² divided by that edge's length (10 cm for an edge 0.5 m long). The water is on: the faucet handle's
+on/off joint (range 0 to 0.52 rad) is more than 0.40 rad and less than π rad; the handle's temperature joint is not
+read. The gripper's grip site is more than 25 cm from the pan's position (its body origin); its distance from the
+sponge is not checked.
+"""
+
+# multi_stage/brewing/prepare_coffee.py _check_success L75-86: OU.gripper_obj_far(obj),
+# check_receptacle_placement_for_pouring(obj) (accessories.py L96-116), coffee_machine._turned_on (update_state
+# L74-94, latched), gripper_button_far (L118-141, 0.15 m).
+[families."robocasa/PrepareCoffee"]
+success = """
+The mug's position (its body origin) is less than 4 cm from the coffee machine's mug place site (the point under its
+spout) horizontally (x-y) and less than 10 cm from it vertically; the coffee machine is on; the gripper's grip site is
+more than 25 cm from the mug's position and more than 15 cm from the centre of the start button. The machine turns on
+at the end of the first control step in which the gripper touches the start button and then stays on, whether or not
+the mug is in place by then. The mug's orientation and the gripper's opening are not checked.
+"""
+
+# multi_stage/restocking_supplies/restock_pantry.py _check_success L151-161: OU.obj_inside_of(obj1 / obj2, cab) (full
+# bounding-box check), _close_to_cab_cans (L124-149: 2 x |obj - cab_obj1| < |obj - cab_obj2|, 3-D, body origins),
+# OU.gripper_obj_far(obj1) and (obj2). Instance: cab_main_main_group (a HingeCabinet); cab_obj1 = the can already in the cabinet, cab_obj2 = the cup.
+[families."robocasa/RestockPantry"]
+success = """
+Both cans from the counter are inside the cabinet: each of the 8 corners of each can's bounding box (the box of its
+model, at its current pose) lies within the cabinet's interior box, which is widened at both ends of each of its three
+edges by 0.05 m² divided by that edge's length (10 cm for an edge 0.5 m long). Each of the two cans is closer to
+the can already in the cabinet than to the other item there (the cup), by more than a factor of 2: twice its distance
+(3-D, between body origins) to that can is less than its distance to the cup. The gripper's grip site is more than 25
+cm from each of the two cans' positions.
+"""
+
+# single_stage/kitchen_microwave.py MicrowavePressButton._check_success L65-80 (turn_off: not turned_on and
+# gripper_button_far(stop_button)); _turned_on = True at the start (L24-25); Microwave.update_state (microwave.py
+# L96-122), gripper_button_far (L124-147, 0.15 m).
+[families."robocasa/TurnOffMicrowave"]
+success = """
+The microwave is off, and the gripper's grip site is more than 15 cm from the centre of its stop button. It starts on.
+Its on/off state is updated at the end of every control step: if the door is open more than 0.5% of 90° (0.45°) it is
+off; otherwise it turns off if it was on and the gripper touches the stop button, and turns on if it was off and the
+gripper touches the start button.
+"""
+
+# single_stage/kitchen_sink.py ManipulateSinkFaucet._check_success L92-107 (turn_off: not water_on); sink.py
+# get_handle_state L67-108 (water_on: 0.40 < handle_joint mod 2 pi < pi; handle_joint range 0-0.52 rad).
+[families."robocasa/TurnOffSinkFaucet"]
+success = """
+The water is off: the faucet handle's on/off joint (range 0 to 0.52 rad) is at most 0.40 rad (or, taken modulo 2π, at
+least π rad). The handle's temperature joint is not read.
+"""
+
+# single_stage/kitchen_stove.py ManipulateStoveKnob._check_success L105-122 (turn_off: not 0.35 <= |knob| <= 2 pi -
+# 0.35); stove.py get_knobs_state L135-164 (knob joint mod 2 pi). knob = front_right (ep_meta task_refs).
+[families."robocasa/TurnOffStove"]
+success = """
+The front right burner is off: its knob's angle, taken modulo 2π, is less than 0.35 rad or more than 2π − 0.35 rad
+(within 0.35 rad, about 20°, of the off position in either direction). The other knobs are not read.
+"""
+
+# single_stage/kitchen_microwave.py MicrowavePressButton._check_success L65-80 (turn_on: turned_on and
+# gripper_button_far(start_button)); Microwave.update_state (microwave.py L96-122), gripper_button_far (L124-147).
+[families."robocasa/TurnOnMicrowave"]
+success = """
+The microwave is on, and the gripper's grip site is more than 15 cm from the centre of its start button. Its on/off
+state is updated at the end of every control step: if the door is open more than 0.5% of 90° (0.45°) it is off;
+otherwise it turns off if it was on and the gripper touches the stop button, and turns on if it was off and the
+gripper touches the start button.
+"""
+
+# single_stage/kitchen_sink.py ManipulateSinkFaucet._check_success L92-107 (turn_on: water_on); sink.py
+# get_handle_state L67-108.
+[families."robocasa/TurnOnSinkFaucet"]
+success = """
+The water is on: the faucet handle's on/off joint (range 0 to 0.52 rad) is more than 0.40 rad and less than π rad
+(taken modulo 2π). The handle's temperature joint is not read.
+"""
+
+# single_stage/kitchen_stove.py ManipulateStoveKnob._check_success L105-122 (turn_on: 0.35 <= |knob| <= 2 pi - 0.35);
+# stove.py get_knobs_state L135-164. knob = front_left (ep_meta task_refs).
+[families."robocasa/TurnOnStove"]
+success = """
+The front left burner is on: its knob's angle, taken modulo 2π, is at least 0.35 rad and at most 2π − 0.35 rad (at
+least 0.35 rad, about 20°, away from the off position in either direction). The other knobs are not read.
+"""
+
+# single_stage/kitchen_sink.py TurnSinkSpout._check_success L208-218: spout_ori == behavior ("right", ep_meta
+# task_refs); sink.py get_handle_state L92-106: right = pi/6 <= spout_joint mod 2 pi <= pi.
+[families."robocasa/TurnSinkSpout"]
+success = """
+The sink spout points to the right: its joint angle, taken modulo 2π, is between π/6 rad (30°) and π rad (180°),
+both included. The water handle is not read.
+"""

@@ -1,9 +1,9 @@
 # MetaWorld+
 
+## Overview
 All fifty of [Meta-World](https://github.com/Farama-Foundation/Metaworld)'s v3 environments (Sawyer arm, reward v2),
-each on one frozen instance, in both modes: 100 tasks.
+each on one frozen instance, in both modes (privileged and standard): 100 tasks.
 
-## Quick start
 ```bash
 harbor run -d embodied-first-exam@all -p tasks/metaworldplus -a codex -m openai/gpt-6-astra
 ```
@@ -12,138 +12,151 @@ Every image is public: Harbor pulls it.
 | | |
 |---|---|
 | upstream | Meta-World @ `59fc34d7768af9785e4688c3e1db671424f4a6c3` (MIT), MuJoCo 3.3.0, gymnasium 1.1.1 |
-| tasks | `tasks/metaworldplus/metaworldplus-<env>-i00-privileged` and `tasks/metaworldplus/metaworldplus-<env>-i00-standard` (twins share the instance) |
+| tasks | `tasks/metaworldplus/metaworldplus-<env>-i00-privileged` and `tasks/metaworldplus/metaworldplus-<env>-i00-standard` (the two modes of an environment share the instance) |
 | metadata | `simulator = "mujoco"`, `robot = "sawyer"`, `family = "metaworld/<env>"`, `oracle = "full"` |
 | image | `ghcr.io/mll-lab-nu/efe:metaworld-0.1.0` (`images/metaworld/`), CPU only |
 | standard client | the one client base and pins of `embodied_first_exam/standard/` (`client.env`, `client-requirements.txt`); `rcb_client.py` / `rcb1.py` byte copies of the MuJoCo standard tasks' (accepting both protocol spellings) |
 | instances | each instance and oracle is committed in its privileged task (`environment/instance.npz`, `solution/oracle.npz`). The task directories are the deliverable; the tooling that built them is kept outside this repository. |
 
-## Task definition
-- **Instance.** Meta-World's reset randomization (object and goal positions) drawn with the instance seed: 0, except
-  soccer and stick-pull (1), where Meta-World's scripted policy fails on seed 0. Frozen in `instance.npz` (~13 KB): the
-  MuJoCo integration state, the model arrays reset rewrites, the env's JSON-encodable caches and both RNG states,
-  with a SHA-256 checked on every load. Copied into `environment/`, `tests/` and `environment/sim/`.
-- **Actions.** Meta-World's native action in both modes, `[dx, dy, dz, grip]` clipped to [-1, 1], one per control step
+Every task is in the normal form of `scripts/task_conventions.py` `normalize` (README layout, no `results/`). The
+per-task READMEs are rendered from `tasks/metaworldplus/readme.toml` (benchmark, license, and each environment's
+success condition, with the upstream source line it was read from).
+
+## Upstream and license
+[Meta-World](https://github.com/Farama-Foundation/Metaworld) (Farama Foundation) at commit
+`59fc34d7768af9785e4688c3e1db671424f4a6c3`, MIT License (Copyright (c) 2019 Meta-World Team); the Sawyer and object
+models ship in the same repository under the same license, with no non-commercial terms. Upstream asks to cite the
+Meta-World+ paper (McLean et al., 2025, NeurIPS Datasets and Benchmarks Track); the original benchmark is Yu et al.,
+2019. Simulator: MuJoCo 3.3.0 (Apache License 2.0), gymnasium 1.1.1; Python and other pins in
+`images/metaworld/requirements.txt`.
+
+## Changes from upstream
+- **Physics and models: none.** The environments, robot model, assets and success checks are Meta-World's at the
+  pinned commit, installed unpatched (`images/metaworld/Dockerfile`). The image is not merged into the MuJoCo image
+  (MuJoCo 3.3.7): frozen instance hashes depend on the MuJoCo version.
+- **Removed.** Meta-World's scripted expert policies (`metaworld/policies/`) are deleted from the image in the layer
+  that installs them (the image's build asserts they are gone).
+- **Frozen instances.** Meta-World's reset randomization (object and goal positions) drawn with the instance seed: 0,
+  except soccer and stick-pull (1), where Meta-World's scripted policy fails on seed 0. Frozen in `instance.npz`
+  (~13 KB): the MuJoCo integration state, the model arrays reset rewrites, the env's JSON-encodable caches and both RNG
+  states, with a SHA-256 checked on every load. Copied into `environment/`, `tests/` and `environment/sim/`. The env is
+  Meta-World's goal-observable v3 env with reward v2; its `max_path_length` is lifted inside a session (the
+  deliverable's length is checked by the tooling and the verifier instead).
+- **Added.** The tool module `mw_tool` (`embodied_first_exam/benchmarks/metaworldplus/privileged/environment/mw_tool.py`:
+  session, privileged state, replay, rendering), three free cameras around the table (`front`, `left`, `right`) next to
+  Meta-World's `topview`, and the standard-mode service (`sim/server_mw.py`, see Others).
+- **Left out.** Meta-World's per-camera views `corner*`: they render upside down. There is no `joint_position` action
+  (docs/protocol/standard_mode.md): the Sawyer in Meta-World has no arm actuators (`model.nu = 2`, the two fingers), so
+  joint targets would mean changing the upstream robot model.
+
+## Interface
+- **Actions (both modes).** Meta-World's native action, `[dx, dy, dz, grip]` clipped to [-1, 1], one per control step
   (0.0125 s = timestep 0.0025 s × frame_skip 5): the hand's mocap target moves by `[dx, dy, dz]` × 1 cm and the arm
-  follows through a weld; `grip` drives the fingers. There is no `joint_position` action (docs/protocol/standard_mode.md): the
-  Sawyer in Meta-World has no arm actuators (`model.nu = 2`, the two fingers), so joint targets would mean changing
-  the upstream robot model. In standard mode the type is called `ee_delta`.
-- **Success.** Meta-World's own check (`evaluate_state`) on the state after the last action (PROTOCOL §3): no
-  "success at any step". The check differs per environment, and a standard-mode agent cannot read the source, so both
-  instructions state it in words (one sentence per environment, read from
-  the source at the pinned commit): what is compared with the target point, in which axes, with which tolerance, and
-  whatever else the final state must satisfy. Not every check is "the object near the target": stick-push also needs
-  the stick still grasped and lifted, stick-pull the stick still in the thermos's handle (so letting go of the stick
-  after the motion loses the success); hammer is the nail driven more than 9 cm in (the hammer's position is not
-  compared); lever-pull is the lever's angle; door-open, door-unlock and the two window tasks compare x only, the
-  button, handle-press / handle-pull and door-lock tasks one axis, disassemble the nut's height only. In three environments (handle-press, handle-pull-side, stick-pull) the success state does
-  not persist by itself (holding still for 10 control steps after the oracle's last action loses it); their READMEs
-  say so, and the instructions tell the agent that only the final state counts.
-- **Length.** Privileged deliverables have 1 ≤ T ≤ 500 actions (Meta-World's `max_path_length`; the MuJoCo
-  Playground tasks bound theirs the same way). Standard episodes have no step limit (D1): only the wall clock.
-- **World frame.** Metres; x to the robot's right, y forward (away from the robot's base), z up; table top at z = 0.
-  Both instructions state it; the workspace box of the hand's target is given per task.
-- **Standard-mode observations.** Four fixed cameras (`front`, `left`, `right` and Meta-World's `topview`; RGB, depth,
+  follows through a weld; `grip` drives the fingers (+1 closes, -1 opens). The wrist does not rotate. In standard mode
+  the type is called `ee_delta`; a hold chunk (`/submit` with `interpolate: "hold"`, `seconds`, no rows) holds the hand
+  still, since actions are deltas.
+- **Length.** Privileged deliverables have 1 ≤ T ≤ 500 actions (Meta-World's `max_path_length`; the MuJoCo Playground
+  tasks bound theirs the same way). Standard episodes have no step limit: only the wall clock.
+- **World frame.** Metres; x to the robot's right, y forward (away from the robot's base), z up; table top at z = 0;
+  quaternions w x y z. Both instructions state it; the workspace box of the hand's target is given per task.
+- **Privileged mode.** The full simulator (`s.env`, `s.model`, `s.data`, Meta-World's source), privileged state
+  (`s.state()`: tcp, gripper, mocap, joints, object poses, target), unlimited resets, self-replay as the verifier does
+  it, rendering of the four views. The deliverable is `/app/output/trajectory.npz`.
+- **Standard-mode observations.** Served by the `sim` sidecar (wire protocol `eai-standard/3.0`): four fixed cameras (`front`, `left`, `right` and Meta-World's `topview`; RGB, depth,
   intrinsics and camera-to-world pose), proprioception (`tcp`, gripper opening, mocap target, arm and finger joints,
   last command) and `meta["task"]["target_pos"]`, Meta-World's `_target_pos` (as the MuJoCo Playground standard tasks
   give their target): the point most checks measure against; for hammer and lever-pull it only marks where the nail's
   head / the lever's end finishes, and the instruction says so. The calibration is the pose of the viewpoint the image
-  is rendered from (not MuJoCo's left-eye camera, 3.4 cm to the side). No object poses, no reward, no success signal. Meta-World's
-  per-camera views `corner*` are left out: they render upside down.
+  is rendered from (not MuJoCo's left-eye camera, 3.4 cm to the side). Not given: object poses, reward, any success
+  signal; there is no reset.
+- **Time.** `meta["time_s"]` / `meta["time_left_s"]` count from the agent's first request to the service (logged, so a
+  crash resume keeps it), not from the service's start: the service is up before the harness has installed the agent.
 
-## Standard-mode service (`embodied_first_exam/benchmarks/metaworldplus/sim/server_mw.py`)
-Derived from `embodied_first_exam/benchmarks/dextoolbench/sim/server_mj.py` and identical in protocol and lifecycle (four endpoints, RCB1, no
-reset, journal + per-call checkpoints with at most two resumes, startup watchdog, SIGUSR1 collect hook, `/data`
-evidence, verdict before video). Differences:
-1. The action type comes from the tool module (`mw_tool.ACTION_TYPE`: `ee_delta`) instead of a fixed `joint_position`.
-2. A hold chunk (`/submit` with `interpolate: "hold"`, `seconds`, no rows) holds the hand still (`S.hold_targets()`), since actions are deltas.
-3. Cameras and proprioception come from the tool module (`CAMERA_VIEWS`, `PROPRIO_LAYOUT`); `meta.task` is the target.
-4. DexToolBench's goal logic is gone.
-5. As in the MuJoCo service: a simulator error (500) ends the episode with
-   `reason = "error"`, a body over 64 MB gets 413; a request is validated in full before any physics, and a malformed
-   one (`dt` / `seconds` / `video_fps` not a finite number, `cameras` not a list of names, actions that are not a
-   numeric array) is a 400 that changes nothing; `final.json` carries `live_success` and the grader writes numeric
-   fields only; `/status` and `meta` also carry `sim_steps`, submit responses `clipped`.
-
-Protocol: `eai-standard/3.0` (`/spec`, `task.toml`, instructions). Every task is in the normal form of
-`scripts/task_conventions.py` `normalize` (README layout, no `results/`).
-
-## Grading (standard mode): the live episode
-The standard twin is graded by the live episode and nothing is replayed to grade it (privileged mode: the verifier's
-one fresh-process replay).
-- **Verdict.** When the episode ends (the collect hook's SIGUSR1, after the agent's container is stopped), the service
-  reads Meta-World's own success check on the live simulator's state after the last executed control step
-  (`server_mw.py` `finalize()`: `S.check()`, i.e. `evaluate_state` as of the last `env.step`) and writes it to
-  `final.json` as `success` = `live_success`, with `graded_by = "live"`, `replays = 0`, the live end state's hash
-  (`state_sha` = `live_state_sha`) and `"finalized": true`, in one atomic write. The check is a predicate on that one
-  state, with no hold or settle window, so the live rule is the privileged twin's. An episode that ended on a simulator error (`reason = "error"`) is no success: `Session.step` raised before
-  the check was updated, so it would report the step before while the state is the failed step's. The crash-recovery replay (the journal replayed to
-  resume the same episode after a sidecar crash) stays: it grades nothing.
+## Grading
+- **Success.** Meta-World's own check (`evaluate_state`) on the state after the last action (PROTOCOL §3): no
+  "success at any step". The check differs per environment, and a standard-mode agent cannot read the source, so both
+  instructions state it in words (one sentence per environment, read from the source at the pinned commit), and each
+  task's README states it exactly: what is compared with the target point, in which axes, with which tolerance, and
+  whatever else the final state must satisfy. Not every check is "the object near the target": stick-push also needs
+  the stick still grasped and lifted, stick-pull the stick still in the thermos's handle (so pulling the stick out
+  after the motion loses the success); hammer is the nail driven more than 9 cm in (the hammer's position is not
+  compared); lever-pull is the lever's angle; door-open, door-unlock and the two window tasks compare x only, the
+  button, handle-press / handle-pull and door-lock tasks one axis, disassemble the nut's height only. In three
+  environments (handle-press, handle-pull-side, stick-pull) the success state does not persist by itself (holding still
+  for 10 control steps after the oracle's last action loses it); their READMEs say so, and the instructions tell the
+  agent that only the final state counts.
+- **Privileged mode: one replay.** `tests/grade.py` in a separate sandbox without network replays
+  `/app/output/trajectory.npz` once, in a fresh process, from the verifier's own copy of the instance, and grades the
+  final state. A missing or invalid file (not a plain `.npz` of at most 2 MB with arrays only and at most 64 members, no
+  `actions`, a wrong shape, a non-finite value, T outside 1..500) scores 0; a simulator instability in the replay is a
+  `grader_error` and 0. `reward.json` (numeric only): `success`, `deterministic`, `determinism_checked`, `replays`,
+  `replay_success`, `missing_trajectory`, `invalid_trajectory`, `grader_error`, `n_actions`, `sim_steps`,
+  `final_reward`, `video_rendered`, `verifier_wall_s`; with one replay, `deterministic` = 1, `determinism_checked` = 0
+  and `replays` = 1. The verdict is on disk before the video (`replay.mp4`) is rendered; the video never changes it.
+- **Standard mode: the live episode.** Nothing is replayed to grade it. When the episode ends (the collect hook's
+  SIGUSR1, after the agent's container is stopped), the service reads Meta-World's own success check on the live
+  simulator's state after the last executed control step (`server_mw.py` `finalize()`: `S.check()`, i.e.
+  `evaluate_state` as of the last `env.step`) and writes it to `final.json` as `success` = `live_success`, with
+  `graded_by = "live"`, `replays = 0`, the live end state's hash (`state_sha` = `live_state_sha`) and
+  `"finalized": true`, in one atomic write. The check is a predicate on that one state, with no hold or settle window,
+  so the live rule is the privileged mode's. An episode that ended on a simulator error (`reason = "error"`) is no
+  success: `Session.step` raised before the check was updated, so it would report the step before while the state is
+  the failed step's. The crash-recovery replay (the journal replayed to resume the same episode after a sidecar crash)
+  stays: it grades nothing.
+- **Agent-ended episodes.** Every standard task sets `RCB_AGENT_END "1"` in its sim service (PROTOCOL §3).
+  `server_mw.py` already judged the state the episode ends in; with the feature it also takes `POST /finish` (reason
+  `finished`), never shows a success (Meta-World's check is recorded after every call, `hidden_success_first_step`),
+  and judges the ends `finished`, `timeout` and, with a step cap, `step_limit` on that state (end judgement `state`, no
+  settle window). `final.json` adds the shared fields (`success_signal`, `ended_by`, `end_judgement`,
+  `hidden_success_seen`, `hidden_success_first_step`, `trial_hidden_success_seen`, `finish_time_s`). Without
+  `RCB_AGENT_END` the service behaves as described above.
 - **Start state.** Checked when the episode begins (`_check_start()`), before the agent is served: the instance's
   SHA-256 must be `RCB_INSTANCE_SHA` and the restored scene's state hash (SHA-256 of the MuJoCo integration state)
-  must be `RCB_START_SHA`, both set in `environment/docker-compose.yaml` from the frozen
-  instance.
-  A mismatch gives up with `reason = "instance_mismatch: ..."`, `infra_error = 1`.
-- **Video.** One pass after the verdict is on disk (`render_video()`): a fresh session renders the recorded trajectory
-  (`front` camera, at most about 600 frames, OSMesa on the CPU) to `replay.mp4` / `replay.last.png`;
-  `video_source = "render"`, `video_pending` while it runs, then `video` and `video_done`. A failed, slow or crashed
-  render loses only the video (a restarted service finds the verdict and idles). Recording during the episode was not
-  chosen: the cameras are rendered only for what the agent asks for, and every extra OSMesa frame in its call path
-  would slow its calls.
-- **Collect hooks.** `rcb_monitor` seal, then `kill -9 -1` in the agent's container (nothing the agent left running
-  drives the robot until the episode ends), then the sim hook: it waits for the PID file (at most
-  180 s), sends SIGUSR1 every 30 s and waits for `video_done`, inside one 840 s deadline (`timeout_sec = 900`). The
-  verdict itself takes well under a second; the deadline is for a crash resume (the journal replayed) and the video of
-  the longest episode the 1800 s cutoff allows (the replay costs 0.2–0.9 ms per control step, plus about 0.1 s per
-  frame).
-- **Infrastructure** (`tests/grade.py`, `infra_error = 1`): `final.json` missing, unreadable, carrying `infra_error`
-  (a give-up after crashes not all inside the agent's calls: `sim_crashed`, `resume_failed`; `instance_mismatch`) or
-  `finalize_error`, or never finalized. The agent's 0: a live failure, a crash inside its calls
-  (`sim_crashed_on_call`), a simulator error raised by its actions (`reason = "error"`), no actions. Video failures
-  are never infrastructure. `reward.json`: `success`, `live_success`, `graded_by_live = 1`, `replays = 0`,
-  `infra_error`, `sim_error`, `grader_error`, `finalized`, `missing_log`, `no_verdict`, `instance_mismatch` and the
-  episode's counts; no `replay_success` / `deterministic`.
+  must be `RCB_START_SHA`, both set in `environment/docker-compose.yaml` from the frozen instance. A mismatch gives up
+  with `reason = "instance_mismatch: ..."`, `infra_error = 1`. In privileged mode the instance's SHA-256 is checked on
+  every load.
+- **Infrastructure vs agent failures** (standard `tests/grade.py`, `infra_error = 1`): `final.json` missing,
+  unreadable, carrying `infra_error` (a give-up after crashes not all inside the agent's calls: `sim_crashed`,
+  `resume_failed`; `instance_mismatch`) or `finalize_error`, or never finalized. The agent's 0: a live failure, a crash
+  inside its calls (`sim_crashed_on_call`), a simulator error raised by its actions (`reason = "error"`), no actions.
+  Video failures are never infrastructure. `reward.json`: `success`, `live_success`, `graded_by_live = 1`,
+  `replays = 0`, `infra_error`, `sim_error`, `grader_error`, `finalized`, `missing_log`, `no_verdict`,
+  `instance_mismatch` and the episode's counts; no `replay_success` / `deterministic`.
+- **Video (standard).** One pass after the verdict is on disk (`render_video()`): a fresh session renders the recorded
+  trajectory (`front` camera, at most about 600 frames, OSMesa on the CPU; typically under a minute) to `replay.mp4` /
+  `replay.last.png`; `video_source = "render"`, `video_pending` while it runs, then `video` and `video_done`. A failed,
+  slow or crashed render loses only the video (a restarted service finds the verdict and idles). Recording during the
+  episode was not chosen: the cameras are rendered only for what the agent asks for, and every extra OSMesa frame in
+  its call path would slow its calls.
+- **Collect hooks (standard).** `rcb_monitor` seal, then `kill -9 -1` in the agent's container (nothing the agent left
+  running drives the robot until the episode ends), then the sim hook: it waits for the PID file (at most 180 s), sends
+  SIGUSR1 every 30 s and waits for `video_done`, inside one 840 s deadline (`timeout_sec = 900`). The verdict itself
+  takes well under a second; the deadline is for a crash resume (the journal replayed) and the video of the longest
+  episode the 1800 s cutoff allows (the replay costs 0.2–0.9 ms per control step, plus about 0.1 s per frame).
 - **Compute.** The video pass is one scene build plus the episode's physics (0.2–0.9 ms per control step) plus its
   frames: seconds per trial, CPU.
 
-`meta["time_s"]` / `meta["time_left_s"]` count from the agent's first request to the service (logged, so a crash
-resume keeps it), not from the service's start: the service is up before the harness has installed the agent.
+## Tasks
+One privileged and one standard task per Meta-World v3 environment, 50 environments: assembly, basketball,
+bin-picking, box-close, button-press, button-press-topdown, button-press-topdown-wall, button-press-wall,
+coffee-button, coffee-pull, coffee-push, dial-turn, disassemble, door-close, door-lock, door-open, door-unlock,
+drawer-close, drawer-open, faucet-close, faucet-open, hammer, hand-insert, handle-press, handle-press-side,
+handle-pull, handle-pull-side, lever-pull, peg-insert-side, peg-unplug-side, pick-out-of-hole, pick-place,
+pick-place-wall, plate-slide, plate-slide-back, plate-slide-back-side, plate-slide-side, push, push-back, push-wall,
+reach, reach-wall, shelf-place, soccer, stick-pull, stick-push, sweep, sweep-into, window-close, window-open. None is
+left out.
 
-### Agent-ended episodes
+- **Seeds.** Each task's default instance is its `instance_seed` (0; 1 for soccer and stick-pull). Every task also
+  allows two further seeds (`[metadata.seeds]`: 0, 1, 2; 1, 2, 3 for soccer and stick-pull), each with its committed
+  instance and reference solution under the privileged task's `tests/seeds/<seed>/`.
+- **Reference solution.** Meta-World's scripted policy for the environment (`metaworld/policies/`, removed from the
+  image), run on the instance up to its first success (41–136 actions), recorded offline in `solution/oracle.npz`. The
+  standard task submits the same actions through the client, one row per control step.
+- **Privileged mode as the control.** With full privileged state, unlimited resets and self-replay, the privileged
+  tasks are the control for the standard tasks of the same environment: they are reported, but not in the main
+  (standard-mode) table, because the mode is saturated under final-state grading.
 
-Every standard task sets `RCB_AGENT_END "1"` in its sim service (PROTOCOL §3). `server_mw.py` already judged the state
-the episode ends in; with the feature it also takes `POST /finish` (reason `finished`), never shows a success
-(Meta-World's check is recorded after every call, `hidden_success_first_step`), and judges the ends `finished`,
-`timeout` and, with a step cap, `step_limit` on that state (end judgement `state`, no settle window). `final.json` adds
-the shared fields (`success_signal`, `ended_by`, `end_judgement`, `hidden_success_seen`, `hidden_success_first_step`,
-`trial_hidden_success_seen`, `finish_time_s`). Without `RCB_AGENT_END` the service behaves as described above.
-
-## Egress
-Meta-World's scripted policies solve these tasks and are public (PyPI, GitHub), so `task.toml` closes agent egress to
-the one allowlist (`network_mode = "allowlist"`, the hosts of `scripts/set_agent_egress.py`), as DexToolBench does. That
-list has the package registries, so the PyPI distribution `metaworld`, which ships those policies, is reachable: the
-instruction's honour rule asks the agent not to fetch a solution, nothing blocks it, and a trial
-that installs `metaworld` is one to look at (PROTOCOL §5). The
-policies are deleted from the image in the layer that installs them.
-
-## Rebuilding
-```bash
-docker build -t ghcr.io/mll-lab-nu/efe:metaworld-$(cat images/metaworld/VERSION) \
-    -f images/metaworld/Dockerfile images/metaworld          # ~780 MB
-bash ci_checks/run_all.sh tasks/metaworldplus/metaworldplus-*
-```
-
-## Evidence
-Measured when the instances were frozen, for all fifty environments: the instance is not
-solved at the start; `reset()` is bit-exact; the oracle (Meta-World's scripted policy, up to its first success, 41–136
-actions) succeeds; two replays in fresh processes end in the live state's hash and succeed (the reference's
-determinism, which the trajectory deliverable and the privileged verifier rely on).
-
-Harbor runs on the generated tasks: `-a oracle` scores 1 (50/50 privileged, 6/6 standard sampled), `-a nop` 0. Two scripted cheat attempts score 0: in privileged mode, tooling patched to report success, forged
-reward files and a do-nothing trajectory; in standard mode, hidden endpoints (`/reset`, `/state`, `/success`: 404), a
-wrong action type and `dt` (400), and a forged `final.json` in the agent's container (never collected).
-
-## Screening
+### Screening
 
 The benchmark owner's screening (ten runs, one trial per run and task directory). A directory is **easy** when a run solved it: a graded success within the task's time limit.
 Where only one or two of the later runs solved a directory Luna had failed, their logs were checked for shortcuts and
@@ -211,3 +224,45 @@ By directory: 79 easy, 0 hard, 21 unverified, 0 pending.
 | `metaworldplus-sweep-into-i00` | easy: Luna | easy: Luna |
 | `metaworldplus-window-close-i00` | easy: Luna | easy: Luna |
 | `metaworldplus-window-open-i00` | easy: Luna | easy: Luna |
+
+## Others
+
+### Standard-mode service (`embodied_first_exam/benchmarks/metaworldplus/sim/server_mw.py`)
+Derived from `embodied_first_exam/benchmarks/dextoolbench/sim/server_mj.py` and identical in protocol and lifecycle
+(four endpoints, RCB1, no reset, journal + per-call checkpoints with at most two resumes, startup watchdog, SIGUSR1
+collect hook, `/data` evidence, verdict before video). It serves the standard protocol (`/spec`, `task.toml`,
+instructions). Differences:
+1. The action type comes from the tool module (`mw_tool.ACTION_TYPE`: `ee_delta`) instead of a fixed `joint_position`.
+2. A hold chunk (`/submit` with `interpolate: "hold"`, `seconds`, no rows) holds the hand still (`S.hold_targets()`), since actions are deltas.
+3. Cameras and proprioception come from the tool module (`CAMERA_VIEWS`, `PROPRIO_LAYOUT`); `meta.task` is the target.
+4. DexToolBench's goal logic is gone.
+5. As in the MuJoCo service: a simulator error (500) ends the episode with
+   `reason = "error"`, a body over 64 MB gets 413; a request is validated in full before any physics, and a malformed
+   one (`dt` / `seconds` / `video_fps` not a finite number, `cameras` not a list of names, actions that are not a
+   numeric array) is a 400 that changes nothing; `final.json` carries `live_success` and the grader writes numeric
+   fields only; `/status` and `meta` also carry `sim_steps`, submit responses `clipped`.
+
+### Egress
+Meta-World's scripted policies solve these tasks and are public (PyPI, GitHub), so `task.toml` closes agent egress to
+the one allowlist (`network_mode = "allowlist"`, the hosts of `scripts/set_agent_egress.py`), as DexToolBench does. That
+list has the package registries, so the PyPI distribution `metaworld`, which ships those policies, is reachable: the
+instruction's honour rule asks the agent not to fetch a solution, nothing blocks it, and a trial
+that installs `metaworld` is one to look at (PROTOCOL §5). The
+policies are deleted from the image in the layer that installs them.
+
+### Rebuilding
+```bash
+docker build -t ghcr.io/mll-lab-nu/efe:metaworld-$(cat images/metaworld/VERSION) \
+    -f images/metaworld/Dockerfile images/metaworld          # ~780 MB
+bash ci_checks/run_all.sh tasks/metaworldplus/metaworldplus-*
+```
+
+### Evidence
+Measured when the instances were frozen, for all fifty environments: the instance is not
+solved at the start; `reset()` is bit-exact; the oracle (Meta-World's scripted policy, up to its first success, 41–136
+actions) succeeds; two replays in fresh processes end in the live state's hash and succeed (the reference's
+determinism, which the trajectory deliverable and the privileged verifier rely on).
+
+Harbor runs on the generated tasks: `-a oracle` scores 1 (50/50 privileged, 6/6 standard sampled), `-a nop` 0. Two scripted cheat attempts score 0: in privileged mode, tooling patched to report success, forged
+reward files and a do-nothing trajectory; in standard mode, hidden endpoints (`/reset`, `/state`, `/success`: 404), a
+wrong action type and `dt` (400), and a forged `final.json` in the agent's container (never collected).

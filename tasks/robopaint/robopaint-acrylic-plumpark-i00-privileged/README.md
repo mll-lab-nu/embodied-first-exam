@@ -1,54 +1,54 @@
-# robopaint-acrylic-plumpark-i00-privileged
+# RoboPaint · acrylic stroke copy · Plum Park in Kameido (after Hiroshige) (privileged)
 
 | | |
 |---|---|
-| Benchmark | RoboPaint |
+| Task ID | `robopaint-acrylic-plumpark-i00-privileged` |
+| Benchmark | [RoboPaint](https://www.embodied-first-exam.ai/suite/robopaint/) (Wang et al., 2026), upstream `mll-lab-nu/embodied-first-exam@b2280d8` |
+| Robot | Franka Emika Panda arm (ManiSkill PandaStick) holding a brush or pen |
 | Mode | privileged |
-| Twin | `robopaint-acrylic-plumpark-i00-standard` |
-| Simulator / robot | `maniskill` / `franka-panda` |
-| Family / instance | `robopaint_acrylic_plumpark` / seed 0 |
-| Oracle | `partial` — Reference solution in solution/, unchanged from the earlier version of this task (the picture score only; its Harbor oracle and nop runs, and what changed since: tasks/robopaint/README.md, Oracle evidence). Under the process rules the verifier scores it 1 (tests/grade.py with rcb_brush_strict.py, two fresh replays, 2026-10-05): path_mm 14099 of the 42300 mm budget; its strokes are sweeps. Harbor oracle and nop runs on one pair per family: tasks/robopaint/README.md (Validation). |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:robopaint-0.2.0` |
+| Instance | `robopaint_acrylic_plumpark`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | Pipeline check only |
 
 ## Task
-Copy the painting in `/app/target.png` (after Utagawa Hiroshige's Plum Park in Kameido) onto the main sheet in at most 384 strokes.
+Copy the painting in `/app/target.png` (after Utagawa Hiroshige's Plum Park in Kameido) onto the main sheet in at most
+384 strokes.
 
-**Process rules** (tasks/robopaint/README.md) on top of the picture rule, so that the exemplar has to be made with strokes rather
-than coloured in: the brush tip's path while it presses on the main sheet with paint (`path_mm`) is at most 42300 mm (3 ×
-the reference solution's 14099 mm), and at most 10 % of it lies in strokes longer than
-2.5 × the diagonal of their bounding box (zigzags, back-and-forth fills, spirals, loops). They are part of the frozen instance (the rules added to its `target.success`); the graders'
-`rcb_brush_strict.py` applies them (the verifier and the scoring service).
+## Success criteria
+Graded on the main sheet's colours and paint coverage against the picture. Both are converted to CIELAB and blurred
+with a Gaussian of σ = 1 mm. The sheet is first moved by the whole-pixel shift, at most 5 mm along each
+axis, that gives the smallest mean colour difference over the picture's central window (a best shift on the edge of
+that window counts as no shift); every measure is taken at that shift, on the overlap of the two pictures.
+Success needs all of these:
 
-The instance: copy the painting in `/app/target.png` (a small acrylic painting after Utagawa Hiroshige's woodblock print Plum Park in Kameido, 1857; the exemplar = this robot's painting of a hidden program of 295 strokes in 4 layers made by our stroke-based painting optimiser from the public-domain source) onto the 227 mm main sheet in at most 384 strokes, with 10 premixed paints on a plate and a practice sheet beside it; the brush starts dry; start pose = PandaStick's rest keyframe; everything frozen in `environment/instance.json` (the brush preset's text included).
+- mean ΔE (CIELAB 1976) ≤ 2.0 and its 90th percentile ≤ 6.0, over the area where the sheet or
+  the picture has paint (coverage ≥ 0.5), widened by about 2 mm;
+- SSIM of the blurred L* channel (Gaussian windows, σ = 1.5 mm) ≥ 0.92;
+- edge correlation ≥ 0.80: the correlation of the blurred L* gradient magnitudes of the sheet and the
+  picture over that area;
+- paint IoU ≥ 0.95: the sheet's painted area (coverage ≥ 0.5) against the exemplar's paint coverage;
+- at most 384 painted contacts with the main sheet (a contact is one continuous stretch of the tip below
+  the sheet's surface; it is painted when the brush was loaded at the touch-down);
+- path budget: `path_mm` ≤ 42300 mm, the total length of the tip's path in all painted contacts with the
+  main sheet (100 Hz physics samples);
+- sweeps: contacts longer than 2.5 × the diagonal of their bounding box (the diagonal taken as at
+  least 10 mm) hold at most 10 % of `path_mm`.
 
-Copy the painting (笔触临摹): after the best single shift of the sheet, at most 5 mm along each axis, mean CIELAB ΔE <= 2.0, p90 ΔE <= 6.0, SSIM of L* >= 0.92, edge correlation >= 0.8, paint IoU >= 0.95 and at most 384 strokes. `final_reward` = max(0, 1 - mean ΔE / 20) (× 384 / strokes above 384).
+The practice sheet is never scored.
 
-## Difficulty
-The exemplar is layered (a ground of 16 mm strokes, forms at 9 mm, details at 5 mm and 3 mm) and the paint is opaque, so later strokes hide earlier ones and the picture shows the strokes themselves. Measured on the robot with this task's grader (after the best single shift of the sheet, at most 5 mm along each axis): the whole program shifted by 2-4 mm (five offsets) passes (the worst: ΔE 0.73 / p90 1.7 / SSIM 0.980 / edge 0.97); the program at twice the speed passes (ΔE 1.25 / p90 3.0 / SSIM 0.958 / edge 0.91); these fail: the naive palette hatching (ΔE 26.92 / p90 56.6 / SSIM 0.128 / edge 0.01); the naive sheet-covering rows (ΔE 8.49 / p90 20.3 / SSIM 0.563 / edge 0.06); the program with its layers reversed (ΔE 7.02 / p90 20.7 / SSIM 0.681 / edge 0.41); a coarse-brush-only painting (16 + 9 mm brushes, the whole budget) (ΔE 6.71 / p90 15.4 / SSIM 0.605 / edge 0.23); the two most used paints swapped (ΔE 10.52 / p90 40.1 / SSIM 0.671 / edge 0.71); 20 % more press (ΔE 3.20 / p90 9.0 / SSIM 0.801 / edge 0.64). The oracle reproduces the exemplar (ΔE 0.15).
+What is graded is the main sheet after one open-loop replay of the delivered trajectory. The verifier, in a separate
+sandbox without network, replays `/app/output/trajectory.npz` (array `actions`, shape (T, 7): absolute joint targets,
+one row per 20 Hz control step, T at most 72,000) once, in a fresh process, from its own copy of the frozen instance; a
+contact still on the paper after the last row is ended there, and the sheet is then scored as above. Meeting the
+conditions earlier in the replay does not count.
 
-## Reference solution
-The exemplar IS the robot's execution of the hidden stroke program (a dip whenever the paint changes, travel, touch-down, the Catmull-Rom path at its speed with the press interpolated, lift; lag feed-forward), so the oracle reproduces it exactly. The program comes from our stroke-based painting optimiser (layered coarse-to-fine greedy strokes with libmypaint in the loop). The plan is frozen at generation time (`solution/oracle_qpos.npy`); `solution/solve.sh` replays it:
-27010 control steps, 301 strokes, mean ΔE 0.153, p90 ΔE 0.282, SSIM 1.0000, paint IoU 1.0000.
+A missing file scores 0, and so does an invalid one: not a readable `.npz` (pickled or object arrays included), no
+`actions` array, a shape other than (T, 7), a NaN or infinite value, more than 72,000 rows, or a `task` entry that names
+another task. A replay that gives no result within 1650 s, or a verifier that cannot rebuild the frozen instance, is an
+infrastructure failure, not a score.
 
-## Verification
-"The rule" below is the picture rule and the process rules (Task); the replays run
-`/tests/rcb_brush_strict.py` (`rcb_brush.py` with the rules), and `reward.json` adds the rules' quantities (`path_mm`,
-`max_path_mm`; paintings: `scribble_share`), `image_success` (the picture rule alone) and `strict_ok` (the process rules).
-Oracle label `partial`: the reference solution, scored under the process rules (task.toml `oracle_evidence`).
-Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in one fresh process (`/tests/grade.py`); pass iff
-the replayed main sheet meets the rule and the rebuilt frozen instance matches the recorded one.
-PhysX and libmypaint (single-threaded, with the image's
-determinism patch) run on the CPU: a live run, in-process replays and fresh-process replays end in the same state bit for bit
-(`rcb_brush.py selftest`); camera rendering does not change it. `/logs/verifier/replay.mp4` and `canvas.png` never affect the verdict.
-A file that is not a readable trajectory (not an npz, no `actions`, a wrong shape, NaN, more than 72,000 rows) scores 0 as
-`bad_trajectory`; `grader_error` (with `infra_error`) is left for the verifier's own failures (a replay process without a result
-or past its 1650 s, a frozen instance that does not rebuild in the verifier: `instance_ok` 0).
-The verifier has 3600 s: a replay of the 72,000 control steps a trajectory may have takes up to 18 min at the measured
-67-102 steps/s (tasks/robopaint/README.md).
-
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -59,8 +59,8 @@ Caps per container (PROTOCOL §6).
 - GPU: any NVIDIA GPU, held by `main` and `scorer`.
 - Recommended GPU: any 8 GB+ NVIDIA GPU (RTX 4090 / L4).
 
-## Details
-| | |
-|---|---|
-| Simulator, tool and robot | ManiSkill 3.0.1 (SAPIEN 3.0.3, PhysX on the CPU) + libmypaint 1.6.1 (ISC; the mypaint-brushes 2.0.2 preset `tanda/acrylic-03-paint`, CC0) through `rcb_brush.py`'s MyPaintPainter (CPU) / franka-panda holding a paint brush (PandaStick's rigid stick as the handle + a 15 mm collision-free tuft; TCP = the tuft's tip) |
-| Base image and GPU | 0.1.1 + libmypaint + the shim + the presets. Physics and paint run on the CPU; SAPIEN still needs the NVIDIA GPU (Vulkan) to build the scene and render: `environment/docker-compose.yaml` |
+## License
+RoboPaint (its scenes, tooling and graders) is part of this repository, MIT License. It runs on ManiSkill 3.0.1
+([haosulab/ManiSkill](https://github.com/haosulab/ManiSkill) @ `a4a4f92`) and SAPIEN 3.0.3, both Apache License 2.0.
+The paint engine is libmypaint 1.6.1 (ISC License, with a one-line determinism patch) with a preset of mypaint-brushes 2.0.2 (CC0-1.0). The base image also carries Spline-FRIDA (GPL-3.0), which this task does not use.
+The exemplar: a painting made by this task's robot and brush, after Utagawa Hiroshige's Plum Park in Kameido (Wikimedia Commons `File:De pruimenboomgaard te Kameido-Rijksmuseum RP-P-1956-743.jpeg`, public domain); the exemplar picture is dedicated to the public domain (CC0-1.0). No non-commercial terms apply.

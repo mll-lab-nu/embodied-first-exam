@@ -1,40 +1,47 @@
-# embodied-olympics-match-badminton-duelrl-i01-realtime
+# Embodied Olympics · robot badminton, duel against the built-in RL player (realtime)
 
 | | |
 |---|---|
-| Benchmark | Embodied Olympics - Match |
-| Mode | realtime (`eai-standard/3.0`) |
-| Twin | `embodied-olympics-match-badminton-duelrl-i01-privileged` |
-| Simulator / robot | `mujoco` / `franka-panda` |
-| Family / instance | `badminton_duel` / seed 1001 (allowed seeds: [1001, 1, 2]; PROTOCOL §2) |
-| Oracle | `partial` — RLBM 2026-10-16, policy bm_cem_v1 with the true shuttle state (v1.1; the shipped policy has no swing option): on this instance (seed 1001, vanilla Harbor 0.23.0) our camera-only reference lost 1:11 (valid, deterministic) and an Azure Astra precheck was 5:5 when Astra forfeited by ready_timeout; live service batch (built-in RL on B, camera reference over HTTP on A, seeds 1-10 x both first servers): reference 0/20 (16 valid, 40:176); in-process (truth, S = 20): mirror RL vs RL seat A 21/40, first server 15/40; as seat A of match-wallclock it beat level 3 in 19 of 20 seeds (217:124) and levels 4 and 5 in 20 of 20; against it on seat B the truth reference won 1/20, short-random, centre, random and nop 0/20; replays identical; limits as the reference |
-| Agent time budget | 14400 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Real time | slowdown S = 20 (the world runs at 1/S of real speed: one control step every S x control_dt s of wall time; `RO_SLOWDOWN`'s default) (PROTOCOL §3) |
-| Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-match-0.1.0` |
+| Task ID | `embodied-olympics-match-badminton-duelrl-i01-realtime` |
+| Benchmark | [Embodied Olympics - Match](https://github.com/CHIGUI0/roboolympics) (Embodied Olympics authors, 2026), upstream `CHIGUI0/roboolympics@0d7f680` |
+| Robot | Franka Emika Panda arm on a moving base (an x-y rail in table tennis, a gantry in badminton), holding a paddle or racket |
+| Mode | realtime, slowdown 20 |
+| Opponent | Built-in player (seat B) with the same robot, limits, rules and stroke controller as yours: it reads the true shuttle state and your base position instead of the cameras, and a policy trained by the cross-entropy method picks its contact, its shot and where its base waits |
+| Instance | `badminton_duel`, seed 1001 |
+| Time limit | 4 h |
+| Reference solution | Pipeline check only |
 
 ## Task
 Win a game of singles badminton to 11 points against the other robot.
 
-Robot badminton against a built-in opponent player (seat B, builtin_players:RLOpponent), program play: robot singles badminton on a small court (the BWF court's lengths x 0.4, the net at its BWF height 1.524 m) in real time (slowed down): a Franka Panda arm held to the real Panda's limits, with a racket, on an x-y gantry of ball-screw axes (2 m/s, 15 m/s^2), a point-mass shuttle with the real shuttle's high quadratic drag (terminal speed 6.8 m/s) and no bounce, a racket contact law of gain 4 (shuttles leave the racket at up to about 10 m/s); rally scoring, one game to 11 points; the players' robots serve (the rally winner serves next): the server tosses the shuttle (from rest or rising up to 0.5 m) at a point it chooses and hits it underhand, below 1.15 m, into the diagonal service court; format match-wallclock: you against a scripted computer opponent (levels 1-3, `game spec` match.opponent_level), format duel-wallclock: two players.
+## Success criteria
+One game of singles badminton with rally scoring between you (seat `A`) and the built-in player (seat `B`); `A`
+serves the first point. The first to 11 points wins; from 10-10 a player must lead by 2, and at 14-14 the next point
+wins (at most 15). The match also ends after 400 hits (both sides) or 40 points played (lets included): then the
+player with more points wins; at equal points, the winner of the last point that was not a let; if no point was won,
+`B` (the player who received first). There are no draws.
 
-## Difficulty
-Frozen development instance: seed 1001, a built-in opponent, slowdown S = 20. Not one of
-the sport's official (hidden) seeds, so results here are previews, not official Embodied Olympics results.
+The rules are the same for both players. A player loses the point when its shot goes into the net, comes down on its
+own side or lands outside the other singles court (lines are in); when a shuttle that is its to hit lands in its court,
+or is still unplayed more than 6 s after it was last played; and on its own service fault: no toss within 3 s (the
+window opens 1 s after play resumes), a miss, a hit above 1.15 m or not upwards, a serve into the net or outside the
+receiver's diagonal service court. A base more than 5 cm from its serve spot before the serve is delivered loses that
+player the point; if both bases move, the point is a let and is replayed.
 
-## Reference solution
-`solution/`: our camera-only reference player through the same HTTP interface. RLBM 2026-10-16, policy bm_cem_v1 with the true shuttle state (v1.1; the shipped policy has no swing option): on this instance (seed 1001, vanilla Harbor 0.23.0) our camera-only reference lost 1:11 (valid, deterministic) and an Azure Astra precheck was 5:5 when Astra forfeited by ready_timeout; live service batch (built-in RL on B, camera reference over HTTP on A, seeds 1-10 x both first servers): reference 0/20 (16 valid, 40:176); in-process (truth, S = 20): mirror RL vs RL seat A 21/40, first server 15/40; as seat A of match-wallclock it beat level 3 in 19 of 20 seeds (217:124) and levels 4 and 5 in 20 of 20; against it on seat B the truth reference won 1/20, short-random, centre, random and nop 0/20; replays identical; limits as the reference.
+Success: the match ends by these rules and seat `A` won it. Seat `A` loses the match at once, a valid 0, if it does not
+send `game start` within 1800 s of real time after the match service starts or before the session ends (`no_show`); if
+its review is not sent with `game ready` within 300 s of real time after a point (`ready_timeout`, even when ahead); or
+if the session ends before the match is over (`abandoned`). The built-in player never ends a session.
 
-## Verification
-Separate sandbox, no network. The match is graded live (owner, 2026-10-17): the sim service records the
-match's scores, winner and reason as it plays it and nothing replays it to grade it (`final.json` `graded_by` live,
-`replays` 0; the replay video is drawn after the verdict). The verifier (`tests/grade.py`, our core's grader) applies
-the validity rule
-(technical failures void the trial, a player's own problems are a valid loss), and writes reward.json; success = a
-valid, finished match that the agent won. `tests/fexam_reward.py` adds the hub's fields (`infra_error`, `realtime`,
-`slowdown`, `opponent_level`).
+A simulator error in a control step, after the agent's first applied action, is a valid 0 too.
 
-## Resources
-Caps per container (PROTOCOL §6).
+Graded: the live match, as the trusted match service recorded it while it was played; nothing is replayed. The world
+runs on a clock that does not stop: one second of game time takes 20 s of real time. There is one match and no reset,
+and the agent cannot end it with `/finish`: the match's rules end it. A technical failure of the match service (a
+crash, an error in its bookkeeping, rendering or metering) voids the trial as an infrastructure failure, not a score.
+
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -44,9 +51,12 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
+## Others
+Exported by the Embodied Olympics task exporter from its task `roboolympics/badminton-duel-wallclock-program-standard` (upstream commit
+`b12667a02300`). The files changed here after the export are listed for this task in
+`ci_checks/benchmarks/embodied-olympics-match/exported.toml`.
 
-### Notes
-Source: Embodied Olympics task `badminton-duel-wallclock-program-standard`, revision `badminton-wallclock-12+duel-14+core-0.2`. The rules, the referee, the scripted
-opponent, the observation, the review between points and the grader are ours, unchanged; only the seat is
-unmetered (Harbor records the model's usage) and the instance is frozen.
+## License
+Embodied Olympics ([CHIGUI0/roboolympics](https://github.com/CHIGUI0/roboolympics), a private repository) is released
+under the MIT License; its exported match services, referees, scripted opponents and graders inside this task are MIT
+too. The simulator is MuJoCo (Apache License 2.0). No non-commercial terms apply.

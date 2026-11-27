@@ -127,6 +127,9 @@ add python3 ci_checks/check-live-verdict.py"$targs"
 add python3 ci_checks/check-agent-end.py --tier advisory"$targs"
 # The task protocol (docs/protocol/README.md): the protocol version per mode, oracle fields, the image registry, no results/, no personal paths, internal names or host /data/ paths
 add python3 ci_checks/check-protocol.py"$pargs"
+# docs/protocol/README.md §1: the per-task README format (each README names no other task and no retired wording;
+# readme.toml and the benchmark README in shape)
+add python3 ci_checks/check-readmes.py"$targs"
 # PROTOCOL §6: the resource monitor sidecar's copies and the verifier step (its isolation: run_invariants.sh)
 add python3 ci_checks/check-monitor.py --tier advisory"$pargs"
 # issue #258: every script or workflow that builds images builds from a stamped copy (scripts/stamp_mtimes.py)

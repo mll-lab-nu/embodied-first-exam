@@ -1,49 +1,42 @@
-# robowits-stack-cubes-i00-standard
+# RoboWits · stack_cubes (standard)
 
 | | |
 |---|---|
-| Benchmark | RoboWits |
-| Mode | standard (`eai-standard/3.0`) |
-| Twin | `robowits-stack-cubes-i00-privileged` |
-| Simulator / robot | `robowits` / `marvin-bimanual` |
-| Family / instance | `stack_cubes` / seed 0 (allowed seeds: [0, 1, 2]; PROTOCOL §2) |
-| Oracle | `partial` — Reference solution solution/oracle_replay.py, which streams the privileged oracle's recorded joint rows (solution/oracle_qpos.npy) through the client. It scored 1 under Harbor -a oracle on the dev branch 9eb18edf version of this task: job v22-laptop-oracle-stack-cubes-0413, trial robowits-stack-cubes-i00-limited__Yw2oaio, 2026-09-29 (laptop, Intel; success=1, live 1, replay 1, deterministic 1). Same since then: the frozen instance (state hash 41c4d7e7d7193b0d), the joint rows (equal to that run's recorded trajectory) and the tooling rcb_robowits.py. Changed since then, so the label is partial: the grader (this PR: the crash-recovery fields and infra_error), the sim adapter server.py and the shared layer rcb_limited.py / rcb_client.py (this PR: crash recovery), the collect hook, the client image and pins, and the oracle player (this PR: it recovers from a crash). Not re-run on this version (static validation only, 2026-10-01). -i01 (2026-10-14, an AMD workstation): Harbor -a oracle scored 1 on a pre-final tree of this change (under a temporary -i01 task name) (trial robowits-stack-cubes-i01-standard__MRgjkTT: live 1, replay 1, deterministic 1), nop 0; since then the service's end-of-phase reason and the instruction's busy-service note changed. |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:robowits-0.1.1` |
+| Task ID | `robowits-stack-cubes-i00-standard` |
+| Benchmark | [RoboWits](https://github.com/UMass-Embodied-AGI/RoboWits) (Lin et al., 2026), upstream `UMass-Embodied-AGI/RoboWits@9cc30ae` |
+| Robot | Bimanual Marvin: two 7-DoF arms with Pika parallel grippers |
+| Mode | standard |
+| Instance | `stack_cubes`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | Pipeline check only |
 
 ## Task
-Set the two grey cubes side by side, touching, and put the red cube on top of them, right above the green dot. The same frozen instance as
-`robowits-stack-cubes-i00-privileged`, as a robot service (`eai-standard/3.0`): the simulator runs in the `sim`
-sidecar, which the agent cannot open; the agent gets one episode, no reset and no privileged state, only the client
-(calibrated RGB-D cameras, proprioception, `joint_position` / `ee_pose` chunks, stateless kinematics). The sidecar
-judges the live episode, records it as the trajectory and renders the video from it; the success criterion as graded
-is in `instruction.md`.
+Set the two grey cubes side by side, touching, and put the red cube on top of them, right above the green dot.
 
-## Difficulty
-That of `robowits-stack-cubes-i00-privileged` (its Difficulty), without resets, privileged state or the tooling's
-primitives: the agent perceives the scene through calibrated RGB-D cameras and its own proprioception, and every
-action it sends is part of the one graded episode.
+## Success criteria
+The goal: the bounding-box bottoms of both grey base cubes are within 1.5 cm of the table top, and their bounding
+boxes are within 1 cm of each other along every axis. The red cube's bounding-box bottom is no more than 1 cm below
+the top of the first base cube's bounding box. The red cube's centre is within 2.5 cm, seen from above, of the green
+dot's centre. Neither gripper's end-effector point is inside the red cube's bounding box grown by 3 cm on every side.
+No part of the robot touches any of the three cubes. Graded objects: the three cubes.
 
-## Reference solution
-`solution/oracle_replay.py` replays the privileged oracle's recorded joint targets (`solution/oracle_qpos.npy`, one
-row per control step, `hold`) through the client, with no privileged information at run time; `solution/solve.sh` runs
-it. The rows are the trajectory of the privileged reference solution (`robowits-stack-cubes-i00-privileged`,
-`solution/`).
+Graded: the live episode the simulator service ran; nothing is replayed. There is one episode and no reset. The
+episode ends when the agent sends `/finish` or when its session ends (at the latest after 1 h). Success is never
+shown and never ends the episode. The verdict is a settle window on the live simulator, from the state the episode
+ends in. The robot holds the last command for 30 control steps (1 s), and nothing is checked. For 60 more control
+steps (2 s) the goal must then hold at every 6th step and at the last one. Through those 60 steps the set of graded
+objects must not change, and no graded object may move more than 2 mm from where it was when they began. The window's
+steps are part of the recorded episode.
 
-## Verification
-`success` = the live episode's: the settle window that ended it passed on the sidecar's simulator (inside the agent's
-last call, or after its last command when its phase is over, once the collect hook has stopped the agent's container),
-and no infrastructure failure (`tests/grade.py` reads the sidecar's `final.json`: `graded_by = "live"`, `replays =
-0`); nothing is replayed to grade it. The frozen instance is checked when the scene is built, before the agent is
-served (`instance_mismatch`, an infrastructure failure). After the verdict the sidecar renders the recorded trajectory
-once into `/logs/verifier/replay.mp4`; a failed video never changes the verdict. What is checked, in words:
-`instruction.md`, "Success criterion (as graded)".
+Where the goal names the table area, it is a fixed rectangle, 0.79 m deep (away from the robot) and 1.38 m wide,
+that the predicates use as the table's extent. Heights are measured from the table top.
 
-Oracle partial: the reference solution scored 1 on an earlier version of this task and was not re-run on this one
-(`oracle_evidence` in `task.toml`); human review in PR #3 (PROTOCOL §4), with its privileged twin.
+The episode also ends on a simulator error, which scores 0. It also ends after 200,000 control steps: the goal is then
+judged as it stands, with no window. A window cut short by that cap does not pass. The scene is checked against the
+frozen instance before the agent is served; a mismatch is an infrastructure failure, not a score.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -54,10 +47,14 @@ Caps per container (PROTOCOL §6).
 - GPU: any NVIDIA GPU, held by `sim`.
 - Recommended GPU: any 8 GB+ NVIDIA GPU (RTX 4090 / L4).
 
-## Details
-| | |
-|---|---|
-| Protocol | `eai-standard/3.0` (docs/protocol/standard_mode.md): `submit` chunks of `joint_position` (16, streamed at the 30 Hz control rate with the agent's `dt`) or `ee_pose` (16, IK per row); `observe` the current frames or those recorded over the last seconds (`last_s`); hold chunks (`hold(s)`); stateless `kinematics`; binary RCB1 responses |
-| Crash recovery | `restart: on-failure:6`; the service replays its journal and resumes the same episode (resume class `exact`, docs/protocol/standard_mode.md §13) |
-| Agent and verifier image | `docker.io/library/python:3.12.14-slim@sha256:f77ac9e44ae96ef2c90b8053ea08c31f8be030f824196b0ae4db6d462c84e51f` with the shared pins (`environment/client-requirements.txt`) |
-| Instance | the privileged twin's frozen instance (`environment/sim/instance.json`): entry 0 of RoboWits' `eval_dataset_50/14.json` |
+## Others
+The frozen scene is entry 0 of RoboWits' `eval_dataset_50/14.json` (RoboWits task
+`robowits/14-stack-cubes-v0`).
+
+## License
+RoboWits ([UMass-Embodied-AGI/RoboWits](https://github.com/UMass-Embodied-AGI/RoboWits) @ `9cc30ae`) is MIT-licensed,
+as declared in its `pyproject.toml`. Genesis 0.4.7 is under the Apache License 2.0, and RoboWits' asset bundle
+(`XHRlyb2001/RoboWits_assets`) also under Apache-2.0. Most families also load BlenderKit models. BlenderKit licenses
+each model to the account that downloads it, and these models may not be redistributed, so they are not in the image
+or the repository. Users fetch them with their own BlenderKit key, or use the encrypted research bundle, whose terms
+allow **non-commercial academic research only** (`images/robowits/NOTICE`).

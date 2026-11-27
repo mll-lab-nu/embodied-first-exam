@@ -1,53 +1,57 @@
-# dexhand-tray-glass-carry-i00-standard
+# DexHand · Carry a tray with two filled glasses around a bottle to the other counter (standard)
 
 | | |
 |---|---|
-| Benchmark | DexHand |
-| Mode | standard (`eai-standard/3.0`) |
-| Twin | `dexhand-tray-glass-carry-i00-privileged` |
-| Simulator / robot | `mujoco` / `sharpa-wave-floating-bimanual` |
-| Family / instance | `tray_glass_carry` / seed 0 |
-| Oracle | `full` — solution/trajectory.npz replays the validated Sharpa Wave authoring trajectory (1,072 controls; the episode ends with success after 952, 120 hold rows of slack) in both modes; it passes two fresh-process replays with identical state hashes and still succeeds with rows rounded to float32. solution/wuji/trajectory.npz is a validated Wuji Hand 2.2 trajectory of this instance (1,148 controls, motor targets only, physical contact only); the oracle uses it when the run selects wuji (privileged: DEXHAND_HAND=wuji; standard: the sim service's hand), and it replays to success in two fresh processes with identical state hashes. |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:dexhand-0.2.0@sha256:0d42994b83d95ab5301c592b35586550c9ee426490115e4b43f3b8cf8cc43350` |
+| Task ID | `dexhand-tray-glass-carry-i00-standard` |
+| Benchmark | [DexHand](https://www.embodied-first-exam.ai/suite/dexhand/) (Wang et al., 2026), upstream `mll-lab-nu/embodied-first-exam@b2280d8` |
+| Robot | Two dexterous hands, each on its own six-DoF actuated wrist stage, no arms: Sharpa Wave (22 finger actuators each) by default, or Wuji Hand 2.2 (20 each) |
+| Mode | standard |
+| Instance | `tray_glass_carry`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | Included |
 
 ## Task
-Carry the serving tray with the two filled glasses from the source counter to the receiving counter. Two dexterous hands, each on its own six-axis wrist stage, start above the two ends of the tray's long axis; the tray rim has open handle slots under the rim bar at both of those ends. Carry the tray around the steel bottle on the source counter at (0.52, 0.22) m without touching the bottle, then across the gap between the counters. Set it down on the receiving counter, turned the same way as at the start, and let go. The liquid is not simulated: a glass counts as spilled when its axis tilts more than 15 degrees from vertical. Glass positions are measured in the tray frame, whose origin is the bottom centre of the tray floor (the floor's top surface is at height +2 mm in that frame). A glass is seated when its base centre lies inside the tray footprint ellipse (semi-axes 0.165 m x 0.23 m) and at a height between -3 mm and +8 mm in the tray frame. Success requires, in this order: (1) lift-off: the tray touches neither counter, its base is at least 30 mm above the counter top (z >= 0.91 m) and both glasses are seated; (2) placement: the tray rests on the receiving counter only, its centre within 20 mm in x and 30 mm in y of (0.78, 0.00) m, tray tilt at most 5 degrees, tray yaw within 10 degrees of its start orientation (long axis along y), both glasses seated; (3) release: the placement conditions plus no hand touching the tray or a glass, both glasses within 6 degrees of vertical, tray and glasses at rest (every linear speed at most 0.02 m/s and every angular speed at most 0.2 rad/s), held for 50 consecutive controls (1 s). The episode ends with success at that moment; a partial transfer never counts. The episode ends immediately with failure, checked after every 2 ms physics step, when a glass tilts more than 15 degrees (spilled); a glass base centre leaves the footprint ellipse, or its height in the tray frame exceeds +22 mm (20 mm above the floor's top surface) or falls below -10 mm; the bottle touches the tray, a glass or a hand; the tray touches the source counter again after lift-off; the tray touches the receiving counter while its centre is more than 40 mm in x or 50 mm in y from (0.78, 0.00) m (no dragging); the tray or a glass moves downward faster than 0.6 m/s (dropped; a free fall of about 18 mm), or faster than 0.2 m/s while unsupported (the tray touching no hand and no counter; a glass touching neither the tray, the other glass, a hand nor a counter); the tray tilts more than 35 degrees; the tray or a glass goes below z = 0.86 m, touches the floor or leaves the workspace box x in [0, 1.15] m, y in [-0.6, 0.6] m, z in [0.86, 1.12] m (so the tray cannot be lifted over the bottle); or the physics becomes unstable. Later actions cannot undo a failure. Only actuator targets of the two wrist stages and hands are commanded: no object teleports, grasp welds, scripted object motion or applied forces. The episode allows at most 3000 controls at 50 Hz; reaching that limit without success is a failure.
+Carry the serving tray with the two filled glasses from the source counter to the receiving counter.
 
-## Difficulty
-Two hands on two independent wrist stages must coordinate a closed-chain carry of a light, wide tray holding two
-free, tall glasses: the tray has no grip other than the thin rim and the open handle slots at its ends, the glasses
-stand loose on a 0.5-friction tray floor and fail at 15 degrees of tilt, the straight path is blocked by a fixed
-bottle, the counters are separated by a gap, the set-down must land within 20 x 30 mm of the target without dragging,
-and the hands must let go without disturbing the tray. Any spill, escaped or dropped glass, obstacle contact, dragged
-tray or object below the counter tops ends the episode as a failure at once.
+## Success criteria
+The tray's position is the bottom centre of its floor. The receiving counter's target point is (0.78, 0.00) m, and its
+tolerance is ±20 mm in x and ±30 mm in y. A glass is seated when its base is between 3 mm below and 8 mm above the tray
+floor, in the tray's frame. Three stages, in this order, checked at the end of each control step (50 Hz):
+1. Lifted: the tray touches neither counter, its base is at least 30 mm above the counter tops (z ≥ 0.91 m), and both
+   glasses are seated.
+2. Placed: the tray touches the receiving counter and not the source counter, its centre is within the target
+   tolerance, it is tilted at most 5° and turned at most 10° about the vertical from its start, and both glasses are
+   seated.
+3. Released, held for 50 consecutive control steps (1 s): the placed conditions; no part of either hand touches the
+   tray or a glass; both glasses are within 6° of vertical; and the tray and both glasses move at most 0.02 m/s and
+   turn at most 0.2 rad/s.
 
-## Reference solution
-`solution/` holds a validated Sharpa Wave trajectory of 1,072 controls (success after 952 controls; 120 hold rows of slack follow); in privileged mode `solve.sh` re-saves it to `/app/output/trajectory.npz`,
-in standard mode it submits the same rows as float64 through the public client. Both hands hang fingers-down outside
-the two handle slots, curl the fingertips inward and push them through the slots under the handle bar (a hook grip),
-lift the tray 100 mm, carry it around the bottle (detour to y = -0.17 m) and across the gap, lower it onto the
-receiving counter, pull the fingertips back out and rise. The authoring controller reads simulator state to place the fingertips and
-level the hooks, but it only ever writes motor targets; it is never copied into the agent's environment or image.
+The episode fails at once, checked after every 2 ms physics substep, when: a glass tilts more than 15° from vertical
+(spilled); a glass base leaves its footprint ellipse on the tray (semi-axes 0.165 m and 0.23 m), rises more than 22 mm
+above the tray floor or sinks more than 10 mm below it; the tray tilts more than 35°; the tray or a glass falls faster
+than 0.6 m/s, or falls faster than 0.2 m/s while unsupported (the tray touching no hand and no counter, a glass
+touching no hand, counter, tray or other glass); the steel bottle touches the tray, a glass or a hand; the tray touches
+the source counter after stage 1; the tray touches the receiving counter while its centre is more than 40 mm (x) or
+50 mm (y) from the target point; the tray or a glass touches the floor, has its origin more than 20 mm below the counter
+tops (z = 0.88 m), or leaves the work box x 0 to 1.15 m, y -0.6 to 0.6 m, z 0.86 to 1.12 m; or the physics becomes
+unstable. The step budget is 3,000 control steps (60 s).
 
-Wuji Hand 2.2: `solution/wuji/trajectory.npz` is a validated Wuji Hand 2.2 trajectory of this instance (1,148 rows of motor targets, physical contact only). When the sim service runs the Wuji Hand 2.2 (`DEXHAND_HAND=wuji`, `spec()["hand"]`), `solve.sh` submits these rows as float64 instead of the Sharpa Wave rows.
+Graded is the live episode on the simulator service; nothing is replayed. The service runs the hand the runner
+selects (Sharpa Wave unless the Wuji Hand 2.2 is selected; `spec()["hand"]` names it). The agent may reset up to
+20 times, each reset starting a new episode from the same frozen start; only the last episode is graded. An
+episode ends at the agent's `POST /finish`, when the agent's session ends (at the latest after 1 h), at the first
+failure above (a score of 0), at the step budget where the task has one, or on a simulator error (a score of 0). A
+success neither ends the episode nor is shown to the agent.
 
-## Verification
-Standard mode. The trusted sim service judges the episode it ran (the last one after resets) with the task's predicate and
-the selected hand, after the agent's container is stopped; its record (`final.json`, `graded_by = "live"`) is the
-verdict, and nothing is replayed to grade it. The isolated verifier reads only the service's artifacts. The
-service then renders `replay.mp4` from the recorded trajectory in one video-only pass, which never changes the
-verdict. A missing or unfinished record, a give-up after crashes between the agent's calls and a frozen instance
-that does not build at the episode's start are infrastructure errors.
-Failures are fail-fast and permanent (checked after every 2 ms physics step): spilled glass (tilt above 15 degrees),
-glass off the tray footprint or lifted off the tray, any contact of the bottle with the tray, a glass or a hand, the
-tray set back on the source counter or dragged on the receiving counter, a tray or glass falling faster than 0.6 m/s
-(a free fall of about 18 mm) or faster than 0.2 m/s while unsupported (no drop-and-catch), a tray tilted beyond 35
-degrees, any object below the counter tops, on the floor or outside the workspace, or unstable physics. At the 3,000-control budget the episode ends and is judged on the state it leaves. The frozen thresholds come from the task, never from an agent archive. A no-op fails. Human
-review and full agent-trial calibration remain pending; report this task as provisional.
+Each stage before the last counts at the moment it is completed. The last stage, with its full hold, must be met on
+the state the episode ends in: every check goes on after it is first met, and a failure after it still scores 0. If
+it is not met at `/finish` or at the session's end, the robot holds its current targets for up to 3 s of simulated
+time, and the episode passes if the last stage completes within that time without a failure. At the step budget it
+must be met at that step. Targets outside an actuator's range are clipped. Each episode's start is checked against
+the frozen instance; a mismatch is an infrastructure error, not a score.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -57,19 +61,14 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-
-### Notes
-Source: the DexHand family of this task. Scene: scene-expansion
-task T48 ("Carry a tray with filled drink cups"); the tray (original ROMANTISK-style perforated oval serving tray, 365
-convex mesh pieces) and the two glasses are frozen verbatim from the T48 source model (kept outside the repository) in
-`assets/t48_tray_glasses.xml` (sha256 in `assets/manifest.json`); counters, bottle obstacle, glass shells and the
-150 mL water volumes are rebuilt from the T48 scene builder's dimensions. The T48 source was a kinematic demonstration
-with prescribed object motion; here every object moves only through contact. Liquid is not simulated: each glass is a
-rigid 0.275 kg body (glass plus 150 mL of water) and spilling is defined as a glass tilt above 15 degrees. The left
-(mirrored) and right Sharpa Wave hands are those of the accepted `sweep_dustpan` rig (MuJoCo Menagerie commit
-`0059d4335f8156206f63a35662313385f7ad6d74`, Apache-2.0), each on its own six-axis wrist stage (slides kp 4000 N/m,
-200 N; hinges kp 200 N m/rad, 30 N m). The Wuji Hand 2.2 models (`hand2/hand2_2`, wuji-technology/wuji-description
-commit `829c9aa27cb12c3a49d5b8d63c9869dd8f656702`, MIT) replace them on the same stages with their vendor joints,
-actuators and contact geometry unchanged. This is a bimanual transport feasibility task on floating wrist stages, not
-an arm-reachability, liquid-sloshing or zero-shot claim.
+## License
+DexHand's scenes, checkers and graders are original to this repository (MIT License). Robot models: the Sharpa Wave
+hand from [MuJoCo Menagerie](https://github.com/google-deepmind/mujoco_menagerie/tree/0059d4335f8156206f63a35662313385f7ad6d74/sharpa_wave)
+@ `0059d43` (Apache License 2.0); the Wuji Hand 2.2 from
+[wuji-technology/wuji-description](https://github.com/wuji-technology/wuji-description/tree/829c9aa27cb12c3a49d5b8d63c9869dd8f656702)
+@ `829c9aa` (MIT License); the Tianji Marvin arm meshes from DexForce `embodichain_data` (Apache License 2.0) with
+inertias from Genesis' `dual_arms_primitives.urdf` (MIT License), see `images/dexhand/tianji/NOTICE.md`. Object
+assets are original geometry of this repository, CC0 (the Poly Haven rubber boot, the Innerscene stockpot, Monet's
+public-domain Water Lilies, original page and letter artwork) or CC BY 4.0 (the Joy-Con, pen, rotary-knob and walnut
+meshes; credits in each task's `object_assets/*/CREDITS.txt`); printed text uses the DejaVu fonts (Bitstream Vera
+license). No non-commercial terms apply.

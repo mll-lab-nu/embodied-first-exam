@@ -1,40 +1,60 @@
-# dexhand-essential-pen-regrasp-i00-privileged
+# DexHand · Paper Mate palm-to-tripod pen regrasp (privileged)
 
 | | |
 |---|---|
-| Benchmark | DexHand |
+| Task ID | `dexhand-essential-pen-regrasp-i00-privileged` |
+| Benchmark | [DexHand](https://www.embodied-first-exam.ai/suite/dexhand/) (Wang et al., 2026), upstream `mll-lab-nu/embodied-first-exam@b2280d8` |
+| Robot | A dexterous right hand on a six-DoF actuated wrist stage, no arm: Sharpa Wave (22 finger actuators) by default, or Wuji Hand 2.2 (20) |
 | Mode | privileged |
-| Twin | `dexhand-essential-pen-regrasp-i00-standard` |
-| Simulator / robot | `mujoco` / `sharpa-wave-floating` |
-| Family / instance | `essential_pen_regrasp` / seed 0 |
-| Oracle | `full` — solution/trajectory.npz is the validated Sharpa Wave actuator trajectory of this frozen instance (385 controls at 50 Hz, physical contact only). The privileged oracle hands it in; the standard oracle submits the same rows as float64 through the client's request path (the service executes the validated targets bit for bit). Both replay to success in two fresh processes with identical final state hashes; float32-rounded copies of all six oracles also score 1. Human solvability review is pending; release status stays provisional. solution/wuji/trajectory.npz is a validated Wuji Hand 2.2 trajectory of this instance (1,571 controls, motor targets only, physical contact only); the oracle uses it when the run selects wuji (privileged: DEXHAND_HAND=wuji; standard: the sim service's hand), and it replays to success in two fresh processes with identical state hashes. |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:dexhand-0.2.0@sha256:0d42994b83d95ab5301c592b35586550c9ee426490115e4b43f3b8cf8cc43350` |
+| Instance | `essential_pen_regrasp`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | Included |
 
 ## Task
-Keep the wrist fixed and never let go of the pen. Slide it about 3 cm along its length toward the fingertips, then swing its length about 45 degrees away from where it pointed, and hold it still by its marked grip band with the tips of the thumb, index and middle fingers, clear of the palm.
+Keep the wrist fixed and never let go of the pen. Slide it a short way (about two finger-widths) along its length toward
+the fingertips, then swing its length about an eighth of a turn away from where it pointed, and hold it still by its
+marked grip band with the tips of the thumb, index and middle fingers, clear of the palm.
 
-Keep the wrist fixed. Slide the pen about 3 cm along its length toward the fingertips, then turn it about 45 degrees and hold it by its marked grip band with the tips of the thumb, index and middle fingers. The initial pen rests against the central palm surfaces; the final pen must clear those central palm surfaces. All three named fingertips must contact the marked band. Other finger links may also contribute contact; an exclusive fingertip-only grasp is not required. No table support, other hand or whole-object release is allowed.
+## Success criteria
+The six wrist targets are locked at (-0.08, 0, 0.29, 0, 0, 0) (metres, then radians).
+A trajectory with a row that changes any of them beyond float32 rounding is rejected.
 
-## Difficulty
-hard: Advance and reorient a real pen mesh with a fitted shaft, physical writing tip and tail into a marked three-finger grip.
-The scene uses free_pen and independently controlled fingers with the wrist locked; every ordered stage and
-a terminal hold must be reached through contact alone.
+The pen's slide is how far it has moved, in the palm's frame, along the direction it pointed at the start; its swing is
+the angle between its axis and that start direction. A fingertip counts when it presses the pen with more than 0.01 N;
+it is on the grip band when that contact lies within 15 mm of the band's centre, 24.7 mm along the pen's axis from its
+origin. Every check below runs after each 2 ms physics substep (ten per control step). Two stages, in this order, then a
+final hold. A control step counts toward a stage or the final hold only when its conditions held at every substep of
+that step:
+1. Slide, for 5 consecutive control steps: the slide is between 24 and 36 mm, the swing at most 0.2 rad, and 2 to 5
+   fingertips touch the pen.
+2. Swing and tripod grip, for 5 consecutive control steps: the slide is between 24 and 36 mm; the swing is between
+   0.65 and 0.92 rad; the thumb, index and middle fingertips each touch the pen on the grip band, and 3 to 5
+   fingertips are on the band; and the palm does not touch the pen with more than 0.01 N.
+3. Final hold, for 25 consecutive control steps: the stage 2 conditions, and no part of the pen moves faster than 0.06
+   (m/s or rad/s).
 
-## Reference solution
-`solution/trajectory.npz` is the validated Sharpa Wave actuator trajectory of this frozen instance: 385 finger-target rows at 50 Hz (7.7 s) with the six wrist targets locked, executed through physical contact only. `solve.sh` hands it in unchanged as `/app/output/trajectory.npz`. It was derived offline by authoring controllers (not part of the repository) and is bound to the validated evidence (byte-identical trajectory, model hash, two fresh-process replays with the validated final state hash). Wuji Hand 2.2: `solution/wuji/trajectory.npz` is a validated Wuji Hand 2.2 trajectory of this instance (1,571 rows of motor targets, physical contact only). With `DEXHAND_HAND=wuji` set for the oracle, `solve.sh` hands it in instead of the Sharpa Wave rows; the verifier replays it with the Wuji Hand 2.2.
+The episode fails at once when: any contact force on the pen exceeds 80 N; it moves faster than 12 (m/s or rad/s);
+the palm moves more than 3 mm or turns more than 0.01 rad from its start; the pen touches anything other than the hand
+with more than 0.01 N; no part of the hand touches it with more than 0.005 N; its centre moves more than 70 mm from
+its start place in the palm's frame, or is below z = 0.18 m or above z = 0.6 m; or the physics becomes unstable. There
+is no step budget.
 
-## Verification
-The separate verifier replays the submitted numeric rows in one fresh process, with the hand recorded in the archive.
-Reward 1 needs every ordered stage and the terminal hold with no invariant or guard violation. Invariants and guards are checked at every 2 ms
-physics substep and fail the episode immediately (a dropped, slipped or knocked-away object ends it as a failure);
-partial completion fails. Rows of the wrong width for the recorded hand, a forged or unknown hand label, non-finite
-or out-of-range targets and wrist motion are rejected with reward 0. The verifier is tested
-on the oracle, no-op, truncated, dropped-object, forged-metadata and wrong-width cases for both hands.
-Release status is provisional until independent solvability review.
+The graded file is `/app/output/trajectory.npz`, as `s.save_trajectory` writes it: a finite numeric `actions` array
+with one row of motor targets per control step (28 values for the Sharpa Wave hand, 26 for
+the Wuji Hand 2.2), 1 to 50,000 rows, and a `hand` member that names the hand (an archive without it counts as
+Sharpa Wave). After the agent's session, the verifier rebuilds the frozen scene with that hand in a fresh process of a
+separate container without network and replays the rows once, open-loop. The replay stops at the first success or the
+first failure, and later rows are not run. The task is passed if the replay ends in success; rows that run out first,
+or the step budget reached first, leave it failed. Only the motor targets are read: no other member of the archive
+changes the verdict.
 
-## Resources
-Caps per container (PROTOCOL §6).
+A missing file scores 0, and so does a rejected one: larger than 64 MB, a row width that does not match the hand, a
+non-finite value, no rows or too many, a target outside its actuator's range, or a `task` or `actuator_names` member
+that does not match this task. A frozen scene that does not build to its recorded start is an infrastructure error,
+not a score.
+
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -43,12 +63,14 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-
-### Notes
-Source: the DexHand essential task `essential_pen_regrasp`; the image recipe is `images/dexhand/`. Both
-modes use the identical frozen `instance.json`. The Sharpa Wave model and meshes are pinned to MuJoCo Menagerie commit
-`0059d4335f8156206f63a35662313385f7ad6d74` (Apache-2.0). Wuji Hand 2.2 is the manufacturer's `hand2/hand2_2` model
-from `wuji-technology/wuji-description` commit `829c9aa27cb12c3a49d5b8d63c9869dd8f656702` (MIT), mounted unchanged in
-the same wrist frame; its collision geoms are renamed to the predicate's finger/palm roles only. Object assets carry
-their own licenses and checksums under `object_assets/`. Renderer output is evidence; it never determines the verdict.
+## License
+DexHand's scenes, checkers and graders are original to this repository (MIT License). Robot models: the Sharpa Wave
+hand from [MuJoCo Menagerie](https://github.com/google-deepmind/mujoco_menagerie/tree/0059d4335f8156206f63a35662313385f7ad6d74/sharpa_wave)
+@ `0059d43` (Apache License 2.0); the Wuji Hand 2.2 from
+[wuji-technology/wuji-description](https://github.com/wuji-technology/wuji-description/tree/829c9aa27cb12c3a49d5b8d63c9869dd8f656702)
+@ `829c9aa` (MIT License); the Tianji Marvin arm meshes from DexForce `embodichain_data` (Apache License 2.0) with
+inertias from Genesis' `dual_arms_primitives.urdf` (MIT License), see `images/dexhand/tianji/NOTICE.md`. Object
+assets are original geometry of this repository, CC0 (the Poly Haven rubber boot, the Innerscene stockpot, Monet's
+public-domain Water Lilies, original page and letter artwork) or CC BY 4.0 (the Joy-Con, pen, rotary-knob and walnut
+meshes; credits in each task's `object_assets/*/CREDITS.txt`); printed text uses the DejaVu fonts (Bitstream Vera
+license). No non-commercial terms apply.

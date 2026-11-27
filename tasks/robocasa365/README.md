@@ -1,213 +1,144 @@
 # RoboCasa365
 
-50 of [RoboCasa365](https://github.com/robocasa/robocasa)'s kitchen tasks (robocasa 1.0.1) with a mobile manipulator
-(Franka Panda on an Omron mobile base), each on one frozen instance, in both modes: 100 tasks; and one realtime twin:
-`tasks/robocasa365/robocasa365-turn-on-toaster-oven-i00-realtime`, the benchmark's one dynamic task.
+## Overview
 
-## Quick start
+50 of [RoboCasa365](https://github.com/robocasa/robocasa)'s kitchen tasks (robocasa 1.0.1) with a mobile manipulator
+(Franka Panda on an Omron mobile base with a torso lift), each on one frozen instance, in the privileged and standard
+modes (100 task directories), and one realtime task, `robocasa365-turn-on-toaster-oven-i00-realtime`: 101 task
+directories.
+
+- **privileged**: the agent has the full simulator (`casa_tool.Session`: the RoboCasa365 environment rebuilt from the
+  frozen instance, its state, unlimited resets) and hands in one trajectory of control-step commands, which the
+  verifier replays open-loop.
+- **standard**: the simulator runs in a `sim` sidecar the agent cannot open. The agent gets only the client (and the
+  same service as MCP tools): the robot's four cameras, proprioception and action chunks of the robot's native command;
+  one episode, no reset, no object poses, no success signal.
+- **realtime**: the standard interface on a clock that does not stop.
+
+Every task is graded by the environment's own `_check_success`. The task directories are the deliverable; the tooling
+that built them is kept outside this repository.
+
+Quick start:
 ```bash
 harbor run -d embodied-first-exam@all -p tasks/robocasa365 -a codex -m openai/gpt-6-astra
 ```
-Every image is public: Harbor pulls it.
-
-| | |
-|---|---|
-| upstream | robocasa/robocasa @ `4f8a2980def75a55dff96b990745b83540425f09` (robocasa 1.0.1, MIT), robosuite @ `5ce6643` (1.5.2), MuJoCo 3.3.1 |
-| tasks | `tasks/robocasa365/robocasa365-<task>-i00-privileged` and `tasks/robocasa365/robocasa365-<task>-i00-standard`, 50 each |
-| metadata | `simulator = "robosuite"`, `robot = "franka-panda-omron"`, `family = "robocasa365/<Env>"`, `oracle = "full"` |
-| image | `ghcr.io/mll-lab-nu/efe:robocasa365-0.1.0` (`images/robocasa365/`), CPU only, ~27 GB |
-| standard client | `python:3.12.14-slim` pinned by digest, pinned pip; `rcb_client.py` / `rcb1.py`: the HumanoidBench tasks' code, the client with a docstring of its own that describes this service |
-| sources | each instance and reference is in its tasks (`environment/instance.npz`, `solution/oracle.npz`); the task directories are the deliverable; the tooling that built them is kept outside this repository |
-
-## Images
-
-The images are public: `ghcr.io/mll-lab-nu/efe:robocasa365-0.1.0` and the files image
-`ghcr.io/mll-lab-nu/efe:robocasa365-files-<version>` (pinned by digest), so a task build pulls them. To build the simulator
-image yourself instead, from the repository root:
+Every image is public: Harbor pulls it. Base image: `ghcr.io/mll-lab-nu/efe:robocasa365-0.1.0` (`images/robocasa365/`),
+CPU only (rendering with OSMesa), about 27 GB. To build it yourself instead, from the repository root:
 
 ```bash
 docker build -f images/robocasa365/Dockerfile -t ghcr.io/mll-lab-nu/efe:robocasa365-$(cat images/robocasa365/VERSION) images/robocasa365
 ```
 
-## Scope and selection rule
-The candidates are the 256 RoboCasa365 families with a demonstration-based reference validated in this repository's pull
-request #4 (PR #4: closed without merging; commit ad3c510, fetchable as `refs/pull/4/head`) (63 atomic, 193 composite; the 109 others
-have no official demonstration at the pinned commit or no validated reference). This benchmark takes 50 of them
-(deterministically): the slots are shared between atomic and composite tasks in proportion to their
-sizes (12 atomic, 38 composite; the group is the module the environment class lives in); within a group, families are
-taken in the order of the SHA-256 of their environment name, skipping any whose reference does not verify with this
-benchmark's tooling, until the group's slots are filled. One candidate was skipped:
-`OrganizeMugsByHandle` (its reference does not reach success when replayed with MuJoCo's mesh cache off, as every build here is).
+A clean build needs about 11 GB of downloads and 55 GB of disk.
 
-- Atomic (12): PickPlaceSinkToCounter, PickPlaceCabinetToCounter, CloseDrawer, TurnOnMicrowave, CloseOven, TurnOnStove, TurnOnToasterOven, OpenDishwasher, TurnOffMicrowave, PackDessert, TurnOnSinkFaucet, CloseStandMixerHead.
-- Composite (38): RetrieveMeat, DrainVeggies, SanitizePrepCuttingBoard, AssembleCookingArray, ClearSink, CookieDoughPrep, DisplayMeatVariety, CandleCleanup, DivideBasins, BeverageSorting, StockingBreakfastFoods, BreadAndCheese, DeliverBrewedCoffee, PortionInTupperware, OvenBroilFish, MakeIceLemonade, TongBuffetSetup, AddLemonToFish, MicrowaveDefrostMeat, MealPrepStaging, MakeLoadedPotato, PrepForSanitizing, SeasoningSpiceSetup, PrepMarinatingMeat, PreRinseStation, SetUpCuttingStation, DessertUpgrade, SweetenCoffee, CerealAndBowl, SearingMeat, ThawInSink, ScrubBowl, PlateSteakMeal, DrinkwareConsolidation, ReheatMeal, ClearFoodWaste, ChooseMeasuringCup, OrganizeCoffeeCondiments.
+## Upstream and license
 
-## Task definition
-- **Instance.** The initial state of an official demonstration episode, frozen in `instance.npz` (~0.2–0.3 MB): the
-  MuJoCo integration state, the model arrays the kitchen's reset rewrites, the env's Python task state and the
-  NumPy / Python RNG states, with a SHA-256 checked on every load. Rebuilding is bit-exact.
-- **Actions.** The robot's native composite-controller command, one per control step (20 Hz), in both modes: 13
-  channels, absolute arm joint position targets (7), grip, base velocities (3), torso, hybrid mode
-  (`casa_tool.action_spec`). The references track the demonstrations' recorded arm joint positions with this
-  controller (RoboCasa365's demonstrations were recorded with a different arm controller; PR #4 retargeted them, with
-  base and torso feedback for some). In standard mode the type is `joint_position` (its arm channels are joint
-  targets; the base and torso stay velocity-controlled).
-- **Success.** The environment's own `_check_success` on the state after the last action (PROTOCOL §3), and not
-  already at the start. Every reference succeeds on its final state. The check runs twice per control step and once at reset everywhere. In
-  1 task (PlateSteakMeal) the success does not survive 10 more still steps; its instructions (both modes) and README
-  say so. Both instructions also state, per task, what `_check_success` requires beyond the task's sentence
-  (`envs.SUCCESS`: releasing and moving the gripper away, distance thresholds, timers, joint thresholds), since the
-  standard-mode agent cannot read the source.
-- **Determinism.** CPU physics, bit-exact, with MuJoCo's process-wide mesh cache turned off in `casa_tool`: with the
-  cache on, a scene built a second time in one process stepped differently in 14 of 61 candidates here (a mesh served
-  from the cache differs in `mesh_polynormal` from a freshly compiled one), which would have broken the agent's own
-  `reset()` and the service's start hash and video pass. With the cache off every build is the cold build a fresh process
-  makes. If the pinned MuJoCo lacks the cache symbols, `casa_tool` raises on import rather than run without it.
-- **Length.** Privileged deliverables have 1 ≤ T ≤ 3000 control steps; the references have 85–2189.
-  Standard episodes have no step limit (D1).
-- **Standard-mode observations.** The robot's four cameras (`robot0_agentview_center/left/right`,
-  `robot0_eye_in_hand`; RGB, depth, intrinsics and current poses), its joints, end-effector position, last command and
-  the instruction. No object poses, scene layout, reward or success signal. Camera images (RGB and depth, in both modes
-  and in replay videos) draw the visual meshes only, as robosuite's own cameras do; the collision geoms (geom group 0)
-  are hidden.
+- Upstream: RoboCasa365, [robocasa/robocasa](https://github.com/robocasa/robocasa) pinned at
+  `4f8a2980def75a55dff96b990745b83540425f09` (robocasa 1.0.1), MIT License (Copyright (c) 2026 the RoboCasa Team).
+  Citation: Nasiriany et al., 2026, "RoboCasa365: A Large-Scale Simulation Framework for Training and Benchmarking
+  Generalist Robots", ICLR 2026; RoboCasa: Nasiriany et al., 2024, RSS 2024.
+- Simulation framework: [robosuite](https://github.com/ARISE-Initiative/robosuite) pinned at `5ce6643` (1.5.2, MIT
+  License), on MuJoCo 3.3.1 (Apache License 2.0).
+- Assets: RoboCasa's assets (robocasa/robocasa-assets on Hugging Face: textures, generative textures, Objaverse and
+  AI-generated objects; the Lightwheel fixtures and objects of RoboCasa's UT Box links) are under CC BY 4.0, as RoboCasa
+  states (credit: RoboCasa, robocasa.ai). No non-commercial terms apply. `images/robocasa365/fetch_assets.sh` downloads
+  the four archives from RoboCasa's Hugging Face mirror (byte-identical to the UT Box ones) and checks each by SHA-256;
+  nothing of them is committed here.
+- `images/robocasa365/Dockerfile` pins the base image by digest, every pip package, the robosuite and RoboCasa commits
+  and every asset archive.
 
-## Standard-mode service
-`embodied_first_exam/benchmarks/robocasa/sim/server_casa.py` and the collect hook `environment/sim/finalize.sh`, the same
-service and hook as RoboCasa's, byte for byte (`tasks/robocasa/README.md`: graded by the live episode, nothing
-replayed, the start checked against the frozen instance (`RCB_INSTANCE_SHA`, `RCB_START_SHA` in
-each task's `environment/docker-compose.yaml`, a mismatch is infrastructure), the video one render pass after the
-verdict; the hook's budget; request validation; the camera calibration is the rendered viewpoint).
+## Changes from upstream
 
-## Realtime (`eai-standard/3.0`)
-The dynamic tasks (PROTOCOL §2: each task's `[metadata] dynamics`) get a `-realtime` twin. In RoboCasa365 that is **TurnOnToasterOven** only: once set, the oven's timer knob turns back
-by itself (`ToasterOven.update_state`: 1/3000 of its range per simulated second, on `sim.data.time`, so a replay repeats
-it bit for bit). The toaster ovens and electric kettles of other tasks move by themselves too, but no other task uses them.
-- **Service.** The shared realtime layer of HumanoidBench, BiGym 2.0 and Embodied Olympics - Fun, unchanged
-  (the task's `environment/sim/rcb_realtime.py`, `rcb_service.py`, `environment/rcb_client.py`, `tests/grade.py`: byte-identical
-  copies of the HumanoidBench realtime tasks' files; `ci_checks/check-tooling-identity.sh`), with
-  `environment/sim/server.py`, an `rcb_service.Sim` adapter on `casa_tool.Session`: the standard
-  twin's frozen instance, native controller command (`joint_position`, 13 channels, clipped and reported), success
-  check (`_check_success`, twice per control step) and cameras (RGB-D, 320 x 240, OSMesa on the CPU; no GPU). The
-  verdict is the live episode's (the shared layer's `graded_by = live`): the last episode's success as it ran, and the
-  adapter's `live_verdict()` adds the standard twin's rule that the scene was not solved at that episode's start;
-  nothing is replayed. `start_sha` (`RCB_START_SHA`, the standard twin's archived start hash,
-  the same value) is checked by the layer when the first episode begins and after every reset (`instance_mismatch`,
-  infrastructure). The video is rendered from the trajectory after the verdict (the live session rebuilt, one pass);
-  the collect hook waits up to 840 s for the verdict and 870 s for the video. The robot's cameras move with it:
-  their intrinsics are in `/spec`, their current poses in every proprioception row (`cam_<camera>_*`, the standard
-  twin's `cam2world_gl`). Not served: the sidecar's per-response calibration dictionary.
-- **Episode.** On a clock that does not stop, an episode as long as the agent's time would run for up to an hour, so
-  the realtime twin also caps it: an episode ends at the agent's `POST /finish`, after 3000 control steps (150 s of
-  robot time, the privileged deliverable's cap; `RCB_MAX_CONTROL_STEPS`), when the agent's time is up, or on a
-  simulator error, and is judged on the state it ends in ("Agent-ended episodes" below). A success never ends it. No reset (reset budget 0, PROTOCOL §2), as in standard: one episode.
-- **Slowdown S = 2.** Real-time factor 1.29 with the realtime clock flat out (the service capped at 4 CPUs); PROTOCOL
-  §2: S = ceil(1.5 / 1.29) = 2, one control step every 0.1 s of wall time. An OSMesa frame takes about 0.12 s per
-  camera; `server.py` makes the renderer at start and after every reset, so the first image does not stall the clock.
-- **Checked at S = 2**: the privileged reference planned from step 0 succeeds live; nop: `timeout`, not a success; a
-  controller streaming one row per control step with an image every 0.5 s over 3 episodes: no stall, largest lag
-  0.05 s.
-- **Cutoff** 3600 s, the standard twin's.
+- **Frozen instances.** Each task starts from the initial state of one official demonstration episode, frozen in
+  `instance.npz` (about 0.2 to 0.3 MB): the MuJoCo integration state, the model arrays the kitchen's reset rewrites, the
+  environment's Python task state and the NumPy and Python random states, with a SHA-256 checked on every load.
+  Rebuilding is bit-exact.
+- **MuJoCo's mesh cache is off.** With the process-wide mesh cache on, a scene built a second time in one process stepped
+  differently in 14 of 61 candidate families (a mesh served from the cache differs in `mesh_polynormal` from a freshly
+  compiled one). `casa_tool` turns the cache off, so every build is the cold build a fresh process makes. If the pinned
+  MuJoCo lacks the cache symbols, `casa_tool` raises on import rather than run without it.
+- **Task sentences.** Where upstream's language sentence for an instance is wrong or unclear, `casa_tool`'s
+  `TEXT_ERRATA` replaces it. The success checks are upstream's, unchanged.
+- **Cameras draw visual geoms only**, as robosuite's own cameras do: the collision geoms (geom group 0) are hidden in
+  every image and video.
+- **No episode termination.** The environment runs with `ignore_done`, so upstream's horizon never ends an episode, and
+  a success never ends one either. Privileged trajectories are capped at 3,000 control steps; standard episodes have no
+  step limit; the realtime episode ends after 3,000 control steps.
 
-### Agent-ended episodes
+## Interface
 
-Every standard and realtime task sets `RCB_AGENT_END "1"` in its sim service (PROTOCOL §3). `server_casa.py` (standard)
-or `rcb_service.py` (realtime) never shows the task's success and a success never ends the episode: the environment's
-own check is still run after every call (as before, twice per control step) and only recorded
-(`hidden_success_first_step`). The agent ends the episode with `POST /finish` (reason `finished`); the end of its
-session (`timeout`), and in realtime the 3000-step cap (`step_limit`) ends it too, and each is judged on the state it
-ends in (end judgement `state`: the environment's `_check_success`, whose timers and event memory are the environment's
-own; no settle window), with the rule that a scene solved at the start is no success. `final.json` adds the shared
-fields (`success_signal`, `ended_by`, `end_judgement`, `hidden_success_seen`, `hidden_success_first_step`,
-`trial_hidden_success_seen`, `finish_time_s`). Without `RCB_AGENT_END` the service behaves as described above.
+The robot's native composite-controller command, one per control step (20 Hz), in every mode: 13 channels, the arm's
+7 absolute joint position targets, the gripper, 3 base velocities, the torso and the base / arm mode
+(`casa_tool.action_spec`). Each row is clipped to the controller's limits.
 
-## Egress
-The demonstrations are public, so `task.toml` closes agent egress to the model APIs and the package registries. The image contains no
-demonstration data.
+- **Privileged.** `casa_tool.Session` (in `/opt/tools`) rebuilds the environment from `/app/instance.npz`, steps it,
+  resets it and exposes its full state. The deliverable is `/app/output/trajectory.npz` with `actions` of shape (T, 13),
+  1 ≤ T ≤ 3,000.
+- **Standard** (`eai-standard/3.0`): the service `embodied_first_exam/benchmarks/robocasa365/sim/server_casa.py` in the
+  `sim` sidecar, taken from the files-only image `robocasa365-files`. The action type is `joint_position` (the arm
+  channels are joint targets; the base and torso stay velocity-controlled). Observations: the robot's four cameras
+  (`robot0_agentview_center`, `robot0_agentview_left`, `robot0_agentview_right`, `robot0_eye_in_hand`; RGB and depth,
+  320 × 240, with intrinsics and current poses), its joints, the end-effector position, the last command and the
+  instruction. No object poses, scene layout, reward or success signal.
+- **Realtime**: the task's own adapter `environment/sim/server.py` (an `rcb_service.Sim` on `casa_tool.Session`, with the
+  same frozen instance, command, cameras and success check as the standard tasks) on the shared realtime service. Slowdown
+  S = 2: the measured real-time factor is 1.29 with the service capped at 4 CPUs, so S = ceil(1.5 / 1.29) = 2, one control
+  step every 0.1 s of wall time. The adapter makes the renderer at start, so the first image does not stall the clock.
+  The robot's cameras move with it: their intrinsics are in `/spec`, their current poses in every proprioception row
+  (`cam_<camera>_*`).
 
-## Image
-`images/robocasa365/Dockerfile` pins the base image by digest, every pip package, the robosuite and RoboCasa commits
-and every asset archive by SHA-256 (`fetch_assets.sh`; four archives from RoboCasa's Hugging Face mirror, byte-identical
-to the UT Box ones). It reproduces the content of the image the tasks were validated with; the published image is that validated image
-(a clean rebuild needs ~11 GB of downloads and ~55 GB of disk). Licences: RoboCasa code MIT; RoboCasa's assets
-(robocasa/robocasa-assets: textures, generative textures, Objaverse and AI-generated objects; the Lightwheel fixtures and
-objects from RoboCasa's UT Box links) CC-BY-4.0, as RoboCasa states (credit: RoboCasa, robocasa.ai), the same asset
-terms as the public RoboCasa images.
+## Grading
 
-## Evidence
-For all 50: not solved at the start; `reset()` bit-exact; the reference
-succeeds on its final state without truncation; two fresh-process replays end in the live state's hash and succeed.
+Every mode uses the environment's `_check_success`. It runs three times per control step: once inside robosuite's
+`step` (the reward), before the kitchen's fixtures update their state (microwave on / off, toaster-oven and stand-mixer
+readings, the scrub count), and twice more in `casa_tool.Session.step`, which keeps the last result. It also runs once at
+the start. Checks with timers or counters (DrainVeggies, OvenBroilFish) count these runs, so 10 runs are about
+4 control steps. A scene solved at the start is never a success.
 
-Harbor runs on the generated tasks: `-a oracle` scores 1 (50/50 privileged, 6/6 standard sampled), `-a nop` 0;
-scripted cheat attempts score 0 in both modes.
+- **Privileged** (`tests/grade.py`, from the files-only image `robocasa-files`; `tests/casa_tool.py`): one open-loop
+  replay in a fresh process from the verifier's own copy of the frozen instance; pass when the check holds after the
+  last row and did not hold at the start. A missing file, an invalid file (over 8 MB, not plain `.npy` arrays, no
+  `actions`, a shape other than (T, 13), a non-finite value, T outside 1 to 3,000) or a replay that fails scores 0.
+- **Standard** (`server_casa.py`, `tests/grade.py` from `robocasa-files`): the live episode, nothing replayed. The
+  agent ends it with `POST /finish`, or the agent's time ends it; the verdict is the check's result after the last
+  control step. The start is checked against the frozen instance (`RCB_INSTANCE_SHA` and `RCB_START_SHA` in each task's
+  `environment/docker-compose.yaml`); a mismatch, or a scene already solved, is an infrastructure error.
+- **Realtime**: the live episode, judged the same way on the state it ends in; the adapter's `live_verdict` applies the
+  rule that the scene was not solved at the start. The episode also ends after 3,000 control steps (150 s of robot time).
+  No reset.
 
-## Screening
+Each task's README states its exact success condition, with its thresholds, from upstream's `_check_success` and the
+helpers it calls.
 
-The benchmark owner's screening (ten runs, one trial per run and task directory). A directory is **easy** when a run solved it: a graded success within the task's time limit.
-Where only one or two of the later runs solved a directory Luna had failed, their logs were checked for shortcuts and
-for any access to tests, solutions or graders. It is **hard** when GPT-6 Luna and every later run that attempted it
-failed, GPT-6 Astra and Claude Opus 5.5 among them; a standard directory that only Astra solved is hard as well. It is
-**unverified** when only Luna attempted it and failed (the later runs only take bases Luna solved in no mode), and
-**pending** without a Luna verdict. A base whose every mode is easy, and every base Luna solved in some mode, is left out of the core set (`docs/core_set.toml`); its tasks keep their names.
+## Tasks
 
-Runs: Luna `codex-gpt6_luna-xhigh`; Astra `codex-gpt6_astra-high`; Opus `claude_code-opus_5_5-high`; Sol 6.1
-`codex-gpt6_1_sol-high`; Sol `codex-gpt6_sol-high`; Gemini 3.8 Flash `antigravity_cli-gemini_3_8_flash-high`; Gemini 4
-Argon `antigravity_cli-gemini_4_argon-high`; DeepSeek V4.1 Flash `dsh-deepseek_v4_1_flash-high`; GLM 5.3 Flash
-`claude_code-glm_5_3_flash-high`; Qwen3.8 27B `claude_code-qwen3_8_27b-high`.
+The candidates are the 256 RoboCasa365 families with a validated demonstration-based reference (63 atomic, 193
+composite). This benchmark takes 50 of them, deterministically. The slots are shared between atomic and composite tasks
+in proportion to their sizes (12 atomic, 38 composite; the group is the module the environment class lives in). Within a
+group, families are taken in the order of the SHA-256 of their environment name, skipping any whose reference does not
+verify with this benchmark's tooling, until the group's slots are filled. One candidate was skipped:
+`OrganizeMugsByHandle` (its reference does not reach success when replayed with the mesh cache off).
 
-By directory: 70 easy, 6 hard, 25 unverified, 0 pending.
+- Atomic (12): PickPlaceSinkToCounter, PickPlaceCabinetToCounter, CloseDrawer, TurnOnMicrowave, CloseOven, TurnOnStove,
+  TurnOnToasterOven, OpenDishwasher, TurnOffMicrowave, PackDessert, TurnOnSinkFaucet, CloseStandMixerHead.
+- Composite (38): RetrieveMeat, DrainVeggies, SanitizePrepCuttingBoard, AssembleCookingArray, ClearSink,
+  CookieDoughPrep, DisplayMeatVariety, CandleCleanup, DivideBasins, BeverageSorting, StockingBreakfastFoods,
+  BreadAndCheese, DeliverBrewedCoffee, PortionInTupperware, OvenBroilFish, MakeIceLemonade, TongBuffetSetup,
+  AddLemonToFish, MicrowaveDefrostMeat, MealPrepStaging, MakeLoadedPotato, PrepForSanitizing, SeasoningSpiceSetup,
+  PrepMarinatingMeat, PreRinseStation, SetUpCuttingStation, DessertUpgrade, SweetenCoffee, CerealAndBowl, SearingMeat,
+  ThawInSink, ScrubBowl, PlateSteakMeal, DrinkwareConsolidation, ReheatMeal, ClearFoodWaste, ChooseMeasuringCup,
+  OrganizeCoffeeCondiments.
 
-| base | privileged | standard | realtime |
-|---|---|---|---|
-| `robocasa365-add-lemon-to-fish-i00` | easy: Astra, Opus, Sol 6.1, Sol, Gemini 4 Argon | easy: Astra, Opus, Sol 6.1 | — |
-| `robocasa365-assemble-cooking-array-i00` | easy: Astra, Opus, Sol 6.1, Sol, Gemini 4 Argon | hard (only Astra) | — |
-| `robocasa365-beverage-sorting-i00` | easy: Astra, Opus, Sol 6.1, Sol, Gemini 4 Argon | easy: Gemini 4 Argon | — |
-| `robocasa365-bread-and-cheese-i00` | easy: Luna | unverified | — |
-| `robocasa365-candle-cleanup-i00` | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon | easy: Astra, Opus, Gemini 4 Argon | — |
-| `robocasa365-cereal-and-bowl-i00` | easy: Astra, Sol 6.1, Gemini 3.8 Flash | hard | — |
-| `robocasa365-choose-measuring-cup-i00` | easy: Luna | unverified | — |
-| `robocasa365-clear-food-waste-i00` | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon | — |
-| `robocasa365-clear-sink-i00` | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, GLM 5.3 Flash | easy: Astra, Opus, Sol 6.1, Gemini 3.8 Flash, Gemini 4 Argon | — |
-| `robocasa365-close-drawer-i00` | easy: Luna | unverified | — |
-| `robocasa365-close-oven-i00` | easy: Luna | unverified | — |
-| `robocasa365-close-stand-mixer-head-i00` | easy: Luna | unverified | — |
-| `robocasa365-cookie-dough-prep-i00` | easy: Luna | unverified | — |
-| `robocasa365-deliver-brewed-coffee-i00` | easy: Astra, Opus, Sol 6.1, Sol, Gemini 4 Argon | easy: Sol 6.1, Gemini 4 Argon | — |
-| `robocasa365-dessert-upgrade-i00` | easy: Luna | unverified | — |
-| `robocasa365-display-meat-variety-i00` | easy: Astra, Opus, Sol 6.1, Sol, Gemini 4 Argon | hard | — |
-| `robocasa365-divide-basins-i00` | easy: Luna | unverified | — |
-| `robocasa365-drain-veggies-i00` | easy: Astra, Opus, Sol 6.1, Sol | easy: Gemini 4 Argon | — |
-| `robocasa365-drinkware-consolidation-i00` | easy: Luna | unverified | — |
-| `robocasa365-make-ice-lemonade-i00` | easy: Astra, Opus, Sol 6.1, Gemini 4 Argon | easy: Opus, Gemini 4 Argon | — |
-| `robocasa365-make-loaded-potato-i00` | easy: Luna | unverified | — |
-| `robocasa365-meal-prep-staging-i00` | easy: Astra, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon | easy: Astra, Opus | — |
-| `robocasa365-microwave-defrost-meat-i00` | easy: Astra, Opus, Sol 6.1, Gemini 4 Argon | hard | — |
-| `robocasa365-open-dishwasher-i00` | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash | easy: Astra, Opus, Sol, Gemini 4 Argon, DeepSeek V4.1 Flash | — |
-| `robocasa365-organize-coffee-condiments-i00` | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash | easy: Astra, Opus, Gemini 4 Argon | — |
-| `robocasa365-oven-broil-fish-i00` | easy: Astra, Opus, Sol 6.1, Gemini 4 Argon | easy: Astra, Opus | — |
-| `robocasa365-pack-dessert-i00` | easy: Luna | unverified | — |
-| `robocasa365-pick-place-cabinet-to-counter-i00` | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, DeepSeek V4.1 Flash, GLM 5.3 Flash | easy: Opus, Gemini 4 Argon | — |
-| `robocasa365-pick-place-sink-to-counter-i00` | easy: Luna | unverified | — |
-| `robocasa365-plate-steak-meal-i00` | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash, GLM 5.3 Flash | easy: Astra, Opus, Sol 6.1, Sol, Gemini 4 Argon | — |
-| `robocasa365-portion-in-tupperware-i00` | easy: Luna | unverified | — |
-| `robocasa365-pre-rinse-station-i00` | easy: Luna | unverified | — |
-| `robocasa365-prep-for-sanitizing-i00` | easy: Astra, Opus, Sol 6.1, Gemini 4 Argon | easy: Astra, Opus | — |
-| `robocasa365-prep-marinating-meat-i00` | easy: Luna | unverified | — |
-| `robocasa365-reheat-meal-i00` | easy: Astra, Gemini 4 Argon | easy: Opus | — |
-| `robocasa365-retrieve-meat-i00` | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon | easy: Opus, Gemini 3.8 Flash, Gemini 4 Argon | — |
-| `robocasa365-sanitize-prep-cutting-board-i00` | easy: Luna | unverified | — |
-| `robocasa365-scrub-bowl-i00` | easy: Luna | unverified | — |
-| `robocasa365-searing-meat-i00` | easy: Astra, Opus | hard | — |
-| `robocasa365-seasoning-spice-setup-i00` | easy: Luna, Astra, Sol 6.1, Gemini 4 Argon | hard | — |
-| `robocasa365-set-up-cutting-station-i00` | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash | easy: Astra, Sol 6.1 | — |
-| `robocasa365-stocking-breakfast-foods-i00` | easy: Luna | unverified | — |
-| `robocasa365-sweeten-coffee-i00` | easy: Luna | unverified | — |
-| `robocasa365-thaw-in-sink-i00` | easy: Luna | unverified | — |
-| `robocasa365-tong-buffet-setup-i00` | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash | easy: Opus | — |
-| `robocasa365-turn-off-microwave-i00` | easy: Luna | unverified | — |
-| `robocasa365-turn-on-microwave-i00` | easy: Luna | unverified | — |
-| `robocasa365-turn-on-sink-faucet-i00` | easy: Luna | unverified | — |
-| `robocasa365-turn-on-stove-i00` | easy: Luna | unverified | — |
-| `robocasa365-turn-on-toaster-oven-i00` | easy: Luna | unverified | easy: Luna |
+Task directories: `robocasa365-<task>-i00-privileged` and `robocasa365-<task>-i00-standard` (50 each, `[metadata]
+family = "robocasa365/<Env>"`, robot `franka-panda-omron`), and `robocasa365-turn-on-toaster-oven-i00-realtime`. Each
+instance and reference is in its task (`environment/instance.npz`, `solution/`). Privileged references have 85 to 2,189
+control steps.
 
-Judgment calls: `robocasa365-beverage-sorting-i00`: the one standard solve hit the 3600 s agent timeout after its
-episode was recorded (graded as a success).
+## Others
+
+- **Egress.** The demonstrations are public, so agent egress is limited to the model APIs and the package registries
+  (`[agent] network_mode = "allowlist"`). The image contains no demonstration data.
+- **Toaster-oven timer.** Upstream's `ToasterOven.update_state` (robocasa/models/fixtures/toaster_oven.py L232-252) has
+  code that turns a set timer back by itself. In this kitchen's toaster oven it never takes effect: the door and
+  temperature-knob entries of the same loop clear the timer's time stamp on every update. A
+  set timer stays where it was set. The success check reads the timer after every control step.

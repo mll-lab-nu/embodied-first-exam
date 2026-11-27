@@ -1,0 +1,223 @@
+# README data for tasks/labutopia/*/README.md (scripts/task_conventions.py render_readme_v3)
+#
+# Sources checked for every success text (each file is identical in every task directory of its mode):
+#   rules     tests/rcb_labutopia.py (privileged; the same file as environment/sim/rcb_labutopia.py of the standard
+#             tasks): the rule classes L223-535 (one per family, FAMILIES L73-83), HOLD_STEPS = 60 (L59),
+#             MAX_STEPS = 36,000 (L58), Session.step L820-842 and _judge L844-849 (stop at the first step the rule is
+#             met), Session.replay L899-921. Each rule is a copy of LabUtopia's controller check, checked against
+#             Rui-li023/LabUtopia @ 8df7278 controllers/*_controller.py (e.g. pick_controller.py L59-60,
+#             press_controller.py L36-40, placepress_controller.py L90-101).
+#   graders   privileged tests/grade.py main/grade (L130-190); standard environment/sim/server.py finish() L309-347,
+#             ae_success L285-291, ae_holding L294-303, AE_HOLD L306, end_from_signal L626-631, on_submit_error L672;
+#             environment/sim/finalize.sh L40-55 (instance check); standard tests/grade.py grade() L36-37.
+# Start values used in the relative wording (standard READMEs give no world coordinates): each privileged task's
+# environment/instance.json `rule_values` (press: button x 0.4000 m; heat_liquid: beaker centre z 0.7611 m, button
+# z 0.7713 m).
+
+[benchmark]
+name = "LabUtopia"
+citation = "Li et al., 2025"     # arXiv:2505.22634, NeurIPS 2025 Datasets and Benchmarks
+url = "https://github.com/Rui-li023/LabUtopia"
+repo = "Rui-li023/LabUtopia"
+commit = "8df7278"
+
+[license]
+text = """
+LabUtopia ([Rui-li023/LabUtopia](https://github.com/Rui-li023/LabUtopia) @ `8df7278`): the code is under the
+[MIT License](https://github.com/Rui-li023/LabUtopia/blob/8df72784265c375a327ffa3f0a0cf8c676f229a7/LICENSE); the data
+assets (the laboratory scenes and objects) are under [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/):
+**non-commercial use only** (research and education). The simulator is NVIDIA Isaac Sim 6.1.0, under the
+[NVIDIA Isaac Sim / Omniverse licence](https://docs.isaacsim.omniverse.nvidia.com/latest/common/NVIDIA_Omniverse_License_Agreement.html);
+it may not be redistributed, so the simulator image is built locally and never published. The robot model and 64
+files from NVIDIA's public asset server come under NVIDIA's terms.
+"""
+
+[robots]
+franka-panda = "Franka Emika Panda arm (7 joints) with its two-finger gripper"
+
+# privileged tests/grade.py: missing file -> missing_trajectory (L138); not a readable npz / no `actions` ->
+# bad_trajectory (L146); `task` other than the family -> wrong_family (L149); shape (T, 18), 1 <= T <= 36,000, finite
+# -> else bad_trajectory (L151-153); ONE replay in a fresh process (L157); no result -> grader_error + infra_error
+# (L159-162); success = replay success AND instance_ok (L170-172; instance_ok false is an infrastructure failure, L184).
+# rcb_labutopia.py Session.step: rows clipped to action_limits (L812-818), the episode ends at the first step the rule
+# is met (_judge L844-849) or at MAX_STEPS (L838-839).
+[modes.privileged]
+success = """
+The verifier replays `/app/output/trajectory.npz` (array `actions`, shape (T, 18), 1 ≤ T ≤ 36,000, finite values) once,
+open-loop, in a fresh process in a separate sandbox without network, from its own copy of the frozen instance. Each row
+is one control step of 1/60 s: 9 position targets and 9 velocity targets, clipped to the action limits. The replay
+stops at the first control step at which the condition above is met: that is a success. Rows after it are not executed. A
+replay that runs out of rows, or reaches 36,000 control steps, without meeting the condition scores 0.
+
+A missing file scores 0, and so does an invalid one: not a readable `.npz`, no `actions` array, a `task` entry that
+names another task, the wrong shape, a non-finite value, or more than 36,000 rows. A replay that gives no result, and a
+replay whose scene does not rebuild the instance's recorded placements, are infrastructure failures, not a score.
+"""
+
+# standard environment/sim/server.py: RCB_AGENT_END=1 (docker-compose); the Session's stop at success is off (L80); the
+# rule is updated after every control step (L82-85). finish(): POST /finish -> "finished", the collect hook's SIGUSR1
+# -> "timeout" (end_from_signal L626-631), MAX_STEPS -> "step_limit" (L314-315), a simulator error -> "error" (L672).
+# At "finished" / "timeout" a hold the rule is counting is run out with the last command held, at most AE_HOLD = 120
+# control steps (L319-328). success = ae_success() (L334): state families (pick, open_door, open_drawer, open_close,
+# place) the rule met at the last control step, in its last phase (L291); act families (press, pour, shake): the rule
+# met at some step (first_success_step, L287-288); heat_liquid: met at some step AND the beaker on the plate at the end
+# (L289-290). budget reset 0 (L198). finalize.sh L45-49: instance_ok_live false -> instance_mismatch, infra_error.
+# tests/grade.py L36-37: success = final.json success AND not infra AND reason != "error".
+[modes.standard]
+success = """
+The graded episode is the one live episode, as it ran; nothing is replayed to grade it. There is no reset. The episode
+ends when the agent sends `/finish`, when the agent's session ends (at the latest after {timeout}), or after 36,000
+control steps (600 s of simulated time). Meeting the condition does not end the episode, and the service never reports
+success while it runs. The condition above is checked after every control step. When the episode ends at `/finish` or at the
+session's end while a timed hold of the condition is partly done, the last command is held for up to 120 more control steps,
+and the hold counts if it completes in that time.
+
+An episode that ends in a simulator error scores 0. A live episode that did not start in the instance's recorded
+placements, and a service that never wrote its record, are infrastructure failures, not a score.
+"""
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Families. "Centre" = the centre of an object's bounding box (LabUtopia's ObjectUtils); "hand" = the point between the
+# fingertips (TCP, rcb_labutopia.py L69); a "frame" is a prim's origin. 60 consecutive control steps = 1 s.
+
+# PickRule L256-270 (pick_controller._check_success): centre z > z0 + 0.1, held 60 steps. State goal in standard mode.
+[families.pick]
+success = """
+The conical flask's centre is more than 0.10 m higher than its starting height for 60 consecutive control steps (1 s).
+"""
+standard = """
+The conical flask's centre is more than 0.10 m higher than its starting height, and has been for at least the last 60
+consecutive control steps (1 s) of the episode.
+"""
+
+# PressRule L273-286 (press_controller._check_success L36-40): button frame x > 0.405 (start 0.4000), held 60 steps.
+# Act goal in standard mode (counts once met).
+[families.press]
+success = """
+The red button's moving part is pushed in more than 5 mm along the world +x axis from where it starts (beyond
+x = 0.405 m; it starts at 0.400 m) for 60 consecutive control steps (1 s).
+"""
+standard = """
+The red button's moving part is pushed in more than 5 mm along the direction it presses in, from where it starts, for
+60 consecutive control steps (1 s), at any point of the episode. Once that has happened it counts, whatever follows.
+"""
+
+# OpenRule L289-310 (open_controller._check_success): |handle - h0| > 0.12 and |hand - handle| > 0.04, 60 steps.
+[families.open_door]
+success = """
+The oven door's handle centre is more than 0.12 m (straight-line distance) from where it started, and the hand is more
+than 0.04 m from the handle's centre, for 60 consecutive control steps (1 s).
+"""
+standard = """
+The oven door's handle centre is more than 0.12 m (straight-line distance) from where it started, and the hand is more
+than 0.04 m from the handle's centre, and both have held for at least the last 60 consecutive control steps (1 s) of
+the episode.
+"""
+
+[families.open_drawer]
+success = """
+The top drawer's handle centre is more than 0.12 m (straight-line distance) from where it started, and the hand is more
+than 0.04 m from the handle's centre, for 60 consecutive control steps (1 s).
+"""
+standard = """
+The top drawer's handle centre is more than 0.12 m (straight-line distance) from where it started, and the hand is more
+than 0.04 m from the handle's centre, and both have held for at least the last 60 consecutive control steps (1 s) of
+the episode.
+"""
+
+# PlaceRule L351-380 (place_controller._check_phase_success; release distance from pickplace_controller.is_success):
+# phase pick until centre z > z0 + 0.1; then |c_xy - t_xy| < 0.05, |c_z - z0| < 0.05, |hand - c| > 0.05, 60 steps.
+[families.place]
+success = """
+First the beaker's centre rises to more than 0.10 m higher than its starting height. After that, for 60 consecutive control
+steps (1 s): the beaker's centre is less than 0.05 m horizontally from the white plate's centre, less than 0.05 m from
+its starting height, and the hand is more than 0.05 m from the beaker's centre.
+"""
+standard = """
+First the beaker's centre rises to more than 0.10 m higher than its starting height (this counts once it has happened). After
+that: the beaker's centre is less than 0.05 m horizontally from the white plate's centre, less than 0.05 m from its
+starting height, and the hand is more than 0.05 m from the beaker's centre, and all three have held for at least the
+last 60 consecutive control steps (1 s) of the episode.
+"""
+
+# PourRule L383-449 (pour_controller._check_phase_success): pick: c_z > z0 + 0.12; q0 = orientation at the first pour
+# step; steps with |c_xy - target_xy| > reach (get_pour_threshold + 0.05 = 0.0776 m here, instance rule_values) are
+# skipped; turned > 50 deg; then back within 30 deg; then timer += 0.012 per step with c_z > z0 + 0.05 until >= 1.0
+# (84 steps; not reset by steps that do not count). Act goal in standard mode.
+[families.pour]
+success = """
+In this order:
+1. The small beaker's centre rises to more than 0.12 m higher than its starting height.
+2. Its orientation at the next control step is the reference. After that, a step counts only while the small beaker's
+   centre is within 0.0776 m horizontally of the large beaker's centre (LabUtopia's pour distance for this beaker).
+3. At a counted step it is turned more than 50 degrees from the reference.
+4. At a later counted step it is back within 30 degrees of the reference.
+5. After that, it is more than 0.05 m higher than its starting height at 84 counted control steps (1.4 s). These steps need
+   not be consecutive: steps that do not count neither add to nor reset the total.
+"""
+standard = """
+In this order, at any point of the episode (once it has happened it counts, whatever follows):
+1. The small beaker's centre rises to more than 0.12 m higher than its starting height.
+2. Its orientation at the next control step is the reference. After that, a step counts only while the small beaker's
+   centre is within 0.0776 m horizontally of the large beaker's centre (LabUtopia's pour distance for this beaker).
+3. At a counted step it is turned more than 50 degrees from the reference.
+4. At a later counted step it is back within 30 degrees of the reference.
+5. After that, it is more than 0.05 m higher than its starting height at 84 counted control steps (1.4 s). These steps need
+   not be consecutive: steps that do not count neither add to nor reset the total.
+"""
+
+# ShakeRule L452-493 (shake_controller.is_success): steps with c_z - z0 < 0.05 are skipped; 5 times: anchor = centre
+# xy at the first counted step, a move counts when |xy - anchor| >= 0.05 (then a new anchor); then a sliding window of
+# 60 counted steps with x and y ranges <= 0.01. Act goal in standard mode.
+[families.shake]
+success = """
+Only control steps at which the beaker's centre is at least 0.05 m higher than its starting height count; the others are
+skipped. Five times: the beaker's centre moves 0.05 m or more horizontally from where it was at the first counted step
+of that move. After the fifth move, over 60 counted control steps in a row, the centre stays within a 0.01 m range in x
+and within a 0.01 m range in y.
+"""
+standard = """
+At any point of the episode (once it has happened it counts, whatever follows): only control steps at which the
+beaker's centre is at least 0.05 m higher than its starting height count; the others are skipped. Five times: the beaker's
+centre moves 0.05 m or more horizontally from where it was at the first counted step of that move. After the fifth
+move, over 60 counted control steps in a row, the centre stays within a 0.01 m range in x and within a 0.01 m range in
+y.
+"""
+
+# HeatLiquidRule L496-532 (placepress_controller._check_phase_success L90-101): pick: c_z > 0.82; place: on plate =
+# c_z <= 0.86 and |c_x - p_x| < 0.05 and |c_y - p_y| < 0.05 (p = the plate prim's frame); press: on plate and button
+# frame z < 0.761. No hold. Standard: met at some step AND on the plate at the end (server.py L289-290). Start values
+# (instance rule_values): beaker centre z 0.7611 m, button z 0.7713 m.
+[families.heat_liquid]
+success = """
+In this order: the beaker's centre rises above z = 0.82 m (5.9 cm higher than its starting height). After that the beaker is
+on the heater's plate: its centre at or below z = 0.86 m and less than 0.05 m in x and less than 0.05 m in y from the
+plate's frame. After that, at one control step, the beaker is on the plate in that sense and the heater's button frame
+is below z = 0.761 m (pressed down more than 1.0 cm from where it starts). There is no hold time.
+"""
+standard = """
+In this order: the beaker's centre rises to more than 5.9 cm higher than its starting height. After that the beaker is on the
+heater's plate: its centre at most 9.9 cm higher than its starting height and less than 0.05 m in x and less than 0.05 m in
+y from the plate's frame. After that, at one control step, the beaker is on the plate in that sense and the heater's
+button is pressed down more than 1.0 cm from where it starts. This press counts once it has happened, and the beaker
+must still be on the plate, in the same sense, at the end of the episode.
+"""
+
+# OpenCloseRule L313-348 (openclose_controller._check_open_success / _check_close_success; the direction condition is
+# added here): open: |h - h0| > 0.13 and |hand - h| > 0.04 for 60 steps; ref = h at that step; close: |h - ref| > 0.13,
+# |hand - h| > 0.04 and |h - h0| < |ref - h0| for 60 steps. Standard: the open phase counts as it happened, the close
+# hold judged at the end (AE_STATE "close").
+[families.open_close]
+success = """
+First, for 60 consecutive control steps (1 s), the top drawer's handle centre is more than 0.13 m from where it started
+and the hand is more than 0.04 m from the handle's centre. The handle's position at that step is the reference. Then,
+for 60 consecutive control steps, the handle's centre is more than 0.13 m from the reference, nearer to where it
+started than the reference is, and the hand is more than 0.04 m from the handle's centre.
+"""
+standard = """
+First, for 60 consecutive control steps (1 s), the top drawer's handle centre is more than 0.13 m from where it started
+and the hand is more than 0.04 m from the handle's centre (this counts once it has happened). The handle's position at
+that step is the reference. Then the handle's centre is more than 0.13 m from the reference, nearer to where it started
+than the reference is, and the hand is more than 0.04 m from the handle's centre, and all three have held for at least
+the last 60 consecutive control steps (1 s) of the episode.
+"""

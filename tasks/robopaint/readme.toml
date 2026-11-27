@@ -1,0 +1,1297 @@
+# README data for tasks/robopaint/*/README.md (scripts/task_conventions.py render_readme_v3)
+#
+# Sources checked for every success text (embodied_first_exam/benchmarks/robopaint/):
+#   rcb_brush_score.py   score_session() L480-491: ink targets (glyph, letters) -> score_ink + is_success, paintings ->
+#                        score_paint + is_success_paint; score_ink L229-255 / _score_ink_at L258-305 (IoU, boundary F at
+#                        TOL_MM = 1.0 (rcb_brush.py L96), per-region coverage, stray ink, contacts on the main sheet);
+#                        is_success L308-313; registration register_window_px L129 (floor(register_mm / px)),
+#                        register_masks L134 (largest ink overlap; a best shift on the window's edge -> no shift),
+#                        register_paint L152 (smallest mean ΔE over the central window), score_inset_px L194;
+#                        _score_paint_at L398-451 (blur σ = blur_mm, ΔE over the painted area dilated 2 mm, SSIM of L*
+#                        at σ 1.5 mm, edge correlation, paint IoU, contacts); is_success_paint L454-458.
+#   rcb_brush_strict.py  process_metrics L140-182 (colouring in: path_mm > max_path_mm AND mark_width_mm <
+#                        min_mark_width_mm; path budget for the paintings (no min_mark_width_mm, medium mypaint: marks
+#                        off); counted strokes on marked_pieces L99-114 / counted_strokes L134-137; sweep share on the
+#                        pieces (calligraphy) or on the contacts (paintings)); apply_rules L185-203: success = the picture
+#                        rule AND strict_ok; Session.score L209-232 (a stroke still pressed counts).
+#   rcb_brush.py         MAX_STEPS = 72_000 (L83), ACTION_DIM = 7 (L82); Session.replay L1621 (reset, rows, painter.finish).
+#   privileged/grade.py  and sim/server.py + standard/grade.py: see [modes].
+# Every number in a family's `vars` is that task's tests/instance.json target.success (identical in the privileged
+# scorer's and the standard sidecar's copies); `regions` = len(truth.strokes), the exemplar's regions that
+# min_stroke_coverage is taken over. Only inked (loaded at the touch-down) contacts with the main sheet count
+# (stroke_stats / piece_stats / _score_*_at filter sheet == "main" and inked).
+
+[benchmark]
+name = "RoboPaint"                  # one of this repository's original suites (root README.md)
+citation = "Wang et al., 2026"       # the Embodied First Exam paper, arXiv:2611.12177
+url = "https://www.embodied-first-exam.ai/suite/robopaint/"
+repo = "mll-lab-nu/embodied-first-exam"
+commit = "b2280d8"                   # the commit that added tasks/robopaint/ (git log --diff-filter=A)
+
+[license]
+text = """
+RoboPaint (its scenes, tooling and graders) is part of this repository, MIT License. It runs on ManiSkill 3.0.1
+([haosulab/ManiSkill](https://github.com/haosulab/ManiSkill) @ `a4a4f92`) and SAPIEN 3.0.3, both Apache License 2.0.
+{vars[tool_license]} The base image also carries Spline-FRIDA (GPL-3.0), which this task does not use.
+The exemplar: {vars[exemplar_license]} No non-commercial terms apply.
+"""
+
+[robots]
+franka-panda = "Franka Emika Panda arm (ManiSkill PandaStick) holding a brush or pen"
+
+# privileged/grade.py main() L67-142: missing file -> missing_trajectory; load_deliverable L43-60 (zip with actions.npy,
+# no pickle, size bound) and L104-107 (task entry == --family, shape (T, 7), finite, T <= MAX_STEPS) -> bad_trajectory /
+# wrong_family; ONE replay (repeat 1) in a fresh process: rcb_brush_strict.py replay -> Session.replay; success = the
+# replay's success AND instance_matches (L126-129); no result / past --replay-timeout-s 1650 / instance not rebuilt ->
+# grader_error + infra_error (L37, L118-125, L136).
+[modes.privileged]
+success = """
+What is graded is the main sheet after one open-loop replay of the delivered trajectory. The verifier, in a separate
+sandbox without network, replays `/app/output/trajectory.npz` (array `actions`, shape (T, 7): absolute joint targets,
+one row per 20 Hz control step, T at most 72,000) once, in a fresh process, from its own copy of the frozen instance; a
+contact still on the paper after the last row is ended there, and the sheet is then scored as above. Meeting the
+conditions earlier in the replay does not count.
+
+A missing file scores 0, and so does an invalid one: not a readable `.npz` (pickled or object arrays included), no
+`actions` array, a shape other than (T, 7), a NaN or infinite value, more than 72,000 rows, or a `task` entry that names
+another task. A replay that gives no result within 1650 s, or a verifier that cannot rebuild the frozen instance, is an
+infrastructure failure, not a score.
+"""
+
+# sim/server.py: RCB_AGENT_END=1 (compose); finish() L146-154: POST /finish -> "finished", the collect hook's SIGUSR1
+# (_end_from_signal L569-577) -> "timeout", the 72,000-step guard (ctrl_step L369-381) -> "step_limit", an error in a
+# call (on_submit_error) -> "error"; no reset, no RCB_STEP_LIMIT. dump() L85-128: painter.finish() (a contact still
+# pressed is committed), S.status() = rcb_brush_strict Session.score() of the live sheet, final.json success; no success
+# shown during the episode (hidden_success). _check: instance sha mismatch -> give_up(infra) L160-169.
+# standard/grade.py verdict() L175-195: success = final.json success AND graded_by live AND not infra AND reason != error;
+# no final.json / no verdict / grade_error / give-up not caused by the agent's calls -> infra_error.
+[modes.standard]
+success = """
+What is graded is the live main sheet at the end of the one episode; nothing is replayed. The episode ends when the agent
+sends `/finish`, when the agent's session ends (at the latest after {timeout}), when the robot reaches the runaway guard
+of 72,000 control steps (1 h of simulated time), or on a simulator error; there is no reset and no other step limit.
+Once the agent's container is stopped, the service ends a contact still on the paper and scores the sheet as it stands,
+with the same rules the privileged verifier uses. Meeting the conditions earlier in the episode does not count, and the
+service never reports a score or a success while the episode runs.
+
+An episode ended by a simulator error scores 0, and so does one ended because the service crashed repeatedly during the
+agent's own calls. The scene is checked to rebuild the frozen instance (its hash) before the agent is served. A mismatch,
+a missing or unreadable verdict, other repeated service crashes and a sheet the service could not score after a normal
+end are infrastructure failures, not scores.
+"""
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Families: the pass condition and its numbers (which sheet is graded: [modes]). "≥" / "≤" as in the code.
+
+# rcb_brush_score.py is_success_paint (painting rule; no score_inset_mm) + rcb_brush_strict.py process_metrics
+# (path budget, sweeps on the contacts); numbers: tests/instance.json target.success.
+[families."robopaint_acrylic_applesoranges"]
+vars = { blur_mm = "1", de_mean = "2.0", de_p90 = "6.0", ssim_L = "0.92", edge_corr = "0.80", paint_iou = "0.95", register_mm = "5", max_strokes = "390", max_path_mm = "33900", max_scribble = "2.5", scribble_min_mm = "10", share_pct = "10", tool_license = "The paint engine is libmypaint 1.6.1 (ISC License, with a one-line determinism patch) with a preset of mypaint-brushes 2.0.2 (CC0-1.0).", exemplar_license = "a painting made by this task's robot and brush, after Paul Cezanne's Still Life with Apples and Oranges (Wikimedia Commons `File:Nature morte aux pommes et aux oranges, par Paul Cézanne.jpg`, public domain); the exemplar picture is dedicated to the public domain (CC0-1.0)." }
+success = """
+Graded on the main sheet's colours and paint coverage against the picture. Both are converted to CIELAB and blurred
+with a Gaussian of σ = {vars[blur_mm]} mm. The sheet is first moved by the whole-pixel shift, at most {vars[register_mm]} mm along each
+axis, that gives the smallest mean colour difference over the picture's central window (a best shift on the edge of
+that window counts as no shift); every measure is taken at that shift, on the overlap of the two pictures.
+Success needs all of these:
+
+- mean ΔE (CIELAB 1976) ≤ {vars[de_mean]} and its 90th percentile ≤ {vars[de_p90]}, over the area where the sheet or
+  the picture has paint (coverage ≥ 0.5), widened by about 2 mm;
+- SSIM of the blurred L* channel (Gaussian windows, σ = 1.5 mm) ≥ {vars[ssim_L]};
+- edge correlation ≥ {vars[edge_corr]}: the correlation of the blurred L* gradient magnitudes of the sheet and the
+  picture over that area;
+- paint IoU ≥ {vars[paint_iou]}: the sheet's painted area (coverage ≥ 0.5) against the exemplar's paint coverage;
+- at most {vars[max_strokes]} painted contacts with the main sheet (a contact is one continuous stretch of the tip below
+  the sheet's surface; it is painted when the brush was loaded at the touch-down);
+- path budget: `path_mm` ≤ {vars[max_path_mm]} mm, the total length of the tip's path in all painted contacts with the
+  main sheet (100 Hz physics samples);
+- sweeps: contacts longer than {vars[max_scribble]} × the diagonal of their bounding box (the diagonal taken as at
+  least {vars[scribble_min_mm]} mm) hold at most {vars[share_pct]} % of `path_mm`.
+
+The practice sheet is never scored.
+"""
+
+# rcb_brush_score.py is_success_paint (painting rule; no score_inset_mm) + rcb_brush_strict.py process_metrics
+# (path budget, sweeps on the contacts); numbers: tests/instance.json target.success.
+[families."robopaint_acrylic_bedroom"]
+vars = { blur_mm = "1", de_mean = "2.0", de_p90 = "6.0", ssim_L = "0.92", edge_corr = "0.80", paint_iou = "0.95", register_mm = "5", max_strokes = "388", max_path_mm = "40300", max_scribble = "2.5", scribble_min_mm = "10", share_pct = "10", tool_license = "The paint engine is libmypaint 1.6.1 (ISC License, with a one-line determinism patch) with a preset of mypaint-brushes 2.0.2 (CC0-1.0).", exemplar_license = "a painting made by this task's robot and brush, after Vincent van Gogh's The Bedroom (Wikimedia Commons `File:Vincent van Gogh - De slaapkamer - Google Art Project.jpg`, public domain); the exemplar picture is dedicated to the public domain (CC0-1.0)." }
+success = """
+Graded on the main sheet's colours and paint coverage against the picture. Both are converted to CIELAB and blurred
+with a Gaussian of σ = {vars[blur_mm]} mm. The sheet is first moved by the whole-pixel shift, at most {vars[register_mm]} mm along each
+axis, that gives the smallest mean colour difference over the picture's central window (a best shift on the edge of
+that window counts as no shift); every measure is taken at that shift, on the overlap of the two pictures.
+Success needs all of these:
+
+- mean ΔE (CIELAB 1976) ≤ {vars[de_mean]} and its 90th percentile ≤ {vars[de_p90]}, over the area where the sheet or
+  the picture has paint (coverage ≥ 0.5), widened by about 2 mm;
+- SSIM of the blurred L* channel (Gaussian windows, σ = 1.5 mm) ≥ {vars[ssim_L]};
+- edge correlation ≥ {vars[edge_corr]}: the correlation of the blurred L* gradient magnitudes of the sheet and the
+  picture over that area;
+- paint IoU ≥ {vars[paint_iou]}: the sheet's painted area (coverage ≥ 0.5) against the exemplar's paint coverage;
+- at most {vars[max_strokes]} painted contacts with the main sheet (a contact is one continuous stretch of the tip below
+  the sheet's surface; it is painted when the brush was loaded at the touch-down);
+- path budget: `path_mm` ≤ {vars[max_path_mm]} mm, the total length of the tip's path in all painted contacts with the
+  main sheet (100 Hz physics samples);
+- sweeps: contacts longer than {vars[max_scribble]} × the diagonal of their bounding box (the diagonal taken as at
+  least {vars[scribble_min_mm]} mm) hold at most {vars[share_pct]} % of `path_mm`.
+
+The practice sheet is never scored.
+"""
+
+# rcb_brush_score.py is_success_paint (painting rule; no score_inset_mm) + rcb_brush_strict.py process_metrics
+# (path budget, sweeps on the contacts); numbers: tests/instance.json target.success.
+[families."robopaint_acrylic_bluehorses"]
+vars = { blur_mm = "1", de_mean = "2.0", de_p90 = "6.0", ssim_L = "0.92", edge_corr = "0.80", paint_iou = "0.95", register_mm = "5", max_strokes = "390", max_path_mm = "35900", max_scribble = "2.5", scribble_min_mm = "10", share_pct = "10", tool_license = "The paint engine is libmypaint 1.6.1 (ISC License, with a one-line determinism patch) with a preset of mypaint-brushes 2.0.2 (CC0-1.0).", exemplar_license = "a painting made by this task's robot and brush, after Franz Marc's The Large Blue Horses (Wikimedia Commons `File:Franz Marc - Die großen blauen Pferde 1911.jpg`, public domain); the exemplar picture is dedicated to the public domain (CC0-1.0)." }
+success = """
+Graded on the main sheet's colours and paint coverage against the picture. Both are converted to CIELAB and blurred
+with a Gaussian of σ = {vars[blur_mm]} mm. The sheet is first moved by the whole-pixel shift, at most {vars[register_mm]} mm along each
+axis, that gives the smallest mean colour difference over the picture's central window (a best shift on the edge of
+that window counts as no shift); every measure is taken at that shift, on the overlap of the two pictures.
+Success needs all of these:
+
+- mean ΔE (CIELAB 1976) ≤ {vars[de_mean]} and its 90th percentile ≤ {vars[de_p90]}, over the area where the sheet or
+  the picture has paint (coverage ≥ 0.5), widened by about 2 mm;
+- SSIM of the blurred L* channel (Gaussian windows, σ = 1.5 mm) ≥ {vars[ssim_L]};
+- edge correlation ≥ {vars[edge_corr]}: the correlation of the blurred L* gradient magnitudes of the sheet and the
+  picture over that area;
+- paint IoU ≥ {vars[paint_iou]}: the sheet's painted area (coverage ≥ 0.5) against the exemplar's paint coverage;
+- at most {vars[max_strokes]} painted contacts with the main sheet (a contact is one continuous stretch of the tip below
+  the sheet's surface; it is painted when the brush was loaded at the touch-down);
+- path budget: `path_mm` ≤ {vars[max_path_mm]} mm, the total length of the tip's path in all painted contacts with the
+  main sheet (100 Hz physics samples);
+- sweeps: contacts longer than {vars[max_scribble]} × the diagonal of their bounding box (the diagonal taken as at
+  least {vars[scribble_min_mm]} mm) hold at most {vars[share_pct]} % of `path_mm`.
+
+The practice sheet is never scored.
+"""
+
+# rcb_brush_score.py is_success_paint (painting rule; no score_inset_mm) + rcb_brush_strict.py process_metrics
+# (path budget, sweeps on the contacts); numbers: tests/instance.json target.success.
+[families."robopaint_acrylic_greatwave"]
+vars = { blur_mm = "1", de_mean = "2.0", de_p90 = "6.0", ssim_L = "0.92", edge_corr = "0.80", paint_iou = "0.95", register_mm = "5", max_strokes = "376", max_path_mm = "37900", max_scribble = "2.5", scribble_min_mm = "10", share_pct = "10", tool_license = "The paint engine is libmypaint 1.6.1 (ISC License, with a one-line determinism patch) with a preset of mypaint-brushes 2.0.2 (CC0-1.0).", exemplar_license = "a painting made by this task's robot and brush, after Katsushika Hokusai's The Great Wave off Kanagawa (Wikimedia Commons `File:Great Wave off Kanagawa2.jpg`, public domain); the exemplar picture is dedicated to the public domain (CC0-1.0)." }
+success = """
+Graded on the main sheet's colours and paint coverage against the picture. Both are converted to CIELAB and blurred
+with a Gaussian of σ = {vars[blur_mm]} mm. The sheet is first moved by the whole-pixel shift, at most {vars[register_mm]} mm along each
+axis, that gives the smallest mean colour difference over the picture's central window (a best shift on the edge of
+that window counts as no shift); every measure is taken at that shift, on the overlap of the two pictures.
+Success needs all of these:
+
+- mean ΔE (CIELAB 1976) ≤ {vars[de_mean]} and its 90th percentile ≤ {vars[de_p90]}, over the area where the sheet or
+  the picture has paint (coverage ≥ 0.5), widened by about 2 mm;
+- SSIM of the blurred L* channel (Gaussian windows, σ = 1.5 mm) ≥ {vars[ssim_L]};
+- edge correlation ≥ {vars[edge_corr]}: the correlation of the blurred L* gradient magnitudes of the sheet and the
+  picture over that area;
+- paint IoU ≥ {vars[paint_iou]}: the sheet's painted area (coverage ≥ 0.5) against the exemplar's paint coverage;
+- at most {vars[max_strokes]} painted contacts with the main sheet (a contact is one continuous stretch of the tip below
+  the sheet's surface; it is painted when the brush was loaded at the touch-down);
+- path budget: `path_mm` ≤ {vars[max_path_mm]} mm, the total length of the tip's path in all painted contacts with the
+  main sheet (100 Hz physics samples);
+- sweeps: contacts longer than {vars[max_scribble]} × the diagonal of their bounding box (the diagonal taken as at
+  least {vars[scribble_min_mm]} mm) hold at most {vars[share_pct]} % of `path_mm`.
+
+The practice sheet is never scored.
+"""
+
+# rcb_brush_score.py is_success_paint (painting rule; no score_inset_mm) + rcb_brush_strict.py process_metrics
+# (path budget, sweeps on the contacts); numbers: tests/instance.json target.success.
+[families."robopaint_acrylic_kajikazawa"]
+vars = { blur_mm = "1", de_mean = "2.0", de_p90 = "6.0", ssim_L = "0.92", edge_corr = "0.80", paint_iou = "0.95", register_mm = "5", max_strokes = "377", max_path_mm = "44300", max_scribble = "2.5", scribble_min_mm = "10", share_pct = "10", tool_license = "The paint engine is libmypaint 1.6.1 (ISC License, with a one-line determinism patch) with a preset of mypaint-brushes 2.0.2 (CC0-1.0).", exemplar_license = "a painting made by this task's robot and brush, after Katsushika Hokusai's Kajikazawa in Kai Province (Wikimedia Commons `File:Kajikazawa in Kai province.jpg`, public domain); the exemplar picture is dedicated to the public domain (CC0-1.0)." }
+success = """
+Graded on the main sheet's colours and paint coverage against the picture. Both are converted to CIELAB and blurred
+with a Gaussian of σ = {vars[blur_mm]} mm. The sheet is first moved by the whole-pixel shift, at most {vars[register_mm]} mm along each
+axis, that gives the smallest mean colour difference over the picture's central window (a best shift on the edge of
+that window counts as no shift); every measure is taken at that shift, on the overlap of the two pictures.
+Success needs all of these:
+
+- mean ΔE (CIELAB 1976) ≤ {vars[de_mean]} and its 90th percentile ≤ {vars[de_p90]}, over the area where the sheet or
+  the picture has paint (coverage ≥ 0.5), widened by about 2 mm;
+- SSIM of the blurred L* channel (Gaussian windows, σ = 1.5 mm) ≥ {vars[ssim_L]};
+- edge correlation ≥ {vars[edge_corr]}: the correlation of the blurred L* gradient magnitudes of the sheet and the
+  picture over that area;
+- paint IoU ≥ {vars[paint_iou]}: the sheet's painted area (coverage ≥ 0.5) against the exemplar's paint coverage;
+- at most {vars[max_strokes]} painted contacts with the main sheet (a contact is one continuous stretch of the tip below
+  the sheet's surface; it is painted when the brush was loaded at the touch-down);
+- path budget: `path_mm` ≤ {vars[max_path_mm]} mm, the total length of the tip's path in all painted contacts with the
+  main sheet (100 Hz physics samples);
+- sweeps: contacts longer than {vars[max_scribble]} × the diagonal of their bounding box (the diagonal taken as at
+  least {vars[scribble_min_mm]} mm) hold at most {vars[share_pct]} % of `path_mm`.
+
+The practice sheet is never scored.
+"""
+
+# rcb_brush_score.py is_success_paint (painting rule; no score_inset_mm) + rcb_brush_strict.py process_metrics
+# (path budget, sweeps on the contacts); numbers: tests/instance.json target.success.
+[families."robopaint_acrylic_plumpark"]
+vars = { blur_mm = "1", de_mean = "2.0", de_p90 = "6.0", ssim_L = "0.92", edge_corr = "0.80", paint_iou = "0.95", register_mm = "5", max_strokes = "384", max_path_mm = "42300", max_scribble = "2.5", scribble_min_mm = "10", share_pct = "10", tool_license = "The paint engine is libmypaint 1.6.1 (ISC License, with a one-line determinism patch) with a preset of mypaint-brushes 2.0.2 (CC0-1.0).", exemplar_license = "a painting made by this task's robot and brush, after Utagawa Hiroshige's Plum Park in Kameido (Wikimedia Commons `File:De pruimenboomgaard te Kameido-Rijksmuseum RP-P-1956-743.jpeg`, public domain); the exemplar picture is dedicated to the public domain (CC0-1.0)." }
+success = """
+Graded on the main sheet's colours and paint coverage against the picture. Both are converted to CIELAB and blurred
+with a Gaussian of σ = {vars[blur_mm]} mm. The sheet is first moved by the whole-pixel shift, at most {vars[register_mm]} mm along each
+axis, that gives the smallest mean colour difference over the picture's central window (a best shift on the edge of
+that window counts as no shift); every measure is taken at that shift, on the overlap of the two pictures.
+Success needs all of these:
+
+- mean ΔE (CIELAB 1976) ≤ {vars[de_mean]} and its 90th percentile ≤ {vars[de_p90]}, over the area where the sheet or
+  the picture has paint (coverage ≥ 0.5), widened by about 2 mm;
+- SSIM of the blurred L* channel (Gaussian windows, σ = 1.5 mm) ≥ {vars[ssim_L]};
+- edge correlation ≥ {vars[edge_corr]}: the correlation of the blurred L* gradient magnitudes of the sheet and the
+  picture over that area;
+- paint IoU ≥ {vars[paint_iou]}: the sheet's painted area (coverage ≥ 0.5) against the exemplar's paint coverage;
+- at most {vars[max_strokes]} painted contacts with the main sheet (a contact is one continuous stretch of the tip below
+  the sheet's surface; it is painted when the brush was loaded at the touch-down);
+- path budget: `path_mm` ≤ {vars[max_path_mm]} mm, the total length of the tip's path in all painted contacts with the
+  main sheet (100 Hz physics samples);
+- sweeps: contacts longer than {vars[max_scribble]} × the diagonal of their bounding box (the diagonal taken as at
+  least {vars[scribble_min_mm]} mm) hold at most {vars[share_pct]} % of `path_mm`.
+
+The practice sheet is never scored.
+"""
+
+# rcb_brush_score.py is_success_paint (painting rule; no score_inset_mm) + rcb_brush_strict.py process_metrics
+# (path budget, sweeps on the contacts); numbers: tests/instance.json target.success.
+[families."robopaint_acrylic_redfuji"]
+vars = { blur_mm = "1", de_mean = "2.0", de_p90 = "6.0", ssim_L = "0.92", edge_corr = "0.80", paint_iou = "0.95", register_mm = "5", max_strokes = "407", max_path_mm = "51700", max_scribble = "2.5", scribble_min_mm = "10", share_pct = "10", tool_license = "The paint engine is libmypaint 1.6.1 (ISC License, with a one-line determinism patch) with a preset of mypaint-brushes 2.0.2 (CC0-1.0).", exemplar_license = "a painting made by this task's robot and brush, after Katsushika Hokusai's Fine Wind, Clear Morning (Red Fuji) (Wikimedia Commons `File:Fine Wind, Clear Morning by Hokusai (Shimane Art Museum).jpg`, public domain); the exemplar picture is dedicated to the public domain (CC0-1.0)." }
+success = """
+Graded on the main sheet's colours and paint coverage against the picture. Both are converted to CIELAB and blurred
+with a Gaussian of σ = {vars[blur_mm]} mm. The sheet is first moved by the whole-pixel shift, at most {vars[register_mm]} mm along each
+axis, that gives the smallest mean colour difference over the picture's central window (a best shift on the edge of
+that window counts as no shift); every measure is taken at that shift, on the overlap of the two pictures.
+Success needs all of these:
+
+- mean ΔE (CIELAB 1976) ≤ {vars[de_mean]} and its 90th percentile ≤ {vars[de_p90]}, over the area where the sheet or
+  the picture has paint (coverage ≥ 0.5), widened by about 2 mm;
+- SSIM of the blurred L* channel (Gaussian windows, σ = 1.5 mm) ≥ {vars[ssim_L]};
+- edge correlation ≥ {vars[edge_corr]}: the correlation of the blurred L* gradient magnitudes of the sheet and the
+  picture over that area;
+- paint IoU ≥ {vars[paint_iou]}: the sheet's painted area (coverage ≥ 0.5) against the exemplar's paint coverage;
+- at most {vars[max_strokes]} painted contacts with the main sheet (a contact is one continuous stretch of the tip below
+  the sheet's surface; it is painted when the brush was loaded at the touch-down);
+- path budget: `path_mm` ≤ {vars[max_path_mm]} mm, the total length of the tip's path in all painted contacts with the
+  main sheet (100 Hz physics samples);
+- sweeps: contacts longer than {vars[max_scribble]} × the diagonal of their bounding box (the diagonal taken as at
+  least {vars[scribble_min_mm]} mm) hold at most {vars[share_pct]} % of `path_mm`.
+
+The practice sheet is never scored.
+"""
+
+# rcb_brush_score.py is_success_paint (painting rule; no score_inset_mm) + rcb_brush_strict.py process_metrics
+# (path budget, sweeps on the contacts); numbers: tests/instance.json target.success.
+[families."robopaint_acrylic_suddenshower"]
+vars = { blur_mm = "1", de_mean = "2.0", de_p90 = "6.0", ssim_L = "0.92", edge_corr = "0.80", paint_iou = "0.95", register_mm = "5", max_strokes = "380", max_path_mm = "40500", max_scribble = "2.5", scribble_min_mm = "10", share_pct = "10", tool_license = "The paint engine is libmypaint 1.6.1 (ISC License, with a one-line determinism patch) with a preset of mypaint-brushes 2.0.2 (CC0-1.0).", exemplar_license = "a painting made by this task's robot and brush, after Utagawa Hiroshige's Sudden Shower over Shin-Ohashi Bridge and Atake (Wikimedia Commons `File:Hiroshige, Sudden shower over Shin-Ōhashi bridge and Atake, 1857.jpg`, public domain); the exemplar picture is dedicated to the public domain (CC0-1.0)." }
+success = """
+Graded on the main sheet's colours and paint coverage against the picture. Both are converted to CIELAB and blurred
+with a Gaussian of σ = {vars[blur_mm]} mm. The sheet is first moved by the whole-pixel shift, at most {vars[register_mm]} mm along each
+axis, that gives the smallest mean colour difference over the picture's central window (a best shift on the edge of
+that window counts as no shift); every measure is taken at that shift, on the overlap of the two pictures.
+Success needs all of these:
+
+- mean ΔE (CIELAB 1976) ≤ {vars[de_mean]} and its 90th percentile ≤ {vars[de_p90]}, over the area where the sheet or
+  the picture has paint (coverage ≥ 0.5), widened by about 2 mm;
+- SSIM of the blurred L* channel (Gaussian windows, σ = 1.5 mm) ≥ {vars[ssim_L]};
+- edge correlation ≥ {vars[edge_corr]}: the correlation of the blurred L* gradient magnitudes of the sheet and the
+  picture over that area;
+- paint IoU ≥ {vars[paint_iou]}: the sheet's painted area (coverage ≥ 0.5) against the exemplar's paint coverage;
+- at most {vars[max_strokes]} painted contacts with the main sheet (a contact is one continuous stretch of the tip below
+  the sheet's surface; it is painted when the brush was loaded at the touch-down);
+- path budget: `path_mm` ≤ {vars[max_path_mm]} mm, the total length of the tip's path in all painted contacts with the
+  main sheet (100 Hz physics samples);
+- sweeps: contacts longer than {vars[max_scribble]} × the diagonal of their bounding box (the diagonal taken as at
+  least {vars[scribble_min_mm]} mm) hold at most {vars[share_pct]} % of `path_mm`.
+
+The practice sheet is never scored.
+"""
+
+# rcb_brush_score.py is_success_paint (painting rule; no score_inset_mm) + rcb_brush_strict.py process_metrics
+# (path budget, sweeps on the contacts); numbers: tests/instance.json target.success.
+[families."robopaint_acrylic_sunflowers"]
+vars = { blur_mm = "1", de_mean = "2.0", de_p90 = "6.0", ssim_L = "0.92", edge_corr = "0.80", paint_iou = "0.95", register_mm = "5", max_strokes = "380", max_path_mm = "41700", max_scribble = "2.5", scribble_min_mm = "10", share_pct = "10", tool_license = "The paint engine is libmypaint 1.6.1 (ISC License, with a one-line determinism patch) with a preset of mypaint-brushes 2.0.2 (CC0-1.0).", exemplar_license = "a painting made by this task's robot and brush, after Vincent van Gogh's Sunflowers (Wikimedia Commons `File:Vincent Willem van Gogh 127.jpg`, public domain); the exemplar picture is dedicated to the public domain (CC0-1.0)." }
+success = """
+Graded on the main sheet's colours and paint coverage against the picture. Both are converted to CIELAB and blurred
+with a Gaussian of σ = {vars[blur_mm]} mm. The sheet is first moved by the whole-pixel shift, at most {vars[register_mm]} mm along each
+axis, that gives the smallest mean colour difference over the picture's central window (a best shift on the edge of
+that window counts as no shift); every measure is taken at that shift, on the overlap of the two pictures.
+Success needs all of these:
+
+- mean ΔE (CIELAB 1976) ≤ {vars[de_mean]} and its 90th percentile ≤ {vars[de_p90]}, over the area where the sheet or
+  the picture has paint (coverage ≥ 0.5), widened by about 2 mm;
+- SSIM of the blurred L* channel (Gaussian windows, σ = 1.5 mm) ≥ {vars[ssim_L]};
+- edge correlation ≥ {vars[edge_corr]}: the correlation of the blurred L* gradient magnitudes of the sheet and the
+  picture over that area;
+- paint IoU ≥ {vars[paint_iou]}: the sheet's painted area (coverage ≥ 0.5) against the exemplar's paint coverage;
+- at most {vars[max_strokes]} painted contacts with the main sheet (a contact is one continuous stretch of the tip below
+  the sheet's surface; it is painted when the brush was loaded at the touch-down);
+- path budget: `path_mm` ≤ {vars[max_path_mm]} mm, the total length of the tip's path in all painted contacts with the
+  main sheet (100 Hz physics samples);
+- sweeps: contacts longer than {vars[max_scribble]} × the diagonal of their bounding box (the diagonal taken as at
+  least {vars[scribble_min_mm]} mm) hold at most {vars[share_pct]} % of `path_mm`.
+
+The practice sheet is never scored.
+"""
+
+# rcb_brush_score.py is_success_paint (painting rule; no score_inset_mm) + rcb_brush_strict.py process_metrics
+# (path budget, sweeps on the contacts); numbers: tests/instance.json target.success.
+[families."robopaint_acrylic_vision"]
+vars = { blur_mm = "1", de_mean = "2.0", de_p90 = "6.0", ssim_L = "0.92", edge_corr = "0.80", paint_iou = "0.95", register_mm = "5", max_strokes = "390", max_path_mm = "32300", max_scribble = "2.5", scribble_min_mm = "10", share_pct = "10", tool_license = "The paint engine is libmypaint 1.6.1 (ISC License, with a one-line determinism patch) with a preset of mypaint-brushes 2.0.2 (CC0-1.0).", exemplar_license = "a painting made by this task's robot and brush, after Paul Gauguin's Vision after the Sermon (Wikimedia Commons `File:La vision après le sermon (Paul Gauguin).jpg`, public domain); the exemplar picture is dedicated to the public domain (CC0-1.0)." }
+success = """
+Graded on the main sheet's colours and paint coverage against the picture. Both are converted to CIELAB and blurred
+with a Gaussian of σ = {vars[blur_mm]} mm. The sheet is first moved by the whole-pixel shift, at most {vars[register_mm]} mm along each
+axis, that gives the smallest mean colour difference over the picture's central window (a best shift on the edge of
+that window counts as no shift); every measure is taken at that shift, on the overlap of the two pictures.
+Success needs all of these:
+
+- mean ΔE (CIELAB 1976) ≤ {vars[de_mean]} and its 90th percentile ≤ {vars[de_p90]}, over the area where the sheet or
+  the picture has paint (coverage ≥ 0.5), widened by about 2 mm;
+- SSIM of the blurred L* channel (Gaussian windows, σ = 1.5 mm) ≥ {vars[ssim_L]};
+- edge correlation ≥ {vars[edge_corr]}: the correlation of the blurred L* gradient magnitudes of the sheet and the
+  picture over that area;
+- paint IoU ≥ {vars[paint_iou]}: the sheet's painted area (coverage ≥ 0.5) against the exemplar's paint coverage;
+- at most {vars[max_strokes]} painted contacts with the main sheet (a contact is one continuous stretch of the tip below
+  the sheet's surface; it is painted when the brush was loaded at the touch-down);
+- path budget: `path_mm` ≤ {vars[max_path_mm]} mm, the total length of the tip's path in all painted contacts with the
+  main sheet (100 Hz physics samples);
+- sweeps: contacts longer than {vars[max_scribble]} × the diagonal of their bounding box (the diagonal taken as at
+  least {vars[scribble_min_mm]} mm) hold at most {vars[share_pct]} % of `path_mm`.
+
+The practice sheet is never scored.
+"""
+
+# rcb_brush_score.py is_success (ink picture rule) + rcb_brush_strict.py process_metrics (colouring in, counted
+# strokes on marked_pieces, sweeps on the pieces); numbers: tests/instance.json target.success.
+[families."robopaint_caoshu_beiquelindanshui"]
+vars = { regions = "27", iou = "0.80", boundary_f = "0.75", min_stroke_coverage = "0.80", max_stray_frac = "0.04", register_mm = "5", max_strokes = "12", max_path_mm = "2680", min_mark_width_mm = "0.59", stroke_gap_mm = "5", mark_min_width_mm = "0.1", max_stroke_path_mm = "860", max_scribble = "12", scribble_min_mm = "10", share_pct = "10", tool_license = "The brush model is this repository's re-implementation of the dynamic virtual brush of Wang et al. (IROS 2020).", exemplar_license = "cropped from a public-domain scan of 張旭《古詩四帖》 (Wikimedia Commons `File:張旭 古詩四帖.jpg`, PD-old-70); notice in `NOTICE-exemplar.md`." }
+success = """
+Graded on the main sheet's ink (pixels with ink coverage ≥ 0.5 on the sheet's 1024 × 1024 raster, 0.222 mm per
+pixel) against the exemplar's ink. The sheet is first moved by the whole-pixel shift, at most {vars[register_mm]} mm along each
+axis, that gives the largest overlap of its ink with the exemplar's (a best shift on the edge of that window counts as
+no shift); every measure is taken at that shift. Success needs all of these:
+
+- IoU of the inked areas ≥ {vars[iou]};
+- boundary F-score ≥ {vars[boundary_f]}: the harmonic mean of the share of the sheet's ink-edge pixels within 1 mm of the
+  exemplar's edge and the share of the exemplar's edge pixels within 1 mm of the sheet's;
+- each of the exemplar's {vars[regions]} regions is at least {vars[min_stroke_coverage]} covered by ink;
+- stray ink (ink more than 1 mm from the exemplar's ink) at most {vars[max_stray_frac]} of the exemplar's ink area;
+- at most {vars[max_strokes]} inked contacts with the main sheet (a contact is one continuous stretch of the tip below the
+  sheet's surface; it is inked when the brush was loaded at the touch-down);
+- no colouring in: the task fails when `path_mm` > {vars[max_path_mm]} mm and also `mark_width_mm` < {vars[min_mark_width_mm]} mm.
+  `path_mm` is the total length of the tip's path in all inked contacts with the main sheet (100 Hz physics samples);
+  `mark_width_mm` is the area each contact inks on its own (coverage ≥ 0.5; where contacts overlap, each counts its
+  own), summed over the contacts and divided by `path_mm`;
+- at most {vars[max_strokes]} counted strokes: each inked contact is cut into marked pieces wherever the tip moves more
+  than {vars[stroke_gap_mm]} mm along the sheet while its mark is narrower than {vars[mark_min_width_mm]} mm (the touch-down before the first and
+  the lift after the last marking sample belong to no piece); a piece counts as one stroke, or as ⌈length /
+  {vars[max_stroke_path_mm]} mm⌉ strokes when it is longer than {vars[max_stroke_path_mm]} mm;
+- sweeps: pieces longer than {vars[max_scribble]} × the diagonal of their bounding box (the diagonal taken as at least
+  {vars[scribble_min_mm]} mm) hold at most {vars[share_pct]} % of the pieces' total length.
+
+The practice sheet is never scored.
+"""
+
+# rcb_brush_score.py is_success (ink picture rule) + rcb_brush_strict.py process_metrics (colouring in, counted
+# strokes on marked_pieces, sweeps on the pieces); numbers: tests/instance.json target.success.
+[families."robopaint_caoshu_nangong"]
+vars = { regions = "24", iou = "0.80", boundary_f = "0.75", min_stroke_coverage = "0.80", max_stray_frac = "0.04", register_mm = "5", max_strokes = "5", max_path_mm = "2680", min_mark_width_mm = "0.93", stroke_gap_mm = "5", mark_min_width_mm = "0.1", max_stroke_path_mm = "1960", max_scribble = "12", scribble_min_mm = "10", share_pct = "10", tool_license = "The brush model is this repository's re-implementation of the dynamic virtual brush of Wang et al. (IROS 2020).", exemplar_license = "cropped from a public-domain scan of 張旭《古詩四帖》 (Wikimedia Commons `File:張旭 古詩四帖.jpg`, PD-old-70); notice in `NOTICE-exemplar.md`." }
+success = """
+Graded on the main sheet's ink (pixels with ink coverage ≥ 0.5 on the sheet's 1024 × 1024 raster, 0.222 mm per
+pixel) against the exemplar's ink. The sheet is first moved by the whole-pixel shift, at most {vars[register_mm]} mm along each
+axis, that gives the largest overlap of its ink with the exemplar's (a best shift on the edge of that window counts as
+no shift); every measure is taken at that shift. Success needs all of these:
+
+- IoU of the inked areas ≥ {vars[iou]};
+- boundary F-score ≥ {vars[boundary_f]}: the harmonic mean of the share of the sheet's ink-edge pixels within 1 mm of the
+  exemplar's edge and the share of the exemplar's edge pixels within 1 mm of the sheet's;
+- each of the exemplar's {vars[regions]} regions is at least {vars[min_stroke_coverage]} covered by ink;
+- stray ink (ink more than 1 mm from the exemplar's ink) at most {vars[max_stray_frac]} of the exemplar's ink area;
+- at most {vars[max_strokes]} inked contacts with the main sheet (a contact is one continuous stretch of the tip below the
+  sheet's surface; it is inked when the brush was loaded at the touch-down);
+- no colouring in: the task fails when `path_mm` > {vars[max_path_mm]} mm and also `mark_width_mm` < {vars[min_mark_width_mm]} mm.
+  `path_mm` is the total length of the tip's path in all inked contacts with the main sheet (100 Hz physics samples);
+  `mark_width_mm` is the area each contact inks on its own (coverage ≥ 0.5; where contacts overlap, each counts its
+  own), summed over the contacts and divided by `path_mm`;
+- at most {vars[max_strokes]} counted strokes: each inked contact is cut into marked pieces wherever the tip moves more
+  than {vars[stroke_gap_mm]} mm along the sheet while its mark is narrower than {vars[mark_min_width_mm]} mm (the touch-down before the first and
+  the lift after the last marking sample belong to no piece); a piece counts as one stroke, or as ⌈length /
+  {vars[max_stroke_path_mm]} mm⌉ strokes when it is longer than {vars[max_stroke_path_mm]} mm;
+- sweeps: pieces longer than {vars[max_scribble]} × the diagonal of their bounding box (the diagonal taken as at least
+  {vars[scribble_min_mm]} mm) hold at most {vars[share_pct]} % of the pieces' total length.
+
+The practice sheet is never scored.
+"""
+
+# rcb_brush_score.py is_success (ink picture rule) + rcb_brush_strict.py process_metrics (colouring in, counted
+# strokes on marked_pieces, sweeps on the pieces); numbers: tests/instance.json target.success.
+[families."robopaint_caoshu_siwushaonian"]
+vars = { regions = "20", iou = "0.80", boundary_f = "0.75", min_stroke_coverage = "0.80", max_stray_frac = "0.04", register_mm = "5", max_strokes = "8", max_path_mm = "1930", min_mark_width_mm = "0.79", stroke_gap_mm = "5", mark_min_width_mm = "0.1", max_stroke_path_mm = "970", max_scribble = "12", scribble_min_mm = "10", share_pct = "10", tool_license = "The brush model is this repository's re-implementation of the dynamic virtual brush of Wang et al. (IROS 2020).", exemplar_license = "cropped from a public-domain scan of 張旭《古詩四帖》 (Wikimedia Commons `File:張旭 古詩四帖.jpg`, PD-old-70); notice in `NOTICE-exemplar.md`." }
+success = """
+Graded on the main sheet's ink (pixels with ink coverage ≥ 0.5 on the sheet's 1024 × 1024 raster, 0.222 mm per
+pixel) against the exemplar's ink. The sheet is first moved by the whole-pixel shift, at most {vars[register_mm]} mm along each
+axis, that gives the largest overlap of its ink with the exemplar's (a best shift on the edge of that window counts as
+no shift); every measure is taken at that shift. Success needs all of these:
+
+- IoU of the inked areas ≥ {vars[iou]};
+- boundary F-score ≥ {vars[boundary_f]}: the harmonic mean of the share of the sheet's ink-edge pixels within 1 mm of the
+  exemplar's edge and the share of the exemplar's edge pixels within 1 mm of the sheet's;
+- each of the exemplar's {vars[regions]} regions is at least {vars[min_stroke_coverage]} covered by ink;
+- stray ink (ink more than 1 mm from the exemplar's ink) at most {vars[max_stray_frac]} of the exemplar's ink area;
+- at most {vars[max_strokes]} inked contacts with the main sheet (a contact is one continuous stretch of the tip below the
+  sheet's surface; it is inked when the brush was loaded at the touch-down);
+- no colouring in: the task fails when `path_mm` > {vars[max_path_mm]} mm and also `mark_width_mm` < {vars[min_mark_width_mm]} mm.
+  `path_mm` is the total length of the tip's path in all inked contacts with the main sheet (100 Hz physics samples);
+  `mark_width_mm` is the area each contact inks on its own (coverage ≥ 0.5; where contacts overlap, each counts its
+  own), summed over the contacts and divided by `path_mm`;
+- at most {vars[max_strokes]} counted strokes: each inked contact is cut into marked pieces wherever the tip moves more
+  than {vars[stroke_gap_mm]} mm along the sheet while its mark is narrower than {vars[mark_min_width_mm]} mm (the touch-down before the first and
+  the lift after the last marking sample belong to no piece); a piece counts as one stroke, or as ⌈length /
+  {vars[max_stroke_path_mm]} mm⌉ strokes when it is longer than {vars[max_stroke_path_mm]} mm;
+- sweeps: pieces longer than {vars[max_scribble]} × the diagonal of their bounding box (the diagonal taken as at least
+  {vars[scribble_min_mm]} mm) hold at most {vars[share_pct]} % of the pieces' total length.
+
+The practice sheet is never scored.
+"""
+
+# rcb_brush_score.py is_success (ink picture rule) + rcb_brush_strict.py process_metrics (colouring in, counted
+# strokes on marked_pieces, sweeps on the pieces); numbers: tests/instance.json target.success.
+[families."robopaint_caoshu_wen"]
+vars = { regions = "9", iou = "0.80", boundary_f = "0.75", min_stroke_coverage = "0.80", max_stray_frac = "0.04", register_mm = "5", max_strokes = "2", max_path_mm = "810", min_mark_width_mm = "1.37", stroke_gap_mm = "5", mark_min_width_mm = "0.1", max_stroke_path_mm = "720", max_scribble = "12", scribble_min_mm = "10", share_pct = "10", tool_license = "The brush model is this repository's re-implementation of the dynamic virtual brush of Wang et al. (IROS 2020).", exemplar_license = "cropped from a public-domain scan of 張旭《古詩四帖》 (Wikimedia Commons `File:張旭 古詩四帖.jpg`, PD-old-70); notice in `NOTICE-exemplar.md`." }
+success = """
+Graded on the main sheet's ink (pixels with ink coverage ≥ 0.5 on the sheet's 1024 × 1024 raster, 0.222 mm per
+pixel) against the exemplar's ink. The sheet is first moved by the whole-pixel shift, at most {vars[register_mm]} mm along each
+axis, that gives the largest overlap of its ink with the exemplar's (a best shift on the edge of that window counts as
+no shift); every measure is taken at that shift. Success needs all of these:
+
+- IoU of the inked areas ≥ {vars[iou]};
+- boundary F-score ≥ {vars[boundary_f]}: the harmonic mean of the share of the sheet's ink-edge pixels within 1 mm of the
+  exemplar's edge and the share of the exemplar's edge pixels within 1 mm of the sheet's;
+- each of the exemplar's {vars[regions]} regions is at least {vars[min_stroke_coverage]} covered by ink;
+- stray ink (ink more than 1 mm from the exemplar's ink) at most {vars[max_stray_frac]} of the exemplar's ink area;
+- at most {vars[max_strokes]} inked contacts with the main sheet (a contact is one continuous stretch of the tip below the
+  sheet's surface; it is inked when the brush was loaded at the touch-down);
+- no colouring in: the task fails when `path_mm` > {vars[max_path_mm]} mm and also `mark_width_mm` < {vars[min_mark_width_mm]} mm.
+  `path_mm` is the total length of the tip's path in all inked contacts with the main sheet (100 Hz physics samples);
+  `mark_width_mm` is the area each contact inks on its own (coverage ≥ 0.5; where contacts overlap, each counts its
+  own), summed over the contacts and divided by `path_mm`;
+- at most {vars[max_strokes]} counted strokes: each inked contact is cut into marked pieces wherever the tip moves more
+  than {vars[stroke_gap_mm]} mm along the sheet while its mark is narrower than {vars[mark_min_width_mm]} mm (the touch-down before the first and
+  the lift after the last marking sample belong to no piece); a piece counts as one stroke, or as ⌈length /
+  {vars[max_stroke_path_mm]} mm⌉ strokes when it is longer than {vars[max_stroke_path_mm]} mm;
+- sweeps: pieces longer than {vars[max_scribble]} × the diagonal of their bounding box (the diagonal taken as at least
+  {vars[scribble_min_mm]} mm) hold at most {vars[share_pct]} % of the pieces' total length.
+
+The practice sheet is never scored.
+"""
+
+# rcb_brush_score.py is_success (ink picture rule) + rcb_brush_strict.py process_metrics (colouring in, counted
+# strokes on marked_pieces, sweeps on the pieces); numbers: tests/instance.json target.success.
+[families."robopaint_caoshu_zhen"]
+vars = { regions = "12", iou = "0.80", boundary_f = "0.75", min_stroke_coverage = "0.80", max_stray_frac = "0.04", register_mm = "5", max_strokes = "3", max_path_mm = "1610", min_mark_width_mm = "1.75", stroke_gap_mm = "5", mark_min_width_mm = "0.1", max_stroke_path_mm = "1590", max_scribble = "12", scribble_min_mm = "10", share_pct = "10", tool_license = "The brush model is this repository's re-implementation of the dynamic virtual brush of Wang et al. (IROS 2020).", exemplar_license = "cropped from a public-domain scan of 張旭《古詩四帖》 (Wikimedia Commons `File:張旭 古詩四帖.jpg`, PD-old-70); notice in `NOTICE-exemplar.md`." }
+success = """
+Graded on the main sheet's ink (pixels with ink coverage ≥ 0.5 on the sheet's 1024 × 1024 raster, 0.222 mm per
+pixel) against the exemplar's ink. The sheet is first moved by the whole-pixel shift, at most {vars[register_mm]} mm along each
+axis, that gives the largest overlap of its ink with the exemplar's (a best shift on the edge of that window counts as
+no shift); every measure is taken at that shift. Success needs all of these:
+
+- IoU of the inked areas ≥ {vars[iou]};
+- boundary F-score ≥ {vars[boundary_f]}: the harmonic mean of the share of the sheet's ink-edge pixels within 1 mm of the
+  exemplar's edge and the share of the exemplar's edge pixels within 1 mm of the sheet's;
+- each of the exemplar's {vars[regions]} regions is at least {vars[min_stroke_coverage]} covered by ink;
+- stray ink (ink more than 1 mm from the exemplar's ink) at most {vars[max_stray_frac]} of the exemplar's ink area;
+- at most {vars[max_strokes]} inked contacts with the main sheet (a contact is one continuous stretch of the tip below the
+  sheet's surface; it is inked when the brush was loaded at the touch-down);
+- no colouring in: the task fails when `path_mm` > {vars[max_path_mm]} mm and also `mark_width_mm` < {vars[min_mark_width_mm]} mm.
+  `path_mm` is the total length of the tip's path in all inked contacts with the main sheet (100 Hz physics samples);
+  `mark_width_mm` is the area each contact inks on its own (coverage ≥ 0.5; where contacts overlap, each counts its
+  own), summed over the contacts and divided by `path_mm`;
+- at most {vars[max_strokes]} counted strokes: each inked contact is cut into marked pieces wherever the tip moves more
+  than {vars[stroke_gap_mm]} mm along the sheet while its mark is narrower than {vars[mark_min_width_mm]} mm (the touch-down before the first and
+  the lift after the last marking sample belong to no piece); a piece counts as one stroke, or as ⌈length /
+  {vars[max_stroke_path_mm]} mm⌉ strokes when it is longer than {vars[max_stroke_path_mm]} mm;
+- sweeps: pieces longer than {vars[max_scribble]} × the diagonal of their bounding box (the diagonal taken as at least
+  {vars[scribble_min_mm]} mm) hold at most {vars[share_pct]} % of the pieces' total length.
+
+The practice sheet is never scored.
+"""
+
+# rcb_brush_score.py is_success (ink picture rule) + rcb_brush_strict.py process_metrics (colouring in, counted
+# strokes on marked_pieces, sweeps on the pieces); numbers: tests/instance.json target.success.
+[families."robopaint_caoshu_zhongtiangechuifen"]
+vars = { regions = "17", iou = "0.80", boundary_f = "0.75", min_stroke_coverage = "0.80", max_stray_frac = "0.04", register_mm = "5", max_strokes = "8", max_path_mm = "1580", min_mark_width_mm = "0.57", stroke_gap_mm = "5", mark_min_width_mm = "0.1", max_stroke_path_mm = "880", max_scribble = "12", scribble_min_mm = "10", share_pct = "10", tool_license = "The brush model is this repository's re-implementation of the dynamic virtual brush of Wang et al. (IROS 2020).", exemplar_license = "cropped from a public-domain scan of 張旭《古詩四帖》 (Wikimedia Commons `File:張旭 古詩四帖.jpg`, PD-old-70); notice in `NOTICE-exemplar.md`." }
+success = """
+Graded on the main sheet's ink (pixels with ink coverage ≥ 0.5 on the sheet's 1024 × 1024 raster, 0.222 mm per
+pixel) against the exemplar's ink. The sheet is first moved by the whole-pixel shift, at most {vars[register_mm]} mm along each
+axis, that gives the largest overlap of its ink with the exemplar's (a best shift on the edge of that window counts as
+no shift); every measure is taken at that shift. Success needs all of these:
+
+- IoU of the inked areas ≥ {vars[iou]};
+- boundary F-score ≥ {vars[boundary_f]}: the harmonic mean of the share of the sheet's ink-edge pixels within 1 mm of the
+  exemplar's edge and the share of the exemplar's edge pixels within 1 mm of the sheet's;
+- each of the exemplar's {vars[regions]} regions is at least {vars[min_stroke_coverage]} covered by ink;
+- stray ink (ink more than 1 mm from the exemplar's ink) at most {vars[max_stray_frac]} of the exemplar's ink area;
+- at most {vars[max_strokes]} inked contacts with the main sheet (a contact is one continuous stretch of the tip below the
+  sheet's surface; it is inked when the brush was loaded at the touch-down);
+- no colouring in: the task fails when `path_mm` > {vars[max_path_mm]} mm and also `mark_width_mm` < {vars[min_mark_width_mm]} mm.
+  `path_mm` is the total length of the tip's path in all inked contacts with the main sheet (100 Hz physics samples);
+  `mark_width_mm` is the area each contact inks on its own (coverage ≥ 0.5; where contacts overlap, each counts its
+  own), summed over the contacts and divided by `path_mm`;
+- at most {vars[max_strokes]} counted strokes: each inked contact is cut into marked pieces wherever the tip moves more
+  than {vars[stroke_gap_mm]} mm along the sheet while its mark is narrower than {vars[mark_min_width_mm]} mm (the touch-down before the first and
+  the lift after the last marking sample belong to no piece); a piece counts as one stroke, or as ⌈length /
+  {vars[max_stroke_path_mm]} mm⌉ strokes when it is longer than {vars[max_stroke_path_mm]} mm;
+- sweeps: pieces longer than {vars[max_scribble]} × the diagonal of their bounding box (the diagonal taken as at least
+  {vars[scribble_min_mm]} mm) hold at most {vars[share_pct]} % of the pieces' total length.
+
+The practice sheet is never scored.
+"""
+
+# rcb_brush_score.py is_success (ink picture rule) + rcb_brush_strict.py process_metrics (colouring in, counted
+# strokes on marked_pieces, sweeps on the pieces); numbers: tests/instance.json target.success.
+[families."robopaint_kaishu_linfengguilong"]
+vars = { regions = "71", iou = "0.80", boundary_f = "0.75", min_stroke_coverage = "0.80", max_stray_frac = "0.04", register_mm = "5", max_strokes = "71", max_path_mm = "7880", min_mark_width_mm = "0.99", stroke_gap_mm = "5", mark_min_width_mm = "0.1", max_stroke_path_mm = "920", max_scribble = "12", scribble_min_mm = "10", share_pct = "10", tool_license = "The brush model is this repository's re-implementation of the dynamic virtual brush of Wang et al. (IROS 2020).", exemplar_license = "the stroke outlines come from Make Me a Hanzi (`skishore/makemeahanzi` @ `bddc96d`, `graphics.txt`, derived from the fonts AR PL KaitiM GB and AR PL UKai) under the Arphic Public License; the task carries `ARPHICPL.TXT` and `NOTICE-exemplar.md`." }
+success = """
+Graded on the main sheet's ink (pixels with ink coverage ≥ 0.5 on the sheet's 1024 × 1024 raster, 0.222 mm per
+pixel) against the exemplar's ink. The sheet is first moved by the whole-pixel shift, at most {vars[register_mm]} mm along each
+axis, that gives the largest overlap of its ink with the exemplar's (a best shift on the edge of that window counts as
+no shift); every measure is taken at that shift. Success needs all of these:
+
+- IoU of the inked areas ≥ {vars[iou]};
+- boundary F-score ≥ {vars[boundary_f]}: the harmonic mean of the share of the sheet's ink-edge pixels within 1 mm of the
+  exemplar's edge and the share of the exemplar's edge pixels within 1 mm of the sheet's;
+- each of the exemplar's {vars[regions]} regions is at least {vars[min_stroke_coverage]} covered by ink;
+- stray ink (ink more than 1 mm from the exemplar's ink) at most {vars[max_stray_frac]} of the exemplar's ink area;
+- at most {vars[max_strokes]} inked contacts with the main sheet (a contact is one continuous stretch of the tip below the
+  sheet's surface; it is inked when the brush was loaded at the touch-down);
+- no colouring in: the task fails when `path_mm` > {vars[max_path_mm]} mm and also `mark_width_mm` < {vars[min_mark_width_mm]} mm.
+  `path_mm` is the total length of the tip's path in all inked contacts with the main sheet (100 Hz physics samples);
+  `mark_width_mm` is the area each contact inks on its own (coverage ≥ 0.5; where contacts overlap, each counts its
+  own), summed over the contacts and divided by `path_mm`;
+- at most {vars[max_strokes]} counted strokes: each inked contact is cut into marked pieces wherever the tip moves more
+  than {vars[stroke_gap_mm]} mm along the sheet while its mark is narrower than {vars[mark_min_width_mm]} mm (the touch-down before the first and
+  the lift after the last marking sample belong to no piece); a piece counts as one stroke, or as ⌈length /
+  {vars[max_stroke_path_mm]} mm⌉ strokes when it is longer than {vars[max_stroke_path_mm]} mm;
+- sweeps: pieces longer than {vars[max_scribble]} × the diagonal of their bounding box (the diagonal taken as at least
+  {vars[scribble_min_mm]} mm) hold at most {vars[share_pct]} % of the pieces' total length.
+
+The practice sheet is never scored.
+"""
+
+# rcb_brush_score.py is_success (ink picture rule) + rcb_brush_strict.py process_metrics (colouring in, counted
+# strokes on marked_pieces, sweeps on the pieces); numbers: tests/instance.json target.success.
+[families."robopaint_kaishu_yongzibafa"]
+vars = { regions = "21", iou = "0.80", boundary_f = "0.75", min_stroke_coverage = "0.80", max_stray_frac = "0.04", register_mm = "5", max_strokes = "21", max_path_mm = "3230", min_mark_width_mm = "1.34", stroke_gap_mm = "5", mark_min_width_mm = "0.1", max_stroke_path_mm = "600", max_scribble = "12", scribble_min_mm = "10", share_pct = "10", tool_license = "The brush model is this repository's re-implementation of the dynamic virtual brush of Wang et al. (IROS 2020).", exemplar_license = "the stroke outlines come from Make Me a Hanzi (`skishore/makemeahanzi` @ `bddc96d`, `graphics.txt`, derived from the fonts AR PL KaitiM GB and AR PL UKai) under the Arphic Public License; the task carries `ARPHICPL.TXT` and `NOTICE-exemplar.md`." }
+success = """
+Graded on the main sheet's ink (pixels with ink coverage ≥ 0.5 on the sheet's 1024 × 1024 raster, 0.222 mm per
+pixel) against the exemplar's ink. The sheet is first moved by the whole-pixel shift, at most {vars[register_mm]} mm along each
+axis, that gives the largest overlap of its ink with the exemplar's (a best shift on the edge of that window counts as
+no shift); every measure is taken at that shift. Success needs all of these:
+
+- IoU of the inked areas ≥ {vars[iou]};
+- boundary F-score ≥ {vars[boundary_f]}: the harmonic mean of the share of the sheet's ink-edge pixels within 1 mm of the
+  exemplar's edge and the share of the exemplar's edge pixels within 1 mm of the sheet's;
+- each of the exemplar's {vars[regions]} regions is at least {vars[min_stroke_coverage]} covered by ink;
+- stray ink (ink more than 1 mm from the exemplar's ink) at most {vars[max_stray_frac]} of the exemplar's ink area;
+- at most {vars[max_strokes]} inked contacts with the main sheet (a contact is one continuous stretch of the tip below the
+  sheet's surface; it is inked when the brush was loaded at the touch-down);
+- no colouring in: the task fails when `path_mm` > {vars[max_path_mm]} mm and also `mark_width_mm` < {vars[min_mark_width_mm]} mm.
+  `path_mm` is the total length of the tip's path in all inked contacts with the main sheet (100 Hz physics samples);
+  `mark_width_mm` is the area each contact inks on its own (coverage ≥ 0.5; where contacts overlap, each counts its
+  own), summed over the contacts and divided by `path_mm`;
+- at most {vars[max_strokes]} counted strokes: each inked contact is cut into marked pieces wherever the tip moves more
+  than {vars[stroke_gap_mm]} mm along the sheet while its mark is narrower than {vars[mark_min_width_mm]} mm (the touch-down before the first and
+  the lift after the last marking sample belong to no piece); a piece counts as one stroke, or as ⌈length /
+  {vars[max_stroke_path_mm]} mm⌉ strokes when it is longer than {vars[max_stroke_path_mm]} mm;
+- sweeps: pieces longer than {vars[max_scribble]} × the diagonal of their bounding box (the diagonal taken as at least
+  {vars[scribble_min_mm]} mm) hold at most {vars[share_pct]} % of the pieces' total length.
+
+The practice sheet is never scored.
+"""
+
+# rcb_brush_score.py is_success (ink picture rule) + rcb_brush_strict.py process_metrics (colouring in only: no
+# counted-stroke or sweep keys in the rule); numbers: tests/instance.json target.success.
+[families."robopaint_lettering_aim"]
+vars = { regions = "54", iou = "0.85", boundary_f = "0.80", min_stroke_coverage = "0.75", max_stray_frac = "0.04", register_mm = "5", max_strokes = "11", max_path_mm = "3000", min_mark_width_mm = "0.12", tool_license = "The pointed-pen model is this repository's own.", exemplar_license = "re-drawn with this task's pen from George Bickham, *The Universal Penman* (London, 1741), public domain (scan: Internet Archive `gri_33125008538056`, NOT_IN_COPYRIGHT); notice in `NOTICE-exemplar.md`." }
+success = """
+Graded on the main sheet's ink (pixels with ink coverage ≥ 0.5 on the sheet's 1024 × 1024 raster, 0.222 mm per
+pixel) against the exemplar's ink. The sheet is first moved by the whole-pixel shift, at most {vars[register_mm]} mm along each
+axis, that gives the largest overlap of its ink with the exemplar's (a best shift on the edge of that window counts as
+no shift); every measure is taken at that shift. Success needs all of these:
+
+- IoU of the inked areas ≥ {vars[iou]};
+- boundary F-score ≥ {vars[boundary_f]}: the harmonic mean of the share of the sheet's ink-edge pixels within 1 mm of the
+  exemplar's edge and the share of the exemplar's edge pixels within 1 mm of the sheet's;
+- each of the exemplar's {vars[regions]} regions is at least {vars[min_stroke_coverage]} covered by ink;
+- stray ink (ink more than 1 mm from the exemplar's ink) at most {vars[max_stray_frac]} of the exemplar's ink area;
+- at most {vars[max_strokes]} inked contacts with the main sheet (a contact is one continuous stretch of the tip below the
+  sheet's surface; it is inked when the pen was loaded at the touch-down);
+- no colouring in: the task fails when `path_mm` > {vars[max_path_mm]} mm and also `mark_width_mm` < {vars[min_mark_width_mm]} mm.
+  `path_mm` is the total length of the tip's path in all inked contacts with the main sheet (100 Hz physics samples);
+  `mark_width_mm` is the area each contact inks on its own (coverage ≥ 0.5; where contacts overlap, each counts its
+  own), summed over the contacts and divided by `path_mm`.
+
+The practice sheet is never scored.
+"""
+
+# rcb_brush_score.py is_success (ink picture rule) + rcb_brush_strict.py process_metrics (colouring in only: no
+# counted-stroke or sweep keys in the rule); numbers: tests/instance.json target.success.
+[families."robopaint_lettering_business"]
+vars = { regions = "54", iou = "0.85", boundary_f = "0.80", min_stroke_coverage = "0.75", max_stray_frac = "0.04", register_mm = "5", max_strokes = "9", max_path_mm = "3730", min_mark_width_mm = "0.1", tool_license = "The pointed-pen model is this repository's own.", exemplar_license = "re-drawn with this task's pen from George Bickham, *The Universal Penman* (London, 1741), public domain (scan: Internet Archive `gri_33125008538056`, NOT_IN_COPYRIGHT); notice in `NOTICE-exemplar.md`." }
+success = """
+Graded on the main sheet's ink (pixels with ink coverage ≥ 0.5 on the sheet's 1024 × 1024 raster, 0.222 mm per
+pixel) against the exemplar's ink. The sheet is first moved by the whole-pixel shift, at most {vars[register_mm]} mm along each
+axis, that gives the largest overlap of its ink with the exemplar's (a best shift on the edge of that window counts as
+no shift); every measure is taken at that shift. Success needs all of these:
+
+- IoU of the inked areas ≥ {vars[iou]};
+- boundary F-score ≥ {vars[boundary_f]}: the harmonic mean of the share of the sheet's ink-edge pixels within 1 mm of the
+  exemplar's edge and the share of the exemplar's edge pixels within 1 mm of the sheet's;
+- each of the exemplar's {vars[regions]} regions is at least {vars[min_stroke_coverage]} covered by ink;
+- stray ink (ink more than 1 mm from the exemplar's ink) at most {vars[max_stray_frac]} of the exemplar's ink area;
+- at most {vars[max_strokes]} inked contacts with the main sheet (a contact is one continuous stretch of the tip below the
+  sheet's surface; it is inked when the pen was loaded at the touch-down);
+- no colouring in: the task fails when `path_mm` > {vars[max_path_mm]} mm and also `mark_width_mm` < {vars[min_mark_width_mm]} mm.
+  `path_mm` is the total length of the tip's path in all inked contacts with the main sheet (100 Hz physics samples);
+  `mark_width_mm` is the area each contact inks on its own (coverage ≥ 0.5; where contacts overlap, each counts its
+  own), summed over the contacts and divided by `path_mm`.
+
+The practice sheet is never scored.
+"""
+
+# rcb_brush_score.py is_success (ink picture rule) + rcb_brush_strict.py process_metrics (colouring in only: no
+# counted-stroke or sweep keys in the rule); numbers: tests/instance.json target.success.
+[families."robopaint_lettering_commendation"]
+vars = { regions = "52", iou = "0.85", boundary_f = "0.80", min_stroke_coverage = "0.75", max_stray_frac = "0.04", register_mm = "5", max_strokes = "9", max_path_mm = "3240", min_mark_width_mm = "0.12", tool_license = "The pointed-pen model is this repository's own.", exemplar_license = "re-drawn with this task's pen from George Bickham, *The Universal Penman* (London, 1741), public domain (scan: Internet Archive `gri_33125008538056`, NOT_IN_COPYRIGHT); notice in `NOTICE-exemplar.md`." }
+success = """
+Graded on the main sheet's ink (pixels with ink coverage ≥ 0.5 on the sheet's 1024 × 1024 raster, 0.222 mm per
+pixel) against the exemplar's ink. The sheet is first moved by the whole-pixel shift, at most {vars[register_mm]} mm along each
+axis, that gives the largest overlap of its ink with the exemplar's (a best shift on the edge of that window counts as
+no shift); every measure is taken at that shift. Success needs all of these:
+
+- IoU of the inked areas ≥ {vars[iou]};
+- boundary F-score ≥ {vars[boundary_f]}: the harmonic mean of the share of the sheet's ink-edge pixels within 1 mm of the
+  exemplar's edge and the share of the exemplar's edge pixels within 1 mm of the sheet's;
+- each of the exemplar's {vars[regions]} regions is at least {vars[min_stroke_coverage]} covered by ink;
+- stray ink (ink more than 1 mm from the exemplar's ink) at most {vars[max_stray_frac]} of the exemplar's ink area;
+- at most {vars[max_strokes]} inked contacts with the main sheet (a contact is one continuous stretch of the tip below the
+  sheet's surface; it is inked when the pen was loaded at the touch-down);
+- no colouring in: the task fails when `path_mm` > {vars[max_path_mm]} mm and also `mark_width_mm` < {vars[min_mark_width_mm]} mm.
+  `path_mm` is the total length of the tip's path in all inked contacts with the main sheet (100 Hz physics samples);
+  `mark_width_mm` is the area each contact inks on its own (coverage ≥ 0.5; where contacts overlap, each counts its
+  own), summed over the contacts and divided by `path_mm`.
+
+The practice sheet is never scored.
+"""
+
+# rcb_brush_score.py is_success (ink picture rule) + rcb_brush_strict.py process_metrics (colouring in only: no
+# counted-stroke or sweep keys in the rule); numbers: tests/instance.json target.success.
+[families."robopaint_lettering_diligence"]
+vars = { regions = "59", iou = "0.85", boundary_f = "0.80", min_stroke_coverage = "0.75", max_stray_frac = "0.04", register_mm = "5", max_strokes = "11", max_path_mm = "4040", min_mark_width_mm = "0.1", tool_license = "The pointed-pen model is this repository's own.", exemplar_license = "re-drawn with this task's pen from George Bickham, *The Universal Penman* (London, 1741), public domain (scan: Internet Archive `gri_33125008538056`, NOT_IN_COPYRIGHT); notice in `NOTICE-exemplar.md`." }
+success = """
+Graded on the main sheet's ink (pixels with ink coverage ≥ 0.5 on the sheet's 1024 × 1024 raster, 0.222 mm per
+pixel) against the exemplar's ink. The sheet is first moved by the whole-pixel shift, at most {vars[register_mm]} mm along each
+axis, that gives the largest overlap of its ink with the exemplar's (a best shift on the edge of that window counts as
+no shift); every measure is taken at that shift. Success needs all of these:
+
+- IoU of the inked areas ≥ {vars[iou]};
+- boundary F-score ≥ {vars[boundary_f]}: the harmonic mean of the share of the sheet's ink-edge pixels within 1 mm of the
+  exemplar's edge and the share of the exemplar's edge pixels within 1 mm of the sheet's;
+- each of the exemplar's {vars[regions]} regions is at least {vars[min_stroke_coverage]} covered by ink;
+- stray ink (ink more than 1 mm from the exemplar's ink) at most {vars[max_stray_frac]} of the exemplar's ink area;
+- at most {vars[max_strokes]} inked contacts with the main sheet (a contact is one continuous stretch of the tip below the
+  sheet's surface; it is inked when the pen was loaded at the touch-down);
+- no colouring in: the task fails when `path_mm` > {vars[max_path_mm]} mm and also `mark_width_mm` < {vars[min_mark_width_mm]} mm.
+  `path_mm` is the total length of the tip's path in all inked contacts with the main sheet (100 Hz physics samples);
+  `mark_width_mm` is the area each contact inks on its own (coverage ≥ 0.5; where contacts overlap, each counts its
+  own), summed over the contacts and divided by `path_mm`.
+
+The practice sheet is never scored.
+"""
+
+# rcb_brush_score.py is_success (ink picture rule) + rcb_brush_strict.py process_metrics (colouring in only: no
+# counted-stroke or sweep keys in the rule); numbers: tests/instance.json target.success.
+[families."robopaint_lettering_liberty"]
+vars = { regions = "82", iou = "0.85", boundary_f = "0.80", min_stroke_coverage = "0.75", max_stray_frac = "0.04", register_mm = "5", max_strokes = "5", max_path_mm = "7940", min_mark_width_mm = "0.13", tool_license = "The pointed-pen model is this repository's own.", exemplar_license = "re-drawn with this task's pen from George Bickham, *The Universal Penman* (London, 1741), public domain (scan: Internet Archive `gri_33125008538056`, NOT_IN_COPYRIGHT); notice in `NOTICE-exemplar.md`." }
+success = """
+Graded on the main sheet's ink (pixels with ink coverage ≥ 0.5 on the sheet's 1024 × 1024 raster, 0.222 mm per
+pixel) against the exemplar's ink. The sheet is first moved by the whole-pixel shift, at most {vars[register_mm]} mm along each
+axis, that gives the largest overlap of its ink with the exemplar's (a best shift on the edge of that window counts as
+no shift); every measure is taken at that shift. Success needs all of these:
+
+- IoU of the inked areas ≥ {vars[iou]};
+- boundary F-score ≥ {vars[boundary_f]}: the harmonic mean of the share of the sheet's ink-edge pixels within 1 mm of the
+  exemplar's edge and the share of the exemplar's edge pixels within 1 mm of the sheet's;
+- each of the exemplar's {vars[regions]} regions is at least {vars[min_stroke_coverage]} covered by ink;
+- stray ink (ink more than 1 mm from the exemplar's ink) at most {vars[max_stray_frac]} of the exemplar's ink area;
+- at most {vars[max_strokes]} inked contacts with the main sheet (a contact is one continuous stretch of the tip below the
+  sheet's surface; it is inked when the pen was loaded at the touch-down);
+- no colouring in: the task fails when `path_mm` > {vars[max_path_mm]} mm and also `mark_width_mm` < {vars[min_mark_width_mm]} mm.
+  `path_mm` is the total length of the tip's path in all inked contacts with the main sheet (100 Hz physics samples);
+  `mark_width_mm` is the area each contact inks on its own (coverage ≥ 0.5; where contacts overlap, each counts its
+  own), summed over the contacts and divided by `path_mm`.
+
+The practice sheet is never scored.
+"""
+
+# rcb_brush_score.py is_success (ink picture rule) + rcb_brush_strict.py process_metrics (colouring in only: no
+# counted-stroke or sweep keys in the rule); numbers: tests/instance.json target.success.
+[families."robopaint_lettering_virtue"]
+vars = { regions = "64", iou = "0.85", boundary_f = "0.80", min_stroke_coverage = "0.75", max_stray_frac = "0.04", register_mm = "5", max_strokes = "4", max_path_mm = "6870", min_mark_width_mm = "0.12", tool_license = "The pointed-pen model is this repository's own.", exemplar_license = "re-drawn with this task's pen from George Bickham, *The Universal Penman* (London, 1741), public domain (scan: Internet Archive `gri_33125008538056`, NOT_IN_COPYRIGHT); notice in `NOTICE-exemplar.md`." }
+success = """
+Graded on the main sheet's ink (pixels with ink coverage ≥ 0.5 on the sheet's 1024 × 1024 raster, 0.222 mm per
+pixel) against the exemplar's ink. The sheet is first moved by the whole-pixel shift, at most {vars[register_mm]} mm along each
+axis, that gives the largest overlap of its ink with the exemplar's (a best shift on the edge of that window counts as
+no shift); every measure is taken at that shift. Success needs all of these:
+
+- IoU of the inked areas ≥ {vars[iou]};
+- boundary F-score ≥ {vars[boundary_f]}: the harmonic mean of the share of the sheet's ink-edge pixels within 1 mm of the
+  exemplar's edge and the share of the exemplar's edge pixels within 1 mm of the sheet's;
+- each of the exemplar's {vars[regions]} regions is at least {vars[min_stroke_coverage]} covered by ink;
+- stray ink (ink more than 1 mm from the exemplar's ink) at most {vars[max_stray_frac]} of the exemplar's ink area;
+- at most {vars[max_strokes]} inked contacts with the main sheet (a contact is one continuous stretch of the tip below the
+  sheet's surface; it is inked when the pen was loaded at the touch-down);
+- no colouring in: the task fails when `path_mm` > {vars[max_path_mm]} mm and also `mark_width_mm` < {vars[min_mark_width_mm]} mm.
+  `path_mm` is the total length of the tip's path in all inked contacts with the main sheet (100 Hz physics samples);
+  `mark_width_mm` is the area each contact inks on its own (coverage ≥ 0.5; where contacts overlap, each counts its
+  own), summed over the contacts and divided by `path_mm`.
+
+The practice sheet is never scored.
+"""
+
+# rcb_brush_score.py is_success_paint (painting rule, score_inset_mm) + rcb_brush_strict.py process_metrics
+# (path budget, sweeps on the contacts); numbers: tests/instance.json target.success.
+[families."robopaint_oil_bathers"]
+vars = { blur_mm = "1", de_mean = "5.5", de_p90 = "9.0", ssim_L = "0.80", edge_corr = "0.74", paint_iou = "0.96", score_inset_mm = "8", register_mm = "5", max_strokes = "2496", max_path_mm = "63600", max_scribble = "2.5", scribble_min_mm = "10", share_pct = "10", tool_license = "The paint engine is libmypaint 1.6.1 (ISC License, with a one-line determinism patch) with a preset of mypaint-brushes 2.0.2 (CC0-1.0).", exemplar_license = "a square crop of Georges Seurat's Bathers at Asnières (Wikimedia Commons `File:Baigneurs a Asnieres.jpg`, public domain), downscaled to the sheet." }
+success = """
+Graded on the main sheet's colours and paint coverage against the picture. Both are converted to CIELAB and blurred
+with a Gaussian of σ = {vars[blur_mm]} mm. The sheet is first moved by the whole-pixel shift, at most {vars[register_mm]} mm along each
+axis, that gives the smallest mean colour difference over the picture's central window (a best shift on the edge of
+that window counts as no shift); every measure is taken at that shift, on the overlap of the two pictures, inside the part of the sheet at least {vars[score_inset_mm]} mm in from its edges.
+Success needs all of these:
+
+- mean ΔE (CIELAB 1976) ≤ {vars[de_mean]} and its 90th percentile ≤ {vars[de_p90]}, over the area where the sheet or
+  the picture has paint (coverage ≥ 0.5), widened by about 2 mm;
+- SSIM of the blurred L* channel (Gaussian windows, σ = 1.5 mm) ≥ {vars[ssim_L]};
+- edge correlation ≥ {vars[edge_corr]}: the correlation of the blurred L* gradient magnitudes of the sheet and the
+  picture over that area;
+- paint IoU ≥ {vars[paint_iou]}: the sheet's painted area (coverage ≥ 0.5) against the exemplar's paint coverage;
+- at most {vars[max_strokes]} painted contacts with the main sheet (a contact is one continuous stretch of the tip below
+  the sheet's surface; it is painted when the brush was loaded at the touch-down);
+- path budget: `path_mm` ≤ {vars[max_path_mm]} mm, the total length of the tip's path in all painted contacts with the
+  main sheet (100 Hz physics samples);
+- sweeps: contacts longer than {vars[max_scribble]} × the diagonal of their bounding box (the diagonal taken as at
+  least {vars[scribble_min_mm]} mm) hold at most {vars[share_pct]} % of `path_mm`.
+
+The practice sheet is never scored.
+"""
+
+# rcb_brush_score.py is_success_paint (painting rule, score_inset_mm) + rcb_brush_strict.py process_metrics
+# (path budget, sweeps on the contacts); numbers: tests/instance.json target.success.
+[families."robopaint_oil_cafeterrace"]
+vars = { blur_mm = "1", de_mean = "8.0", de_p90 = "13.5", ssim_L = "0.66", edge_corr = "0.57", paint_iou = "0.96", score_inset_mm = "8", register_mm = "5", max_strokes = "2507", max_path_mm = "68600", max_scribble = "2.5", scribble_min_mm = "10", share_pct = "10", tool_license = "The paint engine is libmypaint 1.6.1 (ISC License, with a one-line determinism patch) with a preset of mypaint-brushes 2.0.2 (CC0-1.0).", exemplar_license = "a square crop of Vincent van Gogh's Cafe Terrace at Night (Wikimedia Commons `File:Vincent Willem van Gogh - Cafe Terrace at Night (Yorck).jpg`, public domain), downscaled to the sheet." }
+success = """
+Graded on the main sheet's colours and paint coverage against the picture. Both are converted to CIELAB and blurred
+with a Gaussian of σ = {vars[blur_mm]} mm. The sheet is first moved by the whole-pixel shift, at most {vars[register_mm]} mm along each
+axis, that gives the smallest mean colour difference over the picture's central window (a best shift on the edge of
+that window counts as no shift); every measure is taken at that shift, on the overlap of the two pictures, inside the part of the sheet at least {vars[score_inset_mm]} mm in from its edges.
+Success needs all of these:
+
+- mean ΔE (CIELAB 1976) ≤ {vars[de_mean]} and its 90th percentile ≤ {vars[de_p90]}, over the area where the sheet or
+  the picture has paint (coverage ≥ 0.5), widened by about 2 mm;
+- SSIM of the blurred L* channel (Gaussian windows, σ = 1.5 mm) ≥ {vars[ssim_L]};
+- edge correlation ≥ {vars[edge_corr]}: the correlation of the blurred L* gradient magnitudes of the sheet and the
+  picture over that area;
+- paint IoU ≥ {vars[paint_iou]}: the sheet's painted area (coverage ≥ 0.5) against the exemplar's paint coverage;
+- at most {vars[max_strokes]} painted contacts with the main sheet (a contact is one continuous stretch of the tip below
+  the sheet's surface; it is painted when the brush was loaded at the touch-down);
+- path budget: `path_mm` ≤ {vars[max_path_mm]} mm, the total length of the tip's path in all painted contacts with the
+  main sheet (100 Hz physics samples);
+- sweeps: contacts longer than {vars[max_scribble]} × the diagonal of their bounding box (the diagonal taken as at
+  least {vars[scribble_min_mm]} mm) hold at most {vars[share_pct]} % of `path_mm`.
+
+The practice sheet is never scored.
+"""
+
+# rcb_brush_score.py is_success_paint (painting rule, score_inset_mm) + rcb_brush_strict.py process_metrics
+# (path budget, sweeps on the contacts); numbers: tests/instance.json target.success.
+[families."robopaint_oil_cypresses"]
+vars = { blur_mm = "1", de_mean = "7.5", de_p90 = "12.5", ssim_L = "0.68", edge_corr = "0.65", paint_iou = "0.96", score_inset_mm = "8", register_mm = "5", max_strokes = "2504", max_path_mm = "51600", max_scribble = "2.5", scribble_min_mm = "10", share_pct = "10", tool_license = "The paint engine is libmypaint 1.6.1 (ISC License, with a one-line determinism patch) with a preset of mypaint-brushes 2.0.2 (CC0-1.0).", exemplar_license = "a square crop of Vincent van Gogh's Wheat Field with Cypresses (Wikimedia Commons `File:Vincent van Gogh - Wheat Field with Cypresses - Google Art Project.jpg`, public domain), downscaled to the sheet." }
+success = """
+Graded on the main sheet's colours and paint coverage against the picture. Both are converted to CIELAB and blurred
+with a Gaussian of σ = {vars[blur_mm]} mm. The sheet is first moved by the whole-pixel shift, at most {vars[register_mm]} mm along each
+axis, that gives the smallest mean colour difference over the picture's central window (a best shift on the edge of
+that window counts as no shift); every measure is taken at that shift, on the overlap of the two pictures, inside the part of the sheet at least {vars[score_inset_mm]} mm in from its edges.
+Success needs all of these:
+
+- mean ΔE (CIELAB 1976) ≤ {vars[de_mean]} and its 90th percentile ≤ {vars[de_p90]}, over the area where the sheet or
+  the picture has paint (coverage ≥ 0.5), widened by about 2 mm;
+- SSIM of the blurred L* channel (Gaussian windows, σ = 1.5 mm) ≥ {vars[ssim_L]};
+- edge correlation ≥ {vars[edge_corr]}: the correlation of the blurred L* gradient magnitudes of the sheet and the
+  picture over that area;
+- paint IoU ≥ {vars[paint_iou]}: the sheet's painted area (coverage ≥ 0.5) against the exemplar's paint coverage;
+- at most {vars[max_strokes]} painted contacts with the main sheet (a contact is one continuous stretch of the tip below
+  the sheet's surface; it is painted when the brush was loaded at the touch-down);
+- path budget: `path_mm` ≤ {vars[max_path_mm]} mm, the total length of the tip's path in all painted contacts with the
+  main sheet (100 Hz physics samples);
+- sweeps: contacts longer than {vars[max_scribble]} × the diagonal of their bounding box (the diagonal taken as at
+  least {vars[scribble_min_mm]} mm) hold at most {vars[share_pct]} % of `path_mm`.
+
+The practice sheet is never scored.
+"""
+
+# rcb_brush_score.py is_success_paint (painting rule, score_inset_mm) + rcb_brush_strict.py process_metrics
+# (path budget, sweeps on the contacts); numbers: tests/instance.json target.success.
+[families."robopaint_oil_irises"]
+vars = { blur_mm = "1", de_mean = "10.6", de_p90 = "17.5", ssim_L = "0.52", edge_corr = "0.35", paint_iou = "0.96", score_inset_mm = "8", register_mm = "5", max_strokes = "2486", max_path_mm = "55600", max_scribble = "2.5", scribble_min_mm = "10", share_pct = "10", tool_license = "The paint engine is libmypaint 1.6.1 (ISC License, with a one-line determinism patch) with a preset of mypaint-brushes 2.0.2 (CC0-1.0).", exemplar_license = "a square crop of Vincent van Gogh's Irises (Wikimedia Commons `File:Irises-Vincent van Gogh.jpg`, public domain), downscaled to the sheet." }
+success = """
+Graded on the main sheet's colours and paint coverage against the picture. Both are converted to CIELAB and blurred
+with a Gaussian of σ = {vars[blur_mm]} mm. The sheet is first moved by the whole-pixel shift, at most {vars[register_mm]} mm along each
+axis, that gives the smallest mean colour difference over the picture's central window (a best shift on the edge of
+that window counts as no shift); every measure is taken at that shift, on the overlap of the two pictures, inside the part of the sheet at least {vars[score_inset_mm]} mm in from its edges.
+Success needs all of these:
+
+- mean ΔE (CIELAB 1976) ≤ {vars[de_mean]} and its 90th percentile ≤ {vars[de_p90]}, over the area where the sheet or
+  the picture has paint (coverage ≥ 0.5), widened by about 2 mm;
+- SSIM of the blurred L* channel (Gaussian windows, σ = 1.5 mm) ≥ {vars[ssim_L]};
+- edge correlation ≥ {vars[edge_corr]}: the correlation of the blurred L* gradient magnitudes of the sheet and the
+  picture over that area;
+- paint IoU ≥ {vars[paint_iou]}: the sheet's painted area (coverage ≥ 0.5) against the exemplar's paint coverage;
+- at most {vars[max_strokes]} painted contacts with the main sheet (a contact is one continuous stretch of the tip below
+  the sheet's surface; it is painted when the brush was loaded at the touch-down);
+- path budget: `path_mm` ≤ {vars[max_path_mm]} mm, the total length of the tip's path in all painted contacts with the
+  main sheet (100 Hz physics samples);
+- sweeps: contacts longer than {vars[max_scribble]} × the diagonal of their bounding box (the diagonal taken as at
+  least {vars[scribble_min_mm]} mm) hold at most {vars[share_pct]} % of `path_mm`.
+
+The practice sheet is never scored.
+"""
+
+# rcb_brush_score.py is_success_paint (painting rule, score_inset_mm) + rcb_brush_strict.py process_metrics
+# (path budget, sweeps on the contacts); numbers: tests/instance.json target.success.
+[families."robopaint_oil_milkmaid"]
+vars = { blur_mm = "1", de_mean = "5.0", de_p90 = "9.5", ssim_L = "0.81", edge_corr = "0.74", paint_iou = "0.96", score_inset_mm = "8", register_mm = "5", max_strokes = "2499", max_path_mm = "71900", max_scribble = "2.5", scribble_min_mm = "10", share_pct = "10", tool_license = "The paint engine is libmypaint 1.6.1 (ISC License, with a one-line determinism patch) with a preset of mypaint-brushes 2.0.2 (CC0-1.0).", exemplar_license = "a square crop of Johannes Vermeer's The Milkmaid (Wikimedia Commons `File:Johannes Vermeer - Het melkmeisje - Google Art Project.jpg`, public domain), downscaled to the sheet." }
+success = """
+Graded on the main sheet's colours and paint coverage against the picture. Both are converted to CIELAB and blurred
+with a Gaussian of σ = {vars[blur_mm]} mm. The sheet is first moved by the whole-pixel shift, at most {vars[register_mm]} mm along each
+axis, that gives the smallest mean colour difference over the picture's central window (a best shift on the edge of
+that window counts as no shift); every measure is taken at that shift, on the overlap of the two pictures, inside the part of the sheet at least {vars[score_inset_mm]} mm in from its edges.
+Success needs all of these:
+
+- mean ΔE (CIELAB 1976) ≤ {vars[de_mean]} and its 90th percentile ≤ {vars[de_p90]}, over the area where the sheet or
+  the picture has paint (coverage ≥ 0.5), widened by about 2 mm;
+- SSIM of the blurred L* channel (Gaussian windows, σ = 1.5 mm) ≥ {vars[ssim_L]};
+- edge correlation ≥ {vars[edge_corr]}: the correlation of the blurred L* gradient magnitudes of the sheet and the
+  picture over that area;
+- paint IoU ≥ {vars[paint_iou]}: the sheet's painted area (coverage ≥ 0.5) against the exemplar's paint coverage;
+- at most {vars[max_strokes]} painted contacts with the main sheet (a contact is one continuous stretch of the tip below
+  the sheet's surface; it is painted when the brush was loaded at the touch-down);
+- path budget: `path_mm` ≤ {vars[max_path_mm]} mm, the total length of the tip's path in all painted contacts with the
+  main sheet (100 Hz physics samples);
+- sweeps: contacts longer than {vars[max_scribble]} × the diagonal of their bounding box (the diagonal taken as at
+  least {vars[scribble_min_mm]} mm) hold at most {vars[share_pct]} % of `path_mm`.
+
+The practice sheet is never scored.
+"""
+
+# rcb_brush_score.py is_success_paint (painting rule, score_inset_mm) + rcb_brush_strict.py process_metrics
+# (path budget, sweeps on the contacts); numbers: tests/instance.json target.success.
+[families."robopaint_oil_monalisa"]
+vars = { blur_mm = "1", de_mean = "5.2", de_p90 = "8.5", ssim_L = "0.82", edge_corr = "0.70", paint_iou = "0.96", score_inset_mm = "8", register_mm = "5", max_strokes = "2507", max_path_mm = "69900", max_scribble = "2.5", scribble_min_mm = "10", share_pct = "10", tool_license = "The paint engine is libmypaint 1.6.1 (ISC License, with a one-line determinism patch) with a preset of mypaint-brushes 2.0.2 (CC0-1.0).", exemplar_license = "a square crop of Leonardo da Vinci's Mona Lisa (Wikimedia Commons `File:Mona Lisa, by Leonardo da Vinci, from C2RMF retouched.jpg`, public domain), downscaled to the sheet." }
+success = """
+Graded on the main sheet's colours and paint coverage against the picture. Both are converted to CIELAB and blurred
+with a Gaussian of σ = {vars[blur_mm]} mm. The sheet is first moved by the whole-pixel shift, at most {vars[register_mm]} mm along each
+axis, that gives the smallest mean colour difference over the picture's central window (a best shift on the edge of
+that window counts as no shift); every measure is taken at that shift, on the overlap of the two pictures, inside the part of the sheet at least {vars[score_inset_mm]} mm in from its edges.
+Success needs all of these:
+
+- mean ΔE (CIELAB 1976) ≤ {vars[de_mean]} and its 90th percentile ≤ {vars[de_p90]}, over the area where the sheet or
+  the picture has paint (coverage ≥ 0.5), widened by about 2 mm;
+- SSIM of the blurred L* channel (Gaussian windows, σ = 1.5 mm) ≥ {vars[ssim_L]};
+- edge correlation ≥ {vars[edge_corr]}: the correlation of the blurred L* gradient magnitudes of the sheet and the
+  picture over that area;
+- paint IoU ≥ {vars[paint_iou]}: the sheet's painted area (coverage ≥ 0.5) against the exemplar's paint coverage;
+- at most {vars[max_strokes]} painted contacts with the main sheet (a contact is one continuous stretch of the tip below
+  the sheet's surface; it is painted when the brush was loaded at the touch-down);
+- path budget: `path_mm` ≤ {vars[max_path_mm]} mm, the total length of the tip's path in all painted contacts with the
+  main sheet (100 Hz physics samples);
+- sweeps: contacts longer than {vars[max_scribble]} × the diagonal of their bounding box (the diagonal taken as at
+  least {vars[scribble_min_mm]} mm) hold at most {vars[share_pct]} % of `path_mm`.
+
+The practice sheet is never scored.
+"""
+
+# rcb_brush_score.py is_success_paint (painting rule, score_inset_mm) + rcb_brush_strict.py process_metrics
+# (path budget, sweeps on the contacts); numbers: tests/instance.json target.success.
+[families."robopaint_oil_pearlearring"]
+vars = { blur_mm = "1", de_mean = "4.4", de_p90 = "8.5", ssim_L = "0.84", edge_corr = "0.76", paint_iou = "0.96", score_inset_mm = "8", register_mm = "5", max_strokes = "2453", max_path_mm = "86500", max_scribble = "2.5", scribble_min_mm = "10", share_pct = "10", tool_license = "The paint engine is libmypaint 1.6.1 (ISC License, with a one-line determinism patch) with a preset of mypaint-brushes 2.0.2 (CC0-1.0).", exemplar_license = "a square crop of Johannes Vermeer's Girl with a Pearl Earring (Wikimedia Commons `File:1665 Girl with a Pearl Earring.jpg`, public domain), downscaled to the sheet." }
+success = """
+Graded on the main sheet's colours and paint coverage against the picture. Both are converted to CIELAB and blurred
+with a Gaussian of σ = {vars[blur_mm]} mm. The sheet is first moved by the whole-pixel shift, at most {vars[register_mm]} mm along each
+axis, that gives the smallest mean colour difference over the picture's central window (a best shift on the edge of
+that window counts as no shift); every measure is taken at that shift, on the overlap of the two pictures, inside the part of the sheet at least {vars[score_inset_mm]} mm in from its edges.
+Success needs all of these:
+
+- mean ΔE (CIELAB 1976) ≤ {vars[de_mean]} and its 90th percentile ≤ {vars[de_p90]}, over the area where the sheet or
+  the picture has paint (coverage ≥ 0.5), widened by about 2 mm;
+- SSIM of the blurred L* channel (Gaussian windows, σ = 1.5 mm) ≥ {vars[ssim_L]};
+- edge correlation ≥ {vars[edge_corr]}: the correlation of the blurred L* gradient magnitudes of the sheet and the
+  picture over that area;
+- paint IoU ≥ {vars[paint_iou]}: the sheet's painted area (coverage ≥ 0.5) against the exemplar's paint coverage;
+- at most {vars[max_strokes]} painted contacts with the main sheet (a contact is one continuous stretch of the tip below
+  the sheet's surface; it is painted when the brush was loaded at the touch-down);
+- path budget: `path_mm` ≤ {vars[max_path_mm]} mm, the total length of the tip's path in all painted contacts with the
+  main sheet (100 Hz physics samples);
+- sweeps: contacts longer than {vars[max_scribble]} × the diagonal of their bounding box (the diagonal taken as at
+  least {vars[scribble_min_mm]} mm) hold at most {vars[share_pct]} % of `path_mm`.
+
+The practice sheet is never scored.
+"""
+
+# rcb_brush_score.py is_success_paint (painting rule, score_inset_mm) + rcb_brush_strict.py process_metrics
+# (path budget, sweeps on the contacts); numbers: tests/instance.json target.success.
+[families."robopaint_oil_saintevictoire"]
+vars = { blur_mm = "1", de_mean = "6.9", de_p90 = "11.5", ssim_L = "0.70", edge_corr = "0.47", paint_iou = "0.96", score_inset_mm = "8", register_mm = "5", max_strokes = "2546", max_path_mm = "57700", max_scribble = "2.5", scribble_min_mm = "10", share_pct = "10", tool_license = "The paint engine is libmypaint 1.6.1 (ISC License, with a one-line determinism patch) with a preset of mypaint-brushes 2.0.2 (CC0-1.0).", exemplar_license = "a square crop of Paul Cézanne's Mont Sainte-Victoire (Wikimedia Commons `File:Paul Cézanne - Mont Sainte-Victoire - Google Art Project.jpg`, public domain), downscaled to the sheet." }
+success = """
+Graded on the main sheet's colours and paint coverage against the picture. Both are converted to CIELAB and blurred
+with a Gaussian of σ = {vars[blur_mm]} mm. The sheet is first moved by the whole-pixel shift, at most {vars[register_mm]} mm along each
+axis, that gives the smallest mean colour difference over the picture's central window (a best shift on the edge of
+that window counts as no shift); every measure is taken at that shift, on the overlap of the two pictures, inside the part of the sheet at least {vars[score_inset_mm]} mm in from its edges.
+Success needs all of these:
+
+- mean ΔE (CIELAB 1976) ≤ {vars[de_mean]} and its 90th percentile ≤ {vars[de_p90]}, over the area where the sheet or
+  the picture has paint (coverage ≥ 0.5), widened by about 2 mm;
+- SSIM of the blurred L* channel (Gaussian windows, σ = 1.5 mm) ≥ {vars[ssim_L]};
+- edge correlation ≥ {vars[edge_corr]}: the correlation of the blurred L* gradient magnitudes of the sheet and the
+  picture over that area;
+- paint IoU ≥ {vars[paint_iou]}: the sheet's painted area (coverage ≥ 0.5) against the exemplar's paint coverage;
+- at most {vars[max_strokes]} painted contacts with the main sheet (a contact is one continuous stretch of the tip below
+  the sheet's surface; it is painted when the brush was loaded at the touch-down);
+- path budget: `path_mm` ≤ {vars[max_path_mm]} mm, the total length of the tip's path in all painted contacts with the
+  main sheet (100 Hz physics samples);
+- sweeps: contacts longer than {vars[max_scribble]} × the diagonal of their bounding box (the diagonal taken as at
+  least {vars[scribble_min_mm]} mm) hold at most {vars[share_pct]} % of `path_mm`.
+
+The practice sheet is never scored.
+"""
+
+# rcb_brush_score.py is_success_paint (painting rule, score_inset_mm) + rcb_brush_strict.py process_metrics
+# (path budget, sweeps on the contacts); numbers: tests/instance.json target.success.
+[families."robopaint_oil_starrynight"]
+vars = { blur_mm = "1", de_mean = "6.5", de_p90 = "11.5", ssim_L = "0.68", edge_corr = "0.52", paint_iou = "0.96", score_inset_mm = "8", register_mm = "5", max_strokes = "2517", max_path_mm = "62300", max_scribble = "2.5", scribble_min_mm = "10", share_pct = "10", tool_license = "The paint engine is libmypaint 1.6.1 (ISC License, with a one-line determinism patch) with a preset of mypaint-brushes 2.0.2 (CC0-1.0).", exemplar_license = "a square crop of Vincent van Gogh's The Starry Night (Wikimedia Commons `File:Van Gogh - Starry Night - Google Art Project.jpg`, public domain), downscaled to the sheet." }
+success = """
+Graded on the main sheet's colours and paint coverage against the picture. Both are converted to CIELAB and blurred
+with a Gaussian of σ = {vars[blur_mm]} mm. The sheet is first moved by the whole-pixel shift, at most {vars[register_mm]} mm along each
+axis, that gives the smallest mean colour difference over the picture's central window (a best shift on the edge of
+that window counts as no shift); every measure is taken at that shift, on the overlap of the two pictures, inside the part of the sheet at least {vars[score_inset_mm]} mm in from its edges.
+Success needs all of these:
+
+- mean ΔE (CIELAB 1976) ≤ {vars[de_mean]} and its 90th percentile ≤ {vars[de_p90]}, over the area where the sheet or
+  the picture has paint (coverage ≥ 0.5), widened by about 2 mm;
+- SSIM of the blurred L* channel (Gaussian windows, σ = 1.5 mm) ≥ {vars[ssim_L]};
+- edge correlation ≥ {vars[edge_corr]}: the correlation of the blurred L* gradient magnitudes of the sheet and the
+  picture over that area;
+- paint IoU ≥ {vars[paint_iou]}: the sheet's painted area (coverage ≥ 0.5) against the exemplar's paint coverage;
+- at most {vars[max_strokes]} painted contacts with the main sheet (a contact is one continuous stretch of the tip below
+  the sheet's surface; it is painted when the brush was loaded at the touch-down);
+- path budget: `path_mm` ≤ {vars[max_path_mm]} mm, the total length of the tip's path in all painted contacts with the
+  main sheet (100 Hz physics samples);
+- sweeps: contacts longer than {vars[max_scribble]} × the diagonal of their bounding box (the diagonal taken as at
+  least {vars[scribble_min_mm]} mm) hold at most {vars[share_pct]} % of `path_mm`.
+
+The practice sheet is never scored.
+"""
+
+# rcb_brush_score.py is_success_paint (painting rule, score_inset_mm) + rcb_brush_strict.py process_metrics
+# (path budget, sweeps on the contacts); numbers: tests/instance.json target.success.
+[families."robopaint_oil_temeraire"]
+vars = { blur_mm = "1", de_mean = "3.9", de_p90 = "6.5", ssim_L = "0.85", edge_corr = "0.59", paint_iou = "0.96", score_inset_mm = "8", register_mm = "5", max_strokes = "2360", max_path_mm = "51400", max_scribble = "2.5", scribble_min_mm = "10", share_pct = "10", tool_license = "The paint engine is libmypaint 1.6.1 (ISC License, with a one-line determinism patch) with a preset of mypaint-brushes 2.0.2 (CC0-1.0).", exemplar_license = "a square crop of J. M. W. Turner's The Fighting Temeraire (Wikimedia Commons `File:The Fighting Temeraire, JMW Turner, National Gallery.jpg`, public domain), downscaled to the sheet." }
+success = """
+Graded on the main sheet's colours and paint coverage against the picture. Both are converted to CIELAB and blurred
+with a Gaussian of σ = {vars[blur_mm]} mm. The sheet is first moved by the whole-pixel shift, at most {vars[register_mm]} mm along each
+axis, that gives the smallest mean colour difference over the picture's central window (a best shift on the edge of
+that window counts as no shift); every measure is taken at that shift, on the overlap of the two pictures, inside the part of the sheet at least {vars[score_inset_mm]} mm in from its edges.
+Success needs all of these:
+
+- mean ΔE (CIELAB 1976) ≤ {vars[de_mean]} and its 90th percentile ≤ {vars[de_p90]}, over the area where the sheet or
+  the picture has paint (coverage ≥ 0.5), widened by about 2 mm;
+- SSIM of the blurred L* channel (Gaussian windows, σ = 1.5 mm) ≥ {vars[ssim_L]};
+- edge correlation ≥ {vars[edge_corr]}: the correlation of the blurred L* gradient magnitudes of the sheet and the
+  picture over that area;
+- paint IoU ≥ {vars[paint_iou]}: the sheet's painted area (coverage ≥ 0.5) against the exemplar's paint coverage;
+- at most {vars[max_strokes]} painted contacts with the main sheet (a contact is one continuous stretch of the tip below
+  the sheet's surface; it is painted when the brush was loaded at the touch-down);
+- path budget: `path_mm` ≤ {vars[max_path_mm]} mm, the total length of the tip's path in all painted contacts with the
+  main sheet (100 Hz physics samples);
+- sweeps: contacts longer than {vars[max_scribble]} × the diagonal of their bounding box (the diagonal taken as at
+  least {vars[scribble_min_mm]} mm) hold at most {vars[share_pct]} % of `path_mm`.
+
+The practice sheet is never scored.
+"""
+
+# rcb_brush_score.py is_success_paint (painting rule, score_inset_mm) + rcb_brush_strict.py process_metrics
+# (path budget, sweeps on the contacts); numbers: tests/instance.json target.success.
+[families."robopaint_oil_wanderer"]
+vars = { blur_mm = "1", de_mean = "3.1", de_p90 = "5.5", ssim_L = "0.87", edge_corr = "0.78", paint_iou = "0.96", score_inset_mm = "8", register_mm = "5", max_strokes = "1974", max_path_mm = "64700", max_scribble = "2.5", scribble_min_mm = "10", share_pct = "10", tool_license = "The paint engine is libmypaint 1.6.1 (ISC License, with a one-line determinism patch) with a preset of mypaint-brushes 2.0.2 (CC0-1.0).", exemplar_license = "a square crop of Caspar David Friedrich's Wanderer above the Sea of Fog (Wikimedia Commons `File:Caspar David Friedrich - Wanderer above the sea of fog.jpg`, public domain), downscaled to the sheet." }
+success = """
+Graded on the main sheet's colours and paint coverage against the picture. Both are converted to CIELAB and blurred
+with a Gaussian of σ = {vars[blur_mm]} mm. The sheet is first moved by the whole-pixel shift, at most {vars[register_mm]} mm along each
+axis, that gives the smallest mean colour difference over the picture's central window (a best shift on the edge of
+that window counts as no shift); every measure is taken at that shift, on the overlap of the two pictures, inside the part of the sheet at least {vars[score_inset_mm]} mm in from its edges.
+Success needs all of these:
+
+- mean ΔE (CIELAB 1976) ≤ {vars[de_mean]} and its 90th percentile ≤ {vars[de_p90]}, over the area where the sheet or
+  the picture has paint (coverage ≥ 0.5), widened by about 2 mm;
+- SSIM of the blurred L* channel (Gaussian windows, σ = 1.5 mm) ≥ {vars[ssim_L]};
+- edge correlation ≥ {vars[edge_corr]}: the correlation of the blurred L* gradient magnitudes of the sheet and the
+  picture over that area;
+- paint IoU ≥ {vars[paint_iou]}: the sheet's painted area (coverage ≥ 0.5) against the exemplar's paint coverage;
+- at most {vars[max_strokes]} painted contacts with the main sheet (a contact is one continuous stretch of the tip below
+  the sheet's surface; it is painted when the brush was loaded at the touch-down);
+- path budget: `path_mm` ≤ {vars[max_path_mm]} mm, the total length of the tip's path in all painted contacts with the
+  main sheet (100 Hz physics samples);
+- sweeps: contacts longer than {vars[max_scribble]} × the diagonal of their bounding box (the diagonal taken as at
+  least {vars[scribble_min_mm]} mm) hold at most {vars[share_pct]} % of `path_mm`.
+
+The practice sheet is never scored.
+"""
+
+# rcb_brush_score.py is_success (ink picture rule) + rcb_brush_strict.py process_metrics (colouring in, counted
+# strokes on marked_pieces, sweeps on the pieces); numbers: tests/instance.json target.success.
+[families."robopaint_xingshu_feng"]
+vars = { regions = "9", iou = "0.80", boundary_f = "0.75", min_stroke_coverage = "0.80", max_stray_frac = "0.04", register_mm = "5", max_strokes = "6", max_path_mm = "2150", min_mark_width_mm = "2.42", stroke_gap_mm = "5", mark_min_width_mm = "0.1", max_stroke_path_mm = "2240", max_scribble = "12", scribble_min_mm = "10", share_pct = "10", tool_license = "The brush model is this repository's re-implementation of the dynamic virtual brush of Wang et al. (IROS 2020).", exemplar_license = "cropped from a public-domain scan of the Shenlong hand copy of Wang Xizhi's 蘭亭序 (Wikimedia Commons `File:神龍蘭亭序全.JPG`, PD-Art / PD-old-100-1923); notice in `NOTICE-exemplar.md`." }
+success = """
+Graded on the main sheet's ink (pixels with ink coverage ≥ 0.5 on the sheet's 1024 × 1024 raster, 0.222 mm per
+pixel) against the exemplar's ink. The sheet is first moved by the whole-pixel shift, at most {vars[register_mm]} mm along each
+axis, that gives the largest overlap of its ink with the exemplar's (a best shift on the edge of that window counts as
+no shift); every measure is taken at that shift. Success needs all of these:
+
+- IoU of the inked areas ≥ {vars[iou]};
+- boundary F-score ≥ {vars[boundary_f]}: the harmonic mean of the share of the sheet's ink-edge pixels within 1 mm of the
+  exemplar's edge and the share of the exemplar's edge pixels within 1 mm of the sheet's;
+- each of the exemplar's {vars[regions]} regions is at least {vars[min_stroke_coverage]} covered by ink;
+- stray ink (ink more than 1 mm from the exemplar's ink) at most {vars[max_stray_frac]} of the exemplar's ink area;
+- at most {vars[max_strokes]} inked contacts with the main sheet (a contact is one continuous stretch of the tip below the
+  sheet's surface; it is inked when the brush was loaded at the touch-down);
+- no colouring in: the task fails when `path_mm` > {vars[max_path_mm]} mm and also `mark_width_mm` < {vars[min_mark_width_mm]} mm.
+  `path_mm` is the total length of the tip's path in all inked contacts with the main sheet (100 Hz physics samples);
+  `mark_width_mm` is the area each contact inks on its own (coverage ≥ 0.5; where contacts overlap, each counts its
+  own), summed over the contacts and divided by `path_mm`;
+- at most {vars[max_strokes]} counted strokes: each inked contact is cut into marked pieces wherever the tip moves more
+  than {vars[stroke_gap_mm]} mm along the sheet while its mark is narrower than {vars[mark_min_width_mm]} mm (the touch-down before the first and
+  the lift after the last marking sample belong to no piece); a piece counts as one stroke, or as ⌈length /
+  {vars[max_stroke_path_mm]} mm⌉ strokes when it is longer than {vars[max_stroke_path_mm]} mm;
+- sweeps: pieces longer than {vars[max_scribble]} × the diagonal of their bounding box (the diagonal taken as at least
+  {vars[scribble_min_mm]} mm) hold at most {vars[share_pct]} % of the pieces' total length.
+
+The practice sheet is never scored.
+"""
+
+# rcb_brush_score.py is_success (ink picture rule) + rcb_brush_strict.py process_metrics (colouring in, counted
+# strokes on marked_pieces, sweeps on the pieces); numbers: tests/instance.json target.success.
+[families."robopaint_xingshu_he"]
+vars = { regions = "7", iou = "0.80", boundary_f = "0.75", min_stroke_coverage = "0.80", max_stray_frac = "0.04", register_mm = "5", max_strokes = "6", max_path_mm = "1850", min_mark_width_mm = "1.93", stroke_gap_mm = "5", mark_min_width_mm = "0.1", max_stroke_path_mm = "1770", max_scribble = "12", scribble_min_mm = "10", share_pct = "10", tool_license = "The brush model is this repository's re-implementation of the dynamic virtual brush of Wang et al. (IROS 2020).", exemplar_license = "cropped from a public-domain scan of the Shenlong hand copy of Wang Xizhi's 蘭亭序 (Wikimedia Commons `File:神龍蘭亭序全.JPG`, PD-Art / PD-old-100-1923); notice in `NOTICE-exemplar.md`." }
+success = """
+Graded on the main sheet's ink (pixels with ink coverage ≥ 0.5 on the sheet's 1024 × 1024 raster, 0.222 mm per
+pixel) against the exemplar's ink. The sheet is first moved by the whole-pixel shift, at most {vars[register_mm]} mm along each
+axis, that gives the largest overlap of its ink with the exemplar's (a best shift on the edge of that window counts as
+no shift); every measure is taken at that shift. Success needs all of these:
+
+- IoU of the inked areas ≥ {vars[iou]};
+- boundary F-score ≥ {vars[boundary_f]}: the harmonic mean of the share of the sheet's ink-edge pixels within 1 mm of the
+  exemplar's edge and the share of the exemplar's edge pixels within 1 mm of the sheet's;
+- each of the exemplar's {vars[regions]} regions is at least {vars[min_stroke_coverage]} covered by ink;
+- stray ink (ink more than 1 mm from the exemplar's ink) at most {vars[max_stray_frac]} of the exemplar's ink area;
+- at most {vars[max_strokes]} inked contacts with the main sheet (a contact is one continuous stretch of the tip below the
+  sheet's surface; it is inked when the brush was loaded at the touch-down);
+- no colouring in: the task fails when `path_mm` > {vars[max_path_mm]} mm and also `mark_width_mm` < {vars[min_mark_width_mm]} mm.
+  `path_mm` is the total length of the tip's path in all inked contacts with the main sheet (100 Hz physics samples);
+  `mark_width_mm` is the area each contact inks on its own (coverage ≥ 0.5; where contacts overlap, each counts its
+  own), summed over the contacts and divided by `path_mm`;
+- at most {vars[max_strokes]} counted strokes: each inked contact is cut into marked pieces wherever the tip moves more
+  than {vars[stroke_gap_mm]} mm along the sheet while its mark is narrower than {vars[mark_min_width_mm]} mm (the touch-down before the first and
+  the lift after the last marking sample belong to no piece); a piece counts as one stroke, or as ⌈length /
+  {vars[max_stroke_path_mm]} mm⌉ strokes when it is longer than {vars[max_stroke_path_mm]} mm;
+- sweeps: pieces longer than {vars[max_scribble]} × the diagonal of their bounding box (the diagonal taken as at least
+  {vars[scribble_min_mm]} mm) hold at most {vars[share_pct]} % of the pieces' total length.
+
+The practice sheet is never scored.
+"""
+
+# rcb_brush_score.py is_success (ink picture rule) + rcb_brush_strict.py process_metrics (colouring in, counted
+# strokes on marked_pieces, sweeps on the pieces); numbers: tests/instance.json target.success.
+[families."robopaint_xingshu_huifenghechang"]
+vars = { regions = "43", iou = "0.80", boundary_f = "0.75", min_stroke_coverage = "0.80", max_stray_frac = "0.04", register_mm = "5", max_strokes = "28", max_path_mm = "6060", min_mark_width_mm = "1.15", stroke_gap_mm = "5", mark_min_width_mm = "0.1", max_stroke_path_mm = "1250", max_scribble = "12", scribble_min_mm = "10", share_pct = "10", tool_license = "The brush model is this repository's re-implementation of the dynamic virtual brush of Wang et al. (IROS 2020).", exemplar_license = "cropped from a public-domain scan of the Shenlong hand copy of Wang Xizhi's 蘭亭序 (Wikimedia Commons `File:神龍蘭亭序全.JPG`, PD-Art / PD-old-100-1923); notice in `NOTICE-exemplar.md`." }
+success = """
+Graded on the main sheet's ink (pixels with ink coverage ≥ 0.5 on the sheet's 1024 × 1024 raster, 0.222 mm per
+pixel) against the exemplar's ink. The sheet is first moved by the whole-pixel shift, at most {vars[register_mm]} mm along each
+axis, that gives the largest overlap of its ink with the exemplar's (a best shift on the edge of that window counts as
+no shift); every measure is taken at that shift. Success needs all of these:
+
+- IoU of the inked areas ≥ {vars[iou]};
+- boundary F-score ≥ {vars[boundary_f]}: the harmonic mean of the share of the sheet's ink-edge pixels within 1 mm of the
+  exemplar's edge and the share of the exemplar's edge pixels within 1 mm of the sheet's;
+- each of the exemplar's {vars[regions]} regions is at least {vars[min_stroke_coverage]} covered by ink;
+- stray ink (ink more than 1 mm from the exemplar's ink) at most {vars[max_stray_frac]} of the exemplar's ink area;
+- at most {vars[max_strokes]} inked contacts with the main sheet (a contact is one continuous stretch of the tip below the
+  sheet's surface; it is inked when the brush was loaded at the touch-down);
+- no colouring in: the task fails when `path_mm` > {vars[max_path_mm]} mm and also `mark_width_mm` < {vars[min_mark_width_mm]} mm.
+  `path_mm` is the total length of the tip's path in all inked contacts with the main sheet (100 Hz physics samples);
+  `mark_width_mm` is the area each contact inks on its own (coverage ≥ 0.5; where contacts overlap, each counts its
+  own), summed over the contacts and divided by `path_mm`;
+- at most {vars[max_strokes]} counted strokes: each inked contact is cut into marked pieces wherever the tip moves more
+  than {vars[stroke_gap_mm]} mm along the sheet while its mark is narrower than {vars[mark_min_width_mm]} mm (the touch-down before the first and
+  the lift after the last marking sample belong to no piece); a piece counts as one stroke, or as ⌈length /
+  {vars[max_stroke_path_mm]} mm⌉ strokes when it is longer than {vars[max_stroke_path_mm]} mm;
+- sweeps: pieces longer than {vars[max_scribble]} × the diagonal of their bounding box (the diagonal taken as at least
+  {vars[scribble_min_mm]} mm) hold at most {vars[share_pct]} % of the pieces' total length.
+
+The practice sheet is never scored.
+"""
+
+# rcb_brush_score.py is_success (ink picture rule) + rcb_brush_strict.py process_metrics (colouring in, counted
+# strokes on marked_pieces, sweeps on the pieces); numbers: tests/instance.json target.success.
+[families."robopaint_xingshu_maolinxiuzhu"]
+vars = { regions = "35", iou = "0.80", boundary_f = "0.75", min_stroke_coverage = "0.80", max_stray_frac = "0.04", register_mm = "5", max_strokes = "21", max_path_mm = "3160", min_mark_width_mm = "1.12", stroke_gap_mm = "5", mark_min_width_mm = "0.1", max_stroke_path_mm = "1220", max_scribble = "12", scribble_min_mm = "10", share_pct = "10", tool_license = "The brush model is this repository's re-implementation of the dynamic virtual brush of Wang et al. (IROS 2020).", exemplar_license = "cropped from a public-domain scan of the Shenlong hand copy of Wang Xizhi's 蘭亭序 (Wikimedia Commons `File:神龍蘭亭序全.JPG`, PD-Art / PD-old-100-1923); notice in `NOTICE-exemplar.md`." }
+success = """
+Graded on the main sheet's ink (pixels with ink coverage ≥ 0.5 on the sheet's 1024 × 1024 raster, 0.222 mm per
+pixel) against the exemplar's ink. The sheet is first moved by the whole-pixel shift, at most {vars[register_mm]} mm along each
+axis, that gives the largest overlap of its ink with the exemplar's (a best shift on the edge of that window counts as
+no shift); every measure is taken at that shift. Success needs all of these:
+
+- IoU of the inked areas ≥ {vars[iou]};
+- boundary F-score ≥ {vars[boundary_f]}: the harmonic mean of the share of the sheet's ink-edge pixels within 1 mm of the
+  exemplar's edge and the share of the exemplar's edge pixels within 1 mm of the sheet's;
+- each of the exemplar's {vars[regions]} regions is at least {vars[min_stroke_coverage]} covered by ink;
+- stray ink (ink more than 1 mm from the exemplar's ink) at most {vars[max_stray_frac]} of the exemplar's ink area;
+- at most {vars[max_strokes]} inked contacts with the main sheet (a contact is one continuous stretch of the tip below the
+  sheet's surface; it is inked when the brush was loaded at the touch-down);
+- no colouring in: the task fails when `path_mm` > {vars[max_path_mm]} mm and also `mark_width_mm` < {vars[min_mark_width_mm]} mm.
+  `path_mm` is the total length of the tip's path in all inked contacts with the main sheet (100 Hz physics samples);
+  `mark_width_mm` is the area each contact inks on its own (coverage ≥ 0.5; where contacts overlap, each counts its
+  own), summed over the contacts and divided by `path_mm`;
+- at most {vars[max_strokes]} counted strokes: each inked contact is cut into marked pieces wherever the tip moves more
+  than {vars[stroke_gap_mm]} mm along the sheet while its mark is narrower than {vars[mark_min_width_mm]} mm (the touch-down before the first and
+  the lift after the last marking sample belong to no piece); a piece counts as one stroke, or as ⌈length /
+  {vars[max_stroke_path_mm]} mm⌉ strokes when it is longer than {vars[max_stroke_path_mm]} mm;
+- sweeps: pieces longer than {vars[max_scribble]} × the diagonal of their bounding box (the diagonal taken as at least
+  {vars[scribble_min_mm]} mm) hold at most {vars[share_pct]} % of the pieces' total length.
+
+The practice sheet is never scored.
+"""
+
+# rcb_brush_score.py is_success (ink picture rule) + rcb_brush_strict.py process_metrics (colouring in, counted
+# strokes on marked_pieces, sweeps on the pieces); numbers: tests/instance.json target.success.
+[families."robopaint_xingshu_nian"]
+vars = { regions = "10", iou = "0.80", boundary_f = "0.75", min_stroke_coverage = "0.80", max_stray_frac = "0.04", register_mm = "5", max_strokes = "7", max_path_mm = "1780", min_mark_width_mm = "2.2", stroke_gap_mm = "5", mark_min_width_mm = "0.1", max_stroke_path_mm = "1080", max_scribble = "12", scribble_min_mm = "10", share_pct = "10", tool_license = "The brush model is this repository's re-implementation of the dynamic virtual brush of Wang et al. (IROS 2020).", exemplar_license = "cropped from a public-domain scan of the Shenlong hand copy of Wang Xizhi's 蘭亭序 (Wikimedia Commons `File:神龍蘭亭序全.JPG`, PD-Art / PD-old-100-1923); notice in `NOTICE-exemplar.md`." }
+success = """
+Graded on the main sheet's ink (pixels with ink coverage ≥ 0.5 on the sheet's 1024 × 1024 raster, 0.222 mm per
+pixel) against the exemplar's ink. The sheet is first moved by the whole-pixel shift, at most {vars[register_mm]} mm along each
+axis, that gives the largest overlap of its ink with the exemplar's (a best shift on the edge of that window counts as
+no shift); every measure is taken at that shift. Success needs all of these:
+
+- IoU of the inked areas ≥ {vars[iou]};
+- boundary F-score ≥ {vars[boundary_f]}: the harmonic mean of the share of the sheet's ink-edge pixels within 1 mm of the
+  exemplar's edge and the share of the exemplar's edge pixels within 1 mm of the sheet's;
+- each of the exemplar's {vars[regions]} regions is at least {vars[min_stroke_coverage]} covered by ink;
+- stray ink (ink more than 1 mm from the exemplar's ink) at most {vars[max_stray_frac]} of the exemplar's ink area;
+- at most {vars[max_strokes]} inked contacts with the main sheet (a contact is one continuous stretch of the tip below the
+  sheet's surface; it is inked when the brush was loaded at the touch-down);
+- no colouring in: the task fails when `path_mm` > {vars[max_path_mm]} mm and also `mark_width_mm` < {vars[min_mark_width_mm]} mm.
+  `path_mm` is the total length of the tip's path in all inked contacts with the main sheet (100 Hz physics samples);
+  `mark_width_mm` is the area each contact inks on its own (coverage ≥ 0.5; where contacts overlap, each counts its
+  own), summed over the contacts and divided by `path_mm`;
+- at most {vars[max_strokes]} counted strokes: each inked contact is cut into marked pieces wherever the tip moves more
+  than {vars[stroke_gap_mm]} mm along the sheet while its mark is narrower than {vars[mark_min_width_mm]} mm (the touch-down before the first and
+  the lift after the last marking sample belong to no piece); a piece counts as one stroke, or as ⌈length /
+  {vars[max_stroke_path_mm]} mm⌉ strokes when it is longer than {vars[max_stroke_path_mm]} mm;
+- sweeps: pieces longer than {vars[max_scribble]} × the diagonal of their bounding box (the diagonal taken as at least
+  {vars[scribble_min_mm]} mm) hold at most {vars[share_pct]} % of the pieces' total length.
+
+The practice sheet is never scored.
+"""
+
+# rcb_brush_score.py is_success (ink picture rule) + rcb_brush_strict.py process_metrics (colouring in, counted
+# strokes on marked_pieces, sweeps on the pieces); numbers: tests/instance.json target.success.
+[families."robopaint_xingshu_shan"]
+vars = { regions = "5", iou = "0.80", boundary_f = "0.75", min_stroke_coverage = "0.80", max_stray_frac = "0.04", register_mm = "5", max_strokes = "4", max_path_mm = "1200", min_mark_width_mm = "3.06", stroke_gap_mm = "5", mark_min_width_mm = "0.1", max_stroke_path_mm = "1360", max_scribble = "12", scribble_min_mm = "10", share_pct = "10", tool_license = "The brush model is this repository's re-implementation of the dynamic virtual brush of Wang et al. (IROS 2020).", exemplar_license = "cropped from a public-domain scan of the Shenlong hand copy of Wang Xizhi's 蘭亭序 (Wikimedia Commons `File:神龍蘭亭序全.JPG`, PD-Art / PD-old-100-1923); notice in `NOTICE-exemplar.md`." }
+success = """
+Graded on the main sheet's ink (pixels with ink coverage ≥ 0.5 on the sheet's 1024 × 1024 raster, 0.222 mm per
+pixel) against the exemplar's ink. The sheet is first moved by the whole-pixel shift, at most {vars[register_mm]} mm along each
+axis, that gives the largest overlap of its ink with the exemplar's (a best shift on the edge of that window counts as
+no shift); every measure is taken at that shift. Success needs all of these:
+
+- IoU of the inked areas ≥ {vars[iou]};
+- boundary F-score ≥ {vars[boundary_f]}: the harmonic mean of the share of the sheet's ink-edge pixels within 1 mm of the
+  exemplar's edge and the share of the exemplar's edge pixels within 1 mm of the sheet's;
+- each of the exemplar's {vars[regions]} regions is at least {vars[min_stroke_coverage]} covered by ink;
+- stray ink (ink more than 1 mm from the exemplar's ink) at most {vars[max_stray_frac]} of the exemplar's ink area;
+- at most {vars[max_strokes]} inked contacts with the main sheet (a contact is one continuous stretch of the tip below the
+  sheet's surface; it is inked when the brush was loaded at the touch-down);
+- no colouring in: the task fails when `path_mm` > {vars[max_path_mm]} mm and also `mark_width_mm` < {vars[min_mark_width_mm]} mm.
+  `path_mm` is the total length of the tip's path in all inked contacts with the main sheet (100 Hz physics samples);
+  `mark_width_mm` is the area each contact inks on its own (coverage ≥ 0.5; where contacts overlap, each counts its
+  own), summed over the contacts and divided by `path_mm`;
+- at most {vars[max_strokes]} counted strokes: each inked contact is cut into marked pieces wherever the tip moves more
+  than {vars[stroke_gap_mm]} mm along the sheet while its mark is narrower than {vars[mark_min_width_mm]} mm (the touch-down before the first and
+  the lift after the last marking sample belong to no piece); a piece counts as one stroke, or as ⌈length /
+  {vars[max_stroke_path_mm]} mm⌉ strokes when it is longer than {vars[max_stroke_path_mm]} mm;
+- sweeps: pieces longer than {vars[max_scribble]} × the diagonal of their bounding box (the diagonal taken as at least
+  {vars[scribble_min_mm]} mm) hold at most {vars[share_pct]} % of the pieces' total length.
+
+The practice sheet is never scored.
+"""
+
+# rcb_brush_score.py is_success (ink picture rule) + rcb_brush_strict.py process_metrics (colouring in, counted
+# strokes on marked_pieces, sweeps on the pieces); numbers: tests/instance.json target.success.
+[families."robopaint_xingshu_xian"]
+vars = { regions = "15", iou = "0.80", boundary_f = "0.75", min_stroke_coverage = "0.80", max_stray_frac = "0.04", register_mm = "5", max_strokes = "7", max_path_mm = "2630", min_mark_width_mm = "1.88", stroke_gap_mm = "5", mark_min_width_mm = "0.1", max_stroke_path_mm = "1930", max_scribble = "12", scribble_min_mm = "10", share_pct = "10", tool_license = "The brush model is this repository's re-implementation of the dynamic virtual brush of Wang et al. (IROS 2020).", exemplar_license = "cropped from a public-domain scan of the Shenlong hand copy of Wang Xizhi's 蘭亭序 (Wikimedia Commons `File:神龍蘭亭序全.JPG`, PD-Art / PD-old-100-1923); notice in `NOTICE-exemplar.md`." }
+success = """
+Graded on the main sheet's ink (pixels with ink coverage ≥ 0.5 on the sheet's 1024 × 1024 raster, 0.222 mm per
+pixel) against the exemplar's ink. The sheet is first moved by the whole-pixel shift, at most {vars[register_mm]} mm along each
+axis, that gives the largest overlap of its ink with the exemplar's (a best shift on the edge of that window counts as
+no shift); every measure is taken at that shift. Success needs all of these:
+
+- IoU of the inked areas ≥ {vars[iou]};
+- boundary F-score ≥ {vars[boundary_f]}: the harmonic mean of the share of the sheet's ink-edge pixels within 1 mm of the
+  exemplar's edge and the share of the exemplar's edge pixels within 1 mm of the sheet's;
+- each of the exemplar's {vars[regions]} regions is at least {vars[min_stroke_coverage]} covered by ink;
+- stray ink (ink more than 1 mm from the exemplar's ink) at most {vars[max_stray_frac]} of the exemplar's ink area;
+- at most {vars[max_strokes]} inked contacts with the main sheet (a contact is one continuous stretch of the tip below the
+  sheet's surface; it is inked when the brush was loaded at the touch-down);
+- no colouring in: the task fails when `path_mm` > {vars[max_path_mm]} mm and also `mark_width_mm` < {vars[min_mark_width_mm]} mm.
+  `path_mm` is the total length of the tip's path in all inked contacts with the main sheet (100 Hz physics samples);
+  `mark_width_mm` is the area each contact inks on its own (coverage ≥ 0.5; where contacts overlap, each counts its
+  own), summed over the contacts and divided by `path_mm`;
+- at most {vars[max_strokes]} counted strokes: each inked contact is cut into marked pieces wherever the tip moves more
+  than {vars[stroke_gap_mm]} mm along the sheet while its mark is narrower than {vars[mark_min_width_mm]} mm (the touch-down before the first and
+  the lift after the last marking sample belong to no piece); a piece counts as one stroke, or as ⌈length /
+  {vars[max_stroke_path_mm]} mm⌉ strokes when it is longer than {vars[max_stroke_path_mm]} mm;
+- sweeps: pieces longer than {vars[max_scribble]} × the diagonal of their bounding box (the diagonal taken as at least
+  {vars[scribble_min_mm]} mm) hold at most {vars[share_pct]} % of the pieces' total length.
+
+The practice sheet is never scored.
+"""
+
+# rcb_brush_score.py is_success (ink picture rule) + rcb_brush_strict.py process_metrics (colouring in, counted
+# strokes on marked_pieces, sweeps on the pieces); numbers: tests/instance.json target.success.
+[families."robopaint_xingshu_yong"]
+vars = { regions = "9", iou = "0.80", boundary_f = "0.75", min_stroke_coverage = "0.80", max_stray_frac = "0.04", register_mm = "5", max_strokes = "6", max_path_mm = "1450", min_mark_width_mm = "2.25", stroke_gap_mm = "5", mark_min_width_mm = "0.1", max_stroke_path_mm = "1330", max_scribble = "12", scribble_min_mm = "10", share_pct = "10", tool_license = "The brush model is this repository's re-implementation of the dynamic virtual brush of Wang et al. (IROS 2020).", exemplar_license = "cropped from a public-domain scan of the Shenlong hand copy of Wang Xizhi's 蘭亭序 (Wikimedia Commons `File:神龍蘭亭序全.JPG`, PD-Art / PD-old-100-1923); notice in `NOTICE-exemplar.md`." }
+success = """
+Graded on the main sheet's ink (pixels with ink coverage ≥ 0.5 on the sheet's 1024 × 1024 raster, 0.222 mm per
+pixel) against the exemplar's ink. The sheet is first moved by the whole-pixel shift, at most {vars[register_mm]} mm along each
+axis, that gives the largest overlap of its ink with the exemplar's (a best shift on the edge of that window counts as
+no shift); every measure is taken at that shift. Success needs all of these:
+
+- IoU of the inked areas ≥ {vars[iou]};
+- boundary F-score ≥ {vars[boundary_f]}: the harmonic mean of the share of the sheet's ink-edge pixels within 1 mm of the
+  exemplar's edge and the share of the exemplar's edge pixels within 1 mm of the sheet's;
+- each of the exemplar's {vars[regions]} regions is at least {vars[min_stroke_coverage]} covered by ink;
+- stray ink (ink more than 1 mm from the exemplar's ink) at most {vars[max_stray_frac]} of the exemplar's ink area;
+- at most {vars[max_strokes]} inked contacts with the main sheet (a contact is one continuous stretch of the tip below the
+  sheet's surface; it is inked when the brush was loaded at the touch-down);
+- no colouring in: the task fails when `path_mm` > {vars[max_path_mm]} mm and also `mark_width_mm` < {vars[min_mark_width_mm]} mm.
+  `path_mm` is the total length of the tip's path in all inked contacts with the main sheet (100 Hz physics samples);
+  `mark_width_mm` is the area each contact inks on its own (coverage ≥ 0.5; where contacts overlap, each counts its
+  own), summed over the contacts and divided by `path_mm`;
+- at most {vars[max_strokes]} counted strokes: each inked contact is cut into marked pieces wherever the tip moves more
+  than {vars[stroke_gap_mm]} mm along the sheet while its mark is narrower than {vars[mark_min_width_mm]} mm (the touch-down before the first and
+  the lift after the last marking sample belong to no piece); a piece counts as one stroke, or as ⌈length /
+  {vars[max_stroke_path_mm]} mm⌉ strokes when it is longer than {vars[max_stroke_path_mm]} mm;
+- sweeps: pieces longer than {vars[max_scribble]} × the diagonal of their bounding box (the diagonal taken as at least
+  {vars[scribble_min_mm]} mm) hold at most {vars[share_pct]} % of the pieces' total length.
+
+The practice sheet is never scored.
+"""

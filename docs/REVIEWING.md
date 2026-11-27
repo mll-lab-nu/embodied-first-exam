@@ -95,8 +95,8 @@ A guide for maintainers. The rules are the protocol ([protocol/README.md](protoc
 - Where a task is offered in several modes, do they share the frozen instance, success rule and seeds, and is the
   cutoff one number?
 - A standard or realtime task without the same task in privileged mode: does it carry its own frozen instance, and
-  does its benchmark's `readme.toml` say why (`no_twin`)? The task-structure check warns otherwise, so that a deleted
-  or misnamed task does not pass silently.
+  does its benchmark's `readme.toml` say why (`no_twin`)? The task-structure check (`check-task-layout.py`) warns
+  otherwise, so that a deleted or misnamed task does not pass silently.
 - A new mode: does the pull request have everything [protocol/tasks.md](protocol/tasks.md#modes) lists? Is the runner
   side (runners, the results site) told the new suffix? A new mode is a protocol change the maintainers decide: one
   pull request of its own, shared files only, merged before the benchmark that uses it.

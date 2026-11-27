@@ -1,37 +1,43 @@
-# dextoolbench_marker_staples_marker_write_c-standard
+# DexToolBench · staples marker · write_c (standard)
 
 | | |
 |---|---|
-| Benchmark | DexToolBench |
-| Mode | standard (`eai-standard/3.0`) |
-| Twin | `dextoolbench_marker_staples_marker_write_c-privileged` |
-| Simulator / robot | `mujoco` / `kuka-iiwa14-sharpa-ha4` |
-| Family / instance | `dextoolbench/marker/staples_marker/write_c` / seed 0 |
-| Oracle | `partial` — SimToolReal's pretrained policy, replayed in this scene, reaches 19/29 goals (solution/; README of dextoolbench_marker_staples_marker_write_c-privileged) |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:mujoco-0.1.2` |
+| Task ID | `dextoolbench_marker_staples_marker_write_c-standard` |
+| Benchmark | [DexToolBench](https://simtoolreal.github.io/) (Kedia, Lum et al., 2026), upstream `tylerlum/simtoolreal@313d5ae` |
+| Robot | KUKA iiwa 14 arm with a left Sharpa HA4 dexterous hand (22 joints): 29 position-controlled joints |
+| Mode | standard |
+| Instance | `dextoolbench/marker/staples_marker/write_c`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | Pipeline check only |
 
 ## Task
 Pick up the marker and write a letter C, following the green ghost marker through its poses in order.
 
-Standard-mode twin of `dextoolbench_marker_staples_marker_write_c-privileged` (see its README): the same scene, instance and scoring, served as a robot service (`embodied_first_exam/benchmarks/dextoolbench/sim/server_mj.py`, protocol eai-standard/3.0, tooling `rcb_dtb`). The agent sees camera RGB-D and proprioception only.
+## Success criteria
+The goal is a fixed sequence of 29 poses of the staples marker (position and orientation in the
+world frame), from DexToolBench's `staples_marker / write_c` demonstration; the scene shows the current
+pose as a green ghost tool. The task passes only when all 29 poses have been reached, one after
+another in the given order.
 
-## Difficulty
-Same scene, instance and success rule as `dextoolbench_marker_staples_marker_write_c-privileged` (see its Difficulty). In standard mode the agent loses privileged state and planning primitives, and has 20 resets instead of unlimited ones: it sees camera images and proprioception only, acts through the client, and every try is a real episode from the same start, of which only the last is graded.
+A pose is reached at a control step when each of the 8 corners of a box fixed to the tool (21.15 × 4.54 × 4.07 cm,
+centred on the tool's frame origin; the same box for every tool) is less than 1.5 cm from where that corner is with the
+tool at the pose. Only the current pose is tested, once after every control step; when it is reached, the next pose
+becomes current from the next control step on.
 
-## Reference solution
-`solution/`: the privileged-mode oracle's recorded targets submitted through the client (one row per control step)
+Graded: the live episode, judged by the simulator service as it runs; nothing is replayed. The service tests the
+current pose after every control step it executes, and poses have no time limit. Reaching the last pose neither ends
+the episode nor is shown to the agent. The episode ends at the agent's `/finish`, after 360,000 control steps of the
+episode (100 min of robot time), or when the agent's session ends (at the latest after 1 h). It passes if every
+pose was reached in order at some control step before it ended; moving the tool afterwards does not undo that. The
+agent has 20 resets; each abandons the running episode and starts a new one from the frozen start, with the first
+pose current again. Only the last episode is graded.
 
-## Verification
-the live episode's verdict (`graded_by = "live"`, no grading replay). The episode is agent-ended: it ends at the agent's
-`POST /finish`, after 360,000 control steps, when the agent's time is up or on a simulator error; reaching the last goal
-does not end it, and nothing tells the agent whether it has. The last episode (every control step since the last reset)
-passes when the goal tracker, run on every executed control step, has reached every goal by then, each counted when it
-was reached (`progress` = goals reached / goals in `reward.json`). The frozen start is checked when the episode begins
-(`RCB_START_SHA`)
+An episode ended by a simulator error scores 0, and so does one ended because the service crashed repeatedly inside
+the agent's own calls. An episode that does not start from the frozen instance (its state hash), a service that
+crashes between calls or cannot resume the episode, or a missing verdict is an infrastructure failure, not a score.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -42,7 +48,10 @@ Caps per container (PROTOCOL §6).
 - GPU: any NVIDIA GPU, held by `sim`.
 - Recommended GPU: any 8 GB+ NVIDIA GPU (RTX 4090 / L4).
 
-## Details
-| | |
-|---|---|
-| video | `replay.mp4`: one render pass over the trajectory from the frozen start after the verdict (in the sidecar, EGL on its GPU); it never changes the verdict |
+## License
+DexToolBench is part of SimToolReal ([tylerlum/simtoolreal](https://github.com/tylerlum/simtoolreal) @ `313d5ae`),
+released under the [MIT License](https://github.com/tylerlum/simtoolreal/blob/313d5aea1f507c6cfe097b672b62945d7b0bbff5/LICENSE)
+(Copyright (c) 2026 Tyler Lum). The tool meshes, the goal trajectories and the Sharpa HA4 hand model used here ship in
+that repository. The KUKA iiwa 14 model is from [MuJoCo Menagerie](https://github.com/google-deepmind/mujoco_menagerie/tree/1b86ece576591213e2b666ebf59508454200ca97/kuka_iiwa_14)
+@ `1b86ece` (BSD 3-Clause License). The simulator is MuJoCo 3.3.7 (Apache License 2.0). No non-commercial terms apply.
+SimToolReal's training code and pretrained policy are not part of the task image.

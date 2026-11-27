@@ -1,40 +1,41 @@
-# bigym2-dishwasher-close-i00-realtime
+# BiGym 2.0 · dishwasher-close (realtime)
 
 | | |
 |---|---|
-| Benchmark | BiGym 2.0 |
-| Mode | realtime (`eai-standard/3.0`) |
-| Twin | `bigym2-dishwasher-close-i00-privileged` |
-| Simulator / robot | `bigym2` / `unitree-g1-dex1` |
-| Family / instance | `dishwasher-close` / seed 0 |
-| Oracle | `none` — no reference solution (BiGym 2.0 ships no expert or planner; its demonstrations and its agents' programs stay off the agent's network); positive example graded 1 by the separate verifier: bigym2-dishwasher-close-i00-priv__BtaZZZZ (run codex-gpt6_luna-medium, 2026-10-08, on an earlier text of the privileged task; regraded by its current verifier); human review in PR #123 |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Real time | slowdown S = 1 (the world runs at 1/S of real speed: one control step every S x control_dt s of wall time; `RCB_SLOWDOWN`'s default); reset budget 0 (`RCB_RESET_BUDGET`'s default) (PROTOCOL §3) |
-| Base image | `ghcr.io/mll-lab-nu/efe:bigym2-0.1.1` |
+| Task ID | `bigym2-dishwasher-close-i00-realtime` |
+| Benchmark | [BiGym 2.0](https://github.com/swirl-uk/BiGym2) (Zhang et al., 2026), upstream `swirl-uk/BiGym2@93ad4b3` |
+| Robot | Unitree G1 humanoid (29 DoF) with Dex1-1 two-finger grippers; legs and waist driven by NVIDIA's GR00T-WBC walking policy |
+| Mode | realtime, slowdown 1 |
+| Instance | `dishwasher-close`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | None |
 
 ## Task
-Close the dishwasher: push both racks in and shut the door. (BiGym 2.0 `dishwasher_close`; the robot as a service on a clock that does not stop: its three onboard cameras and
-its proprioception only, one episode.)
+Close the dishwasher: push both racks in and shut the door.
 
-## Difficulty
-Three articulated joints low in front of the robot (two racks and a door), pushed fully closed to within 5% of their travel, which takes squatting and leaning. In realtime mode the robot keeps running at 50 Hz while the agent thinks, holding its last
-command (standing still), so the agent drives it from a controller program of its own.
+## Success criteria
+Success predicate (upstream `DishwasherCloseG1`): the dishwasher's door, its bottom rack and its middle rack are each
+within 5% of their travel from fully closed, at the same time. Held for 1 s (50 consecutive control steps), with no
+fall in the episode: the pelvis tilting past about 53° or dropping below 0.30 m makes the episode a failure without
+ending it.
 
-## Reference solution
-None (as `bigym2-dishwasher-close-i00-privileged`).
+Failure (ends the episode at once with 0): the pelvis more than 10 m from the scene's origin.
 
-## Verification
-As `bigym2-dishwasher-close-i00-standard`: the sidecar judges the live episode with BiGym's own success check and writes that verdict to
-`/data/final.json` (`graded_by = "live"`); nothing is replayed to grade it (owner, 2026-10-17). The
-trajectory holds the commands the simulator executed at each control step, so it reproduces the live run whatever the
-timing was; the video is rendered from it in one pass after the verdict. `tests/grade.py` reads `final.json`. After
-the agent's first command, a simulator error raised by a control step and a simulator crash inside a control step (a
-fatal signal) are the agent's 0; before it, a kill, a failed resume and a reset that does not rebuild the scene are infrastructure
-(`infra_error = 1`; owner, 2026-10-17, docs/protocol/standard_mode.md). Success condition: the door and both racks are closed to within 5% of their travel: the door within about 4.5 degrees of shut, the lower rack within 0.025 m and the upper rack within 0.0225 m of fully in.
-No oracle; human review in PR #123 (PROTOCOL §4).
+Graded: the live episode, judged by the simulator service; nothing is replayed. The clock does not stop: an episode
+starts paused at the frozen start, and from the agent's first `submit` one control step runs every 20 ms × S of wall
+time (slowdown S = 1) whether or not the agent sends anything; when the planned rows run out, the last row
+is held, its walking velocity included. Reaching the goal does not end the episode and is not shown to the agent. The
+episode ends at the agent's `/finish`, at the horizon (4,650 control steps, 93 s of robot
+time), when the agent's time (1 h) runs out, or at a failure above, which scores 0. After it ends, the robot
+holds its last command, standing still, for 1 s more (50 control steps). The task is passed if at the end of that
+second upstream's success predicate has held for 50 consecutive control steps and the robot has not fallen at any
+time in the episode or the hold; a failure during the hold scores 0. Resets granted: 0; only the episode after
+the last reset is graded. After the agent's first command, a simulator error or a simulator crash inside a control
+step is the agent's 0; anything before the first command, a killed service, a failed resume or a reset that does not
+rebuild the scene is an infrastructure failure, not a score.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -45,9 +46,10 @@ Caps per container (PROTOCOL §6).
 - GPU: any NVIDIA GPU, held by `sim`.
 - Recommended GPU: any 8 GB+ NVIDIA GPU (RTX 4090 / L4).
 
-## Details
-| | |
-|---|---|
-| Service | `environment/sim/rcb_realtime.py` (eai-standard/3.0) with the BiGym 2.0 adapter `server.py`, `rcb_bigym2.py`, `instance.json` (= the privileged twin's) |
-| Clock | real time (`RCB_SLOWDOWN`, default 1) from the first `submit` |
-| Horizon | 4650 control steps (93 s at 50 Hz) |
+## License
+BiGym 2.0 ([swirl-uk/BiGym2](https://github.com/swirl-uk/BiGym2) @ `93ad4b3`, `bigym` 1.0.0) is released under the
+Apache License 2.0. Bundled components keep their own licences: the Unitree G1 description (BSD 3-Clause) in AMO's
+MuJoCo packaging (Apache License 2.0); the scene props (CC0 or CC BY 4.0, attributions in upstream's
+`bigym/envs/xmls/3D_MODELS_ATTRIBUTION.md`); NVIDIA's GR00T-WBC weights, redistributed under the NVIDIA Open Model
+License (upstream's `NOTICE` and `THIRD_PARTY_NOTICES.md`). The simulator is MuJoCo 3.8.1 (Apache License 2.0). No
+non-commercial terms apply.

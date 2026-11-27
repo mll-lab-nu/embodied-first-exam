@@ -1,3 +1,7 @@
 [[replace]]
 old = "entry 0 of RoboWits' `eval_dataset_50/13.json`"
 new = "entry 1 of RoboWits' `eval_dataset_50/13.json`"
+
+[[replace]]
+old = "`cover_with_lid`, seed 0 |"
+new = "`cover_with_lid`, seed 1 |"

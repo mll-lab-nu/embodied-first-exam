@@ -1,31 +1,34 @@
-# labutopia-open-door-i00-privileged
+# LabUtopia · open_door (privileged)
 
 | | |
 |---|---|
-| Benchmark | LabUtopia |
+| Task ID | `labutopia-open-door-i00-privileged` |
+| Benchmark | [LabUtopia](https://github.com/Rui-li023/LabUtopia) (Li et al., 2025), upstream `Rui-li023/LabUtopia@8df7278` |
+| Robot | Franka Emika Panda arm (7 joints) with its two-finger gripper |
 | Mode | privileged |
-| Twin | `labutopia-open-door-i00-standard` |
-| Simulator / robot | `labutopia` / `franka-panda` |
-| Family / instance | `open_door` / seed 4 |
-| Oracle | `full` |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:labutopia-0.1.0` |
+| Instance | `open_door`, seed 4 |
+| Time limit | 1 h |
+| Reference solution | Included |
 
 ## Task
-LabUtopia's `open_door` (Open Door), with a Franka Panda arm (7 joints) with its two-finger gripper, fixed to a laboratory bench: Open the drying oven's door, then let go of it and move the hand away.
-On the bench in front of the arm: a drying oven, a grey metal box about 58 cm deep, 74 cm wide and 63 cm high, with a blue door that has a window and a handle and is hinged on one side; a small control panel sits next to the door. The door is closed. The deliverable is one replayable trajectory of joint targets (`/app/output/trajectory.npz`, `(T, 18)`, one row per 1/60 s control step: 9 position targets, then 9 velocity targets).
+Open the drying oven's door, then let go of it and move the hand away.
 
-## Difficulty
-LabUtopia's level 1. A hinged door: the handle moves on an arc around the hinge, so the hand has to follow it, and the rule wants the door left open with the handle released. The agent has full access to the simulator and to LabUtopia's scene and task code, but not to its scripted controller or its motion primitives: it has to build the motion itself from joint targets at 60 Hz.
+## Success criteria
+The oven door's handle centre is more than 0.12 m (straight-line distance) from where it started, and the hand is more
+than 0.04 m from the handle's centre, for 60 consecutive control steps (1 s).
 
-## Reference solution
-LabUtopia's scripted controller (open, config level1_open_door @ 8df7278), seed 4: the joint targets it sends, one row per control step (float32, as PhysX holds them), cut at the first step at which the rule is met: `solution/oracle.npz`, 687 rows, success after 687 control steps. Replayed and saved by `solution/solve.sh`; re-checked by the privileged verifier (`harbor run -a oracle`: one fresh-process replay).
+The verifier replays `/app/output/trajectory.npz` (array `actions`, shape (T, 18), 1 ≤ T ≤ 36,000, finite values) once,
+open-loop, in a fresh process in a separate sandbox without network, from its own copy of the frozen instance. Each row
+is one control step of 1/60 s: 9 position targets and 9 velocity targets, clipped to the action limits. The replay
+stops at the first control step at which the condition above is met: that is a success. Rows after it are not executed. A
+replay that runs out of rows, or reaches 36,000 control steps, without meeting the condition scores 0.
 
-## Verification
-`tests/grade.py` in a separate sandbox without network: one replay of `/app/output/trajectory.npz`, in a fresh process, from the verifier's own copy of the instance (`tests/instance.json`; the rebuilt placements are checked against its recorded hash); pass iff the episode succeeds (the first control step at which the rule is met ends the episode). `nop`: no trajectory, reward 0.
+A missing file scores 0, and so does an invalid one: not a readable `.npz`, no `actions` array, a `task` entry that
+names another task, the wrong shape, a non-finite value, or more than 36,000 rows. A replay that gives no result, and a
+replay whose scene does not rebuild the instance's recorded placements, are infrastructure failures, not a score.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -35,11 +38,11 @@ Caps per container (PROTOCOL §6).
 - GPU: an RTX-class NVIDIA GPU (ray-tracing cores), one of the models in `gpu_types`: RTX 4090, L40S, held by `main`.
 - Recommended GPU: RTX 4090 24GB / L40S 48GB.
 
-## Details
-| | |
-|---|---|
-| Upstream | LabUtopia (github.com/Rui-li023/LabUtopia @ 8df7278; code MIT, assets CC BY-NC 4.0) on NVIDIA Isaac Sim 6.1.0 (LabUtopia pins 5.1.0; the image is built locally, images/labutopia/BUILD_ONLY) |
-| Instance | config `level1_open_door` (task `openclose`, stage `assets/chemistry_lab/lab_001/lab_001.usd`) after LabUtopia's reset with seed 4 and 5 physics steps; placement hash `106ee1a5119756d2` (checked on every load), start-state hash `ac92955f6803b7d6` |
-| Rule | `OpenRule` in `rcb_labutopia.py`: the handle's centre is more than 0.12 m from where it started and the hand is more than 0.04 m from the handle's centre (the handle is released), for 60 consecutive control steps (1 s) |
-| Actions | 18 joint targets per control step (1/60 s, one physics step); the first step at which the rule is met ends the episode (tasks/labutopia/README.md) |
-| Resources | an RTX-class NVIDIA GPU (Isaac Sim), 8 CPUs, 32 GB of RAM |
+## License
+LabUtopia ([Rui-li023/LabUtopia](https://github.com/Rui-li023/LabUtopia) @ `8df7278`): the code is under the
+[MIT License](https://github.com/Rui-li023/LabUtopia/blob/8df72784265c375a327ffa3f0a0cf8c676f229a7/LICENSE); the data
+assets (the laboratory scenes and objects) are under [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/):
+**non-commercial use only** (research and education). The simulator is NVIDIA Isaac Sim 6.1.0, under the
+[NVIDIA Isaac Sim / Omniverse licence](https://docs.isaacsim.omniverse.nvidia.com/latest/common/NVIDIA_Omniverse_License_Agreement.html);
+it may not be redistributed, so the simulator image is built locally and never published. The robot model and 64
+files from NVIDIA's public asset server come under NVIDIA's terms.

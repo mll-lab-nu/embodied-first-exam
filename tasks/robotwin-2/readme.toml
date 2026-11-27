@@ -1,0 +1,468 @@
+# README data for tasks/robotwin-2/*/README.md (scripts/task_conventions.py render_readme_v3)
+# Success texts are read from RoboTwin 2.0 @ 6dde571 (third_party/RoboTwin): envs/<task>.py `check_success`, with
+# envs/_base_task.py (table_z_bias = 0: no task passes table_height_bias and random_table_height is 0 in the tooling's
+# BASE_ARGS, so every "0.74 + table_z_bias" is 0.74 m) and envs/robot/robot.py (gripper open > 0.8, closed < 0.2).
+# Instance-dependent sides (which arm, which side an object started on) follow each task's instruction.md ## Goal.
+# Positions are object origins (Actor.get_pose().p) unless a functional / contact point of the model is named.
+[benchmark]
+name = "RoboTwin 2.0"
+citation = "Chen et al., 2025"
+url = "https://github.com/RoboTwin-Platform/RoboTwin"
+repo = "RoboTwin-Platform/RoboTwin"
+commit = "6dde571"
+
+[license]
+text = """
+The scenes, task definitions and success checks are RoboTwin 2.0's ([RoboTwin-Platform/RoboTwin](https://github.com/RoboTwin-Platform/RoboTwin),
+MIT License, copyright 2025 Tianxing Chen; paper: Chen et al., 2025, "RoboTwin 2.0: A Scalable Data Generator and
+Benchmark with Strong Domain Randomization for Robust Bimanual Robotic Manipulation", arXiv:2506.18088). The robot and
+object assets come from RoboTwin's asset dataset on Hugging Face
+([TianxingChen/RoboTwin2.0](https://huggingface.co/datasets/TianxingChen/RoboTwin2.0), revision `981c92a`,
+`embodiments.zip` and `objects.zip`), downloaded when the image is built and not redistributed in this repository.
+"""
+
+[robots]
+aloha-agilex = "ALOHA-AgileX dual-arm robot (two 6-joint arms with parallel-jaw grippers)"
+
+[modes.privileged]
+# tests/grade.py main / load_deliverable / probe_instance; tests/rcb_traj.py Session.replay, status (env.check_success
+# once, after the last row), gripper_opening + _install_gripper_predicates (gripper_state="fingers"), MAX_T = 200,000.
+# The latch of press_stapler (stage_success_tag) is reset by every rebuild (_base_task._init_task_env_ L160) and nothing
+# calls check_success during the replay, so the one check is the end state's.
+success = """
+Positions are in the world frame: the table centre at the origin, +x to the robot's right, +y away from the robot, +z
+up; the table top is at z ≈ 0.74 m. Where a gripper must be open or closed, a gripper counts as open when the position
+targets of both its fingers command an opening above 0.8 (0 = closed, 1 = open) and as closed when both command less
+than 0.2; the two gripper-command columns of a row are not read.
+
+The graded file is `/app/output/trajectory.npz`: `actions`, a finite (T, 34) array with one row per physics step
+(1/250 s) and at most 200,000 rows, and `task` = `{family}`. The verifier replays it once, open-loop, in a fresh process
+from the frozen start (the scene is rebuilt from the instance and its initial-state hash is checked) and checks the
+conditions above once, on the state after the last row; nothing earlier in the replay counts. A missing file, a file
+that is not a readable npz, a wrong `task`, a wrong shape, a non-finite value, more than 200,000 rows or a simulator
+error during the replay scores 0. A host on which the frozen instance does not rebuild is an infrastructure error, not
+a score.
+"""
+
+[modes.standard]
+# environment sim service = embodied_first_exam/benchmarks/robotwin-2/sim/server.py: finish() L232-252 (RCB_AGENT_END=1,
+# END_STATE_REASONS finished / timeout; step limit unset: RCB_STEP_LIMIT not in the compose file), _check_success
+# L108-113 (stage_success_tag cleared before every judgement), Session(..., gripper_state="command") L258-261 (RoboTwin's
+# own gripper rule), simulator error L967-971 -> reason "error"; tests/grade.py main (reason "error" and
+# sim_crashed_on_call are 0; instance_mismatch, sim_crashed, resume_failed, no live verdict are infra_error).
+success = """
+Positions are in the world frame: the table centre at the origin, +x to the robot's right, +y away from the robot, +z
+up; the table top is at z ≈ 0.74 m. Where a gripper must be open or closed, a gripper counts as open when its last
+command is above 0.8 (0 = closed, 1 = open) and as closed when its last command is below 0.2, whether or not the fingers
+reach that opening.
+
+Graded is the one live episode (no reset, no step limit). It ends at the agent's `POST /finish` or when the time
+limit is up, and the conditions above are checked once, on the state at that moment; a success earlier in
+the episode neither ends it nor counts. A simulator error raised by an agent's call ends the episode with 0, as do
+repeated service crashes that all happened while serving the agent's calls. A host on which the frozen instance does
+not rebuild, or a service crash the episode cannot be resumed from, is an infrastructure error, not a score.
+"""
+
+# ------------------------------------------------------------------------------------------------------------------
+# Families (47). Each text states the check of envs/<family>.py check_success at 6dde571 (line numbers below).
+
+[families.adjust_bottle]
+# envs/adjust_bottle.py check_success L63-67: (qpose_tag 0 and fp0.x < -0.15 or qpose_tag 1 and fp0.x > 0.15) and fp0.z > 0.9;
+# qpose_tag 1 = the bottle starts at x 0.08..0.12 (load_actors xlims); the Goal: the robot's right.
+success = """
+The bottle started on the right of the table's centre, so it counts on the right: the bottle's functional point (a
+reference point fixed on the bottle model) is more than 15 cm to the right of the table's centre (x > 0.15 m) and
+higher than z = 0.90 m (about 16 cm above the table top). No gripper state is checked.
+"""
+
+[families.beat_block_hammer]
+# envs/beat_block_hammer.py check_success L82-87: |hammer fp0 - block fp1| < 0.02 in x and y, and check_actors_contact
+# (hammer, block); the box's functional point 1 is its top-face centre (envs/utils/create_actor.py create_box).
+success = """
+The hammer's head point (functional point 0 of the hammer model) is within 2 cm of the centre of the block's top face
+in both x and y, and the hammer is in contact with the block. No gripper state is checked.
+"""
+
+[families.blocks_ranking_rgb]
+# envs/blocks_ranking_rgb.py check_success L155-164: |b1-b2| < (0.13, 0.03) and |b2-b3| < (0.13, 0.03) in (x, y),
+# b1.x < b2.x < b3.x, both grippers open; block1 red, block2 green, block3 blue (load_actors).
+success = """
+The red, green and blue blocks are in that order from the robot's left to its right (red x < green x < blue x); the
+centres of neighbouring blocks (red and green, green and blue) are less than 13 cm apart in x and less than 3 cm apart
+in y; both grippers are open.
+"""
+
+[families.blocks_ranking_size]
+# envs/blocks_ranking_size.py check_success L149-158 (as blocks_ranking_rgb); block1..3 half sides 3.0-3.3 / 2.4-2.7 /
+# 1.8-2.1 cm (load_actors halfsize_lst L14-18).
+success = """
+The largest, middle-sized and smallest blocks are in that order from the robot's left to its right (largest x <
+middle x < smallest x); the centres of neighbouring blocks are less than 13 cm apart in x and less than 3 cm apart in
+y; both grippers are open.
+"""
+
+[families.dump_bin_bigbin]
+# envs/dump_bin_bigbin.py check_success L153-162: deskbin.z >= 1, every sphere 0.13 <= z <= 0.25; the big bin
+# (011_dustbin) is static on the floor at (-0.45, 0, 0) (load_actors).
+success = """
+The small bin's position is at least z = 1.0 m (about 26 cm above the table top), and each of the five balls is between
+z = 0.13 m and z = 0.25 m, the height of the inside of the big bin that stands on the floor at the robot's left (the
+balls' horizontal positions are not checked). No gripper state is checked.
+"""
+
+[families.grab_roller]
+# envs/grab_roller.py check_success L55-57: both grippers closed and roller.z > 0.8.
+success = """
+Both grippers are closed and the roller's position is higher than z = 0.80 m (about 6 cm above the table top).
+"""
+
+[families.handover_block]
+# envs/handover_block.py check_success L111-116: |box fp0 - target_box fp1| < 0.03 in x and y, |dz| < 0.01, right gripper
+# open; fp0 of a box = its bottom-face centre, fp1 = its top-face centre (create_box functional_matrix).
+success = """
+The centre of the red block's bottom face (the end that was down at the start) is within 3 cm of the centre of the blue
+pad's top face in both x and y and within 1 cm of it in height, and the right gripper is open. The left gripper is not
+checked.
+"""
+
+[families.handover_mic]
+# envs/handover_mic.py check_success L99-107: some gripper link touches 018_microphone; handover arm's gripper closed,
+# grasp arm's open; mic fp0.z > 0.92; fp0.x < 0 for a left handover arm. grasp arm = the side the mic starts on
+# (load_actors L27-28); the Goal: the left arm holds it, the right lets go.
+success = """
+A gripper touches the microphone; the left gripper is closed and the right gripper is open; the microphone's functional
+point (a reference point fixed on the microphone model) is higher than z = 0.92 m (about 18 cm above the table top) and
+on the robot's left of the table's centre (x < 0).
+"""
+
+[families.hanging_mug]
+# envs/hanging_mug.py check_success L81-88: |mug fp0 - (rack origin + rack fp0) / 2| < 0.02 in x and y, right gripper
+# open, mug fp0.z > 0.86.
+success = """
+The mug's functional point (a reference point fixed on the mug model, at its handle) is within 2 cm, in both x and y,
+of the point halfway between the rack's origin and the rack's functional point on its arm, and higher than z = 0.86 m
+(about 12 cm above the table top); the right gripper is open. The left gripper is not checked.
+"""
+
+[families.lift_pot]
+# envs/lift_pot.py check_success L50-58: pot.z > 0.82; |left TCP - pot contact point 0| < 0.03 and |right TCP - pot
+# contact point 1| < 0.03 (3-D distances); pot up axis . world up > 0.8.
+success = """
+The pot's position is higher than z = 0.82 m (about 8 cm above the table top); the pot is roughly level (its up axis is
+tilted less than about 37° from vertical: cosine above 0.8); the left gripper's centre is within 3 cm of the pot's
+left handle grasp point and the right gripper's centre within 3 cm of the right one (contact points 0 and 1 of the pot
+model). The grippers' opening is not checked.
+"""
+
+[families.move_can_pot]
+# envs/move_can_pot.py check_success L95-110 (arm_tag right: the can starts at x > 0, load_actors L39; the Goal: the
+# pot's right side): 0 < can.x - pot.x < 0.2, |pot.y - can.y| < 0.035, |roll - 90°| < 15°, |pitch| < 15°
+# (transforms3d quat2euler, sxyz), can.z <= orig_z + 0.001 (orig_z = the pot's starting z), both grippers open.
+success = """
+The can is on the pot's right: its position is 0 to 20 cm further right (x) than the pot's and within 3.5 cm of the
+pot's in y. The can stands upright (of its Euler angles in RoboTwin's x-y-z convention, the roll is within 15° of 90°
+and the pitch within 15° of 0°), and its position is no more than 1 mm higher than the pot's starting height, so it
+rests on the table, not on or in the pot. Both grippers are open.
+"""
+
+[families.move_pillbottle_pad]
+# envs/move_pillbottle_pad.py check_success L97-103: |pillbottle - pad| < 0.03 in x and y, |pillbottle.z - 0.741| <
+# 0.005, both grippers open.
+success = """
+The pill bottle's position is within 3 cm of the pad's centre in both x and y, and its height is within 5 mm of
+z = 0.741 m (standing on the table top); both grippers are open.
+"""
+
+[families.move_playingcard_away]
+# envs/move_playingcard_away.py check_success L62-67: |cards.x| > 0.23, both grippers open.
+success = """
+The playing cards' position is more than 23 cm from the table's centre in x, on either side (|x| > 0.23 m); both
+grippers are open.
+"""
+
+[families.move_stapler_pad]
+# envs/move_stapler_pad.py check_success L113-120: |stapler - pad| < (0.02, 0.02, 0.01), max(|q|) - min(|q|) < 0.02,
+# both grippers open. The mat's colour is drawn per seed (load_actors); the Goal: red.
+success = """
+The stapler's position is within 2 cm of the red mat's centre in x and in y and within 1 cm of it in height; the
+stapler is lined up with the mat's long side, either way round (the absolute values of the four components of its
+orientation quaternion differ from one another by less than 0.02); both grippers are open.
+"""
+
+[families.open_laptop]
+# envs/open_laptop.py check_success L64-70 (target 0.4): lid qpos >= lo + 0.4 (hi - lo) and |arm TCP - laptop contact
+# point 1| < 0.1; the lid starts at 0.2 of its range (load_actors set_qpos); arm_tag from the laptop's yaw (load_actors
+# L21), the Goal: left.
+success = """
+The lid's hinge is open to at least 40% of its range from closed (it starts at 20%), and the left gripper's centre is
+within 10 cm of the lid's grasp point (contact point 1 of the laptop model). The right gripper is not checked.
+"""
+
+[families.open_microwave]
+# envs/open_microwave.py check_success L102-105 (target 0.6): door qpos >= 0.6 x its upper limit.
+success = """
+The door's hinge is open to at least 60% of its upper limit. No gripper state is checked.
+"""
+
+[families.pick_diverse_bottles]
+# envs/pick_diverse_bottles.py check_success L94-104: bottle1 (starts at x -0.25..-0.05) fp0 within 0.1 of (-0.06,
+# -0.105) in x and in y, bottle2 within 0.1 of (0.06, -0.105), both fp0.z > 0.89 (left/right_target_pose, load_actors;
+# not scrubbed: images/robotwin/scrub_oracles.py LEAKS).
+success = """
+The bottle that started on the robot's left has its functional point (a reference point fixed on the bottle model)
+within 10 cm of (x, y) = (−0.06, −0.105) m in x and in y, and the other bottle within 10 cm of (0.06, −0.105) m; both
+functional points are higher than z = 0.89 m (about 15 cm above the table top). No gripper state is checked.
+"""
+
+[families.pick_dual_bottles]
+# envs/pick_dual_bottles.py check_success L92-102 (the same check as pick_diverse_bottles).
+success = """
+The bottle that started on the robot's left has its functional point (a reference point fixed on the bottle model)
+within 10 cm of (x, y) = (−0.06, −0.105) m in x and in y, and the other bottle within 10 cm of (0.06, −0.105) m; both
+functional points are higher than z = 0.89 m (about 15 cm above the table top). No gripper state is checked.
+"""
+
+[families.place_a2b_left]
+# envs/place_a2b_left.py check_success L147-153: 0.08 < |object - target|_xy < 0.2, object.x < target.x, |dy| < 0.05,
+# both grippers open. Objects drawn per seed (load_actors); the Goal: the toy car and the bell.
+success = """
+The toy car's position is between 8 cm and 20 cm from the bell's horizontally, on the bell's left (smaller x), and
+within 5 cm of the bell's in y; both grippers are open.
+"""
+
+[families.place_a2b_right]
+# envs/place_a2b_right.py check_success L148-154: as place_a2b_left with object.x > target.x. The Goal: the box of
+# playing cards and the soap.
+success = """
+The box of playing cards' position is between 8 cm and 20 cm from the soap's horizontally, on the soap's right (larger
+x), and within 5 cm of the soap's in y; both grippers are open.
+"""
+
+[families.place_bread_basket]
+# envs/place_bread_basket.py check_success L190-202: every bread |bread - basket| < 0.05 in x and y and bread.z > 0.73;
+# both grippers open; two breads (load_actors range(2)).
+success = """
+Each of the two breads has its position within 5 cm of the basket's centre in both x and y and higher than z = 0.73 m;
+both grippers are open.
+"""
+
+[families.place_bread_skillet]
+# envs/place_bread_skillet.py check_success L114-118: |skillet fp0 - bread| < 0.035 in x and y, skillet fp0.z > 0.76,
+# bread.z > 0.76. No gripper clause.
+success = """
+The bread's position is within 3.5 cm of the skillet pan's centre point (functional point 0 of the skillet model) in
+both x and y, and both that point and the bread are higher than z = 0.76 m (about 2 cm above the table top). No gripper
+state is checked.
+"""
+
+[families.place_burger_fries]
+# envs/place_burger_fries.py check_success L125-131: |tray fp0 - hamburger fp0|_xy < 0.08, |tray fp1 - fries fp0|_xy <
+# 0.08, both grippers open.
+success = """
+The hamburger's functional point is within 8 cm horizontally of the tray's left-half target point and the fries'
+functional point within 8 cm horizontally of the tray's right-half target point (functional points 0 and 1 of the tray
+model); both grippers are open.
+"""
+
+[families.place_can_basket]
+# envs/place_can_basket.py check_success L141-151: basket.z - start > 0.02, can.z - start > 0.02, basket local y axis .
+# world up > 0.5, sum |can - basket| (x, y, z) < 0.15, can not touching the table, can touching the basket. No gripper
+# clause.
+success = """
+The basket's position has risen more than 2 cm above its starting height and the can's more than 2 cm above the can's
+starting height; the basket is upright (its upright axis tilted less than 60° from vertical); the can's position is
+less than 15 cm from the basket's (the sum of the x, y and z differences); the can touches the basket and does not touch
+the table. No gripper state is checked.
+"""
+
+[families.place_cans_plasticbox]
+# envs/place_cans_plasticbox.py check_success L127-135: for each can min(|can - box fp0|_xy, |can - box fp1|_xy) < 0.04;
+# both grippers open. The two cans are not required to be at different points.
+success = """
+Each of the two cans has its position within 4 cm horizontally of the centre of one of the plastic box's two halves
+(functional points 0 and 1 of the box model; the check takes the nearer one for each can and does not require the two
+cans to be in different halves); both grippers are open.
+"""
+
+[families.place_container_plate]
+# envs/place_container_plate.py check_success L93-98: |container - plate| < (0.05, 0.05, 0.03), both grippers open.
+success = """
+The cup's position is within 5 cm of the plate's in x and in y and within 3 cm of it in height; both grippers are open.
+"""
+
+[families.place_dual_shoes]
+# envs/place_dual_shoes.py check_success L141-159: left shoe within 0.05 of (0, -0.17) in x and y, right shoe within 0.05
+# of (0, -0.09); each quaternion (w >= 0) within 0.07 per component of (0.5, 0.5, -0.5, -0.5); |shoe.z - (box.z + 0.01)| <
+# 0.03; both grippers open. left_shoe starts at x -0.3..-0.2 (load_actors); the shoebox is at (0, -0.13, 0.74).
+success = """
+The shoe that started on the left has its position within 5 cm of (x, y) = (0, −0.17) m in x and in y (the half of the
+shoebox nearer the robot), the other shoe within 5 cm of (0, −0.09) m (the far half). Each shoe lies sole down with its
+toe pointing to the robot's left: every component of its orientation quaternion (w, x, y, z, with w ≥ 0) is within 0.07
+of (0.5, 0.5, −0.5, −0.5). Each shoe's height is within 3 cm of a point 1 cm above the shoebox's origin. Both grippers
+are open.
+"""
+
+[families.place_empty_cup]
+# envs/place_empty_cup.py check_success L90-98: |cup fp0 - coaster fp0|_xy < 0.035, |dz| < 0.015, both grippers open.
+success = """
+The cup's functional point is less than 3.5 cm horizontally from the coaster's functional point and within 1.5 cm of it
+in height (functional point 0 of each model); both grippers are open.
+"""
+
+[families.place_fan]
+# envs/place_fan.py check_success L116-129: fan quaternion (w >= 0) within 0.05 per component of (0.707, 0.707, 0, 0),
+# |fan - target_pose| < 0.04 in x, y and z (target_pose = the pad's starting position, load_actors), both grippers open.
+# The mat's colour is drawn per seed; the Goal: red.
+success = """
+The fan's position is within 4 cm, in each of x, y and z, of where the red mat's centre was at the start; the fan
+stands upright facing the robot (every component of its orientation quaternion, w ≥ 0, within 0.05 of
+(0.707, 0.707, 0, 0)); both grippers are open.
+"""
+
+[families.place_mouse_pad]
+# envs/place_mouse_pad.py check_success L118-128: |mouse - mat| < (0.015, 0.012) in (x, y); with q = |quaternion|,
+# |q2 q3 - 0.49| < 0.015 or |q0 q1 - 0.49| < 0.015; both grippers open.
+success = """
+The mouse's position is within 1.5 cm of the blue mat's centre in x and within 1.2 cm in y; it lies flat and lined up
+with the mat's long side, either way round (with the absolute values of its orientation quaternion (w, x, y, z), the
+product y·z or the product w·x is within 0.015 of 0.49); both grippers are open.
+"""
+
+[families.place_object_basket]
+# envs/place_object_basket.py check_success L141-151 (as place_can_basket, for the drawn object; the Goal: the toy car).
+success = """
+The basket's position has risen more than 2 cm above its starting height and the toy car's more than 2 cm above the
+car's starting height; the basket is upright (its upright axis tilted less than 60° from vertical); the toy car's
+position is less than 15 cm from the basket's (the sum of the x, y and z differences); the toy car touches the basket
+and does not touch the table. No gripper state is checked.
+"""
+
+[families.place_object_scale]
+# envs/place_object_scale.py check_success L131-137: |object - scale fp0|_xy < 0.035, object.z > scale fp0.z - 0.01,
+# the grasping arm's gripper open (arm = the object's starting side, load_actors L99; the Goal: left).
+success = """
+The bell's position is within 3.5 cm horizontally of the scale's functional point (a reference point on its weighing
+surface) and no more than 1 cm below it; the left gripper is open. The right gripper is not checked.
+"""
+
+[families.place_object_stand]
+# envs/place_object_stand.py check_success L134-139: |object - displaystand| < 0.03 in x and y, both grippers open. No
+# height clause. Object drawn per seed; the Goal: the bell.
+success = """
+The bell's position is within 3 cm of the stand's in both x and y (height is not checked); both grippers are open.
+"""
+
+[families.place_phone_stand]
+# envs/place_phone_stand.py check_success L99-104: |phone fp0 - stand fp0| < (0.045, 0.04, 0.04), both grippers open.
+success = """
+The phone's functional point (on its bottom edge) is within 4.5 cm in x, 4 cm in y and 4 cm in height of the phone
+stand's functional point (on its ledge); both grippers are open.
+"""
+
+[families.place_shoe]
+# envs/place_shoe.py check_success L90-100: |shoe - (0, -0.08)| < (0.05, 0.02), quaternion (w >= 0) within 0.07 per
+# component of (0.5, 0.5, -0.5, -0.5), both grippers open; the blue mat is at (0, -0.08, 0.74) (load_actors).
+success = """
+The shoe's position is within 5 cm in x and 2 cm in y of the blue mat's centre, (x, y) = (0, −0.08) m. The shoe lies
+sole down with its toe pointing to the robot's left: every component of its orientation quaternion (w, x, y, z, with
+w ≥ 0) is within 0.07 of (0.5, 0.5, −0.5, −0.5). Both grippers are open.
+"""
+
+[families.press_stapler]
+# envs/press_stapler.py check_success L45-55: a gripper-stapler contact position within 0.03 of stapler contact point 2
+# in x, y and z; upstream latches it in stage_success_tag. The latch is cleared before every judgement in standard
+# mode (sim/server.py _check_success L108-113) and never set before the one end-state check of the privileged replay.
+success = """
+In the final state a gripper touches the stapler at a contact position within 3 cm, in each of x, y and z, of the top of
+the stapler's head (contact point 2 of the stapler model). Only the final state counts; an earlier touch that has ended
+by then does not.
+"""
+
+[families.put_bottles_dustbin]
+# envs/put_bottles_dustbin.py check_success L145-153: every bottle |(x, y) - (-0.45, 0)| < (0.221, 0.325) and 0.2 <
+# z < 0.7; the dustbin is static on the floor at (-0.45, 0, 0) (load_actors L63-69). No gripper clause.
+success = """
+Each of the three bottles has its position within 22.1 cm in x and 32.5 cm in y of (x, y) = (−0.45, 0) m, where the
+dustbin stands on the floor at the robot's left, and between z = 0.2 m and z = 0.7 m (below the table top). No gripper
+state is checked.
+"""
+
+[families.rotate_qrcode]
+# envs/rotate_qrcode.py check_success L70-78: quaternion (w >= 0) within 0.05 per component of (0.707, 0.707, 0, 0),
+# qrcode.z < 0.75, both grippers open.
+success = """
+The board stands upright with its QR code facing the robot (every component of its orientation quaternion, w ≥ 0,
+within 0.05 of (0.707, 0.707, 0, 0)); its position is lower than z = 0.75 m (resting on the table); both grippers are
+open.
+"""
+
+[families.scan_object]
+# envs/scan_object.py check_success L103-112: with a = the scanner fp0's -z axis and d = a . (scanner fp0 - box), the box
+# position moved by d along a is within 0.025 of scanner fp0 in x, y and z, 0 < d < 0.07, both grippers closed.
+success = """
+The tea box's position lies on the scanner head's axis: moved along that axis (the axis of the scanner's functional
+point, at its head) to the head, it is within 2.5 cm of the head point in each of x, y and z, and the box is in front
+of the head at less than 7 cm along the axis. Both grippers are closed.
+"""
+
+[families.shake_bottle]
+# envs/shake_bottle.py check_success L82-84: bottle.z > 0.8.
+success = """
+The bottle's position is higher than z = 0.80 m (about 6 cm above the table top). The shaking itself is not checked,
+and no gripper state is checked.
+"""
+
+[families.shake_bottle_horizontally]
+# envs/shake_bottle_horizontally.py check_success L92-94: bottle.z > 0.8.
+success = """
+The bottle's position is higher than z = 0.80 m (about 6 cm above the table top). The shaking itself is not checked,
+and no gripper state is checked.
+"""
+
+[families.stack_blocks_three]
+# envs/stack_blocks_three.py check_success L122-130: |green - (red.xy, red.z + 0.05)| < (0.025, 0.025, 0.012), the same
+# for blue on green, both grippers open; block1 red, block2 green, block3 blue, 5 cm cubes (load_actors).
+success = """
+The green block's centre is within 2.5 cm of the red block's in x and in y and 5 cm (± 1.2 cm) above it; the blue
+block's centre is within 2.5 cm of the green block's in x and in y and 5 cm (± 1.2 cm) above it; both grippers are
+open.
+"""
+
+[families.stack_blocks_two]
+# envs/stack_blocks_two.py check_success L116-122: |green - (red.xy, red.z + 0.05)| < (0.025, 0.025, 0.012), both
+# grippers open; block1 red, block2 green, 5 cm cubes (load_actors).
+success = """
+The green block's centre is within 2.5 cm of the red block's in x and in y and 5 cm (± 1.2 cm) above it; both grippers
+are open.
+"""
+
+[families.stack_bowls_three]
+# envs/stack_bowls_three.py check_success L108-123: bowls sorted by z; |b1 - b2| < 0.04 and |b2 - b3| < 0.04 in x and y;
+# z - (0.74, 0.77, 0.81) < 0.02 (an upper bound only); both grippers open.
+success = """
+Taking the three bowls from lowest to highest, each is within 4 cm of the one below it in both x and y, and their
+positions are lower than z = 0.76 m, 0.79 m and 0.83 m respectively (2 cm above 0.74, 0.77 and 0.81 m; there is no
+lower bound); both grippers are open.
+"""
+
+[families.stack_bowls_two]
+# envs/stack_bowls_two.py check_success L110-122: bowls sorted by z; |b1 - b2| < 0.04 in x and y; z - (0.74, 0.77) < 0.02
+# (an upper bound only); both grippers open.
+success = """
+The higher bowl is within 4 cm of the lower one in both x and y, and the lower and the higher bowl's positions are
+lower than z = 0.76 m and 0.79 m respectively (2 cm above 0.74 and 0.77 m; there is no lower bound); both grippers are
+open.
+"""
+
+[families.stamp_seal]
+# envs/stamp_seal.py check_success L131-137: |seal - mat| < 0.01 in x and y, both grippers open. The mat's colour is
+# drawn per seed; the Goal: olive.
+success = """
+The stamp's position is within 1 cm of the olive mat's centre in both x and y; both grippers are open.
+"""
+
+[families.turn_switch]
+# envs/turn_switch.py check_success L40-42: switch qpos >= upper limit - 0.05.
+success = """
+The switch's joint is within 0.05 rad (about 3°) of the upper limit of its travel. No gripper state is checked.
+"""

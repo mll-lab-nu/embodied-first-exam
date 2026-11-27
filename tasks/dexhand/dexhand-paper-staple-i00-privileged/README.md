@@ -1,45 +1,54 @@
-# dexhand-paper-staple-i00-privileged
+# DexHand · Align and staple three paper sheets (privileged)
 
 | | |
 |---|---|
-| Benchmark | DexHand |
+| Task ID | `dexhand-paper-staple-i00-privileged` |
+| Benchmark | [DexHand](https://www.embodied-first-exam.ai/suite/dexhand/) (Wang et al., 2026), upstream `mll-lab-nu/embodied-first-exam@b2280d8` |
+| Robot | Tianji Marvin fixed stand with two 7-joint arms and a dexterous hand on each wrist: Sharpa Wave (22 finger actuators each) by default, or Wuji Hand 2.2 (20 each) |
 | Mode | privileged |
-| Twin | `dexhand-paper-staple-i00-standard` |
-| Simulator / robot | `mujoco` / `marvin-bimanual-sharpa-wave` |
-| Family / instance | `paper_staple` / seed 0 |
-| Oracle | `full` — solution/trajectory.npz replays the validated Sharpa Wave authoring trajectory on the Marvin right arm (942 controls; success after 742, then 200 unexecuted hold rows of slack). Two fresh-process replays succeed with identical state hashes. The standard oracle submits the same rows through the public client. |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:dexhand-0.2.0@sha256:0d42994b83d95ab5301c592b35586550c9ee426490115e4b43f3b8cf8cc43350` |
+| Instance | `paper_staple`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | Included |
 
 ## Task
-Square up the 3 loose A5 sheets and staple them together at a corner with the desk stapler, then let go. The left arm stays parked. The sheets lie as a misaligned stack (each upper sheet shifted toward +x) with the bottom sheet's corner resting on the stapler's anvil mouth and the far edge on the desk. Slide the stack into the stapler throat against the stapler's paper stop, square the sheets, press the stapler head through its full stroke onto the stack and let it spring back. Stages, in order: (1) aligned: every corner of sheets 1 and 2 within 2.0 mm of the matching corner of sheet 0 (in sheet 0's plane), the sheets stacked in order (each 0.25-1.5 mm above the one below, along sheet 0's normal) and sheets 0-1 and 1-2 in contact; (2) in the throat: with (1), the staple point (stapler base frame (0.063, 0, 0.012) m, on the anvil under the driver blade) lies inside every sheet 3-30 mm from both edges of one corner and every sheet mid-plane is 0-6 mm above it; (3) pressed: with (1) and (2), the head hinge within 0.01 rad of its bottom stop (0.1701 rad) and the driver blade touching the top sheet; (4) released: after (3), with (1) and (2), the head back up (hinge <= 0.02 rad), no robot contact (either hand or any arm link) with any sheet or the stapler and every sheet's centre of mass slower than 0.02 m/s for 50 consecutive controls (1 s). The episode ends with success at that moment; partial completion never counts. The episode ends immediately with failure, checked after every 2 ms physics substep, when a sheet centre falls below z = 0.77925 m (1 mm under its resting height on the desk top) or any sheet corner below z = 0.765 m, a sheet centre leaves the desk (x 0.25-0.99 m, y -0.36-0.36 m) or the workspace box (x 0.2-1.1 m, y -0.45-0.45 m, z 0.70-1.20 m), a sheet or the stapler touches the floor or a desk leg, a sheet or the stapler has no contact at all while its centre of mass falls faster than 0.2 m/s, the stapler base moves more than 3 cm horizontally from its reset position or tilts more than 0.26 rad, an arm link or the robot stand (anything of the robot but the two hands) touches the desk, the stapler or a sheet, or the physics becomes unstable; later actions cannot undo a failure. Only arm-joint and finger actuator targets are allowed. The head's return spring needs about 10 N pressed 8 cm in front of its hinge to start the stroke and about 25 N at the bottom stop. Sheets are 0.5 mm rigid plates (real A5 size and mass); staple formation is not simulated. At most 6000 controls at 50 Hz; reaching that limit without success is a failure.
+Square up the 3 loose A5 sheets and staple them together at a corner with the desk stapler, then let go.
 
-## Difficulty
-The three sheets must be squared to 2 mm at all four corners while being slid as one stack into a narrow stapler
-throat against its paper stop by fingertips on a 7-joint arm without gravity compensation; pushing too low rides over
-the sheet edges, pushing off-centre rotates the stack or shoves the stapler, and the spring-loaded head (about 10 N
-rising to 25 N) must then be pressed through its full stroke and released with the stack still squared and in place.
-Any sheet pushed off the desk, a dropped sheet, a knocked/tipped stapler or an arm link touching the desk, stapler or
-sheets ends the episode at once.
+## Success criteria
+The sheets are numbered from the bottom one up. Four stages, in this order, checked at the end of each control step
+(50 Hz); each later stage also needs the conditions of stages 1 and 2 at the same step:
+1. Aligned: every corner of sheets 2 and 3 is within 2 mm of the matching corner of sheet 1 (in sheet 1's plane);
+   each sheet lies 0.25 to 1.5 mm (0.5 to 3 sheet thicknesses) above the one below it along sheet 1's normal; sheets
+   1 and 2, and sheets 2 and 3, touch.
+2. In the throat: the stapler's staple point (on its anvil, under the driver blade) lies inside every sheet, 3 to
+   30 mm from both edges at one corner of it, and every sheet's mid-plane is 0 to 6 mm above that point.
+3. Pressed: the head's hinge is within 0.01 rad of its bottom stop and the driver blade touches the top sheet.
+4. Released, for 50 consecutive control steps (1 s): the head's hinge is back up (at most 0.02 rad), no part of the
+   robot touches a sheet or the stapler, and every sheet moves at most 0.02 m/s.
 
-## Reference solution
-`solution/` replays the validated Sharpa Wave authoring trajectory on the Marvin right arm (942 controls; the replay
-ends at success after 742 controls): a two-fingertip rake squares and feeds the stack against the paper stop, then the
-straight index and middle fingers press the handle to the bottom stop (peak hand force about 40 N) and release it. The
-authoring controller converts desired hand poses to arm joint targets
-by inverse kinematics on the robot model only; it never drives an object pose or applies an object force, and it is
-never copied into the agent's environment or image. No Wuji Hand 2.2 reference episode is packaged for this version.
+The episode fails at once, checked after every 2 ms physics substep, when: a sheet's origin is more than 1 mm below its
+resting height on the desk top (z = 0.78 m), leaves the desk's footprint (x 0.25 to 0.99 m, y -0.36 to 0.36 m) or the
+box x 0.20 to 1.10 m, y -0.45 to 0.45 m, z 0.70 to 1.20 m, or a sheet's corner is more than 15 mm below the desk top;
+the stapler's base moves more than 30 mm horizontally from its start or tilts more than 0.26 rad; a sheet or the
+stapler's base falls faster than 0.2 m/s while touching nothing; an arm link or the stand touches anything but the
+robot itself; a sheet or the stapler touches the floor or a desk leg; or the physics becomes unstable. The step budget
+is 6,000 control steps (120 s).
 
-## Verification
-privileged mode. The verifier rebuilds the frozen scene with the recorded hand and replays only numeric motor targets
-in one fresh process, which must succeed;
-in standard mode nothing is replayed: the live episode is graded. A replay ends at the first success or the first failure.
-Failures are fail-fast and permanent (see the task text). The frozen instance and thresholds come from the task, never
-from an agent archive. A no-op fails. Human review and full agent-trial calibration remain pending; report this task as
-provisional.
+The graded file is `/app/output/trajectory.npz`, as `s.save_trajectory` writes it: a finite numeric `actions` array
+with one row of motor targets per control step (58 values for the Sharpa Wave hand, 54 for
+the Wuji Hand 2.2), 1 to 6,000 rows, and a `hand` member that names the hand (an archive without it counts as
+Sharpa Wave). After the agent's session, the verifier rebuilds the frozen scene with that hand in a fresh process of a
+separate container without network and replays the rows once, open-loop. The replay stops at the first success or the
+first failure, and later rows are not run. The task is passed if the replay ends in success; rows that run out first,
+or the step budget reached first, leave it failed. Only the motor targets are read: no other member of the archive
+changes the verdict.
 
-## Resources
-Caps per container (PROTOCOL §6).
+A missing file scores 0, and so does a rejected one: larger than 64 MB, a row width that does not match the hand, a
+non-finite value, no rows or too many, a target outside its actuator's range, or a `task` or `actuator_names` member
+that does not match this task. A frozen scene that does not build to its recorded start is an infrastructure error,
+not a score.
+
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -48,19 +57,14 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-
-### Notes
-Source: the DexHand family of this task, from the scene-expansion
-T36 scene (desk, NOVUS B2 envelope stapler at its source pose, A5 sheets; stapler shells exported to `assets/*.obj` with
-sha256 manifest). Robot: the Tianji Marvin stand and arms of `pot_shelf_transfer` (`arm_rig.py`, robot id
-`marvin-bimanual-sharpa-wave`), stand origin at (0.58, -0.66, 0.10) on the floor (z 0) beside the desk's -y edge,
-heading 135 deg, right arm active, left arm parked; no robot part overlaps the desk or its legs.
-Sharpa Wave: MuJoCo Menagerie `0059d4335f8156206f63a35662313385f7ad6d74` (Apache-2.0); Wuji Hand 2.2 (`hand2/hand2_2`):
-wuji-technology/wuji-description `829c9aa27cb12c3a49d5b8d63c9869dd8f656702` (MIT), mounted on the same arms.
-Modelling scope: sheets are rigid 0.5 mm plates (five times real thickness, real A5 size and 80 g/m2 mass); the reset
-props the bottom sheet's corner on the anvil mouth (a physically settled rest pose) instead of starting flat on the
-desk as in the source; a paper insertion stop behind the anvil (not part of the real B2) squares the stack and sets the
-staple position; the magazine is rigid with the base and the handle with its driver blade turns on one passive
-spring-returned hinge (about 10 N to start, 25 N at the bottom stop) with a bottom stop; staple piercing and clinching
-are not simulated. Paper-paper, paper-desk and paper-chrome friction are 0.4, 0.15 and 0.1.
+## License
+DexHand's scenes, checkers and graders are original to this repository (MIT License). Robot models: the Sharpa Wave
+hand from [MuJoCo Menagerie](https://github.com/google-deepmind/mujoco_menagerie/tree/0059d4335f8156206f63a35662313385f7ad6d74/sharpa_wave)
+@ `0059d43` (Apache License 2.0); the Wuji Hand 2.2 from
+[wuji-technology/wuji-description](https://github.com/wuji-technology/wuji-description/tree/829c9aa27cb12c3a49d5b8d63c9869dd8f656702)
+@ `829c9aa` (MIT License); the Tianji Marvin arm meshes from DexForce `embodichain_data` (Apache License 2.0) with
+inertias from Genesis' `dual_arms_primitives.urdf` (MIT License), see `images/dexhand/tianji/NOTICE.md`. Object
+assets are original geometry of this repository, CC0 (the Poly Haven rubber boot, the Innerscene stockpot, Monet's
+public-domain Water Lilies, original page and letter artwork) or CC BY 4.0 (the Joy-Con, pen, rotary-knob and walnut
+meshes; credits in each task's `object_assets/*/CREDITS.txt`); printed text uses the DejaVu fonts (Bitstream Vera
+license). No non-commercial terms apply.

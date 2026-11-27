@@ -13,7 +13,7 @@ robot = "kuka-iiwa14-sharpa-ha4"
 family = "dextoolbench/spatula/flat_spatula/serve_plate"
 dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
 oracle = "partial"
-oracle_evidence = "SimToolReal's pretrained policy, replayed in this scene, reaches 9/33 goals (solution/; README of dextoolbench_spatula_flat_spatula_serve_plate-privileged)"
+oracle_evidence = "SimToolReal's pretrained policy, replayed in this scene, reaches 9/33 goals (solution/)"
 instance_seed = 0                 # DexToolBench fixes the start pose and goals (from a human demo); no randomization
 expert_time_estimate_hours = 4.0
 

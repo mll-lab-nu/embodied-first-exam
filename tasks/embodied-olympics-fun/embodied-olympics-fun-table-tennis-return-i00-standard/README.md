@@ -1,34 +1,60 @@
-# embodied-olympics-fun-table-tennis-return-i00-standard
+# Embodied Olympics · table tennis return (standard)
 
 | | |
 |---|---|
-| Benchmark | Embodied Olympics - Fun |
-| Mode | standard (`eai-standard/3.0`) |
-| Twin | `embodied-olympics-fun-table-tennis-return-i00-privileged` |
-| Simulator / robot | `mujoco` / `unitree-g1` |
-| Family / instance | `table_tennis_return` / seed 0 |
-| Oracle | `none` — no reference solution; the referee is tested: No reference solution (the short service is over the robot's court for a few tenths of a second, 0.7-1.0 m inside the end line). Positive by a declared injection around a real contact: the robot holds the blade still over its end line with the paddle held by contact and friction in its own right Dex3-1 hand (a shakehand grip, the device's joint torques, no weld); after the machine's real service bounces on the robot's court the ball is put 0.10 m in front of the blade moving onto it at 3 m/s, and at the real strike it is moved 3 cm off the blade with a return's velocity (4.0, 0.3, 2.2) m/s; the flight over the net and the landing on the opponent's court are real; the hand's hold broken for at most 0.027 s, the handle at most 0.12 mm into the fingers; the same state hash twice. Negatives: nop (the short service bounces twice), touched before the service, obstruction, the trunk, a second strike, a block onto the robot's own court, the floor, the racket on the net, a fall. Realtime: physics-only RTF on the shared cluster 0.63 against 0.82-0.92 for a reference dynamic family whose workstation RTF is 3.07: about 1.5 (with a measured 2.4-times speed ratio between the two machines) to 2.2 (with the same run's reference) on the workstation.; human review in the pull request that adds the benchmark (PROTOCOL §4) |
-| Agent time budget | 7200 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
+| Task ID | `embodied-olympics-fun-table-tennis-return-i00-standard` |
+| Benchmark | [Embodied Olympics - Fun](https://github.com/CHIGUI0/roboolympics) (Embodied Olympics authors, 2026), upstream `CHIGUI0/roboolympics@7df999b` |
+| Robot | Unitree G1 humanoid (1.32 m, 33 kg, 29 joints), with Unitree's walking and running policies |
+| Mode | standard |
+| Opponent | A ball machine on the far side of the table (scripted), serving one fixed legal service at about 3 s |
+| Instance | `table_tennis_return`, seed 0 |
+| Time limit | 2 h |
+| Reference solution | None |
 
 ## Task
-Return the serve: after it bounces once on your side, hit it with the paddle in your right hand onto the opponent's side, without letting go of the paddle. (Embodied Olympics `table-tennis-return`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Return the serve: after it bounces once on your side, hit it with the paddle in your right hand onto the opponent's
+side, without letting go of the paddle.
 
-## Difficulty
-The served ball is over your court for a few tenths of a second, low above a table that is as high as your hips, and may have to be met far inside the end line: the blade, a rigid extension of a 0.5 m arm, has to be there at the right instant and angle while the body leans over the table without touching the net. The return must clear a 15 cm net and still come down on a court 1.37 m long, off a ball that carries spin. The paddle sits in a three-finger hand with small finger motors: the blade is where the fingers hold it, and a fast stroke must not fling it out of the hand. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 5 resets (only the last attempt is graded).
+## Success criteria
+An official table (2.74 m by 1.525 m, its playing surface 0.76 m above the floor, a net 0.1525 m high). The robot
+holds a free racket (0.14 kg, a 0.15 m square blade on a 0.1 m handle) in its right hand by contact and friction
+only. About 3.0 s after the start a ball machine on the far side serves one fixed legal service: the ball bounces on
+the server's court, passes the net and bounces on the robot's court. The referee's stages, in order: bounce, strike,
+opponent's court.
+- Bounce: the ball bounces once on the robot's court (ball contacts with the table less than 0.02 s apart are one
+  bounce).
+- Strike: the ball is then struck with the racket's blade or the right hand; all such contacts within 0.05 s of the
+  first are one strike.
+- Opponent's court: after the strike, the ball's next table contact is on the opponent's half of the playing surface
+  (directly or after touching the net; over or around the net). The success is called at that touch.
 
-## Reference solution
-None (as `embodied-olympics-fun-table-tennis-return-i00-privileged`).
+Fouls (each fails the attempt at once):
+- the racket has not been held by the right hand's fingers and its thumb or palm for more than 0.05 s (dropped,
+  thrown or slipped out); the racket touches any part of the robot other than the right hand, or the floor;
+- the robot or the racket touches the ball before the service has left the machine, or before its bounce on the
+  robot's court; the ball bounces a second time on the robot's court before the strike;
+- anything other than the blade or the right hand touches the ball (the racket's handle included); the blade or the
+  right hand touches the ball again more than 0.05 s after the first contact;
+- after the strike the ball touches the robot's own court, the side of the table (the ball's centre below the playing
+  surface) or the floor before the opponent's court; the ball touches the floor at any time;
+- any part of the robot or the racket touches the net; the left hand touches the playing surface once the ball is in
+  play;
+- a service that touches the net or does not bounce first on the server's court and then on the robot's.
+Fall (a failure at any time): the pelvis lower than 0.35 m, or any part other than the feet on the floor. Anything
+else of the robot, the racket included, may touch the table. Time limit: 8 s (800 control steps).
 
-## Verification
-The sim sidecar's referee judges the live attempt, and that is the verdict (`final.json`: `graded_by` live, `replays` 0;
-no grading replay, owner 2026-10-17); the frozen start is checked on the live simulator (`instance_mismatch`:
-infrastructure), and the video is rendered from the recorded attempt afterwards. `/tests/grade.py` reads
-`/data/final.json`: pass iff the live attempt succeeded. The
-rules: The table is the official one: 2.74 m long, 1.525 m wide, its playing surface 0.76 m above the floor, with a net 0.1525 m high across its middle that reaches 0.1525 m beyond each side line. Your court is the half of the playing surface on your side of the net, the opponent's court the other half; the top edges belong to the playing surface, the sides of the table top do not (a ball that touches the table with its centre below the level of the playing surface has hit the side). The ball is the official one (40 mm, 2.7 g) and flies in air: drag and the lift of its spin act on it. The racket is a separate body: a rigid square blade 0.15 m wide and 0.015 m thick on a straight handle 0.1 m long, 0.032 m wide and 0.025 m thick, 0.14 kg in all, the blade's centre 0.175 m from the butt. At the start its handle is closed in your right hand (three fingers: a thumb, an index and a middle finger), which holds it by contact and friction only: it can slip, turn in the hand and fall. Your right hand is the racket hand, your left hand the free hand. The racket is in your hand while its handle touches the hand's fingers and its thumb or palm; it has left your hand when for more than 0.05 s it has not. The service is thrown by a ball machine about 3.0 s after the start (it is served when it has left the machine's wheels): a legal service, so the ball bounces first on the server's court, passes the net and bounces on your court. Then you must make a good return (Law 2.7): strike the ball, after that one bounce on your court, with the blade of the racket in your hand or with the racket hand below the wrist, so that it touches the opponent's court, directly or after touching the net; it may pass over or around the net. You succeed at the moment the ball touches the opponent's court after your strike. All contacts of the blade or the racket hand with the ball within 0.05 s of the first are one strike. You fail if the racket leaves your hand at any time (dropped, thrown or slipped out of the hand); if the racket touches any part of you other than the racket hand; if you or the racket touch the ball before the service, or before it has bounced on your court (obstruction); if the ball bounces a second time on your court before you strike it (ball contacts with the table less than 0.02 s apart are one bounce); if anything other than the blade or the racket hand touches the ball (the racket's handle, an arm, the body); if the blade or the racket hand touches the ball again later than 0.05 s after the first contact (struck twice, or carried); if after your strike the ball touches your own court, the side of the table or the floor before the opponent's court; if the ball touches the floor at any time; if any part of you or the racket touches the net (it gives a little when touched); if the racket touches the floor; if your free hand touches the playing surface while the ball is in play (from the service on); if you fall; or after 8 s. Anything else of you, the racket included, may touch the table. A fall is your pelvis lower than 0.35 m above the floor, or any part of you other than your feet touching the floor. No oracle; human review in the pull request that adds the benchmark (PROTOCOL §4).
+Graded: the live attempt, judged by the referee in the simulator service as it runs; nothing is replayed. The referee's
+success call is an event: once it is made at some control step, the attempt is a success. It is never shown to the
+agent and does not end the attempt: the physics goes on until the agent's `/finish`, the attempt's time limit, or the
+end of the agent's time (2 h), and nothing after the call undoes it. A failure the referee calls before any
+success (a foul, a fall, the physics diverging) ends the attempt at once with 0. Reaching the time limit or the end of
+the session without a success call scores 0. The agent has 5 resets, each starting a new attempt from the
+frozen start; only the last attempt (the one after the last reset) is graded, and a success in an earlier attempt does
+not count. A simulator error raised by the agent's own call ends the attempt with 0. An attempt that does not start
+from the frozen instance, or a service crash outside the agent's calls, is an infrastructure failure, not a score.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -38,13 +64,10 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Category | basketball-and-rackets |
-| Rule book | ITTF Handbook 2024, The Laws of Table Tennis: 2.1 (the table), 2.2 (the net assembly), 2.3 (the ball), 2.4 (the racket), 2.5 (definitions: struck, obstruction, racket hand, free hand), 2.6 (the service), 2.7 (the return), 2.10 (a point); deviations: 2.6.1-2.6.3 (the service): there is no server and no toss: a table-tennis ball machine behind the server's end line throws the service from the server's strike point at about 3.0 s, aimed to reproduce a legal service of Embodied Olympics' serve library (a service a Franka arm made under its real limits; entry 221, the draw of this instance's seed, not chosen for being returnable): the same bounces, its own spin; the task is one return, not a match · 2.1.3 (the table's bounce): the playing surface is Google DeepMind's system-identified table, on which a ball dropped from 30 cm rebounds 26 cm, not the Law's about 23 cm; it is the only identified model of the ball's bounce with spin there is · 2.2 (the net): the net is 6 panels 1 cm thick (their collision slab 3 cm), 0.1525 m high, reaching 0.1525 m beyond each side line, without separate posts; each gives way across the net on a spring and a damper: the stiffness of a cord at 45.0 N (from the net-tension check as we read ITTF's net-assembly leaflet: 100 g on the top's middle sags it about 1 cm; not re-verified), the net 0.04 kg in all; the ball's contact with it is DeepMind's undamped spring, so a ball driven into the net comes back off it at nearly its speed, where a real net would take up most of it · 2.4 (the racket): the blade is a rigid 15 cm square, 1.5 cm thick, on a straight handle 0.1 m long, 0.032 m wide and 0.025 m thick, 0.14 kg in all (legal: the Laws set no size, shape or weight); its covering is one contact law on both faces (Embodied Olympics' ball-paddle pair, hand-picked, not identified) · 2.5.5 (the racket hand, the hand carrying the racket): the hand is the G1's own Dex3-1 three-finger hand (a thumb, an index and a middle finger, at the device's joint torques), closed round the handle in a shakehand grip; the racket is held by contact and friction alone; "carrying" is defined by contact: the handle touches the hand's fingers and its thumb or palm, and a break of up to 0.05 s is not a release; the racket may touch nothing of the player but the racket hand (the Laws do not forbid a second hand on the racket; here it would make the free hand a second racket hand) · 2.10.1.7 (deliberately striking the ball twice): intent cannot be judged: every contact of the blade or the racket hand within 0.05 s of the first is the same strike, a later one is a second strike · 2.10.1.8 (moving the playing surface): the table is fixed and this is not judged: a competition table weighs three times the robot and more, and the robot's push on it is limited by the grip of its own feet · 2.5.8 and 2.10.1 (the ball touching the player): any touch of the ball by anything but the blade or the racket hand loses the point, also after the ball has bounced on the robot's court (stricter than the Laws, which then only require that the return be struck) |
-| Stages | bounce → strike → opponent's court |
-| Service | `environment/sim/server.py` (the Embodied Olympics adapter) on `rcb_service.py` (eai-standard/3.0), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
-| Observations | `head_left`, `head_right` (RGB 270 × 480, depth on `head_left`), `venue` (fixed); proprioception: joints, torques, targets, two IMUs, grip state |
-| Episode | 800 control steps (8 s at 100 Hz); 5 resets, the last attempt graded |
-| Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md) |
+## License
+The Embodied Olympics robot library and running-policy port ([CHIGUI0/roboolympics](https://github.com/CHIGUI0/roboolympics)
+@ `7df999b`, a private repository) is released under the MIT License (`LICENSE.roboolympics` in the image); this
+benchmark's venues and referees are MIT too. Third-party parts in the image: the Unitree G1 model and meshes from MuJoCo
+Menagerie (BSD-3-Clause), the Unitree H1-2 model, meshes and walking policy and the G1 walking policy from
+unitree_rl_gym (BSD-3-Clause), the G1 running policy from C1801SYQ/g1_running (Apache-2.0), FALCON's G1 walking policy
+from LeCAR-Lab/FALCON (MIT) and the WBC-AGILE G1 walking policy from NVIDIA (Apache-2.0). No non-commercial terms apply.

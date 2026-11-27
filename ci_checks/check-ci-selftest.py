@@ -40,6 +40,8 @@ DIGESTS = ["bash", str(ROOT / "ci_checks/check-dataset-manifest.sh")]
 DOCKERFILE = ["bash", str(ROOT / "ci_checks/check-dockerfile.sh")]
 FIELDS = [sys.executable, str(ROOT / "ci_checks/check-task-layout.py")]
 INSTRUCTION = ["bash", str(ROOT / "ci_checks/check-instruction.sh")]
+STRUCTURE = FIELDS   # check-task-layout.py: the README's sections and key table too
+READMES = [sys.executable, str(ROOT / "ci_checks/check-readmes.py")]
 RP_LEAK = ["bash", str(ROOT / "ci_checks/benchmarks/robopaint/invariant-leak.sh")]
 EOM_MI = [sys.executable, str(ROOT / "ci_checks/benchmarks/embodied-olympics-match/invariant-match-instance.py")]
 ARC_BIND = [sys.executable, str(ROOT / "ci_checks/benchmarks/roboarc/invariant-runtime-binding.py")]
@@ -324,8 +326,8 @@ MUTATIONS = [
      PRIV, "instruction.md", sub(r"^(## Limits)$", r"The limit is 3600 seconds.\n\n\1"), CUTOFFS, "states the agent's limit a second time"),
     ("... 'Finish within 60 minutes.'",
      STD, "instruction.md", sub(r"^(## Limits)$", r"Finish within 60 minutes.\n\n\1"), CUTOFFS, "states the agent's limit a second time"),
-    ("the README's `Agent time budget` row with another number than the task's cutoff",
-     STD, "README.md", sub(r"^(\| Agent time budget \| )\d+ s;", r"\g<1>28800 s;"), CUTOFFS, "README.md's `Agent time budget` row does not say"),
+    ("the README's `Time limit` row with another duration than the task's cutoff",
+     STD, "README.md", sub(r"^(\| Time limit \| )[^|\n]+\|", r"\g<1>8 h |"), CUTOFFS, "README.md's `Time limit` row does not say"),
     ("the sim service is told another wall clock than the task's cutoff",
      STD, COMPOSE, sub(r'(RCB_WALL_CLOCK_S: ")\d+', r"\g<1>3600"), CUTOFFS, "RCB_WALL_CLOCK_S = 3600, the task's cutoff is"),
     ("the sim service is not told the wall clock (it would report its code's default)",
@@ -515,6 +517,21 @@ MUTATIONS = [
      sub(r'^\s*\{ source = "/data/replay\.mp4", service = "sim" \},\n', ""), VIDEO, "the sim's video is never collected"),
     ("a video time bound shorter than the verdict replay's", MWP_P, "+tests/grading.json",
      append('{"replay_timeout_s": 1400, "video_timeout_s": 300}'), VIDEO, "shorter than the verdict replay's 1400 s"),
+    # docs/protocol/README.md §1: the per-task README format
+    ("a per-task README with a Difficulty section back", MWP_P, "README.md",
+     sub(r"^(## Success criteria)$", r"## Difficulty\nHard.\n\n\1"), STRUCTURE, "sections must be"),
+    ("... with `## Others` after License", MWP_P, "README.md", append("\n## Others\nMore.\n"), STRUCTURE,
+     "sections must be"),
+    ("... with a Twin row back", MWP_P, "README.md", sub(r"^(\| Robot \|.*\n)", r"\1| Twin | the other mode |\n"),
+     STRUCTURE, "key table rows must be"),
+    ("... with a protocol version", MWP_P, "README.md", sub(r"^(## License)$", r"Served over eai-standard/" + "2" + r".1.\n\n\1"),
+     STRUCTURE, "retired wording 'eai-standard/2.'"),
+    ("... naming its other mode's task", MWP_P, "README.md", sub(r"^(## License)$", f"See `{MWP}`.\n\n\\1"),
+     READMES, f"names another task: `{MWP}`"),
+    ("... with another Time limit than the task's cutoff", MWP_P, "README.md",
+     sub(r"^(\| Time limit \| ).*( \|)$", r"\g<1>8 h\2"), CUTOFFS, "README.md's `Time limit` row does not say"),
+    ("a Dockerfile that copies the README into the image", MWP_P, "environment/Dockerfile",
+     append("COPY README.md /app/README.md\n"), DOCKERFILE, "copies a README into an image"),
 ]
 
 
@@ -547,7 +564,8 @@ def twin_cutoffs(tmp: Path) -> int:
     expect(r.returncode == 0, "normalize a task whose cutoff changed", r.stdout + r.stderr)
     expect(f"\n- Time: {sec} s of wall-clock time" in (t / "instruction.md").read_text(),
            f"the instruction does not say {sec} seconds after normalize")
-    expect(f"| Agent time budget | {sec} s;" in (t / "README.md").read_text(), f"the README row does not say {sec} s")
+    expect(f"| Time limit | {tc.duration_text(sec)} |" in (t / "README.md").read_text(),
+           f"the README's Time limit row does not say {sec} s")
     expect(f'RCB_WALL_CLOCK_S: "{sec}"' in (t / "environment/docker-compose.yaml").read_text(),
            f"the sim service's wall clock is not {sec}")
     rc, out = run(CUTOFFS, t)

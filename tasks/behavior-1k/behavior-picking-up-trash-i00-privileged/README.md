@@ -1,50 +1,49 @@
-# behavior-picking-up-trash-i00-privileged
+# BEHAVIOR-1K · picking_up_trash (privileged)
 
 | | |
 |---|---|
-| Benchmark | BEHAVIOR-1K |
+| Task ID | `behavior-picking-up-trash-i00-privileged` |
+| Benchmark | [BEHAVIOR-1K](https://behavior.stanford.edu/) (Li et al., 2024), upstream `StanfordVL/BEHAVIOR-1K@b197991` |
+| Robot | Galaxea R1 Pro mobile bimanual manipulator (holonomic wheeled base, 4-joint trunk, two 7-joint arms with parallel-jaw grippers) |
 | Mode | privileged |
-| Twin | `behavior-picking-up-trash-i00-standard` |
-| Simulator / robot | `behavior` / `r1pro` |
-| Family / instance | `picking_up_trash` / seed 301 |
-| Oracle | `partial` — Reference solution solution/oracle_picking_up_trash.py on the frozen task-level primitives solution/rcb_behavior_ref.py. Recorded Harbor oracle runs (laptop, pre-v1.0 uncommitted trees): 2026-09-24 behavior-picking-up-trash-i00__FKLU2nS (job behavior-picking-up-trash-i00-oracle-0924-230430) scored 1 (5115 control steps, deterministic 1, instance_exact 1); the run before it, behavior-picking-up-trash-i00__MjRvy7Y (an older placement routine), scored 0; the 2026-10-01 review counts 1 success in 3 runs of that version. Model trial behavior-picking-up-trash-i00__JRcB9fb (behavior-lunaxh-0925-2057) scored 1. The tooling and verifier files changed since; not re-run on this version (static validation only). Measured 2026-10-10 on main 332bf8080 (an 8-vCPU cloud L40S host, Harbor oracle agent, twice): the reference solution's own run put 2 of the 3 cans in (the third grasp closed on nothing; q_score 0.667, 4390 control steps), the verifier replayed it faithfully (deterministic 1) and scored 0; both runs were bit-identical. The frozen scene rebuilt there within tolerance but not bit-exactly (instance_exact 0), so the solution's online planning took another path than on the recording host: this reference solution does not succeed on that host class. |
-| Agent time budget | 7200 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
+| Instance | `picking_up_trash`, seed 301 |
+| Time limit | 2 h |
+| Reference solution | Pipeline check only |
 
 ## Task
-Put the three soda cans into the kitchen trash can (BDDL: every `can__of__soda.n.01`
-`inside` `ashcan.n.01_1`).
+Put the three soda cans into the kitchen trash can.
 
-## Difficulty
-Long-horizon mobile manipulation: three floor-level soda cans in the living room must be carried to a trash can in the
-kitchen (~2.5 m navigation legs between rooms). The tooling gives only thin primitives (joint moves, a straight-line base
-drive, cuRobo IK moves, gripper commands): navigation, grasping and placing are the agent's to build. What that takes,
-from building the reference solution: the traversability map does not contain movable furniture (a 0.41 m cabinet blocks
-the route between the rooms), the robot is a floating-base articulation that gets shoved around by any contact, IK near
-the can in hand treats it as an obstacle unless told otherwise, the open fingers hang ~9 cm below the end-effector frame
-and hook the rim when backing away, and the trash can is narrow at the bottom (fillable radius ~6.5 cm for 7.5 cm wide
-cans) while the `inside` predicate tests each can's centre against a fillable volume that ends at z = 0.239 m, 4 cm below
-the rim: a third upright can stacked on two others sticks out of it.
+## Success criteria
+All three soda cans are inside the trash can.
 
-## Reference solution
-`solution/oracle_picking_up_trash.py`: nearest can first; grasp (navigate → top-down pregrasp → descend → assisted
-grasp), lift 0.6 m to carry above furniture, place it inside the trash can lying down (the pile stays low), reusing the
-base pose of the first successful delivery. It runs on the task-level primitives of the tooling it was written with,
-frozen in `solution/rcb_behavior_ref.py` (navigation on a map with the furniture painted in, grasp, `place_inside`);
-`solution/solve.sh` records the trajectory with that copy (5115 control steps).
+The relations above are OmniGibson's object states, evaluated on the simulator after every control step (30 Hz). An
+object is *on* another (`ontop`) when the two touch and the other is directly below it; *inside* when the centre of its
+bounding box lies in one of the other's container volumes; *next to* (`nextto`) when their bounding boxes are no farther
+apart than a sixth of their mean side length and one is a horizontal neighbour of the other; *under* when the other is
+directly above it; *touching* when the two are in contact. An object is *closed* when none of its openable joints is
+more than 5 % of its range away from closed, and *switched on* when its toggle state is on.
 
-## Verification
-Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json`, up to 3 times (`[metadata] replays`), each in
-a fresh process, stopping at the first success; pass iff the BDDL goal holds after a replay and the rebuilt frozen instance matches the recorded one
-(`tests/grade.py`), plus `/logs/verifier/replay.mp4`. A fresh process starts from the loaded state (no reset;
-an in-process reset is only approximate, hence a fresh process); fresh replays are not always bit-identical, hence up to 3. A file the
-grader cannot read or with the wrong shape is `bad_trajectory`; a replay that dies or runs out of time, and a frozen
-instance that does not rebuild in the verifier (`instance_ok` 0), are `grader_error` + `infra_error` (no verdict on the agent).
+Success needs more than these conditions: they hold for 30 consecutive control steps (1 s of simulated time), and on
+each of those steps no object they name (furniture and floors included; a substance has no pose and is not checked) is
+held by a gripper's assisted grasp, and each of those objects moves slower than 0.05 m/s. The replay ends at the end of
+that window. There is no partial credit.
 
-Oracle `partial`: the reference solution scored 1 on earlier versions of this task (`task.toml` `oracle_evidence`) and was not re-run on this one; the family is reviewed by a maintainer (PROTOCOL §4) in the pull request that adds it.
+The graded file is `/app/output/trajectory.npz`: `actions`, a finite (T, 25) array with one row per control step and
+at most 40,000 rows, and `task` = `picking_up_trash`. The verifier replays it open-loop, in a fresh process, from the frozen
+start (the scene is rebuilt and checked against the recorded state hash, or every object pose within tolerance). After
+the last row the robot holds its last command with the base still for up to 150 control steps (5 s), and a success
+within that window counts. It runs up to 3 such replays and the task passes if any one of them succeeds. A replay ends
+as a failure when the robot has fallen over (its base more than 3 cm below the floor, or its up axis tilted more than
+41.4° from vertical, for 300 consecutive control steps) or on a simulator breakdown (a non-finite robot state, the robot
+or a named object more than 10 km from the origin, or the base faster than 100 m/s).
 
-## Resources
-Caps per container (PROTOCOL §6).
+A missing file scores 0, and so does a file that is not a plain npz, lacks `task` or `actions`, names another task, has
+another shape, a non-finite value or more than 40,000 rows. A frozen scene that does not rebuild in the verifier, or a
+replay process that dies or exceeds its time limit (1200 s plus T / 1.5 s, at least 3600 s and at most 28000 s), is an
+infrastructure error, not a score.
+
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -54,12 +53,12 @@ Caps per container (PROTOCOL §6).
 - GPU: an RTX-class NVIDIA GPU (ray-tracing cores), one of the models in `gpu_types`: L40S, L40, L4, RTX 4090, RTX 6000 Ada, held by `main`.
 - Recommended GPU: L40S 48GB / L4 24GB / RTX 4090 24GB.
 
-## Details
-| | |
-|---|---|
-| Instance | 2026 BEHAVIOR Challenge public_test instance 301 (scene `house_double_floor_lower`), state hash in `environment/instance.json` |
-| Image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` = `stanfordvl/behavior:3.9.2` + ffmpeg (`images/behavior/`): the task builds it from public sources, or reuses our prebuilt copy when you can pull it |
-| Dataset | the licensed BEHAVIOR dataset, mounted read-only from `$RCB_BEHAVIOR_DATA` (a precondition), never baked in |
-| GPU | an RTX-class NVIDIA GPU (`environment/docker-compose.yaml`, `count: 1`) |
-| Budget | the agent's time (the `Agent time budget` row; the number is this task's `[agent] timeout_sec`): every Python process pays ~3 min of Isaac Sim + scene load out of it; ~7-11 control steps/s (tasks/behavior-1k/README.md) |
-| Verifier time | at most 40,000 rows accepted; each graded replay min(28000 s, max(3600 s, 1200 s + steps / 1.5)), and the video replay after the verdict the same; `[verifier] timeout_sec` 113800 s (four capped replays + 30 min) |
+## License
+The task definitions (BDDL activity definitions) and the simulator are BEHAVIOR-1K's
+([StanfordVL/BEHAVIOR-1K](https://github.com/StanfordVL/BEHAVIOR-1K) v3.9.2: OmniGibson and bddl, MIT License; paper: Li
+et al., 2024, "BEHAVIOR-1K: A Human-Centered, Embodied AI Benchmark with 1,000 Everyday Activities and Realistic
+Simulation", arXiv:2403.09227). The scenes, objects, robot assets and task instances are the BEHAVIOR Data Bundle, under
+the BEHAVIOR Data Bundle End User License Agreement: **non-commercial academic research use only (NC)**, no
+redistribution, use only within OmniGibson. It is never in an image or in this repository; each user downloads it after
+accepting that licence and mounts it read-only. The simulator image contains NVIDIA Isaac Sim 5.1 and Omniverse Kit
+(NVIDIA proprietary licence terms, accepted when the image is built).
