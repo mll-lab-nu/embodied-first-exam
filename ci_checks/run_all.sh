@@ -136,6 +136,8 @@ add python3 scripts/task_conventions.py readme --check
 add python3 scripts/task_conventions.py taxonomy --check
 # every files-only image's sources still hash to its FILES.json (the checks read the sources for what the pinned image holds)
 add python3 scripts/files_image.py check
+# every tracked .py file compiles (compile() only: no import); the CI job unit-tests runs it as a failing step too
+add python3 ci_checks/check-py-compile.py
 
 t0=$SECONDS
 printf %s "$cmds" | python3 "$root/ci_checks/parallel.py" --advisory; rc=$?

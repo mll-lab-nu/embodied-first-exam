@@ -104,7 +104,7 @@ jobs:
   # The shared service layers and the benchmarks' service / grader tests on stub simulators (numpy + requests; no
   # simulator, no image, no GPU): ci_checks/check-unit-tests.sh, both tiers, and in the full suite the OpenAPI contract
   # of the reference services (ci_checks/check-openapi-contract.py; numpy, requests, pyyaml, jsonschema: its exit 2, a
-  # missing module, fails the job). A job of its own, so that the static checks above do not wait for it. On a pull
+  # missing module, fails the job), and that every tracked .py file compiles (ci_checks/check-py-compile.py). A job of its own, so that the static checks above do not wait for it. On a pull
   # request: the tests of the benchmarks in scope (all of them when the scope is full).
   unit-tests:
     runs-on: ubuntu-latest
@@ -129,3 +129,5 @@ jobs:
             none) echo "no benchmark or shared code changed: no unit test in scope" ;;
             *) echo "FAIL unknown scope $scope"; exit 1 ;;
           esac
+      - name: Every tracked .py file compiles
+        run: python3 ci_checks/check-py-compile.py
