@@ -9,8 +9,8 @@ rcb-limits/2), no copy of the code in the task, the verifier step's trap and COP
 Default: both.
 
 PROTOCOL §6: every task runs the resource monitor sidecar and the verifier step, wired exactly as
-images/monitor/rcb_monitor/inject.py writes them (task_conventions.py --check catches any drift from the generator; this
-check catches a task the generator never ran on, and hand edits that break the safety properties).
+images/monitor/rcb_monitor/inject.py writes them (task_conventions.py --check catches any drift from inject.py; this
+check catches a task normalize never ran on, and hand edits that break the safety properties).
 
     python3 ci_checks/check-monitor.py [--tier invariants|advisory|all] [task dirs]   # default: every task, both tiers
                                                         # (advisory: also runs images/monitor/rcb_monitor/selftest.py and test_monitor.py)
@@ -55,7 +55,7 @@ def check(task: Path) -> tuple[list[str], list[str]]:
                      f"      - {inject.LIMITS_MOUNT}", "      RCB_LIMITS_ENFORCE: ${RCB_LIMITS_ENFORCE:-0}"):
             if need not in blk:
                 (err if "RCB_LIMITS_ENFORCE" in need else inv).append(f"rcb_monitor service: missing `{need.strip()}`")
-        # the whole service is the generator's (its code from the pinned image, nothing else mounted, no other command)
+        # the whole service is inject.py's (its code from the pinned image, nothing else mounted, no other command)
         gen = [inject.monitor_block(gpu, observe) for gpu in (False, True) for observe in (False, True)]
         if not any(blk + "\n" == "".join(g) for g in gen):
             inv.append("rcb_monitor service: not the block images/monitor/rcb_monitor/inject.py writes (another image, mount, "
