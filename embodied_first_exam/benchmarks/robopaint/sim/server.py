@@ -262,7 +262,7 @@ SPEC = {
     "protocol": PROTOCOL, "protocol_compat": L.COMPAT, "simulator": "maniskill 3.0.1 (SAPIEN 3.0.3, PhysX CPU) + a virtual brush",
     "robot": ROBOT_TEXT,
     "task_text": TASK_TEXT,
-    "control_hz": CTRL_HZ, "physics_substeps": SUBSTEPS, "physics_hz": CTRL_HZ * SUBSTEPS, "max_chunk_s": MAX_CHUNK_S,
+    "control_hz": CTRL_HZ, "max_video_fps": MAX_VIDEO_FPS, "physics_substeps": SUBSTEPS, "physics_hz": CTRL_HZ * SUBSTEPS, "max_chunk_s": MAX_CHUNK_S,
     "max_frames_per_call": MAX_FRAMES,
     "cameras": {c: {"rgb": True, "depth": True, "mounted": MOUNT.get(c, "static"), "resolution": [int(FIRST[c].shape[1]), int(FIRST[c].shape[0])],
                     "calibration_in_obs": OBS_CALIBRATION, "intrinsic_cv": CALIB[c]["intrinsic_cv"], "depth_range_m": NEAR_FAR[c],

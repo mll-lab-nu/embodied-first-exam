@@ -219,6 +219,7 @@ SPEC = {
     "robot": S.robot["name"],
     "task_text": S.inst["text"],
     "control_hz": CTRL_HZ,
+    "max_video_fps": 50,                     # video_fps() below takes 1..50; the layer holds requests to this
     "physics_substeps": SUBSTEPS,
     "max_chunk_s": MAX_CHUNK_S,
     "max_frames_per_call": MAX_FRAMES,
