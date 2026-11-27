@@ -20,7 +20,8 @@ episode's as it stands, never an end. The adapter declares how its rule is judge
 happened (end_judgement "events"); a hold family's goal on the end state with the hold window run from it
 (end_window_steps = its hold time; Session.solved_run counts the steps already held); MyoDex's track at the end of the
 reference motion. A done that is the episode's own length (the reference motion, baoding's targets) is info["step_cap"],
-judged as it stands, and so is a challenge's failure after its success event (the event stays counted).
+judged as it stands; a challenge's failure after its success event is an ordinary failure end (reason "failed", as
+without the event: the end says nothing about it), which the layer judges on the event it recorded (it stays counted).
 
 What the agent gets is what the standard twin gives, minus the 2.2 additions the realtime layer does not serve
 (`/kinematics`, per-frame camera poses, depth modes): the cameras (RGB, and depth on request from every camera that
@@ -316,8 +317,9 @@ class MyoSuite:
         running = self.s.step(row)
         self.cmd = np.asarray(row, dtype=np.float64).copy()
         info = {} if running else {"why": self.s.reason}
-        if M.AGENT_END and not running and (self.s.at_limit or (self.s.rule == "event" and self.s.event_step is not None)):
-            info["step_cap"] = True   # the episode's own length, or a failure after the success event: judged as it stands
+        if M.AGENT_END and not running and self.s.at_limit:
+            info["step_cap"] = True   # the episode's own length: judged as it stands (a failure after the success event
+            # is an ordinary failure end, which the layer judges on the event it recorded: end_judgement "events")
         return (not running), bool(self.s.success), info
 
     def reset(self) -> None:
