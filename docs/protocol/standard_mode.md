@@ -81,8 +81,8 @@ reference services of 2.1–2.4 and checks their answers against it.
   without a recorder declares the same (`cameras: []`). With 2.1's `record_frames = "delivered"` a recorded frame
   holds the images the agent was sent at that step, and `last_s` returns only frames that hold every requested camera.
 - **The realtime clock** starts at the episode's first `/submit` (again after a reset and a crash recovery), never at an
-  `/observe`; `/submit` answers at once with `duration_s` and `end_step` (= `plan_end_step`). An `/observe` before the
-  simulator thread has published its first state is a 503 `{"error": "warming up"}` (retry).
+  `/observe`; `/submit` answers at once with `duration_s` and `end_step` (= `plan_end_step`). The service publishes the
+  first state before it answers any request, so the first `/observe` already has one.
 - **`/finish`** is required in the standard and realtime modes ("Agent-ended episodes"; RoboEngineer and Embodied
   Olympics - Match are exempt: a match ends by its rules, its `/finish` is a 404, and its clock starts at its `/start`
   barrier, a deviation it declares in `/spec.timing.deviations`).
@@ -179,7 +179,6 @@ the wall clock; the simulated time is recorded as cost.
 | 400 | wrong type/dim, a chunk with no rows (other than a hold chunk), a hold chunk with rows, `/observe` with `seconds > 0` (3.0), NaN/inf, a field of the wrong JSON type (`dt`, `seconds` or `video_fps` not a finite number, `cameras` not a list), `dt` or `seconds` out of range or `dt` not a multiple of the physics step, chunk too long, bad interpolate/video value, `video_fps` outside [1, `max_video_fps`] ("Version 3.0"), a JSON `true`/`false` or string where a number goes, more images than `max_frames_per_call` in one response (PROTOCOL §3), malformed body |
 | 409 | episode already finished (`done`); the trial is over; after `/finish` every call but `GET /spec` and `GET /status` (2.4's `GET /operations/{id}` too) |
 | 413 | body over 64 MB, `/finish`'s too (`rcb_client.py` raises before sending such a body) |
-| 503 | realtime (2.3): an `/observe` before the simulator thread has published its first state (`{"error": "warming up"}`; retry) |
 | 500 | simulator error; the episode ends with `reason = "error"` (the client raises `EpisodeOver`; the verifier reports `sim_error = 1`) |
 
 ### Episode semantics
@@ -663,8 +662,8 @@ are part of a result's configuration (running.md).
   answers with images are built at a time (past that: without frames, `frames_skipped`). A recorder that dies is
   restarted; meanwhile answers come without frames (`frames_pending`). final.json adds `camera_worker` (frames
   rendered, copies skipped, render time). Adapters without the two hooks render on the simulator's thread into the same
-  ring (3.0) at 10 fps (each render costs the clock its time; `fps` says so), as below. Before the simulator thread has
-  published its first state, an `/observe` is a 503 `{"error": "warming up"}`.
+  ring (3.0) at 10 fps (each render costs the clock its time; `fps` says so), as below. The first state is published
+  before the service answers any request.
 - **Grading** is 2.1's: the live episode, judged by the service (PROTOCOL H.4). The journal holds the sim row the
   simulator applied at every control step, so the graded episode's trajectory reproduces the live run whatever the
   timing (the video is rendered from it). Evidence

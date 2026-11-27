@@ -142,7 +142,8 @@ bash ci_checks/run_all.sh tasks/<benchmark>/<your tasks>      # both tiers: fix 
 bash ci_checks/run_all.sh --changed               # what CI runs on your pull request (scope: ci_checks/ci_scope.py)
 python3 scripts/task_conventions.py --check tasks/<benchmark>/<your tasks>     # README, task.toml, test.sh in the standard layout
 python3 ci_checks/check-resources.py tasks/<benchmark>/<your tasks>             # the caps of every container + README / instruction (PROTOCOL §6)
-python3 ci_checks/check-cutoffs.py tasks/<benchmark>/<your tasks>               # the time cutoff: task.toml = instruction = README = sim service, twins equal, cap (PROTOCOL §2)
+python3 ci_checks/check-cutoffs.py tasks/<benchmark>/<your tasks>               # the time cutoff: task.toml = instruction = README = sim service, cap (PROTOCOL §2)
+python3 ci_checks/check-twins.py tasks/<benchmark>/<your tasks>                 # twins: the same cutoff and seeds (H.7)
 python3 scripts/stamp_mtimes.py tasks             # before any image build from the checkout (below)
 harbor run -p tasks/<benchmark>/<task> -a oracle               # on a sample: >= 2 tasks per mode
 harbor run -p tasks/<benchmark>/<task> -a nop                  # must score 0
