@@ -2,6 +2,7 @@
  "image": "ghcr.io/mll-lab-nu/efe:standard-files-0.8.0@sha256:497a2b864b3a1aaf1f60206dc14f08a0f99960037f0e54be3d4bc2e39f5adba4",
  "source": "embodied_first_exam/standard",
  "files": {
+  "agent_end/rcb_agent_end.py": "7c66a5fe81bc4fba634bb9692d8cb1190bec349fd52bb70952d722bf4aae0566",
   "live_video.py": "eb4f98634ffbade423a0c10cc45140b78695dc42c86bc8d6fa5b4941c3b19075",
   "mcp/rcb_tools.py": "372fe8d0a3b17f8534f663663875262c4283fd57c01c7a8c339fed9d4a72006e",
   "mcp/schema.py": "384f9433c9fd7a69452b8b34acae280e00be4b68d283804776b6757128aa37d3",

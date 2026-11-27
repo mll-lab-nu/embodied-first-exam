@@ -2,6 +2,8 @@
  "image": "ghcr.io/mll-lab-nu/efe:vlabench-files-0.8.0@sha256:98eaa794134b7259ca6340f24e4c14bee200dd496232a40638f5c1d8949e17e5",
  "source": "embodied_first_exam/benchmarks/vlabench",
  "files": {
+  "image/requirements.txt": "8573472cbe67e8eb9cb78316d1f4adfec9fed153a2b082d6b72810dd97d02d68",
+  "image/strip_experts.py": "3965236b5116ba5090db775989f1e09b7f748d6ae2d46aea58283810c7bb0f6f",
   "privileged/environment/vlb_tool.py": "401b91f5d4491f5e9bcc4466e29050911d7821ba9e73be9b4e0bf2516246dee8",
   "privileged/tests/grade.py": "99f451c7cbe053cc384450a236890b4578097683b41582001bc395db8d1724ce",
   "sim/server.py": "404a250577ddc3f7cd2d05a4eddff62d66f00b57fc6dd2921a1686431886b200"

@@ -15,7 +15,7 @@
     `sidecar/clients/<name>/`: the clients some benchmarks use (`robocasa`, `kinder`, `compact`);
   - `operations/`: the operations layer (`rcb_limited.py`, `rcb_client.py`, `selftest.py`);
   - `realtime/`: the realtime layer (`rcb_realtime.py`, its client);
-  - `agent_end/`: the agent-ended episode layer of the shared and the operations layers (`rcb_agent_end.py`, files-only image `agent-end-files`)
+  - `agent_end/`: the agent-ended episode layer of the shared and the operations layers (`rcb_agent_end.py`, in the files-only image `standard-files`)
     and the tests of agent-ended episodes on every layer;
   - `mcp/`: the `efe-robot` MCP server that offers each standard and realtime task's robot service as tools, and
     `inject.py`, which `normalize` uses to write it into each task.

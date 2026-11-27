@@ -17,4 +17,4 @@ COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.8.0@sha256:497a2b864b3a1aaf1
      /run.sh \
      /srv/
 COPY --from=ghcr.io/mll-lab-nu/efe:robopaint-pictures-files-0.1.0@sha256:3ce92526aa79918994ccb934390221e1dd6c3f4364109a40e5746140def6062e /acrylic-sunflowers-i00/target.png /srv/target.png
-COPY --from=ghcr.io/mll-lab-nu/efe:agent-end-files-0.5.0@sha256:3e1cda4a561e626b804231bf86efac77649926eabdfe8c930b8e2a01f35b74c3 /rcb_agent_end.py /srv/rcb_agent_end.py
+COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.8.0@sha256:497a2b864b3a1aaf1f60206dc14f08a0f99960037f0e54be3d4bc2e39f5adba4 /agent_end/rcb_agent_end.py /srv/rcb_agent_end.py

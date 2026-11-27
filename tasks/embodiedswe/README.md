@@ -115,7 +115,7 @@ Differences from EmbodiedSWE's own grading, on purpose:
 `<task>-standard` is the privileged task's twin: the same frozen instance (`environment/sim/instance.json`, byte for
 byte), grader and time limit. The simulator runs in the `sim` sidecar (`embodied_first_exam/benchmarks/embodiedswe/sim/`:
 `server.py` on the shared layer, `esw_std.py` for the robots, cameras and kinematics; files image
-`embodiedswe-standard-files`), built by the privileged tooling (`rcb_embodiedswe.py`: the same build and start-state check);
+`embodiedswe-files`), built by the privileged tooling (`rcb_embodiedswe.py`: the same build and start-state check);
 the agent's container holds the shared client only. No reset. The episode ends after the first call at whose end the
 grader's success predicate holds, when the agent's time is up, on a simulator error, on a tool contact (spatula) or at
 400,000 control steps (`step_guard`, a technical cap). Graded by the live episode (`final.json` from the service, no

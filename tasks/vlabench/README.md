@@ -33,8 +33,8 @@ as the stage `vlabench-base`, and compose `build.cache_from` names `ghcr.io/mll-
 same recipe prebuilt with BuildKit's inline cache. A runner that can pull it takes its layers; any other runner gets a
 warning that the cache cannot be read and builds the layers from public sources (GitHub, PyPI, snapshot.debian.org and
 the Hugging Face dataset `lerobot/vlabench-assets` @ `08d7a44`, checked by `git lfs fsck`). Both give the same image.
-The files images `efe:vlabench-files` (the tasks' tooling) and `efe:vlabench-build-files` (the recipe's
-`requirements.txt` and `strip_experts.py`) are public. The verifier's build reuses the agent environment's layers.
+The files image `efe:vlabench-files` (the tasks' tooling, and the recipe's
+`requirements.txt` and `strip_experts.py`) is public. The verifier's build reuses the agent environment's layers.
 
 | | |
 |---|---|
@@ -109,7 +109,7 @@ end of the session or on a simulator error, and is judged on VLABench's check as
 ## Image
 `images/vlabench/Dockerfile` is the full, pinned recipe and needs no build context: Python 3.10.18 by digest, Debian
 packages from snapshot.debian.org at 2026-10-02 00:00 UTC (the image's apt sources are restored afterwards), pinned pip
-(`requirements.txt`, from `efe:vlabench-build-files`), VLABench and rrt-algorithms at fixed commits, the assets at a fixed commit with `git lfs fsck`,
+(`requirements.txt`, from `efe:vlabench-files`), VLABench and rrt-algorithms at fixed commits, the assets at a fixed commit with `git lfs fsck`,
 then `strip_experts.py`, which removes every `get_expert_skill_sequence`, `configs/task2code.json` (a per-task skill
 sequence; no runtime code reads it), the evaluation code and configs, the source tree's `.git` and `scripts/`.
 VLABench's general skills and its success predicates stay: the privileged mode offers the skills, the verifier grades

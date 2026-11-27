@@ -315,7 +315,7 @@ A client that never calls `/finish` has its episode ended by its session's end. 
   budget; over the token budget an agent-ended task is graded on its end state, not failed on top
   (`scripts/write_task_results.py`, by the task's mode).
 - Implementation for the shared and the operations layers: `embodied_first_exam/standard/agent_end/rcb_agent_end.py` (`Service`,
-  `serve`, `hidden_success`, `final_fields`, `steps_left`; files-only image `agent-end-files`); an adapter without
+  `serve`, `hidden_success`, `final_fields`, `steps_left`; files-only image `standard-files`); an adapter without
   `finish()` refuses to start. `Service` enforces `RCB_STEP_LIMIT` for every adapter: the call
   (a hold chunk too) stops at the step that reaches it (`Episode.row_cap`), the adapter's `finish("step_limit")` ends
   the episode there and the answer says so (`done`, `reason`, a `duration_s` of the steps run); an adapter with a cap

@@ -61,7 +61,7 @@ UNITS: dict[str, list[str]] = {
     "MyoSuite": _own("myosuite"),
     "DexJoCo": _own("dexjoco"),
     "DexHand": _own("dexhand"),
-    "VLABench": _own("vlabench", "images/vlabench-build-files/"),
+    "VLABench": _own("vlabench"),
     "RoboCasa-GR1": _own("robocasa-gr1", "embodied_first_exam/benchmarks/robocasa/", "images/robocasa-files/"),   # RoboCasa's service, tooling, graders
     "RoboCasa": _own("robocasa"),
     "RoboCasa365": _own("robocasa365", "embodied_first_exam/benchmarks/robocasa/", "images/robocasa-files/"),   # RoboCasa's service and graders
@@ -80,12 +80,12 @@ UNITS: dict[str, list[str]] = {
     "roboEngineer": ["images/control-transfer/", "images/quadrotor-landing/"],
     "ABC Sim": _own("abc-sim"),
     "Embodied Safety Exam": _own("ese"),
-    "EmbodiedSWE": _own("embodiedswe", "images/embodiedswe-standard-files/"),
+    "EmbodiedSWE": _own("embodiedswe"),
     "HumanCLAW": _own("humanclaw"),
 }
 HAND_UNITS = {k: list(v) for k, v in UNITS.items()}   # the rows above, before the conventional paths below are added
 # images/ directories every benchmark builds on: a change to one runs the full suite (no unit owns it)
-SHARED_IMAGES = ("monitor", "standard-files", "agent-end-files")
+SHARED_IMAGES = ("monitor", "standard-files")
 # the benchmark's shared task code, embodied_first_exam/benchmarks/<folder>/ (embodied_first_exam/README.md), its CI
 # hooks, ci_checks/benchmarks/<folder>/, and its files-only image, images/<folder>-files/ (task images and sidecars): the folder of its
 # task dirs, tasks/<folder>/ (task_conventions.BENCHMARK_DIRS)
