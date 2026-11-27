@@ -49,7 +49,8 @@ PROTOCOL = {"realtime": "eai-standard/2.3+match/1.0", "lockstep": "eai-standard/
 EXTENSION = {"match": "1.0"}
 EAI_STANDARD = "eai-standard/3.0"
 HOLD_HINT = ('observe never lets time pass (eai-standard/3.0): to let n seconds pass, submit a hold chunk {"type": <type>, '
-             '"interpolate": "hold", "seconds": n} with no rows; last_s = n returns the frames recorded in the last n seconds')
+             '"interpolate": "hold", "seconds": n} with no rows; the match keeps no recorder: last_s = n answers with '
+             "the sport's own frames of now")
 HOLD_HINT_RT = ("observe reads the recorder only and never waits (eai-standard/3.0): send last_s = n for the last n seconds "
                 "already recorded (0: the current frame)")
 MAX_REQUEST_BYTES = 8 << 20
@@ -57,6 +58,8 @@ MAX_JSON_ROWS = 1000
 MAX_CHUNK_S = 10.0                        # game seconds a chunk may cover
 TURN_WAIT_MAX_S = 60.0                    # turn-based: max_chunk_s, the real seconds a hold chunk may wait for your turn
 MAX_AHEAD_S = 10.0                        # realtime: `at` at most this far ahead (game seconds)
+MAX_VIDEO_FPS = 30                        # video_fps lies in [1, 30] (eai-standard/3.0, 2.1/2.3); the match renders the
+                                          # sport's own frames, so the value is checked, then not used
 RECENT_EFFECTS = 64
 STATE_KEYS_SKIP = {"team_messages", "ready", "retired"}
 _MISSING = object()
@@ -390,6 +393,7 @@ class Adapter:
                "format": core.get("format"), "action_level": core.get("action_level"),
                "control_hz": None if not self.dt else round(1.0 / self.dt, 6), "physics_substeps": None,
                "control_dt": self.dt, "max_chunk_s": self.max_chunk_s, "max_chunk_rows": MAX_JSON_ROWS,
+               "max_video_fps": MAX_VIDEO_FPS,
                "standard": EAI_STANDARD,
                "max_request_bytes": MAX_REQUEST_BYTES, "entities": entities,
                "cameras": cams, "action_types": {**types, "not_yet": []}, "action_types_note": types_note,
@@ -507,6 +511,16 @@ class Adapter:
         steps = [int(np.max(a)) for a in steps if len(a)]
         return max(steps) if steps else None
 
+    def newest_step(self, parts: list) -> int | None:
+        """meta.frame_step of an answer (eai-standard/3.0: every answer with images): its frame_step part(s), else, for
+        a sport whose observation names no view steps (soccer, soccer SSL, foosball), the step the core is at now
+        (the images are of now); None without images or without a step clock (turn-based)."""
+        newest = self.frame_step(parts) if parts else None
+        if newest is None and any(p[0].startswith("last/") for p in parts or ()):
+            k = getattr(getattr(self.svc, "m", None), "k", None) if self.dt else None
+            newest = int(k) if isinstance(k, (int, np.integer)) else None
+        return newest
+
     def hold_seconds(self, hdr: dict) -> float:
         """A hold chunk's `seconds`: interpolate "hold", a finite number in (0, max_chunk_s]."""
         if hdr.get("interpolate") != "hold":
@@ -521,6 +535,9 @@ class Adapter:
         hdr, raw = req["hdr"], req["rows"]
         if req.get("hold") is not None:
             return self.build_hold(req)
+        if hdr.get("interpolate") not in (None, "linear", "hold"):
+            raise BadRequest("interpolate: linear | hold (the match's rows are commands, never interpolated: either "
+                             "keeps each command in force until the next)")
         code, spec = self.core("spec", None, post=False)
         schema = self.schema_of(spec if code == 200 else {})
         kind = hdr.get("type")
@@ -618,6 +635,10 @@ class Adapter:
         video = hdr.get("video", default_video)
         if video not in ("mp4", "frames", "both", "none"):
             raise BadRequest("video: mp4 | frames | both | none")
+        fps = hdr.get("video_fps")
+        if fps is not None and (isinstance(fps, bool) or not isinstance(fps, (int, float)) or not math.isfinite(fps)
+                                or not 1 <= fps <= MAX_VIDEO_FPS):
+            raise BadRequest(f"video_fps: a number in [1, max_video_fps = {MAX_VIDEO_FPS}]")
         depth = hdr.get("depth", "none")
         if depth not in ("none", False, None) or hdr.get("include_depth"):
             raise BadRequest("no depth in this service (spec depth.modes)")
@@ -787,6 +808,8 @@ class Adapter:
         if steps is not None and len(steps) and self.dt:
             newest = int(np.max(steps))
             covered = round(float(newest - int(np.min(steps))) * self.dt, 4) if last_s > 0 else 0.0
+        if newest is None:
+            newest = self.newest_step(parts)
         extra = {"obs_id": self.obs_id, "last_s": covered, **({"frame_step": newest} if newest is not None else {}), **info}
         self.log(ev="observe", last_s=last_s, k=k0, images=bool(parts))
         return 200, self.meta(now, **extra), parts
@@ -827,7 +850,7 @@ class Adapter:
             code, meta, parts = self.submit_realtime(req, cid)
         else:
             code, meta, parts = self.submit_sync(req, cid)
-        newest = self.frame_step(parts) if parts else None
+        newest = self.newest_step(parts)
         if newest is not None and isinstance(meta, dict) and "frame_step" not in meta:
             meta = {**meta, "frame_step": newest}   # eai-standard/3.0: every answer with images
         return code, meta, parts
@@ -870,6 +893,14 @@ class Adapter:
                                   plan_end_step=at + steps, end_step=at + steps, entity=ent,
                                   duration_s=round(steps * self.dt, 6), planned_duration_s=round(n, 6),
                                   effects=self.take_effects(), plan=[], clipped=[], n_clipped=0, **info), parts
+        phase = svc.phase
+        if (phase != "running") if self.clock == "lockstep" else (phase == "prepare"):
+            not_now = ("the world is frozen for the reviews: send /ready" if phase == "review" else
+                       "the match has not started: send /start")   # (§29: nothing runs, ok false)
+            self.log(ev="submit", clock=self.clock, chunk_id=cid, type=req["type"], hold_s=n, not_now=phase)
+            return 200, self.meta(None, chunk_id=cid, type=req["type"], hold=True, ok=False, not_now=not_now,
+                                  executed_rows=0, control_steps_chunk=0, duration_s=0.0,
+                                  planned_duration_s=round(n, 6), effects=[], plan=[], clipped=[], n_clipped=0), []
         if self.clock == "turn":
             body = {"timeout_s": float(n)}
             if req.get("team_since") is not None:
@@ -905,6 +936,9 @@ class Adapter:
                                  "passes while you think)")
             if req["at"] > k0 + int(round(MAX_AHEAD_S / self.dt)):
                 raise BadRequest("at: too far ahead")
+            if (req["at"] - k0 + len(req["rows"]) * req["n"]) * self.dt > MAX_CHUNK_S + 1e-9:
+                raise BadRequest(f"a chunk covers at most max_chunk_s = {MAX_CHUNK_S:g} s, the wait until `at` "
+                                 f"included (the world is at step {k0})")
             if req["at"] > k0:
                 code, now, w = self.watch((req["at"] - k0) * self.dt)
                 if code != 200:
