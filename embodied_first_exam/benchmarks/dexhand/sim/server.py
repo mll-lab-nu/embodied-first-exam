@@ -565,7 +565,8 @@ def do_observe(meta):
     ):
         raise ValueError(f"seconds must be in [0, {SPEC['max_chunk_s']:g}]")
     rec, video, fps = options(meta, int(round(seconds * HZ)))
-    rec.tick(force=True)
+    if seconds > 0 and not E["done"]:
+        rec.tick(force=True)            # the hold's first frame; a zero-length observe is only response()'s last frame
     E["calls"] += 1
     for _ in range(int(round(seconds * HZ))):
         if E["done"] or execute(D.ctrl[:N].copy(), rec):

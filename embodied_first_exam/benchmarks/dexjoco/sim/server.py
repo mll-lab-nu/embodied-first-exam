@@ -359,6 +359,7 @@ SPEC = {
     "physics_hz": CTRL_HZ * SUBSTEPS,
     "max_chunk_s": MAX_CHUNK_S,
     "max_frames_per_call": MAX_FRAMES,
+    "max_video_fps": MAX_FPS,   # what video_fps() accepts (the layer's default would be max(30, control_hz))
     "max_control_steps": int(S.max_steps),   # the episode's step cap (the runaway guard, or RCB_STEP_LIMIT): step_limit
     "cameras": {c: {"rgb": True, "depth": True, "mounted": _mounted(c), "resolution": [CAM_W, CAM_H], "intrinsic_cv": _intrinsic(c),
                     "mount": _mount(c)} for c in CAMS},
