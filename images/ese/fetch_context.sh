@@ -9,6 +9,7 @@
 #                                  repository at MENAGERIE_COMMIT and checks every one
 #   context/ese-src.sha256         every file of context/ese-src/
 #   context/requirements.txt, context/ese-commit
+#   (context/requirements.txt and context/third_party_context.py are this repository's own: kept as they are, edited there)
 # The context is vendored: committed in this repository, so that anyone can build the image. This script is how it was
 # made, and how a maintainer with a clone of Embodied Safety Exam checks it (`--check`) or refreshes it for a new commit.
 # README.md's sentence about the repository's own documents is rewritten (they are not in the snapshot).
@@ -32,8 +33,8 @@ git -C "$SRC" archive "$full" "${PATHS[@]}" | tar -x -C "$TMP/all"
 # The installed package keeps its exact third-party assets. The committed build
 # context needs one copy only; reconstruct the package copy after fetching the
 # pinned Menagerie files and before wheel installation.
-python3 "$HERE/third_party_context.py" stage "$TMP/all" "$OUT/third-party-duplicates.json"
-cp "$HERE/third_party_context.py" "$OUT/third_party_context.py"
+python3 "$HERE/context/third_party_context.py" stage "$TMP/all" "$OUT/third-party-duplicates.json"
+cp "$HERE/context/third_party_context.py" "$OUT/third_party_context.py"
 ( cd "$TMP/all/assets/third_party/mujoco_menagerie" && find . -type f | LC_ALL=C sort | sed 's|^\./||' | xargs sha256sum ) > "$OUT/menagerie.sha256"
 rm -rf "$TMP/all/assets/third_party/mujoco_menagerie"
 cp -a "$TMP/all/." "$OUT/ese-src/"
@@ -49,7 +50,7 @@ if old not in s:
     sys.exit("README.md changed upstream: update the rewrite in fetch_context.sh")
 open(p, "w").write(s.replace(old, new))
 PY
-cp "$HERE/requirements.txt" "$OUT/requirements.txt"
+cp "$HERE/context/requirements.txt" "$OUT/requirements.txt"
 printf '%s\n' "$full" > "$OUT/ese-commit"
 printf 'MENAGERIE_REPO=%s\nMENAGERIE_COMMIT=%s\n' "$MENAGERIE_REPO" "$MENAGERIE_COMMIT" > "$OUT/menagerie.env"
 ( cd "$OUT/ese-src" && find . -type f -print0 | LC_ALL=C sort -z | xargs -0 sha256sum ) > "$OUT/ese-src.sha256"   # names may hold spaces (0.5.2: the G1 licence)

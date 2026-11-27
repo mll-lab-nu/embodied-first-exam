@@ -732,8 +732,8 @@ same way (pack `third_party`). Before building the image, run
 and puts them into the build context, where the Dockerfile checks them again with the rest of `ese-src.sha256`.
 
 ### Licences
-Embodied Safety Exam: Apache-2.0 (`images/ese/LICENSE.ese`); its generated assets CC BY 4.0
-(`images/ese/LICENSE-assets.ese`); MuJoCo Menagerie's robot models and the DejaVu font keep their own
+Embodied Safety Exam: Apache-2.0 (`images/ese/context/ese-src/LICENSE`); its generated assets CC BY 4.0
+(`images/ese/context/ese-src/LICENSE-assets`); MuJoCo Menagerie's robot models and the DejaVu font keep their own
 licences (beside them in the image). The image also carries the G1's assets (`assets/third_party/bigym2/`):
 BiGym 2.0's model and config under Apache-2.0, the Unitree G1 meshes under BSD-3-Clause, and the G1 controller's policy
 weights (`wbc/*.onnx`, NVIDIA GR00T Whole-Body Control) under the NVIDIA Open Model License, which is not covered by
