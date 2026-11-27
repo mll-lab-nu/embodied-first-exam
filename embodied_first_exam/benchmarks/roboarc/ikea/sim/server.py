@@ -88,6 +88,7 @@ LIVE_FPS = int(os.environ.get("RCB_LIVE_FPS", "10")); LIVE_CAM = os.environ.get(
 # sim time, its first and last frames included); a frame with per-frame depth counts once more (L.check_frames). The
 # recorder holds every frame of a call (848 x 480 RGB = 1.2 MB) until the response is sent.
 MAX_FRAMES = 1000
+MAX_VIDEO_FPS = 30                      # the response video's frame-rate cap (/spec max_video_fps)
 LOCK = threading.Lock()
 E = {"ready": False, "step": 0, "calls": 0, "done": False, "reason": None, "success": False, "t0": time.time(), "error": None,
      "service_s": 0.0, "t_first": None, "deadline": float("inf")}
@@ -357,7 +358,7 @@ SPEC = {
     "protocol": PROTOCOL, "protocol_compat": L.COMPAT, "simulator": "mujoco 3.14.0 (CPU, float64; the scene's own runtime and mechanism)",
     "robot": R_SPEC["name"], "task_text": TEXTS["task_text"],
     "control_hz": CTRL_HZ, "control_dt": CTRL_DT, "physics_substeps": int(R.SUBSTEPS), "physics_dt": float(s.timestep),
-    "max_chunk_s": MAX_CHUNK_S, "max_frames_per_call": MAX_FRAMES,
+    "max_chunk_s": MAX_CHUNK_S, "max_frames_per_call": MAX_FRAMES, "max_video_fps": MAX_VIDEO_FPS,
     "cameras": CAM_SPEC, "default_cameras": list(CAMS),
     "action_types": {
         "joint_position": {
@@ -434,12 +435,20 @@ def time_left() -> float:
     return max(0.0, WALL_CLOCK_S - agent_time())
 
 
+def error_fields() -> dict:
+    """final.json's error classes: a service-side error (infra_exception) or an exception while judging the end state
+    (finalize_error: the end state was never judged) is infrastructure, never the agent's 0; any other simulator error
+    in the agent's call is sim_error (the agent's 0)."""
+    infra = (E["reason"] == "error" and bool(E.get("error_infra"))) or bool(E.get("finalize_error"))
+    return {"infra_error": int(infra), "sim_error": int(E["reason"] == "error" and not infra),
+            **({"finalize_error": E["finalize_error"]} if E.get("finalize_error") else {})}
+
+
 def write_final() -> None:
     if L.final_verdict(DATA):
         return
     L._write_json(os.path.join(DATA, "final.json"), {
-        "success": bool(E["success"]), "infra_error": int(E["reason"] == "error" and bool(E.get("error_infra"))),
-        "sim_error": int(E["reason"] == "error" and not E.get("error_infra")),
+        "success": bool(E["success"]), **error_fields(),
         "dump_error": E.get("dump_error"), "steps": E["step"], "calls": E["calls"],
         "control_steps": ctrl_steps(), "physics_steps": ctrl_steps() * R.SUBSTEPS, "sim_time_s": sim_time(),
         "elapsed_s": round(agent_time(), 1), "service_time_s": round(service_time(), 1),
@@ -514,8 +523,7 @@ def dump() -> None:
 
 def episode_json() -> None:
     L._write_json(os.path.join(DATA, "episode.json"), {
-        "success": bool(E["success"]), "infra_error": int(E["reason"] == "error" and bool(E.get("error_infra"))),
-        "sim_error": int(E["reason"] == "error" and not E.get("error_infra")),
+        "success": bool(E["success"]), **error_fields(),
         "dump_error": E.get("dump_error"), "steps": E["step"], "calls": E["calls"],
         "control_steps": ctrl_steps(), "physics_steps": ctrl_steps() * R.SUBSTEPS, "sim_time_s": sim_time(),
         "elapsed_s": round(((E.get("t_end") or time.time()) - E["t_first"]) if E["t_first"] else 0.0, 1),
@@ -586,13 +594,14 @@ def finish(reason: str) -> None:
     elif not E["success"] and reason not in ("sim_breakdown", "error"):
         try:
             E["success"] = bool(verdict()["success"]) and bool(settled()["success"])   # graded as it stands: the verdict
-        except Exception:  # noqa: BLE001
+        except Exception as exc:  # noqa: BLE001 - the end state was not judged: infrastructure (error_fields), never a 0
             traceback.print_exc()
+            E["success"] = False; E["finalize_error"] = repr(exc)[:300]
         if AE.ENABLED and E["success"]:     # the end state is a success: seen (at the last control step) if not before
             AE.hidden_success(E, True, log, ctrl_steps())
     if reason in ("sim_breakdown", "error"):
         E["success"] = False
-    log({"ev": "end", "reason": reason, "error_infra": bool(E.get("error_infra")), "step": E["step"], "control_steps": ctrl_steps(), "elapsed_s": round(agent_time(), 1),
+    log({"ev": "end", "reason": reason, "error_infra": bool(E.get("error_infra")), "finalize_error": E.get("finalize_error"), "step": E["step"], "control_steps": ctrl_steps(), "elapsed_s": round(agent_time(), 1),
          "service_time_s": round(service_time(), 1), "success": bool(E["success"]), "breakdown": s.validity.breakdown})
     dump()
 
@@ -600,6 +609,8 @@ def finish(reason: str) -> None:
 def fail(exc: BaseException) -> None:
     """A simulator error in /submit or /observe ends the episode (reason "error"): infra_error if it is the service's
     (infra_exception), else sim_error (the agent's 0)."""
+    if isinstance(exc, EpisodeFinished):    # nothing ran: the episode had already ended (answered 409)
+        return
     if not E["done"]:
         E["error_infra"] = bool(infra_exception(exc))
     finish("error")
@@ -770,6 +781,12 @@ def _call(fn):
     return wrapped
 
 
+class EpisodeFinished(Exception):
+    """A /submit admitted while the episode ran, whose job found it over (the deadline ended it in between): answered 409
+    "episode finished" like a /submit after the end (the handler, _touching_handler), nothing executed. The layer hands it
+    to fail() first, which leaves an ended episode as it is."""
+
+
 class EncodeError(OSError):
     """The response's video / frame encoding failed after the rows ran (imageio / ffmpeg): the service's own fault,
     infrastructure (infra_exception), never the agent's: the request was validated and its frames bounded."""
@@ -825,8 +842,8 @@ def _frames(cams, fps, steps, depth_mode) -> int:
 
 @_call
 def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
-    if E["done"]:               # the episode ended (the deadline) between the request's admission and this job
-        raise ValueError("episode finished")
+    if E["done"]:               # the episode ended (the deadline) between the request's admission and this job: 409
+        raise EpisodeFinished(E["reason"])
     typ = meta.get("type"); interp = meta.get("interpolate", "linear")
     note = req_note(meta)
     try:
@@ -848,8 +865,8 @@ def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
         raise ValueError("interpolate must be hold|linear")
     if video not in ("mp4", "frames", "both", "none"):
         raise ValueError("video must be mp4|frames|both|none")
-    if not isinstance(fps, (int, float)) or not 1 <= fps <= 30:
-        raise ValueError("video_fps must be in [1, 30]")
+    if isinstance(fps, bool) or not isinstance(fps, (int, float)) or not 1 <= fps <= MAX_VIDEO_FPS:
+        raise ValueError(f"video_fps must be in [1, {MAX_VIDEO_FPS}]")
     fps = int(fps); depth = L.depth_mode(meta)
     _frames(cams, fps, A.shape[0] * k, depth)
     try:   # executing: a ValueError from here on is the simulator's (a 400 would hide it), never the request's
@@ -885,8 +902,8 @@ def do_observe(meta: dict) -> tuple[dict, list]:
         raise ValueError(f"seconds must be in [0, {MAX_CHUNK_S}] (max_chunk_s)")
     if video not in ("mp4", "frames", "both", "none"):
         raise ValueError("video must be mp4|frames|both|none")
-    if not isinstance(fps, (int, float)) or not 1 <= fps <= 30:
-        raise ValueError("video_fps must be in [1, 30]")
+    if isinstance(fps, bool) or not isinstance(fps, (int, float)) or not 1 <= fps <= MAX_VIDEO_FPS:
+        raise ValueError(f"video_fps must be in [1, {MAX_VIDEO_FPS}]")
     fps = int(fps); depth = L.depth_mode(meta)
     _frames(cams, fps, int(round(seconds * CTRL_HZ)) if seconds > 0 and not E["done"] else 0, depth)
     try:   # executing: a ValueError from here on is the simulator's (a 400 would hide it), never the request's
@@ -990,6 +1007,11 @@ def _touching_handler(svc):
         def do_POST(self):
             touch()
             return base.do_POST(self)
+
+        def _json(self, code, body):
+            if code == 500 and isinstance(body, dict) and str(body.get("detail") or "").startswith("EpisodeFinished("):
+                code, body = 409, {"error": "episode finished", "reason": E.get("reason")}   # do_submit: EpisodeFinished
+            return base._json(self, code, body)
     return Handler
 
 
