@@ -83,7 +83,7 @@ has its own prefix (`task_conventions.py benchmarks --check`, `ci_scope.py --che
    `check-verifier-isolation.sh` requires exactly its list. The cutoff, `[agent] timeout_sec`, is yours to set in this
    pull request within PROTOCOL §2 and to state in its Contract; what `normalize` renders from it and how the clock
    runs: docs/protocol/running.md "The agent's time". Your own text never repeats the limit as a duration: say "the
-   time limit (`## Time limit`)", and add what is particular to your benchmark (a simulator's start-up cost). Your
+   time limit (Limits)", and add what is particular to your benchmark (a simulator's start-up cost). Your
    service's `time_s` / `time_left_s` count from the agent's first request to it, never from the service's start, and
    a resumed service keeps that moment (docs/protocol/standard_mode.md, "The agent's clock": the shared layers do it
    for you; a test must show it).
@@ -213,11 +213,10 @@ The checklist is in PROTOCOL §4.
   and files that may not be redistributed stay in the task dir.
 - Pin everything (`FROM` tags or digests, pip versions); no network access during verification.
 - The agent's egress (PROTOCOL Appendix H.6, docs/protocol/running.md "Network"): the allowlist by default; a task
-  whose author chooses open egress declares `[agent] network_mode = "public"` and writes its own `## External material`
-  paragraph. Bake
+  whose author chooses open egress declares `[agent] network_mode = "public"` and writes its own Network line
+  in `## Limits`. Bake
   what the task itself needs at run time into the image or the task directory (an agent may install packages; a task
-  must not depend on it). `normalize` writes the `## External material` paragraph, an honour rule, into
-  `instruction.md`. If a distribution on PyPI ships your benchmark's solutions or task sources, add it to the table in
+  must not depend on it). `normalize` writes the Network line of `## Limits` into `instruction.md`. If a distribution on PyPI ships your benchmark's solutions or task sources, add it to the table in
   [docs/protocol/leakage.md](docs/protocol/leakage.md) ("Packages on PyPI"). Keep provenance (source repository, dataset, demonstration
   file, expert module) out of every file under `environment/` that the agent reads, and look through a new image for
   recorded episodes and links to them (`ci_checks/check-agent-pointers.py` covers the task's own files only).

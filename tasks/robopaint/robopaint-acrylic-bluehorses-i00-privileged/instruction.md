@@ -7,14 +7,14 @@ strokes.
 ## Goal
 Success: the main sheet looks like the picture (the same colours in the same places, the same lights and darks and
 edges, and paint only where the picture has paint), you used at most 390 strokes, and the process rules below hold; a
-small shift of the whole painting does not matter. What counts is how things stand after the last action of your
-trajectory, replayed from the fixed start.
+small shift of the whole painting does not matter. Your trajectory is replayed from the fixed start. What counts is the
+state after its last action.
 
 You are scored on how close your colours are to the picture's.
 
-Paint with brush strokes, the way a person paints: each stroke is one sweep of the loaded brush. Colouring in or filling
-areas with a thin line, zigzag or serpentine fills, and fills that circle round and round inside an area fail the task,
-even when the sheet matches the picture. The exact checks are under Process rules in Robot Interface.
+Paint with brush strokes, the way a person paints: each stroke is one sweep of the loaded brush. These fail the task
+even when the sheet matches the picture: colouring in or filling areas with a thin line, zigzag or serpentine fills, and
+fills that circle round and round inside an area. The exact checks are under Process rules in Robot Interface.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, path)`; it is replayed open-loop
 from the frozen start and succeeds if the replay meets the rules above. Also leave the script that produced it at
@@ -78,30 +78,31 @@ base at (-0.615, 0, 0), x forward (away from the base), y to the robot's left. Q
 brush points straight down with the tip at about (0.000, 0.000, 0.108).
 
 ### The brush, the paints and the sheets
-- The brush is a rigid handle with a 15 mm soft tuft (no collision; the handle hits the paper 15 mm below its surface);
-  the robot's tool point (TCP) is the tuft's tip. Hold it vertical (as at the start).
+- The brush is a rigid handle with a 15 mm soft tuft (no collision). The handle hits the paper when the tip is 15 mm
+  below the paper's surface. The robot's tool point (TCP) is the tuft's tip. Hold the brush vertical (as at the start).
 - Paints (every colour the painting needs, premixed): 10 wells on a plate on the robot's left (+y), in two rows, radius
   12 mm, paint surface z = 0.028 m (plate top 0.026 m, rigid); `s.wells()` gives each well's name, colour and centre.
-  Dipping = the tip inside a well's circle and below the paint surface: the brush is then loaded with that paint on a
-  fresh brush (the previous paint is gone; no mixing on the palette, it never runs dry). The brush starts dry.
+  Dipping means having the tip inside a well's circle and below the paint surface. The brush is then loaded with that
+  paint on a fresh brush: the previous paint is gone, nothing mixes on the palette, and it never runs dry. The brush
+  starts dry.
 - Sheets (surface z = 0.020 m): the main sheet, a 227.18 mm square centred at world (-0.100, 0.000), is scored; the
   practice sheet, 227.18 x 99.41 mm centred at (-0.100, -0.1856), is for test strokes and is never scored or counted.
-- How the paint goes on: at every physics step (100 Hz) the tip over a sheet is one motion event for libmypaint with the
-  mypaint-brushes preset `tanda/acrylic-03-paint` (dab size scaled to the paper): an opaque acrylic paint whose mark
-  width follows the pressure (press depth / 15 mm): straight strokes at 40 mm/s are about 1.6 mm wide at a 1 mm press,
-  2.4 mm at 3 mm, 3.5 mm at 5 mm, 5.2 mm at 7 mm, 7.5 mm at 9 mm, 11 mm at 11 mm and 16 mm at 13 mm; the dabs also
-  depend on the speed and direction and carry the engine's own jitter (deterministic); later strokes cover earlier ones.
-  The engine is `MyPaintPainter` in `/opt/tools/rcb_brush.py` (+ `/opt/mypaint`). One continuous contact is one stroke;
-  paint is permanent (only `s.reset()` clears it).
+- How the paint goes on: at every physics step (100 Hz) the tip over a sheet is one motion event for libmypaint, with
+  the mypaint-brushes preset `tanda/acrylic-03-paint` (dab size scaled to the paper). The result is an opaque acrylic
+  paint whose mark width follows the pressure (press depth / 15 mm): straight strokes at 40 mm/s are about 1.6 mm wide
+  at a 1 mm press, 2.4 mm at 3 mm, 3.5 mm at 5 mm, 5.2 mm at 7 mm, 7.5 mm at 9 mm, 11 mm at 11 mm and 16 mm at 13 mm.
+  The dabs also depend on the speed and direction and carry the engine's own jitter (deterministic). Later strokes cover
+  earlier ones. The engine is `MyPaintPainter` in `/opt/tools/rcb_brush.py` (+ `/opt/mypaint`). One continuous contact
+  is one stroke; paint is permanent (only `s.reset()` clears it).
 - The arm is position-controlled (PD, 20 Hz targets): a moving target is followed with a lag of about 0.1 s.
 
 ### The target picture
 `/app/target.png` (1024 x 1024 px, RGB) shows the exemplar at its true size and place on the main sheet: the image
 covers the main sheet exactly, 0.2219 mm per pixel. Pixel (column u, row v), counted from 0 at the image's top-left, has
-its centre at sheet millimetres X = (u + 0.5) · 227.18 / 1024, Y = (v + 0.5) · 227.18 / 1024 (X to the robot's right, Y
-towards the robot, origin = the sheet's far-left corner as seen from the robot's base), i.e. at world x = -0.100 +
-0.1136 - Y/1000, y = 0.1136 - X/1000 (m) (`s.geo.mm_to_world(X, Y)`). Image top = the sheet's far edge (+x), image left
-= the robot's left (+y): the same orientation as `s.canvas()` and `canvas_cam`.
+its centre at sheet millimetres X = (u + 0.5) · 227.18 / 1024, Y = (v + 0.5) · 227.18 / 1024. X runs to the robot's
+right and Y towards the robot; the origin is the sheet's far-left corner as seen from the robot's base. In the world
+frame that is x = -0.100 + 0.1136 - Y/1000, y = 0.1136 - X/1000 (m) (`s.geo.mm_to_world(X, Y)`). Image top = the sheet's
+far edge (+x), image left = the robot's left (+y): the same orientation as `s.canvas()` and `canvas_cam`.
 
 ### Process rules
 The grader checks the process rules in Goal on the replayed trajectory with two numbers you can check yourself; only
@@ -109,9 +110,9 @@ painted strokes on the main sheet count (the practice sheet is free):
 - Paint path budget: `path_mm` ≤ 35900 mm. `path_mm` is the total length of the brush tip's path while it presses on the
   main sheet with paint (all strokes together, sampled at every physics step).
 - Strokes are sweeps: `scribble_share` ≤ 0.1. A stroke's scribble ratio is its length divided by the diagonal of its
-  bounding box on the sheet (taken as at least 10 mm): about 1 for a straight or curved sweep, 2 for a sweep out and
-  back along the same line, more for a zigzag, a back-and-forth fill, a spiral or a loop. `scribble_share` is the share
-  of `path_mm` in strokes whose ratio is above 2.5.
+  bounding box on the sheet (the diagonal taken as at least 10 mm). It is about 1 for a straight or curved sweep, 2 for
+  a sweep out and back along the same line, and more for a zigzag, a back-and-forth fill, a spiral or a loop.
+  `scribble_share` is the share of `path_mm` in strokes whose ratio is above 2.5.
 
 Breaking a process rule fails the task. `s.score()` reports `path_mm`, `max_path_mm`, `scribble_share`, `scribble_max`
 (the largest ratio of a stroke), `longest_stroke_mm`, `image_success` (the picture rule alone), `strict_ok` (the process
@@ -119,7 +120,7 @@ rules) and `success` (all).
 
 The score (`final_reward`, 0 to 1) is higher the closer your colours are to the picture's; it is scaled down above the
 stroke cap and when a process rule fails. `s.score()` returns the grader's metrics for the current sheet, `success` and
-`final_reward` included: a scoring service replays the actions you have executed since your last `s.reset()` and scores
+`final_reward` included. A scoring service replays the actions you have executed since your last `s.reset()` and scores
 the resulting sheet.
 
 ## Limits
@@ -133,5 +134,5 @@ the resulting sheet.
 - Resources: 8 CPUs, 12 GiB memory, 2048 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`),
   one GPU (3 GiB of its memory). Over a cap a process can be killed (the CPU cap only slows you down); usage:
   `/run/rcb-limits/usage.json`.
-- Steps: no step budget; a runaway guard stops an episode at 72000 control steps (1 h of simulated time).
+- Steps: no step budget. A runaway guard stops an episode at 72000 control steps (1 h of simulated time).
 - Resets: as many as you like (`s.reset()`: blank sheets, a dry brush, the robot at its start pose, exact).

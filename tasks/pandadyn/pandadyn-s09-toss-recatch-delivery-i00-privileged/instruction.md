@@ -10,19 +10,19 @@ cup with a real throw (the ball leaves the cup floor while rising, the cup about
 cup, moved sideways, catches it again; finally the ball rests in the moving box, clear of the cup, while the box moves.
 A catch means the ball drops into the cup from above after flying free and stays there.
 
-The steps count only in this order, and a step once done stays done. The replay ends as soon as the task is done or has
-failed; the task also fails at once when:
+The steps count only in this order. Once a step is done, it stays done. The replay ends as soon as the task is done or
+has failed; the task also fails at once when:
 - the task's horizon is reached before the task is done (Robot Interface);
 - an object leaves the workspace (falls well below the table top or flies far away);
 - a robot part touches what it may not: only the cup may touch anything, and only the ball;
 - an arm touches itself, a robot part touches the table or the floor, or a contact presses deep into anything;
 - an arm goes beyond the Franka Panda's own safety limits (Robot Interface, Safety).
 
-Deliverable: `/app/output/trajectory.npz`, written with `Session.save_trajectory(...)`: it holds `task` and `actions`, a
-(T, 8) float array of at most 4,500 rows (one per control step); anything else (another shape, NaN, more rows, a file
-that is not such an npz) scores 0. It is replayed open-loop from the fixed start and scores 1 if the task succeeds in
-the replay, else 0. Keep the script that produced it at `/app/output/gen.py`. Save a valid one early and overwrite it
-when you have a better one.
+Deliverable: `/app/output/trajectory.npz`, written with `Session.save_trajectory(...)`. It holds `task` and `actions`;
+`actions` is a (T, 8) float array of at most 4,500 rows, one per control step. Anything else (another shape, NaN, more
+rows, a file that is not such an npz) scores 0. It is replayed open-loop from the fixed start and scores 1 if the task
+succeeds in the replay, else 0. Keep the script that produced it at `/app/output/gen.py`. Save a valid one early and
+overwrite it when you have a better one.
 
 Rules: **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
 benchmark's demonstrations, trained policies); trials are reviewed.
@@ -64,9 +64,9 @@ to build. The environment's source is in `/opt/pandadyn/panda_dynamics`. Check a
 asked for and never moves anything. Do not call `s.close()` before writing every output.
 
 ### Actions
-- Action row (8 values per control step): `[joint1..7, aperture]`. Each arm's 8 values are its 7 absolute joint-position
-  targets (rad, `panda_joint1..7`) and its total gripper aperture target (m, 0 = closed .. 0.08 = open; each finger
-  moves at most 0.025 m/s). Values outside the joint limits (`s.robot_spec()`) are clipped to them before they are
+- Action row (8 values per control step): `[joint1..7, aperture]`. Each arm has 8 values: its 7 absolute joint-position
+  targets (rad, `panda_joint1..7`) and its total gripper aperture target (m, 0 = closed .. 0.08 = open). Each finger
+  moves at most 0.025 m/s. Values outside the joint limits (`s.robot_spec()`) are clipped to them before they are
   executed, and the trajectory records the clipped row.
 - The servo: every control step, each arm's latest target is turned into a smooth reference motion by a jerk-limited
   trajectory generator (Ruckig, the joints synchronised to arrive together) within 65 % (speed), 90 % (acceleration) and
@@ -91,14 +91,15 @@ permanently open pouring lip. The tool frame is the centre of the floor's top su
 the open side. A fixed adapter bar connects the closed -x wall to the hand; in the tool frame the hand's TCP is at
 (-0.12, 0, +0.04), so the cup hangs 12 cm ahead of and 4 cm below the TCP. At the start the cup is level (identity
 orientation; open side facing world +x), centre at (0.03, -0.15, 0.22). The tool's adapter runs between the gripper's
-fingertips: closing the gripper to less than about 12 mm of aperture makes the fingers touch the adapter, which ends the
-episode as a collision with its own tool (the gripper starts fully open, at 0.08 m).
+fingertips. If you close the gripper to less than about 12 mm of aperture, the fingers touch the adapter, and the
+episode ends as a collision with its own tool. The gripper starts fully open, at 0.08 m.
 
 ### Safety
-The task fails when an arm goes beyond the Franka Panda's own safety limits on joint positions, joint and finger speeds,
-the hand's speed and acceleration, joint accelerations and jerks, and motor torques and how fast they change (the
-numbers: the robot spec's `safety_limits`). They count on the motion as measured, whatever was commanded (a catch or a
-strike moves the arm too), and the servo's own reference motion is held to the same speed, acceleration and jerk limits.
+The task fails when an arm goes beyond the Franka Panda's own safety limits. These limits cover joint positions, joint
+and finger speeds, the hand's speed and acceleration, joint accelerations and jerks, motor torques, and how fast the
+torques change. The numbers are in the robot spec's `safety_limits`. The limits apply to the motion as measured,
+whatever was commanded (a catch or a strike moves the arm too). The servo's own reference motion must also stay within
+the same speed, acceleration and jerk limits.
 
 ### Goal points
 - The launch point is not marked: it is at (0.30, -0.10, 0.30) in the world frame, for the cup's tool frame, which must

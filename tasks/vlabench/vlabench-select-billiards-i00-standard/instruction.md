@@ -21,9 +21,9 @@ tools, as if it were real hardware: one live episode.
 `POST /finish` (MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`. Its docstring is the full reference
-(`python -c "import rcb_client; help(rcb_client)"`; its examples come from another benchmark: the numbers here and in
-`spec()` are this task's).
+`/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`. Its docstring is the full reference:
+`python -c "import rcb_client; help(rcb_client)"`. Its examples come from another benchmark; the numbers here and in
+`spec()` are this task's.
 
 | call | endpoint | what it does |
 |---|---|---|
@@ -57,9 +57,9 @@ camera image.
 - The client and the tools drive the same robot in the same episode; use either, or both.
 
 ### Actions
-- Action `joint_position` (9, float64): absolute position targets for VLABench's own actuators, the 7 arm joints (rad)
-  and the 2 fingers (m, 0 closed … 0.04 open), each row held for its control steps (0.1 s, 100 physics steps each). The
-  model sets no arm joint limits; stay inside the Panda's own,
+- Action `joint_position` has 9 float64 values: absolute position targets for VLABench's own actuators, the 7 arm joints
+  (rad) and the 2 fingers (m, 0 closed … 0.04 open). Each row is held for its control steps (0.1 s, 100 physics steps
+  each). The model sets no arm joint limits; stay inside the Panda's own,
   `spec()["action_types"]["joint_position"]["panda_joint_limits_rad"]`.
 
 ### Observations
@@ -68,14 +68,15 @@ camera image.
 - Proprioception (the spec's `proprio_layout`): `joint1..7_pos` (rad), `joint1..7_vel` (rad/s), `finger1_pos`,
   `finger2_pos` (m), `tcp_x/y/z` (m) and `tcp_qw/qx/qy/qz` (the hand's pose), `cmd_*` (the last command).
 - World frame: metres; the robot's base is at (0, -0.4, 0.6) facing +y: x to the robot's right, y forward (across the
-  table), z up; quaternions are w x y z. Each camera's `cam2world_gl` is its pose (OpenGL convention: it looks along its
-  -z axis, +y up); `intrinsic_cv` its pinhole intrinsics in pixels.
+  table), z up; quaternions are w x y z. Each camera's `cam2world_gl` is its pose, in the OpenGL convention: the camera
+  looks along its -z axis, with +y up. Its `intrinsic_cv` holds its pinhole intrinsics in pixels.
 
 ### Episode
-Time moves only inside calls: a submitted chunk runs its control steps, and holding still (`hold(s)`) runs `s` seconds
-of them; between calls the robot waits, frozen, while you think, and reading the cameras (`get_obs()`, or
-`get_obs(last_s=n)` for the last n seconds) takes no time. Whether the episode has ended is in `meta["done"]`, and why
-in `meta["reason"]`: `"finished"` after your finish, `"step_limit"` at the step cap, `"error"` after a simulator error.
+Time moves only inside calls. A submitted chunk runs its control steps, and holding still (`hold(s)`) runs `s` seconds
+of them. Between calls the robot waits, frozen, while you think. Reading the cameras (`get_obs()`, or
+`get_obs(last_s=n)` for the last n seconds) takes no time. `meta["done"]` says whether the episode has ended, and
+`meta["reason"]` says why: `"finished"` after your finish, `"step_limit"` at the step cap, `"error"` after a simulator
+error.
 
 ## Limits
 - Time: 1800 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
@@ -89,5 +90,5 @@ in `meta["reason"]`: `"finished"` after your finish, `"step_limit"` at the step 
   GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap only
   slows you down); usage: `/run/rcb-limits/usage.json`.
 - Resets: none: one episode.
-- Steps: at most 9,000 control steps (900 s of robot time); at the cap the episode ends.
+- Steps: at most 9,000 control steps (900 s of robot time), then the episode ends.
 - Finish: if you never send `/finish`, the episode is graded when the step limit is reached or your session ends.

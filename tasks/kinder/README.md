@@ -88,8 +88,7 @@ measured on the frozen instance.
 Every standard task runs with `RCB_AGENT_END=1` (PROTOCOL §3, agent-ended episodes): KinDER's goal check no longer ends
 the episode and no reply shows it. The episode ends at the agent's `POST /finish`, after `max_steps` control steps
 (reason `step_limit`), at the end of the session or on a simulator error, and is judged on KinDER's goal check as things
-stand then (`end_judgement = "state"`). KinDER has no failure terminations. With the flag off nothing changes; where
-this README says a success ends the episode, that is the flag-off behaviour.
+stand then (`end_judgement = "state"`). KinDER has no failure terminations.
 
 ## Run
 

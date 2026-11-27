@@ -68,16 +68,17 @@ became of a call.
 - **Action** `joint_position`: rows of 16 values, float32 or float64, layout
   `spec()["action_types"]["joint_position"]["layout"]`: per arm (`left_`, then `right_`): `actuator1`..`actuator7` =
   joint position targets (rad; joint 7, the wrist, has no joint limit in these scenes, unlike the real Panda),
-  `actuator8` = gripper command (0 = closed, 255 = open; the hand squeezes at its tendon force limit, about 70 N per
-  finger, at any width when commanded 0). One control step is 2.5 ms (400 Hz: the row is applied for 4 physics steps of
+  `actuator8` = gripper command (0 = closed, 255 = open). Commanded 0, the hand squeezes at its tendon force limit,
+  about 70 N per finger, at any width. One control step is 2.5 ms (400 Hz: the row is applied for 4 physics steps of
   0.625 ms). `dt` must be a multiple of 0.0025 s (at most 0.5 s); `hold` keeps each row for its `dt`, `linear`
   interpolates the arm targets. A chunk covers at most 10 s. Out-of-range values are clipped to the actuator's control
   range and reported in `meta["clipped"]`. Speed rule (the robot's real limits; clamp, not fail): arm joint targets move
   at most 0.0054375 rad per control step on joints 1-4 (`actuator1`..`actuator4`: 2.175 rad/s) and 0.006525 rad on
-  joints 5-7 (`actuator5`..`actuator7`: 2.61 rad/s), the Franka Panda's joint velocity limits
-  (`spec()["robot_spec"]["controller"]`); a row that asks for more takes the control steps it needs, and
-  `meta["clipped"]` says so. The gripper command is not limited: it switches at the row. The arms are position servos
-  with the scene's gains and force limits; use `obs.group("joint_cmd", now=True)` as the starting row to move smoothly.
+  joints 5-7 (`actuator5`..`actuator7`: 2.61 rad/s). These are the Franka Panda's joint velocity limits
+  (`spec()["robot_spec"]["controller"]`). A row that asks for more takes the control steps it needs, and
+  `meta["clipped"]` says so. The gripper command is not limited; it switches to its new value at the start of its row.
+  The arms are position servos with the scene's gains and force limits; use `obs.group("joint_cmd", now=True)` as the
+  starting row to move smoothly.
 
 ### Observations
 - **Cameras** (ALOHA-style, 848 x 480, vertical field of view 58 deg): `cam_high` (static, above the front of the work
@@ -85,7 +86,7 @@ became of a call.
   looking at the fingers; they move, so use the pose that comes with each frame). Intrinsics and mounts in
   `spec()["cameras"]`, the per-frame world -> camera pose in every response; depth on request.
 - **Proprioception** (`spec()["proprio_layout"]`, groups in `spec()["proprio_groups"]`): per arm the 7 joint positions
-  and velocities, the gripper opening (m), the tool-frame pose (`left_tcp` / `right_tcp` (between the fingertips): x y z
+  and velocities, the gripper opening (m), the tool-frame pose (`left_tcp` / `right_tcp`, between the fingertips; x y z
   + qw qx qy qz, world frame), the applied commands and the actuator forces.
 - **World frame**: origin at the left arm's base link (`left_link0`) on its mounting, +z up, x along that arm's forward
   direction; metres, quaternions **WXYZ**. The proprio tool-frame poses, the camera extrinsics and mounts and

@@ -40,7 +40,6 @@ verdict, and nothing is replayed to grade it. The isolated verifier reads only t
 service then renders `replay.mp4` from the recorded trajectory in one video-only pass, which never changes the
 verdict. A missing or unfinished record, a give-up after crashes between the agent's calls and a frozen instance
 that does not build at the episode's start are infrastructure errors.
-The episode ends at the first success or the first failure.
 Failures are fail-fast and permanent: the frame touching the floor, leaving the workspace box, tilting more than
 0.6 rad, falling 1 cm below its start height after lift-off, falling off a hook after both rings were engaged, unstable
 physics (all checked after every 2 ms substep), being held by nothing after lift-off (at the end of any control, or

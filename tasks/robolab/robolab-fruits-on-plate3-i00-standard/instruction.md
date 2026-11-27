@@ -51,15 +51,16 @@ res.last["egocentric_mirrored_camera"]; res.proprio   # last frame per camera; f
   `{"ok", "q", "error"}`: a stateless model of the arm (no physics, no simulated time).
 - A malformed request (a wrong type, a value out of range) is answered 400 with the reason and executes nothing. One
   call returns at most 2712 images.
-- A busy service has not crashed. The service answers one request at a time: while a call runs (a long `submit` or a
-  long `hold` can take minutes; one call stops at `spec["max_call_wall_s"]`), every other request waits for it,
-  `r.status()` from another process included. A client-side timeout while a call is in flight (for example a `requests`
-  ReadTimeout on `r.status()`) means "busy": nothing restarts, the call runs to its end and the episode goes on from
+- A busy service has not crashed. The service answers one request at a time. While a call runs, every other request
+  waits for it, including `r.status()` from another process. A long `submit` or a long `hold` can take minutes; one call
+  stops at `spec["max_call_wall_s"]`. A client-side timeout while a call is in flight (for example a `requests`
+  ReadTimeout on `r.status()`) means "busy". Nothing restarts: the call runs to its end and the episode goes on from
   there. Keep one client process and wait for your call's answer.
-- If the service crashes, the connection is refused or reset and the call is lost: the simulator restarts and resumes
-  the same episode (never a reset) in the state after the last call it completed, which you may not have received.
-  `r.wait_ready()` waits until it answers again (resuming replays the episode so far, which can take minutes; the wall
-  clock keeps running); then check `r.status()["control_steps"]` before you continue (`spec["on_service_error"]`).
+- If the service crashes, the connection is refused or reset and the call is lost. The simulator then restarts and
+  resumes the same episode (never a reset) from the state after the last call it completed. You may not have received
+  that call's answer. `r.wait_ready()` waits until it answers again. Resuming replays the episode so far, which can take
+  minutes, and the wall clock keeps running. Then check `r.status()["control_steps"]` before you continue
+  (`spec["on_service_error"]`).
 
 ### MCP tools
 - The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
@@ -74,14 +75,14 @@ res.last["egocentric_mirrored_camera"]; res.proprio   # last frame per camera; f
 
 ### Actions
 - `joint_position` (8): `panda_joint1..7, gripper`; radians, and the gripper command is binary (0 = open, 1 = closed; it
-  switches at the row, never interpolated). Absolute targets tracked by PD controllers. Rows are `dt` apart
-  (`1/15 ≤ dt ≤ 0.5` s, a multiple of the 15 Hz control period: 1/15, 2/15, ...; any other `dt` is rejected, never
-  rounded); a chunk covers at most 10 s; out-of-limit values are clipped and listed in `meta["clipped"]` (limits in the
+  switches at the row, never interpolated). Absolute targets tracked by PD controllers. Rows are `dt` apart:
+  `1/15 ≤ dt ≤ 0.5` s, a multiple of the 15 Hz control period (1/15, 2/15, ...). Any other `dt` is rejected, never
+  rounded. A chunk covers at most 10 s. Out-of-limit values are clipped and listed in `meta["clipped"]` (limits in the
   spec). Use `obs.meta["proprio"]["now"][:7]` for the current joints to move smoothly.
 - `ee_pose` (8): `x y z qw qx qy qz gripper` in the env-local frame (the robot's root frame: the Franka base at the
-  origin, x forward towards the table, y to its left, z up); quaternions wxyz. Each row is driven to by differential IK
-  in closed loop (at most 0.25 m/s); a row that does not converge within 6 mm is reported in `meta["plan"]`. The pose is
-  the fingertip-centre tool frame: the gripper flange moved 0.162 m along the approach axis to the ends of the closed
+  origin, x forward towards the table, y to its left, z up); quaternions wxyz. Closed-loop differential IK drives the
+  arm to each row (at most 0.25 m/s). A row that does not converge within 6 mm is reported in `meta["plan"]`. The pose
+  is the fingertip-centre tool frame: the gripper flange moved 0.162 m along the approach axis to the ends of the closed
   fingertips (the pads extend ~5.7 cm back from there). At the reset pose the gripper points straight down. At most 50
   rows per submit; a position more than 2 m from the robot's base on any axis, or a zero quaternion, is rejected (400)
   and nothing moves.
@@ -113,7 +114,7 @@ task is still judged, so a release you sent last completes.
   no GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap
   only slows you down); usage: `/run/rcb-limits/usage.json`.
 - Resets: none: one episode.
-- Steps: no step budget (actions and simulated time are reported as cost); a technical cap ends the episode after
-  100,000 control steps (1.9 h of simulated time), graded as it stands; at this service's speed (3-15 control steps/s)
-  your time runs out long before.
+- Steps: no step budget (actions and simulated time are reported as cost). A technical cap ends the episode after
+  100,000 control steps (1.9 h of simulated time). The episode is then graded on its state at that point. At this
+  service's speed (3-15 control steps/s), your time runs out long before that.
 - Finish: if you never send `/finish`, the episode is graded when your session ends.

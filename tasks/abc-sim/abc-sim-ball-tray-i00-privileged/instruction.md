@@ -51,8 +51,8 @@ wall-clock time is the limit. An episode ends at success or failure; `s.step` th
 An action has 14 numbers per control step: `[left_joint1..6, left_gripper, right_joint1..6, right_gripper]` -- each
 arm's six joint position targets (rad) and its gripper opening (0 = closed, 1 = open, each finger 0.0475 m from closed;
 up to 1.042). The joints and grippers are position servos that track the targets (MuJoCo position actuators with damping
-and force limits); a target outside a joint's range is clamped to it, and the simulator rounds every command to float32.
-One control step = 17 physics steps of 2 ms = 0.034 s (29.4 Hz).
+and force limits). A target outside a joint's range is clamped to that range. The simulator rounds every command to
+float32. One control step = 17 physics steps of 2 ms = 0.034 s (29.4 Hz).
 
 ### Observations
 Bodies: the tray and the ball are free bodies (`s.objects()`); `s.state()['runtime']` shows the countdown. Tool frames:

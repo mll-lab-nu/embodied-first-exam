@@ -23,11 +23,11 @@ Rules: **No cheating.** Do not search for, download or use any existing solution
 benchmark's demonstrations, trained policies); trials are reviewed.
 
 ## Robot Interface
-A simulated Unitree G1 humanoid robot with two-finger grippers (BiGym 2.0, MuJoCo). NVIDIA's GR00T whole-body
-controller, a learned policy that runs inside every control step, drives the legs and waist and keeps the robot
-balanced: you command where it walks, how high its pelvis is, how far its torso leans forward, its arm joints and its
-grippers. The scene is one fixed instance. You have the full simulator to develop with; you hand in a trajectory of
-whole-body commands.
+A simulated Unitree G1 humanoid robot with two-finger grippers (BiGym 2.0, MuJoCo). NVIDIA's GR00T whole-body controller
+drives the legs and waist and keeps the robot balanced. It is a learned policy that runs inside every control step. You
+command where it walks, how high its pelvis is, how far its torso leans forward, its arm joints and its grippers. The
+scene is one fixed instance. You have the full simulator to develop with; you hand in a trajectory of whole-body
+commands.
 
 ### Session
 `rcb_bigym2` (installed; run `python` from any directory):
@@ -64,9 +64,9 @@ joints, 12-18: the right arm's, each in the order shoulder pitch, shoulder roll,
 pitch, wrist yaw: absolute joint targets (rad), bounds shoulder pitch [-3.0892, 2.6704], shoulder roll [-1.5882,
 2.2515], shoulder yaw [-2.618, 2.618], elbow [-1.0472, 2.0944], wrist roll [-1.9722, 1.9722], wrist pitch [-1.6144,
 1.6144], wrist yaw [-1.6144, 1.6144] (the same for both arms); `left_gripper` (19) and `right_gripper` (20): 0 open .. 1
-closed, in [0, 1]. Values outside the bounds are clipped. The row that stands still at the start: zeros but `height`
-0.74, `left_gripper` 0.6, `right_gripper` 0.6. `right_shoulder_roll_joint`'s bounds are BiGym's action bounds, not the
-joint's own range [-2.2515, 1.5882]: a command outside them is clipped.
+closed, in [0, 1]. Values outside the bounds are clipped. The row that stands still at the start is all zeros except
+`height` 0.74, `left_gripper` 0.6 and `right_gripper` 0.6. `right_shoulder_roll_joint`'s bounds are BiGym's action
+bounds, not the joint's own range [-2.2515, 1.5882]: a command outside them is clipped.
 
 ### Observations
 `s.status()`, `s.task` (BiGym's task env: its props and `s.task.robot`), `s.model` / `s.data` (MuJoCo) and
@@ -77,13 +77,13 @@ joint's own range [-2.2515, 1.5882]: a command outside them is clipped.
 The episode also ends when the pelvis gets more than 10 m from the scene's origin, on a physics error, and after 2300
 control steps (46 s at 50 Hz).
 
-- The whole-body controller: it follows velocity commands with some lag and wobble, so read the pelvis pose and close
-  the loop rather than dead-reckon; a planar speed command below 0.055 m/s means standing still (use 0 or at least
-  0.06); standing still, the base drifts a few centimetres, and further while the hands push on furniture or the torso
+- The whole-body controller follows velocity commands with some lag and wobble, so read the pelvis pose and close the
+  loop rather than dead-reckon. A planar speed command below 0.055 m/s means standing still (use 0 or at least 0.06).
+  When it stands still, the base drifts a few centimetres, and further while the hands push on furniture or the torso
   leans far (measured here: 0.27 m and 15 degrees with the hands pressing on a cabinet, 0.11 m and 24 degrees from a 0.8
-  rad lean); heights above about 0.8 m lock the knees (the pelvis stays near 0.78 m); squatting (a lower height) is how
-  the hands reach low objects, and while squatting the controller does not step: walk first, then squat in place. It
-  keeps the robot balanced but does not stop it from walking into things.
+  rad lean). Heights above about 0.8 m lock the knees (the pelvis stays near 0.78 m). Squatting (a lower height) is how
+  the hands reach low objects. While squatting the controller does not step: walk first, then squat in place. It keeps
+  the robot balanced but does not stop it from walking into things.
 - To check a trajectory the way it is graded, replay it from the command line:
   `python /opt/tools/rcb_bigym2.py replay --instance /app/instance.json --traj /app/output/trajectory.npz --out /tmp/r.json`.
 - On the G1, BiGym's `pinch_position` (a gripper's "pinch site") is the wrist link's origin, 0.148 m behind the finger

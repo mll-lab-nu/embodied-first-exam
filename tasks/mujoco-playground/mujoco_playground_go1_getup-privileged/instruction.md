@@ -41,10 +41,10 @@ s.save_trajectory(rows, "/app/output/trajectory.npz")
 `s.check()` reports the last tilt, height and `success`.
 
 ### Actions
-12 absolute joint targets per control step, in `s.joint_names` order (FR, FL, RR, RL legs, each hip (abduction), thigh
-(hip pitch), calf (knee)), in radians; values outside the actuator ranges (`s.lower`, `s.upper`) are clipped. Joint
-position actuators (PD): kp = 35 N m/rad, joint damping 0.5 N m s/rad; the physics step is 0.004 s, the control step
-0.02 s (5 physics steps); a row holds until the next one.
+12 absolute joint targets per control step, in radians, in `s.joint_names` order: the FR, FL, RR, RL legs, each with hip
+(abduction), thigh (hip pitch) and calf (knee). Values outside the actuator ranges (`s.lower`, `s.upper`) are clipped.
+Joint position actuators (PD): kp = 35 N m/rad, joint damping 0.5 N m s/rad. The physics step is 0.004 s and the control
+step 0.02 s (5 physics steps). A row holds until the next one.
 
 ### Observations
 `s.state()`: qpos, qvel, the IMU (`local_linvel`, `gyro`, `gravity`, `accelerometer`, pose), the feet and their

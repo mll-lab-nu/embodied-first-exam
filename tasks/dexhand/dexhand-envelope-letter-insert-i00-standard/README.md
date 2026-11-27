@@ -38,11 +38,9 @@ verdict, and nothing is replayed to grade it. The isolated verifier reads only t
 service then renders `replay.mp4` from the recorded trajectory in one video-only pass, which never changes the
 verdict. A missing or unfinished record, a give-up after crashes between the agent's calls and a frozen instance
 that does not build at the episode's start are infrastructure errors.
-The episode ends at the first success or the first failure.
 Failures are fail-fast and permanent: the letter pressed through an envelope wall, seam or the mouth lip, or
 interpenetrating the envelope by more than 0.7 mm, the letter or the envelope below the desk top, touching the floor, dropped
-(touching nothing while its centre of mass falls faster than 0.1 m/s) or leaving the desk, the envelope pushed more than 5 cm or tilted more than 0.35 rad, the robot's arm, stand or parked left hand touching the letter or the envelope, unstable physics, or the 6,000-control
-budget. A no-op fails. Human review and full agent-trial calibration remain pending; report this task as provisional.
+(touching nothing while its centre of mass falls faster than 0.1 m/s) or leaving the desk, the envelope pushed more than 5 cm or tilted more than 0.35 rad, the robot's arm, stand or parked left hand touching the letter or the envelope, or unstable physics. At the 6,000-control budget the episode ends and is judged on the state it leaves. A no-op fails. Human review and full agent-trial calibration remain pending; report this task as provisional.
 
 ## Resources
 Caps per container (PROTOCOL §6).

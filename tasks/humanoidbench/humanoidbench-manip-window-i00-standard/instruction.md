@@ -5,8 +5,8 @@ Take hold of the wiping tool and wipe the window with it, moving it up and down.
 
 ## Goal
 Success: for most of the episode the tool is held flat against the glass and moving up and down at a steady wiping pace,
-with both hands on the tool and the robot standing upright. Success is counted as it happens: what the robot does adds
-up over the episode (its full length is in Limits), and once it adds up to a pass the episode is a success, even if it
+with both hands on the tool and the robot standing upright. Success is counted as it happens. What the robot does adds
+up over the episode (its full length is in Limits). Once that adds up to a pass, the episode is a success, even if it
 then ends as a failure (below).
 
 When you are done, send `/finish` to end the episode and get it graded.
@@ -54,12 +54,11 @@ The answers come back decoded: `res.meta` (the counters, `done`, `reason`, `prop
 (proprioception rows). Values outside [-1, 1] are clipped and reported in `meta["clipped"]`, never refused; a malformed
 request raises `ValueError` and runs nothing. One call returns at most 3000 images. Time per call: about 7.1 ms per
 control step in one-row calls asking for one head camera, 9.3 ms with both head cameras' images, 2.2 ms per step in
-chunks of 10 rows asking for one camera (video="none" each time).
-`r.reset()` puts the robot and the scene back on the same starting state and starts a new episode with its own 1000
-control steps (either abandoning the running episode or after one has ended) and returns the start's images and
-proprioception; it takes no robot time. Once an episode has ended, `submit` raises `EpisodeOver` (its message gives
-`resets_left`) until you reset. `meta["episode"]` and `meta["resets_left"]` count the episodes; the wall clock never
-restarts.
+chunks of 10 rows asking for one camera (video="none" each time). `r.reset()` puts the robot and the scene back on the
+same starting state and starts a new episode with its own 1000 control steps. You can call it during a running episode,
+which it abandons, or after one has ended. It returns the start's images and proprioception; it takes no robot time.
+Once an episode has ended, `submit` raises `EpisodeOver` (its message gives `resets_left`) until you reset.
+`meta["episode"]` and `meta["resets_left"]` count the episodes; the wall clock never restarts.
 
 ### MCP tools
 - The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
@@ -73,23 +72,24 @@ restarts.
 - The client and the tools drive the same robot in the same episode; use either, or both.
 
 ### Actions
-One action type, `joint_position`: one row per control step (`control_dt` = 0.02 s, 50 Hz), rows `dt` apart (a multiple
-of 0.02 s), a chunk at most 10 s. Every number is HumanoidBench's normalised servo target in [-1, 1]: -1 and +1 command
-the two ends of that servo's range (`spec()["action_types"]["joint_position"]["range_rad"]`, radians), linearly, so 0 is
-mid-range, not 0 rad. The 61 actuators are position servos. The first 21 are the body, in this order: `left_hip_yaw`,
-`left_hip_roll`, `left_hip_pitch`, `left_knee`, `left_ankle`, `right_hip_yaw`, `right_hip_roll`, `right_hip_pitch`,
-`right_knee`, `right_ankle`, `torso`, `left_shoulder_pitch`, `left_shoulder_roll`, `left_shoulder_yaw`, `left_elbow`,
-`left_wrist_yaw`, `right_shoulder_pitch`, `right_shoulder_roll`, `right_shoulder_yaw`, `right_elbow`, `right_wrist_yaw`.
-The remaining 40 are the two Shadow hands, 20 each — `lh_A_*` then `rh_A_*`; each hand's first 2 are its wrist
-(`*_A_WRJ2`, `*_A_WRJ1`) and the other 18 its fingers, where each of the 4 `*J0` ones (`*_A_FFJ0`, `*_A_MFJ0`,
-`*_A_RFJ0`, `*_A_LFJ0`) drives a tendon that moves two finger joints together
+One action type, `joint_position`, with one row per control step (`control_dt` = 0.02 s, 50 Hz). Rows are `dt` apart (a
+multiple of 0.02 s), and a chunk covers at most 10 s. Every number is HumanoidBench's normalised servo target in [-1,
+1]. The mapping is linear: -1 and +1 command the two ends of that servo's range
+(`spec()["action_types"]["joint_position"]["range_rad"]`, radians), so 0 is mid-range, not 0 rad. The 61 actuators are
+position servos. The first 21 are the body, in this order: `left_hip_yaw`, `left_hip_roll`, `left_hip_pitch`,
+`left_knee`, `left_ankle`, `right_hip_yaw`, `right_hip_roll`, `right_hip_pitch`, `right_knee`, `right_ankle`, `torso`,
+`left_shoulder_pitch`, `left_shoulder_roll`, `left_shoulder_yaw`, `left_elbow`, `left_wrist_yaw`,
+`right_shoulder_pitch`, `right_shoulder_roll`, `right_shoulder_yaw`, `right_elbow`, `right_wrist_yaw`. The remaining 40
+are the two Shadow hands, 20 each: `lh_A_*`, then `rh_A_*`. In each hand the first 2 are the wrist (`*_A_WRJ2`,
+`*_A_WRJ1`) and the other 18 are the fingers. Each of the 4 `*J0` actuators (`*_A_FFJ0`, `*_A_MFJ0`, `*_A_RFJ0`,
+`*_A_LFJ0`) drives a tendon that moves two finger joints together
 (`spec()["action_types"]["joint_position"]["layout"]`). A constant action commands joint *targets*, not a pose: whether
 the robot stays there depends on whether that pose is stable under gravity and contact.
 
 ### Observations
 - Cameras: the robot's two head cameras (`left_eye_camera`, `right_eye_camera`, RGB, 256 × 256) and `room_camera`, fixed
   in the room.
-- The proprioception (`obs.meta["proprio"]`) has, per row, in `spec()["proprio_layout"]` order, the joints' angles
+- Each row of the proprioception (`obs.meta["proprio"]`) holds, in `spec()["proprio_layout"]` order, the joints' angles
   (`*_pos`, rad), their velocities (`*_vel`, rad/s), then the IMU (`imu_gyro_*`, `imu_gravity_*`). The proprioception
   measures joints, not actuators: 69 of them, in `spec()["proprio"]["joints"]` order.
 - The robot's own facts, as its URDF would give them, are in `r.spec()`: each actuator's range, each joint's axis and
@@ -103,8 +103,8 @@ Time moves only inside calls: running your servo targets and holding the last on
 control steps. Between calls the robot waits, frozen, while you think; an observation is free.
 
 ## Others
-- A robot that has fallen in a way the Goal does not list (on its side, face down, sitting on the floor) is not stopped:
-  the episode goes on, so an episode still running does not mean the robot is still up.
+- The episode is not stopped if the robot falls in a way the Goal does not list (on its side, face down, sitting on the
+  floor). It goes on, so an episode that is still running does not mean the robot is still up.
 - The tool starts in the air just in front of the hands and falls almost at once unless it is held.
 
 ## Limits

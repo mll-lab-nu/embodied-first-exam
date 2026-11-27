@@ -5,15 +5,14 @@ Put the purple bottle in the clear ashtray.
 
 ## Goal
 Success: the purple bottle rests in or on the clear ashtray, the robot has let go of it, and the ashtray has not been
-pushed far or tipped over. What counts is how things stand after the last action of your trajectory, replayed from the
-fixed start. Rows past the step limit (Limits) are never run: ending your trajectory once the task holds is how you stop
-there.
+pushed far or tipped over. Your trajectory is replayed from the fixed start. What counts is the state after its last
+action. Rows past the step limit (Limits) are never run. To stop there once the task holds, end your trajectory.
 
 Deliverable: `/app/output/trajectory.npz` with `actions`, float64 (T, 8), one row per control step (the layout is under
 Actions); at most 100,000 rows (a longer file scores 0). `s.save_trajectory(rows, "/app/output/trajectory.npz")` writes
-it. It is replayed open-loop from the fixed start. Leave the script that produced it at `/app/output/gen.py`, and leave
-`/app/output/rcb_session_log.jsonl` where it is (the tooling writes it: your sessions, resets and simulated steps,
-reported as cost; not graded). Save a valid trajectory early and overwrite it when you have a better one.
+it. It is replayed open-loop from the fixed start. Leave the script that produced it at `/app/output/gen.py`. Also leave
+`/app/output/rcb_session_log.jsonl` where it is: the tooling writes it with your sessions, resets and simulated steps,
+reported as cost. That log is not graded. Save a valid trajectory early and overwrite it when you have a better one.
 
 Rules: **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
 benchmark's demonstrations, trained policies); trials are reviewed.
@@ -53,8 +52,8 @@ s.save_trajectory(rows, "/app/output/trajectory.npz")
 - A row (`s.layout`) has 8 entries, the targets of upstream's joint-position controllers, in this order: `fr3_joint1`,
   `fr3_joint2`, `fr3_joint3`, `fr3_joint4`, `fr3_joint5`, `fr3_joint6`, `fr3_joint7`, `gripper` (fr3_joint1..7 in rad;
   gripper: the Robotiq command, 0 = open .. 255 = closed). At t = 0 the gripper is open and its target is 0.
-- One control step is 0.066 s of simulated time (MuJoCo steps of 2 ms); a row holds until the next one, and
-  `s.hold_row()` keeps every controller at its current target.
+- One control step is 0.066 s of simulated time (MuJoCo steps of 2 ms). A row holds until the next one. `s.hold_row()`
+  keeps every controller at its current target.
 
 ## Others
 - `s.state()["task"]`: `pickup_obj_name` is the purple bottle, `place_receptacle_name` the clear ashtray.
@@ -72,4 +71,4 @@ s.save_trajectory(rows, "/app/output/trajectory.npz")
   one GPU (7 GiB of its memory). Over a cap a process can be killed (the CPU cap only slows you down); usage:
   `/run/rcb-limits/usage.json`.
 - Resets: as many as you like (`s.reset()`).
-- Steps: at most 606 control steps (the benchmark's 40 s horizon); the replay stops there.
+- Steps: at most 606 control steps (the benchmark's 40 s horizon), then the replay stops.

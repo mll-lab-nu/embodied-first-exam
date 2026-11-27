@@ -5,8 +5,8 @@ Sprint forward down the track and over the hurdles, without touching the walls.
 
 ## Goal
 Success: the robot sprints forward down the track, upright and without straining, for most of the episode; time spent
-touching a wall counts for almost nothing. Success is counted as it happens: what the robot does adds up over the
-episode (its full length is in Limits), and once it adds up to a pass the episode is a success, unless it then ends as a
+touching a wall counts for almost nothing. Success is counted as it happens. What the robot does adds up over the
+episode (its full length is in Limits). Once that adds up to a pass, the episode is a success, unless it then ends as a
 failure (below).
 
 When you are done, send `/finish` to end the episode and get it graded.
@@ -55,14 +55,14 @@ The answers come back decoded: `res.meta` (the counters, `done`, `reason`, `prop
 `res.last[camera]` (the last frame), `res.frames` or `res.video` (what the cameras recorded), `res.proprio`
 (proprioception rows). Values outside [-1, 1] are clipped and reported in `meta["clipped"]`, never refused; a malformed
 request raises `ValueError` and changes nothing. One call returns at most 3000 images. No call is refused for its
-images: while 8 answers with images are outstanding, the answer of a `submit` or a `get_obs()` comes without its frames
-and `meta["frames_skipped"]` is set. Time per call (standard mode): about 4.4 ms per one-row call asking for one head
+images. While 8 answers with images are still waiting to be read, a `submit` or a `get_obs()` answers without its frames
+and sets `meta["frames_skipped"]`. Time per call (standard mode): about 4.4 ms per one-row call asking for one head
 camera, physics included; a call with `cameras=[]` skips the rendering. A control step is 20 ms. `r.reset()` puts the
-robot and the scene back on the same starting state and starts a new episode with its own 1000 control steps (either
-abandoning the running episode or after one has ended) and returns the start's images and proprioception; the new
-episode stays paused until your next `submit`. Once an episode has ended, `submit` raises `EpisodeOver` (its message
-gives `resets_left`) until you reset. `meta["episode"]` and `meta["resets_left"]` count the episodes; the wall clock
-never restarts.
+robot and the scene back on the same starting state and starts a new episode with its own 1000 control steps. You can
+call it during a running episode, which it abandons, or after one has ended. It returns the start's images and
+proprioception; the new episode stays paused until your next `submit`. Once an episode has ended, `submit` raises
+`EpisodeOver` (its message gives `resets_left`) until you reset. `meta["episode"]` and `meta["resets_left"]` count the
+episodes; the wall clock never restarts.
 
 ### MCP tools
 - The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
@@ -76,21 +76,21 @@ never restarts.
 - The client and the tools drive the same robot in the same episode; use either, or both.
 
 ### Actions
-One action type, `joint_position`: one row per control step (`control_dt` = 0.02 s, 50 Hz), rows `dt` apart (a multiple
-of 0.02 s), a chunk at most 10 s. Every number is HumanoidBench's normalised servo target in [-1, 1]: -1 and +1 command
-the two ends of that servo's range (`spec()["action_types"]["joint_position"]["range_rad"]`, radians), linearly, so 0 is
-mid-range, not 0 rad. The 19 actuators are position servos, in this order: `left_hip_yaw`, `left_hip_roll`,
-`left_hip_pitch`, `left_knee`, `left_ankle`, `right_hip_yaw`, `right_hip_roll`, `right_hip_pitch`, `right_knee`,
-`right_ankle`, `torso`, `left_shoulder_pitch`, `left_shoulder_roll`, `left_shoulder_yaw`, `left_elbow`,
-`right_shoulder_pitch`, `right_shoulder_roll`, `right_shoulder_yaw`, `right_elbow`
-(`spec()["action_types"]["joint_position"]["layout"]`; the proprioception measures the same joints in the same order). A
-constant action commands joint *targets*, not a pose: whether the robot stays there depends on whether that pose is
-stable under gravity and contact.
+One action type, `joint_position`, with one row per control step (`control_dt` = 0.02 s, 50 Hz). Rows are `dt` apart (a
+multiple of 0.02 s), and a chunk covers at most 10 s. Every number is HumanoidBench's normalised servo target in [-1,
+1]. The mapping is linear: -1 and +1 command the two ends of that servo's range
+(`spec()["action_types"]["joint_position"]["range_rad"]`, radians), so 0 is mid-range, not 0 rad. The 19 actuators are
+position servos, in this order: `left_hip_yaw`, `left_hip_roll`, `left_hip_pitch`, `left_knee`, `left_ankle`,
+`right_hip_yaw`, `right_hip_roll`, `right_hip_pitch`, `right_knee`, `right_ankle`, `torso`, `left_shoulder_pitch`,
+`left_shoulder_roll`, `left_shoulder_yaw`, `left_elbow`, `right_shoulder_pitch`, `right_shoulder_roll`,
+`right_shoulder_yaw`, `right_elbow` (`spec()["action_types"]["joint_position"]["layout"]`; the proprioception measures
+the same joints in the same order). A constant action commands joint *targets*, not a pose: whether the robot stays
+there depends on whether that pose is stable under gravity and contact.
 
 ### Observations
 - Cameras: the robot's two head cameras (`left_eye_camera`, `right_eye_camera`, RGB, 256 × 256) and `room_camera`, fixed
   in the room.
-- The proprioception (`obs.meta["proprio"]`) has, per row, in `spec()["proprio_layout"]` order, the joints' angles
+- Each row of the proprioception (`obs.meta["proprio"]`) holds, in `spec()["proprio_layout"]` order, the joints' angles
   (`*_pos`, rad), their velocities (`*_vel`, rad/s), then the IMU (`imu_gyro_*`, `imu_gravity_*`).
 - The robot's own facts, as its URDF would give them, are in `r.spec()`: each actuator's range, each joint's axis and
   position, each link's mass and centre of mass, the feet's collision boxes, the IMU's frame, each camera's field of
@@ -105,31 +105,30 @@ stable under gravity and contact.
   what you planned, then holds the last servo targets you sent; nothing pauses for you, not your thinking, not your tool
   calls.
 - You are far too slow to steer it turn by turn. One turn of yours (a model response, a tool call) takes seconds, and
-  the robot falls within a few seconds of robot time without active balance. Drive it with a program: a controller of
-  your own (Python in your container, with numpy and the client) that runs a loop at the control rate, reads the
-  proprioception and sends targets, started in the background (`nohup python /app/ctrl.py > /app/ctrl.log 2>&1 &`). Use
+  the robot falls within a few seconds of robot time without active balance. Drive it with a program: your own
+  controller (Python in your container, with numpy and the client) that runs a loop at the control rate, reads the
+  proprioception and sends targets. Start it in the background (`nohup python /app/ctrl.py > /app/ctrl.log 2>&1 &`). Use
   your turns to start episodes, read what happened, and improve the program.
 - `submit` answers at once, with the robot as it is now: the rows you sent have not run yet. They become the plan from
-  control step `at` (an episode step number; by default the next step), replacing whatever was planned from `at` on and
-  keeping what is planned before it. When the plan runs out, the last target is held. `res.meta["control_steps"]` is the
-  number of steps run so far in this episode (so the next step has that number), `res.meta["proprio"]["now"]` the
-  robot's proprioception now, `res.meta["plan_end_step"]` where the plan now ends.
+  control step `at` (an episode step number; by default the next step). They replace whatever was planned from `at` on
+  and keep what is planned before it. When the plan runs out, the last target is held. `res.meta["control_steps"]` is
+  the number of steps run so far in this episode, so the next step has that number. `res.meta["proprio"]["now"]` is the
+  robot's proprioception now. `res.meta["plan_end_step"]` is where the plan now ends.
 - Closed loop: send one row per control step, `r.submit("joint_position", a[None], cameras=[])`, and compute the next
   one from the proprioception it returns. `cameras=[]` skips the images (the fastest call); sending faster than 50 Hz
   only replaces the same step's target again.
-- Open loop: send up to 10 s of rows at once (a chunk, `dt` a multiple of 0.02) and the next chunk before the plan runs
-  out, with `at` = the step where it should take over; `at` may be up to `spec()["timing"]["max_ahead_steps"]` steps
-  ahead.
+- Open loop: send up to 10 s of rows at once (a chunk, `dt` a multiple of 0.02). Send the next chunk before the plan
+  runs out, with `at` set to the step where it should take over. `at` may be up to `spec()["timing"]["max_ahead_steps"]`
+  steps ahead.
 - Latency: a reading is a few milliseconds old when it reaches you, and a row takes effect at the next control step at
-  the earliest. A row whose step has already run when the request arrives is dropped (`res.meta["late_steps"]` counts
-  them); the rest of its chunk applies from the next step.
-- `get_obs()` reads the robot now; `get_obs(last_s=n)` returns, without waiting, what the cameras recorded over the last
-  n seconds (the robot keeps executing its plan). `spec()["timing"]` states all this; `r.status()` shows `running` and
-  `lag_s`.
+  the earliest. A row whose step has already run when the request arrives is dropped; `res.meta["late_steps"]` counts
+  them. The rest of the chunk applies from the next step.
+- `get_obs()` reads the robot now. `get_obs(last_s=n)` returns at once what the cameras recorded over the last n seconds
+  (the robot keeps executing its plan). `spec()["timing"]` states all this; `r.status()` shows `running` and `lag_s`.
 
 ## Others
-- A robot that has fallen in a way the Goal does not list (on its side, face down, sitting on the floor) is not stopped:
-  the episode goes on, so an episode still running does not mean the robot is still up.
+- The episode is not stopped if the robot falls in a way the Goal does not list (on its side, face down, sitting on the
+  floor). It goes on, so an episode that is still running does not mean the robot is still up.
 - Each hurdle is solid over its whole height and width, not just its drawn bars, so the robot has to get over it.
 
 ## Limits

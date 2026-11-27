@@ -65,7 +65,7 @@ Guide for maintainers. The contract is [protocol/README.md](protocol/README.md);
   site) told the new suffix? A new mode is a protocol change the maintainers decide: one pull request of its own, shared files
   only, merged before the benchmark that uses it.
 - Time cutoff: does every task set its own `[agent] timeout_sec` within the rules of PROTOCOL §2 (the pull request's
-  overview lists the numbers)? Does `instruction.md` end with the rendered `## Time limit` section and
+  overview lists the numbers)? Does `instruction.md` end with the rendered `## Limits` (its Time line) and
   state the limit nowhere else? Does the benchmark's own text say what the cutoff costs here (simulator start-up, what
   the service's `time_left_s` counts from, a service that ends the episode itself)? A pull request that changes the
   cutoff of existing tasks (label `cutoff-change`): the author's decision (the maintainers step in only where official

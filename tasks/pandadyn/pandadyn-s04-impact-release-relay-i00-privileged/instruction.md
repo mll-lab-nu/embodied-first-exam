@@ -11,8 +11,8 @@ impact the ball is past the gate and rolling down the chute; once the ball has l
 and sends it through the passage between the walls, free of the paddle; then the paddle touches it again and brings it
 to rest on the table in the target zone beyond the passage.
 
-The steps count only in this order, and a step once done stays done. The replay ends as soon as the task is done or has
-failed; the task also fails at once when:
+The steps count only in this order. Once a step is done, it stays done. The replay ends as soon as the task is done or
+has failed; the task also fails at once when:
 - the paddle touches the latch;
 - the ball is not past the gate and rolling down the chute within about a second of the block hitting the latch;
 - the task's horizon is reached before the task is done (Robot Interface);
@@ -21,11 +21,11 @@ failed; the task also fails at once when:
 - an arm touches itself, a robot part touches the table or the floor, or a contact presses deep into anything;
 - an arm goes beyond the Franka Panda's own safety limits (Robot Interface, Safety).
 
-Deliverable: `/app/output/trajectory.npz`, written with `Session.save_trajectory(...)`: it holds `task` and `actions`, a
-(T, 8) float array of at most 4,500 rows (one per control step); anything else (another shape, NaN, more rows, a file
-that is not such an npz) scores 0. It is replayed open-loop from the fixed start and scores 1 if the task succeeds in
-the replay, else 0. Keep the script that produced it at `/app/output/gen.py`. Save a valid one early and overwrite it
-when you have a better one.
+Deliverable: `/app/output/trajectory.npz`, written with `Session.save_trajectory(...)`. It holds `task` and `actions`;
+`actions` is a (T, 8) float array of at most 4,500 rows, one per control step. Anything else (another shape, NaN, more
+rows, a file that is not such an npz) scores 0. It is replayed open-loop from the fixed start and scores 1 if the task
+succeeds in the replay, else 0. Keep the script that produced it at `/app/output/gen.py`. Save a valid one early and
+overwrite it when you have a better one.
 
 Rules: **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
 benchmark's demonstrations, trained policies); trials are reviewed.
@@ -67,9 +67,9 @@ to build. The environment's source is in `/opt/pandadyn/panda_dynamics`. Check a
 asked for and never moves anything. Do not call `s.close()` before writing every output.
 
 ### Actions
-- Action row (8 values per control step): `[joint1..7, aperture]`. Each arm's 8 values are its 7 absolute joint-position
-  targets (rad, `panda_joint1..7`) and its total gripper aperture target (m, 0 = closed .. 0.08 = open; each finger
-  moves at most 0.025 m/s). Values outside the joint limits (`s.robot_spec()`) are clipped to them before they are
+- Action row (8 values per control step): `[joint1..7, aperture]`. Each arm has 8 values: its 7 absolute joint-position
+  targets (rad, `panda_joint1..7`) and its total gripper aperture target (m, 0 = closed .. 0.08 = open). Each finger
+  moves at most 0.025 m/s. Values outside the joint limits (`s.robot_spec()`) are clipped to them before they are
   executed, and the trajectory records the clipped row.
 - The servo: every control step, each arm's latest target is turned into a smooth reference motion by a jerk-limited
   trajectory generator (Ruckig, the joints synchronised to arrive together) within 65 % (speed), 55 % (acceleration) and
@@ -95,15 +95,16 @@ tool x axis. The paddle hangs from a rigid side adapter (part of the tool): from
 paddle's top edge at its -y end. The Panda TCP is at (-0.12, -0.13, 0.04) in the tool frame, so with the paddle upright
 the gripper points straight down, offset to the paddle's -y side. At the start the paddle is upright, rotated 0.35 rad
 (20.1 deg) about world z (tool x axis along (cos 0.35, sin 0.35, 0)), its centre at (0.236, 0.266, 0.197). The tool's
-adapter runs between the gripper's fingertips: closing the gripper to less than about 12 mm of aperture makes the
-fingers touch the adapter, which ends the episode as a collision with its own tool (the gripper starts fully open, at
-0.08 m).
+adapter runs between the gripper's fingertips. If you close the gripper to less than about 12 mm of aperture, the
+fingers touch the adapter, and the episode ends as a collision with its own tool. The gripper starts fully open, at 0.08
+m.
 
 ### Safety
-The task fails when an arm goes beyond the Franka Panda's own safety limits on joint positions, joint and finger speeds,
-the hand's speed and acceleration, joint accelerations and jerks, and motor torques and how fast they change (the
-numbers: the robot spec's `safety_limits`). They count on the motion as measured, whatever was commanded (a catch or a
-strike moves the arm too), and the servo's own reference motion is held to the same speed, acceleration and jerk limits.
+The task fails when an arm goes beyond the Franka Panda's own safety limits. These limits cover joint positions, joint
+and finger speeds, the hand's speed and acceleration, joint accelerations and jerks, motor torques, and how fast the
+torques change. The numbers are in the robot spec's `safety_limits`. The limits apply to the motion as measured,
+whatever was commanded (a catch or a strike moves the arm too). The servo's own reference motion must also stay within
+the same speed, acceleration and jerk limits.
 
 ### Goal points
 - The target zone is not marked: it is a circle about a hand's width across, centred on the table at (0.40, -0.35) in

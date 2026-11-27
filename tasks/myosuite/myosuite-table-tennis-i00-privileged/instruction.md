@@ -50,10 +50,11 @@ success or failure; `s.step` then refuses further actions until `s.reset()`.
 ### Actions
 An action has 275 real numbers per control step, one per actuator in order: 273 muscles and 2 non-muscle actuators. A
 muscle's command a maps to its excitation u = 1 / (1 + exp(-5 (a - 0.5))) and is not clipped (a = -1: u ~ 0.0006, a =
-0.5: 0.5, a = 1: 0.92, a = 2: 0.9994); activation follows excitation with a first-order delay (~10 ms up, ~40 ms down);
-muscles only pull; one muscle can cross several joints; its force also depends on its length and velocity. The
-non-muscle actuators: `pelvis_x` (index 273): normalized: a in [-1, 1] maps linearly onto [-1, 0.05] (position of joint
-pelvis_x); `pelvis_y` (index 274): normalized: a in [-1, 1] maps linearly onto [-1, 1] (position of joint pelvis_y).
+0.5: 0.5, a = 1: 0.92, a = 2: 0.9994). Activation follows excitation with a first-order delay (~10 ms up, ~40 ms down).
+Muscles only pull, and one muscle can cross several joints. A muscle's force also depends on its length and velocity.
+The non-muscle actuators: `pelvis_x` (index 273): normalized: a in [-1, 1] maps linearly onto [-1, 0.05] (position of
+joint pelvis_x); `pelvis_y` (index 274): normalized: a in [-1, 1] maps linearly onto [-1, 1] (position of joint
+pelvis_y).
 
 ### Observations
 `s.state()`: the task's observation dict: `pelvis_pos`, `body_qpos`, `body_qvel`, `ball_pos`, `ball_vel`, `paddle_pos`,

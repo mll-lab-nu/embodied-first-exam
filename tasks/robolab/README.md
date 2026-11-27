@@ -129,7 +129,7 @@ The agent reaches the model APIs and the package registries (PyPI, apt archives)
 
 ## Time budget
 3600 s for every task of both modes: each task's own `[agent] timeout_sec` (PROTOCOL §2,
-docs/protocol/running.md "The agent's time"); every instruction states it in its closing `## Time limit` section, and the benchmark's
+docs/protocol/running.md "The agent's time"); every instruction states it in the Time line of its closing `## Limits`, and the benchmark's
 own text names no number. Every Python process pays about 2 minutes of Isaac launch and scene build, so an agent's
 iterations cost more than in the other simulators.
 

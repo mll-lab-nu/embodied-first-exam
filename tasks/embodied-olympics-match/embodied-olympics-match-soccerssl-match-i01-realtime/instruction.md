@@ -67,19 +67,19 @@ client is installed (`from rcb_client import Robot`).
 | `POST /submit {"type": T, "interpolate": "hold", "seconds": S}` | no new action for S seconds: what was planned for that robot from now on is dropped, and its last action stays in force |
 | `POST /ready {"why": "...", "plan": "..."}` | your review when the world freezes |
 
-`/submit` answers at once. `at` (default: the current step, `meta.step`) and DT (default: one control step) place the
-rows; a new chunk replaces what was planned for the same robot from `at` on, and rows whose step has passed are dropped
-(`meta.late_rows`). Each row is sent to the match at its step and takes effect like a `game act`; the next answers list
-each row's `effect_step` in `meta.effects` (a row the match refuses: `code` 400 there). The last action stays in force
-(no interpolation between rows). The plan is cleared when the world freezes. Where an action names a robot (`entity`),
-one chunk commands one: `"entity": E` in the chunk, or the type `T@E`. Every answer's `meta` has `score`, `review_due`
-(send `/ready` now), `match_over`, `step`, `phase` and your `state`. A `/submit` while the world is frozen or before the
-start executes nothing (`ok: false`, `not_now`); after the match is over requests are a 409. `/finish` and `/reset` are
-not offered (404): the match's rules end it, and there is one match. What differs from the plain standard:
-`timing.deviations` in `/spec`.
+`/submit` answers at once. `at` (default: the current step, `meta.step`) and DT (default: one control step) set the
+steps of the rows. A new chunk replaces what was planned for the same robot from `at` on. Rows whose step has already
+passed are dropped (`meta.late_rows`). Each row is sent to the match at its step and takes effect like a `game act`. The
+next answers list each row's `effect_step` in `meta.effects`; a row the match refuses shows `code` 400 there. The last
+action stays in force (no interpolation between rows). The plan is cleared when the world freezes. Where an action names
+a robot (`entity`), each chunk commands one robot: set `"entity": E` in the chunk, or use the type `T@E`. Every answer's
+`meta` has `score`, `review_due` (send `/ready` now), `match_over`, `step`, `phase` and your `state`. A `/submit` sent
+while the world is frozen or before the start executes nothing (`ok: false`, `not_now`). After the match is over, every
+request gets a 409. `/finish` and `/reset` are not offered (404): the match's rules end it, and there is one match.
+`timing.deviations` in `/spec` lists what differs from the plain standard.
 
-The same match also answers the `game` command, or the same calls as HTTP with JSON under
-`http://localhost:8000/<SEAT>/` (the paths below are under it; your seat is `$SEAT`); you may use both:
+The same match also answers the `game` command, and the same calls as HTTP with JSON under
+`http://localhost:8000/<SEAT>/` (your seat is `$SEAT`; the paths below are under it). You may use both:
 
 | `game` command | HTTP | |
 | --- | --- | --- |
@@ -95,9 +95,9 @@ The same match also answers the `game` command, or the same calls as HTTP with J
 | `game substitute ENTITY TO` | `POST /act {"type": "substitute", ...}` | take a robot off or bring it back (`substitute`) |
 | `game ready "WHY" "PLAN"` | `POST /ready {"why": "...", "plan": "..."}` | your review when the world freezes |
 
-Errors: 400 = an invalid action (nothing happens), 409 = not now (not your turn, or a review is due), 429 = one action
-in flight (sent before the previous one returned), or more than 20 requests per second or 4 open requests from your seat
-(empty body: retry more slowly).
+Errors: 400 = an invalid action (nothing happens); 409 = not now (not your turn, or a review is due); 429 = one action
+already in flight (sent before the previous one returned), or more than 20 requests per second or 4 open requests from
+your seat (empty body: retry more slowly).
 
 ### MCP tools
 - The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,

@@ -106,11 +106,10 @@ first guess, and in standard mode there is no simulator to practise in. This is 
   the task state and the model-side goals, the same restore every episode starts from. Each episode has
   its own `max_control_steps`; the wall clock is the trial's and never restarts. The reply carries the start's images
   and proprioception, `episode` and `resets_left`.
-- Refused (409) once an episode has succeeded (a success ends the trial), once the agent's time is up, or when the
-  budget is spent; then the running episode is the last one.
+- Refused (409) after `/finish`, once the agent's time is up, or when the budget is spent; then the running episode is
+  the last one.
 - **Only the last episode is graded.** The finalize grades the episode since the last reset as it ran;
-  `trajectory.npz`, `replay.mp4` and `replay.last.png` are that episode. Since a success ends the trial at once, this
-  is the same as "the trial passes iff some episode passes". Every episode stays in the
+  `trajectory.npz`, `replay.mp4` and `replay.last.png` are that episode. Every episode stays in the
   evidence: `trajectory_live.f64` journals every control step of the trial, `episode.jsonl` logs each reset (its
   checkpoint's `ep_start` is where the new episode begins in the journal) and `calls/` each call.
 - `final.json` and `reward.json` report `reset_budget` (50), `resets` (used), `n_actions` (the graded episode's steps)
@@ -125,7 +124,7 @@ grants N. Results under a budget other than 50 are reported separately.
 In standard mode the robot waits, frozen, between the agent's calls: a model that thinks for a minute between two
 chunks loses nothing. A real H1 does not wait. The realtime mode (PROTOCOL §3;
 `tasks/humanoidbench/humanoidbench-*-i00-realtime`, 10 tasks, one per family, `mode = "realtime"`) is standard mode with the same
-instance, sensors, success rule, reset budget (50), wall clock (each task's own `[agent] timeout_sec`, stated by the closing `## Time limit` section of every instruction, PROTOCOL §2) and client, on a
+instance, sensors, success rule, reset budget (50), wall clock (each task's own `[agent] timeout_sec`, stated by the Time line of every instruction's closing `## Limits`, PROTOCOL §2) and client, on a
 clock that does not stop (each task's `environment/sim/rcb_realtime.py`, which extends `rcb_service.py`; the
 wire protocol is `eai-standard/2.3`, 2.2 plus the realtime capability, docs/protocol/standard_mode.md "Realtime mode"):
 
@@ -190,8 +189,7 @@ Judgement is by events (`end_judgement = "events"`): the summed reward reaching 
 an event that happened stands: a fall or another failure rule after the pass mark ends the episode (reason `failed`)
 but the episode is a success (eai-standard/3.0, PROTOCOL §3: on a goal judged as events a later failure does not take
 an event back; `rcb_service.py`). A failure before the pass mark is reached is 0. Resets stay available
-after a success, and the last episode is graded. With the flag off nothing changes; where this README says a success
-ends the episode, that is the flag-off behaviour.
+after a success, and the last episode is graded.
 
 ## Physics: fixes to upstream (image 0.2.0)
 

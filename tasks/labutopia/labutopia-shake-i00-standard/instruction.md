@@ -46,7 +46,7 @@ r.status()                                     # calls, control steps, done, rea
 Simulated time only advances with your commands (and `hold(s)`, which holds the last targets). The service needs 13 to
 27 minutes to come up (Isaac Sim prepares the stage for its renderer once; longer on a busy host): `Robot()` waits for
 it (it prints its progress to stderr), and that wait is part of your budget. If the service crashes, a call fails with a
-connection error: it restarts and resumes the same episode (never a reset) in the state after the last call it
+connection error. The service restarts and resumes the same episode (never a reset), in the state after the last call it
 completed. `r.wait_ready()` waits for it; then check `r.status()`. Ask only for the cameras you need; `video="none"`
 makes a chunk fastest. One call returns at most 1800 images; `video_fps` is up to 30, default 10.
 
@@ -64,20 +64,20 @@ makes a chunk fastest. One call returns at most 1800 images; `video_fps` is up t
 ### Actions
 Action type `joint_position` (9): Position targets of the joints' drives: `panda_joint1` .. `panda_joint7` (rad), then
 `panda_finger_joint1`, `panda_finger_joint2` (m from the gripper's centre line: 0 closed .. 0.04 open; the second finger
-mirrors the first, its target is ignored). The velocity targets are zero. Rows are `dt` apart (a whole multiple of the
-1/60 s control period, at most 0.5 s; a chunk covers at most 10 s), `interpolate="linear"` (default, from the previous
-target) or `"hold"`; values outside the joints' ranges are clipped and reported; the client sends float32.
+mirrors the first, its target is ignored). The velocity targets are zero. Rows are `dt` apart: a whole multiple of the
+1/60 s control period, at most 0.5 s. A chunk covers at most 10 s. Interpolation: `interpolate="linear"` (default, from
+the previous target) or `"hold"`. Values outside the joints' ranges are clipped and reported; the client sends float32.
 
-Action type `joint_position_velocity` (18): A position target and a velocity target for every joint's drive (effort =
-stiffness x (position target - q) + damping x (velocity target - qdot), limited: `spec["robot_spec"]["controller"]`): 9
-position targets as above, then 9 velocity targets (rad/s; m/s). Here a position target may lie beyond a joint's range
-(`spec["action_types"]["joint_position_velocity"]["limits"]`): the joint stops and the drive keeps pushing, so a finger
-target below the point where the finger meets an object squeezes it (400 N/m of error, at most 7.2 N). Rows and `dt` as
-above; the velocity targets of a row hold for its whole interval.
+Action type `joint_position_velocity` (18): A position target and a velocity target for every joint's drive: 9 position
+targets as above, then 9 velocity targets (rad/s; m/s). Each drive applies effort = stiffness x (position target - q) +
+damping x (velocity target - qdot), limited (`spec["robot_spec"]["controller"]`). Here a position target may lie beyond
+a joint's range (`spec["action_types"]["joint_position_velocity"]["limits"]`). The joint then stops and the drive keeps
+pushing, so a finger target below the point where the finger meets an object squeezes it (400 N/m of error, at most 7.2
+N). Rows and `dt` as above; the velocity targets of a row hold for its whole interval.
 
 The control rate is 60 Hz (one physics step per control step). At the start the arm is not at rest: it stands straight
-up and is moving towards its home pose (the targets in effect, `cmd_*` in the proprioception); holding them, e.g. with
-`r.hold(2)`, brings it there in about two seconds. There is no step budget: the one technical cap is
+up and is moving towards its home pose (the targets in effect, `cmd_*` in the proprioception). Holding those targets,
+e.g. with `r.hold(2)`, brings it there in about two seconds. There is no step budget: the one technical cap is
 `spec["max_control_steps"]`, 36000 (600 s of simulated time), at which the episode ends.
 
 ### Observations

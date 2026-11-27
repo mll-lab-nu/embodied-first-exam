@@ -4,13 +4,13 @@
 Hook the stick into the thermos's handle and pull the thermos to the target with it. Leave the stick in the handle.
 
 ## Goal
-Success: the thermos is at the target point with the stick still hooked in its handle. What counts is how things stand
-after the last action of your trajectory, replayed from the fixed start.
+Success: the thermos is at the target point with the stick still hooked in its handle. Your trajectory is replayed from
+the fixed start. What counts is the state after its last action.
 
 Deliverable: `/app/output/trajectory.npz` with key `actions`: Meta-World's native actions, shape `(T, 4)` with 1 ≤ T ≤
 500 (Meta-World's episode length), one row per control step (1/80 s). Write it with `s.save_trajectory()` so the format
-is right: the grader reads a plain `.npz` of at most 2 MB that holds arrays only (no pickled objects, at most 64
-members), and grades anything else as an invalid trajectory. Leave the script that produced it at `/app/output/gen.py`.
+is right. The grader reads a plain `.npz` of at most 2 MB that holds only arrays (no pickled objects, at most 64
+members). Anything else is graded as an invalid trajectory. Leave the script that produced it at `/app/output/gen.py`.
 Save a valid one early and overwrite it when you have a better one.
 
 Rules: **No cheating.** Do not search for, download or use any existing solution (published or reference solutions,

@@ -45,14 +45,14 @@ obs = r._post("/reset", {"cameras": ["side_view"]}, [], 900)   # POST /reset: a 
 ```
 
 Simulated time only advances with your commands (and `hold(s)`, which holds the last command). A reset (`POST /reset`,
-the `_post` line above) puts the body and the scene back on the same frozen starting state and starts a new episode,
-either abandoning the running one or after one has ended; it takes no simulated time and returns the start's images and
-proprioception. Once an episode has ended, `submit` raises `EpisodeOver` until you reset. The wall clock is the run's
-and never restarts; `meta["episode"]` and `meta["resets_left"]` count the episodes (`meta["control_steps"]` is the
-current episode's). If the service crashes, a call fails with a connection error: it restarts and resumes the same
-episode (never a reset) in the state after the last call it completed. `r.wait_ready()` waits for it; then check
-`r.status()`. One call returns at most 1000 images. `r.fk(q)` (`/kinematics`) gives the fingertip sites and the camera
-mounts for any joint positions.
+the `_post` line above) puts the body and the scene back in the same frozen starting state and starts a new episode. You
+can reset during an episode (abandoning it) or after one has ended. It takes no simulated time and returns the start's
+images and proprioception. Once an episode has ended, `submit` raises `EpisodeOver` until you reset. The wall clock
+covers the whole run and never restarts. `meta["episode"]` and `meta["resets_left"]` count the episodes;
+`meta["control_steps"]` counts only the current episode's steps. If the service crashes, a call fails with a connection
+error. The service restarts and resumes the same episode (never a reset), in the state after the last call it completed.
+`r.wait_ready()` waits for it; then check `r.status()`. One call returns at most 1000 images. `r.fk(q)` (`/kinematics`)
+gives the fingertip sites and the camera mounts for any joint positions.
 
 ### MCP tools
 - The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
@@ -69,17 +69,18 @@ mounts for any joint positions.
 ### Actions
 Action type `muscle` (39): 39 real numbers per control step, one per actuator in order: 39 muscles. A muscle's command a
 maps to its excitation u = 1 / (1 + exp(-5 (a - 0.5))) and is not clipped (a = -1: u ~ 0.0006, a = 0.5: 0.5, a = 1:
-0.92, a = 2: 0.9994); activation follows excitation with a first-order delay (~10 ms up, ~40 ms down); muscles only
-pull; one muscle can cross several joints; its force also depends on its length and velocity. Columns in
-`spec["action_types"]["muscle"]["layout"]` order. Rows are `dt` apart (a whole multiple of the 20 ms control period, at
-most 0.5 s; a chunk covers at most 10 s), `interpolate="linear"` (default, from the previous command) or `"hold"`; the
-client sends them as float32. The control rate is 50 Hz (10 physics substeps); there is no step budget.
+0.92, a = 2: 0.9994). Activation follows excitation with a first-order delay (~10 ms up, ~40 ms down). Muscles only
+pull, and one muscle can cross several joints. A muscle's force also depends on its length and velocity. Columns in
+`spec["action_types"]["muscle"]["layout"]` order. Rows are `dt` apart: a whole multiple of the 20 ms control period, at
+most 0.5 s. A chunk covers at most 10 s. Interpolation: `interpolate="linear"` (default, from the previous command) or
+`"hold"`. The client sends the rows as float32. The control rate is 50 Hz (10 physics substeps); there is no step
+budget.
 
 ### Observations
 Cameras: `side_view`, `front_view`, `hand_top`, `hand_bottom`, `hand_side_inter`, `hand_side_exter`, `plam_lookat`
 (640x480; default `hand_top`). `hand_top` and `hand_side_inter` are close-ups of the hand, mounted on the forearm (the
-radius): they move with it (pronation turns them), so use the pose returned with each frame; `spec["cameras"]` gives
-each camera's mounting (static, fixed to a body, or a MuJoCo tracking camera that follows one) and intrinsics, and every
+radius). They move with it (pronation turns them), so use the pose returned with each frame. `spec["cameras"]` gives
+each camera's intrinsics and mounting: static, fixed to a body, or a MuJoCo tracking camera that follows one. Every
 response carries each frame's pose. Proprioception (`spec["proprio_groups"]`): `joint_pos` (`q_<joint>`), `joint_vel`
 (`qd_<joint>`), `muscle_activation` (`act_<muscle>`), `muscle_length` (`len_<muscle>`, m), `joint_effort`
 (`effort_<joint>`, the actuators' generalized force on each joint).

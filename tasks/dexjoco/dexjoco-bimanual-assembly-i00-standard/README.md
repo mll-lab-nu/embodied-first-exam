@@ -25,7 +25,7 @@ mistakes without starting over.
 ## Reference solution
 `solution/oracle_stream.py` streams the privileged reference's rows (`solution/oracle_trajectory.npz`, 586 rows, float32-exact)
 through the client as `ee_pose` chunks; it uses no privileged information at run time. The service's recorded
-trajectory is then exactly the privileged reference, and the episode ends with success after 586 control steps.
+trajectory is then exactly the privileged reference (586 control steps), whose end state is a success.
 
 ## Verification
 The verdict is the live episode's (`graded_by = "live"`, `replays = 0`): the sim service judges the episode it runs with

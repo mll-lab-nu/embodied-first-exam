@@ -46,14 +46,14 @@ obs = r._post("/reset", {"cameras": ["side_view"]}, [], 900)   # POST /reset: a 
 ```
 
 Simulated time only advances with your commands (and `hold(s)`, which holds the last command). A reset (`POST /reset`,
-the `_post` line above) puts the body and the scene back on the same frozen starting state and starts a new episode,
-either abandoning the running one or after one has ended; it takes no simulated time and returns the start's images and
-proprioception. Once an episode has ended, `submit` raises `EpisodeOver` until you reset. The wall clock is the run's
-and never restarts; `meta["episode"]` and `meta["resets_left"]` count the episodes (`meta["control_steps"]` is the
-current episode's). If the service crashes, a call fails with a connection error: it restarts and resumes the same
-episode (never a reset) in the state after the last call it completed. `r.wait_ready()` waits for it; then check
-`r.status()`. One call returns at most 1000 images. `r.fk(q)` (`/kinematics`) gives the fingertip sites and the camera
-mounts for any joint positions.
+the `_post` line above) puts the body and the scene back in the same frozen starting state and starts a new episode. You
+can reset during an episode (abandoning it) or after one has ended. It takes no simulated time and returns the start's
+images and proprioception. Once an episode has ended, `submit` raises `EpisodeOver` until you reset. The wall clock
+covers the whole run and never restarts. `meta["episode"]` and `meta["resets_left"]` count the episodes;
+`meta["control_steps"]` counts only the current episode's steps. If the service crashes, a call fails with a connection
+error. The service restarts and resumes the same episode (never a reset), in the state after the last call it completed.
+`r.wait_ready()` waits for it; then check `r.status()`. One call returns at most 1000 images. `r.fk(q)` (`/kinematics`)
+gives the fingertip sites and the camera mounts for any joint positions.
 
 ### MCP tools
 - The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
@@ -70,12 +70,12 @@ mounts for any joint positions.
 ### Actions
 Action type `actuators` (80): 80 real numbers per control step, one per actuator in order: 63 muscles and 17 non-muscle
 actuators. A muscle's command a maps to its excitation u = 1 / (1 + exp(-5 (a - 0.5))) and is not clipped (a = -1: u ~
-0.0006, a = 0.5: 0.5, a = 1: 0.92, a = 2: 0.9994); activation follows excitation with a first-order delay (~10 ms up,
-~40 ms down); muscles only pull; one muscle can cross several joints; its force also depends on its length and velocity.
-The non-muscle actuators: `prosthesis/Lshoulder_fe` (index 63): normalized: a in [-1, 1] maps linearly onto [-0.611,
-2.792] (position of joint prosthesis/Lshoulder_fe); `prosthesis/Lshoulder_abad` (index 64): normalized: a in [-1, 1]
-maps linearly onto [-2.792, 0] (position of joint prosthesis/Lshoulder_abad); `prosthesis/Lhumeral_rot` (index 65):
-normalized: a in [-1, 1] maps linearly onto [-0.524, 1.483] (position of joint prosthesis/Lhumeral_rot);
+0.0006, a = 0.5: 0.5, a = 1: 0.92, a = 2: 0.9994). Activation follows excitation with a first-order delay (~10 ms up,
+~40 ms down). Muscles only pull, and one muscle can cross several joints. A muscle's force also depends on its length
+and velocity. The non-muscle actuators: `prosthesis/Lshoulder_fe` (index 63): normalized: a in [-1, 1] maps linearly
+onto [-0.611, 2.792] (position of joint prosthesis/Lshoulder_fe); `prosthesis/Lshoulder_abad` (index 64): normalized: a
+in [-1, 1] maps linearly onto [-2.792, 0] (position of joint prosthesis/Lshoulder_abad); `prosthesis/Lhumeral_rot`
+(index 65): normalized: a in [-1, 1] maps linearly onto [-0.524, 1.483] (position of joint prosthesis/Lhumeral_rot);
 `prosthesis/Lelbow` (index 66): normalized: a in [-1, 1] maps linearly onto [0.05, 2.356] (position of joint
 prosthesis/Lelbow); `prosthesis/A_wrist_PRO` (index 67): normalized: a in [-1, 1] maps linearly onto [-1.57, 1.57]
 (position of joint prosthesis/wrist_PRO); `prosthesis/A_wrist_UDEV` (index 68): normalized: a in [-1, 1] maps linearly
@@ -92,16 +92,16 @@ a in [-1, 1] maps linearly onto [0, 1.6] (position of joint prosthesis/middle_MC
 normalized: a in [-1, 1] maps linearly onto [0, 1.6] (position of joint prosthesis/ring_MCP); `prosthesis/A_pinky_ABD`
 (index 78): normalized: a in [-1, 1] maps linearly onto [0, 0.34] (position of joint prosthesis/pinky_ABD);
 `prosthesis/A_pinky_MCP` (index 79): normalized: a in [-1, 1] maps linearly onto [0, 1.6] (position of joint
-prosthesis/pinky_MCP). Columns in `spec["action_types"]["actuators"]["layout"]` order. Rows are `dt` apart (a whole
-multiple of the 10 ms control period, at most 0.5 s; a chunk covers at most 10 s), `interpolate="linear"` (default, from
-the previous command) or `"hold"`; the client sends them as float32. The control rate is 100 Hz (5 physics substeps);
-there is no step budget.
+prosthesis/pinky_MCP). Columns in `spec["action_types"]["actuators"]["layout"]` order. Rows are `dt` apart: a whole
+multiple of the 10 ms control period, at most 0.5 s. A chunk covers at most 10 s. Interpolation: `interpolate="linear"`
+(default, from the previous command) or `"hold"`. The client sends the rows as float32. The control rate is 100 Hz (5
+physics substeps); there is no step budget.
 
 ### Observations
 Cameras: `side_view`, `front_view`, `hand_top`, `hand_bottom`, `hand_side_inter`, `hand_side_exter`, `plam_lookat`
 (640x480; default `front_view`). `hand_top` and `hand_side_inter` are close-ups of the hand, mounted on the forearm (the
-radius): they move with it (pronation turns them), so use the pose returned with each frame; `spec["cameras"]` gives
-each camera's mounting (static, fixed to a body, or a MuJoCo tracking camera that follows one) and intrinsics, and every
+radius). They move with it (pronation turns them), so use the pose returned with each frame. `spec["cameras"]` gives
+each camera's intrinsics and mounting: static, fixed to a body, or a MuJoCo tracking camera that follows one. Every
 response carries each frame's pose. Proprioception (`spec["proprio_groups"]`): `joint_pos` (`q_<joint>`), `joint_vel`
 (`qd_<joint>`), `muscle_activation` (`act_<muscle>`), `muscle_length` (`len_<muscle>`, m), `joint_effort`
 (`effort_<joint>`, the actuators' generalized force on each joint).
@@ -118,5 +118,5 @@ response carries each frame's pose. Proprioception (`spec["proprio_groups"]`): `
   GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap only
   slows you down); usage: `/run/rcb-limits/usage.json`.
 - Resets: at most 10 (`spec()["budget"]["reset"]`), each a new episode from the same starting state.
-- Steps: the episode ends by itself after 10 s of robot time.
+- Steps: the episode ends after 10 s of robot time.
 - Finish: if you never send `/finish`, the episode is graded when the step limit is reached or your session ends.

@@ -6,7 +6,7 @@ the left arm off the box.
 
 ## Goal
 Success: the right gripper holds the box at the target box, off the table, and no part of the left arm touches the box.
-What counts is how things stand after the last action of your trajectory, replayed from the fixed start.
+Your trajectory is replayed from the fixed start. What counts is the state after its last action.
 
 Deliverable: `/app/output/trajectory.npz`: actuator targets, shape `(T, 14)` (T at most 3000), one row per control step
 (1/50 s), each held for 4 physics steps; record it with the tooling so the layout is right. It is replayed from the

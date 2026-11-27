@@ -15,9 +15,9 @@ When you are done, send `/finish` to end the episode and get it graded.
 You are scored on how closely your ink matches the exemplar's, afterwards, from the service's record of your episode.
 
 Write with brush strokes, the way a person writes: each stroke of the exemplar is written along its length, with the
-brush pressed for the stroke's width; going over a stroke again is fine. Colouring in or filling the shapes, zigzag or
-serpentine fills, and fills that go round and round inside a shape fail the task, even when the sheet matches the
-picture. The exact checks are under Process rules in Robot Interface.
+brush pressed for the stroke's width; going over a stroke again is fine. These fail the task even when the sheet matches
+the picture: colouring in or filling the shapes, zigzag or serpentine fills, and fills that go round and round inside a
+shape. The exact checks are under Process rules in Robot Interface.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
@@ -72,9 +72,10 @@ res.save("/app/runs/003")                     # meta.json, <cam>.mp4, frames/<ca
 - `meta["time_left_s"]` is the service's count of the time left.
 
 A service restart is not a reset. If the service crashes, it restarts and resumes the same episode in the state after
-the last call it completed (the call that was running is lost as a whole: you get a connection error). `r.wait_ready()`
-waits until it answers again (resuming replays the episode so far without rendering; the clock keeps running), then
-`r.status()` tells `calls` and `control_steps`, so you know what was executed (`spec["on_service_error"]`).
+the last call it completed. The call that was running is lost as a whole, and you get a connection error.
+`r.wait_ready()` waits until the service answers again; resuming replays the episode so far without rendering, and the
+clock keeps running. Then `r.status()` tells `calls` and `control_steps`, so you know what was executed
+(`spec["on_service_error"]`).
 
 ### MCP tools
 - The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
@@ -91,10 +92,10 @@ waits until it answers again (resuming replays the episode so far without render
 Two action types:
 - `ee_pose` (7): `x y z qw qx qy qz` of the brush tip in the world frame (z up, the robot base at (-0.615, 0, 0), x away
   from the base, y to the robot's left); quaternion wxyz — the proprio quaternion at the start points the brush straight
-  down. Rows are `dt` apart (`1/20 ≤ dt ≤ 0.5` s, a multiple of 1/20 s): the tip target moves on a straight line from
-  the previous row's target at the 20 Hz control rate, one IK solve per control step (no collision checking), at most
-  0.25 m/s (a faster row is slowed down; `meta["plan"]` reports it and any IK failure). At most 400 rows and 10 s per
-  submit.
+  down. Rows are `dt` apart (`1/20 ≤ dt ≤ 0.5` s, a multiple of 1/20 s). The tip target moves on a straight line from
+  the previous row's target at the 20 Hz control rate, with one IK solve per control step (no collision checking), at
+  most 0.25 m/s. A faster row is slowed down; `meta["plan"]` reports it and any IK failure. At most 400 rows and 10 s
+  per submit.
 - `joint_position` (7): `panda_joint1..7` absolute joint targets in radians (PD-tracked), rows `dt` apart, `interpolate`
   = `"linear"` (default) or `"hold"`; a chunk may cover at most 10 s; out-of-limit values are clipped and listed in
   `meta["clipped"]` (limits in the spec).
@@ -127,28 +128,29 @@ Two action types:
 ### The target picture
 `/app/target.png` (1024 × 1024 px, RGB) shows the exemplar at its true size and place on the main sheet: the image
 covers the main sheet exactly, 0.2219 mm per pixel. Pixel (column u, row v), counted from 0 at the image's top-left, has
-its centre at sheet millimetres X = (u + 0.5) · 227.18 / 1024, Y = (v + 0.5) · 227.18 / 1024 (X to the robot's right, Y
-towards the robot, origin = the sheet's far-left corner as seen from the robot's base). Image top = the sheet's far edge
-(+x), image left = the robot's left (+y): the same orientation as `canvas_cam`.
+its centre at sheet millimetres X = (u + 0.5) · 227.18 / 1024, Y = (v + 0.5) · 227.18 / 1024. X runs to the robot's
+right and Y towards the robot; the origin is the sheet's far-left corner as seen from the robot's base. Image top = the
+sheet's far edge (+x), image left = the robot's left (+y): the same orientation as `canvas_cam`.
 
 ### Process rules
 The grader checks the process rules in Goal on the episode with two numbers you can compute yourself; only inked strokes
 on the main sheet count (the practice sheet is free):
 - `path_mm`: the total length of the brush tip's path while it presses on the main sheet with ink (all strokes together,
   sampled at every physics step);
-- `mark_width_mm`: the average width of your marks = the area each stroke inks on its own (its own mark, ink coverage ≥
-  0.5; where different strokes overlap, each counts its own), summed over the strokes, divided by `path_mm`.
+- `mark_width_mm`: the average width of your marks. It is the area each stroke inks on its own, summed over the strokes
+  and divided by `path_mm`; a stroke's own area is its own mark where ink coverage is ≥ 0.5, and where different strokes
+  overlap, each counts its own.
 
-Colouring in = `path_mm` > 1200 mm and `mark_width_mm` < 3.06 mm (a long path of thin marks): it fails the task. A
-pressed brush, even over a stroke again, keeps the marks wide enough, and a light hand on a short path stays under the
-path limit: both are fine. The stroke cap counts strokes as they are written, not contacts (this refines "one continuous
-contact is one stroke" above). A contact is cut into two strokes wherever the brush moves more than 5 mm along the main
-sheet without marking it (its mark narrower than 0.1 mm: a press too light to ink), and a stroke longer than 1360 mm of
-path counts as one stroke per started 1360 mm. Pieces joined by a touch too light to ink are therefore separate strokes,
-and one contact held down to write and re-write for a long time counts as several; a stroke written with the brush down
-and lifted at its end is one. Strokes are sweeps: at most 10 % of `path_mm` may lie in strokes whose path is longer than
-12 times the diagonal of their bounding box (taken as at least 10 mm): back-and-forth, zigzag, spiral or looping fills
-inside one stroke fail. Breaking a process rule fails the task.
+Colouring in = `path_mm` > 1200 mm and `mark_width_mm` < 3.06 mm (a long path of thin marks): it fails the task. Both of
+these are fine: a pressed brush keeps the marks wide enough, even when it goes over a stroke again, and a light hand on
+a short path stays under the path limit. The stroke cap counts strokes as they are written, not contacts (this refines
+"one continuous contact is one stroke" above). A contact is cut into two strokes wherever the brush moves more than 5 mm
+along the main sheet without marking it (its mark narrower than 0.1 mm: a press too light to ink), and a stroke longer
+than 1360 mm of path counts as one stroke per started 1360 mm. So pieces joined by a touch too light to ink are separate
+strokes, and one contact held down for a long time to write and re-write counts as several. A stroke written with the
+brush down and lifted at its end counts as one. Strokes are sweeps: at most 10 % of `path_mm` may lie in strokes whose
+path is longer than 12 times the diagonal of their bounding box (the diagonal taken as at least 10 mm). Back-and-forth,
+zigzag, spiral or looping fills inside one stroke fail. Breaking a process rule fails the task.
 
 The score (`final_reward`, 0 to 1) is how well your ink overlaps the exemplar's (1 = the same); it is scaled down above
 the stroke cap and when a process rule fails.
@@ -165,6 +167,6 @@ the stroke cap and when a process rule fails.
   GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap only
   slows you down); usage: `/run/rcb-limits/usage.json`.
 - Resets: none: one episode.
-- Steps: no step budget; actions and simulated time are reported as cost; a runaway guard stops the robot after 72000
-  control steps (1 h of simulated time; `hold(s)` also advances it).
+- Steps: no step budget. Actions and simulated time are reported as cost. A runaway guard stops the robot after 72000
+  control steps (1 h of simulated time). `hold(s)` also adds to that count.
 - Finish: if you never send `/finish`, the episode is graded when your session ends.

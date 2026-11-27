@@ -24,7 +24,8 @@ Rules:
   graded.
 - You get only what the robot's own sensors give (its head cameras, joint encoders, motor torques and IMUs) and the
   venue's fixed cameras: not where you or any object is, not the referee's state. If the referee ends an attempt on a
-  foul, every reply then carries the rule broken (`meta["outcome"]`); no stage count, no success signal.
+  foul, every reply after that names the rule broken (`meta["outcome"]`). The replies give no stage count and no success
+  signal.
 
 The attempt fails at once if:
 - the ball touches the ground, or any part of you but a hand or a forearm, before the catch
@@ -54,17 +55,17 @@ benchmark's names: for this task `r.spec()` is authoritative.
 | `r.submit(type, A, dt=0.01, interpolate="linear", at=None, cameras=None)` | `POST /submit` | plans `A`, rows of that action type `dt` seconds apart (a multiple of 0.01; a chunk covers at most 10 s), from step `at`; answers at once; the first one starts the attempt's clock |
 | `r.reset(cameras=None)` | `POST /reset` | a new attempt from the same start, paused (see above) |
 
-One call returns at most 3000 images (`max_frames_per_call`). No call is refused for its images: while 8 answers with
-images are outstanding, the answer of a `submit` or a `get_obs()` comes without its frames and `meta["frames_skipped"]`
-is set.
+One call returns at most 3000 images (`max_frames_per_call`). No call is refused for its images. While 8 answers with
+images are still waiting to be read, a `submit` or a `get_obs()` answers without its frames and sets
+`meta["frames_skipped"]`.
 
 The answers are binary (RCB1) and come back decoded: `res.meta` (the counters, `done`, `reason`, `proprio["now"]`,
 `clipped`), `res.last[camera]` (the last frame), `res.frames` or `res.video` (what the cameras saw during the call),
-`res.depth`, `res.proprio` (proprioception rows). Values outside the bounds are clipped and reported in
-`meta["clipped"]`, never refused; a malformed request raises `ValueError` and runs nothing. `cameras=None` means every
+`res.depth`, `res.proprio` (proprioception rows). Values outside the bounds are clipped, not refused, and
+`meta["clipped"]` reports them. A malformed request raises `ValueError` and runs nothing. `cameras=None` means every
 camera: a controller's call should ask for none (`cameras=[]`) and read `res.meta["proprio"]["now"]`; the cameras are
-rendered on the service's GPU. With `interpolate="linear"` (the default) each control step's command is a straight line
-from the command in force to the row; `"hold"` applies the row as it is.
+rendered on the service's GPU. With `interpolate="linear"` (the default), the command moves step by step in a straight
+line from the command in force to the row. With `"hold"`, the row is applied as it is.
 
 ```python
 from rcb_client import Robot
@@ -120,42 +121,44 @@ Joint order everywhere (Unitree's SDK order): `left_hip_yaw`, `left_hip_pitch`, 
   velocity `gx, gy, gz`, rad/s; acceleration `ax, ay, az`, m/s², gravity included; in the sensor's frame),
   `holding_left`, `holding_right` (1 while that hand grips something), `mode` (0 stand, 1 walk, 2 run, 3 run_arms, 4
   joints / lowcmd; the G1 also 5 walk_falcon, 6 walk_agile), the velocity command in force (`cmd_vx`, `cmd_vy`,
-  `cmd_wz`) and `time_s`, the attempt's time. Then, at the end of the row, the grippers: `jaw_opening_left`,
-  `jaw_speed_left`, `jaw_force_left`, `jaw_opening_right`, `jaw_speed_right`, `jaw_force_right` (the opening between the
-  pads in m, its speed in m/s, + opening, and the clamp force in N, + closing); a gripper's `holding_*` is 1 while both
-  its jaws touch the same object. A real H1-2 has no sensor for its position in the venue, and neither do you: that is
-  what the cameras are for.
+  `cmd_wz`) and `time_s`, the attempt's time. Then, at the end of the row, come the grippers: `jaw_opening_left`,
+  `jaw_speed_left`, `jaw_force_left`, `jaw_opening_right`, `jaw_speed_right`, `jaw_force_right`. These are the opening
+  between the pads (m), its speed (m/s, positive when opening) and the clamp force (N, positive when closing). A
+  gripper's `holding_*` is 1 while both its jaws touch the same object. A real H1-2 has no sensor for its position in
+  the venue, and neither do you: that is what the cameras are for.
 
 ### What the platform does
 - **`stand`** holds the legs at the standing pose with stiff gains and a gravity-support torque. It is not a balance
   controller: it does not step and it has no feedback. After an arm movement the body sways a few centimetres for a few
   seconds; a hard or fast swing of the arms, a push or a load can tip the robot over within a second or two.
 - **`walk`** runs Unitree's own H1-2 walking policy (50 Hz) on the legs. At the largest forward command (0.8) it walks
-  at about 0.6 m/s and its heading drifts (close the loop on the IMU); `vy` up to 0.5 and `wz` up to 1.57 rad/s. At a
-  zero command it marks time on the spot and recovers from small disturbances, which `stand` does not. When the legs
-  come to it from another mode it first blends them to the stance (0.3 s) and holds a zero command until the robot is
+  at about 0.6 m/s, and its heading drifts, so close the loop on the IMU. `vy` goes up to 0.5 and `wz` up to 1.57 rad/s.
+  At a zero command it marks time on the spot. Unlike `stand`, it recovers from small disturbances. When you switch to
+  `walk` from another mode, it first blends the legs to the stance (0.3 s), then holds a zero command until the robot is
   steady (up to 2 s). It was trained with the arms at their zero pose (upper arms down, forearms forward): moving the
   arms disturbs it. This robot has no running policy: anything faster than a walk is yours to build or to find. The G1's
-  two other walking policies (FALCON, AGILE) are not offered for it: driven on this robot (joints matched by name) they
-  keep it upright but do not walk it.
-- **`joints` / `lowcmd`** are yours: each motor's torque is `kp (q − q_measured) + kd (dq − dq_measured) + tau`,
-  evaluated at 1 kHz with your row held for its 10 ms, then limited by the motor's torque-speed curve and torque limit.
-  `joints` uses the default gains (the spec's `robot_facts`) and zero `dq` and `tau`; `lowcmd` takes yours (kp up to
-  1500 / 800 / 400 and kd up to 30 / 20 / 10 for legs / waist / arms). Nothing balances the robot in these modes but
-  your own targets.
-- **Every joint target** is clipped into the joint's range and moves at most the joint's speed limit × 10 ms per step
-  from the target in force. Joints a type does not name keep their targets. The speed limit is a limit on targets; what
-  bounds the joint itself is the motor's torque-speed curve (a `lowcmd` feed-forward torque can turn a joint up to about
-  1.15 times that speed, where the motor's torque has fallen to zero).
-- **The left and right hands are the robot's own**: the H1-2's Inspire RH56DFX five-finger hand (6 self-locking linear
-  drives for 12 joints: the thumb's rotation and flexion, one drive per finger with its two joints coupled). 6 drives
-  per hand, with fingertip forces of 20 N per finger and 30 N for the thumb (twice the stock hand's); each drive is
-  position-servoed and force-limited (closing stops where its force limit is reached, a larger load drags it open).
-  `grip_left` and `grip_right` are the closure commands: one value per hand from 0 (open) to 1 (closed), all of that
-  hand's drives following it together. The hand holds only by contact and friction (no weld): what it holds can slip,
-  turn or drop; it holds an object while the fingers and the thumb or palm touch it. The fingers, thumb and palm collide
-  with the world and with the rest of your own body. The proprioception reports each hand's closure and every drive's
-  position and torque (`r.spec()` lists the drives with their limits).
+  two other walking policies (FALCON, AGILE) are not offered for this robot. Run on it (joints matched by name), they
+  keep it upright but do not make it walk.
+- **`joints` / `lowcmd`** give you direct control. Each motor's torque is
+  `kp (q − q_measured) + kd (dq − dq_measured) + tau`, computed at 1 kHz while your row is held for its 10 ms, then
+  limited by the motor's torque-speed curve and torque limit. `joints` uses the default gains (the spec's `robot_facts`)
+  with zero `dq` and `tau`. `lowcmd` uses the gains, `dq` and `tau` you send (kp up to 1500 / 800 / 400 and kd up to 30
+  / 20 / 10 for legs / waist / arms). Nothing balances the robot in these modes but your own targets.
+- **Every joint target** is clipped into the joint's range. In each 10 ms step, a target moves at most the joint's speed
+  limit × 10 ms away from the target in force. Joints that an action type does not include keep their current targets.
+  The speed limit applies only to targets. The joint itself is bounded by the motor's torque-speed curve: with a
+  `lowcmd` feed-forward torque, a joint can turn up to about 1.15 times that speed, where the motor's torque has fallen
+  to zero.
+- **The left and right hands are the robot's own**: the H1-2's Inspire RH56DFX five-finger hand. It has 6 self-locking
+  linear drives for 12 joints: one each for the thumb's rotation and flexion, and one per finger, which drives that
+  finger's two coupled joints. Each hand has 6 drives, with fingertip forces of 20 N per finger and 30 N for the thumb
+  (twice the stock hand's). Each drive is position-servoed and force-limited: closing stops when the drive reaches its
+  force limit, and a larger load drags it open. `grip_left` and `grip_right` are the closure commands: one value per
+  hand from 0 (open) to 1 (closed), all of that hand's drives following it together. The hand holds only by contact and
+  friction (no weld), so what it holds can slip, turn or drop. It holds an object while the fingers and the thumb or
+  palm touch it. The fingers, thumb and palm collide with the world and with the rest of your own body. The
+  proprioception reports each hand's closure and every drive's position and torque (`r.spec()` lists the drives with
+  their limits).
 - **A tool on a hand** (a racket, a paddle, a club; where the task has one) is fixed to the wrist in place of the pad.
   It collides with the world, the ball and the rest of your own body.
 - **The air** is real: balls and implements feel drag and, when they spin, lift.
@@ -163,36 +166,37 @@ Joint order everywhere (Unitree's SDK order): `left_hip_yaw`, `left_hip_pitch`, 
   failure: "the simulation became unstable".
 
 ### Time and streaming
-- The world runs at 1/S of real speed, S = 1: one control step (10 ms of robot time) every S x 10 ms of wall-clock time;
-  `spec()["timing"]["slowdown"]` states it.
+- The world runs at 1/S of real speed, with S = 1 (`spec()["timing"]["slowdown"]`): one control step (10 ms of robot
+  time) every S x 10 ms of wall-clock time.
 - Time does not stop: an attempt starts paused, on the frozen start, the robot holding its starting command. Its clock
-  starts at your first `submit` and from then on the simulator runs at 100 Hz of robot time (S = 1), whether or not you
-  send anything, until the attempt ends: the venue's timed events (the launch, the serve, the release) happen on that
-  clock. Between your commands the robot executes what you planned, then holds the last command in force; nothing pauses
-  for you, not your thinking, not your tool calls.
+  starts at your first `submit`. From then on the simulator runs at 100 Hz of robot time (S = 1) until the attempt ends,
+  whether or not you send anything. The venue's timed events (the launch, the serve, the release) happen on that clock.
+  Between your commands the robot executes what you planned, then holds the last command in force; nothing pauses for
+  you, not your thinking, not your tool calls.
 - You are far too slow to steer it turn by turn: one turn of yours (a model response, a tool call) takes seconds; the
-  decisive moment of an attempt takes a fraction of one. Drive the robot with a program: a controller of your own
-  (Python in your container, with numpy and the client) that plans or streams the rows, started in the background
-  (`nohup python /app/ctrl.py > /app/ctrl.log 2>&1 &`) or in the foreground if it ends with the attempt. Use your turns
-  to start attempts, read what happened, and improve the program.
-- Attempts: `r.reset()` abandons the running attempt (or follows one that has ended) and starts a new one from the same
-  start, paused until your next `submit`; once an attempt has ended, `submit` raises `EpisodeOver` until you reset. The
-  wall clock is the run's and never restarts.
+  decisive moment of an attempt takes a fraction of one. Drive the robot with a program: your own controller (Python in
+  your container, with numpy and the client) that plans or streams the rows. Start it in the background
+  (`nohup python /app/ctrl.py > /app/ctrl.log 2>&1 &`), or in the foreground if it ends when the attempt ends. Use your
+  turns to start attempts, read what happened, and improve the program.
+- Attempts: `r.reset()` abandons the running attempt (or follows one that has already ended) and starts a new one from
+  the same start, paused until your next `submit`. Once an attempt has ended, `submit` raises `EpisodeOver` until you
+  reset. The wall clock belongs to the whole run and never restarts.
 - `submit` answers at once, with the robot as it is now: the rows you sent have not run yet. They become the plan from
-  control step `at` (an attempt step number; by default the next step), replacing whatever was planned from `at` on and
-  keeping what is planned before it. When the plan runs out, the command in force is held. `res.meta["control_steps"]`
-  is the number of steps run so far in this attempt (so the next step has that number), `res.meta["proprio"]["now"]` the
-  proprioception now, `res.meta["plan_end_step"]` where the plan now ends.
-- Open loop: plan a whole movement at once (a chunk covers at most 10 s), with `at = 0` for the attempt's start:
+  control step `at` (a step number within the attempt; by default the next step). They replace whatever was planned from
+  `at` on and keep what is planned before it. When the plan runs out, the command in force is held.
+  `res.meta["control_steps"]` is the number of steps run so far in this attempt (so the next step has that number).
+  `res.meta["proprio"]["now"]` is the current proprioception, and `res.meta["plan_end_step"]` is where the plan now
+  ends.
+- Open loop: plan a whole movement at once (a chunk covers at most 10 s), with `at = 0` for the attempt's start.
   `r.submit(type, A, dt=0.01, interpolate="hold", at=0, cameras=[])` starts the clock and runs exactly those rows from
-  the first step; `at` may be up to `spec()["timing"]["max_ahead_steps"]` steps ahead.
+  the first step. `at` may be up to `spec()["timing"]["max_ahead_steps"]` steps ahead.
 - Closed loop: send one row per control step, `r.submit(type, a[None], cameras=[])`, computed from the proprioception
   the previous call returned. `cameras=[]` skips the images (the fastest call).
 - Latency: a reading is a few milliseconds old when it reaches you, and a row takes effect at the next control step at
-  the earliest. A row whose step has already run when the request arrives is dropped (`res.meta["late_steps"]` counts
-  them); the rest of its chunk applies from the next step.
-- `get_obs()` reads the robot now; `get_obs(last_s=n)` returns, without waiting, what the cameras recorded over the last
-  n seconds. `r.status()` shows `running` and `lag_s`.
+  the earliest. A row whose step has already run when the request arrives is dropped; `res.meta["late_steps"]` counts
+  them. The rest of the chunk applies from the next step.
+- `get_obs()` reads the robot now. `get_obs(last_s=n)` returns at once what the cameras recorded over the last n
+  seconds. `r.status()` shows `running` and `lag_s`.
 
 ## Others
 - The machine throws the ball high right after the start, to come down near you.
@@ -210,5 +214,5 @@ Joint order everywhere (Unitree's SDK order): `left_hip_yaw`, `left_hip_pitch`, 
   no GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap
   only slows you down); usage: `/run/rcb-limits/usage.json`.
 - Resets: at most 5 (`spec()["budget"]["reset"]`), each a new episode from the same starting state.
-- Steps: an attempt ends by itself after 9 s of robot time.
+- Steps: an attempt ends after 9 s of robot time.
 - Finish: if you never send `/finish`, the episode is graded when the step limit is reached or your session ends.

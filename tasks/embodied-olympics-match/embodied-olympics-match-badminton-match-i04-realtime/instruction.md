@@ -16,10 +16,10 @@ Rules:
   benchmark's demonstrations, trained policies); trials are reviewed.
 - One match, no reset: a point lost stays lost.
 - Use only the camera images, the service's replies and this text: no simulator internals or hidden state.
-- Reviews: after every point the world freezes; send `game ready "WHY" "PLAN"`, a short review, within 300 s of real
-  time (`timing.review_timeout_s` in `game spec`), or your side loses the match (`ready_timeout`), even when you are
-  ahead. The world does not go on by itself: watch for the freeze (your program's log, `game status`) and review at
-  once.
+- Reviews: after every point the world freezes. Within 300 s of real time (`timing.review_timeout_s` in `game spec`),
+  send a short review with `game ready "WHY" "PLAN"`; otherwise your side loses the match (`ready_timeout`), even when
+  you are ahead. The world does not go on by itself: watch for the freeze (your program's log, `game status`) and review
+  at once.
 - Start window: send `game start` within 1800 s of real time after the match service starts (`start.window_s` in
   `game spec`), or you lose the match (`no_show`). The match does not run before that: read `game spec` and prepare your
   program first.
@@ -41,17 +41,18 @@ The match (BWF Laws, with these changes):
 - The winner of a rally serves the next point (after a let, the same server); you serve the first point. Before every
   serve both robots are put at rest on their serve spots, diagonally opposite: in their right service courts when the
   server's score is even, else in their left ones.
-- The server has 3 s, from 1 s after play resumes, to toss the shuttle (`toss`) and then hits it: below 1.15 m, upwards,
-  over the net into the receiver's diagonally opposite service court (between its short service line and its back line,
-  lines in).
-- A serve that breaks this is a fault, the receiver's point: a toss not made in time (every time, never a
-  disqualification), a miss, a hit above 1.15 m or not upwards, a serve into the net or outside that court.
-- Both bases must stay on their spots until the serve is hit (or faulted): a base that moves earlier is that player's
-  fault (both at once: a let, replayed).
+- The server has 3 s, starting 1 s after play resumes, to toss the shuttle (`toss`). Then it hits the shuttle below 1.15
+  m, upwards, over the net into the receiver's diagonally opposite service court (between its short service line and its
+  back line, lines in).
+- A serve that breaks this is a fault and gives the receiver the point. The faults: a toss not made in time (a fault
+  every time, never a disqualification), a miss, a hit above 1.15 m or not upwards, a serve into the net or outside that
+  court.
+- Both bases must stay on their spots until the serve is hit (or faulted). A base that moves earlier is that player's
+  fault; if both move at once, it is a let and the point is replayed.
 
 ## Robot Interface
-Robot singles badminton on a small court (the BWF court's lengths × 0.4, the net at its full height): each player is a
-Franka Panda arm with a racket, held to the real Panda's limits, on an x-y gantry base; the shuttle has the real
+Robot singles badminton on a small court: the BWF court's lengths × 0.4, with the net at its full height. Each player is
+a Franka Panda arm with a racket, held to the real Panda's limits, on an x-y gantry base. The shuttle has the real
 shuttle's high drag and does not bounce. You are seat `A` against a scripted opponent at level 5, a tier above the
 sport's levels 1-3. The world runs at 1/S of real speed (S = 20). The robot runs as a service you reach through its
 client or its MCP tools, as if it were real hardware, on a clock that does not stop while you think: one live episode.
@@ -71,19 +72,19 @@ client is installed (`from rcb_client import Robot`).
 | `POST /submit {"type": T, "interpolate": "hold", "seconds": S}` | no new action for S seconds: what was planned for that robot from now on is dropped, and its last action stays in force |
 | `POST /ready {"why": "...", "plan": "..."}` | your review when the world freezes |
 
-`/submit` answers at once. `at` (default: the current step, `meta.step`) and DT (default: one control step) place the
-rows; a new chunk replaces what was planned for the same robot from `at` on, and rows whose step has passed are dropped
-(`meta.late_rows`). Each row is sent to the match at its step and takes effect like a `game act`; the next answers list
-each row's `effect_step` in `meta.effects` (a row the match refuses: `code` 400 there). The last action stays in force
-(no interpolation between rows). The plan is cleared when the world freezes. Where an action names a robot (`entity`),
-one chunk commands one: `"entity": E` in the chunk, or the type `T@E`. Every answer's `meta` has `score`, `review_due`
-(send `/ready` now), `match_over`, `step`, `phase` and your `state`. A `/submit` while the world is frozen or before the
-start executes nothing (`ok: false`, `not_now`); after the match is over requests are a 409. `/finish` and `/reset` are
-not offered (404): the match's rules end it, and there is one match. What differs from the plain standard:
-`timing.deviations` in `/spec`.
+`/submit` answers at once. `at` (default: the current step, `meta.step`) and DT (default: one control step) set the
+steps of the rows. A new chunk replaces what was planned for the same robot from `at` on. Rows whose step has already
+passed are dropped (`meta.late_rows`). Each row is sent to the match at its step and takes effect like a `game act`. The
+next answers list each row's `effect_step` in `meta.effects`; a row the match refuses shows `code` 400 there. The last
+action stays in force (no interpolation between rows). The plan is cleared when the world freezes. Where an action names
+a robot (`entity`), each chunk commands one robot: set `"entity": E` in the chunk, or use the type `T@E`. Every answer's
+`meta` has `score`, `review_due` (send `/ready` now), `match_over`, `step`, `phase` and your `state`. A `/submit` sent
+while the world is frozen or before the start executes nothing (`ok: false`, `not_now`). After the match is over, every
+request gets a 409. `/finish` and `/reset` are not offered (404): the match's rules end it, and there is one match.
+`timing.deviations` in `/spec` lists what differs from the plain standard.
 
-The same match also answers the `game` command, or the same calls as HTTP with JSON under
-`http://localhost:8000/<SEAT>/` (the paths below are under it; your seat is `$SEAT`); you may use both:
+The same match also answers the `game` command, and the same calls as HTTP with JSON under
+`http://localhost:8000/<SEAT>/` (your seat is `$SEAT`; the paths below are under it). You may use both:
 
 | `game` command | HTTP | |
 | --- | --- | --- |
@@ -96,9 +97,9 @@ The same match also answers the `game` command, or the same calls as HTTP with J
 | `game none` | `POST /act {"type": "none"}` | cancel the stroke under way (the arm returns to its ready pose) |
 | `game ready "WHY" "PLAN"` | `POST /ready {"why": "...", "plan": "..."}` | your review when the world freezes |
 
-Errors: 400 = an invalid action (nothing happens), 409 = not now (not your turn, or a review is due), 429 = one action
-in flight (sent before the previous one returned), or more than 20 requests per second or 4 open requests from your seat
-(empty body: retry more slowly).
+Errors: 400 = an invalid action (nothing happens); 409 = not now (not your turn, or a review is due); 429 = one action
+already in flight (sent before the previous one returned), or more than 20 requests per second or 4 open requests from
+your seat (empty body: retry more slowly).
 
 ### MCP tools
 - The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
@@ -117,9 +118,9 @@ in flight (sent before the previous one returned), or more than 20 requests per 
 - `act`: `{"type": "act", "t": T, "pos": [PX, PY, PZ], "normal": [NX, NY, NZ], "vel": [VX, VY, VZ]}`: the racket's state
   at contact, T s after the act takes effect: the head centre, the string-face normal and the head velocity (m/s).
   Limits: 0 < T <= 5, |x| <= 2.136, -3.68 <= y <= -0.3, 0.2 <= z <= 3.0, speed <= 8 m/s. It replaces the stroke under
-  way. An act may carry `"base": [BX, BY]`, where the base stands at contact (default: the forehand stance for pos: (PX,
-  PY) - 0.62 r (1, 1), r = max(0.30, 0.95 - 0.35 |PZ - 1.333|)); after a stroke the base stays where it struck (no
-  automatic return).
+  way. An act may carry `"base": [BX, BY]`, where the base stands at contact. By default the base takes the forehand
+  stance for pos: (PX, PY) - 0.62 r (1, 1), with r = max(0.30, 0.95 - 0.35 |PZ - 1.333|). After a stroke the base stays
+  where it struck (no automatic return).
 - The stroke controller drives the base to stand for a forehand at the contact point (or as far as it gets in time) and
   swings the arm within the joint speed and acceleration limits (a slower head when the time left does not allow the
   commanded one; the reply's stroke notes say so, and `state.command` gives the rehearsal's head velocity
@@ -130,42 +131,42 @@ in flight (sent before the previous one returned), or more than 20 requests per 
 - `none`: `{"type": "none"}` cancels the stroke (the arm returns to its ready pose, the base stays where it is).
 - `move`: `{"type": "move", "base": [BX, BY]}` sets where the base waits (it goes there once no stroke is under way;
   until a serve is delivered both bases must stay on their spots).
-- `toss`: `{"type": "toss", "pos": [X, Y, Z], "height": H}` tosses the shuttle for your serve: when the command takes
-  effect the shuttle appears at that point (0.5 <= Z <= 1.8, within 1.0 m horizontally of your base, Y <= -0.5) and is
-  released from rest (H = 0 or omitted) or rises H straight up (0 <= H <= 0.5) before it falls (until then it is held
-  beside the server; no spin). Then hit it with an act, which you may send before the toss.
+- `toss`: `{"type": "toss", "pos": [X, Y, Z], "height": H}` tosses the shuttle for your serve. When the command takes
+  effect, the shuttle appears at that point (0.5 <= Z <= 1.8, within 1.0 m horizontally of your base, Y <= -0.5). It is
+  released from rest (H = 0 or omitted) or rises H straight up (0 <= H <= 0.5) before it falls, with no spin; until then
+  it is held beside the server. Then hit it with an act, which you may send before the toss.
 - `traj` (the low level): `{"type": "traj", "q": [[base_x, base_y, q1..q7], ...]}`: joint targets, one per 10 ms control
-  step from the next step on (then the arm returns to its ready pose and the base holds its last target, or goes to the
-  point of a `move`), each within the joint ranges and speed limits of `game spec` `joints`, the base's within the
-  gantry's speed (2 m/s) and per-axis acceleration (15 m/s^2, from the targets' second differences), else refused; the
-  arm's targets pass through the Panda's setpoint generator (acceleration and jerk limits: a target beyond them is
-  reached later).
+  step from the next step on. After the last row the arm returns to its ready pose, and the base holds its last target
+  or goes to the point of a `move`. Each target must be within the joint ranges and speed limits of `game spec`
+  `joints`, and the base's within the gantry's speed (2 m/s) and per-axis acceleration (15 m/s^2, from the targets'
+  second differences); otherwise the action is refused. The arm's targets pass through the Panda's setpoint generator,
+  which has acceleration and jerk limits: a target beyond them is reached later.
 - Your robot: a Franka Panda arm held to the real Panda's limits (joint velocity 2.175 / 2.61 rad/s, acceleration 15 /
   7.5 / 10 / 12.5 / 15 / 20 / 20 rad/s^2, jerk, torque 87 / 12 N m, torque rate 1000 N m/s: `game spec` `arm_limits`) on
   a 1.0 m pedestal whose base rides a ball-screw gantry (|bx| <= 1.5, -3.53 <= by <= -0.5, up to 2 m/s and 15 m/s^2 per
   axis); it starts each point on the point's spot and then waits where you put it (`move`) or where it last struck. Its
-  servo runs the arm at 0.9 of the velocity limits, and an arm joint faster than 1.05 × its limit triggers the robot's
-  velocity reflex: it stops at that pose for 1 s (the gantry brakes to rest) and then resumes from rest, so the stroke
-  under way is lost (`velocity_reflexes` in the final record). The racket head centre is 0.56 m beyond the flange; the
-  string face is a disc of radius 0.14 m; the racket meets shuttles 0.4-2.5 m above the floor. From its ready pose
-  (racket head 1.15 m high) a stroke is delivered reliably about 0.8-1 s ahead, and its head reaches about 2-2.3 m/s
-  along a forward face normal.
+  servo runs the arm at 0.9 of the velocity limits. An arm joint faster than 1.05 × its limit triggers the robot's
+  velocity reflex: the robot stops at that pose for 1 s (the gantry brakes to rest), then resumes from rest, and the
+  stroke under way is lost (`velocity_reflexes` in the final record). The racket head centre is 0.56 m beyond the
+  flange; the string face is a disc of radius 0.14 m; the racket meets shuttles 0.4-2.5 m above the floor. From its
+  ready pose (racket head 1.15 m high) a stroke is delivered reliably about 0.8-1 s ahead, and its head reaches about
+  2-2.3 m/s along a forward face normal.
 
 ### Observations
-- `game observe`: a PNG of 2 rows × 4 columns of 480 × 360 tiles: row 1 a camera behind and above your base line looking
-  down the court, row 2 a camera at the side of the court (x < 0) looking along +x (your half on the right); the columns
-  are frames 60 ms apart, newest on the right, with each frame's step and game time (`view_steps`, `view_sim_times`). No
-  shuttle coordinates: the shuttle is drawn enlarged, an orange cork (12 cm ball centred on its position) with a white
-  skirt behind it.
+- `game observe`: a PNG of 480 × 360 tiles in 2 rows × 4 columns. Row 1 is a camera behind and above your base line,
+  looking down the court; row 2 is a camera at the side of the court (x < 0), looking along +x (your half on the right).
+  The columns are frames 60 ms apart, newest on the right, each with its step and game time (`view_steps`,
+  `view_sim_times`). No shuttle coordinates: the shuttle is drawn enlarged, an orange cork (12 cm ball centred on its
+  position) with a white skirt behind it.
 - Pinhole cameras (`game spec` gives each one's pose, field of view, size, `focal_px` and `principal_point_px`):
   `u = cx + f · x_right / depth`, `v = cy - f · y_up / depth`. Both cameras: 45 degree vertical field of view, focal
   length 434.6 px, principal point at the tile centre.
 - The state: your robot (`robot_base_xy`, `q_arm`, `racket_pos`, `racket_normal`), what you heard (tosses, serves and
   hits, with their times), whether the shuttle is coming to you, and the serve: `you_serve`, `serve.court` (right or
   left), `serve.phase` (`waiting`: the receiver is getting ready; `open`: the server may toss; `tossed`; `done`: the
-  serve was delivered), `serve.opens_in_s` and `serve.deadline_in_s` for the server, `serve.tossed_at_step`; a point
+  serve was delivered), `serve.opens_in_s` and `serve.deadline_in_s` for the server, and `serve.tossed_at_step`. A point
   lost by a service fault says `serve_fault:<reason>: ...` (undue_delay, missed, too_high, not_upwards, net, out,
-  moved), the receiver's early move `receive_fault:moved: ...`.
+  moved); a point lost by the receiver's early move says `receive_fault:moved: ...`.
 
 ### Frame and court
 - Metres; your own frame: x to your right, y towards the opponent, z up; the floor z = 0. Your half is y < 0.
@@ -184,11 +185,11 @@ world freezes for the reviews. One action at a time per seat (429).
   metre (terminal speed 6.8 m/s): hit at 40 m/s it slows to about 10 m/s within 0.3 s, and a high shuttle falls almost
   vertically at close to 6.8 m/s. No spin, no wind, no bounce.
 - Racket contact: the racket meets the shuttle when the shuttle's centre crosses the string plane within 0.14 m of the
-  head centre; the shuttle leaves exactly along the face normal n (the side the head moves towards, relative to the
-  shuttle) at the speed 4 max(0, v_head·n) (1 - 0.3 (r/0.14)^2) + 0.15 max(0, -v_in·n), where v_head is the head
-  velocity, r the contact's distance from the head centre and v_in the shuttle's incoming velocity; the rest of the head
-  and incoming velocity is lost. A head speed along the normal of 1 m/s gives about 4 m/s, 2.5 m/s about 10 m/s (a
-  lofted shot of 10 m/s flies about 4-5 m and 1.3-1.5 s).
+  head centre. The shuttle leaves exactly along the face normal n (pointing to the side the head moves towards, relative
+  to the shuttle) at the speed 4 max(0, v_head·n) (1 - 0.3 (r/0.14)^2) + 0.15 max(0, -v_in·n). Here v_head is the head
+  velocity, r the contact's distance from the head centre and v_in the shuttle's incoming velocity. The rest of the head
+  and incoming velocity is lost. A head speed of 1 m/s along the normal gives a shuttle speed of about 4 m/s, and 2.5
+  m/s gives about 10 m/s. A lofted shot at 10 m/s flies about 4-5 m in 1.3-1.5 s.
 
 ### Container
 - Your container: Python 3.12 with numpy, SciPy and Pillow.

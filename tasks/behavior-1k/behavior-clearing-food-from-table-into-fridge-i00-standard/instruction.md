@@ -48,17 +48,17 @@ res.video[cam]; res.frames[cam]; res.last[cam]; res.proprio   # execution video 
   float32 (224, 224); `depth="frames"` also returns `res.depth[cam]` (N, 224, 224), one per frame. Per frame:
   `res.frame_step`, `res.frame_time_s` and `res.extrinsic_cv[cam]` (N, 3, 4). Proprio groups: `res.group("tcp_pose")`
   per frame, `res.group("tcp_pose", now=True)` now.
-- Kinematics (stateless: no physics, no time): `r.fk(q)`, `r.ik({"left_tcp": pose}, seed=q)`; q =
-  `spec["kinematics"]["joint_names"]` (trunk + both arms, all proprio columns); poses in the robot's base frame, or in
-  the world frame with `base_pose=` the 7 base proprio columns.
+- Kinematics (stateless: no physics, no time): `r.fk(q)` and `r.ik({"left_tcp": pose}, seed=q)`. q follows
+  `spec["kinematics"]["joint_names"]` (trunk + both arms, all proprio columns). Poses are in the robot's base frame, or
+  in the world frame if you pass `base_pose=` the 7 base proprio columns.
 - A malformed request (a wrong type or shape, a value out of range, a `dt` that is not a whole number of control
   periods, `video_fps` outside 1-30) is refused with a 400 and nothing is executed: fix it and send it again.
 - One call returns at most 5412 images. A call that runs longer than `spec["max_call_wall_s"]` (900 s) stops at the next
   control step and returns what it executed (`res.stopped`, `meta["executed_rows"]`).
-- If the service crashes (a connection error or a 5xx answer), it restarts and resumes the same episode (never a reset)
-  in the state after the last call it completed, which you may not have received: call `r.wait_ready()`, then check
-  `r.status()` (`calls`, `control_steps`) before you continue. Resuming replays the episode so far (minutes in a long
-  episode) on your wall clock.
+- If the service crashes (a connection error or a 5xx answer), it restarts and resumes the same episode; it never
+  resets. It resumes in the state after the last call it completed, and you may not have received that call's answer.
+  Call `r.wait_ready()`, then check `r.status()` (`calls`, `control_steps`) before you continue. Resuming replays the
+  episode so far on your wall clock, which can take minutes in a long episode.
 
 ### MCP tools
 - The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
@@ -73,31 +73,33 @@ res.video[cam]; res.frames[cam]; res.last[cam]; res.proprio   # execution video 
 
 ### Actions
 - The world frame is OmniGibson's (metres, +z up, the floor is the plane z = 0); poses are position + quaternion XYZW.
-- `joint_position` (25), in the blocks `spec["action_types"]["joint_position"]["blocks"]` lists: base (3), trunk (4),
-  left arm (7), left gripper (2), right arm (7), right gripper (2). Rows are `dt` apart (`1/30 ≤ dt ≤ 0.5` s, a multiple
-  of the 30 Hz control period: `k/30` s, e.g. 0.1 or 0.2; any other `dt` is refused, never rounded); a chunk covers at
-  most 10 s; out-of-limit values are clipped and listed in `meta["clipped"]`.
+- `joint_position` (25 values), in the blocks that `spec["action_types"]["joint_position"]["blocks"]` lists: base (3),
+  trunk (4), left arm (7), left gripper (2), right arm (7), right gripper (2). Rows are `dt` apart. `dt` must be a
+  multiple of the 30 Hz control period (`k/30` s, e.g. 0.1 or 0.2) with `1/30 ≤ dt ≤ 0.5` s; any other `dt` is refused,
+  never rounded. A chunk covers at most 10 s. Out-of-limit values are clipped and listed in `meta["clipped"]`.
   - Trunk and arm entries are absolute joint targets (rad), linearly interpolated between rows (or held,
     `interpolate="hold"`).
-  - The three base entries are different: they are position targets in the robot's own frame (x, y in m, yaw in rad),
-    re-applied on every control step, so they act as a per-step displacement: a row held for N control steps drives
-    roughly N times that far. They are bounded per step (0.15 m, 0.3 rad); zeros stand still. They switch at the row.
-  - Each gripper is 2 finger targets in m (0 = closed, 0.05 = fully open); they switch at the row. Grasping is assisted:
-    a finger commanded below 0.05 closes and holds what the pads touch; only both fingers at ≥ 0.05 let go, so open with
-    0.07 (the service's open command).
+  - The three base entries work differently. They are position targets in the robot's own frame (x, y in m, yaw in rad),
+    re-applied on every control step. So they act as a per-step displacement: a row held for N control steps drives
+    roughly N times that far. They are bounded per step (0.15 m, 0.3 rad); zeros stand still. They change at once at the
+    start of each row.
+  - Each gripper is 2 finger targets in m (0 = closed, 0.05 = fully open); they change at once at the start of each row.
+    Grasping is assisted: a finger commanded below 0.05 closes and holds what the pads touch. The grasp lets go only
+    when both fingers are at ≥ 0.05, so open with 0.07 (the service's open command).
 - `ee_pose` (16): left `x y z qx qy qz qw gripper`, right the same; world frame, quaternions xyzw, gripper 1 = open, 0 =
-  closed (switched at the start of the row). Each row is solved by cuRobo inverse kinematics for both end effectors
-  together (the trunk may bend too; no collision checking) and driven to in joint space; `dt` is ignored and the base
-  stands still. If no IK solution exists nothing moves, and `meta["plan"]` says so. The pose is the end-effector frame
-  of the proprio `*_eef_*` entries, so an observed pose is a valid target. At most 50 rows per submit.
+  closed (switched at the start of the row). For each row, cuRobo inverse kinematics solves both end effectors together
+  (the trunk may bend too; there is no collision checking), and the robot drives to that solution in joint space. `dt`
+  is ignored and the base stands still. If no IK solution exists nothing moves, and `meta["plan"]` says so. The pose is
+  the end-effector frame of the proprio `*_eef_*` entries, so an observed pose is a valid target. At most 50 rows per
+  submit.
 
 ### Observations
 - Cameras: `robot_r1:zed_link:Camera:0` (head; moves with the base and trunk), `robot_r1:left_realsense_link:Camera:0`
   and `robot_r1:right_realsense_link:Camera:0` (wrists), 224×224 each: RGB, and depth on request (z-depth in metres, 0 =
   no reading, pixel-aligned with the RGB). They all move, so always use the calibration that came with the image;
   intrinsics `spec["cameras"][cam]["intrinsic_cv"]`, mounting `spec["cameras"][cam]["mount"]` (parent link + fixed
-  `link_T_cam_cv`). While the robot moves, a frame shows the scene 2 control steps before its step; the pose that comes
-  with it is the one it was rendered with.
+  `link_T_cam_cv`). While the robot moves, a frame shows the scene as it was 2 control steps before the step it is
+  reported at. The camera pose that comes with a frame is the pose it was rendered with.
 - Proprioception: joints, base pose, end-effector and fingertip poses, gripper openings, velocities and efforts, as
   named columns (`spec["proprio_layout"]`) in groups (`spec["proprio_groups"]`: joint_pos, joint_vel, joint_effort,
   gripper_opening, tcp_pose, eef_pose, base_pose, ...).
@@ -117,6 +119,6 @@ res.video[cam]; res.frames[cam]; res.last[cam]; res.proprio   # execution video 
   no GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap
   only slows you down); usage: `/run/rcb-limits/usage.json`.
 - Resets: none: one episode.
-- Steps: no step budget (actions and simulated time are reported as cost); a runaway guard ends the episode at 200,000
+- Steps: no step budget (actions and simulated time are reported as cost). A runaway guard ends the episode at 200,000
   control steps (1.85 h of simulated time).
 - Finish: if you never send `/finish`, the episode is graded when your session ends.

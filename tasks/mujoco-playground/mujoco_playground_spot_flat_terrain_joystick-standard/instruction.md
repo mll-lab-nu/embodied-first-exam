@@ -42,14 +42,14 @@ r.status()                                     # calls, control steps, done, rea
 obs = r._post("/reset", {"cameras": ["track"]}, [], 900)   # POST /reset: a new episode (the 2.2 client has no reset())
 ```
 
-Simulated time only advances with your commands (and `hold(s)`, which holds the current targets). A reset (`POST
-/reset`, the `_post` line above) puts the robot back on the same frozen starting state and starts a new episode, either
-abandoning the running one or after one has ended; it takes no simulated time and returns the start's images and
-proprioception. Once an episode has ended, `submit` raises `EpisodeOver` until you reset. The wall clock is the run's
-and never restarts; `meta["episode"]` and `meta["resets_left"]` count the episodes (`meta["control_steps"]` is the
-current episode's). If the service crashes, a call fails with a connection error: it restarts and resumes the same
-episode (never a reset) in the state after the last call it completed. `r.wait_ready()` waits for it; then check
-`r.status()`. One call returns at most 3000 images.
+Simulated time only advances with your commands (and `hold(s)`, which holds the current targets). A reset
+(`POST /reset`, the `_post` line above) puts the robot back on the same frozen starting state and starts a new episode.
+You can reset during an episode (abandoning it) or after one has ended. A reset takes no simulated time and returns the
+start's images and proprioception. Once an episode has ended, `submit` raises `EpisodeOver` until you reset. The wall
+clock covers the whole run and never restarts. `meta["episode"]` and `meta["resets_left"]` count the episodes;
+`meta["control_steps"]` counts only the current episode's steps. If the service crashes, a call fails with a connection
+error. The service restarts and resumes the same episode (never a reset), in the state after the last call it completed.
+`r.wait_ready()` waits for it; then check `r.status()`. One call returns at most 3000 images.
 
 ### MCP tools
 - The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
@@ -66,8 +66,8 @@ episode (never a reset) in the state after the last call it completed. `r.wait_r
 ### Actions
 Action type `joint_position` (12): FL, FR, HL, HR legs, each hx (abduction), hy (hip pitch), kn (knee): absolute targets
 of the joint position actuators (rad; kp = 300 N m/rad, joint damping 1 N m s/rad, plus the actuators' own damping of 20
-N m s/rad). Rows are `dt` apart (a whole multiple of the 0.02 s control period, at most 0.5 s), `interpolate="linear"`
-(default) or `"hold"` between rows; a chunk covers at most 10 s; values outside the limits
+N m s/rad). Rows are `dt` apart (a whole multiple of the 0.02 s control period, at most 0.5 s). Between rows, use
+`interpolate="linear"` (default) or `"hold"`. A chunk covers at most 10 s. Values outside the limits
 (`spec["action_types"]["joint_position"]["limits"]`) are clipped and listed in `res.meta["clipped"]`. Feedback control
 means short chunks: each response tells you where the robot is now.
 
@@ -98,5 +98,5 @@ control steps).
   GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap only
   slows you down); usage: `/run/rcb-limits/usage.json`.
 - Resets: at most 10 (`spec()["budget"]["reset"]`), each a new episode from the same starting state.
-- Steps: the episode ends by itself at the end of the schedule, after 20 s of robot time.
+- Steps: the episode ends at the end of the schedule, after 20 s of robot time.
 - Finish: if you never send `/finish`, the episode is graded when the step limit is reached or your session ends.

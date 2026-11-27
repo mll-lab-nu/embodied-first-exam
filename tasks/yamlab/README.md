@@ -171,7 +171,7 @@ hash exactly, resumes the same episode, the oracle continues from the reported s
 
 ## Time budget
 3600 s for every task of both modes: each task's own `[agent] timeout_sec` (PROTOCOL §2,
-docs/protocol/running.md "The agent's time"); every instruction states it in its closing `## Time limit` section, and the benchmark's
+docs/protocol/running.md "The agent's time"); every instruction states it in the Time line of its closing `## Limits`, and the benchmark's
 own text names no number. Every Python process pays ~1.5-2.5 min of Isaac Sim launch and scene build (more on a loaded
 host). A trial's first Isaac start in a container compiles the shaders into the trial's fresh Kit cache (up to ~10 min on
 a heavily loaded host); the standard sidecar's startup watchdog is therefore 1800 s (as BEHAVIOR-1K), and the standard

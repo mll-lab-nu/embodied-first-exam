@@ -19,10 +19,11 @@ Any of these ends the episode at once as a failure, which later actions cannot u
 - After it was grasped, the plug is dropped (let go while it is not in a port).
 - The physics becomes unstable.
 
-Deliverable: `/app/output/trajectory.npz` with a finite numeric `actions` array of shape `(T, 58)` for `sharpa` or
-`(T, 54)` for `wuji`, at most 3000 rows, plus the `hand` member (`s.save_trajectory` writes both), and
-`/app/output/gen.py`, the script that produced it. Save it compressed (`numpy.savez_compressed`; `s.save_trajectory`
-does): an archive larger than 64 MB is rejected. Save a valid one early and overwrite it when you have a better one.
+Deliverable: `/app/output/trajectory.npz` and `/app/output/gen.py`, the script that produced it. The archive holds a
+finite numeric `actions` array of shape `(T, 58)` for `sharpa` or `(T, 54)` for `wuji`, at most 3000 rows, plus the
+`hand` member; `s.save_trajectory` writes both. Save it compressed with `numpy.savez_compressed` (`s.save_trajectory`
+does this). An archive larger than 64 MB is rejected. Save a valid one early and overwrite it when you have a better
+one.
 
 Rules: **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
 benchmark's demonstrations, trained policies); trials are reviewed.
@@ -78,9 +79,9 @@ normal +x, thumb +y), which forward kinematics of the arm joints places in the w
 ### Hands
 Two hand models: `sharpa` (Sharpa Wave, 22 finger actuators; the default) and `wuji` (Wuji Hand 2.2, 20 finger
 actuators); the task is the same for both. Choose the hand with `Session(..., hand="wuji")` or the environment variable
-`DEXHAND_HAND=wuji` (default `sharpa`). `s.save_trajectory(actions, path)` records the hand in the archive (`hand`
-member, `sharpa` when absent); a trajectory whose row width does not match its hand is rejected. Action rows are `58`
-wide for `sharpa` and `54` wide for `wuji`; `s.actuator_names` gives the exact order.
+`DEXHAND_HAND=wuji` (default `sharpa`). `s.save_trajectory(actions, path)` records the hand in the archive as the `hand`
+member; an archive without it counts as `sharpa`. A trajectory whose row width does not match its hand is rejected.
+Action rows are `58` wide for `sharpa` and `54` wide for `wuji`; `s.actuator_names` gives the exact order.
 
 ### Robot
 You control the right arm and right hand of a fixed Tianji Marvin robot: a stand with two 7-joint arms and a dexterous
@@ -88,8 +89,8 @@ hand on each wrist. The robot stands on the floor in front of the desk, right of
 -0.52 on the floor at z = -0.20, facing the desk at yaw 135 deg, i.e. toward world (-1, +1)/sqrt(2); shoulders at z =
 1.021 m, 1.221 m above the floor). The left arm stays parked beside the torso with its hand open; the task is done by
 the right arm and hand alone. Every arm and finger joint is a position servo inside the physics engine under native
-force bounds; arm servos have stiffness 700 N m/rad, damping 48 N m s/rad and no gravity compensation (a held target
-sags under the arm's weight unless your targets account for it). Grasping, carrying, inserting and releasing require
+force bounds. Arm servos have stiffness 700 N m/rad, damping 48 N m s/rad and no gravity compensation, so a held target
+sags under the arm's weight unless your targets account for it. Grasping, carrying, inserting and releasing require
 physical contact. Only the working right hand may touch the desk and the task objects: any contact of an arm link, the
 stand or torso, or the parked left hand with anything fails the episode at once (`robot_collision`). The controller runs
 at 50 Hz, with ten 2 ms physics substeps.

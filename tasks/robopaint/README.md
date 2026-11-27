@@ -240,8 +240,8 @@ a Man respected."), `commendation` ("Commendation animates the mind.") and `dili
 
 ## Time budget
 3600 s for every task of both modes: each task's own `[agent] timeout_sec` (PROTOCOL §2,
-docs/protocol/running.md "The agent's time"); `instruction.md` states it once, in its closing `## Time limit` section, and the
-rest of the text says "the time limit (`## Time limit`)". What the agent has to fit into it:
+docs/protocol/running.md "The agent's time"); `instruction.md` states it once, in the Time line of its closing `## Limits`, and the
+rest of the text says "the time limit (Limits)". What the agent has to fit into it:
 - learning the brush's mark from test strokes on the practice sheet: width against press depth, the drag of the tuft, the
   paint's blending (the privileged mode gives the exact sheet but no brush model);
 - every stroke on the main sheet is irreversible in standard mode;

@@ -8,8 +8,8 @@ through the shelf holes into the frames until they seat. Then let go of everythi
 Success: the four screws are screwed in (turned, not just pushed) through the shelf holes into four different holes in
 the frames and seated; the frames stand lined up under the shelf, the insert stands on the bench on its own, no arm
 touches it and everything is still. Forcing parts deep into each other breaks the simulation and ends the episode at
-once, without success. What counts is how things stand after the last action of your trajectory, replayed from the fixed
-start. After your last row the grader holds it for 1 s more and requires all of this again: end your rows with the parts
+once, without success. Your trajectory is replayed from the fixed start. What counts is the state after its last action.
+After your last row the grader holds it for 1 s more and requires all of this again: end your rows with the parts
 released, the arms clear of them and everything at rest.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory()`: `ctrl` (N, 16) float64, `substeps` = 4,
@@ -54,15 +54,15 @@ s.save_trajectory(path="/app/output/trajectory.npz")   # the rows recorded since
 ### Actions
 - Action: one row of 16 actuator controls per control tick, float64: per arm (`left_`, then `right_`):
   `actuator1`..`actuator7` = joint position targets (rad; joint 7, the wrist, has no joint limit in these scenes, unlike
-  the real Panda), `actuator8` = gripper command (0 = closed, 255 = open; the hand squeezes at its tendon force limit,
-  about 70 N per finger, at any width when commanded 0). Out-of-range values are clamped to each actuator's ctrlrange.
-  Speed rule (the robot's real limits; clamp, not fail; `rcb_ikea.JOINT_SPEED_LIMITS_RAD_S`): each arm joint target
-  moves at most 0.0054375 rad per control tick on joints 1-4 (`actuator1`..`actuator4`: 2.175 rad/s) and 0.006525 rad on
-  joints 5-7 (`actuator5`..`actuator7`: 2.61 rad/s), the Franka Panda's joint velocity limits, from the target applied
-  on the previous tick; a target that asks for more is moved by the limit only (`Session.applied()`, in `s.step` and in
-  the grader's replay alike), so a fast row is spread over the ticks after it. A row within the limit (+1e-9) is applied
-  unchanged. The gripper command is not limited. The arms are position servos; the actuators' gains and force limits are
-  in the model.
+  the real Panda), `actuator8` = gripper command (0 = closed, 255 = open). Commanded 0, the hand squeezes at its tendon
+  force limit, about 70 N per finger, at any width. Out-of-range values are clamped to each actuator's ctrlrange. Speed
+  rule (the robot's real limits; clamp, not fail; `rcb_ikea.JOINT_SPEED_LIMITS_RAD_S`): from the target applied on the
+  previous tick, each arm joint target moves at most 0.0054375 rad per control tick on joints 1-4
+  (`actuator1`..`actuator4`: 2.175 rad/s) and 0.006525 rad on joints 5-7 (`actuator5`..`actuator7`: 2.61 rad/s). These
+  are the Franka Panda's joint velocity limits. A target that asks for more is moved by the limit only, so a fast row is
+  spread over the ticks after it. This holds in `s.step` and in the grader's replay alike (`Session.applied()`). A row
+  within the limit (+1e-9) is applied unchanged. The gripper command is not limited. The arms are position servos; the
+  actuators' gains and force limits are in the model.
 - Each row is applied for 4 physics steps of 0.625 ms: a 2.5 ms control tick (400 Hz). One control tick takes about 16.6
   ms of wall clock here: budget your experiments.
 - World frame: MuJoCo's, +z up, metres; quaternions are MuJoCo's **WXYZ**. Tool frames (sites): `left_tcp` / `right_tcp`

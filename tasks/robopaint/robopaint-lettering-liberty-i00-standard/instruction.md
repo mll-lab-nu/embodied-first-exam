@@ -14,8 +14,8 @@ When you are done, send `/finish` to end the episode and get it graded.
 You are scored on how closely your ink matches the exemplar's, afterwards, from the service's record of your episode.
 
 Letter the line with pen strokes, the way a scribe writes it: each stroke of a letter is one pass of the pen along it;
-going over a stroke again is fine. Colouring in or filling the letters' shapes, zigzag or serpentine fills, and fills
-that go round and round inside a shape fail the task, even when the sheet matches the picture. The exact checks are
+going over a stroke again is fine. These fail the task even when the sheet matches the picture: colouring in or filling
+the letters' shapes, zigzag or serpentine fills, and fills that go round and round inside a shape. The exact checks are
 under Process rules in Robot Interface.
 
 Rules:
@@ -71,9 +71,10 @@ res.save("/app/runs/003")                     # meta.json, <cam>.mp4, frames/<ca
 - `meta["time_left_s"]` is the service's count of the time left.
 
 A service restart is not a reset. If the service crashes, it restarts and resumes the same episode in the state after
-the last call it completed (the call that was running is lost as a whole: you get a connection error). `r.wait_ready()`
-waits until it answers again (resuming replays the episode so far without rendering; the clock keeps running), then
-`r.status()` tells `calls` and `control_steps`, so you know what was executed (`spec["on_service_error"]`).
+the last call it completed. The call that was running is lost as a whole, and you get a connection error.
+`r.wait_ready()` waits until the service answers again; resuming replays the episode so far without rendering, and the
+clock keeps running. Then `r.status()` tells `calls` and `control_steps`, so you know what was executed
+(`spec["on_service_error"]`).
 
 ### MCP tools
 - The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
@@ -90,10 +91,10 @@ waits until it answers again (resuming replays the episode so far without render
 Two action types:
 - `ee_pose` (7): `x y z qw qx qy qz` of the pen tip in the world frame (z up, the robot base at (-0.615, 0, 0), x away
   from the base, y to the robot's left); quaternion wxyz — the proprio quaternion at the start points the pen straight
-  down. Rows are `dt` apart (`1/20 ≤ dt ≤ 0.5` s, a multiple of 1/20 s): the tip target moves on a straight line from
-  the previous row's target at the 20 Hz control rate, one IK solve per control step (no collision checking), at most
-  0.25 m/s (a faster row is slowed down; `meta["plan"]` reports it and any IK failure). At most 400 rows and 10 s per
-  submit.
+  down. Rows are `dt` apart (`1/20 ≤ dt ≤ 0.5` s, a multiple of 1/20 s). The tip target moves on a straight line from
+  the previous row's target at the 20 Hz control rate, with one IK solve per control step (no collision checking), at
+  most 0.25 m/s. A faster row is slowed down; `meta["plan"]` reports it and any IK failure. At most 400 rows and 10 s
+  per submit.
 - `joint_position` (7): `panda_joint1..7` absolute joint targets in radians (PD-tracked), rows `dt` apart, `interpolate`
   = `"linear"` (default) or `"hold"`; a chunk may cover at most 10 s; out-of-limit values are clipped and listed in
   `meta["clipped"]` (limits in the spec).
@@ -108,13 +109,13 @@ Two action types:
 - Proprioception: the robot's own joint positions, velocities and efforts and its pen-tip pose.
 
 ### The pen, the ink and the sheets
-- The pen is a rigid holder with a pointed flexible steel nib (two tines split by a slit; no collision; the holder hits
-  the paper 6 mm below its surface); the proprio "tip" pose is the point. A light touch writes a hairline 0.4 mm wide;
-  pressed deeper, the tines spread apart and the line widens, up to 2.0 mm when they are fully open (no wider beyond);
-  how the width follows the press is for you to find out (the practice sheet is there for that). The tines spread along
-  the tool's y axis (the second column of the tip pose's rotation matrix; at the start pose along the writing line,
-  world -y): a pressed stroke is wide where the point moves across that axis and stays thin where it moves along it.
-  Turning the pen about the vertical turns it (the camera images show the nib).
+- The pen is a rigid holder with a pointed flexible steel nib: two tines split by a slit (no collision). The holder hits
+  the paper when the point is 6 mm below the paper's surface. The proprio "tip" pose is the point. A light touch writes
+  a hairline 0.4 mm wide. Press deeper and the tines spread apart and the line widens, up to 2.0 mm when they are fully
+  open (no wider beyond). How the width follows the press is for you to find out (the practice sheet is there for that).
+  The tines spread along the tool's y axis: the second column of the tip pose's rotation matrix, which at the start pose
+  lies along the writing line (world -y). A pressed stroke is wide where the point moves across that axis and stays thin
+  where it moves along it. Turning the pen about the vertical turns that axis with it (the camera images show the nib).
 - Ink: the pen starts dry (strokes leave no mark). The ink well, radius 20 mm, lies on a rigid plate on the robot's left
   (+y). Dipping = the tip inside the well's circle and below the ink surface: the pen is then inked (it never runs dry).
   The robot does not report whether the pen is inked; the nib looks dark on the cameras when it is.
@@ -127,21 +128,22 @@ Two action types:
 ### The target picture
 `/app/target.png` (1024 × 1024 px, RGB) shows the exemplar at its true size and place on the main sheet: the image
 covers the main sheet exactly, 0.2219 mm per pixel. Pixel (column u, row v), counted from 0 at the image's top-left, has
-its centre at sheet millimetres X = (u + 0.5) · 227.18 / 1024, Y = (v + 0.5) · 227.18 / 1024 (X to the robot's right, Y
-towards the robot, origin = the sheet's far-left corner as seen from the robot's base). Image top = the sheet's far edge
-(+x), image left = the robot's left (+y): the same orientation as `canvas_cam`.
+its centre at sheet millimetres X = (u + 0.5) · 227.18 / 1024, Y = (v + 0.5) · 227.18 / 1024. X runs to the robot's
+right and Y towards the robot; the origin is the sheet's far-left corner as seen from the robot's base. Image top = the
+sheet's far edge (+x), image left = the robot's left (+y): the same orientation as `canvas_cam`.
 
 ### Process rules
 The grader checks the process rules in Goal on the episode with two numbers you can compute yourself; only inked strokes
 on the main sheet count (the practice sheet is free):
 - `path_mm`: the total length of the pen tip's path while it presses on the main sheet with ink (all strokes together,
   sampled at every physics step);
-- `mark_width_mm`: the average width of your marks = the area each stroke inks on its own (its own mark, ink coverage ≥
-  0.5; where different strokes overlap, each counts its own), summed over the strokes, divided by `path_mm`.
+- `mark_width_mm`: the average width of your marks. It is the area each stroke inks on its own, summed over the strokes
+  and divided by `path_mm`; a stroke's own area is its own mark where ink coverage is ≥ 0.5, and where different strokes
+  overlap, each counts its own.
 
-Colouring in = `path_mm` > 7940 mm and `mark_width_mm` < 0.13 mm (a long path of thin marks): it fails the task. A
-pressed pen, even over a stroke again, keeps the marks wide enough, and a light hand on a short path stays under the
-path limit: both are fine. Breaking a process rule fails the task.
+Colouring in = `path_mm` > 7940 mm and `mark_width_mm` < 0.13 mm (a long path of thin marks): it fails the task. Both of
+these are fine: a pressed pen keeps the marks wide enough, even when it goes over a stroke again, and a light hand on a
+short path stays under the path limit. Breaking a process rule fails the task.
 
 The score (`final_reward`, 0 to 1) is how well your ink overlaps the exemplar's (1 = the same); it is scaled down above
 the stroke cap and when a process rule fails.
@@ -158,6 +160,6 @@ the stroke cap and when a process rule fails.
   GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap only
   slows you down); usage: `/run/rcb-limits/usage.json`.
 - Resets: none: one episode.
-- Steps: no step budget; actions and simulated time are reported as cost; a runaway guard stops the robot after 72000
-  control steps (1 h of simulated time; `hold(s)` also advances it).
+- Steps: no step budget. Actions and simulated time are reported as cost. A runaway guard stops the robot after 72000
+  control steps (1 h of simulated time). `hold(s)` also adds to that count.
 - Finish: if you never send `/finish`, the episode is graded when your session ends.

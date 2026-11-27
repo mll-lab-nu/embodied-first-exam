@@ -4,15 +4,15 @@
 Pull the door open, at least two-thirds of the way.
 
 ## Goal
-Success: the door is open at least two-thirds of the way. What counts is how things stand after the last action of your
-trajectory, replayed from the fixed start. Rows past the step limit (Limits) are never run: ending your trajectory once
-the task holds is how you stop there.
+Success: the door is open at least two-thirds of the way. Your trajectory is replayed from the fixed start. What counts
+is the state after its last action. Rows past the step limit (Limits) are never run. To stop there once the task holds,
+end your trajectory.
 
 Deliverable: `/app/output/trajectory.npz` with `actions`, float64 (T, 25), one row per control step (the layout is under
 Actions); at most 100,000 rows (a longer file scores 0). `s.save_trajectory(rows, "/app/output/trajectory.npz")` writes
-it. It is replayed open-loop from the fixed start. Leave the script that produced it at `/app/output/gen.py`, and leave
-`/app/output/rcb_session_log.jsonl` where it is (the tooling writes it: your sessions, resets and simulated steps,
-reported as cost; not graded). Save a valid trajectory early and overwrite it when you have a better one.
+it. It is replayed open-loop from the fixed start. Leave the script that produced it at `/app/output/gen.py`. Also leave
+`/app/output/rcb_session_log.jsonl` where it is: the tooling writes it with your sessions, resets and simulated steps,
+reported as cost. That log is not graded. Save a valid trajectory early and overwrite it when you have a better one.
 
 Rules: **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
 benchmark's demonstrations, trained policies); trials are reviewed.
@@ -74,4 +74,4 @@ s.save_trajectory(rows, "/app/output/trajectory.npz")
   one GPU (7 GiB of its memory). Over a cap a process can be killed (the CPU cap only slows you down); usage:
   `/run/rcb-limits/usage.json`.
 - Resets: as many as you like (`s.reset()`).
-- Steps: at most 400 control steps (the benchmark's 40 s horizon); the replay stops there.
+- Steps: at most 400 control steps (the benchmark's 40 s horizon), then the replay stops.

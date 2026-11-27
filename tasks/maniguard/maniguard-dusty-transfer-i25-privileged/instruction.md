@@ -62,8 +62,8 @@ s.env, s.robot, s.get_object(name) # OmniGibson's environment, robot and objects
   `python /opt/tools/rcb_maniguard.py replay --task dusty_transfer/task_0025 --instance /app/instance --traj /app/output/trajectory.npz`.
 
 ### Actions
-- Action (8): `panda_joint1..7` absolute joint-position targets (rad) + the gripper command: +1 = open, -1 = close (any
-  other value is binarised: its sign, or -1 when |x| <= 0.01). `s.hold_action()` is the no-op.
+- Action (8): `panda_joint1..7` absolute joint-position targets (rad), then the gripper command: +1 = open, -1 = close.
+  Any other value is binarised to its sign, or to -1 when |x| <= 0.01. `s.hold_action()` is the no-op.
 - Control runs at 20 Hz with 120 Hz physics (PhysX on the CPU): one row is one control step (1/20 s); `s.step(row)` runs
   one.
 - End-effector frames: `eef` is OmniGibson's end-effector link (+z along the fingers, the fingers close along +y); `tcp`
@@ -92,5 +92,5 @@ fin-ray fingers.
   one GPU (18 GiB of its memory). Over a cap a process can be killed (the CPU cap only slows you down); usage:
   `/run/rcb-limits/usage.json`.
 - Resets: as many as you like (`s.reset()`).
-- Steps: an episode ends after 50,000 control steps (41.7 min of simulated time; `s.status()["reason"]` =
-  `runaway_guard`, a failure); there is no other step budget.
+- Steps: an episode ends after 50,000 control steps (41.7 min of simulated time) as a failure, with
+  `s.status()["reason"]` = `runaway_guard`. There is no other step budget.

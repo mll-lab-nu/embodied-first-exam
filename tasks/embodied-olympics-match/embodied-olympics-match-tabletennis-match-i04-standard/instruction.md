@@ -16,10 +16,10 @@ Rules:
   benchmark's demonstrations, trained policies); trials are reviewed.
 - One match, no reset: a point lost stays lost.
 - Use only the camera images, the service's replies and this text: no simulator internals or hidden state.
-- Reviews: after every point the world freezes; send `game ready "WHY" "PLAN"`, a short review, within 300 s of real
-  time (`timing.review_timeout_s` in `game spec`), or your side loses the match (`ready_timeout`), even when you are
-  ahead. The world does not go on by itself: watch for the freeze (your program's log, `game status`) and review at
-  once.
+- Reviews: after every point the world freezes. Within 300 s of real time (`timing.review_timeout_s` in `game spec`),
+  send a short review with `game ready "WHY" "PLAN"`; otherwise your side loses the match (`ready_timeout`), even when
+  you are ahead. The world does not go on by itself: watch for the freeze (your program's log, `game status`) and review
+  at once.
 - Start window: send `game start` within 1800 s of real time after the match service starts (`start.window_s` in
   `game spec`), or you lose the match (`no_show`). The match does not run before that: read `game spec` and prepare your
   program first.
@@ -29,9 +29,9 @@ Rules:
 
 The match (ITTF Laws, with these changes):
 - One game: the first to 5 points with a lead of 2 from 4:4, or the first to 7 (at 6:6 the next point wins). At 40
-  points played (lets included) the player ahead wins, at a level score the player who won the last point. There are no
-  draws.
-- A player's third undue-delay fault (no toss within 5 s of the serve opening) loses it the match.
+  points played (lets included) the player ahead wins; if the score is level, the player who won the last point wins.
+  There are no draws.
+- A player loses the match at its third undue-delay fault (no toss within 5 s of the serve opening).
 - Let the ball bounce exactly once on your half, then hit it once so that it lands on the opponent's half, directly or
   after touching the net (the upper table edges count, the vertical sides do not).
 - You lose the point for a volley, a double hit, two bounces, a miss, a ball that lands on your own half or out, the
@@ -44,21 +44,21 @@ The match (ITTF Laws, with these changes):
 - The server must toss within 5 s of the serve opening, else it is a failed service (the receiver's point). Strike the
   ball as it falls, while it is still behind your end line and above the table; it must bounce on your court and then
   directly on the opponent's court, at least 0.2 m from the net.
-- It is your opponent's point if the toss touches anything before your strike, you strike it while it rises or rests or
-  strike it twice, it drops below the table or comes in front of the end line before you strike it, or the service does
-  not bounce on your court and then on the opponent's court, or lands closer than 0.2 m to the net (even after touching
-  the net).
-- A service that touches the net and is otherwise good is a let (replayed), at most 2 in a row: your third service let
-  since the last point scored is a failed service.
-- If the receiver touches the service before it bounces on its court, the receiver loses the point (a let after a net
-  touch). The receiver returns the service after its bounce like any other ball.
+- Your opponent wins the point if: the toss touches anything before your strike; you strike the ball while it rises or
+  rests, or strike it twice; the ball drops below the table or comes in front of the end line before you strike it; or
+  the service does not bounce on your court and then on the opponent's court, or lands closer than 0.2 m to the net
+  (even after touching the net).
+- A service that touches the net and is otherwise good is a let and is replayed, at most 2 times in a row. Your third
+  service let since the last point scored is a failed service.
+- If the receiver touches the service before it bounces on its court, the receiver loses the point; if the service had
+  touched the net, it is a let instead. The receiver returns the service after its bounce like any other ball.
 
 ## Robot Interface
-Robot table tennis: each player is a Franka Panda arm with a paddle on an x-y rail base behind its end line, both held
-to the real robot's limits, and you see the game only through two cameras of four frames each. The players' robots serve
-by the ITTF service laws, with a toss device on the robot. You are seat `A` against a scripted opponent at level 4 of 4.
-The world waits for you: it advances only while you let it (`### Time` below). The robot runs as a service you reach
-through its client or its MCP tools, as if it were real hardware: one live episode.
+Robot table tennis: each player is a Franka Panda arm with a paddle on an x-y rail base behind its end line, and the arm
+and the base are both held to the real robot's limits. You see the game only through two cameras, four frames each. The
+players' robots serve by the ITTF service laws, with a toss device on the robot. You are seat `A` against a scripted
+opponent at level 4 of 4. The world waits for you: it advances only while you let it (`### Time` below). The robot runs
+as a service you reach through its client or its MCP tools, as if it were real hardware: one live episode.
 
 ### Client
 The service at `http://localhost:8000` speaks eai-standard/2.x with the match extension (`eai-standard/2.1+match/1.0`;
@@ -76,15 +76,16 @@ client is installed (`from rcb_client import Robot`).
 | `POST /ready {"why": "...", "plan": "..."}` | your review when the world freezes |
 
 `/submit` returns after its last row: each row takes effect at the current step, then the world advances DT (default:
-one control step). An action the match refuses is a 400 (a later row's: `code` 400 in `meta.effects`). Where an action
-names a robot (`entity`), one chunk commands one: `"entity": E` in the chunk, or the type `T@E`. Every answer's `meta`
-has `score`, `review_due` (send `/ready` now), `match_over`, `step`, `phase` and your `state`. A `/submit` while the
-world is frozen or before the start executes nothing (`ok: false`, `not_now`); after the match is over requests are a
+one control step). An action the match refuses gets a 400. If a later row is refused, its entry in `meta.effects` shows
+`code` 400. Where an action names a robot (`entity`), each chunk commands one robot: set `"entity": E` in the chunk, or
+use the type `T@E`. Every answer's `meta` has `score`, `review_due` (send `/ready` now), `match_over`, `step`, `phase`
+and your `state`. A `/submit` while the world is frozen or before the start executes nothing (`ok: false`, `not_now`);
+after the match is over requests are a
 409. `/finish` and `/reset` are not offered (404): the match's rules end it, and there is one match. What differs from
 the plain standard: `timing.deviations` in `/spec`.
 
-The same match also answers the `game` command, or the same calls as HTTP with JSON under
-`http://localhost:8000/<SEAT>/` (the paths below are under it; your seat is `$SEAT`); you may use both:
+The same match also answers the `game` command, and the same calls as HTTP with JSON under
+`http://localhost:8000/<SEAT>/` (your seat is `$SEAT`; the paths below are under it). You may use both:
 
 | `game` command | HTTP | |
 | --- | --- | --- |
@@ -97,9 +98,9 @@ The same match also answers the `game` command, or the same calls as HTTP with J
 | `game none` | `POST /act {"type": "none"}` | the arm back to its ready pose |
 | `game ready "WHY" "PLAN"` | `POST /ready {"why": "...", "plan": "..."}` | your review when the world freezes |
 
-Errors: 400 = an invalid action (nothing happens), 409 = not now (not your turn, or a review is due), 429 = one action
-in flight (sent before the previous one returned), or more than 20 requests per second or 4 open requests from your seat
-(empty body: retry more slowly).
+Errors: 400 = an invalid action (nothing happens); 409 = not now (not your turn, or a review is due); 429 = one action
+already in flight (sent before the previous one returned), or more than 20 requests per second or 4 open requests from
+your seat (empty body: retry more slowly).
 
 ### MCP tools
 - The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
@@ -135,65 +136,67 @@ in flight (sent before the previous one returned), or more than 20 requests per 
   speed beyond the joint limits or a base that cannot get there in time is executed as well as the limits allow and the
   reply says so (ik_residual, blade_error_m, normal_error_deg, speed_scale, base); a new act replaces the stroke under
   way.
-- `toss`: `{"type": "toss", "pos": [x, y, z], "height": H}` (both action levels; it takes effect like an act): the ball
-  rests at pos for 0.1 s, then it is projected straight up with no spin to rise H metres above pos (0.16 <= H <= 1.0);
-  pos behind your end line and above the table (y <= -1.39, 0.02 <= z <= 0.9) and within 0.9 m of your base
-  horizontally; until then the ball waits out of sight in your robot's column. Strike it with an act, which you may send
+- `toss`: `{"type": "toss", "pos": [x, y, z], "height": H}` (both action levels; it takes effect like an act). The ball
+  rests at pos for 0.1 s, then it is projected straight up with no spin to rise H metres above pos (0.16 <= H <= 1.0).
+  The pos must be behind your end line and above the table (y <= -1.39, 0.02 <= z <= 0.9) and within 0.9 m of your base
+  horizontally. Until then the ball waits out of sight in your robot's column. Strike it with an act, which you may send
   before or after the toss (its contact time counted from when it takes effect; `state.serve.toss.projected_at_step`
   tells when the ball leaves the device).
-- The low level (`traj`, `slew`, `hold`): joint position targets at 100 Hz for the base and the arm, no IK or stroke
-  planner: traj {k0, q: rows of 9 targets [base_x, base_y, q1..q7]} (row i = control step k0 + i, <= 300 rows;
-  consecutive rows within the per-step speed limit - 2 cm per base axis - and three consecutive rows within the
-  acceleration limit: second difference <= acceleration limit × (10 ms)^2 - 8 m/s^2 per base axis, 15 / 7.5 / 10 / 12.5
-  / 15 / 20 / 20 rad/s^2 for q1..q7; the first row used must satisfy both with the target in force and its velocity),
-  slew {q (9), speed} (every arm joint towards q at speed × its speed limit within its acceleration limit, the base
-  towards q's base position at speed × 2 m/s with bounded acceleration and jerk), hold; the robot's 1 kHz servo follows
-  the targets with a setpoint that never exceeds the real limits (velocity, acceleration, jerk; the arm's torques 87 /
-  12 N m changing by at most 1 N m per ms), so targets beyond them are followed late; `game spec` gives the kinematic
-  chain (the base's two prismatic joints first), limits (limits.joint_accel_limit, joint_jerk_limit, the servo's law),
-  the joint controller and the robot's own model (robot_model.robot_only_xml).
-- Your robot faces +y on an x-y rail base behind your end line: base position base_xy (link0 at table-top height),
-  travel |x| <= 1.0, -2.40 <= y <= -1.50, home (0, -1.75); up to 2 m/s, 8 m/s^2 and 200 m/s^3 per axis; the arm is a
-  Franka Panda held to its real joint limits (velocity 2.175 / 2.61 rad/s, acceleration 15 / 7.5 / 10 / 12.5 / 15 / 20 /
-  20 rad/s^2, jerk 7500 / 3750 / 5000 / 6250 / 7500 / 10000 / 10000 rad/s^3, torque 87 / 12 N m, torque rate 1000 N
-  m/s); its servo runs the arm at 0.9 of the velocity limits, and an arm joint faster than 1.05 × its limit triggers the
-  robot's velocity reflex: it stops at that pose for 1 s, then resumes from rest (the stroke is lost; `game spec`
-  limits.controller); its collision reflex does the same when the arm or paddle presses on the table with more than 20 N
-  (touching the table is legal, but the robot protects itself).
+- The low level (`traj`, `slew`, `hold`) sends joint position targets at 100 Hz for the base and the arm, with no IK or
+  stroke planner. `traj` is {k0, q: rows of 9 targets [base_x, base_y, q1..q7]}: row i is control step k0 + i, at most
+  300 rows. Consecutive rows must stay within the per-step speed limit (2 cm per base axis). Any three consecutive rows
+  must stay within the acceleration limit: second difference <= acceleration limit × (10 ms)^2, with 8 m/s^2 per base
+  axis and 15 / 7.5 / 10 / 12.5 / 15 / 20 / 20 rad/s^2 for q1..q7. The first row used must satisfy both limits together
+  with the target in force and its velocity. `slew` is {q (9), speed}: every arm joint moves towards q at speed × its
+  speed limit within its acceleration limit, and the base towards q's base position at speed × 2 m/s with bounded
+  acceleration and jerk. The robot's 1 kHz servo follows the targets with a setpoint that never exceeds the real limits
+  (velocity, acceleration, jerk; the arm's torques 87 / 12 N m, changing by at most 1 N m per ms), so targets beyond
+  those limits are followed late. `game spec` gives the kinematic chain (the base's two prismatic joints first), the
+  limits (limits.joint_accel_limit, joint_jerk_limit, the servo's law), the joint controller and the robot's own model
+  (robot_model.robot_only_xml).
+- Your robot faces +y on an x-y rail base behind your end line. The base position is base_xy (link0 at table-top
+  height); its travel is |x| <= 1.0, -2.40 <= y <= -1.50, home (0, -1.75), at up to 2 m/s, 8 m/s^2 and 200 m/s^3 per
+  axis. The arm is a Franka Panda held to its real joint limits (velocity 2.175 / 2.61 rad/s, acceleration 15 / 7.5 / 10
+  / 12.5 / 15 / 20 / 20 rad/s^2, jerk 7500 / 3750 / 5000 / 6250 / 7500 / 10000 / 10000 rad/s^3, torque 87 / 12 N m,
+  torque rate 1000 N m/s). Its servo runs the arm at 0.9 of the velocity limits. An arm joint faster than 1.05 × its
+  limit triggers the robot's velocity reflex: the robot stops at that pose for 1 s, then resumes from rest, and the
+  stroke is lost (`game spec` limits.controller). Its collision reflex does the same when the arm or paddle presses on
+  the table with more than 20 N (touching the table is legal, but the robot protects itself).
 - Reach: the blade can meet a ball whose centre is within about 0.85 m of the shoulder (base_xy, z = 0.33) and above z =
   0.12; the base moves the shoulder over the whole table width but never over the table (it stops 0.13 m behind the end
   line).
 
 ### Observations
-- `game observe`: one PNG of 2 rows (camera behind your robot, camera at the side) × 4 columns (frames 40 ms apart,
-  newest right) of 480 × 360 tiles, with each frame's control step (observation.view_steps); no ball coordinates; yellow
-  marks every 0.25 m along the table edges; cameras' poses and intrinsics in `game spec` (pinhole, 45 degree vertical
-  field of view, focal length 434.6 px, principal point at the tile centre).
+- `game observe`: one PNG of 480 × 360 tiles in 2 rows (a camera behind your robot, a camera at the side) × 4 columns
+  (frames 40 ms apart, newest on the right), with each frame's control step (observation.view_steps). There are no ball
+  coordinates. Yellow marks run every 0.25 m along the table edges. The cameras' poses and intrinsics are in `game spec`
+  (pinhole, 45 degree vertical field of view, focal length 434.6 px, principal point at the tile centre).
 - Pinhole cameras (`game spec` gives each one's pose, field of view, size, `focal_px` and `principal_point_px`):
   `u = cx + f · x_right / depth`, `v = cy - f · y_up / depth`.
-- The state: `you_serve`, `you_receive_serve` and `serve`: `phase` `waiting` (the receiver is getting ready), `open`
-  (0.8 s after the previous point; `opens_in_s`), `tossed` (`tossed_at_step`), `done`; `court` any (singles has no
-  service court); `deadline_in_s`; `detail`, `server`, and for the server `delay_faults` and its own toss; `lets_in_row`
-  counts the service lets in a row. Service faults are recorded as `serve_fault:<reason>: <text>`, reasons: undue_delay
-  (no toss in time), dropped (the toss fell below the table unstruck), in_front (it came in front of the end line
-  unstruck), position (another breach of the service law), toss_touched (it touched something before the strike),
-  not_projected (struck while resting), rising (struck while rising), double_hit, not_own_court (the first bounce was
-  not on your court), out (after your court it missed the opponent's court), undecided (not decided within 3 s of the
-  strike), robot_net (your robot touched the net assembly during the service), repeated_let (your third service let in a
-  row), short (the bounce on your opponent's court was closer than 0.2 m to the net).
+- The state has `you_serve`, `you_receive_serve` and `serve`. `serve` gives the `phase`: `waiting` (the receiver is
+  getting ready), `open` (0.8 s after the previous point; `opens_in_s`), `tossed` (`tossed_at_step`) or `done`. It also
+  gives `court` (any: singles has no service court), `deadline_in_s`, `detail`, `server` and, for the server,
+  `delay_faults` and its own toss. `lets_in_row` counts the service lets in a row. Service faults are recorded as
+  `serve_fault:<reason>: <text>`, reasons: undue_delay (no toss in time), dropped (the toss fell below the table
+  unstruck), in_front (it came in front of the end line unstruck), position (another breach of the service law),
+  toss_touched (it touched something before the strike), not_projected (struck while resting), rising (struck while
+  rising), double_hit, not_own_court (the first bounce was not on your court), out (after your court it missed the
+  opponent's court), undecided (not decided within 3 s of the strike), robot_net (your robot touched the net assembly
+  during the service), repeated_let (your third service let in a row), short (the bounce on your opponent's court was
+  closer than 0.2 m to the net).
 
 ### Frame and table
 - Metres; your frame: x to your right, y towards the opponent, z up; table top z = 0, |x| <= 0.7625, |y| <= 1.37; net at
   y = 0, top z = 0.1525; your half y < 0.
 
 ### Time
-The world waits for you: it advances only during an open `game wait DT` (at most DT game seconds, then it stops again)
-and, for an action you sent, up to the control step at which it takes effect (the step after the state it answers).
-Between your calls it stands still: your thinking, your program's computation and the service's planning of an action
-take no game time, so a program has to keep calling `game wait` (or acting) for the match to go on; a match you leave
-standing never ends, and it is lost when your session ends. `game spec` says so (`timing.clock` = `lockstep`). At the
-end of every unit (a point; `game spec`) the world freezes for the reviews; the reviews' time limit and the start window
-are real time. One act and one observation per seat in flight.
+The world waits for you. It advances only during an open `game wait DT` (at most DT game seconds, then it stops again),
+and, after you send an action, up to the control step at which that action takes effect (the step after the state it
+answers). Between your calls the world stands still: your thinking, your program's computation and the service's
+planning of an action take no game time. So a program has to keep calling `game wait` (or acting) for the match to go
+on. A match you leave standing never ends, and you lose it when your session ends. `game spec` says so (`timing.clock` =
+`lockstep`). At the end of every unit (a point; `game spec`) the world freezes for the reviews; the reviews' time limit
+and the start window are real time. One act and one observation per seat in flight.
 
 ### Physics
 - The ball: radius 0.02 m, orange; gravity 9.81 m/s^2; air drag about 0.13 |v| v; spin bends the flight by a few cm; a

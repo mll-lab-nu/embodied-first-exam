@@ -189,8 +189,7 @@ events (`end_judgement = "events"`): every phase done in order counts as it happ
 stands: a failure after the phase ledger is complete (an object leaving the workspace, a forbidden contact) ends the
 episode (reason `failed`) but the episode is a success (eai-standard/3.0, PROTOCOL §3: on a goal judged as events a
 later failure does not take an event back; `rcb_service.py`). A failure, or the horizon (reason `step_limit`), before
-the ledger is complete is 0. Resets stay available after a success, and the last episode is graded. With the
-flag off nothing changes; where this README says a success ends the episode, that is the flag-off behaviour.
+the ledger is complete is 0. Resets stay available after a success, and the last episode is graded.
 
 ## Crash recovery (both standard modes)
 The shared service layer's (`rcb_service.py`): every executed control step is journaled (`trajectory_live.f64`, the

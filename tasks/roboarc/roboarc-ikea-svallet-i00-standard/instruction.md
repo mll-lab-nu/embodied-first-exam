@@ -74,8 +74,9 @@ became of a call.
   actuator's control range and reported in `meta["clipped"]`. Speed rule (the robot's real limits; clamp, not fail): arm
   joint targets move at most 0.00785397 rad per control step on every arm joint (3.14159 rad/s, the ViperX 300 s joint
   velocity limit) (`spec()["robot_spec"]["controller"]`); a row that asks for more takes the control steps it needs, and
-  `meta["clipped"]` says so. The gripper command is not limited: it switches at the row. The arms are position servos
-  with the scene's gains and force limits; use `obs.group("joint_cmd", now=True)` as the starting row to move smoothly.
+  `meta["clipped"]` says so. The gripper command is not limited; it switches to its new value at the start of its row.
+  The arms are position servos with the scene's gains and force limits; use `obs.group("joint_cmd", now=True)` as the
+  starting row to move smoothly.
 
 ### Observations
 - **Cameras** (ALOHA-style, 848 x 480, vertical field of view 58 deg): `cam_high` (static, above the front of the work

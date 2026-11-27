@@ -8,10 +8,10 @@ every stroke.
 Success: your program wins the complete formal match.
 
 Deliverable: `/app/output/policy/program.py`, with any helper or data files in that directory (at most 512 regular files
-and 32 MiB; no links or special files; helpers are importable). It defines `make_policy(config)`, returning an object
-with `act(view)` that lives for the whole match. `view` has `state` (the twin's observation), `truth` (the full current
-state) and `scores`; `act` returns one action of the twin's interface, `{"type": "ready"}` during a review, or None.
-Save a valid program early and overwrite it when you have a better one.
+and 32 MiB; no links or special files; helpers are importable). It defines `make_policy(config)`, which returns an
+object with an `act(view)` method; that object lives for the whole match. `view` has `state` (the twin's observation),
+`truth` (the full current state) and `scores`; `act` returns one action of the twin's interface, `{"type": "ready"}`
+during a review, or None. Save a valid program early and overwrite it when you have a better one.
 
 The formal match: a separate verifier without network runs your final program as an unprivileged process against a fresh
 match, with no reset. The world runs at 1/10 of real speed while your program computes, as in the realtime twin; each
@@ -24,16 +24,17 @@ or a claimed score; no model or API calls during the formal match. Your program 
 the simulator at `/opt/dev` for its own predictions, never the copy that runs the match, the referee or the logs.
 
 ## Robot Interface
-Robot table tennis: each player is a Franka Panda arm with a paddle on an x-y rail base behind its end line, both held
-to the real robot's limits, and you see the game only through two cameras of four frames each. The players' robots serve
-by the ITTF service laws, with a toss device on the robot. You are seat `A` against the scripted level-1 opponent, seed
-22: the same fixed match as the realtime twin (`embodied-olympics-match-tabletennis-matchlow-i01-realtime`), with the
-same robot, actions, rules, limits and opponent. The world runs at 1/10 of real speed. The low level: the twin's skill
-in the loop without its plumbing. Your program returns the robot's low-level commands (traj / slew / hold / toss)
-itself; there is no hit skill and no skill server (what the twin's skill computes, your program computes). The toolkit
-is under `sports/tabletennis/seat/`. `from tools.fullsim.session import Session`;
-`Session("tabletennis", level=1, seed=22)` gives `state()`, `world`, `spec()`, `act(command)`, `step(n)`, `ready()` and
-`reset()`. You have the full simulator to develop with; you hand in a program that plays the match.
+Robot table tennis: each player is a Franka Panda arm with a paddle on an x-y rail base behind its end line, and the arm
+and the base are both held to the real robot's limits. You see the game only through two cameras, four frames each. The
+players' robots serve by the ITTF service laws, with a toss device on the robot. You are seat `A` against the scripted
+level-1 opponent, seed 22: the same fixed match as the realtime twin
+(`embodied-olympics-match-tabletennis-matchlow-i01-realtime`), with the same robot, actions, rules, limits and opponent.
+The world runs at 1/10 of real speed. The low level: the twin's skill in the loop without its plumbing. Your program
+returns the robot's low-level commands (traj / slew / hold / toss) itself; there is no hit skill and no skill server
+(what the twin's skill computes, your program computes). The toolkit is under `sports/tabletennis/seat/`.
+`from tools.fullsim.session import Session`; `Session("tabletennis", level=1, seed=22)` gives `state()`, `world`,
+`spec()`, `act(command)`, `step(n)`, `ready()` and `reset()`. You have the full simulator to develop with; you hand in a
+program that plays the match.
 
 ### Session
 ```python

@@ -48,11 +48,10 @@ verdict, and nothing is replayed to grade it. The isolated verifier reads only t
 service then renders `replay.mp4` from the recorded trajectory in one video-only pass, which never changes the
 verdict. A missing or unfinished record, a give-up after crashes between the agent's calls and a frozen instance
 that does not build at the episode's start are infrastructure errors.
-The episode ends at the first success or the first failure.
 Failures are fail-fast and permanent: the pump tipping over 15 degrees, sliding more than 3 cm, lifting more than
 2 cm, falling below the bench top or touching the floor, the head pulled back more than 2 mm or the lock opened below
 1.2 rad after connecting and before the pressure is reached, the head pulled back more than 2 mm while still locked
-afterwards, unstable physics, or the 5,000-control budget. The frozen
+afterwards, or unstable physics. At the 5,000-control budget the episode ends and is judged on the state it leaves. The frozen
 thresholds come from the task, never from an agent archive. A no-op fails. Human review and full agent-trial
 calibration remain pending; report this task as provisional.
 

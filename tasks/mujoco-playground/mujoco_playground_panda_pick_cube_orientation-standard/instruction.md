@@ -59,9 +59,9 @@ default) over its control steps; clipped to the limits in the spec. A chunk cove
 ### Observations
 `meta["proprio"]` (`layout`, `now`): the joint positions, velocities and current targets. `meta["task"]` is the task's
 target (`target_pos`, and `target_quat_wxyz` where it has one). Calibration: `meta["cameras"][cam]` holds `intrinsic_cv`
-(pinhole, pixels) and `cam2world_gl` (4x4 camera-to-world, OpenGL axes: x right, y up, the camera looks along -z; the
-viewpoint the image is rendered from), for the state at the end of that call (the `last` image and the last frame of
-every stack). Depth is the distance along the viewing axis, in metres. The four cameras are fixed.
+(pinhole, pixels) and `cam2world_gl`, the 4x4 camera-to-world pose the image is rendered from (OpenGL axes: x right, y
+up, the camera looks along -z). Both describe the state at the end of that call: the `last` image and the last frame of
+every stack. Depth is the distance along the viewing axis, in metres. The four cameras are fixed.
 
 ## Limits
 - Time: 1800 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At

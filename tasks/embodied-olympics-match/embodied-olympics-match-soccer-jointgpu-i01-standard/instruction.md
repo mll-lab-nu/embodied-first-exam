@@ -37,13 +37,14 @@ Rules:
 The match (RoboCup Humanoid Soccer League rules, with these changes):
 - Two halves of 5 minutes of game time; more goals after two halves wins, or a 10-goal lead at any time (the mercy
   rule). No change of ends (each team's frame stays), no timeouts, no designated goalkeeper, no substitutes.
-- Level after two halves: a penalty shoot-out of 3 kicks each, then up to 3 sudden-death rounds, each won by the better
-  kick (goal, saved, post, wide, other, no kick), then a coin toss drawn from the seed. There are no draws.
-- In the shoot-out the team that kicked off first shoots first; the strikers are robot 1, 2, 1 and the keeper is the
-  other team's robot with the same number; each team shoots at the goal it attacks; the striker has 20 s to touch the
-  ball; a keeper more than 0.6 m from its goal line before the touch concedes a goal.
-- After a kick-off the ball is in play once it has moved 0.15 m or 10 s after play resumes; the kick-off team must touch
-  it outside the centre circle before it can score (else no goal, and the other team kicks off).
+- If the score is level after two halves, there is a penalty shoot-out of 3 kicks each. Then come up to 3 sudden-death
+  rounds, each won by the better kick (goal, saved, post, wide, other, no kick), and then a coin toss drawn from the
+  seed. There are no draws.
+- In the shoot-out the team that kicked off first shoots first. The strikers are robot 1, 2, 1, and the keeper is the
+  other team's robot with the same number. Each team shoots at the goal it attacks. The striker has 20 s to touch the
+  ball. A keeper more than 0.6 m from its goal line before the touch concedes a goal.
+- After a kick-off the ball is in play once it has moved 0.15 m, or 10 s after play resumes. The kick-off team must
+  touch it outside the centre circle before it can score; otherwise there is no goal, and the other team kicks off.
 
 ## Robot Interface
 Robot soccer 2 v 2 at the joint level: four simulated Booster T1 humanoids (lower bodies: legs and trunk, held to the
@@ -70,15 +71,16 @@ client is installed (`from rcb_client import Robot`).
 | `POST /ready {"why": "...", "plan": "..."}` | your review when the world freezes |
 
 `/submit` returns after its last row: each row takes effect at the current step, then the world advances DT (default:
-one control step). An action the match refuses is a 400 (a later row's: `code` 400 in `meta.effects`). Where an action
-names a robot (`entity`), one chunk commands one: `"entity": E` in the chunk, or the type `T@E`. Every answer's `meta`
-has `score`, `review_due` (send `/ready` now), `match_over`, `step`, `phase` and your `state`. A `/submit` while the
-world is frozen or before the start executes nothing (`ok: false`, `not_now`); after the match is over requests are a
+one control step). An action the match refuses gets a 400. If a later row is refused, its entry in `meta.effects` shows
+`code` 400. Where an action names a robot (`entity`), each chunk commands one robot: set `"entity": E` in the chunk, or
+use the type `T@E`. Every answer's `meta` has `score`, `review_due` (send `/ready` now), `match_over`, `step`, `phase`
+and your `state`. A `/submit` while the world is frozen or before the start executes nothing (`ok: false`, `not_now`);
+after the match is over requests are a
 409. `/finish` and `/reset` are not offered (404): the match's rules end it, and there is one match. What differs from
 the plain standard: `timing.deviations` in `/spec`.
 
-The same match also answers the `game` command, or the same calls as HTTP with JSON under
-`http://localhost:8000/<SEAT>/` (the paths below are under it; your seat is `$SEAT`); you may use both:
+The same match also answers the `game` command, and the same calls as HTTP with JSON under
+`http://localhost:8000/<SEAT>/` (your seat is `$SEAT`; the paths below are under it). You may use both:
 
 | `game` command | HTTP | |
 | --- | --- | --- |
@@ -90,9 +92,9 @@ The same match also answers the `game` command, or the same calls as HTTP with J
 | `game act JSON` | `POST /act JSON` | any action |
 | `game ready "WHY" "PLAN"` | `POST /ready {"why": "...", "plan": "..."}` | your review when the world freezes |
 
-Errors: 400 = an invalid action (nothing happens), 409 = not now (not your turn, or a review is due), 429 = one action
-in flight (sent before the previous one returned), or more than 20 requests per second or 4 open requests from your seat
-(empty body: retry more slowly).
+Errors: 400 = an invalid action (nothing happens); 409 = not now (not your turn, or a review is due); 429 = one action
+already in flight (sent before the previous one returned), or more than 20 requests per second or 4 open requests from
+your seat (empty body: retry more slowly).
 
 ### MCP tools
 - The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
@@ -131,16 +133,17 @@ in flight (sent before the previous one returned), or more than 20 requests per 
   touchlines and goal lines except the goal mouths; goals 2.6 m wide (|y| < 1.3), 1.8 m high, 0.6 m deep with nets.
 
 ### Time
-The world waits for you: it advances only during an open `game wait DT` (at most DT game seconds, then it stops again)
-and, for an action you sent, up to the control step at which it takes effect (the step after the state it answers).
-Between your calls it stands still: your thinking, your program's computation and the service's planning of an action
-take no game time, so a program has to keep calling `game wait` (or acting) for the match to go on; a match you leave
-standing never ends, and it is lost when your session ends. `game spec` says so (`timing.clock` = `lockstep`). At the
-end of every unit (a goal or another stoppage; `game spec`) the world freezes for the reviews; the reviews' time limit
-and the start window are real time. Run your control loop in a program (`game status` + one act per robot per step, or
-short `traj` plans to ride over hiccups); a step you miss keeps the row (or plan) in effect. An act returns when it
-takes effect, at the next control-step boundary: one act per robot may be in flight, so send each robot's acts from its
-own thread (or use plans); at most 20 requests per second and 4 open requests from your seat to the match service.
+The world waits for you. It advances only during an open `game wait DT` (at most DT game seconds, then it stops again),
+and, after you send an action, up to the control step at which that action takes effect (the step after the state it
+answers). Between your calls the world stands still: your thinking, your program's computation and the service's
+planning of an action take no game time. So a program has to keep calling `game wait` (or acting) for the match to go
+on. A match you leave standing never ends, and you lose it when your session ends. `game spec` says so (`timing.clock` =
+`lockstep`). At the end of every unit (a goal or another stoppage; `game spec`) the world freezes for the reviews; the
+reviews' time limit and the start window are real time. Run your control loop in a program (`game status` + one act per
+robot per step, or short `traj` plans to ride over hiccups); a step you miss keeps the row (or plan) in effect. An act
+returns when it takes effect, at the next control-step boundary: one act per robot may be in flight, so send each
+robot's acts from its own thread (or use plans); at most 20 requests per second and 4 open requests from your seat to
+the match service.
 
 ### Practice: your copy of the match world
 - CPU-parallel simulation (`/opt/robot/pool.py`): run many practice.py drills or rollouts at once on your 6 cores (both
@@ -177,15 +180,15 @@ own thread (or use plans); at most 20 requests per second and 4 open requests fr
   anything made from it, for your robots is not allowed (a lost match).
 
 ### Kick-off
-- Kick-off positions, in your frame: when you kick off, your robot 1 stands about (-0.32, 0.06) facing +x behind the
-  ball on the centre mark (the ball in its swing zone) and robot 2 about (-2.5, -1.5); when the opponents kick off,
-  about (-1.6, 0.4) and (-3.6, -0.8) (up to 0.3 m off, seeded).
+- Kick-off positions, in your frame: when you kick off, your robot 1 stands at about (-0.32, 0.06), facing +x behind the
+  ball on the centre mark (the ball in its swing zone), and robot 2 at about (-2.5, -1.5). When the opponents kick off,
+  your robots stand at about (-1.6, 0.4) and (-3.6, -0.8). Each position can be up to 0.3 m off (seeded).
 
 ### Physics
-- The ball: radius 0.11 m, 0.45 kg, orange, a thin shell; on the turf it rolls with a deceleration of about 0.52 m/s^2
-  (a kicked ball first skids and loses about 2/5 of its speed); it bounces: a 2 m drop rebounds about 0.8 m, it comes
-  off a post or a board at about 0.7 of its speed; a rolling ball that runs into a standing robot's legs mostly stops at
-  its feet (its spin takes the rebound).
+- The ball: radius 0.11 m, 0.45 kg, orange, a thin shell. On the turf it rolls with a deceleration of about 0.52 m/s^2
+  (a kicked ball first skids and loses about 2/5 of its speed). It bounces: a 2 m drop rebounds about 0.8 m, and it
+  comes off a post or a board at about 0.7 of its speed. A rolling ball that runs into a standing robot's legs mostly
+  stops at its feet (its spin takes the rebound).
 - The robots: Booster T1 lower bodies (legs and trunk, no arms), trunk about 0.68 m above the floor, head camera about
   1.0 m (it sees the floor from about 0.55 m ahead of the trunk on: a ball at your feet is out of view); held to the
   real T1's leg limits (motor torques 45 / 30 / 30 / 60 / 24 / 15 N m for hip pitch / roll / yaw, knee, ankle pitch /
@@ -198,18 +201,19 @@ own thread (or use plans); at most 20 requests per second and 4 open requests fr
   foldback and bus cap; robot-robot, robot-ball, goal and board contacts.
 
 ## Others
-- Before the ball is in play at a kick-off only the kick-off team's robots may be in the centre circle and nobody in the
-  opponents' half (else a removal penalty).
+- At a kick-off, before the ball is in play, only the kick-off team's robots may be in the centre circle, and no robot
+  may be in its opponents' half; breaking this is a removal penalty.
 - The boards keep the ball in: no kick-ins, goal kicks or corners; a ball resting at a board for 3 s is moved 1 m
   straight inwards while play goes on. A ball that leaves the pitch, or 30 s with nobody near the ball, gives a dropped
-  ball: the ball on the centre mark, the robots placed in their halves. A ball that the robots near it leave unmoved for
-  15 s gets the nearest robot removed.
-- No free kicks and no cards: a foul only removes the offender, for 15 s + 5 s per counted team offence (pushing, ball
-  holding), off the pitch beside its own half, with re-entry on the touchline; penalties end at half time.
-- Removal fouls: pushing (an opponent falls, or is pushed back, because a robot moved into it faster; or contact for
-  more than 5 s; a robot kicking close to the ball is exempt), ball holding (the ball kept right at a standing robot's
-  trunk for more than 5 s), illegal defence (both robots of a team inside their own penalty area for more than 5 s: the
-  one farther from the ball; not counted as an offence).
+  ball: the ball on the centre mark, the robots placed in their halves. If the robots near the ball leave it unmoved for
+  15 s, the nearest robot is removed.
+- No free kicks and no cards: a foul only removes the offender. It stays off the pitch beside its own half for 15 s + 5
+  s per counted team offence (pushing, ball holding), then re-enters on the touchline. Penalties end at half time.
+- Removal fouls: pushing, ball holding and illegal defence. Pushing: an opponent falls, or is pushed back, because a
+  robot moved into it faster, or the two stay in contact for more than 5 s; a robot kicking close to the ball is exempt.
+  Ball holding: the ball is kept right at a standing robot's trunk for more than 5 s. Illegal defence: both robots of a
+  team are inside their own penalty area for more than 5 s; the one farther from the ball is removed, and it is not
+  counted as an offence.
 - At every kick-off, restart, stand-up after a fall and return from a penalty the referee puts the robot in Booster's
   default stance (`game spec` -> joint_level.stance_on_placement) and holds its trunk for 1 s (`held_s` > 0; your rows
   already act); then it lets go.

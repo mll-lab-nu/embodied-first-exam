@@ -37,9 +37,12 @@ invariants of Appendix H bind and no task value overrides them), `docs/protocol/
   host's CPU count is the runner's to clamp (docker refuses it); the values in `scripts/task_resources.toml` stay.
   The same step's `sanitize` line in every `tests/test.sh` removes links and special files from `/app/output` before
   the grader reads the agent's files.
+- Every `instruction.md` has the v2 sections `## Task`, `## Goal`, `## Robot Interface`, `## Others` (optional) and
+  `## Limits`, in this order (`V2_SECTIONS` in `scripts/task_conventions.py`, PROTOCOL §5); `normalize` renders
+  `## Limits` (Time, Tokens, Network, Resources, the task's own lines, an agent-ended task's Finish line).
 - The agent's time cutoff is each task's own `[agent] timeout_sec`, set by its author in the pull request (rules:
-  PROTOCOL §2; what `normalize` renders from it, `## Time limit` last in every `instruction.md`, and how to change it:
-  docs/protocol/running.md "The agent's time"). A benchmark's own text says "the time limit (`## Time limit`)", never a
+  PROTOCOL §2; what `normalize` renders from it, the Time line of `## Limits`, and how to change it:
+  docs/protocol/running.md "The agent's time"). A benchmark's own text says "the time limit (Limits)", never a
   duration. Checks: `ci_checks/check-cutoffs.py` (advisory), the twins' equal number `ci_checks/check-twins.py` (H.7).
 - Seeds: `[metadata] instance_seed` is the default seed, `[metadata.seeds]` only where a task allows others (PROTOCOL
   §2; how a runner draws one: docs/protocol/running.md "Seeds"). Committed non-default instances live under the
@@ -75,7 +78,7 @@ invariants of Appendix H bind and no task value overrides them), `docs/protocol/
   outside the container in official runs: the harness's web search is off (`run_agent_batch.sh` default
   `WEB_SEARCH=disabled`), as are account connectors, apps and plugins.
 - A task's agent egress: Appendix H.6 and docs/protocol/running.md "Network" (`[agent] network_mode`, "allowlist" or
-  "public"); `normalize` ends every `instruction.md` with `## External material` (PROTOCOL §5). Scene dynamics are each task's `[metadata] dynamics` (no
+  "public"); `normalize` renders it in the Network line of every instruction's `## Limits` (PROTOCOL §5). Scene dynamics are each task's `[metadata] dynamics` (no
   central table). A task needs no download at run time: bake it into the image or
   the task directory. Nothing an agent can read (image, tooling, instance metadata) names or locates a solution.
   Unattended batches: `scripts/run_agent_batch.sh` (lanes with per-job claims; configured by environment variables,

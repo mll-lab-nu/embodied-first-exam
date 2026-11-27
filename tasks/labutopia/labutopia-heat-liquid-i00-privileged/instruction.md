@@ -53,42 +53,43 @@ s.camera_info(cam)                 # (cameras=True) intrinsics and pose of a cam
 s.render_video(actions, "/app/output/check.mp4", cameras=["camera_1"])   # (cameras=True)
 ```
 There are no ready-made motions: LabUtopia's scripted controllers and their motion primitives are not in this image. The
-rest of LabUtopia is, under `/opt/labutopia` (importable once a Session exists), and so is Isaac Sim's own motion
-generation for the Franka (RMPflow and the Lula kinematics, `isaacsim.robot_motion.motion_generation`; LabUtopia's
-wrapper is `/opt/labutopia/robots/franka/rmpflow_controller.py`). Import `pxr`, `omni.*` and `isaacsim.*` modules only
-after the Session exists: Isaac Sim loads its own build of USD when the application starts, and with a `pxr` imported
-earlier some of its extensions fail to start (at worst the process ends with a symbol lookup error). Do not name a
-script after a standard-library module (`inspect.py`, `types.py`): Isaac Sim imports those as it starts. One control
-step is one physics step, 1/60 s (LabUtopia's own rate): a row is executed for exactly one step, so a motion lasting 1 s
-is 60 rows (repeat a row to hold a target). Your wall-clock time is the budget (a replay runs at about 300 control
-steps/s here); the one technical cap is 36000 rows per trajectory (600 s of simulated time).
+rest of LabUtopia is in this image, under `/opt/labutopia` (importable once a Session exists). So is Isaac Sim's own
+motion generation for the Franka: RMPflow and the Lula kinematics (`isaacsim.robot_motion.motion_generation`).
+LabUtopia's wrapper for it is `/opt/labutopia/robots/franka/rmpflow_controller.py`. Import `pxr`, `omni.*` and
+`isaacsim.*` modules only after the Session exists. Isaac Sim loads its own build of USD when the application starts; if
+`pxr` was imported earlier, some of its extensions fail to start, and at worst the process ends with a symbol lookup
+error. Do not name a script after a standard-library module (`inspect.py`, `types.py`): Isaac Sim imports those as it
+starts. One control step is one physics step, 1/60 s (LabUtopia's own rate): a row is executed for exactly one step, so
+a motion lasting 1 s is 60 rows (repeat a row to hold a target). Your wall-clock time is the budget (a replay runs at
+about 300 control steps/s here); the one technical cap is 36000 rows per trajectory (600 s of simulated time).
 
 ### Actions
-- An action has 18 numbers per control step: a position target for each of the 9 joints (`panda_joint1` ..
-  `panda_joint7` in rad, then `panda_finger_joint1`, `panda_finger_joint2` in m from the gripper's centre line), then a
-  velocity target for each (rad/s; m/s; zeros if you give only positions). Each joint has a drive: effort = stiffness x
-  (position target - q) + damping x (velocity target - qdot), limited (`s.robot_spec()["controller"]["gains"]`,
-  `["joints"]`). `panda_finger_joint2` mirrors `panda_finger_joint1`: its targets are ignored.
+- An action has 18 numbers per control step. First comes a position target for each of the 9 joints: `panda_joint1` ..
+  `panda_joint7` in rad, then `panda_finger_joint1`, `panda_finger_joint2` in m from the gripper's centre line. Then
+  comes a velocity target for each joint (rad/s; m/s), all zeros if you give only positions. Each joint has a drive:
+  effort = stiffness x (position target - q) + damping x (velocity target - qdot), limited
+  (`s.robot_spec()["controller"]["gains"]`, `["joints"]`). `panda_finger_joint2` mirrors `panda_finger_joint1`: its
+  targets are ignored.
 - The fingers travel from 0 (closed) to 0.04 m (open) each. A position target may lie beyond a joint's range (arm: by
-  0.1 rad; fingers: -0.1 .. 0.1 m): the joint stops and the drive keeps pushing, so a finger target below the point
+  0.1 rad; fingers: -0.1 .. 0.1 m). The joint then stops and the drive keeps pushing, so a finger target below the point
   where the finger meets an object squeezes it (400 N/m of error, at most 7.2 N). Targets outside `s.action_limits()`
   are clipped, and all targets are stored as float32.
-- At the start the arm is not at rest: LabUtopia's reset leaves it straight up, moving towards its home pose (the
-  targets in effect, `s.command()`); holding them brings it there in about two seconds.
+- At the start the arm is not at rest. LabUtopia's reset leaves it straight up, moving towards its home pose (the
+  targets in effect, `s.command()`). Holding those targets brings it there in about two seconds.
 - World frame: z up, metres; poses are x y z + wxyz quaternion; angles in rad. The arm's base is at
   `s.robot_spec()["base"]["pose"]`.
 
 ### Startup output
-- Isaac Sim prints a lot when it starts; without cameras that includes Vulkan errors (`vkCreateInstance failed`,
-  `GPU Foundation is not initialized`): expected, the simulation-only Session runs without the renderer. Your own
-  `print` output comes through as usual, and an uncaught exception still ends your script with a non-zero status.
+- Isaac Sim prints a lot when it starts. Without cameras this includes Vulkan errors (`vkCreateInstance failed`,
+  `GPU Foundation is not initialized`). They are expected: the simulation-only Session runs without the renderer. Your
+  own `print` output comes through as usual, and an uncaught exception still ends your script with a non-zero status.
 
 ## Others
 - Labels in `s.rule.values()` (USD paths): `beaker` (the beaker), `plate` (the heater's plate), `button` (the red
   button).
-- Isaac Sim repeats an episode exactly only from a newly started process: after `s.reset()` the start state differs from
-  the first one by about 1e-5, which a contact-rich motion can amplify. So check the final trajectory from the command
-  line before you stop:
+- Isaac Sim repeats an episode exactly only in a newly started process. After `s.reset()` the start state differs from
+  the first one by about 1e-5, and a contact-rich motion can amplify that difference. So check the final trajectory from
+  the command line before you stop:
   `python /opt/tools/rcb_labutopia.py replay --instance /app/instance.json --traj /app/output/trajectory.npz` (prints
   `RESULT {...}` with `success` and `state_sha`; `--video FILE` also renders it).
 

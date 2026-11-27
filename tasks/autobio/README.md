@@ -110,8 +110,8 @@ success rate), load rotor 14.7 / 1.0.
   are in `/spec` (`robot_spec.base`). `ci_checks/benchmarks/autobio/advisory-world-frame.sh` checks the standard texts.
 - **Texts.** The instructions describe each check in our own words and point to its source in the image
   (`/opt/AutoBio/autobio/<module>.py`); AutoBio's code is not quoted (no licence).
-- **Budget: 3600 s**, both modes (each task's `[agent] timeout_sec`, stated in its instruction's closing
-  `## Time limit` section).
+- **Budget: 3600 s**, both modes (each task's `[agent] timeout_sec`, stated in the Time line of its
+  instruction's closing `## Limits`).
 
 ## Modes
 - **Privileged:** `rcb_autobio.Session` in the agent's container: AutoBio's task object (`s.task`: its scene helpers and

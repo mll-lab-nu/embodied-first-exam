@@ -138,8 +138,7 @@ the floor, a gripper on the sandwich) or a physics error, the pelvis 10 m from t
 success termination from stopping the episode (also in the video's replay). The verdict is judged on the end state
 (`end_judgement = "state"`): upstream's held success as things stand (`Episode.success_now`: the success-hold counter at
 its mark and no fall in the episode), read after an end window of upstream's hold
-(`end_window_steps = success_hold_steps`, 1 s of standing still from the end state). With the flag off nothing changes;
-where this README says a success ends the episode, that is the flag-off behaviour.
+(`end_window_steps = success_hold_steps`, 1 s of standing still from the end state).
 
 ## Where upstream holds answers
 | where | what | handling |

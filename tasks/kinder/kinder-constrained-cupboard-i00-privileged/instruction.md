@@ -11,10 +11,10 @@ are not run.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(...)`, at most 1000 actions (`s.max_steps`,
 100 s at 10 Hz); it is replayed open-loop from the fixed start and passes if the task is done within it. Also leave
-`/app/output/gen.py`, the script that produced it, which must run and reproduce `trajectory.npz` reading nothing but
-`/app/instance.json` and files under `/app/output/`, and `/app/output/NOTES.md`, at most 20 lines: your final approach
-and why it works, and the approaches that failed and what each told you about the task. Only the trajectory is scored.
-Save a valid one early and overwrite it (with `gen.py` and `NOTES.md` to match) when you have a better one;
+`/app/output/gen.py`, the script that produced it; it must run and reproduce `trajectory.npz` reading nothing but
+`/app/instance.json` and files under `/app/output/`. Also leave `/app/output/NOTES.md`, at most 20 lines: your final
+approach and why it works, and the approaches that failed and what each told you about the task. Only the trajectory is
+scored. Save a valid one early and overwrite it (with `gen.py` and `NOTES.md` to match) when you have a better one;
 `s.replay(...)` tells you whether a trajectory does the task.
 
 Rules: **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
@@ -57,10 +57,10 @@ World frame: metres, z up. Everything in `s.env` (KinDER's state, every object a
 - One 1000-step episode costs about 9 s of one core (more when the host is busy); the container has 16.
 
 ## Others
-- The trajectory is replayed open-loop, but you may generate it closed-loop: replayed from `s.reset()`, KinDER on the
-  CPU repeats exactly, so actions recorded from a feedback controller reproduce. Scripted motions, feedback control,
-  search and optimisation are all fine.
-- `s.env.unwrapped.set_state()` restores KinDER's object-centric state, not everything the physics carries, so a rollout
+- The trajectory is replayed open-loop, but you may generate it closed-loop. KinDER on the CPU repeats exactly when
+  replayed from `s.reset()`, so actions recorded from a feedback controller reproduce. Scripted motions, feedback
+  control, search and optimisation are all fine.
+- `s.env.unwrapped.set_state()` restores KinDER's object-centric state, not everything the physics carries. So a rollout
   continued from it can drift from the same actions replayed from the start: check the final trajectory with `s.replay`.
 - In the state, the rods are `cuboid_0` to `cuboid_5` and the cupboards `cupboard_0` to `cupboard_10`; rod `cuboid_i`
   goes into cupboard `cupboard_i`.

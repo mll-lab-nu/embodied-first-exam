@@ -51,16 +51,17 @@ s.save_trajectory(actions, "/app/output/trajectory.npz")
 s.render_video(actions, "/app/output/check.mp4")   # replays from the frozen state and writes a tiled camera video
 ```
 
-- The primitives are deliberately thin (IK moves, joint moves, gripper, hold): grasping, placing and every other skill
-  are yours to build from them.
-- One `Session` per process (one simulator per process). Building the scene and compiling its kernels can take minutes;
-  every `Session`, including the one a replay or render CLI command starts, holds its own scene in GPU memory, so keep
-  one alive at a time. Do not call `s.close()` before writing every output.
-- Once the episode has ended, later steps do not change the execution record or move the scene
-  (`s.status()["episode_end"]`), and `s.reset()` starts over.
+- The primitives are deliberately thin: IK moves, joint moves, gripper, hold. You build grasping, placing and every
+  other skill from them.
+- One `Session` per process (one simulator per process). Building the scene and compiling its kernels can take minutes.
+  Every `Session` holds its own scene in GPU memory, including the one that a replay or render CLI command starts, so
+  keep only one alive at a time. Do not call `s.close()` before writing every output.
+- Once the episode has ended (`s.status()["episode_end"]`), later steps neither move the scene nor change the execution
+  record. `s.reset()` starts over.
 - A failure is reported in `s.status()["episode_end"]` as "A task body fell below the table" or "forced_breakdown:
-  <what>" (<what>: the readable reason); `s.safety()` reports forcing, contact depths, volume ratios and table-guard
-  stops, each next to its limit, and `s.status()["review"]` the deep task contacts that would hold a success for review.
+  <what>", where <what> is the readable reason. `s.safety()` reports forcing, contact depths, volume ratios and
+  table-guard stops, each next to its limit. `s.status()["review"]` lists the deep task contacts that would hold a
+  success for review.
 - The grader replays with this command (run it to self-check):
   `python /opt/tools/rcb_topogym.py replay --task hedgehog_in_cage --instance /app/instance.json --traj /app/output/trajectory.npz`
 
@@ -75,34 +76,34 @@ s.render_video(actions, "/app/output/check.mp4")   # replays from the frozen sta
 - Tool frame (TCP, the ee pose and IK frame): a fixed point near the closed finger pads; approach axis (hand ->
   fingertips) = local [0.0, 0.0, 1.0], finger-closing axis = local [-0.0, -1.0, 0.0]. The ee_pose action, the proprio
   tcp pose and the IK use this frame. `p["top_down_quat"](yaw)` builds a vertical approach whose fingers close along
-  `yaw`; `p["gripper_quat"](yaw, approach)` any other.
+  `yaw`. `p["gripper_quat"](yaw, approach)` builds any other approach.
 
 ### Grasping
 - Assisted grasping: a gripper whose command moves towards closed takes hold of a graspable part (owl, rod) once both
   fingers touch the same part inside its grasp region, the tool frame within 16.7962 cm of it and the penetration at
-  most 2 mm, for 0.02 s; the part then follows the gripper rigidly. Any command that opens the gripper (by more than 0.2
-  % of its travel) lets it go. A hold that breaks (the fingers open more than 15 %, the part drifts 1 cm / 0.15 rad from
-  its held pose, the hold has to push or pull its part with more than 65 N averaged over 20 ms, or no finger has touched
-  the part for 0.2 s) is lost, and the gripper must open before it can take hold again; that force is reached when, for
+  most 2 mm, for 0.02 s; the part then follows the gripper rigidly. Any command that opens the gripper by more than 0.2
+  % of its travel releases the part. A hold is lost if the fingers open more than 15 %, the part drifts 1 cm / 0.15 rad
+  from its held pose, the hold has to push or pull its part with more than 65 N averaged over 20 ms, or no finger has
+  touched the part for 0.2 s. The gripper must then open before it can take hold again. That force is reached when, for
   example, two held parts that hook into each other are pulled apart, or a held part is pressed into another object. Two
-  grippers never hold the same part; other objects are grasped physically (friction).
+  grippers never hold the same part. Objects that are not graspable parts are grasped physically (by friction).
 - Grasp regions (one sphere per graspable part): owl: radius 102.3 mm, enclosing the owl's body link (body, beak, legs
   and tail; the wings are a separate link); rod: radius 138 mm, enclosing the whole rod. Both finger contacts must lie
   inside the part's sphere; a part touched elsewhere is grasped physically. Each region's centre (in its link's frame)
   is in `/app/instance.json` under `simulator.grasp_assist.targets`.
 
 ### Safety
-- Robot safety: no gripper target goes lower than 15 mm below the tabletop; a commanded target that would bring any part
-  of a gripper lower is stopped there, on the commanded path. The fingertips reach about 6 mm beyond the tool frame
-  (TCP) along its approach axis when open and about 19 mm when closed (the Robotiq fingertips move forward as they
-  close). Arm drive torques are capped (the effort limits in robot_spec), so an arm pushing against an obstacle stalls
-  at that torque. An arm with any part more than 5 mm deep in a fixed object (a fixture, the table) is stopped where it
-  is: its joint targets become its measured joints for that control step, so it stops pushing (the safety readings
-  report these stops as static_guard).
-- Forcing (an arm drive near its torque cap while its gripper, or a part it holds, presses hard on something) is
-  recorded as evidence (`s.safety()`, `s.status()["forcing"]`) and shown to the reviewer when a success is reviewed; it
-  does not end the episode or change the grade by itself. A simulator breakdown ends the episode: as an infrastructure
-  error, or as your failure if an arm was forcing just before it.
+- Robot safety: no gripper target goes lower than 15 mm below the tabletop. If a commanded target would bring any part
+  of a gripper lower, the gripper is stopped at that height, on the commanded path. The fingertips reach about 6 mm
+  beyond the tool frame (TCP) along its approach axis when open and about 19 mm when closed (the Robotiq fingertips move
+  forward as they close). Arm drive torques are capped (the effort limits in robot_spec), so an arm pushing against an
+  obstacle stalls at that torque. If any part of an arm is more than 5 mm deep in a fixed object (a fixture, the table),
+  the arm is stopped where it is. For that control step its joint targets are set to its measured joints, so it stops
+  pushing. The safety readings report these stops as static_guard.
+- Forcing means an arm drive is near its torque cap while its gripper, or a part it holds, presses hard on something.
+  Forcing is recorded as evidence (`s.safety()`, `s.status()["forcing"]`) and shown to the reviewer when a success is
+  reviewed. By itself, it does not end the episode or change the grade. If the simulator breaks down, the episode ends.
+  This counts as your failure if an arm was forcing just before the breakdown, and as an infrastructure error otherwise.
 
 ## Others
 - The scene's objects (`s.objects()`: `hedgehog_mount` (fixed), `owl_cage` (fixed), `owl`, `rod`, `goal_region`

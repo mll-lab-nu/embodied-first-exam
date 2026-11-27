@@ -55,11 +55,11 @@ seconds; those control steps are part of the episode.
 - The client and the tools drive the same robot in the same episode; use either, or both.
 
 ### Actions
-- Action `ee_delta` (4: `dx, dy, dz, grip`, float64, each clipped to [-1, 1]) is Meta-World's native action, applied
-  once per control step (`control_dt` = 0.0125 s). The hand's target moves by `[dx, dy, dz]` × 1 cm per control step and
-  stays inside x ∈ [-0.5, 0.5], y ∈ [0.4, 1], z ∈ [-0.05, 0.5]; the hand follows it. `grip` drives the two fingers (+1
-  closes, -1 opens). The wrist does not rotate. Rows are `dt` apart (a multiple of `control_dt`); with `dt = control_dt`
-  each row is one native action. A chunk covers at most 10 s.
+- Action `ee_delta` is Meta-World's native action: 4 float64 values, `dx, dy, dz, grip`, each clipped to [-1, 1]. It is
+  applied once per control step (`control_dt` = 0.0125 s). The hand's target moves by `[dx, dy, dz]` × 1 cm per control
+  step and stays inside x ∈ [-0.5, 0.5], y ∈ [0.4, 1], z ∈ [-0.05, 0.5]; the hand follows it. `grip` drives the two
+  fingers (+1 closes, -1 opens). The wrist does not rotate. Rows are `dt` apart (a multiple of `control_dt`); with
+  `dt = control_dt` each row is one native action. A chunk covers at most 10 s.
 
 ### Observations
 - Proprioception (names as in the spec's proprio layout): `tcp_x/y/z` (the point between the fingertips),
@@ -67,9 +67,9 @@ seconds; those control steps are part of the episode.
   the finger joints' positions, and `cmd_*` (the last action).
 - World frame: metres; x to the robot's right, y forward (away from the robot's base), z up; the table top is at z = 0.
   Quaternions are w x y z. The four cameras are fixed.
-- Calibration (`obs.meta["cameras"]`, per camera): `intrinsic_cv` (pinhole, pixels) and `cam2world_gl` (4x4
-  camera-to-world, OpenGL axes: x right, y up, the camera looks along -z; the viewpoint the image is rendered from).
-  Depth is the distance along the viewing axis, in metres.
+- Calibration, per camera, is in `obs.meta["cameras"]`: `intrinsic_cv` (pinhole, pixels) and `cam2world_gl`.
+  `cam2world_gl` is the 4x4 camera-to-world pose of the viewpoint the image is rendered from, in OpenGL axes: x right, y
+  up, the camera looks along -z. Depth is the distance along the viewing axis, in metres.
 - The target point that Goal names is `target_pos` in `meta["task"]` (world frame), in every reply.
 
 ## Limits

@@ -7,10 +7,10 @@ Win a game of singles badminton to 11 points against the other robot.
 Success: your program wins the complete formal match.
 
 Deliverable: `/app/output/policy/program.py`, with any helper or data files in that directory (at most 512 regular files
-and 32 MiB; no links or special files; helpers are importable). It defines `make_policy(config)`, returning an object
-with `act(view)` that lives for the whole match. `view` has `state` (the twin's observation), `truth` (the full current
-state) and `scores`; `act` returns one action of the twin's interface, `{"type": "ready"}` during a review, or None.
-Save a valid program early and overwrite it when you have a better one.
+and 32 MiB; no links or special files; helpers are importable). It defines `make_policy(config)`, which returns an
+object with an `act(view)` method; that object lives for the whole match. `view` has `state` (the twin's observation),
+`truth` (the full current state) and `scores`; `act` returns one action of the twin's interface, `{"type": "ready"}`
+during a review, or None. Save a valid program early and overwrite it when you have a better one.
 
 The formal match: a separate verifier without network runs your final program as an unprivileged process against a fresh
 match, with no reset. The world runs at 1/20 of real speed while your program computes, as in the realtime twin; each
@@ -23,8 +23,8 @@ or a claimed score; no model or API calls during the formal match. Your program 
 the simulator at `/opt/dev` for its own predictions, never the copy that runs the match, the referee or the logs.
 
 ## Robot Interface
-Robot singles badminton on a small court (the BWF court's lengths × 0.4, the net at its full height): each player is a
-Franka Panda arm with a racket, held to the real Panda's limits, on an x-y gantry base; the shuttle has the real
+Robot singles badminton on a small court: the BWF court's lengths × 0.4, with the net at its full height. Each player is
+a Franka Panda arm with a racket, held to the real Panda's limits, on an x-y gantry base. The shuttle has the real
 shuttle's high drag and does not bounce. You are seat `A` against the built-in RL player (seat `B`), seed 1001: the same
 fixed match as the realtime twin (`embodied-olympics-match-badminton-duelrl-i01-realtime`), with the same robot,
 actions, rules, limits and opponent. The world runs at 1/20 of real speed. Seat `B` is the twin's built-in player

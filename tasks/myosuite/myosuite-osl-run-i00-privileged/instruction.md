@@ -49,9 +49,9 @@ success or failure; `s.step` then refuses further actions until `s.reset()`.
 ### Actions
 An action has 56 real numbers per control step, one per actuator in order: 54 muscles and 2 non-muscle actuators. A
 muscle's command a maps to its excitation u = 1 / (1 + exp(-5 (a - 0.5))) and is not clipped (a = -1: u ~ 0.0006, a =
-0.5: 0.5, a = 1: 0.92, a = 2: 0.9994); activation follows excitation with a first-order delay (~10 ms up, ~40 ms down);
-muscles only pull; one muscle can cross several joints; its force also depends on its length and velocity. The
-non-muscle actuators: `osl_knee_torque_actuator` (index 54): ignored: the prosthesis's own impedance controller
+0.5: 0.5, a = 1: 0.92, a = 2: 0.9994). Activation follows excitation with a first-order delay (~10 ms up, ~40 ms down).
+Muscles only pull, and one muscle can cross several joints. A muscle's force also depends on its length and velocity.
+The non-muscle actuators: `osl_knee_torque_actuator` (index 54): ignored: the prosthesis's own impedance controller
 (MyoSuite's OSL state machine) sets it; `osl_ankle_torque_actuator` (index 55): ignored: the prosthesis's own impedance
 controller (MyoSuite's OSL state machine) sets it.
 

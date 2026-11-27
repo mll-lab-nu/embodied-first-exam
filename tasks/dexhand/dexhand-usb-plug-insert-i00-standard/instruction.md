@@ -18,9 +18,9 @@ Any of these ends the episode at once as a failure, which later actions cannot u
 - After it was grasped, the plug is dropped (let go while it is not in a port).
 - The physics becomes unstable.
 
-The steps before the last count as they happen.
+Each step of the Goal before the last one counts at the moment it happens.
 
-When you are done, send `/finish` to end the episode and get it graded. Everything else counts only as it stands at that
+When you are done, send `/finish` to end the episode and get it graded. Everything else is judged on the state at that
 point.
 
 Rules:
@@ -66,10 +66,11 @@ links; no IK primitive is supplied. If the service connection fails, call `r.wai
 before continuing. Crash recovery resumes the same journaled episode, without a reset, and the wall-clock budget keeps
 running.
 
-Resets: `r._post("/reset", ...)` (`POST /reset`) starts a new episode from the same starting state, abandoning the
-running one or after one has ended; it takes no simulated time and returns the start's images and proprioception. Once
-an episode has ended, `submit` raises `EpisodeOver` until you reset. `meta["episode"]` and `meta["resets_left"]` count
-the episodes; `meta["control_steps"]` is the current episode's, `meta["control_steps_total"]` all of them.
+Resets: `r._post("/reset", ...)` (`POST /reset`) starts a new episode from the same starting state. You can call it
+during a running episode, which it abandons, or after one has ended. It takes no simulated time and returns the start's
+images and proprioception. Once an episode has ended, `submit` raises `EpisodeOver` until you reset. `meta["episode"]`
+and `meta["resets_left"]` count the episodes. `meta["control_steps"]` counts the current episode's control steps,
+`meta["control_steps_total"]` those of all episodes.
 
 ### MCP tools
 - The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
@@ -95,8 +96,8 @@ are clipped to the published joint limits and clipping is reported. `dt` must be
 previous target. The robot has no scalar gripper opening.
 
 Each row starts with the 14 Marvin arm joint targets (left arm J1-J7, then right arm J1-J7), followed by the left hand's
-finger targets and then the right hand's (22 per hand for `sharpa`, 20 per hand for `wuji`); the left arm is parked and
-only the right arm/hand perform the task.
+finger targets and then the right hand's (22 per hand for `sharpa`, 20 per hand for `wuji`). The left arm is parked;
+only the right arm and hand perform the task.
 
 ### Observations
 You receive camera RGB, optional calibrated depth, and the robot's own joint positions, velocities, actuator efforts,
@@ -118,8 +119,8 @@ hand on each wrist. The robot stands on the floor in front of the desk, right of
 -0.52 on the floor at z = -0.20, facing the desk at yaw 135 deg, i.e. toward world (-1, +1)/sqrt(2); shoulders at z =
 1.021 m, 1.221 m above the floor). The left arm stays parked beside the torso with its hand open; the task is done by
 the right arm and hand alone. Every arm and finger joint is a position servo inside the physics engine under native
-force bounds; arm servos have stiffness 700 N m/rad, damping 48 N m s/rad and no gravity compensation (a held target
-sags under the arm's weight unless your targets account for it). Grasping, carrying, inserting and releasing require
+force bounds. Arm servos have stiffness 700 N m/rad, damping 48 N m s/rad and no gravity compensation, so a held target
+sags under the arm's weight unless your targets account for it. Grasping, carrying, inserting and releasing require
 physical contact. Only the working right hand may touch the desk and the task objects: any contact of an arm link, the
 stand or torso, or the parked left hand with anything fails the episode at once (`robot_collision`). The controller runs
 at 50 Hz, with ten 2 ms physics substeps.
@@ -153,5 +154,5 @@ at 50 Hz, with ten 2 ms physics substeps.
   GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap only
   slows you down); usage: `/run/rcb-limits/usage.json`.
 - Resets: at most 20 (`spec()["budget"]["reset"]`), each a new episode from the same starting state.
-- Steps: at most 3,000 control steps (60 s of simulated time) per episode; an episode that reaches them ends there.
+- Steps: at most 3,000 control steps (60 s of simulated time) per episode, then the episode ends.
 - Finish: if you never send `/finish`, the episode is graded when the step limit is reached or your session ends.

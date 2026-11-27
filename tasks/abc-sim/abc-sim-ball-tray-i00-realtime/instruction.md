@@ -38,10 +38,10 @@ live episode.
 | `r.get_obs(cameras=None, last_s=0, include_depth=False, video="frames")` | `POST /observe` | the robot now, or with `last_s=n` what the cameras recorded over the last n seconds; it never waits |
 
 Once the episode has ended, `submit` raises `EpisodeOver`. One call returns at most 3000 images. No call is refused for
-its images: while 8 answers with images are outstanding, the answer of a `submit` or a `get_obs()` comes without its
-frames and `meta["frames_skipped"]` is set. The answers are binary (RCB1) and come back decoded: `res.meta` (the
-counters, `done`, `reason`, `proprio["now"]`), `res.last[camera]` (the last frame), `res.frames` or `res.video` (what
-the cameras recorded), `res.proprio` (proprioception rows). A malformed request raises `ValueError` and changes nothing.
+its images. While 8 answers with images are still waiting to be read, a `submit` or a `get_obs()` answers without its
+frames and sets `meta["frames_skipped"]`. The answers are binary (RCB1) and come back decoded: `res.meta` (the counters,
+`done`, `reason`, `proprio["now"]`), `res.last[camera]` (the last frame), `res.frames` or `res.video` (what the cameras
+recorded), `res.proprio` (proprioception rows). A malformed request raises `ValueError` and changes nothing.
 
 ### MCP tools
 - The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
@@ -58,11 +58,11 @@ the cameras recorded), `res.proprio` (proprioception rows). A malformed request 
 Action type `joint_position` (14): 14 numbers per control step:
 `[left_joint1..6, left_gripper, right_joint1..6, right_gripper]` -- each arm's six joint position targets (rad) and its
 gripper opening (0 = closed, 1 = open, each finger 0.0475 m from closed; up to 1.042). The joints and grippers are
-position servos that track the targets (MuJoCo position actuators with damping and force limits); a target outside a
-joint's range is clamped to it, and the simulator rounds every command to float32. One control step = 17 physics steps
-of 2 ms = 0.034 s (29.4 Hz). Columns in `spec()["action_types"]["joint_position"]["layout"]` order; rows `dt` apart,
-`interpolate="linear"` (default: a straight line from the targets in force) or `"hold"`; the realtime client sends them
-as float64.
+position servos that track the targets (MuJoCo position actuators with damping and force limits). A target outside a
+joint's range is clamped to that range. The simulator rounds every command to float32. One control step = 17 physics
+steps of 2 ms = 0.034 s (29.4 Hz). Columns in `spec()["action_types"]["joint_position"]["layout"]` order; rows `dt`
+apart, `interpolate="linear"` (default: a straight line from the targets in force) or `"hold"`; the realtime client
+sends them as float64.
 
 ### Observations
 Cameras: `top` (above and behind the arms, looking down at the table), `left` and `right` (wrist cameras on the arms),
@@ -85,15 +85,15 @@ the arms), in front = -x (nearer to them). No positions of the scene are given.
   commands it executes what you planned, then holds the last targets you sent; nothing pauses for you, not your
   thinking, not your tool calls.
 - You are far too slow to steer it turn by turn. One turn of yours (a model response, a tool call) takes seconds. Drive
-  the robot with a program: a controller of your own (Python in your container, with numpy and the client) that plans or
-  streams the targets, started in the background (`nohup python /app/ctrl.py > /app/ctrl.log 2>&1 &`) or in the
-  foreground if it ends with the episode. Use your turns to read what happened and improve the program while the episode
-  runs.
+  the robot with a program: your own controller (Python in your container, with numpy and the client) that plans or
+  streams the targets. Start it in the background (`nohup python /app/ctrl.py > /app/ctrl.log 2>&1 &`), or in the
+  foreground if it ends when the episode ends. Use your turns to read what happened and improve the program while the
+  episode runs.
 - `submit` answers at once, with the robot as it is now: the rows you sent have not run yet. They become the plan from
-  control step `at` (an episode step number; by default the next step), replacing whatever was planned from `at` on and
-  keeping what is planned before it. When the plan runs out, the last targets are held. `res.meta["control_steps"]` is
-  the number of steps run so far in this episode (so the next step has that number), `res.meta["proprio"]["now"]` the
-  proprioception now, `res.meta["plan_end_step"]` where the plan now ends.
+  control step `at` (an episode step number; by default the next step). They replace whatever was planned from `at` on
+  and keep what is planned before it. When the plan runs out, the last targets are held. `res.meta["control_steps"]` is
+  the number of steps run so far in this episode, so the next step has that number. `res.meta["proprio"]["now"]` is the
+  proprioception now. `res.meta["plan_end_step"]` is where the plan now ends.
 - Open loop: plan a whole movement at once (`dt` a multiple of 0.034 s; a chunk covers at most 10 s), from step `at = 0`
   for the episode's start: `r.submit("joint_position", rows, dt=0.034, interpolate="hold", at=0, cameras=[])` starts the
   clock and runs exactly those rows from the first step; `at` may be up to `spec()["timing"]["max_ahead_steps"]` steps
@@ -101,11 +101,10 @@ the arms), in front = -x (nearer to them). No positions of the scene are given.
 - Closed loop: send one row per control step, `r.submit("joint_position", a[None], cameras=[])`, computed from the
   proprioception or images the previous call returned. `cameras=[]` skips the images (the fastest call).
 - Latency: a reading is a few milliseconds old when it reaches you, and a row takes effect at the next control step at
-  the earliest. A row whose step has already run when the request arrives is dropped (`res.meta["late_steps"]` counts
-  them); the rest of its chunk applies from the next step.
-- `get_obs()` reads the robot now; `get_obs(last_s=n)` returns, without waiting, what the cameras recorded over the last
-  n seconds (the robot keeps executing its plan). `spec()["timing"]` states all this; `r.status()` shows `running` and
-  `lag_s`.
+  the earliest. A row whose step has already run when the request arrives is dropped; `res.meta["late_steps"]` counts
+  them. The rest of the chunk applies from the next step.
+- `get_obs()` reads the robot now. `get_obs(last_s=n)` returns at once what the cameras recorded over the last n seconds
+  (the robot keeps executing its plan). `spec()["timing"]` states all this; `r.status()` shows `running` and `lag_s`.
 
 ## Others
 - While the countdown runs, the ball gets light pushes along the tray, in a direction that drifts from push to push.

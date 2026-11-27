@@ -76,10 +76,11 @@ became of a call.
   interpolates the arm targets. A chunk covers at most 10 s. Out-of-range values are clipped to the actuator's control
   range and reported in `meta["clipped"]`. Speed rule (the robot's real limits; clamp, not fail): arm joint targets move
   at most 0.0054375 rad per control step on joints 1-4 (`actuator1`..`actuator4`: 2.175 rad/s) and 0.006525 rad on
-  joints 5-7 (`actuator5`..`actuator7`: 2.61 rad/s), the Franka Panda's joint velocity limits
-  (`spec()["robot_spec"]["controller"]`); a row that asks for more takes the control steps it needs, and
-  `meta["clipped"]` says so. The gripper command is not limited: it switches at the row. The arms are position servos
-  with the scene's gains and force limits; use `obs.group("joint_cmd", now=True)` as the starting row to move smoothly.
+  joints 5-7 (`actuator5`..`actuator7`: 2.61 rad/s). These are the Franka Panda's joint velocity limits
+  (`spec()["robot_spec"]["controller"]`). A row that asks for more takes the control steps it needs, and
+  `meta["clipped"]` says so. The gripper command is not limited; it switches to its new value at the start of its row.
+  The arms are position servos with the scene's gains and force limits; use `obs.group("joint_cmd", now=True)` as the
+  starting row to move smoothly.
 
 ### Observations
 - **Cameras** (ALOHA-style, 848 x 480, vertical field of view 58 deg): `cam_high` (static, above the front of the work

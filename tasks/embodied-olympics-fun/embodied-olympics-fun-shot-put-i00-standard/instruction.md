@@ -24,7 +24,8 @@ Rules:
   your last attempt is graded.
 - You get only what the robot's own sensors give (its head cameras, joint encoders, motor torques and IMUs) and the
   venue's fixed cameras: not where you or any object is, not the referee's state. If the referee ends an attempt on a
-  foul, every reply then carries the rule broken (`meta["outcome"]`); no stage count, no success signal.
+  foul, every reply after that names the rule broken (`meta["outcome"]`). The replies give no stage count and no success
+  signal.
 
 The attempt fails at once if:
 - before the shot lands, any part of you touches the top of the rim, the ground outside the circle or the stop board
@@ -59,11 +60,11 @@ One call returns at most 3000 images (`max_frames_per_call`).
 
 The answers are binary (RCB1) and come back decoded: `res.meta` (the counters, `done`, `reason`, `proprio["now"]`,
 `clipped`), `res.last[camera]` (the last frame), `res.frames` or `res.video` (what the cameras saw during the call),
-`res.depth`, `res.proprio` (proprioception rows). Values outside the bounds are clipped and reported in
-`meta["clipped"]`, never refused; a malformed request raises `ValueError` and runs nothing. Rendering is most of a
-call's cost: a controller's call should ask for no video (`video="none"`, `cameras=["head_left"]` or fewer) and read
-`res.proprio`. With `interpolate="linear"` (the default) each control step's command is a straight line from the command
-in force to the row; `"hold"` applies the row as it is.
+`res.depth`, `res.proprio` (proprioception rows). Values outside the bounds are clipped, not refused, and
+`meta["clipped"]` reports them. A malformed request raises `ValueError` and runs nothing. Rendering is most of a call's
+cost: a controller's call should ask for no video (`video="none"`, `cameras=["head_left"]` or fewer) and read
+`res.proprio`. With `interpolate="linear"` (the default), the command moves step by step in a straight line from the
+command in force to the row. With `"hold"`, the row is applied as it is.
 
 ```python
 from rcb_client import Robot
@@ -126,24 +127,25 @@ Joint order everywhere (Unitree's SDK order): `left_hip_yaw`, `left_hip_pitch`, 
   controller: it does not step and it has no feedback. After an arm movement the body sways a few centimetres for a few
   seconds; a hard or fast swing of the arms, a push or a load can tip the robot over within a second or two.
 - **`walk`** runs Unitree's own H1-2 walking policy (50 Hz) on the legs. At the largest forward command (0.8) it walks
-  at about 0.6 m/s and its heading drifts (close the loop on the IMU); `vy` up to 0.5 and `wz` up to 1.57 rad/s. At a
-  zero command it marks time on the spot and recovers from small disturbances, which `stand` does not. When the legs
-  come to it from another mode it first blends them to the stance (0.3 s) and holds a zero command until the robot is
+  at about 0.6 m/s, and its heading drifts, so close the loop on the IMU. `vy` goes up to 0.5 and `wz` up to 1.57 rad/s.
+  At a zero command it marks time on the spot. Unlike `stand`, it recovers from small disturbances. When you switch to
+  `walk` from another mode, it first blends the legs to the stance (0.3 s), then holds a zero command until the robot is
   steady (up to 2 s). It was trained with the arms at their zero pose (upper arms down, forearms forward): moving the
   arms disturbs it. This robot has no running policy: anything faster than a walk is yours to build or to find. The G1's
-  two other walking policies (FALCON, AGILE) are not offered for it: driven on this robot (joints matched by name) they
-  keep it upright but do not walk it.
-- **`joints` / `lowcmd`** are yours: each motor's torque is `kp (q − q_measured) + kd (dq − dq_measured) + tau`,
-  evaluated at 1 kHz with your row held for its 10 ms, then limited by the motor's torque-speed curve and torque limit.
-  `joints` uses the default gains (the spec's `robot_facts`) and zero `dq` and `tau`; `lowcmd` takes yours (kp up to
-  1500 / 800 / 400 and kd up to 30 / 20 / 10 for legs / waist / arms). Nothing balances the robot in these modes but
-  your own targets.
-- **Every joint target** is clipped into the joint's range and moves at most the joint's speed limit × 10 ms per step
-  from the target in force. Joints a type does not name keep their targets. The speed limit is a limit on targets; what
-  bounds the joint itself is the motor's torque-speed curve (a `lowcmd` feed-forward torque can turn a joint up to about
-  1.15 times that speed, where the motor's torque has fallen to zero).
-- **The hands** have no working fingers here; each carries a fist pad (a box of 4.4 × 8 × 10 cm beyond the wrist, the 10
-  cm along the forearm). Nothing in this task is grippable: `grip_left` and `grip_right` have no effect.
+  two other walking policies (FALCON, AGILE) are not offered for this robot. Run on it (joints matched by name), they
+  keep it upright but do not make it walk.
+- **`joints` / `lowcmd`** give you direct control. Each motor's torque is
+  `kp (q − q_measured) + kd (dq − dq_measured) + tau`, computed at 1 kHz while your row is held for its 10 ms, then
+  limited by the motor's torque-speed curve and torque limit. `joints` uses the default gains (the spec's `robot_facts`)
+  with zero `dq` and `tau`. `lowcmd` uses the gains, `dq` and `tau` you send (kp up to 1500 / 800 / 400 and kd up to 30
+  / 20 / 10 for legs / waist / arms). Nothing balances the robot in these modes but your own targets.
+- **Every joint target** is clipped into the joint's range. In each 10 ms step, a target moves at most the joint's speed
+  limit × 10 ms away from the target in force. Joints that an action type does not include keep their current targets.
+  The speed limit applies only to targets. The joint itself is bounded by the motor's torque-speed curve: with a
+  `lowcmd` feed-forward torque, a joint can turn up to about 1.15 times that speed, where the motor's torque has fallen
+  to zero.
+- **The hands** have no working fingers here. Each carries a fist pad: a 4.4 × 8 × 10 cm box beyond the wrist, with its
+  10 cm side along the forearm. Nothing in this task is grippable: `grip_left` and `grip_right` have no effect.
 - **A tool on a hand** (a racket, a paddle, a club; where the task has one) is fixed to the wrist in place of the pad.
   It collides with the world, the ball and the rest of your own body.
 - **The air** is real: balls and implements feel drag and, when they spin, lift.
@@ -167,5 +169,5 @@ Joint order everywhere (Unitree's SDK order): `left_hip_yaw`, `left_hip_pitch`, 
   no GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap
   only slows you down); usage: `/run/rcb-limits/usage.json`.
 - Resets: at most 5 (`spec()["budget"]["reset"]`), each a new episode from the same starting state.
-- Steps: an attempt ends by itself after 60 s of robot time.
+- Steps: an attempt ends after 60 s of robot time.
 - Finish: if you never send `/finish`, the episode is graded when the step limit is reached or your session ends.

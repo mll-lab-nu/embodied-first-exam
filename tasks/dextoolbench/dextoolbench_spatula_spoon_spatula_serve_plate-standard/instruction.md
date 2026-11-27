@@ -29,14 +29,29 @@ hardware.
 
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`:
-```python from rcb_client import Robot r = Robot() # connects (waits while the service starts) spec = r.spec() # control_dt, action layout + limits, cameras, proprio layout, budget cams = list(spec["cameras"]) # camera names obs = r.get_obs(cameras=cams, include_depth=True) # obs.last[cam] -> uint8 (240, 320, 3); obs.depth[cam] -> float16 metres obs.meta["proprio"] # {"layout": [...], "now": [...]}: joint positions, velocities, current targets obs.meta["cameras"] # per camera: intrinsic_cv, cam2world_gl (OpenGL: looks along -z) obs.meta["task"] # see below obs = r.hold(2.0, cameras=cams[:1]) # hold the targets for 2 s of robot time obs = r.get_obs(last_s=1.0) # the frames recorded over the last 1 s (reading moves no time) res = r.submit("joint_position", A, dt=spec["control_dt"], cameras=cams[:1], video="mp4") # A: (T, 29) rows dt apart res.meta["done"], res.meta["reason"], res.meta["task"], res.meta["control_steps"] res.video[cam]; res.frames[cam]; res.last[cam]; res.proprio obs = r.reset(cameras=cams) # a new episode from the starting state; obs.meta["resets_left"] ```
+```python
+from rcb_client import Robot
+r = Robot()                                   # connects (waits while the service starts)
+spec = r.spec()                               # control_dt, action layout + limits, cameras, proprio layout, budget
+cams = list(spec["cameras"])                  # camera names
+obs = r.get_obs(cameras=cams, include_depth=True)   # obs.last[cam] -> uint8 (240, 320, 3); obs.depth[cam] -> float16 metres
+obs.meta["proprio"]                           # {"layout": [...], "now": [...]}: joint positions, velocities, current targets
+obs.meta["cameras"]                           # per camera: intrinsic_cv, cam2world_gl (OpenGL: looks along -z)
+obs.meta["task"]                              # see below
+obs = r.hold(2.0, cameras=cams[:1])           # hold the targets for 2 s of robot time
+obs = r.get_obs(last_s=1.0)                   # the frames recorded over the last 1 s (reading moves no time)
+res = r.submit("joint_position", A, dt=spec["control_dt"], cameras=cams[:1], video="mp4")   # A: (T, 29) rows dt apart
+res.meta["done"], res.meta["reason"], res.meta["task"], res.meta["control_steps"]
+res.video[cam]; res.frames[cam]; res.last[cam]; res.proprio
+obs = r.reset(cameras=cams)                   # a new episode from the starting state; obs.meta["resets_left"]
+```
 After the step limit (`spec()["max_control_steps"]`) `submit` raises `EpisodeOver` (409) until you reset, and after
-`/finish` every call but `spec` and `status` is refused. `r.reset(cameras=None, include_depth=False)` (`POST /reset`): a
-new episode from the same starting state; it returns the start's frames, and `meta` (also `r.status()`) carries
-`episode`, `resets_left` and `control_steps_total`. Resetting does not stop or restore the clock. Calibration:
-`meta["cameras"][cam]` holds `intrinsic_cv` (pinhole, pixels) and `cam2world_gl` (4x4 camera-to-world, OpenGL axes: x
-right, y up, the camera looks along -z; the viewpoint the image is rendered from), for the state at the end of that call
-(the `last` image and the last frame of every stack). One call returns at most 3000 images.
+`/finish` every call but `spec` and `status` is refused. `r.reset(cameras=None, include_depth=False)` (`POST /reset`)
+starts a new episode from the same starting state. It returns the start's frames, and its `meta` (also `r.status()`)
+carries `episode`, `resets_left` and `control_steps_total`. Resetting does not stop or restore the clock. Calibration:
+`meta["cameras"][cam]` holds `intrinsic_cv` (pinhole, pixels) and `cam2world_gl`, the 4x4 camera-to-world pose the image
+is rendered from (OpenGL axes: x right, y up, the camera looks along -z). Both describe the state at the end of that
+call: the `last` image and the last frame of every stack. One call returns at most 3000 images.
 
 ### MCP tools
 - The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
@@ -51,9 +66,9 @@ right, y up, the camera looks along -z; the viewpoint the image is rendered from
 
 ### Actions
 `joint_position`, 29 numbers per row: `joint1..joint7` (iiwa), then the 22 Sharpa hand joints (names in
-`spec()["action_types"]["joint_position"]["layout"]`); rows are `dt` apart (a multiple of `control_dt`), each held
-(`interpolate="hold"`) or ramped from the previous row (`"linear"`, default) over its control steps; clipped to the
-limits in the spec. A chunk covers at most 10 s.
+`spec()["action_types"]["joint_position"]["layout"]`). Rows are `dt` apart (a multiple of `control_dt`). Each row is
+either held over its control steps (`interpolate="hold"`) or ramped from the previous row (`"linear"`, default). Values
+are clipped to the limits in the spec. A chunk covers at most 10 s.
 
 ### Observations
 - Cameras: `front`, `side`, `top`, `oblique`, all fixed; RGB 240 × 320, depth on request (metres).
@@ -61,9 +76,9 @@ limits in the spec. A chunk covers at most 10 s.
   metres.
 - Proprioception (`obs.meta["proprio"]`): the joint positions, velocities and current targets.
 - The current goal (`meta["task"]`): its pose (`goal`, x y z qx qy qz qw), `goal_index`, `n_goals`, `goals_reached`,
-  `steps_left_on_goal` (null: goals have no time limit here). Once the last goal is reached it stays the current goal
-  (`goals_reached` stops one short): the service never says whether every pose has been reached. The benchmark shows the
-  controller the current goal, and the images show it as the green ghost tool.
+  `steps_left_on_goal` (null: goals have no time limit here). Once the last goal is reached, it stays the current goal
+  and `goals_reached` stops one short. So the service never says whether every pose has been reached. The benchmark
+  shows the controller the current goal, and the images show it as the green ghost tool.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At

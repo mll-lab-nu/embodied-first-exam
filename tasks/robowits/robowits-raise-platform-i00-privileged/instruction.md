@@ -5,10 +5,10 @@ Lay the book across the two cups so that it rests on top of them.
 
 ## Goal
 Success: the book lies raised on top of the two cups, both cups under it; the robot has let go of the book and moved its
-grippers away from it, it is at rest, and neither the book nor the cups have fallen off the table. What counts is how
-things stand after the last action of your trajectory, replayed from the fixed start. After your last row the grader
-holds its command for about three seconds (a second, then two seconds in which all of this must keep holding, with
-nothing moving).
+grippers away from it, it is at rest, and neither the book nor the cups have fallen off the table. Your trajectory is
+replayed from the fixed start. What counts is the state after its last action. After your last row, the grader keeps
+your last command for about three seconds: first one second, then two seconds in which all of this must keep holding,
+with nothing moving.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, path)`: the (T, 16) actions, one row
 per control step (1/30 s), at most 200,000 rows (more score 0). It is replayed once from the fixed start, settle check
@@ -49,11 +49,11 @@ s.save_trajectory(actions, "/app/output/trajectory.npz")
 s.render_video(actions, "/app/output/check.mp4")   # replays from the frozen state and writes a tiled camera video
 ```
 
-The primitives are deliberately thin (IK moves, joint moves, gripper, hold): grasping, placing and every other skill are
-yours to build from them. `s.replay(actions)` runs exactly what the grader runs, settle check included, and returns the
-verdict as `success` (why it failed in `settle`); `s.status()["success"]` is the same conditions at one instant, without
-the settle check. One `Session` per process (Genesis initialises once). The physics runs on Genesis' bit-deterministic
-CPU backend at ~700 control steps/s; the GPU only renders camera images. Do not call `s.close()` before writing every
+The primitives are deliberately thin: IK moves, joint moves, gripper, hold. You build grasping, placing and every other
+skill from them. `s.replay(actions)` runs exactly what the grader runs, settle check included. It returns the verdict as
+`success`, and why it failed in `settle`. `s.status()["success"]` checks the same conditions at one instant, without the
+settle check. One `Session` per process (Genesis initialises once). The physics runs on Genesis' bit-deterministic CPU
+backend at ~700 control steps/s; the GPU only renders camera images. Do not call `s.close()` before writing every
 output. The grader replays with this command; run it to self-check:
 `python /opt/tools/rcb_robowits.py replay --task raise_platform --instance /app/instance.json --traj /app/output/trajectory.npz`
 
@@ -61,7 +61,7 @@ output. The grader replays with this command; run it to self-check:
 - Action (16): right arm 7 joint targets (rad), right gripper width (m, 0 closed .. 0.1 open), left arm 7 joint targets,
   left gripper width; absolute position targets tracked by PD controllers. `s.hold_action()` is the no-op.
 - Control runs at 30 Hz (4 physics substeps). A `Session` between two resets has at most 200,000 control steps. `s.step`
-  returns `True` on the step that reaches it and raises after it until `s.reset()`.
+  returns `True` on the step that reaches this cap, and raises on every later step until `s.reset()`.
 - Grippers open to 10 cm. The gripper tip frame's +z axis is the approach direction and +x the finger-closing direction;
   `p["top_down_quat"](yaw)` builds a vertical-approach orientation whose fingers close along `yaw`.
 - World frame: robot base at (0, 0, 1.08), table top at z = 0.76, x points away from the robot, y to its left (the left

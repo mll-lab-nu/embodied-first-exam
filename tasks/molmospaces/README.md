@@ -87,7 +87,7 @@ rendered on the GPU, 20-120 s, over 500 s on a loaded host) renders `replay.mp4`
 Rendering during the live episode was not chosen: the service renders only what the agent asks for, and a frame every
 control step would add a GPU render to every step of the agent's calls. Crash recovery:
 resume class `exact`. Budget: each task's own `[agent] timeout_sec` (PROTOCOL §2,
-docs/protocol/running.md "The agent's time"), stated by the closing `## Time limit` section of every instruction; no step limit beyond the horizon.
+docs/protocol/running.md "The agent's time"), stated by the Time line of every instruction's closing `## Limits`; no step limit beyond the horizon.
 
 What is not the agent's failure is flagged, and a reward is always written. Standard `infra_error = 1`: no
 `final.json` (`missing_log`), an unreadable one (also `grader_error`), an unfinished one (`finalized` 0: the collect hook

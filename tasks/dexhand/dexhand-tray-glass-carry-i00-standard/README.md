@@ -23,8 +23,7 @@ and the hands must let go without disturbing the tray. Any spill, escaped or dro
 tray or object below the counter tops ends the episode as a failure at once.
 
 ## Reference solution
-`solution/` holds a validated Sharpa Wave trajectory of 1,072 controls (the episode ends with success after 952
-controls; 120 hold rows of slack follow); in privileged mode `solve.sh` re-saves it to `/app/output/trajectory.npz`,
+`solution/` holds a validated Sharpa Wave trajectory of 1,072 controls (success after 952 controls; 120 hold rows of slack follow); in privileged mode `solve.sh` re-saves it to `/app/output/trajectory.npz`,
 in standard mode it submits the same rows as float64 through the public client. Both hands hang fingers-down outside
 the two handle slots, curl the fingertips inward and push them through the slots under the handle bar (a hook grip),
 lift the tray 100 mm, carry it around the bottle (detour to y = -0.17 m) and across the gap, lower it onto the
@@ -40,13 +39,11 @@ verdict, and nothing is replayed to grade it. The isolated verifier reads only t
 service then renders `replay.mp4` from the recorded trajectory in one video-only pass, which never changes the
 verdict. A missing or unfinished record, a give-up after crashes between the agent's calls and a frozen instance
 that does not build at the episode's start are infrastructure errors.
-The episode ends at the first success or the first failure.
 Failures are fail-fast and permanent (checked after every 2 ms physics step): spilled glass (tilt above 15 degrees),
 glass off the tray footprint or lifted off the tray, any contact of the bottle with the tray, a glass or a hand, the
 tray set back on the source counter or dragged on the receiving counter, a tray or glass falling faster than 0.6 m/s
 (a free fall of about 18 mm) or faster than 0.2 m/s while unsupported (no drop-and-catch), a tray tilted beyond 35
-degrees, any object below the counter tops, on the floor or outside the workspace, unstable physics, or the
-3,000-control budget. The frozen thresholds come from the task, never from an agent archive. A no-op fails. Human
+degrees, any object below the counter tops, on the floor or outside the workspace, or unstable physics. At the 3,000-control budget the episode ends and is judged on the state it leaves. The frozen thresholds come from the task, never from an agent archive. A no-op fails. Human
 review and full agent-trial calibration remain pending; report this task as provisional.
 
 ## Resources

@@ -11,19 +11,19 @@ into the water head first, vertical, straight and untwisted, arms stretched beyo
 The referee judges these stages, in order: **take-off → entry → under water**. An attempt ends at the success, at the
 first foul or after 20 s (2000 control steps) of robot time.
 
-Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory()`: `actions`, one sim row of 151 floats per
-control step. It is replayed open-loop from the fixed start, one row per control step, until the referee ends the
-attempt, and it scores 1 if the replay succeeds, else 0: when the rows run out, the attempt is judged as it stands. At
-most 2000 rows are used, and every one must be finite, also those after the attempt's end (a NaN or an infinite value
-scores 0).
+Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory()`. It holds `actions`: one sim row of 151
+floats per control step. It is replayed open-loop from the fixed start, one row per control step, until the referee ends
+the attempt. It scores 1 if the replay succeeds, else 0. If the rows run out first, the attempt is judged on its state
+at that point. At most 2000 rows are used. Every row must be finite, including rows after the attempt's end; a NaN or an
+infinite value scores 0.
 
-Beside it: `gen.py`, the script that produced it, which must run and reproduce `trajectory.npz` reading nothing but
-`/app/instance.json` and files under `/app/output/`; and `NOTES.md`, at most 20 lines: your final approach and why it
-works, the approaches that failed and what each told you, what you downloaded or installed. The tooling appends its own
-log, `rcb_session_log.jsonl`, to `/app/output/`: leave it there and do not set `RCB_SESSION_LOG`.
+Put two files beside it. `gen.py` is the script that produced it: it must run and reproduce `trajectory.npz`, reading
+nothing but `/app/instance.json` and files under `/app/output/`. `NOTES.md` has at most 20 lines: your final approach
+and why it works, the approaches that failed and what each told you, and what you downloaded or installed. The tooling
+appends its own log, `rcb_session_log.jsonl`, to `/app/output/`: leave it there and do not set `RCB_SESSION_LOG`.
 
-Save a trajectory as soon as you have one and overwrite it (with `gen.py` and `NOTES.md` to match) whenever you have a
-better one; a run that ends with no file scores zero. Do not stop early.
+Save a trajectory as soon as you have one. Whenever you have a better one, overwrite it and update `gen.py` and
+`NOTES.md` to match. A run that ends with no file scores zero. Do not stop early.
 
 Rules: **No cheating.** Do not search for, download or use an existing solution to this exact task (published or
 reference solutions, the benchmark's demonstrations, policies trained for it); trials are reviewed.
@@ -66,8 +66,8 @@ s.save_trajectory()                    # writes the SCORED file /app/output/traj
 The simulator is deterministic on the CPU: the same rows from the frozen start give the same state, so a trajectory you
 generate closed-loop (reading `s.state()`, `s.world`) replays exactly.
 `python /opt/tools/rcb_rfo.py replay --instance /app/instance.json --traj /app/output/trajectory.npz --out /tmp/r.json`
-runs the same replay from the shell. The world's source is in `/opt/tools/rfo/` (the robot and action layer `world.py`,
-the referee's toolkit `referee.py`) and this task's rules, as code, in `/opt/tools/rfo_task.py`; the robot library
+runs the same replay from the shell. The world's source is in `/opt/tools/rfo/`: the robot and action layer `world.py`
+and the referee's toolkit `referee.py`. This task's rules, as code, are in `/opt/tools/rfo_task.py`. The robot library
 (model, meshes, limits, the walking and running policies' weights) is in `/opt/roboolympics/`. You may build your own
 copies of the world to plan or learn in.
 
@@ -106,38 +106,40 @@ in `/app/instance.json` (`t0.robot`).
   controller: it does not step and it has no feedback. After an arm movement the body sways a few centimetres for a few
   seconds; a hard or fast swing of the arms, a push or a load can tip the robot over within a second or two.
 - **`walk`** runs Unitree's own G1 walking policy (50 Hz) on the legs. At the largest forward command (0.8) it walks at
-  about 0.6 m/s; `vy` up to 0.5 and `wz` up to 1.57 rad/s; it follows with lag and barely moves in its first second. At
-  a zero command it marks time on the spot (the pelvis sways and drifts a centimetre or two per second) and recovers
-  from small disturbances, which `stand` does not. When the legs come to it from another mode it first blends them to
-  the stance (0.3 s) and holds a zero command until the robot is steady (up to 2 s). It was trained with the arms at
-  rest: moving the arms and the waist disturbs it.
-- **`walk_falcon`** and **`walk_agile`** are two more walking policies for the G1's legs, with the same row as `walk`
-  (you keep the waist and the arms): FALCON (trained with arm motions and forces on the hands) and AGILE's
-  velocity-height policy (trained while the arms and the waist moved), the released weights run in numpy at 50 Hz on
-  their own leg gains (kp 100 / 100 / 100 / 200 / 20 / 20 per leg). Both hold still and follow the command better than
-  `walk` while the arms move or carry something; FALCON also adds a small correction to the wrists. FALCON zeroes speeds
-  below 0.2 m/s and turns below 0.2 rad/s and stands with the pelvis at about 0.74 m; AGILE zeroes commands of norm
-  below 0.1, stands lower (about 0.68 m) and barely turns on the spot below about 0.7 rad/s (walking at 0.2 m/s or more
-  it turns as asked). Their command ranges are in the action table. A walker takes the legs at once, from where they are
-  (its memory starts afresh); `walk`, the other walker and `run` take them from it the same way. Going from a walker
-  straight to `stand` usually ends in a fall (`stand` holds Unitree's stance and does not balance): give `walk` a zero
-  command for about 2 s first.
+  about 0.6 m/s. `vy` goes up to 0.5 and `wz` up to 1.57 rad/s. It follows the command with lag and barely moves in its
+  first second. At a zero command it marks time on the spot; the pelvis sways and drifts a centimetre or two per second.
+  Unlike `stand`, it recovers from small disturbances. When you switch to `walk` from another mode, it first blends the
+  legs to the stance (0.3 s), then holds a zero command until the robot is steady (up to 2 s). It was trained with the
+  arms at rest: moving the arms and the waist disturbs it.
+- **`walk_falcon`** and **`walk_agile`** are two more walking policies for the G1's legs. They use the same row as
+  `walk`, so you keep the waist and the arms. `walk_falcon` is FALCON, trained with arm motions and forces on the hands;
+  `walk_agile` is AGILE's velocity-height policy, trained while the arms and the waist moved. Both run their released
+  weights in numpy at 50 Hz, with their own leg gains (kp 100 / 100 / 100 / 200 / 20 / 20 per leg). Both hold still and
+  follow the command better than `walk` while the arms move or carry something; FALCON also adds a small correction to
+  the wrists. FALCON treats speeds below 0.2 m/s and turns below 0.2 rad/s as zero, and stands with the pelvis at about
+  0.74 m. AGILE treats commands with a norm below 0.1 as zero and stands lower (about 0.68 m). AGILE barely turns on the
+  spot below about 0.7 rad/s; while walking at 0.2 m/s or more it turns as asked. Their command ranges are in the action
+  table. When you switch to `walk_falcon` or `walk_agile`, that policy takes over the legs at once, from where they are,
+  with its memory reset. `walk`, the other of the two and `run` take the legs over from it in the same way. Switching
+  from `walk_falcon` or `walk_agile` straight to `stand` usually ends in a fall, because `stand` holds Unitree's stance
+  and does not balance. First give `walk` a zero command for about 2 s.
 - **`run`** runs the platform's athletics running policy (50 Hz) on all 29 joints: `vx` from 0 to about 4 m/s (it falls
   above that; the command changes at most 1.5 m/s per second), `|vy|` ≤ 0.12 m/s, `|wz|` ≤ 0.5 rad/s. `run_arms` gives
-  you the arms while it keeps the legs and the waist; taking the arms away from its swing disturbs it. Switching to
-  `stand`, `walk` or `joints` above about 0.6 m/s usually ends in a fall: slow down first (from 2.4 m/s that takes about
-  2 s and 2.3 m).
-- **`joints` / `lowcmd`** are yours: each motor's torque is `kp (q − q_measured) + kd (dq − dq_measured) + tau`,
-  evaluated at 1 kHz with your row held for its 10 ms, then limited by the motor's torque-speed curve and torque limit.
-  `joints` uses the default gains (`/app/instance.json` (`t0.robot`)) and zero `dq` and `tau`; `lowcmd` takes yours (kp
-  up to 1000 / 500 / 400 and kd up to 20 / 15 / 10 for legs / waist / arms). Nothing balances the robot in these modes
-  but your own targets.
-- **Every joint target** is clipped into the joint's range and moves at most the joint's speed limit × 10 ms per step
-  from the target in force. Joints a type does not name keep their targets. The speed limit is a limit on targets; what
-  bounds the joint itself is the motor's torque-speed curve (a `lowcmd` feed-forward torque can turn a joint up to about
-  1.15 times that speed, where the motor's torque has fallen to zero).
-- **The hands** have no working fingers here; each carries a fist pad (a box of 4.4 × 8 × 10 cm beyond the wrist, the 10
-  cm along the forearm). Nothing in this task is grippable: `grip_left` and `grip_right` have no effect.
+  you the arms, while the running policy keeps the legs and the waist. Taking the arms away from the policy's swing
+  disturbs it. Switching to `stand`, `walk` or `joints` above about 0.6 m/s usually ends in a fall: slow down first
+  (from 2.4 m/s that takes about 2 s and 2.3 m).
+- **`joints` / `lowcmd`** give you direct control. Each motor's torque is
+  `kp (q − q_measured) + kd (dq − dq_measured) + tau`, computed at 1 kHz while your row is held for its 10 ms, then
+  limited by the motor's torque-speed curve and torque limit. `joints` uses the default gains from `/app/instance.json`
+  (`t0.robot`), with zero `dq` and `tau`. `lowcmd` uses the gains, `dq` and `tau` you send (kp up to 1000 / 500 / 400
+  and kd up to 20 / 15 / 10 for legs / waist / arms). Nothing balances the robot in these modes but your own targets.
+- **Every joint target** is clipped into the joint's range. In each 10 ms step, a target moves at most the joint's speed
+  limit × 10 ms away from the target in force. Joints that an action type does not include keep their current targets.
+  The speed limit applies only to targets. The joint itself is bounded by the motor's torque-speed curve: with a
+  `lowcmd` feed-forward torque, a joint can turn up to about 1.15 times that speed, where the motor's torque has fallen
+  to zero.
+- **The hands** have no working fingers here. Each carries a fist pad: a 4.4 × 8 × 10 cm box beyond the wrist, with its
+  10 cm side along the forearm. Nothing in this task is grippable: `grip_left` and `grip_right` have no effect.
 - **A tool on a hand** (a racket, a paddle, a club; where the task has one) is fixed to the wrist in place of the pad.
   It collides with the world, the ball and the rest of your own body.
 - **The air** is real: balls and implements feel drag and, when they spin, lift.

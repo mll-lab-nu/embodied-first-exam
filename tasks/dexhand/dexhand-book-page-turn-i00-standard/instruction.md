@@ -60,10 +60,11 @@ and records those steps. `get_obs()` only observes the current state. Forward ki
 `r.status()` before continuing. Crash recovery resumes the same journaled episode, without a reset, and the wall-clock
 budget keeps running.
 
-Resets: `r._post("/reset", ...)` (`POST /reset`) starts a new episode from the same starting state, abandoning the
-running one or after one has ended; it takes no simulated time and returns the start's images and proprioception. Once
-an episode has ended, `submit` raises `EpisodeOver` until you reset. `meta["episode"]` and `meta["resets_left"]` count
-the episodes; `meta["control_steps"]` is the current episode's, `meta["control_steps_total"]` all of them.
+Resets: `r._post("/reset", ...)` (`POST /reset`) starts a new episode from the same starting state. You can call it
+during a running episode, which it abandons, or after one has ended. It takes no simulated time and returns the start's
+images and proprioception. Once an episode has ended, `submit` raises `EpisodeOver` until you reset. `meta["episode"]`
+and `meta["resets_left"]` count the episodes. `meta["control_steps"]` counts the current episode's control steps,
+`meta["control_steps_total"]` those of all episodes.
 
 ### MCP tools
 - The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
@@ -151,5 +152,5 @@ hangs parked beside the stand.
   GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap only
   slows you down); usage: `/run/rcb-limits/usage.json`.
 - Resets: at most 20 (`spec()["budget"]["reset"]`), each a new episode from the same starting state.
-- Steps: at most 3,000 control steps (60 s of simulated time) per episode; an episode that reaches them ends there.
+- Steps: at most 3,000 control steps (60 s of simulated time) per episode, then the episode ends.
 - Finish: if you never send `/finish`, the episode is graded when the step limit is reached or your session ends.

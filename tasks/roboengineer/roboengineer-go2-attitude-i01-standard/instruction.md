@@ -6,27 +6,27 @@ Make the Go2 tilt its body to follow the commanded roll and pitch while it stand
 ## Goal
 Success: once the commands start, the Go2's body follows the commanded roll and pitch closely for the rest of the run,
 with at least three feet on the ground nearly all the time, and the Go2 stays nearly in place. Falling over or the body
-touching the ground fails. The evaluator runs the policy you select on 10 held-out cases (new episodes of the same
-hidden plant, never shown to you): success needs every case to pass, and `final_reward` reports the mean score (0-100).
+touching the ground fails. The evaluator runs the policy you select on 10 held-out cases: new episodes of the same
+hidden plant, never shown to you. Success needs every case to pass; `final_reward` reports the mean score (0-100).
 
-Deliverable: the policy of one completed deployment round. `seal(round_id, summary)` selects it (once; it ends
-adaptation). If you seal none, the latest round completed before the cutoff counts; with no completed round the score is
-zero. Preserve code, training logs, policies and exact feedback under `/app/output/`. The client saves the exact
-response and image bytes.
+Deliverable: the policy of one completed deployment round. Choose that round with `seal(round_id, summary)`. You can
+seal only once, and sealing ends adaptation. If you seal none, the latest round completed before the cutoff counts; with
+no completed round the score is zero. Preserve code, training logs, policies and exact feedback under `/app/output/`.
+The client saves the exact response and image bytes.
 
 Rules:
 - **No cheating.** Write your own fitting, training and analysis code. Do not search for, download or use any existing
   solution (published or reference solutions, trained policies for this task) or hidden evaluator information; trials
   are reviewed.
-- No reset: deployments are your only runs on the hidden evaluator, at most three rounds, each on the same 3 development
-  cases from their start; no reset or privileged-state endpoint exists.
-- A deployment returns noisy telemetry and camera frames only; the evaluation dynamics, seeds, true state, contacts and
-  grades are never returned, and nothing about the held-out cases.
+- No reset: deployments are your only runs on the hidden evaluator. You get at most three rounds, each on the same 3
+  development cases from their start. There is no reset or privileged-state endpoint.
+- A deployment returns only noisy telemetry and camera frames. It never returns the evaluation dynamics, seeds, true
+  state, contacts or grades, nor anything about the held-out cases.
 
 ## Robot Interface
 A simulated Unitree Go2 quadruped (MuJoCo). You tune its numeric controller on the public nominal model in your
-container and deploy it to a hidden evaluator whose dynamics differ in ways you are not told; the evaluator runs as a
-service you reach only through its client.
+container. Then you deploy it to a hidden evaluator whose dynamics differ in ways you are not told. The evaluator runs
+as a service that you reach only through its client.
 
 ### Client
 - `from control_public.client import Client, artifact`; `Client().describe()` provides the public defaults and bounds.

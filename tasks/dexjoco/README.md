@@ -19,7 +19,7 @@ Every image is public: Harbor pulls it.
 | tasks | 11 families × 2 modes: `tasks/dexjoco/dexjoco-<family>-i00-privileged` and `-standard` (`eai-standard/2.2`) |
 | image | `ghcr.io/mll-lab-nu/efe:dexjoco-0.1.2` (`images/dexjoco/`: DexJoCo @ 8d23b0f and its pinned dependency closure; no demonstrations, no policies) |
 | oracle | full, both modes: the demonstration's own actions |
-| agent time budget | 3600 s for every task, one number for both modes; each task's own `[agent] timeout_sec`, stated in every instruction's closing `## Time limit` section (PROTOCOL §2) |
+| agent time budget | 3600 s for every task, one number for both modes; each task's own `[agent] timeout_sec`, stated in the Time line of every instruction's closing `## Limits` (PROTOCOL §2) |
 | egress | allowlisted to the model APIs and the package registries in both modes: the reference demonstrations are public (PROTOCOL H.2) |
 
 ## Tasks
@@ -63,7 +63,8 @@ tasks keep their names.
 - **Action.** DexJoCo's own row per control step (50 Hz, 10 physics substeps of 2 ms): per arm the tcp target pose
   (xyz, quaternion wxyz, world frame), which DexJoCo's operational-space controller tracks, and 16 Allegro joint targets.
   Single arm 23 values, bimanual 46 (right first; the left hand's fingers in DexJoCo's mirrored order).
-- **Episode.** As in DexJoCo's evaluation: it ends at the first success or task failure. DexJoCo's episode cap, its
+- **Episode.** In privileged mode, as in DexJoCo's evaluation, it ends at the first success or task failure (standard
+  mode: "Agent-ended episodes"). DexJoCo's episode cap, its
   real-time pacing, its per-step camera rendering and hanoi's wall-clock auto-reset are lifted (`rcb_dexjoco.py`):
   the wall clock is the only budget.
 - **Threads.** The replay is bit-exact for one OpenBLAS thread count. DexJoCo's operational-space controller does its
@@ -140,9 +141,8 @@ unchanged), resume class `exact`:
 - **grading: the live episode.** `success` = DexJoCo's own success check
   (`Session.step`, with this benchmark's tightened checks such as water_plant's aim and 30-step hold) on the episode the
   service ran, recorded by the service in `episode.json` when the episode ends; `final.json` has `graded_by = "live"`,
-  `replays = 0`, `live_success`, `live_sha` (the final-state hash). Nothing is replayed to grade it. No settle window
-  is needed without agent-ended episodes: the episode ends at the first success (with them, see "Agent-ended
-  episodes").
+  `replays = 0`, `live_success`, `live_sha` (the final-state hash). Nothing is replayed to grade it. The end window:
+  "Agent-ended episodes".
 - **start state:** the service checks the frozen instance when the episode begins (`server.py`, before
   `Episode.begin`): a scene that does not rebuild to the instance's recorded state hash (`instance_exact`) gets no
   episode; the service gives up (`instance_mismatch = 1`, `infra_error = 1`, 409 to every request) before the agent is
@@ -179,10 +179,10 @@ unchanged), resume class `exact`:
 Standard episodes are agent-ended (PROTOCOL §3 "Agent-ended episodes"; `RCB_AGENT_END` in the sim service,
 `/srv/rcb_agent_end.py`). The agent never sees a success: no `success` or progress in any meta, status or spec, and a
 success never ends the episode. The episode ends at the agent's `POST /finish` (reason `finished`), when its time runs
-out (`timeout`), at the episode's step cap (`step_limit`), on a failure rule of the task (a 0, even after a success) or
+out (`timeout`), at the runaway guard (`step_limit`), on a failure rule of the task (a 0, even after a success) or
 on a simulator error (judged as without the feature). It is then judged on how things stand when it ends; `episode.json`
 records `ended_by`, `hidden_success_seen` and the step of the first hidden success as evidence. No `RCB_STEP_LIMIT` is
-set: DexJoCo's `max_steps` already caps the episode and maps to `step_limit`.
+set: the runaway guard (`rcb_dexjoco.MAX_STEPS`) maps to `step_limit`.
 
 `rcb_dexjoco.Session(hide_success=True)` records DexJoCo's `succeed` (`now_success`) without ending the episode; its
 other terminations stay failures. The microwave, photograph and water-plant tasks are judged as events (seen during the

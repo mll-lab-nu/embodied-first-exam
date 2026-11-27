@@ -4,21 +4,22 @@
 The stove is already off: turn its knob further toward off, as far as it will go.
 
 ## Goal
-Success: the stove's knob is turned back past its off position. Your trajectory is replayed from the fixed start, and
-the episode ends as soon as the task is done: the trajectory must end on that step (actions after it make it invalid).
+Success: the stove's knob is turned back past its off position. Your trajectory is replayed from the fixed start. The
+episode ends as soon as the task is done, and the trajectory must end on that step: any action after it makes the
+trajectory invalid.
 
-Deliverable: `/app/output/trajectory.npz` with key `actions`: LIBERO's native control steps, shape `(T, 7)`, 1 ≤ T ≤ 300
-(LIBERO's step limit for this task), one row per control step (1/20 s), starting after LIBERO's 10 warm-up steps (no-ops
-with the gripper open, already part of the fixed start). Write it with `s.save_trajectory()` so the format is right.
-Leave the script that produced it at `/app/output/gen.py`. Save a valid one early and overwrite it when you have a
-better one.
+Deliverable: `/app/output/trajectory.npz` with key `actions`, shape `(T, 7)`, 1 ≤ T ≤ 300 (LIBERO's step limit for this
+task). Each row is one of LIBERO's native control steps (1/20 s). The rows start after LIBERO's 10 warm-up steps, which
+are no-ops with the gripper open and already part of the fixed start. Write it with `s.save_trajectory()` so the format
+is right. Leave the script that produced it at `/app/output/gen.py`. Save a valid one early and overwrite it when you
+have a better one.
 
 Rules: **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
 benchmark's demonstrations, trained policies); trials are reviewed.
 
 ## Robot Interface
 A Franka Panda arm at a table (LIBERO on robosuite / MuJoCo). The scene is one fixed instance, and it changes once while
-you work (Others). You have the full simulator to develop with; you hand in a trajectory of robot actions.
+you work (see Others). You have the full simulator to develop with; you hand in a trajectory of robot actions.
 
 ### Session
 `/opt/tools/lmx_tool.py`, importable as `lmx_tool`:
@@ -35,23 +36,23 @@ lmx_tool.replay_fresh(A)   # replay A in a new process (as the grader does) -> {
 img = s.render("agentview", 256)   # RGB, upright; cameras "agentview" and "wrist"; depth=True adds metric depth
 ```
 
-One simulator per process: some scenes do not rebuild exactly the same a second time in one process, so a second
-`Session` in a process raises an error. To start over, start a new Python process (as often as you like); `replay_fresh`
+One simulator per process: a second `Session` in the same process raises an error, because some scenes do not rebuild
+exactly the same way a second time. To start over, start a new Python process (as often as you like); `replay_fresh`
 does this for you.
 
 ### Actions
-- Action `[dx, dy, dz, drx, dry, drz, grip]`, each clipped to [-1, 1]: LIBERO's operational-space controller (OSC_POSE)
-  moves the hand's target by `[dx, dy, dz]` × 0.05 m and rotates it by `[drx, dry, drz]` × 0.5 rad (axis-angle, world
-  frame) per control step; `grip` +1 closes, -1 opens the gripper.
-- World frame: metres; the robot's base is at (-0.66, 0, 0.912) facing +x: x forward (across the table), y to the
-  robot's left, z up; quaternions are w x y z.
+- Action `[dx, dy, dz, drx, dry, drz, grip]`, each clipped to [-1, 1], for LIBERO's operational-space controller
+  (OSC_POSE). Per control step it moves the hand's target by `[dx, dy, dz]` × 0.05 m and rotates it by `[drx, dry, drz]`
+  × 0.5 rad (axis-angle, world frame). `grip` +1 closes the gripper, -1 opens it.
+- World frame: metres, x forward (across the table), y to the robot's left, z up; quaternions are w x y z. The robot's
+  base is at (-0.66, 0, 0.912), facing +x.
 - Everything in `s.env` (robosuite's LIBERO environment) and `s.sim` is readable (privileged mode).
 
 ## Others
 - Labels in `s.state()`: `flat_stove_1` (the stove).
 - The scene changes once, the first time the gripper comes within about a hand's length of the stove: the colours in the
-  camera images change. `s.state()["event_fired"]` and `event_step` show when it happened; the grader's replay does the
-  same.
+  camera images change. `s.state()["event_fired"]` and `event_step` show when it happened. The same change happens in
+  the grader's replay.
 
 ## Limits
 - Time: 1800 s of wall-clock time from the start of your session; everything counts (the simulator's start-up too). At

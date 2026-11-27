@@ -63,7 +63,7 @@ by a few hundredths of a radian while it holds. One call returns at most 3000 im
   controller (mink), limits [-10, 10]; then six commands per hand (right, then left) in the finger order
   `little, ring, middle, index, thumb_flexion, thumb_rotation` -- unscaled Fourier hand commands in [-3, 3], not a
   binary grip. The GR1 has no mobile base. Values are clipped to the limits. Rows are `dt` apart (default and minimum:
-  `control_dt`; a chunk covers at most 10 s).
+  `control_dt`). A chunk covers at most 10 s.
 - World frame: metres, z up. In the proprio, `eef_left_*` / `eef_right_*` are the grip sites' positions in the world
   frame; the action's pose targets and the `cmd_*` entries (the last command) are in the robot's base frame. The robot's
   base frame (body `robot0_base`, fixed in the world) has its origin at world (2.67441, -2.13856, 0.89778) m and is
@@ -75,9 +75,9 @@ by a few hundredths of a radian while it holds. One call returns at most 3000 im
 
 ### Hands
 Each hand command is the position target, in radians, of that finger's joints (`thumb_flexion` drives two thumb joints,
-`thumb_rotation` one): 0 is the straight, open finger, larger values bend it toward the palm (the hand closes), and
-every finger joint stops at the end of its range (1.22 to 1.74 rad), so values below 0 or above about 1.7 change nothing
-more. The grip site that the pose targets place is the origin of the hand's mounting frame (`gripper0_right_grip_site`,
+`thumb_rotation` one). 0 is the straight, open finger; larger values bend it toward the palm, closing the hand. Every
+finger joint stops at the end of its range (1.22 to 1.74 rad), so values below 0 or above about 1.7 change nothing more.
+The grip site that the pose targets place is the origin of the hand's mounting frame (`gripper0_right_grip_site`,
 `gripper0_left_grip_site`), at the wrist end of the hand, not a point between the fingertips. The four small pink
 spheres beside each hand are part of the robot model (visual markers `robot0_<side>_pinch_spheres_0..3`, about 13.5 cm
 from its grip site, with no collision): they are not objects.

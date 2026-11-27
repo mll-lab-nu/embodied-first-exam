@@ -4,9 +4,9 @@
 Set the thermal mixer to time 30 s, temperature 33 °C, mixing speed 600 rpm, with the buttons on its front panel.
 
 ## Goal
-Success: the panel is set to exactly these three values. What counts is how things stand after the last action of your
-trajectory, replayed from the fixed start. A physics warning (an unstable simulation, for instance after the robot was
-driven hard into something) ends the episode at once, as a failure.
+Success: the panel is set to exactly these three values. Your trajectory is replayed from the fixed start. What counts
+is the state after its last action. A physics warning (an unstable simulation, for instance after the robot was driven
+hard into something) ends the episode at once, as a failure.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, path)`. It is replayed open-loop
 from the same initial state and scores 1 if its episode ends in success. Leave the script that produced it at
@@ -41,11 +41,11 @@ s.render_frame("table_cam_left")   # RGB uint8 (480, 640, 3); cameras: table_cam
 s.render_video(actions, "/app/output/check.mp4", cameras=["table_cam_left"])
 s.close()                          # release the renderer when you are done with a Session
 ```
-There are no ready-made motions: AutoBio's scripted experts are not in this image. Its other code is, under
-`/opt/AutoBio/autobio` (importable once a Session exists): the scene helpers `s.task` is built from, its inverse
-kinematics (`kinematics.py`) and its path timing (`topp.py`). One control step is one physics step, 2 ms: a row is
-executed for exactly one step, so a motion lasting 1 s is 500 rows (repeat a row to hold a target). Your wall-clock time
-is the budget (the reference replays at about 20000 control steps/s here); the one technical cap is 600000 rows per
+There are no ready-made motions: AutoBio's scripted experts are not in this image. The rest of AutoBio's code is there,
+under `/opt/AutoBio/autobio` (importable once a Session exists): the scene helpers that `s.task` is built from, its
+inverse kinematics (`kinematics.py`) and its path timing (`topp.py`). One control step is one physics step, 2 ms: a row
+is executed for exactly one step, so a motion lasting 1 s is 500 rows (repeat a row to hold a target). Your wall-clock
+time is the budget (the reference replays at about 20000 control steps/s here); the one technical cap is 600000 rows per
 trajectory (1200 s of simulated time).
 
 ### Actions

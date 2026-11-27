@@ -365,7 +365,7 @@ service's `RCB_WALL_CLOCK_S` state the same number; nothing else in the instruct
 **What the agent is told.** `normalize` ends every `instruction.md` with `## Limits`, whose Time line gives the
 task's number and what the cutoff means in the mode (`LIMITS_TIME` in `scripts/task_conventions.py`: wall-clock time
 from the start of the session; at the cutoff the agent is stopped and only `/app/output/` (privileged) or the episode
-as it stands (standard modes) is graded; `/run/rcb-limits/usage.json` gives `time_left_s` and `deadline_utc`; long
+as it stands, the last one with resets (standard modes), is graded; `/run/rcb-limits/usage.json` gives `time_left_s` and `deadline_utc`; long
 waits in tool calls count). A benchmark's own text about its time says "the time limit (Limits)", never a number.
 
 **When the clock runs.** Harbor counts the cutoff around the agent's run only (`asyncio.wait_for(agent.run(...),
@@ -376,7 +376,7 @@ number from the agent's first request to the service (kept through a restart) an
 reports, except that RoboARC's service ends the episode when its count reaches 0 (tasks/roboarc/README.md). At the cutoff Harbor stops the agent (`AgentTimeoutError`), collects the artifacts and runs the verifier, so
 the trial is graded as it stands: a result, not an infrastructure failure, never run again.
 
-**Official runs** pass no multiplier and add nothing to the instruction (Official runs above), so `## Time limit` is the
+**Official runs** pass no multiplier and add nothing to the instruction (Official runs above), so `## Limits` is the
 last thing the agent reads. `--agent-setup-timeout-multiplier` (slow harness
 installs) is fine: set-up is not the agent's time.
 

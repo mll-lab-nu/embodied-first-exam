@@ -41,11 +41,11 @@ verdict, and nothing is replayed to grade it. The isolated verifier reads only t
 service then renders `replay.mp4` from the recorded trajectory in one video-only pass, which never changes the
 verdict. A missing or unfinished record, a give-up after crashes between the agent's calls and a frozen instance
 that does not build at the episode's start are infrastructure errors.
-The episode ends at the first success or the first failure. Failures are
+Failures are
 fail-fast, checked after every 2 ms physics substep, and permanent: a displaced boot, a clod touching the counter or
 floor or leaving the workspace, a hand-clod contact, a brush that touches the floor, tray or rack or is released in the
-air, any contact of a robot part other than the right hand (stand, torso, arm links, the parked left hand), unstable
-physics, or the 3,000-control budget. A no-op fails. Human review and full agent-trial calibration remain
+air, any contact of a robot part other than the right hand (stand, torso, arm links, the parked left hand), or unstable
+physics. At the 3,000-control budget the episode ends and is judged on the state it leaves. A no-op fails. Human review and full agent-trial calibration remain
 pending; report this task as provisional.
 
 ## Resources

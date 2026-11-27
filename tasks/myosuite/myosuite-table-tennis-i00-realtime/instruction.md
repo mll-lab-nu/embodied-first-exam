@@ -50,8 +50,8 @@ while not r.status()["done"]:
     ...                                          # or stream: r.submit("actuators", a[None], cameras=[]) each step
 ```
 
-One call returns at most 3000 images. No call is refused for its images: while 8 answers with images are outstanding,
-the answer of a `submit` or a `get_obs()` comes without its frames and `meta["frames_skipped"]` is set. The answers are
+One call returns at most 3000 images. No call is refused for its images. While 8 answers with images are still waiting
+to be read, a `submit` or a `get_obs()` answers without its frames and sets `meta["frames_skipped"]`. The answers are
 binary (RCB1) and come back decoded: `res.meta` (the counters, `done`, `reason`, `proprio["now"]`), `res.last[camera]`
 (the last frame), `res.frames` or `res.video` (what the cameras recorded), `res.proprio` (proprioception rows). A
 malformed request raises `ValueError` and changes nothing.
@@ -70,11 +70,11 @@ malformed request raises `ValueError` and changes nothing.
 ### Actions
 Action type `actuators` (275): 275 real numbers per control step, one per actuator in order: 273 muscles and 2
 non-muscle actuators. A muscle's command a maps to its excitation u = 1 / (1 + exp(-5 (a - 0.5))) and is not clipped (a
-= -1: u ~ 0.0006, a = 0.5: 0.5, a = 1: 0.92, a = 2: 0.9994); activation follows excitation with a first-order delay (~10
-ms up, ~40 ms down); muscles only pull; one muscle can cross several joints; its force also depends on its length and
-velocity. The non-muscle actuators: `pelvis_x` (index 273): normalized: a in [-1, 1] maps linearly onto [-1, 0.05]
-(position of joint pelvis_x); `pelvis_y` (index 274): normalized: a in [-1, 1] maps linearly onto [-1, 1] (position of
-joint pelvis_y). Columns in `spec()["action_types"]["actuators"]["layout"]` order; rows `dt` apart,
+= -1: u ~ 0.0006, a = 0.5: 0.5, a = 1: 0.92, a = 2: 0.9994). Activation follows excitation with a first-order delay (~10
+ms up, ~40 ms down). Muscles only pull, and one muscle can cross several joints. A muscle's force also depends on its
+length and velocity. The non-muscle actuators: `pelvis_x` (index 273): normalized: a in [-1, 1] maps linearly onto [-1,
+0.05] (position of joint pelvis_x); `pelvis_y` (index 274): normalized: a in [-1, 1] maps linearly onto [-1, 1]
+(position of joint pelvis_y). Columns in `spec()["action_types"]["actuators"]["layout"]` order; rows `dt` apart,
 `interpolate="linear"` (default: a straight line from the commands in force) or `"hold"`; the realtime client sends them
 as float64. The control rate is 100 Hz (5 physics substeps).
 
@@ -99,18 +99,18 @@ milliseconds each; `cameras=None` means every camera, so name the ones you need.
   (`nohup python /app/ctrl.py > /app/ctrl.log 2>&1 &`) or in the foreground if it ends with the episode. Use your turns
   to start episodes, read what happened, and improve the program.
 - `submit` answers at once, with the body as it is now: the rows you sent have not run yet. They become the plan from
-  control step `at` (an episode step number; by default the next step), replacing whatever was planned from `at` on and
-  keeping what is planned before it. When the plan runs out, the last commands are held. `res.meta["control_steps"]` is
-  the number of steps run so far in this episode (so the next step has that number), `res.meta["proprio"]["now"]` the
-  proprioception now, `res.meta["plan_end_step"]` where the plan now ends.
+  control step `at` (an episode step number; by default the next step). They replace whatever was planned from `at` on
+  and keep what is planned before it. When the plan runs out, the last commands are held. `res.meta["control_steps"]` is
+  the number of steps run so far in this episode, so the next step has that number. `res.meta["proprio"]["now"]` is the
+  proprioception now. `res.meta["plan_end_step"]` is where the plan now ends.
 - Open loop: plan a whole movement at once (`dt` a multiple of 0.01 s; a chunk covers at most 10 s), from step `at = 0`
   for the episode's start: `r.submit("actuators", rows, dt=0.01, interpolate="hold", at=0, cameras=[])` starts the clock
   and runs exactly those rows from the first step; `at` may be up to `spec()["timing"]["max_ahead_steps"]` steps ahead.
 - Closed loop: send one row per control step, `r.submit("actuators", a[None], cameras=[])`, computed from the
   proprioception the previous call returned. `cameras=[]` skips the images (the fastest call).
 - Latency: a reading is a few milliseconds old when it reaches you, and a row takes effect at the next control step at
-  the earliest. A row whose step has already run when the request arrives is dropped (`res.meta["late_steps"]` counts
-  them); the rest of its chunk applies from the next step.
+  the earliest. A row whose step has already run when the request arrives is dropped; `res.meta["late_steps"]` counts
+  them. The rest of the chunk applies from the next step.
 - `get_obs()` reads the body now; `get_obs(last_s=n)` returns, without waiting, what the cameras recorded over the last
   n seconds (the body keeps executing its plan). `spec()["timing"]` states all this; `r.status()` shows `running` and
   `lag_s`.
@@ -132,5 +132,5 @@ milliseconds each; `cameras=None` means every camera, so name the ones you need.
   no GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap
   only slows you down); usage: `/run/rcb-limits/usage.json`.
 - Resets: at most 10 (`spec()["budget"]["reset"]`), each a new episode from the same starting state.
-- Steps: the episode ends by itself after 3 s of robot time.
+- Steps: the episode ends after 3 s of robot time.
 - Finish: if you never send `/finish`, the episode is graded when the step limit is reached or your session ends.

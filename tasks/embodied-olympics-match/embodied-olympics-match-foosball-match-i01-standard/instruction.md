@@ -68,15 +68,16 @@ client is installed (`from rcb_client import Robot`).
 | `POST /ready {"why": "...", "plan": "..."}` | your review when the world freezes |
 
 `/submit` returns after its last row: each row takes effect at the current step, then the world advances DT (default:
-one control step). An action the match refuses is a 400 (a later row's: `code` 400 in `meta.effects`). Where an action
-names a robot (`entity`), one chunk commands one: `"entity": E` in the chunk, or the type `T@E`. Every answer's `meta`
-has `score`, `review_due` (send `/ready` now), `match_over`, `step`, `phase` and your `state`. A `/submit` while the
-world is frozen or before the start executes nothing (`ok: false`, `not_now`); after the match is over requests are a
+one control step). An action the match refuses gets a 400. If a later row is refused, its entry in `meta.effects` shows
+`code` 400. Where an action names a robot (`entity`), each chunk commands one robot: set `"entity": E` in the chunk, or
+use the type `T@E`. Every answer's `meta` has `score`, `review_due` (send `/ready` now), `match_over`, `step`, `phase`
+and your `state`. A `/submit` while the world is frozen or before the start executes nothing (`ok: false`, `not_now`);
+after the match is over requests are a
 409. `/finish` and `/reset` are not offered (404): the match's rules end it, and there is one match. What differs from
 the plain standard: `timing.deviations` in `/spec`.
 
-The same match also answers the `game` command, or the same calls as HTTP with JSON under
-`http://localhost:8000/<SEAT>/` (the paths below are under it; your seat is `$SEAT`); you may use both:
+The same match also answers the `game` command, and the same calls as HTTP with JSON under
+`http://localhost:8000/<SEAT>/` (your seat is `$SEAT`; the paths below are under it). You may use both:
 
 | `game` command | HTTP | |
 | --- | --- | --- |
@@ -88,9 +89,10 @@ The same match also answers the `game` command, or the same calls as HTTP with J
 | `game act JSON` | `POST /act JSON` | any action |
 | `game ready "WHY" "PLAN"` | `POST /ready {"why": "...", "plan": "..."}` | your review when the world freezes |
 
-Errors: 400 = an invalid action (nothing happens), 409 = not now (not your turn, or a review is due), 429 = one action
-in flight (sent before the previous one returned), or more than 20 requests per second or 4 open requests from your seat
-(empty body: retry more slowly). Acts are never out of turn: one in flight per seat (it may address several rods).
+Errors: 400 = an invalid action (nothing happens); 409 = not now (not your turn, or a review is due); 429 = one action
+already in flight (sent before the previous one returned), or more than 20 requests per second or 4 open requests from
+your seat (empty body: retry more slowly). Acts are never out of turn: one in flight per seat (it may address several
+rods).
 
 ### MCP tools
 - The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
@@ -141,13 +143,13 @@ in flight (sent before the previous one returned), or more than 20 requests per 
   Hz, control 100 Hz (10 ms steps); a transparent cover 4 cm above the playfield normally keeps the ball on the table.
 
 ### Time
-The world waits for you: it advances only during an open `game wait DT` (at most DT game seconds, then it stops again)
-and, for an action you sent, up to the control step at which it takes effect (the step after the state it answers).
-Between your calls it stands still: your thinking, your program's computation and the service's planning of an action
-take no game time, so a program has to keep calling `game wait` (or acting) for the match to go on; a match you leave
-standing never ends, and it is lost when your session ends. `game spec` says so (`timing.clock` = `lockstep`). At the
-end of every unit (a rally; `game spec`) the world freezes for the reviews; the reviews' time limit and the start window
-are real time.
+The world waits for you. It advances only during an open `game wait DT` (at most DT game seconds, then it stops again),
+and, after you send an action, up to the control step at which that action takes effect (the step after the state it
+answers). Between your calls the world stands still: your thinking, your program's computation and the service's
+planning of an action take no game time. So a program has to keep calling `game wait` (or acting) for the match to go
+on. A match you leave standing never ends, and you lose it when your session ends. `game spec` says so (`timing.clock` =
+`lockstep`). At the end of every unit (a rally; `game spec`) the world freezes for the reviews; the reviews' time limit
+and the start window are real time.
 
 ### Physics
 - A full-speed kick sends the ball off at about 4-5 m/s (at most about 5.4 m/s).

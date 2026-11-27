@@ -7,14 +7,14 @@ and ink, in at most 9 strokes.
 ## Goal
 Success: the ink on the main sheet matches the exemplar's line letter for letter (every stroke inked along its whole
 length, its edges where the exemplar's are, almost no ink anywhere else), you used at most 9 strokes, and the process
-rules below hold; a small shift of the whole writing does not matter. What counts is how things stand after the last
-action of your trajectory, replayed from the fixed start.
+rules below hold; a small shift of the whole writing does not matter. Your trajectory is replayed from the fixed start.
+What counts is the state after its last action.
 
 You are scored on how closely your ink matches the exemplar's.
 
 Letter the line with pen strokes, the way a scribe writes it: each stroke of a letter is one pass of the pen along it;
-going over a stroke again is fine. Colouring in or filling the letters' shapes, zigzag or serpentine fills, and fills
-that go round and round inside a shape fail the task, even when the sheet matches the picture. The exact checks are
+going over a stroke again is fine. These fail the task even when the sheet matches the picture: colouring in or filling
+the letters' shapes, zigzag or serpentine fills, and fills that go round and round inside a shape. The exact checks are
 under Process rules in Robot Interface.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, path)`; it is replayed open-loop
@@ -79,14 +79,14 @@ base at (-0.615, 0, 0), x forward (away from the base), y to the robot's left. Q
 pen points straight down (`s.tip_pose()` gives the tip's position).
 
 ### The pen, the ink and the sheets
-- The pen is a rigid holder with a pointed flexible steel nib (two tines split by a slit; no collision; the holder hits
-  the paper 6 mm below its surface); the robot's tool point (TCP) is the point. A light touch (a press of up to 1.0 mm
-  below a sheet's surface) writes a hairline 0.4 mm wide; pressed deeper, the tines spread apart and the line widens
-  linearly with the press depth, up to 2.0 mm at a 3.5 mm press (fully open; no wider beyond that). The tines spread
-  along the tool's y axis (the second column of the tip pose's rotation matrix; at the start pose along the writing
-  line, world -y): a pressed stroke is wide where the point moves across that axis and stays thin where it moves along
-  it. `s.tip_down_quat(yaw)` turns the pen about the vertical by `yaw` (counter-clockwise as seen by the writer, looking
-  at the sheet with its far edge up).
+- The pen is a rigid holder with a pointed flexible steel nib: two tines split by a slit (no collision). The holder hits
+  the paper when the point is 6 mm below the paper's surface. The robot's tool point (TCP) is the point. A light touch
+  (a press of up to 1.0 mm below a sheet's surface) writes a hairline 0.4 mm wide; pressed deeper, the tines spread
+  apart and the line widens linearly with the press depth, up to 2.0 mm at a 3.5 mm press (fully open; no wider beyond
+  that). The tines spread along the tool's y axis: the second column of the tip pose's rotation matrix, which at the
+  start pose lies along the writing line (world -y). A pressed stroke is wide where the point moves across that axis and
+  stays thin where it moves along it. `s.tip_down_quat(yaw)` turns the pen about the vertical by `yaw`
+  (counter-clockwise as seen by the writer, looking at the sheet with its far edge up).
 - Ink: the pen starts dry (strokes leave no mark). The ink well lies on a plate on the robot's left (+y): centre (x, y)
   = (-0.100, 0.150), radius 20 mm, ink surface z = 0.028 m (plate top 0.026 m, rigid). Dipping = the tip inside the
   well's circle and below the ink surface: the pen is then inked (it never runs dry). `s.wells()` returns these facts.
@@ -101,28 +101,29 @@ pen points straight down (`s.tip_pose()` gives the tip's position).
 ### The target picture
 `/app/target.png` (1024 x 1024 px, RGB) shows the exemplar at its true size and place on the main sheet: the image
 covers the main sheet exactly, 0.2219 mm per pixel. Pixel (column u, row v), counted from 0 at the image's top-left, has
-its centre at sheet millimetres X = (u + 0.5) · 227.18 / 1024, Y = (v + 0.5) · 227.18 / 1024 (X to the robot's right, Y
-towards the robot, origin = the sheet's far-left corner as seen from the robot's base), i.e. at world x = -0.100 +
-0.1136 - Y/1000, y = 0.1136 - X/1000 (m) (`s.geo.mm_to_world(X, Y)`). Image top = the sheet's far edge (+x), image left
-= the robot's left (+y): the same orientation as `s.canvas()` and `canvas_cam`.
+its centre at sheet millimetres X = (u + 0.5) · 227.18 / 1024, Y = (v + 0.5) · 227.18 / 1024. X runs to the robot's
+right and Y towards the robot; the origin is the sheet's far-left corner as seen from the robot's base. In the world
+frame that is x = -0.100 + 0.1136 - Y/1000, y = 0.1136 - X/1000 (m) (`s.geo.mm_to_world(X, Y)`). Image top = the sheet's
+far edge (+x), image left = the robot's left (+y): the same orientation as `s.canvas()` and `canvas_cam`.
 
 ### Process rules
 The grader checks the process rules in Goal on the replayed trajectory with two numbers you can compute yourself; only
 inked strokes on the main sheet count (the practice sheet is free):
 - `path_mm`: the total length of the pen tip's path while it presses on the main sheet with ink (all strokes together,
   sampled at every physics step);
-- `mark_width_mm`: the average width of your marks = the area each stroke inks on its own (its own mark, ink coverage ≥
-  0.5; where different strokes overlap, each counts its own), summed over the strokes, divided by `path_mm`.
+- `mark_width_mm`: the average width of your marks. It is the area each stroke inks on its own, summed over the strokes
+  and divided by `path_mm`; a stroke's own area is its own mark where ink coverage is ≥ 0.5, and where different strokes
+  overlap, each counts its own.
 
-Colouring in = `path_mm` > 3240 mm and `mark_width_mm` < 0.12 mm (a long path of thin marks): it fails the task. A
-pressed pen, even over a stroke again, keeps the marks wide enough, and a light hand on a short path stays under the
-path limit: both are fine. Breaking a process rule fails the task. `s.score()` reports `path_mm`, `mark_width_mm`,
-`max_path_mm`, `min_mark_width_mm`, `colour_in`, `image_success` (the picture rule alone), `strict_ok` (the process
-rule) and `success` (both); `s.strokes()` holds each stroke's samples and its own mark.
+Colouring in = `path_mm` > 3240 mm and `mark_width_mm` < 0.12 mm (a long path of thin marks): it fails the task. Both of
+these are fine: a pressed pen keeps the marks wide enough, even when it goes over a stroke again, and a light hand on a
+short path stays under the path limit. Breaking a process rule fails the task. `s.score()` reports `path_mm`,
+`mark_width_mm`, `max_path_mm`, `min_mark_width_mm`, `colour_in`, `image_success` (the picture rule alone), `strict_ok`
+(the process rule) and `success` (both); `s.strokes()` holds each stroke's samples and its own mark.
 
 The score (`final_reward`, 0 to 1) is how well your ink overlaps the exemplar's (1 = the same); it is scaled down above
 the stroke cap and when a process rule fails. `s.score()` returns the grader's metrics for the current sheet, `success`
-and `final_reward` included: a scoring service replays the actions you have executed since your last `s.reset()` and
+and `final_reward` included. A scoring service replays the actions you have executed since your last `s.reset()` and
 scores the resulting sheet, so a call after a long episode takes as long as that replay.
 
 ## Limits
@@ -136,5 +137,5 @@ scores the resulting sheet, so a call after a long episode takes as long as that
 - Resources: 8 CPUs, 12 GiB memory, 2048 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`),
   one GPU (3 GiB of its memory). Over a cap a process can be killed (the CPU cap only slows you down); usage:
   `/run/rcb-limits/usage.json`.
-- Steps: no step budget; a runaway guard stops an episode at 72000 control steps (1 h of simulated time).
+- Steps: no step budget. A runaway guard stops an episode at 72000 control steps (1 h of simulated time).
 - Resets: as many as you like (`s.reset()`: blank sheets, a dry pen, the robot at its start pose, exact).

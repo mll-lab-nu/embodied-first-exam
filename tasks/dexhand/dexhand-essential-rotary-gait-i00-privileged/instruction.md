@@ -16,13 +16,13 @@ Any of these ends the episode at once as a failure, which later actions cannot u
 - The palm moves.
 - The physics becomes unstable.
 
-Deliverable: `/app/output/trajectory.npz` with a numeric `actions` array of shape `(T, 28)` for Sharpa or `(T, 26)` for
-Wuji (at most 50,000 rows) and the `hand` it was made for, as written by `s.save_trajectory` (an archive without `hand`
-is replayed as Sharpa), and `/app/output/gen.py`, the script that produced it. Each row is one control step: wrist x/y/z
-targets in metres, wrist XYZ Euler joint targets in radians, then the finger targets in `s.actuator_names` order. NaN,
-infinity, object arrays and malformed or oversized trajectories are rejected. Save it compressed
-(`numpy.savez_compressed`; `s.save_trajectory` does): an archive larger than 64 MB is rejected. Save a valid one early
-and overwrite it when you have a better one.
+Deliverable: `/app/output/trajectory.npz` and `/app/output/gen.py`, the script that produced it. The archive holds a
+numeric `actions` array of shape `(T, 28)` for Sharpa or `(T, 26)` for Wuji (at most 50,000 rows) and the `hand` it was
+made for, as written by `s.save_trajectory`. An archive without `hand` is replayed as Sharpa. Each row is one control
+step: wrist x/y/z targets in metres, wrist XYZ Euler joint targets in radians, then the finger targets in
+`s.actuator_names` order. NaN, infinity, object arrays and malformed or oversized trajectories are rejected. Save it
+compressed with `numpy.savez_compressed` (`s.save_trajectory` does this). An archive larger than 64 MB is rejected. Save
+a valid one early and overwrite it when you have a better one.
 
 Rules: **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
 benchmark's demonstrations, trained policies); trials are reviewed.
@@ -63,11 +63,11 @@ the same six wrist targets, then `r_wuji_r_THJ0..3` (thumb CMC flexion, CMC abdu
 ### Hands
 Two hand models: `sharpa` (Sharpa Wave, 22 finger actuators; the default) and `wuji` (Wuji Hand 2.2, 20 finger
 actuators); the task is the same for both. Choose the hand with `Session(..., hand="wuji")` or the environment variable
-`DEXHAND_HAND=wuji` (default `sharpa`). `s.save_trajectory(actions, path)` records the hand in the archive (`hand`
-member, `sharpa` when absent); a trajectory whose row width does not match its hand is rejected. Action rows are `28`
-wide for `sharpa` and `26` wide for `wuji`; `s.actuator_names` gives the exact order. Both hands are mounted in the same
-wrist frame. Each hand starts from its own finger pose (Wuji: `wuji_reset.json`), with the object held as at the Sharpa
-start.
+`DEXHAND_HAND=wuji` (default `sharpa`). `s.save_trajectory(actions, path)` records the hand in the archive as the `hand`
+member; an archive without it counts as `sharpa`. A trajectory whose row width does not match its hand is rejected.
+Action rows are `28` wide for `sharpa` and `26` wide for `wuji`; `s.actuator_names` gives the exact order. Both hands
+are mounted in the same wrist frame. Each hand starts from its own finger pose (Wuji: `wuji_reset.json`), with the
+object held as at the Sharpa start.
 
 ### Robot
 You control one dexterous hand on a six-DoF wrist positioning stage: a Sharpa Wave hand with 22 independently actuated
@@ -76,10 +76,10 @@ engine; grasping and manipulating require physical contact. The five fingers are
 The controller runs at 50 Hz, with ten 2 ms physics substeps.
 
 This is a fixed-wrist essential dexterity task. Native equality constraints lock all six wrist joints. The first six
-entries of every action must remain [-0.08, 0, 0.29, 0, 0, 0]. Float32 wire-format rounding is accepted and normalized
-to those exact fixed targets before physics runs. Use the declared target values rather than copying measured wrist
-joint positions. Only the finger targets may change. Objects have no actuators, scripted motion or grasp attachments;
-they move through contact and normal gravity.
+entries of every action must remain [-0.08, 0, 0.29, 0, 0, 0]. If float32 rounding on the wire changes these values
+slightly, that is accepted: they are set back to the exact fixed targets before physics runs. Use the declared target
+values rather than copying measured wrist joint positions. Only the finger targets may change. Objects have no
+actuators, scripted motion or grasp attachments; they move through contact and normal gravity.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (the simulator's start-up too). At

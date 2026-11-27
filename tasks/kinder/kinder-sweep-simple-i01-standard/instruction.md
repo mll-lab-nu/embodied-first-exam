@@ -43,9 +43,9 @@ res = r.submit("delta", A)       # A: (T, 11), one 10 Hz control step per row
 ```
 The answers come back decoded: `res.meta` (the counters, `done`, `reason`, `proprio["now"]`, `clipped`),
 `res.last[camera]` (the last frame), `res.frames` or `res.video` (what the cameras saw during the call), `res.depth`
-(metres), `res.proprio` (one row per frame). One call returns at most 3000 images. Values outside the bounds are clipped
-and reported in `meta["clipped"]`, never refused; a malformed request raises `ValueError` and runs nothing. Once the
-episode has ended, `submit` raises `EpisodeOver`. Time per call, on a lightly loaded host: about 49.9 ms per control
+(metres), `res.proprio` (one row per frame). One call returns at most 3000 images. Values outside the bounds are
+clipped, not refused, and `meta["clipped"]` reports them. A malformed request raises `ValueError` and runs nothing. Once
+the episode has ended, `submit` raises `EpisodeOver`. Time per call, on a lightly loaded host: about 49.9 ms per control
 step in one-row calls asking for one camera, 53.4 ms with both cameras' images (and the wrist's depth), 45.9 ms per step
 in chunks of 10 rows asking for one camera (`video="none"` each time).
 
@@ -97,5 +97,5 @@ steps. Between calls the robot waits, frozen, while you think; an observation is
   no GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap
   only slows you down); usage: `/run/rcb-limits/usage.json`.
 - Resets: none: one episode.
-- Steps: the episode ends after 1000 control steps (100 s of robot time); the task has to be done by then.
+- Steps: the episode ends after 1000 control steps (100 s of robot time). The task has to be done by then.
 - Finish: if you never send `/finish`, the episode is graded when the step limit is reached or your session ends.

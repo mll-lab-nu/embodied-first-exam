@@ -11,8 +11,8 @@ the cube arrives and then promptly brakes to rest with the cube settled on it; t
 place and slides it back the same way onto the left scoop, which likewise moves in step when it arrives and then brakes
 to rest; finally the cube is set down on the output platform and left there at rest, clear of both scoops.
 
-The steps count only in this order, and a step once done stays done. The replay ends as soon as the task is done or has
-failed; the task also fails at once when:
+The steps count only in this order. Once a step is done, it stays done. The replay ends as soon as the task is done or
+has failed; the task also fails at once when:
 - a scoop tilts noticeably before the final set-down begins;
 - the cube is off both scoops for more than a brief moment before the final set-down begins;
 - the task's horizon is reached before the task is done (Robot Interface);
@@ -22,18 +22,18 @@ failed; the task also fails at once when:
 - an arm touches itself, a robot part touches the table or the floor, or a contact presses deep into anything;
 - an arm goes beyond the Franka Panda's own safety limits (Robot Interface, Safety).
 
-Deliverable: `/app/output/trajectory.npz`, written with `Session.save_trajectory(...)`: it holds `task` and `actions`, a
-(T, 16) float array of at most 4,500 rows (one per control step); anything else (another shape, NaN, more rows, a file
-that is not such an npz) scores 0. It is replayed open-loop from the fixed start and scores 1 if the task succeeds in
-the replay, else 0. Keep the script that produced it at `/app/output/gen.py`. Save a valid one early and overwrite it
-when you have a better one.
+Deliverable: `/app/output/trajectory.npz`, written with `Session.save_trajectory(...)`. It holds `task` and `actions`;
+`actions` is a (T, 16) float array of at most 4,500 rows, one per control step. Anything else (another shape, NaN, more
+rows, a file that is not such an npz) scores 0. It is replayed open-loop from the fixed start and scores 1 if the task
+succeeds in the replay, else 0. Keep the script that produced it at `/app/output/gen.py`. Save a valid one early and
+overwrite it when you have a better one.
 
 Rules: **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
 benchmark's demonstrations, trained policies); trials are reviewed.
 
 ## Robot Interface
-Two simulated Franka Panda arms (`panda-0` on the left, `panda-1` on the right; each with its standard hand and the
-task's tool where it has one) on a table (ManiSkill 3 / SAPIEN, rigid-body physics at 1000 Hz). The scene is one fixed
+Two simulated Franka Panda arms on a table (ManiSkill 3 / SAPIEN, rigid-body physics at 1000 Hz). `panda-0` is on the
+left and `panda-1` on the right; each has its standard hand and the task's tool where it has one. The scene is one fixed
 instance: everything starts the same way after every reset. Things move by themselves from the first control step on:
 the scene does not wait for the robot. You have the full simulator to develop with; you hand in a trajectory of robot
 actions.
@@ -70,15 +70,15 @@ asked for and never moves anything. Do not call `s.close()` before writing every
 
 ### Actions
 - Action row (16 values per control step): `[panda-0 joint1..7, panda-0 aperture, panda-1 joint1..7, panda-1 aperture]`.
-  Each arm's 8 values are its 7 absolute joint-position targets (rad, `panda_joint1..7`) and its total gripper aperture
-  target (m, 0 = closed .. 0.08 = open; each finger moves at most 0.025 m/s). Values outside the joint limits
+  Each arm has 8 values: its 7 absolute joint-position targets (rad, `panda_joint1..7`) and its total gripper aperture
+  target (m, 0 = closed .. 0.08 = open). Each finger moves at most 0.025 m/s. Values outside the joint limits
   (`s.robot_spec()`) are clipped to them before they are executed, and the trajectory records the clipped row.
-- The servo: every control step, each arm's latest target is turned into a smooth reference motion by a jerk-limited
-  trajectory generator (Ruckig, the joints synchronised to arrive together) within 65 % (speed), 55 % (acceleration) and
-  5 % (jerk) of the Panda's joint speed, acceleration and jerk limits, and the arm tracks that reference with torque
-  control (PD + inverse dynamics, the Panda's torque and torque-rate limits). A new target replans from the current
-  reference motion, so a target far away is reached smoothly, not in one step. `s.robot_spec()["servo"]` has the exact
-  limits and gains.
+- The servo: every control step, a jerk-limited trajectory generator (Ruckig) turns each arm's latest target into a
+  smooth reference motion, with the joints synchronised to arrive together. That motion stays within 65 % of the Panda's
+  joint speed limits, 55 % of its acceleration limits and 5 % of its jerk limits. The arm tracks that reference with
+  torque control (PD + inverse dynamics, within the Panda's torque and torque-rate limits). A new target replans from
+  the current reference motion, so a target far away is reached smoothly, not in one step. `s.robot_spec()["servo"]` has
+  the exact limits and gains.
 - Control runs at 100 Hz (10 ms per row), physics at 1000 Hz. A simulated episode ends at the latest at the task's
   horizon (25 s, 2500 rows).
 
@@ -100,14 +100,15 @@ inward from floor level up to 35 mm, and a bar protrudes 12 mm inward 29-41 mm a
 Start: left floor centre at (-0.015, -0.04, 0.19), level, axes aligned with the world (open side facing +x). Right floor
 centre at (0.175, -0.04, 0.187), level, rotated 180 deg about z (open side facing -x). The two open edges thus face each
 other across a gap of about 2 cm, with the right floor 3 mm lower. On both arms the tool's adapter runs between the
-fingertips: closing a gripper to less than about 12 mm of aperture makes its fingers touch the adapter, which ends the
-episode as a collision with its own tool (both grippers start fully open, at 0.08 m).
+fingertips. If you close a gripper to less than about 12 mm of aperture, its fingers touch the adapter, and the episode
+ends as a collision with its own tool. Both grippers start fully open, at 0.08 m.
 
 ### Safety
-The task fails when an arm goes beyond the Franka Panda's own safety limits on joint positions, joint and finger speeds,
-the hand's speed and acceleration, joint accelerations and jerks, and motor torques and how fast they change (the
-numbers: the robot spec's `safety_limits`). They count on the motion as measured, whatever was commanded (a catch or a
-strike moves the arm too), and the servo's own reference motion is held to the same speed, acceleration and jerk limits.
+The task fails when an arm goes beyond the Franka Panda's own safety limits. These limits cover joint positions, joint
+and finger speeds, the hand's speed and acceleration, joint accelerations and jerks, motor torques, and how fast the
+torques change. The numbers are in the robot spec's `safety_limits`. The limits apply to the motion as measured,
+whatever was commanded (a catch or a strike moves the arm too). The servo's own reference motion must also stay within
+the same speed, acceleration and jerk limits.
 
 ## Others
 - State labels (`s.objects()`, `s.fixtures()`): `block` is the cube.

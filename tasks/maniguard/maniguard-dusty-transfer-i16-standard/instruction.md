@@ -55,9 +55,9 @@ res.save("/app/runs/003")                     # meta.json, <cam>.mp4, frames/, l
 - One call returns at most 6020 images.
 - A call that runs longer than `spec["max_call_wall_s"]` (900 s) stops at the next control step and returns what it
   executed (`res.stopped`, `meta["executed_rows"]`).
-- If the service crashes (a connection error or a 5xx answer), it restarts and resumes the same episode (never a reset)
-  in the state after the last call it completed, which you may not have received: call `r.wait_ready()`, then check
-  `r.status()` (`calls`, `control_steps`) before you continue.
+- If the service crashes (a connection error or a 5xx answer), it restarts and resumes the same episode; it never
+  resets. It resumes in the state after the last call it completed, and you may not have received that call's answer.
+  Call `r.wait_ready()`, then check `r.status()` (`calls`, `control_steps`) before you continue.
 - Optional inputs (nothing changes unless you ask):
   - Depth: `depth=True` adds `res.last_depth[cam]` (z-depth in metres, 0 = no reading, pixel-aligned with the RGB);
     `depth="frames"` also returns `res.depth[cam]`, one map per frame.
@@ -81,14 +81,14 @@ res.save("/app/runs/003")                     # meta.json, <cam>.mp4, frames/, l
 
 ### Actions
 - `joint_position` (8): `panda_joint1..7, gripper`; radians, and the gripper command is binary (+1 = open, -1 = close;
-  it switches at the row, never interpolated). Absolute targets tracked by PD drives. Rows are `dt` apart
-  (`1/20 ≤ dt ≤ 0.5` s, a multiple of the 20 Hz control period; any other `dt` is rejected, never rounded); a chunk may
-  cover at most 10 s; out-of-limit values are clipped and listed in `meta["clipped"]`. Use
+  it switches at the row, never interpolated). Absolute targets tracked by PD drives. Rows are `dt` apart:
+  `1/20 ≤ dt ≤ 0.5` s, a multiple of the 20 Hz control period. Any other `dt` is rejected, never rounded. A chunk may
+  cover at most 10 s. Out-of-limit values are clipped and listed in `meta["clipped"]`. Use
   `obs.meta["proprio"]["now"][:7]` for the current joints to move smoothly.
-- `ee_pose` (8): `x y z qx qy qz qw gripper`, world frame, XYZW. Each row is solved by the arm's inverse kinematics for
-  the fingertip centre (no collision checking) and driven to in joint space (at most 0.02 rad per control step); `dt` is
-  ignored. If no IK solution exists nothing moves and `meta["plan"]` says so. The pose is the frame of the proprio
-  `tcp_pose` group, so an observed pose is a valid target. At most 50 rows per submit.
+- `ee_pose` (8): `x y z qx qy qz qw gripper`, world frame, XYZW. For each row, the arm's inverse kinematics solves for
+  the fingertip centre (no collision checking), and the arm moves there in joint space (at most 0.02 rad per control
+  step). `dt` is ignored. If no IK solution exists nothing moves and `meta["plan"]` says so. The pose is the frame of
+  the proprio `tcp_pose` group, so an observed pose is a valid target. At most 50 rows per submit.
 
 ### Observations
 - Cameras (256×256 each): `cam_opposite` (static, across the table, facing the robot), `cam_left` and `cam_right`
@@ -96,13 +96,11 @@ res.save("/app/runs/003")                     # meta.json, <cam>.mp4, frames/, l
   moves, so use the calibration that arrived with each image).
 - Proprioception (`obs.meta["proprio"]`, named columns: `spec["proprio_groups"]`): joints, gripper opening and command,
   end-effector and fingertip poses, velocities, drive efforts.
-- The robot's own conventions (its action types, its spec and its proprioception): the scene's world frame (metres, +z
-  up, the floor is the plane z = 0); poses are position + quaternion XYZW; its fixed base pose is
-  `spec["robot_spec"]["base"]["pose"]`.
+- The robot's action types, spec and proprioception use the scene's world frame (metres, +z up, the floor is the plane z
+  = 0). Poses are position + quaternion XYZW. The robot's fixed base pose is `spec["robot_spec"]["base"]["pose"]`.
 
 ## Others
-- Grasping is sticky: the gripper attaches an object as soon as a finger touches it when it closes, and releases it when
-  it opens.
+- Grasping is sticky: closing the gripper attaches an object as soon as a finger touches it; opening releases it.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
@@ -116,6 +114,6 @@ res.save("/app/runs/003")                     # meta.json, <cam>.mp4, frames/, l
   GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap only
   slows you down); usage: `/run/rcb-limits/usage.json`.
 - Resets: none: one episode.
-- Steps: at most 50,000 control steps (the spec's `max_control_steps`: 41.7 min of simulated time, holding included); at
-  the cap the episode ends by itself. There is no other step budget.
+- Steps: at most 50,000 control steps (the spec's `max_control_steps`: 41.7 min of simulated time, holding included),
+  then the episode ends. There is no other step budget.
 - Finish: if you never send `/finish`, the episode is graded when the step limit is reached or your session ends.

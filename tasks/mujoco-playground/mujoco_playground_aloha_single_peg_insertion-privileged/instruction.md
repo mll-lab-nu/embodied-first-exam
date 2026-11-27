@@ -4,8 +4,8 @@
 Push the red peg well into the open end of the blue socket.
 
 ## Goal
-Success: the peg's end is well inside the socket, pushed in through its open end and lined up with it. What counts is
-how things stand after the last action of your trajectory, replayed from the fixed start.
+Success: the peg's end is well inside the socket, pushed in through its open end and lined up with it. Your trajectory
+is replayed from the fixed start. What counts is the state after its last action.
 
 Deliverable: `/app/output/trajectory.npz`: actuator targets, shape `(T, 14)` (T at most 3000), one row per control step
 (1/50 s), each held for 8 physics steps; record it with the tooling so the layout is right. It is replayed from the

@@ -13,9 +13,9 @@ When you are done, send `/finish` to end the episode and get it graded.
 
 You are scored on how close your colours are to the picture's, afterwards, from the service's record of your episode.
 
-Paint with brush strokes, the way a person paints: each stroke is one sweep of the loaded brush. Colouring in or filling
-areas with a thin line, zigzag or serpentine fills, and fills that circle round and round inside an area fail the task,
-even when the sheet matches the picture. The exact checks are under Process rules in Robot Interface.
+Paint with brush strokes, the way a person paints: each stroke is one sweep of the loaded brush. These fail the task
+even when the sheet matches the picture: colouring in or filling areas with a thin line, zigzag or serpentine fills, and
+fills that circle round and round inside an area. The exact checks are under Process rules in Robot Interface.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
@@ -71,9 +71,10 @@ res.save("/app/runs/003")                     # meta.json, <cam>.mp4, frames/<ca
 - `meta["time_left_s"]` is the service's count of the time left.
 
 A service restart is not a reset. If the service crashes, it restarts and resumes the same episode in the state after
-the last call it completed (the call that was running is lost as a whole: you get a connection error). `r.wait_ready()`
-waits until it answers again (resuming replays the episode so far without rendering; the clock keeps running), then
-`r.status()` tells `calls` and `control_steps`, so you know what was executed (`spec["on_service_error"]`).
+the last call it completed. The call that was running is lost as a whole, and you get a connection error.
+`r.wait_ready()` waits until the service answers again; resuming replays the episode so far without rendering, and the
+clock keeps running. Then `r.status()` tells `calls` and `control_steps`, so you know what was executed
+(`spec["on_service_error"]`).
 
 ### MCP tools
 - The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
@@ -90,10 +91,10 @@ waits until it answers again (resuming replays the episode so far without render
 Two action types:
 - `ee_pose` (7): `x y z qw qx qy qz` of the brush tip in the world frame (z up, the robot base at (-0.615, 0, 0), x away
   from the base, y to the robot's left); quaternion wxyz — the proprio quaternion at the start points the brush straight
-  down. Rows are `dt` apart (`1/20 ≤ dt ≤ 0.5` s, a multiple of 1/20 s): the tip target moves on a straight line from
-  the previous row's target at the 20 Hz control rate, one IK solve per control step (no collision checking), at most
-  0.25 m/s (a faster row is slowed down; `meta["plan"]` reports it and any IK failure). At most 400 rows and 10 s per
-  submit.
+  down. Rows are `dt` apart (`1/20 ≤ dt ≤ 0.5` s, a multiple of 1/20 s). The tip target moves on a straight line from
+  the previous row's target at the 20 Hz control rate, with one IK solve per control step (no collision checking), at
+  most 0.25 m/s. A faster row is slowed down; `meta["plan"]` reports it and any IK failure. At most 400 rows and 10 s
+  per submit.
 - `joint_position` (7): `panda_joint1..7` absolute joint targets in radians (PD-tracked), rows `dt` apart, `interpolate`
   = `"linear"` (default) or `"hold"`; a chunk may cover at most 10 s; out-of-limit values are clipped and listed in
   `meta["clipped"]` (limits in the spec).
@@ -108,13 +109,13 @@ Two action types:
 - Proprioception: the robot's own joint positions, velocities and efforts and its brush-tip pose.
 
 ### The brush, the paints and the sheets
-- The brush is a rigid handle with a 15 mm soft tuft (no collision; the handle hits the paper 15 mm below its surface);
-  the proprio "tip" pose is the tuft's tip. Hold it vertical (as at the start).
+- The brush is a rigid handle with a 15 mm soft tuft (no collision). The handle hits the paper when the tip is 15 mm
+  below the paper's surface. The proprio "tip" pose is the tuft's tip. Hold the brush vertical (as at the start).
 - Paints (the picture's colours, premixed): 16 wells on a rigid plate on the robot's left (+y), in three rows, radius 9
-  mm; `spec["static"]["wells"]["wells"]` gives each well's name, colour and radius. Dipping = the tip inside a well's
-  circle and below the paint surface: the brush is then loaded with that paint (the previous paint is gone; no mixing on
-  the palette, it never runs dry). The brush starts dry. The robot does not report which paint it carries; the tuft
-  shows the colour on the cameras.
+  mm; `spec["static"]["wells"]["wells"]` gives each well's name, colour and radius. Dipping means having the tip inside
+  a well's circle and below the paint surface. The brush is then loaded with that paint: the previous paint is gone,
+  nothing mixes on the palette, and it never runs dry. The brush starts dry. The robot does not report which paint it
+  carries; the tuft shows the colour on the cameras.
 - Sheets: the main sheet, a 227.18 mm square in front of the robot, is scored; the practice sheet, 227.18 × 99.41 mm, on
   the robot's right of the main sheet, is not.
 - Wherever the loaded tip is below a sheet's surface the brush paints wet oil paint; what the mark looks like depends on
@@ -125,9 +126,9 @@ Two action types:
 ### The target picture
 `/app/target.png` (1024 × 1024 px, RGB) shows the exemplar at its true size and place on the main sheet: the image
 covers the main sheet exactly, 0.2219 mm per pixel. Pixel (column u, row v), counted from 0 at the image's top-left, has
-its centre at sheet millimetres X = (u + 0.5) · 227.18 / 1024, Y = (v + 0.5) · 227.18 / 1024 (X to the robot's right, Y
-towards the robot, origin = the sheet's far-left corner as seen from the robot's base). Image top = the sheet's far edge
-(+x), image left = the robot's left (+y): the same orientation as `canvas_cam`.
+its centre at sheet millimetres X = (u + 0.5) · 227.18 / 1024, Y = (v + 0.5) · 227.18 / 1024. X runs to the robot's
+right and Y towards the robot; the origin is the sheet's far-left corner as seen from the robot's base. Image top = the
+sheet's far edge (+x), image left = the robot's left (+y): the same orientation as `canvas_cam`.
 
 ### Process rules
 The grader checks the process rules in Goal on the episode with two numbers you can check yourself; only painted strokes
@@ -135,9 +136,9 @@ on the main sheet count (the practice sheet is free):
 - Paint path budget: `path_mm` ≤ 55600 mm. `path_mm` is the total length of the brush tip's path while it presses on the
   main sheet with paint (all strokes together, sampled at every physics step).
 - Strokes are sweeps: `scribble_share` ≤ 0.1. A stroke's scribble ratio is its length divided by the diagonal of its
-  bounding box on the sheet (taken as at least 10 mm): about 1 for a straight or curved sweep, 2 for a sweep out and
-  back along the same line, more for a zigzag, a back-and-forth fill, a spiral or a loop. `scribble_share` is the share
-  of `path_mm` in strokes whose ratio is above 2.5.
+  bounding box on the sheet (the diagonal taken as at least 10 mm). It is about 1 for a straight or curved sweep, 2 for
+  a sweep out and back along the same line, and more for a zigzag, a back-and-forth fill, a spiral or a loop.
+  `scribble_share` is the share of `path_mm` in strokes whose ratio is above 2.5.
 
 Breaking a process rule fails the task.
 
@@ -156,6 +157,6 @@ stroke cap and when a process rule fails.
   GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap only
   slows you down); usage: `/run/rcb-limits/usage.json`.
 - Resets: none: one episode.
-- Steps: no step budget; actions and simulated time are reported as cost; a runaway guard stops the robot after 72000
-  control steps (1 h of simulated time; `hold(s)` also advances it).
+- Steps: no step budget. Actions and simulated time are reported as cost. A runaway guard stops the robot after 72000
+  control steps (1 h of simulated time). `hold(s)` also adds to that count.
 - Finish: if you never send `/finish`, the episode is graded when your session ends.

@@ -23,10 +23,11 @@ robot runs as a service you reach through its client or its MCP tools, as if it 
 ### Client
 `/opt/tools/rcb_client.py`: its docstring is its manual; `r.spec()` gives the numbers. The service answers one request
 at a time: while a long call runs, every other request waits, so a client-side timeout means "busy", not "crashed".
-Simulated time advances only inside your calls. One call returns at most 240 images (cameras × the frames captured: the
-first, one every round(60 / `video_fps`) control steps and the last; a per-frame depth one more image; `video="none"`
-captures only the first and the last); a larger request is refused (400) before anything runs. A call that names no
-cameras gets `overview`, `head` at 3 frames per second, so every call up to `max_chunk_s` fits.
+Simulated time advances only inside your calls. One call returns at most 240 images; a larger request is refused (400)
+before anything runs. The count is cameras × frames captured, where the frames are the first, one every round(60 /
+`video_fps`) control steps, and the last. Each depth frame counts as one more image. `video="none"` captures only the
+first and the last frame. A call that names no cameras gets `overview` and `head` at 3 frames per second, so every call
+up to `max_chunk_s` stays within that limit.
 
 ### MCP tools
 - The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
@@ -61,5 +62,5 @@ depth camera).
   no GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap
   only slows you down); usage: `/run/rcb-limits/usage.json`.
 - Resets: none: one episode.
-- Steps: at most 400,000 control steps (1.9 h of simulated time, reason `step_guard`); then the episode ends.
+- Steps: at most 400,000 control steps (1.9 h of simulated time, reason `step_guard`), then the episode ends.
 - Finish: if you never send `/finish`, the episode is graded when the step limit is reached or your session ends.

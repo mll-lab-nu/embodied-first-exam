@@ -12,7 +12,7 @@ as a failure.
 
 The dip and the release count as they happen, in that order.
 
-When you are done, send `/finish` to end the episode and get it graded. Everything else counts only as it stands at that
+When you are done, send `/finish` to end the episode and get it graded. Everything else is judged on the state at that
 point.
 
 Rules:
@@ -50,9 +50,9 @@ r.status()                                     # calls, control steps, done, rea
 ```
 
 Simulated time only advances with your commands (and `hold(s)`, which holds the last targets). If the service crashes, a
-call fails with a connection error: it restarts and resumes the same episode (never a reset) in the state after the last
-call it completed. `r.wait_ready()` waits for it; then check `r.status()`. One call returns at most 3000 images;
-`video_fps` is up to 50, default 10.
+call fails with a connection error. The service restarts and resumes the same episode (never a reset), in the state
+after the last call it completed. `r.wait_ready()` waits for it; then check `r.status()`. One call returns at most 3000
+images; `video_fps` is up to 50, default 10.
 
 ### MCP tools
 - The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
@@ -72,11 +72,11 @@ that presses the pipette's plunger: 0 .. 1.3 rad, larger presses), `arm2_shoulde
 `arm2_elbow`, `arm2_wrist_1`, `arm2_wrist_2`, `arm2_wrist_3`, `arm2_2f85_fingers_actuator` (the Robotiq gripper: 0 open
 .. 255 closed). Arm joints are in rad. Each entry is the target of a PD position drive (stiffness, damping and force
 limit per entry: `spec["robot_spec"]["controller"]["gains"]`); a target outside the entry's range is clipped to it.
-Columns in `spec["action_types"]["joint_position"]["layout"]` order. Rows are `dt` apart (a whole multiple of the 2 ms
-control period, at most 0.5 s; a chunk covers at most 10 s), `interpolate="linear"` (default, from the previous target)
-or `"hold"`; the client sends them as float32. The control rate is 500 Hz (one physics step per control step). There is
-no step budget: the one technical cap is `spec["max_control_steps"]`, 600000 (1200 s of simulated time), at which the
-episode ends.
+Columns in `spec["action_types"]["joint_position"]["layout"]` order. Rows are `dt` apart: `dt` is a whole multiple of
+the 2 ms control period, at most 0.5 s, and a chunk covers at most 10 s. Interpolation is `interpolate="linear"` (the
+default, from the previous target) or `"hold"`. The client sends rows as float32. The control rate is 500 Hz (one
+physics step per control step). There is no step budget: the one technical cap is `spec["max_control_steps"]`, 600000
+(1200 s of simulated time), at which the episode ends.
 
 ### Observations
 Cameras (`table_cam_front`, `table_cam_left`, `arm1_wrist_cam`, `arm2_wrist_cam`; 640x480): `table_cam_front` and

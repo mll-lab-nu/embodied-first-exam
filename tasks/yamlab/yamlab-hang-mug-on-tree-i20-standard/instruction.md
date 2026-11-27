@@ -6,10 +6,11 @@ Pick up the mug with the left arm, pass it to the right arm in the air, and hang
 ## Goal
 Success: the left gripper picks up the mug, the right gripper then takes it in the air and holds it up on its own for
 about a second, and then the mug hangs on the mug tree with neither gripper holding it, steady for about a second. The
-steps count in this order: each but the last counts for good once done, and the last is judged on how things stand when
-the episode ends. An object falling off the table ends the episode as a failure.
+steps count in this order. Every step except the last counts for good once done. An object falling off the table ends
+the episode as a failure.
 
-When you are done, send `/finish` to end the episode and get it graded.
+When you are done, send `/finish` to end the episode and get it graded. Everything else is judged on the state at that
+point.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
@@ -45,9 +46,9 @@ res.last["right_wrist"]; res.proprio          # last frame per camera; float32 (
 ```
 
 The service's first start in a trial compiles Isaac's shaders: `Robot()` can wait ~2-12 min (it prints its progress to
-stderr once a minute). It gives up after 3600 s (`Robot(timeout=...)`) with
-`RuntimeError("sim service unavailable ...")`: then call it again (nothing has happened in the episode yet; your wall
-clock runs from the start of the trial).
+stderr once a minute). After 3600 s (`Robot(timeout=...)`) it gives up with
+`RuntimeError("sim service unavailable ...")`. Then call it again: nothing has happened in the episode yet. Your wall
+clock runs from the start of the trial.
 
 Optional inputs (ask only for what you need):
 - Depth: `r.get_obs(depth=True)` -> `obs.last_depth[cam]` float32 (H,W) z-depth in metres, 0 = no reading, pixel-aligned
@@ -56,15 +57,16 @@ Optional inputs (ask only for what you need):
 - Per frame: `res.frame_step` (control step), `res.frame_time_s`, `res.extrinsic_cv[cam]` (N,3,4 world -> camera, OpenCV
   axes). `spec["cameras"][cam]`: `intrinsic_cv` and `mount` (static pose, or a wrist camera on link `<arm>_link_6` with
   a fixed `link_T_cam_cv`).
-- `r.fk(q12)` -> poses of `spec["kinematics"]["links"]`; `r.ik({"left_tcp": pose7}, seed=q12)` ->
-  `{"ok", "q", "error"}`: stateless models of both arms (no physics, no simulated time); `q12` = left joint1..6 then
-  right joint1..6.
+- `r.fk(q12)` -> poses of `spec["kinematics"]["links"]`, and `r.ik({"left_tcp": pose7}, seed=q12)` ->
+  `{"ok", "q", "error"}`. Both are stateless models of the two arms (no physics, no simulated time). `q12` = left
+  joint1..6 then right joint1..6.
 - `res.group("joint_vel")`: proprio columns by group name (`spec["proprio_groups"]`).
 
-If the service crashes, a call fails with a connection error: the simulator restarts and resumes the SAME episode (never
-a reset) in the state after the last call it completed, which you may not have received. `r.wait_ready()` waits until it
-answers again (resuming replays the episode so far, which can take minutes; the wall clock keeps running), then check
-`r.status()["control_steps"]` before you continue (`spec["on_service_error"]`). One call returns at most 5412 images.
+If the service crashes, a call fails with a connection error. The simulator restarts and resumes the SAME episode (never
+a reset), in the state after the last call it completed. You may not have received that call's reply. `r.wait_ready()`
+waits until it answers again. Resuming replays the episode so far and can take minutes; the wall clock keeps running.
+Then check `r.status()["control_steps"]` before you continue (`spec["on_service_error"]`). One call returns at most 5412
+images.
 
 ### MCP tools
 - The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
@@ -81,17 +83,18 @@ answers again (resuming replays the episode so far, which can take minutes; the 
 - `joint_position` (14): `left_joint1..6, left_gripper, right_joint1..6, right_gripper`, YAMLab's own action. Joints:
   absolute targets (rad) tracked by PD controllers. Gripper: the position target of that arm's finger in metres,
   **-0.0475 = fully open .. 0.0 = closed** (continuous; a closing gripper stops at whatever is between its fingers).
-  Rows are `dt` apart (`1/30 ≤ dt ≤ 0.5` s, a multiple of the 30 Hz control period: 1/30, 2/30, ...; any other `dt` is
-  rejected, never rounded); `interpolate="linear"` (default) or `"hold"`; a chunk may cover at most 10 s; out-of-limit
-  values are clipped and listed in `meta["clipped"]` (limits in the spec). Start from `obs.meta["proprio"]["now"]` (the
-  first 14 columns are the measured joints and fingers) to move smoothly.
+  Rows are `dt` apart: `1/30 ≤ dt ≤ 0.5` s, a multiple of the 30 Hz control period (1/30, 2/30, ...). Any other `dt` is
+  rejected, never rounded. Interpolation: `interpolate="linear"` (default) or `"hold"`. A chunk may cover at most 10 s.
+  Out-of-limit values are clipped and listed in `meta["clipped"]` (limits in the spec). Start from
+  `obs.meta["proprio"]["now"]` (the first 14 columns are the measured joints and fingers) to move smoothly.
 - `ee_pose` (16): per arm, left then right, `x y z qw qx qy qz gripper` in the world frame (metres; x forward from the
   arm bases towards the far side of the table, y to the left, z up; quaternions wxyz). Each row drives both tool frames
   to their targets together by differential IK in closed loop (at most 0.25 m/s); an arm that does not converge within 6
   mm is reported in `meta["plan"]`. The tool frame `<arm>_tcp` is the midpoint of that gripper's two fingertips, 0.1426
   m from `link_6` along `link_6`'s +z (approach) axis, with `link_6`'s orientation. At the start both arms are at their
-  home pose (all joints 0, grippers open), tool frames pointing forward. At most 50 rows per submit; a position more
-  than 3 m from the world origin on any axis, or a zero quaternion, is rejected (400), nothing moves.
+  home pose (all joints 0, grippers open), tool frames pointing forward. At most 50 rows per submit. If a position is
+  more than 3 m from the world origin on any axis, or a quaternion is zero, the submit is rejected (400) and nothing
+  moves.
 - A malformed request (a wrong type, a value out of range) is answered 400 with the reason and executes nothing.
 - Control runs at 30 Hz (simulated time; sim dt 1/120 s, decimation 4).
 
@@ -113,6 +116,7 @@ answers again (resuming replays the episode so far, which can take minutes; the 
   GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap only
   slows you down); usage: `/run/rcb-limits/usage.json`.
 - Resets: none: one episode.
-- Steps: no step budget; a technical cap ends the episode after 100,000 control steps (1/30 s each, about 56 min of
-  simulated time), graded as it stands. The service runs 60-120 control steps per second, so long holds can reach it.
+- Steps: no step budget. A technical cap ends the episode after 100,000 control steps (1/30 s each, about 56 min of
+  simulated time). The episode is then graded on its state at that point. The service runs 60-120 control steps per
+  second, so long holds can reach it.
 - Finish: if you never send `/finish`, the episode is graded when your session ends.

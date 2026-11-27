@@ -39,11 +39,10 @@ verdict, and nothing is replayed to grade it. The isolated verifier reads only t
 service then renders `replay.mp4` from the recorded trajectory in one video-only pass, which never changes the
 verdict. A missing or unfinished record, a give-up after crashes between the agent's calls and a frozen instance
 that does not build at the episode's start are infrastructure errors.
-The episode ends at the first success or the first failure.
 Failures are fail-fast and permanent: a dropped plug, the plug below z = 0.685 m, the hub moved more than 20 mm or
 tilted more than 20 degrees, plug or hub outside the workspace box, the cable's far end pulled off the desk, an arm
-link, the robot's stand or the parked hand touching anything, unstable
-physics, or the 3,000-control budget. A no-op fails. Human review and full agent-trial calibration remain pending;
+link, the robot's stand or the parked hand touching anything, or unstable
+physics. At the 3,000-control budget the episode ends and is judged on the state it leaves. A no-op fails. Human review and full agent-trial calibration remain pending;
 report this task as provisional.
 
 ## Resources

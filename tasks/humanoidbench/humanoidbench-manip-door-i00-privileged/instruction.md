@@ -7,20 +7,20 @@ Open the door by pressing the handle and pulling it towards you, then walk throu
 Success: early in the episode the robot pulls the door wide open and walks through the doorway, and it stays through,
 upright, with the door open.
 
-The episode ends at once, and nothing after it counts, if the robot falls.
+If the robot falls, the episode ends at once and nothing after that counts.
 
 You cannot see the score here: the reward function is not in this container (`s.step()` returns `None` where the reward
 would be, and `s.status()` reports no return). You do have the complete physical state (`s.obs()`, `s.low.model`,
-`s.low.data`): build your own measure of what the episode is judged on and optimise against it; it should improve when
-the robot visibly does the task better.
+`s.low.data`). Build your own measure of what the episode is judged on and optimise against it; your measure should
+improve when the robot visibly does the task better.
 
-Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(...)`, at most 1000 rows (`s.max_steps`); it
-is replayed open-loop from the fixed start and passes if the replayed episode's score reaches the mark. Also leave
-`/app/output/gen.py`, the script that produced it, which must run and reproduce `trajectory.npz` (not a paraphrase of
-it) reading nothing but `/app/instance.npz` and files under `/app/output/`, and `/app/output/NOTES.md`, at most 20
-lines: your final approach and why it works, and the approaches you tried that failed and what each told you about the
-task. Only the trajectory is scored. Save one as soon as you have any trajectory and overwrite it (with `gen.py` and
-`NOTES.md` to match) whenever you have a better one; since you cannot see the score, keep improving it until the time is
+Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(...)`, at most 1000 rows (`s.max_steps`). It
+is replayed open-loop from the fixed start and passes if the replayed episode's score reaches the mark. Also leave two
+files. `/app/output/gen.py` is the script that produced it; it must run and reproduce `trajectory.npz` (not a paraphrase
+of it), reading nothing but `/app/instance.npz` and files under `/app/output/`. `/app/output/NOTES.md`, at most 20
+lines, gives your final approach and why it works, and the approaches you tried that failed and what each told you about
+the task. Only the trajectory is scored. Save one as soon as you have any trajectory. Overwrite it, with `gen.py` and
+`NOTES.md` to match, whenever you have a better one. You cannot see the score, so keep improving it until the time is
 up.
 
 Rules: **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
@@ -69,7 +69,7 @@ stable under gravity and contact.
 
 ## Others
 - The trajectory is replayed open-loop, but MuJoCo on the CPU repeats exactly, so actions recorded from a feedback
-  controller reproduce when replayed; `s.low.data` can be snapshotted and restored to branch rollouts.
+  controller reproduce when replayed. You can snapshot and restore `s.low.data` to branch rollouts.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (the simulator's start-up too). At
