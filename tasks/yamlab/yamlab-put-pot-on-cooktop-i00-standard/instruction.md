@@ -5,8 +5,8 @@ Lift the pot with both grippers and set it down on the cooktop.
 
 ## Goal
 Success: both grippers hold the pot and lift it off the table, then the pot stands upright on the cooktop with neither
-gripper holding it for about a second. The steps count in this order: each but the last counts for good once done. An
-object falling off the table ends the episode as a failure.
+gripper holding it for about a second. The steps count in this order. Every step except the last counts for good once
+done. An object falling off the table ends the episode as a failure.
 
 When you are done, send `/finish` to end the episode and get it graded. Everything else is judged on the state at that
 point.
@@ -56,9 +56,9 @@ Optional inputs (ask only for what you need):
 - Per frame: `res.frame_step` (control step), `res.frame_time_s`, `res.extrinsic_cv[cam]` (N,3,4 world -> camera, OpenCV
   axes). `spec["cameras"][cam]`: `intrinsic_cv` and `mount` (static pose, or a wrist camera on link `<arm>_link_6` with
   a fixed `link_T_cam_cv`).
-- `r.fk(q12)` -> poses of `spec["kinematics"]["links"]`; `r.ik({"left_tcp": pose7}, seed=q12)` ->
-  `{"ok", "q", "error"}`: stateless models of both arms (no physics, no simulated time); `q12` = left joint1..6 then
-  right joint1..6.
+- `r.fk(q12)` -> poses of `spec["kinematics"]["links"]`, and `r.ik({"left_tcp": pose7}, seed=q12)` ->
+  `{"ok", "q", "error"}`. Both are stateless models of the two arms (no physics, no simulated time). `q12` = left
+  joint1..6 then right joint1..6.
 - `res.group("joint_vel")`: proprio columns by group name (`spec["proprio_groups"]`).
 
 If the service crashes, a call fails with a connection error. The simulator restarts and resumes the SAME episode (never
@@ -82,17 +82,18 @@ images.
 - `joint_position` (14): `left_joint1..6, left_gripper, right_joint1..6, right_gripper`, YAMLab's own action. Joints:
   absolute targets (rad) tracked by PD controllers. Gripper: the position target of that arm's finger in metres,
   **-0.0475 = fully open .. 0.0 = closed** (continuous; a closing gripper stops at whatever is between its fingers).
-  Rows are `dt` apart (`1/30 ≤ dt ≤ 0.5` s, a multiple of the 30 Hz control period: 1/30, 2/30, ...; any other `dt` is
-  rejected, never rounded); `interpolate="linear"` (default) or `"hold"`; a chunk may cover at most 10 s; out-of-limit
-  values are clipped and listed in `meta["clipped"]` (limits in the spec). Start from `obs.meta["proprio"]["now"]` (the
-  first 14 columns are the measured joints and fingers) to move smoothly.
+  Rows are `dt` apart: `1/30 ≤ dt ≤ 0.5` s, a multiple of the 30 Hz control period (1/30, 2/30, ...). Any other `dt` is
+  rejected, never rounded. Interpolation: `interpolate="linear"` (default) or `"hold"`. A chunk may cover at most 10 s.
+  Out-of-limit values are clipped and listed in `meta["clipped"]` (limits in the spec). Start from
+  `obs.meta["proprio"]["now"]` (the first 14 columns are the measured joints and fingers) to move smoothly.
 - `ee_pose` (16): per arm, left then right, `x y z qw qx qy qz gripper` in the world frame (metres; x forward from the
   arm bases towards the far side of the table, y to the left, z up; quaternions wxyz). Each row drives both tool frames
   to their targets together by differential IK in closed loop (at most 0.25 m/s); an arm that does not converge within 6
   mm is reported in `meta["plan"]`. The tool frame `<arm>_tcp` is the midpoint of that gripper's two fingertips, 0.1426
   m from `link_6` along `link_6`'s +z (approach) axis, with `link_6`'s orientation. At the start both arms are at their
-  home pose (all joints 0, grippers open), tool frames pointing forward. At most 50 rows per submit; a position more
-  than 3 m from the world origin on any axis, or a zero quaternion, is rejected (400), nothing moves.
+  home pose (all joints 0, grippers open), tool frames pointing forward. At most 50 rows per submit. If a position is
+  more than 3 m from the world origin on any axis, or a quaternion is zero, the submit is rejected (400) and nothing
+  moves.
 - A malformed request (a wrong type, a value out of range) is answered 400 with the reason and executes nothing.
 - Control runs at 30 Hz (simulated time; sim dt 1/120 s, decimation 4).
 

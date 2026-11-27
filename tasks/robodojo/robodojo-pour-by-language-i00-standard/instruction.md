@@ -58,9 +58,9 @@ Optional inputs (ask only for what you need):
   steps).
 - Per frame: `res.frame_step` (control step), `res.frame_time_s`, `res.extrinsic_cv[cam]` (N,3,4 world -> camera, OpenCV
   axes). `spec["cameras"][cam]`: `intrinsic_cv` and `mount` (static pose, or a wrist camera on link `<arm>_link6`).
-- `r.fk(q12)` -> poses of `spec["kinematics"]["links"]`; `r.ik({"left_link6": pose7}, seed=q12)` ->
-  `{"ok", "q", "error"}`: stateless models of both arms (no physics, no simulated time); `q12` = left joint1..6 then
-  right joint1..6.
+- `r.fk(q12)` -> poses of `spec["kinematics"]["links"]`, and `r.ik({"left_link6": pose7}, seed=q12)` ->
+  `{"ok", "q", "error"}`. Both are stateless models of the two arms (no physics, no simulated time). `q12` = left
+  joint1..6 then right joint1..6.
 - `res.group("joint_vel")`: proprio columns by group name (`spec["proprio_groups"]`).
 
 If the service crashes, a call fails with a connection error. The simulator restarts and resumes the SAME episode (never
@@ -84,15 +84,15 @@ images.
 - `joint_position` (14): `left_joint1..6, left_gripper, right_joint1..6, right_gripper`, RoboDojo's own action. Joints:
   absolute targets (rad); RoboDojo's controller moves each arm to the targets over the action's 10 physics steps.
   Gripper: RoboDojo's normalised command, **1 = fully open .. 0 = closed** (a closing gripper stops at whatever is
-  between its fingers). Rows are `dt` apart (`1/25 ≤ dt ≤ 0.5` s, a multiple of the 25 Hz action period: 0.04, 0.08,
-  ...; any other `dt` is rejected, never rounded); `interpolate="linear"` (default) or `"hold"`; a chunk may cover at
-  most 10 s; out-of-limit values are clipped and listed in `meta["clipped"]` (limits in the spec). Start from
-  `obs.meta["proprio"]["now"]` (the first 14 columns are the measured joints and gripper joints) to move smoothly.
-- `ee_pose` (16): per arm, left then right, `x y z qw qx qy qz gripper` in the world frame. Each row is solved by the
-  arms' kinematic model and executed as a joint move (at most 0.25 m/s); an arm that misses by more than 1 cm is
-  reported in `meta["plan"]`. The pose is the arm's `link6` frame (the frame of the proprio `tcp` columns). At most 50
-  rows per submit; a position more than 3 m from the world origin on any axis, or a zero quaternion, is rejected (400),
-  nothing moves.
+  between its fingers). Rows are `dt` apart: `1/25 ≤ dt ≤ 0.5` s, a multiple of the 25 Hz action period (0.04, 0.08,
+  ...). Any other `dt` is rejected, never rounded. Interpolation: `interpolate="linear"` (default) or `"hold"`. A chunk
+  may cover at most 10 s. Out-of-limit values are clipped and listed in `meta["clipped"]` (limits in the spec). Start
+  from `obs.meta["proprio"]["now"]` (the first 14 columns are the measured joints and gripper joints) to move smoothly.
+- `ee_pose` (16): per arm, left then right, `x y z qw qx qy qz gripper` in the world frame. The arms' kinematic model
+  solves each row, and the arm executes it as a joint move (at most 0.25 m/s). If an arm misses its target by more than
+  1 cm, `meta["plan"]` reports it. The pose is the arm's `link6` frame (the frame of the proprio `tcp` columns). At most
+  50 rows per submit. If a position is more than 3 m from the world origin on any axis, or a quaternion is zero, the
+  submit is rejected (400) and nothing moves.
 - A malformed request (a wrong type, a value out of range) is answered 400 with the reason and executes nothing.
 - Control runs at 25 Hz (simulated time; physics dt 4 ms, 10 physics steps per action).
 

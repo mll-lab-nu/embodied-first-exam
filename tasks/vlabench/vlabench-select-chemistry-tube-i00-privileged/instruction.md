@@ -4,8 +4,9 @@
 Take the tube of CuCl2 solution out of the tube stand.
 
 ## Goal
-Success: the tube of CuCl2 solution is out of the tube stand. Your trajectory is replayed from the fixed start, and the
-episode ends as soon as the task is done: the trajectory must end on that step (actions after it make it invalid).
+Success: the tube of CuCl2 solution is out of the tube stand. Your trajectory is replayed from the fixed start. The
+episode ends as soon as the task is done, and the trajectory must end on that step: any action after it makes the
+trajectory invalid.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory()`: key `actions`, shape `(T, 9)`, 1 ≤ T ≤
 4000; only this file is graded. Also leave two files for the people who read your work. `/app/output/gen.py`: the script

@@ -8,12 +8,12 @@ Success: exactly one of the three bananas outside the grey bin is now in it, and
 two bananas already in the bin do not count either way. The replay of your trajectory ends as soon as the task is done
 (later rows are never executed).
 
-Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, "/app/output/trajectory.npz")`:
-`task` and `actions`, a (T, 8) float array of at most 100,000 rows (one per control step, 1.9 h of robot time); anything
-else (another shape, NaN, more rows, a file that is not such an npz) scores 0. It is replayed open-loop from the fixed
-start, the same way `s.replay(actions)` and the replay CLI do it. A replay can end slightly differently from your run,
-so leave a margin. Leave the script that produced it at `/app/output/gen.py`. Save a valid one early and overwrite it
-when you have a better one.
+Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, "/app/output/trajectory.npz")`. It
+holds `task` and `actions`, a (T, 8) float array of at most 100,000 rows (one per control step, 1.9 h of robot time).
+Anything else (another shape, NaN, more rows, a file that is not such an npz) scores 0. It is replayed open-loop from
+the fixed start, the same way `s.replay(actions)` and the replay CLI do it. A replay can end slightly differently from
+your run, so leave a margin. Leave the script that produced it at `/app/output/gen.py`. Save a valid one early and
+overwrite it when you have a better one.
 
 Rules: **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
 benchmark's demonstrations, trained policies); trials are reviewed.
@@ -64,16 +64,16 @@ s.start_video("/app/output/try.mp4"); ...; s.stop_video()          # film the st
   = open, 1 = close; the Robotiq action is binary). `s.hold_action()` is the no-op. Control runs at 15 Hz (sim dt 1/120
   s, decimation 8). There is no step budget; a runaway guard ends an episode after 100,000 control steps, the most a
   trajectory may hold.
-- `s.ee_pose()` and every primitive use the fingertip-centre tool frame: RoboLab's `eef_frame` (the gripper flange,
-  `s.eef_frame_pose()`) moved 0.162 m along the approach axis to the ends of the closed fingertips (the pads extend ~5.7
-  cm back from there, so for a low object the frame goes almost down to the table). `p["top_down_quat"](yaw)` is its
-  orientation for a vertical approach whose finger-closing direction is rotated by `yaw` (rad, about z) from the reset
-  pose; at yaw 0 the fingers close along `p["get_finger_closing_dir"]()` (world y at the reset pose), and
+- `s.ee_pose()` and every primitive use the fingertip-centre tool frame. It is RoboLab's `eef_frame` (the gripper
+  flange, `s.eef_frame_pose()`) moved 0.162 m along the approach axis, to the ends of the closed fingertips. The pads
+  extend ~5.7 cm back from there, so for a low object the frame goes almost down to the table. `p["top_down_quat"](yaw)`
+  gives its orientation for a vertical approach, with the finger-closing direction rotated by `yaw` (rad, about z) from
+  the reset pose. At yaw 0 the fingers close along `p["get_finger_closing_dir"]()` (world y at the reset pose).
   `p["yaw_for_closing_dir"]([dx, dy])` gives the yaw for any horizontal closing direction. The Robotiq opens to 8.5 cm.
 - One `Session` per process (Isaac Sim launches once, ~70 s; the scene ~30 s more). Physics is PhysX on the CPU,
   rendering on the GPU; ~15 control steps/s.
 
-After your last row that row's command is held for about two seconds more, so a release in the last rows completes; a
+After your last row, its command is held for about two seconds more, so a release in the last rows completes. A
 trajectory that ends with an object in the gripper goes on holding it.
 
 ## Others
@@ -81,10 +81,10 @@ trajectory that ends with an object in the gripper goes on holding it.
   so stop recording there.
 - Do not call `s.close()` before you have written every output.
 - The first episode of a process (a live run before any `s.reset()`, or the first `s.replay()`) ends in the same state
-  as the grader's replay of the same actions. After `s.reset()` the state is restored but not every PhysX internal: a
-  live run recorded after a reset, and later replays in the same process, can end differently (a success after a few
-  resets has failed the grader's replay), so record the final trajectory from the first episode of a new process and
-  check it with the replay CLI, which runs in one.
+  as the grader's replay of the same actions. After `s.reset()` the state is restored, but not every PhysX internal. So
+  a live run recorded after a reset, and later replays in the same process, can end differently: a success after a few
+  resets has failed the grader's replay. Record the final trajectory from the first episode of a new process, and check
+  it with the replay CLI, which runs in a new process.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (the simulator's start-up too). At

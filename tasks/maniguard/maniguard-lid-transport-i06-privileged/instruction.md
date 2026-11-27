@@ -61,8 +61,8 @@ s.env, s.robot, s.get_object(name) # OmniGibson's environment, robot and objects
   `python /opt/tools/rcb_maniguard.py replay --task lid_transport/task_0006 --instance /app/instance --traj /app/output/trajectory.npz`.
 
 ### Actions
-- Action (8): `panda_joint1..7` absolute joint-position targets (rad) + the gripper command: +1 = open, -1 = close (any
-  other value is binarised: its sign, or -1 when |x| <= 0.01). `s.hold_action()` is the no-op.
+- Action (8): `panda_joint1..7` absolute joint-position targets (rad), then the gripper command: +1 = open, -1 = close.
+  Any other value is binarised to its sign, or to -1 when |x| <= 0.01. `s.hold_action()` is the no-op.
 - Control runs at 20 Hz with 120 Hz physics (PhysX on the CPU): one row is one control step (1/20 s); `s.step(row)` runs
   one.
 - End-effector frames: `eef` is OmniGibson's end-effector link (+z along the fingers, the fingers close along +y); `tcp`

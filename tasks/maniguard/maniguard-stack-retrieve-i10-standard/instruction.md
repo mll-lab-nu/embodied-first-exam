@@ -83,14 +83,14 @@ res.save("/app/runs/003")                     # meta.json, <cam>.mp4, frames/, l
 
 ### Actions
 - `joint_position` (8): `panda_joint1..7, gripper`; radians, and the gripper command is binary (+1 = open, -1 = close;
-  it switches at the row, never interpolated). Absolute targets tracked by PD drives. Rows are `dt` apart
-  (`1/20 ≤ dt ≤ 0.5` s, a multiple of the 20 Hz control period; any other `dt` is rejected, never rounded); a chunk may
-  cover at most 10 s; out-of-limit values are clipped and listed in `meta["clipped"]`. Use
+  it switches at the row, never interpolated). Absolute targets tracked by PD drives. Rows are `dt` apart:
+  `1/20 ≤ dt ≤ 0.5` s, a multiple of the 20 Hz control period. Any other `dt` is rejected, never rounded. A chunk may
+  cover at most 10 s. Out-of-limit values are clipped and listed in `meta["clipped"]`. Use
   `obs.meta["proprio"]["now"][:7]` for the current joints to move smoothly.
-- `ee_pose` (8): `x y z qx qy qz qw gripper`, world frame, XYZW. Each row is solved by the arm's inverse kinematics for
-  the fingertip centre (no collision checking) and driven to in joint space (at most 0.02 rad per control step); `dt` is
-  ignored. If no IK solution exists nothing moves and `meta["plan"]` says so. The pose is the frame of the proprio
-  `tcp_pose` group, so an observed pose is a valid target. At most 50 rows per submit.
+- `ee_pose` (8): `x y z qx qy qz qw gripper`, world frame, XYZW. For each row, the arm's inverse kinematics solves for
+  the fingertip centre (no collision checking), and the arm moves there in joint space (at most 0.02 rad per control
+  step). `dt` is ignored. If no IK solution exists nothing moves and `meta["plan"]` says so. The pose is the frame of
+  the proprio `tcp_pose` group, so an observed pose is a valid target. At most 50 rows per submit.
 
 ### Observations
 - Cameras (256×256 each): `cam_opposite` (static, across the table, facing the robot), `cam_left` and `cam_right`
@@ -98,13 +98,11 @@ res.save("/app/runs/003")                     # meta.json, <cam>.mp4, frames/, l
   moves, so use the calibration that arrived with each image).
 - Proprioception (`obs.meta["proprio"]`, named columns: `spec["proprio_groups"]`): joints, gripper opening and command,
   end-effector and fingertip poses, velocities, drive efforts.
-- The robot's own conventions (its action types, its spec and its proprioception): the scene's world frame (metres, +z
-  up, the floor is the plane z = 0); poses are position + quaternion XYZW; its fixed base pose is
-  `spec["robot_spec"]["base"]["pose"]`.
+- The robot's action types, spec and proprioception use the scene's world frame (metres, +z up, the floor is the plane z
+  = 0). Poses are position + quaternion XYZW. The robot's fixed base pose is `spec["robot_spec"]["base"]["pose"]`.
 
 ## Others
-- Grasping is sticky: the gripper attaches an object as soon as a finger touches it when it closes, and releases it when
-  it opens.
+- Grasping is sticky: closing the gripper attaches an object as soon as a finger touches it; opening releases it.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At

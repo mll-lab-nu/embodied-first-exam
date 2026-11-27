@@ -46,8 +46,8 @@ res.video["front"]; res.last["front"]; res.proprio   # mp4 of the chunk, last fr
 r.fk(q); r.ik({"tcp": pose}, seed=q)  # kinematics of the robot (stateless: no physics, no time)
 r.status()                                    # calls, control steps, done, reason, elapsed time
 ```
-One call returns at most 1000 images. If a call fails with a connection error the service may have crashed: it resumes
-the same episode; `r.wait_ready()`, then check `r.status()` (`spec["on_service_error"]`).
+One call returns at most 1000 images. If a call fails with a connection error, the service may have crashed; it resumes
+the same episode. Call `r.wait_ready()`, then check `r.status()` (`spec["on_service_error"]`).
 
 ### MCP tools
 - The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
@@ -63,15 +63,15 @@ the same episode; `r.wait_ready()`, then check `r.status()` (`spec["on_service_e
 ### Actions
 - `ee_pose` (23 numbers, DexJoCo's own action): tcp target position (3, metres, world frame), tcp target orientation (4,
   quaternion wxyz), 16 Allegro joint targets (rad). The arm tracks the target through DexJoCo's operational-space
-  controller (it lags a moving target and stops where contact blocks it); the hand joints are position-controlled. Rows
-  are `dt` apart (a whole multiple of 1/50 s, at most 0.5 s); between rows positions and joints move linearly and
-  orientations by slerp (`interpolate="linear"`) or jump (`"hold"`); a chunk may cover at most 10 s. Hand targets
-  outside the ranges (`spec["action_types"]["ee_pose"]["hand_limits"]`) are clamped by the simulator and listed in
-  `meta["clipped"]`. Build the next row from the `tcp_target` and `hand_target` proprio groups to move smoothly.
+  controller, which lags a moving target and stops where contact blocks it. The hand joints are position-controlled.
+  Rows are `dt` apart (a whole multiple of 1/50 s, at most 0.5 s). With `interpolate="linear"`, positions and joints
+  move linearly between rows and orientations by slerp; with `"hold"` they jump. A chunk may cover at most 10 s. Hand
+  targets outside the ranges (`spec["action_types"]["ee_pose"]["hand_limits"]`) are clamped by the simulator and listed
+  in `meta["clipped"]`. Build the next row from the `tcp_target` and `hand_target` proprio groups to move smoothly.
 - `joint_position` (23 numbers): 7 Panda joint targets, then the 16 Allegro joint targets (rad). The service turns the
-  arm's targets into a tcp target by forward kinematics and the same controller tracks it: the tcp reaches FK(q), but
-  the measured arm joints may differ from q in the arm's redundant direction (the controller's null space pulls towards
-  a home posture). Out-of-limit values are clipped and reported.
+  arm's targets into a tcp target by forward kinematics, and the same controller tracks it. The tcp reaches FK(q), but
+  the measured arm joints may differ from q along the arm's redundant direction, because the controller's null space
+  pulls towards a home posture. Out-of-limit values are clipped and reported.
 - Control runs at 50 Hz (10 physics substeps of 2 ms).
 
 ### Observations

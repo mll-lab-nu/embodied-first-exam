@@ -55,9 +55,9 @@ with this command; run it to self-check (it stops at the first success):
 
 ### Actions
 - Action (14): `[left joint1..6, left gripper, right joint1..6, right gripper]`, RoboDojo's joint action. Joints:
-  absolute position targets (rad); RoboDojo's controller moves each arm from where it is to the new target over the
-  action's 10 physics steps (linear for 8, then holding). Gripper: RoboDojo's normalised command, clipped to 0..1 (1 =
-  fully open, as at the start; 0 = closed; a closing gripper stops at whatever is between its fingers).
+  absolute position targets (rad). RoboDojo's controller moves each arm from where it is to the new target over the
+  action's 10 physics steps: linearly for 8, then holding. Gripper: RoboDojo's normalised command, clipped to 0..1: 1 =
+  fully open (as at the start), 0 = closed. A closing gripper stops at whatever is between its fingers.
   `s.hold_action()` keeps the current targets.
 - Control runs at 25 Hz (physics dt 4 ms, 10 physics steps per action).
 - World frame: RoboDojo's env frame, metres; quaternions are **WXYZ**. Axes: x to the right as seen from behind the arms
@@ -69,10 +69,10 @@ with this command; run it to self-check (it stops at the first success):
 
 ## Others
 - Labels in `s.objects()`: `xylophone` (the xylophone); `mallet` (the mallet); `mallet_stand` (the mallet's stand).
-- RoboDojo's own reset settles the scene again from where it is, so after actions a reset gives the same layout and
-  start pose but not bit-for-bit the same state; a replay after such a reset can end slightly differently from the
-  grader's. Each graded replay runs the first episode of a newly started Session (nothing stepped before it): test on
-  that.
+- RoboDojo's own reset settles the scene again from where it is. So a reset after actions gives the same layout and
+  start pose, but not bit-for-bit the same state, and a replay after such a reset can end slightly differently from the
+  grader's. Each graded replay is the first episode of a newly started Session, with nothing stepped before it. Test
+  your trajectory the same way.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (the simulator's start-up too). At

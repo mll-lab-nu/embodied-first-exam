@@ -47,10 +47,10 @@ replay from the shell:
 
 ### Actions
 - An action row (46): per arm, right first: tcp target position (3), tcp target orientation (4, wxyz), 16 Allegro joint
-  targets (rad). The arm tracks the target through DexJoCo's operational-space controller (it lags a moving target and
-  stops where contact blocks it); the hand joints are position-controlled. `s.hold_action()` is the no-op. At the start
-  the tcp target is right [-0.443, -0.4, 1.517] / [0.0, -1.0, 0.0, -0.0025], left [-0.443, 0.4, 1.517] / [0.0, -1.0,
-  0.0, -0.0025].
+  targets (rad). The arm tracks the target through DexJoCo's operational-space controller, which lags a moving target
+  and stops where contact blocks it. The hand joints are position-controlled. `s.hold_action()` is the no-op. At the
+  start the tcp target is right [-0.443, -0.4, 1.517] / [0.0, -1.0, 0.0, -0.0025], left [-0.443, 0.4, 1.517] / [0.0,
+  -1.0, 0.0, -0.0025].
 - Allegro joint order (right hand): index finger 0-3, middle 4-7, ring 8-11, thumb 12-15 (joint 0 of a finger = spread,
   1-3 = flexion from the knuckle out; thumb 12 = opposition). The LEFT hand's 16 values are mirrored: ring 0-3, middle
   4-7, index 8-11, thumb 12-15. Target ranges (rad, same for every finger slot, thumb last): low [-0.47, -0.2, -0.17,
@@ -72,8 +72,8 @@ at y > 0. Quaternions are WXYZ. `s.objects()` gives the live poses of the task o
 ## Others
 - The simulation repeats exactly only for one OpenBLAS thread count: the controller's linear algebra gives slightly
   different results on 1, on 2-3 and on 4 or more threads. This container sets `OPENBLAS_NUM_THREADS=4`, as the grader's
-  does; leave it as it is, or your replays will not match the grader's. (OpenBLAS runs no more threads than the CPUs a
-  process may use: if the tooling warns that it runs fewer than 4, your replays here are not the grader's.)
+  does; leave it as it is, or your replays will not match the grader's. (OpenBLAS never runs more threads than the CPUs
+  a process may use. If the tooling warns that it runs fewer than 4, your replays here will not match the grader's.)
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (the simulator's start-up too). At

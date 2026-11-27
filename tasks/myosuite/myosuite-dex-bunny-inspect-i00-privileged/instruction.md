@@ -48,18 +48,19 @@ success or failure; `s.step` then refuses further actions until `s.reset()`.
 ### Actions
 An action has 45 real numbers per control step, one per actuator in order: 39 muscles and 6 non-muscle actuators. A
 muscle's command a maps to its excitation u = 1 / (1 + exp(-5 (a - 0.5))) and is not clipped (a = -1: u ~ 0.0006, a =
-0.5: 0.5, a = 1: 0.92, a = 2: 0.9994); activation follows excitation with a first-order delay (~10 ms up, ~40 ms down);
-muscles only pull; one muscle can cross several joints; its force also depends on its length and velocity. The
-non-muscle actuators: `A_ARTx` (index 0): position target of joint ARTx in [-0.75, 0.5]; `A_ARTy` (index 1): position
-target of joint ARTy in [-0.5, 0.5]; `A_ARTz` (index 2): position target of joint ARTz in [-0.5, 0.3]; `A_ARRx` (index
-3): position target of joint ARRx in [-1.75, 1.75]; `A_ARRy` (index 4): position target of joint ARRy in [-1.75, 1.75];
-`A_ARRz` (index 5): position target of joint ARRz in [-1.75, 1.75].
+0.5: 0.5, a = 1: 0.92, a = 2: 0.9994). Activation follows excitation with a first-order delay (~10 ms up, ~40 ms down).
+Muscles only pull, and one muscle can cross several joints. A muscle's force also depends on its length and velocity.
+The non-muscle actuators: `A_ARTx` (index 0): position target of joint ARTx in [-0.75, 0.5]; `A_ARTy` (index 1):
+position target of joint ARTy in [-0.5, 0.5]; `A_ARTz` (index 2): position target of joint ARTz in [-0.5, 0.3]; `A_ARRx`
+(index 3): position target of joint ARRx in [-1.75, 1.75]; `A_ARRy` (index 4): position target of joint ARRy in [-1.75,
+1.75]; `A_ARRz` (index 5): position target of joint ARRz in [-1.75, 1.75].
 
 ### Observations
 `s.state()`: the task's observation dict: `qp`, `qv`, `robot_err`, `curr_hand_qpos`, `curr_hand_qvel`, `targ_hand_qpos`,
 `targ_hand_qvel`, `curr_obj_com`, `curr_obj_rot`, `wrist_err`, `base_error`, `targ_obj_com`, `targ_obj_rot`,
-`hand_qpos_err`, `hand_qvel_err`, `obj_com_err`, `act`. The reference motion (the goal) is MyoDex's `s.base.ref` and,
-per control step, the observation's `targ_obj_com` / `targ_obj_rot`; `curr_obj_com` / `curr_obj_rot` are the object's.
+`hand_qpos_err`, `hand_qvel_err`, `obj_com_err`, `act`. The reference motion (the goal) is MyoDex's `s.base.ref`; per
+control step, it is also in the observation's `targ_obj_com` / `targ_obj_rot`. `curr_obj_com` / `curr_obj_rot` are the
+object's current values.
 
 ## Others
 - To check a trajectory the way it is graded, replay it from the command line:

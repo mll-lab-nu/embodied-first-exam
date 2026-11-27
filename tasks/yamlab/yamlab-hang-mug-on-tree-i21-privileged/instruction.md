@@ -6,8 +6,8 @@ Pick up the mug with the left arm, pass it to the right arm in the air, and hang
 ## Goal
 Success: the left gripper picks up the mug, the right gripper then takes it in the air and holds it up on its own for
 about a second, and then the mug hangs on the mug tree with neither gripper holding it, steady for about a second. The
-steps count in this order, each for good once done. An object falling off the table ends the episode as a failure. A
-replay ends as soon as the task is done; later rows are not run.
+steps count in this order, and each one counts for good once done. An object falling off the table ends the episode as a
+failure. A replay ends as soon as the task is done; later rows are not run.
 
 Deliverable: `/app/output/trajectory.npz` with `task` and `actions`, a (T, 14) float array of at most 100,000 rows, one
 per control step (1/30 s); write it with `s.save_trajectory()`. Anything else (another shape, NaN, more rows) scores 0.
@@ -49,8 +49,8 @@ s.start_video("/app/output/try.mp4"); ...; s.stop_video()   # film the steps in 
 ```
 
 The primitives are deliberately thin (IK moves, joint moves, grippers, hold): grasping, lifting, handing over and
-placing are yours to build from them. One `Session` per process (Isaac Sim launches once, then the scene builds: ~1.5-3
-min; the very first start in this container also compiles Isaac's shaders, ~10 min on a busy host). Physics is PhysX on
+placing are yours to build from them. One `Session` per process. Isaac Sim launches once, then the scene builds (~1.5-3
+min). The very first start in this container also compiles Isaac's shaders (~10 min on a busy host). Physics is PhysX on
 the **CPU**; rendering (on the GPU) happens only when a frame is asked for and never moves anything. Stepping runs at
 about 60-120 control steps/s. Do not call `s.close()` before writing every output. YAMLab's source is in `/opt/yamlab`
 (read-only). The grader replays with this command; run it to self-check (it stops at the first success):

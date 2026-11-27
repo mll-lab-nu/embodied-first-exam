@@ -48,8 +48,8 @@ success or failure; `s.step` then refuses further actions until `s.reset()`.
 ### Actions
 An action has 39 real numbers per control step, one per actuator in order: 39 muscles. A muscle's command a maps to its
 excitation u = 1 / (1 + exp(-5 (a - 0.5))) and is not clipped (a = -1: u ~ 0.0006, a = 0.5: 0.5, a = 1: 0.92, a = 2:
-0.9994); activation follows excitation with a first-order delay (~10 ms up, ~40 ms down); muscles only pull; one muscle
-can cross several joints; its force also depends on its length and velocity.
+0.9994). Activation follows excitation with a first-order delay (~10 ms up, ~40 ms down). Muscles only pull, and one
+muscle can cross several joints. A muscle's force also depends on its length and velocity.
 
 ### Observations
 `s.state()`: the task's observation dict: `hand_pos`, `object1_pos`, `object2_pos`, `object1_velp`, `object2_velp`,
