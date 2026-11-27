@@ -374,6 +374,10 @@ ACTION = {
 }
 if OTHER:
     ACTION["actuators"] = [{"index": a["index"], "name": a["name"], "kind": a["kind"], "command": a["command"]} for a in OTHER]
+# the episode's step cap: its own length where it has one (MyoDex's reference motion, baoding's target points; the end
+# there is step_limit), else the tooling's runaway guard (rcb_myosuite.MAX_STEPS; the wall clock is the budget)
+EPISODE_STEPS = int(S.track_steps if S.rule == "track" else
+                    (len(getattr(S.base, "goal", ())) or S.max_steps) if TASK == "baoding" else S.max_steps)
 SPEC = {
     "protocol": L.PROTOCOL,
     "protocol_compat": list(L.COMPAT),
@@ -383,6 +387,7 @@ SPEC = {
     "control_hz": CTRL_HZ,
     "physics_substeps": SUBSTEPS,
     "max_chunk_s": MAX_CHUNK_S,
+    "max_control_steps": EPISODE_STEPS,
     "max_frames_per_call": MAX_FRAMES,
     "cameras": {
         c: {
