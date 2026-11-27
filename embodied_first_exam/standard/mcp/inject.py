@@ -3,9 +3,12 @@
 client (HTTP, as before) and through MCP tools, the agent's choice.
 
 Per task (manifest(): None for a task without it, exception() says why):
-  environment/efe_mcp/        the server (SERVER_FILES, copied unchanged from this directory; suites.py too for a
-                              match) and manifest.json: the task's tool list (TOOLS rule below), its protocol and mode
-  environment/Dockerfile      `COPY efe_mcp /opt/tools/efe_mcp` (DOCKER_LINE) after the task's last /opt/tools line
+  environment/efe_mcp/        manifest.json only: the task's tool list (TOOLS rule below), its protocol and mode
+  environment/Dockerfile      after the task's last /opt/tools line: the server (SERVER_FILES of this directory; suites.py
+                              too for a match) from the files-only image standard-files (docker_lines(): `COPY --from=
+                              <image@digest> /mcp/<file> ... /opt/tools/efe_mcp/`, images/standard-files/FILES.json),
+                              then `COPY efe_mcp /opt/tools/efe_mcp` (DOCKER_LINE): /opt/tools/efe_mcp/ holds the same
+                              files as when every task carried a copy
   task.toml                   one `[[environment.mcp_servers]]` entry (TOML_BLOCK): Harbor registers the server with the
                               agent's harness (Claude Code, Codex, Gemini CLI, ...) as a stdio server
   instruction.md              the mode line names both routes and `### MCP tools` (section()) follows `### Client`
@@ -25,6 +28,10 @@ SUITE_FILES = ("suites.py",)                  # a match's tools (kind "eo-match"
 DIR = "environment/efe_mcp"
 DOCKER_LINE = "COPY efe_mcp /opt/tools/efe_mcp"
 DOCKER_COMMENT = "# the robot's MCP tools (docs/protocol/standard_mode.md \"MCP tools\"): the server Harbor starts, efe-robot"
+IMAGE = "standard-files"                      # the files-only image that carries the server (/mcp/<file>)
+IMAGE_DIR = "mcp"                             # this directory in that image (its source: embodied_first_exam/standard)
+DEST = "/opt/tools/efe_mcp/"
+SERVER_LINE = re.compile(r"^COPY --from=\S+ (?:/" + IMAGE_DIR + r"/\S+ )+/opt/tools/efe_mcp/(?:schema/)?$")
 TOML_MARK = "# The robot's MCP tools (docs/protocol/standard_mode.md \"MCP tools\"): Harbor starts this server for the agent."
 TOML_BLOCK = TOML_MARK + """
 [[environment.mcp_servers]]
@@ -168,6 +175,24 @@ def files_for(m: dict) -> tuple[str, ...]:
     return SERVER_FILES + (SUITE_FILES if m.get("kind") != "rcb" else ())
 
 
+def image_ref() -> str:
+    """The pinned standard-files image (images/standard-files/FILES.json "image")."""
+    return json.loads((ROOT / "images" / IMAGE / "FILES.json").read_text())["image"]
+
+
+def docker_lines(m: dict) -> list[str]:
+    """The task Dockerfile's MCP lines: the server's files from standard-files at their paths under /opt/tools/efe_mcp/,
+    then the task's own manifest.json (DOCKER_LINE)."""
+    ref = image_ref()
+    top = [f for f in files_for(m) if "/" not in f]
+    sub = sorted({f.rsplit("/", 1)[0] for f in files_for(m) if "/" in f})
+    lines = [f"COPY --from={ref} " + " ".join(f"/{IMAGE_DIR}/{f}" for f in top) + f" {DEST}"]
+    for d in sub:
+        lines.append(f"COPY --from={ref} " + " ".join(f"/{IMAGE_DIR}/{f}" for f in files_for(m)
+                                                       if f.rsplit("/", 1)[0] == d) + f" {DEST}{d}/")
+    return [DOCKER_COMMENT] + lines + [DOCKER_LINE]
+
+
 def apply(task: pathlib.Path, m: dict | None) -> None:
     """Write (m) or remove (None) the server, the Dockerfile line and the task.toml entry; idempotent."""
     task = pathlib.Path(task)
@@ -176,8 +201,7 @@ def apply(task: pathlib.Path, m: dict | None) -> None:
         if d.exists():
             shutil.rmtree(d)
     else:
-        want = {f: (HERE / f).read_bytes() for f in files_for(m)}
-        want["manifest.json"] = (json.dumps(m, indent=1, ensure_ascii=False) + "\n").encode()
+        want = {"manifest.json": (json.dumps(m, indent=1, ensure_ascii=False) + "\n").encode()}   # the rest: standard-files
         if d.exists():
             for p in sorted(d.rglob("*"), reverse=True):
                 rel = p.relative_to(d).as_posix()
@@ -193,7 +217,7 @@ def apply(task: pathlib.Path, m: dict | None) -> None:
     df = task / "environment/Dockerfile"
     if df.is_file():
         s = df.read_text()
-        t = dockerfile(s, m is not None)
+        t = dockerfile(s, m)
         if t != s:
             df.write_text(t)
     tt = task / "task.toml"
@@ -204,15 +228,17 @@ def apply(task: pathlib.Path, m: dict | None) -> None:
             tt.write_text(t)
 
 
-def dockerfile(s: str, on: bool) -> str:
-    lines = [ln for ln in s.rstrip("\n").split("\n") if ln.strip() not in (DOCKER_LINE, DOCKER_COMMENT)]
-    if on:
+def dockerfile(s: str, m: dict | None) -> str:
+    """The Dockerfile with the MCP lines (docker_lines(m)) after its last /opt/tools line, or without them (None)."""
+    lines = [ln for ln in s.rstrip("\n").split("\n")
+             if ln.strip() not in (DOCKER_LINE, DOCKER_COMMENT) and not SERVER_LINE.match(ln.strip())]
+    if m is not None:
         at = max((i for i, ln in enumerate(lines) if "/opt/tools" in ln and not ln.lstrip().startswith("#")), default=None)
         if at is None:      # a match's seat: before WORKDIR
             at = next((i for i, ln in enumerate(lines) if ln.startswith("WORKDIR")), len(lines)) - 1
         while at + 1 < len(lines) and lines[at].rstrip().endswith("\\"):
             at += 1
-        lines[at + 1:at + 1] = [DOCKER_COMMENT, DOCKER_LINE]
+        lines[at + 1:at + 1] = docker_lines(m)
     return "\n".join(lines) + "\n"
 
 

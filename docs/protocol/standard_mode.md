@@ -946,8 +946,9 @@ deadline is not sent (an error result, `{"sent": false, "operation": <the runnin
 sent once.
 
 **Shipping.** `scripts/task_conventions.py` `normalize` writes, from `embodied_first_exam/standard/mcp/inject.py`, into
-every standard and realtime task: `environment/efe_mcp/` (the server, copied unchanged, and the task's `manifest.json`:
-its tools), `COPY efe_mcp /opt/tools/efe_mcp` in the agent's Dockerfile, one `[[environment.mcp_servers]]` entry
+every standard and realtime task: `environment/efe_mcp/manifest.json` (its tools), the agent's Dockerfile lines that
+take the server's files from the files-only image `standard-files` (`/mcp/<file>`) to `/opt/tools/efe_mcp/` and then
+`COPY efe_mcp /opt/tools/efe_mcp`, one `[[environment.mcp_servers]]` entry
 (`efe-robot`, stdio, `python3 /opt/tools/efe_mcp/server.py`) in task.toml, through which Harbor registers the server
 with the agent's harness (Claude Code, Codex, Gemini CLI and the others that take MCP servers), and `### MCP tools`
 after `### Client` in the instruction's Robot Interface. The server needs Python 3 with numpy and requests (pillow for

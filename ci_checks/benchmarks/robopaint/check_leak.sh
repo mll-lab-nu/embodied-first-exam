@@ -31,18 +31,17 @@ ALLOWED = {"Dockerfile", "docker-compose.yaml", "instance.json", "target.png", "
            "client-requirements.txt", "NOTICE-exemplar.md", "ARPHICPL.TXT"}
 SIDECARS = {"sim", "scorer"}
 MONITOR = "rcb_monitor"   # the resource monitor sidecar's limits, mounted only into it (check-monitor.py)
-MCP = "efe_mcp"   # standard: the robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"), the server's files unchanged
-MCP_SRC = Path(root) / "embodied_first_exam/standard/mcp"   # from their source, + the task's manifest.json
-MCP_COPY = "COPY efe_mcp /opt/tools/efe_mcp"
+MCP = "efe_mcp"   # standard: the robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): the task's manifest.json;
+MCP_COPY = "COPY efe_mcp /opt/tools/efe_mcp"   # the server's files from the pinned standard-files image (/mcp/<file>)
+MCP_DEST = ("/opt/tools/efe_mcp/", "/opt/tools/efe_mcp/schema/")
 for f in sorted(os.listdir(env)):
     p = os.path.join(env, f)
     if os.path.isdir(p):
         if f == MCP and not name.endswith("-privileged"):
             for q in sorted(Path(p).rglob("*")):
                 rel = q.relative_to(p).as_posix()
-                if q.is_file() and rel != "manifest.json" and (not (MCP_SRC / rel).is_file()
-                                                                or q.read_bytes() != (MCP_SRC / rel).read_bytes()):
-                    bad.append(f"environment/{MCP}/{rel}: not the file of embodied_first_exam/standard/mcp/")
+                if q.is_file() and rel != "manifest.json":
+                    bad.append(f"environment/{MCP}/{rel}: only manifest.json (the server comes from standard-files)")
         elif f not in SIDECARS and f != MONITOR:
             bad.append(f"environment/{f}/: unexpected directory")
     elif f not in ALLOWED:
@@ -64,6 +63,9 @@ for m in re.finditer(r"^\s*(COPY|ADD)\s+(.+)$", df, re.M):
     if frm:   # only a pinned files-only image (robopaint-files, or standard-files' client), only whitelisted agent-side files of it
         img = IMAGES.get(frm[0]) if len(frm) == 1 else None
         srcs = [x.lstrip("/") for x in parts[:-1]]
+        if (img is STD and not name.endswith("-privileged") and parts[-1] in MCP_DEST and srcs
+                and all(x.startswith("mcp/") and x in STD["files"] for x in srcs)):
+            continue   # the MCP server's files (the generic tool server, no task data)
         if (m.group(1) != "COPY" or img is None or not srcs
                 or any(f not in img["files"] or "/" in f or f not in ALLOWED for f in srcs)):
             bad.append(f"Dockerfile: COPY --from of {' '.join(parts)}: only an allowed agent-side file of the pinned {FILES['image']}"

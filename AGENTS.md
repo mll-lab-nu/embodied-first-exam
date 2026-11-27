@@ -101,7 +101,8 @@ invariants of Appendix H bind and no task value overrides them), `docs/protocol/
   tests what the operations layer adds (about 15 seconds).
 - MCP tools (docs/protocol/standard_mode.md "MCP tools"): every standard and realtime task also offers its robot service
   as the `efe-robot` MCP server, one tool per agent-facing endpoint; source `embodied_first_exam/standard/mcp/`, written
-  into each task by `normalize` (`inject.py`: `environment/efe_mcp/`, a Dockerfile line, a task.toml
+  into each task by `normalize` (`inject.py`: `environment/efe_mcp/manifest.json`, the Dockerfile lines that take the
+  server's files from `standard-files` and the manifest to `/opt/tools/efe_mcp/`, a task.toml
   `[[environment.mcp_servers]]` entry, `### MCP tools` in Robot Interface); `ci_checks/check-mcp-tools.py` checks it.
 - The match extension (docs/protocol/standard_mode.md Part 5, Embodied Olympics - Match):
   `embodied_first_exam/benchmarks/embodied-olympics-match/eai_std/`, copied unchanged into each such task's

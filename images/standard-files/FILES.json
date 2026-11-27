@@ -2,6 +2,12 @@
  "image": "ghcr.io/mll-lab-nu/efe:standard-files-0.8.0@sha256:497a2b864b3a1aaf1f60206dc14f08a0f99960037f0e54be3d4bc2e39f5adba4",
  "source": "embodied_first_exam/standard",
  "files": {
+  "mcp/rcb_tools.py": "372fe8d0a3b17f8534f663663875262c4283fd57c01c7a8c339fed9d4a72006e",
+  "mcp/schema.py": "384f9433c9fd7a69452b8b34acae280e00be4b68d283804776b6757128aa37d3",
+  "mcp/schema/tools.json": "bec3f10cbf568e5f41b3b3d7c089a285f21e84ef5f607c18792f7d5389cbe412",
+  "mcp/server.py": "75fafee63c4cc45544ce0a9c7822daf5256219c2dbb983dee7f0e16ecbf6662f",
+  "mcp/suites.py": "388232b453af014a14bf15463bfc2e28a69eb20e7bb02444e0b79ead991eea3f",
+  "mcp/workspace.py": "9ba59ef4861ee53809fee7f07936aeb2d560e71c196a571d91e60fc2e2e29b58",
   "operations/rcb_client.py": "69c34fa5abc7372d46b0c597950bb43a98fa1eb91ec1e199101ef438184d2080",
   "operations/rcb_limited.py": "dd782586307ada161515c438fdad8411e7e3353a1e9b631f19d242f1d5863816",
   "rcb1.py": "d8c6ceabdad914afd39ac4a93904e486039c69c14ec5ae140b33aa653ff7979f",
