@@ -4,9 +4,9 @@ FROM ghcr.io/mll-lab-nu/efe:roboarc-0.2.0
 ENV NPY_DISABLE_CPU_FEATURES=AVX512F,AVX512CD,AVX512_SKX,AVX512_CLX,AVX512_CNL,AVX512_ICL,AVX512_SPR OPENBLAS_CORETYPE=Haswell
 COPY runtime_binding.json /app/runtime_binding.json
 RUN python /opt/robotangle/stage_instance.py knot-untying-06-i01 /app --purge   # the frozen instance, from the image (images/roboarc/assets.json), checked against runtime_binding.json
-COPY --from=ghcr.io/mll-lab-nu/efe:roboarc-files-0.6.0@sha256:ce740c503a85c04a22c1a012e36d3fa374c5828925278e30ae68b82bc5c9a12c /rcb_topogym.py /opt/tools/rcb_topogym.py
-COPY --from=ghcr.io/mll-lab-nu/efe:roboarc-files-0.6.0@sha256:ce740c503a85c04a22c1a012e36d3fa374c5828925278e30ae68b82bc5c9a12c /render_bridge.py /opt/tools/render_bridge.py
-COPY --from=ghcr.io/mll-lab-nu/efe:roboarc-files-0.6.0@sha256:ce740c503a85c04a22c1a012e36d3fa374c5828925278e30ae68b82bc5c9a12c /nyx_direct.py /opt/tools/nyx_direct.py
+COPY --from=ghcr.io/mll-lab-nu/efe:roboarc-files-0.6.0@sha256:88d6d1f453b5135dc5979fd8e4cae4e71d3703ffb322e50cd68c3abb5343b36a /rcb_topogym.py /opt/tools/rcb_topogym.py
+COPY --from=ghcr.io/mll-lab-nu/efe:roboarc-files-0.6.0@sha256:88d6d1f453b5135dc5979fd8e4cae4e71d3703ffb322e50cd68c3abb5343b36a /render_bridge.py /opt/tools/render_bridge.py
+COPY --from=ghcr.io/mll-lab-nu/efe:roboarc-files-0.6.0@sha256:88d6d1f453b5135dc5979fd8e4cae4e71d3703ffb322e50cd68c3abb5343b36a /nyx_direct.py /opt/tools/nyx_direct.py
 ENV PYTHONPATH=/opt/tools:/opt/topogym
 # the longest trajectory the verifier replays within its timeout
 ENV RCB_MAX_STEPS=31000
