@@ -77,8 +77,8 @@ are clipped to the limits in the spec. A chunk covers at most 10 s.
 - Proprioception (`obs.meta["proprio"]`): the joint positions, velocities and current targets.
 - The current goal (`meta["task"]`): its pose (`goal`, x y z qx qy qz qw), `goal_index`, `n_goals`, `goals_reached`,
   `steps_left_on_goal` (null: goals have no time limit here). Once the last goal is reached, it stays the current goal
-  and `goals_reached` stops one short. So the service never says whether every pose has been reached. The benchmark
-  shows the controller the current goal, and the images show it as the green ghost tool.
+  and `goals_reached` stops one short. So the service never says whether every pose has been reached. The images show
+  the current goal as the green ghost tool.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session. Everything counts, including waiting for the service.

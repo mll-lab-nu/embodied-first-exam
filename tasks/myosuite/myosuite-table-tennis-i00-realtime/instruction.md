@@ -6,9 +6,9 @@ opponent's half, with no second paddle touch and no second bounce on your half.
 
 ## Goal
 Success: after the serve bounces once on your half, you hit the ball once with the paddle and it then lands on the
-opponent's half, with no second paddle touch and no second bounce on your half. This counts once it has happened, even
-if the episode then ends as a failure. It ends as a failure on any other outcome of the rally or if the ball falls
-toward the floor.
+opponent's half, with no second paddle touch and no second bounce on your half. Once this has happened the task is
+passed, whatever happens afterwards. Before that, the episode ends as a failure on any other outcome of the rally or if
+the ball falls toward the floor.
 
 When you are done, send `/finish` to end the episode and get it graded.
 

@@ -25,15 +25,13 @@ The agent has to find the objects in the images, close the loop through the came
 when it happens and adapt, and finish in one episode without a reset.
 
 ## Reference solution
-`solution/`: the privileged oracle's 154 control steps (recorded offline; see the twin's README) submitted
-through the client; the episode ends with `reason = "success"` at the last of them.
+`solution/`: the privileged oracle's 154 control steps (recorded offline; see the twin's README) submitted through the client. It sends no `/finish`: the episode is graded on the state it is left in when the session ends.
 
 ## Verification
-Graded by the live episode (docs/protocol/README.md H.4): the sim service ends the episode at
-LIBERO's success (or at the 9000-step technical cap, when the agent's time is up, or on a simulator error) and,
+Graded by the live episode (docs/protocol/README.md H.4): the episode ends at the agent's `POST /finish`, at the 9000-step technical cap, when the agent's time is up, or on a simulator error (a success never ends it and is never shown), and is judged on the state it ends in. The sim service,
 once the agent's container is stopped, writes its verdict to `/data/final.json` (`graded_by = "live"`, `replays = 0`,
 the event record `event_fired` / `event_step`); `tests/grade.py` (separate sandbox, no network) grades it:
-`success = live_success` (LIBERO's success check held in the live episode), with `infra_error = 1` when there is no
+`success = live_success` (LIBERO's success check on the state the live episode ended in), with `infra_error = 1` when there is no
 finalized verdict. Nothing is replayed to grade it. The frozen start is checked when the episode begins: a scene that
 does not start at the instance's recorded state hash is `instance_mismatch` (`infra_error = 1`), before the agent is
 served. After the verdict the collect hook replays `trajectory.npz` once in a fresh process for `replay.mp4` (and
@@ -56,4 +54,4 @@ Caps per container (PROTOCOL §6).
 |---|---|
 | Actions | `ee_delta` (7, float64): OSC hand-target delta (1.0 = 0.05 m, 0.5 rad per control step) and gripper |
 | Episode cap | 9000 control steps (450 s of robot time; `spec.max_control_steps`, docs/protocol/standard_mode.md) |
-| Resources | 4 CPUs, no GPU (CPU physics, OSMesa rendering); the collect hook: the verdict at once, then one video pass (up to 5,400 s for the longest episode on a busy host) |
+| Resources | `sim`: 3 CPUs, no GPU (CPU physics, OSMesa rendering); the collect hook: the verdict at once, then one video pass (up to 5,400 s for the longest episode on a busy host) |

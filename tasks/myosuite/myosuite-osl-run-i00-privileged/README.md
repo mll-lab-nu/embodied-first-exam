@@ -16,7 +16,7 @@ MyoSuite `myoChallengeOslRunFixed-v0` (MyoLeg + OSL, a free-standing musculoskel
 A musculoskeletal body whose right leg is an Open-Source Leg prosthesis (knee and ankle motors driven by its own controller) stands at the start of a straight, flat running track. The deliverable is one replayable trajectory of actuator commands (`/app/output/trajectory.npz`, `(T, 56)`, one row per 5 ms control step).
 
 ## Difficulty
-First-pass rating: hard. The action is muscle-level (54 muscles, each only pulling, several crossing more than one joint, with activation delays): the agent has to build its own joint control from muscle excitations. Success is the challenge's own event; nothing short of it counts, and the challenge's failure conditions and time limit apply.
+First-pass rating: hard. The action is muscle-level (54 muscles, each only pulling, several crossing more than one joint, with activation delays): the agent has to build its own joint control from muscle excitations. Success is the challenge's own event (reaching the finish 29 m down the track); nothing short of it counts, and the challenge's failure conditions apply (a fall, more than 1 m off the centre line, 2 m backwards). There is no time limit.
 
 ## Reference solution
 None. Solvability evidence: a successful model trial on this frozen instance: Claude Code + Claude Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-10-06), trial `myosuite-osl-run-i00-privileged__cWgLuKv` (6714 rows); today's verifier scores its trajectory 1 in two fresh trials (tasks/myosuite/README.md); human review in PR #65.

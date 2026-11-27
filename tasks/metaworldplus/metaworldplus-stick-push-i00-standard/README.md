@@ -13,7 +13,7 @@
 
 ## Task
 Standard-mode twin of `metaworldplus-stick-push-i00-privileged`: the same instance and success check (Use the stick to push the thermos to the target. At the end, still hold the stick, lifted off the table.), served
-as a robot service (`images/metaworld/standard/server_mw.py`, protocol eai-standard/2.1, tool module `mw_tool`). The
+as a robot service (`embodied_first_exam/benchmarks/metaworldplus/sim/server_mw.py`, protocol eai-standard/2.1, tool module `mw_tool`). The
 agent sees camera RGB-D, the robot's own state and the target point; no object poses, no reset; one episode.
 
 ## Difficulty

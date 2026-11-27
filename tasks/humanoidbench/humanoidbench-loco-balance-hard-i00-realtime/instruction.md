@@ -4,14 +4,14 @@
 Stand on the balance board and keep your balance on it, upright and still.
 
 ## Goal
-Success: the robot stands tall on the board, upright, still and without straining, for most of the episode. Success is
-counted as it happens. What the robot does adds up over the episode (its full length is in Limits). Once that adds up to
-a pass, the episode is a success, even if it then ends as a failure (below).
+Success: the robot stands tall on the board, upright, still and without straining, for most of the episode. Success
+counts as it happens: every moment the robot does this well adds to its score over the episode (its full length is in
+Limits), and once the score reaches the pass mark the episode is a success, even if it then ends as a failure (below).
 
 When you are done, send `/finish` to end the episode and get it graded.
 
 Any of these ends the episode at once as a failure:
-- The robot falls.
+- The robot falls: its pelvis drops below 0.8 m above the floor (it starts at about 1.4 m, standing on the board).
 - Anything but the roller under the board touches the floor, a foot or the board itself included.
 - The roller touches anything but the floor and the board.
 
@@ -129,8 +129,8 @@ there depends on whether that pose is stable under gravity and contact.
   (the robot keeps executing its plan). `spec()["timing"]` states all this; `r.status()` shows `running` and `lag_s`.
 
 ## Others
-- The episode is not stopped if the robot falls in a way the Goal does not list (on its side, face down, sitting on the
-  floor). It goes on, so an episode that is still running does not mean the robot is still up.
+- A fall that leaves the pelvis above that height (kneeling on the board, or slumped against something) does not end the
+  episode. It goes on, so an episode that is still running does not mean the robot is still up.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session. Everything counts, including waiting for the service.

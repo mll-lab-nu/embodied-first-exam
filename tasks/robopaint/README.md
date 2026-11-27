@@ -459,7 +459,7 @@ One reference execution therefore takes 10–15 minutes of the time limit, or ab
   `sim_error = 1` marks an episode that a simulator error ended. The hook writes `final.json` whole (temporary file + rename).
 - Malformed requests (standard mode, `environment/sim/server.py`): every field of `/submit` and `/observe` is checked
   before anything is executed (`parse_submit` / `parse_observe`; `note` included), and whatever a malformed field raises
-  is a 400 that leaves the episode alive. Null is the default; `video_fps` is accepted in [0, 1000].
+  is a 400 that leaves the episode alive. Null is the default; `video_fps` is accepted in [1, 20] (up to the control rate).
 - Instance drift (privileged mode, `tests/grade.py`): a frozen instance the verifier does not rebuild (`instance_ok = 0`)
   is `grader_error = 1` + `infra_error = 1`, and `infra_error = 1`
   goes with every `grader_error = 1`.

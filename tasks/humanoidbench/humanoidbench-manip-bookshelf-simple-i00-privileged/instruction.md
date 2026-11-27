@@ -6,7 +6,7 @@ itself.
 
 ## Goal
 Success: all five red objects are put on their places within the episode, one at a time, palest first, with the robot
-standing steadily and a hand at the object it is moving.
+standing steadily and a hand at the object it is moving. Putting the fifth object in its place also ends the episode.
 
 Any of these ends the episode at once, and nothing after it counts:
 - The robot falls.

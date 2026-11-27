@@ -26,8 +26,7 @@ Rules:
 - Episodes: 20 resets (`spec()["budget"]["reset"]`), each a new episode from the same starting state; within an episode
   what you knock over stays knocked over until you reset. Only the last episode is graded. No reset is possible after
   `/finish`.
-- You get only the cameras and the robot's own sensor readings: no object poses, no scene layout, no score, no success
-  signal.
+- You get only the cameras and the robot's own sensor readings: no live object poses, no score, no success signal.
 
 Only the robot's actuator targets act on the scene: no object teleports, grasp welds, scripted object motion or applied
 forces.
@@ -52,7 +51,7 @@ q = obs.group("joint_pos", now=True)
 res = r.submit("joint_position", rows, dt=0.0005, interpolate="hold", video="none")
 r.fk(q)                        # robot-link forward kinematics; no physics is stepped
 r.status()
-res = r._post("/reset", {"cameras": ["overview"]}, [], 900)   # POST /reset (this client has no reset())
+# a new episode: POST /reset, or the MCP tool `reset` (this client has no reset() call)
 ```
 The client sends rows as float32. Requests return at most 1,000 camera images; ask for fewer cameras or a lower
 `video_fps` for long chunks. `hold(s)` holds the current targets and records those steps; `get_obs()` only observes.
@@ -60,10 +59,10 @@ Forward kinematics covers the robot's own links; no IK primitive is supplied. If
 `r.wait_ready()` and inspect `r.status()` before continuing. Crash recovery resumes the same journaled episode, without
 a reset, and the wall-clock budget keeps running.
 
-Resets: `r._post("/reset", ...)` (`POST /reset`) starts a new episode from the same starting state. You can call it
-during a running episode, which it abandons, or after one has ended. It takes no simulated time and returns the start's
-images and proprioception. Once an episode has ended, `submit` raises `EpisodeOver` until you reset. `meta["episode"]`
-and `meta["resets_left"]` count the episodes. `meta["control_steps"]` counts the current episode's control steps,
+Resets: `POST /reset` (MCP tool `reset`) starts a new episode from the same starting state. You can call it during a
+running episode, which it abandons, or after one has ended. It takes no simulated time and returns the start's images
+and proprioception. Once an episode has ended, `submit` raises `EpisodeOver` until you reset. `meta["episode"]` and
+`meta["resets_left"]` count the episodes. `meta["control_steps"]` counts the current episode's control steps,
 `meta["control_steps_total"]` those of all episodes.
 
 ### MCP tools

@@ -14,7 +14,7 @@
 ## Task
 Push the red peg well into the open end of the blue socket.
 
-Standard-mode twin of `mujoco_playground_aloha_single_peg_insertion-privileged` (see its README): the same scene, instance and scoring, served as a robot service (`images/mujoco/limited/server_mj.py`, protocol eai-standard/2.1, tooling `rcb_aloha`). The agent sees camera RGB-D and proprioception only.
+Standard-mode twin of `mujoco_playground_aloha_single_peg_insertion-privileged` (see its README): the same scene, instance and scoring, served as a robot service (`embodied_first_exam/benchmarks/mujoco-playground/sim/server_mj.py`, protocol eai-standard/2.1, tooling `rcb_aloha`). The agent sees camera RGB-D and proprioception only.
 
 ## Difficulty
 Same scene, instance and success rule as `mujoco_playground_aloha_single_peg_insertion-privileged` (see its Difficulty). In standard mode the agent loses resets, privileged state and planning primitives: it sees camera images and proprioception only, acts through the client, and gets one episode, so it has to estimate the scene from images and recover from its own mistakes without starting over.

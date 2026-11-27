@@ -13,7 +13,7 @@
 
 ## Task
 Standard-mode twin of `metaworldplus-hammer-i00-privileged`: the same instance and success check (Use the hammer to drive the nail into the block.), served
-as a robot service (`images/metaworld/standard/server_mw.py`, protocol eai-standard/2.1, tool module `mw_tool`). The
+as a robot service (`embodied_first_exam/benchmarks/metaworldplus/sim/server_mw.py`, protocol eai-standard/2.1, tool module `mw_tool`). The
 agent sees camera RGB-D, the robot's own state and the target point; no object poses, no reset; one episode.
 
 ## Difficulty

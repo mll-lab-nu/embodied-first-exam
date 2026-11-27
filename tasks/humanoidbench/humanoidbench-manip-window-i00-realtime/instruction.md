@@ -5,14 +5,14 @@ Take hold of the wiping tool and wipe the window with it, moving it up and down.
 
 ## Goal
 Success: for most of the episode the tool is held flat against the glass and moving up and down at a steady wiping pace,
-with both hands on the tool and the robot standing upright. Success is counted as it happens. What the robot does adds
-up over the episode (its full length is in Limits). Once that adds up to a pass, the episode is a success, even if it
-then ends as a failure (below).
+with both hands on the tool and the robot standing upright. Success counts as it happens: every moment the robot does
+this well adds to its score over the episode (its full length is in Limits), and once the score reaches the pass mark
+the episode is a success, even if it then ends as a failure (below).
 
 When you are done, send `/finish` to end the episode and get it graded.
 
 Any of these ends the episode at once as a failure:
-- The robot falls.
+- The robot falls: its pelvis drops below about 0.6 m, a little over half its standing height.
 - The tool drops.
 
 Rules:
@@ -133,8 +133,8 @@ the robot stays there depends on whether that pose is stable under gravity and c
   (the robot keeps executing its plan). `spec()["timing"]` states all this; `r.status()` shows `running` and `lag_s`.
 
 ## Others
-- The episode is not stopped if the robot falls in a way the Goal does not list (on its side, face down, sitting on the
-  floor). It goes on, so an episode that is still running does not mean the robot is still up.
+- A fall that leaves the pelvis above that height (slumped against something) does not end the episode. It goes on, so
+  an episode that is still running does not mean the robot is still up.
 - The tool starts in the air just in front of the hands and falls almost at once unless it is held.
 
 ## Limits

@@ -13,7 +13,7 @@
 
 ## Task
 Standard-mode twin of `metaworldplus-peg-insert-side-i00-privileged`: the same instance and success check (Put the peg into the side-facing socket.), served
-as a robot service (`images/metaworld/standard/server_mw.py`, protocol eai-standard/2.1, tool module `mw_tool`). The
+as a robot service (`embodied_first_exam/benchmarks/metaworldplus/sim/server_mw.py`, protocol eai-standard/2.1, tool module `mw_tool`). The
 agent sees camera RGB-D, the robot's own state and the target point; no object poses, no reset; one episode.
 
 ## Difficulty

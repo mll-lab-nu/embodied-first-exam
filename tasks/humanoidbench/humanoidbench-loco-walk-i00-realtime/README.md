@@ -44,19 +44,20 @@ interesting tasks. What replaces it (docs/protocol/README.md §4): the floor abo
 pass), the evidence that the task has a solution (`oracle_evidence` in task.toml), and a human reviewer.
 
 ## Verification
-`success` = live success: the episode the sim service ran reached the pass mark (HumanoidBench's own rule,
-judged on the live simulator), for the last episode; nothing is replayed to grade it (owner, 2026-10-17, board
-0151). The scene's start is checked against the frozen instance's recorded state when an episode begins
-(`instance_mismatch`, infrastructure). The trajectory records the servo targets the simulator applied at each
-control step (`trajectory_live.f64`, `trajectory.npz`), not the ones the agent submitted, so it reproduces the
-live run whatever the timing was (the video is rendered from it after the verdict); `ticks.f64` records each
-step's wall time and the call that planned it, `calls.jsonl` and `submitted.f64` every call and every row as
-sent, and `final.json` the clock's lag (`max_lag_s`, `stalls`) and the held and late steps. `tests/grade.py`
-reads `/data/final.json` and copies the evidence to `/logs/verifier/` (`replay.mp4`). After the agent's first
-command, a simulator error raised by a control step and a simulator crash inside a control step (a fatal
-signal) are the agent's 0; a kill, a crash outside a control step, anything before the first command, a failed
-resume and a reset that does not rebuild the scene are infrastructure (`infra_error = 1`; owner, 2026-10-17,
-docs/protocol/standard_mode.md). No oracle; human review in PR #83. `nop` scores 0.
+`success` = live success: the episode the sim service ran reached the pass mark at some step (HumanoidBench's own rule,
+judged on the live simulator as the episode ran: reaching it does not end the episode, and it still counts when a fall
+or another failure rule ends the episode afterwards), for the last episode; nothing is replayed to grade it (owner,
+2026-10-17, board 0151). The scene's start is checked against the frozen instance's recorded state when an episode
+begins (`instance_mismatch`, infrastructure). The trajectory records the servo targets the simulator applied at each
+control step (`trajectory_live.f64`, `trajectory.npz`), not the ones the agent submitted, so it reproduces the live run
+whatever the timing was (the video is rendered from it after the verdict); `ticks.f64` records each step's wall time and
+the call that planned it, `calls.jsonl` and `submitted.f64` every call and every row as sent, and `final.json` the
+clock's lag (`max_lag_s`, `stalls`) and the held and late steps. `tests/grade.py` reads `/data/final.json` and copies
+the evidence to `/logs/verifier/` (`replay.mp4`). After the agent's first command, a simulator error raised by a control
+step and a simulator crash inside a control step (a fatal signal) are the agent's 0; a kill, a crash outside a control
+step, anything before the first command, a failed resume and a reset that does not rebuild the scene are infrastructure
+(`infra_error = 1`; owner, 2026-10-17, docs/protocol/standard_mode.md). No oracle; human review in PR #83. `nop` scores
+0.
 
 ## Resources
 Caps per container (PROTOCOL §6).
