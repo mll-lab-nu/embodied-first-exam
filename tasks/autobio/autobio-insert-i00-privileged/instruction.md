@@ -45,8 +45,8 @@ There are no ready-made motions: AutoBio's scripted experts are not in this imag
 under `/opt/AutoBio/autobio` (importable once a Session exists): the scene helpers that `s.task` is built from, its
 inverse kinematics (`kinematics.py`) and its path timing (`topp.py`). One control step is one physics step, 2 ms: a row
 is executed for exactly one step, so a motion lasting 1 s is 500 rows (repeat a row to hold a target). Your wall-clock
-time is the budget (the reference replays at about 1000 control steps/s here); the one technical cap is 600000 rows per
-trajectory (1200 s of simulated time).
+time is the budget (the reference replays at about 1000 control steps/s here); a trajectory has at most 600,000 rows
+(1200 s of simulated time).
 
 ### Actions
 - An action has 7 position targets per control step, in this order: `shoulder_pan`, `shoulder_lift`, `elbow`, `wrist_1`,

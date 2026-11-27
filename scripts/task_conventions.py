@@ -1372,8 +1372,7 @@ def _v2_steps(task: Path, s: str) -> str:
     elif _CAP_SENTENCE.search(s):
         m = _CAP_SENTENCE.search(s)
         n = int(m.group(1).replace(",", ""))
-        steps = (f"no step budget. A technical cap (`spec[\"max_control_steps\"]`) ends the episode after {n:,} control "
-                 f"steps ({' '.join(m.group(2).split())}).")
+        steps = f"at most {n:,} control steps ({' '.join(m.group(2).split())}), then the episode ends."
         s = _sub_prose(s, _CAP_SENTENCE, "")
     elif _CAP_IN_ENDS.search(s):
         m = _CAP_IN_ENDS.search(s)

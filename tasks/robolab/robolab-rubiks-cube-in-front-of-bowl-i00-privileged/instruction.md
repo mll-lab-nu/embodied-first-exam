@@ -61,8 +61,7 @@ s.start_video("/app/output/try.mp4"); ...; s.stop_video()          # film the st
   Quaternions are WXYZ. `s.objects()["table"]["bounds"][1][2]` is the table-top height.
 - An action has 8 entries: panda_joint1..7 absolute joint-position targets (rad, PD-tracked) and the gripper command (0
   = open, 1 = close; the Robotiq action is binary). `s.hold_action()` is the no-op. Control runs at 15 Hz (sim dt 1/120
-  s, decimation 8). There is no step budget; a runaway guard ends an episode after 100,000 control steps, the most a
-  trajectory may hold.
+  s, decimation 8). An episode ends after at most 100,000 control steps, which is also the most a trajectory may hold.
 - `s.ee_pose()` and every primitive use the fingertip-centre tool frame. It is RoboLab's `eef_frame` (the gripper
   flange, `s.eef_frame_pose()`) moved 0.162 m along the approach axis, to the ends of the closed fingertips. The pads
   extend ~5.7 cm back from there, so for a low object the frame goes almost down to the table. `p["top_down_quat"](yaw)`

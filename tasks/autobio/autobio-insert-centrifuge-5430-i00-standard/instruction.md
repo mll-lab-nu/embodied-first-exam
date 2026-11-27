@@ -95,6 +95,5 @@ spec sheet: where each arm's base stands, joint limits, the drives' gains, the g
   GPU; the simulator runs in its own container and does not count. Going over a cap can get a process killed (the CPU
   cap only slows you down). Usage: `/run/rcb-limits/usage.json`.
 - Resets: none. You get one episode.
-- Steps: no step budget. A technical cap (`spec["max_control_steps"]`) ends the episode after 600,000 control steps
-  (1200 s of simulated time).
-- Finish: if you never send `/finish`, the episode is graded when your session ends.
+- Steps: at most 600,000 control steps (1200 s of simulated time), then the episode ends.
+- Finish: if you never send `/finish`, the episode is graded when the step limit is reached or your session ends.

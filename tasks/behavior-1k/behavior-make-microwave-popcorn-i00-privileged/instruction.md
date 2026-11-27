@@ -74,8 +74,8 @@ s.render_video(actions, "/app/output/check.mp4")   # tiled robot cameras while r
   only when both fingers are commanded open. The base entries are x, y, yaw position targets in the robot's own frame.
   They are re-applied every control step, so they act as a per-step displacement; 0 = stand still. `s.hold_action()`
   (the last command with the base at 0) is the no-op.
-- Control runs at 30 Hz with 120 Hz physics. There is no step budget; a runaway guard ends an episode after 200,000
-  control steps (1.85 h of simulated time).
+- Control runs at 30 Hz with 120 Hz physics. An episode ends after at most 200,000 control steps (1.85 h of simulated
+  time).
 
 ### Observations
 - While the robot moves, the cameras' frames lag the physics by 2 control steps; `s.camera_info()` gives the pose they

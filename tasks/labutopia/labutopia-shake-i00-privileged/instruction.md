@@ -62,7 +62,7 @@ LabUtopia's wrapper for it is `/opt/labutopia/robots/franka/rmpflow_controller.p
 error. Do not name a script after a standard-library module (`inspect.py`, `types.py`): Isaac Sim imports those as it
 starts. One control step is one physics step, 1/60 s (LabUtopia's own rate): a row is executed for exactly one step, so
 a motion lasting 1 s is 60 rows (repeat a row to hold a target). Your wall-clock time is the budget (a replay runs at
-about 300 control steps/s here); the one technical cap is 36000 rows per trajectory (600 s of simulated time).
+about 300 control steps/s here); a trajectory has at most 36,000 rows (600 s of simulated time).
 
 ### Actions
 - An action has 18 numbers per control step. First comes a position target for each of the 9 joints: `panda_joint1` ..

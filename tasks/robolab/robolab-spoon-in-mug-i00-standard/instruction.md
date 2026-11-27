@@ -112,7 +112,6 @@ task is judged at the end of that hold, so a release you sent last completes.
   no GPU; the simulator runs in its own container and does not count. Going over a cap can get a process killed (the CPU
   cap only slows you down). Usage: `/run/rcb-limits/usage.json`.
 - Resets: none. You get one episode.
-- Steps: no step budget (actions and simulated time are reported as cost). A technical cap ends the episode after
-  100,000 control steps (1.9 h of simulated time). The episode is then graded on its state at that point. At this
-  service's speed (3-15 control steps/s), your time runs out long before that.
-- Finish: if you never send `/finish`, the episode is graded when your session ends.
+- Steps: at most 100,000 control steps (1.9 h of simulated time), then the episode ends. Actions and simulated time are
+  reported as cost. The service runs 3-15 control steps per second, so your time limit runs out long before this.
+- Finish: if you never send `/finish`, the episode is graded when the step limit is reached or your session ends.
