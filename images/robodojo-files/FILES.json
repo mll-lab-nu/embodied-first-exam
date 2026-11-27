@@ -5,7 +5,6 @@
   "privileged/environment/rcb_robodojo.py": "9d8837b7889b558d9eac55a4d0d5e9d70df77df4494ddcc08d9ca5da498b0fcf",
   "privileged/tests/grade.py": "8cd2f769e1e33f2bef8ae7c20c15a950d06e02f46f7354ef1e8caead48f32e0e",
   "sim/finalize.sh": "ce21fd6941d9aadd04b20f2c0a4205297601f0aa5658b20dfacf9b8793f45824",
-  "sim/live_video.py": "eb4f98634ffbade423a0c10cc45140b78695dc42c86bc8d6fa5b4941c3b19075",
   "sim/server.py": "9428798ea6c4fb61b549e86fbf53380f762be006df8fc0f95a0d6a0daac55ea7",
   "standard/tests/grade.py": "5b9b6c8b730d123210cc02f847798ff478d5b798d26c7c18f42dc6f5286f5442"
  }

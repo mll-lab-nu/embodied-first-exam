@@ -217,9 +217,9 @@ and writes the verdict into `final.json` (`success`, the verdict; `live_success`
 any settle or hold check; `graded_by` = `live`, `replays` = 0); nothing is
 replayed to grade it (PROTOCOL H.4). The video is a post-hoc replay of `trajectory.npz` after the verdict by default, and a live
 recording where the simulator is not verified bit-wise replayable (`video_source`, PROTOCOL §4); it never decides
-anything. With resets, the shared sidecar service (`rcb_service.py`, one file copied into each benchmark that runs it,
-also under the realtime layer; every copy is the same code, a few with differently worded comments,
-`ci_checks/check-tooling-identity.sh`) keeps the first episode as evidence too: `trajectory.first.npz` (its
+anything. With resets, the shared sidecar service (`rcb_service.py`, one source,
+`embodied_first_exam/standard/sidecar/`, which every benchmark that runs it takes from the files-only image
+`standard-files`, also under the realtime layer; `ci_checks/check-tooling-identity.sh`) keeps the first episode as evidence too: `trajectory.first.npz` (its
 rows from the journal) and `replay.first.mp4`, rendered after the graded video; `final.json` says how it ended
 (`first_success`, `first_reason`; without agent-ended episodes a success ends the trial, so after a reset
 `first_success` is 0; with them it is the first episode's own end judgement, as its end recorded it, or null when that
@@ -256,8 +256,8 @@ described in its benchmark's `tasks/<benchmark>/README.md`:
 - the MetaWorld+ service, `embodied_first_exam/benchmarks/metaworldplus/sim/server_mw.py`;
 - the RoboCasa service, `embodied_first_exam/benchmarks/robocasa/sim/server_casa.py` (RoboCasa and RoboCasa-GR1);
 - the RoboTwin service, `embodied_first_exam/benchmarks/robotwin-2/sim/server.py`;
-- the shared sidecar `rcb_service.py`, one copy per benchmark (`embodied_first_exam/benchmarks/<benchmark>/sim/` or
-  `standard/`, HumanCLAW's at the folder's top), with that benchmark's adapter: KinDER, HumanoidBench, Panda Dynamic
+- the shared sidecar `rcb_service.py`, one source (`embodied_first_exam/standard/sidecar/`, in the files-only image
+  `standard-files`), with each benchmark's adapter: KinDER, HumanoidBench, Panda Dynamic
   Scenes, LIBERO-Max, VLABench, BiGym 2.0, Embodied Olympics - Fun, Embodied Safety Exam, HumanCLAW, the realtime tasks
   of RoboCasa365, MyoSuite and MuJoCo Playground, and ABC-Sim's realtime tasks (in its image,
   `images/abc-sim/tools/realtime/`); the realtime layer (`rcb_realtime.py`) runs over it.

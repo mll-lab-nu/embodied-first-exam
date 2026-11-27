@@ -10,6 +10,6 @@ COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.8.0@sha256:497a2b864b3a1aaf1
 COPY --from=ghcr.io/mll-lab-nu/efe:humanoidbench-files-0.7.0@sha256:e59319022949b9fdbeb2354c2c3721ab65391b1668289b5a03d77c2060bde761 \
      /privileged/environment/rcb_hb.py \
      /privileged/tests/rcb_rewards.py \
-     /sim/rcb_service.py \
      /sim/server.py \
      /srv/
+COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.8.0@sha256:497a2b864b3a1aaf1f60206dc14f08a0f99960037f0e54be3d4bc2e39f5adba4 /sidecar/rcb_service.py /srv/rcb_service.py

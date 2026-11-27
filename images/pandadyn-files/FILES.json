@@ -4,7 +4,6 @@
  "files": {
   "privileged/environment/rcb_pandadyn.py": "4e038eb8b8a3ce0f01911b5364c9a3c8ebbe133c84cfa591d866e0df00c86838",
   "privileged/tests/grade.py": "3e2c4ef4470d4d72e29a63291acb484ae8e3e0c237fb974daf597705d937acae",
-  "sim/rcb_service.py": "86ff3b1e0e089cbe3b845a062b73b4c69c928ce817e62b724c02777ffab955c5",
   "sim/server.py": "cae27331dd8f54438ed85dd4fc5f61ecbea9913104e8163e6f04a6e892e41f79"
  }
 }

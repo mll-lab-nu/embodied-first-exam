@@ -5,7 +5,6 @@
   "privileged/environment/rcb_maniguard.py": "d7995d7c890863722751effad5c759cc73f3e40873ea94a5bbdd9382b662591f",
   "privileged/tests/grade.py": "04210af8088ac14861121889ceb601420c88dbb6c1e8500d43b5799f87e5ec9f",
   "sim/finalize.sh": "687b2880f66f72cc942f33784f26235bae1e83cb174ee8b76fe8aa7fdea9a4d3",
-  "sim/live_video.py": "eb4f98634ffbade423a0c10cc45140b78695dc42c86bc8d6fa5b4941c3b19075",
   "sim/server.py": "e8f44402aa4cd9da09ca60838919fdb2b20024967577b8b8590d01352ea837c3",
   "standard/tests/grade.py": "c6cc52990e64fd9e883940bd38b85d9d78d4c139f335632ed026216a8f859a1d"
  }

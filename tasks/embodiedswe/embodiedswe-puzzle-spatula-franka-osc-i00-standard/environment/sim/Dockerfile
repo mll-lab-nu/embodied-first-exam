@@ -8,9 +8,9 @@ COPY --from=ghcr.io/mll-lab-nu/efe:embodiedswe-files-0.3.1@sha256:ef309a60a26d88
 COPY --from=ghcr.io/mll-lab-nu/efe:embodiedswe-standard-files-0.6.0@sha256:06e6f60047354e3317a50e6068b44740c33abde1b9bacfb671902c458b39473d \
      /sim/esw_std.py \
      /sim/finalize.sh \
-     /sim/live_video.py \
      /sim/server.py \
      /srv/
+COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.8.0@sha256:497a2b864b3a1aaf1f60206dc14f08a0f99960037f0e54be3d4bc2e39f5adba4 /live_video.py /srv/live_video.py
 COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.8.0@sha256:497a2b864b3a1aaf1f60206dc14f08a0f99960037f0e54be3d4bc2e39f5adba4 \
      /rcb1.py \
      /rcb_limited.py \

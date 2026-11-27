@@ -89,10 +89,10 @@ WORKDIR /app
 COPY . /srv/
 COPY --from=ghcr.io/mll-lab-nu/efe:yamlab-files-0.9.0@sha256:36e86358ee34980c47dda75770fca3b28afb2f2751559e58faac13ec9a82720e \
      /sim/finalize.sh \
-     /sim/live_video.py \
      /privileged/environment/rcb_yamlab.py \
      /sim/server.py \
      /srv/
+COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.8.0@sha256:497a2b864b3a1aaf1f60206dc14f08a0f99960037f0e54be3d4bc2e39f5adba4 /live_video.py /srv/live_video.py
 COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.8.0@sha256:497a2b864b3a1aaf1f60206dc14f08a0f99960037f0e54be3d4bc2e39f5adba4 \
      /rcb1.py \
      /rcb_limited.py \

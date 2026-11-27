@@ -5,8 +5,7 @@
   "privileged/environment/lmx_tool.py": "6648024fad5e975573405d9fe90d0043a5aeb90ea71a6ca99fc651968ea8900d",
   "privileged/tests/grade.py": "dbb03f93e81f4ff3b2cd6a8b28e64038256331748d4c3ff8918424ee9ff66b56",
   "sim/finalize.sh": "70115cf52792185a70a6e588004a00609632cb1a44503f434cb82fdcc4fc59e4",
-  "sim/rcb_service.py": "37f0718c61c9abe99ac26e21bc36c2e5bad9eda1dfdc8d78a48e006121600cc1",
-  "sim/server.py": "c329119053af95b04e9237ca4e124b4991f9dd89aca3978989d7c42986936693",
+  "sim/server.py": "3d6f35673278138bb324ee0efb4e81af6663759ec48fc861e6da3051862e8076",
   "standard/tests/grade.py": "c090e5365af09bda2af10469570ac3569b3579e38699f1270671898ca5f23ca5"
  }
 }

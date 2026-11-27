@@ -10,9 +10,9 @@ COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.8.0@sha256:497a2b864b3a1aaf1
      /srv/
 COPY --from=ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-files-0.8.0@sha256:2586f42b2d63892c9a09bf77320a404d49c24171fd6a999a6672a25074843cf7 \
      /rcb_rfo.py \
-     /standard/rcb_service.py \
      /standard/server.py \
      /srv/
+COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.8.0@sha256:497a2b864b3a1aaf1f60206dc14f08a0f99960037f0e54be3d4bc2e39f5adba4 /sidecar/rcb_service.py /srv/rcb_service.py
 COPY --from=ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-files-0.8.0@sha256:2586f42b2d63892c9a09bf77320a404d49c24171fd6a999a6672a25074843cf7 \
      /rfo/__init__.py \
      /rfo/looks.py \

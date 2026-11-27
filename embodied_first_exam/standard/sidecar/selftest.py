@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """The sidecar service's first-attempt record (docs/protocol/standard_mode.md "Evidence and grading"; PROTOCOL
-§4), on a toy simulator (numpy only, no image, a few seconds), for every distinct rcb_service.py in
-embodied_first_exam/benchmarks/ (the copies are byte-identical; a copy without the record is reported, not failed):
+§4), on a toy simulator (numpy only, no image, a few seconds), for every distinct rcb_service.py:
+its one source embodied_first_exam/standard/sidecar/ and the abc-sim base image's copy (byte-identical; a copy without the
+record is reported, not failed):
 
   - one attempt that reaches the goal and is finished (POST /finish): first_success = success = 1, no first-episode files;
   - fail (the task's rule), reset, the goal reached and finished: success 1, first_success 0 ("failed"),
@@ -352,14 +353,14 @@ def test_v3_more(S, tag) -> None:
 
 def main() -> None:
     v3: dict[str, Path] = {}
-    for p in sorted(list((ROOT / "embodied_first_exam/benchmarks").glob("**/rcb_service.py"))
+    for p in sorted([ROOT / "embodied_first_exam/standard/sidecar/rcb_service.py"]
                     + list((ROOT / "images").glob("*/tools/**/rcb_service.py"))):
         if "class Service" in p.read_text():
             v3.setdefault(hashlib.sha256(p.read_bytes()).hexdigest(), p)
     for p in v3.values():
         test_v3(p)
     copies: dict[str, list[Path]] = {}
-    for p in sorted(list((ROOT / "embodied_first_exam/benchmarks").glob("**/rcb_service.py"))
+    for p in sorted([ROOT / "embodied_first_exam/standard/sidecar/rcb_service.py"]
                     + list((ROOT / "images").glob("*/tools/**/rcb_service.py"))):
         copies.setdefault(hashlib.sha256(p.read_bytes()).hexdigest(), []).append(p)
     tested = 0

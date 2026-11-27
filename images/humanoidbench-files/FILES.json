@@ -5,7 +5,6 @@
   "privileged/environment/rcb_hb.py": "52d982c6ff29d8d1f8bc80739c98283ffebec6963dae8549fae36048a4c91405",
   "privileged/tests/grade.py": "c8fee805a3669ab4a6770e8d7808b15ae1e688921a650c0baddc1f405c60ba42",
   "privileged/tests/rcb_rewards.py": "a90e12a68d2ca9865139313de36a39dc7d99d5dfc681cc1072cb31f5a13c78b5",
-  "sim/rcb_service.py": "86ff3b1e0e089cbe3b845a062b73b4c69c928ce817e62b724c02777ffab955c5",
   "sim/server.py": "08bf3877bd7438a9b68b8af0703e0217800cbd71760ca2de01e435d692aa30ec"
  }
 }

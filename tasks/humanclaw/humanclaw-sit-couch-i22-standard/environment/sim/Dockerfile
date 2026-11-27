@@ -175,5 +175,6 @@ WORKDIR /app
 FROM humanclaw-base
 COPY . /srv/
 COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.8.0@sha256:497a2b864b3a1aaf1f60206dc14f08a0f99960037f0e54be3d4bc2e39f5adba4 /rcb1.py /srv/rcb1.py
-COPY --from=ghcr.io/mll-lab-nu/efe:humanclaw-files-0.4.0@sha256:66052030ca9c609bac486e2f3f43bc6e63b003de0a323877ea67e99d0ed92009 /hc_core.py /rcb_service.py /server.py /srv/
+COPY --from=ghcr.io/mll-lab-nu/efe:humanclaw-files-0.4.0@sha256:66052030ca9c609bac486e2f3f43bc6e63b003de0a323877ea67e99d0ed92009 /hc_core.py /server.py /srv/
+COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.8.0@sha256:497a2b864b3a1aaf1f60206dc14f08a0f99960037f0e54be3d4bc2e39f5adba4 /sidecar/rcb_service.py /srv/rcb_service.py
 WORKDIR /srv

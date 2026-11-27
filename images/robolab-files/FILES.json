@@ -4,7 +4,6 @@
  "files": {
   "rcb_robolab.py": "3f1dc01f12cb7e3e4961c520a5eebe2cd9769b7728baf7ee55c559d386fb55cf",
   "sim/finalize.sh": "6968f8b9ee0caafd89fa3470f8e5bcf66c449f1bc3d2d1f4b1b3c114f769ef7c",
-  "sim/live_video.py": "eb4f98634ffbade423a0c10cc45140b78695dc42c86bc8d6fa5b4941c3b19075",
   "sim/server.py": "d6dfa5db9378e54c0070ab9791e5151f12dca4eb7a364529efb1d846c24ad992"
  }
 }

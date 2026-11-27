@@ -63,10 +63,10 @@ WORKDIR /app
 COPY . /srv/
 COPY --from=ghcr.io/mll-lab-nu/efe:robolab-files-0.9.0@sha256:f83cfa6d06e76d8012336b46cb5d875a323d4b8bcd0afee9d2c8038251f4b39a \
      /sim/finalize.sh \
-     /sim/live_video.py \
      /rcb_robolab.py \
      /sim/server.py \
      /srv/
+COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.8.0@sha256:497a2b864b3a1aaf1f60206dc14f08a0f99960037f0e54be3d4bc2e39f5adba4 /live_video.py /srv/live_video.py
 COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.8.0@sha256:497a2b864b3a1aaf1f60206dc14f08a0f99960037f0e54be3d4bc2e39f5adba4 \
      /rcb1.py \
      /rcb_limited.py \

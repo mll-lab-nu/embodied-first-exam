@@ -2,6 +2,7 @@
  "image": "ghcr.io/mll-lab-nu/efe:standard-files-0.8.0@sha256:497a2b864b3a1aaf1f60206dc14f08a0f99960037f0e54be3d4bc2e39f5adba4",
  "source": "embodied_first_exam/standard",
  "files": {
+  "live_video.py": "eb4f98634ffbade423a0c10cc45140b78695dc42c86bc8d6fa5b4941c3b19075",
   "mcp/rcb_tools.py": "372fe8d0a3b17f8534f663663875262c4283fd57c01c7a8c339fed9d4a72006e",
   "mcp/schema.py": "384f9433c9fd7a69452b8b34acae280e00be4b68d283804776b6757128aa37d3",
   "mcp/schema/tools.json": "bec3f10cbf568e5f41b3b3d7c089a285f21e84ef5f607c18792f7d5389cbe412",
@@ -20,6 +21,7 @@
   "sidecar/clients/kinder/rcb_client.py": "fc270c49db2baa80db5ebfdadbda383d52a98fdba939d869bb28f068530627c7",
   "sidecar/clients/robocasa/rcb_client.py": "c2fd5a466cadf5ace5a8ee899373be4a332751a66bb1b06699f77b0f1ed71040",
   "sidecar/grade.py": "b821884fcf20d2de74b42f6e15b2c24ca37d9286e645f77920421035e4b65893",
-  "sidecar/rcb_client.py": "cff2d61ef321e0c41037d98ec0fe61d83ab82821682233209457a8ec007265ac"
+  "sidecar/rcb_client.py": "cff2d61ef321e0c41037d98ec0fe61d83ab82821682233209457a8ec007265ac",
+  "sidecar/rcb_service.py": "86ff3b1e0e089cbe3b845a062b73b4c69c928ce817e62b724c02777ffab955c5"
  }
 }

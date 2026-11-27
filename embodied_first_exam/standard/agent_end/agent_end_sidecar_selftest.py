@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Agent-ended episodes (PROTOCOL §3) in the sidecar layer (every distinct rcb_service.py: embodied_first_exam/benchmarks/
-and the abc-sim realtime copy) and in the realtime layer on top of it (rcb_realtime.py), in process on a toy
+"""Agent-ended episodes (PROTOCOL §3) in the sidecar layer (every distinct rcb_service.py: embodied_first_exam/standard/
+sidecar/ and the abc-sim realtime copy) and in the realtime layer on top of it (rcb_realtime.py), in process on a toy
 simulator (numpy only, CPU, a few seconds):
 
   - the oracle and /finish: 1; nothing done and /finish: 0; a success undone before /finish: 0; a success then the
@@ -314,8 +314,7 @@ def suite_21(S, tag):
 
 
 copies: dict[str, Path] = {}
-for p in sorted([*(ROOT / "embodied_first_exam/benchmarks").glob("*/rcb_service.py"),
-                 *(ROOT / "embodied_first_exam/benchmarks").glob("*/*/rcb_service.py"),
+for p in sorted([ROOT / "embodied_first_exam/standard/sidecar/rcb_service.py",
                  ROOT / "images/abc-sim/tools/realtime/rcb_service.py"]):
     copies.setdefault(hashlib.sha256(p.read_bytes()).hexdigest(), p)
 for h, path in copies.items():

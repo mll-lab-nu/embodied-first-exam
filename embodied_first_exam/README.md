@@ -8,8 +8,10 @@
   `tasks/<benchmark>/<task>/`.
 - `standard/`: the standard-mode client and service layers (docs/protocol/standard_mode.md). Tasks do not carry copies
   of them: their Dockerfiles take the files from the files-only image `standard-files` (`images/standard-files/`).
-  - the top level: the shared layer (`rcb_limited.py`, `rcb_client.py`, `rcb1.py`, `run.sh`) and its tests;
-  - `sidecar/`: the sidecar client and the standard grader most sidecar and realtime tasks share;
+  - the top level: the shared layer (`rcb_limited.py`, `rcb_client.py`, `rcb1.py`, `run.sh`) and its tests, and the
+    live video several sim services film (`live_video.py`);
+  - `sidecar/`: the sidecar service (`rcb_service.py`, which the realtime layer runs over too), the sidecar client and
+    the standard grader most sidecar and realtime tasks share;
     `sidecar/clients/<name>/`: the clients some benchmarks use (`robocasa`, `kinder`, `compact`);
   - `operations/`: the operations layer (`rcb_limited.py`, `rcb_client.py`, `selftest.py`);
   - `realtime/`: the realtime layer (`rcb_realtime.py`, its client);

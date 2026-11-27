@@ -5,7 +5,6 @@
   "privileged/environment/rcb_yamlab.py": "e833c553219e632fff038fba7cfcfe8dfcfdbb24d853015febbf62c01b2e5c95",
   "privileged/tests/grade.py": "a2fa34aeea91a4706ee0c2632e1c17dbb2ae4762b3e8977d84886bae81c14192",
   "sim/finalize.sh": "7ca27997c065f26caed0a77c1f5d49555bd611312bbb4084582cf27bbf813689",
-  "sim/live_video.py": "eb4f98634ffbade423a0c10cc45140b78695dc42c86bc8d6fa5b4941c3b19075",
   "sim/server.py": "8c5adaea9bacad90420ab812255862546fb245a237b9208ce0681148edb2c115",
   "standard/tests/grade.py": "0794f84962c11f9df4eb6c68aecf29ef28a83067e4ecb68582afeeecbe53d42d"
  }

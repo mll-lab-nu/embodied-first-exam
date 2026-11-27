@@ -1,8 +1,8 @@
 """eai-standard/3.0 sim service for LIBERO-MAX -- the sidecar's entry point (`python /srv/server.py`).
 
 The simulator-specific half only: `LiberoMax` implements rcb_service.Sim for one frozen instance (lmx_tool.Session).
-The protocol, the episode, crash recovery and the finalize live in rcb_service.py (a byte copy of main's HumanoidBench /
-VLABench service), which imports no simulator.
+The protocol, the episode, crash recovery and the finalize live in rcb_service.py (embodied_first_exam/standard/sidecar/, from
+standard-files), which imports no simulator.
 The verdict is the live episode's (docs/protocol/README.md H.4): the episode ends the moment
 LIBERO's success check holds (step() reports it), and that is the success; nothing is replayed to grade it. The
 frozen start is checked when the episode begins (start_sha: the instance's recorded start-state hash; a scene that

@@ -78,7 +78,7 @@ class Toy:
 
 if __name__ == "__main__":
     sys.path.insert(0, str(STD))
-    S = load(ROOT / "embodied_first_exam/benchmarks/humanoidbench/sim/rcb_service.py", "rcb_service")
+    S = load(ROOT / "embodied_first_exam/standard/sidecar/rcb_service.py", "rcb_service")
     if "--standard" in sys.argv[2:]:
         S.main(Toy, int(sys.argv[1]))
     else:

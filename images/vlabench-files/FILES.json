@@ -4,7 +4,6 @@
  "files": {
   "privileged/environment/vlb_tool.py": "401b91f5d4491f5e9bcc4466e29050911d7821ba9e73be9b4e0bf2516246dee8",
   "privileged/tests/grade.py": "99f451c7cbe053cc384450a236890b4578097683b41582001bc395db8d1724ce",
-  "sim/rcb_service.py": "37f0718c61c9abe99ac26e21bc36c2e5bad9eda1dfdc8d78a48e006121600cc1",
-  "sim/server.py": "ddcc093dc67f3e7227b9a0807a7dd7954860a0cc7d315041f57c604f554da205"
+  "sim/server.py": "404a250577ddc3f7cd2d05a4eddff62d66f00b57fc6dd2921a1686431886b200"
  }
 }

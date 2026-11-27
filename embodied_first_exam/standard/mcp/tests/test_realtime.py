@@ -176,7 +176,7 @@ def rules_v3(tmp):
         return mod
 
     toy = load(HERE / "toy_realtime.py", "toy_realtime_v3")
-    load(STD.parent / "benchmarks/humanoidbench/sim/rcb_service.py", "rcb_service")
+    load(STD / "sidecar/rcb_service.py", "rcb_service")
     R = load(STD / "realtime/rcb_realtime.py", "rcb_realtime")
     d = tmp / "v3"; d.mkdir()
     svc = R.RealtimeService(toy.Toy(), data=str(d), slowdown=1.0)

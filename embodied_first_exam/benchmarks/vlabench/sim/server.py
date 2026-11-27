@@ -1,8 +1,8 @@
 """eai-standard/3.0 sim service for VLABench -- the sidecar's entry point (`python /srv/server.py`).
 
 The simulator-specific half only: `VLABench` implements rcb_service.Sim for one frozen instance (vlb_tool.Session).
-The protocol, the episode, crash recovery and the finalize live in rcb_service.py (copied from main's HumanoidBench
-tasks), which imports no simulator.
+The protocol, the episode, crash recovery and the finalize live in rcb_service.py (embodied_first_exam/standard/sidecar/, from
+standard-files), which imports no simulator.
 Settings come from environment/docker-compose.yaml:
   RCB_INSTANCE            the frozen instance (the privileged twin's instance.json)
   RCB_TASK_TEXT           the task as the instruction states it, for /spec

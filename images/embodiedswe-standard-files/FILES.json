@@ -4,7 +4,6 @@
  "files": {
   "sim/esw_std.py": "3670cecfa792274ff4a99af17bf0739dacb6b55544710843a2512e691883742d",
   "sim/finalize.sh": "827f76ce84fd8c47e5fa8e2e894a4d3d82a7117ca7814a492c353f0c57b06e69",
-  "sim/live_video.py": "eb4f98634ffbade423a0c10cc45140b78695dc42c86bc8d6fa5b4941c3b19075",
   "sim/server.py": "4e44678ec0d5b1c0a9a09ef7db0a47ab0a73bf062a8302c7c985b79c58a20ca3"
  }
 }

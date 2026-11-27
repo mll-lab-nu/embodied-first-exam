@@ -4,7 +4,6 @@
  "files": {
   "privileged/environment/rcb_bigym2.py": "c34cfc32e62a08c4a4b7f297d14773f2f01680b8556b24efc03853dc3963eac5",
   "privileged/tests/grade.py": "521abbeac15a1e6b8a153a3d52f59b2c53da3019402bfd1f46545250f8c8a83f",
-  "sim/rcb_service.py": "86ff3b1e0e089cbe3b845a062b73b4c69c928ce817e62b724c02777ffab955c5",
   "sim/server.py": "83001bb5229e51bdfc06870a050abf42298df79e7879e9e3928407d6dfab1a37"
  }
 }

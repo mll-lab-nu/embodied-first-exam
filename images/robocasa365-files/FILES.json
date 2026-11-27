@@ -4,7 +4,6 @@
  "files": {
   "privileged/environment/casa_tool.py": "a60e99889af2e515e6f7fd30ecf6058c62b0f233f9d9fec48f82f2eaa35b1299",
   "sim/finalize.sh": "5d962167951ecc53bf38fe3f2e0636ddeff12c967dc82e0218836a152a811595",
-  "sim/rcb_service.py": "37f0718c61c9abe99ac26e21bc36c2e5bad9eda1dfdc8d78a48e006121600cc1",
   "sim/server_casa.py": "78161d9f6edbad852293faa4b1968f3375fcf136fb80d615baa25a3e35b33508"
  }
 }

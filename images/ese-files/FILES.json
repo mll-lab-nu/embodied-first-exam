@@ -8,7 +8,6 @@
   "standard/grade.py": "788fb60867a009b09e6e464a73dc84bd8846b9b3b46ea5043f7d7490e3e2cc0b",
   "standard/picture_delivery.py": "0e3db4880897e3de6072d4d961c60c70d0d808af943a603a79348ec35fe67aee",
   "standard/rcb_ese.py": "42a8a65dce0753a003b0cf192781b89417c74d009eac0a07f71808db40bcf19d",
-  "standard/rcb_service.py": "86ff3b1e0e089cbe3b845a062b73b4c69c928ce817e62b724c02777ffab955c5",
   "standard/replay.py": "6e764b0ee3691625d70704d4ac50913ee8c46db75ff91f6d263d0dfaa0cfe70c",
   "standard/server.py": "1319694fbe249e5c4ccc99e16af4750cfdc3f5984a6d5a8926a68bd10b84bc58"
  }

@@ -48,7 +48,7 @@ WORKDIR /app
 COPY . /srv/
 COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.8.0@sha256:497a2b864b3a1aaf1f60206dc14f08a0f99960037f0e54be3d4bc2e39f5adba4 /rcb1.py /srv/rcb1.py
 COPY --from=ghcr.io/mll-lab-nu/efe:vlabench-files-0.8.0@sha256:98eaa794134b7259ca6340f24e4c14bee200dd496232a40638f5c1d8949e17e5 \
-     /sim/rcb_service.py \
      /sim/server.py \
      /privileged/environment/vlb_tool.py \
      /srv/
+COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.8.0@sha256:497a2b864b3a1aaf1f60206dc14f08a0f99960037f0e54be3d4bc2e39f5adba4 /sidecar/rcb_service.py /srv/rcb_service.py

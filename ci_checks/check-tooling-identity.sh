@@ -33,9 +33,11 @@
 #    embodied_first_exam/benchmarks/metaworldplus/sim/server_mw.py. RoboTwin's privileged
 #    tests/test.sh and solution/solve.sh differ by the task's name only and are compared with the name replaced.
 #    Not covered here: the per-task texts of these benchmarks (instruction.md, README.md, task.toml).
-# 5. The sidecar service rcb_service.py (docs/protocol/standard_mode.md Part 1; under the realtime layer too): every
-#    copy, embodied_first_exam/benchmarks/**/rcb_service.py and images/*/tools/**/rcb_service.py, is the same code
-#    (compared without comments and docstrings, which a few copies word differently).
+# 5. The sidecar service rcb_service.py (docs/protocol/standard_mode.md Part 1; under the realtime layer too) and the live
+#    video live_video.py have one source each, embodied_first_exam/standard/sidecar/rcb_service.py and
+#    embodied_first_exam/standard/live_video.py (the tasks take them from the files-only image standard-files): no
+#    benchmark carries a copy (embodied_first_exam/benchmarks/**), and a base image's copy (images/*/tools/**: abc-sim's,
+#    built into its image) is byte-identical to the source.
 # Usage: check-tooling-identity.sh [tasks dir]   (repo-level; run_all.sh calls it once)
 set -uo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
@@ -199,27 +201,19 @@ for t in sorted(TDIR):
         role = module if f == module else f"{mode} {rel}" if rel in SHARED else None
         if role:
             seen[bench][role].setdefault(h, f"{t}/{rel} (files image)")
-# 5. the sidecar service: one code in every copy (comments and docstrings aside)
-import ast  # noqa: E402
-
-
-def code_sha(p: Path) -> str:
-    tree = ast.parse(p.read_text(encoding="utf-8"))
-    for n in ast.walk(tree):
-        if (isinstance(n, (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)) and n.body
-                and isinstance(n.body[0], ast.Expr) and isinstance(n.body[0].value, ast.Constant)
-                and isinstance(n.body[0].value.value, str)):
-            n.body = n.body[1:] or [ast.Pass()]
-    return hashlib.sha256(ast.dump(tree).encode()).hexdigest()[:16]
-
-
-sidecar_codes = collections.defaultdict(list)
-for p in sorted([*Path(ROOTD, "embodied_first_exam/benchmarks").glob("**/rcb_service.py"),
-                 *Path(images).glob("*/tools/**/rcb_service.py")]):
-    sidecar_codes[code_sha(p)].append(os.path.relpath(p, ROOTD))
-if len(sidecar_codes) > 1:
-    bad.append(f"rcb_service.py (the sidecar service): {len(sidecar_codes)} versions of its code: "
-               + "; ".join(f"{h} ({', '.join(ps)})" for h, ps in sorted(sidecar_codes.items())))
+# 5. the sidecar service and the live video: one source each; a base image's copy is the same bytes
+n_one = 0
+for one in ("sidecar/rcb_service.py", "live_video.py"):
+    srcp = Path(src, one)
+    if not srcp.is_file():
+        bad.append(f"embodied_first_exam/standard/{one}: missing (the one source)")
+        continue
+    for p in sorted(Path(ROOTD, "embodied_first_exam/benchmarks").glob(f"**/{srcp.name}")):
+        bad.append(f"{os.path.relpath(p, ROOTD)}: a copy of embodied_first_exam/standard/{one} (take it from standard-files)")
+    for p in sorted(Path(images).glob(f"*/tools/**/{srcp.name}")):
+        n_one += 1
+        if sha(p) != sha(srcp):
+            bad.append(f"{os.path.relpath(p, ROOTD)}: not byte-identical to embodied_first_exam/standard/{one}")
 bad += [f"{b}: {len(v)} versions of {role}: " + ", ".join(f"{h} ({p})" for h, p in sorted(v.items()))
         for b, roles in sorted(seen.items()) for role, v in sorted(roles.items()) if len(v) > 1]
 if bad:
@@ -231,5 +225,5 @@ if bad:
     sys.exit(1)
 print("ok shared sources: " + ("; ".join(f"{b} {dirs[b]} task dirs, {len(seen[b])} shared files" for b in sorted(seen)) or "no BEHAVIOR / RoboLab / RoboWits / ManiGuard / MolmoSpaces / MyoSuite / DexJoCo / DexHand / RoboARC / BiGym 2.0 / YAMLab tasks")
       + f"; the shared / operations layers in {n_layer} task dirs; the realtime layer in {n_rt}"
-      + f"; rcb_service.py (sidecar) one code in {sum(map(len, sidecar_codes.values()))} copies")
+      + f"; rcb_service.py and live_video.py one source each ({n_one} base-image copy(ies) identical)")
 PY
