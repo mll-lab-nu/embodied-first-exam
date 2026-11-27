@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""ADVISORY (docs/protocol/README.md §1, §2, §6; docs/TAXONOMY.md). The task layout, in one pass over the given task dirs:
+"""ADVISORY (docs/protocol/tasks.md, resources.md; docs/TAXONOMY.md). The task layout, in one pass over the given task dirs:
 
   files     the Harbor task contract: the canonical files exist and the scripts are executable; solution/solve.sh is
             required unless the task declares `oracle = "none"` (§1, §4); no results/ (agent results are published on
@@ -56,7 +56,7 @@ def structure(t: str) -> list[str]:
         elif not os.access(sol, os.X_OK):
             out.append("solution/solve.sh not executable")
     if os.path.lexists(p / "results"):
-        out.append("results/ does not belong in the repository (PROTOCOL §1)")
+        out.append("results/ does not belong in the repository (docs/protocol/tasks.md)")
     return out
 
 
@@ -64,13 +64,13 @@ def readme(t: str) -> list[str]:
     p = Path(t)
     s = (p / "README.md").read_text() if (p / "README.md").is_file() else ""
     bad = tc().readme_format_errors(p, s)
-    try:   # PROTOCOL §3: a standard or realtime task without its privileged twin says why (readme.toml `no_twin`)
+    try:   # docs/protocol/tasks.md#modes: a standard or realtime task without its privileged twin says why (readme.toml `no_twin`)
         tw = tc().twin_of(p)
     except ValueError:
         tw = None
     if tw is not None and not (tw / "task.toml").is_file() and not tc().no_twin_reason(p):
         bad.append(f"its twin {tw.name} is missing and nothing says why (`no_twin` in tasks/{tc().bench_dir(p)}/"
-                   f"{tc().README_DATA}, PROTOCOL §3)")
+                   f"{tc().README_DATA}, docs/protocol/tasks.md#modes)")
     return [f"README.md: {b}" for b in bad]
 
 
@@ -88,7 +88,7 @@ def fields(t: str, mode_names: tuple[str, ...]) -> list[str]:
             if k not in m]
     if m.get("task_type") not in ("trajectory", "policy"):
         out.append("task_type must be trajectory|policy")
-    # PROTOCOL §1, §3: the directory ends in its mode (-privileged, -standard, -realtime, or a mode added to the
+    # docs/protocol/tasks.md, tasks.md#modes: the directory ends in its mode (-privileged, -standard, -realtime, or a mode added to the
     # registry), the one place that says it; no `tier`. The suffix is the whole mode name, longest first.
     suffix = next((x for x in mode_names if p.name.endswith("-" + x)), p.name.rsplit("-", 1)[-1])
     if suffix not in mode_names:
@@ -103,7 +103,7 @@ def fields(t: str, mode_names: tuple[str, ...]) -> list[str]:
     if "tier" in m:
         out.append("[metadata].tier is not a task field (the mode is the directory name's suffix)")
     if m.get("dynamics") not in ("static", "dynamic"):
-        out.append(f'[metadata].dynamics must be declared, "static" or "dynamic" (PROTOCOL §2), got {m.get("dynamics")!r}')
+        out.append(f'[metadata].dynamics must be declared, "static" or "dynamic" (docs/protocol/tasks.md), got {m.get("dynamics")!r}')
     if "/app/output/" not in d.get("artifacts", []):
         out.append('top-level artifacts must include "/app/output/"')
     return out

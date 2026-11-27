@@ -17,7 +17,7 @@ condition) at every control step and the episode ends there, so nothing is repla
 the trajectory once, after the verdict, to film it. The frozen start: vlb_tool.Session refuses a scene whose initial
 state or compiled model differs from instance.json (InstanceMismatch here), and start_sha (the instance's
 initial_state_sha256) is checked by rcb_service when an episode begins.
-Agent-ended episodes (PROTOCOL §3; RCB_AGENT_END in the sim service's environment sets vlb_tool's Session): the task's
+Agent-ended episodes (docs/protocol/tasks.md#modes; RCB_AGENT_END in the sim service's environment sets vlb_tool's Session): the task's
 termination condition (its success) never ends the episode (vlb_tool Session.run_on, also in the video's replay); step() reports it as things
 stand and the episode is judged on the state it ends in (end_judgement "state": the conditions are predicates on the
 scene); RCB_MAX_CONTROL_STEPS is the step cap, judged as it stands. The exceptions are EVENT_TASKS: their success

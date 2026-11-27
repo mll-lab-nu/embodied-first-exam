@@ -12,7 +12,7 @@ def digest(value):
 
 
 def verdict(data, instance_path):
-    # standard mode (PROTOCOL §4): the verdict is the sidecar's own evaluation of the sealed policy, transcribed here
+    # standard mode (docs/protocol/tasks.md#grading): the verdict is the sidecar's own evaluation of the sealed policy, transcribed here
     empty = {
         "success": 0,
         "live_success": 0,

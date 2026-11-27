@@ -13,7 +13,7 @@ What it does:
 - `task.toml`: `oracle` (+ `oracle_evidence`) for benchmarks whose oracle level is known from their files.
 - `tests/test.sh` clears `/logs/verifier` first.
 - no `results/` directory (results are published on the results site, not in the repository).
-- the resource caps (docs/protocol/README.md §6), every one an upper bound for one container, from the task's rule in
+- the resource caps (docs/protocol/resources.md), every one an upper bound for one container, from the task's rule in
   `scripts/task_resources.toml` (a task no rule matches keeps the caps its files have): main's in `[environment]`
   (`cpus`, `memory_mb`, `storage_mb`, and `gpu_types` for a task that needs an RTX-class GPU), every other service's and
   main's processes in `environment/docker-compose.yaml` (`cpus`, `mem_limit`, `pids_limit`, and `x-gpu-memory-gb` on
@@ -25,10 +25,10 @@ What it does:
   committed task's line back (normalize_dynamics).
 - from the agent's time cutoff (§2), the task's own `[agent] timeout_sec`: the standard modes' `RCB_WALL_CLOCK_S` in
   `environment/docker-compose.yaml`, the README's "Time limit" row and the Time line of `## Limits`.
-- `README.md` (docs/protocol/README.md §1): rendered whole from instruction.md, task.toml and
+- `README.md` (docs/protocol/tasks.md): rendered whole from instruction.md, task.toml and
   tasks/<benchmark>/readme.toml (render_readme: key table, Task, Success criteria, Resource requirements, Others,
   License; a missing success text fails).
-- last, `DIGEST`: the task's content digest (PROTOCOL Appendix H.8; the digest Harbor publishes it under, `digest()`), one
+- last, `DIGEST`: the task's content digest (docs/protocol/invariants.md H.8; the digest Harbor publishes it under, `digest()`), one
   line `sha256:<hex>`. Each task carries its own, so pull requests that change different tasks never touch a shared file;
   the release manifest `tasks/dataset.toml` is generated from them (`scripts/dataset_manifest.py`, not committed).
 """
@@ -108,14 +108,14 @@ BENCHMARK_TABLE = [
     ("humanclaw-", "HumanCLAW", "humanclaw"),  # find / navigate / sit with a simulated human body (HumanClawBench)
 ]
 BENCHMARKS = [(p, label) for p, label, _ in BENCHMARK_TABLE]   # (directory prefix, label): the first matching prefix wins
-# The benchmarks (folders of BENCHMARK_TABLE) whose standard tasks give no world coordinates in their texts (PROTOCOL §5;
+# The benchmarks (folders of BENCHMARK_TABLE) whose standard tasks give no world coordinates in their texts (docs/protocol/tasks.md#instructionmd;
 # each one's tasks/<folder>/README.md, "World-frame information"): ci_checks/check-world-frame-texts.sh checks them.
 NO_WORLD_FRAME_TEXTS = ("autobio", "behavior-1k", "labutopia", "maniguard", "molmospaces", "roboarc", "robolab",
                         "robopaint", "robowits", "yamlab")
-# Modes (PROTOCOL §3): a benchmark ships any subset of the modes. A standard or realtime
+# Modes (docs/protocol/tasks.md#modes): a benchmark ships any subset of the modes. A standard or realtime
 # task without a privileged twin says why in its benchmark's readme.toml (`no_twin`, a family or task entry):
 # no_twin_reason() reads it, so no list of such tasks is kept here.
-# Embodied Olympics' exported tasks (PROTOCOL §3) have a Time line of their own (LIMITS_TIME_TASK below): the
+# Embodied Olympics' exported tasks (docs/protocol/tasks.md#modes) have a Time line of their own (LIMITS_TIME_TASK below): the
 # directories its manifest ci_checks/benchmarks/embodied-olympics-match/exported.toml lists in a mode that serves its own
 # protocol (its [protocols] table: their session talks to its own service). The privileged twins listed there
 # (`kind = "fullsim-policy"`) run no service: they keep their mode's note.
@@ -130,11 +130,11 @@ def _ro_exported_tasks() -> tuple[str, ...]:
 
 
 RO_EXPORTED_TASKS = _ro_exported_tasks()
-# PROTOCOL §3: THE registry of modes. A mode's name is the whole suffix of its task directories
+# docs/protocol/tasks.md#modes: THE registry of modes. A mode's name is the whole suffix of its task directories
 # (`<base>-<mode>`; task.toml keeps no copy of it); everything that parses or branches on a mode reads this table (mode_of,
 # base_of, the twins' equal cutoffs, the limits' scope, the checks under ci_checks/, which get it once per run through
 # `python3 scripts/task_conventions.py modes`). A new mode is one entry here plus its protocol section, by a mode
-# pull request (PROTOCOL §3 lists what it must contain). Fields:
+# pull request (docs/protocol/tasks.md#modes lists what it must contain). Fields:
 #   short          the column label in tables of the modes (the generated task list)
 #   section        the PROTOCOL section that defines the mode
 #   sidecar        the simulator runs in a trusted `sim` sidecar the agent's container talks to (robot as a service):
@@ -150,32 +150,32 @@ MODE_REGISTRY = {
                    "twin": None, "same_cutoff_as": None},
     "standard": {"short": "S", "section": "§3", "sidecar": True, "limit_scope": "agent",
                  "protocols": ("eai-standard/3.0",),
-                 "twin": "privileged", "same_cutoff_as": "privileged",   # one cutoff for both modes (Appendix H.7)
+                 "twin": "privileged", "same_cutoff_as": "privileged",   # one cutoff for both modes (invariants.md H.7)
                  "agent_end": True},   # v3.0: the agent ends the episode (§3 "Agent-ended episodes", H.3)
     "realtime": {"short": "RT", "section": "§3", "sidecar": True, "limit_scope": "agent",
                           "protocols": ("eai-standard/3.0",), "twin": "privileged", "same_cutoff_as": None,
                           "agent_end": True},
 }
 MODES = tuple(MODE_REGISTRY)
-SIDECAR_MODES = tuple(m for m, d in MODE_REGISTRY.items() if d["sidecar"])   # robot as a service (PROTOCOL §3)
+SIDECAR_MODES = tuple(m for m, d in MODE_REGISTRY.items() if d["sidecar"])   # robot as a service (docs/protocol/tasks.md#modes)
 for _m, _d in MODE_REGISTRY.items():   # a registry that cannot parse names is refused at import (every check imports it)
     assert re.fullmatch(r"[a-z]+(?:-[a-z]+)*", _m) and not any(_m.endswith("-" + o) for o in MODE_REGISTRY if o != _m), \
-        f"mode {_m!r}: lower-case words joined by '-', not ending in another mode's suffix (PROTOCOL §3)"
+        f"mode {_m!r}: lower-case words joined by '-', not ending in another mode's suffix (docs/protocol/tasks.md#modes)"
     assert _d["limit_scope"] in ("trial", "agent") and _d["twin"] in (None, *MODE_REGISTRY) \
-        and _d["same_cutoff_as"] in (None, *MODE_REGISTRY), f"mode {_m!r}: a bad registry field (PROTOCOL §3)"
-# PROTOCOL §6: the resource caps of every task, as rules (scripts/task_resources.toml); normalize writes them where
+        and _d["same_cutoff_as"] in (None, *MODE_REGISTRY), f"mode {_m!r}: a bad registry field (docs/protocol/tasks.md#modes)"
+# docs/protocol/resources.md: the resource caps of every task, as rules (scripts/task_resources.toml); normalize writes them where
 # Harbor and docker read them (normalize_resources, images/monitor/rcb_monitor/inject.py)
 RESOURCES_FILE = Path(__file__).resolve().parent / "task_resources.toml"
-# PROTOCOL §2: a realtime task's slowdown S is its sim service's `RCB_SLOWDOWN` default
+# docs/protocol/tasks.md: a realtime task's slowdown S is its sim service's `RCB_SLOWDOWN` default
 # (environment/docker-compose.yaml), its reset budget the `RCB_RESET_BUDGET` default there; task.toml keeps no copy of
 # either (ci_checks/check-realtime.py)
 SLOWDOWN_RE = re.compile(r'RCB_SLOWDOWN:\s*"?\$\{RCB_SLOWDOWN:-([0-9.]+)\}"?')
 # RCB_RESET_BUDGET's default: overridable (`"${RCB_RESET_BUDGET:-N}"`) or fixed (`"N"`); the one rule for the README,
 # the recorded configuration (reset_budget_of) and ci_checks/check-realtime.py
 RESET_DECL_RE = re.compile(r'^\s*RCB_RESET_BUDGET:\s*"?(?:\$\{RCB_RESET_BUDGET:-([0-9]+)\}|([0-9]+))"?\s*(?:#.*)?$', re.M)
-# a task a benchmark exports with its own service (PROTOCOL §3) sets S its own way: Embodied Olympics `RO_SLOWDOWN: "10"`
+# a task a benchmark exports with its own service (docs/protocol/tasks.md#modes) sets S its own way: Embodied Olympics `RO_SLOWDOWN: "10"`
 OWN_SLOWDOWN_RE = re.compile(r'^\s*RO_SLOWDOWN:\s*"?([0-9.]+)"?\s*$', re.M)
-# PROTOCOL §6: a rule of scripts/task_resources.toml: `match` and, per compose service, its caps (CAP_KEYS; `disk_gb`
+# docs/protocol/resources.md: a rule of scripts/task_resources.toml: `match` and, per compose service, its caps (CAP_KEYS; `disk_gb`
 # only for main, `gpu_memory_gb` only for a service that holds a GPU); for the README, `gpu_types` (a task that needs an
 # RTX-class GPU: Harbor's `[environment].gpu_types` too), `recommended_gpu`, `measured`, `caps_measured`
 CAP_KEYS = {"cpus": float, "memory_gb": float, "pids": int, "gpu_memory_gb": float, "disk_gb": float}
@@ -185,7 +185,7 @@ RULE_KEYS = {"match": str, "gpu_types": list, "recommended_gpu": str, "measured"
 RTX_GPU_MODELS = ("L40S", "L40", "L4", "RTX 4090", "RTX 6000 Ada", "RTX PRO 6000 Blackwell", "A40", "RTX A6000")
 ENFORCE_ENV = "RCB_LIMITS_ENFORCE"   # §6: run-time switch (compose default 0 = record only; 1 = the monitor's backstop)
 RESOURCES_HEADING = "## Resource requirements"   # the README's section (readme_resources)
-# PROTOCOL §5 (owner 11-24): the one anti-cheating rule, emphasized, first in Goal's rules (V2_RULE_OWN). Rendered words:
+# docs/protocol/tasks.md#instructionmd (owner 11-24): the one anti-cheating rule, emphasized, first in Goal's rules (V2_RULE_OWN). Rendered words:
 # edit them here, never in a task.
 NO_CHEATING = ("**No cheating.** Do not search for, download or use any existing solution (published or reference "
                "solutions, the benchmark's demonstrations, trained policies); trials are reviewed.")
@@ -196,13 +196,13 @@ NO_CHEATING = ("**No cheating.** Do not search for, download or use any existing
 RETIRED_RULES_RE = re.compile(r"\*\*No cheating\.\*\* Write your own controller\.|changes nothing in the (?:replay|grading)\."
                               r"|(?i:real-robot rules)")
 
-# PROTOCOL §2, §5: the agent's time cutoff. Each task sets its own, in `[agent] timeout_sec` of its task.toml (its author
+# docs/protocol/tasks.md, tasks.md#instructionmd: the agent's time cutoff. Each task sets its own, in `[agent] timeout_sec` of its task.toml (its author
 # decides it in the pull request that adds or changes the task), as in Terminal-Bench. There is no table: normalize
 # writes from the task's own number the standard modes' RCB_WALL_CLOCK_S and the Time line of instruction.md's
 # `## Limits` (limits_time), the last section the agent reads: edit `timeout_sec` or the words of LIMITS_TIME, never the
 # line in a task (ci_checks/check-cutoffs.py).
 WALL_CLOCK_ENV = "RCB_WALL_CLOCK_S"              # the standard modes' sim service: what its /spec budget and time_left_s report
-CUTOFF_CAP = 14400                               # PROTOCOL §2, no benchmark excepted (ci_checks/check-cutoffs.py)
+CUTOFF_CAP = 14400                               # docs/protocol/tasks.md, no benchmark excepted (ci_checks/check-cutoffs.py)
 # The repository's task tree: one folder per benchmark, tasks/<folder>/<task>/ (a task dir's name says its benchmark,
 # bench_of; GitHub lists at most 1000 entries of a folder). The folder of each label: BENCHMARK_TABLE's third column.
 # Everything that finds a task dir in the repository goes through task_dir() / iter_tasks(); `benchmarks --check` holds
@@ -212,7 +212,7 @@ BENCHMARK_DIRS = {label: folder for _, label, folder in BENCHMARK_TABLE}
 
 
 # ---------------------------------------------------------------------------------------------------------------------
-# PROTOCOL §1, §3: each mode of MODE_REGISTRY is the whole suffix of its task directories. A mode is recognised by
+# docs/protocol/tasks.md, tasks.md#modes: each mode of MODE_REGISTRY is the whole suffix of its task directories. A mode is recognised by
 # its complete suffix only, longest first: `-realtime` is never `-standard` (it does not end in it).
 MODES_LONGEST_FIRST = tuple(sorted(MODES, key=len, reverse=True))
 
@@ -226,12 +226,12 @@ def mode_of(task: Path) -> str:
     mode = mode_suffix(task.name)
     if mode is None:
         raise ValueError(f"{task.name}: task directories end in " + ", ".join(f"-{m}" for m in MODES)
-                         + " (docs/protocol/README.md §1, the modes of §3)")
+                         + " (docs/protocol/tasks.md, the modes of §3)")
     return mode
 
 
 def base_of(task: Path) -> str:
-    """The name without its mode suffix (`-privileged`, `-standard`, `-realtime`, ...; PROTOCOL §1)."""
+    """The name without its mode suffix (`-privileged`, `-standard`, `-realtime`, ...; docs/protocol/tasks.md)."""
     mode = mode_suffix(task.name)
     return task.name[: -len(mode) - 1] if mode else task.name
 
@@ -580,7 +580,7 @@ def set_table_keys(s: str, table: str, values: dict, task_name: str = "") -> str
 
 def normalize_resources(task: Path) -> None:
     """The caps of main where Harbor reads them, `[environment]` (`cpus`, `memory_mb`, `storage_mb`, `gpu_types`), from
-    the task's rule (PROTOCOL §6; the other services' and main's processes: inject.py, in the compose file)."""
+    the task's rule (docs/protocol/resources.md; the other services' and main's processes: inject.py, in the compose file)."""
     p = task / "task.toml"
     s = p.read_text()
     r = rule_for(task)
@@ -646,7 +646,7 @@ def _gb(v) -> str:
 
 
 def readme_resources(task: Path, old_readme: str = "") -> list[str]:
-    """README `## Resource requirements` (PROTOCOL §6): the caps of every container, as applied, and the rule's recommended GPU (a task
+    """README `## Resource requirements` (docs/protocol/resources.md): the caps of every container, as applied, and the rule's recommended GPU (a task
     no rule matches keeps the `- Measured` / `- Recommended GPU` lines of its README). A rule's `measured` and
     `caps_measured` stay in the rules file: they are the benchmark's, not each task's."""
     caps = task_caps(task)
@@ -682,18 +682,18 @@ def readme_resources(task: Path, old_readme: str = "") -> list[str]:
     return [RESOURCES_HEADING, "Caps per container.", "", *rows, "", *notes]
 
 
-VERIFIER_NETWORK_LINE = 'network_mode = "no-network"       # PROTOCOL H.6: the verifier has no network'
+VERIFIER_NETWORK_LINE = 'network_mode = "no-network"       # docs/protocol/invariants.md H.6: the verifier has no network'
 
 
 def normalize_verifier_network(task: Path) -> None:
-    """`[verifier] network_mode = "no-network"` (PROTOCOL Appendix H.6: the verifier has no network; Harbor 0.23 denies the
+    """`[verifier] network_mode = "no-network"` (docs/protocol/invariants.md H.6: the verifier has no network; Harbor 0.23 denies the
     separate verifier environment all egress while tests/test.sh runs). A task that lacks it gets the line after
     `environment_mode`; one that sets another policy (or `allowed_hosts`) for its verifier is an error, never rewritten."""
     p = task / "task.toml"
     s = p.read_text()
     ver = tomllib.loads(s).get("verifier") or {}
     if "allowed_hosts" in ver or ver.get("network_mode", "no-network") != "no-network":
-        raise RuntimeError(f'{task.name}: [verifier] sets a network policy other than network_mode = "no-network" (PROTOCOL H.6)')
+        raise RuntimeError(f'{task.name}: [verifier] sets a network policy other than network_mode = "no-network" (docs/protocol/invariants.md H.6)')
     if ver.get("network_mode") == "no-network":
         return
     m = re.search(r"(?ms)^\[verifier\]\n(.*?)(?=^\[|\Z)", s)
@@ -706,7 +706,7 @@ def normalize_verifier_network(task: Path) -> None:
 
 
 def cutoff_for(task: Path) -> int | None:
-    """The agent's time cutoff of a task in seconds: its own `[agent] timeout_sec` (PROTOCOL §2), the one source of the
+    """The agent's time cutoff of a task in seconds: its own `[agent] timeout_sec` (docs/protocol/tasks.md), the one source of the
     number. None when task.toml has none, or one that is not a whole positive number of seconds (ci_checks/check-cutoffs.py
     fails such a task; normalize then writes nothing from it)."""
     v = task_toml(task).get("agent", {}).get("timeout_sec")
@@ -718,7 +718,7 @@ def cutoff_for(task: Path) -> int | None:
 @functools.cache
 def bench_has_mode(bench: str, mode: str) -> bool:
     """Whether the benchmark (a BENCHMARKS label) ships tasks of the mode: a task directory of it under the repository's
-    tasks/ (PROTOCOL §2). Read from the repository, not from the directory a task is rendered in."""
+    tasks/ (docs/protocol/tasks.md). Read from the repository, not from the directory a task is rendered in."""
     prefixes = tuple(p for p, label in BENCHMARKS if label == bench)
     if not TASKS_DIR.is_dir() or bench not in BENCHMARK_DIRS:  # Source-only generation has no committed task tree.
         return False
@@ -728,7 +728,7 @@ def bench_has_mode(bench: str, mode: str) -> bool:
 
 
 def no_twin_reason(task: Path) -> str | None:
-    """Why a standard or realtime task has no privileged twin `<base>-privileged` (PROTOCOL §3); None for a privileged
+    """Why a standard or realtime task has no privileged twin `<base>-privileged` (docs/protocol/tasks.md#modes); None for a privileged
     task and for one that has no reason recorded. The reason is the benchmark's declaration: `no_twin` of the task's
     entry in tasks/<benchmark>/readme.toml (a family or task entry); a benchmark without a privileged mode gets the
     generic reason. Whether the twin exists is not looked at: the answer is the same before and after the twin has been
@@ -744,24 +744,24 @@ def no_twin_reason(task: Path) -> str | None:
         return f"— (none: {r})"
     bench = bench_of(task)
     if bench and not bench_has_mode(bench, twin):
-        return f"— (none: {bench} has no {twin} mode, PROTOCOL §2)"
+        return f"— (none: {bench} has no {twin} mode, docs/protocol/tasks.md)"
     return None
 
 
-# PROTOCOL §3 "Agent-ended episodes": every standard and realtime service is agent-ended; its sim service's environment
+# docs/protocol/eai-standard.md "Agent-ended episodes": every standard and realtime service is agent-ended; its sim service's environment
 # says so to the benchmark's tooling (`RCB_AGENT_END: "1"`, which normalize writes) and sets `RCB_STEP_LIMIT: "<N>"` for a
 # step limit (embodied_first_exam/standard/agent_end/). Its instruction then has the
 # finish line in `## Robot Interface` (ROBOT_FINISH) and the Finish (and Steps) lines of `## Limits` (render_limits).
 AGENT_END_RE = re.compile(r'^\s*RCB_AGENT_END:\s*"?1"?\s*(?:#.*)?$', re.M)
 STEP_LIMIT_RE = re.compile(r'^\s*RCB_STEP_LIMIT:\s*"?([0-9]+)"?\s*(?:#.*)?$', re.M)
 # a service's own technical episode cap set in its environment (the benchmark-own adapters server_mw / server_casa / server_mj:
-# `/spec.max_control_steps`); without RCB_STEP_LIMIT it ends the episode the same way (standard_mode.md "Agent-ended
+# `/spec.max_control_steps`); without RCB_STEP_LIMIT it ends the episode the same way (docs/protocol/eai-standard.md "Agent-ended
 # episodes"), so the instruction's Limits states it in a Steps line
 MAX_CONTROL_STEPS_RE = re.compile(r'^\s*RCB_MAX_CONTROL_STEPS:\s*"?([0-9]+)"?\s*(?:#.*)?$', re.M)
 
 
 def agent_end_of(task: Path) -> dict | None:
-    """A standard-mode task's agent-ended episode (PROTOCOL §3): {"step_limit": N or None}, None when its sim service
+    """A standard-mode task's agent-ended episode (docs/protocol/tasks.md#modes): {"step_limit": N or None}, None when its sim service
     does not set RCB_AGENT_END (RCB_STEP_LIMIT: the limit)."""
     if not MODE_REGISTRY.get(mode_of(task), {}).get("sidecar"):
         return None
@@ -772,7 +772,7 @@ def agent_end_of(task: Path) -> dict | None:
     return {"step_limit": int(m.group(1)) if m else None}
 
 
-# Tasks a benchmark exports with its own service inside (PROTOCOL §3): each such benchmark keeps a manifest,
+# Tasks a benchmark exports with its own service inside (docs/protocol/tasks.md#modes): each such benchmark keeps a manifest,
 # ci_checks/benchmarks/<bench>/exported.toml, that lists the directories (`[[tasks]] name`) and the protocol(s) each mode
 # serves (`[protocols]`, a string or a list); a listed directory may declare one of its manifest's protocols for its mode
 # (a task may name its one protocol, `protocol`: then only that one). No per-benchmark table here.
@@ -797,7 +797,7 @@ def own_protocols(name: str, mode: str | None) -> set[str]:
 
 def agent_end_required(task: Path) -> bool:
     """PROTOCOL v3.0 §3 / H.3: the task's episode must be agent-ended: its mode says so (MODE_REGISTRY "agent_end"),
-    unless it is a task a benchmark exports with a runtime of its own (PROTOCOL §3: Embodied Olympics Match,
+    unless it is a task a benchmark exports with a runtime of its own (docs/protocol/tasks.md#modes: Embodied Olympics Match,
     RoboEngineer), listed in that benchmark's exported.toml and declaring one of the protocols it lists for its mode.
     Any other protocol does not exempt a task (check-agent-end.py fails one that is neither its mode's nor its
     manifest's)."""
@@ -807,7 +807,7 @@ def agent_end_required(task: Path) -> bool:
     return str(metadata_of(task).get("protocol") or "") not in own_protocols(task.name, mode)
 
 
-AGENT_END_ENV_LINE = '      RCB_AGENT_END: "1"                               # agent-ended episodes (PROTOCOL §3)\n'
+AGENT_END_ENV_LINE = '      RCB_AGENT_END: "1"                               # agent-ended episodes (docs/protocol/tasks.md#modes)\n'
 
 
 def set_agent_end(compose: str, name: str = "") -> str:
@@ -845,7 +845,7 @@ def _set_number(old: str, sec: int) -> str:
 
 def normalize_cutoff(task: Path) -> None:
     """In the standard modes, the sim service's `RCB_WALL_CLOCK_S` (what its `/spec` budget and `meta["time_left_s"]`
-    report) is the task's own cutoff, `[agent] timeout_sec` (PROTOCOL §2). A task without a usable number is left as
+    report) is the task's own cutoff, `[agent] timeout_sec` (docs/protocol/tasks.md). A task without a usable number is left as
     it is."""
     sec = cutoff_for(task)
     if sec is None:
@@ -913,7 +913,7 @@ LIMITS_TIME = {   # mode -> (what counts and what is graded at the end, the serv
                  "starts only at your first request"),
 }
 LIMITS_TIME["realtime"] = LIMITS_TIME["standard"]
-assert set(MODE_REGISTRY) <= set(LIMITS_TIME), "every mode of MODE_REGISTRY needs its LIMITS_TIME (PROTOCOL §5)"
+assert set(MODE_REGISTRY) <= set(LIMITS_TIME), "every mode of MODE_REGISTRY needs its LIMITS_TIME (docs/protocol/tasks.md#instructionmd)"
 LIMITS_TIME_OWN = {("RoboDojo", "standard"): (   # agent-ended, judged per task (V2_AGENT_END_*): Goal says how
     "Everything counts, including waiting for the service. At the end you are stopped without warning and the episode "
     "ends.", LIMITS_TIME["standard"][1]), ("roboEngineer", "standard"): (
@@ -1162,7 +1162,7 @@ def _limits_reworded(label: str, v: str) -> str:
 
 
 def render_limits(task: Path, text: str = "") -> str:
-    """instruction.md's `## Limits` (v2): Time (PROTOCOL §2, §5; left out when the task has no usable number), Tokens,
+    """instruction.md's `## Limits` (v2): Time (docs/protocol/tasks.md, tasks.md#instructionmd; left out when the task has no usable number), Tokens,
     Network (§5, H.6), Resources (§6), then the task's own lines of `text`'s `## Limits` (a default Resets line where it
     has none, and for an agent-ended task with a step limit, or a cap its service's environment sets, a default Steps
     line), and an agent-ended task's Finish line (limits_finish)."""
@@ -1195,11 +1195,11 @@ def render_limits(task: Path, text: str = "") -> str:
     return LIMITS_HEADING + "\n" + "\n".join(_wrap_bullet(x) for x in out) + "\n"
 
 
-# the Finish line of an agent-ended task's `## Limits` (PROTOCOL §3; rendered; owner 11-26: one line): [a Steps line
+# the Finish line of an agent-ended task's `## Limits` (docs/protocol/tasks.md#modes; rendered; owner 11-26: one line): [a Steps line
 # with a step limit or a cap that ends the episode (a technical cap or a runaway guard that "ends the episode at / after
 # N control steps", even in a line that says there is no step budget: the cap ends and grades the episode too); no
 # Steps line, or one with no step budget and no such cap; a reset budget (after the cap, a failure end too, /reset is
-# still allowed and only the last episode is graded: standard_mode.md "Agent-ended episodes")]
+# still allowed and only the last episode is graded: docs/protocol/eai-standard.md "Agent-ended episodes")]
 LIMITS_FINISH = ("if you never send `/finish`, the episode is graded when the step limit is reached or your session ends.",
                  "if you never send `/finish`, the episode is graded when your session ends.",
                  "if you never send `/finish`, the last episode is graded when your session ends.")
@@ -1317,7 +1317,7 @@ def _ws(t: str) -> str:
     return r"\s+".join(re.escape(w) for w in t.split())
 
 
-# where a task's own text states its service's technical step cap outside a Steps line (PROTOCOL §3: the Limits' Steps
+# where a task's own text states its service's technical step cap outside a Steps line (docs/protocol/tasks.md#modes: the Limits' Steps
 # line states how the episode ends on its own, and the Finish line names it): (pattern, Steps line) and what stays.
 # A cap in the Resets line ("none: one episode, at most N control steps (...)"):
 _CAP_IN_RESETS = re.compile(r"(?m)^- Resets:\s+none:\s+one\s+episode,\s+at\s+most\s+([\d,]+)\s+(control\s+steps\b[^\n]*"
@@ -1410,12 +1410,12 @@ def normalize_test_sh(task: Path) -> None:
     if cmds and re.match(r"rm\s+-[rRf]+\s+/logs/verifier/\*", cmds[0]):
         return
     i = next((k for k, ln in enumerate(lines) if ln.strip() and not ln.lstrip().startswith("#")), len(lines))
-    lines.insert(i, CLEAR_LOGS + "   # verdicts from an earlier run never survive (docs/protocol/README.md Appendix H.1)\n")
+    lines.insert(i, CLEAR_LOGS + "   # verdicts from an earlier run never survive (docs/protocol/invariants.md H.1)\n")
     write_if_changed(p, "".join(lines))
 
 
 # ---------------------------------------------------------------------------------------------------------------------
-# The per-task README (docs/protocol/README.md §1; the owner's format of 11-27). Each task's README describes that task
+# The per-task README (docs/protocol/tasks.md; the owner's format of 11-27). Each task's README describes that task
 # alone, for a reader who has not seen any other task: no other task's name, no protocol version, no Twin / Difficulty /
 # Baselines rows, no word on how the reference solution or any strategy works. It is rendered whole from three sources:
 #   instruction.md   the H1 (verbatim) and the `## Task` body (verbatim)
@@ -1624,7 +1624,7 @@ def readme_format_errors(task: Path, text: str) -> list[str]:
 
 # ---------------------------------------------------------------------------------------------------------------------
 def seeds_of(md: dict) -> dict:
-    """The task's seeds (PROTOCOL §2): `default` = `[metadata] instance_seed` (the one field that names it), else 0 (then 0 names the task's one frozen instance); from
+    """The task's seeds (docs/protocol/tasks.md): `default` = `[metadata] instance_seed` (the one field that names it), else 0 (then 0 names the task's one frozen instance); from
     `[metadata.seeds]`, written only where they are not the defaults: `allowed` = [default] unless given (a list, a range
     `{from, to}` with both ends included, or "any"); `oracle` = the seeds the reference solution is for: the task's (else
     [default]) for an `oracle` of "full" or "partial", [] for "none"; `build` = "frozen" (every allowed seed a committed
@@ -1669,7 +1669,7 @@ def seeds_nondefault(md: dict) -> dict:
 
 
 def normalize_seeds(task: Path) -> None:
-    """The seeds (PROTOCOL §2): `instance_seed = <default>` in `[metadata]` (kept where it is, with its comment; else
+    """The seeds (docs/protocol/tasks.md): `instance_seed = <default>` in `[metadata]` (kept where it is, with its comment; else
     written before `expert_time_estimate_hours`), and a `[metadata.seeds]` table only with the keys that are not the
     defaults (`allowed`, `oracle`, `build`: seeds_nondefault); the values the task gives are kept."""
     p = task / "task.toml"
@@ -1684,7 +1684,7 @@ def normalize_seeds(task: Path) -> None:
     if extra:
         a, b = _metadata_span(s)
         block = ("[metadata.seeds]\n# the seeds a runner may draw from (a list, { from = A, to = B } or \"any\") and the ones the "
-                 "reference solution\n# under solution/ is for, where they are not the default seed alone (docs/protocol/README.md §2)\n"
+                 "reference solution\n# under solution/ is for, where they are not the default seed alone (docs/protocol/tasks.md)\n"
                  + "".join(f"{k} = " + (f'"{v}"' if k == "build" else seeds_text(v)) + "\n" for k, v in extra.items()))
         s = s[:b].rstrip("\n") + "\n\n" + block + ("\n" + s[b:] if b < len(s) else "")
     else:
@@ -1714,7 +1714,7 @@ def committed_line(task: Path, key: str) -> str | None:
 
 
 def normalize_dynamics(task: Path) -> None:
-    """`[metadata] dynamics` (static / dynamic; PROTOCOL §2) is the task's own declaration and is kept as written. A
+    """`[metadata] dynamics` (static / dynamic; docs/protocol/tasks.md) is the task's own declaration and is kept as written. A
     task.toml without it (a fresh render) gets the committed task's line back, right after `family`; a new task
     declares it itself (ci_checks/check-task-layout.py warns when it is missing)."""
     p = task / "task.toml"
@@ -1729,7 +1729,7 @@ def normalize_dynamics(task: Path) -> None:
 
 def realtime_of(task: Path) -> tuple[float, int | None] | None:
     """A realtime task's (slowdown S, reset budget) as its sim service starts by default: the `RCB_SLOWDOWN`
-    and `RCB_RESET_BUDGET` defaults in environment/docker-compose.yaml (PROTOCOL §2). None: not a realtime task,
+    and `RCB_RESET_BUDGET` defaults in environment/docker-compose.yaml (docs/protocol/tasks.md). None: not a realtime task,
     or a service without `RCB_SLOWDOWN` (ci_checks/check-realtime.py fails one on the realtime layer)."""
     if mode_of(task) != "realtime":
         return None
@@ -1745,11 +1745,11 @@ def slowdown_text(S: float) -> str:
 
 
 # ---------------------------------------------------------------------------------------------------------------------
-# PROTOCOL §2: the settings a task declares, and the effective configuration of a trial, recorded with every result
+# docs/protocol/tasks.md: the settings a task declares, and the effective configuration of a trial, recorded with every result
 # so that results are ranked only within one comparable configuration (docs/protocol/running.md "Results"). Standard
 # library only: scripts/write_task_results.py, scripts/dataset_manifest.py and a runner's scheduler read these.
 PROTOCOL_VERSION = "3.0"                         # docs/protocol/README.md; the wire's name: EAI_STANDARD
-EAI_STANDARD = f"eai-standard/{PROTOCOL_VERSION}"   # standard_mode.md: observe reads, submit (and hold chunks) move time, /finish
+EAI_STANDARD = f"eai-standard/{PROTOCOL_VERSION}"   # docs/protocol/eai-standard.md: observe reads, submit (and hold chunks) move time, /finish
 
 
 def metadata_of(task: Path) -> dict:
@@ -1758,7 +1758,7 @@ def metadata_of(task: Path) -> dict:
 
 def network_of(task: Path) -> str:
     """The agent's egress the task declares, from Harbor's own field, `[agent] network_mode`: "open" for "public" (the
-    author's choice, PROTOCOL Appendix H.6), else "allowlist" (the default: the model APIs and the package registries;
+    author's choice, docs/protocol/invariants.md H.6), else "allowlist" (the default: the model APIs and the package registries;
     ci_checks/check-verifier-isolation.sh fails a task whose [agent] is not on it)."""
     return "open" if (task_toml(task).get("agent") or {}).get("network_mode") == "public" else "allowlist"
 
@@ -1779,7 +1779,7 @@ def slowdown_of(task: Path) -> float | None:
 
 
 def validated_of(task: Path) -> bool:
-    """Whether the task counts as validated (PROTOCOL §2, docs/protocol/running.md "Results"): `[metadata] validated` where the task
+    """Whether the task counts as validated (docs/protocol/tasks.md, docs/protocol/running.md "Results"): `[metadata] validated` where the task
     declares it (e.g. after the human review of §4), else `oracle = "full"` (its reference solution scores 1 and `nop`
     0). A marker recorded with each result: validated and unvalidated tasks are ranked together."""
     md = metadata_of(task)
@@ -1788,7 +1788,7 @@ def validated_of(task: Path) -> bool:
     return md.get("oracle") == "full"
 
 
-# The core set (PROTOCOL §4, docs/protocol/running.md "Results"): the tasks the headline statistics are computed on, one
+# The core set (docs/protocol/tasks.md#grading, docs/protocol/running.md "Results"): the tasks the headline statistics are computed on, one
 # central list, docs/core_set.toml, not a task field: listing a task changes none of its files, so its DIGEST and the
 # results recorded against it stay as they are. One entry per task: `task`, the task dir name without its mode suffix
 # (base_of()); every mode dir of a listed task is core.
@@ -2150,8 +2150,8 @@ def normalize(task: Path) -> None:
     normalize_instruction(task)
     normalize_test_sh(task)
     write_if_changed(task / "README.md", render_readme(task))
-    rcb_monitor_inject.apply(task, caps)   # PROTOCOL §6: the resource monitor sidecar, the compose caps, the verifier step
-    write_if_changed(task / DIGEST_FILE, digest(task) + "\n")   # last: the digest of everything above (PROTOCOL Appendix H.8)
+    rcb_monitor_inject.apply(task, caps)   # docs/protocol/resources.md: the resource monitor sidecar, the compose caps, the verifier step
+    write_if_changed(task / DIGEST_FILE, digest(task) + "\n")   # last: the digest of everything above (docs/protocol/invariants.md H.8)
 
 
 # The digest Harbor publishes a task under (harbor.publisher.packager.Packager.compute_content_hash, Harbor 0.23.0):
@@ -2186,7 +2186,7 @@ def snapshot(task: Path) -> dict[str, bytes]:
 
 
 def main(argv: list[str]) -> int:
-    if argv[:1] == ["modes"]:          # the mode registry for the shell checks (PROTOCOL §3)
+    if argv[:1] == ["modes"]:          # the mode registry for the shell checks (docs/protocol/tasks.md#modes)
         print(modes_table())
         return 0
     if argv[:1] == ["task-dir"]:       # `task-dir <name>...`: each task dir's path in this tree (task_dir), one per line
@@ -2228,7 +2228,7 @@ def main(argv: list[str]) -> int:
         if row.group(0) != want:
             print("FAIL docs/TAXONOMY.md: the protocol row is stale (python3 scripts/task_conventions.py taxonomy --write)"); return 1
         print("ok docs/TAXONOMY.md protocol row"); return 0
-    if argv[:1] == ["core-set"]:       # `core-set --check`: docs/core_set.toml (PROTOCOL §4); `core-set [--<mode>...]`:
+    if argv[:1] == ["core-set"]:       # `core-set --check`: docs/core_set.toml (docs/protocol/tasks.md#grading); `core-set [--<mode>...]`:
         if "--check" in argv:            # list the core tasks' dirs, or their dirs of those modes (core_tasks())
             bad = check_core_set()
             for b in bad:

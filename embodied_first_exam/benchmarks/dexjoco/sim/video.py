@@ -31,7 +31,7 @@ def main() -> int:
     ap.add_argument("--json", required=True)
     ap.add_argument("--deadline-s", type=float, default=0.0, help="stop this long after the start (0: never)")
     ap.add_argument("--agent-end", action="store_true",
-                    help="an agent-ended episode (PROTOCOL §3): a success never ends it, as in the service (hide_success)")
+                    help="an agent-ended episode (docs/protocol/tasks.md#modes): a success never ends it, as in the service (hide_success)")
     a = ap.parse_args()
     t0 = time.time()
     res = {"video": False, "rows": 0}

@@ -7,7 +7,7 @@ description = "EmbodiedSWE puzzle.stack_blocks.g1.pink_ik (robobench at 67f44e8a
 keywords = ["robotics", "embodiedswe", "isaac-lab", "isaac-sim", "code-as-policy", "program", "stacking", "humanoid", "unitree-g1", "puzzle.stack_blocks.g1.pink_ik"]
 
 [metadata]
-task_type = "policy"              # the deliverable is a program, run by the verifier (PROTOCOL H.1)
+task_type = "policy"              # the deliverable is a program, run by the verifier (docs/protocol/invariants.md H.1)
 simulator = "embodiedswe"         # EmbodiedSWE's robobench on Isaac Lab 2.3.2 / Isaac Sim 5.1, GPU PhysX
 robot = "unitree-g1-dex3"
 family = "puzzle.stack_blocks.g1.pink_ik"
@@ -23,7 +23,7 @@ timeout_sec = 122550.0            # (64 checkpoints + final) x (1800 + 30 grace)
 environment_mode = "separate"
 network_mode = "no-network"
 
-# Resources (PROTOCOL §6): seal the monitor's record first.
+# Resources (docs/protocol/resources.md): seal the monitor's record first.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"

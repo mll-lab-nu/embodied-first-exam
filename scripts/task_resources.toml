@@ -1,4 +1,4 @@
-# Resource caps per task: the rules of docs/protocol/README.md §6 (the format, what normalize writes where, what enforces
+# Resource caps per task: the rules of docs/protocol/resources.md (the format, what normalize writes where, what enforces
 # each cap; CONTRIBUTING.md step 3 has an example). Every number is an upper bound for ONE container. Edit the values
 # here, never in a task, then run python3 scripts/task_conventions.py <task dirs>. The comment above each rule counts the
 # tasks it applies to (the last rule that matches a task wins).

@@ -20,7 +20,7 @@ task_type = "trajectory"
 simulator = "mujoco"
 robot = "franka-panda"
 family = "tabletennis_matchlow"
-dynamics = "dynamic"              # scene dynamics (docs/protocol/README.md §2): the task's own declaration
+dynamics = "dynamic"              # scene dynamics (docs/protocol/tasks.md): the task's own declaration
 protocol = "eai-standard/3.0"
 instance_seed = 22
 opponent_level = 1
@@ -41,7 +41,7 @@ oracle_evidence = "level 1, the easiest level, the low level (the agent's own hi
 
 [metadata.seeds]
 # the seeds a runner may draw from (a list, { from = A, to = B } or "any") and the ones the reference solution
-# under solution/ is for, where they are not the default seed alone (docs/protocol/README.md §2)
+# under solution/ is for, where they are not the default seed alone (docs/protocol/tasks.md)
 allowed = [22, 101, 111]
 
 [verifier]
@@ -49,7 +49,7 @@ timeout_sec = 1260.0
 environment_mode = "separate"
 network_mode = "no-network"
 
-# Resources (PROTOCOL §6): seal the monitor's record first.
+# Resources (docs/protocol/resources.md): seal the monitor's record first.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"

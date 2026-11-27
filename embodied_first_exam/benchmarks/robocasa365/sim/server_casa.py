@@ -17,7 +17,7 @@ positions and last command, and the task's instruction. Never an object's pose, 
 The episode is agent-ended: it runs until the agent's POST /finish, the step limit, the end of its session or a
 simulator error, and the state it ends in is graded; the success is never shown.
 
-The verdict is the live episode's (docs/protocol/README.md H.4): the environment's own success
+The verdict is the live episode's (docs/protocol/invariants.md H.4): the environment's own success
 check on the state after the last control step this service executed, not already solved at the start, and the
 episode not ended by a simulator error. Nothing is replayed to grade it. The frozen initial state is checked when the
 episode begins (the instance file's hash, RCB_INSTANCE_SHA, and the start state's hash, RCB_START_SHA, both from the
@@ -72,7 +72,7 @@ LOCK = threading.Lock()
 E = {"ready": False, "calls": 0, "rows": 0, "done": False, "reason": None, "t0": time.time(), "finalized": False}
 E["t_first"] = None  # the agent's first request (its clock starts there: _touch, _agent_time)
 
-# Agent-ended episodes (docs/protocol/README.md §3 "Agent-ended episodes", standard_mode.md; the same rules as
+# Agent-ended episodes (docs/protocol/eai-standard.md "Agent-ended episodes", docs/protocol/eai-standard.md; the same rules as
 # rcb_service.py's): the service never shows the task's success and a success never ends the episode; POST /finish (JSON {}) ends it (reason "finished"),
 # and so do the step cap (reason "step_limit": RCB_MAX_CONTROL_STEPS, or RCB_STEP_LIMIT=N when set, which may only lower
 # it) and the end of the agent's session ("timeout"); those three ends are judged on the state they leave (END_JUDGEMENT
@@ -194,7 +194,7 @@ def _remove(*paths: str) -> None:
 def _give_up(reason: str, infra: bool) -> None:
     """End the trial's episode without a new one: mark it failed, keep the PID file for the collect hook, and answer
     every request with the refusal (409, _refuse_forever) until the container is removed.
-    A verdict already on disk is never overwritten (PROTOCOL §4.7), whatever else the file says: at most its missing
+    A verdict already on disk is never overwritten (embodied_first_exam/standard/README.md#crash-recovery), whatever else the file says: at most its missing
     "finalized" flag is set, or a "video_pending" left by a process that died rendering the video is cleared (that
     video is lost), which changes nothing the verdict says."""
     log({"ev": "restart_refused", "reason": reason})
@@ -578,7 +578,7 @@ class Recorder:
         return out
 
 
-# ---- eai-standard/3.0 (docs/protocol/standard_mode.md): standard mode is Gym's env.step. The world is frozen between
+# ---- eai-standard/3.0 (docs/protocol/eai-standard.md): standard mode is Gym's env.step. The world is frozen between
 # submits; /observe never lets time pass (`seconds` > 0 is a 400) and reads the recorder: last_s = 0 the current frame,
 # last_s = n the frames recorded in the last n robot seconds. The recorder is no process of its own: during every /submit
 # (a rows-free hold chunk too) it keeps every camera's RGB frame every 1 / RCB_CAMERA_FPS of robot time, with the proprio
@@ -1029,7 +1029,7 @@ def _render_video(A: np.ndarray) -> None:
 
 
 def finalize() -> None:
-    """The episode is over: the verdict is the live episode's (docs/protocol/README.md H.4).
+    """The episode is over: the verdict is the live episode's (docs/protocol/invariants.md H.4).
     success = the environment's success check (`_check_success`, as the live episode last ran it) holds on the state
     after the last executed control step, the scene was not solved at the start, and the episode did not end on a
     simulator error (whose state is the partial step's, not the last executed one). Nothing is replayed to grade it.
@@ -1199,7 +1199,7 @@ class Hd(BaseHTTPRequestHandler):
         if submit and E["done"]:
             return self._json(409, {"error": "episode finished", "reason": E["reason"]})
         # 1. Validation: nothing has run yet, so whatever is wrong here is the request's fault and a 400; it never ends
-        #    the episode (PROTOCOL §4.6). ValueError carries the explanation; any other exception is a field of a type
+        #    the episode (docs/protocol/eai-standard.md#errors). ValueError carries the explanation; any other exception is a field of a type
         #    the checks did not expect.
         try:
             q = parse_submit(meta, parts) if submit else parse_observe(meta)

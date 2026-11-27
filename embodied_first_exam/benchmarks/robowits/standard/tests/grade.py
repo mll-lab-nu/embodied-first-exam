@@ -1,14 +1,14 @@
 """Standard-mode verifier (eai-standard/3.0): reads what the sim service (which the agent could not touch) wrote:
 /data/final.json (the live episode's verdict, crash recovery), /data/trajectory.npz, /data/replay.mp4. success = the
 live episode's success: the settle window that ended the episode passed on the service's simulator (final.json
-"graded_by": "live"; nothing is replayed: docs/protocol/README.md H.4), and no infrastructure
+"graded_by": "live"; nothing is replayed: docs/protocol/invariants.md H.4), and no infrastructure
 failure (infra_error = 1: no record, no live verdict, a give-up the service caused, a frozen instance the host could
 not rebuild, a service that could not record the end of an episode that ended normally). Numeric-only reward.json.
 RCB_DATA / RCB_VERIFIER_LOG_DIR: test hooks (never set in tasks)."""
 import json, os, shutil
 
 def agent_end_fields(d):
-    """An agent-ended episode's record (PROTOCOL §3: final.json success_signal / ended_by, step_limit / steps_used):
+    """An agent-ended episode's record (docs/protocol/tasks.md#modes: final.json success_signal / ended_by, step_limit / steps_used):
     evidence only, never the verdict (numbers only: a bad value is 0); the runner reads ended_session_end."""
     if not isinstance(d, dict) or d.get("success_signal") != "hidden":
         return {}
@@ -44,7 +44,7 @@ for f in ("replay.mp4", "replay.last.png", "trajectory.npz", "episode.jsonl", "s
         print(f"[grade] {f} not copied: {exc!r}")
 gpu = os.environ.get("RCB_ROBOWITS_BACKEND", "cpu") == "gpu"
 reason = str(d.get("reason") or "")
-sim_error = reason == "error"                          # the live episode ended with a simulator error (PROTOCOL §4.6): the agent's 0
+sim_error = reason == "error"                          # the live episode ended with a simulator error (docs/protocol/eai-standard.md#errors): the agent's 0
 instance_mismatch = reason.startswith("instance_mismatch")   # the host could not rebuild the frozen instance (server.py)
 live_verdict = d.get("graded_by") == "live"            # the service wrote the live episode's verdict
 # The service could not record the end of the episode (final.json grade_error). After an episode that ended normally that
@@ -55,7 +55,7 @@ grade_error = bool(d.get("grade_error")) and not sim_error
 # because it could not rebuild the frozen instance (instance_mismatch), never wrote the live verdict, or could not record it
 infra = (bool(d.get("infra_error")) or not (live_verdict or d.get("gave_up")) or not d.get("finalized") or grade_error)
 live = bool(d.get("success"))                          # the verdict: final.json `success` decides (live_success beside it)
-ok = live and live_verdict and not infra and not sim_error   # PROTOCOL §4: a simulator error is the agent's 0
+ok = live and live_verdict and not infra and not sim_error   # docs/protocol/tasks.md#grading: a simulator error is the agent's 0
 num = lambda k, cast=int: cast(d.get(k) or 0)  # noqa: E731
 write(ok, {"success": int(ok), "live_success": int(bool(d.get("live_success", d.get("success")))), "graded_by_live": int(live_verdict), "replays": 0,
            "gpu_backend": int(gpu), "finalized": int(bool(d.get("finalized"))), "missing_log": 0,

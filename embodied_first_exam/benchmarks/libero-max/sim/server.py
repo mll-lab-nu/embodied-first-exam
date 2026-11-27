@@ -3,12 +3,12 @@
 The simulator-specific half only: `LiberoMax` implements rcb_service.Sim for one frozen instance (lmx_tool.Session).
 The protocol, the episode, crash recovery and the finalize live in rcb_service.py (embodied_first_exam/standard/sidecar/, from
 standard-files), which imports no simulator.
-The verdict is the live episode's (docs/protocol/README.md H.4): the episode ends the moment
+The verdict is the live episode's (docs/protocol/invariants.md H.4): the episode ends the moment
 LIBERO's success check holds (step() reports it), and that is the success; nothing is replayed to grade it. The
 frozen start is checked when the episode begins (start_sha: the instance's recorded start-state hash; a scene that
 did not rebuild to it is refused as instance_mismatch, an infrastructure failure, before the agent is served).
 live_verdict() adds LIBERO-MAX's event record of the live episode to final.json (event_fired, event_step).
-Agent-ended episodes (PROTOCOL §3; RCB_AGENT_END in the sim service's environment sets lmx_tool's Session): LIBERO's
+Agent-ended episodes (docs/protocol/tasks.md#modes; RCB_AGENT_END in the sim service's environment sets lmx_tool's Session): LIBERO's
 success check never ends the episode (lmx_tool Session.run_on, also in the video's replay, which inherits the setting); step() reports the
 check as things stand, and the episode is judged on the state it ends in (end_judgement "state": the task's BDDL goal
 is a predicate on the scene); RCB_MAX_CONTROL_STEPS is the step cap, judged as it stands.

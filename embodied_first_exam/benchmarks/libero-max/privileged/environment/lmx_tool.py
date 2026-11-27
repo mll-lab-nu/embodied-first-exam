@@ -193,7 +193,7 @@ class Session:
         self.actions: list[np.ndarray] = []
         self.targets = np.array(DUMMY)
         self.done = self.success = False
-        # agent-ended episodes (the standard sim service with RCB_AGENT_END, PROTOCOL §3; its video replay inherits
+        # agent-ended episodes (the standard sim service with RCB_AGENT_END, docs/protocol/tasks.md#modes; its video replay inherits
         # the setting): LIBERO's success check does not end the episode; `success` is the check as things stand
         self.run_on = os.environ.get("RCB_AGENT_END") == "1"
         self.trigger_step = None

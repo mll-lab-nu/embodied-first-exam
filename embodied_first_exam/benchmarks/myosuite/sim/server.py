@@ -1,8 +1,8 @@
-"""eai-standard/3.0 sim service for the MyoSuite tasks (docs/protocol/standard_mode.md): the adapter of the shared layer
+"""eai-standard/3.0 sim service for the MyoSuite tasks (docs/protocol/eai-standard.md): the adapter of the shared layer
 rcb_limited.py; the simulator is rcb_myosuite.Session (MyoSuite 2.12.2 on MuJoCo, CPU). HTTP surface: GET /spec,
 GET /status, POST /observe, POST /submit, POST /kinematics, and POST /reset when the run grants resets (RCB_RESET_BUDGET,
-the optional reset capability of docs/protocol/standard_mode.md; MyoSuite's standard tasks default to 10 in their compose
-file, PROTOCOL §4.5). Every call is logged to /data/episode.jsonl.
+the optional reset capability of docs/protocol/eai-standard.md; MyoSuite's standard tasks default to 10 in their compose
+file, docs/protocol/eai-standard.md#post-reset-reset-capability). Every call is logged to /data/episode.jsonl.
 
 The episode is the frozen instance's (environment/sim/instance.npz, the privileged twin's). The action is MyoSuite's own:
 one command per muscle (excitation u = 1 / (1 + exp(-5 (a - 0.5)))), one row per control step. The episode ends the
@@ -25,7 +25,7 @@ ends in success once its window is complete). Nothing is replayed to grade it. T
 the episode begins: a fresh start whose built scene does not hash to the instance's recorded sha gives up as an
 infrastructure failure (`instance_mismatch`) before the agent is served.
 
-Agent-ended episodes (rcb_agent_end.py, PROTOCOL §3; rcb_myosuite.AGENT_END): a success never ends the
+Agent-ended episodes (rcb_agent_end.py, docs/protocol/tasks.md#modes; rcb_myosuite.AGENT_END): a success never ends the
 episode and is never shown, and it does not end the trial (resets stay available). POST /finish ends the trial
 (finished: every call after it, /reset too, is a 409); the session's end (timeout) judges the episode then running. The
 verdict is Session.success as the episode ends: the hold families' goal held for the hold time up to the end (at
@@ -54,7 +54,7 @@ DATA = os.environ.get("RCB_DATA", "/data")
 INSTANCE = os.environ.get("RCB_INSTANCE", os.path.join(os.path.dirname(os.path.abspath(__file__)), "instance.npz"))
 WALL_CLOCK_S = float(os.environ.get("RCB_WALL_CLOCK_S", "5400"))
 MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10"))
-RESET_BUDGET = max(0, int(os.environ.get("RCB_RESET_BUDGET") or 0))  # the compose file's default: 10 (PROTOCOL §4.5)
+RESET_BUDGET = max(0, int(os.environ.get("RCB_RESET_BUDGET") or 0))  # the compose file's default: 10 (docs/protocol/eai-standard.md#post-reset-reset-capability)
 W, H = 640, 480
 # Images one call may return (cameras x frames, per-frame depth counted again), checked before anything runs: every
 # frame is held until the response is sent. Measured on the layer's Recorder with 640x480 frames: 2.7 GB per 1000 RGB
@@ -130,7 +130,7 @@ OWN_JOINTS = set(J_ID) | ({ROOT} if ROOT is not None else set())  # what moves t
 def own_body(b: int) -> bool:
     """Whether the MuJoCo body `b` is fixed in the world or moved by the body's own joints alone. A mocap body (the
     opponent, the goalkeeper, goal markers) or a body behind any other joint (objects, balls, the key) is scene state:
-    where it is must never leave this process (PROTOCOL §4.5)."""
+    where it is must never leave this process (docs/protocol/eai-standard.md#post-reset-reset-capability)."""
     while b > 0:
         if int(MD.body_mocapid[b]) >= 0:
             return False

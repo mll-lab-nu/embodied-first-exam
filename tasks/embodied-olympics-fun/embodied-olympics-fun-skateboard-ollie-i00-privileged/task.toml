@@ -12,12 +12,12 @@ simulator = "mujoco"               # the Embodied Olympics simulator: MuJoCo 3.3
 robot = "unitree-g1"
 family = "skateboard_ollie"
 category = "parkour-apparatus-balance"
-dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
+dynamics = "static"               # scene dynamics (docs/protocol/tasks.md): the task's own declaration
 # scene = environment/instance.json (the family's parameters + its t = 0 state hash); identity = the dataset.toml digest
 instance_seed = 0
 expert_time_estimate_hours = 80.0
 oracle = "none"
-oracle_evidence = "no reference solution; the referee is tested: positive by injection (a real ankle and hip balance controller holds the robot on the resting board, and at t = 1.2 s one upward velocity of 1.25 m/s is written to the robot's floating base and to the board's; the 6.2 cm clearance, the landing and the 1 s stand are physics under the same controller), for a stationary ollie (the board at rest; clear 5 cm, land on four wheels with both feet, stand still 1 s). No real ollie: 5291 scripted stationary ollies (IK pop, drag, level and land; parameter searches) cleared 5 cm in 565 runs (the board up to about 0.9 m), but only 6 landed and none stood 1 s; of 4810 rolling attempts none rode away; human review in the pull request that adds the benchmark (PROTOCOL §4)"
+oracle_evidence = "no reference solution; the referee is tested: positive by injection (a real ankle and hip balance controller holds the robot on the resting board, and at t = 1.2 s one upward velocity of 1.25 m/s is written to the robot's floating base and to the board's; the 6.2 cm clearance, the landing and the 1 s stand are physics under the same controller), for a stationary ollie (the board at rest; clear 5 cm, land on four wheels with both feet, stand still 1 s). No real ollie: 5291 scripted stationary ollies (IK pop, drag, level and land; parameter searches) cleared 5 cm in 565 runs (the board up to about 0.9 m), but only 6 landed and none stood 1 s; of 4810 rolling attempts none rode away; human review in the pull request that adds the benchmark (docs/protocol/tasks.md#grading)"
 
 [verifier]
 timeout_sec = 900.0
@@ -26,7 +26,7 @@ timeout_sec = 900.0
 environment_mode = "separate"
 network_mode = "no-network"
 
-# Resources (PROTOCOL §6): seal the monitor's record first.
+# Resources (docs/protocol/resources.md): seal the monitor's record first.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
@@ -41,7 +41,7 @@ memory_mb = 8192
 timeout_sec = 7200.0
 # Egress: open, `network_mode = "public"` below (the author's choice). Embodied Olympics lets the agent search for and download
 # public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md).
-network_mode = "public"        # open egress, the task author's choice (docs/protocol/README.md Appendix H.6)
+network_mode = "public"        # open egress, the task author's choice (docs/protocol/invariants.md H.6)
 
 [environment]
 build_timeout_sec = 1800.0

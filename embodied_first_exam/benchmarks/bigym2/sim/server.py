@@ -15,7 +15,7 @@ no fall) and the episode ends where upstream ends it, so nothing is replayed to 
 trajectory once, after the verdict, to film it. The frozen start is checked when the scene is built (instance_check: the
 instance's t0 state exactly, or within upstream's tolerance on another CPU): a scene that does not rebuild it is
 InstanceMismatch, and start_sha (the start this image accepts) is checked by rcb_service when an episode begins.
-Agent-ended episodes (PROTOCOL §3): a success never ends
+Agent-ended episodes (docs/protocol/tasks.md#modes): a success never ends
 the episode (rcb_bigym2 Episode.run_on: upstream's end on the held success alone is passed over), step() reports the
 held success as things stand (success_now: upstream's success-hold counter at its mark, no fall in the episode), and an
 end-state end runs upstream's own hold window (end_window_steps = its success-hold steps, 1 s) from the state the

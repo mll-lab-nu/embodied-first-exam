@@ -1,10 +1,10 @@
 """eai-standard/3.0 sim service for RoboDojo's simulation benchmark (RoboDojo's own evaluator on its Isaac Lab 2.3 fork /
-Isaac Sim 5.1; two ARX X5 arms with parallel grippers; see docs/protocol/standard_mode.md). Owns the scene. HTTP surface
+Isaac Sim 5.1; two ARX X5 arms with parallel grippers; see docs/protocol/eai-standard.md). Owns the scene. HTTP surface
 (rcb_limited): GET /spec, GET /status, POST /observe, POST /submit, POST /kinematics (RCB1 bodies, RCB1 responses: videos /
 frames / depth / proprio as raw blobs, never base64). Logs every call to /data/episode.jsonl and keeps /data/final.json
 current. Nothing about objects ever leaves this process.
 
-Crash recovery (rcb_limited.Episode, docs/protocol/standard_mode.md §13, resume class `exact`, or `approx` for the tasks graded
+Crash recovery (rcb_limited.Episode, embodied_first_exam/standard/README.md#crash-recovery, resume class `exact`, or `approx` for the tasks graded
 by verdict): every executed action is
 journaled (the 14-D row handed to Session.step), every completed call is checkpointed with the scene's state hash. After a
 crash compose restarts the container and this service, a fresh process, rebuilds the frozen layout, replays the journal up
@@ -17,7 +17,7 @@ RoboDojo specifics:
   kinematic model (the same as /kinematics) and executed as a joint move at most 0.25 m/s, then checked;
 - three cameras (cam_head: static; cam_left_wrist / cam_right_wrist: on each arm's link6), rendered when a frame is
   recorded (rendering never steps physics), z-depth from the same renders;
-- the episode is agent-ended (PROTOCOL §3 "Agent-ended episodes", rcb_agent_end.py): it ends after the task's step_lim
+- the episode is agent-ended (docs/protocol/eai-standard.md "Agent-ended episodes", rcb_agent_end.py): it ends after the task's step_lim
   actions (RoboDojo's per-task step limit, the service's RCB_STEP_LIMIT: every RoboDojo standard task sets it; without
   it only a runaway guard caps the episode), or when a check fails for good (a 0), or at the agent's POST /finish or the
   end of its session; a success never ends it and is never shown, and the verdict is
@@ -172,7 +172,7 @@ KIN = {"endpoint": "/kinematics", "joint_names": [f"{a}_{j}" for a in ARMS for j
                            "seed": "12 joint angles (optional; default: the current targets)"}},
        "model": "numpy models of both arms from RoboDojo's ARX X5 URDF at their base poses (no physics, no simulated time)"}
 STEP_GUARD = int(S.step_lim)
-# Agent-ended episodes (PROTOCOL §3; RCB_STEP_LIMIT in the task's sim service): the episode's step limit is
+# Agent-ended episodes (docs/protocol/tasks.md#modes; RCB_STEP_LIMIT in the task's sim service): the episode's step limit is
 # the task's own RoboDojo step_lim (Session: env.step_lim; RCB_STEP_LIMIT must equal it), one step = one 25 Hz action (one
 # row handed to Session.step, 10 physics steps), as RoboDojo's evaluator counts them; the end there is reason "step_limit",
 # graded as it stands. The spec states the budget; every meta / status gives the steps left.
@@ -216,7 +216,7 @@ SPEC = {
               "up": "+z", "units": {"length": "m", "angle": "rad", "time": "s"}, "quaternion_order": "wxyz",
               "camera_axes": "intrinsic_cv / extrinsic_cv: OpenCV camera axes (x right, y down, z forward); cam2world_gl: OpenGL axes (x right, y up, z back)"},
     "budget": {"reset": 0, "steps": STEP_GUARD if STEP_LIMIT else None, "wall_clock_s": float(os.environ.get("RCB_WALL_CLOCK_S", "3600"))},
-    # PROTOCOL §4.5: no step budget, but a technical cap is stated here. The tooling's runaway guard ends the episode after
+    # docs/protocol/eai-standard.md#post-reset-reset-capability: no step budget, but a technical cap is stated here. The tooling's runaway guard ends the episode after
     # STEP_GUARD actions (reason "step_guard"): 10 min of simulated time.
     "max_control_steps": STEP_GUARD,
     "episode": (f"one episode, no reset, with a step limit of {STEP_GUARD:,} steps (RoboDojo's own limit for this task; one step = one "
@@ -384,7 +384,7 @@ def run_ee_pose(A: np.ndarray, rec: L.Recorder, plan: list, clipped: list) -> No
 
 
 # ---------------------------------------------------------------- request fields
-# PROTOCOL §4.6: a malformed request is a 400 and executes nothing. Every field is read and checked by the functions below
+# docs/protocol/eai-standard.md#errors: a malformed request is a 400 and executes nothing. Every field is read and checked by the functions below
 # BEFORE the first action; a field that is absent or JSON null takes its default, a value of the wrong type or out of range
 # is a ValueError (the layer's 400). as_400() turns anything else a bad value can raise while it is being read (TypeError,
 # OverflowError, AttributeError, ...) into that 400 too: only an error while the simulator is stepping is a simulator error
@@ -440,7 +440,7 @@ EE_POS_MAX_M = 3.0       # an ee_pose target further than this from the world or
 
 
 def check_ee_rows(A: np.ndarray) -> None:
-    """ee_pose rows that cannot be meant (PROTOCOL §4.6: a 400, nothing executed): a position outside the +-EE_POS_MAX_M
+    """ee_pose rows that cannot be meant (docs/protocol/eai-standard.md#errors: a 400, nothing executed): a position outside the +-EE_POS_MAX_M
     box around the world origin (a unit slip), or a quaternion of zero length."""
     for ri, row in enumerate(A):
         for i, a in enumerate(ARMS):

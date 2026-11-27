@@ -11,7 +11,7 @@ task_type = "trajectory"
 simulator = "myosuite"            # MyoSuite 2.12.2 on MuJoCo 3.6.0 (CPU)
 robot = "myoarm"
 family = "relocate"
-dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
+dynamics = "static"               # scene dynamics (docs/protocol/tasks.md): the task's own declaration
 oracle = "none"
 oracle_evidence = "a successful model trial on this frozen instance: Codex + GPT-6 Luna (run `codex-gpt6_luna-high`, via an OpenRouter adapter before protocol v1.0, 2026-09-29), trial `myosuite-relocate-i00__PjqTvZ2` (231 rows); today's verifier scores its trajectory 1 in two fresh trials (tasks/myosuite/README.md); human review in PR #65"
 instance_seed = 0                 # myoChallengeRelocateP1-v0: seed(0), then reset(seed=0)
@@ -19,7 +19,7 @@ expert_time_estimate_hours = 3.0
 
 [metadata.seeds]
 # the seeds a runner may draw from (a list, { from = A, to = B } or "any") and the ones the reference solution
-# under solution/ is for, where they are not the default seed alone (docs/protocol/README.md §2)
+# under solution/ is for, where they are not the default seed alone (docs/protocol/tasks.md)
 allowed = [0, 1, 2]
 
 [verifier]
@@ -27,7 +27,7 @@ timeout_sec = 1800.0
 environment_mode = "separate"
 network_mode = "no-network"
 
-# Resources (PROTOCOL §6): seal the monitor's record first.
+# Resources (docs/protocol/resources.md): seal the monitor's record first.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
@@ -42,7 +42,7 @@ memory_mb = 8192
 timeout_sec = 3600.0
 # The agent reaches the model APIs and the package registries, nothing else (scripts/set_agent_egress.py HOSTS). MyoSuite's
 # trained baselines ship in its PyPI wheel (and a standard-mode agent could rebuild the simulator from it): reachable,
-# left to the instruction's honour rule (PROTOCOL §5).
+# left to the instruction's honour rule (docs/protocol/tasks.md#instructionmd).
 network_mode = "allowlist"
 allowed_hosts = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com", "*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com", "pypi.org", "files.pythonhosted.org", "deb.debian.org", "security.debian.org", "archive.ubuntu.com", "security.ubuntu.com", "snapshot.ubuntu.com"]
 

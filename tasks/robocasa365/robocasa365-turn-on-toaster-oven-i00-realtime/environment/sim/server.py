@@ -1,12 +1,12 @@
 """eai-standard/3.0 sim service for RoboCasa365's realtime tasks -- the adapter behind the shared realtime layer
-(`python /srv/rcb_realtime.py`, which imports this module and calls build(); docs/protocol/README.md §3,
+(`python /srv/rcb_realtime.py`, which imports this module and calls build(); docs/protocol/tasks.md#modes,
 tasks/robocasa365/README.md "Realtime").
 
 The simulator-specific half only: `RoboCasa` implements rcb_service.Sim (the contract documented in rcb_service.py) for
 one frozen instance on the benchmark's own tooling module, casa_tool.Session -- the same scene, native controller
 command and success check (`_check_success`, twice per control step) as the standard twin's service
 (environment/sim/server_casa.py of `-standard`) and the privileged verifier. The verdict is the live episode's
-(docs/protocol/README.md H.4): live_verdict() adds the standard twin's rule that the scene was
+(docs/protocol/invariants.md H.4): live_verdict() adds the standard twin's rule that the scene was
 not solved at the episode's start, and start_sha (RCB_START_SHA, the frozen instance's starting state) is checked when
 the first episode begins; nothing is replayed to grade it, and the video is rendered from the trajectory afterwards. The protocol, the clock, the plan, the
 episode, crash recovery and the finalize are rcb_realtime.py's and rcb_service.py's, unchanged copies of the
@@ -27,7 +27,7 @@ Settings (environment/docker-compose.yaml): RCB_INSTANCE (the frozen instance), 
 episode of it starts in, recorded when the task was built), RCB_MAX_CONTROL_STEPS (3000), RCB_DATA,
 RCB_RESET_BUDGET, RCB_WALL_CLOCK_S, RCB_SLOWDOWN (rcb_realtime / rcb_service).
 
-Agent-ended episodes (PROTOCOL §3): step() reports the success check after every control step; rcb_service only
+Agent-ended episodes (docs/protocol/tasks.md#modes): step() reports the success check after every control step; rcb_service only
 records it, and the episode ends at the agent's POST /finish, after max_control_steps (reason "step_limit") or when the
 agent's time is up, each judged on the state it ends in (end_judgement "state": the environment's own check, whose
 timers and event memory are the environment's; no settle window), and live_verdict()'s start rule still applies. This adapter only words /spec's episode for it.

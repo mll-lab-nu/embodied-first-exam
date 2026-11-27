@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The standard modes are graded by the live episode (docs/protocol/README.md H.4): the sim
+"""The standard modes are graded by the live episode (docs/protocol/invariants.md H.4): the sim
 sidecar judges the episode it ran and the verifier transcribes its `final.json`; no replay grades it. Advisory: the
 invariant itself (the verdict from a trusted source) is held by check-verifier-isolation.sh; this check reports a
 standard task whose grader still follows the replay rule, and a grader that breaks the infrastructure rule of
@@ -15,7 +15,7 @@ docs/protocol/running.md ("Infrastructure failures"). For every standard / realt
       a give-up after crashes between calls (sim_crashed)       -> reward 0, infra_error 1
       a finalized live failure at the cutoff                    -> reward 0, infra_error 0 (the agent's result)
       a give-up after crashes inside the agent's calls          -> reward 0, infra_error 0 (never a free retry)
-      a live success that then ended in a simulator error       -> reward 0, infra_error 0 (PROTOCOL §4)
+      a live success that then ended in a simulator error       -> reward 0, infra_error 0 (docs/protocol/tasks.md#grading)
       an unreadable final.json; a scene off the frozen instance -> reward 0, infra_error 1
       a live success whose settle / hold check failed           -> reward 0, infra_error 0 (`success` decides)
       realtime: a simulator error after the agent's first command -> reward 0, infra_error 0; before it (the
@@ -69,7 +69,7 @@ CASES = (
     ("a give-up after crashes inside the agent's calls",
      {"finalized": True, "success": False, "live_success": False, "done": True,
       "reason": "sim_crashed_on_call", "gave_up": True}, 0, 0),
-    ("a live success that then ended in a simulator error",       # PROTOCOL §4: the agent's 0, not infrastructure
+    ("a live success that then ended in a simulator error",       # docs/protocol/tasks.md#grading: the agent's 0, not infrastructure
      {**LIVE_OK, "reason": "error", "sim_error": 1}, 0, 0),
     ("a replay success where the live episode failed",
      {"finalized": True, "success": False, "live_success": False, "replay_success": True, "deterministic": True,
@@ -77,7 +77,7 @@ CASES = (
 )
 
 
-# realtime only (docs/protocol/standard_mode.md Part 3): a simulator error after the agent's first command is the
+# realtime only (docs/protocol/eai-standard.md#realtime): a simulator error after the agent's first command is the
 # agent's result; one before it is infrastructure (the service records it so)
 RT_CASES = (
     ("realtime: a simulator error after the first command",
@@ -156,7 +156,7 @@ def check(tasks: list[Path]) -> list[str]:
             continue
         if "graded_by_live" not in src:
             errs.append(f"{task.name}: its verifier reports no `graded_by_live` (the standard modes are graded by the "
-                        "live episode, PROTOCOL H.4)")
+                        "live episode, docs/protocol/invariants.md H.4)")
         try:
             hooks = (tomllib.loads((task / "task.toml").read_text()).get("verifier") or {}).get("collect") or []
         except (OSError, tomllib.TOMLDecodeError):
@@ -167,7 +167,7 @@ def check(tasks: list[Path]) -> list[str]:
                      and re.search(r"\bkill\s+-(9|KILL)\s+-1\b", str(h.get("command") or ""))), None)
         if first_sim is not None and (kill is None or kill > first_sim):
             errs.append(f"{task.name}: no collect hook stops the agent's processes (`main`: kill -9 -1) before the sim "
-                        "sidecar is signalled (PROTOCOL H.4)")
+                        "sidecar is signalled (docs/protocol/invariants.md H.4)")
         grader = files.get("grade.py")
         if grader is None:
             STATIC_ONLY.append(task.name)
@@ -208,7 +208,7 @@ def main(argv: list[str]) -> int:
     errs = check(dirs)
     n = sum(1 for d in dirs if mode_of(d))
     if errs:
-        print(f"FAIL live verdict (PROTOCOL H.4, docs/protocol/running.md \"Infrastructure failures\"; {len(errs)} finding(s)):")
+        print(f"FAIL live verdict (docs/protocol/invariants.md H.4, docs/protocol/running.md \"Infrastructure failures\"; {len(errs)} finding(s)):")
         for e in errs[:60]:
             print("  -", e)
         if len(errs) > 60:

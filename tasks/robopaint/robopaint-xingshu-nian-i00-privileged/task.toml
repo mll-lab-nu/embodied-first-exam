@@ -11,7 +11,7 @@ task_type = "trajectory"          # trajectory | policy   (see docs/protocol/REA
 simulator = "maniskill"           # ManiSkill 3.0.1 / SAPIEN 3.0.3 (PhysX on the CPU) + the Wang et al. 2020 dynamic brush (rcb_brush.py, CPU)
 robot = "franka-panda"            # PandaStick with a Chinese brush: rigid handle + 30 mm collision-free tuft, TCP = the tuft's tip
 family = "robopaint_xingshu_nian"
-dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
+dynamics = "static"               # scene dynamics (docs/protocol/tasks.md): the task's own declaration
 oracle = "partial"                # solution/solve.sh replays the frozen reference plan; its recorded scores: oracle_evidence
 oracle_evidence = "Reference solution in solution/, made by the calligraphy planner (README, Reference solution; tasks/robopaint/README.md, Targets). The verifier scores it 1 under the process rules (tests/grade.py with rcb_brush_strict.py, two fresh replays): path_mm 1013 and mark_width_mm 4.59, against the colouring-in limits 1780 mm and 2.20 mm. Harbor oracle 1 and nop 0 on both modes of this pair on its current files (2026-10-09): tasks/robopaint/README.md (Validation)."
 instance_seed = 0                 # scene = environment/instance.json (agent's copy: sheets, brush, ink stone, start joints, the rule, instance_sha)
@@ -25,9 +25,9 @@ characters = 1
 [verifier]
 timeout_sec = 3600.0              # two fresh replays of at most 72,000 control steps (rcb_brush.MAX_STEPS) at 67-102 steps/s, plus two scene builds
 environment_mode = "separate"     # verifier runs in its own sandbox (tests/Dockerfile); the agent container is gone by then
-network_mode = "no-network"       # PROTOCOL H.6: the verifier has no network
+network_mode = "no-network"       # docs/protocol/invariants.md H.6: the verifier has no network
 
-# Resources (PROTOCOL §6): seal the monitor's record first.
+# Resources (docs/protocol/resources.md): seal the monitor's record first.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
@@ -35,7 +35,7 @@ timeout_sec = 120
 
 [agent]
 timeout_sec = 3600.0              # the agent's cutoff, this task's own (a replay of a few thousand control steps takes seconds)
-network_mode = "allowlist"      # model APIs and package registries (scripts/set_agent_egress.py); PROTOCOL Appendix H.6
+network_mode = "allowlist"      # model APIs and package registries (scripts/set_agent_egress.py); docs/protocol/invariants.md H.6
 allowed_hosts = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com", "*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com", "pypi.org", "files.pythonhosted.org", "deb.debian.org", "security.debian.org", "archive.ubuntu.com", "security.ubuntu.com", "snapshot.ubuntu.com"]
 
 [environment]

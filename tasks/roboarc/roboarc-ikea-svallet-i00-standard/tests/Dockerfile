@@ -5,6 +5,6 @@ COPY test.sh /tests/
 COPY --from=ghcr.io/mll-lab-nu/efe:ikea-mujoco-files-0.8.0@sha256:a4231b93ed125d76abe0e5630c2ed1877b25678878c338c0a608594cf54eda06 /standard/tests/grade.py /tests/grade.py
 RUN chmod +x /tests/test.sh && mkdir -p /logs/verifier
 WORKDIR /tests
-# resources (PROTOCOL §6) # rcb-monitor
+# resources (docs/protocol/resources.md) # rcb-monitor
 COPY --from=ghcr.io/mll-lab-nu/efe:monitor-0.5.0@sha256:ecc5f24f1516ca11711d7c2d3ac07c89f79cd9220812c1244498ec71e352402a /opt/rcb_monitor/rcb_limits.py /tests/rcb_limits.py
 COPY rcb_limits.json /tests/rcb_limits.json

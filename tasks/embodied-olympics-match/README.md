@@ -98,7 +98,7 @@ environment where it changes the core's behaviour, so the core keeps its upstrea
 low-level matches keep their own interface only: the player delivers skill code the platform runs in the loop, which a
 tool call cannot deliver.
 
-**The standard endpoints** (the match extension, docs/protocol/standard_mode.md Part 5). Every answer's `meta`
+**The standard endpoints** (the match extension, docs/protocol/eai-standard.md#match-extension). Every answer's `meta`
 carries `score`, `review_due` and `match_over`. In the real-time matches `/submit` answers at once and its rows become a
 plan from control step `at`; a new chunk replaces it from `at` on, passed rows are dropped, and the last command holds.
 As in every `eai-standard/3.0` task, `/observe` answers at once and never lets time pass (`seconds > 0` is a 400);

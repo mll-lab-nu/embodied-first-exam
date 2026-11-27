@@ -1,10 +1,10 @@
-"""eai-standard/3.0 sim service for RoboTwin 2.0 (see docs/protocol/standard_mode.md).
+"""eai-standard/3.0 sim service for RoboTwin 2.0 (see docs/protocol/eai-standard.md).
 Owns the scene and the seed. HTTP surface: GET /spec, GET /status, POST /observe, POST /submit (both RCB1 bodies,
 RCB1 responses: videos / frames / depth / proprio as raw blobs, never base64). Logs every call to /data/episode.jsonl,
 keeps /data/final.json current, and on episode end grades the live episode: success = RoboTwin's check_success on the
 state the episode ends in (agent-ended: the agent's POST /finish, the step limit RCB_STEP_LIMIT, the end of the
 agent's session or a simulator error ends it; the success is never shown and never ends it), nothing
-replayed (docs/protocol/README.md H.4). /observe only reads (eai-standard/3.0); a hold chunk lets time pass. The verdict
+replayed (docs/protocol/invariants.md H.4). /observe only reads (eai-standard/3.0); a hold chunk lets time pass. The verdict
 goes to final.json first ("finalized": true, "graded_by": "live"); then the recorded (T,34) trajectory, which is the
 deliverable, is rendered once for people: the six-view /data/replay.mp4 and /data/live.mp4 (rcb_live.py: call-stamped
 frames only while physics ran, skipped while nothing moved) in one pass ("video_pending": true while it runs; it never
@@ -35,7 +35,7 @@ E = {"ready": False, "step": 0, "calls": 0, "done": False, "reason": None, "succ
 _USR1 = {"pending": False}
 signal.signal(signal.SIGUSR1, lambda *_: _USR1.__setitem__("pending", True))
 
-# Agent-ended episodes (docs/protocol/README.md §3 "Agent-ended episodes", standard_mode.md; the same rules as
+# Agent-ended episodes (docs/protocol/eai-standard.md "Agent-ended episodes", docs/protocol/eai-standard.md; the same rules as
 # rcb_service.py's): the service never shows the task's success and a success never ends the episode (RoboTwin's check_success is still read after every call, and only
 # recorded); POST /finish (JSON {}) ends it (reason "finished"), and so does the end of the agent's session ("timeout");
 # both are judged on the state they leave: RoboTwin's check_success on it (no settle window: the check is one state's).
@@ -254,14 +254,14 @@ try:
     # replays rows an agent wrote, reads the finger targets instead: rcb_traj.Session.gripper_opening).
     S = Session(TASK, instance=INSTANCE, enable_render=True, gripper_state="command")
 except RuntimeError as _exc:
-    # This host does not rebuild the frozen instance (PROTOCOL §3: seen for four tasks on L40S cards). Before an episode
+    # This host does not rebuild the frozen instance (docs/protocol/tasks.md#modes: seen for four tasks on L40S cards). Before an episode
     # began: after one retry say so in final.json (infra_error) instead of crash-looping until compose gives up. On a
     # resume (the episode began on this host, so the rebuild drifted since): at once; the episode cannot be continued.
     if "instance state hash" in str(_exc) and (_n_starts >= 2 or any(e.get("ev") == "start" for e in _events())):
         traceback.print_exc(); _give_up(f"instance_mismatch: {_exc}"[:300], infra=True)
     raise
 E["built"] = True; faulthandler.cancel_dump_traceback_later()    # the scene exists: the startup watchdog stands down (a resume replay may take minutes)
-S.max_rows = None   # a standard episode has no row cap (PROTOCOL §4.4): the tool's hand-in cap for privileged trajectories (rcb_traj.MAX_T) is not its
+S.max_rows = None   # a standard episode has no row cap (docs/protocol/tasks.md#grading): the tool's hand-in cap for privileged trajectories (rcb_traj.MAX_T) is not its
 ENV = S.env; ROBOT = ENV.robot
 ENV.step_lim = None; ENV.eval_video_path = None; ENV.take_action_cnt = 0; ENV.eval_success = False; ENV.now_obs = {}
 L_ARM = [j.get_name() for j in ROBOT.left_arm_joints]; R_ARM = [j.get_name() for j in ROBOT.right_arm_joints]
@@ -483,7 +483,7 @@ class Recorder:
         return out
 
 
-# ---- eai-standard/3.0 (docs/protocol/standard_mode.md): standard mode is Gym's env.step. The world is frozen between
+# ---- eai-standard/3.0 (docs/protocol/eai-standard.md): standard mode is Gym's env.step. The world is frozen between
 # submits; /observe never lets time pass (`seconds` > 0 is a 400) and reads the recorder: last_s = 0 the current frame,
 # last_s = n the frames recorded in the last n robot seconds. The recorder is no process of its own: during every /submit
 # (a rows-free hold chunk too) it keeps every camera's RGB frame every 1 / RCB_CAMERA_FPS of robot time, with the proprio

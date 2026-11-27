@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# ADVISORY (docs/protocol/README.md §1: images pinned for reproducibility; the frozen instance's hash check backs it up at run
+# ADVISORY (docs/protocol/tasks.md: images pinned for reproducibility; the frozen instance's hash check backs it up at run
 # time): every FROM of a Dockerfile under environment/ or tests/ (every stage) is a registry image with an explicit,
 # non-`latest` tag or digest, and so is every compose `image:` (environment/ and tests/); every `COPY --from=<image>`
 # (files-only images, the monitor's code) names its image by digest. Moved here from

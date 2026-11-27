@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Every graded trial leaves a video (docs/protocol/README.md §4): the task must render one and the runner must be
+"""Every graded trial leaves a video (docs/protocol/tasks.md#grading): the task must render one and the runner must be
 able to collect it. Advisory: a video is evidence for people and never the verdict, and a static scan cannot
 tell whether a render finishes in time (the runner flags a graded trial without a video at run time, docs/protocol/running.md
 "Recordings"). For every task:
   - privileged: the verifier renders the video, so a file under tests/ names an `.mp4` output;
   - standard / realtime: the task's code (environment/ or tests/) renders one (an `.mp4` output, or the
     exported runtime's `RCB_RENDER_VIDEO` / `RCB_VIDEO_*` switches) -- recorded during the live episode or rendered from
-    the trajectory after the verdict (no replay grades these modes, PROTOCOL H.4) -- and it is collected: task.toml
+    the trajectory after the verdict (no replay grades these modes, docs/protocol/invariants.md H.4) -- and it is collected: task.toml
     `artifacts` takes a directory or an `.mp4` from a service other than the resource monitor (the sim sidecar's
     `/data/replay.mp4`, `/out/`; a first-attempt `*.first.mp4` is evidence, not the graded video), unless the verifier renders it itself (a video writer under tests/);
   - a declared video time bound is not shorter than the verdict replay's in the same file (`video_timeout_s` vs
@@ -97,7 +97,7 @@ def main(argv: list[str]) -> int:
     dirs = [Path(a) for a in argv] or tc.iter_tasks()
     errs = [e for t in dirs for e in check(t)]
     if errs:
-        print(f"FAIL videos (PROTOCOL §4: every graded trial leaves a video; {len(errs)} finding(s)):")
+        print(f"FAIL videos (docs/protocol/tasks.md#grading: every graded trial leaves a video; {len(errs)} finding(s)):")
         for e in errs[:60]:
             print("  -", e)
         if len(errs) > 60:

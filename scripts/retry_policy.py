@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The infrastructure-rerun rule (docs/protocol/README.md Appendix H.5), as one pure function
+"""The infrastructure-rerun rule (docs/protocol/invariants.md H.5), as one pure function
 every runner applies and the required CI job `invariants` tests (scripts/tests/test_retry_policy.py):
 
     An attempt that failed for infrastructure reasons, with positive evidence of it, is void and the task may be rerun

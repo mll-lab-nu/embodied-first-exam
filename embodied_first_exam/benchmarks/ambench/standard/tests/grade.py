@@ -5,20 +5,20 @@ the live episode's success (AM-Bench's success check held at a control step of t
 infrastructure failure. The same rule for every task (one task, "determinism": "verdict", was graded so before; the
 others by live success AND two fresh-process replays that succeed and agree on the outcome). Numeric-only reward.json; a reward is written whatever final.json holds.
 
-infra_error = 1 (no verdict on the agent, PROTOCOL §2.6): final.json is missing (the service never came up, or its
+infra_error = 1 (no verdict on the agent, docs/protocol/tasks.md#grading): final.json is missing (the service never came up, or its
 container was gone when the collect hook ran), unreadable, or not finalized (the collect hook did not finish); or the
 service or the hook reported one: a give-up after crashes between calls (`sim_crashed`), a failed resume, the frozen
 instance not rebuilt at the episode's start (`instance_mismatch`, before the agent was served), the episode never ended
 for the hook, no record of the live episode (episode.json), GPU faults in the live episode's physics (`live_gpu_faults`:
 PhysX kernels that failed to launch, CUDA out of memory). A give-up after crashes inside the agent's calls
 (`sim_crashed_on_call`) and a simulator error raised during the agent's calls (reason "error", `sim_error`) stay the
-agent's 0, even after a success the episode had reached (PROTOCOL §4). The video never decides anything (`video_rendered`;
+agent's 0, even after a success the episode had reached (docs/protocol/tasks.md#grading). The video never decides anything (`video_rendered`;
 `video_matches_live`: the film ended in the live episode's outcome and end-state hash, `video_outcome_matches_live`: in
 its outcome; a film with another outcome is dropped by the collect hook)."""
 import json, os, shutil, traceback
 
 def agent_end_fields(d):
-    """An agent-ended episode's record (PROTOCOL §3: final.json success_signal / ended_by, step_limit / steps_used):
+    """An agent-ended episode's record (docs/protocol/tasks.md#modes: final.json success_signal / ended_by, step_limit / steps_used):
     evidence only, never the verdict (numbers only: a bad value is 0); the runner reads ended_session_end."""
     if not isinstance(d, dict) or d.get("success_signal") != "hidden":
         return {}
@@ -59,7 +59,7 @@ def num(k):
     except (TypeError, ValueError): return 0.0
 unfinished = not d.get("finalized")                        # the collect hook never completed final.json
 infra = bool(d.get("infra_error")) or unfinished
-sim_error = d.get("reason") == "error"                     # PROTOCOL §4: a simulator error is the agent's 0, whatever success came before
+sim_error = d.get("reason") == "error"                     # docs/protocol/tasks.md#grading: a simulator error is the agent's 0, whatever success came before
 ok = bool(d.get("success")) and not infra and not sim_error
 write(ok, {"success": int(ok), "live_success": int(bool(d.get("success"))), "graded_by_live": 1, "replays": 0,
            "finalized": int(not unfinished), "missing_log": 0, "n_actions": int(num("n_actions")), "sim_steps": int(num("control_steps")),
@@ -72,7 +72,7 @@ write(ok, {"success": int(ok), "live_success": int(bool(d.get("success"))), "gra
            "sim_error": int(sim_error),   # a simulator error during the agent's calls: the agent's 0
            "instance_mismatch": int(bool(d.get("instance_mismatch"))), "instance_exact": int(bool(d.get("instance_exact"))),
            "grader_error": 0,
-           # an infrastructure failure, not the agent's (PROTOCOL §2.6): see the module docstring
+           # an infrastructure failure, not the agent's (docs/protocol/tasks.md#grading): see the module docstring
            "infra_error": int(infra), "gave_up": int(bool(d.get("gave_up"))),
            "sim_crashed_on_call": int(d.get("reason") == "sim_crashed_on_call"),
            "sim_startups": int(num("sim_startups")), "resumes": int(num("resumes")),

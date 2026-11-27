@@ -77,7 +77,7 @@ E = {"ready": False, "calls": 0, "rows": 0, "done": False, "reason": None, "t0":
 # t_first: the agent's first request (its clock starts there); video_pending: the video renders (after the verdict)
 E.update({"t_first": None, "video_done": False, "video_pending": False})
 
-# Agent-ended episodes (docs/protocol/README.md §3 "Agent-ended episodes", standard_mode.md; the same rules as
+# Agent-ended episodes (docs/protocol/eai-standard.md "Agent-ended episodes", docs/protocol/eai-standard.md; the same rules as
 # rcb_service.py's): the service never shows the task's success and a success never ends the episode; POST /finish (JSON {}) ends it (reason "finished"),
 # and so do the step cap (reason "step_limit": RCB_MAX_CONTROL_STEPS, or RCB_STEP_LIMIT=N when set, which may only lower
 # it) and the end of the agent's session ("timeout"); those three ends are judged on the state they leave (END_JUDGEMENT
@@ -523,7 +523,7 @@ class Recorder:
         return out
 
 
-# ---- eai-standard/3.0 (docs/protocol/standard_mode.md): standard mode is Gym's env.step. The world is frozen between
+# ---- eai-standard/3.0 (docs/protocol/eai-standard.md): standard mode is Gym's env.step. The world is frozen between
 # submits; /observe never lets time pass (`seconds` > 0 is a 400) and reads the recorder: last_s = 0 the current frame,
 # last_s = n the frames recorded in the last n robot seconds. The recorder is no process of its own: during every /submit
 # (a rows-free hold chunk too) it keeps every camera's RGB frame every 1 / RCB_CAMERA_FPS of robot time, with the proprio
@@ -631,7 +631,7 @@ def _ctrl_step(tg, rec) -> bool:
 
 
 # ---- request parsing: everything here runs BEFORE any physics. A malformed request is the caller's mistake: it raises
-# ValueError (answered 400, nothing executed), never a simulator error (500, which ends the episode; PROTOCOL §4.6).
+# ValueError (answered 400, nothing executed), never a simulator error (500, which ends the episode; docs/protocol/eai-standard.md#errors).
 VIDEO_MODES = ("mp4", "frames", "both", "none")
 
 

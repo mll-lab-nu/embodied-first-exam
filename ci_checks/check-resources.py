@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Resources (docs/protocol/README.md §6): every number is an upper bound (a cap) for one container, written where Harbor
+"""Resources (docs/protocol/resources.md): every number is an upper bound (a cap) for one container, written where Harbor
 and docker read it, and nothing else.
 
 - task.toml has no `[metadata.resources]` (no minimums, no soft limits, no copy of the caps);
@@ -73,7 +73,7 @@ def check(task: Path) -> list[str]:
     d = tomllib.loads((task / "task.toml").read_text())
     if "resources" in (d.get("metadata") or {}):
         errs.append("task.toml has [metadata.resources]: resources are caps per container only, in [environment] and the "
-                    "compose files (PROTOCOL §6; run scripts/task_conventions.py)")
+                    "compose files (docs/protocol/resources.md; run scripts/task_conventions.py)")
     env = d.get("environment") or {}
     if "gpus" in env:
         errs.append("[environment].gpus: Harbor's local docker refuses gpus > 0; reserve the GPU in "
@@ -141,7 +141,7 @@ def check(task: Path) -> list[str]:
         names = {"cpus": "cpus", "memory_gb": "mem_limit", "pids": "pids_limit"}
         for k in need:
             if c.get(k) is None:
-                errs.append(f"service {svc}: no `{names[k]}` (every container has its caps, PROTOCOL §6)")
+                errs.append(f"service {svc}: no `{names[k]}` (every container has its caps, docs/protocol/resources.md)")
         if c.get("gpu") and not c.get("gpu_memory_gb"):
             errs.append(f"service {svc} reserves a GPU but sets no `{inject.GPU_KEY}` (its GPU-memory cap, GiB)")
         if not c.get("gpu") and c.get("gpu_memory_gb") is not None:
@@ -157,7 +157,7 @@ def check(task: Path) -> list[str]:
                 if c.get("gpu") and not c.get("gpu_memory_gb"):
                     errs.append(f"tests/docker-compose.yaml: service {svc} reserves a GPU but sets no `{inject.GPU_KEY}`: "
                                 "normalize copies main's GPU-memory cap there only when main holds a GPU; otherwise write "
-                                f"`{inject.GPU_KEY}: <GiB>` on that service yourself (normalize keeps it; PROTOCOL §6)")
+                                f"`{inject.GPU_KEY}: <GiB>` on that service yourself (normalize keeps it; docs/protocol/resources.md)")
         except ValueError as e:
             errs.append(f"tests/docker-compose.yaml: {e}")
     if errs:
@@ -217,7 +217,7 @@ def main(argv: list[str]) -> int:
             print(f"FAIL {t.name}: {e}")
             rc = 1
     if rc == 0:
-        print(f"resources: {n} task(s) state the caps of every container (PROTOCOL §6)")
+        print(f"resources: {n} task(s) state the caps of every container (docs/protocol/resources.md)")
     return rc
 
 

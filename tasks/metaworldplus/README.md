@@ -46,7 +46,7 @@ Meta-World+ paper (McLean et al., 2025, NeurIPS Datasets and Benchmarks Track); 
   session, privileged state, replay, rendering), three free cameras around the table (`front`, `left`, `right`) next to
   Meta-World's `topview`, and the standard-mode service (`sim/server_mw.py`, see Others).
 - **Left out.** Meta-World's per-camera views `corner*`: they render upside down. There is no `joint_position` action
-  (docs/protocol/standard_mode.md): the Sawyer in Meta-World has no arm actuators (`model.nu = 2`, the two fingers), so
+  (docs/protocol/eai-standard.md): the Sawyer in Meta-World has no arm actuators (`model.nu = 2`, the two fingers), so
   joint targets would mean changing the upstream robot model.
 
 ## Interface
@@ -73,7 +73,7 @@ Meta-World+ paper (McLean et al., 2025, NeurIPS Datasets and Benchmarks Track); 
   crash resume keeps it), not from the service's start: the service is up before the harness has installed the agent.
 
 ## Grading
-- **Success.** Meta-World's own check (`evaluate_state`) on the state after the last action (PROTOCOL §3): no
+- **Success.** Meta-World's own check (`evaluate_state`) on the state after the last action (docs/protocol/tasks.md#modes): no
   "success at any step". The check differs per environment, and a standard-mode agent cannot read the source, so both
   instructions state it in words (one sentence per environment, read from the source at the pinned commit), and each
   task's README states it exactly: what is compared with the target point, in which axes, with which tolerance, and
@@ -103,7 +103,7 @@ Meta-World+ paper (McLean et al., 2025, NeurIPS Datasets and Benchmarks Track); 
   success: `Session.step` raised before the check was updated, so it would report the step before while the state is
   the failed step's. The crash-recovery replay (the journal replayed to resume the same episode after a sidecar crash)
   stays: it grades nothing.
-- **Agent-ended episodes.** Every standard task sets `RCB_AGENT_END "1"` in its sim service (PROTOCOL §3).
+- **Agent-ended episodes.** Every standard task sets `RCB_AGENT_END "1"` in its sim service (docs/protocol/tasks.md#modes).
   `server_mw.py` already judged the state the episode ends in; with the feature it also takes `POST /finish` (reason
   `finished`), never shows a success (Meta-World's check is recorded after every call, `hidden_success_first_step`),
   and judges the ends `finished`, `timeout` and, with a step cap, `step_limit` on that state (end judgement `state`, no
@@ -247,7 +247,7 @@ Meta-World's scripted policies solve these tasks and are public (PyPI, GitHub), 
 the one allowlist (`network_mode = "allowlist"`, the hosts of `scripts/set_agent_egress.py`), as DexToolBench does. That
 list has the package registries, so the PyPI distribution `metaworld`, which ships those policies, is reachable: the
 instruction's honour rule asks the agent not to fetch a solution, nothing blocks it, and a trial
-that installs `metaworld` is one to look at (PROTOCOL §5). The
+that installs `metaworld` is one to look at (docs/protocol/tasks.md#instructionmd). The
 policies are deleted from the image in the layer that installs them.
 
 ### Rebuilding

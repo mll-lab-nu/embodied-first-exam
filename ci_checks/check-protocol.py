@@ -19,7 +19,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 REGISTRY = ("ghcr.io/mll-lab-nu/efe:", "ghcr.io/mll-lab-nu/efe-private:")   # efe:<name>-<version> (public), efe-private:<name>-<version> (BUILD_ONLY)
 sys.path.insert(0, str(ROOT / "scripts"))
-import task_conventions as tc  # noqa: E402  (the mode registry, PROTOCOL §3)
+import task_conventions as tc  # noqa: E402  (the mode registry, docs/protocol/tasks.md#modes)
 # the `protocol` values each mode may declare: standard 2.1 / 2.2 / 2.4 (2.4: the operations capability, issue #89),
 # realtime 2.3 (the realtime capability, §3), privileged none
 MODE_PROTOCOLS = {m: set(d["protocols"]) for m, d in tc.MODE_REGISTRY.items()}
@@ -85,7 +85,7 @@ def check_task(task: Path) -> None:
     mode = named
     proto = meta.get("protocol")
     if proto is not None and proto in own_protocols(name, mode):
-        pass                                   # PROTOCOL §3: the benchmark's own protocol
+        pass                                   # docs/protocol/tasks.md#modes: the benchmark's own protocol
     elif mode in tc.MODES:
         allowed = MODE_PROTOCOLS[mode]
         if allowed and proto not in allowed:
@@ -106,25 +106,25 @@ def check_task(task: Path) -> None:
         if cmds and re.fullmatch(r"exit\s+1", cmds[-1]) and not any(re.search(r"\b(python|harbor|cp|bash)\b", c) for c in cmds):
             warn("`solve.sh` is an `exit 1` placeholder (declare `oracle = \"none\"` and remove it)", name)
 
-    replays = meta.get("replays")              # PROTOCOL §4: up to N fresh replays, any success counts
+    replays = meta.get("replays")              # docs/protocol/tasks.md#grading: up to N fresh replays, any success counts
     if replays is not None:
         test = task / "tests/test.sh"
         if mode != "privileged" or not isinstance(replays, int) or isinstance(replays, bool) or replays < 1:
-            warn("`replays` must be an integer >= 1 on a privileged task (PROTOCOL §4)", f"{name} ({replays!r})")
+            warn("`replays` must be an integer >= 1 on a privileged task (docs/protocol/tasks.md#grading)", f"{name} ({replays!r})")
         elif not test.is_file() or not re.search(rf"--repeat {replays}\b", test.read_text()):
-            warn("`[metadata] replays` differs from tests/test.sh's `--repeat` (PROTOCOL §4)", f"{name} ({replays})")
+            warn("`[metadata] replays` differs from tests/test.sh's `--repeat` (docs/protocol/tasks.md#grading)", f"{name} ({replays})")
 
     for ref in image_refs(task):
         if ref.startswith("ghcr.io/") and not ref.startswith(REGISTRY):
-            warn("base image outside the registry (`ghcr.io/mll-lab-nu/efe:<name>-<version>` or `efe-private:<name>-<version>`, PROTOCOL §1)", f"{name}: {ref}")
+            warn("base image outside the registry (`ghcr.io/mll-lab-nu/efe:<name>-<version>` or `efe-private:<name>-<version>`, docs/protocol/tasks.md)", f"{name}: {ref}")
 
     if (task / "results").exists():
-        warn("results/ in a task directory (results are published on the results site, PROTOCOL §1)", name)
+        warn("results/ in a task directory (results are published on the results site, docs/protocol/tasks.md)", name)
 
 
 def check_repository() -> None:
     if (ROOT / "results").is_dir():
-        warn("top-level results/ directory (results are published on the results site, PROTOCOL §1)", "results/")
+        warn("top-level results/ directory (results are published on the results site, docs/protocol/tasks.md)", "results/")
     try:
         files = subprocess.run(["git", "-C", str(ROOT), "ls-files", "-z"], capture_output=True, text=True, check=True).stdout.split("\0")
     except (OSError, subprocess.CalledProcessError):

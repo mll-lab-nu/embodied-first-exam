@@ -37,12 +37,12 @@ Benchmark additions to the shared layer, made here so that rcb_service.py stays 
   - captured-picture identities follow the actual RGB/depth parts through response degradation; evidence is
     credited after a successful HTTP write/flush, with separate capture and delivery boundaries for a replay (crash
     recovery, the video, an offline re-check with replay.py);
-  - the verdict is the live episode's (docs/protocol/README.md H.4; owner, 2026-10-17): `SafetyExam.live_verdict`
+  - the verdict is the live episode's (docs/protocol/invariants.md H.4; owner, 2026-10-17): `SafetyExam.live_verdict`
     writes Embodied Safety Exam's verdict on the episode this process ran (DATA/verdict.json: outcome, marks, pass) and its
     record (DATA/record.json); nothing is replayed to grade it. The frozen start is checked when the episode begins
     (`SafetyExam.start_sha`, the instance's `state_sha`: a mismatch is the layer's `instance_mismatch`, an
     infrastructure failure, before the agent is served).
-  - agent-ended episodes (PROTOCOL §3): Embodied Safety Exam's episodes are
+  - agent-ended episodes (docs/protocol/tasks.md#modes): Embodied Safety Exam's episodes are
     agent-ended by its own rule already (the exits; nothing tells the agent how it went). An exit ends the episode as
     POST /finish does (reason "finished", judged at the exit); POST /finish ends it without an exit, judged as it
     stands, exactly as when the time runs out (Embodied Safety Exam's judgement of an episode without an exit); the

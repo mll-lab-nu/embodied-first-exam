@@ -11,7 +11,7 @@ task_type = "trajectory"
 simulator = "vlabench"
 robot = "franka-panda"
 family = "vlabench/select_chemistry_tube_semantic"
-dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
+dynamics = "static"               # scene dynamics (docs/protocol/tasks.md): the task's own declaration
 oracle = "full"
 instance_seed = 0             # VLABench's episode configuration for this task, seeded build
 expert_time_estimate_hours = 1.0
@@ -21,7 +21,7 @@ timeout_sec = 1800.0
 environment_mode = "separate"
 network_mode = "no-network"
 
-# Resources (PROTOCOL §6): seal the monitor's record first.
+# Resources (docs/protocol/resources.md): seal the monitor's record first.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"

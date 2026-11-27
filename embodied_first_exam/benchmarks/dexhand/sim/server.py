@@ -1,6 +1,6 @@
 """DexHand adapter of the shared layer; physics stays in this process.
 
-The optional reset capability (docs/protocol/standard_mode.md "Optional reset capability", PROTOCOL §4.5) is added here, as the
+The optional reset capability (docs/protocol/eai-standard.md "POST /reset", docs/protocol/eai-standard.md#post-reset-reset-capability) is added here, as the
 MyoSuite service adds it (the shared layer has none): with RCB_RESET_BUDGET = N > 0 (DexHand's compose files: 20),
 POST /reset abandons the running episode, or follows one that has ended, and starts a new one from the frozen start
 (Session.reset(): the same state hash as a fresh process); only the last episode is graded. A crash resume replays the
@@ -8,9 +8,9 @@ journal and resets where the committed resets did (their journal rows are checkp
 
 The frozen start is checked against the instance's record (instance.json `start_state_sha`, one hash per hand) when a
 fresh episode begins and after every reset: a scene that does not start there is no trial of this task (instance_mismatch,
-an infrastructure failure; PROTOCOL H.4).
+an infrastructure failure; docs/protocol/invariants.md H.4).
 
-Episodes are agent-ended (PROTOCOL §3): a success never ends the episode and is never shown. Each family's
+Episodes are agent-ended (docs/protocol/tasks.md#modes): a success never ends the episode and is never shown. Each family's
 runtime latches its success and then executes nothing more, so after every control step that latches it the service
 puts the family's verdict state (the checker's, or the runtime's own for the families that keep it there:
 RUNTIME_VERDICT) back to where it was before that step, the physics going on: the success then holds again only while
@@ -51,7 +51,7 @@ try:
 except hands.HandError as exc:  # a hand this task does not offer (task.toml `hands`): refused below, no episode
     HAND, HAND_ERROR = os.environ.get("DEXHAND_HAND", "").strip(), exc
 WALL = float(os.environ.get("RCB_WALL_CLOCK_S", "5400"))
-RESET_BUDGET = max(0, int(os.environ.get("RCB_RESET_BUDGET") or 0))  # the compose files' default: 20 (PROTOCOL §4.5)
+RESET_BUDGET = max(0, int(os.environ.get("RCB_RESET_BUDGET") or 0))  # the compose files' default: 20 (docs/protocol/eai-standard.md#post-reset-reset-capability)
 HZ = 50
 N = 6 + 22  # replaced by the selected hand's width once the scene is built
 LOCK = threading.Lock()

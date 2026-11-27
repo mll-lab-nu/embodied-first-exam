@@ -7,7 +7,7 @@ human-viewable replay video /logs/verifier/replay.mp4 (the head camera).
 Up to `--repeat` N fresh-process replays (`rcb_robodojo.py replay`; default 1, tests/test.sh passes the task's
 `[metadata] replays`) decide, stopping at the first that succeeds: RoboDojo's GPU PhysX does not replay bit-wise
 (fresh replays of one file can end in different states), so the attempt succeeds if ANY replay completes the task
-(RoboDojo's own reward check, the episode ending in success; PROTOCOL §4). Every graded replay is filmed into the same
+(RoboDojo's own reward check, the episode ending in success; docs/protocol/tasks.md#grading). Every graded replay is filmed into the same
 file, so the video kept is the deciding replay's (the successful one, else the last); the filming never decides (the
 tooling reports a failed video as `video_ok` false and the replay stands). reward.json: `replays` (run),
 `replays_succeeded`, `success_replay` (1-based, 0 none), `all_success` (every replay run succeeded), `deterministic` /

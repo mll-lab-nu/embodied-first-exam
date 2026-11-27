@@ -1,5 +1,5 @@
 """The realtime layer of eai-standard/3.0: the sim service of the `-realtime` tasks built on rcb_service.py
-(docs/protocol/README.md §3, docs/protocol/standard_mode.md "Part 3 — Realtime mode"). Entry
+(docs/protocol/tasks.md#modes, docs/protocol/eai-standard.md "Realtime"). Entry
 point of the sidecar: `python /srv/rcb_realtime.py` (the adapter is server.py's, unchanged). This service is
 rcb_service's sidecar service with the realtime capability (/spec.timing.realtime); the shared layer's optional
 capabilities (/kinematics, depth modes) are not served.
@@ -29,7 +29,7 @@ and finalize. Only the time model differs. In standard mode time moves only insi
   refused (400). It never changes the plan.
 - `cameras = []` asks for no images at all (in the sidecar layer an empty list means every camera): a controller's proprio-only call.
 
-Cameras (the recorder; docs/protocol/standard_mode.md Part 3, "Cameras"). Every realtime service records: an adapter
+Cameras (the recorder; docs/protocol/eai-standard.md#realtime, "Cameras"). Every realtime service records: an adapter
 without the two hooks below is recorded on the simulator's thread (_ThreadCameras: the same ring, filled every
 1 / RCB_CAMERA_FPS (default 10) of robot time between control steps), unless it sets record_frames to something else
 than True (a rendering with effects of its own: it then answers /observe with the current frame only). Where the
@@ -45,7 +45,7 @@ waits: last_s = 0 the current frame, last_s = n the last n seconds recorded; `se
 reaches the simulator thread and never starts the clock (the first /submit does). A /submit answers with the newest
 recorded frames. Answers with images carry frame_step (the control step the newest image shows).
 
-Grading is the sidecar layer's: the verdict is the live episode's (docs/protocol/README.md H.4; owner, 2026-10-17), judged by
+Grading is the sidecar layer's: the verdict is the live episode's (docs/protocol/invariants.md H.4; owner, 2026-10-17), judged by
 this service, nothing replayed. Every executed control step's sim row is journaled (trajectory_live.f64) and the graded
 episode's rows are saved as the trajectory: the rows the simulator applied, not what was submitted, so the trajectory
 reproduces the live run however the timing went (the video is rendered from it). Evidence added (never visible to the agent):
@@ -84,7 +84,7 @@ More than MAX_LAG_S behind, the service drops the debt instead of fast-forwardin
 seconds added to stalled_s).
 
 A crash resumes the same episode from its last checkpoint (one per second of robot time while the clock runs), paused.
-Whose failure it is (owner, 2026-10-17; docs/protocol/standard_mode.md Part 3): once the agent's first command has run (the first
+Whose failure it is (owner, 2026-10-17; docs/protocol/eai-standard.md#realtime): once the agent's first command has run (the first
 control step that runs a row the agent sent: the "first_command" event), the robot is executing the agent's commands, as inside a
 call in the sidecar layer.
 - A simulator error raised by a control step after the first command ends the episode "error": the agent's 0

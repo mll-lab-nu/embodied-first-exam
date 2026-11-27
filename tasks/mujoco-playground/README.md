@@ -203,7 +203,7 @@ The manipulation tasks also allow seeds 60418 and 60419 (`[metadata.seeds]`; com
   here on re-implementations of Playground's environments; the manipulation references are scripted. No image contains
   a policy, and every reference row is float32-exact, so the standard oracle (streaming the rows through the client)
   records exactly the privileged reference. The PyPI packages `playground` and `envpool` carry Playground's task
-  sources (the honour rule, PROTOCOL §5).
+  sources (the honour rule, docs/protocol/tasks.md#instructionmd).
 - **Files.** The privileged task's `environment/instance.json` and `tests/instance.json` and a standard or realtime
   task's `environment/sim/instance.json` are byte-identical copies of the frozen instance. The shared code lives in
   `embodied_first_exam/benchmarks/mujoco-playground/` and reaches the tasks through the files-only image

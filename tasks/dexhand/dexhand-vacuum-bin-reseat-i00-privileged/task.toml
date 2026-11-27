@@ -13,7 +13,7 @@ robot = "sharpa-wave-floating-bimanual"
 hands = ["sharpa", "wuji"]
 default_hand = "sharpa"
 family = "vacuum_bin_reseat"
-dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
+dynamics = "static"               # scene dynamics (docs/protocol/tasks.md): the task's own declaration
 
 oracle = "full"
 oracle_evidence = "solution/trajectory.npz: 1,331 two-hand Sharpa Wave control rows recorded from the closed-loop authoring controller (the left hand holds the vacuum by its handle, the right hand presses the release button, removes and reinstalls the bin); the replay ends at success after 1,181 controls (150 slack rows) in two fresh processes with identical state hashes, also with rows rounded to float32. The standard oracle submits the same rows as float64 through the public client."
@@ -27,7 +27,7 @@ timeout_sec = 1200.0
 environment_mode = "separate"
 network_mode = "no-network"
 
-# Resources (PROTOCOL §6): seal the monitor's record first.
+# Resources (docs/protocol/resources.md): seal the monitor's record first.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"

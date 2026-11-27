@@ -126,7 +126,7 @@ class Session:
         self.n_steps_total = 0
         self.n_clipped = 0
         self._video = None
-        # agent-ended episodes (the standard / realtime sim service with RCB_AGENT_END, PROTOCOL §3): the task's success
+        # agent-ended episodes (the standard / realtime sim service with RCB_AGENT_END, docs/protocol/tasks.md#modes): the task's success
         # does not end the episode; it runs on until a failure, the environment's step cap or the agent's end
         self.run_on = False
         self.horizon_end = False

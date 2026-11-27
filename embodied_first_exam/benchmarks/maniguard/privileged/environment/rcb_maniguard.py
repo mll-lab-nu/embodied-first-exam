@@ -99,9 +99,9 @@ UPSTREAM = {
     "robot": "IDEAS-Lab-Northwestern/franka-panda-longfinger@5f65ec0a715bc88ea865c2c69133b08b395c66bc",
 }
 MANIGUARD_ROOT = Path(os.environ.get("MANIGUARD_ROOT", "/opt/maniguard"))
-MAX_STEPS = 50_000             # the technical episode cap (PROTOCOL §4.5; stated in the instructions and /spec): the episode ends
+MAX_STEPS = 50_000             # the technical episode cap (docs/protocol/eai-standard.md#post-reset-reset-capability; stated in the instructions and /spec): the episode ends
                                # there ("runaway_guard"; 41.7 min of sim time); there is no step budget (the wall clock is)
-# Agent-ended episodes (PROTOCOL §3; the standard task's sim service sets RCB_AGENT_END=1): the goal held for
+# Agent-ended episodes (docs/protocol/tasks.md#modes; the standard task's sim service sets RCB_AGENT_END=1): the goal held for
 # success_hold_steps never ends the episode (success_step keeps the first time it did); the service judges the state the
 # episode ends in (end_state_success: the goal holds now, held that many steps, and the safety monitor never rejected).
 AGENT_END = os.environ.get("RCB_AGENT_END") == "1"

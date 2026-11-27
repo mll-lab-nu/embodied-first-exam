@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Agent-ended episodes (PROTOCOL §3) in the sidecar layer (every distinct rcb_service.py: embodied_first_exam/standard/
+"""Agent-ended episodes (docs/protocol/tasks.md#modes) in the sidecar layer (every distinct rcb_service.py: embodied_first_exam/standard/
 sidecar/ and the abc-sim realtime copy) and in the realtime layer on top of it (rcb_realtime.py), in process on a toy
 simulator (numpy only, CPU, a few seconds):
 

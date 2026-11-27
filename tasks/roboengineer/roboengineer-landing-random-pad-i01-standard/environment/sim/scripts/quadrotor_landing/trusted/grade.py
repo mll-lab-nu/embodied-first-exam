@@ -98,7 +98,7 @@ def grade(root, residual, render=False):
 
 
 def render_held_out(root, residual):
-    """After the verdict (PROTOCOL §4): one rendered run of the sealed policy per held-out case, joined into
+    """After the verdict (docs/protocol/tasks.md#grading): one rendered run of the sealed policy per held-out case, joined into
     <data>/replay.mp4. Best effort; it never changes grade.json or final.json."""
     root, residual = Path(root), Path(residual)
     state = json.loads((root / "state.json").read_text())

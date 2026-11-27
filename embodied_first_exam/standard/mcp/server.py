@@ -6,7 +6,7 @@
 Tools (schema/tools.json, narrowed to the task by its manifest; rcb_tools.py): one per agent-facing endpoint of the
 task's robot service -- spec, observe, submit, finish, reset (where the task has a reset budget), kinematics (where the
 service offers it) -- the request fields and the reply as the service's client sends and receives them
-(docs/protocol/standard_mode.md "MCP tools"); a service with calls of its own adds their tools (suites.py: an
+(docs/protocol/eai-standard.md "MCP tools"); a service with calls of its own adds their tools (suites.py: an
 Embodied Olympics match's start, ready, say, team). Images, depth and video are written under /app/obs; results carry
 paths and the service's meta, and `tool_s` (the wall time the call took in this server, the request included). A call
 answers within --max-block-s of its arrival (default 45, under Codex's 60 s tool timeout), any wait for an earlier call

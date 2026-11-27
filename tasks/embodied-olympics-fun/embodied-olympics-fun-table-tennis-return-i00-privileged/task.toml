@@ -12,12 +12,12 @@ simulator = "mujoco"               # the Embodied Olympics simulator: MuJoCo 3.3
 robot = "unitree-g1"
 family = "table_tennis_return"
 category = "basketball-and-rackets"
-dynamics = "dynamic"              # scene dynamics (docs/protocol/README.md §2): the task's own declaration
+dynamics = "dynamic"              # scene dynamics (docs/protocol/tasks.md): the task's own declaration
 # scene = environment/instance.json (the family's parameters + its t = 0 state hash); identity = the dataset.toml digest
 instance_seed = 0
 expert_time_estimate_hours = 10.0
 oracle = "none"
-oracle_evidence = "no reference solution; the referee is tested: No reference solution (the short service is over the robot's court for a few tenths of a second, 0.7-1.0 m inside the end line). Positive by a declared injection around a real contact: the robot holds the blade still over its end line with the paddle held by contact and friction in its own right Dex3-1 hand (a shakehand grip, the device's joint torques, no weld); after the machine's real service bounces on the robot's court the ball is put 0.10 m in front of the blade moving onto it at 3 m/s, and at the real strike it is moved 3 cm off the blade with a return's velocity (4.0, 0.3, 2.2) m/s; the flight over the net and the landing on the opponent's court are real; the hand's hold broken for at most 0.027 s, the handle at most 0.12 mm into the fingers; the same state hash twice. Negatives: nop (the short service bounces twice), touched before the service, obstruction, the trunk, a second strike, a block onto the robot's own court, the floor, the racket on the net, a fall. Realtime: physics-only RTF on the shared cluster 0.63 against 0.82-0.92 for a reference dynamic family whose workstation RTF is 3.07: about 1.5 (with a measured 2.4-times speed ratio between the two machines) to 2.2 (with the same run's reference) on the workstation.; human review in the pull request that adds the benchmark (PROTOCOL §4)"
+oracle_evidence = "no reference solution; the referee is tested: No reference solution (the short service is over the robot's court for a few tenths of a second, 0.7-1.0 m inside the end line). Positive by a declared injection around a real contact: the robot holds the blade still over its end line with the paddle held by contact and friction in its own right Dex3-1 hand (a shakehand grip, the device's joint torques, no weld); after the machine's real service bounces on the robot's court the ball is put 0.10 m in front of the blade moving onto it at 3 m/s, and at the real strike it is moved 3 cm off the blade with a return's velocity (4.0, 0.3, 2.2) m/s; the flight over the net and the landing on the opponent's court are real; the hand's hold broken for at most 0.027 s, the handle at most 0.12 mm into the fingers; the same state hash twice. Negatives: nop (the short service bounces twice), touched before the service, obstruction, the trunk, a second strike, a block onto the robot's own court, the floor, the racket on the net, a fall. Realtime: physics-only RTF on the shared cluster 0.63 against 0.82-0.92 for a reference dynamic family whose workstation RTF is 3.07: about 1.5 (with a measured 2.4-times speed ratio between the two machines) to 2.2 (with the same run's reference) on the workstation.; human review in the pull request that adds the benchmark (docs/protocol/tasks.md#grading)"
 
 [verifier]
 timeout_sec = 900.0
@@ -26,7 +26,7 @@ timeout_sec = 900.0
 environment_mode = "separate"
 network_mode = "no-network"
 
-# Resources (PROTOCOL §6): seal the monitor's record first.
+# Resources (docs/protocol/resources.md): seal the monitor's record first.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
@@ -41,7 +41,7 @@ memory_mb = 8192
 timeout_sec = 7200.0
 # Egress: open, `network_mode = "public"` below (the author's choice). Embodied Olympics lets the agent search for and download
 # public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md).
-network_mode = "public"        # open egress, the task author's choice (docs/protocol/README.md Appendix H.6)
+network_mode = "public"        # open egress, the task author's choice (docs/protocol/invariants.md H.6)
 
 [environment]
 build_timeout_sec = 1800.0

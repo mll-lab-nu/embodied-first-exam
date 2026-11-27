@@ -1,5 +1,5 @@
-"""eai-standard/3.0 sim service: the simulator-agnostic half of a standard-mode sidecar (docs/protocol/README.md §4,
-docs/protocol/standard_mode.md).
+"""eai-standard/3.0 sim service: the simulator-agnostic half of a standard-mode sidecar (docs/protocol/tasks.md#grading,
+docs/protocol/eai-standard.md).
 
 The robot as a service: the agent reaches a simulator it cannot open over HTTP. GET /spec, GET /status, POST /observe,
 POST /submit and POST /finish; POST /reset exists only when the run grants resets (budget.reset > 0); everything else
@@ -18,7 +18,7 @@ the running episode and starts another from the frozen instance; only the last e
 A request is checked in full before anything runs: whatever is wrong with it is a 400 and nothing ran. Once it runs,
 any failure is the simulator's: a 500, and the episode ends ("error").
 
-eai-standard/3.0 (docs/protocol/standard_mode.md): standard mode is Gym's env.step. Time passes only inside /submit,
+eai-standard/3.0 (docs/protocol/eai-standard.md): standard mode is Gym's env.step. Time passes only inside /submit,
 which blocks until its rows have run and answers with their video, `duration_s` (robot seconds it ran) and
 `planned_duration_s` (rows x dt as sent). A hold chunk -- /submit {"type": <type>, "interpolate": "hold", "seconds": n}
 with no rows -- holds the current target (sim.hold()) for n seconds. /observe is a pure read: it never moves time;
@@ -44,7 +44,7 @@ Evidence under DATA, never visible to the agent:
                        the first episode's own end judgement, as the "end" event recorded it
                        (no end window, no live_verdict), or null when that is not on record
 
-The verdict is the live episode's (docs/protocol/README.md H.4; owner, 2026-10-17): success = the episode this
+The verdict is the live episode's (docs/protocol/invariants.md H.4; owner, 2026-10-17): success = the episode this
 service ran ended in success under the task's rule (the adapter's step()), judged here, after the agent's container is
 gone; nothing is replayed to grade it. An adapter may add its benchmark's own record of the live episode with
 live_verdict(rows, success) -> dict, e.g. a settle window run on the live simulator: its "success" can only take a
@@ -106,7 +106,7 @@ VIDEOS = ("mp4", "frames", "both", "none")
 ON_SERVICE_ERROR = ("if a call fails with a connection error or a 5xx, the service may have crashed and resumed the "
                     "same episode (never a reset): the state is the one after the last call that completed on the "
                     "service, which you may not have received; check GET /status before continuing")
-# Agent-ended episodes (docs/protocol/README.md §3 "Agent-ended episodes", standard_mode.md "Agent-ended episodes";
+# Agent-ended episodes (docs/protocol/eai-standard.md "Agent-ended episodes", docs/protocol/eai-standard.md "Agent-ended episodes";
 # every standard and realtime task): the service never shows the task's
 # success and a success never ends the episode; POST /finish (JSON {}) ends it (reason "finished"), and so do the step
 # cap (reason "step_limit": the adapter's max_control_steps, or RCB_STEP_LIMIT=N when set, which may only lower it) and
@@ -1256,7 +1256,7 @@ class Service:
         return {**info, "first_n_actions": cut}, rows.reshape(cut, -1)
 
     def _finalize(self) -> None:
-        """The verdict: the live episode's (docs/protocol/README.md H.4). The graded episode (every control step since the last
+        """The verdict: the live episode's (docs/protocol/invariants.md H.4). The graded episode (every control step since the last
         reset) is saved as the trajectory, the deliverable that stays replayable, and the success is the one the live
         episode ended with (plus the adapter's live_verdict(), which can only take it away): final from the moment it is
         written ("finalized": true). Nothing is replayed to grade it. Then a video for humans, rendered from the

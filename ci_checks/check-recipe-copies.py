@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Base-image recipes copied into other base images' recipes (PROTOCOL §1: copies of shared sources are byte-identical).
+"""Base-image recipes copied into other base images' recipes (docs/protocol/tasks.md: copies of shared sources are byte-identical).
 
 A base image built on another one's recipe (images/<name>/Dockerfile starting with another image's stages) holds that
 recipe between `# >>> images/<other>/Dockerfile` and `# <<< images/<other>/Dockerfile`, as task Dockerfiles do

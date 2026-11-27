@@ -1,4 +1,4 @@
-"""The efe-robot MCP server in every standard and realtime task (docs/protocol/standard_mode.md "MCP tools"): what
+"""The efe-robot MCP server in every standard and realtime task (docs/protocol/eai-standard.md "MCP tools"): what
 `scripts/task_conventions.py` `normalize` writes into a task so that its robot service is reachable through the service's
 client (HTTP, as before) and through MCP tools, the agent's choice.
 
@@ -27,12 +27,12 @@ SERVER_FILES = ("server.py", "rcb_tools.py", "schema.py", "workspace.py", "schem
 SUITE_FILES = ("suites.py",)                  # a match's tools (kind "eo-match")
 DIR = "environment/efe_mcp"
 DOCKER_LINE = "COPY efe_mcp /opt/tools/efe_mcp"
-DOCKER_COMMENT = "# the robot's MCP tools (docs/protocol/standard_mode.md \"MCP tools\"): the server Harbor starts, efe-robot"
+DOCKER_COMMENT = "# the robot's MCP tools (docs/protocol/eai-standard.md \"MCP tools\"): the server Harbor starts, efe-robot"
 IMAGE = "standard-files"                      # the files-only image that carries the server (/mcp/<file>)
 IMAGE_DIR = "mcp"                             # this directory in that image (its source: embodied_first_exam/standard)
 DEST = "/opt/tools/efe_mcp/"
 SERVER_LINE = re.compile(r"^COPY --from=\S+ (?:/" + IMAGE_DIR + r"/\S+ )+/opt/tools/efe_mcp/(?:schema/)?$")
-TOML_MARK = "# The robot's MCP tools (docs/protocol/standard_mode.md \"MCP tools\"): Harbor starts this server for the agent."
+TOML_MARK = "# The robot's MCP tools (docs/protocol/eai-standard.md \"MCP tools\"): Harbor starts this server for the agent."
 TOML_BLOCK = TOML_MARK + """
 [[environment.mcp_servers]]
 name = "efe-robot"
@@ -75,7 +75,7 @@ EO = "embodied-olympics-match"
 
 
 def on_match_extension(task: pathlib.Path | None) -> bool:
-    """A match that serves the match extension (standard_mode.md Part 5): it carries environment/sim/eai_std/."""
+    """A match that serves the match extension (docs/protocol/eai-standard.md#match-extension): it carries environment/sim/eai_std/."""
     return task is not None and (pathlib.Path(task) / "environment/sim/eai_std").is_dir()
 
 

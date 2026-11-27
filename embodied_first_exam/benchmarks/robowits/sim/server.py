@@ -1,16 +1,16 @@
-"""eai-standard/3.0 sim service for RoboWits (Genesis 0.4.7, bimanual Marvin; docs/protocol/standard_mode.md): the RoboWits
+"""eai-standard/3.0 sim service for RoboWits (Genesis 0.4.7, bimanual Marvin; docs/protocol/eai-standard.md): the RoboWits
 adapter of the shared layer rcb_limited.py (embodied_first_exam/standard/). Served from the robowits-files image at
 /srv/server.py in every RoboWits standard task's sim sidecar.
 Owns the scene. HTTP surface (rcb_limited.py): GET /spec, GET /status, POST /observe, POST /submit (RCB1 bodies, RCB1
 responses: videos / frames / depth / proprio / per-frame step, time and camera poses as raw blobs, never base64), POST
 /kinematics (stateless FK / IK on the robot's own model). Logs every call to /data/episode.jsonl, keeps /data/final.json
-current, and grades the live episode (docs/protocol/README.md H.4): success = the settle window
+current, and grades the live episode (docs/protocol/invariants.md H.4): success = the settle window
 that ended the episode passed on this simulator (inside the agent's last call, or after its last command when its phase
 is over: Session.settle_check), nothing replayed. The verdict goes to final.json first ("finalized", "graded_by":
 "live"); then the recorded (T, 16) trajectory, the deliverable, is rendered once into /data/replay.mp4 for people
 ("video_pending" while it runs; it never changes the verdict). Nothing about objects ever leaves this process.
 
-Crash recovery (rcb_limited.Episode, docs/protocol/standard_mode.md §13): every executed control step is journaled
+Crash recovery (rcb_limited.Episode, embodied_first_exam/standard/README.md#crash-recovery): every executed control step is journaled
 (/data/journal.f64, the exact row handed to the simulator), every completed call checkpointed (rows, state hash, proprio
 row). After a crash, run.sh exits non-zero, compose restarts the container (`restart: on-failure:6`) and this service
 rebuilds the frozen scene, replays the journal up to the last checkpoint and continues the SAME episode, never a reset.
@@ -23,7 +23,7 @@ a give-up record (reason "instance_mismatch") instead of crashing into every res
 trajectory's rows or hash the end state keeps the verdict the episode ended with (finalize_error; journal.f64 holds the
 rows). A crash in the settle window at the end of the agent's phase counts as a crash inside the agent's last call. A restart that finds the verdict on disk (the service died
 while it rendered the video) keeps it, marks the video as over and idles without rebuilding the scene.
-Requests (PROTOCOL §4.6): every field of a /submit header and an /observe body is checked for type and range before
+Requests (docs/protocol/eai-standard.md#errors): every field of a /submit header and an /observe body is checked for type and range before
 anything is executed (ValueError -> 400, no physics); a `joint_position` dt that is not a whole number of control periods
 is refused, never rounded.
 
@@ -180,7 +180,7 @@ def settle(step) -> bool:
 
 def finish(reason: str) -> None:
     if E["done"]: return
-    # agent-ended episodes (PROTOCOL §3, rcb_agent_end.py): a success never ends the episode (no settle window inside a
+    # agent-ended episodes (docs/protocol/tasks.md#modes, rcb_agent_end.py): a success never ends the episode (no settle window inside a
     # call); the end of the agent's session is one reason, "timeout" (agent_exit is kept as evidence), the runaway guard
     # is the step limit; the settle window runs from the state the episode ends in (/finish, the session's end); at the
     # step limit no step can run, so the goal there is judged as it stands
@@ -236,7 +236,7 @@ E["instance_exact"] = bool(S.instance_exact)
 E["ready"] = True                       # S exists: ctrl_steps() counts its control steps (a resume replay included)
 ROBOT = S.robot
 CAMS = ["ego", "wrist_right", "wrist_left"]
-# The images one call may hold (PROTOCOL §3 "Images per call"): every frame a call records stays in memory until its
+# The images one call may hold (docs/protocol/tasks.md#modes "Images per call"): every frame a call records stays in memory until its
 # response is sent, so a call without a bound could exhaust the sidecar's memory, and a service killed for memory is never
 # the agent's failure, so one large request could void a failed trial. Cameras x frames at the recorder's real stride,
 # its first and last frames included; a frame with per-frame depth counts once more (L.check_frames).
@@ -283,7 +283,7 @@ SPEC = {
     "control_hz": CTRL_HZ, "physics_substeps": SUBSTEPS, "max_chunk_s": MAX_CHUNK_S,
     "max_frames_per_call": MAX_FRAMES,
     # not a step budget (budget.steps stays null: the wall clock is the budget) but the technical cap of one episode
-    # (PROTOCOL §4.5, `max_control_steps`): the tooling's runaway guard, also the longest trajectory the graders accept
+    # (docs/protocol/eai-standard.md#post-reset-reset-capability, `max_control_steps`): the tooling's runaway guard, also the longest trajectory the graders accept
     "max_control_steps": int(S.max_steps),
     "cameras": {c: {"rgb": True, "depth": True, "mounted": MOUNT[c], "resolution": list(CAM_INFO[c]["image_size"]), "calibration_in_obs": OBS_CALIBRATION,
                     "intrinsic_cv": CAM_INFO[c]["intrinsic_cv"], "mount": CAM_INFO[c]["mount"],
@@ -441,7 +441,7 @@ def run_ee_pose(A: np.ndarray, rec: L.Recorder, plan: list, clipped: list) -> No
             if ctrl_step(cur + (goal - cur) * (k / n), rec): return
 
 
-# ---------------------------------------------------------------- request fields (PROTOCOL §4.6: 400, nothing executed)
+# ---------------------------------------------------------------- request fields (docs/protocol/eai-standard.md#errors: 400, nothing executed)
 # Every field is checked for type and range BEFORE anything is executed or counted. The shared layer answers a ValueError
 # with 400; any other exception is a 500 that ends the episode, so nothing here may raise anything else on a bad request.
 VIDEO_MODES = ("mp4", "frames", "both", "none")
@@ -505,7 +505,7 @@ def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
     if not np.all(np.isfinite(A)): raise ValueError("actions contain NaN/inf")
     if not (1.0 / CTRL_HZ - 1e-9 <= dt <= MAX_DT_S): raise ValueError(f"dt must be in [{1.0 / CTRL_HZ:.4f}, {MAX_DT_S}] s")
     periods = dt * CTRL_HZ
-    if typ == "joint_position" and abs(periods - round(periods)) > 1e-6:     # never rounded (PROTOCOL §4.4); ee_pose ignores dt
+    if typ == "joint_position" and abs(periods - round(periods)) > 1e-6:     # never rounded (docs/protocol/tasks.md#grading); ee_pose ignores dt
         k = max(1, int(round(periods)))
         raise ValueError(f"dt must be a whole number of control periods (k/{CTRL_HZ} s, k = 1..{int(MAX_DT_S * CTRL_HZ)}): {dt} s is "
                          f"{periods:.4f} periods; the nearest is {k}/{CTRL_HZ} = {k / CTRL_HZ!r}")

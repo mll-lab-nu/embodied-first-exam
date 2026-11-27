@@ -27,7 +27,7 @@ task_type = "trajectory"
 simulator = "robosuite"
 robot = "franka-panda"
 family = "libero-max/libero_spatial/target_relocation"
-dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
+dynamics = "static"               # scene dynamics (docs/protocol/tasks.md): the task's own declaration
 protocol = "eai-standard/3.0"
 oracle = "full"
 instance_seed = 195
@@ -35,7 +35,7 @@ expert_time_estimate_hours = 2.0
 
 [metadata.seeds]
 # the seeds a runner may draw from (a list, { from = A, to = B } or "any") and the ones the reference solution
-# under solution/ is for, where they are not the default seed alone (docs/protocol/README.md §2)
+# under solution/ is for, where they are not the default seed alone (docs/protocol/tasks.md)
 allowed = [195, 0, 1]
 oracle = [195, 1]
 
@@ -44,7 +44,7 @@ timeout_sec = 1200.0
 environment_mode = "separate"
 network_mode = "no-network"
 
-# Resources (PROTOCOL §6): seal the monitor's record first.
+# Resources (docs/protocol/resources.md): seal the monitor's record first.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
@@ -80,7 +80,7 @@ cpus = 3
 memory_mb = 10240
 storage_mb = 10240
 
-# The robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): Harbor starts this server for the agent.
+# The robot's MCP tools (docs/protocol/eai-standard.md "MCP tools"): Harbor starts this server for the agent.
 [[environment.mcp_servers]]
 name = "efe-robot"
 transport = "stdio"

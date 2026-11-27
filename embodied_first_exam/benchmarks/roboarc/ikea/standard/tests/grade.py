@@ -8,7 +8,7 @@ success = the live episode's success AND no infrastructure failure. The live suc
 simulator (server.py: rcb_ikea.Session.status(), then final_check() with the last executed row held 1.0 s more, the
 privileged grader's terminal rules), so it already includes the settle window. reward.txt = success (1/0); reward.json
 = numbers only.
-Failure classes (PROTOCOL H.5: infra_error / grader_error give a free retry): a simulator error the agent's rows caused
+Failure classes (docs/protocol/invariants.md H.5: infra_error / grader_error give a free retry): a simulator error the agent's rows caused
 (final.json sim_error: the scene's code or MuJoCo raised in a call) is the agent's 0 (sim_error 1), and so are a
 breakdown, a timeout, an episode without actions and a crash give-up whose crashes were all inside the agent's calls
 (`sim_crashed_on_call`); no / unreadable / unfinalized final.json, a scene, image or runtime that differs from the
@@ -18,7 +18,7 @@ not dumped are infra_error. The live video (/data/live.mp4) is evidence only: it
 import json, os, shutil, sys
 
 def agent_end_fields(d):
-    """An agent-ended episode's record (PROTOCOL §3: final.json success_signal / ended_by, step_limit / steps_used):
+    """An agent-ended episode's record (docs/protocol/tasks.md#modes: final.json success_signal / ended_by, step_limit / steps_used):
     evidence only, never the verdict (numbers only: a bad value is 0); the runner reads ended_session_end."""
     if not isinstance(d, dict) or d.get("success_signal") != "hidden":
         return {}

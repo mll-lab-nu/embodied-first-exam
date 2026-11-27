@@ -23,7 +23,7 @@ task_type = "trajectory"
 simulator = "behavior"
 robot = "r1pro"
 family = "laying_tile_floors"
-dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
+dynamics = "static"               # scene dynamics (docs/protocol/tasks.md): the task's own declaration
 protocol = "eai-standard/3.0"
 oracle = "none"
 oracle_evidence = "No reference solution and no verified positive example yet: BEHAVIOR-1K ships no expert or planner that replays on this frozen instance, and no model trial has solved this task. Solvable by a human with this robot: the 2026 BEHAVIOR Challenge publishes 200 teleoperated demonstrations of this activity on the R1Pro in this scene model (478 s on average); demonstration video (520 s): https://www.youtube.com/embed/a3OjMFaaSs8 (challenge task list https://behavior.stanford.edu/challenge/tasks/index.html). Supplementary task (added 2026-10-04); human review per family (protocol §4)."
@@ -35,7 +35,7 @@ timeout_sec = 1200.0
 environment_mode = "separate"
 network_mode = "no-network"
 
-# Resources (PROTOCOL §6): seal the monitor's record first.
+# Resources (docs/protocol/resources.md): seal the monitor's record first.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
@@ -54,12 +54,12 @@ command = "sh /srv/finalize.sh"   # end the episode (waits through a resume; the
                                   # final.json from the live episode (no replay); a video-only render if the live video is missing
 timeout_sec = 23400               # 6.5 h = the episode end (up to 2 h through a resume) + the video-only render, run only when
                                   # the live video is missing, after the verdict (a replay of up to 4 h, the privileged
-                                  # grader's cap: PROTOCOL §4) + 30 min; measured on an 8-vCPU L40S: 626 s Isaac start,
+                                  # grader's cap: docs/protocol/tasks.md#grading) + 30 min; measured on an 8-vCPU L40S: 626 s Isaac start,
                                   # < 3.5 steps/s. finalize.sh's BUDGET_S is this value: the render stops 5 min before it
 
 [agent]
 timeout_sec = 7200.0             # BEHAVIOR budget (Isaac Sim + scene load, ~10 steps/s), same as the privileged twin (tasks/behavior-1k/README.md)
-network_mode = "allowlist"      # model APIs and package registries (scripts/set_agent_egress.py); PROTOCOL Appendix H.6
+network_mode = "allowlist"      # model APIs and package registries (scripts/set_agent_egress.py); docs/protocol/invariants.md H.6
 allowed_hosts = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com", "*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com", "pypi.org", "files.pythonhosted.org", "deb.debian.org", "security.debian.org", "archive.ubuntu.com", "security.ubuntu.com", "snapshot.ubuntu.com"]
 
 [environment]
@@ -69,7 +69,7 @@ memory_mb = 24576
 storage_mb = 10240
 gpu_types = ["L40S", "L40", "L4", "RTX 4090", "RTX 6000 Ada"]
 
-# The robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): Harbor starts this server for the agent.
+# The robot's MCP tools (docs/protocol/eai-standard.md "MCP tools"): Harbor starts this server for the agent.
 [[environment.mcp_servers]]
 name = "efe-robot"
 transport = "stdio"

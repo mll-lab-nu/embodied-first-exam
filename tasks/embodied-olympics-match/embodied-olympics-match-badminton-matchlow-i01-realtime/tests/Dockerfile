@@ -8,6 +8,6 @@ COPY --from=ghcr.io/mll-lab-nu/efe:embodied-olympics-match-files-0.4.0@sha256:0d
 COPY --from=ghcr.io/mll-lab-nu/efe:embodied-olympics-match-files-0.4.0@sha256:0d8eb42153dfb410f293e1ab6da62c5f3b7f08901fbb8c91f1d98e6729ebf88f /shared/tests/seeds.py /tests/seeds.py
 COPY fexam_reward.py /tests/fexam_reward.py
 RUN chmod +x /tests/test.sh
-# resources (PROTOCOL §6) # rcb-monitor
+# resources (docs/protocol/resources.md) # rcb-monitor
 COPY --from=ghcr.io/mll-lab-nu/efe:monitor-0.5.0@sha256:ecc5f24f1516ca11711d7c2d3ac07c89f79cd9220812c1244498ec71e352402a /opt/rcb_monitor/rcb_limits.py /tests/rcb_limits.py
 COPY rcb_limits.json /tests/rcb_limits.json

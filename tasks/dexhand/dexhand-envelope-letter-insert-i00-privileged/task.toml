@@ -13,7 +13,7 @@ robot = "marvin-bimanual-sharpa-wave"
 hands = ["sharpa", "wuji"]
 default_hand = "sharpa"
 family = "envelope_letter_insert"
-dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
+dynamics = "static"               # scene dynamics (docs/protocol/tasks.md): the task's own declaration
 
 oracle = "full"
 oracle_evidence = "solution/trajectory.npz: Sharpa Wave rows on the Marvin right arm (2,446 rows; success after 2,346 controls, 100 hold rows of slack), float32-exact. Authored closed loop on the wave-2 wrist stage and followed with the arm by IK; two fresh-process replays give identical state hashes; no arm, stand or parked-hand contact with the task objects. No Wuji Hand 2.2 reference for the arm rig."
@@ -27,7 +27,7 @@ timeout_sec = 2100.0
 environment_mode = "separate"
 network_mode = "no-network"
 
-# Resources (PROTOCOL §6): seal the monitor's record first.
+# Resources (docs/protocol/resources.md): seal the monitor's record first.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"

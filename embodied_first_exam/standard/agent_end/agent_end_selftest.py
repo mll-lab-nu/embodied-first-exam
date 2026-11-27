@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""rcb_agent_end.py (agent-ended episodes, PROTOCOL §3) over HTTP, on toy_server.py of the shared layer, an agent-ended
+"""rcb_agent_end.py (agent-ended episodes, docs/protocol/tasks.md#modes) over HTTP, on toy_server.py of the shared layer, an agent-ended
 adapter that uses the module the way every adapter does (numpy only, CPU, about 20 s):
 
   - a success changes no answer (done, reason, executed rows, 409s); POST /finish ends the episode and every

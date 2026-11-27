@@ -7,7 +7,7 @@ human-viewable replay video /logs/verifier/replay.mp4 (viewport camera + wrist c
 Up to `--repeat` N fresh-process replays (`rcb_robolab.py replay`; default 1, tests/test.sh passes the task's
 `[metadata] replays`; on Isaac only the first replay in a process is bit-exact, env.reset_to does not restore every PhysX
 internal) decide, stopping at the first that completes the task: RoboLab's PhysX does not replay bit-wise across processes
-and hosts (tasks/robolab/README.md), so the attempt succeeds if ANY replay succeeds (PROTOCOL §4). Every graded replay is
+and hosts (tasks/robolab/README.md), so the attempt succeeds if ANY replay succeeds (docs/protocol/tasks.md#grading). Every graded replay is
 filmed into the same file, so the video kept is the deciding replay's (the successful one, else the last); the filming
 never decides. reward.json: `replays` (run), `replays_succeeded`, `success_replay` (1-based, 0 none), `all_success`,
 `deterministic` (the replays run ended in one final-state hash: evidence only, 1 with one replay) and

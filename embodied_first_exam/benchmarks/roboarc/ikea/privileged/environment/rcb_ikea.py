@@ -1398,7 +1398,7 @@ def replay_cli(a) -> int:
             raise                       # the host's problem: the grader reports it as its own error
         except Exception as exc:  # noqa: BLE001
             # The scene's own code (mechanism, success.py) or MuJoCo raised on the state these rows drove it into: a
-            # simulator breakdown caused by the deliverable (the agent's 0), never a grader error (PROTOCOL H.5).
+            # simulator breakdown caused by the deliverable (the agent's 0), never a grader error (docs/protocol/invariants.md H.5).
             out.update(success=False, goal=False, replay_exception=f"{type(exc).__name__}: {exc}"[:500],
                        breakdown=dict(kind="exception", error=type(exc).__name__, row=len(s.rows)), rows=len(s.rows),
                        state_sha=s.state_sha(), settled_sha=None, sim_steps=len(s.rows) * SUBSTEPS,

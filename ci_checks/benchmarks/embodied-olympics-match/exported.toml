@@ -1,10 +1,10 @@
 # Embodied Olympics tasks exported by Embodied Olympics' own exporter (a private repository, MIT): its simulator
-# service runs unchanged inside each task (PROTOCOL §3; tasks/embodied-olympics-match/README.md: the benchmark
+# service runs unchanged inside each task (docs/protocol/tasks.md#modes; tasks/embodied-olympics-match/README.md: the benchmark
 # Embodied Olympics - Match). Written by that exporter on this checkout, then `python3 scripts/task_conventions.py` on
 # them (seeds, resources, README; the cutoff is each task's own `[agent] timeout_sec`, which a re-export must keep:
 # 7200 s, 14400 s for soccerssl-match-i01, badminton-match-i04, badminton-duelrl-i01, badminton-matchlow-i01,
 # foosball-match-i01, soccer-jointcpu-i01 and soccer-jointgpu-i01).
-# `patched`: files this repository changed after the export (PROTOCOL §3: sent upstream; a re-export must keep them).
+# `patched`: files this repository changed after the export (docs/protocol/tasks.md#modes: sent upstream; a re-export must keep them).
 # Every task: the standard modes are graded by the live episode: core/service.py, core/grading.py = tests/grade.py,
 # core/realtime.py (real-time: the control step's own error), spectator/sport_video.py (where present),
 # docker-compose.yaml (RO_VERDICT_REPLAY=0), task.toml, README.md.
@@ -27,9 +27,9 @@
 # the first two public seeds of the instance's format and level cell in sport.toml [official], else the sport's
 # development seeds 1 and 2; scripts/task_seed.py materialize sets RO_SEED, match_instance.json and the texts).
 
-# The protocol each mode of these tasks serves (PROTOCOL §3): ci_checks/check-protocol.py accepts it for the
+# The protocol each mode of these tasks serves (docs/protocol/tasks.md#modes): ci_checks/check-protocol.py accepts it for the
 # directories listed below only.
-# The match extension of eai-standard/3.0 (owner 2026-11-25; docs/protocol/standard_mode.md Part 5): every task below
+# The match extension of eai-standard/3.0 (owner 2026-11-25; docs/protocol/eai-standard.md#match-extension): every task below
 # except the low-level skill matches (matchlow) and the G1 table tennis serves the standard endpoints (/spec /status
 # /observe /submit, plus /start /ready /say /team) next to the core's own seat API, from
 # embodied_first_exam/benchmarks/embodied-olympics-match/eai_std/ (copied to environment/sim/eai_std/ by

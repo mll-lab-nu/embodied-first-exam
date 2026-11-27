@@ -1,4 +1,4 @@
-# Separate verifier sandbox (PROTOCOL H.1): the same image with the verifier's own copies of the tooling and the frozen
+# Separate verifier sandbox (docs/protocol/invariants.md H.1): the same image with the verifier's own copies of the tooling and the frozen
 # instance. Nothing the agent did in its container reaches this one: Harbor uploads only the declared artifacts.
 # >>> images/labutopia/Dockerfile
 # labutopia: LabUtopia (Rui-li023/LabUtopia @ 8df7278, NeurIPS 2025 Datasets and Benchmarks), a chemistry laboratory
@@ -74,6 +74,6 @@ COPY grade.py instance.json rcb_labutopia.py test.sh /tests/
 RUN chmod +x /tests/test.sh && mkdir -p /app/output /logs/verifier
 ENV PYTHONPATH=/tests
 WORKDIR /tests
-# resources (PROTOCOL §6) # rcb-monitor
+# resources (docs/protocol/resources.md) # rcb-monitor
 COPY --from=ghcr.io/mll-lab-nu/efe:monitor-0.5.0@sha256:ecc5f24f1516ca11711d7c2d3ac07c89f79cd9220812c1244498ec71e352402a /opt/rcb_monitor/rcb_limits.py /tests/rcb_limits.py
 COPY rcb_limits.json /tests/rcb_limits.json

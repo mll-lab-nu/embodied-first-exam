@@ -1,5 +1,5 @@
 """The operations layer of eai-standard/3.0: the shared layer (the HTTP layer, the protocol helpers and the crash recovery;
-docs/protocol/standard_mode.md Part 2, the sidecar base is its Part 1) plus the operations capability of its Part 4
+docs/protocol/eai-standard.md#the-shared-capability, the sidecar base is its Part 1) plus the operations capability of its Part 4
 (/spec.operations): operation ids and request deadlines (408 / 409), GET /operations/<id>, the service-owned call
 watchdog, the physics-tick ledger (journal.ticks.i64) and fsynced journals. First served by RoboTangle.
 
@@ -34,11 +34,11 @@ this module plain callables:
 
 None of the callables may step physics. check_spec(SPEC) runs in serve(): a service whose /spec misses a required field, or
 carries a field the protocol forbids (segmentation, object identities or sizes, physical parameters), does not start.
-Crash recovery (class Episode; PROTOCOL §4.7): every executed control step is journaled, every completed call
+Crash recovery (class Episode; embodied_first_exam/standard/README.md#crash-recovery): every executed control step is journaled, every completed call
 checkpointed (rows, state hash, the robot's proprio row); after a crash compose restarts the container and the service
 replays the journal and continues the SAME episode, never a reset. `python rcb_limited.py end <data dir>` is the shared
 first half of a collect hook.
-eai-standard/3.0 (standard_call, StandardRing; docs/protocol/standard_mode.md): the layer answers /observe `seconds` > 0 with a 400
+eai-standard/3.0 (standard_call, StandardRing; docs/protocol/eai-standard.md): the layer answers /observe `seconds` > 0 with a 400
 (observe never lets time pass), serves /observe last_s = n from the ring that Recorder.tick fills while a /submit runs
 (every /spec camera at RCB_CAMERA_FPS, RCB_LOOKBACK_S seconds), runs a rows-free hold chunk {type, interpolate: "hold",
 seconds} through the adapter's own observe watch and answers it as a submit, and adds duration_s / planned_duration_s
@@ -500,7 +500,7 @@ def check_spec(spec: dict) -> None:
         raise RuntimeError("default_cameras must be cameras")
 
 
-# ---------------------------------------------------------------- crash recovery (PROTOCOL §4.7; docs/protocol/standard_mode.md)
+# ---------------------------------------------------------------- crash recovery (embodied_first_exam/standard/README.md#crash-recovery; embodied_first_exam/standard/README.md#crash-recovery)
 MAX_RESUMES = int(os.environ.get("RCB_MAX_RESUMES", "2"))
 STARTUP_TIMEOUT_S = float(os.environ.get("RCB_STARTUP_TIMEOUT_S", "900"))     # a task with a slower scene build sets more
 MAX_CALL_WALL_S = float(os.environ.get("RCB_MAX_CALL_WALL_S", "900"))         # < the client's 1800 s /submit read timeout
@@ -571,7 +571,7 @@ def final_verdict(data: str) -> dict | None:
 
 
 class Episode:
-    """Crash-safe episode bookkeeping, the same rules as the RoboTwin and MuJoCo services (PROTOCOL §4.7):
+    """Crash-safe episode bookkeeping, the same rules as the RoboTwin and MuJoCo services (embodied_first_exam/standard/README.md#crash-recovery):
 
     - startup(): before the scene is built. One line in startups.jsonl; a back-off of min(120, 20 (n - 1)) s when the
       earlier starts never began an episode (they crashed while building, e.g. GPU memory taken by other trials); the
@@ -589,7 +589,7 @@ class Episode:
       else the episode ends `resume_failed` (infra_error). `approx` (a simulator declared nondeterministic): a
       mismatch is recorded (resume_state_mismatch, and the robot's deviation from its checkpointed proprio: joint_pos and
       tcp_pose) and the episode continues, unless a TCP is more than RCB_RESUME_MAX_DEV_M from where it was
-      (resume_failed, infra_error). The verdict is the live episode's (PROTOCOL H.4), so it is judged on the state the
+      (resume_failed, infra_error). The verdict is the live episode's (docs/protocol/invariants.md H.4), so it is judged on the state the
       resumed episode continued from; the mismatch stays in final.json for audit.
     - More than RCB_MAX_RESUMES crashes end the episode: `sim_crashed_on_call` if every crash happened while a call was
       being served (the agent's failure), else `sim_crashed` (infra_error = 1). A verdict already on disk is never
@@ -1011,7 +1011,7 @@ def _finite(v) -> bool:
 
 
 def parse_request(path: str, meta, parts: dict):
-    """What every adapter needs checked before it touches the simulator (ValueError -> 400; PROTOCOL §4.6: a malformed
+    """What every adapter needs checked before it touches the simulator (ValueError -> 400; docs/protocol/eai-standard.md#errors: a malformed
     request steps no physics and never ends the episode, whatever is wrong with it: a JSON object where rows are
     expected, a number too large for a float, NaN, a field of the wrong JSON type). Returns the action rows of a
     /submit as a float64 array (shape and limits are the adapter's to check), None for /observe."""
@@ -1086,7 +1086,7 @@ def max_video_fps(spec: dict) -> float:
 
 
 def check_common(path: str, meta: dict, spec: dict) -> None:
-    """The 400s every layer answers before anything runs (docs/protocol/standard_mode.md, Errors; the OpenAPI
+    """The 400s every layer answers before anything runs (docs/protocol/eai-standard.md, Errors; the OpenAPI
     BadRequest), checked here so that no adapter can miss one: the numeric fields are JSON numbers, video_fps in
     [1, max_video_fps], and on /submit interpolate is linear or hold. A chunk's rows x dt cap is checked in
     standard_call once the rows are parsed. A null numeric field is absent (as in every layer): it is dropped here, so
@@ -1541,7 +1541,7 @@ def make_handler(svc: Service):
                 except Exception as exc:  # noqa: BLE001
                     traceback.print_exc(); E["error"] = repr(exc); svc.log({"ev": "error", "path": self.path, "error": repr(exc)})
                     try:
-                        svc.on_submit_error(exc)    # PROTOCOL §4.6: a simulator error ends the episode (reason "error")
+                        svc.on_submit_error(exc)    # docs/protocol/eai-standard.md#errors: a simulator error ends the episode (reason "error")
                     except Exception:  # noqa: BLE001
                         traceback.print_exc()
                     err = (500, {"error": "simulator error", "detail": repr(exc)[:200]})

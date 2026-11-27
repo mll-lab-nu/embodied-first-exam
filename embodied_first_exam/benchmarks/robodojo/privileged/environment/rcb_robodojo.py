@@ -70,7 +70,7 @@ CONFIG_NAME = "arx_x5"                 # RoboDojo's simulation embodiment: two A
 CONTROL_HZ = 25
 ACTION_DIM = 14
 MAX_ACTIONS = 15000                    # no step budget (PROTOCOL D1; the wall clock is): this only stops a runaway episode (10 min of simulated time)
-# Agent-ended episodes (PROTOCOL §3; the standard task's sim service sets RCB_AGENT_END=1, RCB_STEP_LIMIT=<RoboDojo's
+# Agent-ended episodes (docs/protocol/tasks.md#modes; the standard task's sim service sets RCB_AGENT_END=1, RCB_STEP_LIMIT=<RoboDojo's
 # step_lim>; without them nothing below changes). RoboDojo's evaluator ends an episode at the action whose reward reaches 1
 # (every staged check passed: RoboDojo pops each stage once it passes, so the stages are latched) or after step_lim
 # actions; a policy never sees the reward. With RCB_AGENT_END the checks never end the episode: _hidden_episode_end

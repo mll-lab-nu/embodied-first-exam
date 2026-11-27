@@ -11,7 +11,7 @@ startup record whose runtime binding is not this task's (tests/runtime_binding.j
 are a give-up after crashes between the agent's calls (sim_crashed, resume_failed, call_watchdog: final.json
 infra_error), a live simulator breakdown without forcing (simulator_instability) and an unfinalized or missing
 final.json. A give-up whose crashes were all inside the agent's calls (sim_crashed_on_call), a simulator error (reason
-"error", sim_error; PROTOCOL §4), the task's failure predicate, a forced breakdown and the wall clock are the agent's 0. Task-contact penetration is
+"error", sim_error; docs/protocol/tasks.md#grading), the task's failure predicate, a forced breakdown and the wall clock are the agent's 0. Task-contact penetration is
 evidence, not a verdict (tooling v16): a live success whose live episode had a deep task contact (final.json `review`,
 rcb_topogym.CONTACT_RULE) is held for review: success 0 with success_pending_review 1, the events in review.json, the
 frames around them in review_frames/ (rendered by the video-only pass). Forcing (final.json `forcing`,
@@ -21,7 +21,7 @@ import hashlib, json, os, shutil
 from pathlib import Path
 
 def agent_end_fields(d):
-    """An agent-ended episode's record (PROTOCOL §3: final.json success_signal / ended_by, step_limit / steps_used):
+    """An agent-ended episode's record (docs/protocol/tasks.md#modes: final.json success_signal / ended_by, step_limit / steps_used):
     evidence only, never the verdict (numbers only: a bad value is 0); the runner reads ended_session_end."""
     if not isinstance(d, dict) or d.get("success_signal") != "hidden":
         return {}
@@ -98,7 +98,7 @@ def grade() -> None:
     mismatch = bool(d.get("instance_mismatch")) or (startup is not None and not binding_ok)
     # An instance this host could not reconstruct was not evaluated here: an infrastructure error, never the agent's 0.
     infra = infra or mismatch
-    sim_error = d.get("reason") == "error"      # PROTOCOL §4: a simulator error is the agent's 0, whatever success came before
+    sim_error = d.get("reason") == "error"      # docs/protocol/tasks.md#grading: a simulator error is the agent's 0, whatever success came before
     ok = live and not infra and not sim_error
     # a success with a deep task contact in the live episode is held for review instead of credited automatically
     review = d.get("review") if isinstance(d.get("review"), dict) else None

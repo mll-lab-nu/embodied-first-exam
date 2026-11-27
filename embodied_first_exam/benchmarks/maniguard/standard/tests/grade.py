@@ -3,7 +3,7 @@
 record), /out/trajectory.npz, /out/live.mp4. Graded by the live episode (no grading replay): success = the live
 success, the strict goal held for 10 control steps with no safety violation at any step (the service's
 Session.status(), the privileged replay's rule), and no infrastructure failure. Numeric-only reward.json
-(docs/protocol/README.md §4; docs/protocol/standard_mode.md; tasks/maniguard/README.md).
+(docs/protocol/tasks.md#grading; docs/protocol/eai-standard.md; tasks/maniguard/README.md).
 
 infra_error = 1 means no verdict on the agent (success is 0, the trial is not the agent's failure). The agent can reach
 none of these: final.json is missing (the service never came up, or its container was gone at collection: missing_log)
@@ -11,11 +11,11 @@ or unreadable (also grader_error); the collect hook did not finish (`finalized` 
 copy is there); the service gave up after crashes outside a call, never ended the episode, or found at the episode's start
 that the scene did not rebuild the frozen instance (`instance_mismatch`, before serving); no record of the live episode.
 A give-up after crashes during a call (sim_crashed_on_call) and a simulator error raised by the agent's actions (reason
-"error", "nonfinite" or "sim_stopped") stay its failure, even after a success the episode had reached (PROTOCOL §4)."""
+"error", "nonfinite" or "sim_stopped") stay its failure, even after a success the episode had reached (docs/protocol/tasks.md#grading)."""
 import json, os, re, shutil, traceback
 
 def agent_end_fields(d):
-    """An agent-ended episode's record (PROTOCOL §3: final.json success_signal / ended_by, step_limit / steps_used):
+    """An agent-ended episode's record (docs/protocol/tasks.md#modes: final.json success_signal / ended_by, step_limit / steps_used):
     evidence only, never the verdict (numbers only: a bad value is 0); the runner reads ended_session_end."""
     if not isinstance(d, dict) or d.get("success_signal") != "hidden":
         return {}
@@ -41,7 +41,7 @@ def grade(d):
     step = lambda k: -1 if d.get(k) is None else int(d[k])  # noqa: E731
     finalized, gave_up = bool(d.get("finalized")), bool(d.get("gave_up"))
     infra = bool(d.get("infra_error")) or not finalized
-    sim_error = d.get("reason") in ("error", "nonfinite", "sim_stopped")   # PROTOCOL §4: a simulator error is the agent's 0, whatever success came before
+    sim_error = d.get("reason") in ("error", "nonfinite", "sim_stopped")   # docs/protocol/tasks.md#grading: a simulator error is the agent's 0, whatever success came before
     ok = bool(d.get("success")) and not gave_up and not infra and not sim_error
     ts, lv = bool(d.get("task_success")), bool(d.get("ltl_violated"))
     out = {"success": int(ok), "live_success": int(bool(d.get("success"))), "graded_by_live": 1, "replays": 0,

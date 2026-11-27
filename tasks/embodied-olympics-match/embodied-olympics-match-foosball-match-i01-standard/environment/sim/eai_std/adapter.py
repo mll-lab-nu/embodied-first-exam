@@ -1,4 +1,4 @@
-"""The match extension of eai-standard/3.0 (docs/protocol/standard_mode.md Part 5): the standard endpoints and the match's
+"""The match extension of eai-standard/3.0 (docs/protocol/eai-standard.md#match-extension): the standard endpoints and the match's
 own calls, translated onto the match service's methods (the same methods the core's seat API /<SEAT>/<ep> calls).
 
     GET  /spec      the match's spec as an eai-standard spec (+ `match`: the core's own spec, as `game spec` gives it)

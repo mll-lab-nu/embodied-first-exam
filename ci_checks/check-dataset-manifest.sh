@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Task digests (PROTOCOL §1, H.8): every task carries the digest of its current files in `tasks/<benchmark>/<task>/DIGEST` (one line
+# Task digests (docs/protocol/tasks.md, invariants.md H.8): every task carries the digest of its current files in `tasks/<benchmark>/<task>/DIGEST` (one line
 # `sha256:<hex>`, written last by scripts/task_conventions.py `normalize`, so every
 # normalize run refreshes it). A digest left over from before a change makes the published dataset and
 # the repository disagree, so it fails here: refresh with `python3 scripts/task_conventions.py tasks/<benchmark>/<task>` (umask 022).

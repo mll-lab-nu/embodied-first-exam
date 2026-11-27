@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# ADVISORY (docs/protocol/README.md §5: world-frame information in the texts is decided per benchmark, consistent within
+# ADVISORY (docs/protocol/tasks.md#instructionmd: world-frame information in the texts is decided per benchmark, consistent within
 # it). The benchmarks that declare "no world coordinates in the standard tasks' texts" (their tasks/<benchmark>/README.md,
 # "World-frame information") are the folders of scripts/task_conventions.py NO_WORLD_FRAME_TEXTS; run_all.sh runs this
 # once with the task directories in scope. Such a benchmark's standard tasks never say WHERE things are in the

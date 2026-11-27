@@ -1,5 +1,5 @@
-"""Agent-ended episodes for the shared layer (rcb_limited.py; PROTOCOL §3 "Agent-ended episodes",
-docs/protocol/standard_mode.md "Agent-ended episodes"): the service never shows the task's success, a success never
+"""Agent-ended episodes for the shared layer (rcb_limited.py; docs/protocol/eai-standard.md "Agent-ended episodes",
+docs/protocol/eai-standard.md "Agent-ended episodes"): the service never shows the task's success, a success never
 ends the episode, POST /finish (JSON {}) ends it, and the state the episode ends in is graded (with the task's settle or
 hold window); a goal made of moments (key strikes, button presses) or judged at a trigger is judged on those as they
 happened, as the task's instruction says; a failure rule that ends the episode gives 0. In the `sim` service's
@@ -36,7 +36,7 @@ if STEP_LIMIT is not None and STEP_LIMIT < 1:
     raise RuntimeError("RCB_STEP_LIMIT needs a positive number of steps")
 HIDDEN_STATE = ("now_success", "seen_step", "trial_seen", "finish_t")   # kept through a resume (Episode persist)
 END_STATE_REASONS = ("finished", "timeout", "step_limit")             # ends judged on the state they leave
-# final.json "ended_by" (PROTOCOL §3): the service's end reasons; "session_end" is the end of the agent's session (its
+# final.json "ended_by" (docs/protocol/tasks.md#modes): the service's end reasons; "session_end" is the end of the agent's session (its
 # time limit, its token budget or its own exit: the runner's record says which)
 ENDED_BY = {"finished": "finish", "step_limit": "step_limit", "timeout": "session_end", "error": "error",
             "sim_crashed_on_call": "error", "sim_crashed": "error", "resume_failed": "error",
@@ -281,7 +281,7 @@ def serve(svc: Service, port: int = 8000) -> None:
     if STEP_LIMIT is not None and control_steps(svc.status()) is None:
         raise RuntimeError("RCB_STEP_LIMIT is set, but this service's status() states no control_steps: the "
                            "step limit counts them")
-    if STEP_LIMIT is not None:           # /spec states the limit in force (PROTOCOL §3: budget.steps =
+    if STEP_LIMIT is not None:           # /spec states the limit in force (docs/protocol/tasks.md#modes: budget.steps =
         spec_limit(svc.spec)             # max_control_steps = N), whatever the adapter's own spec says
     L.check_spec(svc.spec)
     L.bind(port, make_handler(svc)).serve_forever()

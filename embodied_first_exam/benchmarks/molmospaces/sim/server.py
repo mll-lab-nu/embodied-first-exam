@@ -1,4 +1,4 @@
-"""eai-standard/3.0 sim service for MolmoSpaces (docs/protocol/standard_mode.md, tasks/molmospaces/README.md): the adapter
+"""eai-standard/3.0 sim service for MolmoSpaces (docs/protocol/eai-standard.md, tasks/molmospaces/README.md): the adapter
 of the shared layer rcb_limited.py; the simulator is rcb_molmospaces.Episode (upstream MolmoSpaces, MuJoCo on the CPU).
 HTTP surface: GET /spec, GET /status, POST /observe, POST /submit, POST /kinematics. Every call is logged to
 /data/episode.jsonl; nothing about objects ever leaves this process.
@@ -204,7 +204,7 @@ def finish(reason: str) -> None:
     """The episode is over: upstream's verdict on the final state, then the record for the collect hook."""
     if E["done"]:
         return
-    # agent-ended episodes (PROTOCOL §3): `done` is the agent's own end, as POST /finish; the horizon is the step limit
+    # agent-ended episodes (docs/protocol/tasks.md#modes): `done` is the agent's own end, as POST /finish; the horizon is the step limit
     reason = {"done": "finished", "horizon": "step_limit"}.get(reason, reason)  # (judged as it stands)
     E["done"] = True
     E["reason"] = reason
@@ -299,7 +299,7 @@ def cameras_of(meta: dict) -> list:
 
 def number(meta: dict, key: str, default: float) -> float:
     """A numeric request field: `default` when the request has no such field; a finite number otherwise, else a 400 (a
-    null, a string, a list, NaN/inf). Every field is checked before anything moves (PROTOCOL §4.6): a malformed request
+    null, a string, a list, NaN/inf). Every field is checked before anything moves (docs/protocol/eai-standard.md#errors): a malformed request
     never becomes an exception past the checks, which would end the episode."""
     if key not in meta:
         return float(default)

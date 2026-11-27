@@ -1,12 +1,12 @@
 """Standard-mode verifier (RoboPaint brush tasks): reads what the sim service (which the agent could not touch) wrote:
 /data/final.json (the live episode's verdict: the service scored its live main sheet against the exemplar with the graders'
 rcb_brush_strict.py, the picture rule and the process rules, after the agent's container was stopped; "graded_by": "live",
-nothing replayed: docs/protocol/README.md H.4), plus the video and sheet pictures. success = the live
+nothing replayed: docs/protocol/invariants.md H.4), plus the video and sheet pictures. success = the live
 sheet meets the task's rule. Numeric-only reward.json; every metric of the live sheet is reported (final_reward = its
-final_reward), with the crash-recovery evidence (sim_startups, resumes, resume_state_mismatch, ...; docs/protocol/standard_mode.md §13.2)
+final_reward), with the crash-recovery evidence (sim_startups, resumes, resume_state_mismatch, ...; embodied_first_exam/standard/README.md#evidence-fields)
 and infra_error.
 
-No verdict on the agent is an infrastructure failure, never the agent's 0 (PROTOCOL §2.6, infra_error = 1): final.json missing (the
+No verdict on the agent is an infrastructure failure, never the agent's 0 (docs/protocol/tasks.md#grading, infra_error = 1): final.json missing (the
 service or its collect hook never wrote one), unreadable (grader_error = 1 too), without a verdict (not `finalized`, or neither the
 live verdict nor a give-up after crashes), the service's give-up after crashes that were not all inside the agent's calls or
 because the frozen instance does not rebuild (final.json infra_error), or a live sheet the service could not score after an
@@ -15,7 +15,7 @@ replays, final_reward, infra_error, sim_error, grader_error and missing_log. RCB
 import json, os, shutil, traceback
 
 def agent_end_fields(d):
-    """An agent-ended episode's record (PROTOCOL §3: final.json success_signal / ended_by, step_limit / steps_used):
+    """An agent-ended episode's record (docs/protocol/tasks.md#modes: final.json success_signal / ended_by, step_limit / steps_used):
     evidence only, never the verdict (numbers only: a bad value is 0); the runner reads ended_session_end."""
     if not isinstance(d, dict) or d.get("success_signal") != "hidden":
         return {}
@@ -55,7 +55,7 @@ def verdict(d):
     grade_error = bool(d.get("grade_error")) and not sim_error
     live = bool(d.get("success"))   # the verdict: final.json `success` decides (live_success is reported beside it)
     infra = bool(d.get("infra_error")) or no_verdict or grade_error
-    ok = live and live_verdict and not infra and not sim_error   # PROTOCOL §4: a simulator error is the agent's 0
+    ok = live and live_verdict and not infra and not sim_error   # docs/protocol/tasks.md#grading: a simulator error is the agent's 0
     return ok, {**{k: float(v) for k, v in m.items() if isinstance(v, (int, float)) and not isinstance(v, bool)},
                 "success": int(ok), "live_success": int(bool(d.get("live_success", d.get("success")))), "graded_by_live": int(live_verdict), "replays": 0,
                 "instance_exact": int(bool(d.get("instance_exact"))),

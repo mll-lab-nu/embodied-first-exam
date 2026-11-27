@@ -55,7 +55,7 @@ from typing import Any
 import numpy as np
 
 MAX_STEPS = 10_000_000          # runaway guard only; the wall clock is the budget
-# Agent-ended episodes (PROTOCOL §3; the standard service's RCB_AGENT_END, sim/server.py): a success never ends the
+# Agent-ended episodes (docs/protocol/tasks.md#modes; the standard service's RCB_AGENT_END, sim/server.py): a success never ends the
 # episode. `success` is the task's verdict on the episode as it now stands: hold, the goal held for the hold time up to
 # now (a failure ends the episode with 0); event, the challenge's success event once it has happened (it stays counted,
 # also when a failure ends the episode later; the challenge's own `done` at the event ends nothing); track, as without

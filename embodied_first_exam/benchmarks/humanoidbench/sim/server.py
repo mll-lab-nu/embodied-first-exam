@@ -5,7 +5,7 @@ the episode, crash recovery and the finalize live in rcb_service.py, which impor
 episode's: step() reports HumanoidBench's own rule (the episode's return reached the pass mark), so nothing is
 replayed to grade it; render_video() re-runs the trajectory once, after the verdict, to
 film it. start_sha is the frozen instance's starting state as instance.npz records it, checked when an episode begins.
-Agent-ended episodes (PROTOCOL §3): the pass mark is a
+Agent-ended episodes (docs/protocol/tasks.md#modes): the pass mark is a
 score earned over the episode, so it is judged as it happened (end_judgement "events": the summed reward reached the
 pass mark at some step); reaching it never ends the episode. A fall or another of the task's failure rules ends it
 (reason "failed": 0 before the mark was reached; after it the event stands and the episode is a success, rcb_service

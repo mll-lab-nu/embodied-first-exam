@@ -1,4 +1,4 @@
-"""eai-standard/3.0 sim service for iSpatialGym (tasks/ispatialgym/README.md; docs/protocol/standard_mode.md): the benchmark's
+"""eai-standard/3.0 sim service for iSpatialGym (tasks/ispatialgym/README.md; docs/protocol/eai-standard.md): the benchmark's
 adapter of the shared layer rcb_limited.py. Owns the scene. HTTP surface (rcb_limited.serve): GET /spec, GET /status,
 POST /observe, POST /submit (RCB1 bodies and responses), POST /kinematics. Logs every call to /out/episode.jsonl and keeps
 /out/final.json current. Nothing about objects, targets or the world frame ever leaves this process.
@@ -151,7 +151,7 @@ def dump() -> None:
 
 
 def finish(reason: str) -> None:
-    # agent-ended episodes (PROTOCOL §3, rcb_agent_end.py; rcb_ispatialgym.AGENT_END): the state the episode ends in is
+    # agent-ended episodes (docs/protocol/tasks.md#modes, rcb_agent_end.py; rcb_ispatialgym.AGENT_END): the state the episode ends in is
     # judged with upstream's success under settle-eval (the goal and every target held, the objects and the robot at
     # rest, over the last 45 control steps). At POST /finish and at the session's end the settle window runs from that
     # state: the last command held (base at 0, journaled and recorded) until upstream's success holds or 45 steps

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""ADVISORY. Seeds (docs/protocol/README.md §2): every task names the frozen instances it may run from. For every task:
+"""ADVISORY. Seeds (docs/protocol/tasks.md): every task names the frozen instances it may run from. For every task:
   - `[metadata] instance_seed` (an integer) is the default seed, the one field that names it; `[metadata.seeds]`, only
     where they are not the defaults, has `allowed` (default [instance_seed]: a list of integers, as many seeds as the
     task has, at least three recommended (fewer is a note, never a failure); a range `{ from = A, to = B }` with both
@@ -41,7 +41,7 @@ def seeds_table(task: Path) -> tuple[dict, dict]:
 
 def holder(task: Path) -> Path:
     """The task whose tests/ holds the pair's instances: the privileged twin of a standard task, else the task."""
-    twin = tc.twin_of(task)          # the mode registry's twin mode (PROTOCOL §3)
+    twin = tc.twin_of(task)          # the mode registry's twin mode (docs/protocol/tasks.md#modes)
     return twin if twin is not None and twin.is_dir() else task
 
 
@@ -141,7 +141,7 @@ def check(task: Path) -> list[str]:
         errs.append(f'oracle = "{md.get("oracle")}" but seeds.oracle is empty: name the seed(s) its solution is for')
     if errs:
         return errs
-    h = holder(task)     # the twins' equal seeds: ci_checks/check-twins.py (an invariant, PROTOCOL Appendix H.7)
+    h = holder(task)     # the twins' equal seeds: ci_checks/check-twins.py (an invariant, docs/protocol/invariants.md H.7)
     kinds = instance_kinds(h / "tests")
     if build == "frozen":                      # a list: every listed seed is a committed instance
         for s in allowed:
@@ -167,12 +167,12 @@ def check(task: Path) -> list[str]:
         for d in sorted(env.rglob("seeds")):
             if d.is_dir():
                 errs.append(f"{d.relative_to(task)}: a `seeds` directory where the agent's image is built from "
-                            "(another seed's instance belongs under tests/seeds/, PROTOCOL §2)")
+                            "(another seed's instance belongs under tests/seeds/, docs/protocol/tasks.md)")
     return errs
 
 
 def few_seeds(task: Path) -> bool:
-    """Fewer than three distinct allowed seeds: at least three are recommended (PROTOCOL §2), never a failure."""
+    """Fewer than three distinct allowed seeds: at least three are recommended (docs/protocol/tasks.md), never a failure."""
     md, sd = seeds_table(task)
     allowed = sd.get("allowed", [md.get("instance_seed")]) if isinstance(sd, dict) else []
     if isinstance(allowed, dict):
@@ -194,10 +194,10 @@ def main(argv: list[str]) -> int:
         if not errs and few_seeds(t):
             few.append(t)
     if few:
-        print(f"NOTE {len(few)} task(s) allow fewer than three distinct seeds (at least three recommended, PROTOCOL §2; "
+        print(f"NOTE {len(few)} task(s) allow fewer than three distinct seeds (at least three recommended, docs/protocol/tasks.md; "
               f"not a failure): {', '.join(t.name for t in few[:5])}{' ...' if len(few) > 5 else ''}")
     if not bad:
-        print(f"check-seeds: {len(dirs)} task(s) name their seeds (PROTOCOL §2)")
+        print(f"check-seeds: {len(dirs)} task(s) name their seeds (docs/protocol/tasks.md)")
     return 1 if bad else 0
 
 

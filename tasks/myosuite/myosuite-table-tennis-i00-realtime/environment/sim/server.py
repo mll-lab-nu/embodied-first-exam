@@ -1,5 +1,5 @@
 """eai-standard/3.0 sim service for MyoSuite's realtime tasks -- the adapter behind the shared realtime layer
-(`python /srv/rcb_realtime.py`, which imports this module and calls build(); docs/protocol/README.md §3,
+(`python /srv/rcb_realtime.py`, which imports this module and calls build(); docs/protocol/tasks.md#modes,
 tasks/myosuite/README.md).
 
 The simulator-specific half only: `MyoSuite` implements rcb_service.Sim (the contract documented in rcb_service.py) for
@@ -15,7 +15,7 @@ live_verdict(): nothing is left that a replay applied and the live run did not. 
 video is rendered from the trajectory after the verdict (render_video). `start_sha` is the frozen instance's recorded
 state hash: the layer refuses a fresh episode whose scene does not start there (instance_mismatch, infrastructure).
 
-Agent-ended episodes (PROTOCOL §3; rcb_myosuite.AGENT_END): step()'s success is the
+Agent-ended episodes (docs/protocol/tasks.md#modes; rcb_myosuite.AGENT_END): step()'s success is the
 episode's as it stands, never an end. The adapter declares how its rule is judged: a challenge's success event as it
 happened (end_judgement "events"); a hold family's goal on the end state with the hold window run from it
 (end_window_steps = its hold time; Session.solved_run counts the steps already held); MyoDex's track at the end of the

@@ -1,5 +1,5 @@
 """eai-standard/3.0 sim service for BEHAVIOR-1K v3.9.2 (OmniGibson on Isaac Sim, the 2026 challenge stack; R1Pro; see
-docs/protocol/standard_mode.md): the benchmark's adapter of the shared layer rcb_limited.py. Owns the scene. HTTP surface
+docs/protocol/eai-standard.md): the benchmark's adapter of the shared layer rcb_limited.py. Owns the scene. HTTP surface
 (rcb_limited.serve): GET /spec, GET /status, POST /observe, POST /submit (RCB1 bodies and responses: videos / frames /
 depth / proprio as raw blobs, never base64), POST /kinematics. Logs every call to /out/episode.jsonl and keeps
 /out/final.json current. Nothing about objects ever leaves this process.
@@ -26,11 +26,11 @@ Differences from the RoboTwin service, all from the simulator:
   breakdown (...)", a failure recorded as `sim_breakdown`), on the collect hook's signal (timeout), on a simulator error, or at the tooling's runaway guard
   (MAX_STEPS control steps, reason "step_limit", judged as it stands;
   /spec max_control_steps); /spec "episode" says so;
-- a malformed request is a 400 before anything is executed (PROTOCOL §4.6): every field of /submit and /observe is
+- a malformed request is a 400 before anything is executed (docs/protocol/eai-standard.md#errors): every field of /submit and /observe is
   checked first (request_number, request_cameras, request_note, video_fps; dt must be a whole number of control
   periods, it is never rounded), so a wrong type, a null or an out-of-range value never reaches the simulator and never
   ends the episode;
-- crash recovery (rcb_limited.Episode, docs/protocol/standard_mode.md §13): every executed control step goes to
+- crash recovery (rcb_limited.Episode, embodied_first_exam/standard/README.md#crash-recovery): every executed control step goes to
   /out/journal.f64, every completed call is checkpointed (rows, state hash, proprio row); after a crash compose restarts
   the container (run.sh exits non-zero) and this service replays the journal and continues the SAME episode. Resume
   class `approx`: OmniGibson declares rollouts nondeterministic, so a hash mismatch after the replay is recorded
@@ -42,7 +42,7 @@ Differences from the RoboTwin service, all from the simulator:
   frames, which every control step renders anyway for the agent (224 px), tiled, every third control step (10 fps),
   copied in the control loop and encoded by a thread (LiveVideo); a resume records it anew while it replays the
   journal. When it is missing or does not play, finalize.sh renders one in a video-only pass after the verdict;
-- agent-ended episodes (PROTOCOL §3): the success rule never ends the episode and is never shown
+- agent-ended episodes (docs/protocol/tasks.md#modes): the success rule never ends the episode and is never shown
   (Session.agent_end); the episode ends at the agent's POST /finish, at the session's end (the collect hook's signal), at
   a fall or a breakdown (failures, also after a success), at the runaway guard (reason step_limit) or on a simulator
   error, and is judged on the state it ends in: from there the same settle window runs (the robot held still for up to
@@ -180,7 +180,7 @@ PRIMS = S.primitives()
 S._curobo()                             # the ee_pose IK; built before the episode starts (it steps nothing)
 FIRST, _ = S._frames(sorted(S._cam_sensors()))
 CAMS = sorted(c for c, a in FIRST.items() if min(a.shape[:2]) >= 32)
-# /spec max_frames_per_call (PROTOCOL §3 "Images per call"): the longest /observe (a 30 s window at the control rate,
+# /spec max_frames_per_call (docs/protocol/tasks.md#modes "Images per call"): the longest /observe (a 30 s window at the control rate,
 # + the first and the last frame) with every camera and its depth
 BUDGET_WATCH_S = 30.0   # the budget is a 30 s watch's whatever max_chunk_s is: the sim memory cap and the instruction use it
 MAX_FRAMES = (int(round(BUDGET_WATCH_S * CTRL_HZ)) + 2) * 2 * len(CAMS)
@@ -221,7 +221,7 @@ class LiveVideo:
     agent's observations, RCB_CAM_SIZE), tiled side by side, every `every`-th control step. The control loop only copies
     the frames and queues them; a thread encodes them (_AvWriter: libx264, fragmented MP4 as the replay video's: a
     process that dies leaves a playable prefix). A full queue (the encoder behind) drops the frame and counts it.
-    Nothing here decides anything: a failure loses only the video (PROTOCOL §4)."""
+    Nothing here decides anything: a failure loses only the video (docs/protocol/tasks.md#grading)."""
 
     def __init__(self, path: str, cams, every: int = 3, fps: int = 10, max_queue: int = 64, writer=None):
         import queue
@@ -334,7 +334,7 @@ def cam_spec(c: str) -> dict:
 SPEC = {
     "protocol": PROTOCOL, "simulator": "behavior-1k 3.9.2 (OmniGibson / Isaac Sim)", "robot": "r1pro", "task_text": S.spec["text"],
     "control_hz": CTRL_HZ, "physics_substeps": SUBSTEPS, "max_chunk_s": MAX_CHUNK_S, "max_frames_per_call": MAX_FRAMES,
-    "max_control_steps": int(M.MAX_STEPS),   # the tooling's runaway guard (PROTOCOL §4.5): the episode ends there, reason "step_guard" (agent-ended: "step_limit")
+    "max_control_steps": int(M.MAX_STEPS),   # the tooling's runaway guard (docs/protocol/eai-standard.md#post-reset-reset-capability): the episode ends there, reason "step_guard" (agent-ended: "step_limit")
     "cameras": {c: cam_spec(c) for c in CAMS},
     "default_cameras": [c for c in S.VIDEO_CAMERAS if c in CAMS],   # the default: head, left wrist, right wrist
     "action_types": {

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""ADVISORY (docs/protocol/README.md §1): the per-task READMEs and the benchmark READMEs (scripts/task_conventions.py
+"""ADVISORY (docs/protocol/tasks.md): the per-task READMEs and the benchmark READMEs (scripts/task_conventions.py
 render_readme, tasks/<benchmark>/readme.toml).
 
     python3 ci_checks/check-readmes.py [task dir ...]     # default: every task

@@ -5,7 +5,7 @@
 # Build: run images/molmospaces/prepare_assets.sh first (it builds the `base` stage, installs and prunes the assets in a
 # container of it, and stages them in images/molmospaces/build/), then scripts/images.sh build, or in this directory:
 #   docker build -t ghcr.io/mll-lab-nu/efe:molmospaces-$(cat VERSION) .
-# Not included (PROTOCOL §2.7): upstream's scripted experts (molmo_spaces/policy/solvers: stubs only) and every grasp file.
+# Not included (docs/protocol/leakage.md): upstream's scripted experts (molmo_spaces/policy/solvers: stubs only) and every grasp file.
 # Licences: code Apache-2.0; scenes and AI2-THOR objects CC BY 4.0; Objaverse objects ODC-BY 1.0 and each its creator's
 # CC BY / BY-SA / CC0 (no instance uses an episode with a non-commercial one).
 FROM docker.io/library/python:3.11.13-slim-bookworm@sha256:86adf8dbadc3d6e82ee5dd2c74bec2e1c2467cdad47886280501df722372d2e1 AS base

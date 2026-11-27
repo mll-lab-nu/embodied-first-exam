@@ -11,7 +11,7 @@ Settings come from environment/docker-compose.yaml:
   RCB_TASK_TEXT     one sentence for /spec
   RCB_RESET_BUDGET, RCB_WALL_CLOCK_S, RCB_DATA   the service's own (rcb_service.main)
 
-Agent-ended episodes (PROTOCOL §3): HumanCLAW's episode is agent-ended by its
+Agent-ended episodes (docs/protocol/tasks.md#modes): HumanCLAW's episode is agent-ended by its
 own rule already (only a stop can succeed, the state at the stop is judged), so the service's finish IS the stop: POST
 /finish runs the stop action as the episode's last control step (journaled like any other row), and the end of the
 agent's session does too, before the episode is judged (reason "timeout"); a stop the agent sends ends the episode as

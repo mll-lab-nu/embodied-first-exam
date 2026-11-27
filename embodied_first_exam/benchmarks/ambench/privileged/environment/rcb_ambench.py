@@ -575,7 +575,7 @@ class Session:
                     print(f"[rcb_ambench] end-of-episode capture failed: {exc!r}", file=sys.stderr, flush=True); self._end = None
             return _reset_idx(env_ids)
         self.env._reset_idx = _keep_end_state
-        # hide_success (a standard-mode agent-ended episode, PROTOCOL §3): AM-Bench's success (its `terminated`) never
+        # hide_success (a standard-mode agent-ended episode, docs/protocol/tasks.md#modes): AM-Bench's success (its `terminated`) never
         # ends the episode and Isaac Lab never resets on it; it is kept as `now_success` (the success as the state is after
         # each step, never latched). The time-out still ends the episode (judged as it stands).
         self.hide_success = bool(hide_success) and not self.render_only

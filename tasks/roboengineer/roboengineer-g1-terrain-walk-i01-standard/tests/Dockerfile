@@ -3,6 +3,6 @@ LABEL roboengineer.instance_sha256="b8366e8b9634f54a1a8c3b30684c61413b312a720f15
 COPY test.sh instance.json /tests/
 COPY --from=ghcr.io/mll-lab-nu/efe:roboengineer-files-0.4.0@sha256:8dc6a958bd2b65394d7b4af4ffb6e20b106a2adea1af43fef2cd9ec1677ab696 /standard/tests/grade.py /tests/grade.py
 RUN echo 'b8366e8b9634f54a1a8c3b30684c61413b312a720f152b0d0547ce7e69df8993  /tests/instance.json' | sha256sum -c - && chmod +x /tests/test.sh
-# resources (PROTOCOL §6) # rcb-monitor
+# resources (docs/protocol/resources.md) # rcb-monitor
 COPY --from=ghcr.io/mll-lab-nu/efe:monitor-0.5.0@sha256:ecc5f24f1516ca11711d7c2d3ac07c89f79cd9220812c1244498ec71e352402a /opt/rcb_monitor/rcb_limits.py /tests/rcb_limits.py
 COPY rcb_limits.json /tests/rcb_limits.json

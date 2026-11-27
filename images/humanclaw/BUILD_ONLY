@@ -1,4 +1,4 @@
-BUILD_ONLY: ghcr.io/mll-lab-nu/efe-private:humanclaw-<images/humanclaw/VERSION> is never public (docs/protocol/README.md §2.4,
+BUILD_ONLY: ghcr.io/mll-lab-nu/efe-private:humanclaw-<images/humanclaw/VERSION> is never public (docs/operations.md,
 D5). It is kept in the organization's private package as the build cache of the HumanCLAW tasks: every task's Dockerfile
 starts with this recipe (images/humanclaw/Dockerfile, copied in by scripts/task_conventions.py normalize) and its compose
 names the private image in `build.cache_from`. A runner that can pull the image takes its layers. Anyone else builds it

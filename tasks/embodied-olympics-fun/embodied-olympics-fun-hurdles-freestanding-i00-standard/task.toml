@@ -27,19 +27,19 @@ simulator = "mujoco"
 robot = "unitree-h1-2"
 family = "hurdles_freestanding"
 category = "track-and-jumps"
-dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
+dynamics = "static"               # scene dynamics (docs/protocol/tasks.md): the task's own declaration
 protocol = "eai-standard/3.0"
 instance_seed = 0
 expert_time_estimate_hours = 14.0
 oracle = "none"
-oracle_evidence = "no reference solution; the referee is tested: rule (stricter than TR 22.6 in one way): leg knocks stay legal, but at least one hurdle must be cleared cleanly; the attempt fails the moment the last standing hurdle leaves its standing pose (a top-bar point more than 0.10 m from where it stood). Positive by injection: the H1-2 given 2.0 m/s forward and 5.5 m/s up over each free-standing 1.067 m hurdle, nothing touched, a real walk to the line; and three hurdles knocked down legally by a trailing leg in the air with the fourth cleared cleanly succeeds (hurdles_clean 1). Negatives: all four knocked down legally fails at the fourth knock; the archived success that knocked all four over with its thighs, replayed on the core it ran on, succeeds under the old module and fails under this one at the fourth knock (t = 86.75 s); knocked with a hand (walking into one), standing on its top bar (climbing), shoved along the track or out of the lane by a foot, moved by something else, knocked in the air then a foot under the bar, a leg swung over from the ground, feet under the bar, beside it, a leg beside it, left the lane, down; nop fails on time with the hurdles still for 140 s; determinism by state hash. Hurdle statics in physics: toppling force 3.81 kgf (3.6 stands, 4.0 falls). Feasibility on the H2-class motor core (hips and knees 360 N m braking peak, ankle 67 / 40 N m), the robot's own motors, a searched standing take-off checked against the real colliding hurdle: an upright clean flight (no touch until touchdown) clears up to 0.914 m (search limit 0.90-0.93 m) but the robot then falls; the best clean clearance with a standing landing found is 0.553 m, below every official height (0.686 m the lowest), so the 1.067 m men's height is kept.; human review in the pull request that adds the benchmark (PROTOCOL §4)"
+oracle_evidence = "no reference solution; the referee is tested: rule (stricter than TR 22.6 in one way): leg knocks stay legal, but at least one hurdle must be cleared cleanly; the attempt fails the moment the last standing hurdle leaves its standing pose (a top-bar point more than 0.10 m from where it stood). Positive by injection: the H1-2 given 2.0 m/s forward and 5.5 m/s up over each free-standing 1.067 m hurdle, nothing touched, a real walk to the line; and three hurdles knocked down legally by a trailing leg in the air with the fourth cleared cleanly succeeds (hurdles_clean 1). Negatives: all four knocked down legally fails at the fourth knock; the archived success that knocked all four over with its thighs, replayed on the core it ran on, succeeds under the old module and fails under this one at the fourth knock (t = 86.75 s); knocked with a hand (walking into one), standing on its top bar (climbing), shoved along the track or out of the lane by a foot, moved by something else, knocked in the air then a foot under the bar, a leg swung over from the ground, feet under the bar, beside it, a leg beside it, left the lane, down; nop fails on time with the hurdles still for 140 s; determinism by state hash. Hurdle statics in physics: toppling force 3.81 kgf (3.6 stands, 4.0 falls). Feasibility on the H2-class motor core (hips and knees 360 N m braking peak, ankle 67 / 40 N m), the robot's own motors, a searched standing take-off checked against the real colliding hurdle: an upright clean flight (no touch until touchdown) clears up to 0.914 m (search limit 0.90-0.93 m) but the robot then falls; the best clean clearance with a standing landing found is 0.553 m, below every official height (0.686 m the lowest), so the 1.067 m men's height is kept.; human review in the pull request that adds the benchmark (docs/protocol/tasks.md#grading)"
 
 [verifier]
 timeout_sec = 900.0
 environment_mode = "separate"
 network_mode = "no-network"
 
-# Resources (PROTOCOL §6): seal the monitor's record first.
+# Resources (docs/protocol/resources.md): seal the monitor's record first.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
@@ -67,7 +67,7 @@ timeout_sec = 7200.0
 # Egress: open, `network_mode = "public"` below (the author's choice). Embodied Olympics lets the agent search for and download
 # public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md). The agent's
 # container holds no simulator, no referee and no instance.
-network_mode = "public"        # open egress, the task author's choice (docs/protocol/README.md Appendix H.6)
+network_mode = "public"        # open egress, the task author's choice (docs/protocol/invariants.md H.6)
 
 [environment]
 build_timeout_sec = 1800.0
@@ -75,7 +75,7 @@ cpus = 4
 memory_mb = 10240
 storage_mb = 10240
 
-# The robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): Harbor starts this server for the agent.
+# The robot's MCP tools (docs/protocol/eai-standard.md "MCP tools"): Harbor starts this server for the agent.
 [[environment.mcp_servers]]
 name = "efe-robot"
 transport = "stdio"

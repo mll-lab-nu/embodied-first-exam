@@ -1,4 +1,4 @@
-"""The sim service's entry point with the match extension of eai-standard/3.0 (docs/protocol/standard_mode.md Part 5):
+"""The sim service's entry point with the match extension of eai-standard/3.0 (docs/protocol/eai-standard.md#match-extension):
 
     python3 -m eai_std.serve            (cwd = the directory holding core/ and eai_std/; core/serve.py's environment)
 

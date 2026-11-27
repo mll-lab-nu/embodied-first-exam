@@ -410,7 +410,7 @@ def simulator_error_ends_the_episode():
 
 @case
 def malformed_requests_are_400_and_change_nothing():
-    """PROTOCOL §4.6: a request the service cannot read is the caller's mistake (400): no physics, the episode goes on.
+    """docs/protocol/eai-standard.md#errors: a request the service cannot read is the caller's mistake (400): no physics, the episode goes on.
     Raw JSON bodies, as an agent without the shipped client may send them."""
     c = Compose("malformed")
     try:

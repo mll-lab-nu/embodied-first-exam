@@ -113,7 +113,7 @@ TASKS: dict[str, dict[str, Any]] = {
     },
 }
 
-# Agent-ended episodes (PROTOCOL §3; the standard task's sim service sets RCB_AGENT_END=1): a success never ends the episode
+# Agent-ended episodes (docs/protocol/tasks.md#modes; the standard task's sim service sets RCB_AGENT_END=1): a success never ends the episode
 # and the state the episode ends in is judged. YAMLab's stages latch in order; the earlier stages count as they happened,
 # the LAST one must still hold when the episode ends: before every control step its latch is opened again with its
 # consecutive-step counter one short of the requirement, so YAMLab's own update_stage_success re-latches it at once while
@@ -1392,7 +1392,7 @@ def cmd_make_instance(a) -> None:
            "robot_joint_positions": {arm: [round(float(x), 6) for x in s.joint_positions(arm)] for arm in ARMS},
            "objects": s.objects(), "success_params": s.success_params(), "table_top_z": None,
            # no provenance here: the instance is in the agent's container, and where its scene came from is the address
-           # of a solution (PROTOCOL §2.7); the maintainers keep that record outside the repository
+           # of a solution (docs/protocol/leakage.md); the maintainers keep that record outside the repository
            "versions": _versions()}
     try:
         from yamlab.robot.yam import ROBOT

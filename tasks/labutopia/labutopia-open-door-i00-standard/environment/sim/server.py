@@ -1,4 +1,4 @@
-"""eai-standard/3.0 sim service for the LabUtopia tasks (docs/protocol/standard_mode.md): the adapter of the shared layer
+"""eai-standard/3.0 sim service for the LabUtopia tasks (docs/protocol/eai-standard.md): the adapter of the shared layer
 rcb_limited.py; the simulator is rcb_labutopia.Session (LabUtopia on Isaac Sim, PhysX on the CPU, RTX cameras). HTTP
 surface: GET /spec, GET /status, POST /observe, POST /submit, POST /kinematics. Every call is logged to
 /data/episode.jsonl.
@@ -10,7 +10,7 @@ LabUtopia's own controllers send. The episode is agent-ended (below). Nothing ab
 objects or the instruments leaves this process: the proprioception is the robot's own joints, gripper, tool frame and
 commands.
 
-Agent-ended episodes (rcb_agent_end.py; PROTOCOL §3): a success never ends the episode (the Session runs
+Agent-ended episodes (rcb_agent_end.py; docs/protocol/tasks.md#modes): a success never ends the episode (the Session runs
 with its stop at success off) and is never shown; POST /finish (finished), the session's end (timeout) or the technical
 cap (step_limit) ends it, and finish() judges it: the families whose goal is a state (pick, open_door, open_drawer,
 open_close, place) on the state it ends in, earlier steps of the rule (a lift, an opening) counted as they happened;
@@ -380,7 +380,7 @@ def recorder(cams, fps: int, meta: dict, video: str) -> L.Recorder:
 
 def checked(parse):
     """A request is checked in full before anything is executed. The layer answers a ValueError with 400 and takes any
-    other exception for a simulator error that ends the episode (PROTOCOL §4), so whatever a malformed field raises
+    other exception for a simulator error that ends the episode (docs/protocol/tasks.md#grading), so whatever a malformed field raises
     while it is being checked (null, a list where a number belongs, a number too large for a float) is a ValueError."""
 
     def run(*args):

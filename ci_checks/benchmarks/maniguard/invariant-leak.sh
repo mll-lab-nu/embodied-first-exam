@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# INVARIANT hook (docs/protocol/README.md Appendix H.2: no answer or pointer to one in the agent's reach), this benchmark's
+# INVARIANT hook (docs/protocol/invariants.md H.2: no answer or pointer to one in the agent's reach), this benchmark's
 # own: ci_checks/run_invariants.sh runs it with every task directory in scope; it checks its benchmark's tasks
 # (maniguard-*) in one pass.
 # ManiGuard only (tasks/maniguard-*): ManiGuard publishes 40 scripted safe demonstrations per task, its data generator
-# (scripted skeletons, grasp annotations) and its policy servers. None of it may be in reach of the agent (PROTOCOL Appendix H.2):
+# (scripted skeletons, grasp annotations) and its policy servers. None of it may be in reach of the agent (docs/protocol/invariants.md H.2):
 #  1. the agent's build context environment/ holds only the files the generator writes there (privileged: the Dockerfile,
 #     compose file, the tooling and the frozen instance; standard: the client, its pins and the sim/ sidecar, the build
 #     context of the sidecar's own image (its Dockerfile, .dockerignore));
@@ -30,7 +30,7 @@ def check(t: str) -> bool:
                  "Dockerfile", ".dockerignore"}}   # the sidecar's image: images/maniguard/Dockerfile (the recipe, normalize writes it),
                                                    # then sim/ at /srv and its shared files from files-only images
     dirs["rcb_monitor"] = {"limits.json"}   # the resource monitor sidecar's limits, mounted only into it (its code is in the image; check-monitor.py)
-    if not name.endswith("-privileged"):    # the robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): the task's
+    if not name.endswith("-privileged"):    # the robot's MCP tools (docs/protocol/eai-standard.md "MCP tools"): the task's
         dirs["efe_mcp"] = {"manifest.json"}  # manifest.json; the server's files come from the files-only image standard-files
     for f in sorted(os.listdir(env)):
         p = os.path.join(env, f)

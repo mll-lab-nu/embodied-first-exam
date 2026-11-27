@@ -1,6 +1,6 @@
 #!/bin/sh
 # The privileged agent's layer on eai-ispatialgym (tasks/ispatialgym/README.md, docs/protocol/leakage.md §1, §3): the agent shares this
-# container with the simulator and may read every file in it (PROTOCOL §5), so what states the task or points to its
+# container with the simulator and may read every file in it (docs/protocol/tasks.md#instructionmd), so what states the task or points to its
 # solution goes, the simulator still loads the frozen start, and the build fails if anything survived.
 #   scrub.sh <this task's BDDL problem in the image>
 # 1. this task's start-only BDDL problem (neutral_bddl.py) from the image's own copy, into /opt/tools/activity_definitions;

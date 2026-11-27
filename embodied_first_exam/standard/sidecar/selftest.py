@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The sidecar service's first-attempt record (docs/protocol/standard_mode.md "Evidence and grading"; PROTOCOL
+"""The sidecar service's first-attempt record (docs/protocol/eai-standard.md "Evidence and grading"; PROTOCOL
 §4), on a toy simulator (numpy only, no image, a few seconds), for every distinct rcb_service.py:
 its one source embodied_first_exam/standard/sidecar/ and the abc-sim base image's copy (byte-identical; a copy without the
 record is reported, not failed):

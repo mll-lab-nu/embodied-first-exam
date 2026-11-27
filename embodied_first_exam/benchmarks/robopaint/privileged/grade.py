@@ -27,14 +27,14 @@ import numpy as np
 LOG_DIR = os.environ.get("RCB_VERIFIER_LOG_DIR", "/logs/verifier")
 
 
-# PROTOCOL §2.6: every exit writes these (numeric only)
+# docs/protocol/tasks.md#grading: every exit writes these (numeric only)
 BASE = {"success": 0, "final_reward": 0.0, "deterministic": 0, "grader_error": 0, "infra_error": 0, "missing_trajectory": 0, "bad_trajectory": 0}
 
 
 def write(ok: bool, out: dict) -> None:
     os.makedirs(LOG_DIR, exist_ok=True)
     out = {**BASE, **out}
-    if out["grader_error"]: out["infra_error"] = 1     # the verifier's failure, never the agent's 0 (PROTOCOL §2.6)
+    if out["grader_error"]: out["infra_error"] = 1     # the verifier's failure, never the agent's 0 (docs/protocol/tasks.md#grading)
     open(os.path.join(LOG_DIR, "reward.txt"), "w").write("1\n" if ok else "0\n")
     json.dump(out, open(os.path.join(LOG_DIR, "reward.json"), "w"))
     print(json.dumps(out), flush=True)

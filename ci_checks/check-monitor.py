@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Two tiers. INVARIANT (docs/protocol/README.md Appendix H.1; `--tier invariants`, part of the required CI job):
+"""Two tiers. INVARIANT (docs/protocol/invariants.md H.1; `--tier invariants`, part of the required CI job):
 the monitor sidecar that check-verifier-isolation.sh exempts is held to its own isolation (no network, its code from
 the pinned image and its limits read-only, the beacons read-only in every other service, its seal the first sidecar collect hook), and tests/test.sh
 sanitizes /app/output before anything reads the agent's files, and the monitor image every task pins carries this
@@ -8,7 +8,7 @@ selftest}.py). ADVISORY (`--tier advisory`): the task's two copies of its caps (
 rcb-limits/2), no copy of the code in the task, the verifier step's trap and COPY lines, and the monitor's own tests.
 Default: both.
 
-PROTOCOL §6: every task runs the resource monitor sidecar and the verifier step, wired exactly as
+docs/protocol/resources.md: every task runs the resource monitor sidecar and the verifier step, wired exactly as
 images/monitor/rcb_monitor/inject.py writes them (task_conventions.py --check catches any drift from inject.py; this
 check catches a task normalize never ran on, and hand edits that break the safety properties).
 

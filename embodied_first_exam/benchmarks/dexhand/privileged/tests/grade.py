@@ -106,7 +106,7 @@ def main() -> None:
                 raise ValueError("replay verdict must be a JSON object")
             mismatch = a if a.get("instance_mismatch") else None
             if mismatch is not None:
-                # the frozen instance did not build to its recorded start: no verdict on the agent (PROTOCOL H.4)
+                # the frozen instance did not build to its recorded start: no verdict on the agent (docs/protocol/invariants.md H.4)
                 result.update(success=0, infra_error=1, instance_mismatch=1, hand_wuji=int(mismatch.get("hand") == "wuji"))
                 details.update(hand=str(mismatch.get("hand", "sharpa")), reason=str(mismatch.get("error") or ""),
                                start_sha=str(mismatch.get("start_sha") or ""),

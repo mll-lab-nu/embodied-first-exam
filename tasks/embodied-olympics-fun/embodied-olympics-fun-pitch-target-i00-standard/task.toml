@@ -27,19 +27,19 @@ simulator = "mujoco"
 robot = "unitree-h1-2"
 family = "pitch_target"
 category = "throwing-catching-striking"
-dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
+dynamics = "static"               # scene dynamics (docs/protocol/tasks.md): the task's own declaration
 protocol = "eai-standard/3.0"
 instance_seed = 0
 expert_time_estimate_hours = 8.0
 oracle = "none"
-oracle_evidence = "no reference solution; the referee is tested: The H1-2's own right Inspire hand at its default forces (20 N per fingertip, 30 N the thumb) holds the baseball against its palm by contact and friction (no weld). Positive by a declared magic action: real stance on the mound with both feet across the pitcher's plate and the hand opening; injected once, 10 ms after it starts to open, the ball moved 0.1 m forwards and up and given 22 m/s at 9.5 deg: released on the plate, it crosses the zone at 0.91 m height, 0.02 m off centre, at 20 m/s (strike); the same state hash twice; a 14.5 m/s lob through the zone is also a strike. Negatives: nop (pitch timer, ball still in the hand), release with no foot on the plate (behind it, in front of it), a bounce, high, wide, the hand opened (the ball drops to the mound), the ball touched after the release, a fall before the call. Stress: random arm targets with the hand closed: the ball drops out, never through the fingers (at most 1.9 mm into them). The clean release (the same rule as javelin): brushes by the right arm in the 0.2 s grace after the release may change the ball's velocity by at most 0.5 m/s in all; an injected blow on the palm (1.8 m/s) fails as 'struck after the release'. An agent's own-motor strike from a model run succeeds under it. Every rule above is judged in the family's own 1 ms substep hook.; human review in the pull request that adds the benchmark (PROTOCOL §4)"
+oracle_evidence = "no reference solution; the referee is tested: The H1-2's own right Inspire hand at its default forces (20 N per fingertip, 30 N the thumb) holds the baseball against its palm by contact and friction (no weld). Positive by a declared magic action: real stance on the mound with both feet across the pitcher's plate and the hand opening; injected once, 10 ms after it starts to open, the ball moved 0.1 m forwards and up and given 22 m/s at 9.5 deg: released on the plate, it crosses the zone at 0.91 m height, 0.02 m off centre, at 20 m/s (strike); the same state hash twice; a 14.5 m/s lob through the zone is also a strike. Negatives: nop (pitch timer, ball still in the hand), release with no foot on the plate (behind it, in front of it), a bounce, high, wide, the hand opened (the ball drops to the mound), the ball touched after the release, a fall before the call. Stress: random arm targets with the hand closed: the ball drops out, never through the fingers (at most 1.9 mm into them). The clean release (the same rule as javelin): brushes by the right arm in the 0.2 s grace after the release may change the ball's velocity by at most 0.5 m/s in all; an injected blow on the palm (1.8 m/s) fails as 'struck after the release'. An agent's own-motor strike from a model run succeeds under it. Every rule above is judged in the family's own 1 ms substep hook.; human review in the pull request that adds the benchmark (docs/protocol/tasks.md#grading)"
 
 [verifier]
 timeout_sec = 900.0
 environment_mode = "separate"
 network_mode = "no-network"
 
-# Resources (PROTOCOL §6): seal the monitor's record first.
+# Resources (docs/protocol/resources.md): seal the monitor's record first.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
@@ -67,7 +67,7 @@ timeout_sec = 7200.0
 # Egress: open, `network_mode = "public"` below (the author's choice). Embodied Olympics lets the agent search for and download
 # public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md). The agent's
 # container holds no simulator, no referee and no instance.
-network_mode = "public"        # open egress, the task author's choice (docs/protocol/README.md Appendix H.6)
+network_mode = "public"        # open egress, the task author's choice (docs/protocol/invariants.md H.6)
 
 [environment]
 build_timeout_sec = 1800.0
@@ -75,7 +75,7 @@ cpus = 4
 memory_mb = 10240
 storage_mb = 10240
 
-# The robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): Harbor starts this server for the agent.
+# The robot's MCP tools (docs/protocol/eai-standard.md "MCP tools"): Harbor starts this server for the agent.
 [[environment.mcp_servers]]
 name = "efe-robot"
 transport = "stdio"

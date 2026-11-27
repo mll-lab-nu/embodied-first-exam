@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
-"""Write per-task agent results for the results site (not into the repository, PROTOCOL §1): <out>/<task>/<run id>/README.md
+"""Write per-task agent results for the results site (not into the repository, docs/protocol/tasks.md): <out>/<task>/<run id>/README.md
 (+ replay.mp4, replay.last.png, replay.first.mp4 and replay.first.last.png when the trial made resets, config.json,
 attempts.json). One folder per agent+model; the privileged and standard twins
 each get their own.
 usage: write_task_results.py <jobs_dir> <job_name> <run-id> "<agent label>" --out <dir>
 
-config.json (docs/protocol/running.md "Results", PROTOCOL §2): the trial's effective configuration (scripts/task_conventions.py
+config.json (docs/protocol/running.md "Results", docs/protocol/tasks.md): the trial's effective configuration (scripts/task_conventions.py
 effective_config: protocol version, mode, cutoff, reset budget, slowdown S, seed, network, validated flag, digest), its
 result (`success`, `fail` or `not_a_result` with the reason), whether it is counted and, in the standard modes, the
-first-attempt result `first_success` (PROTOCOL §4: the no-reset performance, reported beside the graded one). Results are ranked only within
+first-attempt result `first_success` (docs/protocol/tasks.md#grading: the no-reset performance, reported beside the graded one). Results are ranked only within
 one comparable configuration (task_conventions.config_key), validated and unvalidated tasks together.
 attempts.json: every trial of this task x run id seen so far. docs/protocol/running.md "Infrastructure failures": an
 infrastructure failure (not a result) is void and may be rerun with the same instance, seed and configuration; the voided
@@ -22,7 +22,7 @@ import retry_policy as rp  # noqa: E402
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 OUTCOME = {"not_a_result": "infra_failure", "success": "success"}   # anything else: the agent's failure (a result)
-OVERRIDES = ("RCB_RESET_BUDGET", "RCB_SLOWDOWN")   # run-time overrides of a task's declared settings (PROTOCOL §2)
+OVERRIDES = ("RCB_RESET_BUDGET", "RCB_SLOWDOWN")   # run-time overrides of a task's declared settings (docs/protocol/tasks.md)
 
 
 def span(x):
@@ -42,7 +42,7 @@ NOT_A_RESULT = "**not a result** — infrastructure error ({}): run it again; it
 
 
 def not_a_result(trial, r, rw):
-    """Why a trial that is not a success is no result either (PROTOCOL §4, H.5: an infrastructure failure is neither a
+    """Why a trial that is not a success is no result either (docs/protocol/tasks.md#grading, invariants.md H.5: an infrastructure failure is neither a
     success nor the agent's 0; only the agent's own end, its deliverable or the cutoff, AgentTimeoutError, is a result),
     or None. A trial whose verifier never ran (no reward.json: `docker compose up` failed, e.g. a CPU
     cap above the host's; the verifier timed out) was published as the agent's 0."""
@@ -81,11 +81,11 @@ def classify(trial, r, rw, agent_ended=False):
     agent-ended now (agent_ended_trial)."""
     gw = load_json(trial / "gateway/totals.json")
     over = bool(gw.get("over_token_budget"))               # running.md "Official runs": over the token budget = failed
-    # PROTOCOL §4: infra_error (or a grader error) = not a result, neither a success nor the agent's 0; so is a trial
+    # docs/protocol/tasks.md#grading: infra_error (or a grader error) = not a result, neither a success nor the agent's 0; so is a trial
     # the verifier never graded, or that Harbor or the model account ended (not_a_result). A verdict of success with no
     # infrastructure flag stands; over the token budget is the agent's failure unless the verifier flagged infrastructure.
     infra = bool(rw.get("infra_error") or rw.get("grader_error"))
-    # an agent-ended episode (PROTOCOL §3: every standard and realtime task, tc.agent_end_required, for a trial
+    # an agent-ended episode (docs/protocol/tasks.md#modes: every standard and realtime task, tc.agent_end_required, for a trial
     # of the task's current version; else reward.json's ended_session_end) is graded on the state its session ended in,
     # the token budget's end included: over the budget it is not failed on top
     fails = over and not agent_ended and "ended_session_end" not in rw
@@ -102,7 +102,7 @@ def agent_ended_trial(tdir, cfg):
 
 
 def first_success(rw, mode, reset_budget=None):
-    """The first attempt's result in the standard modes (PROTOCOL §4): reward.json's first_success; a verifier that does
+    """The first attempt's result in the standard modes (docs/protocol/tasks.md#grading): reward.json's first_success; a verifier that does
     not write it: the graded success when the trial's reset budget (its effective configuration) is 0, as no reset
     could be made (whatever a service counts as `resets`), else the graded success when no reset was made, else 0 (a
     success ends the trial). None when none of these is known (privileged mode, no verdict, no `resets` and a reset
@@ -178,9 +178,9 @@ def record_attempt(out, trial, r, status):
 
 def main(argv):
     jobs, job, slug, label = pathlib.Path(argv[1]), argv[2], argv[3], argv[4]
-    if "--out" not in argv: sys.exit("--out <dir> is required: results are published on the results site, not committed (PROTOCOL §1)")
+    if "--out" not in argv: sys.exit("--out <dir> is required: results are published on the results site, not committed (docs/protocol/tasks.md)")
     out_root = pathlib.Path(argv[argv.index("--out") + 1]).resolve()
-    if out_root == ROOT or ROOT in out_root.parents: sys.exit("--out must be outside the repository (PROTOCOL §1)")
+    if out_root == ROOT or ROOT in out_root.parents: sys.exit("--out must be outside the repository (docs/protocol/tasks.md)")
     n = 0
     trials = []
     for trial in (jobs / job).glob("*__*"):
@@ -199,7 +199,7 @@ def main(argv):
         rule = rp.check_attempts([{"outcome": OUTCOME.get(a["status"], "agent_failure")} for a in led])
         over_cap = bool(rule)
         if over_cap:
-            print(f"WARN {task} / {slug}: {len(led)} attempts break the rerun rule (PROTOCOL Appendix H.5: reruns only "
+            print(f"WARN {task} / {slug}: {len(led)} attempts break the rerun rule (docs/protocol/invariants.md H.5: reruns only "
                   f"after an infrastructure failure): {'; '.join(rule)}")
         counted = [a for a in led if a["counted"]]
         if status == "not_a_result" and counted:
@@ -220,7 +220,7 @@ def main(argv):
                  f"| configuration | {tc.config_label(cfg)}; seed {cfg.get('seed')} ({cfg.get('seed_source')}); "
                  f"{'validated' if cfg.get('validated') is True else 'unvalidated' if cfg.get('validated') is False else 'legacy'}"
                  f"{'; not in the core set (docs/core_set.toml)' if cfg.get('set') not in (None, '', 'core') else ''} (`config.json`) |",
-                 f"| attempts | {len(led)}" + (" — **breaks the rerun rule (PROTOCOL H.5)**" if over_cap else "") + " |",
+                 f"| attempts | {len(led)}" + (" — **breaks the rerun rule (docs/protocol/invariants.md H.5)**" if over_cap else "") + " |",
                  *([f"| first attempt (no reset) | {cfg['first_success']}; resets {rw.get('resets')} |"]
                    if cfg["first_success"] is not None else []),
                  f"| agent time | {span(r.get('agent_execution') or {})} s |",

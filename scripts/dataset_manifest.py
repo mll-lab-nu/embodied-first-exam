@@ -56,7 +56,7 @@ def render() -> str:
 
 
 def resources_row(t: Path) -> dict:
-    """The task's caps per container (PROTOCOL §6): {"gpu_types": [...] or None, "containers": {service: caps}}, main's
+    """The task's caps per container (docs/protocol/resources.md): {"gpu_types": [...] or None, "containers": {service: caps}}, main's
     CPU / memory / disk from [environment], the rest from the compose file (GPU memory: x-gpu-memory-gb); a compose file
     the caps cannot be read from: "containers" None and the "error"."""
     gt = (tc.task_toml(t).get("environment") or {}).get("gpu_types")
@@ -72,7 +72,7 @@ def resources_row(t: Path) -> dict:
 def entry(t: Path) -> dict:
     """One task's row of the list: what its own files say."""
     md = tomllib.loads((t / "task.toml").read_text()).get("metadata", {})
-    # the settings results are grouped by (PROTOCOL §2, docs/protocol/running.md "Results"): rankings compare only tasks
+    # the settings results are grouped by (docs/protocol/tasks.md, docs/protocol/running.md "Results"): rankings compare only tasks
     # and results of one configuration; `validated` is a marker, ranked together. The same fields a result records.
     cfg = tc.effective_config(t)
     return {"name": t.name, "benchmark": tc.bench_of(t), "mode": cfg["mode"], "base": tc.base_of(t),

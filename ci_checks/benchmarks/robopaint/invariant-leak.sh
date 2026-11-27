@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# INVARIANT hook (docs/protocol/README.md Appendix H.2: no answer or pointer to one in the agent's reach), this benchmark's
+# INVARIANT hook (docs/protocol/invariants.md H.2: no answer or pointer to one in the agent's reach), this benchmark's
 # own: ci_checks/run_invariants.sh runs it with every task directory in scope; it checks its benchmark's tasks
 # (robopaint-*) in one pass.
 # RoboPaint only (tasks/robopaint/robopaint-*): the agent's container may hold nothing derived from the target except target.png
@@ -35,7 +35,7 @@ def check(t: str) -> bool:
                "client-requirements.txt", "NOTICE-exemplar.md", "ARPHICPL.TXT"}
     SIDECARS = {"sim", "scorer"}
     MONITOR = "rcb_monitor"   # the resource monitor sidecar's limits, mounted only into it (check-monitor.py)
-    MCP = "efe_mcp"   # standard: the robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): the task's manifest.json;
+    MCP = "efe_mcp"   # standard: the robot's MCP tools (docs/protocol/eai-standard.md "MCP tools"): the task's manifest.json;
     MCP_COPY = "COPY efe_mcp /opt/tools/efe_mcp"   # the server's files from the pinned standard-files image (/mcp/<file>)
     MCP_DEST = ("/opt/tools/efe_mcp/", "/opt/tools/efe_mcp/schema/")
     for f in sorted(os.listdir(env)):

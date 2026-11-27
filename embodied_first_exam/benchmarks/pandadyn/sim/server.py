@@ -1,7 +1,7 @@
 """Sim service adapter of Panda Dynamic Scenes' standard and realtime tasks (eai-standard/3.0): one
 file for both modes. A standard task runs it behind the shared standard service layer (`python /srv/server.py`:
-rcb_service.main(build); docs/protocol/standard_mode.md Part 1); a realtime task runs the shared realtime layer
-(`python /srv/rcb_realtime.py`, which imports this module and calls build(); docs/protocol/standard_mode.md Part 3,
+rcb_service.main(build); docs/protocol/eai-standard.md); a realtime task runs the shared realtime layer
+(`python /srv/rcb_realtime.py`, which imports this module and calls build(); docs/protocol/eai-standard.md#realtime,
 tasks/pandadyn/README.md "Realtime").
 
 The simulator-specific half only: `PandaDyn` implements rcb_service.Sim (the contract documented in rcb_service.py) for
@@ -26,7 +26,7 @@ begins and after every reset: `start_sha` is the instance's recorded `initial_sh
 starts elsewhere: instance_mismatch, an infrastructure failure). The video is rendered after the verdict from the graded
 episode's rows by this process's Session (render_video: the scene rebuilt, the rows filmed).
 
-Agent-ended episodes (PROTOCOL §3): the task's
+Agent-ended episodes (docs/protocol/tasks.md#modes): the task's
 check is an event ledger (every phase completed in order, as it happens in a moving scene), so the episode is judged
 on it as it happened (end_judgement "events"): the ledger completed at some step (a failure that ends the episode after
 that does not take it back; before it, it is 0).

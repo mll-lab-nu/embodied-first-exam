@@ -9,7 +9,7 @@ We answer within a week.
 In scope:
 - **Isolation of grading.** A way for the agent under test to change or forge its own result: reach the verifier's
   sandbox, the standard modes' simulator sidecar or the declared artifacts after submission, or read a task's reference
-  solution or its source (docs/protocol/README.md Appendix H). These are the bugs that matter most for the exam.
+  solution or its source (docs/protocol/invariants.md). These are the bugs that matter most for the exam.
 - **The tooling in this repository**: the Harbor wrapper (`scripts/efe.py`), the optional usage gateway
   (`scripts/usage_gateway/`), the base images under `images/` and the GitHub workflows.
 

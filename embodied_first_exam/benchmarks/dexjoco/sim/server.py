@@ -1,4 +1,4 @@
-"""eai-standard/3.0 sim service for DexJoCo (docs/protocol/standard_mode.md): the adapter of the shared layer rcb_limited.py;
+"""eai-standard/3.0 sim service for DexJoCo (docs/protocol/eai-standard.md): the adapter of the shared layer rcb_limited.py;
 the simulator is rcb_dexjoco.Session (DexJoCo on MuJoCo 3.4, CPU physics, OSMesa rendering).
 HTTP surface: GET /spec, GET /status, POST /observe, POST /submit, POST /kinematics. Every call is logged to
 /data/episode.jsonl.
@@ -10,7 +10,7 @@ The robot is a Franka Panda with a 16-DoF Allegro hand, or two of them side by s
   joint_position  per arm: 7 arm joint targets + 16 Allegro joint targets; the arm's targets are turned into a tcp target
                   by forward kinematics (the controller tracks the tcp pose, not the joints).
 Either way, the executed (journaled, recorded) row is DexJoCo's own row, so the recorded trajectory replays in the
-privileged tooling unchanged. Agent-ended episodes (PROTOCOL §3): a success never ends the episode and is never shown:
+privileged tooling unchanged. Agent-ended episodes (docs/protocol/tasks.md#modes): a success never ends the episode and is never shown:
 it ends at the agent's POST /finish, at a task failure
 (a failure, even after a success; on an event task the event seen before it stands), at the runaway guard (reason step_limit) or when the agent's time
 is over, and is judged on the state it ends in (END_JUDGEMENT / END_WINDOW below). Nothing about the objects leaves this process: a
@@ -161,7 +161,7 @@ OWN_JOINTS = {MD.joint(j).id for j in JOINTS}        # the arms' and the hands' 
 def own_body(b: int) -> bool:
     """Whether the MuJoCo body `b` is fixed in the world or moved by the robot's own joints alone. A mocap body or a
     body behind any other joint (the objects: free joints, hinges, slides) is scene state: where it is must never leave
-    this process (PROTOCOL §4.5). Decided from the model, never from a name (the rule of MyoSuite's service)."""
+    this process (docs/protocol/eai-standard.md#post-reset-reset-capability). Decided from the model, never from a name (the rule of MyoSuite's service)."""
     while b > 0:
         if int(MD.body_mocapid[b]) >= 0:
             return False
@@ -475,14 +475,14 @@ def write_final() -> None:
     L._write_json(os.path.join(DATA, "final.json"), {**summary(), "finalized": False, "live_sha": E.get("live_sha")})
 
 
-# Agent-ended episodes (PROTOCOL §3): how each DexJoCo task is judged when the agent ends it. "state": DexJoCo's success
+# Agent-ended episodes (docs/protocol/tasks.md#modes): how each DexJoCo task is judged when the agent ends it. "state": DexJoCo's success
 # check on the state the episode ends in; "event": the check held at some control step of the episode (a moment: the
 # start button pressed with the hot dog inside and the door shut, the shutter pressed with the camera aimed, the plant
 # watered for DexJoCo's 30 steps). END_WINDOW: a task whose check is a hold (DexJoCo's own trigger counters: 10 to 50
 # control steps) runs its hold on from the end state, the robot holding its last command, for at most that many control
 # steps, and succeeds if the check holds within them (the steps already held count). A task failure (task_text) ends the
 # episode as a failure, also after a success; on an event task the event that happened before it stands (the episode ends
-# with the events reached so far, standard_mode.md "Agent-ended episodes").
+# with the events reached so far, docs/protocol/eai-standard.md "Agent-ended episodes").
 END_JUDGEMENT = {"bimanual_microwave_cook": "event", "bimanual_photograph": "event", "water_plant": "event"}
 END_WINDOW = {t: int(1.2 * CTRL_HZ) for t in ("bimanual_assembly", "bimanual_hanoi", "bimanual_unlock_ipad", "click_mouse",
                                              "fold_glasses", "pinch_tongs")}   # control steps (1.2 s > fold_glasses' 50)
@@ -495,7 +495,7 @@ def end_fields() -> dict:
 def judge_end(reason: str) -> bool:
     """An agent-ended episode's verdict (lock held): the end state's success, or for an event task whether it happened;
     a hold task's window first runs on from the end state (journaled and recorded: the trajectory has its rows). An
-    event that happened stands: a task failure after it does not take it back (standard_mode.md "Agent-ended episodes")."""
+    event that happened stands: a task failure after it does not take it back (docs/protocol/eai-standard.md "Agent-ended episodes")."""
     if END_JUDGEMENT.get(TASK, "state") == "event":
         return E.get("seen_step") is not None
     if S.done:                                   # a task failure ended it: an end-state task is never a success
@@ -575,7 +575,7 @@ def frames_ok(cams, fps: int, steps: int, meta: dict) -> None:
 
 def checked(parse):
     """A request is checked in full before anything is executed. The layer answers a ValueError with 400 and takes any
-    other exception for a simulator error that ends the episode (PROTOCOL §4.6), so whatever a malformed field raises
+    other exception for a simulator error that ends the episode (docs/protocol/eai-standard.md#errors), so whatever a malformed field raises
     while it is being checked (null, a list where a number belongs, a number too large for a float) is a ValueError."""
     def run(*args):
         try:

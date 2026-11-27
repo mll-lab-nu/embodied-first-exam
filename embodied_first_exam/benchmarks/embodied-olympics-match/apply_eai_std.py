@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Put the match extension of eai-standard/3.0 (docs/protocol/standard_mode.md Part 5; eai_std/ next to this file) into
+"""Put the match extension of eai-standard/3.0 (docs/protocol/eai-standard.md#match-extension; eai_std/ next to this file) into
 the Embodied Olympics - Match tasks that serve it, after an export (ci_checks/benchmarks/embodied-olympics-match/
 exported.toml lists the files it changes in each task's `patched`). Idempotent: a second run changes nothing.
 
@@ -48,7 +48,7 @@ import files_image  # noqa: E402
 STD_FILES = files_image.image("standard-files")
 CLIENT = {"realtime": "/rcb1.py /realtime/rcb_client.py", "lockstep": "/rcb1.py /rcb_client.py",
           "turn": "/rcb1.py /rcb_client.py"}
-DOCKER_MARK = "# the eai-standard/3.0 client (docs/protocol/standard_mode.md): `from rcb_client import Robot`"
+DOCKER_MARK = "# the eai-standard/3.0 client (docs/protocol/eai-standard.md): `from rcb_client import Robot`"
 
 ENDPOINTS = """\
 | HTTP | |

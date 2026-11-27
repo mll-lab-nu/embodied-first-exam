@@ -1,9 +1,9 @@
 """eai-standard/3.0 sim service for YAMLab (Isaac Lab / Isaac Sim 5.1; two I2RT YAM arms with parallel grippers; see
-docs/protocol/standard_mode.md). Owns the scene. HTTP surface (rcb_limited): GET /spec, GET /status, POST /observe, POST /submit,
+docs/protocol/eai-standard.md). Owns the scene. HTTP surface (rcb_limited): GET /spec, GET /status, POST /observe, POST /submit,
 POST /kinematics (RCB1 bodies, RCB1 responses: videos / frames / depth / proprio as raw blobs, never base64). Logs every call
 to /data/episode.jsonl and keeps /data/final.json current. Nothing about objects ever leaves this process.
 
-Crash recovery (rcb_limited.Episode, docs/protocol/standard_mode.md §13, resume class `exact`): every executed control step is
+Crash recovery (rcb_limited.Episode, embodied_first_exam/standard/README.md#crash-recovery, resume class `exact`): every executed control step is
 journaled (the 14-D float32 row handed to Session.step), every completed call is checkpointed with the scene's state hash.
 After a crash compose restarts the container (`restart: on-failure:6`, run.sh exits non-zero) and this service, a fresh
 process, rebuilds the frozen scene, replays the journal up to the last checkpoint (the first run in a fresh process:
@@ -93,7 +93,7 @@ def dump() -> None:
 
 def finish(reason: str) -> None:
     if E["done"]: return
-    # agent-ended episodes (PROTOCOL §3, rcb_agent_end.py; rcb_yamlab.AGENT_END): the earlier stages count as they
+    # agent-ended episodes (docs/protocol/tasks.md#modes, rcb_agent_end.py; rcb_yamlab.AGENT_END): the earlier stages count as they
     # happened, the last one must hold when the episode ends. At POST /finish and at the session's end, a last stage
     # whose hold has begun (its consecutive steps short of YAMLab's requirement) is given the rest of its window: the
     # last command is held (journaled, recorded) until it latches or breaks. The runaway guard is the step limit
@@ -143,7 +143,7 @@ VIDEO = live_video.LiveVideo(DATA, ctrl_hz=CTRL_HZ, frame=live_frame, log=EP.log
 ARMS = M.ARMS
 LAYOUT = [f"{a}_{j}" for a in ARMS for j in list(M.ARM_JOINTS) + ["gripper"]]
 CAMS = list(M.CAMERAS)
-# /spec max_frames_per_call (PROTOCOL §3 "Images per call"): the longest /observe (a 30 s window at the control rate,
+# /spec max_frames_per_call (docs/protocol/tasks.md#modes "Images per call"): the longest /observe (a 30 s window at the control rate,
 # + the first and the last frame) with every camera and its depth
 BUDGET_WATCH_S = 30.0   # the budget is a 30 s watch's whatever max_chunk_s is: the sim memory cap and the instruction use it
 MAX_FRAMES = (int(round(BUDGET_WATCH_S * CTRL_HZ)) + 2) * 2 * len(CAMS)
@@ -213,7 +213,7 @@ SPEC = {
               "up": "+z", "units": {"length": "m", "angle": "rad", "time": "s"}, "quaternion_order": "wxyz",
               "camera_axes": "intrinsic_cv / extrinsic_cv: OpenCV camera axes (x right, y down, z forward); cam2world_gl: OpenGL axes (x right, y up, z back)"},
     "budget": {"reset": 0, "steps": None, "wall_clock_s": float(os.environ.get("RCB_WALL_CLOCK_S", "5400"))},
-    # PROTOCOL §4.5: no step budget, but a technical cap is stated here. The tooling's runaway guard ends the episode after
+    # docs/protocol/eai-standard.md#post-reset-reset-capability: no step budget, but a technical cap is stated here. The tooling's runaway guard ends the episode after
     # MAX_STEPS control steps (reason "step_limit"): 55.6 min of simulated time, which 60-120 control steps/s can reach.
     "max_control_steps": int(M.MAX_STEPS),
     "episode": ("one episode, no reset: it ends when you call POST /finish or when your time is up (the service never tells you "
@@ -259,7 +259,7 @@ def video_fps(meta: dict) -> int:
 
 
 # ---------------------------------------------------------------- request fields
-# PROTOCOL §4.6: a malformed request is a 400 and executes nothing. Every field is read and checked by the functions below
+# docs/protocol/eai-standard.md#errors: a malformed request is a 400 and executes nothing. Every field is read and checked by the functions below
 # BEFORE the first control step; a field that is absent or JSON null takes its default, a value of the wrong type or out
 # of range is a ValueError (the layer's 400). as_400() turns anything else a bad value can raise while it is being read
 # (TypeError, OverflowError, AttributeError, ...) into that 400 too: only an error while the simulator is stepping is a
@@ -435,7 +435,7 @@ EE_POS_MAX_M = 3.0       # an ee_pose target further than this from the world or
 
 
 def check_ee_rows(A: np.ndarray) -> None:
-    """ee_pose rows that cannot be meant (PROTOCOL §4.6: a 400, nothing executed): a position outside the +-EE_POS_MAX_M
+    """ee_pose rows that cannot be meant (docs/protocol/eai-standard.md#errors: a 400, nothing executed): a position outside the +-EE_POS_MAX_M
     box around the world origin (a unit slip: such a row would run tens of thousands of control steps towards nowhere,
     and a huge value would end the episode with a simulator error), or a quaternion of zero length."""
     for ri, row in enumerate(A):

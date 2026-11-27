@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Shared-source rules (PROTOCOL §1: copies of shared sources are byte-identical). Two parts:
+# Shared-source rules (docs/protocol/tasks.md: copies of shared sources are byte-identical). Two parts:
 # 1. BEHAVIOR-1K, RoboLab, RoboWits, ManiGuard, MolmoSpaces, MyoSuite, DexJoCo, DexHand, RoboARC, BiGym 2.0, YAMLab, RoboDojo, Panda Dynamic Scenes, AM-Bench, LabUtopia, AutoBio and EmbodiedSWE: within one benchmark (RoboARC's IKEA suite, roboarc-ikea-*, is a group of its own), every mode, every copy of a shared file is byte-identical
 #    (one source per benchmark, copied unchanged):
 #    - the tooling module rcb_<sim>.py wherever it sits (privileged environment/ and tests/, standard environment/sim/);
@@ -11,18 +11,18 @@
 #    the line must name the image FILES.json pins (contexts: environment/, tests/ and a sidecar's own environment/sim/ or
 #    environment/scorer/).
 #    A change to one of them is rolled out to every task of the benchmark at once. Same approach as ci_checks/benchmarks/robopaint/advisory-tooling.sh.
-#    Tasks the benchmark's own exporter wrote (task.toml [metadata] exporter: Embodied Olympics, PROTOCOL §3) are a group of their own,
+#    Tasks the benchmark's own exporter wrote (task.toml [metadata] exporter: Embodied Olympics, docs/protocol/tasks.md#modes) are a group of their own,
 #    one per exporter and [metadata] skill_in_loop.
 # 2. The shared layer (every task whose sim image takes rcb_limited.py, task_conventions.service_layer: BEHAVIOR, RoboLab, RoboWits, RoboPaint, MolmoSpaces, MyoSuite, DexJoCo, DexHand, YAMLab, RoboDojo, LabUtopia, AutoBio, EmbodiedSWE): the
 #    agent's client environment/rcb_client.py + rcb1.py and the service's environment/sim/rcb_limited.py + rcb1.py +
-#    run.sh are byte-identical to their source in embodied_first_exam/standard/ (docs/protocol/standard_mode.md), and the sidecar is
+#    run.sh are byte-identical to their source in embodied_first_exam/standard/ (docs/protocol/eai-standard.md), and the sidecar is
 #    set up for crash recovery: `command: sh /srv/run.sh` (run.sh exits non-zero when the service crashes) and
-#    `restart: on-failure:N` with N >= 3 (docs/protocol/standard_mode.md).
+#    `restart: on-failure:N` with N >= 3 (embodied_first_exam/standard/README.md#crash-recovery).
 #    The operations layer (RoboARC, its IKEA suite included) is held to the same rules, with rcb_limited.py and
-#    rcb_client.py from embodied_first_exam/standard/operations/ (docs/protocol/standard_mode.md) and the shared layer's rcb1.py and run.sh.
+#    rcb_client.py from embodied_first_exam/standard/operations/ (docs/protocol/eai-standard.md) and the shared layer's rcb1.py and run.sh.
 # 3. The realtime layer (every task on realtime/rcb_realtime.py: HumanoidBench, BiGym 2.0
 #    realtime): the service's environment/sim/rcb_realtime.py and the agent's environment/rcb_client.py are
-#    byte-identical to their one source, embodied_first_exam/standard/realtime/ (docs/protocol/standard_mode.md,
+#    byte-identical to their one source, embodied_first_exam/standard/realtime/ (docs/protocol/eai-standard.md,
 #    "Realtime mode").
 # 4. DexToolBench and the MuJoCo Playground tasks that serve the same service (ALOHA, Panda), MetaWorld+ and RoboTwin
 #    2.0. Every file shared by the tasks of a mode is byte-identical
@@ -33,7 +33,7 @@
 #    embodied_first_exam/benchmarks/metaworldplus/sim/server_mw.py. RoboTwin's privileged
 #    tests/test.sh and solution/solve.sh differ by the task's name only and are compared with the name replaced.
 #    Not covered here: the per-task texts of these benchmarks (instruction.md, README.md, task.toml).
-# 5. The sidecar service rcb_service.py (docs/protocol/standard_mode.md Part 1; under the realtime layer too) and the live
+# 5. The sidecar service rcb_service.py (docs/protocol/eai-standard.md; under the realtime layer too) and the live
 #    video live_video.py have one source each, embodied_first_exam/standard/sidecar/rcb_service.py and
 #    embodied_first_exam/standard/live_video.py (the tasks take them from the files-only image standard-files): no
 #    benchmark carries a copy (embodied_first_exam/benchmarks/**), and a base image's copy (images/*/tools/**: abc-sim's,
@@ -183,7 +183,7 @@ for t in sorted(TDIR):
     if bench not in MODULE:
         continue
     module = MODULE[bench]
-    if meta.get("exporter"):   # written by the benchmark's own exporter (Embodied Olympics, PROTOCOL §3; Embodied Safety Exam 0.5.4): its own sources
+    if meta.get("exporter"):   # written by the benchmark's own exporter (Embodied Olympics, docs/protocol/tasks.md#modes; Embodied Safety Exam 0.5.4): its own sources
         # one group per exporter and skill-in-the-loop setting: Embodied Olympics - Match's table-tennis privileged twins come
         # from their own simulator's exporter (tools.tt_fullsim, #282 / #325) and the low-level matches with the agent's
         # skill in the loop have their own realtime grader (#300); each is shared within its group

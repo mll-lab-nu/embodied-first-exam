@@ -12,12 +12,12 @@ simulator = "mujoco"               # the Embodied Olympics simulator: MuJoCo 3.3
 robot = "unitree-h1-2"
 family = "volleyball_set"
 category = "football-and-volleyball"
-dynamics = "dynamic"              # scene dynamics (docs/protocol/README.md §2): the task's own declaration
+dynamics = "dynamic"              # scene dynamics (docs/protocol/tasks.md): the task's own declaration
 # scene = environment/instance.json (the family's parameters + its t = 0 state hash); identity = the dataset.toml digest
 instance_seed = 0
 expert_time_estimate_hours = 8.0
 oracle = "none"
-oracle_evidence = "no reference solution; the referee is tested: No reference solution: a CMA-ES search over the walk command, the key times and the arms' key offsets (about 150 generations) finds legal sets (out 7.0-7.5 m/s against 6.6 in, apex 4.3-4.6 m, 0.5-0.8 m from the target's centre) only with the hands 5.7-6.4 cm into each other as they rise above the forehead, which the robot's self-collision rules out; with a penalty for that, no clean set was found in 20 generations. Positive by a declared magic action. The real parts: the ball machine's toss, the walking policy at zero command with the right arm raised straight up (the hands far apart; at most 0.2 mm of self-overlap), the contact with the right hand, the flight and the landing. Injected: (1) once, 0.35 m above the palm, the descending ball is moved sideways, its height and velocity kept, onto a path that meets the palm; (2) at the first contact with the hand, its velocity is set to rise to 4.6 m and come down on the target's centre. It comes in at 6.85 m/s, leaves at 8.13 m/s, peaks at 4.74 m and lands 0.82 m from the centre; the same state hash twice. Negatives: nop (the floor before the set), the same at half speed (not a set), and the referee test's other negatives.; human review in the pull request that adds the benchmark (PROTOCOL §4)"
+oracle_evidence = "no reference solution; the referee is tested: No reference solution: a CMA-ES search over the walk command, the key times and the arms' key offsets (about 150 generations) finds legal sets (out 7.0-7.5 m/s against 6.6 in, apex 4.3-4.6 m, 0.5-0.8 m from the target's centre) only with the hands 5.7-6.4 cm into each other as they rise above the forehead, which the robot's self-collision rules out; with a penalty for that, no clean set was found in 20 generations. Positive by a declared magic action. The real parts: the ball machine's toss, the walking policy at zero command with the right arm raised straight up (the hands far apart; at most 0.2 mm of self-overlap), the contact with the right hand, the flight and the landing. Injected: (1) once, 0.35 m above the palm, the descending ball is moved sideways, its height and velocity kept, onto a path that meets the palm; (2) at the first contact with the hand, its velocity is set to rise to 4.6 m and come down on the target's centre. It comes in at 6.85 m/s, leaves at 8.13 m/s, peaks at 4.74 m and lands 0.82 m from the centre; the same state hash twice. Negatives: nop (the floor before the set), the same at half speed (not a set), and the referee test's other negatives.; human review in the pull request that adds the benchmark (docs/protocol/tasks.md#grading)"
 
 [verifier]
 timeout_sec = 900.0
@@ -26,7 +26,7 @@ timeout_sec = 900.0
 environment_mode = "separate"
 network_mode = "no-network"
 
-# Resources (PROTOCOL §6): seal the monitor's record first.
+# Resources (docs/protocol/resources.md): seal the monitor's record first.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
@@ -41,7 +41,7 @@ memory_mb = 8192
 timeout_sec = 7200.0
 # Egress: open, `network_mode = "public"` below (the author's choice). Embodied Olympics lets the agent search for and download
 # public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md).
-network_mode = "public"        # open egress, the task author's choice (docs/protocol/README.md Appendix H.6)
+network_mode = "public"        # open egress, the task author's choice (docs/protocol/invariants.md H.6)
 
 [environment]
 build_timeout_sec = 1800.0

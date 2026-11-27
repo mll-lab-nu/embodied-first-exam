@@ -1,4 +1,4 @@
-"""eai-standard/3.0 client with the operations capability (docs/protocol/standard_mode.md) — the only thing a
+"""eai-standard/3.0 client with the operations capability (docs/protocol/eai-standard.md) — the only thing a
 standard-mode agent gets (installed at /opt/tools/rcb_client.py). Against a service with /spec.operations every submit /
 get_obs carries an operation id and a request deadline: after a timeout, `r.operation_status()` (or
 `r.operation_status(r.last_operation_id)`) says whether the call ran; never re-send it blindly.

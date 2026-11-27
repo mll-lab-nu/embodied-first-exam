@@ -1,5 +1,5 @@
 """eai-standard/3.0 sim service for EmbodiedSWE (robobench on Isaac Lab 2.3.2 / Isaac Sim 5.1, GPU PhysX; see
-docs/protocol/standard_mode.md and tasks/embodiedswe/README.md "Standard mode"). Owns the scene. HTTP surface
+docs/protocol/eai-standard.md and tasks/embodiedswe/README.md "Standard mode"). Owns the scene. HTTP surface
 (rcb_limited): GET /spec, GET /status, POST /observe, POST /submit, POST /kinematics (RCB1 bodies and responses).
 
 The scene is the privileged task's: EmbodiedSWE's own build of the preset from the same frozen instance (instance.json,
@@ -12,7 +12,7 @@ Actions (esw_std): only `ee_pose`, streamed: rows `dt` apart (a multiple of the 
 target of that step (Franka: the OSC pose target of panda_hand, its action smoothing inverted; G1: the native wrist
 poses + hand targets [+ base command]). Between calls the last row stays in force (a watch holds it).
 
-The episode: no reset, agent-ended (PROTOCOL §3): a success (the grader's check_success, the privileged verdict's
+The episode: no reset, agent-ended (docs/protocol/tasks.md#modes): a success (the grader's check_success, the privileged verdict's
 predicate) never ends the episode and is never shown: it ends at the agent's POST /finish, at a broken tool-only rule
 (spatula: a failure, also after a success), at the runaway cap (rcb_embodiedswe.MAX_STEPS, reason step_limit), on a
 simulator error or when the agent's time is up (the collect hook). The verdict is read on the live state it ends in
@@ -21,7 +21,7 @@ in the scene and this start-up's reads of the articulation change the later bits
 another process is not bit-exact, so the video is filmed live (live_video.py) and crash recovery is class `approx` (the
 journal holds the native action rows).
 
-Per call, images are bounded by spec.max_frames_per_call (PROTOCOL §3 "Images per call": the frames really captured,
+Per call, images are bounded by spec.max_frames_per_call (docs/protocol/tasks.md#modes "Images per call": the frames really captured,
 at the recorder's stride, per-frame depth counted again), checked before anything runs; the shared Recorder holds one
 copy of the frames and the shared layer builds the body once."""
 from __future__ import annotations
@@ -190,7 +190,7 @@ SPEC = {
                 for c, v in ((v["name"], v) for v in CAMS_OBJ.views)},
     "default_cameras": list(DEFAULT_CAMS),
     "budget": {"reset": 0, "steps": None, "wall_clock_s": float(os.environ.get("RCB_WALL_CLOCK_S", "14400")),
-               "default_video_fps": DEFAULT_FPS, "images_per_call": (f"max_frames_per_call = {MAX_FRAMES} images per call (PROTOCOL §3 \"Images per call\"): cameras x the "
+               "default_video_fps": DEFAULT_FPS, "images_per_call": (f"max_frames_per_call = {MAX_FRAMES} images per call (docs/protocol/tasks.md#modes \"Images per call\"): cameras x the "
                      "frames really captured (the first, one every round(control_hz / video_fps) control steps, the last), a "
                      "per-frame depth one more image each; video mp4, frames and both capture the same frames, video none only "
                      "the first and the last. A call over it is a 400 before anything runs. Defaults: "
@@ -373,7 +373,7 @@ def every_of(fps: int, video: str = "frames") -> int:
 
 
 def frames_ok(cams, steps: int, fps: int, depth: str, video: str) -> None:
-    """A 400 before anything runs for a call of `steps` control steps over max_frames_per_call (PROTOCOL §3): the frames
+    """A 400 before anything runs for a call of `steps` control steps over max_frames_per_call (docs/protocol/tasks.md#modes): the frames
     the recorder captures at its stride (rcb_limited.frames_per_call), per-frame depth counted again."""
     n = L.frames_per_call(steps, every_of(fps, video)) if steps > 0 else 1
     L.check_frames(len(cams), n, depth in ("frames", "legacy"), MAX_FRAMES)

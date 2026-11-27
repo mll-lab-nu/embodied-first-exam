@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# PROTOCOL §1: the agent container and the verifier of every standard task share ONE client base image, pinned by
+# docs/protocol/tasks.md: the agent container and the verifier of every standard task share ONE client base image, pinned by
 # digest, and pinned pip versions. The image and the pins are embodied_first_exam/standard/client.env (CLIENT_IMAGE) and
 # embodied_first_exam/standard/client-requirements.txt. For each standard or realtime task (mode standard /
 # realtime, or a -standard / -realtime name), environment/Dockerfile and tests/Dockerfile:
@@ -8,7 +8,7 @@
 #     build context, or the full pin list inline (name==version for every pin, nothing else).
 # A failure for the tasks on the shared and the operations layers (task_conventions.service_layer), which carry
 # client.env's image and the pins (BEHAVIOR-1K, RoboLab, RoboWits, RoboPaint; RoboARC on the operations layer). For every other task it only reports (a warning, never a failure) whether all standard tasks
-# share the one client image of client.env (their own pip pins are their benchmark's business; PROTOCOL §7, open).
+# share the one client image of client.env (their own pip pins are their benchmark's business; docs/protocol/tasks.md, open).
 # Usage: check-standard-client.sh [tasks dir] (tasks/, or a flat tree of task dirs)   (repo-level; run_all.sh calls it once)
 set -uo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"

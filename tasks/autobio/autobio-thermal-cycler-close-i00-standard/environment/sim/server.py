@@ -1,10 +1,10 @@
-"""eai-standard/3.0 sim service for the AutoBio tasks (docs/protocol/standard_mode.md): the adapter of the shared layer
+"""eai-standard/3.0 sim service for the AutoBio tasks (docs/protocol/eai-standard.md): the adapter of the shared layer
 rcb_limited.py; the simulator is rcb_autobio.Session (AutoBio on MuJoCo 3.3.0, CPU). HTTP surface: GET /spec,
 GET /status, POST /observe, POST /submit, POST /kinematics. Every call is logged to /data/episode.jsonl.
 
 The episode is the frozen instance's (environment/sim/instance.json, the privileged twin's). The action is AutoBio's
 own: one position target per controlled actuator (arm joints, gripper or pipette thumb), one row per 2 ms control
-step. Episodes are agent-ended (PROTOCOL §3): every task is judged by rule `final` (AutoBio's own rule, `first` for
+step. Episodes are agent-ended (docs/protocol/tasks.md#modes): every task is judged by rule `final` (AutoBio's own rule, `first` for
 its early_stop tasks, is recorded as native_rule): a success never ends the episode and is never shown; it ends at the agent's POST /finish (or `done`, the same), at a physics warning (a failure, also after a success), at
 the technical step cap (reason step_limit) or when its time is over, and AutoBio's check is applied to the state it ends
 in (its own stage memory included: the pipette's ordered steps count as they happened). Nothing about the objects or the
@@ -317,7 +317,7 @@ def recorder(cams, fps: int, meta: dict, video: str) -> L.Recorder:
 
 def checked(parse):
     """A request is checked in full before anything is executed. The layer answers a ValueError with 400 and takes any
-    other exception for a simulator error that ends the episode (PROTOCOL §4), so whatever a malformed field raises
+    other exception for a simulator error that ends the episode (docs/protocol/tasks.md#grading), so whatever a malformed field raises
     while it is being checked (null, a list where a number belongs, a number too large for a float) is a ValueError."""
 
     def run(*args):

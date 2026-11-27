@@ -73,7 +73,7 @@ ENV OMNI_KIT_ACCEPT_EULA=YES HDF5_USE_FILE_LOCKING=FALSE HF_HUB_OFFLINE=1 \
     OMNIGIBSON_TRACK_STATE_UPDATES=1 OMNIGIBSON_CHANGE_DETECTION_NUMPY=1 OMP_NUM_THREADS=1 NUMPY_MADVISE_HUGEPAGE=0 \
     PYTHONHASHSEED=0
 # <<< images/ispatialgym/Dockerfile
-# Privileged mode: the agent and the simulator share this container (docs/protocol/README.md §3). eai-ispatialgym, with a layer
+# Privileged mode: the agent and the simulator share this container (docs/protocol/tasks.md#modes). eai-ispatialgym, with a layer
 # that removes what states or solves a task and asserts nothing of it is left (scrub.sh, bind-mounted for the build only),
 # and this task's frozen start (instance.json, the copy the standard twin and the verifier also hold): no goal, no target,
 # no success check here; the verifier has them (tests/).

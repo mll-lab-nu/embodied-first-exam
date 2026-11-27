@@ -10,7 +10,7 @@
 # images/<name>/<sub>/ with its own Dockerfile and VERSION is a second image, <pkg>:<name>-<sub>-<its version>, built after
 # <name> with itself as context (e.g. images/ikea-mujoco/sim/, the standard tasks' sidecar image FROM efe:ikea-mujoco-<version>).
 # push: an image with images/<name>/BUILD_ONLY (e.g. Isaac Sim inside, which may not be redistributed) is skipped: it is
-# never public (PROTOCOL §1); RCB_PUSH_PRIVATE=1 pushes it to the organization's private package efe-private (org members
+# never public (docs/protocol/tasks.md); RCB_PUSH_PRIVATE=1 pushes it to the organization's private package efe-private (org members
 # only).
 # A files-only image (images/<name>/FILES.json) is no docker build: `build` runs scripts/files_image.py build (the same
 # digest as the pinned one); `push` skips it, since `docker push` would recompress its layer (another digest): push one

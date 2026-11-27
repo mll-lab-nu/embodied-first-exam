@@ -1,6 +1,6 @@
 # embodied-olympics-fun (earlier tag: robofunolympics): the Embodied Olympics simulator for the Embodied Olympics - Fun tasks (tasks/embodied-olympics-fun/README.md):
 # MuJoCo 3.3.7 on CPU (bit-exact replay) with OSMesa rendering (EGL on a GPU for the standard-realtime twins, since 0.2.1), and Embodied Olympics' robot library with its
-# Unitree G1 (PROTOCOL §2.1: a base image holds the simulator and its assets) at /opt/roboolympics:
+# Unitree G1 (docs/protocol/tasks.md: a base image holds the simulator and its assets) at /opt/roboolympics:
 #   bodies/              the robot library (model, meshes, real limits, the one servo path, the joint-group arbiter,
 #                        kinematics, the walking policies that come with the robot), unchanged
 #                        (with the G1's optional FALCON and AGILE walking policies, numpy ports, since 0.2.0)

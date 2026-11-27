@@ -672,7 +672,7 @@ ON_TABLE = ("take_measuring_spoon_out", "cooking_clear_plate")
 # row for SETTLE_STEPS more control steps (2 s), the success term still checked at every step, so that a release in the
 # last rows completes; a trajectory that ends holding the object goes on holding it.
 SETTLE_STEPS = 30
-# Agent-ended episodes (PROTOCOL §3; the standard task's sim service sets RCB_AGENT_END=1): the success term never ends the
+# Agent-ended episodes (docs/protocol/tasks.md#modes; the standard task's sim service sets RCB_AGENT_END=1): the success term never ends the
 # episode and is never shown. Session wraps the term: RoboLab's termination manager still evaluates it at every control step
 # (stateful conditionals see every step, as before), the value is kept in Session.term_now, and the term returns False, so
 # the env never terminates on it. The service judges the state the episode ends in: the last command held for SETTLE_STEPS

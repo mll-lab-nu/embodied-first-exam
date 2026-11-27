@@ -110,7 +110,7 @@ def test_results():
             check(want in line, f"write_task_results: {name}: {line}")
             if want != "not a result":
                 check("not a result" not in line, f"write_task_results: {name} is a result: {line}")
-        # an agent-ended episode (every standard task, PROTOCOL §3) is graded on the state its session ended in, the
+        # an agent-ended episode (every standard task, docs/protocol/tasks.md#modes) is graded on the state its session ended in, the
         # token budget's end included; a privileged task over the budget is failed. The rule of the checkout holds only
         # for a trial of the task's current version (its DIGEST); an older version's trial keeps the rules it ran under
         # (reward.json's ended_session_end where its service wrote one)
@@ -156,7 +156,7 @@ def write(jobs: Path, job: str, out: Path) -> subprocess.CompletedProcess:
 
 
 def test_config_and_attempts():
-    """PROTOCOL §2 / docs/protocol/running.md: every result records its effective configuration (config.json); an infrastructure
+    """docs/protocol/tasks.md / docs/protocol/running.md: every result records its effective configuration (config.json); an infrastructure
     failure (not a result) is voided and never counted, a rerun replaces it, a voided attempt never replaces a counted
     one, an attempt after a result is flagged; a trial of another task version is legacy."""
     infra = {"success": 0, "infra_error": 1}
@@ -228,7 +228,7 @@ def test_config_and_attempts():
 
 
 def test_first_attempt():
-    """PROTOCOL §4: the standard modes report the first-attempt (no-reset) result beside the graded one: reward.json's
+    """docs/protocol/tasks.md#grading: the standard modes report the first-attempt (no-reset) result beside the graded one: reward.json's
     first_success; else, on a task whose reset budget is 0, the graded success (no reset could be made, whatever the
     service counts as `resets`); else the graded success when no reset was made (no `resets`: unknown). The first
     attempt's video is published next to the graded one; privileged results and infrastructure failures carry none."""
@@ -293,7 +293,7 @@ def test_summary_grouping():
 
 
 def test_core_set():
-    """PROTOCOL §4: the core set (docs/core_set.toml: one entry per task) is valid, marks every mode dir of its listed
+    """docs/protocol/tasks.md#grading: the core set (docs/core_set.toml: one entry per task) is valid, marks every mode dir of its listed
     tasks `core` and every other dir `excluded` (recorded with the result as `set`, never part of config_key), and the
     batch summary marks the trials outside it and leaves them out of the rate."""
     sys.path.insert(0, str(ROOT / "scripts"))

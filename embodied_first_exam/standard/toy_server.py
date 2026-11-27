@@ -1,7 +1,7 @@
 """A toy sim service: the smallest complete adapter of the shared layer (rcb_limited.py), on a numpy
 "simulator" (a 3-joint point robot pushing a block on a plane), CPU only. selftest.py drives it to test the layer's crash
-recovery; it is also the reference for how a benchmark's environment/sim/server.py uses Episode (docs/protocol/standard_mode.md)
-and agent-ended episodes (agent_end/rcb_agent_end.py, PROTOCOL §3): a success is only recorded (never shown, never the
+recovery; it is also the reference for how a benchmark's environment/sim/server.py uses Episode (docs/protocol/eai-standard.md)
+and agent-ended episodes (agent_end/rcb_agent_end.py, docs/protocol/tasks.md#modes): a success is only recorded (never shown, never the
 end), POST /finish ends the episode (finish("finished")) and the end state is judged; the layer enforces RCB_STEP_LIMIT
 (finish("step_limit")).
 
@@ -167,7 +167,7 @@ def status() -> dict:
 
 def end_episode() -> None:
     """The collect hook's SIGUSR1: end the episode, then grade in-process (inprocess: the live episode's verdict, nothing
-    replayed; PROTOCOL H.4) or dump and exit (dump)."""
+    replayed; docs/protocol/invariants.md H.4) or dump and exit (dump)."""
     with LOCK:
         if not E["done"]:
             finish("timeout")

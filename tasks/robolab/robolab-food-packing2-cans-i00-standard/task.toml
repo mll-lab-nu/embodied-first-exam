@@ -22,10 +22,10 @@ task_type = "trajectory"
 simulator = "robolab"
 robot = "franka-robotiq-2f85"
 family = "food_packing2_cans"
-dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
+dynamics = "static"               # scene dynamics (docs/protocol/tasks.md): the task's own declaration
 protocol = "eai-standard/3.0"
 oracle = "none"
-oracle_evidence = "No reference solution: RoboLab ships no expert or planner. Positive examples graded 1 by the separate verifier: robolab-food-packing2-cans-i00__ne3U8Jh (robolab-food-packing2-cans-i00-privileged, an earlier version of the task, run codex-gpt6_luna-xhigh, robolab-lunacx-0925-2038). The positives were graded under an earlier success term (one-finger gripper contact, no settle hold); not re-graded under the current term (both-finger contact, settle hold) unless stated here. Human review per family (PROTOCOL §4)."
+oracle_evidence = "No reference solution: RoboLab ships no expert or planner. Positive examples graded 1 by the separate verifier: robolab-food-packing2-cans-i00__ne3U8Jh (robolab-food-packing2-cans-i00-privileged, an earlier version of the task, run codex-gpt6_luna-xhigh, robolab-lunacx-0925-2038). The positives were graded under an earlier success term (one-finger gripper contact, no settle hold); not re-graded under the current term (both-finger contact, settle hold) unless stated here. Human review per family (docs/protocol/tasks.md#grading)."
 instance_seed = 0
 expert_time_estimate_hours = 2.0
 
@@ -34,7 +34,7 @@ timeout_sec = 1200.0
 environment_mode = "separate"
 network_mode = "no-network"
 
-# Resources (PROTOCOL §6): seal the monitor's record first.
+# Resources (docs/protocol/resources.md): seal the monitor's record first.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
@@ -56,7 +56,7 @@ timeout_sec = 3600                # = finalize.sh's HOOK_BUDGET_S (keep them equ
 
 [agent]
 timeout_sec = 3600.0              # RoboLab budget, both modes (tasks/robolab/README.md)
-network_mode = "allowlist"      # model APIs and package registries (scripts/set_agent_egress.py); PROTOCOL Appendix H.6
+network_mode = "allowlist"      # model APIs and package registries (scripts/set_agent_egress.py); docs/protocol/invariants.md H.6
 allowed_hosts = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com", "*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com", "pypi.org", "files.pythonhosted.org", "deb.debian.org", "security.debian.org", "archive.ubuntu.com", "security.ubuntu.com", "snapshot.ubuntu.com"]
 
 [environment]
@@ -66,7 +66,7 @@ memory_mb = 24576
 storage_mb = 10240
 gpu_types = ["L40S", "L40", "L4", "RTX 4090", "RTX 6000 Ada", "RTX PRO 6000 Blackwell"]
 
-# The robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): Harbor starts this server for the agent.
+# The robot's MCP tools (docs/protocol/eai-standard.md "MCP tools"): Harbor starts this server for the agent.
 [[environment.mcp_servers]]
 name = "efe-robot"
 transport = "stdio"

@@ -44,7 +44,7 @@ def num(v, kind=float):
 
 
 def agent_end_fields(d: dict) -> dict:
-    """An agent-ended episode's record (PROTOCOL §3: final.json success_signal / ended_by, step_limit / steps_used):
+    """An agent-ended episode's record (docs/protocol/tasks.md#modes: final.json success_signal / ended_by, step_limit / steps_used):
     evidence only, never the verdict; the runner reads ended_session_end."""
     if d.get("success_signal") != "hidden":
         return {}
@@ -80,7 +80,7 @@ def main() -> None:
     unfinished = not d.get("finalized")  # the service never reached a verdict
     failed_finalize = bool(d.get("finalize_error"))
     infra = bool(d.get("infra_error")) or failed_finalize or unfinished
-    ok = bool(d.get("success")) and live and not infra and d.get("reason") != "error"   # PROTOCOL §4: a simulator error is the agent's 0
+    ok = bool(d.get("success")) and live and not infra and d.get("reason") != "error"   # docs/protocol/tasks.md#grading: a simulator error is the agent's 0
     reason = str(d.get("reason") or "")
     out = {
         "success": int(ok),

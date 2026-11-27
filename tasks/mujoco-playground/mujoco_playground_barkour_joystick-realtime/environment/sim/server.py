@@ -1,5 +1,5 @@
 """eai-standard/3.0 sim service for MuJoCo Playground's quadruped realtime tasks -- the adapter behind the shared
-realtime layer (`python /srv/rcb_realtime.py`, which imports this module and calls build(); docs/protocol/README.md §3,
+realtime layer (`python /srv/rcb_realtime.py`, which imports this module and calls build(); docs/protocol/tasks.md#modes,
 tasks/mujoco-playground/README.md "Realtime").
 
 The simulator-specific half only: `Quadruped` implements rcb_service.Sim (the contract documented in rcb_service.py) for
@@ -29,7 +29,7 @@ mounts the library under NVIDIA_DRIVER_CAPABILITIES=graphics but not always the 
 Settings (environment/docker-compose.yaml): RCB_INSTANCE (the frozen instance.json), RCB_DATA, RCB_RESET_BUDGET,
 RCB_WALL_CLOCK_S, RCB_SLOWDOWN (rcb_realtime / rcb_service), RCB_GL.
 
-Agent-ended episodes (PROTOCOL §3): step() reports the check after every control step; rcb_service only records it,
+Agent-ended episodes (docs/protocol/tasks.md#modes): step() reports the check after every control step; rcb_service only records it,
 and the episode ends at the agent's POST /finish, at the horizon (info["step_cap"]: the task's episode length, judged
 as it stands, reason "step_limit"), at the termination rule (a done without a success: 0), when the agent's time is up,
 or on a simulator error. The judgement is the check on the state the episode ends in (end_judgement "state", no settle

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""INVARIANT hook (PROTOCOL §1: copies of shared sources are byte-identical; docs/protocol/standard_mode.md Part 5),
+"""INVARIANT hook (docs/protocol/tasks.md: copies of shared sources are byte-identical; docs/protocol/eai-standard.md#match-extension),
 this benchmark's own: ci_checks/run_invariants.sh runs every ci_checks/benchmarks/*/invariant-* hook with the task
 directories in scope.
 

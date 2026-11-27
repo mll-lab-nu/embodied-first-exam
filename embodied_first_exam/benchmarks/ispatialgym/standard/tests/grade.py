@@ -2,7 +2,7 @@
 /out/final.json (the live episode's result and the crash-recovery record) and the evidence next to it. success = the live
 episode's success: upstream's geometric success under settle-eval, judged by the service at every control step the
 episode ran; nothing replays it (owner 2026-10-17). Numeric-only reward.json (docs/protocol/README.md
-Appendix H.1, H.4; docs/protocol/standard_mode.md).
+invariants.md H.1, H.4; docs/protocol/eai-standard.md).
 
 infra_error = 1 means no verdict on the agent: final.json is missing, unreadable or not finalized, the service never
 ended the episode, it gave up after crashes that were not all inside the agent's calls (sim_crashed, resume_failed), or
@@ -12,7 +12,7 @@ The video never decides anything. A reward is written in every case."""
 import json, os, shutil, traceback
 
 def agent_end_fields(d):
-    """An agent-ended episode's record (PROTOCOL §3: final.json success_signal / ended_by, step_limit / steps_used):
+    """An agent-ended episode's record (docs/protocol/tasks.md#modes: final.json success_signal / ended_by, step_limit / steps_used):
     evidence only, never the verdict (numbers only: a bad value is 0); the runner reads ended_session_end."""
     if not isinstance(d, dict) or d.get("success_signal") != "hidden":
         return {}
@@ -44,7 +44,7 @@ def grade(d: dict) -> tuple[bool, dict]:
     reason = str(d.get("reason") or "")
     infra = bool(d.get("infra_error")) or not finalized
     live = bool(d.get("live_success", d.get("success")))
-    ok = live and bool(d.get("success")) and not d.get("gave_up") and not infra and reason != "error"   # PROTOCOL §4: a simulator error is the agent's 0
+    ok = live and bool(d.get("success")) and not d.get("gave_up") and not infra and reason != "error"   # docs/protocol/tasks.md#grading: a simulator error is the agent's 0
     return ok, {
         "success": int(ok), "live_success": int(live), "graded_by_live": 1, "replays": 0,
         "finalized": int(finalized), "missing_log": 0, "n_actions": int(d.get("n_actions") or 0), "sim_steps": int(d.get("control_steps") or 0),

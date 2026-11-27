@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The per-call image budget and the response build of the shared layers (PROTOCOL §3 "Images per call"), on
+"""The per-call image budget and the response build of the shared layers (docs/protocol/tasks.md#modes "Images per call"), on
 toy simulators (numpy only, no image, a few seconds):
 
   - rcb1.frames_part() gives the header and bytes of array_part(np.stack(...)) (dtype promotion, empty, shape errors),

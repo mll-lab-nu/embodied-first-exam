@@ -38,7 +38,7 @@ unitree-h1hand = "Unitree H1 humanoid with two Shadow dexterous hands, 61 positi
 [modes.privileged]
 # grade.py main() / load_actions(): missing file -> missing_trajectory; npz `task` != family -> wrong_family; not a
 # (T, nu) finite array with T <= max_steps -> bad_trajectory (all success 0, grader_error 0); any exception ->
-# grader_error 1 (docs/protocol/README.md H.5: a void attempt, rerun). rcb_hb.Session.replay() L432-443: reset to the
+# grader_error 1 (docs/protocol/invariants.md H.5: a void attempt, rerun). rcb_hb.Session.replay() L432-443: reset to the
 # frozen instance, step until done (term or trunc), status(); step() clips each row to [-1, 1].
 success = """
 Graded file: `/app/output/trajectory.npz`, as `s.save_trajectory(...)` writes it: this task's name (`{family}`) and at

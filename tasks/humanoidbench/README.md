@@ -24,7 +24,7 @@ Every image is public: Harbor pulls it.
 |---|---|---|---|
 | privileged | the simulator and its full state; no reward | unlimited | its `trajectory.npz`, replayed once in a fresh process |
 | standard | head cameras, joint angles/velocities, a pelvis IMU, a fixed room camera; no reward | 50 (below; `RCB_RESET_BUDGET=0`: none) | the last episode, as it ran (live; nothing replayed) |
-| realtime | the same as standard, but time does not stop: the robot runs at 50 Hz in real time while the agent thinks (below) | 50 (as in standard: HumanoidBench's choice, PROTOCOL §2; the realtime template's default is 0) | the last episode, as it ran (live; nothing replayed) |
+| realtime | the same as standard, but time does not stop: the robot runs at 50 Hz in real time while the agent thinks (below) | 50 (as in standard: HumanoidBench's choice, docs/protocol/tasks.md; the realtime template's default is 0) | the last episode, as it ran (live; nothing replayed) |
 
 ## Upstream and license
 
@@ -92,7 +92,7 @@ docstring is the reference; `instruction.md` lists the endpoints) or the `efe-ro
 `joint_position`: HumanoidBench's own normalised position targets, 50 Hz, sent in chunks (realtime: streamed one row
 at a time or in chunks of up to 10 s).
 
-World-frame information (PROTOCOL §5): privileged mode gives the full state; standard mode gives none -- no root pose,
+World-frame information (docs/protocol/tasks.md#instructionmd): privileged mode gives the full state; standard mode gives none -- no root pose,
 no object or target pose; the room camera's pose is given in the robot's starting frame.
 
 | standard mode: given (a real H1 has it) | not given |
@@ -126,11 +126,11 @@ the task's recording camera frozen at its starting pose):
 ### Realtime mode: time does not stop
 
 In standard mode the robot waits, frozen, between the agent's calls: a model that thinks for a minute between two
-chunks loses nothing. A real H1 does not wait. The realtime mode (PROTOCOL §3;
+chunks loses nothing. A real H1 does not wait. The realtime mode (docs/protocol/tasks.md#modes;
 `tasks/humanoidbench/humanoidbench-*-i00-realtime`, 10 tasks, one per family, `mode = "realtime"`) is standard mode with the same
-instance, sensors, success rule, reset budget (50), wall clock (each task's own `[agent] timeout_sec`, stated by the Time line of every instruction's closing `## Limits`, PROTOCOL §2) and client, on a
+instance, sensors, success rule, reset budget (50), wall clock (each task's own `[agent] timeout_sec`, stated by the Time line of every instruction's closing `## Limits`, docs/protocol/tasks.md) and client, on a
 clock that does not stop (each task's `environment/sim/rcb_realtime.py`, which extends `rcb_service.py`; the
-wire protocol is the standard protocol's realtime capability, docs/protocol/standard_mode.md "Realtime mode"):
+wire protocol is the standard protocol's realtime capability, docs/protocol/eai-standard.md "Realtime"):
 
 - **Clock.** An episode starts paused at the frozen start, its servos holding their starting targets. Its clock starts
   at its first `submit` and runs one control step every 20 ms of wall time
@@ -149,7 +149,7 @@ wire protocol is the standard protocol's realtime capability, docs/protocol/stan
   sidecar's GPU, against a 20 ms step. A service that falls behind runs the missed steps back to back; more than
   0.5 s behind, it drops the debt (a stall) instead of fast-forwarding the robot. Requests cannot slow the clock: a request is read, decoded and checked off the simulator's thread (large
   JSON bodies by a child process), waiting requests are served once the clock has caught up, and the cameras are
-  rendered once per control step for everyone who asks (`docs/protocol/standard_mode.md`, "What a request can cost the
+  rendered once per control step for everyone who asks (`docs/protocol/eai-standard.md`, "What a request can cost the
   clock").
 
 **What makes it a meaningful task.** A model's turn takes seconds; the H1 falls within 1-3 s of robot time without
@@ -159,7 +159,7 @@ that reads proprioception and streams targets at the control rate through the cl
 `cameras=[]` costs a few ms over the shared network namespace), run in the background, and improved between episodes.
 The agent's code still runs only in its own container, never next to the simulator (standard mode's isolation is
 kept); the 50 resets are what make that loop of writing, running and revising a controller possible at all, which is
-why HumanoidBench's realtime tasks default to 50 resets rather than the mode's 0 (PROTOCOL §2).
+why HumanoidBench's realtime tasks default to 50 resets rather than the mode's 0 (docs/protocol/tasks.md).
 
 ## Grading
 
@@ -206,13 +206,13 @@ Standard mode keeps its rule: a crash is the agent's only inside its call (`fata
 
 ### Agent-ended episodes
 
-Every standard and realtime task runs with `RCB_AGENT_END=1` (PROTOCOL §3, agent-ended episodes): reaching the pass mark
+Every standard and realtime task runs with `RCB_AGENT_END=1` (docs/protocol/tasks.md#modes, agent-ended episodes): reaching the pass mark
 no longer ends the episode or the trial and no reply shows it. The episode ends at the agent's `POST /finish`, at one of
 the task's own terminations (a fall, a dropped tool, cube or book, a forbidden contact: a failure), at the episode's
 length or bookshelf's own end once all five objects are placed (reason `step_limit`), or at the end of the session.
 Judgement is by events (`end_judgement = "events"`): the summed reward reaching the pass mark counts once reached, and
 an event that happened stands: a fall or another failure rule after the pass mark ends the episode (reason `failed`)
-but the episode is a success (the standard protocol, PROTOCOL §3: on a goal judged as events a later failure does not
+but the episode is a success (the standard protocol, docs/protocol/tasks.md#modes: on a goal judged as events a later failure does not
 take an event back; `rcb_service.py`). A failure before the pass mark is reached is 0; a simulator error or a reset
 gives 0 whatever was reached. Resets stay available after a success, and the last episode is graded.
 
@@ -221,7 +221,7 @@ gives 0 whatever was reached. Resets stay available after a success, and the las
 HumanoidBench's standard configuration grants **50 resets** (`RCB_RESET_BUDGET` defaults to 50 in every
 `-standard` task's `environment/docker-compose.yaml`, so `spec()["budget"]["reset"]` is 50). Without them, the agent gets a single blind attempt: the H1 falls within 1-3 s of robot time under a
 first guess, and in standard mode there is no simulator to practise in. This is HumanoidBench's own choice of budget
-(PROTOCOL §2: each task declares its budget; the standard template's default is 0); results state the reset budget they ran under. What a reset does (`rcb_service.py`, the
+(docs/protocol/tasks.md: each task declares its budget; the standard template's default is 0); results state the reset budget they ran under. What a reset does (`rcb_service.py`, the
 standard-protocol service shared with KinDER and VLABench; each standard task's `environment/sim/`):
 
 - `POST /reset` (`r.reset()`) abandons the running episode, or follows one that has ended (`failed`: a fall or the

@@ -1,7 +1,7 @@
 """eai-standard/3.0 sim service for the MuJoCo tasks (DexToolBench, MuJoCo Playground): robot as a service.
 
 The sidecar owns the simulator (the task's tooling module, RCB_TOOL = rcb_dtb | rcb_aloha | rcb_panda, with the task's
-frozen instance) and serves the same wire protocol as the RoboTwin limited tasks (docs/protocol/standard_mode.md), so
+frozen instance) and serves the same wire protocol as the RoboTwin limited tasks (docs/protocol/eai-standard.md), so
 the agent uses the same client (rcb_client.py): GET /spec, GET /status, POST /observe, POST /submit, binary RCB1
 responses. What the agent gets: camera RGB (+ depth, with each camera's intrinsics and pose: the viewpoint the image is
 rendered from, recomputed for every response, and per frame for a camera that moves), the robot's own joint
@@ -16,7 +16,7 @@ when the agent's time is up; reaching the goals never ends one and is never anno
 judged as they are reached; Playground: the final state).
 
 Evidence under /data: episode.jsonl (every call), calls/NNNNNN/ (meta + actions), and at the end trajectory.npz
-((T, N) per control step), final.json and replay.mp4. The verdict is the live episode's (docs/protocol/README.md H.4; owner,
+((T, N) per control step), final.json and replay.mp4. The verdict is the live episode's (docs/protocol/invariants.md H.4; owner,
 2026-10-17; graded_by = "live", replays = 0): the task's own rule on the episode this service ran
 (DexToolBench: every goal reached, the goal tracker running every live control step; Playground: the tooling's check() of
 the live final state); nothing is replayed to grade it. The collect hook ends the episode with SIGUSR1. final.json is
@@ -30,7 +30,7 @@ Requests are validated in full before any physics runs: a malformed one (dt / se
 JSON number, cameras not a list of names, ...) is answered 400 and changes nothing (a /finish body is never parsed); only a failure of the simulator itself is a 500
 that ends the episode. `time_s` / `time_left_s` count from the agent's first request to the service.
 
-Optional reset capability (PROTOCOL §4.5; RCB_RESET_BUDGET = N > 0, default 0; DexToolBench's standard twins set 20):
+Optional reset capability (docs/protocol/eai-standard.md#post-reset-reset-capability; RCB_RESET_BUDGET = N > 0, default 0; DexToolBench's standard twins set 20):
 POST /reset abandons the running episode and starts a new one from the frozen start state (Session.reset()), N times
 in all. Only the last episode is graded (trajectory.npz holds its rows, replayable from the frozen start); the agent's
 /finish or its time (SIGUSR1) ends the trial (no reset after it). Without a budget /reset is a 404."""
@@ -53,7 +53,7 @@ MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10"))
 MAX_CONTROL_STEPS = int(os.environ.get("RCB_MAX_CONTROL_STEPS", "0"))
 MAX_VIDEO_FPS = 30; MAX_FRAMES_PER_CALL = 3000   # frames x cameras per response: bounds the service's memory
 WALL_CLOCK_S = float(os.environ.get("RCB_WALL_CLOCK_S", "3600"))
-RESET_BUDGET = max(0, int(os.environ.get("RCB_RESET_BUDGET", "0") or 0))   # PROTOCOL §4.5: 0 = one episode, no /reset
+RESET_BUDGET = max(0, int(os.environ.get("RCB_RESET_BUDGET", "0") or 0))   # docs/protocol/eai-standard.md#post-reset-reset-capability: 0 = one episode, no /reset
 MAX_BODY = 64 * 1024 * 1024; MAX_RESP = 256 * 1024 * 1024
 LOCK = threading.Lock()
 E = {"ready": False, "calls": 0, "rows": 0, "done": False, "reason": None, "t0": time.time(), "finalized": False,
@@ -62,7 +62,7 @@ E = {"ready": False, "calls": 0, "rows": 0, "done": False, "reason": None, "t0":
 # journal_rows: control steps executed over the whole trial (record.f64's length); ep_start: where the current episode
 # begins in it. stopping: the agent's time is up (SIGUSR1): no reset any more.
 
-# Agent-ended episodes (docs/protocol/README.md §3 "Agent-ended episodes", standard_mode.md; the same rules as
+# Agent-ended episodes (docs/protocol/eai-standard.md "Agent-ended episodes", docs/protocol/eai-standard.md; the same rules as
 # rcb_service.py's): the service never shows the task's success and a success never ends the episode; POST /finish (JSON {}) ends it (reason "finished"),
 # and so do the step cap (reason "step_limit": RCB_MAX_CONTROL_STEPS, or RCB_STEP_LIMIT=N when set, which may only lower
 # it) and the end of the agent's session ("timeout"); those three ends are judged on the state they leave (END_JUDGEMENT
@@ -510,7 +510,7 @@ class Recorder:
         return out
 
 
-# ---- eai-standard/3.0 (docs/protocol/standard_mode.md): standard mode is Gym's env.step. The world is frozen between
+# ---- eai-standard/3.0 (docs/protocol/eai-standard.md): standard mode is Gym's env.step. The world is frozen between
 # submits; /observe never lets time pass (`seconds` > 0 is a 400) and reads the recorder: last_s = 0 the current frame,
 # last_s = n the frames recorded in the last n robot seconds. The recorder is no process of its own: during every /submit
 # (a rows-free hold chunk too) it keeps every camera's RGB frame every 1 / RCB_CAMERA_FPS of robot time, with the proprio
@@ -619,7 +619,7 @@ def _ctrl_step(tg, rec) -> bool:
 
 
 # ---- request parsing: everything here runs BEFORE any physics. A malformed request is the caller's mistake: it raises
-# ValueError (answered 400, nothing executed), never a simulator error (500, which ends the episode; PROTOCOL §4.6).
+# ValueError (answered 400, nothing executed), never a simulator error (500, which ends the episode; docs/protocol/eai-standard.md#errors).
 VIDEO_MODES = ("mp4", "frames", "both", "none")
 
 
@@ -826,7 +826,7 @@ def do_reset(q: dict):
 
 
 def finalize() -> None:
-    """The verdict: the live episode's (docs/protocol/README.md H.4; owner, 2026-10-17). The graded episode (every
+    """The verdict: the live episode's (docs/protocol/invariants.md H.4; owner, 2026-10-17). The graded episode (every
     control step since the last reset) is saved as the trajectory, and the task's rule is read off the live simulator:
     DexToolBench, every goal reached (the goal tracker ran on every executed control step, as the privileged replay runs
     it); Playground, the tooling's check() of the final state. Nothing is replayed to grade it. final.json is finalized
@@ -958,7 +958,7 @@ class Hd(BaseHTTPRequestHandler):
         try:
             out, blobs = {"/submit": do_submit, "/observe": do_observe, "/reset": do_reset}[self.path](q)
         except Exception as exc:  # noqa
-            traceback.print_exc(); log({"ev": "error", "error": repr(exc)}); finish("error")   # PROTOCOL §4.6: a 500 ends the episode
+            traceback.print_exc(); log({"ev": "error", "error": repr(exc)}); finish("error")   # docs/protocol/eai-standard.md#errors: a 500 ends the episode
             return self._json(500, {"error": "simulator error", "detail": repr(exc)[:200]})
         return self._rcb1(out, blobs)
 

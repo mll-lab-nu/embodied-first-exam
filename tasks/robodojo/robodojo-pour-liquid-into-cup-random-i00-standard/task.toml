@@ -22,16 +22,16 @@ task_type = "trajectory"
 simulator = "robodojo"
 robot = "arx-x5-bimanual"
 family = "pour_liquid_into_cup_random"
-dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
+dynamics = "static"               # scene dynamics (docs/protocol/tasks.md): the task's own declaration
 protocol = "eai-standard/3.0"
 oracle = "none"
-oracle_evidence = "no positive example yet; no reference solution (RoboDojo releases no expert, and its training demonstrations carry no initial state); marked unvalidated (PROTOCOL §2 `validated`); human review in PR #142"
+oracle_evidence = "no positive example yet; no reference solution (RoboDojo releases no expert, and its training demonstrations carry no initial state); marked unvalidated (docs/protocol/tasks.md `validated`); human review in PR #142"
 instance_seed = 0
 expert_time_estimate_hours = 3.0
 
 [metadata.seeds]
 # the seeds a runner may draw from (a list, { from = A, to = B } or "any") and the ones the reference solution
-# under solution/ is for, where they are not the default seed alone (docs/protocol/README.md §2)
+# under solution/ is for, where they are not the default seed alone (docs/protocol/tasks.md)
 allowed = [0, 1, 2]
 
 [verifier]
@@ -39,7 +39,7 @@ timeout_sec = 1200.0
 environment_mode = "separate"
 network_mode = "no-network"
 
-# Resources (PROTOCOL §6): seal the monitor's record first.
+# Resources (docs/protocol/resources.md): seal the monitor's record first.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
@@ -60,7 +60,7 @@ timeout_sec = 3600                # = finalize.sh's HOOK_BUDGET_S (keep them equ
                                   # the live episode (no grading replay)
 
 [agent]
-timeout_sec = 3600.0              # the agent's cutoff, this task's own (PROTOCOL §2), as the service's RCB_WALL_CLOCK_S
+timeout_sec = 3600.0              # the agent's cutoff, this task's own (docs/protocol/tasks.md), as the service's RCB_WALL_CLOCK_S
 # RoboDojo's training demonstrations and policy checkpoints are public (Hugging Face), so the agent reaches the model APIs and the package registries,
 # nothing else (scripts/set_agent_egress.py HOSTS).
 network_mode = "allowlist"
@@ -73,7 +73,7 @@ memory_mb = 8192
 storage_mb = 10240
 gpu_types = ["L40S", "L40", "L4", "RTX 4090", "RTX 6000 Ada"]
 
-# The robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): Harbor starts this server for the agent.
+# The robot's MCP tools (docs/protocol/eai-standard.md "MCP tools"): Harbor starts this server for the agent.
 [[environment.mcp_servers]]
 name = "efe-robot"
 transport = "stdio"

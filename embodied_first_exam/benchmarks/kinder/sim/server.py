@@ -25,7 +25,7 @@ The verdict is the live episode's: step() reports KinDER's own goal check (`term
 step and the episode ends there, so nothing is replayed to grade it; render_video() re-runs the trajectory once, after
 the verdict, to film it. start_sha is the frozen instance's recorded scene_sha (the state hash right after reset), which
 rcb_service checks when an episode begins; a KinDER that no longer builds the instance is InstanceMismatch.
-Agent-ended episodes (PROTOCOL §3): the goal check never ends the
+Agent-ended episodes (docs/protocol/tasks.md#modes): the goal check never ends the
 episode; it is judged on the state the episode ends in (end_judgement "state"; the goal check is a predicate on the
 scene); the episode's length is its step cap, judged as it stands.
 """

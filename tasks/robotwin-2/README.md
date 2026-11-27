@@ -11,7 +11,7 @@ with its expected initial-state hash) and the same success rule, RoboTwin's `che
   primitives, unlimited resets) and hands in one replayable trajectory of per-physics-step drive targets, which the
   verifier replays open-loop.
 - **standard**: RoboTwin 2.0's standard tasks serve the standard protocol
-  (docs/protocol/standard_mode.md Part 1), the service the base protocol was written from. The simulator runs in a
+  (docs/protocol/eai-standard.md), the service the base protocol was written from. The simulator runs in a
   `sim` sidecar the agent cannot open; the agent gets only the client (and the same service as MCP tools): camera
   images, camera calibration and proprioception, `joint_position` or `ee_pose` action chunks, one episode, no reset, no
   object poses, no success signal. It has to estimate the scene from images and recover from its own mistakes without
@@ -163,7 +163,7 @@ determinism measurement by hand: success = every replay succeeds and all final-s
 
 ### Standard (live)
 
-**Grading** (the live episode, PROTOCOL H.4; no grading replay). `success` is RoboTwin's `check_success` on the
+**Grading** (the live episode, docs/protocol/invariants.md H.4; no grading replay). `success` is RoboTwin's `check_success` on the
 episode the sidecar ran: it is checked after every call that ran physics and only recorded (a success never ends the
 episode: "Agent-ended episodes" below); the episode ends at the agent's `POST /finish` or when
 the agent's time is up (the collect hook's SIGUSR1, after the monitor is sealed and the agent's container is stopped
@@ -182,7 +182,7 @@ the agent's call (`reason = "error"`), a timeout are the agent's 0. `reward.json
 
 #### Agent-ended episodes
 
-Every standard task sets `RCB_AGENT_END "1"` in its sim service (PROTOCOL §3). `server.py` no longer ends the episode at
+Every standard task sets `RCB_AGENT_END "1"` in its sim service (docs/protocol/tasks.md#modes). `server.py` no longer ends the episode at
 the first success: RoboTwin's `check_success` is still run after every call and only recorded
 (`hidden_success_first_step`). The agent ends the episode with `POST /finish` (reason `finished`); the end of its
 session (`timeout`) ends it too, and both are judged by `check_success` on the state they leave (end judgement `state`;
@@ -248,7 +248,7 @@ Excluded: `click_bell` is left out because its success is a transient contact th
   (for `stack_blocks_two`, rewritten), recorded into a trajectory by `solution/solve.sh`; the oracles restore the
   scrubbed attributes by rebuilding the scene with upstream's `load_actors`. Standard, the privileged expert's joint
   targets streamed as `joint_position` chunks (every K physics steps, dt = K/250 s, linear interpolation).
-- **Resources** (caps per container, PROTOCOL §6): privileged `main` 4 CPUs, 10 GiB, 13 GiB of GPU memory (the GPU is
+- **Resources** (caps per container, docs/protocol/resources.md): privileged `main` 4 CPUs, 10 GiB, 13 GiB of GPU memory (the GPU is
   held by `main`; the verifier gets 13 GiB of GPU memory); standard `main` 3 CPUs, 4 GiB, no GPU, `sim` 2 CPUs, 7 GiB,
   13 GiB of GPU memory. Any NVIDIA GPU; recommended RTX 4090 24GB / L4 24GB. The GPU is passed through with
   `environment/docker-compose.yaml` (nvidia device reservation).

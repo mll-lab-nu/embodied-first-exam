@@ -18,7 +18,7 @@ and motor torques, its two IMUs, whether each hand holds something), the venue's
 has ended an attempt on a foul or a fall, the rule broken (meta["outcome"]). Never an object's pose, the robot's
 position in the venue, or the referee's state during an episode.
 
-Agent-ended episodes (PROTOCOL §3): the referee's success call is an event, and counts the moment it is made (end_judgement "events"): the referee does nothing more once it has called the attempt, so
+Agent-ended episodes (docs/protocol/tasks.md#modes): the referee's success call is an event, and counts the moment it is made (end_judgement "events"): the referee does nothing more once it has called the attempt, so
 nothing after its call undoes it, but the attempt does not end there: the physics goes on (rfo World.run_after_done)
 until the agent's POST /finish, the end of its session, a reset, or the attempt's time limit (the service's step cap,
 "step_limit"). A foul or a fall the referee calls before a success ends the attempt as a failure ("failed"), and only

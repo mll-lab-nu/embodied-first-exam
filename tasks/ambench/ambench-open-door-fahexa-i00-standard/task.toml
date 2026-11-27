@@ -22,7 +22,7 @@ task_type = "trajectory"
 simulator = "ambench"             # AM-Bench @ 60bf5b7 on Isaac Lab @ f4aa17f / Isaac Sim 5.1 (PhysX on the GPU, RTX rendering)
 robot = "ambench-fahexa"
 family = "open_door_fahexa"
-dynamics = "static"               # scene dynamics (PROTOCOL §2): nothing but the robot does work on the scene
+dynamics = "static"               # scene dynamics (docs/protocol/tasks.md): nothing but the robot does work on the scene
 protocol = "eai-standard/3.0"
 oracle = "full"
 instance_seed = 0
@@ -33,7 +33,7 @@ timeout_sec = 1200.0
 environment_mode = "separate"
 network_mode = "no-network"
 
-# Resources (PROTOCOL §6): seal the monitor's record first.
+# Resources (docs/protocol/resources.md): seal the monitor's record first.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
@@ -55,7 +55,7 @@ timeout_sec = 4800                # = finalize.sh's HOOK_BUDGET_S (RCB_COLLECT_T
                                   # + a margin; graded by the live episode since 2026-10-17 (7200 s with two replays before)
 
 [agent]
-timeout_sec = 3600.0              # the agent's cutoff, this task's own (PROTOCOL §2)
+timeout_sec = 3600.0              # the agent's cutoff, this task's own (docs/protocol/tasks.md)
 # AM-Bench's scripted experts are public upstream, so the agent reaches the model APIs and the package registries, nothing
 # else (scripts/set_agent_egress.py HOSTS).
 network_mode = "allowlist"
@@ -68,7 +68,7 @@ memory_mb = 4096
 storage_mb = 10240
 gpu_types = ["L40S", "L40", "RTX 4090", "RTX PRO 6000 Blackwell"]
 
-# The robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): Harbor starts this server for the agent.
+# The robot's MCP tools (docs/protocol/eai-standard.md "MCP tools"): Harbor starts this server for the agent.
 [[environment.mcp_servers]]
 name = "efe-robot"
 transport = "stdio"

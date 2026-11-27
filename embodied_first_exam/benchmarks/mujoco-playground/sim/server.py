@@ -1,7 +1,7 @@
-"""eai-standard/3.0 sim service for MuJoCo Playground's quadruped tasks (docs/protocol/standard_mode.md): the adapter of the
+"""eai-standard/3.0 sim service for MuJoCo Playground's quadruped tasks (docs/protocol/eai-standard.md): the adapter of the
 shared layer rcb_limited.py; the simulator is rcb_quadruped.Session (plain MuJoCo on the CPU).
 HTTP surface: GET /spec, GET /status, POST /observe, POST /submit, POST /kinematics, and POST /reset when the run grants
-resets (RCB_RESET_BUDGET, the optional reset capability of docs/protocol/standard_mode.md / PROTOCOL §4.5; the quadrupeds'
+resets (RCB_RESET_BUDGET, the optional reset capability of docs/protocol/eai-standard.md / docs/protocol/eai-standard.md#post-reset-reset-capability; the quadrupeds'
 standard tasks default to 10 in their compose file). Every call is logged to /data/episode.jsonl.
 
 The episode is the frozen instance's: one control step = the instance's control period (Go1, Spot: 1/50 s; Barkour:
@@ -19,7 +19,7 @@ this simulator when the episode ends); the collect hook (finalize.sh) makes it e
 instance is checked when the service builds it: a scene whose start state does not hash to the instance's recorded
 `state_sha` gets no episode (instance_mismatch, an infrastructure failure).
 
-Agent-ended episodes (rcb_agent_end.py; PROTOCOL §3): the service never shows the task's success and a
+Agent-ended episodes (rcb_agent_end.py; docs/protocol/tasks.md#modes): the service never shows the task's success and a
 success never ends the episode (the check is still run after every control step, and only recorded); POST /finish (or
 the `done` action, the same end) ends it with reason "finished", the horizon with "step_limit" (RCB_STEP_LIMIT may only
 lower it) and the end of the agent's session with "timeout": those three are judged on the state they leave (the task's
@@ -44,7 +44,7 @@ INSTANCE = os.environ.get("RCB_INSTANCE", os.path.join(os.path.dirname(os.path.a
 WALL_CLOCK_S = float(os.environ.get("RCB_WALL_CLOCK_S", "3600"))
 MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10"))
 MAX_FRAMES = L.MAX_FRAMES_PER_CALL  # /spec max_frames_per_call, 3000 images (cameras x frames, depth counted again)
-RESET_BUDGET = max(0, int(os.environ.get("RCB_RESET_BUDGET") or 0))  # the compose file's default: 10 (PROTOCOL §4.5)
+RESET_BUDGET = max(0, int(os.environ.get("RCB_RESET_BUDGET") or 0))  # the compose file's default: 10 (docs/protocol/eai-standard.md#post-reset-reset-capability)
 CAM_W, CAM_H = 320, 240
 LOCK = threading.Lock()
 PID_FILE = os.path.join(DATA, "server.pid")
@@ -334,7 +334,7 @@ def finish(reason: str) -> None:
     try:
         chk = S.check()
         E["check"] = {k: v for k, v in chk.items() if k != "segments"}
-        # a simulator error ends the episode: the state after it is never judged a success (PROTOCOL §4.6); only the
+        # a simulator error ends the episode: the state after it is never judged a success (docs/protocol/eai-standard.md#errors); only the
         # ends judged on the state they leave can succeed (a fall is the termination rule: 0)
         E["success"] = bool(chk["success"]) and reason != "error" and reason in AE.END_STATE_REASONS
     except Exception:  # noqa: BLE001

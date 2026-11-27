@@ -1,5 +1,5 @@
 BUILD_ONLY: the evaluator ghcr.io/mll-lab-nu/efe-private:control-transfer-<images/control-transfer/VERSION> is never published
-(docs/protocol/README.md §1). An evaluation host builds it (images/control-transfer/README.md), or takes it from the
+(docs/operations.md). An evaluation host builds it (images/control-transfer/README.md), or takes it from the
 organization's own non-public copy of the package; the roboEngineer Control Transfer tasks reference that tag and Harbor
 finds it in the local Docker image store. The agents' bases built from the same Dockerfile, efe:control-transfer-<VERSION>-nominal
 and the G1 family's -train, hold public assets only and are public (build.sh).

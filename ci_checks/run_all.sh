@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Every check, in two tiers (docs/protocol/README.md: only Appendix H binds):
+# Every check, in two tiers (docs/protocol/README.md: only the invariants of invariants.md bind):
 #   1. the invariants: ci_checks/run_invariants.sh (the required CI job `invariants`); a failure fails this run (exit 1);
 #   2. the advisory checks (the CI job `advisories`): ci_checks/parallel.py --advisory, findings are warnings (exit 3).
 # Exit 0: everything clean; 1: an invariant failed (or the invariant run was incomplete); 3: advisory findings only.
@@ -35,7 +35,7 @@ if [ "${1:-}" != "--changed" ]; then   # task dirs given relative to the caller'
 fi
 cd "$root" || exit 1
 q() { printf %q "$1"; }
-# the mode registry (PROTOCOL §3, scripts/task_conventions.py MODE_REGISTRY), read once for the per-task shell checks
+# the mode registry (docs/protocol/tasks.md#modes, scripts/task_conventions.py MODE_REGISTRY), read once for the per-task shell checks
 RCB_MODES_TABLE="$(python3 "$root/scripts/task_conventions.py" modes)" || { echo "FAIL scripts/task_conventions.py modes"; exit 1; }
 export RCB_MODES_TABLE
 
@@ -86,29 +86,29 @@ if [ ${#tasks[@]} -gt 0 ]; then
     [ -f "$h" ] || continue
     case "$h" in *.py) add xargs python3 "$(q "$h") < $(q "$hlist")" ;; *) add xargs bash "$(q "$h") < $(q "$hlist")" ;; esac
   done
-  # PROTOCOL §5: the standard texts of the benchmarks that give no world coordinates (task_conventions.NO_WORLD_FRAME_TEXTS)
+  # docs/protocol/tasks.md#instructionmd: the standard texts of the benchmarks that give no world coordinates (task_conventions.NO_WORLD_FRAME_TEXTS)
   add xargs bash ci_checks/check-world-frame-texts.sh "< $(q "$hlist")"
 fi
 # repo-level, cheap: always on everything, or on the given task dirs as before
 pargs=""; [ $explicit -eq 1 ] && pargs="$targs"
-add bash ci_checks/check-tooling-identity.sh                # shared sources (PROTOCOL §1); the shared layer = embodied_first_exam/standard/
+add bash ci_checks/check-tooling-identity.sh                # shared sources (docs/protocol/tasks.md); the shared layer = embodied_first_exam/standard/
 add bash ci_checks/check-standard-client.sh                 # standard agent + verifier images: the pinned client base and pins
 add python3 ci_checks/check-recipe-copies.py               # base-image recipes inside other images' recipes: byte-identical to their source
-# PROTOCOL §6: the caps of every container ([environment], the compose files, x-gpu-memory-gb), the rules of
+# docs/protocol/resources.md: the caps of every container ([environment], the compose files, x-gpu-memory-gb), the rules of
 # scripts/task_resources.toml applied, and the Resources line of the instruction's `## Limits` and the README's
 # `## Resources` rendered from them
 add python3 ci_checks/check-resources.py"$pargs"
-# PROTOCOL §2: the agent's time cutoff, each task's own `[agent] timeout_sec` (no table): at most 14400 s, the Time line
+# docs/protocol/tasks.md: the agent's time cutoff, each task's own `[agent] timeout_sec` (no table): at most 14400 s, the Time line
 # of instruction.md's `## Limits`, the README row and the standard modes' sim service say it, nothing else states
 # the limit (the twins' equal number is an invariant: check-twins.py). Per task: a scoped run checks its benchmarks' tasks only
 add python3 ci_checks/check-cutoffs.py"$targs"
 add python3 ci_checks/check-seeds.py"$pargs"
-# PROTOCOL §2: a realtime task states its slowdown S (its sim service's default, the instruction) and allows resets
+# docs/protocol/tasks.md: a realtime task states its slowdown S (its sim service's default, the instruction) and allows resets
 add python3 ci_checks/check-realtime.py"$pargs"
-# docs/protocol/standard_mode.md "MCP tools": every standard / realtime task has the robot's MCP tools (or a stated
+# docs/protocol/eai-standard.md "MCP tools": every standard / realtime task has the robot's MCP tools (or a stated
 # exception), and every agent-facing endpoint the layers and adapters serve has a tool
 add python3 ci_checks/check-mcp-tools.py"$pargs"
-# docs/protocol/standard_mode.md: the reference services of every layer answer as
+# docs/protocol/eai-standard.md: the reference services of every layer answer as
 # docs/protocol/eai-standard.openapi.yaml says (paths, status codes, bodies against the schemas); in CI the
 # unit-tests job runs it with its modules installed (RCB_SKIP_UNIT_TESTS=1 here)
 [ "${RCB_SKIP_UNIT_TESTS:-0}" = 1 ] || add python3 ci_checks/check-openapi-contract.py
@@ -116,25 +116,25 @@ add python3 ci_checks/check-mcp-tools.py"$pargs"
 # their source: the keys /status, every answer meta and /spec must carry (static: no simulator)
 add python3 ci_checks/check-protocol-strings.py             # one protocol id, eai-standard/3.0, in code, tasks and docs
 add python3 ci_checks/check-own-servers.py
-# PROTOCOL §4: every task renders a video and the runner can collect it; a declared video time bound is not
+# docs/protocol/tasks.md#grading: every task renders a video and the runner can collect it; a declared video time bound is not
 # shorter than the verdict replay's (privileged)
 add python3 ci_checks/check-video.py"$targs"
-# PROTOCOL H.4: the standard modes' graders transcribe the live episode's verdict (graded_by_live), no replay
+# docs/protocol/invariants.md H.4: the standard modes' graders transcribe the live episode's verdict (graded_by_live), no replay
 # decides, and agent-caused ends are never infrastructure failures (synthetic records through each distinct grade.py)
 add python3 ci_checks/check-live-verdict.py"$targs"
-# PROTOCOL §3: an agent-ended task's Goal says how its episode is judged and ends (the environment and the Finish line
+# docs/protocol/tasks.md#modes: an agent-ended task's Goal says how its episode is judged and ends (the environment and the Finish line
 # are invariants: run_invariants.sh)
 add python3 ci_checks/check-agent-end.py --tier advisory"$targs"
 # The task protocol (docs/protocol/README.md): the protocol version per mode, oracle fields, the image registry, no results/, no personal paths, internal names or host /data/ paths
 add python3 ci_checks/check-protocol.py"$pargs"
-# docs/protocol/README.md §1: the per-task README format (each README names no other task and no retired wording;
+# docs/protocol/tasks.md: the per-task README format (each README names no other task and no retired wording;
 # readme.toml and the benchmark README in shape)
 add python3 ci_checks/check-readmes.py"$targs"
-# PROTOCOL §6: the resource monitor sidecar's copies and the verifier step (its isolation: run_invariants.sh)
+# docs/protocol/resources.md: the resource monitor sidecar's copies and the verifier step (its isolation: run_invariants.sh)
 add python3 ci_checks/check-monitor.py --tier advisory"$pargs"
 # issue #258: every script or workflow that builds images builds from a stamped copy (scripts/stamp_mtimes.py)
 add python3 ci_checks/check-build-stamps.py
-# PROTOCOL §4: the core set (docs/core_set.toml) names existing task dirs, with their base, benchmark label and mode
+# docs/protocol/tasks.md#grading: the core set (docs/core_set.toml) names existing task dirs, with their base, benchmark label and mode
 add python3 scripts/task_conventions.py core-set --check
 # every task dir has its benchmark label and sits in its benchmark's folder, tasks/<folder>/<task>/ (BENCHMARK_TABLE)
 add python3 scripts/task_conventions.py benchmarks --check

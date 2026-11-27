@@ -1,4 +1,4 @@
-"""eai-standard/3.0 for Embodied Olympics - Match (docs/protocol/standard_mode.md Part 5, the match extension): the
+"""eai-standard/3.0 for Embodied Olympics - Match (docs/protocol/eai-standard.md#match-extension, the match extension): the
 standard endpoints (/spec /status /observe /submit) and the match's own calls as extension endpoints (/start /ready
 /say /team), served next to the core's seat API (/<SEAT>/..., the `game` command) by the same process. A translation
 layer only: it calls the match service's own methods (core/realtime.py, core/lockstep.py, core/turn.py, unchanged), so

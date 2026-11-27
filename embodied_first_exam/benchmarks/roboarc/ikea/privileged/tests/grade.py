@@ -11,12 +11,12 @@ compared: `replays` 1, `deterministic` 1, `determinism_checked` 0. `--repeat N` 
 measurement by hand: N fresh processes at the same time, pass iff every replay succeeds and all end in the same state
 hashes, before and after the hold (`deterministic`, `determinism_checked` 1; MuJoCo on the CPU is bit-deterministic).
 Writes /logs/verifier/reward.txt (1/0), reward.json (numbers only) and verdict.json (the replays' reports).
-Replay video (PROTOCOL §4; evidence only, never the verdict): one more process, render_video.py, replays the
+Replay video (docs/protocol/tasks.md#grading; evidence only, never the verdict): one more process, render_video.py, replays the
 same rows at the same time and writes /logs/verifier/replay.mp4 (+ replay.last.png, replay.json); the verdict is written
 first, then `video_rendered` is set once the video exists, waiting for it at most as long again as the verdict replay
 took plus 600 s and never past the verifier's limit (--budget-s); a video that fails or is late changes nothing else. No
 video for a missing or invalid trajectory.
-Failure classes (PROTOCOL H.5: grader_error / infra_error give a free retry, so only what is not the deliverable's doing
+Failure classes (docs/protocol/invariants.md H.5: grader_error / infra_error give a free retry, so only what is not the deliverable's doing
 lands there): a replay that crashed (SIGSEGV, SIGBUS, SIGFPE, SIGILL, SIGABRT: `replay_crash`) or in which the scene's
 code or MuJoCo raised (`replay_exception`, rcb_ikea.py replay) is a breakdown, the agent's 0; a replay stopped from
 outside (SIGKILL from the OOM killer, SIGTERM: `replay_killed`), a scene, image or runtime that differs from the binding
@@ -170,7 +170,7 @@ def main() -> int:
         raised = [o for o in outs if o.get("replay_exception")]
         if raised:
             # the scene's code or MuJoCo raised on the state the rows drove it into (rcb_ikea.py replay): a breakdown
-            # caused by the deliverable, the agent's 0, never a grader error (PROTOCOL H.5: no free retry).
+            # caused by the deliverable, the agent's 0, never a grader error (docs/protocol/invariants.md H.5: no free retry).
             same = len(raised) == len(outs) and len({(o["replay_exception"], o.get("rows")) for o in outs}) == 1
             out = {"success": 0, "sim_breakdown": 1, "replay_exception": 1, "replays_raised": len(raised),
                    "replays": len(outs), "deterministic": int(same), "determinism_checked": int(len(outs) > 1),

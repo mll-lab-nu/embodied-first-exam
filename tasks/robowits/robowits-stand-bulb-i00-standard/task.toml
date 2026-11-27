@@ -21,7 +21,7 @@ task_type = "trajectory"
 simulator = "robowits"
 robot = "marvin-bimanual"
 family = "stand_bulb"
-dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
+dynamics = "static"               # scene dynamics (docs/protocol/tasks.md): the task's own declaration
 protocol = "eai-standard/3.0"
 oracle = "none"
 oracle_evidence = "No reference solution: RoboWits ships no expert or planner for its seed tasks. Solvable: model trial robowits-stand-bulb-i00__BrTmH6k (robowits-lunaxh-0925-2042, privileged) graded success=1, deterministic=1 by the separate verifier; nop scored 0. These records are from earlier versions of the task (before protocol v1.0, on the same frozen instance and predicate); not re-run on this version (static validation only, 2026-10-01). Human review per family (protocol §4). 2026-10-18: the frozen instance is now that scene settled at rest; the positive above was recorded on the earlier instance."
@@ -33,7 +33,7 @@ timeout_sec = 1200.0
 environment_mode = "separate"
 network_mode = "no-network"
 
-# Resources (PROTOCOL §6): seal the monitor's record first.
+# Resources (docs/protocol/resources.md): seal the monitor's record first.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
@@ -50,13 +50,13 @@ timeout_sec = 30
 service = "sim"
 # end the episode (SIGUSR1 to the live service, through a crash resume if one is under way): the service runs the settle
 # window after the agent's last command on the live simulator and writes the live verdict (nothing is replayed), then
-# renders the video once; wait for it (final.json video_done), then hand over the record (docs/protocol/standard_mode.md §13.3)
+# renders the video once; wait for it (final.json video_done), then hand over the record (embodied_first_exam/standard/README.md#what-a-shared-layer-task-declares)
 command = "python3 /srv/rcb_limited.py end /data --wait-key video_done --timeout 2280; cat /data/final.json"
 timeout_sec = 2400                # service up (a resume replays the journal first), the settle window, then the video
 
 [agent]
 timeout_sec = 3600.0             # RoboWits budget (why: tasks/robowits/README.md)
-network_mode = "allowlist"      # model APIs and package registries (scripts/set_agent_egress.py); PROTOCOL Appendix H.6
+network_mode = "allowlist"      # model APIs and package registries (scripts/set_agent_egress.py); docs/protocol/invariants.md H.6
 allowed_hosts = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com", "*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com", "pypi.org", "files.pythonhosted.org", "deb.debian.org", "security.debian.org", "archive.ubuntu.com", "security.ubuntu.com", "snapshot.ubuntu.com"]
 
 [environment]
@@ -65,7 +65,7 @@ cpus = 4
 memory_mb = 5120
 storage_mb = 10240
 
-# The robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): Harbor starts this server for the agent.
+# The robot's MCP tools (docs/protocol/eai-standard.md "MCP tools"): Harbor starts this server for the agent.
 [[environment.mcp_servers]]
 name = "efe-robot"
 transport = "stdio"

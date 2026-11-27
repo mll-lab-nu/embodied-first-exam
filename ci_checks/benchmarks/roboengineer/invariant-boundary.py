@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""roboEngineer's public/private boundary (PROTOCOL H.2, H.3), a benchmark hook of the required CI job `invariants`.
+"""roboEngineer's public/private boundary (docs/protocol/invariants.md H.2, H.3), a benchmark hook of the required CI job `invariants`.
 
 The agent's container gets only the public nominal tooling, environment/public/ (copied to /app by
 environment/Dockerfile); the private evaluator (hidden plant, case banks, scoring, reference searches) lives in
@@ -54,7 +54,7 @@ def main(argv: list[str]) -> int:
     bad = 0
     for t in tasks:
         for e in check(t):
-            print(f"FAIL {t.name}: {e} (PROTOCOL H.2/H.3)")
+            print(f"FAIL {t.name}: {e} (docs/protocol/invariants.md H.2, H.3)")
             bad = 1
     if not bad:
         print(f"ok roboEngineer boundary: {len(tasks)} task(s); the agent's copy holds public tooling only")

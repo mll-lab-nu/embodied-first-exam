@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): every standard and realtime task offers its
+"""The robot's MCP tools (docs/protocol/eai-standard.md "MCP tools"): every standard and realtime task offers its
 robot service through its client (HTTP) and through the `efe-robot` MCP server, and every agent-facing endpoint has a
 tool.
 
@@ -216,7 +216,7 @@ def main(argv: list[str]) -> int:
             n += 1
         errs += check_task(task)
     if errs:
-        print("FAIL MCP tools (docs/protocol/standard_mode.md \"MCP tools\": every standard and realtime task has them; "
+        print("FAIL MCP tools (docs/protocol/eai-standard.md \"MCP tools\": every standard and realtime task has them; "
               "every agent-facing endpoint has a tool):")
         for e in errs[:60]:
             print("  -", e)

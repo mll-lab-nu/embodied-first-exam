@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""eai-standard/3.0 conformance test of the shared layer, run against a LIVE sim service (docs/protocol/standard_mode.md).
+"""eai-standard/3.0 conformance test of the shared layer, run against a LIVE sim service (docs/protocol/eai-standard.md).
 
     embodied_first_exam/standard/check-standard-protocol.py --url http://127.0.0.1:8000 [--task tasks/<benchmark>/<t>-standard] [--out DIR] [--watch 0.5]
     embodied_first_exam/standard/check-standard-protocol.py --launch tasks/<benchmark>/<t>-standard [--port 18000] [--out DIR]   # compose up the task's sidecar, test, down
@@ -33,8 +33,8 @@ SPEC_KEYS_REQ = {"protocol", "simulator", "robot", "task_text", "control_hz", "m
                  "cameras", "default_cameras", "action_types", "proprio_layout", "proprio_groups", "static", "world", "budget",
                  "robot_spec", "kinematics", "depth"}
 SPEC_KEYS_OK = SPEC_KEYS_REQ | {"physics_substeps", "physics_hz", "on_service_error", "max_call_wall_s",   # + crash recovery
-                                "episode", "max_control_steps",                                           # standard_mode.md, PROTOCOL §2
-                                "max_frames_per_call",   # standard_mode.md §12: where the adapter states one
+                                "episode", "max_control_steps",                                           # docs/protocol/eai-standard.md, docs/protocol/tasks.md
+                                "max_frames_per_call",   # docs/protocol/eai-standard.md#images-per-call: where the adapter states one
                                 "operations"}            # the operations capability (the operations layer)
 CAM_KEYS_REQ = {"rgb", "depth", "mounted", "resolution", "intrinsic_cv", "mount"}
 CAM_KEYS_OK = CAM_KEYS_REQ | {"calibration_in_obs", "depth_range_m"}
@@ -49,7 +49,7 @@ GROUPS_REQ = ("joint_pos", "joint_vel", "gripper_opening", "tcp_pose", "joint_ef
 META_KEYS_OK = {"stopped", "step", "calls", "control_steps", "physics_steps", "sim_time_s", "time_s", "time_left_s", "proprio", "cameras",
                 "done", "reason", "degraded", "chunk_id", "type", "executed_rows", "control_steps_chunk", "physics_steps_chunk",
                 "clipped", "n_clipped", "plan", "rejected", "ok", "obs_id", "seconds", "control_steps_watch", "physics_steps_watch", "last_s", "frame_step", "hold", "duration_s", "planned_duration_s", "chunk_id",
-                "frames_skipped"}   # frames_skipped: frames a call left out at max_frames_per_call (PROTOCOL §3)
+                "frames_skipped"}   # frames_skipped: frames a call left out at max_frames_per_call (docs/protocol/tasks.md#modes)
 META_CAM_KEYS_OK = {"intrinsic_cv", "extrinsic_cv", "cam2world_gl", "image_size"}
 PART_RE = re.compile(r"^(video|frames|last|last_depth|depth_frames|depth|extrinsic_cv)/[^/]+$|^(proprio|frame_step|frame_time_s)$")
 FORBIDDEN = re.compile(r"mask|segment|semantic(?!s$)|instance_?id|bbox|bounding|categor|object|\bobj_|label|mass|friction|restitution|"
@@ -386,7 +386,7 @@ def check_live(rep: Report, url: str, task: Path | None, client_dir: Path, out: 
     # /status and the 404 surface
     st0 = r.status()
     rep.ok({"step", "calls", "done", "reason"} <= set(st0), "status.keys", json.dumps(st0))
-    resets = int((spec.get("budget") or {}).get("reset") or 0)   # POST /reset exists only with a reset budget (PROTOCOL §2)
+    resets = int((spec.get("budget") or {}).get("reset") or 0)   # POST /reset exists only with a reset budget (docs/protocol/tasks.md)
     for m, p in (("GET", "/reset"), ("GET", "/state"), ("GET", "/success"), ("POST", "/reset"), ("GET", "/kinematics"), ("POST", "/step")):
         if (m, p) == ("POST", "/reset") and resets:
             continue                                            # never probed live: it would start a new episode

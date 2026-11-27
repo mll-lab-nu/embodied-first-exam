@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""The agent's time cutoff (docs/protocol/README.md §2): each task sets its own, and says it once, at the end of its instruction.
+"""The agent's time cutoff (docs/protocol/tasks.md): each task sets its own, and says it once, at the end of its instruction.
 
 The number is the task's `[agent] timeout_sec` in task.toml, set by its author in the
 pull request that adds or changes the task, as in Terminal-Bench; there is no table. For every task given (default:
 every task):
-  - `[agent] timeout_sec` is a whole positive number of seconds, at most 14400 (PROTOCOL §2; no benchmark is excepted);
+  - `[agent] timeout_sec` is a whole positive number of seconds, at most 14400 (docs/protocol/tasks.md; no benchmark is excepted);
   - instruction.md ends with the `## Limits` section scripts/task_conventions.py renders, the last thing the agent
     reads, whose Time line states that number and what the cutoff means in the task's mode; nothing follows it, and the
     heading stands there once;
@@ -88,11 +88,11 @@ def number_errors(task: Path) -> list[str]:
     except (OSError, tomllib.TOMLDecodeError) as e:
         return [f"task.toml: {e}"]
     if v is None:
-        return ["task.toml has no `[agent] timeout_sec` (the agent's cutoff, set by the task's author; PROTOCOL §2)"]
+        return ["task.toml has no `[agent] timeout_sec` (the agent's cutoff, set by the task's author; docs/protocol/tasks.md)"]
     if isinstance(v, bool) or not isinstance(v, (int, float)) or v <= 0 or float(v) != int(v):
         return [f"[agent] timeout_sec = {v!r} is not a whole positive number of seconds"]
     if v > tc.CUTOFF_CAP:
-        return [f"[agent] timeout_sec = {v:g} is above the {tc.CUTOFF_CAP} s cap (PROTOCOL §2; no benchmark is excepted)"]
+        return [f"[agent] timeout_sec = {v:g} is above the {tc.CUTOFF_CAP} s cap (docs/protocol/tasks.md; no benchmark is excepted)"]
     return []
 
 

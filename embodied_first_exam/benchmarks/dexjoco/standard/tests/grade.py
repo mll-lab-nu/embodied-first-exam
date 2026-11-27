@@ -3,7 +3,7 @@
 ended in success under DexJoCo's own check (graded_by = "live"; nothing is replayed to
 grade it), the episode having started in the instance's frozen state. Numeric-only reward.json.
 
-No verdict on the agent is an infrastructure failure, never the agent's 0 (PROTOCOL §2.6, infra_error = 1):
+No verdict on the agent is an infrastructure failure, never the agent's 0 (docs/protocol/tasks.md#grading, infra_error = 1):
 final.json missing (the service or its collect hook never wrote one), unreadable (grader_error = 1 too), or without a
 verdict (the collect hook did not finish: not `finalized`, or neither the live verdict (`graded_by`) nor a give-up), a
 give-up after crashes that were not all inside the agent's calls (`sim_crashed`, `resume_failed`), the service not
@@ -19,7 +19,7 @@ finalized and missing_log."""
 import json, os, shutil, traceback
 
 def agent_end_fields(d):
-    """An agent-ended episode's record (PROTOCOL §3: final.json success_signal / ended_by, step_limit / steps_used):
+    """An agent-ended episode's record (docs/protocol/tasks.md#modes: final.json success_signal / ended_by, step_limit / steps_used):
     evidence only, never the verdict (numbers only: a bad value is 0); the runner reads ended_session_end."""
     if not isinstance(d, dict) or d.get("success_signal") != "hidden":
         return {}
@@ -81,8 +81,8 @@ def verdict(d):
         "too_few_cpus": int(bool(d.get("too_few_cpus"))),
         "visible_cpus": int(num("visible_cpus")),
         "blas_threads": int(num("blas_threads")),
-        # an infrastructure failure, not the agent's (PROTOCOL §2.6): a give-up after crashes between calls or a failed
-        # resume (docs/protocol/standard_mode.md §13), the service not ending its episode for the collect hook, a scene that did
+        # an infrastructure failure, not the agent's (docs/protocol/tasks.md#grading): a give-up after crashes between calls or a failed
+        # resume (embodied_first_exam/standard/README.md#crash-recovery), the service not ending its episode for the collect hook, a scene that did
         # not start in the instance's frozen state, too few CPUs, a collect hook that left no verdict
         "infra_error": int(bool(d.get("infra_error")) or no_verdict or bool(d.get("too_few_cpus"))
                            or bool(d.get("instance_mismatch"))),

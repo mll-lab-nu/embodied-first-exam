@@ -12,12 +12,12 @@ simulator = "mujoco"               # the Embodied Olympics simulator: MuJoCo 3.3
 robot = "unitree-h1-2"
 family = "basketball_dribble"
 category = "basketball-and-rackets"
-dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
+dynamics = "static"               # scene dynamics (docs/protocol/tasks.md): the task's own declaration
 # scene = environment/instance.json (the family's parameters + its t = 0 state hash); identity = the dataset.toml digest
 instance_seed = 0
 expert_time_estimate_hours = 10.0
 oracle = "none"
-oracle_evidence = "no reference solution; the referee is tested: No reference solution; the referee is tested with the H1-2's own Inspire hands at the core's default forces (20 N per fingertip, 30 N the thumb; no extra factor; nothing welded). Start: the ball resting on the upturned right hand, the left hand on its side; the start command holds it the whole minute (nop: time). Positive by a declared injection: the robot really opens both hands and moves them out to the sides so the ball falls out of them before a foot lifts, turns the right palm down at its side and really walks the 14 m (0.8 m/s, heading held by feedback) while the ball really bounces and really meets the right hand 53 times; injected: at the ball's first floor contact its velocity is set to rise to the palm, and at each real touch of the hand its velocity is set (4 m/s down, towards where the palm will be): success in 20.0 s, longest hand touch 0.01 s, the ball at most 4.9 mm into the hands; the same state hash twice. Negatives: walking with the held ball (travelling), a dropped ball walked away from, backwards over the end line, tossed up and caught on the same hand (two touches without the floor), a hand under the ball (carrying), the ball held 0.3 s against the palm-down hand (come to rest), up against the palm again without a bounce, a touch by the thigh, thrown 6 m ahead, thrown back over the end line, both hands on the ball at once, dribbling on the spot (time), a fall.; human review in the pull request that adds the benchmark (PROTOCOL §4)"
+oracle_evidence = "no reference solution; the referee is tested: No reference solution; the referee is tested with the H1-2's own Inspire hands at the core's default forces (20 N per fingertip, 30 N the thumb; no extra factor; nothing welded). Start: the ball resting on the upturned right hand, the left hand on its side; the start command holds it the whole minute (nop: time). Positive by a declared injection: the robot really opens both hands and moves them out to the sides so the ball falls out of them before a foot lifts, turns the right palm down at its side and really walks the 14 m (0.8 m/s, heading held by feedback) while the ball really bounces and really meets the right hand 53 times; injected: at the ball's first floor contact its velocity is set to rise to the palm, and at each real touch of the hand its velocity is set (4 m/s down, towards where the palm will be): success in 20.0 s, longest hand touch 0.01 s, the ball at most 4.9 mm into the hands; the same state hash twice. Negatives: walking with the held ball (travelling), a dropped ball walked away from, backwards over the end line, tossed up and caught on the same hand (two touches without the floor), a hand under the ball (carrying), the ball held 0.3 s against the palm-down hand (come to rest), up against the palm again without a bounce, a touch by the thigh, thrown 6 m ahead, thrown back over the end line, both hands on the ball at once, dribbling on the spot (time), a fall.; human review in the pull request that adds the benchmark (docs/protocol/tasks.md#grading)"
 
 [verifier]
 timeout_sec = 900.0
@@ -26,7 +26,7 @@ timeout_sec = 900.0
 environment_mode = "separate"
 network_mode = "no-network"
 
-# Resources (PROTOCOL §6): seal the monitor's record first.
+# Resources (docs/protocol/resources.md): seal the monitor's record first.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
@@ -41,7 +41,7 @@ memory_mb = 8192
 timeout_sec = 7200.0
 # Egress: open, `network_mode = "public"` below (the author's choice). Embodied Olympics lets the agent search for and download
 # public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md).
-network_mode = "public"        # open egress, the task author's choice (docs/protocol/README.md Appendix H.6)
+network_mode = "public"        # open egress, the task author's choice (docs/protocol/invariants.md H.6)
 
 [environment]
 build_timeout_sec = 1800.0

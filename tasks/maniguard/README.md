@@ -141,7 +141,7 @@ the image only).
 - **Host.** Linux x86_64, Docker with BuildKit and the NVIDIA Container Toolkit, a driver Isaac Sim 4.5 supports
   (ManiGuard verified 580.x). Blackwell GPUs would need a torch 2.7 / cu128 build of the image for GPU-dynamics tasks;
   the included dry tasks never use torch on the GPU. The simulator's container peaked at 18-19.4 GiB of GPU memory, above
-  its GPU-memory cap, so an honest trial can go over it (PROTOCOL §6). Every Python process pays an Isaac Sim launch and
+  its GPU-memory cap, so an honest trial can go over it (docs/protocol/resources.md). Every Python process pays an Isaac Sim launch and
   the scene load (about 4 min with a cold cache, which every trial's first process has).
 - **Kit cache.** Every compose file names its cache volume without a fixed name (`rcb_maniguard_cache` for the agent,
   `rcb_maniguard_cache_trusted` for the verifier and the standard sidecar), so it belongs to the trial.

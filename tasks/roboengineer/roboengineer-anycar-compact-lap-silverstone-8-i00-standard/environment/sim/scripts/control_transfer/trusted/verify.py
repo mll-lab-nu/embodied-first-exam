@@ -18,7 +18,7 @@ def verdict(data, instance, diagnostics=None):
     Input hashes identify the exact bytes read, not a later filesystem snapshot.
     Only inputs reached before rejection appear in the diagnostic manifest.
     """
-    # standard mode (PROTOCOL §4): the verdict is the sidecar's own evaluation of the selected policy, transcribed here
+    # standard mode (docs/protocol/tasks.md#grading): the verdict is the sidecar's own evaluation of the selected policy, transcribed here
     empty = {
         "success": 0,
         "infra_error": 1,

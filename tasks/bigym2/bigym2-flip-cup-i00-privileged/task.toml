@@ -11,7 +11,7 @@ task_type = "trajectory"
 simulator = "bigym2"               # BiGym 2.0 (bigym 1.0.0 at 93ad4b3): MuJoCo 3.8.1 + NVIDIA GR00T-WBC, CPU physics
 robot = "unitree-g1-dex1"
 family = "flip-cup"
-dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
+dynamics = "static"               # scene dynamics (docs/protocol/tasks.md): the task's own declaration
 # scene = environment/instance.json (upstream's task reset with this seed + its t = 0 state hash); identity = the dataset.toml digest
 instance_seed = 0
 expert_time_estimate_hours = 2.0
@@ -20,7 +20,7 @@ oracle_evidence = "no reference solution (BiGym 2.0 ships no expert or planner; 
 
 [metadata.seeds]
 # the seeds a runner may draw from (a list, { from = A, to = B } or "any") and the ones the reference solution
-# under solution/ is for, where they are not the default seed alone (docs/protocol/README.md §2)
+# under solution/ is for, where they are not the default seed alone (docs/protocol/tasks.md)
 allowed = [0, 620100, 620101]
 
 [verifier]
@@ -30,7 +30,7 @@ timeout_sec = 1800.0
 environment_mode = "separate"
 network_mode = "no-network"
 
-# Resources (PROTOCOL §6): seal the monitor's record first.
+# Resources (docs/protocol/resources.md): seal the monitor's record first.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"

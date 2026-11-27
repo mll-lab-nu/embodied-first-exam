@@ -40,7 +40,7 @@ def member_sizes(path: str) -> dict | None:
 
 def write(ok: bool, out: dict) -> None:
     os.makedirs(LOG_DIR, exist_ok=True)
-    out.setdefault("infra_error", int(bool(out.get("grader_error"))))   # every grader_error here is the host's, never the agent's (PROTOCOL §2.6)
+    out.setdefault("infra_error", int(bool(out.get("grader_error"))))   # every grader_error here is the host's, never the agent's (docs/protocol/tasks.md#grading)
     open(os.path.join(LOG_DIR, "reward.txt"), "w").write("1\n" if ok else "0\n")
     json.dump(out, open(os.path.join(LOG_DIR, "reward.json"), "w"))
     print(json.dumps(out), flush=True)

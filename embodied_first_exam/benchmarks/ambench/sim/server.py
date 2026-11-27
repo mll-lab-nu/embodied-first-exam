@@ -1,5 +1,5 @@
 """eai-standard/3.0 sim service for AM-Bench (Isaac Lab / Isaac Sim 5.1, GPU PhysX; the FA-Hexa: a fully actuated hexarotor
-with a 4-joint arm and a two-finger gripper; see docs/protocol/standard_mode.md). Owns the scene. HTTP surface (rcb_limited): GET
+with a 4-joint arm and a two-finger gripper; see docs/protocol/eai-standard.md). Owns the scene. HTTP surface (rcb_limited): GET
 /spec, GET /status, POST /observe, POST /submit, POST /kinematics (RCB1 bodies, RCB1 responses: videos / frames / depth /
 proprio as raw blobs, never base64). Logs every call to /data/episode.jsonl and keeps /data/final.json current. Nothing
 about objects ever leaves this process.
@@ -9,7 +9,7 @@ states this one sends it (measured: rendering inside the physics process makes A
 the live episode is the same computation as a fresh-process replay of its rows (the privileged grader's), and the live
 episode is what is graded (no grading replay since 2026-10-17).
 
-Crash recovery (rcb_limited.Episode, docs/protocol/standard_mode.md §13, resume class `approx`): every executed control step is
+Crash recovery (rcb_limited.Episode, embodied_first_exam/standard/README.md#crash-recovery, resume class `approx`): every executed control step is
 journaled (the 8-value row handed to Session.step), every completed call is checkpointed with the scene's state hash.
 After a crash compose restarts the container (`restart: on-failure:6`, run.sh exits non-zero) and this service, a fresh
 process, rebuilds the frozen scene, replays the journal up to the last checkpoint (the first episode of a fresh process:
@@ -22,7 +22,7 @@ Differences from the YAMLab service, all from the robot and the simulator:
   command) streamed at the 120 Hz control rate, `dt` apart, `hold` or `linear` (positions linear, orientation slerp, the
   gripper linear); AM-Bench's controller (floating-base IK + PID on the airframe + PD joint drives) does the rest;
 - the airframe is free-flying: /kinematics is the arm on its base (frame `base`, or world with `base_pose`);
-- the episode is agent-ended (PROTOCOL §3): a success never ends it and is never shown: it ends at the agent's POST /finish, at the time-out (reason
+- the episode is agent-ended (docs/protocol/tasks.md#modes): a success never ends it and is never shown: it ends at the agent's POST /finish, at the time-out (reason
   "step_limit"), at the end of the agent's session ("timeout") or on a simulator error, and the verdict is the state it
   ends in (END_JUDGEMENT: press_button's press counts as it happens; ndt's hold runs on from the end, END_WINDOW);
 - the episode is graded as it ran (no grading replay): when it ends the service writes
@@ -101,7 +101,7 @@ def dump() -> None:
     write_final()
 
 
-# Agent-ended episodes (PROTOCOL §3): how each AM-Bench task is judged when the agent ends it. "state": AM-Bench's success
+# Agent-ended episodes (docs/protocol/tasks.md#modes): how each AM-Bench task is judged when the agent ends it. "state": AM-Bench's success
 # check on the state the episode ends in; "event": the check held at some control step of the episode (a press is a
 # moment: the button springs back). END_WINDOW: a task whose check is a hold (ndt: the end effector held at the inspection
 # point) runs its hold on from the end state, the robot holding its last command, for at most that many control steps,
@@ -257,7 +257,7 @@ def video_fps(meta: dict) -> int:
 
 
 # ---------------------------------------------------------------- request fields
-# PROTOCOL §4.6: a malformed request is a 400 and executes nothing. Every field is read and checked by the functions below
+# docs/protocol/eai-standard.md#errors: a malformed request is a 400 and executes nothing. Every field is read and checked by the functions below
 # BEFORE the first control step; a field that is absent or JSON null takes its default, a value of the wrong type or out
 # of range is a ValueError (the layer's 400). as_400() turns anything else a bad value can raise while it is being read
 # into that 400 too: only an error while the simulator is stepping is a simulator error (500, the episode ends).
@@ -390,7 +390,7 @@ EE_POS_MAX_M = 30.0      # an ee_pose position further than this from the origin
 
 
 def check_ee_rows(A: np.ndarray) -> None:
-    """ee_pose rows that cannot be meant (PROTOCOL §4.6: a 400, nothing executed): a position outside the +-EE_POS_MAX_M box
+    """ee_pose rows that cannot be meant (docs/protocol/eai-standard.md#errors: a 400, nothing executed): a position outside the +-EE_POS_MAX_M box
     around the origin, or a quaternion of zero length."""
     for ri, r in enumerate(A):
         if float(np.max(np.abs(r[0:3]))) > EE_POS_MAX_M:

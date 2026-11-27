@@ -2,7 +2,7 @@
 server.
 
 kind "eo-match": Embodied Olympics matches (embodied-olympics-match standard and realtime tasks): the seat's
-eai-standard/3.0 service with the match extension (docs/protocol/standard_mode.md Part 5;
+eai-standard/3.0 service with the match extension (docs/protocol/eai-standard.md#match-extension;
 the service's eai_std/ layer at $SIM_URL). The tools of every RCB task, one per endpoint and with the same fields and
 replies (rcb_tools.py): `spec`, `observe`, `submit` (rows are the match's JSON action objects, or numeric rows in a
 type's layout; a hold chunk too); no `finish` (the match's rules end it: /finish is a 404), no `reset`, no

@@ -41,7 +41,7 @@ grading replay).
 Start state: the scene is checked file by file against runtime_binding.json and its initial-state hash, actuators and
 runtime before the episode begins; a mismatch writes final.json `instance_mismatch` (infra_error 1) and serves nothing.
 
-Episode end (agent-ended, PROTOCOL §3, rcb_agent_end.py; the live verdict is THE verdict: the grader's rule,
+Episode end (agent-ended, docs/protocol/tasks.md#modes, rcb_agent_end.py; the live verdict is THE verdict: the grader's rule,
 rcb_ikea.Session.final_check(), on the live simulator): a success never ends the episode and is never shown (no settled
 check during the episode, no settle_failed in meta or /status). The episode ends at
   - finished: POST /finish;
@@ -80,7 +80,7 @@ OBS_CALIBRATION = os.environ.get("RCB_OBS_CALIBRATION", "1") == "1"
 MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10"))
 WALL_CLOCK_S = float(os.environ.get("RCB_WALL_CLOCK_S", "10800"))
 LIVE_FPS = int(os.environ.get("RCB_LIVE_FPS", "10")); LIVE_CAM = os.environ.get("RCB_LIVE_CAMERA", "cam_high")
-# /spec max_frames_per_call (PROTOCOL §3 "Images per call"): cameras x frames as the recorder takes them (one every 1/fps of
+# /spec max_frames_per_call (docs/protocol/tasks.md#modes "Images per call"): cameras x frames as the recorder takes them (one every 1/fps of
 # sim time, its first and last frames included); a frame with per-frame depth counts once more (L.check_frames). The
 # recorder holds every frame of a call (848 x 480 RGB = 1.2 MB) until the response is sent.
 MAX_FRAMES = 1000
@@ -459,7 +459,7 @@ def live_open() -> None:
     except Exception:  # noqa: BLE001 — the live video is evidence only
         traceback.print_exc(); LIVE["w"] = None
         return
-    live_tick()     # the start frame: every graded trial has a video, a trial with no step too (PROTOCOL §4)
+    live_tick()     # the start frame: every graded trial has a video, a trial with no step too (docs/protocol/tasks.md#grading)
 
 
 def live_tick() -> None:
@@ -780,7 +780,7 @@ def encode_parts(rec, video: str, fps: int) -> list:
 
 def req_cameras(meta: dict) -> list:
     """The request's cameras (a list of names; unknown names are dropped, none left = every camera). A malformed field is
-    the caller's error, a 400 before anything executes (PROTOCOL §4.6), never a simulator error."""
+    the caller's error, a 400 before anything executes (docs/protocol/eai-standard.md#errors), never a simulator error."""
     c = meta.get("cameras")
     if c is None:
         return list(CAMS)
@@ -800,7 +800,7 @@ def infra_exception(exc: BaseException) -> bool:
     """Which errors in /submit or /observe are the service's infrastructure (reason "error", infra_error): the render
     process (ikea_nyx.RenderError), the host (OSError: disk, pipes; MemoryError). Everything else raised while the agent's
     rows run (the scene's code, MuJoCo) is a simulator error the rows caused (sim_error 1: the agent's 0,
-    docs/protocol/standard_mode.md "500"), so an agent cannot void a failed episode by breaking the simulator. Both end the episode
+    docs/protocol/eai-standard.md "Errors"), so an agent cannot void a failed episode by breaking the simulator. Both end the episode
     with reason "error"."""
     render = getattr(sys.modules.get("ikea_nyx"), "RenderError", ())
     return isinstance(exc, (OSError, MemoryError) + ((render,) if render else ()))

@@ -1,9 +1,9 @@
 """Standard-mode verifier (AutoBio): reads what the sim service (which the agent could not touch) wrote: /data/final.json
 (the LIVE episode's result and the crash-recovery fields), /data/trajectory.npz, /data/replay.mp4. The trial is graded by
-its live episode (docs/protocol/README.md H.4; no grading replay): success = the live episode's success, no
+its live episode (docs/protocol/invariants.md H.4; no grading replay): success = the live episode's success, no
 infrastructure failure and no simulator error. Numeric-only reward.json; a reward is always written.
 
-infra_error = 1 (no verdict on the agent, PROTOCOL §4) when final.json is missing (the service writes it as soon as
+infra_error = 1 (no verdict on the agent, docs/protocol/tasks.md#grading) when final.json is missing (the service writes it as soon as
 its scene is up, so the agent cannot make it disappear), unreadable, or not finalized (the collect hook did not
 finish); or the service or the hook reported one: a give-up after crashes between calls, a failed resume, the live
 episode not started in the instance's recorded state (`instance_mismatch`), the episode never ended for the hook, no
@@ -14,7 +14,7 @@ decides anything (`video_rendered`)."""
 import json, os, shutil, traceback
 
 def agent_end_fields(d):
-    """An agent-ended episode's record (PROTOCOL §3: final.json success_signal / ended_by, step_limit / steps_used):
+    """An agent-ended episode's record (docs/protocol/tasks.md#modes: final.json success_signal / ended_by, step_limit / steps_used):
     evidence only, never the verdict (numbers only: a bad value is 0); the runner reads ended_session_end."""
     if not isinstance(d, dict) or d.get("success_signal") != "hidden":
         return {}
@@ -53,7 +53,7 @@ def grade(d: dict) -> tuple[bool, dict]:
     reason = str(d.get("reason") or "")
     unfinished = not d.get("finalized")  # the collect hook never completed final.json
     infra = bool(d.get("infra_error")) or bool(d.get("instance_mismatch")) or unfinished
-    ok = bool(d.get("success")) and not infra and reason != "error"   # PROTOCOL §4: a simulator error is the agent's 0
+    ok = bool(d.get("success")) and not infra and reason != "error"   # docs/protocol/tasks.md#grading: a simulator error is the agent's 0
     return ok, {
         "success": int(ok),
         "live_success": int(bool(d.get("success"))),
@@ -72,7 +72,7 @@ def grade(d: dict) -> tuple[bool, dict]:
         "timeout": int(reason == "timeout"),
         "instance_mismatch": int(bool(d.get("instance_mismatch"))),
         "grader_error": 0,
-        # an infrastructure failure, not the agent's (PROTOCOL §4): see the module docstring
+        # an infrastructure failure, not the agent's (docs/protocol/tasks.md#grading): see the module docstring
         "infra_error": int(infra),
         "gave_up": int(bool(d.get("gave_up"))),
         "sim_crashed_on_call": int(reason == "sim_crashed_on_call"),

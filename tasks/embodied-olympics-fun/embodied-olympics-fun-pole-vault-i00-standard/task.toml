@@ -27,19 +27,19 @@ simulator = "mujoco"
 robot = "unitree-g1"
 family = "pole_vault"
 category = "track-and-jumps"
-dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
+dynamics = "static"               # scene dynamics (docs/protocol/tasks.md): the task's own declaration
 protocol = "eai-standard/3.0"
 instance_seed = 0
 expert_time_estimate_hours = 22.0
 oracle = "none"
-oracle_evidence = "no reference solution; the referee is tested: No real solution: out of reach for the G1 with its own Dex3-1 hands at the device's torques (one hand lets the pole slide at about 157 N, two hold about 310 N of the robot's 341 N; a hand holds the pole only across its palm, square to the forearm, so the hang on a tilted pole asks the arms for two to six times their motors). Measured and computed in the simulator image: over all arm poses of both arms (the trunk upright, both grip points on the pole's line, half the weight on each hand), the smallest largest arm torque against its limit is 0.65 for a level pole, 1.47 at 20 degrees, 2.45 at 40, 4.46 at 60 and 5.83 at 80 (the 5 N m wrists, the 25 N m shoulders); a vault plants the pole at 45 degrees or more and swings it up to vertical, and the bar's height and the pole's length do not change this. With the run-up injected (3 and 4 m/s, the pole planted 30 and 45 degrees from vertical with its tip at the stop board, the right hand 2.0 m from the tip, the joints held) the rigid pole stops the run along it at once and the hand loses the pole within the plant (measured with a parallel gripper). The energy: the running policy's 4 m/s carries 0.82 m of height; what the plant leaves (2.8 m/s square to the pole at 45 degrees) carries 0.41 m: the centre of mass, about 0.65 m up when running, reaches about 1.06 m at best. Referee positive by a declared referee-only injection: the robot set hanging from the pole by its right hand (the hand really closed on it), the tip pressed 8 mm into the box, the assembly turned rigidly about the tip each control step over the bar after an injected 3 m/s run-up, then the hand opens and the robot falls onto the mat: plant, take-off (hang 0.19 s), clearance, the bar stays. Negatives: nop (time), no run-up, the pole near vertical at the take-off, a push on the pole (the hand below the pelvis), the pole not loaded, letting go before the bar, climbing the pole, a jump without the pole, round and under the bar, walking onto the mat with the pole, a hand steadying the bar, the bar pushed off its pegs. Physics: the pole stops on the robot's body, the box is sunk, the mat's foam.; human review in the pull request that adds the benchmark (PROTOCOL §4)"
+oracle_evidence = "no reference solution; the referee is tested: No real solution: out of reach for the G1 with its own Dex3-1 hands at the device's torques (one hand lets the pole slide at about 157 N, two hold about 310 N of the robot's 341 N; a hand holds the pole only across its palm, square to the forearm, so the hang on a tilted pole asks the arms for two to six times their motors). Measured and computed in the simulator image: over all arm poses of both arms (the trunk upright, both grip points on the pole's line, half the weight on each hand), the smallest largest arm torque against its limit is 0.65 for a level pole, 1.47 at 20 degrees, 2.45 at 40, 4.46 at 60 and 5.83 at 80 (the 5 N m wrists, the 25 N m shoulders); a vault plants the pole at 45 degrees or more and swings it up to vertical, and the bar's height and the pole's length do not change this. With the run-up injected (3 and 4 m/s, the pole planted 30 and 45 degrees from vertical with its tip at the stop board, the right hand 2.0 m from the tip, the joints held) the rigid pole stops the run along it at once and the hand loses the pole within the plant (measured with a parallel gripper). The energy: the running policy's 4 m/s carries 0.82 m of height; what the plant leaves (2.8 m/s square to the pole at 45 degrees) carries 0.41 m: the centre of mass, about 0.65 m up when running, reaches about 1.06 m at best. Referee positive by a declared referee-only injection: the robot set hanging from the pole by its right hand (the hand really closed on it), the tip pressed 8 mm into the box, the assembly turned rigidly about the tip each control step over the bar after an injected 3 m/s run-up, then the hand opens and the robot falls onto the mat: plant, take-off (hang 0.19 s), clearance, the bar stays. Negatives: nop (time), no run-up, the pole near vertical at the take-off, a push on the pole (the hand below the pelvis), the pole not loaded, letting go before the bar, climbing the pole, a jump without the pole, round and under the bar, walking onto the mat with the pole, a hand steadying the bar, the bar pushed off its pegs. Physics: the pole stops on the robot's body, the box is sunk, the mat's foam.; human review in the pull request that adds the benchmark (docs/protocol/tasks.md#grading)"
 
 [verifier]
 timeout_sec = 900.0
 environment_mode = "separate"
 network_mode = "no-network"
 
-# Resources (PROTOCOL §6): seal the monitor's record first.
+# Resources (docs/protocol/resources.md): seal the monitor's record first.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
@@ -67,7 +67,7 @@ timeout_sec = 7200.0
 # Egress: open, `network_mode = "public"` below (the author's choice). Embodied Olympics lets the agent search for and download
 # public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md). The agent's
 # container holds no simulator, no referee and no instance.
-network_mode = "public"        # open egress, the task author's choice (docs/protocol/README.md Appendix H.6)
+network_mode = "public"        # open egress, the task author's choice (docs/protocol/invariants.md H.6)
 
 [environment]
 build_timeout_sec = 1800.0
@@ -75,7 +75,7 @@ cpus = 4
 memory_mb = 10240
 storage_mb = 10240
 
-# The robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): Harbor starts this server for the agent.
+# The robot's MCP tools (docs/protocol/eai-standard.md "MCP tools"): Harbor starts this server for the agent.
 [[environment.mcp_servers]]
 name = "efe-robot"
 transport = "stdio"

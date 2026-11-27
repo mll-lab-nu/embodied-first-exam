@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """One protocol: every standard and realtime task, service, client and document speaks `eai-standard/3.0`
-(docs/protocol/standard_mode.md). A service's layer and capabilities are in its /spec (operations, timing.realtime,
+(docs/protocol/eai-standard.md). A service's layer and capabilities are in its /spec (operations, timing.realtime,
 kinematics, match), never in a version string. This check fails on any tracked text file (code, tasks, docs) that
 names another protocol id of this family or keeps a list of accepted old ids:
 

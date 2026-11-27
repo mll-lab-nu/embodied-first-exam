@@ -31,7 +31,7 @@ COPY --from=ghcr.io/astral-sh/uv:0.13.0@sha256:cdc6093146eb3ff6a40107b38f008b789
 ENV PATH="/root/.local/bin:${PATH}"
 # RoboLab's code at v0.3.1 and its asset library (every LFS file present), in one RUN that then deletes the repository's
 # .git (its objects hold every committed file: `git show` would rebuild what is removed) and examples/recorded_data
-# (RoboLab's one recorded episode, a successful run of one of the RoboLab tasks: its actions, log and video; PROTOCOL H.2)
+# (RoboLab's one recorded episode, a successful run of one of the RoboLab tasks: its actions, log and video; docs/protocol/invariants.md H.2)
 RUN git init -q /opt/robolab && cd /opt/robolab && git remote add origin https://github.com/NVlabs/RoboLab && \
     git fetch -q --depth 1 origin 9db0aaf09d9fe5d4f37b168320788258c7012463 && GIT_LFS_SKIP_SMUDGE=1 git checkout -q FETCH_HEAD && \
     test "$(git rev-parse HEAD)" = 9db0aaf09d9fe5d4f37b168320788258c7012463 && \

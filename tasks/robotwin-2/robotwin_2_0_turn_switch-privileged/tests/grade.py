@@ -12,7 +12,7 @@ measurement by hand: success = every replay completes the task AND all final-sta
 
 reward.json always carries success, deterministic and grader_error. A deliverable the agent got wrong (not an npz, a
 missing key, a wrong shape, NaN, too long) is bad_trajectory = 1, the agent's failure. A host that cannot rebuild the
-frozen instance (the initial-state hash differs, PROTOCOL §3: seen for four tasks on L40S cards) is
+frozen instance (the initial-state hash differs, docs/protocol/tasks.md#modes: seen for four tasks on L40S cards) is
 instance_mismatch = 1 with infra_error = 1, whether or not a trajectory was handed in: on such a host every Session
 the agent opened failed too, so a missing trajectory there says nothing about the agent.
 """

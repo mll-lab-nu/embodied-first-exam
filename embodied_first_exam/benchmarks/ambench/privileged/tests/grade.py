@@ -10,7 +10,7 @@ Replays up to `--repeat` N times (default 1; tests/test.sh passes the task's `[m
 process (`rcb_ambench.py replay`), and stops at the first replay that completes the task (AM-Bench's own
 `_get_success`): GPU PhysX does not replay bit-wise here (with the tooling's five synchronizations every replay outside
 Harbor ended in the frozen state, 29 of 29 clean runs, yet under Harbor two of six runs did not, tasks/ambench/README.md,
-Determinism), so the attempt succeeds if ANY replay succeeds (PROTOCOL §4). reward.json: `replays` (run),
+Determinism), so the attempt succeeds if ANY replay succeeds (docs/protocol/tasks.md#grading). reward.json: `replays` (run),
 `replays_succeeded`, `success_replay` (1-based, 0 none), `all_success`, `deterministic` (the replays run agree on the
 outcome) and `state_identical` (they ended in one state), both evidence only, and `determinism_checked` (more than one
 replay ran). The frozen scene rebuilt in each replay must match the recorded one (`instance_ok`: the exact state hash of
