@@ -1,8 +1,8 @@
 name: static-checks
-# Two tiers (docs/protocol/README.md v2.0): `invariants` (required: Appendix H) and `advisories` (warnings only); `unit-tests`
+# Two tiers (docs/protocol/README.md): `invariants` (required: Appendix H) and `advisories` (warnings only); `unit-tests`
 # (not required). Scope (ci_checks/ci_scope.py, docs: CONTRIBUTING.md "Review and merge"): a pull request runs the checks on what it
-# can affect -- one benchmark's own paths changed: that benchmark's tasks, generator check and unit tests (plus the cheap
-# repo-level checks on everything); anything shared (ci_checks/, .github/, shared scripts/ modules and tables, shared
+# can affect -- one benchmark's own paths changed: that benchmark's tasks, their normal form (task_conventions.py
+# --check) and unit tests (plus the cheap repo-level checks on everything); anything shared (ci_checks/, .github/, shared scripts/ modules and tables, shared
 # images, the protocol documents, an unknown path): the full suite. Pushes to main, the nightly run and a manual run
 # always run the full suite, so nothing a scoped run leaves out stays unchecked past the merge.
 on:
@@ -102,9 +102,10 @@ jobs:
             curl -fsS -X POST "${auth[@]}" "$api/issues/$PR/labels" -d "$labels" > /dev/null; echo "labels: $(tr '\n' ' ' < "$RUNNER_TEMP/labels.txt")"
           fi
   # The shared service layers and the benchmarks' service / grader tests on stub simulators (numpy + requests; no
-  # simulator, no image, no GPU): ci_checks/check-unit-tests.sh, both tiers. A job of its own, so that the static
-  # checks above do not wait for it. On a pull request: the tests of the benchmarks in scope (all of them when the scope
-  # is full).
+  # simulator, no image, no GPU): ci_checks/check-unit-tests.sh, both tiers, and in the full suite the OpenAPI contract
+  # of the reference services (ci_checks/check-openapi-contract.py; numpy, requests, pyyaml, jsonschema: its exit 2, a
+  # missing module, fails the job). A job of its own, so that the static checks above do not wait for it. On a pull
+  # request: the tests of the benchmarks in scope (all of them when the scope is full).
   unit-tests:
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -113,8 +114,8 @@ jobs:
         with: { fetch-depth: 2, persist-credentials: false }
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
-      - name: numpy and requests
-        run: python3 -m pip install --quiet numpy requests
+      - name: numpy, requests, pyyaml, jsonschema
+        run: python3 -m pip install --quiet numpy requests pyyaml "jsonschema>=4.18"
       - name: Unit tests (both tiers)
         run: |
           scope=full
@@ -123,7 +124,7 @@ jobs:
             echo "scope: $RCB_SCOPE ($RCB_SCOPE_REASON)${RCB_SCOPE_BENCHES:+ -- benchmarks: $RCB_SCOPE_BENCHES}"
           fi
           case "$scope" in
-            full) bash ci_checks/check-unit-tests.sh --all ;;
+            full) bash ci_checks/check-unit-tests.sh --all && python3 ci_checks/check-openapi-contract.py ;;
             benchmarks) read -ra only <<<"$RCB_SCOPE_PATHS"; bash ci_checks/check-unit-tests.sh --all --only "${only[@]}" ;;
             none) echo "no benchmark or shared code changed: no unit test in scope" ;;
             *) echo "FAIL unknown scope $scope"; exit 1 ;;

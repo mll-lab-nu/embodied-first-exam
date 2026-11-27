@@ -10,8 +10,9 @@
 #                                with origin/main). Shared code changed -> the full suite (as with no arguments). Only
 #                                some benchmarks' own paths changed -> the per-task checks on those benchmarks' tasks
 #                                and the cheap repo-level checks on everything; the CI
-#                                mutation self-test runs in the full suite only (it tests ci_checks/, which a scoped change
-#                                does not touch). Nothing a scoped run skips goes unchecked: pushes to main run the full suite.
+#                                mutation self-test runs in the full suite only (it tests the shared checks and the
+#                                benchmarks' invariant hooks, and a change to either is shared code: ci_scope.py). Nothing
+#                                a scoped run skips goes unchecked: pushes to main run the full suite.
 # Everything runs concurrently (ci_checks/parallel.py; RCB_CI_JOBS=N caps it, default: the CPUs), each command's output
 # printed in one piece when it ends. RCB_SKIP_UNIT_TESTS=1: leave out check-unit-tests.sh (the CI workflow runs it, with
 # --all, in a job of its own). Benchmark-specific checks are each benchmark's own hooks, ci_checks/benchmarks/<bench>/advisory-*
@@ -94,8 +95,8 @@ add python3 ci_checks/check-recipe-copies.py               # base-image recipes 
 # PROTOCOL §6: the caps of every container ([environment], the compose files, x-gpu-memory-gb), the rules of
 # scripts/task_resources.toml applied, and the instruction's and README's `## Resources` rendered from them
 add python3 ci_checks/check-resources.py"$pargs"
-# PROTOCOL §2: the agent's time cutoff, each task's own `[agent] timeout_sec` (no table): at most 14400 s, the closing
-# `## Time limit` section of instruction.md, the README row and the standard modes' sim service say it, nothing else states
+# PROTOCOL §2: the agent's time cutoff, each task's own `[agent] timeout_sec` (no table): at most 14400 s, the Time line
+# of instruction.md's `## Limits`, the README row and the standard modes' sim service say it, nothing else states
 # the limit (the twins' equal number is an invariant: check-twins.py). Per task: a scoped run checks its benchmarks' tasks only
 add python3 ci_checks/check-cutoffs.py"$targs"
 add python3 ci_checks/check-seeds.py"$pargs"
@@ -105,8 +106,9 @@ add python3 ci_checks/check-realtime.py"$pargs"
 # exception), and every agent-facing endpoint the layers and adapters serve has a tool
 add python3 ci_checks/check-mcp-tools.py"$pargs"
 # docs/protocol/standard_mode.md "Version 3.0": the reference services of 2.1–2.4 answer as
-# docs/protocol/eai-standard-3.0.openapi.yaml says (paths, status codes, bodies against the schemas)
-add python3 ci_checks/check-openapi-contract.py
+# docs/protocol/eai-standard-3.0.openapi.yaml says (paths, status codes, bodies against the schemas); in CI the
+# unit-tests job runs it with its modules installed (RCB_SKIP_UNIT_TESTS=1 here)
+[ "${RCB_SKIP_UNIT_TESTS:-0}" = 1 ] || add python3 ci_checks/check-openapi-contract.py
 # PROTOCOL §4: every task renders a video and the runner can collect it; a declared video time bound is not
 # shorter than the verdict replay's (privileged)
 add python3 ci_checks/check-video.py"$targs"
