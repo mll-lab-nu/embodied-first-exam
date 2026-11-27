@@ -4,8 +4,8 @@
 Go to one of the two table lamps and stop close by, with the lamp in view of the head camera.
 
 ## Goal
-Success: the robot's base is within about 1.5 m of the nearer table lamp, and that lamp shows in the head camera. The
-`done` action is the same as `/finish`.
+Success: the robot's base is next to a table lamp, and that lamp shows in the head camera. The `done` action is the same
+as `/finish`.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
@@ -20,7 +20,7 @@ A Rainbow Robotics RB-Y1 mobile manipulator (holonomic base, 6-joint torso, two 
 head camera) in a simulated house (Ai2's MolmoSpaces, MuJoCo). The robot runs as a service you reach through its client
 or its MCP tools, as if it were real hardware: one live episode.
 
-`POST /finish` (MCP tool `finish`): ends the episode; it is graded right away.
+`POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
 `/opt/tools/rcb_client.py` (protocol `eai-standard/2.2`):

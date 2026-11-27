@@ -1,8 +1,8 @@
 # DexHand · Plug a USB cable into a hub port (privileged)
 
 ## Task
-Pick up the cable's plug and lift it at least 3 cm off the desk, then plug it into the hub's rightmost port (seen from
-the front) with its top face up, and let go.
+Pick up the cable's plug and lift it a few centimetres off the desk, then plug it into the hub's rightmost port (seen
+from the front) with its top face up, and let go.
 
 ## Goal
 Success: in this order, the plug is grasped by the thumb and at least one other finger and lifted off the desk; it is

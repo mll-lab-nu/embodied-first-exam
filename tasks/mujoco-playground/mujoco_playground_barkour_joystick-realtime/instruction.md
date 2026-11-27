@@ -24,7 +24,7 @@ Google's Barkour vB quadruped (MuJoCo Playground's scene, in MuJoCo), driven by 
 walking or balance controller. The robot runs as a service you reach through its client or its MCP tools, as if it were
 real hardware, on a clock that does not stop while you think.
 
-`POST /finish` (MCP tool `finish`): ends the episode; it is graded right away.
+`POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.3`, realtime mode, its docstring the full reference

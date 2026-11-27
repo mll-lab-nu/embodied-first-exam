@@ -4,9 +4,9 @@
 Go to one of the two table lamps and stop close by, with the lamp in view of the head camera.
 
 ## Goal
-Success: the robot's base is within about 1.5 m of the nearer table lamp, and that lamp shows in the head camera. Your
-trajectory is replayed from the fixed start. What counts is the state after its last action. Rows past the step limit
-(Limits) are never run. To stop there once the task holds, end your trajectory.
+Success: the robot's base is next to a table lamp, and that lamp shows in the head camera. Your trajectory is replayed
+from the fixed start. What counts is the state after its last action. Rows past the step limit (Limits) are never run.
+To stop there once the task holds, end your trajectory.
 
 Deliverable: `/app/output/trajectory.npz` with `actions`, float64 (T, 25), one row per control step (the layout is under
 Actions); at most 100,000 rows (a longer file scores 0). `s.save_trajectory(rows, "/app/output/trajectory.npz")` writes

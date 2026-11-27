@@ -20,7 +20,7 @@ A TidyBot++ mobile manipulator (a holonomic base, a Kinova Gen3 7-joint arm and 
 scene (KinDER, MuJoCo). The robot runs as a service you reach through its client or its MCP tools, as if it were real
 hardware: one live episode.
 
-`POST /finish` (MCP tool `finish`): ends the episode; it is graded right away.
+`POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
 `/opt/tools/rcb_client.py` (protocol `eai-standard/2.1`); its docstring is the full reference
@@ -96,5 +96,5 @@ steps. Between calls the robot waits, frozen, while you think; an observation is
   no GPU; the simulator runs in its own container and does not count. Going over a cap can get a process killed (the CPU
   cap only slows you down). Usage: `/run/rcb-limits/usage.json`.
 - Resets: none. You get one episode.
-- Steps: the episode ends after 1000 control steps (100 s of robot time). The task has to be done by then.
+- Steps: at most 1,000 control steps (100 s of robot time), then the episode ends. The task has to be done by then.
 - Finish: if you never send `/finish`, the episode is graded when the step limit is reached or your session ends.

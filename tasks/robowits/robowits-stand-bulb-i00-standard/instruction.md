@@ -5,9 +5,8 @@ Stand the tall object with the curved bottom upright on the green target area, s
 
 ## Goal
 Success: the tall object with the curved bottom stands upright on the green target area, both clear of the table's
-edges, and stays standing still; the robot has let go of it and moved its grippers away from it. When the episode ends,
-the service keeps your last command for about three seconds: first one second, then two seconds in which all of this
-must keep holding, with nothing moving.
+edges, and stays standing still; the robot has let go of it and moved its grippers away from it. Make sure everything is
+at rest when you send `/finish`.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
@@ -21,7 +20,7 @@ Rules:
 A bimanual Marvin robot (two 7-DoF arms with Pika parallel grippers), in RoboWits' simulation (Genesis). The robot runs
 as a service you reach through its client or its MCP tools, as if it were real hardware: one live episode.
 
-`POST /finish` (MCP tool `finish`): ends the episode; it is graded right away.
+`POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:

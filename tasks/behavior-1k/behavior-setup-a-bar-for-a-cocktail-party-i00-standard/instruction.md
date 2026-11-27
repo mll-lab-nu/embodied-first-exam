@@ -8,9 +8,7 @@ the three cans next to one another, and the ice bucket holding all six ice cubes
 Success: on the bar countertop stand the wine bottle, the three cans of soda (each next to another can), the ice bucket
 with all six ice cubes inside it, and the two wine glasses next to each other, at least one of them next to the wine
 bottle; the corkscrew lies on the countertop next to the wine bottle. It counts only once the scene has settled: nothing
-the task names (a tool included) is still in a gripper, and everything has come to rest. When the episode ends, the
-robot is held still for a few seconds more (your last command, the base at 0), and a success that settles in that time
-counts.
+the task names (a tool included) is still in a gripper, and everything has come to rest.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
@@ -26,7 +24,7 @@ Rules:
 An R1Pro mobile bimanual robot in a simulated house (BEHAVIOR-1K: OmniGibson on Isaac Sim). The robot runs as a service
 you reach through its client or its MCP tools, as if it were real hardware: one live episode.
 
-`POST /finish` (MCP tool `finish`): ends the episode; it is graded right away.
+`POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
 `/opt/tools/rcb_client.py` (protocol `eai-standard/2.2`):

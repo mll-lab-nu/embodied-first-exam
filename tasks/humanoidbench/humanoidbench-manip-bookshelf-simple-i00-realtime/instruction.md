@@ -7,14 +7,13 @@ itself.
 ## Goal
 Success: all five red objects are put on their places within the episode, one at a time, palest first, with the robot
 standing steadily and a hand at the object it is moving. Success counts as it happens: every moment the robot does this
-well adds to its score over the episode (its full length is in Limits), and once the score reaches the pass mark the
-episode is a success, even if it then ends as a failure (below). Putting the fifth object in its place also ends the
-episode.
+well adds to its score over the episode (its full length is in Limits). Once you have done this well for long enough,
+the task is passed, even if the episode fails afterwards. Putting the fifth object in its place also ends the episode.
 
 When you are done, send `/finish` to end the episode and get it graded.
 
 Any of these ends the episode at once as a failure:
-- The robot falls: its pelvis drops below about 0.6 m, a little over half its standing height.
+- The robot falls (its pelvis drops to about half its standing height).
 - The object being moved drops below about knee height.
 
 Rules:
@@ -30,7 +29,7 @@ Rules:
 A simulated Unitree H1 humanoid with two Shadow dexterous hands (HumanoidBench, MuJoCo). The robot runs as a service you
 reach through its client or its MCP tools, as if it were real hardware, on a clock that does not stop while you think.
 
-`POST /finish` (MCP tool `finish`): ends the episode; it is graded right away.
+`POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
 `/opt/tools/rcb_client.py` (protocol `eai-standard/2.3`, realtime mode); its docstring is the full reference
@@ -150,5 +149,5 @@ the robot stays there depends on whether that pose is stable under gravity and c
   GPU; the simulator runs in its own container and does not count. Going over a cap can get a process killed (the CPU
   cap only slows you down). Usage: `/run/rcb-limits/usage.json`.
 - Resets: at most 50 (`spec()["budget"]["reset"]`), each a new episode from the same starting state.
-- Steps: each episode ends after 1000 control steps (20 s of robot time).
+- Steps: at most 1,000 control steps (20 s of robot time), then the episode ends.
 - Finish: if you never send `/finish`, the last episode is graded when your session ends.

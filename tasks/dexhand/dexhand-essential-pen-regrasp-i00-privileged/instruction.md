@@ -1,15 +1,15 @@
 # DexHand · Paper Mate palm-to-tripod pen regrasp (privileged)
 
 ## Task
-Keep the wrist fixed and never let go of the pen. Slide it about 3 cm along its length toward the fingertips, then swing
-its length about 45 degrees away from where it pointed, and hold it still by its marked grip band with the tips of the
-thumb, index and middle fingers, clear of the palm.
+Keep the wrist fixed and never let go of the pen. Slide it a short way (about two finger-widths) along its length toward
+the fingertips, then swing its length about an eighth of a turn away from where it pointed, and hold it still by its
+marked grip band with the tips of the thumb, index and middle fingers, clear of the palm.
 
 ## Goal
-Success: in this order, each held for a moment, the pen is slid about 3 cm toward the fingertips while at least two
-fingertips hold it; then, still there, its length is swung about 45 degrees away from where it pointed and it is held on
-its marked grip band by the tips of the thumb, index and middle fingers, clear of the palm; at the end it is held still
-that way. A replay ends as soon as the task is done; later rows are not run.
+Success: in this order, each held for a moment, the pen is slid a short way toward the fingertips while at least two
+fingertips hold it; then, still there, its length is swung about an eighth of a turn away from where it pointed and it
+is held on its marked grip band by the tips of the thumb, index and middle fingers, clear of the palm; at the end it is
+held still that way. A replay ends as soon as the task is done; later rows are not run.
 
 Any of these ends the episode at once as a failure, which later actions cannot undo:
 - The pen rests on anything but the hand, or the hand lets go of it.

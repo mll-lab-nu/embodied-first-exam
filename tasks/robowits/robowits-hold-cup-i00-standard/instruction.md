@@ -5,9 +5,8 @@ Stand the cup upright on the green target area on the slope, so that it stays th
 
 ## Goal
 Success: the cup stands upright on the green target area on the slope and stays there without sliding down; the robot
-has let go of the cup and moved its grippers away from it, and the cup stays on the table, clear of its edges. When the
-episode ends, the service keeps your last command for about three seconds: first one second, then two seconds in which
-all of this must keep holding, with nothing moving.
+has let go of the cup and moved its grippers away from it, and the cup stays on the table, clear of its edges. Make sure
+everything is at rest when you send `/finish`.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
@@ -21,7 +20,7 @@ Rules:
 A bimanual Marvin robot (two 7-DoF arms with Pika parallel grippers), in RoboWits' simulation (Genesis). The robot runs
 as a service you reach through its client or its MCP tools, as if it were real hardware: one live episode.
 
-`POST /finish` (MCP tool `finish`): ends the episode; it is graded right away.
+`POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:

@@ -11,7 +11,7 @@ small shift of the whole painting does not matter. The main sheet is scored as t
 
 When you are done, send `/finish` to end the episode and get it graded.
 
-You are scored on how close your colours are to the picture's, afterwards, from the service's record of your episode.
+Your painting is scored on how close its colours are to the picture's.
 
 Paint with brush strokes, the way a person paints: each stroke is one sweep of the loaded brush. These fail the task
 even when the sheet matches the picture: colouring in or filling areas with a thin line, zigzag or serpentine fills, and
@@ -28,7 +28,7 @@ Rules:
 A simulated Franka Panda arm holding an oil-paint brush. The robot runs as a service you reach through its client or its
 MCP tools, as if it were real hardware: one live episode.
 
-`POST /finish` (MCP tool `finish`): ends the episode; it is graded right away.
+`POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
@@ -66,8 +66,7 @@ res.save("/app/runs/003")                     # meta.json, <cam>.mp4, frames/<ca
   uses.
 - Depth: `r.get_obs(depth=True)` → `obs.last_depth[cam]`, float32 (H,W) z-depth in metres of the last frame,
   pixel-aligned with `obs.last[cam]` (0 = no reading); `depth="frames"` in `r.submit(...)` or `r.hold(...)` →
-  `res.depth[cam]` (N,H,W), one map per frame (1 mm steps). Depth is geometry only: paint on the paper never shows in
-  it.
+  `res.depth[cam]` (N,H,W), one map per frame (1 mm steps).
 - `meta["time_left_s"]` is the service's count of the time left.
 
 A service restart is not a reset. If the service crashes, it restarts and resumes the same episode in the state after

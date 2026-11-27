@@ -5,9 +5,9 @@ Hold the end effector at the inspection point (Robot Interface), in front of the
 warehouse wall ahead, for almost a second.
 
 ## Goal
-Success: the end-effector link stays at the inspection point for almost a second without leaving it. An episode ends by
-itself at the first control step where the task is done (the rows after it are never run), or as a failure when its
-simulated time (Robot Interface) runs out.
+Success: the end-effector link stays at the inspection point for almost a second without leaving it. The replay stops at
+the first step where the task is done; later rows are not run. It fails if its simulated time (Robot Interface) runs out
+first.
 
 Deliverable: `/app/output/trajectory.npz`, written with `Session.save_trajectory(...)`. It holds `task` and `actions`, a
 (T, 8) float array of at most 8,000 rows (one per control step). Anything else scores 0: another shape, NaN, more rows,

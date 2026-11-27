@@ -1,10 +1,10 @@
 # MyoSuite · chase_tag (privileged)
 
 ## Task
-Tag the opponent: get your pelvis within 0.5 m of it.
+Tag the opponent: get right next to it.
 
 ## Goal
-Success: your pelvis gets within 0.5 m of the opponent. The episode ends as soon as the task is done. It ends as a
+Success: you get close enough to the opponent to tag it. The episode ends as soon as the task is done. It ends as a
 failure if you fall, if you leave the arena, and after 20 s.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, path)`. It is replayed open-loop

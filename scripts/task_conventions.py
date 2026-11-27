@@ -988,6 +988,12 @@ LIMITS_RETIRED = {
     "source. Do not look up an existing solution to this exact task, such as the benchmark's reference solutions. "
     "Trials are reviewed.": LIMITS_NETWORK_OPEN,
     "none: one episode.": "none. You get one episode.",
+    # owner 11-27: no double colon in a Resets line
+    "none: one match.": "none. You get one match.",
+    "none: one bout.": "none. You get one bout.",
+    "none: one game.": "none. You get one game.",
+    "none: deployments are your only runs, each starting its development cases afresh.":
+        "none. Deployments are your only runs, each starting its development cases afresh.",
 }
 LIMITS_STRICTER = " Additional rules for this task (stricter than the above): "
 LIMITS_OVER_CAP = ("Going over a cap can get a process killed (the CPU cap only slows you down). Usage: "
@@ -1188,6 +1194,17 @@ def _limits_reworded(label: str, v: str) -> str:
                    f"{m.group(2)[0].upper() + m.group(2)[1:]} gives what is left.", v)
         v = re.sub(r"; at the [\d,]+(?:st|nd|rd|th) the episode ends by itself\.", ", then the episode ends.", v)
         v = v.replace(" ends by itself", " ends")
+        # owner 11-27: every step or time limit in the one pattern "at most N control steps (...), then the episode
+        # ends." / "at most N s of robot time, then the episode ends."
+        v = re.sub(r"^(?:each|an|the) episode ends after ([\d,]+) control steps( \([^)]*\))?(?: as a failure)?\.",
+                   lambda m: f"at most {int(m.group(1).replace(',', '')):,} control steps{m.group(2) or ''}, then the "
+                             "episode ends.", v)
+        v = re.sub(r"^(?:an attempt|each episode|an episode|the episode) ends after ([\d.,]+ (?:s|min|h) of (?:robot|"
+                   r"simulated) time)\.", r"at most \1, then the episode ends.", v)
+        v = re.sub(r"^at most ([\d,]+) steps, RoboDojo's own limit for this task, then the episode ends\. One step is ",
+                   r"at most \1 control steps, then the episode ends. One control step is ", v)
+        v = v.replace("Everything that lets simulated time pass uses steps:",
+                      "Everything that lets simulated time pass uses control steps:")
     return v
 
 
@@ -1247,8 +1264,11 @@ def limits_finish(task: Path, steps: str) -> str:
 
 # the endpoint's line in an agent-ended task's `## Robot Interface`, its own paragraph after the mode line (rendered):
 # [client only, client and MCP tools]
-ROBOT_FINISH = ("`POST /finish`: ends the episode; it is graded right away.",
-                "`POST /finish` (MCP tool `finish`): ends the episode; it is graded right away.")
+ROBOT_FINISH = ("`POST /finish` (client `r.finish()`): ends the episode; it is graded right away.",
+                "`POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.")
+# earlier renders of that line (owner 11-27: it names the client's call too), dropped where they stand (_v2_finish)
+ROBOT_FINISH_RETIRED = ("`POST /finish`: ends the episode; it is graded right away.",
+                        "`POST /finish` (MCP tool `finish`): ends the episode; it is graded right away.")
 
 
 def robot_finish(task: Path) -> str:
@@ -1322,7 +1342,8 @@ def _v2_finish(task: Path, s: str) -> str:
     """`s` with the finish line of an agent-ended task's `## Robot Interface` (ROBOT_FINISH: client only, client and MCP
     tools, MCP tools only) as its own paragraph right after the paragraph with the mode line; an earlier copy of it is
     dropped first, and a task that is not agent-ended has none."""
-    s = re.sub(r"(?m)^(?:" + "|".join(re.escape(x) for x in ROBOT_FINISH) + r")[ \t]*\n(?:[ \t]*\n)?", "", s)
+    s = re.sub(r"(?m)^(?:" + "|".join(re.escape(x) for x in ROBOT_FINISH + ROBOT_FINISH_RETIRED)
+               + r")[ \t]*\n(?:[ \t]*\n)?", "", s)
     if not agent_end_of(task):
         return s
     line = robot_finish(task)

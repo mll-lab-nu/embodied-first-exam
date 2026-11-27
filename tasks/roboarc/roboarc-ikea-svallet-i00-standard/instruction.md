@@ -1,4 +1,4 @@
-# IKEA MuJoCo · SVALLET work lamp (standard)
+# RoboARC · SVALLET work lamp (standard)
 
 ## Task
 Snap the lamp shade onto the socket on top of the stand, then screw the bulb into the shade's socket until it seats.
@@ -9,8 +9,8 @@ Success: the shade is snapped onto the stand and the bulb screwed fully into the
 bench as it started, no arm touches it and everything is still. Forcing parts deep into each other breaks the simulation
 and ends the episode at once, without success.
 
-When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts, and it must
-still hold after your last command is held a moment longer.
+When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts. Make sure
+everything is at rest when you send `/finish`.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
@@ -23,7 +23,7 @@ Two 6-DoF ViperX 300 s arms (MuJoCo Menagerie ALOHA), each with its own parallel
 furniture-assembly suite, MuJoCo). The robot runs as a service you reach through its client or its MCP tools, as if it
 were real hardware: one live episode.
 
-`POST /finish` (MCP tool `finish`): ends the episode; it is graded right away.
+`POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
 `/opt/tools/rcb_client.py` (already installed; `python` from any directory):

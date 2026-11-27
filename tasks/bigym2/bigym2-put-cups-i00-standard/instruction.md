@@ -5,8 +5,7 @@ Put both cups from the counter on the bottom shelf of the wall cabinet and let g
 
 ## Goal
 Success: both cups are on the bottom shelf of the wall cabinet and neither gripper touches them, for a second. A fall
-(the pelvis tipping far over, or dropping low) makes the episode a failure without ending it. After `/finish`, the robot
-stands still for one more second, and the check runs at its end.
+(the pelvis tipping far over, or dropping low) makes the episode a failure without ending it.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
@@ -23,7 +22,7 @@ drives the legs and waist and keeps the robot balanced. It is a learned policy t
 command where it walks, how high its pelvis is, how far its torso leans forward, its arm joints and its grippers. The
 robot runs as a service you reach through its client or its MCP tools, as if it were real hardware: one live episode.
 
-`POST /finish` (MCP tool `finish`): ends the episode; it is graded right away.
+`POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`, its docstring the full reference

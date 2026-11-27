@@ -1,15 +1,15 @@
 # DexHand · Paper Mate palm-to-tripod pen regrasp (standard)
 
 ## Task
-Keep the wrist fixed and never let go of the pen. Slide it about 3 cm along its length toward the fingertips, then swing
-its length about 45 degrees away from where it pointed, and hold it still by its marked grip band with the tips of the
-thumb, index and middle fingers, clear of the palm.
+Keep the wrist fixed and never let go of the pen. Slide it a short way (about two finger-widths) along its length toward
+the fingertips, then swing its length about an eighth of a turn away from where it pointed, and hold it still by its
+marked grip band with the tips of the thumb, index and middle fingers, clear of the palm.
 
 ## Goal
-Success: in this order, each held for a moment, the pen is slid about 3 cm toward the fingertips while at least two
-fingertips hold it; then, still there, its length is swung about 45 degrees away from where it pointed and it is held on
-its marked grip band by the tips of the thumb, index and middle fingers, clear of the palm; at the end it is held still
-that way.
+Success: in this order, each held for a moment, the pen is slid a short way toward the fingertips while at least two
+fingertips hold it; then, still there, its length is swung about an eighth of a turn away from where it pointed and it
+is held on its marked grip band by the tips of the thumb, index and middle fingers, clear of the palm; at the end it is
+held still that way.
 
 Any of these ends the episode at once as a failure, which later actions cannot undo:
 - The pen rests on anything but the hand, or the hand lets go of it.
@@ -39,7 +39,7 @@ One dexterous hand on a six-axis wrist stage, the wrist locked (no arm), holding
 (DexHand, MuJoCo). The robot runs as a service you reach through its client or its MCP tools, as if it were real
 hardware.
 
-`POST /finish` (MCP tool `finish`): ends the episode; it is graded right away.
+`POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
 `/opt/tools/rcb_client.py`:

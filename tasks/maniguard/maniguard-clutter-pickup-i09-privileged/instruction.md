@@ -91,5 +91,5 @@ visual only). The robot is a fixed Franka Panda with long fin-ray fingers.
   one GPU (18 GiB of its memory). Going over a cap can get a process killed (the CPU cap only slows you down). Usage:
   `/run/rcb-limits/usage.json`.
 - Resets: as many as you like (`s.reset()`).
-- Steps: an episode ends after 50,000 control steps (41.7 min of simulated time) as a failure. There is no other step
+- Steps: at most 50,000 control steps (41.7 min of simulated time), then the episode ends. There is no other step
   budget.

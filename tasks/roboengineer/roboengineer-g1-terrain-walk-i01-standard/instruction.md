@@ -15,9 +15,9 @@ no completed round the score is zero. Preserve code, training logs, policies and
 The client saves the exact response and image bytes.
 
 Rules:
-- **No cheating.** Write your own fitting, training and analysis code. Do not search for, download or use any existing
-  solution (published or reference solutions, trained policies for this task) or hidden evaluator information; trials
-  are reviewed.
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, trained
+  policies for this task) or hidden evaluator information; trials are reviewed. Write your own fitting, training and
+  analysis code.
 - No reset: deployments are your only runs on the hidden evaluator, at most three rounds, each on the same 4 development
   cases from their start; no reset or privileged-state endpoint exists.
 - A deployment returns only noisy telemetry and camera frames. It never returns the evaluation dynamics, seeds, true
@@ -68,5 +68,5 @@ frames and noisy telemetry, then revise.
 - Resources: 4 CPUs, 12 GiB memory, 1024 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`),
   one GPU (20 GiB of its memory); the simulator runs in its own container and does not count. Going over a cap can get a
   process killed (the CPU cap only slows you down). Usage: `/run/rcb-limits/usage.json`.
-- Resets: none: deployments are your only runs, each starting its development cases afresh.
+- Resets: none. Deployments are your only runs, each starting its development cases afresh.
 - Rounds: at most three deployment rounds (`Client().describe()` has what is left).

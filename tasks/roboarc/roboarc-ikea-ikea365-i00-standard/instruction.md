@@ -1,4 +1,4 @@
-# IKEA MuJoCo · IKEA 365+ serving stand (standard)
+# RoboARC · IKEA 365+ serving stand (standard)
 
 ## Task
 Rebuild the IKEA 365+ serving stand: take the screw out of member A and set it down by itself, away from both members,
@@ -12,8 +12,8 @@ across member A, and the stand is upside down on the bench with the bowl on it, 
 touches any part and everything is still. Forcing parts deep into each other breaks the simulation and ends the episode
 at once, without success.
 
-When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts, and it must
-still hold after your last command is held a moment longer.
+When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts. Make sure
+everything is at rest when you send `/finish`.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
@@ -26,7 +26,7 @@ Two 7-DoF Franka Panda arms, each with the MuJoCo Menagerie Panda hand (two-fing
 (RoboARC's IKEA furniture-assembly suite, MuJoCo). The robot runs as a service you reach through its client or its MCP
 tools, as if it were real hardware: one live episode.
 
-`POST /finish` (MCP tool `finish`): ends the episode; it is graded right away.
+`POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
 `/opt/tools/rcb_client.py` (already installed; `python` from any directory):

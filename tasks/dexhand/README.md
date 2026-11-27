@@ -237,7 +237,7 @@ each task's `checker.py`: ordered stages with consecutive holds, guards while a 
 terminal hold. A stage or the terminal hold counts a control sample only if its bounds held at every 2 ms substep of
 that control interval; stages complete in order and a stage cannot use the sample that completed the previous one;
 missing or non-finite features fail closed; the first violated invariant or guard, a non-finite feature or unstable
-physics fails the episode immediately and permanently; success ends the episode at the end of the terminal hold. The
+physics fails the episode immediately and permanently; success ends the episode (privileged) at the end of the terminal hold. The
 instructions render the exact predicate and define every feature (`force`: largest contact force on any task object,
 N; `speed`: largest task-object velocity, m/s or rad/s; `palm_drift` / `wrist_rotation`: palm motion from reset;
 `support`: object-environment contacts; contact counts in fingers). The bounds below are the frozen instances' (six
@@ -332,7 +332,7 @@ tomato, lettuce and the sesame top bun start on preparation supports. **Success*
 ingredient centre within 12 mm horizontally of the plate centre, every layer upright within 0.22 rad, heights strictly
 increasing in the order bottom bun, patty, cheese, tomato, lettuce, top bun, all five consecutive pairs in physical
 contact and the bottom bun touching the plate; then released: no hand contact on any ingredient, every ingredient
-slower than 0.025 m/s and 0.25 rad/s, the whole condition for 100 consecutive controls (2 s). Success ends the episode;
+slower than 0.025 m/s and 0.25 rad/s, the whole condition for 100 consecutive controls (2 s). Success ends the episode (privileged);
 a partial stack never counts. **Immediate failure**, checked after every 2 ms substep: an ingredient touches the table
 top or the floor (`ingredient_dropped`), an ingredient body falls below the table top (z < 0.30 m), an ingredient
 leaves the box x in [-0.64, 0.64] m, y in [-0.52, 0.52] m, z in [0.30, 0.80] m, a cheese or lettuce bending angle
@@ -353,7 +353,7 @@ spacing); the half with x <= 0.08 m is glued to a backing next to a dark clamp, 
 **Success**: 100 consecutive 50 Hz samples (2 s) with no hand-paper contact and fold angle of the free half above
 2.6 rad, mean plastic crease on the centre line above 2.2 rad with at least 90 % of its hinges above 2.2 rad, free edge
 within 18 mm of the fixed edge, stretch below 8 %, and the whole sheet over the table top: every vertex within
-x from -0.345 to 0.135 m, y from -0.30 to 0.30 m and at z >= 0.298 m (2 mm tolerance). Success ends the episode. **Immediate
+x from -0.345 to 0.135 m, y from -0.30 to 0.30 m and at z >= 0.298 m (2 mm tolerance). Success ends the episode (privileged). **Immediate
 failure**, checked every 0.5 ms: a vertex more than 10 mm below the table top (z < 0.29 m), a vertex outside the
 workspace box x from -0.03 to 0.19 m, y from -0.09 to 0.09 m, z <= 0.45 m, stretch above 8 %, unstable physics, or 1,500 controls
 (30 s) without success. A fold that springs back, a crease that is not permanent or a hand still touching the paper
@@ -408,7 +408,7 @@ horizontally of (0.46, 0.31) and within 0.012 m of z = 0.79, axis within 0.10 ra
 every part of the pot inside the bay and at most 0.05 m in front of the board's front edge at y = 0.12 (y >= 0.07: a
 50 mm open-front allowance, because the 438 mm handle span reaches about 34 mm past the front edge at the target; side
 walls, back wall and top board are strict),
-and every hand collision surface at least 0.04 m from the pot. Success ends the episode. **Immediate failure**, the only early failures ("touches" means at least 0.02 N):
+and every hand collision surface at least 0.04 m from the pot. Success ends the episode (privileged). **Immediate failure**, the only early failures ("touches" means at least 0.02 N):
 1. the pot base below z = 0.70 m;
 2. the base outside x in [-0.10, 1.10] m, y in [-0.50, 0.85] m, z <= 1.45 m;
 3. the axis more than 0.5 rad from +z;
