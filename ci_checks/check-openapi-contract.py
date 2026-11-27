@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Contract check of docs/protocol/eai-standard-3.0.openapi.yaml against the running reference services.
+"""Contract check of docs/protocol/eai-standard.openapi.yaml against the running reference services.
 
 1. The document: openapi-spec-validator when it is installed (it is not a client pin; without it a structural check
    runs: openapi 3.1.0, info.version 3.0, the required paths, every $ref resolves, every operation has responses and
@@ -145,7 +145,7 @@ def check_document(doc: dict, spec_path: pathlib.Path) -> None:
             n_ops += 1
             check(bool(op.get("responses")), f"{m.upper()} {p}: no responses")
             check("x-eai-mcp" in op, f"{m.upper()} {p}: no x-eai-mcp entry")
-            check("x-eai-layer" in op, f"{m.upper()} {p}: no x-eai-layer")
+            check("x-eai-capability" in op, f"{m.upper()} {p}: no x-eai-capability")
             tool = MCP_TOOLS.get(op.get("operationId"))
             if tool:
                 check((op.get("x-eai-mcp") or {}).get("tool") == tool, f"{op.get('operationId')}: x-eai-mcp tool != {tool}")
@@ -718,13 +718,13 @@ TARGETS = ("sidecar", "sidecar-limit", "realtime", "shared", "shared-finish", "s
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--repo", default=str(HERE.parent), help="repository root (default: this script's parent's parent)")
-    ap.add_argument("--spec", default=None, help="the OpenAPI file (default: <repo>/docs/protocol/eai-standard-3.0.openapi.yaml)")
+    ap.add_argument("--spec", default=None, help="the OpenAPI file (default: <repo>/docs/protocol/eai-standard.openapi.yaml)")
     ap.add_argument("--targets", default=",".join(TARGETS))
     ap.add_argument("--work", default=None, help="scratch directory (default: a new temporary one, removed at the end)")
     ap.add_argument("--keep", action="store_true", help="keep the scratch directory")
     a = ap.parse_args()
     repo = pathlib.Path(a.repo).resolve()
-    spec_path = pathlib.Path(a.spec) if a.spec else repo / "docs/protocol/eai-standard-3.0.openapi.yaml"
+    spec_path = pathlib.Path(a.spec) if a.spec else repo / "docs/protocol/eai-standard.openapi.yaml"
     doc = yaml.safe_load(spec_path.read_text())
     check_document(doc, spec_path)
 
