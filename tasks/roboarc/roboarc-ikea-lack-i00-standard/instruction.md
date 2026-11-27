@@ -1,4 +1,4 @@
-# IKEA MuJoCo · LACK side table (standard)
+# RoboARC · LACK side table (standard)
 
 ## Task
 Screw the four legs onto the four studs of the tabletop, one leg per stud. Then let go of everything and move both arms
@@ -9,8 +9,8 @@ Success: the tabletop lies studs up with a leg screwed fully onto each stud, eac
 and everything is still. Forcing parts deep into each other breaks the simulation and ends the episode at once, without
 success.
 
-When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts, and it must
-still hold after your last command is held a moment longer.
+When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts. Make sure
+everything is at rest when you send `/finish`.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
@@ -23,7 +23,7 @@ Two 7-DoF Franka Panda arms, each with the MuJoCo Menagerie Panda hand (two-fing
 (RoboARC's IKEA furniture-assembly suite, MuJoCo). The robot runs as a service you reach through its client or its MCP
 tools, as if it were real hardware: one live episode.
 
-`POST /finish` (MCP tool `finish`): ends the episode; it is graded right away.
+`POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
 `/opt/tools/rcb_client.py` (already installed; `python` from any directory):

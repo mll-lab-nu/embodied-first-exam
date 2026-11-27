@@ -65,7 +65,7 @@ players' robots serve by the ITTF service laws, with a toss device on the robot.
 opponent at level 1. At this low level the platform does not give you the robot's `hit` skill: you implement it
 yourself, and every stroke of the match is played by your implementation (the skill in the loop). The world waits for
 you: it advances only while you let it (`### Time` below). The robot runs as a service you reach only through its
-client, as if it were real hardware: one live episode.
+client, as if it were real hardware: one live episode. There is no `finish` tool: the match's rules end it.
 
 ### Client
 The `game` command, or the same calls as HTTP with JSON at `http://localhost:8000/<SEAT>/` (your seat is `$SEAT`):
@@ -244,4 +244,4 @@ decides when and where, your skill turns each decision into the robot's commands
 - Resources: 2 CPUs, 5 GiB memory, 2048 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`), no
   GPU; the simulator runs in its own container and does not count. Going over a cap can get a process killed (the CPU
   cap only slows you down). Usage: `/run/rcb-limits/usage.json`.
-- Resets: none: one match.
+- Resets: none. You get one match.

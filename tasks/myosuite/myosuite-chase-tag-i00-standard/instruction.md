@@ -1,10 +1,10 @@
 # MyoSuite · chase_tag (standard)
 
 ## Task
-Tag the opponent: get your pelvis within 0.5 m of it.
+Tag the opponent: get right next to it.
 
 ## Goal
-Success: your pelvis gets within 0.5 m of the opponent. Once this has happened the task is passed, whatever happens
+Success: you get close enough to the opponent to tag it. Once this has happened the task is passed, whatever happens
 afterwards. Before that, the episode ends as a failure if you fall or leave the arena.
 
 When you are done, send `/finish` to end the episode and get it graded.
@@ -22,7 +22,7 @@ The MyoLegs, a free-standing musculoskeletal model of a human torso and both leg
 through its actuators (80 muscles): there is no joint-level controller. The robot runs as a service you reach through
 its client or its MCP tools, as if it were real hardware.
 
-`POST /finish` (MCP tool `finish`): ends the episode; it is graded right away.
+`POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
@@ -99,5 +99,5 @@ because the pose would be that body's position). Proprioception (`spec["proprio_
   GPU; the simulator runs in its own container and does not count. Going over a cap can get a process killed (the CPU
   cap only slows you down). Usage: `/run/rcb-limits/usage.json`.
 - Resets: at most 10 (`spec()["budget"]["reset"]`), each a new episode from the same starting state.
-- Steps: the episode ends after 20 s of robot time.
+- Steps: at most 20 s of robot time, then the episode ends.
 - Finish: if you never send `/finish`, the last episode is graded when your session ends.

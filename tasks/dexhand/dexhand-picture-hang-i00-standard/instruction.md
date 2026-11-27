@@ -38,7 +38,7 @@ A fixed Tianji Marvin robot with two 7-joint arms and a dexterous hand on each w
 task), facing a wall (DexHand, MuJoCo). The robot runs as a service you reach through its client or its MCP tools, as if
 it were real hardware.
 
-`POST /finish` (MCP tool `finish`): ends the episode; it is graded right away.
+`POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
 `/opt/tools/rcb_client.py`:

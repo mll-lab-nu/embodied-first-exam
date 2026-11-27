@@ -6,10 +6,9 @@ Keep goal: stop all 3 penalty kicks, with a foot on the goal line at each kick, 
 ## Goal
 Success: you keep all three shots out of the goal, on your feet with a foot on the goal line at each kick.
 
-The referee in the service judges these stages, in order: **save 1 → save 2 → save 3**. The referee's success call
-counts the moment it is made: nothing after it undoes it, but the attempt does not end there. The first foul before a
-success ends the attempt as a failure. A reset starts a new attempt, and only your last attempt is graded. Ending your
-session also stops your background programs.
+The referee in the service judges these stages, in order: **save 1 → save 2 → save 3**. Once the referee calls success,
+it stays; the attempt continues until you finish. The first foul before a success ends the attempt as a failure. A reset
+starts a new attempt, and only your last attempt is graded. Ending your session also stops your background programs.
 
 When you are done, send `/finish` to end the episode and get it graded.
 
@@ -17,8 +16,8 @@ Keep a `NOTES.md` of at most 20 lines in `/app/output/` (your approach, what fai
 save it early and keep it current.
 
 Rules:
-- **No cheating.** Do not search for, download or use an existing solution to this exact task (published or reference
-  solutions, the benchmark's demonstrations, policies trained for it); trials are reviewed.
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+  benchmark's demonstrations, policies trained for it); trials are reviewed.
 - Attempts: 5 resets, each a new attempt from the same start, paused until your next command; only your last attempt is
   graded.
 - You get only what the robot's own sensors give (its head cameras, joint encoders, motor torques and IMUs) and the
@@ -37,7 +36,7 @@ You control a simulated Unitree H1-2 humanoid robot (27 joints, 1.78 m tall, 67 
 MuJoCo). The robot runs as a service you reach through its client or its MCP tools, as if it were real hardware, on a
 clock that does not stop while you think.
 
-`POST /finish` (MCP tool `finish`): ends the episode; it is graded right away.
+`POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
 `/opt/tools/rcb_client.py` (protocol `eai-standard/2.3`, realtime mode) is your whole interface to the robot. Its
@@ -201,5 +200,5 @@ Joint order everywhere (Unitree's SDK order): `left_hip_yaw`, `left_hip_pitch`, 
   no GPU; the simulator runs in its own container and does not count. Going over a cap can get a process killed (the CPU
   cap only slows you down). Usage: `/run/rcb-limits/usage.json`.
 - Resets: at most 5 (`spec()["budget"]["reset"]`), each a new episode from the same starting state.
-- Steps: an attempt ends after 27 s of robot time.
+- Steps: at most 27 s of robot time, then the episode ends.
 - Finish: if you never send `/finish`, the last episode is graded when your session ends.

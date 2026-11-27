@@ -25,7 +25,7 @@ A KUKA iiwa 14 arm with a 22-joint Sharpa HA4 dexterous hand stands next to a ta
 (DexToolBench, MuJoCo). The robot runs as a service you reach through its client or its MCP tools, as if it were real
 hardware.
 
-`POST /finish` (MCP tool `finish`): ends the episode; it is graded right away.
+`POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`:
@@ -92,5 +92,5 @@ are clipped to the limits in the spec. A chunk covers at most 10 s.
   no GPU; the simulator runs in its own container and does not count. Going over a cap can get a process killed (the CPU
   cap only slows you down). Usage: `/run/rcb-limits/usage.json`.
 - Resets: at most 20 (`spec()["budget"]["reset"]`), each a new episode from the same starting state.
-- Steps: each episode ends after 360,000 control steps (100 min of robot time).
+- Steps: at most 360,000 control steps (100 min of robot time), then the episode ends.
 - Finish: if you never send `/finish`, the last episode is graded when your session ends.

@@ -1,4 +1,4 @@
-# IKEA MuJoCo · EKET cabinet (privileged)
+# RoboARC · EKET cabinet (privileged)
 
 ## Task
 Build the EKET cabinet frame from the five panels on the table: slide the side panel next to the top panel into the top
@@ -9,8 +9,8 @@ Leave the cabinet standing on the table on its own. Then let go of everything an
 Success: the frame is built in that order, every panel (the back too) in its place and the four frame joints latched; it
 stands on the table on its own with nothing on the floor, no arm touches it and everything is still. Forcing parts deep
 into each other breaks the simulation and ends the episode at once, without success. Your trajectory is replayed from
-the fixed start. What counts is the state after its last action. After your last row the grader holds it for 1 s more
-and requires all of this again: end your rows with the parts released, the arms clear of them and everything at rest.
+the fixed start. What counts is the state after its last action. End your rows with the parts released, the arms clear
+of them and everything at rest.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory()`: `ctrl` (N, 16) float64, `substeps` = 4,
 `timestep` = 0.000625, at most 476,000 rows (a longer one is refused). Leave the script that produced it at

@@ -20,7 +20,7 @@ Rules:
 Two ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim). The robot
 runs as a service you reach through its client or its MCP tools, as if it were real hardware: one live episode.
 
-`POST /finish` (MCP tool `finish`): ends the episode; it is graded right away.
+`POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
@@ -116,9 +116,9 @@ images.
   GPU; the simulator runs in its own container and does not count. Going over a cap can get a process killed (the CPU
   cap only slows you down). Usage: `/run/rcb-limits/usage.json`.
 - Resets: none. You get one episode.
-- Steps: at most 1,900 steps, RoboDojo's own limit for this task, then the episode ends. One step is one 25 Hz action
-  (1/25 s of simulated time). Everything that lets simulated time pass uses steps: a `joint_position` row with `dt` =
-  k/25 s uses k steps, an `ee_pose` row uses as many as its move takes at 0.25 m/s (at least one), and holding still for
-  s seconds (`hold(s)`) uses s x 25. Observing (`get_obs`), the spec, the status and the kinematics use none. Every
-  reply gives `steps_left`.
+- Steps: at most 1,900 control steps, then the episode ends. One control step is one 25 Hz action (1/25 s of simulated
+  time). Everything that lets simulated time pass uses control steps: a `joint_position` row with `dt` = k/25 s uses k
+  steps, an `ee_pose` row uses as many as its move takes at 0.25 m/s (at least one), and holding still for s seconds
+  (`hold(s)`) uses s x 25. Observing (`get_obs`), the spec, the status and the kinematics use none. Every reply gives
+  `steps_left`.
 - Finish: if you never send `/finish`, the episode is graded when the step limit is reached or your session ends.

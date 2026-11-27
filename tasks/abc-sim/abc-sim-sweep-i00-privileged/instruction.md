@@ -4,8 +4,7 @@
 Get all the paper scraps into the trash can.
 
 ## Goal
-Success: all the paper scraps are in the trash can at the same time. The episode ends as soon as that has held for about
-a second.
+Success: all the paper scraps are in the trash can at the same time. The replay ends as soon as the task is done.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, path)`: `(T, 14)` rows, one per
 control step, at most 20,000 rows. It is replayed open-loop from the same initial state and scores 1 if its episode ends

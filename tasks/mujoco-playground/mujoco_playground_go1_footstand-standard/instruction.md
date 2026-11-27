@@ -23,7 +23,7 @@ The Unitree Go1 quadruped (MuJoCo Playground's scene, in MuJoCo), driven by 12 j
 walking or balance controller. The robot runs as a service you reach through its client or its MCP tools, as if it were
 real hardware.
 
-`POST /finish` (MCP tool `finish`): ends the episode; it is graded right away.
+`POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:

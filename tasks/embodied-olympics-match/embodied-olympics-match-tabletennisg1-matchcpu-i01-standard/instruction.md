@@ -7,8 +7,8 @@ Win a game of table tennis to 5 points against the other robot.
 Success: you win the match.
 
 The match is graded when it is over; your session must last until then: when your session ends, a match that has not
-started is a no-show and a match in play is lost. When the match is over its result is final and your session is ended a
-few seconds later.
+started is a no-show and a match in play is lost. When the match is over, its result is final and your session ends soon
+after.
 
 Keep your programs, trained models, logs and notes in `/app/output/`.
 
@@ -44,7 +44,7 @@ Table tennis between two Unitree G1 humanoids (29 actuated joints each: arms 2 Ã
 real robot's limits), each holding a racket. You control seat `A`'s G1 at the joint level, with no skill commands,
 against a G1 the platform drives at level 4 of four (the BOSS). The world waits for you: it advances only while you let
 it (`### Time` below). The robot runs as a service you reach only through its client, as if it were real hardware: one
-live episode.
+live episode. There is no `finish` tool: the match's rules end it.
 
 ### Client
 The `game` command (the seat protocol; `game spec` gives the exact command formats, observation fields, frames, limits
@@ -136,4 +136,4 @@ and timing; `game rules` the complete rules):
 - Resources: 8 CPUs, 16 GiB memory, 2048 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`),
   no GPU; the simulator (`sim`) and `practice` and `practice_player` run in containers of their own and do not count.
   Going over a cap can get a process killed (the CPU cap only slows you down). Usage: `/run/rcb-limits/usage.json`.
-- Resets: none: one match.
+- Resets: none. You get one match.

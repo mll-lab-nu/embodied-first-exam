@@ -8,8 +8,8 @@ cord, beads and end discs behind, no closer to the goal than they were at the st
 Success: all of the removable metal ring is inside the green dashed goal square and still, and the post, cord, beads and
 end discs are no closer to the goal than at the start.
 
-When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts, and it must
-keep holding for a moment while your last command is held.
+When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts. Make sure
+everything is at rest when you send `/finish`.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
@@ -22,7 +22,7 @@ Rules:
 Two 6-DoF ALOHA (ViperX) arms with parallel-jaw grippers on a fixed base, at a table (RoboARC, MuJoCo). The robot runs
 as a service you reach through its client or its MCP tools, as if it were real hardware: one live episode.
 
-`POST /finish` (MCP tool `finish`): ends the episode; it is graded right away.
+`POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.4`:

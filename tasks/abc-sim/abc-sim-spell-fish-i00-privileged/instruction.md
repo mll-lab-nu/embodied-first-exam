@@ -6,8 +6,8 @@ face up or down, reading from left to right as the arms face the table.
 
 ## Goal
 Success: the blocks F, I, S and H lie flat on the table side by side in a straight row, close together, in that order
-from left to right as the arms face the table, each with a letter face up or down. The episode ends as soon as that has
-held for about a second.
+from left to right as the arms face the table, each with a letter face up or down. The replay ends as soon as the task
+is done.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, path)`: `(T, 14)` rows, one per
 control step, at most 20,000 rows. It is replayed open-loop from the same initial state and scores 1 if its episode ends

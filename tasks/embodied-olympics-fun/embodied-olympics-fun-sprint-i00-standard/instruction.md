@@ -7,9 +7,9 @@ Run the 50 m: start on the gun and sprint down your lane until your torso reache
 Success: you start after the gun, with no false start, and stay in your lane until your torso reaches the finish line,
 within 30 s of the gun.
 
-The referee in the service judges these stages, in order: **start → finish**. The referee's success call counts the
-moment it is made: nothing after it undoes it, but the attempt does not end there. The first foul before a success ends
-the attempt as a failure. A reset starts a new attempt, and only your last attempt is graded.
+The referee in the service judges these stages, in order: **start → finish**. Once the referee calls success, it stays;
+the attempt continues until you finish. The first foul before a success ends the attempt as a failure. A reset starts a
+new attempt, and only your last attempt is graded.
 
 When you are done, send `/finish` to end the episode and get it graded.
 
@@ -17,8 +17,8 @@ Keep a `NOTES.md` of at most 20 lines in `/app/output/` (your approach, what fai
 save it early and keep it current.
 
 Rules:
-- **No cheating.** Do not search for, download or use an existing solution to this exact task (published or reference
-  solutions, the benchmark's demonstrations, policies trained for it); trials are reviewed.
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+  benchmark's demonstrations, policies trained for it); trials are reviewed.
 - Attempts: 5 resets, each a new attempt from the same start (the first attempt starts when the service comes up); only
   your last attempt is graded.
 - You get only what the robot's own sensors give (its head cameras, joint encoders, motor torques and IMUs) and the
@@ -35,7 +35,7 @@ The attempt fails at once if:
 You control a simulated Unitree G1 humanoid robot (29 joints, 1.32 m tall, 33 kg; the Embodied Olympics simulator on
 MuJoCo). The robot runs as a service you reach through its client or its MCP tools, as if it were real hardware.
 
-`POST /finish` (MCP tool `finish`): ends the episode; it is graded right away.
+`POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
 `/opt/tools/rcb_client.py` (protocol `eai-standard/2.1`) is your whole interface to the robot. Its docstring is the full
@@ -189,5 +189,5 @@ in the spec's `robot_facts`.
   no GPU; the simulator runs in its own container and does not count. Going over a cap can get a process killed (the CPU
   cap only slows you down). Usage: `/run/rcb-limits/usage.json`.
 - Resets: at most 5 (`spec()["budget"]["reset"]`), each a new episode from the same starting state.
-- Steps: an attempt ends after 34.2 s of robot time.
+- Steps: at most 34.2 s of robot time, then the episode ends.
 - Finish: if you never send `/finish`, the last episode is graded when your session ends.

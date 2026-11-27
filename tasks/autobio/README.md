@@ -184,7 +184,7 @@ AutoBio's scripted experts (`class <Task>Expert` in each task module), run from 
 still has them: the targets in effect at every physics step, clipped to the actuators' ranges, rounded to float32 (what
 the standard client sends, so both modes execute the same rows) and, for rule `first`, cut at the first success:
 `solution/oracle.npz` in every task. The privileged oracle hands the rows in; the standard oracle streams them through
-the client (and ends the mixer's episode with `done`). Replayed through `ctrl[action_indices]` alone on a task without
+the client and ends the episode with `r.finish()`. Replayed through `ctrl[action_indices]` alone on a task without
 its expert, the unrounded rows reproduce the expert's own run bit for bit (final state and the whole `check()`
 timeline), in all nine families; rounded to float32 they still succeed (the success step moves by at most 22 control
 steps).

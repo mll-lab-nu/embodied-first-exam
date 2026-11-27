@@ -28,7 +28,7 @@ Two UR5e arms fixed to the bench: `arm1` carries a dexterous hand that holds a p
 `arm2` has a Robotiq 2F-85 gripper, in AutoBio's simulated biology laboratory (MuJoCo). The robot runs as a service you
 reach through its client or its MCP tools, as if it were real hardware: one live episode.
 
-`POST /finish` (MCP tool `finish`): ends the episode; it is graded right away.
+`POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:

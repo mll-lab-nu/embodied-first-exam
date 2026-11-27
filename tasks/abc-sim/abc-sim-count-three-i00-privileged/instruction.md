@@ -4,7 +4,7 @@
 Put exactly three of the objects in the box.
 
 ## Goal
-Success: the box holds exactly three objects, of any kind. The episode ends as soon as that has held for about a second.
+Success: the box holds exactly three objects, of any kind. The replay ends as soon as the task is done.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, path)`: `(T, 14)` rows, one per
 control step, at most 20,000 rows. It is replayed open-loop from the same initial state and scores 1 if its episode ends

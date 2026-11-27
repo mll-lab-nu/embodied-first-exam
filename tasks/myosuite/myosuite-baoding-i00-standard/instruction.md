@@ -23,7 +23,7 @@ The MyoHand, a musculoskeletal model of a human forearm and hand (MyoSuite, MuJo
 (39 muscles): there is no joint-level controller. The robot runs as a service you reach through its client or its MCP
 tools, as if it were real hardware.
 
-`POST /finish` (MCP tool `finish`): ends the episode; it is graded right away.
+`POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
@@ -96,5 +96,5 @@ response carries each frame's pose. Proprioception (`spec["proprio_groups"]`): `
   GPU; the simulator runs in its own container and does not count. Going over a cap can get a process killed (the CPU
   cap only slows you down). Usage: `/run/rcb-limits/usage.json`.
 - Resets: at most 10 (`spec()["budget"]["reset"]`), each a new episode from the same starting state.
-- Steps: the episode ends after 25 s of robot time.
+- Steps: at most 25 s of robot time, then the episode ends.
 - Finish: if you never send `/finish`, the last episode is graded when your session ends.

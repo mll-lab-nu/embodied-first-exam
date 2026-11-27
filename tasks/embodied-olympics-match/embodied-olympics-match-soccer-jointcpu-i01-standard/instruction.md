@@ -13,9 +13,8 @@ Keep your scripts, logs and notes in `/app/output/`, with a short `/app/output/N
 tested and how it did in practice matches.
 
 Rules:
-- **No cheating.** No walking or balancing policy you did not build in this session (in particular not the released
-  Booster or SaiResearch T1 walking policies, nor anything made from them), and do not search for, download or use any
-  existing solution; a team found driving its robots with one loses the match.
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+  benchmark's demonstrations, trained policies); trials are reviewed. Do not use a released walking or balancing policy.
 - One match, no reset: a goal against you stays.
 - No privileged match internals: use only the service's replies (your robots' state and the full-state `truth`), your
   toolkit and this text.
@@ -213,4 +212,4 @@ the match service.
 - Resources: 6 CPUs, 16 GiB memory, 1024 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`),
   no GPU; the simulator (`sim`) and `practice` run in containers of their own and do not count. Going over a cap can get
   a process killed (the CPU cap only slows you down). Usage: `/run/rcb-limits/usage.json`.
-- Resets: none: one match.
+- Resets: none. You get one match.

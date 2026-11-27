@@ -8,7 +8,7 @@ now, clear of the table, and let go.
 Success: both plates stand on edge in slots of the right dish rack, facing the same way as at the start (a plate turned
 around does not count), off the table, and neither gripper touches them, for a second. A plate touching the floor ends
 the episode as a failure. A fall (the pelvis tipping far over, or dropping low) makes the episode a failure without
-ending it. After `/finish`, the robot stands still for one more second, and the check runs at its end.
+ending it.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
@@ -27,7 +27,7 @@ command where it walks, how high its pelvis is, how far its torso leans forward,
 robot runs as a service you reach through its client or its MCP tools, as if it were real hardware, on a clock that does
 not stop while you think: one live episode.
 
-`POST /finish` (MCP tool `finish`): ends the episode; it is graded right away.
+`POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.3`, realtime mode, its docstring the full reference

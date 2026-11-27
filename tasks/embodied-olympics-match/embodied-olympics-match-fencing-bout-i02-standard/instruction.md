@@ -126,4 +126,4 @@ your seat (empty body: retry more slowly).
 - Resources: 2 CPUs, 4 GiB memory, 1024 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`), no
   GPU; the simulator runs in its own container and does not count. Going over a cap can get a process killed (the CPU
   cap only slows you down). Usage: `/run/rcb-limits/usage.json`.
-- Resets: none: one bout.
+- Resets: none. You get one bout.

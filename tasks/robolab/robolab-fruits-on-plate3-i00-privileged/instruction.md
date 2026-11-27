@@ -78,7 +78,7 @@ After your last row, its command is held for about two seconds more, so a releas
 trajectory that ends with an object in the gripper goes on holding it.
 
 ## Others
-- The episode ends by itself the moment the task is done: after that `s.step` raises and the primitives become no-ops,
+- The episode stops at the first step where the task is done; after that `s.step` raises and the primitives do nothing,
   so stop recording there.
 - Do not call `s.close()` before you have written every output.
 - The first episode of a process (a live run before any `s.reset()`, or the first `s.replay()`) ends in the same state

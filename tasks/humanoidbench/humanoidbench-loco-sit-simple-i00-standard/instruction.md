@@ -6,12 +6,11 @@ Sit down on the chair right behind you and stay seated, upright and still.
 ## Goal
 Success: the robot sits down on the chair quickly and stays seated on it, upright, still and without straining, for most
 of the episode. Success counts as it happens: every moment the robot does this well adds to its score over the episode
-(its full length is in Limits), and once the score reaches the pass mark the episode is a success, even if it then ends
-as a failure (below).
+(its full length is in Limits). Once you have sat well for long enough, the task is passed, even if you fall afterwards.
 
 When you are done, send `/finish` to end the episode and get it graded.
 
-The episode ends at once as a failure if the robot falls: its pelvis drops below 0.5 m, clearly lower than when seated.
+The episode ends at once as a failure if the robot falls (its pelvis drops clearly lower than when seated).
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
@@ -26,7 +25,7 @@ Rules:
 A simulated Unitree H1 humanoid (HumanoidBench, MuJoCo). The robot runs as a service you reach through its client or its
 MCP tools, as if it were real hardware.
 
-`POST /finish` (MCP tool `finish`): ends the episode; it is graded right away.
+`POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
 `/opt/tools/rcb_client.py` (protocol `eai-standard/2.1`); its docstring is the full reference
@@ -112,5 +111,5 @@ control steps. Between calls the robot waits, frozen, while you think; an observ
   GPU; the simulator runs in its own container and does not count. Going over a cap can get a process killed (the CPU
   cap only slows you down). Usage: `/run/rcb-limits/usage.json`.
 - Resets: at most 50 (`spec()["budget"]["reset"]`), each a new episode from the same starting state.
-- Steps: each episode ends after 1000 control steps (20 s of robot time).
+- Steps: at most 1,000 control steps (20 s of robot time), then the episode ends.
 - Finish: if you never send `/finish`, the last episode is graded when your session ends.

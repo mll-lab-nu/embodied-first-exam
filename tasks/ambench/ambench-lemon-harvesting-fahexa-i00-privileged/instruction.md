@@ -4,9 +4,8 @@
 Pull the lemon off the wall, drop it into the grey tote on the table to your left and open the gripper all the way.
 
 ## Goal
-Success: the lemon, pulled off the wall, is in the tote while the gripper is fully open. An episode ends by itself at
-the first control step where the task is done (the rows after it are never run), or as a failure when its simulated time
-(Robot Interface) runs out.
+Success: the lemon, pulled off the wall, is in the tote while the gripper is fully open. The replay stops at the first
+step where the task is done; later rows are not run. It fails if its simulated time (Robot Interface) runs out first.
 
 Deliverable: `/app/output/trajectory.npz`, written with `Session.save_trajectory(...)`. It holds `task` and `actions`, a
 (T, 8) float array of at most 8,000 rows (one per control step). Anything else scores 0: another shape, NaN, more rows,

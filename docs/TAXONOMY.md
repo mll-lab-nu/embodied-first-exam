@@ -38,7 +38,7 @@ Benchmark-specific fields (optional, PROTOCOL §1):
 | DexHand | `difficulty`, `release_status` | `hard` (proposed before calibration with agent trials); `provisional` (human solvability review pending, PROTOCOL §4) |
 | LabUtopia | `level` | `1` (an atomic action) · `2` (a short-horizon task): LabUtopia's own level of the task |
 | AutoBio | `difficulty` | `easy` · `medium` · `hard` (the level AutoBio's paper gives the task) |
-| AutoBio | `success_rule` | `first` (the first control step at which AutoBio's check holds ends the episode) · `final` (judged in the state in which the episode ends) |
+| AutoBio | `success_rule` | `first` (privileged mode: the first control step at which AutoBio's check holds ends the replay; standard mode judges every task with the `final` rule) · `final` (judged in the state in which the episode ends) |
 | Embodied Olympics - Match (exported, PROTOCOL §3) | `opponent_level`, `chess_clock_s` (turn-based matches) | integers: the scripted opponent's level; in a turn-based match the world waits for the player whose turn it is, and `chess_clock_s` is each player's clock of real time, running on its own turns |
 | Embodied Olympics - Match (exported, PROTOCOL §3) | `revision`, `play`, `player_mode`, `action_level`, `source_task`, `source_commits`, `exporter`, `official` | the sport's revision; `program`; `high` · `low`; the Embodied Olympics task it was exported from, its commits and exporter; `false` (development seeds) |
 | Embodied Olympics - Fun | `category` | `track-and-jumps` · `football-and-volleyball` · `basketball-and-rackets` · `throwing-catching-striking` · `parkour-apparatus-balance` |

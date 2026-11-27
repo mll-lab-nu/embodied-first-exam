@@ -60,7 +60,7 @@ shuttle's high drag and does not bounce. You are seat `A` against a scripted opp
 platform does not give you the robot's `act` skill: you implement it yourself, and every stroke of the match is played
 by your implementation (the skill in the loop). The world runs at 1/S of real speed (S = 20). The robot runs as a
 service you reach only through its client, as if it were real hardware, on a clock that does not stop while you think:
-one live episode.
+one live episode. There is no `finish` tool: the match's rules end it.
 
 ### Client
 The `game` command, or the same calls as HTTP with JSON at `http://localhost:8000/<SEAT>/` (your seat is `$SEAT`):
@@ -240,4 +240,4 @@ decides when and where, your skill turns each decision into the robot's commands
 - Resources: 2 CPUs, 5 GiB memory, 2048 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`), no
   GPU; the simulator runs in its own container and does not count. Going over a cap can get a process killed (the CPU
   cap only slows you down). Usage: `/run/rcb-limits/usage.json`.
-- Resets: none: one match.
+- Resets: none. You get one match.

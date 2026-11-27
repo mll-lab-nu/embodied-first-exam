@@ -4,9 +4,9 @@
 Push the red knob along the rail all the way to its right end, as seen from you.
 
 ## Goal
-Success: the knob is at, or just short of, the right end of the rail, as seen from the robot. An episode ends by itself
-at the first control step where the task is done (the rows after it are never run), or as a failure when its simulated
-time (Robot Interface) runs out.
+Success: the knob is at, or just short of, the right end of the rail, as seen from the robot. The replay stops at the
+first step where the task is done; later rows are not run. It fails if its simulated time (Robot Interface) runs out
+first.
 
 Deliverable: `/app/output/trajectory.npz`, written with `Session.save_trajectory(...)`. It holds `task` and `actions`, a
 (T, 8) float array of at most 8,000 rows (one per control step). Anything else scores 0: another shape, NaN, more rows,

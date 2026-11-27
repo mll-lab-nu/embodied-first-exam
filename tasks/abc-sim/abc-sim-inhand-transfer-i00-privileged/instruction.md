@@ -6,7 +6,7 @@ down there.
 
 ## Goal
 Success: the cream cheese stick lies on the table on the left arm's side, at least a hand's width past the middle line
-between the arms. The episode ends as soon as that has held for about a second.
+between the arms. The replay ends as soon as the task is done.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, path)`: `(T, 14)` rows, one per
 control step, at most 20,000 rows. It is replayed open-loop from the same initial state and scores 1 if its episode ends

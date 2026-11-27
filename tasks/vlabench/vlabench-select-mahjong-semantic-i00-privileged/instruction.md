@@ -13,8 +13,8 @@ that produced the trajectory; it should run and reproduce `trajectory.npz` from 
 `/app/output/NOTES.md`: at most 20 lines on your final approach and why it works, and what you tried that failed. Save a
 valid trajectory early and overwrite it when you have a better one.
 
-Rules: **No cheating.** VLABench's general skills are allowed. Do not search for, download or use any existing solution
-(published or reference solutions, VLABench's expert solutions, trained policies); trials are reviewed.
+Rules: **No cheating.** Do not search for, download or use any existing solution (published or reference solutions,
+VLABench's expert solutions, trained policies); trials are reviewed. VLABench's general skills are allowed.
 
 ## Robot Interface
 A Franka Panda arm at a table (VLABench on MuJoCo). The scene is one fixed instance. You have the full simulator to

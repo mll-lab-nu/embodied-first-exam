@@ -1,8 +1,8 @@
 # DexHand · Plug a USB cable into a hub port (standard)
 
 ## Task
-Pick up the cable's plug and lift it at least 3 cm off the desk, then plug it into the hub's rightmost port (seen from
-the front) with its top face up, and let go.
+Pick up the cable's plug and lift it a few centimetres off the desk, then plug it into the hub's rightmost port (seen
+from the front) with its top face up, and let go.
 
 ## Goal
 Success: in this order, the plug is grasped by the thumb and at least one other finger and lifted off the desk; it is
@@ -39,7 +39,7 @@ The right arm and hand of a fixed Tianji Marvin robot (two 7-joint arms, a dexte
 stays parked), in front of a desk (DexHand, MuJoCo). The robot runs as a service you reach through its client or its MCP
 tools, as if it were real hardware.
 
-`POST /finish` (MCP tool `finish`): ends the episode; it is graded right away.
+`POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
 `/opt/tools/rcb_client.py`:

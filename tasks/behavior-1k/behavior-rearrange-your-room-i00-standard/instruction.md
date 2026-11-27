@@ -6,8 +6,7 @@ Put the tissue dispenser on a stand and one pillow on each bed.
 ## Goal
 Success: the tissue dispenser stands on one of the stands, and each bed has one of the two pillows on it. It counts only
 once the scene has settled: nothing the task names (a tool included) is still in a gripper, and everything has come to
-rest. When the episode ends, the robot is held still for a few seconds more (your last command, the base at 0), and a
-success that settles in that time counts.
+rest.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
@@ -23,7 +22,7 @@ Rules:
 An R1Pro mobile bimanual robot in a simulated house (BEHAVIOR-1K: OmniGibson on Isaac Sim). The robot runs as a service
 you reach through its client or its MCP tools, as if it were real hardware: one live episode.
 
-`POST /finish` (MCP tool `finish`): ends the episode; it is graded right away.
+`POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
 `/opt/tools/rcb_client.py` (protocol `eai-standard/2.2`):

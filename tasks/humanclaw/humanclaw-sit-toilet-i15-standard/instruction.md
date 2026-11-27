@@ -4,9 +4,8 @@
 Sit down on any toilet in the house, and stop while you are still sitting on it.
 
 ## Goal
-Success: when you stop, you are sitting on a toilet. Your stop (action 1) declares that you are done and ends the
-episode. `/finish` is the same stop, and so is the end of your session. Only a stop can succeed: if your 100th action is
-not a stop, the episode fails there.
+Success: you stop (action 1 or `/finish`) while sitting on a toilet. If your 100th action is not a stop, the episode
+fails.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
@@ -22,7 +21,7 @@ A simulated adult human body in a furnished house (HumanCLAW: Habitat-Sim with H
 moves only by motion skills: walk, turn, side step, step back, steps up or down, sit and stop. The robot runs as a
 service you reach through its client or its MCP tools, as if it were real hardware: one live episode.
 
-`POST /finish` (MCP tool `finish`): ends the episode; it is graded right away.
+`POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`. Its docstring is the full reference

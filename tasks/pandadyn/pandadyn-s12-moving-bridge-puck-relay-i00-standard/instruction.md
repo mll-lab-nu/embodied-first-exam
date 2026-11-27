@@ -39,7 +39,7 @@ One simulated Franka Panda arm (7 joints, its standard hand, and the task's tool
 3 / SAPIEN, rigid-body physics at 1000 Hz). The robot runs as a service you reach through its client or its MCP tools,
 as if it were real hardware.
 
-`POST /finish` (MCP tool `finish`): ends the episode; it is graded right away.
+`POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
 `/opt/tools/rcb_client.py` (protocol `eai-standard/2.1`). Its docstring (`help(rcb_client)`) lists the calls and their
@@ -162,5 +162,5 @@ the same speed, acceleration and jerk limits.
   no GPU; the simulator runs in its own container and does not count. Going over a cap can get a process killed (the CPU
   cap only slows you down). Usage: `/run/rcb-limits/usage.json`.
 - Resets: at most 3 resets, each a new episode from the same frozen starting state; only the last episode is graded.
-- Steps: the episode ends after 32 s of robot time.
+- Steps: at most 32 s of robot time, then the episode ends.
 - Finish: if you never send `/finish`, the last episode is graded when your session ends.

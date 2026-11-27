@@ -25,8 +25,8 @@ appends its own log, `rcb_session_log.jsonl`, to `/app/output/`: leave it there 
 Save a trajectory as soon as you have one. Whenever you have a better one, overwrite it and update `gen.py` and
 `NOTES.md` to match. A run that ends with no file scores zero. Do not stop early.
 
-Rules: **No cheating.** Do not search for, download or use an existing solution to this exact task (published or
-reference solutions, the benchmark's demonstrations, policies trained for it); trials are reviewed.
+Rules: **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+benchmark's demonstrations, policies trained for it); trials are reviewed.
 
 The attempt fails at once if:
 - you pass a hurdle beside it or under its top, or touch the track or anything but its top bar while going over it

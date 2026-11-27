@@ -1,4 +1,4 @@
-# IKEA MuJoCo · IKEA 365+ serving stand (privileged)
+# RoboARC · IKEA 365+ serving stand (privileged)
 
 ## Task
 Rebuild the IKEA 365+ serving stand: take the screw out of member A and set it down by itself, away from both members,
@@ -11,8 +11,7 @@ Success: these steps were done in that order, and at the end the screw is seated
 across member A, and the stand is upside down on the bench with the bowl on it, standing firmly on its own; no arm
 touches any part and everything is still. Forcing parts deep into each other breaks the simulation and ends the episode
 at once, without success. Your trajectory is replayed from the fixed start. What counts is the state after its last
-action. After your last row the grader holds it for 1 s more and requires all of this again: end your rows with the
-parts released, the arms clear of them and everything at rest.
+action. End your rows with the parts released, the arms clear of them and everything at rest.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory()`: `ctrl` (N, 16) float64, `substeps` = 4,
 `timestep` = 0.000625, at most 495,000 rows (a longer one is refused). Leave the script that produced it at

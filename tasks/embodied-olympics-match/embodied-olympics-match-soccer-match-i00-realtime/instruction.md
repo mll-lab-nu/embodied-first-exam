@@ -219,4 +219,4 @@ stoppage; `game spec`) the world freezes for the reviews.
 - Resources: 2 CPUs, 5 GiB memory, 2048 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`), no
   GPU; the simulator runs in its own container and does not count. Going over a cap can get a process killed (the CPU
   cap only slows you down). Usage: `/run/rcb-limits/usage.json`.
-- Resets: none: one match.
+- Resets: none. You get one match.

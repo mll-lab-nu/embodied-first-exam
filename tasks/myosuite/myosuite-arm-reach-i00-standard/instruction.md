@@ -4,8 +4,8 @@
 Touch the small sphere in front of you with your index fingertip and hold it there for a second.
 
 ## Goal
-Success: your index fingertip is on the sphere and stays there for a second. It ends as a failure if your fingertip gets
-very far from the sphere.
+Success: your index fingertip is on the sphere and stays there for a second. The episode ends as a failure if your
+fingertip moves very far from the sphere.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
@@ -22,7 +22,7 @@ The MyoArm, a musculoskeletal model of a human shoulder, arm and hand (MyoSuite,
 actuators (34 muscles): there is no joint-level controller. The robot runs as a service you reach through its client or
 its MCP tools, as if it were real hardware.
 
-`POST /finish` (MCP tool `finish`): ends the episode; it is graded right away.
+`POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:

@@ -22,7 +22,7 @@ Two ALOHA arms (`arm1` and `arm2`; 6 joints and a parallel gripper each), fixed 
 in AutoBio's simulated biology laboratory (MuJoCo). The robot runs as a service you reach through its client or its MCP
 tools, as if it were real hardware: one live episode.
 
-`POST /finish` (MCP tool `finish`): ends the episode; it is graded right away.
+`POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:

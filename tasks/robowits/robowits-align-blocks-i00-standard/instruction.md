@@ -6,8 +6,7 @@ Line up the three cubes on the table in a perfectly straight line.
 ## Goal
 Success: the three cubes rest on the table in one straight line, seen from above, spread out along it, and everything
 else, the ruler included, is still on the table; the robot has let go of the cubes, touches none of them, and they are
-at rest. When the episode ends, the service keeps your last command for about three seconds: first one second, then two
-seconds in which all of this must keep holding, with nothing moving.
+at rest. Make sure everything is at rest when you send `/finish`.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
@@ -21,7 +20,7 @@ Rules:
 A bimanual Marvin robot (two 7-DoF arms with Pika parallel grippers), in RoboWits' simulation (Genesis). The robot runs
 as a service you reach through its client or its MCP tools, as if it were real hardware: one live episode.
 
-`POST /finish` (MCP tool `finish`): ends the episode; it is graded right away.
+`POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:

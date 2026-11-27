@@ -22,7 +22,7 @@ any attitude while hovering. It carries a small arm with four joints (three pitc
 two-finger gripper. The robot runs as a service you reach through its client or its MCP tools, as if it were real
 hardware: one live episode.
 
-`POST /finish` (MCP tool `finish`): ends the episode; it is graded right away.
+`POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
 `/opt/tools/rcb_client.py` (protocol `eai-standard/2.2`):
@@ -130,5 +130,5 @@ One episode lasts 26 s of simulated time.
   GPU; the simulator runs in its own container and does not count. Going over a cap can get a process killed (the CPU
   cap only slows you down). Usage: `/run/rcb-limits/usage.json`.
 - Resets: none. You get one episode.
-- Steps: the episode ends after 26 s of simulated time.
+- Steps: at most 26 s of simulated time, then the episode ends.
 - Finish: if you never send `/finish`, the episode is graded when the step limit is reached or your session ends.
