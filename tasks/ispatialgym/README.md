@@ -137,6 +137,15 @@ verifier's, for all 12 tasks.
   after crashes not all inside the agent's calls (`sim_crashed`, `resume_failed`), `instance_mismatch`. A crash inside the
   agent's calls (`sim_crashed_on_call`) and a simulator error raised by its actions (`error`) score 0.
 
+**Agent-ended episodes** (standard mode; PROTOCOL §3 "Agent-ended episodes", `RCB_AGENT_END` in each sim service,
+`rcb_agent_end.py`). The task's success is never shown and never ends the episode: the agent ends it with `POST /finish`
+(reason `finished`), or the end of its session does (`timeout`). Upstream's step budget is the step limit
+(`RCB_STEP_LIMIT` = the instance's `max_steps`, the Steps line of the instruction; reason `step_limit`). The episode is
+judged on how things stand when it ends, with upstream's settle-eval: at `/finish` and at the session's end the last
+command is held (base at 0, journaled and recorded) until upstream's success holds over the last 45 control steps or 45
+steps have passed, so steps already held count; at the step limit it is judged as it stands
+(`rcb_ispatialgym.AGENT_END`: success no longer sets `done`; `sim/server.py` `finish()`).
+
 ## Where upstream keeps the answers
 
 | what | where upstream has it | here |

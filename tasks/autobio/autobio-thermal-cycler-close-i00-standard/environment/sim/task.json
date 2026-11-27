@@ -1,5 +1,5 @@
 {
- "task_text": "Close the lid of the thermal cycler and lock it: swing the lid fully down and turn the lever on the lid to the locked end of its travel. Success the moment both are within 0.01 rad of those end positions.",
+ "task_text": "Close the thermal cycler's lid and lock it with the lever on the lid.",
  "default_cameras": [
   "table_cam_left",
   "wrist_cam"

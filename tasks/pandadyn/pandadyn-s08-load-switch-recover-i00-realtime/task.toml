@@ -19,7 +19,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/pandadyn-s08-load-switch-recover-i00-realtime"
-description = "REALTIME MODE (robot as a service on a clock that does not stop, eai-standard/2.3, slowdown S = 6): Panda Dynamic Scenes S08 Load a coasting cart, throw the switch, recover the part (one Franka Panda) on the same frozen instance as the privileged task. Task: A small cube, the part, rides a powered roller conveyor, and an unpowered cart is already coasting along a straight channel towards a passive hinged switch that splits the track into two diagonal branches. Grasp the part with both fingers while it is still moving and lift it. Drop it into the moving cart without stopping the cart, which must keep coasting until the switch is set. Then, before the cart reaches the switch, push the switch with a finger so that it will steer the cart into the branch selected for this instance, which is given under Goal geometry. The cart must then be deflected by the switch into that branch. Finally, grasp the part again, lift it out of the cart and hold it up before the cart runs too far down the branch. Once an episode starts the scene and the robot move whatever the agent does (at 1/S of real speed), so the agent plans or streams joint_position targets from a program of its own through the realtime client (RGB, depth + proprioception). 3 resets, only the last episode graded; no privileged state; the sim service records every executed control step and grades the last episode as it ran live (no replay)."
+description = "REALTIME MODE (robot as a service on a clock that does not stop, eai-standard/2.3, slowdown S = 6): Panda Dynamic Scenes S08 Load a coasting cart, throw the switch, recover the part (one Franka Panda) on the same frozen instance as the privileged task. Task: Grasp the part from the moving conveyor, lift it about a hand's length and drop it into the coasting cart without stopping the cart. Before the cart reaches the switch, push the switch with a finger so that it sends the cart into the branch nearer to you, then lift the part back out of the cart and hold it up. Once an episode starts the scene and the robot move whatever the agent does (at 1/S of real speed), so the agent plans or streams joint_position targets from a program of its own through the realtime client (RGB, depth + proprioception). 3 resets, only the last episode graded; no privileged state; the sim service records every executed control step and grades the last episode as it ran live (no replay)."
 keywords = ["robotics", "pandadyn", "maniskill", "sapien", "franka-panda", "single-arm", "dynamic-manipulation", "realtime-mode", "trajectory"]
 
 [metadata]
@@ -74,6 +74,13 @@ build_timeout_sec = 1800.0
 cpus = 4
 memory_mb = 10240
 storage_mb = 10240
+
+# The robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): Harbor starts this server for the agent.
+[[environment.mcp_servers]]
+name = "efe-robot"
+transport = "stdio"
+command = "python3"
+args = ["/opt/tools/efe_mcp/server.py"]
 
 [verifier.env]
 RCB_LIMITS_ENFORCE = "${RCB_LIMITS_ENFORCE:-0}"

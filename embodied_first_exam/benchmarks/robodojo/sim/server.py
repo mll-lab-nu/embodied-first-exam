@@ -21,9 +21,11 @@ RoboDojo specifics:
   or when the time is up. RoboDojo's per-task step limit (a policy's episode length in its evaluation; no check reads it)
   is not applied: no step caps (PROTOCOL D1), only a runaway guard. A task whose service sets RCB_AGENT_END and
   RCB_STEP_LIMIT (every RoboDojo standard task: PROTOCOL §3 "Agent-ended episodes", rcb_agent_end.py) ends it the
-  agent's way instead: after the task's step_lim actions, or when a check fails for good, or
+  agent's way instead: after the task's step_lim actions, or when a check fails for good (a 0), or
   at the agent's POST /finish or the end of its session; a success never ends it and is never shown, and the verdict is
-  RoboDojo's: whether the reward reached 1 in the episode;
+  the state's success after the episode's last action as rcb_robodojo.END_JUDGEMENT judges it: RoboDojo's staged reward
+  is 1 and, for a task judged on its end state, its last check stage holds on the final state (re-checked with RoboDojo's
+  own check function);
 - the episode is graded as it ran (no grading replay): when it ends the service writes
   /data/trajectory.npz (the deliverable) + /data/episode.json (the live result: RoboDojo's check after every action; the
   end-state hash), the collect hook's SIGUSR1 makes it exit, and environment/sim/finalize.sh writes final.json from it;
@@ -51,7 +53,7 @@ DATA = os.environ.get("RCB_DATA", "/data"); os.makedirs(DATA, exist_ok=True); os
 TASK = os.environ.get("RCB_TASK", "stack_bowls"); INSTANCE = os.environ.get("RCB_INSTANCE", os.path.join(os.path.dirname(__file__), "instance.json"))
 OBS_CALIBRATION = os.environ.get("RCB_OBS_CALIBRATION", "1") == "1"
 CTRL_HZ = 25; SUBSTEPS = 10; ACTION_DIM = 14
-MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10")); MAX_WATCH_S = float(os.environ.get("RCB_MAX_WATCH_S", "30"))
+MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10"))
 MAX_FRAMES = L.MAX_FRAMES_PER_CALL   # images one call may capture (cameras x frames, per-frame depth counted again; 3000):
                          # every one is held in memory until the response is sent (L.check_frames; /spec max_frames_per_call)
 LOCK = threading.Lock(); PID_FILE = os.path.join(DATA, "server.pid")
@@ -108,9 +110,9 @@ def dump() -> None:
 def finish(reason: str) -> None:
     if E["done"]: return
     E["done"] = True; E["reason"] = reason; E["t_end"] = time.time(); E["episode_control_steps"] = ctrl_steps()
-    if AE.ENABLED:       # agent-ended episode: RoboDojo's reward is a latch: its verdict at an end-state end, a failed check
-        # and a simulator error alike (an error is judged as in a task without the feature: the check still runs)
-        try: E["success"] = reason in AE.END_STATE_REASONS + ("failed_check", "error") and S.latched()
+    if AE.ENABLED:       # agent-ended episode: the state it ends in, judged as rcb_robodojo.END_JUDGEMENT says (S.success()
+        # after the last action); a failed check is a 0; a simulator error is judged as in a task without the feature
+        try: E["success"] = reason in AE.END_STATE_REASONS + ("error",) and S.success()
         except Exception: E["success"] = False
     elif not E["success"]:
         try: E["success"] = check_success()
@@ -184,7 +186,7 @@ STEP_LIMIT = AE.STEP_LIMIT is not None
 SPEC = {
     "protocol": PROTOCOL, "protocol_compat": list(L.COMPAT), "simulator": "robodojo (RoboDojo's evaluator on Isaac Lab / Isaac Sim 5.1)",
     "robot": "arx-x5-bimanual", "task_text": S.inst.get("goal_text") or S.instruction(), "control_hz": CTRL_HZ,
-    "physics_substeps": SUBSTEPS, "max_chunk_s": MAX_CHUNK_S, "max_watch_s": MAX_WATCH_S, "max_frames_per_call": MAX_FRAMES,
+    "physics_substeps": SUBSTEPS, "max_chunk_s": MAX_CHUNK_S, "max_frames_per_call": MAX_FRAMES,
     "cameras": {c: {"rgb": True, "depth": True, "mounted": MOUNT[c], "resolution": [int(FIRST[c].shape[1]), int(FIRST[c].shape[0])],
                     "calibration_in_obs": OBS_CALIBRATION, "intrinsic_cv": CAM0[c]["intrinsic_cv"], "mount": CAM0[c]["mount"]} for c in CAMS},
     "default_cameras": list(CAMS),
@@ -515,7 +517,7 @@ def parse_observe(meta: dict) -> tuple:
     """Every field of an /observe, checked; nothing is executed here."""
     cams = cameras(meta); seconds = number(meta, "seconds", 0.0); fps = video_fps(meta)
     video = choice(meta, "video", "frames", ("mp4", "frames", "both", "none")); depth = L.depth_mode(meta)
-    if seconds < 0 or seconds > MAX_WATCH_S: raise ValueError(f"seconds must be in [0, {MAX_WATCH_S}]")
+    if seconds < 0 or seconds > MAX_CHUNK_S: raise ValueError(f"seconds must be in [0, {MAX_CHUNK_S}] (max_chunk_s)")
     check_frames(cams, fps, depth, int(round(seconds * CTRL_HZ)))
     return cams, seconds, fps, video
 
@@ -585,4 +587,5 @@ open(PID_FILE, "w").write(str(os.getpid()))
 print(f"{PROTOCOL} sim ready (startup {EP.n_startups}, resumes {EP.resumes})", flush=True)
 AE.serve(AE.Service(spec=SPEC, lock=LOCK, state=E, submit=do_submit, observe=do_observe, kinematics=do_kinematics, status=status,
                   on_submit_error=lambda exc: finish("error"), log=log, episode=EP, state_sha=S.state_sha, proprio=proprio_row,
-                  **({"finish": lambda: finish("finished")} if AE.ENABLED else {})))
+                  **({"finish": lambda: finish("finished"),
+                      "end_step_limit": lambda: finish("step_limit")} if AE.ENABLED else {})))

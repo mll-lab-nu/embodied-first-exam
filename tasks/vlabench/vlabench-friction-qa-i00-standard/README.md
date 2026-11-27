@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:vlabench-0.2.0` |
 
 ## Task
-VLABench's `friction_qa` as a robot service: a Franka Panda arm at a table, instructed **"We are testing the friction of different objects. Press the button in front of the object that slides the slowest on a steel ramp."**
+VLABench's `friction_qa` as a robot service: a Franka Panda arm at a table, instructed **"Press the button in front of the object that would slide down a steel ramp the slowest."**
 (a physics question, answered by pressing the button in front of the right object), on the same frozen instance as `vlabench-friction-qa-i00-privileged`. The simulator runs in the
 `sim` sidecar (`environment/sim/server.py` on main's `rcb_service.py`); the agent only has the client: four cameras
 (RGB 320×320, depth on request, calibrated), the robot's own state, and joint-position chunks. One episode, no reset,

@@ -1,9 +1,10 @@
 # Running evaluations
 
 Part of the task protocol ([README](README.md); its Appendix H binds every run): how runs are configured, and what
-makes a run official. The sections "Official runs" to "Results" below are the runner's rules:
-`scripts/run_agent_batch.sh` applies them by default, and a runner's scheduler (its run policy, checked at every launch
-and retry) refuses a launch that breaks one.
+makes a run official. The sections "Official runs" to "Results" below are the runner's rules, and
+a runner's scheduler (its run policy, checked at every launch and retry) refuses a launch that breaks one.
+`scripts/run_agent_batch.sh` applies most of them by default, but a batch of it is an official run only with
+`GATEWAY=1` (the default is 0) and a seed drawn for each trial (by default it runs the task's default seed: "Seeds").
 
 ## Official runs
 A result is official only when its run had all of these:
@@ -28,7 +29,8 @@ A result is official only when its run had all of these:
 The seed is the runner's, never the agent's. A task's default seed is `[metadata] instance_seed`, the task directory as
 committed; the seeds a runner may draw from are `[metadata.seeds] allowed` (a list, a range `{ from = A, to = B }` or
 `"any"`; without the table, the default seed alone), and `oracle` names the ones the reference solution is for (PROTOCOL
-§2). Official batches draw one uniformly per trial; a run on the default seed only records `default-only`. The verifier
+§2). An official batch draws one uniformly per trial; a run on the default seed only is not official and records
+`default-only`. The verifier
 grades the drawn seed's instance from its own copy (`build = "runtime"`: from its own seed file). To run another allowed
 seed, or one drawn from the allowed list, let the runner write a copy and run that:
 
@@ -40,9 +42,10 @@ harbor run -p /tmp/run1/<task> -a <agent> ...
 
 The agent never chooses or sees the list: another seed's instance lives under the privileged task's `tests/seeds/`
 (with the seed's other files and text, `seed.toml`), and the copy carries only the drawn one.
-`scripts/run_agent_batch.sh` runs each job on the task's default seed, from a stamped copy of the task as it is (with
-the gateway, the copy's egress is the gateway; with a CPU cap above the host's count, `HOST_CPUS`, the copy has that cap
-clamped, Resources below).
+`scripts/run_agent_batch.sh` runs each job on the task's default seed (`default-only`, so not an official batch on its
+own), from a stamped copy of the task as it is (with the gateway, the copy's egress is the gateway; with a CPU cap above
+the host's count, `HOST_CPUS`, the copy has that cap clamped, Resources below). For an official batch, draw each
+trial's seed with `task_seed.py materialize --seed draw` and run the copies.
 
 ## Network
 The default is the allowlist (PROTOCOL Appendix H.6); whether a task has open network is its author's decision,
@@ -75,8 +78,8 @@ The list is the one switch.
   `harbor run -p /some/dir/tasks/<benchmark> ...` (with `scripts/run_agent_batch.sh`: a copy of the repository with that
   `tasks/`; the copies say `network_mode = "public"`, so the runner keeps each job's copy open, with the gateway or
   without, `set_agent_egress.py allowlist` skips them, and their results record `network` = open). The instructions'
-  last sentence about the network does not hold for such a run: `EXTERNAL_TEXT` in `scripts/task_conventions.py` is
-  the text every allowlist task carries.
+  Network line does not hold for such a run: `LIMITS_NETWORK` in `scripts/task_conventions.py` is the text every
+  allowlist task carries.
 
 ## Infrastructure failures: rerun
 The rule is PROTOCOL Appendix H.5; how the runner applies it:
@@ -114,13 +117,17 @@ The rule is PROTOCOL Appendix H.5; how the runner applies it:
 ## Results
 Results are not committed (published on the [results site](https://www.embodied-first-exam.ai) and the Hugging Face dataset, keyed by run id
 `<harness>-<model>-<effort>`, the model token with underscores: `codex-gpt6_luna-xhigh`; provider, tier and settings go
-in the metadata). `scripts/write_task_results.py` writes, per task and run id, `README.md`, `config.json` (the trial's
-effective configuration: `protocol_version`, `mode`, `cutoff_s`, `reset_budget`, `slowdown`, `seed`, `network`,
-`validated`, `set`, `oracle`, `service_protocol`, `digest`, the result, the first-attempt result `first_success`
-(standard modes: reward.json's `first_success`; a verifier that does not write it, the graded success when no reset
-was made, else 0) and whether it counts; a trial of another version of the task, whose digest is neither the task's
-DIGEST nor that of the runner's copy of it and whose seed is not known from a runner's copy, keeps only what its name says, and its other fields, `protocol_version`
-included, are `"legacy"`) and `attempts.json`. Rankings (the batch summary,
+in the metadata). `scripts/write_task_results.py` writes three files per task and run id:
+- `README.md`;
+- `config.json`, the trial's effective configuration: `protocol_version`, `mode`, `cutoff_s`, `reset_budget`,
+  `slowdown`, `seed`, `network`, `validated`, `set`, `oracle`, `service_protocol`, `digest`, the result, whether it
+  counts, and the first-attempt result `first_success` (standard modes: reward.json's `first_success`; where the
+  verifier does not write it, the graded success if no reset was made, else 0). A trial of another version of the
+  task (its digest is neither the task's DIGEST nor that of the runner's copy, and no runner's copy tells its seed)
+  keeps only what its name says; its other fields, `protocol_version` included, are `"legacy"`;
+- `attempts.json`.
+
+Rankings (the batch summary,
 the results site) compare trials only within one comparable configuration (`task_conventions.config_key`: protocol
 version, mode, cutoff, reset budget, S, network), report success together with cost (tokens, money, turns, wall clock,
 simulation steps), and align reasoning effort, `max_turns` and the token budget before comparing agents. Validated and
@@ -213,7 +220,9 @@ Codex session (`agent/sessions/`). Run Codex with `--ak reasoning_summary=detail
   (`live` / `render`). Published videos follow the same rule and keep the label.
 - **First attempt (standard modes with resets):** only benchmarks on the shared 2.1 sidecar service (`rcb_service.py`,
   standard_mode.md "Evidence and grading") graded by the shared grader (`embodied_first_exam/standard/v2_1/grade.py`)
-  keep the first episode (`trajectory.first.npz`, `replay.first.mp4`) and how it ended. A task whose sidecar runs a
+  keep the first episode (`trajectory.first.npz`, `replay.first.mp4`) and how it ended: `first_success` is the graded
+  success when `resets` = 0; after a reset it is 0 without agent-ended episodes (a success ends the trial) and, with
+  them, the first episode's own end judgement, or null when that is not on record. A task whose sidecar runs a
   service of its own reports `resets` only: its `first_success` is the graded success when `resets` = 0, else 0, and the first
   episode is not kept.
 - **Standard mode (RoboTwin):** the sim service records `live.mp4` (six views, frames only while physics runs and something moves,
@@ -287,8 +296,8 @@ node-local scratch (podman's storage does not work on most network file systems)
    python3 scripts/stamp_mtimes.py "$c"
    harbor run -e podman -p "$c" -a oracle -y -o $PWD/jobs
    ```
-6. Base images built from their recipe (AM-Bench, BEHAVIOR-1K, iSpatialGym, ManiGuard, RoboDojo, RoboLab, VLABench,
-   YAMLab): their tasks' Dockerfiles start with the recipe of `efe-private:<name>-<version>` (the stage between
+6. Base images built from their recipe (AM-Bench, AutoBio, BEHAVIOR-1K, HumanCLAW, iSpatialGym, LabUtopia, ManiGuard,
+   RoboDojo, RoboLab, VLABench, YAMLab): their tasks' Dockerfiles start with the recipe of `efe-private:<name>-<version>` (the stage between
    `# >>> images/<name>/Dockerfile` and `# <<< images/<name>/Dockerfile`) and name that image as `build.cache_from`.
    Docker's BuildKit takes the image's layers from that cache; podman ignores `cache_from` and would build the whole
    recipe on every host (20-90 min, up to 150 GB). `harbor run -e podman` with this repository's set flags therefore
@@ -359,15 +368,14 @@ Every task gives the agent a fixed wall-clock time, its cutoff: Harbor's `[agent
 §2 (3600 s unless the pull request justifies another number, at most 14400 s, `CUTOFF_CAP`; the same for a task's
 privileged and standard versions, H.7; one number for a benchmark's tasks of a mode unless the pull request says why).
 `ci_checks/check-cutoffs.py` checks per task that the number is a whole number of seconds within the cap and that the
-instruction's closing `## Time limit`, the README's `Agent time budget` row and, in the standard modes, the sim
+Time line of the instruction's closing `## Limits`, the README's `Agent time budget` row and, in the standard modes, the sim
 service's `RCB_WALL_CLOCK_S` state the same number; nothing else in the instruction states the limit as a duration.
 
-**What the agent is told.** `normalize` ends every `instruction.md` with `## Time limit`: the cutoff sentence
-(`CUTOFF_SENTENCE` in `scripts/task_conventions.py`, the task's number in Terminal-Bench's format), then what the cutoff
-means in the mode (`CUTOFF_NOTE`: wall-clock time from the start of the session; at the cutoff
-the agent is stopped and only `/app/output/` (privileged) or the episode as it stands (standard modes) is graded;
-`/run/rcb-limits/usage.json` gives `time_left_s` and `deadline_utc`; long waits in tool calls count). A benchmark's own
-text about its time says "the time limit (`## Time limit`)", never a number.
+**What the agent is told.** `normalize` ends every `instruction.md` with `## Limits`, whose Time line gives the
+task's number and what the cutoff means in the mode (`LIMITS_TIME` in `scripts/task_conventions.py`: wall-clock time
+from the start of the session; at the cutoff the agent is stopped and only `/app/output/` (privileged) or the episode
+as it stands, the last one with resets (standard modes), is graded; `/run/rcb-limits/usage.json` gives `time_left_s` and `deadline_utc`; long
+waits in tool calls count). A benchmark's own text about its time says "the time limit (Limits)", never a number.
 
 **When the clock runs.** Harbor counts the cutoff around the agent's run only (`asyncio.wait_for(agent.run(...),
 timeout=...)`): after the environment has been built and started and the harness installed, each under a timeout of its
@@ -377,7 +385,7 @@ number from the agent's first request to the service (kept through a restart) an
 reports, except that RoboARC's service ends the episode when its count reaches 0 (tasks/roboarc/README.md). At the cutoff Harbor stops the agent (`AgentTimeoutError`), collects the artifacts and runs the verifier, so
 the trial is graded as it stands: a result, not an infrastructure failure, never run again.
 
-**Official runs** pass no multiplier and add nothing to the instruction (Official runs above), so `## Time limit` is the
+**Official runs** pass no multiplier and add nothing to the instruction (Official runs above), so `## Limits` is the
 last thing the agent reads. `--agent-setup-timeout-multiplier` (slow harness
 installs) is fine: set-up is not the agent's time.
 
@@ -393,7 +401,8 @@ pages) and, for Embodied Olympics - Match's exported matches, a match's wall tim
 Every base image is a tag of one of two packages (PROTOCOL §1): `ghcr.io/mll-lab-nu/efe:<name>-<images/<name>/VERSION>` (public), or `ghcr.io/mll-lab-nu/efe-private:<name>-<VERSION>` for an image with `images/<name>/BUILD_ONLY` (org members only): `scripts/build_images.sh`
 builds them all, `scripts/push_images.sh` pushes all but the `BUILD_ONLY` ones (needs `docker login ghcr.io` with a token
 that has `write:packages`). A new image is a new tag of `efe`, which is public, so nothing needs an admin's visibility
-change (a new package would start private, and the API cannot change that). An image with `images/<name>/BUILD_ONLY` (Isaac Sim inside: RoboLab, BEHAVIOR-1K) is never
+change (a new package would start private, and the API cannot change that). An image with `images/<name>/BUILD_ONLY` is one that may not be redistributed (Isaac Sim's
+licence, assets without a licence for a public copy, or data behind a token; the marker file says which) and is never
 public: every host builds it (the marker file says how, and what licences and data it needs), and maintainers may keep
 a private package for org members.
 A task on such an image starts its Dockerfile with the image's recipe and names the private image as `build.cache_from`

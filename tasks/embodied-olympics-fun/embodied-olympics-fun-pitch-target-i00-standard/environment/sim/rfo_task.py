@@ -110,8 +110,8 @@ class Task(TaskBase):
                   zone_high_m=1.07, release_limit_s=15.0, release_s=0.02, retouch_grace_s=0.20, retouch_dv_m_s=0.5,
                   fall_pelvis_m=0.75)
 
-    sentence = ("Pitch a strike: from the pitcher's plate on the mound, with a foot on the plate, throw the baseball "
-                "held in your right hand through the strike zone over home plate, on the fly.")
+    sentence = ("Pitch a strike: with a foot on the pitcher's plate, throw the baseball through the strike zone "
+                "over home plate on the fly.")
     rules = ("The baseball (" + f"{2 * BALL['radius']:.3f} m across, {BALL['mass']:.3f} kg" + ", it flies in air with "
              "drag and spin lift) starts held in your right hand, a five-finger hand that holds only by "
              "contact and friction: the ball can slip or roll out and drop. You stand on the pitcher's plate (a slab "

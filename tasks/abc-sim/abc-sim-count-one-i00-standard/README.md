@@ -9,10 +9,10 @@
 | Family / instance | `count_one` / seed 0 (allowed seeds: [0, 36, 50]; PROTOCOL §2) |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:abc-sim-0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe:abc-sim-0.5.1` |
 
 ## Task
-ABC Sim `count_one_into_opaque_box` (two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each) side by side at the near edge of a table, facing +x (the left arm is the one at +y)): Follow the directive **"put exactly 1 red object in the box"**. Success: the box holds exactly one red object, and no object of another colour. An object is in the box when its centre is inside the box's interior (between its walls, below the lid); the count is read anew at every step, so taking an object out again, or dropping in one too many, undoes it. The goal must hold for 30 consecutive control steps (1.02 s); the episode then ends in success.
+ABC Sim `count_one_into_opaque_box` (two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each) side by side at the near edge of a table, facing +x (the left arm is the one at +y)): Put exactly one red object in the box, and nothing else.
 Twelve small objects in several shapes and colours, some larger than others, lie on the table next to an opaque box. The box's lid has a slot covered by a light spring-hinged flap: objects go in through the slot. The robot is a service; the episode it runs is graded.
 
 ## Difficulty

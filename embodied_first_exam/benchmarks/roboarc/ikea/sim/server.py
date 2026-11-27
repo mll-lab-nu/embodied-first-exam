@@ -56,7 +56,16 @@ executed control step, substeps, timestep, actuators: the deliverable, replayabl
 verdict, final state hash); the collect hook (finalize.sh) ends the service and writes final.json (graded_by "live",
 replays 0). The verifier only transcribes it; nothing is replayed to grade.
 A live video of cam_high (/data/live.mp4, RCB_LIVE_FPS frames per simulated second) is recorded during the episode; it
-never affects the verdict."""
+never affects the verdict.
+
+Agent-ended episodes (PROTOCOL §3; RCB_AGENT_END "1" in the task's sim service, rcb_agent_end.py): a success never ends the
+episode and is never shown (no settled check during the episode, no settle_failed in meta or /status); POST /finish ends it
+(reason "finished"), and so do the end of the agent's session ("timeout": the wall clock, the collect hook) or a simulator
+breakdown / error (0, after a success too). An end at finish or at the session's end is judged as it stands, by the same
+two checks as above (the terminal rules on the live state, then on a copy with the last row held SETTLE_S more): an
+ordered goal's earlier steps count as they happened (the scene's own record), the rest must hold at the end. Calls are
+served one at a time: a /finish sent while a /submit runs (an operation in flight) waits for it to complete; after /finish
+every call but GET /spec, /status and /operations/<id> is a 409."""
 from __future__ import annotations
 import json, math, os, queue, shutil, sys, threading, time, traceback
 import numpy as np
@@ -64,6 +73,7 @@ import numpy as np
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import rcb_limited as L  # noqa: E402
+import rcb_agent_end as AE  # noqa: E402
 
 PROTOCOL = L.PROTOCOL
 DATA = os.environ.get("RCB_DATA", "/data"); os.makedirs(os.path.join(DATA, "calls"), exist_ok=True)
@@ -71,20 +81,21 @@ TASK = os.environ.get("RCB_TASK", "lack")
 BINDING = json.load(open(os.environ.get("RCB_BINDING", os.path.join(HERE, "runtime_binding.json"))))
 RIG_SPEC = json.load(open(os.environ.get("RCB_RIG", os.path.join(HERE, "rig.json"))))
 OBS_CALIBRATION = os.environ.get("RCB_OBS_CALIBRATION", "1") == "1"
-MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10")); MAX_WATCH_S = float(os.environ.get("RCB_MAX_WATCH_S", "30"))
+MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10"))
 WALL_CLOCK_S = float(os.environ.get("RCB_WALL_CLOCK_S", "10800"))
 LIVE_FPS = int(os.environ.get("RCB_LIVE_FPS", "10")); LIVE_CAM = os.environ.get("RCB_LIVE_CAMERA", "cam_high")
 # /spec max_frames_per_call (PROTOCOL §3 "Images per call"): cameras x frames as the recorder takes them (one every 1/fps of
 # sim time, its first and last frames included); a frame with per-frame depth counts once more (L.check_frames). The
 # recorder holds every frame of a call (848 x 480 RGB = 1.2 MB) until the response is sent.
 MAX_FRAMES = 1000
+MAX_VIDEO_FPS = 30                      # the response video's frame-rate cap (/spec max_video_fps)
 LOCK = threading.Lock()
 E = {"ready": False, "step": 0, "calls": 0, "done": False, "reason": None, "success": False, "t0": time.time(), "error": None,
      "service_s": 0.0, "t_first": None, "deadline": float("inf")}
 JOBS: queue.Queue = queue.Queue()      # simulator work (physics, rendering), executed in order by the main thread
 PID_FILE = os.path.join(DATA, "server.pid")
 NU = int(BINDING["nu"])
-EP = L.Episode(DATA, dim=NU, resume="exact", persist=("service_s",))
+EP = L.Episode(DATA, dim=NU, resume="exact", persist=AE.persist(("service_s",)))
 EP.startup()
 log = EP.log
 
@@ -347,7 +358,7 @@ SPEC = {
     "protocol": PROTOCOL, "protocol_compat": L.COMPAT, "simulator": "mujoco 3.14.0 (CPU, float64; the scene's own runtime and mechanism)",
     "robot": R_SPEC["name"], "task_text": TEXTS["task_text"],
     "control_hz": CTRL_HZ, "control_dt": CTRL_DT, "physics_substeps": int(R.SUBSTEPS), "physics_dt": float(s.timestep),
-    "max_chunk_s": MAX_CHUNK_S, "max_watch_s": MAX_WATCH_S, "max_frames_per_call": MAX_FRAMES,
+    "max_chunk_s": MAX_CHUNK_S, "max_frames_per_call": MAX_FRAMES, "max_video_fps": MAX_VIDEO_FPS,
     "cameras": CAM_SPEC, "default_cameras": list(CAMS),
     "action_types": {
         "joint_position": {
@@ -373,7 +384,15 @@ SPEC = {
     "budget": {"reset": 0, "steps": None, "wall_clock_s": WALL_CLOCK_S,
                "clock": "time_s and elapsed_s count from your first request to the service; time_left_s is wall_clock_s minus "
                         "that, so it never runs out before the harness's limit does"},
-    "episode": ("one episode, no reset. It ends at the first settled success (evaluated after every /submit and every /observe "
+    "episode": (("one episode, no reset. It ends when you call POST /finish (reason finished), when the wall-clock budget is used "
+                 "up (reason timeout), on a simulator breakdown (reason sim_breakdown, no success: a non-finite state, a MuJoCo "
+                 f"BADQACC / BADQPOS / BADQVEL warning, a part contact deeper than {R.BREAKDOWN_DEPTH_M * 1000:g} mm) or on a "
+                 "simulator error. Reaching the goal does not end it and is not shown. At finish or at the end of your session it "
+                 "is judged as it stands: the task's success requirements AND the terminal rules (no robot link touches any part, "
+                 f"every part at rest: at most {R.REST_LIN_M_S:g} m/s and {R.REST_ANG_RAD_S:g} rad/s, no simulator breakdown), "
+                 f"then the same again after the last executed row is held {R.SETTLE_S:g} s more on a copy. The live episode is "
+                 "the verdict: nothing is replayed to grade it") if AE.ENABLED else
+                ("one episode, no reset. It ends at the first settled success (evaluated after every /submit and every /observe "
                 "that watches: the task's success requirements AND the terminal rules: no robot link touches any part, every "
                 f"part at rest (at most {R.REST_LIN_M_S:g} m/s and {R.REST_ANG_RAD_S:g} rad/s), no simulator breakdown so far; "
                 f"then, on a copy, the last executed row held {R.SETTLE_S:g} s more and the same checked again: if that fails "
@@ -382,7 +401,7 @@ SPEC = {
                 f"BADQVEL warning, a part contact deeper than {R.BREAKDOWN_DEPTH_M * 1000:g} mm), when the wall-clock budget "
                 "is used up (reason timeout; graded as it stands: the same rules on the live state, and again after the last "
                 f"row is held {R.SETTLE_S:g} s more on a copy), or on a simulator error. The live episode is the verdict: "
-                "nothing is replayed to grade it"),
+                "nothing is replayed to grade it")),
     "robot_spec": R_SPEC, "kinematics": K_SPEC,
     "depth": {"modes": list(L.DEPTH_MODES), "default": "none", "kind": "z-depth", "unit": "m", "invalid": 0, "max_m": L.DEPTH_MAX_M,
               "frames_encoding": "uint16 mm, zlib", "noise": L.DEPTH_NOISE,
@@ -416,18 +435,26 @@ def time_left() -> float:
     return max(0.0, WALL_CLOCK_S - agent_time())
 
 
+def error_fields() -> dict:
+    """final.json's error classes: a service-side error (infra_exception) or an exception while judging the end state
+    (finalize_error: the end state was never judged) is infrastructure, never the agent's 0; any other simulator error
+    in the agent's call is sim_error (the agent's 0)."""
+    infra = (E["reason"] == "error" and bool(E.get("error_infra"))) or bool(E.get("finalize_error"))
+    return {"infra_error": int(infra), "sim_error": int(E["reason"] == "error" and not infra),
+            **({"finalize_error": E["finalize_error"]} if E.get("finalize_error") else {})}
+
+
 def write_final() -> None:
     if L.final_verdict(DATA):
         return
     L._write_json(os.path.join(DATA, "final.json"), {
-        "success": bool(E["success"]), "infra_error": int(E["reason"] == "error" and bool(E.get("error_infra"))),
-        "sim_error": int(E["reason"] == "error" and not E.get("error_infra")),
+        "success": bool(E["success"]), **error_fields(),
         "dump_error": E.get("dump_error"), "steps": E["step"], "calls": E["calls"],
         "control_steps": ctrl_steps(), "physics_steps": ctrl_steps() * R.SUBSTEPS, "sim_time_s": sim_time(),
         "elapsed_s": round(agent_time(), 1), "service_time_s": round(service_time(), 1),
         "reason": E["reason"], "done": E["done"], "task": TASK, "protocol": PROTOCOL,
         "finalized": False, "n_actions": E.get("n_actions"), "live_rows": E.get("live_rows"), "live_sha": E.get("live_sha"),
-        "live_verdict": E.get("verdict"), **EP.final_fields()})
+        "live_verdict": E.get("verdict"), **EP.final_fields(), **AE.final_fields(E, ctrl_steps())})
 
 
 LIVE = {"w": None, "next": 0.0, "frames": 0, "path": None, "last": None}
@@ -496,15 +523,15 @@ def dump() -> None:
 
 def episode_json() -> None:
     L._write_json(os.path.join(DATA, "episode.json"), {
-        "success": bool(E["success"]), "infra_error": int(E["reason"] == "error" and bool(E.get("error_infra"))),
-        "sim_error": int(E["reason"] == "error" and not E.get("error_infra")),
+        "success": bool(E["success"]), **error_fields(),
         "dump_error": E.get("dump_error"), "steps": E["step"], "calls": E["calls"],
         "control_steps": ctrl_steps(), "physics_steps": ctrl_steps() * R.SUBSTEPS, "sim_time_s": sim_time(),
         "elapsed_s": round(((E.get("t_end") or time.time()) - E["t_first"]) if E["t_first"] else 0.0, 1),
         "service_time_s": round(service_time(), 1), "reason": E["reason"], "task": TASK, "protocol": PROTOCOL,
         "n_actions": E.get("n_actions"), "live_rows": E.get("live_rows"), "live_sha": E.get("live_sha"), "live_verdict": E.get("verdict"),
         "live_video": LIVE["path"] and os.path.basename(LIVE["path"]), "live_video_frames": LIVE["frames"],
-        "settle_failed": E.get("settle_failed", 0), "settled_verdict": E.get("settled_verdict"), **EP.final_fields()})
+        "settle_failed": E.get("settle_failed", 0), "settled_verdict": E.get("settled_verdict"), **EP.final_fields(),
+        **AE.final_fields(E, ctrl_steps())})
 
 
 def verdict() -> dict:
@@ -546,6 +573,8 @@ def evaluate() -> bool:
     v = verdict()
     if v["breakdown"] is not None:
         finish("sim_breakdown")
+    elif AE.ENABLED:    # agent-ended: the terminal rules' success is only recorded (no settled check, nothing ends here)
+        AE.hidden_success(E, v["success"], log, ctrl_steps())
     elif v["success"]:
         if settled()["success"]:
             E["success"] = True
@@ -560,14 +589,19 @@ def finish(reason: str) -> None:
     if E["done"]:
         return
     E["done"] = True; E["reason"] = reason; E["t_end"] = time.time()
-    if not E["success"] and reason not in ("sim_breakdown", "error"):
+    if AE.ENABLED and reason not in AE.END_STATE_REASONS:
+        E["success"] = False     # agent-ended: only finish and the session's end are judged on the state (a breakdown: 0)
+    elif not E["success"] and reason not in ("sim_breakdown", "error"):
         try:
             E["success"] = bool(verdict()["success"]) and bool(settled()["success"])   # graded as it stands: the verdict
-        except Exception:  # noqa: BLE001
+        except Exception as exc:  # noqa: BLE001 - the end state was not judged: infrastructure (error_fields), never a 0
             traceback.print_exc()
+            E["success"] = False; E["finalize_error"] = repr(exc)[:300]
+        if AE.ENABLED and E["success"]:     # the end state is a success: seen (at the last control step) if not before
+            AE.hidden_success(E, True, log, ctrl_steps())
     if reason in ("sim_breakdown", "error"):
         E["success"] = False
-    log({"ev": "end", "reason": reason, "error_infra": bool(E.get("error_infra")), "step": E["step"], "control_steps": ctrl_steps(), "elapsed_s": round(agent_time(), 1),
+    log({"ev": "end", "reason": reason, "error_infra": bool(E.get("error_infra")), "finalize_error": E.get("finalize_error"), "step": E["step"], "control_steps": ctrl_steps(), "elapsed_s": round(agent_time(), 1),
          "service_time_s": round(service_time(), 1), "success": bool(E["success"]), "breakdown": s.validity.breakdown})
     dump()
 
@@ -575,6 +609,8 @@ def finish(reason: str) -> None:
 def fail(exc: BaseException) -> None:
     """A simulator error in /submit or /observe ends the episode (reason "error"): infra_error if it is the service's
     (infra_exception), else sim_error (the agent's 0)."""
+    if isinstance(exc, EpisodeFinished):    # nothing ran: the episode had already ended (answered 409)
+        return
     if not E["done"]:
         E["error_infra"] = bool(infra_exception(exc))
     finish("error")
@@ -641,6 +677,8 @@ def meta_common(cams) -> dict:
             "time_left_s": round(time_left(), 1), "proprio": {"layout": PROPRIO_LAYOUT, "now": proprio_row().tolist()},
             "done": E["done"], "reason": E["reason"], "settle_failed": E.get("settle_failed", 0),
             **({"cameras": calib(cams)} if OBS_CALIBRATION else {})}
+# agent-ended episodes: meta / status keys that would tell the agent about its success (AE.Service drops them)
+HIDDEN_KEYS = ("settle_failed",)
 
 
 CALLS_KEPT = 200     # the last calls' evidence (meta + last frames) on the sidecar's disk; older ones are removed
@@ -743,6 +781,12 @@ def _call(fn):
     return wrapped
 
 
+class EpisodeFinished(Exception):
+    """A /submit admitted while the episode ran, whose job found it over (the deadline ended it in between): answered 409
+    "episode finished" like a /submit after the end (the handler, _touching_handler), nothing executed. The layer hands it
+    to fail() first, which leaves an ended episode as it is."""
+
+
 class EncodeError(OSError):
     """The response's video / frame encoding failed after the rows ran (imageio / ffmpeg): the service's own fault,
     infrastructure (infra_exception), never the agent's: the request was validated and its frames bounded."""
@@ -798,8 +842,8 @@ def _frames(cams, fps, steps, depth_mode) -> int:
 
 @_call
 def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
-    if E["done"]:               # the episode ended (the deadline) between the request's admission and this job
-        raise ValueError("episode finished")
+    if E["done"]:               # the episode ended (the deadline) between the request's admission and this job: 409
+        raise EpisodeFinished(E["reason"])
     typ = meta.get("type"); interp = meta.get("interpolate", "linear")
     note = req_note(meta)
     try:
@@ -821,8 +865,8 @@ def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
         raise ValueError("interpolate must be hold|linear")
     if video not in ("mp4", "frames", "both", "none"):
         raise ValueError("video must be mp4|frames|both|none")
-    if not isinstance(fps, (int, float)) or not 1 <= fps <= 30:
-        raise ValueError("video_fps must be in [1, 30]")
+    if isinstance(fps, bool) or not isinstance(fps, (int, float)) or not 1 <= fps <= MAX_VIDEO_FPS:
+        raise ValueError(f"video_fps must be in [1, {MAX_VIDEO_FPS}]")
     fps = int(fps); depth = L.depth_mode(meta)
     _frames(cams, fps, A.shape[0] * k, depth)
     try:   # executing: a ValueError from here on is the simulator's (a 400 would hide it), never the request's
@@ -854,12 +898,12 @@ def do_observe(meta: dict) -> tuple[dict, list]:
     except (TypeError, ValueError, OverflowError):
         raise ValueError("seconds must be a number")
     fps = meta.get("video_fps", 10); video = meta.get("video", "frames")
-    if not math.isfinite(seconds) or seconds < 0 or seconds > MAX_WATCH_S:
-        raise ValueError(f"seconds must be in [0, {MAX_WATCH_S}]")
+    if not math.isfinite(seconds) or seconds < 0 or seconds > MAX_CHUNK_S:
+        raise ValueError(f"seconds must be in [0, {MAX_CHUNK_S}] (max_chunk_s)")
     if video not in ("mp4", "frames", "both", "none"):
         raise ValueError("video must be mp4|frames|both|none")
-    if not isinstance(fps, (int, float)) or not 1 <= fps <= 30:
-        raise ValueError("video_fps must be in [1, 30]")
+    if isinstance(fps, bool) or not isinstance(fps, (int, float)) or not 1 <= fps <= MAX_VIDEO_FPS:
+        raise ValueError(f"video_fps must be in [1, {MAX_VIDEO_FPS}]")
     fps = int(fps); depth = L.depth_mode(meta)
     _frames(cams, fps, int(round(seconds * CTRL_HZ)) if seconds > 0 and not E["done"] else 0, depth)
     try:   # executing: a ValueError from here on is the simulator's (a 400 would hide it), never the request's
@@ -963,6 +1007,11 @@ def _touching_handler(svc):
         def do_POST(self):
             touch()
             return base.do_POST(self)
+
+        def _json(self, code, body):
+            if code == 500 and isinstance(body, dict) and str(body.get("detail") or "").startswith("EpisodeFinished("):
+                code, body = 409, {"error": "episode finished", "reason": E.get("reason")}   # do_submit: EpisodeFinished
+            return base._json(self, code, body)
     return Handler
 
 
@@ -1008,10 +1057,12 @@ live_open()
 write_final()
 open(PID_FILE, "w").write(str(os.getpid()))
 print(f"{PROTOCOL} IKEA MuJoCo sim ready: task {TASK}, startup {EP.n_startups}, resumes {EP.resumes}, rows {ctrl_steps()}", flush=True)
-threading.Thread(target=L.serve, daemon=True, args=(L.Service(
+threading.Thread(target=AE.serve, daemon=True, args=(AE.Service(
     spec=SPEC, lock=LOCK, state=E, submit=lambda meta, A: on_main(do_submit, meta, A), observe=lambda meta: on_main(do_observe, meta),
     kinematics=lambda req: on_main(do_kinematics, req), status=status, on_submit_error=lambda exc: on_main(fail, exc), log=log,
-    episode=EP, state_sha=lambda: on_main(s.state_sha), proprio=lambda: on_main(proprio_row)),)).start()
+    episode=EP, state_sha=lambda: on_main(s.state_sha), proprio=lambda: on_main(proprio_row), hidden_keys=HIDDEN_KEYS,
+    **({"finish": lambda: on_main(finish, "finished"),
+       "end_step_limit": lambda: on_main(finish, "step_limit")} if AE.ENABLED else {})),)).start()
 while True:
     if deadline_reached():                      # between simulator jobs: never inside a call
         finish("timeout")

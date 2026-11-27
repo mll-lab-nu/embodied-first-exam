@@ -110,8 +110,8 @@ class Task(TaskBase):
                   ramp_arc_m=1.5, release_time_s=2.0, gate_torque_nm=SERVO_STALL_NM, strike_max_s=0.15, clear_s=0.03,
                   strike_gain=1.0, rest_speed_m_s=0.1, rest_s=1.0, fall_z_m=0.35)
 
-    sentence = ("Shoot first time: the football rolls down a ramp and across in front of you; with one touch of a foot "
-                "send it into the official goal 11 m away.")
+    sentence = (("Shoot first time: with one touch of a foot, send the ball rolling across in front of you into "
+                 "the goal."))
     rules = ("You stand facing the goal (+x), {behind_line_m} m behind the pass line: the line through the penalty mark "
              "parallel to the goal line, which is {mark_distance_m} m beyond it. The goal is {goal_width_m} m wide "
              "between the posts and {goal_height_m} m high under the crossbar (posts and bar {post_m} m thick), "

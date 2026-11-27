@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/embodied-olympics-fun-catch-i00-privileged"
-description = "Embodied Olympics catch (one Unitree H1-2 on the Embodied Olympics simulator, MuJoCo 3.3.7, CPU) in privileged mode: produce one replayable trajectory. Catch the fly ball: close one of your hands on the baseball before it touches the ground or your body, and keep it there. A referee of events, geometry and contact rules decides the success."
+description = "Embodied Olympics catch (one Unitree H1-2 on the Embodied Olympics simulator, MuJoCo 3.3.7, CPU) in privileged mode: produce one replayable trajectory. Catch the fly ball in one hand before it touches the ground or your body, and keep it in that hand. A referee of events, geometry and contact rules decides the success."
 keywords = ["robotics", "embodied-olympics", "sports", "mujoco", "unitree-h1-2", "humanoid", "trajectory", "catch"]
 
 [metadata]

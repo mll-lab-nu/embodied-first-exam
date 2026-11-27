@@ -1,30 +1,29 @@
-# MuJoCo Playground · ALOHA hand-over — STANDARD MODE (robot as a service)
+# MuJoCo Playground · ALOHA hand-over (standard)
 
-An **ALOHA 2** bimanual robot (two ViperX 300s arms facing each other across a table) has a **red box** on the left
-arm's side of the table and a **translucent red target box** floating on the right arm's side.
-**Task:** pick up the red box with the **left** arm, **hand it over** to the **right** arm, and have the right arm hold it at the translucent red target box. Then take the left arm off the box. This is MuJoCo Playground's `AlohaHandOver`, run here in plain MuJoCo; the box and target positions are
-randomized as in Playground, with a fixed seed.
+## Task
+Pick up the red box with the left arm, pass it to the right arm, and hold it at the see-through target box. Then take
+the left arm off the box.
 
-You control the robot **as if it were real hardware**: the simulator runs in a service you cannot open. You get one
-client and one episode.
+## Goal
+Success: the right gripper holds the box at the target box, off the table, and no part of the left arm touches the box.
 
-## Rules (real-robot rules)
-- **No reset.** Knocked-over objects stay knocked over.
-- **No privileged state.** You see what the cameras see (RGB, optional depth, with each camera's calibration) plus the
-  robot's own joint positions, velocities and targets. No object poses, no success predicate.
-- Your only budget is the time limit (`## Time limit`). `meta["time_left_s"]` is the service's count of it, from your first
-  request to the service: it never runs out before your time does, so plan by it. There is nothing to hand in: the
-  service records the episode as the trajectory and grades it. Leave your script at `/app/output/gen.py` for the
-  record.
-- Do not use pretrained manipulation policies or any published solution for this benchmark; write your own controller.
-- Images come back as arrays in a Python object; what you look at and where you store it is up to your code.
+When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
-## Scoring
-At the **end of the trajectory** the box's centre is within **3 cm** of the target's centre (`meta["task"]["target_pos"]`), the box
-touches the **right** gripper's fingers and **nothing of the left arm**, and it is off the table (z ≥ 0.05 m).
-The service applies exactly this rule.
+Rules:
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+  benchmark's demonstrations, trained policies); trials are reviewed.
+- One episode, no reset: what you knock over stays knocked over.
+- You get only the cameras and the robot's own sensor readings: no object poses, no scene layout, no success signal.
 
-## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`)
+## Robot Interface
+An ALOHA 2 bimanual robot (two ViperX 300s arms facing each other across a table; MuJoCo Playground's scene, in MuJoCo).
+The robot runs as a service you reach through its client or its MCP tools, as if it were real hardware: one live
+episode.
+
+`POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
+
+### Client
+`/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`:
 ```python
 from rcb_client import Robot
 r = Robot()                                   # connects (waits while the service starts)
@@ -34,33 +33,52 @@ obs = r.get_obs(cameras=cams, include_depth=True)   # obs.last[cam] -> uint8 (24
 obs.meta["proprio"]                           # {"layout": [...], "now": [...]}: joint positions, velocities, current targets
 obs.meta["cameras"]                           # per camera: intrinsic_cv, cam2world_gl (OpenGL: looks along -z)
 obs.meta["task"]                              # see below
-obs = r.get_obs(cameras=cams[:1], seconds=2.0, video="mp4")    # hold the targets and watch for 2 s (max 30)
+obs = r.hold(2.0, cameras=cams[:1])                            # hold the targets for 2 s of robot time
+obs = r.get_obs(last_s=1.0)                                    # the frames recorded over the last 1 s (reading moves no time)
 res = r.submit("joint_position", A, dt=spec["control_dt"], cameras=cams[:1], video="mp4")   # A: (T, 14) rows dt apart
 res.meta["done"], res.meta["reason"], res.meta["task"], res.meta["control_steps"]
 res.video[cam]; res.frames[cam]; res.last[cam]; res.proprio; res.save("/app/runs/003")
 ```
-- Actions `joint_position` (14: per arm `waist, shoulder, elbow, forearm_roll, wrist_angle, wrist_rotate, gripper`); rows are `dt` apart (a multiple of `control_dt`), each held
-  (`interpolate="hold"`) or ramped from the previous row (`"linear"`, default) over its control steps; clipped to the
-  limits in the spec. A chunk covers at most 10 s.
-- `meta["task"]` = the task's target (`target_pos`, and `target_quat_wxyz` where it has one). The episode runs until your
-time is up; the **final state** is graded (so end in the pose you want graded, and keep it).
-- Calibration: `meta["cameras"][cam]` holds `intrinsic_cv` (pinhole, pixels) and `cam2world_gl` (4x4 camera-to-world,
-  OpenGL axes: x right, y up, the camera looks along -z; the viewpoint the image is rendered from), for the state at the
-  **end** of that call (the `last` image and the last frame of every stack). Depth is the distance along the viewing
-  axis, in metres. The overhead and teleoperator cameras are fixed. The two wrist cameras move with the arms (`spec["cameras"][cam]["moving"]`):
-  for them a response with several frames also carries one pose per frame, `res.raw["cam2world_gl/<cam>"]["data"]`,
-  float64 `(n_frames, 4, 4)`. `intrinsic_cv` is `[[fx, 0, cx], [0, fy, cy], [0, 0, 1]]` for the 320 x 240 image; fx and fy
-  differ for the overhead and wrist cameras (their sensor is wider than the image): use both.
 
-One call returns at most 3000 images (`max_frames_per_call`, PROTOCOL §3 "Images per call").
+One call returns at most 3000 images.
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+### MCP tools
+- The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
+  `observe`, `submit`, `finish`. A tool takes its endpoint's request fields (any other field in `fields`) and returns
+  the service's reply `meta` unchanged; images, arrays and video are written as files under `/app/obs/` (`.png`, `.npy`,
+  `.mp4`) and the result lists them. Long action chunks can be passed as a file (`actions_file`).
+- `observe` returns at once with what is already recorded: the current frame, or the last `last_s` seconds. Time passes
+  only through `submit`, which answers when its rows have run; a `submit` with `interpolate` "hold", `seconds` and no
+  rows lets time pass with the robot holding still.
+- A call still running after 45 s returns `pending` with an `operation` id; `observe(operation=id)` collects its reply.
+- The client and the tools drive the same robot in the same episode; use either, or both.
 
-## Resources
-Your container: **4 CPUs**, **16 GiB of memory**, **8192 processes and threads** and **20 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
+### Actions
+Action type `joint_position` (14): per arm `waist, shoulder, elbow, forearm_roll, wrist_angle, wrist_rotate, gripper`;
+rows are `dt` apart (a multiple of `control_dt`), each held (`interpolate="hold"`) or ramped from the previous row
+(`"linear"`, default) over its control steps; clipped to the limits in the spec. A chunk covers at most 10 s.
 
-## Time limit
-You have 1800 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+### Observations
+`meta["proprio"]` (`layout`, `now`): the joint positions, velocities and current targets. `meta["task"]` is the task's
+target (`target_pos`, and `target_quat_wxyz` where it has one). Calibration: `meta["cameras"][cam]` holds `intrinsic_cv`
+(pinhole, pixels) and `cam2world_gl`, the 4x4 camera-to-world pose the image is rendered from (OpenGL axes: x right, y
+up, the camera looks along -z). Both describe the state at the end of that call: the `last` image and the last frame of
+every stack. Depth is the distance along the viewing axis, in metres. The overhead and teleoperator cameras are fixed.
+The two wrist cameras move with the arms (`spec["cameras"][cam]["moving"]`): for them a response with several frames
+also carries one pose per frame, `res.raw["cam2world_gl/<cam>"]["data"]`, float64 `(n_frames, 4, 4)`. `intrinsic_cv` is
+`[[fx, 0, cx], [0, fy, cy], [0, 0, 1]]` for the 320 x 240 image; fx and fy differ for the overhead and wrist cameras
+(their sensor is wider than the image): use both.
 
-This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` counts the same limit from your first request to the service, so it never runs out before your time does: your real time left is `time_left_s` minus the time you spent before that request. Plan by it. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+## Limits
+- Time: 1800 s of wall-clock time from the start of your session. Everything counts, including waiting for the service.
+  At the end you are stopped without warning. Time left: `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`).
+  Trust this file: the `time_left_s` in the service's replies starts only at your first request. A call into a
+  long-running process can block for its whole wait time. Use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, including the simulator's and the benchmark's source.
+- Resources: 4 CPUs, 16 GiB memory, 8192 processes and threads, 20 GiB disk (new files under `/app`, `/tmp`, `/root`),
+  no GPU; the simulator runs in its own container and does not count. Going over a cap can get a process killed (the CPU
+  cap only slows you down). Usage: `/run/rcb-limits/usage.json`.
+- Resets: none. You get one episode.
+- Finish: if you never send `/finish`, the episode is graded when your session ends.

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Catch the fly ball: close one of your hands on the baseball before it touches the ground or your body, and keep it there. (Embodied Olympics `catch`: one Unitree H1-2 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
+Catch the fly ball in one hand before it touches the ground or your body, and keep it in that hand. (Embodied Olympics `catch`: one Unitree H1-2 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
 
 ## Difficulty
 The ball is in the air for three seconds and comes down at about 17 m/s more than a metre away: the body has to walk there at 0.6 m/s and bring an open hand onto its line, and the fingers need a few tenths of a second to close round it, while a ball that meets the hand at that speed bounces off it in a few milliseconds.

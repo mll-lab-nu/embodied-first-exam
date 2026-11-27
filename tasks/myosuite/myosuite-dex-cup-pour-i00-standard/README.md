@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:myosuite-0.1.1` |
 
 ## Task
-MyoSuite `MyoHandCupPour-v0` (MyoHand, 39 muscles) on the same frozen instance as `myosuite-dex-cup-pour-i00-privileged`: Move the cup along MyoDex's recorded pour motion, lifting it and tilting it as if pouring. The reference is the cup's pose over 81 control steps, from GRAB motion capture (TCDM / MyoDex), and the episode lasts exactly those 81 steps. At the last control step and at nine in ten or more of all control steps, the cup's centre of mass must have moved since the start to within about 3 cm of how the reference has moved since its start, and the cup must have turned since the start to within about 25 degrees of how the reference has turned. That position error must never go above about 5 cm. The episode ends early in failure, by MyoDex's own termination rule, if the cup gets more than about 25 cm from the reference or from the wrist.
+MyoSuite `MyoHandCupPour-v0` (MyoHand, 39 muscles) on the same frozen instance as `myosuite-dex-cup-pour-i00-privileged`: Pick up the cup and tilt it as if pouring, following the recorded reference motion.
 A cup stands on the table; the MyoHand is at its pre-grasp pose. Standard mode (eai-standard/2.2): the agent drives the body through a client, with only its own proprioception and the scene's cameras, and 10 resets (only the last episode is graded).
 
 ## Difficulty
@@ -41,7 +41,7 @@ Caps per container (PROTOCOL §6).
 | Upstream | MyoSuite 2.12.2 (Apache-2.0) on MuJoCo 3.6.0, the models that ship in its wheel |
 | Service | `environment/sim/server.py` (the adapter) on the shared 2.2 layer `rcb_limited.py` (`embodied_first_exam/standard/`); cameras `left_cam`, `right_cam`, `center_cam`, `hand_top`, `hand_bottom`, `hand_side_inter`, `hand_side_exter`, `plam_lookat` (640 x 480); forward kinematics of the body's links |
 | Resources | 4 CPUs, no GPU (CPU physics, OSMesa rendering); after the agent's phase the collect hook only renders the video (one pass over the graded episode), it replays nothing to grade |
-| Reset budget | 10 (`RCB_RESET_BUDGET`, compose default; PROTOCOL §2): `POST /reset` starts a new episode from the frozen instance; only the last episode is graded, a success ends the trial; results under another budget are reported separately |
+| Reset budget | 10 (`RCB_RESET_BUDGET`, compose default; PROTOCOL §2): `POST /reset` starts a new episode from the frozen instance; only the last episode is graded, when the agent sends `POST /finish` or its session ends (a success ends nothing); results under another budget are reported separately |
 
 ### Provenance
 The frozen instance (`environment/sim/instance.npz`) and its scene facts were made at generation time; see `tasks/myosuite/README.md`.

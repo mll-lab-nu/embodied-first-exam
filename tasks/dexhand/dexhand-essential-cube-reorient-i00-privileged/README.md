@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:dexhand-0.2.0@sha256:0d42994b83d95ab5301c592b35586550c9ee426490115e4b43f3b8cf8cc43350` |
 
 ## Task
-With the wrist fixed, rotate the free marked sphere +90 degrees around palm-local Y, then +90 degrees around palm-local X from that pose, then return to its exact initial orientation. Maintain hand contact and avoid any external support throughout; stabilize each ordered checkpoint with at least two fingertips.
+Keep the wrist still. Turn the marked ball a quarter turn so that its top moves toward the fingertips, then a quarter turn so that its top moves toward the thumb side, then back to how it started. Hold it still with at least 2 fingertips at each of these 3 poses, and keep it in the hand with nothing else supporting it the whole time.
 
 Palm-local axes belong to a frame fixed to the palm; with the wrist locked it is aligned with the world axes: +X points from the wrist toward the fingertips (world +x), +Y points across the palm from the thumb side toward the little-finger side (world +y), and +Z points out of the palm, which faces up (world +z). In the simulator it has the orientation of the `wrist_stage` body (the identity quaternion while the wrist is locked), not that of the palm link `right_hand_C_MC`, whose own axes are rotated relative to it. A turn about a palm-local axis is about that palm-fixed axis (it does not turn with the object), and a positive angle follows the right-hand rule: counterclockwise when seen from the positive end of the axis looking back toward the palm. So +90 degrees about Y carries the side of the sphere that faces up toward the fingertips, and +90 degrees about X carries the side that faces up toward the thumb side.
 

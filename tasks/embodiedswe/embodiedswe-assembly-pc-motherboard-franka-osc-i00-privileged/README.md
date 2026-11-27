@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:embodiedswe-0.3.0` |
 
 ## Task
+Use the allen key to screw the seven bolts already started in the motherboard's holes all the way down.
+
 Drive the seven motherboard bolts with an allen key (Franka, operational-space control). EmbodiedSWE's `assembly.pc_motherboard.franka.osc` task (robobench at commit `67f44e8a2ca5`), privileged mode, with a program as the
 deliverable: `solution/solve.py` exposing `solve(env)`.
 

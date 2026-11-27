@@ -22,7 +22,8 @@ Every image is public: Harbor pulls it.
   reported in `plan`. The pose is RoboTwin's end-effector frame, **0.12 m behind the gripper centre** along the approach
   axis (same as the `proprio` end-effector poses). At most 50 rows per submit.
 - Video is captured every `250/video_fps` physics steps; the chunk is appended to the recorded `(T, 34)` trajectory.
-- `/observe` watches at most `max_watch_s` = 30 s.
+- `/observe` only reads (`last_s`); a hold chunk (`/submit` with `interpolate: "hold"`, `seconds`, no rows) holds the
+  last command for at most a chunk's length.
 
 **`meta.cameras`** carries RoboTwin's per-camera `intrinsic_cv`, `extrinsic_cv`, `cam2world_gl`; the wrist cameras move
 with the arms (`cam2world_gl/<cam>` per returned frame). `/spec` states the agent's clock in
@@ -50,7 +51,8 @@ More than 2 crashes end the episode: `sim_crashed_on_call` if every crash happen
 `reason = instance_mismatch` with `infra_error = 1`.
 
 **Grading** (the live episode, PROTOCOL H.4; no grading replay). `success` is RoboTwin's `check_success` on the
-episode the sidecar ran: it is checked after every call that ran physics, the first success ends the episode, and when
+episode the sidecar ran: it is checked after every call that ran physics and only recorded (a success never ends the
+episode: "Agent-ended episodes" below); the episode ends at the agent's `POST /finish` or when
 the agent's time is up (the collect hook's SIGUSR1, after the monitor is sealed and the agent's container is stopped
 with `kill -9 -1`) the final state is checked once more. `final.json` gets the verdict at once (`graded_by = "live"`, `replays = 0`, `finalized`,
 the end state's hash `live_sha`, `video_pending: true`); `trajectory.npz` is saved as the deliverable. The frozen
@@ -81,6 +83,17 @@ rendered frames); a video not ready by then is lost, the verdict is not.
   `live_segments.jsonl` is enough to render the video offline; `startups.jsonl` has one line per service start.
 - The verifier copies `live.mp4` and `live_timeline.jsonl` next to `replay.mp4` (which stays the authoritative video)
   and reports `live_video`, `live_frames`, `sim_startups`, `infra_error`.
+
+### Agent-ended episodes
+
+Every standard task sets `RCB_AGENT_END "1"` in its sim service (PROTOCOL §3). `server.py` no longer ends the episode at
+the first success: RoboTwin's `check_success` is still run after every call and only recorded
+(`hidden_success_first_step`). The agent ends the episode with `POST /finish` (reason `finished`); the end of its
+session (`timeout`) ends it too, and both are judged by `check_success` on the state they leave (end judgement `state`;
+no settle window, the check is one state's). A simulator error still ends the episode with 0. The service has no step
+cap, so `RCB_STEP_LIMIT` is refused. `final.json` adds the shared fields (`success_signal`, `ended_by`, `end_judgement`,
+`hidden_success_seen`, `hidden_success_first_step`, `trial_hidden_success_seen`, `finish_time_s`). Without
+`RCB_AGENT_END` the service behaves as described above.
 
 ## Excluded tasks
 

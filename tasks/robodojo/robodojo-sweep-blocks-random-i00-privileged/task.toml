@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/robodojo-sweep-blocks-random-i00-privileged"
-description = "RoboDojo sweep_blocks_random (Generalization (randomised variant: other models, clutter); two ARX X5 arms with parallel grippers, Isaac Sim 5.1 / Isaac Lab): produce one replayable trajectory of RoboDojo's 14-D joint actions. Task: Pick up the broom, hand it to the right arm, sweep the toy brick, the two earbuds and the two paper balls into the dustpan, which stays on the table, and leave the broom on the dustpan's open right side. Then bring both arms back to where they started. Frozen scene instance: RoboDojo's own evaluation layout arx_x5/0/sweep_blocks_random_0.json; graded by RoboDojo's own reward check."
+description = "RoboDojo sweep_blocks_random (Generalization (randomised variant: other models, clutter); two ARX X5 arms with parallel grippers, Isaac Sim 5.1 / Isaac Lab): produce one replayable trajectory of RoboDojo's 14-D joint actions. Task: Sweep the toy brick, the two earbuds and the two paper balls into the dustpan, keeping the dustpan flat on the table, and leave the broom well to the right of the dustpan. Then move both arms back to where they started. Frozen scene instance: RoboDojo's own evaluation layout arx_x5/0/sweep_blocks_random_0.json; graded by RoboDojo's own reward check."
 keywords = ["robotics", "robodojo", "isaac-lab", "isaac-sim", "bimanual", "arx-x5", "code-as-policy", "trajectory", "privileged"]
 
 [metadata]

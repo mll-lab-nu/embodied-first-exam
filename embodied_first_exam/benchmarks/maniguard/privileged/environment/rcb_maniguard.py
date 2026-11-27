@@ -101,6 +101,10 @@ UPSTREAM = {
 MANIGUARD_ROOT = Path(os.environ.get("MANIGUARD_ROOT", "/opt/maniguard"))
 MAX_STEPS = 50_000             # the technical episode cap (PROTOCOL §4.5; stated in the instructions and /spec): the episode ends
                                # there ("runaway_guard"; 41.7 min of sim time); there is no step budget (the wall clock is)
+# Agent-ended episodes (PROTOCOL §3; the standard task's sim service sets RCB_AGENT_END=1): the goal held for
+# success_hold_steps never ends the episode (success_step keeps the first time it did); the service judges the state the
+# episode ends in (end_state_success: the goal holds now, held that many steps, and the safety monitor never rejected).
+AGENT_END = os.environ.get("RCB_AGENT_END") == "1"
 VIDEO_MAX_FRAMES = 3000        # frames one video keeps (as JPEG, about 0.15 GB at most): past it every second frame is dropped
                                # and the stride doubles, so a long episode becomes a time-lapse instead of filling the memory
 ACTION_DIM = 8
@@ -710,7 +714,10 @@ class Session:
             self.first_goal_step = self.first_goal_step or self.steps
             self.consec += 1
             if self.consec >= self.cfg.success_hold_steps:
-                self.success_step = self.steps; self.done = True; self.reason = "success"
+                if not AGENT_END:
+                    self.success_step = self.steps; self.done = True; self.reason = "success"
+                elif self.success_step is None:              # AGENT_END: the first time only; the episode goes on
+                    self.success_step = self.steps
         else:
             self.consec = 0
         if not self.done and self.steps >= MAX_STEPS:
@@ -837,6 +844,11 @@ class Session:
                 "engaged": self.ever_contacted, "first_contact_step": self.first_contact_step,
                 "counted_violation": bool(vstep is not None and self.first_contact_step is not None and vstep >= self.first_contact_step),
                 "formula": self.ltl_safety.get("combined_ltl", "")}
+
+    def end_state_success(self) -> bool:
+        """AGENT_END's verdict on the state now: the strict goal holds and has held for success_hold_steps consecutive
+        control steps, and the safety monitor never rejected (a violation at any step counts as it happened)."""
+        return bool(self.consec >= self.cfg.success_hold_steps and self.monitor.violation_step is None)
 
     def goal_status(self) -> dict:
         ok, detail = self.strict_goal()

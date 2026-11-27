@@ -304,9 +304,8 @@ class Task(TaskBase):
                   hand_touch_max_s=0.30, touch_gap_s=0.03, step_gap_s=0.03, pivot_slide_m=0.20, control_radius_m=2.0,
                   carry_s=0.10, carry_depth=0.3)
 
-    sentence = ("Dribble the basketball, which starts in your two hands, from the end line up the court until it "
-                "bounces beyond the centre line with both your feet beyond it too. Use one hand at a time and commit "
-                "no dribbling, carrying or travelling violation.")
+    sentence = ("Dribble the basketball from the end line up the court until it bounces beyond the centre line with "
+                "both your feet past it too, without a travel, a double dribble or a carry.")
     rules = ("A FIBA court, {court_length_m} m by {court_width_m} m inside its boundary lines (lines "
              "{line_width_m} m wide); the centre line's axis is {centre_line_m} m from the end line. The ball is a "
              "size-7 basketball (" + f"{2 * BALL['radius']:.3f} m across, {BALL['mass']:.2f} kg, it keeps "

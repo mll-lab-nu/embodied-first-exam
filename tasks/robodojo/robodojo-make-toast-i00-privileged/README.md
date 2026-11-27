@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Put two slices of bread from the bread shelf into the two toaster slots, press the toaster lever down, and return both arms to their start pose. (RoboDojo's `make_toast`). RoboDojo capability dimension: Generalization. Instance i00 is RoboDojo's own evaluation layout
+Put two slices of bread from the bread shelf into the toaster, one in each slot, and press the lever down. Then move both arms back to where they started. (RoboDojo's `make_toast`). RoboDojo capability dimension: Generalization. Instance i00 is RoboDojo's own evaluation layout
 `arx_x5/0/make_toast_0.json` (sha256 `f78afb3f82b6d9ce`), frozen in `instance.json`. The deliverable is one replayable trajectory of
 RoboDojo's 14-D joint action at 25 Hz (`/app/output/trajectory.npz`), graded by RoboDojo's own reward check for the task,
 with no step cap (RoboDojo's own evaluation gives a policy 1400 actions; PROTOCOL §3).

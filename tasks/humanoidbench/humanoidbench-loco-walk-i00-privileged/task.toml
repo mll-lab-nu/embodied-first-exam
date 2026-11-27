@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/humanoidbench-loco-walk-i00-privileged"
-description = "HumanoidBench walk: produce one replayable trajectory that walks the Unitree H1 forward and keeps it walking, frozen scene instance 00."
+description = "HumanoidBench walk: produce one replayable trajectory that walks the Unitree H1 forward and keeps it walking, frozen scene instance 00. Task: Walk forward and keep walking, without falling."
 keywords = ["robotics", "humanoidbench", "code-as-policy", "trajectory", "h1", "locomotion", "walk"]
 
 [metadata]

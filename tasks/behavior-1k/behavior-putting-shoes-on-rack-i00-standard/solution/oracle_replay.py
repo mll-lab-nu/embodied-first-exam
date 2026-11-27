@@ -33,5 +33,7 @@ while i < len(Q):
     if res.meta["done"]: done = True; print("done:", res.meta["reason"]); break
     if not res.meta["executed_rows"]: print("the service executed no row:", res.meta.get("stopped")); break
 if not done:
-    obs = r.get_obs(seconds=1.0, cameras=cam, video="none"); print("settle:", obs.meta["done"], obs.meta["reason"])
+    obs = r.hold(1.0, cameras=cam, video="none"); print("settle:", obs.meta["done"], obs.meta["reason"])
+try: print("finish:", r.finish())                       # the agent ends the episode (eai-standard/3.0: POST /finish)
+except EpisodeOver as e: print("finish: the episode had already ended:", e)
 print("status:", r.status(), "wall %.0fs" % (time.time() - t0))

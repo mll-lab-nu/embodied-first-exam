@@ -1,21 +1,21 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe:standard-files-0.4.1@sha256:7f1a830075fd6dd25e7a20a340316c041df583a29062796f59a4fa63b6f76946",
+ "image": "ghcr.io/mll-lab-nu/efe:standard-files-0.7.0@sha256:1ab8c16d4372a0b44f5c0ea7f819f6febafcfdc132013b1736a04f360375b28f",
  "source": "embodied_first_exam/standard",
  "files": {
   "rcb1.py": "d8c6ceabdad914afd39ac4a93904e486039c69c14ec5ae140b33aa653ff7979f",
-  "rcb_client.py": "8bbaec33b075dc41b9618c582be1d4db09f8ccbe8ab5173f96b4a2f4cb1ddcad",
-  "rcb_limited.py": "352cc7efea2846a03b67215b9caf4fcf21da1b1591e63ef4f2435566cf6e84a2",
-  "realtime/rcb_client.py": "05fcaa3f7456ac70dbccd8f49709795852df37e085a181aa7f383f42e6c5f557",
-  "realtime/rcb_realtime.py": "fbd5976ae20ec843b86137829d4aee77475373a9b59972ab826fc25bd23dbacc",
-  "run.sh": "5a3fb29ea050a005cb0e441f9129b347fa0af5d536d9d210178b1398df032f64",
-  "v2_1/grade.py": "94d741d8dcea4ba02a343a8d23f1963489c6260aaa4b260efe6e0a09bb46c8ed",
-  "v2_1/rcb_client.py": "4a3097258fe55cdd58961f63967ce93a4568ce23a50d7d0b5b0b3763f4e59064",
-  "v2_1/variants/042c4ff1e4/rcb_client.py": "042c4ff1e41a475039cebabe648242fd5d7aa00368a8b67e10bdb6aa527dee46",
-  "v2_1/variants/62def5e7ce/rcb_client.py": "62def5e7ce8f0006521bd3d1bacf185aeecdcf093c7411d9a790d99b77dce647",
-  "v2_1/variants/af20f7b98f/rcb_client.py": "af20f7b98fa11ff4e51cc8a51ea06f795a083a3f932b48b0b706e9962e731577",
-  "v2_1/variants/bb67bdefd5/rcb_client.py": "bb67bdefd50e3396ab3f2476d1eb61647cf6a638ec6933764dd313ec536fe243",
-  "v2_1/variants/f2b4a08eba/rcb_client.py": "f2b4a08eba32de5f42ccae18a0a1cff25633704e979c4e90a325eeeb067a34e5",
-  "v2_4/rcb_client.py": "4f3d3d28f8ae5e2de864852585180efa13662d775cafe0fcc7693c9773fbc988",
-  "v2_4/rcb_limited.py": "fccd6d03a9c690d5b352efb0ad15ea6def1096279f40a94ffcda7ed933f91f54"
+  "rcb_client.py": "9e7b33e2f1e69613cba5451cbb437ba3f1d211e78bc23863f127f845d3b147ac",
+  "rcb_limited.py": "e780ec0b416d58411f2f0c579ad5fd5b998be96629e2a90bf23829ec419d1edf",
+  "realtime/rcb_client.py": "c780b8b9691bea221ddfc0a50ef08e2e6c84d4c59aa4ca8030d9bade101375d8",
+  "realtime/rcb_realtime.py": "6b3e14c33bc54d28f5994e88e7a2d870210430f3b5330cd80937ccd562f2bc33",
+  "run.sh": "08e4659bf4adca636a47b432a4649ae89777e1d394dceb9afc9b8896cd158376",
+  "v2_1/grade.py": "ff863225171ee723d8b40ac13f17190dfc908f7f1683681b19f40d6dec3980b4",
+  "v2_1/rcb_client.py": "acfbe5c7bd8ab20c0519718a054d78c0c681b08f576c54556f4b75ac1440090b",
+  "v2_1/variants/2858803c15/rcb_client.py": "2858803c1546aa8ff9ec7eb3523644ef882ff9f583e7ec3b87e40349f40a7438",
+  "v2_1/variants/7a2866bae0/rcb_client.py": "7a2866bae060263ab3118076a6399a00982a0ed2e23ce751fbf67ebca7acf945",
+  "v2_1/variants/a1d942e2c3/rcb_client.py": "a1d942e2c330518fb6cf96889e5eba74a1a2e36e1faa097065505ff3792001f3",
+  "v2_1/variants/cf4073a8f3/rcb_client.py": "cf4073a8f3478efa9b17661b777fefc1feac48593133bacfe895259928dd37c5",
+  "v2_1/variants/dbda20b2c2/rcb_client.py": "dbda20b2c2a48d1613a978e0c225c3953c661e0d8c940be2c220cadea599053b",
+  "v2_4/rcb_client.py": "dd05d534c4af1e437f07c3ccf3de5db0f96b51aa8aae023afc036e03e62d1a79",
+  "v2_4/rcb_limited.py": "b53f0731152e072e90c85369a2578631029e8cca12d9f1ce86e79d93679f6ed7"
  }
 }

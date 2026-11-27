@@ -20,6 +20,7 @@ services:
     command: python /srv/server_mj.py
     restart: on-failure:6
     environment:
+      RCB_AGENT_END: "1"                               # agent-ended episodes (PROTOCOL §3)
       RCB_TOOL: rcb_aloha
       RCB_INSTANCE: /srv/instance.json
       PYTHONPATH: /srv

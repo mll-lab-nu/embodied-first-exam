@@ -22,6 +22,7 @@ services:
     command: sh /srv/run.sh
     restart: on-failure:6          # N >= 3 (docs/protocol/standard_mode.md); a resume continues the episode
     environment:
+      RCB_AGENT_END: "1"                               # agent-ended episodes (PROTOCOL §3)
       RCB_TASK: click_mouse
       RCB_INSTANCE: /srv/instance.npz
       RCB_TOOL: /srv/rcb_dexjoco.py

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Clean up the desk in the child's room. A folder, a pencil, two pens, two paperback books and a pencil box lie on the desk; the other folder lies on the chair, the stapler is inside the bookcase, and the open laptop lies on the bed. Put both folders and both paperback books into the bookcase and the pencil and both pens into the pencil box, which stays on the desk; take the stapler out of the bookcase and put it on the desk; and put the laptop on the desk, closed.
+Tidy the desk: the folders and paperbacks into the bookcase, the pencil and pens into the pencil box, and the pencil box, the stapler and the closed laptop on the desk.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - both folders (`folder.n.02_1`, `_2`) and both paperback books (`paperback_book.n.01_1`, `_2`) are inside the bookcase (`bookcase.n.01_1`)

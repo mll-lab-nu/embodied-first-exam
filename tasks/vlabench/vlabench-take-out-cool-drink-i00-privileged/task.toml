@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/vlabench-take-out-cool-drink-i00-privileged"
-description = "VLABench take_out_cool_drink (Franka Panda): I am thirsty after sport and want a cool, healthy drink. Take it out of the small fridge and close the fridge door. Produce one replayable trajectory of joint-position control steps on a frozen scene instance; graded by VLABench's own success check at the trajectory's end."
+description = "VLABench take_out_cool_drink (Franka Panda): I'm thirsty after sport and want a cool, healthy drink: take it out of the small fridge and close the fridge door. Produce one replayable trajectory of joint-position control steps on a frozen scene instance; graded by VLABench's own success check at the trajectory's end."
 keywords = ["robotics", "vlabench", "mujoco", "franka-panda", "code-as-policy", "trajectory", "privileged"]
 
 [metadata]

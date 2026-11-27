@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:humanoidbench-0.2.0` |
 
 ## Task
+Put the five red objects on the bookshelf one at a time, palest first and darkest last, each on the see-through copy of itself.
+
 HumanoidBench bookshelf_simple: produce one replayable trajectory that puts five objects onto their assigned bookshelf slots with the Unitree H1, frozen scene instance 00.
 
 ## Difficulty

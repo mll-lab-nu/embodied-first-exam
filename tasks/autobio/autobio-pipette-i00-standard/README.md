@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:autobio-0.1.0` |
 
 ## Task
-AutoBio's `pipette` (Aspirate with pipette) on the same frozen instance as `autobio-pipette-i00-privileged`: Aspirate from the 50 mL centrifuge tube with the pipette. The test is a sequence: (1) with the plunger pressed (the thumb's target, action entry `arm1_dh_rh_thj3`, above 0.70 rad), the pipette tip is within 6.5 mm (horizontally) of the tube's axis and more than 5 mm below the liquid surface; (2) the plunger is released (the thumb's target below 0.45 rad) while the tip is still below the surface; (3) success the moment, after (1) and (2), the tip is more than 5 cm above the liquid surface. The tube is part-filled (31.5 mL); the cameras show the liquid as a blue surface inside the tube. No liquid actually moves: the test is on positions and commands.
+AutoBio's `pipette` (Aspirate with pipette) on the same frozen instance as `autobio-pipette-i00-privileged`: Draw up liquid from the 50 mL tube with the pipette: press the plunger, push the tip down into the liquid near the middle of the tube, let the plunger go, then lift the tip well out of the tube.
 On the bench, between the arms: a rack with an open, part-filled 50 mL tube standing in it. AutoBio's prompt for this task: "one arm lifts centrifuge tube, the other aligns pipette tip and aspirates liquid"; the test itself does not ask for the tube to be lifted. Standard mode (eai-standard/2.2): the agent drives the robot through a client in one episode, with only its proprioception and the scene's cameras.
 
 ## Difficulty

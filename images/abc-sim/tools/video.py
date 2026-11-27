@@ -6,7 +6,10 @@ and no state, and a render that fails, is stopped or runs out of time loses only
         --result /data/video.json --deadline-s 1500
 
 The frames are the `top`, `left` and `right` cameras side by side, 320 x 240 each, at most ~1500 of them plus the last;
-the pass stops by itself `--deadline-s` seconds after it started and keeps the frames written so far (a playable file)."""
+the pass stops by itself `--deadline-s` seconds after it started and keeps the frames written so far (a playable file).
+`--agent-end` (an agent-ended episode, PROTOCOL §3: finalize.sh passes it when the service's record says so) runs the
+Session as the service did (rcb_abc.Session.agent_end: a success never ends it), so the film runs to the graded end
+state, not to the first success."""
 import argparse
 import json
 import os
@@ -30,6 +33,7 @@ def main() -> int:
     ap.add_argument("--out", required=True)
     ap.add_argument("--result", required=True, help="write {video, frames, rows, cut_short} here")
     ap.add_argument("--deadline-s", type=float, default=0.0, help="stop this long after the start (0: never)")
+    ap.add_argument("--agent-end", action="store_true", help="the episode was agent-ended: a success never ends it")
     a = ap.parse_args()
     t0 = time.time()
     res = {"video": False, "frames": 0, "rows": 0, "cut_short": False, "gl": M.GL}
@@ -37,6 +41,7 @@ def main() -> int:
         A = np.asarray(np.load(a.traj, allow_pickle=False)["actions"], dtype=np.float64)
         res["rows"] = int(len(A))
         s = M.Session(instance=a.instance)
+        s.agent_end = bool(a.agent_end)     # as the service's Session (standard/server.py: S.agent_end)
         import imageio.v2 as imageio
         cams = list(M.DEFAULT_CAMERAS)
         every = max(1, -(-len(A) // MAX_FRAMES))

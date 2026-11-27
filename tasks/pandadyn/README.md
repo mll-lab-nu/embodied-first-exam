@@ -178,6 +178,19 @@ before official runs there (PROTOCOL §3).
   error from a call (`sim_error`), crashes all inside the agent's calls (`sim_crashed_on_call`). A failed or slow video
   costs only the video.
 
+## Agent-ended episodes
+Every standard and realtime task runs with `RCB_AGENT_END=1` (PROTOCOL §3, agent-ended episodes): completing the last
+phase no longer ends the episode and no reply shows it (`rcb_pandadyn` `run_on` ignores the environment's success
+termination). The episode ends at the agent's `POST /finish`, at the first failure (a failure event, a forbidden
+contact, a safety-limit violation, an object out of bounds), at the task's horizon whether or not every phase is done by
+then (reason `step_limit` either way, so the reason never shows the outcome; a horizon reached before completion is
+still judged 0), at the environment's step cap, at the end of the session or on a simulator error. Judgement is by
+events (`end_judgement = "events"`): every phase done in order counts as it happens, and an event that happened
+stands: a failure after the phase ledger is complete (an object leaving the workspace, a forbidden contact) ends the
+episode (reason `failed`) but the episode is a success (eai-standard/3.0, PROTOCOL §3: on a goal judged as events a
+later failure does not take an event back; `rcb_service.py`). A failure, or the horizon (reason `step_limit`), before
+the ledger is complete is 0. Resets stay available after a success, and the last episode is graded.
+
 ## Crash recovery (both standard modes)
 The shared service layer's (`rcb_service.py`): every executed control step is journaled (`trajectory_live.f64`, the
 float64 row the servo received), every completed call checkpointed with the state hash; after a crash compose restarts the
@@ -201,9 +214,9 @@ only the standard twin and get the same rules.
   control step, `hold` or `linear` (from the targets in force), a chunk at most 10 s.
 - **Observation.** Cameras `overview` and `closeup` (static, 640×480, RGB, z-depth on request) with their calibration in
   `/spec`; proprioception per arm: joints and fingers, hand TCP pose, velocities, aperture, motor torques, tool pose, the
-  targets in force (`spec["proprio_groups"]`); `video_fps` 1-30, at most 3,000 images per call; watches (`observe` with
-  `seconds`) up to 30 s, holding the last targets.
-- **Clock.** The simulated clock advances only with the agent's calls (submit rows, observe watches): between calls the
+  targets in force (`spec["proprio_groups"]`); `video_fps` 1-30, at most 3,000 images per call; hold chunks (`hold(s)`, a
+  `/submit` without rows) hold the last targets; `observe` only reads (`last_s`).
+- **Clock.** The simulated clock advances only with the agent's calls (submit rows and hold chunks): between calls the
   world is frozen, so the agent can look between control steps at a cost in calls, as on a robot whose controller it
   pauses. The realtime twin runs the same steps on a clock that does not stop (below).
 - **Episode.** The only step bound is the task's own horizon (2,500, 3,200 or 3,500 control steps: 25, 32 or 35 s of

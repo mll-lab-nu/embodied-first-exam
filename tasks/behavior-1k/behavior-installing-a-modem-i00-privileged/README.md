@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Install the modem. A modem, switched off, sits on the coffee table in the living room; the room also has two cabinets and a television. Switch the modem on and put it on the same cabinet as the television, next to it.
+Switch the modem on and put it next to the television, on the same cabinet.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - the modem (`modem.n.01_1`) is switched on

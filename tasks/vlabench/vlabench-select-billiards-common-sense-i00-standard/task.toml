@@ -17,7 +17,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/vlabench-select-billiards-common-sense-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.1): VLABench select_billiards_common_sense (Franka Panda) on the same frozen instance as vlabench-select-billiards-common-sense-i00-privileged: Please put the snooker ball worth 7 points into the middle pocket on the robot's right side of the table. The agent only gets a client: four cameras (RGB, optional depth, calibrated) and the robot's own state; joint-position chunks; one episode, no reset, no object poses; the sim service records the episode and grades it as it ran (the live episode; nothing is replayed)."
+description = "STANDARD MODE (robot as a service, eai-standard/2.1): VLABench select_billiards_common_sense (Franka Panda) on the same frozen instance as vlabench-select-billiards-common-sense-i00-privileged: Put the snooker ball worth 7 points into the middle pocket on the robot's right side of the table. The agent only gets a client: four cameras (RGB, optional depth, calibrated) and the robot's own state; joint-position chunks; one episode, no reset, no object poses; the sim service records the episode and grades it as it ran (the live episode; nothing is replayed)."
 keywords = ["robotics", "vlabench", "mujoco", "franka-panda", "code-as-policy", "trajectory", "standard-mode"]
 
 [metadata]
@@ -71,6 +71,13 @@ build_timeout_sec = 3600.0
 cpus = 4
 memory_mb = 5120
 storage_mb = 10240
+
+# The robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): Harbor starts this server for the agent.
+[[environment.mcp_servers]]
+name = "efe-robot"
+transport = "stdio"
+command = "python3"
+args = ["/opt/tools/efe_mcp/server.py"]
 
 [verifier.environment]
 build_timeout_sec = 600.0

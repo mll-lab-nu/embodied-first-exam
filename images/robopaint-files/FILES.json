@@ -1,5 +1,5 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe:robopaint-files-0.5.1@sha256:add9631308d500e110745e1c5bb80a363db6517a01d50959ad6d33224b6db89d",
+ "image": "ghcr.io/mll-lab-nu/efe:robopaint-files-0.8.0@sha256:cbafd0760e862a76db9ef14f295807769280d02a68b583d68bd97b047b256793",
  "source": "embodied_first_exam/benchmarks/robopaint",
  "files": {
   "privileged/grade.py": "0c7809fe54e1b9803a0e7ead887feaa01219f06696331efbaa4bf9bf69b1a2d8",
@@ -11,7 +11,7 @@
   "sim/finalize.sh": "674d696023bae6e71ef064161bd5cfc9b6aee65de57c740b436799933668ec16",
   "sim/rcb_scorer.py": "9c7265253b21ac5cd79f76066a8f863ea1cf7fd881c0b5659145f8034485af91",
   "sim/run.sh": "87ea1409a7bba77efb90ee29b24660e1fc59ef850d363660a7dbe19c641bc140",
-  "sim/server.py": "a2c2ffef2d8eb8a2422547165d40b5324737f5407567134aa95e95ab65439df6",
+  "sim/server.py": "bd858a1a36aac28020d9d27589234286306a264d02b12b7dbfa88e015b64cc2a",
   "sim/variants/055fb18b90/NOTICE-exemplar.md": "055fb18b90e5e0a953b4e96c0bd0448f93137153628aca2755c88bb8e9ef6788",
   "sim/variants/16c0bbe684/NOTICE-exemplar.md": "16c0bbe684dc9ab9515ee9e5dfba9f2c310a53723be1b996f631be621ad0baf6",
   "sim/variants/49c8421692/NOTICE-exemplar.md": "49c8421692baba9efe9754d424aa4de8f49939e753f0db186374b86cf9659143",

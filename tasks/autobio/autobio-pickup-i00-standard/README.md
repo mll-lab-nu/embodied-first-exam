@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:autobio-0.1.0` |
 
 ## Task
-AutoBio's `pickup` (Pick up centrifuge tube) on the same frozen instance as `autobio-pickup-i00-privileged`: Pick up the 50 mL centrifuge tube with the orange screw cap from the blue rack: hold it by its cap and lift it at least 10 cm. Success the moment the tube is that high while the gripper holds it by the cap (the test looks for contact between the cap and the gripper's left finger, so the cap has to be between the fingers).
+AutoBio's `pickup` (Pick up centrifuge tube) on the same frozen instance as `autobio-pickup-i00-privileged`: Pick up the 50 mL tube from the rack by its cap and lift it more than a hand's width.
 On the bench: a 10-slot tube rack (2 rows of 5) with one capped 50 mL tube standing in it. Standard mode (eai-standard/2.2): the agent drives the robot through a client in one episode, with only its proprioception and the scene's cameras.
 
 ## Difficulty

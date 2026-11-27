@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Install the smoke detector. A fire alarm lies on the table in the living room; attach it to the wall nail in the living room.
+Attach the fire alarm to the wall nail.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - the fire alarm (`fire_alarm.n.02_1`) is attached to the wall nail (`wall_nail.n.01_1`)

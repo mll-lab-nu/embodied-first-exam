@@ -17,7 +17,7 @@ Standard mode (robot as a service, `eai-standard/2.1`) of `kinder-constrained-cu
 cameras, joint encoders, the base's odometry -- and
 never the scene's state or the goal check. No reset: one episode, which is graded.
 
-Task: put the six brown rods, each about 30 cm long, that lie on the floor into the row of eleven narrow cupboards standing side by side ahead of the robot, one rod into the tall compartment of each of six cupboards. Taking the rods in order of their distance from where the centre of the robot's base starts, nearest first, they go into the 11th, 5th, 2nd, 8th, 4th and 1st cupboard of the row, counted from the robot's left as it faces the row at the start. The task succeeds the moment every rod's centre is inside its compartment: above that compartment's shelf, below the shelf over it, and within the cupboard's 10 cm width and 30 cm depth.
+Task: Put the six brown rods lying on the floor into the row of narrow cupboards ahead of you, one rod in the tall compartment of each of six cupboards. Taking the rods in order of distance from where you start, nearest first, they go into the 11th, 5th, 2nd, 8th, 4th and 1st cupboard of the row, counted from the left as you face it.
 
 ## Difficulty
 Geometric: six identical rods, each into the one narrow compartment it is owed (standard mode names them by distance and by place in the row).
@@ -26,7 +26,7 @@ Geometric: six identical rods, each into the one narrow compartment it is owed (
 None. Solvability rests on the positive example in `oracle_evidence` (task.toml), checked by a human reviewer (docs/protocol/README.md §4).
 
 ## Verification
-The sidecar judges the episode as it runs (KinDER's goal check at every control step; the episode ends there) and,
+The sidecar runs the episode live: it ends at the agent's `POST /finish`, at the step cap, when the agent's time is up, or on a simulator error (a success never ends it and is never shown), and KinDER's goal check is judged on the state it ends in. The sidecar,
 when the collect hook ends the trial, writes that verdict to `/data/final.json` (`graded_by = "live"`): nothing is
 replayed to grade it (owner, 2026-10-17). The scene's start is checked against the frozen instance's
 recorded state (`scene_sha`) when the episode begins (a mismatch is `instance_mismatch`, infrastructure).

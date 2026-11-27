@@ -21,7 +21,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/roboarc-ikea-vesken-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.4): IKEA MuJoCo VESKEN shelf unit (dual Franka Panda + Menagerie Panda hand, MuJoCo 3.14.0 CPU) on the same frozen scene as the privileged task. Build the VESKEN shelf unit body: snap the four feet into the bottom tray from below, the four columns into the bottom tray, the second tray onto the columns, four columns and a tray for each of the two upper levels, and the four caps into the top tray. The agent only gets a client: get_obs (RGB from four ALOHA-style cameras, optional depth, proprioception, calibrated cameras), submit (joint_position chunks, joint targets within the robot's joint velocity limits), stateless kinematics, every pose in the robot's frame. No reset, no privileged state; the sim service records and grades the live episode (no grading replay)."
+description = "STANDARD MODE (robot as a service, eai-standard/2.4): IKEA MuJoCo VESKEN shelf unit (dual Franka Panda + Menagerie Panda hand, MuJoCo 3.14.0 CPU) on the same frozen scene as the privileged task. Build the VESKEN shelf unit: snap the four feet into the bottom tray from below, then four columns into the bottom tray, the second tray onto them, four columns and a tray for each of the two upper levels, and last the four caps into the top tray. Then let go of everything and move both arms clear. The agent only gets a client: get_obs (RGB from four ALOHA-style cameras, optional depth, proprioception, calibrated cameras), submit (joint_position chunks, joint targets within the robot's joint velocity limits), stateless kinematics, every pose in the robot's frame. No reset, no privileged state; the sim service records and grades the live episode (no grading replay)."
 keywords = ["robotics", "roboarc", "ikea", "furniture-assembly", "mujoco", "panda", "bimanual", "standard-mode", "trajectory"]
 
 [metadata]
@@ -71,6 +71,13 @@ build_timeout_sec = 1800.0
 cpus = 4
 memory_mb = 10240
 storage_mb = 10240
+
+# The robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): Harbor starts this server for the agent.
+[[environment.mcp_servers]]
+name = "efe-robot"
+transport = "stdio"
+command = "python3"
+args = ["/opt/tools/efe_mcp/server.py"]
 
 [verifier.environment]
 build_timeout_sec = 1800.0

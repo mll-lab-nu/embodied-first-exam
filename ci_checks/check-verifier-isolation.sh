@@ -51,7 +51,7 @@ if ag.get("network_mode") == "public":
     if "allowed_hosts" in ag:
         fail('[agent] network_mode = "public" (open egress) with allowed_hosts: drop the list, or put the task on the allowlist')
 elif ag.get("network_mode") != "allowlist":
-    fail('[agent].network_mode must be "allowlist" (PROTOCOL Appendix H.6: the model APIs and the package registries; the generator writes it, scripts/set_agent_egress.py allowlist), or "public" where the task\'s author chose open egress')
+    fail('[agent].network_mode must be "allowlist" (PROTOCOL Appendix H.6: the model APIs and the package registries; scripts/set_agent_egress.py allowlist writes it), or "public" where the task\'s author chose open egress')
 elif not ag.get("allowed_hosts"):
     fail('[agent] allowlist without allowed_hosts (the agent could not reach its model API)')
 else:

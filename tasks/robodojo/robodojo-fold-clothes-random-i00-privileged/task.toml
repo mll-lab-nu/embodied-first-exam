@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/robodojo-fold-clothes-random-i00-privileged"
-description = "RoboDojo fold_clothes_random (Generalization (randomised variant: other models, clutter); two ARX X5 arms with parallel grippers, Isaac Sim 5.1 / Isaac Lab): produce one replayable trajectory of RoboDojo's 14-D joint actions. Task: Fold the long-sleeve shirt lying flat on the table: first fold both sleeves in across the chest, then fold the bottom hem up to the shoulders, using both arms, and finish with both arms back home with grippers open. Frozen scene instance: RoboDojo's own evaluation layout arx_x5/0/fold_clothes_random_0.json; graded by RoboDojo's own reward check."
+description = "RoboDojo fold_clothes_random (Generalization (randomised variant: other models, clutter); two ARX X5 arms with parallel grippers, Isaac Sim 5.1 / Isaac Lab): produce one replayable trajectory of RoboDojo's 14-D joint actions. Task: Fold the shirt: first both sleeves in across the chest, then the bottom hem up to the shoulders. Then move both arms back to where they started, with both grippers open. Frozen scene instance: RoboDojo's own evaluation layout arx_x5/0/fold_clothes_random_0.json; graded by RoboDojo's own reward check."
 keywords = ["robotics", "robodojo", "isaac-lab", "isaac-sim", "bimanual", "arx-x5", "code-as-policy", "trajectory", "privileged"]
 
 [metadata]

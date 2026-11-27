@@ -1,6 +1,6 @@
 [[replace]]
-old = "The table top is at z = 0.970. Arm base (`link0`): link0 [-0.75, 0.0, 0.924]."
-new = "The table top is at z = 0.960. Arm base (`link0`): link0 [-0.75, 0.0, 0.924]."
+old = "### Scene\nWorld frame, metres; z up; the robot stands at low x and reaches towards +x. The table top is at z = 0.970. Arm base\n(`link0`): link0 [-0.75, 0.0, 0.924]. Quaternions are WXYZ. `s.objects()` gives the live poses of the task objects\n(`tongs`, `tongs_hinge`, `table_top`)."
+new = "### Scene\nWorld frame, metres; z up; the robot stands at low x and reaches towards +x. The table top is at z = 0.960. Arm base\n(`link0`): link0 [-0.75, 0.0, 0.924]. Quaternions are WXYZ. `s.objects()` gives the live poses of the task objects\n(`tongs`, `tongs_hinge`, `table_top`)."
 
 [[replace]]
 old = "`table_tongs_demo_10_2026-03-12_16-30-04_442884`"

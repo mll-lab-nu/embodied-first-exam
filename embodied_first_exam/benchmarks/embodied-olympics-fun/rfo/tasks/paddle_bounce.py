@@ -856,9 +856,8 @@ class Task(TaskBase):
                   blade_centre_m=FREE_PADDLE["blade_centre_from_butt_m"], out_of_hand_s=0.05, retract_after_s=0.15,
                   retract_m=0.35, dropper_free_s=0.1)
 
-    sentence = ("Keep the table tennis ball that is dropped in front of you bouncing on the paddle held in your right "
-                "hand: {bounces} bounces in a row, each back up to the height the ball was dropped from, "
-                "without letting go of the paddle.")
+    sentence = (("Bounce the table-tennis ball on the paddle in your right hand 20 times in a row, each time back"
+                 " up to the height it was dropped from, without letting go of the paddle."))
     rules = ("A table tennis racket (a rigid square blade 0.15 m wide and 0.015 m thick on a straight handle "
              "{handle_length_m} m long, {handle_width_m} m wide and {handle_thickness_m} m thick; {paddle_mass_kg} kg; "
              "the blade's centre {blade_centre_m} m from the butt) is a separate body; at the start its handle is "

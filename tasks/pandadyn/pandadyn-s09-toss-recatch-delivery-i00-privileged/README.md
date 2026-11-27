@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0` |
 
 ## Task
-A ball is thrown high into the air when the episode starts and comes down near the robot. Catch it in the shallow cup the Panda holds, which has one open side. Bring the cup to a launch region and toss the ball straight up out of the cup with a real throw: it must leave the cup floor while rising. Move the cup sideways and catch the ball again. Finally, release it into an open box that slides back and forth along a rail, where it must settle while the box is moving. The deliverable is one replayable trajectory of 100 Hz joint-target actions (`/app/output/trajectory.npz`,
+Catch the falling ball in the cup, bring the cup to the launch point and toss the ball straight up out of it. Move the cup sideways, catch the ball again, and drop it into the sliding box while the box is moving. The deliverable is one replayable trajectory of 100 Hz joint-target actions (`/app/output/trajectory.npz`,
 8 values per row), graded by the task's own staged success check: 5 phases (`initial_catch`, `launch_region`, `self_toss`, `displaced_recatch`, `moving_receiver_delivery`), in order,
 with no failure event and no safety-limit violation, within the task's horizon of 25 s.
 

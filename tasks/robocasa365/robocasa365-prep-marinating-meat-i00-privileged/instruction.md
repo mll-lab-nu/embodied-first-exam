@@ -1,64 +1,61 @@
-# RoboCasa365 · PrepMarinatingMeat
+# RoboCasa365 · PrepMarinatingMeat (privileged)
 
-A **Franka Panda arm on an Omron mobile base** (with a torso lift) works in a kitchen: RoboCasa365's `PrepMarinatingMeat` kitchen task (robosuite, MuJoCo).
-**Task: Pick the shrimp from the plate and place it on the cutting board. Then pick the condiment bottle from the cabinet and place it next to the cutting board.**
-The scene is one frozen instance: the initial state of one of the benchmark's official demonstrations (kitchen
-layout, style, fixtures, objects and their poses).
+## Task
+Put the shrimp from the plate on the cutting board, then put the condiment bottle from the cabinet next to the board,
+and move your hand away.
 
-## What you hand in
-`/app/output/trajectory.npz` with key `actions`: the robot's native controller commands, shape `(T, 13)` with
-1 ≤ T ≤ 3000, one row per control step (1/20 s). Write it with `s.save_trajectory()` so the format is right.
-Leave the script that produced it at `/app/output/gen.py`.
+## Goal
+Success: the shrimp is on the cutting board, the board and the condiment bottle are on the counter nearest the cabinet,
+and the hand has let go and moved well away from the shrimp and the bottle. Your trajectory is replayed from the fixed
+start. What counts is the state after its last action.
 
-## Success
-The verifier replays your actions from the frozen start in a separate sandbox (once, in a fresh process; MuJoCo on the
-CPU is bit-exact) and applies the environment's own success check for `PrepMarinatingMeat` (`_check_success`) to the state **after
-the last action**. A success reached earlier and then lost does not count: end the trajectory while the task is
-achieved. `s.check()` returns the check's latest result.
+Deliverable: `/app/output/trajectory.npz` with key `actions`: the robot's native controller commands, shape `(T, 13)`
+with 1 ≤ T ≤ 3000, one row per control step (1/20 s). Write it with `s.save_trajectory()` so the format is right. Leave
+the script that produced it at `/app/output/gen.py`. Save a valid one early and overwrite it when you have a better one.
 
-The check for `PrepMarinatingMeat` requires that the shrimp is on the cutting board, the board and the condiment bottle touch the counter nearest the cabinet, and the gripper ends more than 0.25 m from the shrimp and from the bottle.
+Rules: **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+benchmark's demonstrations, trained policies); trials are reviewed.
 
-How RoboCasa365's checks compute these terms (`robocasa/utils/object_utils.py`):
-- *the gripper ends more than d m from X*: the distance from the robot's end-effector grip site to X's origin exceeds
-  d. Opening the fingers is not enough: release, then move the hand away.
-- *X is on / in Y* for an object Y (plate, tray, board, pan, pot, colander, tupperware, glass): X touches Y and their
-  centres are within 0.7 × Y's horizontal radius of each other horizontally, unless a distance is given.
-- *X touches* a counter, the dining counter or the stove: contact between X and that fixture.
-- *X is inside* a fixture (a cabinet, the sink or one of its basins, the microwave): all eight corners of X's bounding
-  box are within the fixture's interior region (5 cm tolerance).
+## Robot Interface
+A Franka Panda arm on an Omron mobile base with a torso lift, in a simulated kitchen (RoboCasa365, robosuite / MuJoCo).
+The scene is one fixed instance. You have the full simulator to develop with; you hand in a trajectory of robot actions.
 
-## Tooling (`/opt/tools/casa_tool.py`, importable as `casa_tool`)
+### Session
+`/opt/tools/casa_tool.py`, importable as `casa_tool`:
 ```python
 import numpy as np, casa_tool
 s = casa_tool.Session("/app/instance.npz")  # the frozen instance; s.env is the robosuite env, s.model / s.data MuJoCo
 s.action_spec        # every channel: name, unit, kind (delta | absolute | grip | mode), lower / upper; frames
-st = s.state()       # instruction, qpos, qvel, joint_names, bodies {name: pos, quat_wxyz}, objects, proprio, success
+st = s.state()       # qpos, qvel, joint_names, bodies {name: pos, quat_wxyz}, objects, proprio, success
 r = s.step(action)   # one control step -> {"success": ..., "control_steps": ..., ...}
 s.check()            # the success check's latest result
 s.save_trajectory()  # the actions since the last reset -> /app/output/trajectory.npz
-s.replay(A)          # reset, then replay A (what the verifier does) -> {"success": ..., "state_sha": ...}
+s.replay(A)          # reset, then replay A (as the grader does) -> {"success": ..., "state_sha": ...}
 s.reset()            # back to the frozen start, as often as you like (it takes a few seconds)
-img = s.render("robot0_agentview_center")   # RGB (240, 320, 3); views in s.camera_views; s.render_grid()
+img = s.render("robot0_agentview_center")   # RGB (240, 320, 3); views in s.camera_views
 ```
-- Actions: 13 channels, in order: `arm_joint1 .. arm_joint7` -- absolute joint position targets (rad, within the joint limits in `s.action_spec`); `grip` (+1 closes, -1 opens); `base_x, base_y, base_yaw` -- the mobile base's velocities in its own frame (normalised, [-1, 1]); `torso` -- the torso lift's velocity; `hybrid_mode` (> 0: base mode; <= 0: arm mode, the default -1). Values are clipped to the limits.
-- The success check runs twice after every control step and once at reset, in your session exactly as in the
-  verifier. Some checks count consecutive successful steps, so calling `s.env._check_success()` yourself changes the
-  state of the run you are recording; use `s.check()`.
+
+### Actions
+- An action has 13 channels, in order: `arm_joint1 .. arm_joint7` -- absolute joint position targets (rad, within the
+  joint limits in `s.action_spec`); `grip` (+1 closes, -1 opens); `base_x, base_y, base_yaw` -- the mobile base's
+  velocities in its own frame (normalised, [-1, 1]); `torso` -- the torso lift's velocity; `hybrid_mode` (> 0: base
+  mode; <= 0: arm mode, the default -1). Values are clipped to the limits.
 - World frame: metres, z up; `s.state()["bodies"]` gives every body's position and orientation (quaternions w x y z).
 - Everything in `s.env`, `s.model` and `s.data` is readable (privileged mode).
 
-## Rules
-- Write your own controller. Do not use the benchmark's demonstrations, trained policies or any published solution.
-- Only the actions count: editing `s.data` or the environment while debugging changes nothing in the replay.
-- Save a working trajectory early, then improve it; do not stop early.
+## Others
+- Read success with `s.check()`. It runs after every step in your session, as it does in the grader. Calling the
+  environment's own check yourself changes the run you are recording.
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
-
-## Resources
-Your container: **4 CPUs**, **20 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
-
-## Time limit
-You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
-
-This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+## Limits
+- Time: 3600 s of wall-clock time from the start of your session. Everything counts, including the simulator's start-up.
+  At the end you are stopped without warning and only what is in `/app/output/` at that moment is graded. Time left:
+  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`). A call into a long-running process can block for its
+  whole wait time. Use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, including the simulator's and the benchmark's source.
+- Resources: 4 CPUs, 20 GiB memory, 1024 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`),
+  no GPU. Going over a cap can get a process killed (the CPU cap only slows you down). Usage:
+  `/run/rcb-limits/usage.json`.
+- Resets: as many as you like (`s.reset()`).

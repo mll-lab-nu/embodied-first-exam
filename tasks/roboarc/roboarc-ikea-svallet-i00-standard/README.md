@@ -14,7 +14,7 @@
 ## Task
 IKEA SVALLET work lamp (AA-2140039-1), unpowered steps 1-2 in plain MuJoCo 3.14.0 (CPU, float64) with two 6-DoF ViperX 300 s arms (MuJoCo Menagerie ALOHA), each with its own parallel gripper, through the robot service (eai-standard/2.4; 2.1 / 2.2
 requests are served unchanged): RGB from four ALOHA-style cameras (optional depth), proprioception, `joint_position`
-chunks, stateless kinematics, every pose in the robot's frame; no reset and no privileged state. Press the lamp shade's key down into the socket on top of the stand column until the spring jaw snaps over it, then screw the E12 bulb up into the shade's socket until it seats.
+chunks, stateless kinematics, every pose in the robot's frame; no reset and no privileged state. Snap the lamp shade onto the socket on top of the stand, then screw the bulb into the shade's socket until it seats. Leave the lamp standing upright. Then let go of everything and move both arms clear.
 
 ## Difficulty
 The privileged twin's bimanual assembly with physical grasps, from cameras and proprioception only, in one episode
@@ -77,7 +77,7 @@ episode with reason `timeout` when it runs out; that count never runs out before
   verifier.
 
 ### Goal
-Press the lamp shade's key down into the socket on top of the stand column until the spring jaw snaps over it, then screw the E12 bulb up into the shade's socket until it seats.
+Snap the lamp shade onto the socket on top of the stand, then screw the bulb into the shade's socket until it seats. Leave the lamp standing upright. Then let go of everything and move both arms clear.
 
 ### Success requirements
 - Both retention joints are connected (shade on the stand, bulb in the shade) and, at the end, each connector is within its gates (axial gap, lateral offset and axis tilt).

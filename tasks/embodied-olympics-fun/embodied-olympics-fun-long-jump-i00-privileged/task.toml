@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/embodied-olympics-fun-long-jump-i00-privileged"
-description = "Embodied Olympics long-jump (one Unitree G1 on the Embodied Olympics simulator, MuJoCo 3.3.7, CPU) in privileged mode: produce one replayable trajectory. Do a long jump: run up, take off behind the take-off line, fly over the metre of runway beyond it and land in the sand pit. A referee of events, geometry and contact rules decides the success."
+description = "Embodied Olympics long-jump (one Unitree G1 on the Embodied Olympics simulator, MuJoCo 3.3.7, CPU) in privileged mode: produce one replayable trajectory. Do a long jump: run up, take off behind the take-off line and land in the sand pit. A referee of events, geometry and contact rules decides the success."
 keywords = ["robotics", "embodied-olympics", "sports", "mujoco", "unitree-g1", "humanoid", "trajectory", "long-jump"]
 
 [metadata]

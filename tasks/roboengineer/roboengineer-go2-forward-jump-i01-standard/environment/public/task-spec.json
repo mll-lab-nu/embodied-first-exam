@@ -2,7 +2,7 @@
   "schema": "control-transfer/1",
   "protocol": "eai-policy/1.1",
   "name": "go2-forward-jump",
-  "goal": "Jump a commanded 0.70\u20131.00 m forward distance with verified flight and stable touchdown; walking to the goal is rejected.",
+  "goal": "Make the Go2 jump straight ahead the commanded distance in one real jump and land steadily.",
   "score": "Success requires flight >=0.08 s, height rise >=0.07 m, airborne x displacement >=70% command, first-touch and final x error <0.15 m, lateral error <0.15 m, and final 1 s stable support; unsuccessful score capped at 49.",
   "max_rounds": 3,
   "adaptation_cases": 3,

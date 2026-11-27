@@ -1,26 +1,67 @@
-# Stack the blocks (Unitree G1, fixed pelvis, Pink IK) — standard mode
+# EmbodiedSWE · stack the blocks, Unitree G1 (standard)
 
-The task of `embodiedswe-puzzle-stack-blocks-g1-pink-ik-i00-privileged`, on the same frozen scene. You drive a Unitree G1 humanoid with three-finger hands, its pelvis fixed, its arms and waist under EmbodiedSWE's Pink IK, as if it were real hardware: the simulator runs in a service you cannot open, and you get its client, one episode and no reset. The client's docstring is its manual (`/opt/tools/rcb_client.py`); `r.spec()` gives the numbers.
+## Task
+Stack the four blocks into one tower on the square pad.
 
-## The task
-4 coloured wooden blocks (45 mm cubes) lie scattered flat on a work table, beside a marked square pad. Goal: stack all 4 blocks into one upright tower, 4 blocks high, centred on the pad, each block squarely on the one below with its faces level, and leave it standing. A block placed off-centre enough to overhang, set down crooked, or left off the pad does not count toward the tower.
+## Goal
+Success: the four blocks stand in one tower on the pad, one on each level, each squarely on the one below, and the tower
+stands still.
 
-Success, exactly: the four 45 mm blocks form one tower on the dark square pad with exactly one block in each of the four levels: every block's centre is within 30 mm horizontally of the pad centre, its centre height is within 20 mm of 0.7225 m + 0.045 m x its level (levels 0-3, i.e. 0.7225 / 0.7675 / 0.8125 / 0.8575 m; table top 0.70 m), one of its faces is level within 25 deg (some cube axis within 25 deg of vertical), and every block moves slower than 0.05 m/s. Not true at the start (blocks scattered flat behind the pad).
+When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
-## This robot
-- Action: `ee_pose` only, 28 values: the world poses of the left and right `wrist_yaw_link` (`x y z qw qx qy qz` each), then 14 hand joint targets (rad). Rows are streamed at the 60 Hz control rate with your `dt`; `spec["action_types"]["ee_pose"]` has the layout, the controller and the joint limits. Coordinates are the simulator's world frame (metres, z up; `spec["world"]`).
-- Cameras (RGB 640×480, depth on request): `overview` (static) and `head` (on the torso, where the real G1 carries its depth camera). One call returns at most 240 images (`max_frames_per_call`, PROTOCOL §3 "Images per call": cameras × the frames captured, the first, one every round(60 / `video_fps`) control steps and the last, a per-frame depth one more image; `video="none"` captures only the first and the last); a larger request is refused (400) before anything runs. A call that names no cameras gets `overview`, `head` at 3 frames per second, so every call up to `max_chunk_s` / `max_watch_s` fits.
-- The episode ends after the first call at whose end the success condition holds (judged on the live simulator), when your time is up, on a simulator error, or after 400,000 control steps (1.9 h of simulated time, reason `step_guard`); it is graded as it stands then. Simulated time advances only inside your calls.
-- The service answers one request at a time: while a long call runs, every other request waits, so a client-side timeout means "busy", not "crashed".
-- Leave your scripts in `/app/output/` for the record.
+Rules:
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+  benchmark's demonstrations, trained policies); trials are reviewed.
+- One episode, no reset: what you knock over stays knocked over.
+- You get only the cameras and the robot's own sensor readings: no object poses, no scene layout, no success signal.
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+## Robot Interface
+A Unitree G1 humanoid with three-finger hands, its pelvis fixed, its arms and waist under EmbodiedSWE's Pink IK. The
+robot runs as a service you reach through its client or its MCP tools, as if it were real hardware: one live episode.
 
-## Resources
-Your container: **8 CPUs**, **24 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
+`POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
-## Time limit
-You have 14400 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+### Client
+`/opt/tools/rcb_client.py`: its docstring is its manual; `r.spec()` gives the numbers. The service answers one request
+at a time: while a long call runs, every other request waits, so a client-side timeout means "busy", not "crashed".
+Simulated time advances only inside your calls. One call returns at most 240 images; a larger request is refused (400)
+before anything runs. The count is cameras × frames captured, where the frames are the first, one every round(60 /
+`video_fps`) control steps, and the last. Each depth frame counts as one more image. `video="none"` captures only the
+first and the last frame. A call that names no cameras gets `overview` and `head` at 3 frames per second, so every call
+up to `max_chunk_s` stays within that limit.
 
-This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` counts the same limit from your first request to the service, so it never runs out before your time does: your real time left is `time_left_s` minus the time you spent before that request. Plan by it. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+### MCP tools
+- The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
+  `observe`, `submit`, `kinematics`, `finish`. A tool takes its endpoint's request fields (any other field in `fields`)
+  and returns the service's reply `meta` unchanged; images, arrays and video are written as files under `/app/obs/`
+  (`.png`, `.npy`, `.mp4`) and the result lists them. Long action chunks can be passed as a file (`actions_file`).
+- `observe` returns at once with what is already recorded: the current frame, or the last `last_s` seconds. Time passes
+  only through `submit`, which answers when its rows have run; a `submit` with `interpolate` "hold", `seconds` and no
+  rows lets time pass with the robot holding still.
+- A call still running after 45 s returns `pending` with an `operation` id; `observe(operation=id)` collects its reply.
+- The client and the tools drive the same robot in the same episode; use either, or both.
+
+### Actions
+The action is `ee_pose` only, 28 values: the world poses of the left and right `wrist_yaw_link` (`x y z qw qx qy qz`
+each), then 14 hand joint targets (rad). Rows are streamed at the 60 Hz control rate with your `dt`;
+`spec["action_types"]["ee_pose"]` has the layout, the controller and the joint limits. Coordinates are the simulator's
+world frame (metres, z up; `spec["world"]`).
+
+### Observations
+Cameras (RGB 640×480, depth on request): `overview` (static) and `head` (on the torso, where the real G1 carries its
+depth camera).
+
+## Limits
+- Time: 14400 s of wall-clock time from the start of your session. Everything counts, including waiting for the service.
+  At the end you are stopped without warning. Time left: `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`).
+  Trust this file: the `time_left_s` in the service's replies starts only at your first request. A call into a
+  long-running process can block for its whole wait time. Use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, including the simulator's and the benchmark's source.
+- Resources: 8 CPUs, 24 GiB memory, 1024 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`),
+  no GPU; the simulator runs in its own container and does not count. Going over a cap can get a process killed (the CPU
+  cap only slows you down). Usage: `/run/rcb-limits/usage.json`.
+- Resets: none. You get one episode.
+- Steps: at most 400,000 control steps (1.9 h of simulated time), then the episode ends.
+- Finish: if you never send `/finish`, the episode is graded when the step limit is reached or your session ends.

@@ -3,7 +3,7 @@
  "challenge_task": "chop_an_onion",
  "instance_id": 301,
  "mode": "public_test",
- "text": "Chop an onion in the kitchen. A Vidalia onion is in the sink; a bowl, a chopping board and a paring knife lie on the countertop. Dice the onion on the chopping board with the knife, put the diced onion into the bowl, then put both the knife and the chopping board into the sink.",
+ "text": "Dice the onion into the bowl, then put the knife and the chopping board into the sink.",
  "robot_config": "r1pro_primitives_eval.yaml",
  "robot_config_sha": "d9d0c8bceea2",
  "state_sha": "e7fdc77fb257bfbe",

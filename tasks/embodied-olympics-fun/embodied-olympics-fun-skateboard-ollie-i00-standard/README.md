@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Ollie the skateboard from a standstill: pop the tail and lift the board with your feet until all of it is at least 5 cm off the ground, then land on it and stand still on it for a second. (Embodied Olympics `skateboard-ollie`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Do an ollie: pop the skateboard into the air with your feet, land on it with both feet and all four wheels down, and stand still on it. (Embodied Olympics `skateboard-ollie`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
 
 ## Difficulty
 The ollie is a timed whole-body skill on a free board: the tail has to be snapped down with the front foot unloaded, the front foot has to drag the rising board up and level it while the robot is in the air, and the robot has to land on a narrow deck that rolls and steers when it tilts. Even standing still, the board is unstable under a rigid rider (its trucks tilt and steer), so the ankles have to balance it before and after the trick. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 5 resets (only the last attempt is graded).

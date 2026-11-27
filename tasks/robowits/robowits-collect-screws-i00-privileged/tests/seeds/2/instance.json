@@ -3,7 +3,7 @@
  "robowits_task": "robowits/10-collect-screws-v0",
  "eval_json": "dataset/robowits/eval_dataset_50/10.json",
  "eval_index": 2,
- "text": "Collect the screw into the container",
+ "text": "Put the screw into the container.",
  "scene": {
   "container": {
    "pos": [

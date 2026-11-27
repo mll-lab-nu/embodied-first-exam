@@ -503,7 +503,7 @@
    "task_type": "close"
   },
   "language": {
-   "task_description": "close the cabinet.",
+   "task_description": "Close the open cabinet door.",
    "referral_expressions": {
     "pickup_obj_name": "cabinet"
    },
@@ -521,7 +521,7 @@
  "instance": "i00",
  "variant": "a hinged door (revolute joint)",
  "facts": {
-  "goal": "close the cabinet.",
+  "goal": "Close the open cabinet door.",
   "horizon_steps": 455,
   "horizon_s": 30,
   "control_hz": 15.152,

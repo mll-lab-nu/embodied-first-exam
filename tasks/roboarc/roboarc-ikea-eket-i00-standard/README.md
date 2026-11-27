@@ -14,7 +14,7 @@
 ## Task
 IKEA EKET cabinet (AA-1914763-5), manual steps 1-4 in plain MuJoCo 3.14.0 (CPU, float64) with two 7-DoF Franka Panda arms, each with the MuJoCo Menagerie Panda hand (two-finger, tendon-coupled), through the robot service (eai-standard/2.4; 2.1 / 2.2
 requests are served unchanged): RGB from four ALOHA-style cameras (optional depth), proprioception, `joint_position`
-chunks, stateless kinematics, every pose in the robot's frame; no reset and no privileged state. Build the EKET cabinet frame from the five panels lying in a row on the table: slide the side panel next to the top panel into the top panel first, then the other side panel, then the back panel into its grooves, and last the bottom panel onto the sides. Leave the cabinet standing on the table on its own.
+chunks, stateless kinematics, every pose in the robot's frame; no reset and no privileged state. Build the EKET cabinet frame from the five panels on the table: slide the side panel next to the top panel into the top panel first, then the other side panel, then the back panel into its grooves, and last the bottom panel onto the sides. Leave the cabinet standing on the table on its own. Then let go of everything and move both arms clear.
 
 ## Difficulty
 The privileged twin's bimanual assembly with physical grasps, from cameras and proprioception only, in one episode
@@ -77,7 +77,7 @@ episode with reason `timeout` when it runs out; that count never runs out before
   verifier.
 
 ### Goal
-Build the EKET cabinet frame from the five panels lying in a row on the table: slide the side panel next to the top panel into the top panel first, then the other side panel, then the back panel into its grooves, and last the bottom panel onto the sides. Leave the cabinet standing on the table on its own.
+Build the EKET cabinet frame from the five panels on the table: slide the side panel next to the top panel into the top panel first, then the other side panel, then the back panel into its grooves, and last the bottom panel onto the sides. Leave the cabinet standing on the table on its own. Then let go of everything and move both arms clear.
 
 ### Success requirements
 - The seven operations happen in this order, each measured against the top panel: side A (the side panel that starts next to the top panel) entry and slide, side B entry and slide, back slide, bottom entry and slide. Each one must reach its goal pose within the scene's gates (goal error 0.25 to 0.8 mm, angle 0.1 to 1 degree, nearly at rest, with contact with its counterpart panels).

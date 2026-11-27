@@ -373,9 +373,8 @@ class Task(TaskBase):
         max_touch_s=0.05, retouch_gap_s=0.05, racket_gap_s=0.05,
         bounce_gap_s=0.02, lets_replayed=1, spare_x_m=0.25, spare_y_m=0.60, spare_z_m=1.05, fall_z_m=0.35)
 
-    sentence = ("Serve: from behind your baseline, release the tennis ball from your left hand, strike it with the "
-                "racket held in your right hand before it reaches the ground, and send it over the net into the "
-                "service box diagonally opposite.")
+    sentence = ("Serve: toss the ball with your left hand and hit it with the racket in your right hand over the "
+                "net into the service box diagonally opposite.")
     rules = (
         "The court is the ITF singles court: {court_length_m} m long and {court_width_m} m wide, measured to the "
         "outside of the lines, with a service line {service_line_m} m from the net on each side and a centre "

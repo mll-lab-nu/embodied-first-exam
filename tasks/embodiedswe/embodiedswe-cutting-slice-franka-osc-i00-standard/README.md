@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:embodiedswe-0.3.0` |
 
 ## Task
+Pick up the knife and cut the carrot into slices along its scored lines, keeping every piece on the chopping board.
+
 Slice the food with a chef knife (Franka, operational-space control): the scene, frozen instance and success predicate of `embodiedswe-cutting-slice-franka-osc-i00-privileged`, with a Franka Panda arm with its parallel gripper, under EmbodiedSWE's operational-space (torque) controller, in standard mode
 (tasks/embodiedswe/README.md "Standard mode").
 

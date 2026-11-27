@@ -17,7 +17,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/pandadyn-s01-cup-route-delivery-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.1): Panda Dynamic Scenes S01 Cup catch, route pour, rebound recatch and cart delivery (one Franka Panda) on the same frozen instance as the privileged task. Task: An orange ball is thrown upward at the start and comes back down near the robot. Catch it in the open cup the Panda holds and pour it into the designated one of the two raised gravity channels. Let it roll down that channel by itself, drop off its end and bounce off the tilted rebound plate below it. Catch it in the cup again while it flies, and finally put it into a cart that slides back and forth on a rail, where it must rest while the cart is still moving. The agent only gets a client: get_obs (RGB, depth + proprioception), submit (joint_position chunks at 100 Hz) and reset; between calls the world is frozen. 3 resets (the benchmark's budget in both standard modes), only the last episode graded; no privileged state; the sim service records every executed control step and grades the last episode as it ran live (no replay)."
+description = "STANDARD MODE (robot as a service, eai-standard/2.1): Panda Dynamic Scenes S01 Cup catch, route pour, rebound recatch and cart delivery (one Franka Panda) on the same frozen instance as the privileged task. Task: Catch the falling ball in the cup and pour it into the channel farther from you. Let it roll down by itself and bounce off the plate below its end, catch it again in flight, and put it into the sliding cart while the cart is moving. The agent only gets a client: get_obs (RGB, depth + proprioception), submit (joint_position chunks at 100 Hz) and reset; between calls the world is frozen. 3 resets (the benchmark's budget in both standard modes), only the last episode graded; no privileged state; the sim service records every executed control step and grades the last episode as it ran live (no replay)."
 keywords = ["robotics", "pandadyn", "maniskill", "sapien", "franka-panda", "single-arm", "dynamic-manipulation", "standard-mode", "trajectory"]
 
 [metadata]
@@ -72,6 +72,13 @@ build_timeout_sec = 1800.0
 cpus = 4
 memory_mb = 10240
 storage_mb = 10240
+
+# The robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): Harbor starts this server for the agent.
+[[environment.mcp_servers]]
+name = "efe-robot"
+transport = "stdio"
+command = "python3"
+args = ["/opt/tools/efe_mcp/server.py"]
 
 [verifier.env]
 RCB_LIMITS_ENFORCE = "${RCB_LIMITS_ENFORCE:-0}"

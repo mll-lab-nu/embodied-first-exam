@@ -1,52 +1,45 @@
-# DexHand: Load two punched pages into a ring binder
+# DexHand · Load two punched pages into a ring binder (standard)
 
-Load both punched pages into the open-front ring binder on the desk. The binder (free on the desk, back cover towards +x) has three 1-inch round split rings on two toggle plates with an over-centre spring: both plates rest closed at 0 rad and open at 0.60 rad, and a booster paddle at each end of the mechanism opens them when pressed down. Two rigid punched pages (139.7 x 215.9 mm, 6 g, three 6.35 mm holes 9.5 mm from the binding edge) lie loose and flat on the desk, printed face up, holes towards the binder (-x), as in the source scene. Complete these stages in order. (1) Rings opened: both toggle plates at 0.50 rad or more. (2) Pages placed: with the rings still open (0.50 rad or more), every one of the six holes is threaded by the right ring half of its own station (the ring wire centre line crosses the page plane exactly once within 3.5 mm of the hole centre, the left half not at all), no hand contact on either page, each page touches the binder or the other page, and each page centre (60 mm from the hole line into the sheet) lies over the back cover: binder-frame x in (0.03, 0.16) m, |y| < 0.03 m, z in (-0.01, 0.06) m. (3) Rings closed: both toggle plates at 0.05 rad or less, every hole linked exactly once by its closed ring (one crossing within 3.5 mm of the hole centre) and both page centres over the back cover. (4) Release: the stage-3 condition with no hand contact on any page or any binder part, both pages resting on the binder and each page staying within 2 mm and 0.03 rad of its pose at the start of the window, for 50 consecutive controls (1 s). The episode ends with success at that moment; one page, an unthreaded hole or open rings never count. The episode ends at once with failure, checked after every 2 ms physics substep, when a page touches the floor; when a page has no contact at all, falls faster than 0.2 m/s and no ring runs through any of its holes (dropped); when a page origin goes more than 2 mm below the desk top (z < 0.698 m) or leaves the workspace x in [0.20, 0.98] m, y in [-0.38, 0.48] m, z in [0.698, 1.10] m; when the binder moves more than 0.03 m horizontally from its start or tilts more than 0.35 rad; when a ring wire penetrates a page deeper than 1.2 mm or a hand part penetrates a page deeper than 3 mm (a ring can only enter a page through its hole); or when the physics becomes unstable. Later actions cannot undo a failure. Only robot actuator targets are allowed; the rings, plates, boosters and covers move only through contact and their passive joints. Pages may slide on the desk and hang over its edge (a page touching the desk is not a failure). Pages are stiff cardstock plates: paper bending is not modelled. At most 6000 controls at 50 Hz; reaching that limit without success is a failure.
+## Task
+Open the rings of the ring binder on the desk, thread both punched pages onto them through their holes, close the rings
+and let go.
 
-You control one dexterous hand mounted on a six-DoF wrist positioning stage (three prismatic and three serial revolute
-joints, no arm). The stage and the fingers are position actuated in the physics engine under native force bounds;
-grasping, carrying and releasing require physical contact. The controller runs at 50 Hz, with ten 2 ms physics
-substeps.
+## Goal
+Success: in this order, the rings are opened; with the rings open, both pages are threaded on them, each hole on its own
+ring, and lie over the back cover with the hand off them; the rings are closed through every hole; then the hand is off
+the pages and the binder, and both pages rest still on the binder for a second.
 
-## Scene and modelling notes
-The binder is free on the desk: back cover (with the ring mechanism near its spine edge) towards +x, spine and front
-cover on passive hinges towards -x. Its two toggle plates carry the three ring halves on each side; an over-centre
-housing spring (a passive spatial tendon) holds them either closed (0 rad) or open (0.60 rad), and the plates and the
-two booster paddles are coupled by the binder's internal linkage (passive joint couplings, never attached to the hand).
-Pressing a booster paddle down opens the rings; pushing the plates back past the over-centre point (for example by
-pressing the raised inner edges of the open plates down) closes them.
-Simplifications, stated plainly: the pages are rigid 0.8 mm cardstock plates (paper bending, creasing and tearing are
-not modelled; the holes are octagonal openings 6.35 mm across flats); as in the source scene the two sheets start loose and
-flat on the desk (a hand can drag a page so that its far edge overhangs the desk edge, then pinch it); the binder geometry is
-an authored reconstruction (Avery 05806 dimensions), not manufacturer CAD.
+Any of these ends the episode at once as a failure, which later actions cannot undo:
+- A page touches the floor or is dropped.
+- A page falls below the desk top or leaves the work area.
+- The binder is pushed away or tipped.
+- A ring or a finger is pushed through a page (a ring may enter a page only through its hole).
+- The physics becomes unstable.
 
-## Hands
-Two genuine manufacturer hand models are available: `sharpa` (Sharpa Wave, 22 finger actuators; the default) and `wuji` (Wuji Hand 2.2, 20 finger actuators). The task, scene, mount, objects and success predicate are the same for both; only one hand is used per episode.
-Both hands hang from the same six-axis wrist stage, with the same wrist joints, ranges, gains and start targets.
-The robot service runs the hand named by `DEXHAND_HAND` on the sim service (default `sharpa`); the agent cannot switch it during an episode. `spec()["hand"]` names it, and `spec()["action_types"]["joint_position"]` gives the row width (`28` for `sharpa`, `26` for `wuji`) and the exact order. The episode record names the hand; the service grades the episode it ran with that hand.
+Each step of the Goal before the last one counts at the moment it happens.
 
-## Episodes and resets
-You have **20 resets** (`spec["budget"]["reset"]`, which is authoritative: if it says 0, there is no reset
-and the one episode is the run). A reset puts the robot and every object back in the same frozen starting state and
-starts a new episode, either abandoning the running one or after one has ended; it takes no simulated time and
-returns the start's images and proprioception:
-```python
-res = r._post("/reset", {"cameras": ["overview"]}, [], 900)   # POST /reset (the 2.2 client has no reset())
-res.meta["episode"], res.meta["resets_left"]
-```
-Once an episode has ended, `submit` raises `EpisodeOver` until you reset. **Only the last episode is graded**: an
-episode you reset away is never graded, a success ends the run at once (no reset after it), and when your time is up
-the episode then running is the one graded. The wall clock is the run's and never restarts; `meta["episode"]` and
-`meta["resets_left"]` count the episodes (`meta["control_steps"]` is the current episode's,
-`meta["control_steps_total"]` all of them).
+When you are done, send `/finish` to end the episode and get it graded. Everything else is judged on the state at that
+point.
 
-## Robot service
-The simulator runs in a separate service. You receive camera RGB, optional calibrated depth, and the robot's own
-joint positions, velocities, actuator efforts, wrist pose and current targets. An episode ends at the first success
-or the first failure (see the task text); after that the service accepts no more actions until a reset (see
-`## Episodes and resets`). The service records every action and watch step, then judges the graded episode as it ran
-(that is the verdict; nothing is replayed). Leave your controller at `/app/output/gen.py`; no trajectory hand-in is
-needed.
+Rules:
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+  benchmark's demonstrations, trained policies); trials are reviewed.
+- Episodes: 20 resets (`spec()["budget"]["reset"]`), each a new episode from the same starting state; within an episode
+  what you knock over stays knocked over until you reset. Only the last episode is graded. No reset is possible after
+  `/finish`.
+- You get only the cameras and the robot's own sensor readings: no live object poses, no score, no success signal.
 
+Only the robot's actuator targets act on the scene: no object teleports, grasp welds, scripted object motion or applied
+forces.
+
+## Robot Interface
+One dexterous hand on a six-axis wrist stage (no arm), at a desk (DexHand, MuJoCo). The robot runs as a service you
+reach through its client or its MCP tools, as if it were real hardware.
+
+`POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
+
+### Client
+`/opt/tools/rcb_client.py`:
 ```python
 from rcb_client import Robot
 r = Robot()
@@ -60,33 +53,84 @@ q = obs.group("joint_pos", now=True)
 res = r.submit("joint_position", rows, dt=0.02, interpolate="hold", video="none")
 r.fk(q)                       # robot-link forward kinematics; no physics is stepped
 r.status()
-res.save("/app/runs/001")
+# a new episode: POST /reset, or the MCP tool `reset` (this client has no reset() call)
 ```
-`rows` is `(T, D)` in `spec["action_types"]["joint_position"]["layout"]` order: the wrist targets `wrist_x, wrist_y,
-wrist_z` (metres, offsets from the stage base at (0.62, 0.00, 0.70)) and `wrist_rx, wrist_ry, wrist_rz` (radians, serial XYZ joints), then the finger targets in radians.
-`D` is 28 for `sharpa` (22 Sharpa Wave finger joints `right_thumb_CMC_FE` ... `right_pinky_DIP`) and 26 for `wuji`
-(20 Wuji Hand 2.2 finger joints `r_wuji_r_THJ0..3`, `r_wuji_r_FFJ0..3`, `r_wuji_r_MFJ0..3`, `r_wuji_r_RFJ0..3`,
-`r_wuji_r_LFJ0..3`). Actuator targets are clipped to the published joint limits and clipping is reported. `dt` must be
-a multiple of 0.02 s, between 0.02 and 0.5 s; a chunk covers at most 10 s. Hold interpolation holds each row for `dt`;
-linear interpolation starts from the previous target. The robot has no scalar gripper opening. Quaternions in measured
-poses use WXYZ; world z is up and the desk top is at z = 0.70 m. Cameras are overview, closeup, rings and pages, at
-640 x 480.
 Requests can return RGB frames or mp4, with depth `none`, `last` or `frames`. Each call returns at most 1,000 camera
-images, counting per-frame depth; reduce cameras, fps or duration for larger chunks. `get_obs(seconds=...)` holds the
-current targets for up to 30 s and records those steps. Calling it without seconds only observes the current state.
-Forward kinematics uses only the robot's own links; no IK primitive is supplied. If the service connection fails,
-call `r.wait_ready()` and inspect `r.status()` before continuing. Crash recovery resumes the same journaled episode,
-without a reset, and the wall-clock budget keeps running.
+images, counting per-frame depth; reduce cameras, fps or duration for larger chunks. `hold(s)` holds the current targets
+and records those steps. `get_obs()` only observes the current state. Forward kinematics uses only the robot's own
+links; no IK primitive is supplied. If the service connection fails, call `r.wait_ready()` and inspect `r.status()`
+before continuing. Crash recovery resumes the same journaled episode, without a reset, and the wall-clock budget keeps
+running.
 
-One call returns at most 1000 images (`max_frames_per_call`, PROTOCOL §3 "Images per call").
+Resets: `POST /reset` (MCP tool `reset`) starts a new episode from the same starting state. You can call it during a
+running episode, which it abandons, or after one has ended. It takes no simulated time and returns the start's images
+and proprioception. Once an episode has ended, `submit` raises `EpisodeOver` until you reset. `meta["episode"]` and
+`meta["resets_left"]` count the episodes. `meta["control_steps"]` counts the current episode's control steps,
+`meta["control_steps_total"]` those of all episodes.
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+### MCP tools
+- The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
+  `observe`, `submit`, `reset`, `kinematics`, `finish`. A tool takes its endpoint's request fields (any other field in
+  `fields`) and returns the service's reply `meta` unchanged; images, arrays and video are written as files under
+  `/app/obs/` (`.png`, `.npy`, `.mp4`) and the result lists them. Long action chunks can be passed as a file
+  (`actions_file`).
+- `observe` returns at once with what is already recorded: the current frame, or the last `last_s` seconds. Time passes
+  only through `submit`, which answers when its rows have run; a `submit` with `interpolate` "hold", `seconds` and no
+  rows lets time pass with the robot holding still.
+- A call still running after 45 s returns `pending` with an `operation` id; `observe(operation=id)` collects its reply.
+- The client and the tools drive the same robot in the same episode; use either, or both.
 
-## Resources
-Your container: **2 CPUs**, **10 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
+### Actions
+`rows` is `(T, D)` in `spec["action_types"]["joint_position"]["layout"]` order: the wrist targets
+`wrist_x, wrist_y, wrist_z` (metres, offsets from the stage base at (0.62, 0.00, 0.70)) and
+`wrist_rx, wrist_ry, wrist_rz` (radians, serial XYZ joints), then the finger targets in radians. `D` is 28 for `sharpa`
+(22 Sharpa Wave finger joints `right_thumb_CMC_FE` ... `right_pinky_DIP`) and 26 for `wuji` (20 Wuji Hand 2.2 finger
+joints `r_wuji_r_THJ0..3`, `r_wuji_r_FFJ0..3`, `r_wuji_r_MFJ0..3`, `r_wuji_r_RFJ0..3`, `r_wuji_r_LFJ0..3`). Actuator
+targets are clipped to the published joint limits and clipping is reported. `dt` must be a multiple of 0.02 s, between
+0.02 and 0.5 s; a chunk covers at most 10 s. Hold interpolation holds each row for `dt`; linear interpolation starts
+from the previous target. The robot has no scalar gripper opening.
 
-## Time limit
-You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+### Observations
+You receive camera RGB, optional calibrated depth, and the robot's own joint positions, velocities, actuator efforts,
+wrist pose and current targets. Quaternions in measured poses use WXYZ; world z is up and the desk top is at z = 0.70 m.
+Cameras are overview, closeup, rings and pages, at 640 x 480.
 
-This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` counts the same limit from your first request to the service, so it never runs out before your time does: your real time left is `time_left_s` minus the time you spent before that request. Plan by it. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+### Hands
+Two hand models: `sharpa` (Sharpa Wave, 22 finger actuators; the default) and `wuji` (Wuji Hand 2.2, 20 finger
+actuators); the task is the same for both, and one hand is used per episode. The service runs the hand that
+`DEXHAND_HAND` names on the sim service (default `sharpa`); you cannot switch it during an episode. The hand in use is
+`spec()["hand"]`; `spec()["action_types"]["joint_position"]` gives the row width (`28` for `sharpa`, `26` for `wuji`)
+and the exact order. Both hands hang from the same six-axis wrist stage, with the same wrist joints, ranges, gains and
+start targets.
+
+### Robot
+You control one dexterous hand mounted on a six-DoF wrist positioning stage (three prismatic and three serial revolute
+joints, no arm). The stage and the fingers are position actuated in the physics engine under native force bounds;
+grasping, carrying and releasing require physical contact. The controller runs at 50 Hz, with ten 2 ms physics substeps.
+
+The wrist targets `wrist_x, wrist_y, wrist_z` are offsets (metres, along the world axes) from the stage base at (0.62,
+0.00, 0.70); `wrist_rx, wrist_ry, wrist_rz` are serial XYZ joint angles (radians); at zero wrist rotation the fingers
+point down (-z) and the palm faces +x.
+
+### Scene
+The binder is free on the desk: back cover (with the ring mechanism near its spine edge) towards +x, spine and front
+cover on passive hinges towards -x. Its two toggle plates carry the three ring halves on each side; an over-centre
+housing spring (a passive spatial tendon) holds them either closed (0 rad) or open (0.60 rad), and the plates and the
+two booster paddles are coupled by the binder's internal linkage (passive joint couplings, never attached to the hand).
+Pressing a booster paddle down opens the rings; pushing the plates back past the over-centre point (for example by
+pressing the raised inner edges of the open plates down) closes them.
+
+## Limits
+- Time: 3600 s of wall-clock time from the start of your session. Everything counts, including waiting for the service.
+  At the end you are stopped without warning. Time left: `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`).
+  Trust this file: the `time_left_s` in the service's replies starts only at your first request. A call into a
+  long-running process can block for its whole wait time. Use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, including the simulator's and the benchmark's source.
+- Resources: 2 CPUs, 10 GiB memory, 1024 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`),
+  no GPU; the simulator runs in its own container and does not count. Going over a cap can get a process killed (the CPU
+  cap only slows you down). Usage: `/run/rcb-limits/usage.json`.
+- Resets: at most 20 (`spec()["budget"]["reset"]`), each a new episode from the same starting state.
+- Steps: at most 6,000 control steps (120 s of simulated time) per episode, then the episode ends.
+- Finish: if you never send `/finish`, the last episode is graded when your session ends.

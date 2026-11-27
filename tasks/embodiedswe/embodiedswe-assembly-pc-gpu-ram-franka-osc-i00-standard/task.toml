@@ -14,7 +14,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/embodiedswe-assembly-pc-gpu-ram-franka-osc-i00-standard"
-description = "EmbodiedSWE assembly.pc_gpu_ram.franka.osc (robobench at 67f44e8a2ca5, Isaac Lab 2.3.2 / Isaac Sim 5.1, GPU PhysX), standard mode: the frozen instance of the privileged twin (seed 0) served by a sim sidecar; the agent gets only the client (camera images, depth, proprioception; ee_pose chunks), one episode, no reset, graded live."
+description = "EmbodiedSWE assembly.pc_gpu_ram.franka.osc (robobench at 67f44e8a2ca5, Isaac Lab 2.3.2 / Isaac Sim 5.1, GPU PhysX), standard mode: Install the graphics card and the two RAM sticks in the PC. The card goes in the PCIe x16 slot, the stick from the holder farther from the robot in the outermost memory slot, and the other stick in the second slot from the CPU socket. The frozen instance of the privileged twin (seed 0) served by a sim sidecar; the agent gets only the client (camera images, depth, proprioception; ee_pose chunks), one episode, no reset, graded live."
 keywords = ["robotics", "embodiedswe", "isaac-lab", "isaac-sim", "assembly", "insertion", "pc-building", "franka", "assembly.pc_gpu_ram.franka.osc", "standard-mode", "trajectory"]
 
 [metadata]
@@ -63,6 +63,13 @@ cpus = 8
 memory_mb = 24576
 storage_mb = 10240
 gpu_types = ["L40S", "L40", "L4", "RTX 4090", "RTX 6000 Ada"]
+
+# The robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): Harbor starts this server for the agent.
+[[environment.mcp_servers]]
+name = "efe-robot"
+transport = "stdio"
+command = "python3"
+args = ["/opt/tools/efe_mcp/server.py"]
 
 [verifier.env]
 RCB_LIMITS_ENFORCE = "${RCB_LIMITS_ENFORCE:-0}"

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:labutopia-0.1.0` |
 
 ## Task
-LabUtopia's `place` (Place (LabUtopia's level-2 TransportBeaker is the same task)), with a Franka Panda arm (7 joints) with its two-finger gripper, fixed to a laboratory bench: Pick up the beaker, set it down on the square target plate and let go of it. Success, at the first control step at which the second condition has held for 60 consecutive control steps (1 s): (1) the beaker's centre has been more than 0.10 m above where it started; (2) after that, its centre is within 0.05 m (horizontally) of the plate's centre and within 0.05 m of its initial height, and the hand (the point between the fingertips) is more than 0.05 m from the beaker's centre.
+LabUtopia's `place` (Place (LabUtopia's level-2 TransportBeaker is the same task)), with a Franka Panda arm (7 joints) with its two-finger gripper, fixed to a laboratory bench: Pick up the beaker, lifting it more than a hand's width, and set it down in the middle of the white square plate; then let go and move the hand away.
 On the bench in front of the arm: a glass beaker, about 11 cm across and 9 cm tall, and a white square plate, 10 cm x 10 cm, lying flat on the bench. The deliverable is one replayable trajectory of joint targets (`/app/output/trajectory.npz`, `(T, 18)`, one row per 1/60 s control step: 9 position targets, then 9 velocity targets).
 
 ## Difficulty

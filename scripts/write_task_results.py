@@ -5,7 +5,7 @@ attempts.json). One folder per agent+model; the privileged and standard twins
 each get their own.
 usage: write_task_results.py <jobs_dir> <job_name> <run-id> "<agent label>" --out <dir>
 
-config.json (docs/protocol/running.md "Results", PROTOCOL v2.1): the trial's effective configuration (scripts/task_conventions.py
+config.json (docs/protocol/running.md "Results", PROTOCOL §2): the trial's effective configuration (scripts/task_conventions.py
 effective_config: protocol version, mode, cutoff, reset budget, slowdown S, seed, network, validated flag, digest), its
 result (`success`, `fail` or `not_a_result` with the reason), whether it is counted and, in the standard modes, the
 first-attempt result `first_success` (PROTOCOL §4: the no-reset performance, reported beside the graded one). Results are ranked only within
@@ -75,21 +75,30 @@ def load_json(p):
         return {}
 
 
-def classify(trial, r, rw):
+def classify(trial, r, rw, agent_ended=False):
     """(status, reason, over the token budget): status `success`, `fail` (the agent's own result, counted) or
-    `not_a_result` (infrastructure: voided, never counted)."""
+    `not_a_result` (infrastructure: voided, never counted). `agent_ended`: the trial ran the version of the task that is
+    agent-ended now (agent_ended_trial)."""
     gw = load_json(trial / "gateway/totals.json")
     over = bool(gw.get("over_token_budget"))               # running.md "Official runs": over the token budget = failed
     # PROTOCOL §4: infra_error (or a grader error) = not a result, neither a success nor the agent's 0; so is a trial
     # the verifier never graded, or that Harbor or the model account ended (not_a_result). A verdict of success with no
     # infrastructure flag stands; over the token budget is the agent's failure unless the verifier flagged infrastructure.
     infra = bool(rw.get("infra_error") or rw.get("grader_error"))
-    # an agent-ended episode (PROTOCOL §3; reward.json ended_session_end) is graded on the state its session ended in, the
-    # token budget's end included: over the budget it is not failed on top
-    fails = over and "ended_session_end" not in rw
+    # an agent-ended episode (PROTOCOL §3: every standard and realtime task from v3.0, tc.agent_end_required, for a trial
+    # of the task's current version; else reward.json's ended_session_end) is graded on the state its session ended in,
+    # the token budget's end included: over the budget it is not failed on top
+    fails = over and not agent_ended and "ended_session_end" not in rw
     ok = rw.get("success") == 1 and not fails and not infra
     why = None if ok or (over and not infra) else not_a_result(trial, r, rw)
     return ("success" if ok else "not_a_result" if why else "fail"), why, over
+
+
+def agent_ended_trial(tdir, cfg):
+    """Whether the trial's episode was agent-ended by the rule of the checkout: only for a trial of the task's current
+    version (its digest matches, trial_config `digest_match`); a trial of an older version (a 2.x task before v3.0)
+    keeps the rules it ran under, known from its reward.json (classify: `ended_session_end`)."""
+    return cfg.get("digest_match") is True and tc.agent_end_required(tdir)
 
 
 def first_success(rw, mode, reset_budget=None):
@@ -184,7 +193,8 @@ def main(argv):
         rw = load_json(trial / "verifier/reward.json")
         ar = r.get("agent_result") or {}; mode = tc.mode_of(tdir); limited = mode != "privileged"
         out = out_root / task / slug; out.mkdir(parents=True, exist_ok=True)
-        status, why, over = classify(trial, r, rw)
+        cfg = trial_config(trial, task, r)
+        status, why, over = classify(trial, r, rw, agent_ended=agent_ended_trial(tdir, cfg))
         led = record_attempt(out, trial, r, status)
         rule = rp.check_attempts([{"outcome": OUTCOME.get(a["status"], "agent_failure")} for a in led])
         over_cap = bool(rule)
@@ -196,7 +206,6 @@ def main(argv):
             # a voided attempt never replaces a counted one: it is recorded in attempts.json only
             print(f"{task} / {slug}: trial {trial.name} is not a result (voided); the counted attempt stays")
             continue
-        cfg = trial_config(trial, task, r)
         cfg.update({"run_id": slug, "job": job, "trial": trial.name, "result": status, "not_a_result_reason": why,
                     "counted": status != "not_a_result", "attempts": len(led), "attempts_over_cap": over_cap,
                     "first_success": first_success(rw, mode, cfg.get("reset_budget"))})

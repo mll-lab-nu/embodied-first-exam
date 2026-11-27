@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:dexjoco-0.1.2` |
 
 ## Task
-DexJoCo `hammer_nail` (a Franka Panda arm with a 16-DoF Allegro hand): Pick up the hammer and drive the nail into the wooden block by striking the nail's head with it. Only a real downward swing counts: the hammer face must be moving down faster than about 20 cm per second just before it hits the nail. Such a blow drives the nail about 1 cm deeper, and a faster blow drives it further, up to about 2.5 cm per strike. Success: the nail is at least 4 cm deep.
+DexJoCo `hammer_nail` (a Franka Panda arm with a 16-DoF Allegro hand): Pick up the hammer and hammer the nail about 4 cm into the wooden block.
 Privileged mode: the agent works in the simulator's container with live object poses, unlimited resets and thin motion
 primitives, and hands in one trajectory replayed open-loop from the frozen instance.
 

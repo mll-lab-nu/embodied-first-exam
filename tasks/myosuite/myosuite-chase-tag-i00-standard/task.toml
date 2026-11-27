@@ -13,7 +13,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/myosuite-chase-tag-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.2): MyoSuite chase_tag (MyoLegs, 80 muscles) on the same frozen instance as myosuite-chase-tag-i00-privileged: Tag the opponent: bring your pelvis within 0.5 m of it (horizontal distance) within 20 s of simulated time (MyoChallenge 2023 ChaseTag P1, task CHASE). The agent only gets a client: cameras (RGB, optional depth, calibration), the body's joints and muscles, actuator command chunks, fingertip kinematics; 10 resets, only the last episode graded; no object state; the sim service records the episode and grades it as it ran (the live episode; nothing is replayed)."
+description = "STANDARD MODE (robot as a service, eai-standard/2.2): MyoSuite chase_tag (MyoLegs, 80 muscles) on the same frozen instance as myosuite-chase-tag-i00-privileged: Tag the opponent: bring your pelvis within 0.5 m of it (horizontal distance) within 20 s of simulated time (MyoChallenge 2023 ChaseTag P1, task CHASE). Task: Tag the opponent: get your pelvis within 0.5 m of it. The agent only gets a client: cameras (RGB, optional depth, calibration), the body's joints and muscles, actuator command chunks, fingertip kinematics; 10 resets, only the last episode graded; no object state; the sim service records the episode and grades it as it ran (the live episode; nothing is replayed)."
 keywords = ["robotics", "myosuite", "mujoco", "musculoskeletal", "myolegs", "code-as-policy", "trajectory", "chase_tag", "standard-mode"]
 
 [metadata]
@@ -69,6 +69,13 @@ build_timeout_sec = 1800.0
 cpus = 4
 memory_mb = 7168
 storage_mb = 10240
+
+# The robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): Harbor starts this server for the agent.
+[[environment.mcp_servers]]
+name = "efe-robot"
+transport = "stdio"
+command = "python3"
+args = ["/opt/tools/efe_mcp/server.py"]
 
 [verifier.env]
 RCB_LIMITS_ENFORCE = "${RCB_LIMITS_ENFORCE:-0}"

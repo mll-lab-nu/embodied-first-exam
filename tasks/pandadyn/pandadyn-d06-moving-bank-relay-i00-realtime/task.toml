@@ -19,7 +19,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/pandadyn-d06-moving-bank-relay-i00-realtime"
-description = "REALTIME MODE (robot as a service on a clock that does not stop, eai-standard/2.3, slowdown S = 3): Panda Dynamic Scenes D06 Moving bank relay (two Franka Pandas) on the same frozen instance as the privileged task. Task: A low-friction puck is already sliding toward the right arm at the start, through the first of two gaps in a row of posts across the table. The right Panda's paddle must strike it back toward the left. The puck must then come back through that same gap, hit a small bank board that slides back and forth by itself on the left arm's side of the posts, while the board is moving, and then hit the left Panda's paddle. The right paddle strikes the puck back a second time. The puck must then come back through the second gap and hit the left paddle again, with the paddle at a clearly different position and angle from the first rebound. Finally the left paddle must send the same puck back out through the second gap and across a goal line in front of a backstop wall on the right arm's side, with the right paddle not touching it after it passes the gap. Once an episode starts the scene and the robot move whatever the agent does (at 1/S of real speed), so the agent plans or streams joint_position targets from a program of its own through the realtime client (RGB, depth + proprioception). 3 resets, only the last episode graded; no privileged state; the sim service records every executed control step and grades the last episode as it ran live (no replay)."
+description = "REALTIME MODE (robot as a service on a clock that does not stop, eai-standard/2.3, slowdown S = 3): Panda Dynamic Scenes D06 Moving bank relay (two Franka Pandas) on the same frozen instance as the privileged task. Task: Strike the sliding puck back with the right paddle so that it returns through the gap it came through, bounces off the moving bank board and hits the left paddle. Strike it back again so that it comes through the other gap, next to the side rail, onto the left paddle held at a new place and angle; then send it with the left paddle back out through that gap and across the goal line in front of the middle of the backstop. Once an episode starts the scene and the robot move whatever the agent does (at 1/S of real speed), so the agent plans or streams joint_position targets from a program of its own through the realtime client (RGB, depth + proprioception). 3 resets, only the last episode graded; no privileged state; the sim service records every executed control step and grades the last episode as it ran live (no replay)."
 keywords = ["robotics", "pandadyn", "maniskill", "sapien", "franka-panda", "bimanual", "dynamic-manipulation", "realtime-mode", "trajectory"]
 
 [metadata]
@@ -74,6 +74,13 @@ build_timeout_sec = 1800.0
 cpus = 4
 memory_mb = 10240
 storage_mb = 10240
+
+# The robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): Harbor starts this server for the agent.
+[[environment.mcp_servers]]
+name = "efe-robot"
+transport = "stdio"
+command = "python3"
+args = ["/opt/tools/efe_mcp/server.py"]
 
 [verifier.env]
 RCB_LIMITS_ENFORCE = "${RCB_LIMITS_ENFORCE:-0}"

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:ikea-mujoco-0.3.0` |
 
 ## Task
-IKEA SVALLET work lamp (AA-2140039-1), unpowered steps 1-2 in plain MuJoCo 3.14.0 (CPU, float64) with two 6-DoF ViperX 300 s arms (MuJoCo Menagerie ALOHA), each with its own parallel gripper: produce one replayable trajectory. Press the lamp shade's key down into the socket on top of the stand column until the spring jaw snaps over it, then screw the E12 bulb up into the shade's socket until it seats.
+IKEA SVALLET work lamp (AA-2140039-1), unpowered steps 1-2 in plain MuJoCo 3.14.0 (CPU, float64) with two 6-DoF ViperX 300 s arms (MuJoCo Menagerie ALOHA), each with its own parallel gripper: produce one replayable trajectory. Snap the lamp shade onto the socket on top of the stand, then screw the bulb into the shade's socket until it seats. Leave the lamp standing upright. Then let go of everything and move both arms clear.
 
 ## Difficulty
 Bimanual furniture assembly with physical grasps (no assist), 14-D actuator action at 400 Hz
@@ -51,7 +51,7 @@ Caps per container (PROTOCOL §6).
 | Initial state | sha256 `22360c69fb8a50ef…` of the mjSTATE_INTEGRATION vector |
 
 ### Goal
-Press the lamp shade's key down into the socket on top of the stand column until the spring jaw snaps over it, then screw the E12 bulb up into the shade's socket until it seats.
+Snap the lamp shade onto the socket on top of the stand, then screw the bulb into the shade's socket until it seats. Leave the lamp standing upright. Then let go of everything and move both arms clear.
 
 ### Success requirements
 - Both retention joints are connected (shade on the stand, bulb in the shade) and, at the end, each connector is within its gates (axial gap, lateral offset and axis tilt).

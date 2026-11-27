@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Do a standing long jump: from a standstill behind the take-off line, take off from both feet without a step, land on your feet at least your own height beyond the line, and stand. (Embodied Olympics `standing-long-jump`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Do a standing long jump: from both feet, without a step, jump at least your own height (1.32 m) past the line, land on your feet and stand. (Embodied Olympics `standing-long-jump`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
 
 ## Difficulty
 Neither built-in gait can jump. The take-off needs both legs' full power in one coordinated push with the body leaning well ahead of the feet, and a jump of the robot's own height comes down at more than 3 m/s: the legs have to absorb it without a hand or the pelvis going down. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 5 resets (only the last attempt is graded).

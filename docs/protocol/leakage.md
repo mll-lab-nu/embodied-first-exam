@@ -11,7 +11,7 @@ a reward function, a success predicate, a trained policy, a demonstration set.
 
 The honour rule allows the agent to read anything installed in its container, the simulator's and the benchmark's
 own source included (PROTOCOL §5); it forbids only searching the web for, or
-downloading, a ready-made solution. Reading the image is therefore not a violation in any trial: whatever the image
+downloading, an existing solution. Reading the image is therefore not a violation in any trial: whatever the image
 ships is fair game, and the only protection of the answer is that the image does not hold it. Everything below is
 about making that true.
 

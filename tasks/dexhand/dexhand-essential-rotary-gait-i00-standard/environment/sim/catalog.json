@@ -6,7 +6,7 @@
       "title": "Multi-turn encoder knob with fixed-wrist finger gait",
       "category": "finger_gaiting",
       "description": "Turn a real rotary-encoder cap on a complete controller housing through two forward revolutions and one reverse revolution, using continuous load-bearing contact and overlapping finger handoffs.",
-      "instruction": "Keep the wrist fixed. Rotate the rotary encoder knob to +720 degrees, then reverse to +360 degrees and hold it still. The real encoder cap has its actual rounded outer profile, normal surface friction and bearing resistance, and a passive unlimited-turn hinge. There is no task-object actuator or powered turning assistance. Maintain load-bearing hand contact throughout and perform at least four contact handoffs involving overlapping fingers.",
+      "instruction": "Keep the wrist fixed and never let go of the knob. Turn the knob two full turns clockwise, as seen looking at its face (which faces the thumb side), passing it from finger to finger at least four times, each new set of touching fingers keeping one finger of the set before; then turn it one full turn back and hold it still. The real encoder cap has its actual rounded outer profile, normal surface friction and bearing resistance, and a passive unlimited-turn hinge. There is no task-object actuator or powered turning assistance. Maintain load-bearing hand contact throughout and perform at least four contact handoffs involving overlapping fingers.",
       "scene": "essential_rotary_gait",
       "mechanism": "smooth_passive_rotary_knob",
       "parameters": {

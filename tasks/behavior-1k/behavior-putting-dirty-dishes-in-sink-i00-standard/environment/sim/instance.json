@@ -3,7 +3,7 @@
  "challenge_task": "putting_dirty_dishes_in_sink",
  "instance_id": 301,
  "mode": "public_test",
- "text": "Clear the dirty dishes. Two bowls and two plates stand on the booth in the dining room; put all four into the sink in the kitchen (the dirt on them does not matter).",
+ "text": "Put both bowls and both plates into the kitchen sink.",
  "robot_config": "r1pro_primitives_eval.yaml",
  "robot_config_sha": "d9d0c8bceea2",
  "state_sha": "0176ae554cc9fb32",

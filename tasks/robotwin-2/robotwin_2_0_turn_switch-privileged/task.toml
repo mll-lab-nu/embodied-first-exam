@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/robotwin_2_0_turn_switch-privileged"
-description = "RoboTwin 2.0 turn_switch (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Use the robotic arm to click the switch. Frozen scene instance (RoboTwin seed 91573)."
+description = "RoboTwin 2.0 turn_switch (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Flip the switch all the way over. Frozen scene instance (RoboTwin seed 91573)."
 keywords = ["robotics", "robotwin", "sapien", "aloha-agilex", "dual-arm", "code-as-policy", "trajectory", "turn_switch"]
 
 [metadata]

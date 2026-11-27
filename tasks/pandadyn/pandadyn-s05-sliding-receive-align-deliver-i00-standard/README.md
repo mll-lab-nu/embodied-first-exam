@@ -18,7 +18,7 @@ client (docs/protocol/standard_mode.md Part 1, with the optional reset capabilit
 live and records every control step it ran. Between the agent's calls the world is frozen; 3 resets, only the last
 episode graded. The sidecar's adapter (`environment/sim/server.py`) is the benchmark's realtime twins', code for code,
 on the same shared service layer, so where a family has that twin the two modes differ only in the clock. Compare against the
-privileged task to measure the cost of losing privileged state, free resets and self-replay. At the start a small cube slides along a raised, slippery lane toward its open end. Once it has left the lane, receive it in the shallow tray the Panda holds, which is open on one side, and let it settle. Then keep the tray level and move it, without tilting it, so that the cube slides inside the tray until it rests at a staging point. Carry the cube through two waypoints. Bring the tray to a pose at a fixed offset from a platform that slides slowly back and forth on a rail, matching the platform's velocity. Finally get the cube onto that platform, where it must ride along at rest without touching the tray.
+privileged task to measure the cost of losing privileged state, free resets and self-replay. Receive the cube that slides off the lane in the tray and slide it, keeping the tray level, to the staging point in the tray. Carry it through the two waypoints, bring the tray to the match point beside the sliding platform, moving with it, and put the cube onto the platform.
 
 ## Difficulty
 That of `pandadyn-s05-sliding-receive-align-deliver-i00-privileged` (its README), without object poses or the success signal and with 3 resets: the moving objects
@@ -60,7 +60,7 @@ Caps per container (PROTOCOL §6).
 | | |
 |---|---|
 | Episode | it ends at the first control step where the task has succeeded or failed (the task's horizon, 25 s of simulated time, is a failure), when the agent's time is up, or on a simulator error; 3 resets (`POST /reset`: the scene rebuilt from the frozen instance); no step budget, the wall clock is the only budget |
-| Action space | `submit` chunks of `joint_position` (8: per arm 7 joint targets + the aperture, one row per 10 ms control step or `dt` apart, a chunk at most 10 s); `observe` frames or a watch window (at most 30 s); binary RCB1 responses |
+| Action space | `submit` chunks of `joint_position` (8: per arm 7 joint targets + the aperture, one row per 10 ms control step or `dt` apart, a chunk at most 10 s); `observe` the current frames or those recorded over the last seconds (`last_s`); hold chunks (`hold(s)`); binary RCB1 responses |
 | Cameras | `overview` and `closeup` (static), 640×480 RGB, z-depth on request |
 | Images | the `sim` sidecar runs efe:pandadyn (`images/pandadyn/`); the agent container and the verifier run the shared client image with its pip pins (`embodied_first_exam/standard/client.env`) |
 | Crash recovery | the shared service layer's: every control step journaled, a checkpoint with the state hash after every call; `restart: on-failure:6`, the service resumes the same episode |

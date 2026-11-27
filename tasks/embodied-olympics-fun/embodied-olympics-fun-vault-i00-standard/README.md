@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Vault over the vault table at the end of the run-up: go over it with at least one hand on its top and nothing but your hands touching it, then land on your feet on the landing mat and stand. (Embodied Olympics `vault`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Vault over the vaulting table: run up, push off it with your hands only, land on your feet on the mat and stand. (Embodied Olympics `vault`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
 
 ## Difficulty
 The table is 1.35 m high and the robot has no running policy: its walk reaches about 0.65 m/s and its best standing jump lifts it far less than a metre, so the 67 kg body has to be carried over the table by a take-off and arm support that nobody has built for it. It must then come down feet first from above 1.35 m and absorb the landing without a hand on the mat. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 5 resets (only the last attempt is graded).

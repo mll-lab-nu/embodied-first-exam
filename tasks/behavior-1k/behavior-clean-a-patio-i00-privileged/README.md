@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Clean the patio. The garden floor is covered with mud and a broom lies on it; remove every bit of mud from the floor.
+Clean all the mud off the garden floor.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - no mud (`mud.n.03_1`) is left on the garden floor (`floor.n.01_1`)

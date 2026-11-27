@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/metaworldplus-coffee-push-i00-privileged"
-description = "MetaWorld+ (Meta-World v3 coffee-push, Sawyer arm): Push the mug into the target position at the coffee machine. Produce one replayable trajectory of Meta-World's native actions on a frozen instance; graded on the state after the last action."
+description = "MetaWorld+ (Meta-World v3 coffee-push, Sawyer arm): Push the mug up to the coffee machine, to the target. Produce one replayable trajectory of Meta-World's native actions on a frozen instance; graded on the state after the last action."
 keywords = ["robotics", "mujoco", "metaworld", "sawyer", "code-as-policy", "trajectory", "privileged"]
 
 [metadata]

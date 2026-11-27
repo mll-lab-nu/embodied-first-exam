@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:myosuite-0.1.1` |
 
 ## Task
-MyoSuite `myoChallengeDieReorientP1-v0` (MyoHand, a musculoskeletal model of a human forearm and hand, 39 muscles): Rotate the die in the hand to the target pose and hold it there for a full second, with its position within about 2.5 cm of the target and its orientation within about 15 degrees of the target's, measured as the norm of the Euler-angle error. The episode ends in failure if the die gets more than about 20 cm from the target, that is, if it is dropped.
+MyoSuite `myoChallengeDieReorientP1-v0` (MyoHand, a musculoskeletal model of a human forearm and hand, 39 muscles): Turn the die in your palm until it matches the see-through target die, and hold it there for a second.
 A die rests in the palm of the upturned hand; a translucent target die shows the goal orientation. The deliverable is one replayable trajectory of actuator commands (`/app/output/trajectory.npz`, `(T, 39)`, one row per 10 ms control step).
 
 ## Difficulty

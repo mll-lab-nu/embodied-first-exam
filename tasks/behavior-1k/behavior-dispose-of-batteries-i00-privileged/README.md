@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Dispose of the batteries. Two batteries lie on the desk in the private office and one on the cabinet in the copy room; put all three inside the wastebasket that stands on the copy-room floor, and leave the wastebasket standing on the floor.
+Put all three batteries into the copy-room wastebasket and leave it standing on the floor.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - all three batteries (`battery.n.02_1`, `battery.n.02_2`, `battery.n.02_3`) are inside the wastebasket (`ashcan.n.01_1`)

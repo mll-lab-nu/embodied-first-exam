@@ -3,7 +3,7 @@
  "category": "marker",
  "object": "sharpie_marker",
  "task": "draw_smile",
- "text": "Pick up the sharpie marker and move it through the demonstrated motion (drawing a smiley face): bring it to each goal pose in order (the green marker shows the current goal).",
+ "text": "Pick up the marker and draw a smiley face, following the green ghost marker through its poses in order.",
  "start_pose": [
   -0.059410100881627466,
   0.025261806520960994,

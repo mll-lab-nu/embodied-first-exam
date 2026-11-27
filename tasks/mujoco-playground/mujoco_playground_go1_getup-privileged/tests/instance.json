@@ -46,7 +46,7 @@
   0.0
  ],
  "dropped": true,
- "text": "The Unitree Go1 has fallen over. Make it get up and stand upright at its standing height.",
+ "text": "The robot has fallen over. Get it back up, standing upright at its normal height.",
  "facts": {
   "start_xy_m": [
    0.0,

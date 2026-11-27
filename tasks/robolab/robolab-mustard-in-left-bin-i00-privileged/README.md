@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robolab-0.2.2` |
 
 ## Task
-Put the mustard in the left bin.
+Put the mustard bottle in the bin on the robot's left.
 
 ## Difficulty
 RoboLab labels this task "simple" (1 subtasks; attributes: spatial); its success term (`object_in_container`) asks for the mustard bottle put into the left bin. The tooling gives only thin primitives (move_ee on Isaac Lab's differential IK, joint moves, gripper, hold), so every grasp, transport and placement is the agent's to build. RoboLab ships no expert solution.

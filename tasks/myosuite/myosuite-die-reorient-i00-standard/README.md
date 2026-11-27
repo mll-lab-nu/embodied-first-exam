@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:myosuite-0.1.1` |
 
 ## Task
-MyoSuite `myoChallengeDieReorientP1-v0` (MyoHand, 39 muscles) on the same frozen instance as `myosuite-die-reorient-i00-privileged`: Rotate the die in the hand to the target pose and hold it there for a full second, with its position within about 2.5 cm of the target and its orientation within about 15 degrees of the target's, measured as the norm of the Euler-angle error. The episode ends in failure if the die gets more than about 20 cm from the target, that is, if it is dropped.
+MyoSuite `myoChallengeDieReorientP1-v0` (MyoHand, 39 muscles) on the same frozen instance as `myosuite-die-reorient-i00-privileged`: Turn the die in your palm until it matches the see-through target die, and hold it there for a second.
 A die rests in the palm of the upturned hand; a translucent target die shows the goal orientation. Standard mode (eai-standard/2.2): the agent drives the body through a client, with only its own proprioception and the scene's cameras, and 10 resets (only the last episode is graded).
 
 ## Difficulty
@@ -41,7 +41,7 @@ Caps per container (PROTOCOL §6).
 | Upstream | MyoSuite 2.12.2 (Apache-2.0) on MuJoCo 3.6.0, the models that ship in its wheel |
 | Service | `environment/sim/server.py` (the adapter) on the shared 2.2 layer `rcb_limited.py` (`embodied_first_exam/standard/`); cameras `side_view`, `front_view`, `hand_top`, `hand_bottom`, `hand_side_inter`, `hand_side_exter`, `plam_lookat` (640 x 480); forward kinematics of the body's links |
 | Resources | 4 CPUs, no GPU (CPU physics, OSMesa rendering); after the agent's phase the collect hook only renders the video (one pass over the graded episode), it replays nothing to grade |
-| Reset budget | 10 (`RCB_RESET_BUDGET`, compose default; PROTOCOL §2): `POST /reset` starts a new episode from the frozen instance; only the last episode is graded, a success ends the trial; results under another budget are reported separately |
+| Reset budget | 10 (`RCB_RESET_BUDGET`, compose default; PROTOCOL §2): `POST /reset` starts a new episode from the frozen instance; only the last episode is graded, when the agent sends `POST /finish` or its session ends (a success ends nothing); results under another budget are reported separately |
 
 ### Provenance
 The frozen instance (`environment/sim/instance.npz`) and its scene facts were made at generation time; see `tasks/myosuite/README.md`.

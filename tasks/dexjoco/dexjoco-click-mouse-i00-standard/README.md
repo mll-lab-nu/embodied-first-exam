@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:dexjoco-0.1.2` |
 
 ## Task
-DexJoCo `click_mouse` (a Franka Panda arm with a 16-DoF Allegro hand) on the same frozen instance as `dexjoco-click-mouse-i00-privileged`: Put the computer mouse on the magenta mousepad, click the mouse button while it is on the pad, and leave the mouse there. Success: the mouse is on the pad (its centre within the pad's 0.15 m radius horizontally and within 0.05 m of the pad's height), the button has been pressed while the mouse was on the pad (button joint more than 0.001 rad past its rest angle), which turns the monitor blue, and the mouse then stays on the pad for 10 consecutive control steps. A click while the mouse is off the pad does nothing.
+DexJoCo `click_mouse` (a Franka Panda arm with a 16-DoF Allegro hand) on the same frozen instance as `dexjoco-click-mouse-i00-privileged`: Put the computer mouse on the mousepad, click its button there and leave the mouse on the pad.
 Standard mode (eai-standard/2.2): the agent drives the robot through a client in one episode, with the robot's own
 sensors, calibrated cameras (RGB, optional depth) and the robot's kinematics.
 
@@ -25,7 +25,7 @@ mistakes without starting over.
 ## Reference solution
 `solution/oracle_stream.py` streams the privileged reference's rows (`solution/oracle_trajectory.npz`, 560 rows, float32-exact)
 through the client as `ee_pose` chunks; it uses no privileged information at run time. The service's recorded
-trajectory is then exactly the privileged reference, and the episode ends with success after 560 control steps.
+trajectory is then exactly the privileged reference (560 control steps), whose end state is a success.
 
 ## Verification
 The verdict is the live episode's (`graded_by = "live"`, `replays = 0`): the sim service judges the episode it runs with

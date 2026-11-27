@@ -8,8 +8,10 @@ __pycache__/
 # run outputs and logs
 /exps/
 /jobs/
+/jobs-*/
 *.log
 nohup.out
+*.pid
 # secrets
 .env
 .env.*

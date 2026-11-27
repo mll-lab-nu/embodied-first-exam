@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:humanoidbench-0.2.0` |
 
 ## Task
+Gather the six loose things in the room (the chair, the trophy, the headphones, the two packages and the snow globe) close together, anywhere you like.
+
 HumanoidBench room: produce one replayable trajectory that tidies six objects scattered around a room with the Unitree H1, frozen scene instance 00.
 
 ## Difficulty

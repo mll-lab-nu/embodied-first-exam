@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/embodied-olympics-fun-dunk-i00-privileged"
-description = "Embodied Olympics dunk (one Unitree H1-2 on the Embodied Olympics simulator, MuJoCo 3.3.7, CPU) in privileged mode: produce one replayable trajectory. Dunk the basketball with both hands: holding it in your two hands, take at most two steps, jump and force it down through the ring from above with both hands on it. Then let go of it, land on your feet and stand. A referee of events, geometry and contact rules decides the success."
+description = "Embodied Olympics dunk (one Unitree H1-2 on the Embodied Olympics simulator, MuJoCo 3.3.7, CPU) in privileged mode: produce one replayable trajectory. Dunk the basketball with both hands: with at most two steps, jump and push it down through the ring with both hands on it, then let go, land on your feet and stand. A referee of events, geometry and contact rules decides the success."
 keywords = ["robotics", "embodied-olympics", "sports", "mujoco", "unitree-h1-2", "humanoid", "trajectory", "dunk"]
 
 [metadata]

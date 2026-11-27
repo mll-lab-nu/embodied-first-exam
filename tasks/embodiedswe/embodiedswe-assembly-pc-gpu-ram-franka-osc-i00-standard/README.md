@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:embodiedswe-0.3.0` |
 
 ## Task
+Install the graphics card and the two RAM sticks in the PC. The card goes in the PCIe x16 slot, the stick from the holder farther from the robot in the outermost memory slot, and the other stick in the second slot from the CPU socket.
+
 Install a graphics card and two RAM sticks (Franka, operational-space control): the scene, frozen instance and success predicate of `embodiedswe-assembly-pc-gpu-ram-franka-osc-i00-privileged`, with a Franka Panda arm with its parallel gripper, under EmbodiedSWE's operational-space (torque) controller, in standard mode
 (tasks/embodiedswe/README.md "Standard mode").
 

@@ -3,7 +3,7 @@
  "challenge_task": "cook_brussels_sprouts",
  "instance_id": 301,
  "mode": "public_test",
- "text": "Roast the halved brussels sprouts. Four brussels sprouts are in a tupperware inside the kitchen refrigerator; a chopping board with a carving knife on it and a cookie sheet lie on the countertop, and there is an oven in the kitchen. Cut every sprout in half, cook all eight halves in the oven and leave them inside it, and close the oven and the refrigerator.",
+ "text": "Cut the brussels sprouts in half, roast all the halves in the oven and leave them there, and close the oven and the fridge.",
  "robot_config": "r1pro_primitives_eval.yaml",
  "robot_config_sha": "d9d0c8bceea2",
  "state_sha": "e12c631dd562b805",

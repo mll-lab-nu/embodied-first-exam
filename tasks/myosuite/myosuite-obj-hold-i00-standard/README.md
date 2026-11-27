@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:myosuite-0.1.1` |
 
 ## Task
-MyoSuite `myoHandObjHoldFixed-v0` (MyoHand, 39 muscles) on the same frozen instance as `myosuite-obj-hold-i00-privileged`: Hold the object at the goal, with its centre within about 1 cm of the goal site, for a full second. The episode ends in failure if the object gets more than about 30 cm from the goal, that is, if it is dropped. The object starts resting in the hand and falls if the hand does not grip it.
+MyoSuite `myoHandObjHoldFixed-v0` (MyoHand, 39 muscles) on the same frozen instance as `myosuite-obj-hold-i00-privileged`: Grip the object in your palm and hold it at the goal spot right above it for a second.
 A small object rests in the palm of the upturned hand; the goal site is right above it. Standard mode (eai-standard/2.2): the agent drives the body through a client, with only its own proprioception and the scene's cameras, and 10 resets (only the last episode is graded).
 
 ## Difficulty
@@ -41,7 +41,7 @@ Caps per container (PROTOCOL §6).
 | Upstream | MyoSuite 2.12.2 (Apache-2.0) on MuJoCo 3.6.0, the models that ship in its wheel |
 | Service | `environment/sim/server.py` (the adapter) on the shared 2.2 layer `rcb_limited.py` (`embodied_first_exam/standard/`); cameras `side_view`, `front_view`, `hand_top`, `hand_bottom`, `hand_side_inter`, `hand_side_exter`, `plam_lookat` (640 x 480); forward kinematics of the body's links |
 | Resources | 4 CPUs, no GPU (CPU physics, OSMesa rendering); after the agent's phase the collect hook only renders the video (one pass over the graded episode), it replays nothing to grade |
-| Reset budget | 10 (`RCB_RESET_BUDGET`, compose default; PROTOCOL §2): `POST /reset` starts a new episode from the frozen instance; only the last episode is graded, a success ends the trial; results under another budget are reported separately |
+| Reset budget | 10 (`RCB_RESET_BUDGET`, compose default; PROTOCOL §2): `POST /reset` starts a new episode from the frozen instance; only the last episode is graded, when the agent sends `POST /finish` or its session ends (a success ends nothing); results under another budget are reported separately |
 
 ### Provenance
 The frozen instance (`environment/sim/instance.npz`), its scene facts and the reference solution (`solution/oracle.npy`) were made at generation time; see `tasks/myosuite/README.md`.

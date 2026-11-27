@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:libero-max-0.1.1` |
 
 ## Task
-LIBERO-MAX case `pro-task-10-t05-i00-illumination_switch-d1-p195`: a Franka Panda arm at a table, instructed **"Pick up the cup and place it in the back compartment of the caddy."**, on a LIBERO-PRO variant
+LIBERO-MAX case `pro-task-10-t05-i00-illumination_switch-d1-p195`: a Franka Panda arm at a table, instructed **"Put the mug in the back compartment of the caddy."**, on a LIBERO-PRO variant
 of a libero_10 task (task). Online event (illumination switch): the first time the gripper comes within
 0.18 m of `white_yellow_mug_1`, LIBERO-MAX changes the scene once (the lighting is scaled by 1.8). The deliverable is one
 replayable trajectory of LIBERO's OSC control steps (`/app/output/trajectory.npz`, `(T, 7)`, T ≤ 520), graded by

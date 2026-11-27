@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Put the car, electric toothbrush, hammer and shoe into the box, each oriented with its front facing the same way (left), with the box upright and aligned, then return both arms to the start pose. (RoboDojo's `pack_objects_into_box_random`). RoboDojo capability dimension: Generalization (randomised variant: other models, clutter). Instance i00 is RoboDojo's own evaluation layout
+Put the car, the toothbrush, the hammer and the shoe in the box, each lying lengthwise with its front end pointing left, and keep the box upright without turning it. Then move both arms back to where they started. (RoboDojo's `pack_objects_into_box_random`). RoboDojo capability dimension: Generalization (randomised variant: other models, clutter). Instance i00 is RoboDojo's own evaluation layout
 `arx_x5/0/pack_objects_into_box_random_0.json` (sha256 `f51946657574f10d`), frozen in `instance.json`. The deliverable is one replayable trajectory of
 RoboDojo's 14-D joint action at 25 Hz (`/app/output/trajectory.npz`), graded by RoboDojo's own reward check for the task,
 with no step cap (RoboDojo's own evaluation gives a policy 1300 actions; PROTOCOL §3).

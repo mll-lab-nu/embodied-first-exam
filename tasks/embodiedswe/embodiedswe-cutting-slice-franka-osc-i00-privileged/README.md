@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:embodiedswe-0.3.0` |
 
 ## Task
+Pick up the knife and cut the carrot into slices along its scored lines, keeping every piece on the chopping board.
+
 Slice the food with a chef knife (Franka, operational-space control). EmbodiedSWE's `cutting.slice.franka.osc` task (robobench at commit `67f44e8a2ca5`), privileged mode, with a program as the
 deliverable: `solution/solve.py` exposing `solve(env)`.
 

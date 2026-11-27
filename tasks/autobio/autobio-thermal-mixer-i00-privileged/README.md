@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:autobio-0.1.0` |
 
 ## Task
-AutoBio's `thermal_mixer` (Operate thermal mixer panel), with a UR5e arm (6 joints) with a Robotiq 2F-85 gripper, fixed to the bench: Set the thermal mixer by pressing the buttons of its panel: time 30 s, temperature 33 °C, mixing speed 600 rpm. It starts at 60 s, 25 °C and 900 rpm. The episode is judged in the state in which your trajectory ends: success iff the panel is then set to exactly these three values. AutoBio's score for the task (reported as `progress`) is 0.5 x temperature + 0.3 x time + 0.2 x speed, each term the fraction of the way from the initial to the target value.
+AutoBio's `thermal_mixer` (Operate thermal mixer panel), with a UR5e arm (6 joints) with a Robotiq 2F-85 gripper, fixed to the bench: Set the thermal mixer to time 30 s, temperature 33 °C, mixing speed 600 rpm, with the buttons on its front panel.
 On the bench: a thermal mixer (an Eppendorf ThermoMixer C model) with a thermoblock on top and a front panel: a display and buttons for time, temperature and speed (up and down each), menu navigation, five program keys, `short` and `start/stop`. The deliverable is one replayable trajectory of joint position targets (`/app/output/trajectory.npz`, `(T, 7)`, one row per 2 ms control step).
 
 ## Difficulty

@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/dexhand-paper-staple-i00-privileged"
-description = "Square up three loose, misaligned A5 sheets with a dexterous hand (Sharpa Wave by default, or Wuji Hand 2.2) on a Tianji Marvin arm, slide their corner into a NOVUS B2 desk stapler's throat against its paper stop, press the spring-loaded head (about 10 N rising to 25 N) through its full stroke and let it spring back; a sheet pushed off the desk, a knocked-over stapler or an arm link hitting the desk fails the episode at once."
+description = "Square up three loose, misaligned A5 sheets with a dexterous hand (Sharpa Wave by default, or Wuji Hand 2.2) on a Tianji Marvin arm, slide their corner into a NOVUS B2 desk stapler's throat against its paper stop, press the spring-loaded head (about 10 N rising to 25 N) through its full stroke and let it spring back; a sheet pushed off the desk, a knocked-over stapler or an arm link hitting the desk fails the episode at once. Task: Square up the 3 loose A5 sheets and staple them together at a corner with the desk stapler, then let go."
 keywords = ["robotics", "dexterous-hand", "mujoco", "sharpa-wave", "wuji-hand-2.2", "office_tools", "arm-mounted-hand", "articulated-mechanism", "edge-alignment", "office-tools", "paper", "pushing", "stapler"]
 
 [metadata]

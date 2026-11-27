@@ -16,7 +16,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/robotwin_2_0_dump_bin_bigbin-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.1): RoboTwin 2.0 dump_bin_bigbin on the same frozen instance as the privileged task (seed 60417). Pick up the small bin and pour all five balls into the big bin on the floor to your left. At the end, keep holding the small bin up high, roughly 30 cm above the table. The agent only gets a client: /observe (RGB-D video, camera calibration, proprioception) and /submit (joint_position or ee_pose action chunks). No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
+description = "STANDARD MODE (robot as a service, eai-standard/2.1): RoboTwin 2.0 dump_bin_bigbin on the same frozen instance as the privileged task (seed 60417). Pick up the small bin, pour all five balls into the big bin on the floor at the robot's left, and keep holding the small bin up high, about a forearm's length above the table. The agent only gets a client: /observe (RGB-D video, camera calibration, proprioception) and /submit (joint_position or ee_pose action chunks). No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
 keywords = ["robotics", "robotwin", "sapien", "aloha-agilex", "dual-arm", "standard-mode", "trajectory", "dump_bin_bigbin"]
 
 [metadata]
@@ -69,6 +69,13 @@ build_timeout_sec = 1800.0
 cpus = 3
 memory_mb = 4096
 storage_mb = 10240
+
+# The robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): Harbor starts this server for the agent.
+[[environment.mcp_servers]]
+name = "efe-robot"
+transport = "stdio"
+command = "python3"
+args = ["/opt/tools/efe_mcp/server.py"]
 
 [verifier.env]
 RCB_LIMITS_ENFORCE = "${RCB_LIMITS_ENFORCE:-0}"

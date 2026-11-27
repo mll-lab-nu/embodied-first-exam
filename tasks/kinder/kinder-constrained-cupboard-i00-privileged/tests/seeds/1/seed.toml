@@ -1,4 +1,8 @@
 [[replace]]
+old = "## Task\nPut the six brown rods lying on the floor into the row of narrow cupboards ahead of you, one rod in the tall compartment\nof each of six cupboards. Taking the rods in order of distance from where you start, nearest first, they go into the\n11th, 5th, 2nd, 8th, 4th and 1st cupboard of the row, counted from the left as you face it."
+new = "## Task\nPut the six brown rods lying on the floor into the row of narrow cupboards ahead of you, one rod in the tall compartment\nof each of six cupboards. Taking the rods in order of distance from where you start, nearest first, they go into the 2nd, 8th, 9th, 11th, 1st and 6th cupboard of the row, counted from the left as you face it."
+
+[[replace]]
 old = "`kinder/ConstrainedCupboard3D-o6-v0` (Dynamic3D, TidyBot++), seed 0, privileged mode"
 new = "`kinder/ConstrainedCupboard3D-o6-v0` (Dynamic3D, TidyBot++), seed 1, privileged mode"
 
@@ -9,3 +13,7 @@ new = "(`kinder/ConstrainedCupboard3D-o6-v0`, seed\n1)"
 [[replace]]
 old = "they go into the 11th, 5th, 2nd, 8th, 4th and 1st cupboard of the row"
 new = "they go into the 2nd, 8th, 9th, 11th, 1st and 6th cupboard of the row"
+
+[[replace]]
+old = "Put the six brown rods lying on the floor into the row of narrow cupboards ahead of you, one rod in the tall compartment of each of six cupboards. Taking the rods in order of distance from where you start, nearest first, they go into the 11th, 5th, 2nd, 8th, 4th and 1st cupboard of the row, counted from the left as you face it."
+new = "Put the six brown rods lying on the floor into the row of narrow cupboards ahead of you, one rod in the tall compartment of each of six cupboards. Taking the rods in order of distance from where you start, nearest first, they go into the 2nd, 8th, 9th, 11th, 1st and 6th cupboard of the row, counted from the left as you face it."

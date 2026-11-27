@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/dexjoco-bimanual-hanoi-i00-privileged"
-description = "DexJoCo bimanual_hanoi (two Franka Panda arms, each with a 16-DoF Allegro hand, MuJoCo): produce one replayable trajectory. This is a Tower of Hanoi with three disks on three upright posts in a row along y. The small disk starts on post A, at y > 0 on the left arm's side, the medium disk on post B in the middle, and the large disk on post C, at y < 0. Frozen scene instance (the initial state of a DexJoCo human demonstration)."
+description = "DexJoCo bimanual_hanoi (two Franka Panda arms, each with a 16-DoF Allegro hand, MuJoCo): produce one replayable trajectory. Stack all three disks on the post on the right arm's side, as in a Tower of Hanoi: the large disk at the bottom, then the medium one, then the small one on top. Frozen scene instance (the initial state of a DexJoCo human demonstration)."
 keywords = ["robotics", "dexjoco", "mujoco", "allegro", "dexterous-manipulation", "code-as-policy", "trajectory", "bimanual_hanoi"]
 
 [metadata]

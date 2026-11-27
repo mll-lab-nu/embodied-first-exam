@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-match-0.1.0@sha256:99255569bf68bcf27f4e4867b58bad55c1d54fe73281920882e97c310836b6c7` |
 
 ## Task
+Win a game of table tennis to 5 points against the scripted opponent, with a hitting skill you write yourself playing every stroke.
+
 The privileged twin of `embodied-olympics-match-tabletennis-matchlow-i01-realtime`: table tennis (ITTF, one game to 5) at the LOW level: a Franka Panda with a paddle on an x-y rail base, driven by your own joint-level commands (no hit skill), against the scripted opponent; level 1, seed 22, S = 10.
 
 ## Difficulty

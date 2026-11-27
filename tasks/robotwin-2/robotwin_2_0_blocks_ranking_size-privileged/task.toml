@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/robotwin_2_0_blocks_ranking_size-privileged"
-description = "RoboTwin 2.0 blocks_ranking_size (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Line up the three blocks in a straight row, close together, from the largest on your left to the smallest on your right, then let go. Frozen scene instance (RoboTwin seed 60417)."
+description = "RoboTwin 2.0 blocks_ranking_size (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Line up the three blocks in a row, close together, from the largest on the robot's left to the smallest on its right. Then let go. Frozen scene instance (RoboTwin seed 60417)."
 keywords = ["robotics", "robotwin", "sapien", "aloha-agilex", "dual-arm", "code-as-policy", "trajectory", "blocks_ranking_size"]
 
 [metadata]

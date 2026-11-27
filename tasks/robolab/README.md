@@ -129,7 +129,7 @@ The agent reaches the model APIs and the package registries (PyPI, apt archives)
 
 ## Time budget
 3600 s for every task of both modes: each task's own `[agent] timeout_sec` (PROTOCOL §2,
-docs/protocol/running.md "The agent's time"); every instruction states it in its closing `## Time limit` section, and the benchmark's
+docs/protocol/running.md "The agent's time"); every instruction states it in the Time line of its closing `## Limits`, and the benchmark's
 own text names no number. Every Python process pays about 2 minutes of Isaac launch and scene build, so an agent's
 iterations cost more than in the other simulators.
 
@@ -142,9 +142,9 @@ iterations cost more than in the other simulators.
   and stops at the first success; success = the predicate held in a replay whose rebuilt frozen scene matches the
   recorded one (`replays_succeeded`, `success_replay`; the end states across hosts above are why more than one).
 - Standard: graded by the **live episode**, with no grading replay (PROTOCOL H.4). The service judges the episode it
-  runs: RoboLab's success term after every control step (the first step where it holds ends the episode), and when the
-  agent's time is up (the collect hook's signal, after the agent's container is stopped) it holds the last command for
-  `SETTLE_STEPS` = 30 more control steps on the live simulator while the term is checked (`settle_steps`, the same hold
+  runs: RoboLab's success term after every control step (only recorded: a success never ends the episode, "Agent-ended
+  episodes" below), and at the agent's `POST /finish` or when its time is up (the collect hook's signal, after the
+  agent's container is stopped) it holds the last command for `SETTLE_STEPS` = 30 more control steps on the live simulator while the term is checked (`settle_steps`, the same hold
   the privileged replay applies after a trajectory's last row; a simulator error during the hold is recorded,
   `settle_error`, and the term is judged as it stands). It then writes `trajectory.npz` (the deliverable) and
   `episode.json` and exits; the hook (`environment/sim/finalize.sh`) writes `final.json` from it (`graded_by` "live",
@@ -240,6 +240,14 @@ than 2 m from the robot's base on any axis or a zero quaternion is a 400 that ex
 takes its default. One case is left in
 the shared layer (`embodied_first_exam/standard/rcb_limited.py`): `actions` sent as a JSON object is converted before the adapter
 sees it and still ends the episode with a 500.
+
+**Agent-ended episodes** (standard mode; PROTOCOL §3 "Agent-ended episodes", `RCB_AGENT_END` in each sim service,
+`rcb_agent_end.py`). The task's success is never shown and never ends the episode: the agent ends it with `POST /finish`
+(reason `finished`), or the end of its session does (`timeout`). RoboLab's success termination term is wrapped
+(`rcb_robolab.Session._hide_success_term`): it records whether it holds and never terminates the env. At `/finish` and
+at the session's end the last command is held for the settle steps (30), then the term is judged on that state;
+RoboLab's other terminations are 0; the technical cap is the step limit (`step_limit`, judged as it stands). There is no
+`RCB_STEP_LIMIT` (no step budget).
 
 ## Known issues
 - The tooling stops a runaway trajectory at 100,000 control steps (`step_guard`, 1.9 h of simulated time); the live

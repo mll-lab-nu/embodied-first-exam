@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Chop the firewood. Four logs, an axe and a chopping block lie on the driveway in the garden; split all four logs in half.
+Split all four logs in half.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - all eight half logs (`half__log.n.01_1` to `_8`) exist (each of the four logs `log.n.01_1` to `_4` has been split in two)

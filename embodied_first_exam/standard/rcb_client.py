@@ -16,14 +16,16 @@
     r.fk(q)                                      # {"ok", "poses": {frame: [x,y,z, quaternion]}}: forward kinematics, no physics
     r.ik({frame: pose}, seed=q)                  # {"ok", "q", "error": {frame: {"pos_m", "rot_rad"}}}: inverse kinematics
     res.save("/app/runs/003")                    # meta.json, <cam>.mp4, last/<cam>.jpg, frames/<cam>/NNN.jpg, proprio.npy, depth, frame_meta.npz
-    obs = r.get_obs(seconds=3, video="both")     # hold the last command, let physics run 3 s, return the video
+    res = r.hold(3)                              # hold the current target for 3 s of robot time, return the video
+    obs = r.get_obs(last_s=2)                    # the frames recorded in the last 2 s (no time passes)
+    r.finish()                                   # end the episode: the state it is in is judged
     r.status()                                   # calls, control steps, done, reason, elapsed time
     res.meta["time_left_s"]                      # your time limit minus the time since your first request to the service:
                                                  # never out before your time is (spec()["budget"]["clock"]); plan by it
 
 Images per call: one call returns at most spec()["max_frames_per_call"] images, counted as cameras x the frames it
 really captures (at video_fps, rounded to whole control steps, plus its first and last), a depth frame one more. A
-get_obs(seconds=...) or a joint_position chunk over it raises ValueError (400) and runs nothing. An ee_pose call, whose
+hold(...) or a joint_position chunk over it raises ValueError (400) and runs nothing. An ee_pose call, whose
 length is known only while it runs, stops filming at the budget instead: the motion goes on, its last frame is always
 taken, and res.meta["frames_skipped"] counts the frames left out.
 
@@ -46,6 +48,19 @@ ACCEPTED = ("eai-standard/2.", "rcb-limited/2.")   # every 2.x service, under th
 
 class EpisodeOver(RuntimeError):
     pass
+
+
+GONE = ("get_obs(seconds=...) is gone (eai-standard/3.0): r.hold(seconds) lets time pass; get_obs(last_s=n) reads the "
+        "last n seconds already recorded")
+
+
+def _hold_type(spec: dict) -> str:
+    """The action type a hold chunk names when none is given: the first one the service offers (the target held is the
+    last command, whatever its type)."""
+    types = [t for t in (spec.get("action_types") or {}) if t != "not_yet"]
+    if not types:
+        raise ValueError("hold: spec()['action_types'] names no action type; pass action_type=")
+    return str(types[0])
 
 
 def _over(r) -> str:
@@ -194,17 +209,39 @@ class Robot:
                   "executed; meta['proprio']['now'] is where the robot is", file=sys.stderr)
         return res
 
-    def get_obs(self, cameras=None, seconds: float = 0.0, video_fps: int | None = None, depth=None, include_depth: bool = False,
-                video: str = "frames") -> Result:
-        """Current frames (seconds=0, free) or hold the last command and watch for `seconds` (returns the video).
+    def get_obs(self, cameras=None, last_s: float = 0.0, video_fps: int | None = None, depth=None, include_depth: bool = False,
+                video: str = "frames", seconds: float | None = None) -> Result:
+        """What is already recorded, at once: nothing moves and no time passes. last_s=0: the current frames; last_s=n:
+        the frames recorded in the last n seconds of robot time (at most spec()["timing"]["recorder"]["buffer_s"]).
+        hold(seconds) lets time pass.
         depth: None | True (= "last": the last frame's depth) | "frames" (one depth map per frame)."""
-        meta = {"seconds": float(seconds), "video": video, **self._common(cameras, video_fps, depth, include_depth)}
-        res = self._post("/observe", meta, [], timeout=1800)
+        if seconds: raise ValueError(GONE)
+        meta = {"last_s": float(last_s), "video": video, **self._common(cameras, video_fps, depth, include_depth)}
+        return self._post("/observe", meta, [], timeout=1800)
+
+    def hold(self, seconds: float, action_type: str | None = None, cameras=None, video_fps: int | None = None,
+             video: str = "mp4", depth=None, include_depth: bool = False, note: str = "") -> Result:
+        """Let `seconds` of robot time pass with the current target held (a hold chunk: POST /submit with
+        interpolate="hold", `seconds` and no rows); returns what the cameras saw, like submit. action_type: any of
+        spec()["action_types"] (default: the first); the target held is the last command, whatever its type."""
+        meta = {"type": action_type or _hold_type(self._spec), "interpolate": "hold", "seconds": float(seconds),
+                "video": video, "note": note, **self._common(cameras, video_fps, depth, include_depth)}
+        res = self._post("/submit", meta, [], timeout=1800)
         if res.stopped:
-            print(f"[rcb_client] the service stopped this watch early ({res.stopped}) after {res.meta.get('control_steps_watch')} control "
-                  "steps", file=sys.stderr)
+            print(f"[rcb_client] the service stopped this hold early ({res.stopped}); meta['proprio']['now'] is where the "
+                  "robot is", file=sys.stderr)
         return res
 
+    def finish(self) -> dict:
+        """POST /finish: end the episode now; the state it is in is judged. After it every call but spec() and status()
+        is refused (EpisodeOver). Returns the service's answer ({"ok": true, ...status fields})."""
+        r = requests.post(self.base + "/finish", json={}, timeout=(5, 900))
+        if r.status_code == 409: raise EpisodeOver(_over(r))
+        if r.status_code >= 400:
+            try: err = r.json()
+            except Exception: err = {"error": r.text[:300]}
+            raise RuntimeError(f"{r.status_code} /finish: {err.get('error')} {err.get('detail', '')}".strip())
+        return r.json()
     def status(self) -> dict:
         r = requests.get(self.base + "/status", timeout=(5, 60))
         if r.status_code == 409: raise EpisodeOver(_over(r))   # the service gave up for good (wait_ready() ends here too)
@@ -226,6 +263,7 @@ class Robot:
     def kinematics(self, body: dict) -> dict:
         """POST /kinematics (stateless: never moves the robot, never advances time). Raises ValueError on a bad request."""
         r = requests.post(self.base + "/kinematics", json=body, timeout=(5, 120))
+        if r.status_code == 409: raise EpisodeOver(_over(r))   # after /finish, or the service gave up
         if r.status_code >= 400:
             try: err = r.json()
             except Exception: err = {"error": r.text[:300]}

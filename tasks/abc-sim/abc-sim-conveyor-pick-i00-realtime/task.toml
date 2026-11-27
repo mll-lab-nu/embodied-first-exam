@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, { source
 
 [task]
 name = "embodied-first-exam/abc-sim-conveyor-pick-i00-realtime"
-description = "ABC Sim conveyor pick (two I2RT YAM arms, MuJoCo): Pick the three objects off the moving belt and put them in the bin. The robot as a service on a clock that does not stop (eai-standard/2.3, S = 1); graded by the live episode."
+description = "ABC Sim conveyor pick (two I2RT YAM arms, MuJoCo): Pick the three objects off the moving conveyor belt and put them in the bin. The robot as a service on a clock that does not stop (eai-standard/2.3, S = 1); graded by the live episode."
 keywords = ["robotics", "abc-sim", "mujoco", "yam", "bimanual", "conveyor_pick", "realtime"]
 
 [metadata]
@@ -51,6 +51,13 @@ build_timeout_sec = 1800.0
 cpus = 4
 memory_mb = 10240
 storage_mb = 20480
+
+# The robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): Harbor starts this server for the agent.
+[[environment.mcp_servers]]
+name = "efe-robot"
+transport = "stdio"
+command = "python3"
+args = ["/opt/tools/efe_mcp/server.py"]
 
 [verifier.env]
 RCB_LIMITS_ENFORCE = "${RCB_LIMITS_ENFORCE:-0}"

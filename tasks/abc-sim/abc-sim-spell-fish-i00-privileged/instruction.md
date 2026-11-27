@@ -1,22 +1,29 @@
-# ABC Sim · spell fish -- frozen instance
+# ABC Sim · spell fish (privileged)
 
-You control a bimanual robot -- two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each) side by side at the near edge of a table, facing +x (the left arm is the one at +y) -- via Python (ABC Sim, `abc_sim` on MuJoCo 3.6.0).
-**Task:** Spell **FISH**: lay the blocks F, I, S and H on the table, each with a letter face up, next to each other in a straight row, in this order from left to right as the arms face the table. Success: for every pair of consecutive letters of FISH, the next block's centre is 0.015-0.06 m to the right (-y) of the previous one's and within 0.03 m of it front to back; every block of the word rests on the table (its centre within 0.02 m of the height of a block lying on the table: not stacked, not held up) with a letter face up or down (the axis through its two letter faces within 32 deg of vertical; the letter's rotation within the face is not checked). The other blocks do not matter. The goal must hold for 30 consecutive control steps (1.02 s); the episode then ends in success.
+## Task
+Spell FISH with the letter blocks: lay F, I, S and H side by side in a straight row on the table, each with a letter
+face up or down, reading from left to right as the arms face the table.
 
-Twenty-six wooden letter blocks (A to Z, 3 cm cubes; each letter is printed on two opposite faces) lie on the table, letter face up. The task's directive, as the scene states it: "spell fish".
+## Goal
+Success: the blocks F, I, S and H lie flat on the table side by side in a straight row, close together, in that order
+from left to right as the arms face the table, each with a letter face up or down. The replay ends as soon as the task
+is done.
 
-This is a *fixed scene instance*: the start state, the objects and the goal never change between resets. You may reset
-and retry as many times as you want. Your deliverable is **one replayable trajectory**, not a general policy.
+Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, path)`: `(T, 14)` rows, one per
+control step, at most 20,000 rows. It is replayed open-loop from the same initial state and scores 1 if its episode ends
+in success. Leave the script that produced it at `/app/output/gen.py`. Save a valid one early and overwrite it when you
+have a better one.
 
-## Deliverable
-Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below): `(T, 14)` rows,
-one per control step, at most 20,000 rows. It is replayed open-loop from the same initial state in a fresh process and
-scored 1 if the episode ends in success, else 0. Also leave the script that produced it at
-`/app/output/gen.py`.
+Rules: **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+benchmark's demonstrations, trained policies); trials are reviewed.
 
-Save a trajectory as soon as you have one that works, improve it while time remains, and do not stop early.
+## Robot Interface
+A bimanual robot in ABC Sim (MuJoCo): two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each) side
+by side at the near edge of a table, facing +x (the left arm is the one at +y). The scene is one fixed instance. You
+have the full simulator to develop with; you hand in a trajectory of robot actions.
 
-## Tooling (already installed; run `python` from any directory)
+### Session
+`rcb_abc` (installed; run `python` from any directory):
 ```python
 from rcb_abc import Session
 s = Session(instance="/app/instance.npz")   # a few seconds
@@ -31,33 +38,47 @@ s.step(a)                          # one control step (14 numbers); False once t
 s.status()                         # {'success', 'done', 'reason', 'steps', 'success_run', 'state_sha', 'info', ...}
 snap = s.snapshot(); s.restore(snap)   # save / restore a mid-episode state exactly (search, planning)
 s.record_start(); ...; actions = s.record_stop()   # (T, 14) rows, one per control step
-s.replay(actions)                  # resets, replays open-loop until the episode ends, returns status -> self-check
+s.replay(actions)                  # resets, replays open-loop until the episode ends, returns status
 s.save_trajectory(actions, "/app/output/trajectory.npz")
 s.render_frame("top"); s.render_depth("top"); s.camera_info("top")   # RGB (480, 640, 3), z-depth (m), calibration
 s.render_video(actions, "/app/output/check.mp4")
 s.kinematics({"op": "fk", "q": q14}); s.kinematics({"op": "ik", "targets": {"left_tcp": [x, y, z, qw, qx, qy, qz]}})
 ```
-Bodies: the letter blocks are `block_A` ... `block_Z`. Tool frames: `left_tcp` / `right_tcp` (each arm's tool centre point) and `left_grasp` /
-`right_grasp` (the point between the finger pads); `s.kinematics` solves IK for them with each arm's own six joints.
-Cameras: `top` (above and behind the arms, looking down at the table), `left` and `right` (wrist cameras on the arms), `overhead`, `left_side`, `right_side`. There are no motion primitives: every skill is yours to build from joint targets.
+There are no motion primitives: every skill is yours to build from joint targets. There is no step budget: your
+wall-clock time is the limit. An episode ends at success; `s.step` then refuses further rows until `s.reset()`.
+Rendering runs on the GPU (EGL) when one is available.
 
-CLI equivalent of the grader:
-`python /opt/abc-tools/rcb_abc.py replay --instance /app/instance.npz --traj /app/output/trajectory.npz --repeat 2`
+### Actions
+An action has 14 numbers per control step: `[left_joint1..6, left_gripper, right_joint1..6, right_gripper]` -- each
+arm's six joint position targets (rad) and its gripper opening (0 = closed, 1 = open, each finger 0.0475 m from closed;
+up to 1.042). The joints and grippers are position servos that track the targets (MuJoCo position actuators with damping
+and force limits). A target outside a joint's range is clamped to that range. The simulator rounds every command to
+float32. One control step = 17 physics steps of 2 ms = 0.034 s (29.4 Hz).
 
-## Conventions
-- World frame: the table's; x forward (away from the arms' bases), y to the left as the arms face the table, z up;
-  metres, radians, quaternions `wxyz`. Directions are as the arms face the table: left = +y, right = -y, behind = +x (farther from the arms), in front = -x (nearer to them).
-- Action: 14 numbers per control step: `[left_joint1..6, left_gripper, right_joint1..6, right_gripper]` -- each arm's six joint position targets (rad) and its gripper opening (0 = closed, 1 = open, each finger 0.0475 m from closed; up to 1.042). The joints and grippers are position servos that track the targets (MuJoCo position actuators with damping and force limits); a target outside a joint's range is clamped to it, and the simulator rounds every command to float32. One control step = 17 physics steps of 2 ms = 0.034 s (29.4 Hz).
-- There is no step budget: your wall-clock time is the limit. An episode ends at success;
-  `s.step` then refuses further rows until `s.reset()`. Rendering runs on the GPU (EGL) when one is available.
+### Observations
+Bodies: the letter blocks are `block_A` ... `block_Z`. Tool frames: `left_tcp` / `right_tcp` (each arm's tool centre
+point) and `left_grasp` / `right_grasp` (the point between the finger pads); `s.kinematics` solves IK for them with each
+arm's own six joints. Cameras: `top` (above and behind the arms, looking down at the table), `left` and `right` (wrist
+cameras on the arms), `overhead`, `left_side`, `right_side`.
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+### World frame
+The table's frame: x forward (away from the arms' bases), y to the left as the arms face the table, z up; metres,
+radians, quaternions `wxyz`. Directions are as the arms face the table: left = +y, right = -y, behind = +x (farther from
+the arms), in front = -x (nearer to them).
 
-## Resources
-Your container: **4 CPUs**, **16 GiB of memory**, **8192 processes and threads**, **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`) and **one GPU, 5 GiB of its memory**. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
+## Others
+- To check a trajectory the way it is graded, replay it from the command line:
+  `python /opt/abc-tools/rcb_abc.py replay --instance /app/instance.npz --traj /app/output/trajectory.npz`.
 
-## Time limit
-You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
-
-This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+## Limits
+- Time: 3600 s of wall-clock time from the start of your session. Everything counts, including the simulator's start-up.
+  At the end you are stopped without warning and only what is in `/app/output/` at that moment is graded. Time left:
+  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`). A call into a long-running process can block for its
+  whole wait time. Use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, including the simulator's and the benchmark's source.
+- Resources: 4 CPUs, 16 GiB memory, 8192 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`),
+  one GPU (5 GiB of its memory). Going over a cap can get a process killed (the CPU cap only slows you down). Usage:
+  `/run/rcb-limits/usage.json`.
+- Resets: as many as you like (`s.reset()`).

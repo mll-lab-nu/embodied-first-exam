@@ -22,7 +22,7 @@ The control API an episode offers (Embodied Safety Exam's side, the instance key
   clip(type, rows) -> (rows, [{"row", "index", "reason"}])   static bounds
   command(type) -> float64[dim]                        the row in force in that type's space (a chunk interpolates
                                                        from it)
-  hold() -> (type, row)                                the row that keeps the robot as it is (/observe with seconds)
+  hold() -> (type, row)                                the row that keeps the robot as it is (a hold chunk)
   proprio_layout: list[str]; proprio() -> float array  the robot's own sensors
   cameras: list[str]; camera_spec() -> {camera: {...}} intrinsics and mounting (for /spec)
   render(camera) -> uint8 (h, w, 3); render_depth(camera) -> float32 (h, w) metres, for the RGB-D cameras only

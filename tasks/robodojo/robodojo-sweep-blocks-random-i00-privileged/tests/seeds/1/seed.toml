@@ -7,12 +7,12 @@ old = "## Goal\nSuccess: the toy brick, the two earbuds and the two paper balls 
 new = "## Goal\nSuccess: the two toy bricks, the two earbuds and the two paper balls lie well inside the dustpan, the dustpan lies flat on\nthe table, the broom lies well to the right of the dustpan, and both arms are back where they started. A replay ends as\nsoon as the task is done; later rows are not run."
 
 [[replace]]
-old = "## Others\n- Labels in `s.objects()`: `broom_shovel` (the dustpan); `broom` (the broom); `target_2_0` (the toy brick);\n  `target_1_0`, `target_1_1` (the two paper balls); `target_3_0`, `target_3_1` (the two earbuds).\n- RoboDojo's own reset settles the scene again from where it is, so after actions a reset gives the same layout and\n  start pose but not bit-for-bit the same state; a replay after such a reset can end slightly differently from the\n  grader's. Each graded replay runs the first episode of a newly started Session (nothing stepped before it): test on\n  that."
-new = "## Others\n- Labels in `s.objects()`: `broom_shovel` (the dustpan); `broom` (the broom); `target_1_0`, `target_1_1` (the two toy bricks); `target_3_0`, `target_3_1` (the two paper balls); `target_2_0`, `target_2_1` (the two earbuds).\n- RoboDojo's own reset settles the scene again from where it is, so after actions a reset gives the same layout and\n  start pose but not bit-for-bit the same state; a replay after such a reset can end slightly differently from the\n  grader's. Each graded replay runs the first episode of a newly started Session (nothing stepped before it): test on\n  that."
+old = "## Others\n- Labels in `s.objects()`: `broom_shovel` (the dustpan); `broom` (the broom); `target_2_0` (the toy brick);\n  `target_1_0`, `target_1_1` (the two paper balls); `target_3_0`, `target_3_1` (the two earbuds).\n- RoboDojo's own reset settles the scene again from where it is. So a reset after actions gives the same layout and\n  start pose, but not bit-for-bit the same state, and a replay after such a reset can end slightly differently from the\n  grader's. Each graded replay is the first episode of a newly started Session, with nothing stepped before it. Test\n  your trajectory the same way."
+new = "## Others\n- Labels in `s.objects()`: `broom_shovel` (the dustpan); `broom` (the broom); `target_1_0`, `target_1_1` (the two toy bricks); `target_3_0`, `target_3_1` (the two paper balls); `target_2_0`, `target_2_1` (the two earbuds).\n- RoboDojo's own reset settles the scene again from where it is. So a reset after actions gives the same layout and\n  start pose, but not bit-for-bit the same state, and a replay after such a reset can end slightly differently from the\n  grader's. Each graded replay is the first episode of a newly started Session, with nothing stepped before it. Test\n  your trajectory the same way."
 
 [[replace]]
-old = "## Goal\nSuccess: the toy brick, the two earbuds and the two paper balls lie well inside the dustpan, the dustpan lies flat on\nthe table, the broom lies well to the right of the dustpan, and both arms are back where they started. What counts is\nhow things stand at the end of the episode: a success reached earlier and lost by the end does not count, so finish in\nthe state you want graded and stop sending commands."
-new = "## Goal\nSuccess: the two toy bricks, the two earbuds and the two paper balls lie well inside the dustpan, the dustpan lies flat on\nthe table, the broom lies well to the right of the dustpan, and both arms are back where they started. What counts is\nhow things stand at the end of the episode: a success reached earlier and lost by the end does not count, so finish in\nthe state you want graded and stop sending commands."
+old = "## Goal\nSuccess: the toy brick, the two earbuds and the two paper balls lie well inside the dustpan, the dustpan lies flat on\nthe table, the broom lies well to the right of the dustpan, and both arms are back where they started."
+new = "## Goal\nSuccess: the two toy bricks, the two earbuds and the two paper balls lie well inside the dustpan, the dustpan lies flat\non the table, the broom lies well to the right of the dustpan, and both arms are back where they started."
 
 [[replace]]
 old = "arx_x5/0/sweep_blocks_random_0.json"
@@ -23,9 +23,9 @@ old = "sha256 `d04495ad79faf3f3`"
 new = "sha256 `57202a3a3660f8a8`"
 
 [[replace]]
-old = "Pick up the broom, hand it to the right arm, sweep the toy brick, the two earbuds and the two paper balls into the dustpan, which stays on the table, and leave the broom on the dustpan's open right side. Then bring both arms back to where they started."
-new = "Pick up the broom, hand it to the right arm, sweep the two toy bricks, the two earbuds and the two paper balls into the dustpan, which stays on the table, and leave the broom on the dustpan's open right side. Then bring both arms back to where they started."
-
-[[replace]]
 old = "the toy brick, the two earbuds"
 new = "the two toy bricks, the two earbuds"
+
+[[replace]]
+old = "Sweep the toy brick, the two earbuds and the two paper balls into the dustpan, keeping the dustpan flat on the table, and leave the broom well to the right of the dustpan. Then move both arms back to where they started."
+new = "Sweep the two toy bricks, the two earbuds and the two paper balls into the dustpan, keeping the dustpan flat on the table, and leave the broom well to the right of the dustpan. Then move both arms back to where they started."

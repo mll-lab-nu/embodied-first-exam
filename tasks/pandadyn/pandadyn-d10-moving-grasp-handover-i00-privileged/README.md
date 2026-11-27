@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0` |
 
 ## Task
-A long bar-shaped part is already riding a powered roller conveyor when the episode starts. The left arm must grasp it with its gripper while it is still moving and lift it, then carry it, still moving, through a presentation point. It then hands the part over to the right arm while the part keeps moving: both grippers hold it at the same time, then the left gripper opens wide and lets go while the right one keeps holding it. Finally the right arm must lay the part into a long open slot that slides back and forth on a rail and let go of it while the slot is moving, so that the part lies in the slot while the slot is moving. The deliverable is one replayable trajectory of 100 Hz joint-target actions (`/app/output/trajectory.npz`,
+Grasp the part with the left gripper while it rides the conveyor, lift it about a hand's length and carry it, still moving, through the presentation point. Hand it to the right gripper while it keeps moving, then lay it into the sliding slot and let go while the slot is moving. The deliverable is one replayable trajectory of 100 Hz joint-target actions (`/app/output/trajectory.npz`,
 16 values per row), graded by the task's own staged success check: 5 phases (`moving_pickup`, `moving_presentation`, `overlapping_grips`, `donor_release`, `receiver_slot_delivery`), in order,
 with no failure event and no safety-limit violation, within the task's horizon of 25 s.
 

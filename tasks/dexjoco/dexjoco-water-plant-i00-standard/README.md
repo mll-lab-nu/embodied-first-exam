@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:dexjoco-0.1.2` |
 
 ## Task
-DexJoCo `water_plant` (a Franka Panda arm with a 16-DoF Allegro hand) on the same frozen instance as `dexjoco-water-plant-i00-privileged`: Pick up the spray bottle, hold its nozzle close to the potted plant pointing at it, and keep the trigger squeezed. Success: the trigger is held pulled (trigger joint > 0.34 rad; it counts as released again below 0.25 rad) while the nozzle reference point is within 0.20 m of the plant horizontally and within +-0.20 m of the plant's height AND the spray points at the plant, all three for 30 consecutive control steps (0.6 s). The spray leaves the spray head horizontally forward: perpendicular to the bottle's long axis, on the side the trigger faces (the bottle's local +z; its long axis, bottom to head, is local +y). It points at the plant when that direction is within 45 degrees of the line from the nozzle to the plant, e.g. with the bottle held upright and its trigger side facing the plant. Pulling the trigger while the nozzle is outside the zone ends the episode as a failure.
+DexJoCo `water_plant` (a Franka Panda arm with a 16-DoF Allegro hand) on the same frozen instance as `dexjoco-water-plant-i00-privileged`: Spray the potted plant: pick up the spray bottle, hold its nozzle close to the plant and aimed at it, and keep the trigger squeezed for a moment. Success: the trigger is held pulled (trigger joint > 0.34 rad; it counts as released again below 0.25 rad) while the nozzle reference point is within 0.20 m of the plant horizontally and within +-0.20 m of the plant's height AND the spray points at the plant, all three for 30 consecutive control steps (0.6 s). The spray leaves the spray head horizontally forward: perpendicular to the bottle's long axis, on the side the trigger faces (the bottle's local +z; its long axis, bottom to head, is local +y). It points at the plant when that direction is within 45 degrees of the line from the nozzle to the plant, e.g. with the bottle held upright and its trigger side facing the plant. Pulling the trigger while the nozzle is outside the zone ends the episode as a failure.
 Standard mode (eai-standard/2.2): the agent drives the robot through a client in one episode, with the robot's own
 sensors, calibrated cameras (RGB, optional depth) and the robot's kinematics.
 
@@ -25,7 +25,7 @@ mistakes without starting over.
 ## Reference solution
 `solution/oracle_stream.py` streams the privileged reference's rows (`solution/oracle_trajectory.npz`, 307 rows, float32-exact)
 through the client as `ee_pose` chunks; it uses no privileged information at run time. The service's recorded
-trajectory is then exactly the privileged reference, and the episode ends with success after 307 control steps.
+trajectory is then exactly the privileged reference (307 control steps), whose end state is a success.
 
 ## Verification
 The verdict is the live episode's (`graded_by = "live"`, `replays = 0`): the sim service judges the episode it runs with

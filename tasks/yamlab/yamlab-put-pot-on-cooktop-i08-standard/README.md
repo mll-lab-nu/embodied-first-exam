@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:yamlab-0.2.1` |
 
 ## Task
+Lift the pot with both grippers and set it down on the cooktop.
+
 Standard-mode twin of `yamlab-put-pot-on-cooktop-i08-privileged` (same frozen instance: YAMLab's objects `pot` = `Pot/pot_008` and `cooktop` = `Cooktop/cooktop_008` as placed in teleoperation
 demonstration `putpot_008.hdf5 demo_8`, both arms at the home pose): the agent gets only the `eai-standard/2.2` client
 (docs/protocol/standard_mode.md); the simulator runs in the `sim` sidecar (`environment/docker-compose.yaml`, GPU on the
@@ -60,7 +62,7 @@ Caps per container (PROTOCOL §6).
 | | |
 |---|---|
 | Episode | one episode, no reset, no step budget: it ends at the first control step where every stage of YAMLab's success check has latched, when a task object falls off the table, when the agent's time is up, on a simulator error, or at the technical cap of 100,000 control steps (`spec.max_control_steps`, reason `step_guard`; 55.6 min of simulated time); the wall clock is the only budget |
-| Action space | `submit` chunks of `joint_position` (14: YAMLab's own action, streamed at the 30 Hz control rate with the agent's `dt`, a multiple of 1/30 s) or `ee_pose` (16: both tool frames, differential IK per row); `observe` frames or a watch window; `/kinematics` (FK / IK of both arms, stateless); binary RCB1 responses |
+| Action space | `submit` chunks of `joint_position` (14: YAMLab's own action, streamed at the 30 Hz control rate with the agent's `dt`, a multiple of 1/30 s) or `ee_pose` (16: both tool frames, differential IK per row); `observe` the current frames or those recorded over the last seconds (`last_s`); hold chunks (`hold(s)`); `/kinematics` (FK / IK of both arms, stateless); binary RCB1 responses |
 | Cameras | `top` (static), `left_wrist`, `right_wrist` (on each arm's link_6), 640×480 RGB, z-depth on request |
 | Images | the `sim` sidecar runs efe-private:yamlab (BUILD_ONLY, `images/yamlab/BUILD_ONLY`); the agent container and the verifier run the shared client image with its pip pins (`embodied_first_exam/standard/client.env`) |
 | Crash recovery | resume class `exact`: every control step journaled, a checkpoint with the state hash after every call; `restart: on-failure:6`, the service resumes the same episode (docs/protocol/standard_mode.md §13) |

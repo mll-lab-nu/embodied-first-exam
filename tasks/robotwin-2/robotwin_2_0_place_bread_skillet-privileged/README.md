@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:robotwin-0.1.2` |
 
 ## Task
-RoboTwin 2.0 place_bread_skillet (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. With one arm, lift the skillet a little off the table and keep holding it. With the other arm, put the bread in the middle of the skillet. Frozen scene instance (RoboTwin seed 28831).
+RoboTwin 2.0 place_bread_skillet (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Put the bread in the middle of the skillet. Lift the skillet a little off the table and keep holding it there. Frozen scene instance (RoboTwin seed 28831).
 
 ## Difficulty
 RoboTwin's scripted expert needs 4 planned motions (52 lines); official data-generation success on ALOHA-AgileX 34% (the expert's own pass rate over random layouts); in our image the expert passed on seed 28831 on attempt 2 of 6 with 2310 physics steps. Tags from the code: dual-arm. RoboTwin evaluation budget 500 policy actions. The trajectory is the raw per-step drive-target record, so any plan failure or a grasp that slips during replay scores 0.
@@ -45,4 +45,4 @@ Caps per container (PROTOCOL §6).
 | RoboTwin eval step limit | 500 (policy-eval budget upstream; indicative of task length) |
 
 ### Goal
-With one arm, lift the skillet a little off the table and keep holding it. With the other arm, put the bread in the middle of the skillet.
+Put the bread in the middle of the skillet. Lift the skillet a little off the table and keep holding it there.

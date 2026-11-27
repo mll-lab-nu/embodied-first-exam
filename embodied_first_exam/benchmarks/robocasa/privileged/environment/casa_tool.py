@@ -41,12 +41,21 @@ def _disable_mesh_cache() -> None:
     """MuJoCo keeps a process-wide cache of compiled meshes (mj_globalCache). A mesh served from it can differ from a
     freshly compiled one (mesh_polynormal), so a scene built twice in one process could step differently from a scene
     built once, depending on what the process loaded before. With the cache off, every build compiles its meshes
-    afresh, exactly as the first build in a fresh process does: one behaviour for the agent, verifier and service."""
-    lib = ctypes.CDLL(glob.glob(os.path.join(os.path.dirname(mujoco.__file__), "libmujoco.so*"))[0])
-    if hasattr(lib, "mj_globalCache"):
-        lib.mj_globalCache.restype = ctypes.c_void_p
-        lib.mj_setCacheSize.argtypes = [ctypes.c_void_p, ctypes.c_size_t]
-        lib.mj_setCacheSize(lib.mj_globalCache(), 0)
+    afresh, exactly as the first build in a fresh process does: one behaviour for the agent, verifier and service.
+    Determinism depends on it, so a MuJoCo build without these symbols is an error, never a silent no-op."""
+    libs = glob.glob(os.path.join(os.path.dirname(mujoco.__file__), "libmujoco.so*"))
+    if not libs:
+        raise RuntimeError(f"casa_tool: no libmujoco.so next to {mujoco.__file__}; cannot turn off the mesh cache")
+    lib = ctypes.CDLL(libs[0])
+    missing = [s for s in ("mj_globalCache", "mj_setCacheSize") if not hasattr(lib, s)]
+    if missing:
+        raise RuntimeError(
+            f"casa_tool: {libs[0]} (MuJoCo {mujoco.__version__}) has no {', '.join(missing)}; the mesh cache cannot be "
+            "turned off and replays would not be deterministic (this tooling is pinned to MuJoCo 3.2.6)"
+        )
+    lib.mj_globalCache.restype = ctypes.c_void_p
+    lib.mj_setCacheSize.argtypes = [ctypes.c_void_p, ctypes.c_size_t]
+    lib.mj_setCacheSize(lib.mj_globalCache(), 0)
 
 
 _disable_mesh_cache()
@@ -336,6 +345,195 @@ def action_spec(env) -> dict:
     return out
 
 
+# -- task text -------------------------------------------------------------------------------------------------
+# The frozen instance keeps the benchmark's own language string (ep_meta["lang"]); the instance file is pinned and is
+# not edited. The text the agent is shown (Session.inst["text"]: the privileged state()["instruction"], the service's
+# spec task_text and task info) is a plain sentence written for the instance, the same one as the task's
+# instruction.md Task line: it names what the environment's own success check needs (the top drawer on your right,
+# the plate inside the microwave, the top tier, the empty plate, the side of the can already in the cabinet, the hand
+# moved away where the check has that term) and leaves out where things start. Keyed by env_name and the exact
+# upstream string (RoboCasa kitchen tasks first, then the GR1 tabletop tasks), so any other instance of a family
+# keeps its own text.
+TEXT_ERRATA = {
+    ("ArrangeVegetables",
+     "Pick the vegetables from the sink and place them on the cutting board."):
+        "Put the carrot and the lemon from the sink on the cutting board, away from its edge, and move your hand "
+        "away.",
+    ("CloseDoubleDoor",
+     "close the cabinet doors"):
+        "Close both cabinet doors.",
+    ("CloseDrawer",
+     "close the left drawer"):
+        "Close the drawer on your left all the way.",
+    ("CloseSingleDoor",
+     "close the microwave door"):
+        "Close the microwave door.",
+    ("CoffeePressButton",
+     "press the button on the coffee machine to serve coffee"):
+        "Press the start button on the coffee machine, then move your hand away.",
+    ("CoffeeServeMug",
+     "pick the mug from under the coffee machine dispenser and place it on the counter"):
+        "Take the mug from under the coffee machine's spout and put it on the counter next to the machine, and "
+        "move your hand away.",
+    ("CoffeeSetupMug",
+     "pick the mug from the counter and place it under the coffee machine dispenser"):
+        "Put the mug from the counter under the coffee machine's spout, and move your hand away.",
+    ("MicrowaveThawing",
+     "Pick the squash from the counter and place it in the microwave. Then turn on the microwave."):
+        "Put the squash from the counter in the microwave, close the door and turn the microwave on, and move "
+        "your hand away.",
+    ("OpenDoubleDoor",
+     "open the cabinet doors"):
+        "Open both cabinet doors all the way.",
+    ("OpenDrawer",
+     "open the right drawer"):
+        "Open the top drawer on your right all the way.",
+    ("OpenSingleDoor",
+     "open the cabinet door"):
+        "Open the cabinet door all the way.",
+    ("PnPCabToCounter",
+     "pick the hot dog from the cabinet and place it on the counter"):
+        "Take the hot dog out of the cabinet and put it on the counter below it, and move your hand away.",
+    ("PnPCounterToCab",
+     "pick the cake from the counter and place it in the cabinet"):
+        "Put the cake from the counter in the cabinet, all the way in, and move your hand away.",
+    ("PnPCounterToMicrowave",
+     "pick the corn from the counter and place it in the microwave"):
+        "Put the corn from the counter on the plate in the microwave, and move your hand away.",
+    ("PnPCounterToSink",
+     "pick the apple from the counter and place it in the sink"):
+        "Put the apple from the counter in the sink, and move your hand away.",
+    ("PnPCounterToStove",
+     "pick the potato from the plate and place it in the pan"):
+        "Move the potato from the plate to the middle of the pan, and move your hand away.",
+    ("PnPMicrowaveToCounter",
+     "pick the onion from the microwave and place it on plate located on the counter"):
+        "Take the onion out of the microwave and put it on the plate on the counter, away from the plate's edge, "
+        "and move your hand away.",
+    ("PnPSinkToCounter",
+     "pick the tomato from the sink and place it on the plate located on the counter"):
+        "Take the tomato out of the sink and put it on the plate on the counter, away from the plate's edge, and "
+        "move your hand away.",
+    ("PnPStoveToCounter",
+     "pick the steak from the pan and place it on the plate"):
+        "Move the steak from the pan to the middle of the plate, and move your hand away.",
+    ("PreSoakPan",
+     "Pick the pan and sponge and place them into the sink. Then turn on the water."):
+        "Put the pan and the sponge in the sink, turn the sink faucet on, nearly all the way, and move your hand away.",
+    ("PrepareCoffee",
+     "Pick the mug from the cabinet, place it under the coffee machine dispenser, and press the start button."):
+        "Take the mug from the cabinet, put it under the coffee machine's spout, press the start button, and move"
+        " your hand away.",
+    ("RestockPantry",
+     "Pick the cans from the counter and place them in their designated side in the cabinet."):
+        "Put both cans from the counter in the cabinet, on the side where the other can already is, and move your"
+        " hand away.",
+    ("TurnOffMicrowave",
+     "press the stop button on the microwave"):
+        "Press the stop button on the microwave, then move your hand away.",
+    ("TurnOffSinkFaucet",
+     "turn off the sink faucet"):
+        "Turn off the sink faucet.",
+    ("TurnOffStove",
+     "turn off the front right burner of the stove"):
+        "Turn off the front right burner of the stove.",
+    ("TurnOnMicrowave",
+     "press the start button on the microwave"):
+        "Press the start button on the microwave, then move your hand away.",
+    ("TurnOnSinkFaucet",
+     "turn on the sink faucet"):
+        "Turn the sink faucet on, nearly all the way.",
+    ("TurnOnStove",
+     "turn on the front left burner of the stove"):
+        "Turn on the front left burner of the stove.",
+    ("TurnSinkSpout",
+     "turn the sink spout to the right"):
+        "Swing the sink spout well over to your right.",
+    ("PnPBottleToCabinetClose",
+     "pick up the bottled water, place it into the cabinet and close the cabinet"):
+        "Put the bottled water in the cabinet and close the cabinet door.",
+    ("PnPCanToDrawerClose",
+     "pick up the can, place it into the drawer and close the drawer"):
+        "Put the can in the drawer and close the drawer.",
+    ("PnPCupToDrawerClose",
+     "pick up the cup, place it into the drawer and close the drawer"):
+        "Put the cup in the drawer and close the drawer.",
+    ("PnPMilkToMicrowaveClose",
+     "pick up the milk, place it into the microwave and close the microwave"):
+        "Put the milk in the microwave and close the microwave door.",
+    ("PnPPotatoToMicrowaveClose",
+     "pick up the potato, place it into the microwave and close the microwave"):
+        "Put the potato in the microwave and close the microwave door.",
+    ("PnPWineToCabinetClose",
+     "pick up the wine, place it into the cabinet and close the cabinet"):
+        "Put the wine in the cabinet and close the cabinet door.",
+    ("PosttrainPnPNovelFromCuttingboardToBasketSplitA",
+     "pick the croissant from the cutting board and place it in the basket"):
+        "Put the croissant from the cutting board in the basket, and move both hands away.",
+    ("PosttrainPnPNovelFromCuttingboardToCardboardboxSplitA",
+     "pick the squash from the cutting board and place it in the cardboard box"):
+        "Put the squash from the cutting board in the cardboard box, and move both hands away.",
+    ("PosttrainPnPNovelFromCuttingboardToPanSplitA",
+     "pick the bell pepper from the cutting board and place it in the pan"):
+        "Put the bell pepper from the cutting board in the pan, and move both hands away.",
+    ("PosttrainPnPNovelFromCuttingboardToPotSplitA",
+     "pick the bell pepper from the cutting board and place it in the pot"):
+        "Put the bell pepper from the cutting board in the pot, and move both hands away.",
+    ("PosttrainPnPNovelFromCuttingboardToTieredbasketSplitA",
+     "pick the sweet potato from the cutting board and place it in the tiered basket"):
+        "Put the sweet potato from the cutting board on the top tier of the tiered basket, and move both hands "
+        "away.",
+    ("PosttrainPnPNovelFromPlacematToBasketSplitA",
+     "pick the croissant from the placemat and place it in the basket"):
+        "Put the croissant from the placemat in the basket, and move both hands away.",
+    ("PosttrainPnPNovelFromPlacematToBowlSplitA",
+     "pick the can from the placemat and place it in the bowl"):
+        "Put the can from the placemat in the bowl, and move both hands away.",
+    ("PosttrainPnPNovelFromPlacematToPlateSplitA",
+     "pick the tomato from the placemat and place it in the plate"):
+        "Put the tomato from the placemat on the plate, and move both hands away.",
+    ("PosttrainPnPNovelFromPlacematToTieredshelfSplitA",
+     "pick the tomato from the placemat and place it in the tiered shelf"):
+        "Put the tomato from the placemat on the top tier of the tiered shelf, and move both hands away.",
+    ("PosttrainPnPNovelFromPlateToBowlSplitA",
+     "pick the bell pepper from the plate and place it in the bowl"):
+        "Put the bell pepper from the plate in the bowl, and move both hands away.",
+    ("PosttrainPnPNovelFromPlateToCardboardboxSplitA",
+     "pick the lemon from the plate and place it in the cardboard box"):
+        "Put the lemon from the plate in the cardboard box, and move both hands away.",
+    ("PosttrainPnPNovelFromPlateToPanSplitA",
+     "pick the pear from the plate and place it in the pan"):
+        "Put the pear from the plate in the pan, and move both hands away.",
+    ("PosttrainPnPNovelFromPlateToPlateSplitA",
+     "pick the sweet potato from the plate and place it in the plate"):
+        "Move the sweet potato from its plate to the empty plate, and move both hands away.",
+    ("PosttrainPnPNovelFromTrayToCardboardboxSplitA",
+     "pick the squash from the tray and place it in the cardboard box"):
+        "Put the squash from the tray in the cardboard box, and move both hands away.",
+    ("PosttrainPnPNovelFromTrayToPlateSplitA",
+     "pick the cupcake from the tray and place it in the plate"):
+        "Put the cupcake from the tray on the plate, and move both hands away.",
+    ("PosttrainPnPNovelFromTrayToPotSplitA",
+     "pick the lemon from the tray and place it in the pot"):
+        "Put the lemon from the tray in the pot, and move both hands away.",
+    ("PosttrainPnPNovelFromTrayToTieredbasketSplitA",
+     "pick the lemon from the tray and place it in the tiered basket"):
+        "Put the lemon from the tray on the top tier of the tiered basket, and move both hands away.",
+    ("PosttrainPnPNovelFromTrayToTieredshelfSplitA",
+     "pick the bell pepper from the tray and place it in the tiered shelf"):
+        "Put the bell pepper from the tray on the top tier of the tiered shelf, and move both hands away.",
+}
+
+
+def task_text(env_name: str, lang: str) -> str:
+    """The task sentence the agent is shown: the instance's plain sentence (TEXT_ERRATA), else its own language
+    string, as a sentence (capital first letter, final period, no trailing space), the same as the task's
+    instruction.md Task line."""
+    s = TEXT_ERRATA.get((env_name, lang), lang).strip()
+    s = s[:1].upper() + s[1:]
+    return s if s.endswith((".", "?", "!")) else s + "."
+
+
 # -- the session ----------------------------------------------------------------------------------------------
 def scene_option() -> mujoco.MjvOption:
     """What robosuite's own cameras draw (its defaults render_collision_mesh=False, render_visual_mesh=True): the visual
@@ -354,7 +552,8 @@ class Session:
         self.instance_path = Path(instance)
         self.frozen, self.instance_sha = load_instance(self.instance_path)
         self.meta = json.loads(str(self.frozen["ep_meta"]))
-        self.inst = {"text": self.meta.get("lang", ""), "env_name": json.loads(str(self.frozen["config"]))["env_name"]}
+        env_name = json.loads(str(self.frozen["config"]))["env_name"]
+        self.inst = {"text": task_text(env_name, self.meta.get("lang", "")), "env_name": env_name}
         self.env = None
         self._renderers: dict = {}
         self.reset()

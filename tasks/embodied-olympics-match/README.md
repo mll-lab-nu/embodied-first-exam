@@ -9,6 +9,11 @@ standard twins of the real-time matches (below), 12 privileged twins, and the G1
 in a CPU and a GPU tier (below). 14 tasks: 14 `-privileged`, 14 `-standard` and 13 `-realtime` dirs; core set 13
 (the G1 table-tennis task in its CPU tier only).
 
+**Two routes to the seat.** A standard or realtime match offers its seat through the `game` command (HTTP) and, in the
+same task, through the MCP server `efe-robot`, one tool per `game` command (docs/protocol/standard_mode.md "MCP
+tools"); the agent chooses. The two matchlow matches keep their own interface only: the player delivers skill code the
+platform runs in the loop, which a tool call cannot deliver.
+
 ## Quick start
 ```bash
 harbor run -d embodied-first-exam@all -p tasks/embodied-olympics-match -a codex -m openai/gpt-6-astra
@@ -39,14 +44,15 @@ they are refreshed by re-running the exporter on this checkout, then `scripts/ta
 | `embodied-olympics-match-badminton-duelrl-i01-realtime` | badminton duel against a built-in RL opponent: the duel world's other robot (the same Panda on a gantry base, the same limits and execution scatter) driven by a learned policy inside the sim service (Embodied Olympics core 0.2.31 built-in seat, not reachable over HTTP); success = the agent's seat A wins | seed 1001, S = 20, 14400 s | partial: the camera-only reference (seat A) lost 1:11 (valid, replay identical); evidence: mirror match 21/40 for seat A, the RL beats level 3 19/20, the truth-state reference beats it 1/20, our camera reference through the live service 0/20; GPT-6 Astra (one precheck) lost by a missed review (`ready_timeout`) at 5:5; nop 0 |
 | `embodied-olympics-match-soccerssl-match-i01-realtime` | wheeled soccer 5 v 5 (RoboCup Small Size League rules, revision `soccer_ssl-1`): one agent commands its five omnidirectional robots (move, kick, dribble) from four overhead cameras against an RL team as an export-only match level 4 (a learned policy in the world, like levels 1-3); two halves and, if level, a shoot-out (about 1035 s of game time) | level 4, seed 7, S = 10; agent budget **14400 s** (the task's own `[agent] timeout_sec`: the match alone is 2.9 h of wall time at S = 10, and at S = 5 the four cameras cannot be rendered in time) | partial: the camera-only reference lost 7:10 (a valid, replayed match); evidence: the RL team beats level 3 64-11-25 over 100 seeds, the truth-state reference beats it 10/20, every simple baseline 0/15; GPT-6 Astra (one precheck) lost by a missed review (`ready_timeout`) while 0:1 down; nop 0 |
 | `embodied-olympics-match-soccer-jointcpu-i01-realtime`, `embodied-olympics-match-soccer-jointgpu-i01-realtime` | a resource-tier pair (exported by Embodied Olympics' soccer pilot exporter): humanoid soccer 2 v 2 at the joint level (12 leg joint targets per Booster T1 every 20 ms, no walking policy, revision `soccer-2v2-11`) against level 5, our joint-level RL team (a PPO gait at the joint level and an RL strategy layer), any method, a practice service with full copies of the match world; the two tasks are the same match and differ only in the agent's resources (CPU tier: 6 cores, numpy / SciPy / MuJoCo; GPU tier: + one NVIDIA GPU with mjlab + rsl_rl and the 2 v 2 world on the GPU) | level 5, seed 101, S = 10, 2 h start window, 300 s reviews, 14400 s | partial: the joint-level reference lost 0:10 to level 5 v1 in both tasks (valid, replay identical); feasibility: three frozen GPU-tier GPT-6 Astra programs win 30 % of 90 matches against v2 (40 % against v1); a walking-policy audit in the collect hook; nop 0 |
-| `embodied-olympics-match-fencing-bout-i02-standard` | robot epee fencing, one FIE direct-elimination bout (15 touches or 9 min of fencing time; Embodied Olympics revision `fencing-7`, a Embodied Olympics preview sport): two Unitree G1s (NVIDIA SONIC on legs, waist and free arm) fence phrase by phrase from on guard, each phrase replayed from a table of all 2916 phrases measured in MuJoCo; the agent chooses each phrase's tactical intention (one of nine) against a scripted fencer that reads its choices; turn-based (`eai-standard-turn/1.0`), a chess clock of 60 min per player | level 2, seed 35 | full: the camera-only reference won 15:13 (32 phrases, replay identical; the world is deterministic, so the oracle's result is the one Embodied Olympics computes in process); nop 0 |
+| `embodied-olympics-match-fencing-bout-i02-standard` | robot epee fencing, one FIE direct-elimination bout (15 touches or 9 min of fencing time; Embodied Olympics revision `fencing-7`, a Embodied Olympics preview sport): two Unitree G1s (NVIDIA SONIC on legs, waist and free arm) fence phrase by phrase from on guard, each phrase replayed from a table of all 2916 phrases measured in MuJoCo; the agent chooses each phrase's tactical intention (one of nine) against a scripted fencer that reads its choices; turn-based (`eai-standard/2.1+match/1.0`, the match's own `eai-standard-turn/1.0` behind it), a chess clock of 60 min per player | level 2, seed 35 | full: the camera-only reference won 15:13 (32 phrases, replay identical; the world is deterministic, so the oracle's result is the one Embodied Olympics computes in process); nop 0 |
 | `embodied-olympics-match-tabletennis-matchlow-i01-realtime` | table tennis at the **low level** (Embodied Olympics' Engineer mode as a match; owner's decision 2026-10-16): the agent implements the robot's `hit` skill itself from the joint interface and the toolkit, serves it from its own container (`game skill serve`; the sim calls it over the shared loopback), and every stroke of the match is played by that skill (the skill in the loop: its compute counts in match time; no execution scatter); success = the agent wins | level 1, seed 22, S = 10, 7200 s | partial: Embodied Olympics' toolkit-only reference skill with the camera-only reference strategy lost 0:5 (valid, replay identical; it lost 0:5 on 8 more seeds: its slow serves bounce twice on its own court); feasibility: the platform's own hit packaged as a skill, with the truth-state strategy, wins level 1 in 7 of 8 seeds of Embodied Olympics' competition test (this seed 5:1; the reference skill 0 of 4); through the live service (core 0.2.32's upload path) with the camera-only strategy it scored 2:5, 1:5, 2:5; GPT-6 Astra (one precheck) lost 2:3 by a missed review (`ready_timeout`, a valid loss; its own skill, then uploaded to the sim (core 0.2.32), won 2 points); nop 0 |
 | `embodied-olympics-match-badminton-matchlow-i01-realtime` | badminton at the **low level**, as the table-tennis one: the agent implements the robot's `act` skill (the racket head's state at contact, optional base position) from the joint interface and the toolkit (bm_kinematics, bm_servo), serves it from its own container (`game skill serve`), and every stroke of the match is played by that skill; success = the agent wins | level 2, seed 8, S = 20, 14400 s | partial: our toolkit-only reference act with the camera-only reference strategy lost 1:11 on this instance (vanilla Harbor 0.23.0, the skill served from the oracle's own container: a valid, replayed match, 30 act calls, none failed); feasibility: our evaluator's competition test (the camera-only reference strategy calling a skill, no wall clock) wins level 1 4/4 and level 2 2/4 with our toolkit-only reference act (API test 512/519), and in the screening's skill-in-the-loop match (revision 12, S = 20) Claude Opus won level 1 11:6 with its own act; level 2 because models won level 1; nop 0 |
 
-**Standard twins of the real-time matches (`eai-standard-lockstep/1.0`).** Each `-realtime` match has a
+**Standard twins of the real-time matches (`eai-standard/2.1+match/1.0`; the match's own `eai-standard-lockstep/1.0` behind it).** Each `-realtime` match has a
 `-standard` twin: the same export (instance, seed, level, opponent, rules, referee, observation, action levels, reviews,
-cutoff, live grading, oracle), with the sim service started as `python3 -m core.lockstep` (`environment/sim/core/lockstep.py`,
-Embodied First Exam's, on top of the unchanged `core/realtime.py`). Only the clock differs: the world advances one control
+cutoff, live grading, oracle), with the sim service's world in lockstep (`environment/sim/core/lockstep.py`, Embodied First Exam's, on top of the
+unchanged `core/realtime.py`; started by `python3 -m eai_std.serve` with `EAI_STD_CLOCK=lockstep`, below; the
+low-level and G1 twins: `python3 -m core.lockstep`). Only the clock differs: the world advances one control
 step at a time, and only while every seat that plays lets it (an open `wait {dt}`, up to its target step; an accepted act,
 up to the step at which it takes effect); between the player's calls it stands still, and nothing advances while any
 act is being prepared (the high level's planning, a low-level skill call), so thinking and computation cost no game
@@ -56,6 +62,41 @@ and play exactly as in real time. `/spec` timing has `clock = "lockstep"`, `peri
 `clock = "lockstep"`; `tests/fexam_reward.py` writes `realtime = 0`. The episode is a realtime episode, so the replay
 video and grading are unchanged. A program that never waits leaves the match standing; it is lost when the session ends
 (`abandoned`). The reviews keep their limit of real time, and the start window is unchanged.
+
+**The standard endpoints (the match extension, owner 2026-11-25; `docs/protocol/standard_mode.md` Part 5).** Every
+match above except the low-level ones (`matchlow`: the agent's in-loop skill service, kept as exported) and the G1 table
+tennis (core 0.5, its own image) speaks eai-standard/2.x: `/spec`, `/status`, `/observe`, `/submit`, plus the match's
+own calls as extension endpoints, `/start`, `/ready` (the review after every unit) and, in team formats, `/say` and
+`/team`; every answer's `meta` carries `score`, `review_due` and `match_over`. The real-time matches declare
+`eai-standard/2.3+match/1.0` and follow 2.3's realtime clock: `/submit` answers at once and its rows become a plan from
+control step `at` (a new chunk replaces it from `at` on, passed rows are dropped, the last command holds). As in every
+eai-standard/3.0 task, `/observe` answers at once and never lets time pass (`seconds > 0` is a 400); time passes only
+through `/submit`, and a rows-free hold chunk `{"type": T, "interpolate": "hold", "seconds": S}` lets it pass without a
+new action (real-time: what was planned from `at` is dropped for S seconds, the last command holds; lockstep: S seconds
+of game time, as `game wait`; fencing: a wait of up to S real seconds for your turn). What cannot follow it is declared
+in `/spec` `timing.deviations` with the reason: the clock starts at the start barrier and freezes for the reviews, a
+high-level action takes effect at the first boundary after the platform has planned it (reported per row), the core
+runs missed steps back to back instead of dropping them, and there is no recorder: `/observe` returns the sport's own
+frames of now (`last_s` does not reach further back), not a video. The standard twins and the fencing bout declare
+`eai-standard/2.1+match/1.0` (`/submit` runs its rows in lockstep; in fencing one row, the turn's phrase).
+`/finish` is not offered (404) in these tasks, nor `/reset` or `/kinematics`: the match's rules end the episode (the
+final score, a forfeit, a start or review timeout, the session's end), never the agent, so they are exempt from
+agent-ended episodes; there is one match and no reset.
+
+How it is built: `embodied_first_exam/benchmarks/embodied-olympics-match/eai_std/` (one source; `apply_eai_std.py` next
+to it copies it to each task's `environment/sim/eai_std/` and sets the task's protocol, compose command, client and
+instruction, and runs again after a re-export). The sim runs `python3 -m eai_std.serve`: the core's own entry point
+(`core/serve.py`, `core/lockstep.py`) builds and runs the match unchanged and the extension only wraps its HTTP server, on
+the same port as the core's seat API, which stays in place: the `game` command and `/<SEAT>/<call>` work as before,
+side by side with the standard endpoints (one request budget for both; `game` does not go through the new endpoints).
+The agent's image gets the shared client from the pinned `standard-files` image (`/opt/tools/rcb_client.py`: 2.3's for
+the real-time matches, 2.2's otherwise). The core and the sport (`core/`, `sport/`: `source_sha`) and the pinned
+files-only image (`embodied-olympics-match-files-0.3.0`) are unchanged: the extension lives in each task's own build
+context, so no files-only image is rebuilt and a match's record is the one its core writes. Checked against the oracles
+without a model: the turn-based bout and a lockstep twin play identically through the standard endpoints and through the
+seat API (same commands, reviews, scores and `state_sha`); the realtime clock's plan, replacement, hold, freeze and
+timing on the core's test sport, and the table-tennis oracle in real time (every planned row took effect at its step).
+`ci_checks/benchmarks/embodied-olympics-match/invariant-eai-std.py` holds each task's copy to the source.
 
 **Privileged twins.** Every exported match has a privileged twin `<base>-privileged` on the same frozen instance: the
 full simulator in development (any state, the whole match reset), the deliverable a closed-loop Python program that
@@ -139,7 +180,7 @@ What differs from Embodied Olympics - Fun's tasks (`eai-standard/2.x`; PROTOCOL 
 
 | | Embodied Olympics - Fun (`eai-standard/2.x`) | Embodied Olympics - Match (exported) | why |
 |---|---|---|---|
-| protocol | `eai-standard/2.x` | `eai-standard-realtime/1.0` (real-time matches; Embodied Olympics' own: `game` CLI / HTTP at `localhost:8000/A/...`), `eai-standard-turn/1.0` (turn-based matches, mode `standard`: the same service and `game` CLI; the world waits for the player whose turn it is, and each player has a chess clock of real time that runs on its own turns, reviews included; a player whose clock runs out loses, a valid 0) | the frozen review after every point (at most 300 s, 600 s in soccer: `READY_TIMEOUT_S`; the world stands still, the agent's time runs on; a side that has not sent `ready` by then loses the match, `ready_timeout`, a valid 0: the world does not go on by itself; stated in each instruction and in `game spec` `timing.review_timeout_s`, `patched` in exported.toml) is part of Embodied Olympics' rules, and its results are only comparable under them |
+| protocol | `eai-standard/2.x` | the match extension of eai-standard/2.x (below): `eai-standard/2.3+match/1.0` (real-time matches), `eai-standard/2.1+match/1.0` (standard twins, the turn-based bout), with Embodied Olympics' own seat API next to it (`game` CLI / HTTP at `localhost:8000/A/...`); `eai-standard-realtime/1.0` / `eai-standard-lockstep/1.0` for the low-level (`matchlow`) and G1 matches. Turn-based matches (mode `standard`: the same service and `game` CLI; the world waits for the player whose turn it is, and each player has a chess clock of real time that runs on its own turns, reviews included; a player whose clock runs out loses, a valid 0) | the frozen review after every point (at most 300 s, 600 s in soccer: `READY_TIMEOUT_S`; the world stands still, the agent's time runs on; a side that has not sent `ready` by then loses the match, `ready_timeout`, a valid 0: the world does not go on by itself; stated in each instruction and in `game spec` `timing.review_timeout_s`, `patched` in exported.toml) is part of Embodied Olympics' rules, and its results are only comparable under them |
 | crash recovery | journal, resume | none: a sim crash ends the trial with `infra_error = 1` | the match is one continuous live record (its scores and winner); a resumed match would not be the recorded one |
 | slowdown | — | per task, the sport's official slowdown: table tennis 10 (Embodied Olympics PR #138), badminton 20, humanoid soccer 5, wheeled soccer 10, foosball 20 (the sim service's `RO_SLOWDOWN` default); turn-based matches have none (`metadata.chess_clock_s`: fencing 3600 s) | results state S, or the chess clock |
 | agent budget | the benchmark's 7200 s | 7200 s; 14400 s for badminton i04, the badminton duel, low-level badminton (`matchlow`), wheeled soccer, foosball and the joint-level soccer pair (`jointcpu`, `jointgpu`) (those tasks' own `[agent] timeout_sec`) | a game to 11 at S = 20 took the reference alone 78 to 93 min; a 5 v 5 match is 2.9 h of wall time at S = 10; foosball's 240 s of play is up to 4800 s at S = 20 |

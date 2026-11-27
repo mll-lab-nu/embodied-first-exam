@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:libero-max-0.1.1` |
 
 ## Task
-LIBERO-MAX case `pro-object-texture-goal-t09-i08-obstacle_insertion-d0-p195`: a Franka Panda arm at a table, instructed **"Put the wine bottle on the rack."**, on a LIBERO-PRO variant
+LIBERO-MAX case `pro-object-texture-goal-t09-i08-obstacle_insertion-d0-p195`: a Franka Panda arm at a table, instructed **"Put the wine bottle on top of the wine rack."**, on a LIBERO-PRO variant
 of a libero_goal task (object_texture). Online event (obstacle insertion): the first time the gripper comes within
 0.18 m of `wine_bottle_1`, LIBERO-MAX changes the scene once (`akita_black_bowl_1` appears as an obstacle, offset (0.14, 0, 0) m from `wine_bottle_1`). The deliverable is one
 replayable trajectory of LIBERO's OSC control steps (`/app/output/trajectory.npz`, `(T, 7)`, T ≤ 300), graded by

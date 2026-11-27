@@ -15,7 +15,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/behavior-sorting-household-items-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.2): BEHAVIOR-1K v3.9.2 sorting_household_items on the same frozen instance as the privileged task (2026 challenge public_test instance 301). Sort the household items into the bathroom. Two baskets stand on the bedroom floor: one holds two bottles of detergent and a box of sanitary napkins, the other a soap dispenser, a tube of toothpaste and a toothbrush; a cup stands on the bathroom sink. Put both detergent bottles under the bathroom sink, next to each other; the box of sanitary napkins on the bathroom shelf; the soap dispenser on the sink; the toothbrush into the cup, which stays on the sink; and the toothpaste next to the cup. The agent only gets a client: get_obs (RGB-D + proprioception), submit (joint_position or ee_pose chunks). No reset, no privileged state; the sim service records the episode as a trajectory, resumes it after a crash, and grades the episode it ran (no replay)."
+description = "STANDARD MODE (robot as a service, eai-standard/2.2): BEHAVIOR-1K v3.9.2 sorting_household_items on the same frozen instance as the privileged task (2026 challenge public_test instance 301). Put the detergent bottles side by side under the sink, the napkins on the shelf, the soap dispenser and the cup on the sink, the toothbrush into the cup and the toothpaste next to it. The agent only gets a client: get_obs (RGB-D + proprioception), submit (joint_position or ee_pose chunks). No reset, no privileged state; the sim service records the episode as a trajectory, resumes it after a crash, and grades the episode it ran (no replay)."
 keywords = ["robotics", "behavior", "omnigibson", "isaac-sim", "r1pro", "mobile-manipulation", "standard-mode", "trajectory", "sorting_household_items"]
 
 [metadata]
@@ -68,6 +68,13 @@ cpus = 8
 memory_mb = 24576
 storage_mb = 10240
 gpu_types = ["L40S", "L40", "L4", "RTX 4090", "RTX 6000 Ada"]
+
+# The robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): Harbor starts this server for the agent.
+[[environment.mcp_servers]]
+name = "efe-robot"
+transport = "stdio"
+command = "python3"
+args = ["/opt/tools/efe_mcp/server.py"]
 
 [verifier.env]
 RCB_LIMITS_ENFORCE = "${RCB_LIMITS_ENFORCE:-0}"

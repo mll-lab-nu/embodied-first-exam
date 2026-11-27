@@ -66,7 +66,7 @@ def run_reference(document, arrays, robot, output=None, *, sleep=time.sleep, mon
                     if before.get('planned_steps')!=0:
                         raise ValueError('Snapshot would cross an undrained motion boundary')
                     sent=monotonic()
-                    result=robot.get_obs(cameras=cameras,seconds=0,video='none',include_depth=False)
+                    result=robot.get_obs(cameras=cameras,video='none',include_depth=False)
                     received=monotonic();status=robot.status()
                     deliveries.append(save_snapshot(output/('%04d-%02d'%(item_index,batch_index)),result,spec,
                         item['boundary'],cameras,before,status,sent,received))

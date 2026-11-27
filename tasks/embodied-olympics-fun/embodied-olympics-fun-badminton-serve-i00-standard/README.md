@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Stand in your right service court and let the shuttle go from your left hand. Hit it with the racket in your right hand, cork base first and with the whole shuttle below 1.15 m, over the net into the receiver's service court diagonally opposite. (Embodied Olympics `badminton-serve`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Serve the shuttle: from your right service court, let it go from your left hand and hit it, cork first and below 1.15 m, with the racket in your right hand over the net into the service court diagonally opposite. (Embodied Olympics `badminton-serve`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
 
 ## Difficulty
 The shuttle must leave the strings at about 9 m/s or more, 40 to 55 degrees upwards, to clear a 1.52 m net 2 m away from a hit below 1.15 m, and the G1 meets it only in the lower part of a swing whose racket is held by friction in a three-finger hand; the left hand's reach and the racket's path barely overlap, and the shuttle falls through it in a few hundredths of a second. The swing must leave the feet where they stand and the robot on them, on a stand without balance feedback. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 5 resets (only the last attempt is graded).

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Store the batteries. Three batteries lie around the house, two on the coffee table in the living room and one on the kitchen countertop; put all three inside one of the two cabinets in the living room (all in the same one).
+Put all three batteries into the same cabinet.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - all three batteries (`battery.n.02_1` to `_3`) are inside one and the same cabinet (`cabinet.n.01_1` or `_2`)

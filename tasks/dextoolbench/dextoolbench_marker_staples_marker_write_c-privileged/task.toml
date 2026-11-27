@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/dextoolbench_marker_staples_marker_write_c-privileged"
-description = "DexToolBench (SimToolReal) staples_marker / write_c in MuJoCo: KUKA iiwa 14 + Sharpa HA4 hand; produce one replayable joint-target trajectory that carries the staples marker through the 29 demonstrated goal poses in order."
+description = "DexToolBench (SimToolReal) staples_marker / write_c in MuJoCo: KUKA iiwa 14 + Sharpa HA4 hand; produce one replayable joint-target trajectory that carries the staples marker through the 29 demonstrated goal poses in order. Task: Pick up the marker and write a letter C, following the green ghost marker through its poses in order."
 keywords = ["robotics", "dextoolbench", "simtoolreal", "mujoco", "dexterous", "tool-use", "iiwa", "sharpa", "code-as-policy", "trajectory"]
 
 [metadata]

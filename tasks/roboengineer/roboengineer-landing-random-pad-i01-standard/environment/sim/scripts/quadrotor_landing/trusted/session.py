@@ -176,7 +176,7 @@ class Session:
                         "pad_xy_m": PAD_XY_RANGE,
                         "min_horizontal_travel_m": MIN_TRAVEL,
                     },
-                    "goal": "Fly from the randomized start to the independently placed, fixed pad; land gently and settle.",
+                    "goal": "Land the drone gently near the centre of the round pad as quickly as you safely can, and keep it there, level and still, until the end.",
                     "action": "Validated numeric landing-policy/2, four rotor thrusts executed by a fixed controller.",
                     "feedback": "Known commanded pad position, 20 Hz noisy navigation, IMU specific force, rotor RPM and own commands; 1 Hz camera frames.",
                     "control_dt_s": DT,

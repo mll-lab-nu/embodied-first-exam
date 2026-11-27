@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Spray the fruit trees. A pesticide atomizer lies on the garden floor near two trees; spray pesticide onto both trees until each of them is covered with it.
+Spray both trees until they are covered with pesticide.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - both trees (`tree.n.01_1`, `_2`) are covered with pesticide (`pesticide.n.01_1`)

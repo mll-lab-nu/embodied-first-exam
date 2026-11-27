@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/abc-sim-ball-tray-i00-privileged"
-description = "ABC Sim ball-tray balancing (two I2RT YAM arms, MuJoCo): Grab the tray by both handles -- the left gripper on one handle bar, the right gripper on the other -- and keep the ball on the tray. Frozen scene instance; one replayable trajectory, graded by two fresh-process replays."
+description = "ABC Sim ball-tray balancing (two I2RT YAM arms, MuJoCo): Hold the tray by both handles, one gripper on each, and keep the ball on the tray until the episode ends. Frozen scene instance; one replayable trajectory, graded by two fresh-process replays."
 keywords = ["robotics", "abc-sim", "mujoco", "yam", "bimanual", "ball_tray", "privileged"]
 
 [metadata]

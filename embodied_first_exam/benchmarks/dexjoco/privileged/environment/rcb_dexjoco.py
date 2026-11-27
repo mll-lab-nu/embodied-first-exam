@@ -284,10 +284,14 @@ class Session:
     """One DexJoCo env on a frozen instance. Every episode starts from the instance snapshot."""
 
     def __init__(self, task: str, instance: str | Path | None = None, *, max_steps: int = MAX_STEPS,
-                 image_size: tuple[int, int] = (480, 640)):
+                 image_size: tuple[int, int] = (480, 640), hide_success: bool = False):
         import mujoco
         self._mj = mujoco
         self.task = task
+        # agent-ended episodes (PROTOCOL §3): a success is only recorded (now_success, the check as the state now is)
+        # and never ends the episode; a task failure still does
+        self.hide_success = bool(hide_success)
+        self.now_success = False
         self.max_steps = int(max_steps)
         self.cfg = _task_config(task)
         # render_mode "none" keeps DexJoCo from rendering its cameras on every step (CPU rendering is ~100x the
@@ -394,6 +398,7 @@ class Session:
         self.steps = 0
         self.done = False
         self.success = False
+        self.now_success = False
         self.reason: str | None = None
         self.last_info: dict[str, Any] = {}
         self._rcb_count = 0                           # Embodied First Exam's own hold counter (tightened checks)
@@ -439,7 +444,15 @@ class Session:
             succeed = self._rcb_count >= 30
             failed = bool(terminated) and not bool(info.get("succeed", False)) and bool(self.base._trigger_pulled)
             terminated = failed                        # upstream's own success no longer ends the episode
-        if succeed:
+        # agent-ended (hide_success): upstream's terminated is terminated or success, so on a success step only an illegal
+        # state (its own flag) tells a failure that happened at the same step: that failure ends the episode (no success)
+        illegal = self.hide_success and succeed and bool(info.get("illegal_state"))
+        self.now_success = succeed and not illegal
+        if illegal:
+            self.done, self.reason = True, _failure_reason(self.task, info)
+        elif succeed and self.hide_success:
+            pass                                       # upstream's terminated = terminated or success: not a failure
+        elif succeed:
             self.done, self.success, self.reason = True, True, "success"
         elif terminated:
             self.done, self.reason = True, _failure_reason(self.task, info)

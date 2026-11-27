@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:dexjoco-0.1.2` |
 
 ## Task
-DexJoCo `hammer_nail` (a Franka Panda arm with a 16-DoF Allegro hand) on the same frozen instance as `dexjoco-hammer-nail-i00-privileged`: Pick up the hammer and drive the nail into the wooden block by striking the nail's head with it. Only a real downward swing counts: the hammer face must be moving down faster than about 20 cm per second just before it hits the nail. Such a blow drives the nail about 1 cm deeper, and a faster blow drives it further, up to about 2.5 cm per strike. Success: the nail is at least 4 cm deep.
+DexJoCo `hammer_nail` (a Franka Panda arm with a 16-DoF Allegro hand) on the same frozen instance as `dexjoco-hammer-nail-i00-privileged`: Pick up the hammer and hammer the nail about 4 cm into the wooden block.
 Standard mode (eai-standard/2.2): the agent drives the robot through a client in one episode, with the robot's own
 sensors, calibrated cameras (RGB, optional depth) and the robot's kinematics.
 
@@ -25,7 +25,7 @@ mistakes without starting over.
 ## Reference solution
 `solution/oracle_stream.py` streams the privileged reference's rows (`solution/oracle_trajectory.npz`, 202 rows, float32-exact)
 through the client as `ee_pose` chunks; it uses no privileged information at run time. The service's recorded
-trajectory is then exactly the privileged reference, and the episode ends with success after 202 control steps.
+trajectory is then exactly the privileged reference (202 control steps), whose end state is a success.
 
 ## Verification
 The verdict is the live episode's (`graded_by = "live"`, `replays = 0`): the sim service judges the episode it runs with

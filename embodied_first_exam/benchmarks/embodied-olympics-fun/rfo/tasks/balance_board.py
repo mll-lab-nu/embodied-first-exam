@@ -47,8 +47,8 @@ class Task(TaskBase):
                   roller_radius_m=0.085, roller_length_m=0.46, deck_mass_kg=DECK_MASS, roller_mass_kg=ROLLER_MASS,
                   friction=1.0, stop_height_m=0.02, stop_length_m=0.03, off_board_s=1.0, start_tilt_deg=3.0)
 
-    sentence = ("Stay balanced on the roller board for {duration_s:g} seconds. Touch only the deck, and only with "
-                "your feet, and keep both ends of the deck off the floor.")
+    sentence = ("Stay balanced on the roller board for 30 s, touching only the deck, with your feet, and keeping "
+                "both ends of the deck off the floor.")
     rules = ("The board is a rigid deck {deck_length_m} m long (left to right), {deck_width_m} m wide and "
              "{deck_thickness_m} m thick, {deck_mass_kg} kg, lying loose on a roller: a free cylinder of "
              "{roller_radius_m} m radius, {roller_length_m} m long, {roller_mass_kg} kg, whose axis points "

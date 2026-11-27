@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Bowl a strike: from behind the foul line, deliver the ball you hold pressed between your two palms down the lane so that it knocks down all ten pins. (Embodied Olympics `bowling`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Bowl a strike: roll the ball down the lane from behind the foul line and knock down all ten pins. (Embodied Olympics `bowling`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
 
 ## Difficulty
 A strike needs the ball in the pocket beside the head pin, a few centimetres wide, after 18 m of lane on which it slides on the oil and grips on the dry boards; a 6 lb ball is deflected by the pins more than a heavy one, so it must also arrive fast. The 2.7 kg ball is held only by the squeeze of two fingerless palms, which the swing's speed and the ball's weight pull apart, both hands have to let go of it at the same moment without steering it off its line, and the body may not cross the foul line. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 5 resets (only the last attempt is graded).

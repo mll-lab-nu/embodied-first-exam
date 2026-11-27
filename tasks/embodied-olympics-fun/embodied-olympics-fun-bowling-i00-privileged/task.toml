@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/embodied-olympics-fun-bowling-i00-privileged"
-description = "Embodied Olympics bowling (one Unitree H1-2 on the Embodied Olympics simulator, MuJoCo 3.3.7, CPU) in privileged mode: produce one replayable trajectory. Bowl a strike: from behind the foul line, deliver the ball you hold pressed between your two palms down the lane so that it knocks down all ten pins. A referee of events, geometry and contact rules decides the success."
+description = "Embodied Olympics bowling (one Unitree H1-2 on the Embodied Olympics simulator, MuJoCo 3.3.7, CPU) in privileged mode: produce one replayable trajectory. Bowl a strike: roll the ball down the lane from behind the foul line and knock down all ten pins. A referee of events, geometry and contact rules decides the success."
 keywords = ["robotics", "embodied-olympics", "sports", "mujoco", "unitree-h1-2", "humanoid", "trajectory", "bowling"]
 
 [metadata]

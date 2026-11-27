@@ -1,35 +1,33 @@
-# DexToolBench · sharpie marker · draw_smile (MuJoCo) — STANDARD MODE (robot as a service)
+# DexToolBench · sharpie marker · draw_smile (standard)
 
-A KUKA iiwa 14 arm with a 22-joint **Sharpa HA4** dexterous hand stands next to a table with a **sharpie marker** on it.
-**Task:** pick up the sharpie marker and move it through the demonstrated motion of drawing a smiley face: bring it to each of the **36 goal poses in order**. A green ghost marker shows the current goal. This is task `marker / sharpie_marker /
-draw_smile` of DexToolBench (SimToolReal), run here in plain MuJoCo.
+## Task
+Pick up the marker and draw a smiley face, following the green ghost marker through its poses in order.
 
-You control the robot **as if it were real hardware**: the simulator runs in a service you cannot open. You get one
-client and **20 resets**: at most 21 episodes, of which the last is graded.
+## Goal
+Success: the marker has lined up closely with the ghost marker, in both position and orientation, at each of its 36
+poses in order. Each pose counts when it is reached: success is judged on whether every pose was reached, in order, by
+the time the episode ends.
 
-## Rules (real-robot rules)
-- **Episodes and resets.** You have **20 resets** (`spec()["budget"]["reset"]`, which is authoritative: if it says 0,
-  there is no reset and the one episode is the run). `r.reset()` puts the robot, the tool and the goals back to the same
-  starting state and starts a new episode, either abandoning the running one or after one has ended. Within an episode
-  nothing is undone: a tool knocked off the table stays there until you reset. **Only the last episode is graded**: a
-  success (every goal reached) ends the run at once, and when your time is up the episode then running is the one
-  graded, so do not reset away a good episode late. Resetting does not stop or restore the clock.
-- **No privileged state.** You see what the cameras see (RGB, optional depth, with each camera's calibration) plus the
-  robot's own joint positions, velocities and targets. No object poses, no success predicate.
-- Your only budget is the time limit (`## Time limit`). `meta["time_left_s"]` is the service's count of it, from your first
-  request to the service: it never runs out before your time does, so plan by it. There is nothing to hand in: the
-  service records every episode, and grades the last one as the trajectory. Leave your script at `/app/output/gen.py` for the
-  record.
-- Do not use pretrained manipulation policies or any published solution for this benchmark; write your own controller.
-- Images come back as arrays in a Python object; what you look at and where you store it is up to your code.
+When you are done, send `/finish` to end the episode and get it graded.
 
-## Scoring
-The current goal counts as reached when all 8 corners of the tool's grasp box (0.141 × 0.030 × 0.027 m, scaled by
-1.5, in the tool's frame) are within **1.5 cm** of the same corners at the goal pose; then the next goal becomes
-current. In this mode goals have **no time limit** (the benchmark gives each goal 10 s). An episode ends when every goal is reached, when your time is up, or after **360,000 control steps (100 min of robot time)**. **Only the last episode is scored.**
-**Score: 1 if all 36 goals are reached, else 0.** Goals reached / 36 is reported as `progress`; there is no partial credit.
+Rules:
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+  benchmark's demonstrations, trained policies); trials are reviewed.
+- Episodes: 20 resets (`spec()["budget"]["reset"]`), each a new episode from the same starting state; within an episode
+  what you knock over stays knocked over until you reset. Only the last episode is graded. No reset is possible after
+  `/finish`.
+- You get only the cameras, the robot's own joint positions, velocities and targets, and the current goal pose with the
+  count of goals reached before it: no object poses, no scene layout, no success signal.
 
-## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`)
+## Robot Interface
+A KUKA iiwa 14 arm with a 22-joint Sharpa HA4 dexterous hand stands next to a table with a sharpie marker on it
+(DexToolBench, MuJoCo). The robot runs as a service you reach through its client or its MCP tools, as if it were real
+hardware.
+
+`POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
+
+### Client
+`/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`:
 ```python
 from rcb_client import Robot
 r = Robot()                                   # connects (waits while the service starts)
@@ -39,35 +37,59 @@ obs = r.get_obs(cameras=cams, include_depth=True)   # obs.last[cam] -> uint8 (24
 obs.meta["proprio"]                           # {"layout": [...], "now": [...]}: joint positions, velocities, current targets
 obs.meta["cameras"]                           # per camera: intrinsic_cv, cam2world_gl (OpenGL: looks along -z)
 obs.meta["task"]                              # see below
-obs = r.get_obs(cameras=cams[:1], seconds=2.0, video="mp4")    # hold the targets and watch for 2 s (max 30)
+obs = r.hold(2.0, cameras=cams[:1])           # hold the targets for 2 s of robot time
+obs = r.get_obs(last_s=1.0)                   # the frames recorded over the last 1 s (reading moves no time)
 res = r.submit("joint_position", A, dt=spec["control_dt"], cameras=cams[:1], video="mp4")   # A: (T, 29) rows dt apart
 res.meta["done"], res.meta["reason"], res.meta["task"], res.meta["control_steps"]
-res.video[cam]; res.frames[cam]; res.last[cam]; res.proprio; res.save("/app/runs/003")
+res.video[cam]; res.frames[cam]; res.last[cam]; res.proprio
 obs = r.reset(cameras=cams)                   # a new episode from the starting state; obs.meta["resets_left"]
 ```
-- Actions `joint_position` (29: `joint1..joint7` (iiwa), then the 22 Sharpa hand joints (names in `spec["action_types"]["joint_position"]["layout"]`)); rows are `dt` apart (a multiple of `control_dt`), each held
-  (`interpolate="hold"`) or ramped from the previous row (`"linear"`, default) over its control steps; clipped to the
-  limits in the spec. A chunk covers at most 10 s.
-- `meta["task"]` = the current goal (`goal`, x y z qx qy qz qw), `goal_index`, `n_goals`, `goals_reached`, `steps_left_on_goal`
-(the benchmark shows the controller the current goal, as SimToolReal's deployment does). The episode **ends** when every
-goal is reached or at the step limit (`spec["max_control_steps"]`); after that `submit` raises `EpisodeOver` (409) until you reset.
-`steps_left_on_goal` is null: no goal has a time limit here.
-- `r.reset(cameras=None, include_depth=False)` (`POST /reset`): a new episode from the same starting state (at most 20 in all);
-  it returns the start's frames, and `meta` (also `r.status()`) carries `episode`, `resets_left` and `control_steps_total`.
-- Calibration: `meta["cameras"][cam]` holds `intrinsic_cv` (pinhole, pixels) and `cam2world_gl` (4x4 camera-to-world,
-  OpenGL axes: x right, y up, the camera looks along -z; the viewpoint the image is rendered from), for the state at the
-  **end** of that call (the `last` image and the last frame of every stack). Depth is the distance along the viewing
-  axis, in metres. The four cameras are fixed.
+After the step limit (`spec()["max_control_steps"]`) `submit` raises `EpisodeOver` (409) until you reset, and after
+`/finish` every call but `spec` and `status` is refused. `r.reset(cameras=None, include_depth=False)` (`POST /reset`)
+starts a new episode from the same starting state. It returns the start's frames, and its `meta` (also `r.status()`)
+carries `episode`, `resets_left` and `control_steps_total`. Resetting does not stop or restore the clock. Calibration:
+`meta["cameras"][cam]` holds `intrinsic_cv` (pinhole, pixels) and `cam2world_gl`, the 4x4 camera-to-world pose the image
+is rendered from (OpenGL axes: x right, y up, the camera looks along -z). Both describe the state at the end of that
+call: the `last` image and the last frame of every stack. One call returns at most 3000 images.
 
-One call returns at most 3000 images (`max_frames_per_call`, PROTOCOL §3 "Images per call").
+### MCP tools
+- The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
+  `observe`, `submit`, `reset`, `finish`. A tool takes its endpoint's request fields (any other field in `fields`) and
+  returns the service's reply `meta` unchanged; images, arrays and video are written as files under `/app/obs/` (`.png`,
+  `.npy`, `.mp4`) and the result lists them. Long action chunks can be passed as a file (`actions_file`).
+- `observe` returns at once with what is already recorded: the current frame, or the last `last_s` seconds. Time passes
+  only through `submit`, which answers when its rows have run; a `submit` with `interpolate` "hold", `seconds` and no
+  rows lets time pass with the robot holding still.
+- A call still running after 45 s returns `pending` with an `operation` id; `observe(operation=id)` collects its reply.
+- The client and the tools drive the same robot in the same episode; use either, or both.
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+### Actions
+`joint_position`, 29 numbers per row: `joint1..joint7` (iiwa), then the 22 Sharpa hand joints (names in
+`spec()["action_types"]["joint_position"]["layout"]`). Rows are `dt` apart (a multiple of `control_dt`). Each row is
+either held over its control steps (`interpolate="hold"`) or ramped from the previous row (`"linear"`, default). Values
+are clipped to the limits in the spec. A chunk covers at most 10 s.
 
-## Resources
-Your container: **3 CPUs**, **16 GiB of memory**, **1024 processes and threads** and **11 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
+### Observations
+- Cameras: `front`, `side`, `top`, `oblique`, all fixed; RGB 240 × 320, depth on request (metres).
+- Each image comes with its camera's calibration (intrinsics and pose); depth is the distance along the viewing axis, in
+  metres.
+- Proprioception (`obs.meta["proprio"]`): the joint positions, velocities and current targets.
+- The current goal (`meta["task"]`): its pose (`goal`, x y z qx qy qz qw), `goal_index`, `n_goals`, `goals_reached`,
+  `steps_left_on_goal` (null: goals have no time limit here). Once the last goal is reached, it stays the current goal
+  and `goals_reached` stops one short. So the service never says whether every pose has been reached. The images show
+  the current goal as the green ghost tool.
 
-## Time limit
-You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
-
-This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` counts the same limit from your first request to the service, so it never runs out before your time does: your real time left is `time_left_s` minus the time you spent before that request. Plan by it. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+## Limits
+- Time: 3600 s of wall-clock time from the start of your session. Everything counts, including waiting for the service.
+  At the end you are stopped without warning. Time left: `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`).
+  Trust this file: the `time_left_s` in the service's replies starts only at your first request. A call into a
+  long-running process can block for its whole wait time. Use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, including the simulator's and the benchmark's source.
+- Resources: 3 CPUs, 16 GiB memory, 1024 processes and threads, 11 GiB disk (new files under `/app`, `/tmp`, `/root`),
+  no GPU; the simulator runs in its own container and does not count. Going over a cap can get a process killed (the CPU
+  cap only slows you down). Usage: `/run/rcb-limits/usage.json`.
+- Resets: at most 20 (`spec()["budget"]["reset"]`), each a new episode from the same starting state.
+- Steps: at most 360,000 control steps (100 min of robot time), then the episode ends.
+- Finish: if you never send `/finish`, the last episode is graded when your session ends.

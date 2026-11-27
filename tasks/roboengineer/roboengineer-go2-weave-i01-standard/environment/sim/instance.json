@@ -607,7 +607,7 @@
     },
     "evaluation_backend": "native MuJoCo CPU / NumPy CPU / OSMesa software rendering",
     "feedback": "37 noisy proprioceptive/public-command channels and sampled images; no global position, velocity, contact flags, scores, hidden parameters or seeds.",
-    "goal": "Execute a predeclared body velocity command schedule to pass four alternating poles without contact; no global-position feedback.",
+    "goal": "Make the Go2 weave forward past the four poles ahead, passing to the left of the first, to the right of the next and so on, without touching any or falling.",
     "held_out_cases": 10,
     "image_interval_s": 1.0,
     "limitations": "A simulated port of published quadruped performance tasks, not a hardware calibration; MuJoCo contacts differ from other simulators.",
@@ -616,7 +616,7 @@
     "policy_abi": "go2-controller/1 bounded JSON; validated numeric parameters, 17x12 offsets and 12x6 feedback gains",
     "protocol": "eai-policy/1.1",
     "schema": "control-transfer/1",
-    "score": "Success requires four ordered alternating crossings, clearance >=0.16 m, no pole/body-ground collision, final x beyond last pole +0.35 m; score combines crossing fraction and tracking quality, unsuccessful capped at 49.",
+    "score": "Success requires four ordered alternating crossings, clearance >=0.16 m, no pole/body-ground collision, final x beyond last pole +0.35 m; the score is the share of poles passed correctly, capped at 49 when unsuccessful.",
     "training_backend": "nominal MuJoCo CPU; GPU training may export the same bounded numeric artifact",
     "units": [
       "rad",

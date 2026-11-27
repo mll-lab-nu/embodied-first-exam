@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:mujoco-0.1.2` |
 
 ## Task
+Pick up the marker and write a letter C, following the green ghost marker through its poses in order.
+
 DexToolBench task `marker / staples_marker / write_c` (SimToolReal, MIT) ported to plain MuJoCo for this benchmark.
 
 ## Difficulty

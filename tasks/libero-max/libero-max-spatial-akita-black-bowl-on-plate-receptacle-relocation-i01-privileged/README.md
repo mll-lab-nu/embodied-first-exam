@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:libero-max-0.1.1` |
 
 ## Task
-LIBERO-MAX case `pro-view-occlusion-spatial-t08-i02-receptacle_relocation-d1-p195`: a Franka Panda arm at a table, instructed **"Pick up the black bowl next to the plate and place it on the plate."**, on a LIBERO-PRO variant
+LIBERO-MAX case `pro-view-occlusion-spatial-t08-i02-receptacle_relocation-d1-p195`: a Franka Panda arm at a table, instructed **"Pick up the black bowl next to the plate and put it on the plate."**, on a LIBERO-PRO variant
 of a libero_spatial task (view_occlusion). Online event (receptacle relocation): the first time the gripper comes within
 0.18 m of `akita_black_bowl_1`, LIBERO-MAX changes the scene once (the receptacle `plate_1` is moved 0.12 m, direction (-0.707, -0.707); it jumps there alone: what already rests in or on it stays where it was, and where it lands on another object the physics pushes the two apart). The deliverable is one
 replayable trajectory of LIBERO's OSC control steps (`/app/output/trajectory.npz`, `(T, 7)`, T ≤ 220), graded by

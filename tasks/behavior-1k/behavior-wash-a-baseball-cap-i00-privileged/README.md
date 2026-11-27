@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Wash the baseball caps. Two dirty baseball caps lie on the countertop in the utility room, where a washer stands; get both caps clean, so that no dirt is left on either of them.
+Wash the dirt off both baseball caps.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - neither baseball cap (`baseball_cap.n.01_1`, `_2`) is covered with dirt (`dirt.n.02_1`)

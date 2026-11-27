@@ -38,13 +38,12 @@ verdict, and nothing is replayed to grade it. The isolated verifier reads only t
 service then renders `replay.mp4` from the recorded trajectory in one video-only pass, which never changes the
 verdict. A missing or unfinished record, a give-up after crashes between the agent's calls and a frozen instance
 that does not build at the episode's start are infrastructure errors.
-The episode ends at the first success or the first failure.
 Success needs, in order: fold angle at most 0.314 rad and all four legs at least 1.571 rad; then the rack upright within
 10 degrees on its four feet and nothing else; then no hand contact and rack speeds at most 0.02 m/s and 0.2 rad/s for
 50 consecutive controls. Failures are fail-fast and permanent, checked every 2 ms substep: a rack part below the counter
 top, off the counter or more than 0.9 m above it, rack-floor or rack-cabinet contact, the rack unsupported (no counter
 and no hand contact) while falling faster than 0.05 m/s, after standing a tilt above 20 degrees or any hinge leaving its
-open range, unstable physics, or the 6,000-control budget. The frozen thresholds come from the task, never from an
+open range, or unstable physics. At the 6,000-control budget the episode ends and is judged on the state it leaves. The frozen thresholds come from the task, never from an
 agent archive. A no-op fails. Human review and full agent-trial calibration remain pending; report this task as
 provisional.
 

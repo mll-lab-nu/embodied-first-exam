@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robolab-0.2.2` |
 
 ## Task
+Put the banana in the bowl.
+
 Pick up the banana and place it in the bowl: RoboLab's `object_in_container` (inside the bowl's volume, in contact with
 it, gripper detached).
 

@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/robotwin_2_0_place_a2b_right-privileged"
-description = "RoboTwin 2.0 place_a2b_right (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Pick up the box of playing cards and set it down about 15 cm to the right of the soap, the same distance from you as the soap. Then let go. Frozen scene instance (RoboTwin seed 28831)."
+description = "RoboTwin 2.0 place_a2b_right (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Put the box of playing cards about a hand's length to the right of the soap, in line with it, neither in front of it nor behind it. Then let go. Frozen scene instance (RoboTwin seed 28831)."
 keywords = ["robotics", "robotwin", "sapien", "aloha-agilex", "dual-arm", "code-as-policy", "trajectory", "place_a2b_right"]
 
 [metadata]

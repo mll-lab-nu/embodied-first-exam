@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:myosuite-0.1.1` |
 
 ## Task
-MyoSuite `myoHandPoseFixed-v0` (MyoHand, 39 muscles) on the same frozen instance as `myosuite-hand-pose-i00-privileged`: Put the hand in the target pose and hold it for a full second, with the norm of the 23 hand and wrist joint-angle errors below about 40 degrees. The episode ends in failure if that norm goes above a full turn, about 360 degrees. The target joint angles are given below. Target joint angles (rad): pro_sup +0.000, deviation +0.000, flexion +0.000, cmc_abduction -0.090, cmc_flexion +0.082, mp_flexion -0.682, ip_flexion -0.515, mcp2_flexion +0.000, mcp2_abduction -0.014, pm2_flexion -0.046, md2_flexion +0.000, mcp3_flexion +0.676, mcp3_abduction -0.021, pm3_flexion +0.770, md3_flexion +0.660, mcp4_flexion +0.000, mcp4_abduction +0.000, pm4_flexion +0.000, md4_flexion +0.000, mcp5_flexion +0.479, mcp5_abduction -0.099, pm5_flexion +0.958, md5_flexion +0.000.
+MyoSuite `myoHandPoseFixed-v0` (MyoHand, 39 muscles) on the same frozen instance as `myosuite-hand-pose-i00-privileged`: Put your hand in the target pose that the see-through fingertip markers show, and hold it for a second. The pose's joint angles are at the end of Robot Interface.
 The hand starts in its rest posture; translucent markers show where the five fingertips are in the target pose. Standard mode (eai-standard/2.2): the agent drives the body through a client, with only its own proprioception and the scene's cameras, and 10 resets (only the last episode is graded).
 
 ## Difficulty
@@ -41,7 +41,7 @@ Caps per container (PROTOCOL §6).
 | Upstream | MyoSuite 2.12.2 (Apache-2.0) on MuJoCo 3.6.0, the models that ship in its wheel |
 | Service | `environment/sim/server.py` (the adapter) on the shared 2.2 layer `rcb_limited.py` (`embodied_first_exam/standard/`); cameras `side_view`, `front_view`, `hand_top`, `hand_bottom`, `hand_side_inter`, `hand_side_exter`, `plam_lookat` (640 x 480); forward kinematics of the body's links |
 | Resources | 4 CPUs, no GPU (CPU physics, OSMesa rendering); after the agent's phase the collect hook only renders the video (one pass over the graded episode), it replays nothing to grade |
-| Reset budget | 10 (`RCB_RESET_BUDGET`, compose default; PROTOCOL §2): `POST /reset` starts a new episode from the frozen instance; only the last episode is graded, a success ends the trial; results under another budget are reported separately |
+| Reset budget | 10 (`RCB_RESET_BUDGET`, compose default; PROTOCOL §2): `POST /reset` starts a new episode from the frozen instance; only the last episode is graded, when the agent sends `POST /finish` or its session ends (a success ends nothing); results under another budget are reported separately |
 
 ### Provenance
 The frozen instance (`environment/sim/instance.npz`) and its scene facts were made at generation time; see `tasks/myosuite/README.md`.

@@ -90,7 +90,7 @@
   ],
   "phase_dt": 0.45974987745285034
  },
- "text": "Make Boston Dynamics Spot follow the joystick command schedule for the whole 20 s episode without falling over. Move its feet in the commanded gait, matching its swing pattern, rhythm and foot height.",
+ "text": "Make the robot follow the joystick's commands for the whole schedule without falling over, moving its feet in the commanded gait: the same stepping pattern, rhythm and foot height.",
  "facts": {
   "start_xy_m": [
    0.0,

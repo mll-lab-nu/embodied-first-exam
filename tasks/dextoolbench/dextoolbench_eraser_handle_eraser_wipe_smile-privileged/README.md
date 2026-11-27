@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:mujoco-0.1.2` |
 
 ## Task
+Pick up the eraser and wipe a smiley face, following the green ghost eraser through its poses in order.
+
 DexToolBench task `eraser / handle_eraser / wipe_smile` (SimToolReal, MIT) ported to plain MuJoCo for this benchmark.
 
 ## Difficulty

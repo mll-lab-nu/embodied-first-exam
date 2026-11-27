@@ -62,7 +62,7 @@ Every topological task shares the tooling `rcb_topogym.py`, the graders, the sim
 ## Time budget
 
 10800 s (3 h) wall clock in both modes and every family (each task's `[agent] timeout_sec`), within the default cap.
-The texts say "the time limit (`## Time limit`)". The standard service's clock (`meta["time_left_s"]`, `RCB_WALL_CLOCK_S`
+The texts say "the time limit (Limits)". The standard service's clock (`meta["time_left_s"]`, `RCB_WALL_CLOCK_S`
 = the cutoff) counts from the agent's first request to the service (logged in `episode.jsonl`, kept over a restart), so
 the instruction has the common closing sentence. The service still ends the episode with reason `timeout` when that
 count reaches 0, never before the harness's cutoff; open: that end becomes report-only at RoboARC's next task update.
@@ -91,7 +91,7 @@ is graded 0 (`all_success` 1, `success_in_hold_only` 1).
 ## Standard grading: the live episode
 
 `success` = the live success: the task predicate on the live simulator with the instance's own thresholds, confirmation
-window included (`server.py`: after every `submit` and every watching `observe`, and as the episode stands at its end),
+window included (`server.py`: after every `submit` (hold chunks included), and as the episode stands at its end),
 recorded in `episode.json`. No grading replay runs. `finalize.sh` writes `final.json` from `episode.json` first
 (`graded_by` live, `replays` 0, `state_sha` = the live end-state hash, `video_pending` 1), then runs ONE video-only pass
 (`replay.py`: a plain fresh-process replay of the live rows on the sidecar's GPU that renders `replay.mp4` and, for a
@@ -112,6 +112,29 @@ verdict, and a failed, killed or GPU-less pass loses only the video. `tests/grad
 - **Re-scoring recorded standard trials.** The verdict is the recorded live fields of `final.json`: the `success` of
   `episode.json`. A live instance mismatch, `infra_error` or `simulator_instability` voids it, and a live `review` holds
   it.
+
+### Agent-ended episodes
+
+Every standard task (topological and IKEA) sets `RCB_AGENT_END "1"` in its sim service (PROTOCOL §3,
+`rcb_agent_end.py`): a success never ends the episode and is never shown. The agent ends it with `POST /finish` (reason
+`finished`); the end of its session (`timeout`) and the runaway guard (`step_limit`, 200,000 control steps) end it too.
+Those three ends are judged on the end state; a failure rule (the task's failure predicate, e.g. a piece dropped off
+the table or a blanket fallen; an IKEA breakdown; `forced_breakdown`; a simulator error) ends the episode at once with
+0, after a success too. Topological tasks: the success predicate must hold at the end and keep holding, with the last
+targets held, until it has held for the family's confirmation window (`stable_duration_s`: 0.5 s, buzz-wire 1 s,
+hedgehog-in-cage 2 s); the steps it already held before the end count. To keep the task's own success from ending the
+scene during the episode, `server.py` raises the task's `stable_duration_s` out of reach at startup and counts the
+window itself from the task's per-tick `_goal_active` (`ae_mode` "window" in `final.json`; a task without them refuses
+to start with reason `agent_end_unsupported`, an infrastructure error, since its own end would freeze the scene at the
+success and show it). The hold steps after the end are recorded after `live_rows`, never
+journaled. IKEA tasks: `Session.status()` and then `final_check()` (the last row held 1.0 s on a copy) on the end state,
+with no settled check during the episode (`settle_failed` is no longer counted or shown). A success with deep task
+contacts is still held for review (`held_for_review`) instead of credited. Calls are served one at a time: a `/finish`
+sent while a `/submit` or `/observe` runs (an operation in flight) waits for it to complete; after it every call but
+`GET /spec`, `/status` and `/operations/<id>` is a 409. `final.json` adds `success_signal`, `ended_by`,
+`hidden_success_seen`, `hidden_success_first_step` (the first control step whose state was a success: per control step
+in topological tasks, per call in IKEA ones), `trial_hidden_success_seen` and `finish_time_s`. Without `RCB_AGENT_END` the
+service behaves as described above.
 
 ## Safety readings in standard mode (`meta["safety"]`)
 

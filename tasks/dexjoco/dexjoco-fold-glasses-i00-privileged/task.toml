@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/dexjoco-fold-glasses-i00-privileged"
-description = "DexJoCo fold_glasses (a Franka Panda arm with a 16-DoF Allegro hand, MuJoCo): produce one replayable trajectory. Fold both temples of the glasses and put the glasses into the open case. Frozen scene instance (the initial state of a DexJoCo human demonstration)."
+description = "DexJoCo fold_glasses (a Franka Panda arm with a 16-DoF Allegro hand, MuJoCo): produce one replayable trajectory. Fold the glasses and put them in the open case. Frozen scene instance (the initial state of a DexJoCo human demonstration)."
 keywords = ["robotics", "dexjoco", "mujoco", "allegro", "dexterous-manipulation", "code-as-policy", "trajectory", "fold_glasses"]
 
 [metadata]

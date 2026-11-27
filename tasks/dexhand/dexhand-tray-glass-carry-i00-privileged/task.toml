@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/dexhand-tray-glass-carry-i00-privileged"
-description = "Two dexterous hands on two wrist stages carry the original perforated serving tray with two filled glasses from the source counter, around a fixed bottle and across the counter gap, set it down level on the receiving counter and let go; spilled (tilted), escaped or dropped objects fail at once."
+description = "Two dexterous hands on two wrist stages carry the original perforated serving tray with two filled glasses from the source counter, around a fixed bottle and across the counter gap, set it down level on the receiving counter and let go; spilled (tilted), escaped or dropped objects fail at once. Task: Carry the serving tray with the two filled glasses from the source counter to the receiving counter."
 keywords = ["robotics", "dexterous-hand", "mujoco", "sharpa-wave", "wuji-hand-2.2", "bimanual_transport", "bimanual", "transport", "tray", "glasses", "obstacle-avoidance", "spill-free", "hook-grasp"]
 
 [metadata]

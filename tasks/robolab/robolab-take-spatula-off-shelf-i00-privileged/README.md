@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robolab-0.2.2` |
 
 ## Task
-Take the spatula off the shelf and put it on the table.
+Take the spatula off the wire shelf and put it on the table.
 
 ## Difficulty
 RoboLab labels this task "moderate" (1 subtasks; attributes: affordance, spatial); its success term (`object_outside_of_and_on_surface`) asks for the spatula taken off the wire shelf and laid on the table. The tooling gives only thin primitives (move_ee on Isaac Lab's differential IK, joint moves, gripper, hold), so every grasp, transport and placement is the agent's to build. RoboLab ships no expert solution.

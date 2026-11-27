@@ -42,5 +42,7 @@ while i < len(Q):
         break
     i += rows
 if not done:
-    obs = r.get_obs(seconds=1.0, cameras=[next(iter(spec["cameras"]))], video="none"); print("settle:", obs.meta["done"], obs.meta["reason"])
+    obs = r.hold(1.0, cameras=[next(iter(spec["cameras"]))], video="none"); print("settle:", obs.meta["done"], obs.meta["reason"])
+try: print("finish:", r.finish())                       # the agent ends the episode (eai-standard/3.0: POST /finish)
+except EpisodeOver as e: print("finish: the episode had already ended:", e)
 print("status:", r.status(), "wall %.0fs" % (time.time() - t0))

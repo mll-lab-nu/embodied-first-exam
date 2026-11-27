@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:libero-max-0.1.1` |
 
 ## Task
-LIBERO-MAX case `pro-view-occlusion-object-t07-i07-target_relocation-d0-p195`: a Franka Panda arm at a table, instructed **"Pick up the milk and place it in the basket."**, on a LIBERO-PRO variant
+LIBERO-MAX case `pro-view-occlusion-object-t07-i07-target_relocation-d0-p195`: a Franka Panda arm at a table, instructed **"Put the milk in the basket."**, on a LIBERO-PRO variant
 of a libero_object task (view_occlusion). Online event (target relocation): the first time the gripper comes within
 0.18 m of `milk_1`, LIBERO-MAX changes the scene once (`milk_1` is moved 0.06 m across the table, direction (-1, 0)). The deliverable is one
 replayable trajectory of LIBERO's OSC control steps (`/app/output/trajectory.npz`, `(T, 7)`, T ≤ 280), graded by

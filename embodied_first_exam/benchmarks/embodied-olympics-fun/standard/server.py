@@ -17,6 +17,13 @@ What leaves this process: the robot's own sensors (its two head cameras, with de
 and motor torques, its two IMUs, whether each hand holds something), the venue's fixed camera, and, once an
 attempt is over, the referee's call (meta["outcome"]: "success" or the rule that ended the attempt) with the number of
 the task's stages reached. Never an object's pose, the robot's position in the venue, or the referee's state during an episode.
+
+Agent-ended episodes (RCB_AGENT_END=1, PROTOCOL §3; rcb_service.AGENT_END): the referee's success call is an event, and
+counts the moment it is made (end_judgement "events"): the referee does nothing more once it has called the attempt, so
+nothing after its call undoes it, but the attempt does not end there: the physics goes on (rfo World.run_after_done)
+until the agent's POST /finish, the end of its session, a reset, or the attempt's time limit (the service's step cap,
+"step_limit"). A foul or a fall the referee calls before a success ends the attempt as a failure ("failed"), and only
+then does a reply carry the call (meta["outcome"], the rule broken); the stages reached and a success are never shown.
 """
 from __future__ import annotations
 
@@ -32,12 +39,16 @@ from rcb_rfo import IMAGE_HW, Episode, load_instance, replay  # noqa: E402
 from rcb_service import main  # noqa: E402
 
 # The referee's call belongs to every response once an attempt is over, not only to the /submit whose row ended it:
-# an attempt may end while the agent watches (/observe with seconds). rcb_service builds every response's meta in
+# an attempt may end while the robot holds (a hold chunk: /submit with seconds, no rows). rcb_service builds every response's meta in
 # Service.meta(); the shared file stays as it is, and the call is added here.
 _service_meta = rcb_service.Service.meta
 
 
 def _meta_with_call(self) -> dict:
+    if self.agent_end:   # only a failure the referee called ends an attempt early: its rule, and nothing else
+        return {**_service_meta(self), **({"outcome": self.sim.ep.outcome()}
+                                          if self.done and self.reason == "failed" and self.sim.ep.outcome() not in
+                                          (None, "success") else {})}
     return {**_service_meta(self), **(self.sim.referee_call() if self.done else {})}
 
 
@@ -67,6 +78,11 @@ class RoboFun:
         self.raw_dim = self.ep.raw_dim
         self.mounts, self.facts = t0["cameras"], t0["robot"]
         self.data = os.environ.get("RCB_DATA", "/data")
+        # agent-ended episodes: the referee's success call is an event (it counts once made); the physics runs on
+        self.agent_end = rcb_service.AGENT_END
+        self.end_judgement = "events"
+        self.hidden_keys = ("outcome", "stages_reached", "stages_total", "step_cap")
+        self.ep.world.run_after_done = self.agent_end
 
     # ------------------------------------------------------------------ the rcb_service.Sim contract
     def spec(self) -> dict:
@@ -82,7 +98,12 @@ class RoboFun:
             "task_text": self.task_text,
             "rules": self.rules,
             "episode": (f"one attempt: it ends at the success, at a rule violation (a fall, a foul; the rules say "
-                        f"which), or after {self.instance['time_limit_s']:g} s ({self.max_control_steps} control steps)"),
+                        f"which), or after {self.instance['time_limit_s']:g} s ({self.max_control_steps} control steps)"
+                        if not self.agent_end else
+                        "one attempt: it ends at POST /finish, at a rule violation before a success (a fall, a "
+                        f"foul; the rules say which), or after {self.instance['time_limit_s']:g} s "
+                        f"({self.max_control_steps} control steps); the referee's success call counts once made, and "
+                        "the attempt goes on after it until you finish"),
             "action_types": types,
             "start_command": self.instance["t0"]["hold"],     # the command in force at t = 0 (type and row)
             "units": "vx, vy: m/s in the robot's own frame (x forward, y left); wz: rad/s (+ turns left); joint targets: "
@@ -102,8 +123,11 @@ class RoboFun:
                                  "the episode's time" + ("; jaw_opening_* (m), jaw_speed_* (m/s, + opening), jaw_force_* "
                                  "(N, the clamp force, + closing): a gripper's jaws; its holding_* is 1 while both jaws "
                                  "touch the same object" if self.facts.get("real_hands") else "")},
-            "referee": "once an attempt is over, every response's meta carries the referee's call: meta['outcome'] "
-                       "('success' or the rule that ended it) and meta['stages_reached'] of meta['stages_total']",
+            "referee": ("once an attempt is over, every response's meta carries the referee's call: meta['outcome'] "
+                        "('success' or the rule that ended it) and meta['stages_reached'] of meta['stages_total']"
+                        if not self.agent_end else
+                        "an attempt the referee ends on a foul or a fall: every response's meta carries the rule "
+                        "(meta['outcome']); nothing tells you about a success or the stages reached"),
         }
 
     def _grip_units(self) -> str:
@@ -128,6 +152,21 @@ class RoboFun:
                     z[z > DEPTH_MAX_M] = 0.0
                     dep[c] = z
         return rgb, dep
+
+    # The realtime layer's camera worker (rcb_realtime.py, "Cameras"): the state copy the simulator thread hands over,
+    # and the images of such a copy, drawn by another process's own world (never the one the episode runs on).
+    def render_state(self) -> np.ndarray:
+        """Everything the cameras show follows from the joint positions (these venues have no mocap bodies)."""
+        return self.ep.world.d.qpos.copy()
+
+    def render_from(self, qpos: np.ndarray, cameras: list[str], depth: bool) -> tuple[dict, dict]:
+        import mujoco
+        w = self.ep.world
+        w.d.qpos[:] = qpos
+        mujoco.mj_kinematics(w.m, w.d)               # positions only: bodies, geoms, cameras and lights
+        mujoco.mj_comPos(w.m, w.d)
+        mujoco.mj_camlight(w.m, w.d)
+        return self.images(cameras, depth)
 
     def proprio(self) -> np.ndarray:
         return self.ep.proprio()
@@ -156,6 +195,12 @@ class RoboFun:
 
     def step(self, row: np.ndarray) -> tuple[bool, bool, dict]:
         done = self.ep.step_raw(row)
+        if self.agent_end:   # a success is only recorded; a foul ends the attempt, its time limit is the step cap
+            if self.ep.success():
+                return False, True, {}
+            if done:
+                return True, False, ({"step_cap": True} if self.ep.world.ref.failed == "time" else {})
+            return False, False, {}
         return done, self.ep.success(), (self.referee_call() if done else {})
 
     def reset(self) -> None:
@@ -182,7 +227,7 @@ class RoboFun:
                  **{k: str(v) for k, v in meta.items()})
 
     def render_video(self, rows: np.ndarray, path: str) -> None:
-        replay(self.instance, rows, video=path)
+        replay(self.instance, rows, video=path, after_done=self.agent_end)
 
 
 def build() -> RoboFun:

@@ -1,0 +1,14 @@
+{
+ "manifest": "efe-mcp-manifest/1",
+ "kind": "rcb",
+ "suite": "robocasa365",
+ "task": "robocasa365-turn-on-toaster-oven-i00-realtime",
+ "protocol": "eai-standard/2.3",
+ "realtime": true,
+ "tools": [
+  "spec",
+  "observe",
+  "submit",
+  "finish"
+ ]
+}

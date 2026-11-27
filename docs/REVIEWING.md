@@ -42,11 +42,18 @@ Guide for maintainers. The contract is [protocol/README.md](protocol/README.md);
 - Does the verifier depend on anything the agent controlled besides the declared artifacts?
 - Is the predicate checked at the end of the replay (privileged) or of the live episode (standard), and can it be true
   without doing the task?
-- Standard mode (Appendix H.3, H.4): four endpoints only, RCB1 responses, resets within the declared budget, the
+- Standard mode (Appendix H.3, H.4): five endpoints only (`/spec`, `/status`, `/observe`, `/submit`, `/finish`; plus
+  `/kinematics` where served and `/reset` within a declared budget), RCB1 responses, resets within the declared budget, the
   verdict from the sidecar's record of the live episode (`success` = the live episode's, with any settle or hold the
   task declares run on the live simulator; `graded_by_live = 1`; no grading replay), the frozen start state checked
   when the episode begins, the agent's processes stopped (a `main` collect hook) before the sidecar is signalled and
   every later request refused, the video recorded live or rendered from the trajectory after the verdict.
+- Agent-ended episodes (eai-standard/3.0, PROTOCOL §3; docs/protocol/standard_mode.md "Agent-ended episodes"): is
+  `RCB_AGENT_END: "1"` in the `sim` service's environment (`ci_checks/check-agent-end.py`), and does nothing the agent
+  sees depend on the task's success (no `done` / `reason = "success"`, no early end of a chunk, no progress field)?
+  Does `POST /finish` end the episode and is the end state judged as the task says (its settle or hold window from
+  there; events judged as they happened)? Does `RCB_STEP_LIMIT`, where set, match the instruction? Does the
+  instruction's `## Limits` end with the Finish line?
 - Does the task run with Harbor's native agents, without custom adapters or runners, and without any gateway other than
   the recording-only usage gateway (protocol/running.md "Official runs")?
 - Are images pinned, published (or marked `BUILD_ONLY`), and shared with the other tasks of the same simulator?
@@ -59,13 +66,13 @@ Guide for maintainers. The contract is [protocol/README.md](protocol/README.md);
   otherwise: a deleted or misnamed twin must not pass silently)?
 - A new mode (PROTOCOL §3): does the pull request have everything §3 lists: the name (the directory suffix),
   its own PROTOCOL section (what the agent gets, what is graded, the time and reset rules, which failures are
-  infrastructure and which the agent's), the `MODE_REGISTRY` entry and `CUTOFF_NOTE`, CI support keyed on the registry
+  infrastructure and which the agent's), the `MODE_REGISTRY` entry and `LIMITS_TIME`, CI support keyed on the registry
   (no new hard-coded list of mode names anywhere) with a self-test case, at least one benchmark using it, the TAXONOMY
   entry, and a stated cutoff relation (`same_cutoff_as`, or free)? Is the runner side (runners, the results
   site) told the new suffix? A new mode is a protocol change the maintainers decide: one pull request of its own, shared files
   only, merged before the benchmark that uses it.
 - Time cutoff: does every task set its own `[agent] timeout_sec` within the rules of PROTOCOL §2 (the pull request's
-  overview lists the numbers)? Does `instruction.md` end with the rendered `## Time limit` section and
+  overview lists the numbers)? Does `instruction.md` end with the rendered `## Limits` (its Time line) and
   state the limit nowhere else? Does the benchmark's own text say what the cutoff costs here (simulator start-up, what
   the service's `time_left_s` counts from, a service that ends the episode itself)? A pull request that changes the
   cutoff of existing tasks (label `cutoff-change`): the author's decision (the maintainers step in only where official

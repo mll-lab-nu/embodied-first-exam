@@ -240,8 +240,8 @@ a Man respected."), `commendation` ("Commendation animates the mind.") and `dili
 
 ## Time budget
 3600 s for every task of both modes: each task's own `[agent] timeout_sec` (PROTOCOL §2,
-docs/protocol/running.md "The agent's time"); `instruction.md` states it once, in its closing `## Time limit` section, and the
-rest of the text says "the time limit (`## Time limit`)". What the agent has to fit into it:
+docs/protocol/running.md "The agent's time"); `instruction.md` states it once, in the Time line of its closing `## Limits`, and the
+rest of the text says "the time limit (Limits)". What the agent has to fit into it:
 - learning the brush's mark from test strokes on the practice sheet: width against press depth, the drag of the tuft, the
   paint's blending (the privileged mode gives the exact sheet but no brush model);
 - every stroke on the main sheet is irreversible in standard mode;
@@ -459,7 +459,7 @@ One reference execution therefore takes 10–15 minutes of the time limit, or ab
   `sim_error = 1` marks an episode that a simulator error ended. The hook writes `final.json` whole (temporary file + rename).
 - Malformed requests (standard mode, `environment/sim/server.py`): every field of `/submit` and `/observe` is checked
   before anything is executed (`parse_submit` / `parse_observe`; `note` included), and whatever a malformed field raises
-  is a 400 that leaves the episode alive. Null is the default; `video_fps` is accepted in [0, 1000].
+  is a 400 that leaves the episode alive. Null is the default; `video_fps` is accepted in [1, 20] (up to the control rate).
 - Instance drift (privileged mode, `tests/grade.py`): a frozen instance the verifier does not rebuild (`instance_ok = 0`)
   is `grader_error = 1` + `infra_error = 1`, and `infra_error = 1`
   goes with every `grader_error = 1`.
@@ -515,6 +515,12 @@ at `/tests/`; no task dir carries them. The sidecars are built from `environment
 | proprio | 28 columns |
 
 More in docs/protocol/standard_mode.md §16.
+
+**Agent-ended episodes** (standard mode; PROTOCOL §3 "Agent-ended episodes", `RCB_AGENT_END` in each sim service,
+`rcb_agent_end.py`). The task's success is never shown and never ends the episode: the agent ends it with `POST /finish`
+(reason `finished`), or the end of its session does (`timeout`). Painting has no early end to remove: the sheet is
+scored as the episode leaves it, at `/finish`, at the session's end, or at the runaway guard (now reason `step_limit`,
+judged as it stands). There is no `RCB_STEP_LIMIT` (no step budget).
 
 ## Licences
 - ManiSkill and SAPIEN: Apache-2.0.

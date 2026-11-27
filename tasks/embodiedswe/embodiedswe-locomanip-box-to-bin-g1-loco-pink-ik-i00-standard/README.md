@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:embodiedswe-0.3.0` |
 
 ## Task
+Take the box off the shelf in front of you, carry it to the blue bin on the table to your right, and leave it in the bin.
+
 Carry the box from the shelf to the bin (Unitree G1, walking, Pink IK): the scene, frozen instance and success predicate of `embodiedswe-locomanip-box-to-bin-g1-loco-pink-ik-i00-privileged`, with a Unitree G1 humanoid with three-finger hands, walking under EmbodiedSWE's frozen locomotion policy, its arms and waist under its Pink IK, in standard mode
 (tasks/embodiedswe/README.md "Standard mode").
 

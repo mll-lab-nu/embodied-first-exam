@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/humanoidbench-loco-hurdle-i00-privileged"
-description = "HumanoidBench hurdle: produce one replayable trajectory that runs the Unitree H1 down a walled track past a line of hurdles, frozen scene instance 00."
+description = "HumanoidBench hurdle: produce one replayable trajectory that runs the Unitree H1 down a walled track past a line of hurdles, frozen scene instance 00. Task: Sprint forward down the track and over the hurdles, without touching the walls."
 keywords = ["robotics", "humanoidbench", "code-as-policy", "trajectory", "h1", "locomotion", "hurdle"]
 
 [metadata]

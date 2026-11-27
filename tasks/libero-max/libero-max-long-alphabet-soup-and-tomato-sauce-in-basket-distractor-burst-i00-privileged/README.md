@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:libero-max-0.1.1` |
 
 ## Task
-LIBERO-MAX case `pro-initial-pose-position-angle-10-t00-i01-distractor_burst-d0-p195`: a Franka Panda arm at a table, instructed **"Put both the alphabet soup and the tomato sauce in the basket."**, on a LIBERO-PRO variant
+LIBERO-MAX case `pro-initial-pose-position-angle-10-t00-i01-distractor_burst-d0-p195`: a Franka Panda arm at a table, instructed **"Put the alphabet soup and the tomato sauce in the basket."**, on a LIBERO-PRO variant
 of a libero_10 task (initial_pose_position_angle). Online event (distractor burst): the first time the gripper comes within
 0.18 m of `alphabet_soup_1`, LIBERO-MAX changes the scene once (5 other objects appear on the table (`butter_1`, `ketchup_1`, `milk_1`, `cream_cheese_1`, `orange_juice_1`)). The deliverable is one
 replayable trajectory of LIBERO's OSC control steps (`/app/output/trajectory.npz`, `(T, 7)`, T ≤ 520), graded by

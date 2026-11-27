@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Run the 50 m: wait for the starter's gun, then sprint down your lane until your torso reaches the finish line. (Embodied Olympics `sprint`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Run the 50 m: start on the gun and sprint down your lane until your torso reaches the finish line. (Embodied Olympics `sprint`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
 
 ## Difficulty
 The gun has to be seen, not guessed: moving early disqualifies and waiting costs time. Then 50 m in a 1.22 m lane: the walking gait covers 20 m in the time, the running gait has to be held straight for a quarter of a minute at a speed close to where it falls. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 5 resets (only the last attempt is graded).

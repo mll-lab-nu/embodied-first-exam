@@ -1,0 +1,21 @@
+{
+ "manifest": "efe-mcp-manifest/1",
+ "kind": "eo-match",
+ "suite": "embodied-olympics-match",
+ "url": "http://localhost:8000",
+ "url_env": "SIM_URL",
+ "seat": "A",
+ "seat_env": "SEAT",
+ "notes": "The tools are those of every standard task (spec, observe, submit) on the seat's eai-standard service with the match extension, plus the match's own calls (start, ready; say, team in a team format). Locating the ball or the opponent is done by eye in the images, with the cameras' intrinsics and poses from `spec`.",
+ "task": "embodied-olympics-match-badminton-duelrl-i01-standard",
+ "protocol": "eai-standard/2.1+match/1.0",
+ "realtime": false,
+ "turn": false,
+ "tools": [
+  "spec",
+  "observe",
+  "submit",
+  "start",
+  "ready"
+ ]
+}

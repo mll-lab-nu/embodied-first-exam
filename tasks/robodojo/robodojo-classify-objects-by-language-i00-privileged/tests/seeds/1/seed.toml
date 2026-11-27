@@ -7,12 +7,12 @@ old = "## Goal\nSuccess: every car is in the left basket, every watch in the mid
 new = "## Goal\nSuccess: every pepper is in the left basket, every watch in the middle basket and every chocolate bar in the right basket, and\nboth arms are back where they started. A replay ends as soon as the task is done; later rows are not run."
 
 [[replace]]
-old = "## Others\n- Labels in `s.objects()`: `basket0`, `basket1`, `basket2` (the left, middle and right baskets); `cat0_*` (the cars);\n  `cat1_*` (the watches); `cat2_*` (the wooden toys).\n- RoboDojo's own reset settles the scene again from where it is, so after actions a reset gives the same layout and\n  start pose but not bit-for-bit the same state; a replay after such a reset can end slightly differently from the\n  grader's. Each graded replay runs the first episode of a newly started Session (nothing stepped before it): test on\n  that."
-new = "## Others\n- Labels in `s.objects()`: `basket0`, `basket1`, `basket2` (the left, middle and right baskets); `cat0_*` (the peppers); `cat1_*` (the watches); `cat2_*` (the chocolate bars).\n- RoboDojo's own reset settles the scene again from where it is, so after actions a reset gives the same layout and\n  start pose but not bit-for-bit the same state; a replay after such a reset can end slightly differently from the\n  grader's. Each graded replay runs the first episode of a newly started Session (nothing stepped before it): test on\n  that."
+old = "## Others\n- Labels in `s.objects()`: `basket0`, `basket1`, `basket2` (the left, middle and right baskets); `cat0_*` (the cars);\n  `cat1_*` (the watches); `cat2_*` (the wooden toys).\n- RoboDojo's own reset settles the scene again from where it is. So a reset after actions gives the same layout and\n  start pose, but not bit-for-bit the same state, and a replay after such a reset can end slightly differently from the\n  grader's. Each graded replay is the first episode of a newly started Session, with nothing stepped before it. Test\n  your trajectory the same way."
+new = "## Others\n- Labels in `s.objects()`: `basket0`, `basket1`, `basket2` (the left, middle and right baskets); `cat0_*` (the peppers); `cat1_*` (the watches); `cat2_*` (the chocolate bars).\n- RoboDojo's own reset settles the scene again from where it is. So a reset after actions gives the same layout and\n  start pose, but not bit-for-bit the same state, and a replay after such a reset can end slightly differently from the\n  grader's. Each graded replay is the first episode of a newly started Session, with nothing stepped before it. Test\n  your trajectory the same way."
 
 [[replace]]
-old = "## Goal\nSuccess: every car is in the left basket, every watch in the middle basket and every wooden toy in the right basket, and\nboth arms are back where they started. What counts is how things stand at the end of the episode: a success reached\nearlier and lost by the end does not count, so finish in the state you want graded and stop sending commands."
-new = "## Goal\nSuccess: every pepper is in the left basket, every watch in the middle basket and every chocolate bar in the right basket, and\nboth arms are back where they started. What counts is how things stand at the end of the episode: a success reached\nearlier and lost by the end does not count, so finish in the state you want graded and stop sending commands."
+old = "## Goal\nSuccess: every car is in the left basket, every watch in the middle basket and every wooden toy in the right basket, and\nboth arms are back where they started."
+new = "## Goal\nSuccess: every pepper is in the left basket, every watch in the middle basket and every chocolate bar in the right\nbasket, and both arms are back where they started."
 
 [[replace]]
 old = "arx_x5/0/classify_objects_by_language_0.json"
@@ -25,3 +25,7 @@ new = "sha256 `c0a5b2c6e7c63872`"
 [[replace]]
 old = "\"Put car objects into the left basket, watch objects into the middle basket, and wooden_toy objects into the right basket,"
 new = "\"Put pepper objects into the left basket, watch objects into the middle basket, and chocolate_bar objects into the right basket,"
+
+[[replace]]
+old = "Put the cars in the left basket, the watches in the middle basket and the wooden toys in the right basket. Then move both arms back to where they started."
+new = "Put the peppers in the left basket, the watches in the middle basket and the chocolate bars in the right basket. Then move both arms back to where they started."

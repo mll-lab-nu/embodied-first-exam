@@ -1,47 +1,42 @@
-# DexHand: Open a jam jar and set the lid aside
+# DexHand · Open a jam jar and set the lid aside (privileged)
 
-Open the jam jar with the robot's right hand and set its lid aside on the worktop. Scene (world frame, metres, z up, +x forward from the robot): the worktop top is at z = 0.75 and spans |x| <= 0.45, |y| <= 0.58. A filled 297 ml glass jam jar (550 g, 67 mm body diameter, 110 mm tall, rim at z = 0.86) stands upright on the worktop centred at x = -0.22, y = -0.08. Nothing holds the jar: it stands on its own weight and glass-on-worktop friction, which resists only about 0.13 N m of twisting torque, so the hand must turn the lid without turning, sliding or tipping the jar. Its red 64.8 mm twist-off steel lid (32 g) is closed. Jar and lid are free rigid bodies. The closure is a lug thread made of contact geometry only: four inclined glass ramps on the jar neck hold four inward lugs of the lid, so the closed lid cannot be pulled off. Turning the lid counter-clockwise seen from above (positive rotation about +z relative to the jar) slides the lugs up the ramps; at 1.049 rad they pass the ramp ends, and while they sit in the gaps between the ramps (turn between 1.049 and about 1.26 rad) the lid lifts off freely; turned further without lifting, the lugs run into the next ramps' leads, and turning clockwise from the closed position tightens and jams. The lid is lightly closed: no vacuum, seal adhesion or tightening torque is modelled, and the jam is part of the jar's rigid mass, not a fluid. Complete three stages in this order. (1) Unscrew: while the lid is still seated on the thread (lid origin less than 6 mm above its closed height and within 4 mm of the jar axis, in the jar frame), its counter-clockwise turn relative to the jar, unwrapped after every physics substep, reaches at least 1.049 rad. (2) Lift clear: afterwards, the lowest point of the lid skirt rises more than 30 mm above the jar rim. (3) Set aside: afterwards, for 50 consecutive controls (1 s), the lid touches the worktop and touches neither the hand nor the jar, is upright (tilt at most 0.15 rad), has its centre at least 90 mm horizontally from the jar axis, moves at most 0.02 m/s and turns at most 0.3 rad/s, while the jar touches the worktop, is not touched by the hand, is upright within 0.10 rad and moves at most 0.02 m/s. The episode ends with success at that moment; a partial sequence never counts. The episode ends immediately with failure, checked after every 2 ms physics substep, when: the jar tilts more than 15 degrees (jar_tipped), slides more than 30 mm horizontally from its start (jar_slid) or is lifted more than 15 mm (jar_lifted); the lid touches the worktop before stage 2 (lid_knocked_off); the lid drops: while it is in the air (its lowest point more than 10 mm above the worktop top), at any substep it touches nothing (no hand, jar or worktop contact) while its centre of mass moves downward faster than 0.3 m/s (about a 5 mm free fall; there is no window to catch it again), or its centre of mass moves downward faster than 1.0 m/s whatever it touches (lid_dropped); a lid that tips over or falls flat on the worktop (lowest point within 10 mm of the worktop top) has not dropped; the jar or the lid touches the floor, its origin falls more than 5 mm below the worktop top or leaves the worktop footprint (lid_off_table, jar_off_table) or the workspace box x in [-0.45, 0.45] m, y in [-0.40, 0.40] m, z in [0.73, 1.25] m (object_left_workspace); the lid leaves the thread upward while its lugs are not in the gaps between the ramps, i.e. its turn modulo pi/2 is outside [1.019, 1.291] rad (lid_forced_through_thread); the parked left arm or the left hand touches the jar or the lid (left_arm_contact; moving the left arm is not blocked, but the task is done by the right arm and hand); or the physics becomes unstable (unstable_physics). Later actions cannot undo a failure. Only robot actuator targets are allowed: the joints of the Marvin right arm and its hand (the left arm stays parked with its hand open), no object teleports, grasp welds, scripted object motion or direct object forces. Any robot part touching the jar or the lid counts as the hand touching it. The episode allows at most 3000 controls at 50 Hz; reaching that limit without success is a failure.
+## Task
+Open the jam jar with the robot's right hand, then set the lid upright on the worktop, clear of the jar, and let go.
 
-You control the right arm and right hand of a fixed Tianji Marvin robot: a stand with two 7-joint arms and a dexterous
-hand on each wrist (the robot stands behind the worktop, its base centre at x = -0.56, y = 0.08 on the floor, facing
-+x; shoulders at z = 1.121 m (1.221 m above the floor)). The left arm stays parked beside the torso with its hand open; the task is done
-by the right arm and hand alone. Every arm and finger joint is a position servo inside the physics engine under native
-force bounds; arm servos have stiffness 700 N m/rad, damping 48 N m s/rad and **no gravity compensation** (a held
-target sags under the arm's weight unless your targets account for it). Turning, lifting, carrying and releasing the
-lid require physical contact, and the jar is held by nothing but its own weight and friction on the worktop. The
-controller runs at 50 Hz, with ten 2 ms physics substeps. At reset the right hand hangs open, palm down, about 0.1 m
-above the lid with its fingers along +x; the left arm is at its parked pose.
+## Goal
+Success: in this order, the lid is unscrewed counter-clockwise (seen from above) while it still sits on the jar, until
+it comes loose; it is lifted clear of the jar; then it stands upright on the worktop, at least a lid's width away from
+the jar, the hand off the lid and the jar, the jar upright on the worktop, and both are still for a second. A replay
+ends as soon as the task is done; later rows are not run.
 
-## Hands
-Two genuine manufacturer hand models are available: `sharpa` (Sharpa Wave, 22 finger actuators; the default) and `wuji` (Wuji Hand 2.2, 20 finger actuators). The task, scene, mount, objects and success predicate are the same for both; only one hand is used per episode.
-Each row starts with the 14 Marvin arm joint targets (left arm J1-J7, then right arm J1-J7), followed by the left hand's finger targets and then the right hand's (22 per hand for `sharpa`, 20 per hand for `wuji`); the left arm is parked and only the right arm/hand perform the task.
-Choose the hand with `Session(..., hand="wuji")` or the environment variable `DEXHAND_HAND=wuji` (default `sharpa`). Action rows are `58` wide for `sharpa` and `54` wide for `wuji`; `s.actuator_names` gives the exact order. `s.save_trajectory(actions, path)` records the hand in the archive (`hand` member). The verifier rebuilds the scene with the recorded hand (default `sharpa` when the member is absent) and rejects a trajectory whose width does not match that hand; rows are never padded, truncated or converted between hands.
+Any of these ends the episode at once as a failure, which later actions cannot undo:
+- The jar tips, slides or is lifted.
+- The lid touches the worktop before it has been lifted clear.
+- The lid is dropped from the air (a lid that tips over or falls flat on the worktop has not dropped).
+- The jar or the lid touches the floor, falls below the worktop top or leaves the worktop or the work area.
+- The lid is forced up through the thread.
+- The parked left arm or the left hand touches the jar or the lid.
+- The physics becomes unstable.
 
-## Action layout
-Each row is one 50 Hz control and holds a position target for every actuator, in radians:
+Deliverable: `/app/output/trajectory.npz` and `/app/output/gen.py`, the script that produced it. The archive holds a
+finite numeric `actions` array of shape `(T, 58)` for `sharpa` or `(T, 54)` for `wuji`, at most 3000 rows, plus the
+`hand` member; `s.save_trajectory` writes both. Save it compressed with `numpy.savez_compressed` (`s.save_trajectory`
+does this). An archive larger than 64 MB is rejected. Save a valid one early and overwrite it when you have a better
+one.
 
-- `sharpa` (58 values): 0-6 the left arm `SHOULDER_PITCH_L_J1, SHOULDER_ROLL_L_J2, ELBOW_PITCH_L_J3, ELBOW_YAW_L_J4,
-  WRIST_PITCH_L_J5, WRIST_YAW_L_J6, WRIST_ROLL_L_J7` (actuators `<joint>_target`; keep them at the parked start
-  values), 7-13 the same right-arm joints (`..._R_J1` to `..._R_J7`), 14-35 the 22 left Sharpa Wave finger targets
-  `left_thumb_CMC_FE` ... `left_pinky_DIP`, 36-57 the 22 right Sharpa Wave finger targets `right_thumb_CMC_FE` ...
-  `right_pinky_DIP`.
-- `wuji` (54 values): 0-13 the same arm targets, 14-33 the 20 left Wuji Hand 2.2 finger targets `l_wuji_l_THJ0..3`,
-  `l_wuji_l_FFJ0..3`, `l_wuji_l_MFJ0..3`, `l_wuji_l_RFJ0..3`, `l_wuji_l_LFJ0..3`, 34-53 the 20 right ones
-  (`r_wuji_r_...`, same order).
+Rules: **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+benchmark's demonstrations, trained policies); trials are reviewed.
 
-Every target must lie within `s.model.actuator_ctrlrange`. The frozen start targets of each hand are in `task.json`
-(`initial_targets`); the right hand's frame is the body `wrist_stage` on the right flange (fingers along its +z, palm
-normal +x, thumb +y), which forward kinematics of the arm joints places in the world.
+Only the robot's actuator targets act on the scene: no object teleports, grasp welds, scripted object motion or applied
+forces.
 
-## Deliverable
-Save `/app/output/trajectory.npz` with a finite numeric `actions` array of shape `(T, 58)` for `sharpa` or `(T, 54)`
-for `wuji`, at most 3000 rows, plus the `hand` member (`s.save_trajectory` writes both), and
-`/app/output/gen.py`, the script that produced it. The separate verifier rebuilds the frozen scene with the recorded
-hand and replays only these motor targets in one fresh process, which must succeed. A replay stops at the first success or the first failure; later rows are not executed. Object poses,
-configuration overrides, pickled arrays and success claims are not deliverables and are never read.
-Save the archive compressed (`numpy.savez_compressed`; `s.save_trajectory` does): an archive file larger than 64 MB is rejected with reward 0.
+## Robot Interface
+The right arm and hand of a fixed Tianji Marvin robot (two 7-joint arms, a dexterous hand on each wrist; the left arm
+stays parked), at a worktop (DexHand, MuJoCo). The scene is one fixed instance. You have the full simulator to develop
+with; you hand in a trajectory of motor targets.
 
-## Tooling
+### Session
+`/opt/tools/rcb_dexhand.py`, importable as `rcb_dexhand`:
 ```python
 from rcb_dexhand import Session
 s = Session("jar_lid_open")               # default hand: DEXHAND_HAND or "sharpa"
@@ -59,20 +54,65 @@ s.reset()                                 # exact frozen reset
 s.replay(actions)                         # reset, run rows until the episode ends, return status()
 s.save_trajectory(actions, "/app/output/trajectory.npz")
 ```
-You may observe everything in privileged mode: the MuJoCo model and state (`s.model`, `s.data`), `s.features()`
-(stage, unwrapped lid turn, lid clearance above the rim, contacts, tilts, speeds, failure details) and renders from the
-`overview`, `closeup`, `side` and `wide` cameras. Read `/opt/tools/task.json`, `scene.py`, `arm_rig.py`, `checker.py` and `runtime.py`
-for the complete geometry (thread ramps and lugs included), the robot, failure checks and predicate. The world frame has z up; lengths
-are in metres and angles in radians. The jar stands at (-0.22, -0.08) on the worktop, whose top is at z = 0.75 m;
-the lid starts closed with its origin at z = 0.8509 m.
+You may observe everything in privileged mode: the MuJoCo model and state (`s.model`, `s.data`), `s.features()` (stage,
+unwrapped lid turn, lid clearance above the rim, contacts, tilts, speeds, failure details) and renders from the
+`overview`, `closeup`, `side` and `wide` cameras. The world frame has z up; lengths are in metres and angles in radians.
+The jar stands at (-0.22, -0.08) on the worktop, whose top is at z = 0.75 m; the lid starts closed with its origin at z
+= 0.8509 m.
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+### Actions
+Each row is one 50 Hz control and holds a position target for every actuator, in radians:
 
-## Resources
-Your container: **2 CPUs**, **10 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
+- `sharpa` (58 values): 0-6 the left arm
+  `SHOULDER_PITCH_L_J1, SHOULDER_ROLL_L_J2, ELBOW_PITCH_L_J3, ELBOW_YAW_L_J4, WRIST_PITCH_L_J5, WRIST_YAW_L_J6, WRIST_ROLL_L_J7`
+  (actuators `<joint>_target`; keep them at the parked start values), 7-13 the same right-arm joints (`..._R_J1` to
+  `..._R_J7`), 14-35 the 22 left Sharpa Wave finger targets `left_thumb_CMC_FE` ... `left_pinky_DIP`, 36-57 the 22 right
+  Sharpa Wave finger targets `right_thumb_CMC_FE` ... `right_pinky_DIP`.
+- `wuji` (54 values): 0-13 the same arm targets, 14-33 the 20 left Wuji Hand 2.2 finger targets `l_wuji_l_THJ0..3`,
+  `l_wuji_l_FFJ0..3`, `l_wuji_l_MFJ0..3`, `l_wuji_l_RFJ0..3`, `l_wuji_l_LFJ0..3`, 34-53 the 20 right ones
+  (`r_wuji_r_...`, same order).
 
-## Time limit
-You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+Every target must lie within `s.model.actuator_ctrlrange`. The frozen start targets of each hand are in `task.json`
+(`initial_targets`); the right hand's frame is the body `wrist_stage` on the right flange (fingers along its +z, palm
+normal +x, thumb +y), which forward kinematics of the arm joints places in the world.
 
-This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+### Hands
+Two hand models: `sharpa` (Sharpa Wave, 22 finger actuators; the default) and `wuji` (Wuji Hand 2.2, 20 finger
+actuators); the task is the same for both. Choose the hand with `Session(..., hand="wuji")` or the environment variable
+`DEXHAND_HAND=wuji` (default `sharpa`). `s.save_trajectory(actions, path)` records the hand in the archive as the `hand`
+member; an archive without it counts as `sharpa`. A trajectory whose row width does not match its hand is rejected.
+Action rows are `58` wide for `sharpa` and `54` wide for `wuji`; `s.actuator_names` gives the exact order.
+
+### Robot
+You control the right arm and right hand of a fixed Tianji Marvin robot: a stand with two 7-joint arms and a dexterous
+hand on each wrist (the robot stands behind the worktop, its base centre at x = -0.56, y = 0.08 on the floor, facing +x;
+shoulders at z = 1.121 m (1.221 m above the floor)). The left arm stays parked beside the torso with its hand open; the
+task is done by the right arm and hand alone. Every arm and finger joint is a position servo inside the physics engine
+under native force bounds. Arm servos have stiffness 700 N m/rad, damping 48 N m s/rad and no gravity compensation, so a
+held target sags under the arm's weight unless your targets account for it. Turning, lifting, carrying and releasing the
+lid require physical contact, and the jar is held by nothing but its own weight and friction on the worktop. The
+controller runs at 50 Hz, with ten 2 ms physics substeps. At reset the right hand hangs open, palm down, about 0.1 m
+above the lid with its fingers along +x; the left arm is at its parked pose.
+
+### Scene
+The worktop top is at z = 0.75 and spans |x| <= 0.45, |y| <= 0.58 (world frame, metres, z up, +x forward from the
+robot). The filled 297 ml glass jar (550 g, 67 mm body diameter, 110 mm tall, rim at z = 0.86) stands upright centred at
+x = -0.22, y = -0.08; its red 64.8 mm twist-off steel lid weighs 32 g. Jar and lid are free rigid bodies.
+
+## Others
+- Nothing holds the jar down, and it turns easily on the worktop.
+- The lid comes loose after about a sixth of a turn and lifts off only there: turned further, it catches on the thread
+  again.
+
+## Limits
+- Time: 3600 s of wall-clock time from the start of your session. Everything counts, including the simulator's start-up.
+  At the end you are stopped without warning and only what is in `/app/output/` at that moment is graded. Time left:
+  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`). A call into a long-running process can block for its
+  whole wait time. Use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, including the simulator's and the benchmark's source.
+- Resources: 2 CPUs, 10 GiB memory, 1024 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`),
+  no GPU. Going over a cap can get a process killed (the CPU cap only slows you down). Usage:
+  `/run/rcb-limits/usage.json`.
+- Resets: as many as you like (`s.reset()`).

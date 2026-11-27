@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:quadrotor-landing-0.1.0` |
 
 ## Task
+Land the drone gently near the centre of the round pad as quickly as you safely can, and keep it there, level and still, until the end.
+
 **roboEngineer → Drone → Neural Landing.** See the [collection roadmap](tasks/roboengineer/README.md).
 
 Randomized aerial landing with bounded sensor-only policy adaptation and a private held-out bank. Reference runs: the Oracle row; build instructions: tasks/roboengineer/README.md.

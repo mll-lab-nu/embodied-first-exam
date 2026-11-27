@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Kick the heavy bag once with your right foot or shin, on the marked band at trunk height, hard enough to give it an impulse of at least 20 N s. Then stand on both feet. (Embodied Olympics `kick-target`: one Unitree H1-2 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
+Kick the heavy bag once, hard, with your right foot or shin on the marked band, then stand on both feet. (Embodied Olympics `kick-target`: one Unitree H1-2 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
 
 ## Difficulty
 The band is higher than the robot's hip joint: the foot has to be swung above hip height, fast, while the other leg alone carries 67 kg; there is no kicking or one-leg balance policy. The bag pushes back with the same impulse, and the body has to end on both feet, still.

@@ -516,7 +516,7 @@ class Session:
     """One AM-Bench environment of one frozen instance. One per process (Isaac Sim runs once per process)."""
 
     def __init__(self, instance="/app/instance.json", *, strict: bool = False, cameras: bool = False, depth: bool = False,
-                 _render_only: bool = False):
+                 _render_only: bool = False, hide_success: bool = False):
         # cameras=True: the physics stays camera-free (as the grader's) and a render worker draws the cameras (Renderer)
         self.render_only = bool(_render_only)
         self.cameras = bool(cameras); self.depth = bool(cameras and depth)
@@ -575,6 +575,19 @@ class Session:
                     print(f"[rcb_ambench] end-of-episode capture failed: {exc!r}", file=sys.stderr, flush=True); self._end = None
             return _reset_idx(env_ids)
         self.env._reset_idx = _keep_end_state
+        # hide_success (a standard-mode agent-ended episode, PROTOCOL §3): AM-Bench's success (its `terminated`) never
+        # ends the episode and Isaac Lab never resets on it; it is kept as `now_success` (the success as the state is after
+        # each step, never latched). The time-out still ends the episode (judged as it stands).
+        self.hide_success = bool(hide_success) and not self.render_only
+        self.now_success = False
+        if self.hide_success:
+            _get_dones = self.env._get_dones
+
+            def _hidden_dones(_get_dones=_get_dones):
+                term, trunc = _get_dones()
+                self.now_success = bool(_np(term).reshape(-1)[0])
+                return torch.zeros_like(term), trunc
+            self.env._get_dones = _hidden_dones
         sync_ik(self.env, torch)
         sync_phases(self.env, torch)
         self.synced_views = sync_views(self.env, torch)
@@ -613,7 +626,7 @@ class Session:
         if self._valve is not None:
             self._valve.update(prev=None, angle=None)    # the joint is back at 0 rad: count from here
         self.rows: list[np.ndarray] = []
-        self.done = False; self.succeeded = False; self.timed_out = False
+        self.done = False; self.succeeded = False; self.timed_out = False; self.now_success = False
         self.n_resets += 1
         if self.n_resets > 1:
             _slog("reset", env_id=self.env_id)

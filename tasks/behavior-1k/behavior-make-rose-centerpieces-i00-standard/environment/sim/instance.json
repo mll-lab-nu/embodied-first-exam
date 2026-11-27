@@ -3,7 +3,7 @@
  "challenge_task": "make_rose_centerpieces",
  "instance_id": 301,
  "mode": "public_test",
- "text": "Make a centerpiece. The vase and three roses lie on the cabinet in the living room; put all three roses into the vase and stand the vase on the living-room coffee table.",
+ "text": "Put the three roses into the vase and stand it on the coffee table.",
  "robot_config": "r1pro_primitives_eval.yaml",
  "robot_config_sha": "d9d0c8bceea2",
  "state_sha": "5414d3bde99b73b6",

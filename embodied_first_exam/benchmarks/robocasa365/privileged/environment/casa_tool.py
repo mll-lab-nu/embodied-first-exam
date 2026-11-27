@@ -345,50 +345,214 @@ def action_spec(env) -> dict:
     return out
 
 
-# -- task text errata -----------------------------------------------------------------------------------------
+# -- task text -------------------------------------------------------------------------------------------------
 # The frozen instance keeps the benchmark's own language string (ep_meta["lang"]); the instance file is pinned and is
-# not edited. Where that string is wrong for the instance, the text the agent is shown (Session.inst["text"]: the
-# privileged state()["instruction"], the service's spec task_text and task info) is the corrected sentence, the same
-# one as the task's instruction.md Task line. Keyed by env_name and the exact upstream string, so any other instance
-# of the family keeps its own text.
-#  - ChooseMeasuringCup, TongBuffetSetup: upstream picks the drawer side from a re-sampled robot anchor, but the robot
-#    is then placed at the demonstration's base pose on the other side of the drawer (kitchen.py, init_robot_base_pos):
-#    the side word is the opposite of the robot's actual one.
-#  - SearingMeat: the check needs the drumstick in the pan (check_obj_in_receptacle "meat", "pan").
-#  - OvenBroilFish: there is no tray; the pulled-out rack is what goes back in.
-#  - SweetenCoffee: a trailing space.
-#  - MicrowaveDefrostMeat, ReheatMeal: where the tupperware starts (the freezer / the fridge).
+# not edited. The text the agent is shown (Session.inst["text"]: the privileged state()["instruction"], the service's
+# spec task_text and task info) is a plain sentence written for the instance, the same one as the task's
+# instruction.md Task line: it names what the environment's own success check needs (which open cabinet, the
+# gripper moved away where the check has that term) and leaves out where things start. Keyed by env_name and the
+# exact upstream string, so any other instance of the family keeps its own text.
 TEXT_ERRATA = {
-    ("ChooseMeasuringCup", "Open the right drawer and place the smaller measuring cup on the counter."):
-        "Open the top drawer on your left and place the smaller measuring cup on the counter.",
-    ("TongBuffetSetup", "Take the tongs from the drawer on the left and place them on the dining counter next to the "
-                        "tray containing the hot dog."):
-        "Take the tongs from the top drawer on your right and place them on the dining counter next to the tray "
-        "containing the hot dog.",
-    ("SearingMeat", "Grab the pan from the cabinet and place it on the rear right burner on the stove. Then place the "
-                    "chicken drumstick on the stove and turn the burner on."):
-        "Grab the pan from the cabinet and place it on the rear right burner on the stove. Then place the chicken "
-        "drumstick in the pan and turn the burner on.",
-    ("OvenBroilFish", "Place the fish on the bottom rack of the oven, and slide the tray back inside. Close the oven "
-                      "door."):
-        "Place the fish on the bottom rack of the oven, and slide the rack back inside. Close the oven door.",
-    ("SweetenCoffee", "Take a sugar cube from the saucer and place it inside the coffee. Then, grab milk from the "
-                      "fridge and place it next to the coffee on the counter to sweeten the coffee. "):
-        "Take a sugar cube from the saucer and place it inside the coffee. Then, grab milk from the fridge and place "
-        "it next to the coffee on the counter to sweeten the coffee.",
-    ("MicrowaveDefrostMeat", "Place the tupperware containing the frozen chicken drumstick in the microwave. Close the "
-                             "microwave door and press the start button to defrost the meat."):
-        "Take the tupperware containing the frozen chicken drumstick out of the freezer and place it in the microwave. "
-        "Close the microwave door and press the start button to defrost the meat.",
-    ("ReheatMeal", "Place the tupperware containing the shrimp and carrot meal in the microwave. Close the microwave "
-                   "door and press the start button to reheat the meal."):
-        "Take the tupperware containing the shrimp and carrot meal out of the fridge and place it in the microwave. "
-        "Close the microwave door and press the start button to reheat the meal.",
+    ("AddLemonToFish",
+     "Take the lemon wedge from the fridge and place it on the plate with fish on the dining counter."):
+        "Put the lemon wedge from the fridge on the plate with the fish on the dining counter, and move your hand"
+        " away.",
+    ("AssembleCookingArray",
+     "Move the shrimp onto the pan on the stove. Then move the syrup bottle and broccoli from the cabinet to the "
+     "counter where the plate is."):
+        "Put the shrimp in the pan on the stove, and move the syrup bottle and the broccoli from the cabinet to "
+        "the counter where the plate is, and move your hand away.",
+    ("BeverageSorting",
+     "Sort all alcoholic drinks to one cabinet, and non-alcoholic drinks to the other."):
+        "Put the two alcoholic drinks in one of the two open cabinets and the two non-alcoholic drinks in the "
+        "other, and move your hand away.",
+    ("BreadAndCheese",
+     "Place the bread and cheese on the cutting board."):
+        "Put the bread and the cheese on the cutting board, and move your hand away.",
+    ("CandleCleanup",
+     "Pick the candle and jar from the dining table and place them in the open cabinet. Close the cabinet after "
+     "placing the objects."):
+        "Put the candle and the jar from the dining table in the open cabinet, then close that cabinet.",
+    ("CerealAndBowl",
+     "Open the cabinet. Pick the cereal and bowl from the cabinet and place them on the counter next to the milk."
+     " Then close the cabinet."):
+        "Take the cereal and the bowl out of the cabinet, put them on the counter next to it, and close the "
+        "cabinet again.",
+    ("ChooseMeasuringCup",
+     "Open the right drawer and place the smaller measuring cup on the counter."):
+        "Take the smaller measuring cup out of the drawer and put it on the counter next to that drawer, and move"
+        " your hand away.",
+    ("ClearFoodWaste",
+     "Move the food items out of the sink and into the colander."):
+        "Move the two food items from the sink into the colander, and move your hand away.",
+    ("ClearSink",
+     "Remove the corn and carrot from the sink. Then move the bowl and cup from the counter to the sink for "
+     "washing."):
+        "Take the corn and the carrot out of the sink and put the bowl and the cup from the counter in it, and "
+        "move your hand away.",
+    ("CloseDrawer",
+     "Close the right drawer."):
+        "Close the right drawer.",
+    ("CloseOven",
+     "Close the oven door."):
+        "Close the oven door.",
+    ("CloseStandMixerHead",
+     "Close the stand mixer head."):
+        "Close the stand mixer head.",
+    ("CookieDoughPrep",
+     "Pick the egg and butter from the fridge and place them by the bowl for mixing."):
+        "Take the egg and the butter from the fridge and put them on the counter by the bowl, and move your hand "
+        "away.",
+    ("DeliverBrewedCoffee",
+     "Pick up the brewed coffee from the coffee machine and place it next to the breakfast plate on the dining "
+     "counter."):
+        "Take the coffee from the coffee machine and put it on the dining counter next to the breakfast plate, "
+        "and move your hand away.",
+    ("DessertUpgrade",
+     "Move the dessert items from the plates to the tray."):
+        "Move the two desserts from the plates onto the tray, and move your hand away.",
+    ("DisplayMeatVariety",
+     "Retrieve the chicken drumstick, shrimp, and steak from the fridge and place them on the serving tray on the"
+     " dining counter."):
+        "Put the chicken drumstick, the shrimp and the steak from the fridge on the serving tray on the dining "
+        "counter, and move your hand away.",
+    ("DivideBasins",
+     "Move any existing items from the left basin to the right basin for drying. Then move the cup from the "
+     "counter to the left basin of the sink for washing."):
+        "Move the item in the sink's left basin to the right basin, then put the cup from the counter in the left"
+        " basin, and move your hand away.",
+    ("DrainVeggies",
+     "Dump the lettuce from the pot into the sink. Then turn on the water and wash the lettuce. Then turn off the"
+     " water and put the lettuce back in the pot."):
+        "Dump the lettuce from the pot into the sink, rinse it under running water, then turn the water off and "
+        "put the lettuce back in the pot.",
+    ("DrinkwareConsolidation",
+     "Pick the bottled water from the counter and place it in the open cabinet."):
+        "Put the bottled water from the counter in the open cabinet, and move your hand away.",
+    ("MakeIceLemonade",
+     "Grab a lemon wedge from the fridge and one ice cube from the ice bowl, and put them in the glass of "
+     "lemonade."):
+        "Put the lemon wedge from the fridge and an ice cube from the ice bowl in the glass of lemonade, and move"
+        " your hand away.",
+    ("MakeLoadedPotato",
+     "Retrieve the reheated potato from the microwave, then place the potato, cheese, and condiment on the "
+     "cutting board."):
+        "Take the potato out of the microwave and put it, the cheese and the condiment on the cutting board, and "
+        "move your hand away.",
+    ("MealPrepStaging",
+     "Place both pans onto different burners. Then place the corn and the steak on different pans."):
+        "Put the two pans on two different burners, then put the corn in one pan and the steak in the other.",
+    ("MicrowaveDefrostMeat",
+     "Place the tupperware containing the frozen chicken drumstick in the microwave. Close the microwave door and"
+     " press the start button to defrost the meat."):
+        "Take the tupperware with the frozen chicken drumstick out of the freezer, put it in the microwave, close"
+        " the door and press start, then move your hand away.",
+    ("OpenDishwasher",
+     "Open the dishwasher door."):
+        "Open the dishwasher door all the way, or nearly.",
+    ("OrganizeCoffeeCondiments",
+     "Pick the syrup bottle and honey bottle from the cabinet and place them next to the mug."):
+        "Put the syrup bottle and the honey bottle from the cabinet on the counter next to the mug, and move your"
+        " hand away.",
+    ("OvenBroilFish",
+     "Place the fish on the bottom rack of the oven, and slide the tray back inside. Close the oven door."):
+        "Put the fish on the oven's bottom rack, slide the rack back in and close the oven door.",
+    ("PackDessert",
+     "Add the marshmallow to the tupperware that contains the hot dog."):
+        "Put the marshmallow in the tupperware with the hot dog, and move your hand away.",
+    ("PickPlaceCabinetToCounter",
+     "Pick the ice cube from the cabinet and place it on the counter."):
+        "Take the ice cube out of the cabinet and put it on the counter next to it, and move your hand away.",
+    ("PickPlaceSinkToCounter",
+     "Pick the egg from the sink and place it on the plate located on the counter."):
+        "Take the egg out of the sink and put it on the plate on the counter, and move your hand away.",
+    ("PlateSteakMeal",
+     "Create a steak meal by picking up the steak and asparagus from the tray and placing them on the plate. "
+     "Leave the chili pepper on the tray."):
+        "Move the steak and the asparagus from the tray to the plate and leave the chili pepper on the tray, and "
+        "move your hand away.",
+    ("PortionInTupperware",
+     "Place one cooked food and one vegetable from the large plate to each tupperware container."):
+        "Put one cooked food and one vegetable from the large plate in each of the two tupperware containers, and"
+        " move your hand away.",
+    ("PreRinseStation",
+     "Place the glass cup in the left basin and the kettle in the right basin of the sink."):
+        "Put the glass cup in the sink's left basin and the kettle in its right basin, and move your hand away.",
+    ("PrepForSanitizing",
+     "Pick the bar soap and dish brush from the cabinet and place them on the counter."):
+        "Take the bar soap and the dish brush out of the cabinet and put them on the counter next to it, and move"
+        " your hand away.",
+    ("PrepMarinatingMeat",
+     "Pick the shrimp from the plate and place it on the cutting board. Then pick the condiment bottle from the "
+     "cabinet and place it next to the cutting board."):
+        "Put the shrimp from the plate on the cutting board, then put the condiment bottle from the cabinet next "
+        "to the board, and move your hand away.",
+    ("ReheatMeal",
+     "Place the tupperware containing the shrimp and carrot meal in the microwave. Close the microwave door and "
+     "press the start button to reheat the meal."):
+        "Take the tupperware with the shrimp and carrot meal out of the fridge, put it in the microwave, close "
+        "the door and press start, then move your hand away.",
+    ("RetrieveMeat",
+     "Retrieve the fish from the fridge and place it on the cutting board."):
+        "Take the fish from the fridge and put it on the cutting board, and move your hand away.",
+    ("SanitizePrepCuttingBoard",
+     "Grab the spray bottle from the cabinet, then place it next to the cutting board for sanitizing. Then grab "
+     "the dish brush from the countertop next to the sink and place it next to the cutting board."):
+        "Put the spray bottle from the cabinet and the dish brush from beside the sink next to the cutting board,"
+        " and move your hand away.",
+    ("ScrubBowl",
+     "Use the sponge to scrub the bowl inside the sink."):
+        "Scrub the bowl in the sink with the sponge for a while, then move your hand away.",
+    ("SearingMeat",
+     "Grab the pan from the cabinet and place it on the rear right burner on the stove. Then place the chicken "
+     "drumstick on the stove and turn the burner on."):
+        "Put the pan from the cabinet on the stove's rear right burner, put the chicken drumstick in the pan and "
+        "turn that burner on, then move your hand away.",
+    ("SeasoningSpiceSetup",
+     "Move the condiment bottle and ketchup from the cabinet to the dining counter."):
+        "Move the condiment bottle and the ketchup from the cabinet to the dining counter, and move your hand "
+        "away.",
+    ("SetUpCuttingStation",
+     "Pick up the knife from the drawer and place it on the cutting board. Then place the meat from the plate to "
+     "the cutting board."):
+        "Put the knife from the drawer and the meat from the plate on the cutting board, and move your hand away.",
+    ("StockingBreakfastFoods",
+     "Pick the canned food and bar from the counter and place them in the cabinets closest to them."):
+        "Put the canned food and the bar from the counter each in the cabinet closest to it, and move your hand "
+        "away.",
+    ("SweetenCoffee",
+     "Take a sugar cube from the saucer and place it inside the coffee. Then, grab milk from the fridge and place"
+     " it next to the coffee on the counter to sweeten the coffee. "):
+        "Put a sugar cube from the saucer in the coffee, and put the milk from the fridge on the counter next to "
+        "the coffee, and move your hand away.",
+    ("ThawInSink",
+     "Pick the orange from the counter and place it in the sink. Then turn on the sink faucet."):
+        "Put the orange from the counter in the sink and turn on the water.",
+    ("TongBuffetSetup",
+     "Take the tongs from the drawer on the left and place them on the dining counter next to the tray containing"
+     " the hot dog."):
+        "Take the tongs from the drawer and put them on the dining counter next to the tray with the hot dog, and"
+        " move your hand away.",
+    ("TurnOffMicrowave",
+     "Press the stop button on the microwave."):
+        "Press the microwave's stop button, then move your hand away.",
+    ("TurnOnMicrowave",
+     "Press the start button on the microwave."):
+        "Press the microwave's start button, then move your hand away.",
+    ("TurnOnSinkFaucet",
+     "Turn on the sink faucet."):
+        "Turn on the sink faucet.",
+    ("TurnOnStove",
+     "Turn on the rear left burner of the stove."):
+        "Turn on the stove's rear left burner.",
+    ("TurnOnToasterOven",
+     "Turn on the toaster oven by setting the timer."):
+        "Turn on the toaster oven by setting its timer.",
 }
 
 
 def task_text(env_name: str, lang: str) -> str:
-    """The task sentence the agent is shown: the instance's own language string, or its erratum (TEXT_ERRATA)."""
+    """The task sentence the agent is shown: the instance's plain sentence (TEXT_ERRATA), else its own language string."""
     return TEXT_ERRATA.get((env_name, lang), lang)
 
 

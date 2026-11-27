@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Ski the giant slalom in one run down the course: take both ski tips and both feet through each of the 26 gates in order, then cross the finish line. (Embodied Olympics `giant-slalom`: one Unitree G1 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
+Ski down the giant-slalom course in one run, through all 26 gates in order, and cross the finish line. (Embodied Olympics `giant-slalom`: one Unitree G1 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
 
 ## Difficulty
 Giant-slalom skis carve long arcs: to turn, the robot must roll them onto their edges and lean its body into the turn so that the snow's force passes through its centre of mass, with no walking or running policy to help. The gates are far apart, so speed builds between them, and a lean that does not match the turn throws it on the snow.

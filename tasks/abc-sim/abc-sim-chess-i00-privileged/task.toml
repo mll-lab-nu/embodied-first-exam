@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/abc-sim-chess-i00-privileged"
-description = "ABC Sim set up chess pieces (two I2RT YAM arms, MuJoCo): Put the 6 pieces that stand next to the board (3 black pawns, a black bishop, the black king, the black queen) upright on the empty squares where the standard starting position puts a piece of their kind. Frozen scene instance; one replayable trajectory, graded by two fresh-process replays."
+description = "ABC Sim set up chess pieces (two I2RT YAM arms, MuJoCo): Put the black pieces that stand next to the board back on their empty starting squares, standing upright. Frozen scene instance; one replayable trajectory, graded by two fresh-process replays."
 keywords = ["robotics", "abc-sim", "mujoco", "yam", "bimanual", "chess", "privileged"]
 
 [metadata]

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Three pieces of broken glass lie on the dining-room floor; put all of them inside the trash can that stands on the corridor floor.
+Put the three pieces of broken glass into the trash can in the corridor.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - each of the three pieces of broken glass (`broken__glass.n.01_1` to `_3`) is inside the trash can (`ashcan.n.01_1`)

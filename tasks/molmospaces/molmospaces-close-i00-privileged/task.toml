@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/molmospaces-close-i00-privileged"
-description = "MolmoSpaces close (a Franka FR3 arm with a Robotiq 2F-85 gripper on a fixed base, MuJoCo 3.5.0) in privileged mode: produce one replayable trajectory. Close the cabinet. Frozen episode: upstream benchmark ithor/FrankaCloseHardBench/FrankaCloseHardBench_20260206_json_benchmark, episode 346."
+description = "MolmoSpaces close (a Franka FR3 arm with a Robotiq 2F-85 gripper on a fixed base, MuJoCo 3.5.0) in privileged mode: produce one replayable trajectory. Close the open cabinet door. Frozen episode: upstream benchmark ithor/FrankaCloseHardBench/FrankaCloseHardBench_20260206_json_benchmark, episode 346."
 keywords = ["robotics", "molmospaces", "mujoco", "franka-robotiq-2f85", "code-as-policy", "trajectory", "close"]
 
 [metadata]

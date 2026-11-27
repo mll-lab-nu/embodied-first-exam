@@ -13,7 +13,7 @@
 
 ## Task
 HumanCLAW find-navigate-interact (couch), standard mode: the same frozen
-episode and success rule as `humanclaw-sit-couch-i154-privileged`, with the head camera only, one episode and no reset. Find the couch and move until your body is touching the target, with zero distance to the target object. Finally, sit on the couch. In plain words: walk up to a couch and sit down on it. Then stop while you are still sitting on it.
+episode and success rule as `humanclaw-sit-couch-i154-privileged`, with the head camera only, one episode and no reset. Sit down on any couch in the house, and stop while you are still sitting on it.
 Modes and rules: `tasks/humanclaw/README.md`.
 
 ## Difficulty

@@ -3,7 +3,7 @@
  "challenge_task": "packing_meal_for_delivery",
  "instance_id": 301,
  "mode": "public_test",
- "text": "Pack three hamburgers for delivery. The three wrapped hamburgers lie on a tray on the kitchen countertop, next to three sacks and a storage container; put each hamburger into its own sack and stand all three sacks on top of the storage container.",
+ "text": "Put each hamburger into its own sack and stand all three sacks on the storage container.",
  "robot_config": "r1pro_primitives_eval.yaml",
  "robot_config_sha": "d9d0c8bceea2",
  "state_sha": "7726c0d9d364e264",

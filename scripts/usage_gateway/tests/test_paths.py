@@ -429,7 +429,13 @@ class UpstreamFailures(unittest.TestCase):
                 self.assertEqual(call(f"/h/{dead}/v1/responses")[0], 502)
                 self.assertEqual(call(f"/h/{up}/v1/messages"), (503, True))
                 self.assertEqual(call(f"/h/{up}/v1/responses"), (200, False))      # the agent sees the stream end broken
-                recs = [json.loads(x) for x in (jobs / ".gateway" / "unattributed.jsonl").read_text().splitlines()]
+                log = jobs / ".gateway" / "unattributed.jsonl"
+                for _ in range(100):                    # a record is written after its reply is sent: wait for all three
+                    recs = [json.loads(x) for x in log.read_text().splitlines()] if log.exists() else []
+                    if len(recs) >= 3:
+                        break
+                    time.sleep(0.1)
+                recs.sort(key=lambda r: r["ts"])           # in the calls' order (a later call's record can land first)
                 fails = [r.get("upstream_failure", "") for r in recs]
                 self.assertEqual(len(recs), 3, recs)
                 self.assertTrue(fails[0].startswith("unreachable: ") and recs[0]["forwarded"] is False, recs[0])

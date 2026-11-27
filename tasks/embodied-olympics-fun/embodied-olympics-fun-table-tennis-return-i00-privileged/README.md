@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Return the service: after the table tennis ball has bounced once on your court, strike it with the paddle held in your right hand so that it touches the opponent's court, without letting go of the paddle. (Embodied Olympics `table-tennis-return`: one Unitree G1 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
+Return the serve: after it bounces once on your side, hit it with the paddle in your right hand onto the opponent's side, without letting go of the paddle. (Embodied Olympics `table-tennis-return`: one Unitree G1 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
 
 ## Difficulty
 The served ball is over your court for a few tenths of a second, low above a table that is as high as your hips, and may have to be met far inside the end line: the blade, a rigid extension of a 0.5 m arm, has to be there at the right instant and angle while the body leans over the table without touching the net. The return must clear a 15 cm net and still come down on a court 1.37 m long, off a ball that carries spin. The paddle sits in a three-finger hand with small finger motors: the blade is where the fingers hold it, and a fast stroke must not fling it out of the hand.

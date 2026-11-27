@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Push the T-shaped block (without lifting it) until it lies exactly on top of the gray T-shaped pad, with the same position and orientation, then return the arms to their start pose. (RoboDojo's `push_T`). RoboDojo capability dimension: Generalization. Instance i00 is RoboDojo's own evaluation layout
+Push the T-shaped block, without lifting it, until it lies exactly on the gray T-shaped pad, the same way round. Then move both arms back to where they started. (RoboDojo's `push_T`). RoboDojo capability dimension: Generalization. Instance i00 is RoboDojo's own evaluation layout
 `arx_x5/0/push_T_0.json` (sha256 `5d6c4c37b2715479`), frozen in `instance.json`. The deliverable is one replayable trajectory of
 RoboDojo's 14-D joint action at 25 Hz (`/app/output/trajectory.npz`), graded by RoboDojo's own reward check for the task,
 with no step cap (RoboDojo's own evaluation gives a policy 600 actions; PROTOCOL §3).

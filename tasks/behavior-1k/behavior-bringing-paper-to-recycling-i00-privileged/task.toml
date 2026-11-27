@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/behavior-bringing-paper-to-recycling-i00-privileged"
-description = "BEHAVIOR-1K v3.9.2 (2026 BEHAVIOR Challenge) bringing_paper_to_recycling (R1Pro mobile manipulator, OmniGibson / Isaac Sim): produce one replayable trajectory. Take the paper out to recycling. A sack stands on the kitchen floor and a newspaper lies on the kitchen countertop; put both inside the recycling bin that stands on the garden floor, and close the bin. Frozen scene instance (challenge public_test instance 301)."
+description = "BEHAVIOR-1K v3.9.2 (2026 BEHAVIOR Challenge) bringing_paper_to_recycling (R1Pro mobile manipulator, OmniGibson / Isaac Sim): produce one replayable trajectory. Put the sack and the newspaper into the recycling bin in the garden and close the bin. Frozen scene instance (challenge public_test instance 301)."
 keywords = ["robotics", "behavior", "omnigibson", "isaac-sim", "r1pro", "mobile-manipulation", "code-as-policy", "trajectory", "bringing_paper_to_recycling"]
 
 [metadata]

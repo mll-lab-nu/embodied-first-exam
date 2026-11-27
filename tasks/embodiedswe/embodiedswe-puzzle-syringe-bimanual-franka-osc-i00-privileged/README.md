@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:embodiedswe-0.3.0` |
 
 ## Task
+Fill the syringe from the beaker, put about a third of a syringe into each of the three test tubes, then lay the syringe back down where it was on the shelf.
+
 Draw and dose liquid with a syringe (two Frankas, operational-space control). EmbodiedSWE's `puzzle.syringe.bimanual_franka.osc` task (robobench at commit `67f44e8a2ca5`), privileged mode, with a program as the
 deliverable: `solution/solve.py` exposing `solve(env)`.
 

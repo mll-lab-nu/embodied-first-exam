@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Run the 50 m hurdles: go over each of the four free-standing hurdles in your lane, never beside or under it and never after pushing it out of the way, then bring your torso to the finish line. Leave at least one hurdle standing in its place. (Embodied Olympics `hurdles-freestanding`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Run the 50 m hurdles: go over each of the four hurdles in your lane and reach the finish line, leaving at least one hurdle standing. (Embodied Olympics `hurdles-freestanding`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
 
 ## Difficulty
 A hurdle's top is higher than the robot's hip joints: each of the four has to be jumped with the whole pelvis above 1.067 m and each foot lifted a metre, on a body of 67 kg whose only built-in gait walks at 0.7 m/s and drifts in heading. The hurdles are loose: a clipped bar tips one into the landing, where it lies as an obstacle, and walking up to one shoves it away, which is a failure. Knocking a hurdle down is allowed, but not all four: at least one must be jumped cleanly. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 5 resets (only the last attempt is graded).

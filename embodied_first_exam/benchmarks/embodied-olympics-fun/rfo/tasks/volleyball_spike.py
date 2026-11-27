@@ -879,8 +879,8 @@ class Task(TaskBase):
                   gate_time_s=2.81, machine_x_m=2, machine_y_m=-5, machine_z_m=2.3, launch_speed_m_s=7.8328,
                   launch_elevation_deg=55.2471, launch_azimuth_deg=84.2827)
 
-    sentence = ("Spike the set: jump and strike the volleyball that comes down near the net with a hand, above the "
-                "height of the net, down into the opponent's court, and land on your feet without touching the net.")
+    sentence = (("Spike the set: jump and hit the ball with a hand above the net down into the opponent's court, "
+                 "then land on your feet without touching the net and stand."))
     rules = ("You are the outside hitter on an official volleyball court ({court_half_length_m} m by {court_width_m} m "
              "on each side of the net; the net's top {net_height_m} m high, an antenna above each side line). You "
              "stand on your attack line facing the net, which is {net_distance_m} m ahead of you; the left side line "

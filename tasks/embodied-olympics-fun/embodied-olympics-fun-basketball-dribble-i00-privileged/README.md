@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Dribble the basketball, which starts in your two hands, from the end line up the court until it bounces beyond the centre line with both your feet beyond it too. Use one hand at a time and commit no dribbling, carrying or travelling violation. (Embodied Olympics `basketball-dribble`: one Unitree H1-2 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
+Dribble the basketball from the end line up the court until it bounces beyond the centre line with both your feet past it too, without a travel, a double dribble or a carry. (Embodied Olympics `basketball-dribble`: one Unitree H1-2 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
 
 ## Difficulty
 The ball keeps 85 % of its speed in a bounce but a hand absorbs it, so every touch has to push it down and forward again by the hand's own motion to where the hand will be, with a hand about 8 cm wide and a ball 24 cm across, for 14 m, on a body whose walking gait covers about 0.7 m/s, drifts in heading, and is disturbed by every push of the arm. The built-in walking gait steps on the spot even at a zero command, so the ball has to leave the hands before it starts.

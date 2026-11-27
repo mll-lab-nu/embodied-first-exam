@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:control-transfer-0.2.0` |
 
 ## Task
-Follow the ordered U-bend, then slide sideways into a parallel-parking space between two stationary cars and hold a precise stop.
+Drive the car round the U-bend, then drift sideways into the parking space between the two parked cars and stop there.
 
 ## Difficulty
 Infer transfer failures from video and noisy sensors across bounded adaptation rounds.

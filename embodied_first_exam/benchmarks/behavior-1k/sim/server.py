@@ -24,7 +24,8 @@ Differences from the RoboTwin service, all from the simulator:
   over (the tooling's fall rule, OmniGibson's Falling held for 10 s of simulated time: reason "failure: the robot fell
   over"), on a simulator breakdown (non-finite or runaway robot or goal-object state: reason "failure: simulator
   breakdown (...)", a failure recorded as `sim_breakdown`), on the collect hook's signal (timeout), on a simulator error, or at the tooling's runaway guard
-  (MAX_STEPS control steps, reason "step_guard"; /spec max_control_steps); /spec "episode" says so;
+  (MAX_STEPS control steps, reason "step_guard"; agent-ended, RCB_AGENT_END=1: reason "step_limit", judged as it stands;
+  /spec max_control_steps); /spec "episode" says so;
 - a malformed request is a 400 before anything is executed (PROTOCOL §4.6): every field of /submit and /observe is
   checked first (request_number, request_cameras, request_note, video_fps; dt must be a whole number of control
   periods, it is never rounded), so a wrong type, a null or an out-of-range value never reaches the simulator and never
@@ -40,13 +41,20 @@ Differences from the RoboTwin service, all from the simulator:
 - the video is recorded live (/out/live.mp4, fragmented MP4: a crash leaves a playable prefix): the robot cameras'
   frames, which every control step renders anyway for the agent (224 px), tiled, every third control step (10 fps),
   copied in the control loop and encoded by a thread (LiveVideo); a resume records it anew while it replays the
-  journal. When it is missing or does not play, finalize.sh renders one in a video-only pass after the verdict."""
+  journal. When it is missing or does not play, finalize.sh renders one in a video-only pass after the verdict;
+- agent-ended episodes (RCB_AGENT_END=1, PROTOCOL §3): the success rule never ends the episode and is never shown
+  (Session.agent_end); the episode ends at the agent's POST /finish, at the session's end (the collect hook's signal), at
+  a fall or a breakdown (failures, also after a success), at the runaway guard (reason step_limit) or on a simulator
+  error, and is judged on the state it ends in: from there the same settle window runs (the robot held still for up to
+  SETTLE_STEPS, stopping once the success rule holds: the goal held for REST_STEPS in a row, released and at rest, the
+  steps already held counting), at /finish on the request as at the session's end."""
 from __future__ import annotations
 import json, math, os, sys, threading, time, traceback
 import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import rcb_limited as L  # noqa: E402
+import rcb_agent_end as AE  # noqa: E402
 
 PROTOCOL = L.PROTOCOL
 DATA = os.environ.get("RCB_DATA", "/out")   # /data is the licensed BEHAVIOR dataset mount here
@@ -54,12 +62,12 @@ os.makedirs(DATA, exist_ok=True); os.makedirs(os.path.join(DATA, "calls"), exist
 TASK = os.environ.get("RCB_TASK", "picking_up_trash"); INSTANCE = os.environ.get("RCB_INSTANCE", os.path.join(os.path.dirname(__file__), "instance.json"))
 OBS_CALIBRATION = os.environ.get("RCB_OBS_CALIBRATION", "1") == "1"
 CTRL_HZ = 30; SUBSTEPS = 4
-MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10")); MAX_WATCH_S = float(os.environ.get("RCB_MAX_WATCH_S", "30"))
+MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10"))
 EE_POS_MAX_M = 1000.0                   # ee_pose positions beyond this are a 400 (a units slip; float32-safe for the IK)
 LOCK = threading.Lock()
 E = {"ready": False, "step": 0, "calls": 0, "done": False, "reason": None, "success": False, "t0": time.time(), "error": None}
 DIM = 25                                # the R1Pro's action with the task's robot config (asserted once the scene exists)
-EP = L.Episode(DATA, dim=DIM, resume="approx")   # crash recovery; approx: OmniGibson declares rollouts nondeterministic
+EP = L.Episode(DATA, dim=DIM, resume="approx", persist=AE.persist())   # crash recovery; approx: OmniGibson declares rollouts nondeterministic
 EP.startup()                            # start count, back-off after failed starts, startup watchdog (RCB_STARTUP_TIMEOUT_S)
 log = EP.log
 
@@ -75,7 +83,7 @@ def write_final() -> None:
     L._write_json(os.path.join(DATA, "final.json"), {
         "success": bool(E["success"]), "steps": E["step"], "calls": E["calls"], "control_steps": n, "physics_steps": n * SUBSTEPS,
         "elapsed_s": round((E.get("t_end") or time.time()) - E["t0"], 1), "reason": E["reason"], "done": E["done"], "task": TASK, "protocol": PROTOCOL,
-        "finalized": False, "n_actions": E.get("n_actions"), "live_sha": E.get("live_sha"), **EP.final_fields()})
+        "finalized": False, "n_actions": E.get("n_actions"), "live_sha": E.get("live_sha"), **EP.final_fields(), **AE.final_fields(E, n)})
 
 
 def dump() -> None:
@@ -105,19 +113,57 @@ def dump() -> None:
         "settle_steps": int(E.get("settle_steps") or 0), "settled_success": bool(E.get("settled_success")),
         "q_score": st.get("q_score"), "goal_first_step": st.get("goal_first_step"), "graded_by": "live", "replays": 0,
         "startup": EP.n_startups, "pid": os.getpid(),   # which service start wrote it (finalize.sh's late-exit check)
-        **EP.final_fields()})
+        **EP.final_fields(), **AE.final_fields(E, n)})
     write_final()
+
+
+def settle_window() -> bool:
+    """Agent-ended episodes: the success rule's settle window from the end state (lock held, on the request thread: at
+    /finish, or at the session's end in end_live). The robot holds still (hold_action: the last command, the base at 0)
+    for up to SETTLE_STEPS control steps, stopping once the success rule holds (the steps already held count) or the
+    episode ends (a fall, a breakdown: a failure). Like end_live's window these steps are not journaled and are not in
+    trajectory.npz. Returns whether the success rule holds at its end."""
+    if E.get("acts") is None:
+        E["acts"] = S.record_stop()
+    n = 0
+    own = EP._call is None              # /finish runs inside its own call; the session's end does not
+    cid = EP.call_begin("/settle") if own else None
+    try:
+        while n < M.SETTLE_STEPS and len(E["acts"]) and not S.episode_done and not S.now_success:
+            S.step(np.asarray(S.hold_action().cpu(), dtype=np.float64).reshape(-1)); n += 1; video_step()
+    except Exception as exc:  # noqa: BLE001 -- the window could not run on: the episode is judged where it stopped
+        traceback.print_exc(); log({"ev": "settle_error", "after_steps": n, "error": repr(exc)[:300]})
+    finally:
+        if own:
+            EP.call_end(cid, "/settle", settle_steps=n)
+    ok = bool(S.now_success)
+    E["settle_steps"] = n
+    E["settled_success"] = bool(ok and n > 0)
+    log({"ev": "settle", "steps": n, "success": ok, "end_reason": S.end_reason})
+    return ok
 
 
 def finish(reason: str) -> None:
     if E["done"]: return
     E["done"] = True; E["reason"] = reason; E["t_end"] = time.time(); E["episode_control_steps"] = ctrl_steps()
-    if reason == "error":               # a simulator error the agent's actions raised: the state after it is never judged
+    if AE.ENABLED:                      # agent-ended: the end state, after the settle window (finished, the session's end)
+        try:
+            if reason in ("finished", "timeout") and not E.get("no_settle"):
+                E["success"] = settle_window()
+                if S.end_reason and S.end_reason != E["reason"]:
+                    E["reason"] = S.end_reason   # a fall or a breakdown in the window: a failure
+            else:
+                E["success"] = reason in AE.END_STATE_REASONS and bool(S.now_success)
+        except Exception:
+            traceback.print_exc(); E["success"] = False
+    elif reason == "error":               # a simulator error the agent's actions raised: the state after it is never judged
         E["success"] = False
     elif not E["success"]:
         try: E["success"] = check_success()
         except Exception: pass
-    log({"ev": "end", "reason": reason, "step": E["step"], "control_steps": ctrl_steps(), "elapsed_s": round(E["t_end"] - E["t0"], 1), "success": bool(E["success"])})
+    # agent-ended: the settle window's steps are not journaled, so the end counts the agent's (a resume finds it)
+    log({"ev": "end", "reason": E["reason"], "step": E["step"], "control_steps": E["episode_control_steps"] if AE.ENABLED else ctrl_steps(),
+         "elapsed_s": round(E["t_end"] - E["t0"], 1), "success": bool(E["success"])})
     dump()
 
 
@@ -126,6 +172,7 @@ import rcb_behavior as M  # noqa: E402
 # the robot's own cameras through the tiny-camera wrapper with RCB_CAM_SIZE raised: real images for the agent without
 # paying for full-resolution rendering on every one of several thousand control steps
 S = M.Session(TASK, instance=INSTANCE, cameras=os.environ.get("RCB_CAMERAS", "tiny"), strict=False)
+S.agent_end = AE.ENABLED                # agent-ended episodes: the success rule never ends the episode
 if not S.instance_matches:              # before the agent is served: the episode must start from the frozen instance
     EP.give_up(f"instance_mismatch: the frozen start state did not rebuild here (state sha {S.instance_sha}; poses differ "
                "beyond tolerance)", infra=True)
@@ -139,9 +186,9 @@ PRIMS = S.primitives()
 S._curobo()                             # the ee_pose IK; built before the episode starts (it steps nothing)
 FIRST, _ = S._frames(sorted(S._cam_sensors()))
 CAMS = sorted(c for c, a in FIRST.items() if min(a.shape[:2]) >= 32)
-# /spec max_frames_per_call (PROTOCOL §3 "Images per call"): the longest /observe (max_watch_s at the control rate,
+# /spec max_frames_per_call (PROTOCOL §3 "Images per call"): the longest /observe (a 30 s window at the control rate,
 # + the first and the last frame) with every camera and its depth
-BUDGET_WATCH_S = 30.0   # the budget is a 30 s watch's whatever RCB_MAX_WATCH_S is: the sim memory cap and the instruction use it
+BUDGET_WATCH_S = 30.0   # the budget is a 30 s watch's whatever max_chunk_s is: the sim memory cap and the instruction use it
 MAX_FRAMES = (int(round(BUDGET_WATCH_S * CTRL_HZ)) + 2) * 2 * len(CAMS)
 S.enable_depth(CAMS)                    # z-depth rendered alongside RGB from now on (attached before the episode: no mid-episode USD edit)
 MOUNT = {c: ("head (moves with the base and trunk)" if "zed" in c else "left wrist" if "left" in c else "right wrist" if "right" in c else "on the robot") for c in CAMS}
@@ -292,8 +339,8 @@ def cam_spec(c: str) -> dict:
 
 SPEC = {
     "protocol": PROTOCOL, "protocol_compat": L.COMPAT, "simulator": "behavior-1k 3.9.2 (OmniGibson / Isaac Sim)", "robot": "r1pro", "task_text": S.spec["text"],
-    "control_hz": CTRL_HZ, "physics_substeps": SUBSTEPS, "max_chunk_s": MAX_CHUNK_S, "max_watch_s": MAX_WATCH_S, "max_frames_per_call": MAX_FRAMES,
-    "max_control_steps": int(M.MAX_STEPS),   # the tooling's runaway guard (PROTOCOL §4.5): the episode ends there, reason "step_guard"
+    "control_hz": CTRL_HZ, "physics_substeps": SUBSTEPS, "max_chunk_s": MAX_CHUNK_S, "max_frames_per_call": MAX_FRAMES,
+    "max_control_steps": int(M.MAX_STEPS),   # the tooling's runaway guard (PROTOCOL §4.5): the episode ends there, reason "step_guard" (agent-ended: "step_limit")
     "cameras": {c: cam_spec(c) for c in CAMS},
     "default_cameras": [c for c in S.VIDEO_CAMERAS if c in CAMS],   # the 2.0 client's default: head, left wrist, right wrist
     "action_types": {
@@ -337,7 +384,17 @@ SPEC = {
                 f"robot or goal-object state: reason \"{M.BREAKDOWN_REASON} (...)\", a failure); "
                 "when your time is up (timeout); on a simulator error (error); "
                 f"or at the runaway guard of {M.MAX_STEPS} control steps ({M.MAX_STEPS / CTRL_HZ / 3600:.2f} h of simulated time; step_guard). "
-                "There is no step budget otherwise"),
+                "There is no step budget otherwise")
+               if not AE.ENABLED else
+               ("one episode, no reset: a success never ends it and is never shown; it ends at your POST /finish or when your "
+                "session ends, and is judged on the state it ends in: from there the service holds the robot still (your last "
+                f"command, the base at 0) for up to {M.SETTLE_STEPS / CTRL_HZ:g} s, and it is a success if within that the "
+                f"task's goal holds for {M.REST_STEPS / CTRL_HZ:g} s of simulated time in a row ({M.REST_STEPS} control steps; "
+                "the steps it already held count) with no goal object in a gripper and every goal object at rest (slower than "
+                f"{M.REST_SPEED_M_S:g} m/s). It also ends, as a failure, when the robot has fallen over (reason "
+                f"\"{M.FALL_REASON}\", the fall rule held for {M.FALL_HOLD_STEPS / CTRL_HZ:g} s) or on a simulator breakdown "
+                f"(reason \"{M.BREAKDOWN_REASON} (...)\"); on a simulator error (error); or at the runaway guard of "
+                f"{M.MAX_STEPS} control steps (step_limit, judged as it stands). There is no step budget otherwise"),
     "robot_spec": RSPEC,
     "kinematics": KSPEC,
     "depth": {"modes": list(L.DEPTH_MODES), "default": "none", "kind": "z-depth", "unit": "m", "invalid": 0, "max_m": L.DEPTH_MAX_M,
@@ -346,7 +403,8 @@ SPEC = {
 
 
 def check_success() -> bool:
-    return S.succeeded                  # the tooling's success rule (goal + release + rest for REST_STEPS), not the bare goal
+    # the tooling's success rule (goal + release + rest for REST_STEPS), not the bare goal; agent-ended: as the state now is
+    return S.now_success if AE.ENABLED else S.succeeded
 
 
 def proprio_row() -> np.ndarray:
@@ -458,8 +516,11 @@ def ctrl_step(a: np.ndarray, rec: L.Recorder) -> bool:
     """One recorded and journaled control step. True when the call must stop: the episode is over (the BDDL goal holding
     also terminates it), or the layer stops the call (max_call_wall_s, the client hung up)."""
     term, trunc = S.step(a); stop = EP.journal(a)
+    if AE.ENABLED:                      # agent-ended: the success is only recorded; a fall, a breakdown or the guard ends it
+        AE.hidden_success(E, S.now_success, log, ctrl_steps())
+        if term or trunc: finish(S.end_reason or "step_limit")
     # the end first: an error in the recording below then cannot turn a completed rule into reason "error"
-    if term or trunc: finish("success" if check_success() else (S.end_reason or "step_guard"))
+    elif term or trunc: finish("success" if check_success() else (S.end_reason or "step_guard"))
     rec.tick(); video_step()
     return E["done"] or stop
 
@@ -535,14 +596,15 @@ def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
     if typ == "joint_position": run_joint_position(A, dt, interp, rec, clipped)
     else: run_ee_pose(A, rec, plan)
     rec.tick(force=True, last=True)
-    succ = E["success"] or check_success(); E["success"] = succ
+    succ = bool(E.get("now_success")) if AE.ENABLED else (E["success"] or check_success())   # agent-ended: never latched
+    if not AE.ENABLED: E["success"] = succ
     out = {**meta_common(cams), "chunk_id": E["calls"], "type": typ, "executed_rows": E["step"] - step0, "control_steps_chunk": ctrl_steps() - before,
            "physics_steps_chunk": (ctrl_steps() - before) * SUBSTEPS, "clipped": clipped[:200], "n_clipped": len(clipped), "plan": plan, "rejected": None, "ok": True,
            **({"frames_skipped": rec.skipped} if rec.skipped else {})}
     log({"ev": "submit", "call": E["calls"], "type": typ, "rows": E["step"] - step0, "dt": dt, "interpolate": interp, "cameras": cams, "note": note,
          "depth": rec.mode, **({"frames_skipped": rec.skipped} if rec.skipped else {}), "control_steps": ctrl_steps() - before, "n_clipped": len(clipped), "success": succ})
     save_call_evidence(E["calls"], {k: v for k, v in out.items() if k != "cameras"}, rec)
-    if succ: finish("success")
+    if succ and not AE.ENABLED: finish("success")
     out["done"] = E["done"]; out["reason"] = E["reason"]
     return out, rec.parts(video, fps)
 
@@ -550,7 +612,7 @@ def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
 def do_observe(meta: dict) -> tuple[dict, list]:
     cams = request_cameras(meta)
     seconds = request_number(meta, "seconds", 0.0); fps = video_fps(meta); video = meta.get("video", "frames")
-    if seconds < 0 or seconds > MAX_WATCH_S: raise ValueError(f"seconds must be in [0, {MAX_WATCH_S}]")
+    if seconds < 0 or seconds > MAX_CHUNK_S: raise ValueError(f"seconds must be in [0, {MAX_CHUNK_S}] (max_chunk_s)")
     frames_ok(cams, int(round(seconds * CTRL_HZ)), fps, meta)
     if video not in ("mp4", "frames", "both", "none"): raise ValueError("video must be mp4|frames|both|none")
     rec = recorder(cams, fps, meta); before = ctrl_steps()
@@ -560,8 +622,9 @@ def do_observe(meta: dict) -> tuple[dict, list]:
         for _ in range(int(round(seconds * CTRL_HZ))):
             if ctrl_step(hold, rec): break
         rec.tick(force=True, last=True)
-        succ = E["success"] or check_success(); E["success"] = succ
-        if succ: finish("success")
+        if not AE.ENABLED:              # agent-ended: ctrl_step recorded the state's success, nothing ends here
+            succ = E["success"] or check_success(); E["success"] = succ
+            if succ: finish("success")
     else:
         rec.tick(force=True, last=True)
     E["calls"] += 1
@@ -578,7 +641,7 @@ def do_kinematics(req: dict) -> dict:
 
 def status() -> dict:
     return {"step": E["step"], "calls": E["calls"], "control_steps": ctrl_steps(), "done": E["done"], "reason": E["reason"],
-            "elapsed_s": round(time.time() - E["t0"], 1)}
+            "elapsed_s": round(time.time() - E["t0"], 1), **AE.steps_left(ctrl_steps())}
 
 
 def end_live() -> None:
@@ -591,6 +654,8 @@ def end_live() -> None:
     same window after them)."""
     if E["done"]:
         dump(); return
+    if AE.ENABLED:                      # agent-ended: finish runs the same window, stopping once the success rule holds
+        finish("timeout"); return
     E["acts"] = S.record_stop()
     n = 0
     cid = EP.call_begin("/settle")      # logged as a call: a crash of the process in the window counts as in the agent's calls
@@ -648,6 +713,7 @@ def _end_from_signal():
     # the HTTP loop never started (the port stayed taken): end here, without the settle window (no stepping off the
     # request thread); the verdict is the episode as it stopped
     with LOCK:
+        E["no_settle"] = True           # no stepping off the request thread (agent-ended: judged as it stands)
         if not E["done"]: finish("timeout")
         else: dump()
         close_video()
@@ -698,8 +764,10 @@ E["ready"] = True; write_final()
 open(os.path.join(DATA, "server.pid"), "w").write(str(os.getpid()))
 print(f"{PROTOCOL} sim ready (startup {EP.n_startups}, resumes {EP.resumes}{', resumed at call ' + str(E['calls']) if resumed else ''})", flush=True)
 HTTPD["serving"] = True
-L.serve(L.Service(spec=SPEC, lock=LOCK, state=E, submit=do_submit, observe=do_observe, kinematics=do_kinematics, status=status,
-                  on_submit_error=lambda exc: finish("error"), log=log, episode=EP, state_sha=S.state_sha, proprio=proprio_row))
+AE.serve(AE.Service(spec=SPEC, lock=LOCK, state=E, submit=do_submit, observe=do_observe, kinematics=do_kinematics, status=status,
+                    on_submit_error=lambda exc: finish("error"), log=log, episode=EP, state_sha=S.state_sha, proprio=proprio_row,
+                    **({"finish": lambda: finish("finished"),
+                        "end_step_limit": lambda: finish("step_limit")} if AE.ENABLED else {})))
 # the end signal stopped the loop (_end_from_signal): the agent's phase is over
 with LOCK:
     try:

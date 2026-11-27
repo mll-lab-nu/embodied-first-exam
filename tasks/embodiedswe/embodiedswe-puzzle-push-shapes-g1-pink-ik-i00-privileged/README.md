@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:embodiedswe-0.3.0` |
 
 ## Task
+Slide each block into the cutout of its own shape on the board, so that it drops in and lies flat in it.
+
 Push the shapes onto their pads (Unitree G1, fixed pelvis, Pink IK). EmbodiedSWE's `puzzle.push_shapes.g1.pink_ik` task (robobench at commit `67f44e8a2ca5`), privileged mode, with a program as the
 deliverable: `solution/solve.py` exposing `solve(env)`.
 

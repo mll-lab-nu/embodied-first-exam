@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robolab-0.2.2` |
 
 ## Task
-Put the red mug upright so that the opening is facing upwards.
+Stand the red mug upright, opening up.
 
 ## Difficulty
 RoboLab labels this task "moderate" (1 subtasks; attributes: reorientation, color); its success term (`object_upright`) asks for reorient 1 object upright. The tooling gives only thin primitives (move_ee on Isaac Lab's differential IK, joint moves, gripper, hold), so every grasp, transport and placement is the agent's to build. RoboLab ships no expert solution.

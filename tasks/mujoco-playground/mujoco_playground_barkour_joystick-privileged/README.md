@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:mujoco-0.1.3` |
 
 ## Task
-MuJoCo Playground `BarkourJoystick` (Google Barkour vB), rebuilt in plain MuJoCo from Playground's scene files: Make Google's Barkour quadruped follow the joystick command schedule for the whole 10 s episode, through random pushes, without falling over.
+MuJoCo Playground `BarkourJoystick` (Google Barkour vB), rebuilt in plain MuJoCo from Playground's scene files: Make the robot follow the joystick's commands for the whole schedule without falling over, even when it gets pushed.
 For 10 s the robot gets a joystick command schedule (2 segments: planar velocity and yaw rate in its own frame) and must track it without falling over. Its torso is pushed 12 times. The deliverable is one replayable trajectory of joint position targets
 (`/app/output/trajectory.npz`, `(T, 12)`, T = 1000 (the whole schedule)).
 

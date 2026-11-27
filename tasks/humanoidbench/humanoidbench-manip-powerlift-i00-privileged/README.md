@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:humanoidbench-0.2.0` |
 
 ## Task
+Lift the dumbbell off the floor to overhead and hold it there.
+
 HumanoidBench powerlift: produce one replayable trajectory that lifts a dumbbell overhead with the Unitree H1, frozen scene instance 00.
 
 ## Difficulty

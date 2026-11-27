@@ -20,7 +20,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/roboarc-interlocked-claws-02-i01-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.4): RoboARC interlocked_claws on the same frozen instance as the privileged task. Separate the brown claw piece from the other claw piece and put the whole of it inside the green dashed goal region. Leave the other claw piece behind, no closer to the goal region than it was at the start. The agent only gets a client: get_obs (RGB, optional depth, proprioception, calibrated cameras), submit (joint_position or ee_pose chunks), stateless kinematics. No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
+description = "STANDARD MODE (robot as a service, eai-standard/2.4): RoboARC interlocked_claws on the same frozen instance as the privileged task. Take the brown claw piece off the other claw piece and put all of it inside the green dashed goal square. Leave the other claw piece behind, no closer to the goal than it was at the start. The agent only gets a client: get_obs (RGB, optional depth, proprioception, calibrated cameras), submit (joint_position or ee_pose chunks), stateless kinematics. No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
 keywords = ["robotics", "roboarc", "mujoco", "aloha", "standard-mode", "trajectory", "interlocked_claws"]
 
 [metadata]
@@ -71,6 +71,13 @@ build_timeout_sec = 1800.0
 cpus = 4
 memory_mb = 16384
 storage_mb = 10240
+
+# The robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): Harbor starts this server for the agent.
+[[environment.mcp_servers]]
+name = "efe-robot"
+transport = "stdio"
+command = "python3"
+args = ["/opt/tools/efe_mcp/server.py"]
 
 [verifier.env]
 RCB_LIMITS_ENFORCE = "${RCB_LIMITS_ENFORCE:-0}"

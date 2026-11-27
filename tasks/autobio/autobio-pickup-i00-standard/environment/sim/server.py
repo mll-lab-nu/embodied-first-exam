@@ -5,7 +5,11 @@ GET /status, POST /observe, POST /submit, POST /kinematics. Every call is logged
 The episode is the frozen instance's (environment/sim/instance.json, the privileged twin's). The action is AutoBio's
 own: one position target per controlled actuator (arm joints, gripper or pipette thumb), one row per 2 ms control
 step. Rule `first`: the episode ends the moment AutoBio's check holds (success). Rule `final` (the thermal mixer):
-the episode is judged where it ends, at the agent's `done` or when its time is over. Nothing about the objects or the
+the episode is judged where it ends, at the agent's `done` or when its time is over. With agent-ended episodes
+(RCB_AGENT_END=1, PROTOCOL §3) every task is judged by rule `final`: a success never ends the episode and is never shown;
+it ends at the agent's POST /finish (or `done`, the same), at a physics warning (a failure, also after a success), at
+the technical step cap (reason step_limit) or when its time is over, and AutoBio's check is applied to the state it ends
+in (its own stage memory included: the pipette's ordered steps count as they happened). Nothing about the objects or the
 instruments leaves this process: the proprioception is the robot's own joints, grippers, tool frames and commands.
 
 Crash recovery (rcb_limited.Episode, resume class `exact`: MuJoCo on the CPU repeats bit for bit in a fresh process):
@@ -25,12 +29,12 @@ import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import rcb_limited as L  # noqa: E402
+import rcb_agent_end as AE  # noqa: E402
 
 DATA = os.environ.get("RCB_DATA", "/data")
 INSTANCE = os.environ.get("RCB_INSTANCE", os.path.join(os.path.dirname(os.path.abspath(__file__)), "instance.json"))
 WALL_CLOCK_S = float(os.environ.get("RCB_WALL_CLOCK_S", "3600"))
 MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10"))
-MAX_WATCH_S = float(os.environ.get("RCB_MAX_WATCH_S", "30"))
 MAX_FPS = 50  # AutoBio's own policy rate
 MAX_FRAMES = 3000  # /spec max_frames_per_call: images per call (cameras x frames, per-frame depth counted again)
 LOCK = threading.Lock()
@@ -54,9 +58,12 @@ W, H = M.W, M.H
 _INST = json.load(open(INSTANCE))
 TASK = _INST["family"]
 NA = int(_INST["n_action"])  # the journal's row width, known before the scene is built
-EP = L.Episode(DATA, dim=NA, resume="exact")
+EP = L.Episode(DATA, dim=NA, resume="exact", persist=AE.persist())
 EP.startup()  # start count, back-off after failed starts, the startup watchdog until scene_built()
 S = M.Session(instance=INSTANCE)
+NATIVE_RULE = S.rule  # AutoBio's own: `first` (its early_stop tasks) or `final`
+if AE.ENABLED:
+    S.rule = "final"  # agent-ended: AutoBio's check on the state the episode ends in; a success never ends it
 assert S.n_act == NA, (S.n_act, NA)
 DT = S.dt
 CTRL_HZ = 1.0 / DT
@@ -114,7 +121,10 @@ EPISODE = {
     "first": f"one episode, no reset: it ends the moment the goal is reached (success), when your time is over, or after {CAP}",
     "final": 'one episode, no reset: it is judged in the state in which it ends, when you end it with r.submit("done", []), '
     f"when your time is over, or after {CAP}",
-}[S.rule] + WARNING_END
+    "agent_end": "one episode, no reset: a success never ends it and is never shown; it is judged in the state in which it "
+    'ends, when you end it with POST /finish (r.submit("done", []) is the same), when your time is over, or after '
+    f"{CAP}",
+}["agent_end" if AE.ENABLED else S.rule] + WARNING_END
 ROBOT_SPEC = S.robot_spec()
 SPEC = {
     "protocol": L.PROTOCOL,
@@ -125,7 +135,6 @@ SPEC = {
     "control_hz": CTRL_HZ,
     "physics_substeps": SUBSTEPS,
     "max_chunk_s": MAX_CHUNK_S,
-    "max_watch_s": MAX_WATCH_S,
     "max_control_steps": M.MAX_STEPS,
     "cameras": {
         c: {
@@ -153,7 +162,8 @@ SPEC = {
         "done": {
             "dim": 0,
             "layout": [],
-            "semantics": 'ends the episode now, in the current state (no physics); r.submit("done", [])',
+            "semantics": 'ends the episode now, in the current state (no physics); r.submit("done", [])'
+            + (" (the same as POST /finish)" if AE.ENABLED else ""),
         },
         "not_yet": ["ee_pose", "joint_delta", "joint_velocity", "ee_delta", "joint_torque"],
     },
@@ -247,10 +257,12 @@ def summary() -> dict:
         "done": E["done"],
         "task": TASK,
         "rule": S.rule,
+        **({"native_rule": NATIVE_RULE} if AE.ENABLED else {}),
         "protocol": L.PROTOCOL,
         "n_actions": len(ROWS),
         "instance_ok_live": bool(S.instance_ok),
         **EP.final_fields(),
+        **AE.final_fields(E, n),
     }
 
 
@@ -263,6 +275,8 @@ def finish(reason: str) -> None:
     E["t_end"] = time.time()
     E["episode_control_steps"] = ctrl_steps()
     E["success"] = bool(S.success)
+    if AE.ENABLED:  # agent-ended: AutoBio's check on the end state (a physics warning, a failure, leaves it False)
+        E["success"] = reason in AE.END_STATE_REASONS + ("error",) and bool(S.success)
     E["score"] = float(S.score)
     EP.log(
         {"ev": "end", "reason": reason, "step": E["step"], "control_steps": ctrl_steps(), "success": bool(E["success"])}
@@ -290,8 +304,11 @@ def ctrl_step(a, rec) -> bool:
     ROWS.append(np.asarray(a, dtype=np.float64))
     stop = EP.journal(a)
     rec.tick()
+    if AE.ENABLED:
+        AE.hidden_success(E, S.success, EP.log, ctrl_steps())
     if not running:
-        finish(S.reason or "done")
+        reason = S.reason or "done"
+        finish("step_limit" if AE.ENABLED and reason == "max_control_steps" else reason)
     return E["done"] or stop
 
 
@@ -429,7 +446,7 @@ def do_submit(meta: dict, A: np.ndarray):
         rec = recorder(cams, 10, meta, "none")
         rec.tick(force=True, last=True)  # every response carries the last frames
         E["calls"] += 1
-        finish("done")
+        finish("finished" if AE.ENABLED else "done")  # agent-ended: `done` is POST /finish
         EP.log({"ev": "submit", "call": E["calls"], "type": "done", "note": note})
         return {**meta_common(cams), "chunk_id": E["calls"], "type": typ, "executed_rows": 0, "ok": True}, rec.parts("none", 10)
     k = dt / DT
@@ -490,8 +507,8 @@ def parse_observe(meta: dict):
     cams, fps = cameras_of(meta), video_fps(meta)
     seconds = number(meta, "seconds", 0.0)
     video = meta.get("video", "frames")
-    if seconds < 0 or seconds > MAX_WATCH_S:
-        raise ValueError(f"seconds must be in [0, {MAX_WATCH_S}]")
+    if seconds < 0 or seconds > MAX_CHUNK_S:
+        raise ValueError(f"seconds must be in [0, {MAX_CHUNK_S}] (max_chunk_s)")
     if not isinstance(video, str) or video not in ("mp4", "frames", "both", "none"):
         raise ValueError("video must be mp4|frames|both|none")
     frames_ok(int(round(seconds / DT)), fps, video, cams, meta)
@@ -539,6 +556,7 @@ def status() -> dict:
         "done": E["done"],
         "reason": E["reason"],
         "elapsed_s": round(time.time() - E["t0"], 1),
+        **AE.steps_left(ctrl_steps()),
     }
 
 
@@ -560,6 +578,8 @@ def replay_row(row) -> None:
     """A journaled row during a resume."""
     S.step(row)
     ROWS.append(np.asarray(row, dtype=np.float64))
+    if AE.ENABLED:
+        E["now_success"] = bool(S.success)
 
 
 EP.begin(
@@ -578,8 +598,8 @@ write_final()
 open(PID_FILE, "w").write(str(os.getpid()))
 print(f"{L.PROTOCOL} AutoBio sim ready ({TASK}; startup {EP.n_startups}, resumes {EP.resumes})", flush=True)
 try:
-    L.serve(
-        L.Service(
+    AE.serve(
+        AE.Service(
             spec=SPEC,
             lock=LOCK,
             state=E,
@@ -592,6 +612,8 @@ try:
             episode=EP,
             state_sha=S.state_sha,
             proprio=proprio_row,
+            **({"finish": lambda: finish("finished"),
+                "end_step_limit": lambda: finish("step_limit")} if AE.ENABLED else {}),
         ),
         port=int(os.environ.get("RCB_PORT", "8000")),
     )

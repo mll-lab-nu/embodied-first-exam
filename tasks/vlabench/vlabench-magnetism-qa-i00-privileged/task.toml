@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/vlabench-magnetism-qa-i00-privileged"
-description = "VLABench magnetism_qa (Franka Panda): We are testing which of these objects, made of different materials, are magnetic. Press the button in front of the magnetic object. Produce one replayable trajectory of joint-position control steps on a frozen scene instance; graded by VLABench's own success check at the trajectory's end."
+description = "VLABench magnetism_qa (Franka Panda): Press the button in front of the magnetic object. Produce one replayable trajectory of joint-position control steps on a frozen scene instance; graded by VLABench's own success check at the trajectory's end."
 keywords = ["robotics", "vlabench", "mujoco", "franka-panda", "code-as-policy", "trajectory", "privileged"]
 
 [metadata]

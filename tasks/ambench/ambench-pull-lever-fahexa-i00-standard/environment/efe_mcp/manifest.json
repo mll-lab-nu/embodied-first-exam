@@ -1,0 +1,15 @@
+{
+ "manifest": "efe-mcp-manifest/1",
+ "kind": "rcb",
+ "suite": "ambench",
+ "task": "ambench-pull-lever-fahexa-i00-standard",
+ "protocol": "eai-standard/2.2",
+ "realtime": false,
+ "tools": [
+  "spec",
+  "observe",
+  "submit",
+  "kinematics",
+  "finish"
+ ]
+}

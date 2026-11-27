@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Juggle three balls in a cascade: throw each ball from one hand in an arc to the other, the hands in turn, catching each in the hand, until 10 catches have been made in a row. (Embodied Olympics `juggle-three`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Juggle 3 balls in a cascade, throwing each from one hand to the other and catching it there, until you have made 10 catches in a row. (Embodied Olympics `juggle-three`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
 
 ## Difficulty
 Each throw has to come down into a palm that is hardly wider than the ball, 0.4 m away, about 0.6 s later, the fingers must close on it within a few hundredths of a second before it bounces off, and the catching hand must have thrown its own ball before: three balls, two hands, never two in one. A throw is the hand opening while the arm moves, and errors add up from throw to throw, because a ball is thrown from wherever it was caught. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 5 resets (only the last attempt is graded).

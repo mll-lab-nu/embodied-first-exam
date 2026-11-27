@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:libero-max-0.1.1` |
 
 ## Task
-LIBERO-MAX case `pro-camera-view-angle-10-t07-i01-receptacle_relocation-d0-p195`: a Franka Panda arm at a table, instructed **"Put both the alphabet soup and the cream cheese box in the basket."**, on a LIBERO-PRO variant
+LIBERO-MAX case `pro-camera-view-angle-10-t07-i01-receptacle_relocation-d0-p195`: a Franka Panda arm at a table, instructed **"Put the alphabet soup and the cream cheese in the basket."**, on a LIBERO-PRO variant
 of a libero_10 task (camera_view_angle). Online event (receptacle relocation): the first time the gripper comes within
 0.18 m of `alphabet_soup_1`, LIBERO-MAX changes the scene once (the receptacle `basket_1` is moved 0.06 m, direction (0, -1); it jumps there alone: what already rests in or on it stays where it was, and where it lands on another object the physics pushes the two apart). The deliverable is one
 replayable trajectory of LIBERO's OSC control steps (`/app/output/trajectory.npz`, `(T, 7)`, T ≤ 520), graded by

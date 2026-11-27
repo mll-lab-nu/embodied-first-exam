@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/roboarc-rope-threading-03-i01-privileged"
-description = "RoboARC rope_threading (ALOHA 2, MuJoCo): produce one replayable trajectory. Thread the rope through the cyan ring (R1) then green ring (R2) then purple ring (R3), in that order along the rope from material start to material end. Frozen scene instance (variation rope_threading_hard, seed 0)."
+description = "RoboARC rope_threading (ALOHA 2, MuJoCo): produce one replayable trajectory. Thread the rope, from its end that started farther from the rings, through the cyan ring (R1), then the green ring (R2), then the purple ring (R3), in that order, each the way given below. Frozen scene instance (variation rope_threading_hard, seed 0)."
 keywords = ["robotics", "roboarc", "mujoco", "aloha", "code-as-policy", "trajectory", "rope_threading"]
 
 [metadata]

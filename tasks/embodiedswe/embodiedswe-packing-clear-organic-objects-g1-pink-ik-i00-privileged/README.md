@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:embodiedswe-0.3.0` |
 
 ## Task
+Put the two lemons from the front row of the table in the blue crate on your right, and the two limes from that row on the round tray on your left.
+
 Sort the front-row items into the crate and onto the tray (Unitree G1, fixed pelvis, Pink IK). EmbodiedSWE's `packing.clear_organic_objects.g1.pink_ik` task (robobench at commit `67f44e8a2ca5`), privileged mode, with a program as the
 deliverable: `solution/solve.py` exposing `solve(env)`.
 

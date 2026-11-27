@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:libero-max-0.1.1` |
 
 ## Task
-LIBERO-MAX case `pro-view-occlusion-goal-t09-i07-visual_theme_switch-d1-p195`: a Franka Panda arm at a table, instructed **"Put the wine bottle on the rack."**, on a LIBERO-PRO variant
+LIBERO-MAX case `pro-view-occlusion-goal-t09-i07-visual_theme_switch-d1-p195`: a Franka Panda arm at a table, instructed **"Put the wine bottle on top of the wine rack."**, on a LIBERO-PRO variant
 of a libero_goal task (view_occlusion). Online event (visual-theme switch): the first time the gripper comes within
 0.18 m of `wine_bottle_1`, LIBERO-MAX changes the scene once (the image colours change (channels permuted (1, 2, 0), scaled (1.25, 0.7, 1.1))). The deliverable is one
 replayable trajectory of LIBERO's OSC control steps (`/app/output/trajectory.npz`, `(T, 7)`, T ≤ 300), graded by

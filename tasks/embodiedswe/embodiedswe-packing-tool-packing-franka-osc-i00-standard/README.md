@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:embodiedswe-0.3.0` |
 
 ## Task
+Put the stapler in the top drawer of the chest, the scissors in the second drawer and the utility knife in the third, then close all four drawers.
+
 Pack three tools into their drawers (Franka, operational-space control): the scene, frozen instance and success predicate of `embodiedswe-packing-tool-packing-franka-osc-i00-privileged`, with a Franka Panda arm with its parallel gripper, under EmbodiedSWE's operational-space (torque) controller, in standard mode
 (tasks/embodiedswe/README.md "Standard mode").
 

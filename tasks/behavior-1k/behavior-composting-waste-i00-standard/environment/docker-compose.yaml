@@ -29,6 +29,7 @@ services:
     command: sh /srv/run.sh
     restart: on-failure:6
     environment:
+      RCB_AGENT_END: "1"                               # agent-ended episodes (PROTOCOL §3)
       OMP_NUM_THREADS: "8"   # thread pools capped (PyTorch sizes its pool to the host: 128 on a 256-core
       MKL_NUM_THREADS: "8"   # host, spinning on every small tensor op); user 2026-09-27
       RCB_TEXTURE_BUDGET: ${RCB_TEXTURE_BUDGET:-0.1}   # Isaac's texture memory as a fraction of the GPU (rcb_behavior.py

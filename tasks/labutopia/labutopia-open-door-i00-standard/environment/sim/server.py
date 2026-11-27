@@ -10,6 +10,14 @@ LabUtopia's own controllers send. The episode ends the moment the family's rule 
 objects or the instruments leaves this process: the proprioception is the robot's own joints, gripper, tool frame and
 commands.
 
+Agent-ended episodes (RCB_AGENT_END, rcb_agent_end.py; PROTOCOL §3): a success never ends the episode (the Session runs
+with its stop at success off) and is never shown; POST /finish (finished), the session's end (timeout) or the technical
+cap (step_limit) ends it, and finish() judges it: the families whose goal is a state (pick, open_door, open_drawer,
+open_close, place) on the state it ends in, earlier steps of the rule (a lift, an opening) counted as they happened;
+the families whose goal is an act (press, pour, shake) as it happened; heat_liquid's press with the beaker on the plate
+as it happened and the beaker still on the plate at the end. A hold the rule is counting when the episode ends at
+/finish or the session's end is run out from that state, the last command held (AE_HOLD).
+
 Crash recovery (rcb_limited.Episode, resume class `exact`: PhysX on the CPU repeats bit for bit in a fresh process):
 every executed row is journaled; after a crash the service, a fresh process, rebuilds the episode and replays the
 journal. When the episode ends the service writes /data/trajectory.npz + /data/episode.json; the collect hook
@@ -27,12 +35,12 @@ import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import rcb_limited as L  # noqa: E402
+import rcb_agent_end as AE  # noqa: E402
 
 DATA = os.environ.get("RCB_DATA", "/data")
 INSTANCE = os.environ.get("RCB_INSTANCE", os.path.join(os.path.dirname(os.path.abspath(__file__)), "instance.json"))
 WALL_CLOCK_S = float(os.environ.get("RCB_WALL_CLOCK_S", "5400"))
 MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10"))
-MAX_WATCH_S = float(os.environ.get("RCB_MAX_WATCH_S", "30"))
 MAX_FPS = 30  # every second control step
 MAX_FRAMES = 1800  # /spec max_frames_per_call: images per call (cameras x frames, per-frame depth counted again)
 LOCK = threading.Lock()
@@ -56,12 +64,26 @@ W, H = M.W, M.H
 _INST = json.load(open(INSTANCE))
 TASK = _INST["family"]
 NA = int(_INST["n_action"])  # the journal's row width, known before the scene is built
-EP = L.Episode(DATA, dim=NA, resume="exact")
+EP = L.Episode(DATA, dim=NA, resume="exact", persist=AE.persist())
 EP.startup()  # start count, back-off after failed starts, the startup watchdog until scene_built()
 
 
 S = M.Session(instance=INSTANCE, cameras=True)
 assert M.N_ACT == NA, (M.N_ACT, NA)
+# agent-ended episodes: the family's rule as the state now is (its update() at the last control step), never ending the
+# episode. AE_EVENT: the goal is an act, judged as it happened (Session.first_success_step); AE_STATE: the rule's phase
+# in which its last condition is judged on the end state
+AE_EVENT = ("press", "pour", "shake")
+AE_STATE = {"pick": "", "open_door": "", "open_drawer": "", "open_close": "close", "place": "place"}
+if AE.ENABLED:
+    S._stop_at_success = False
+    S.rule_now = False
+    _rule_update = S.rule.update
+
+    def _update_now() -> bool:
+        S.rule_now = bool(_rule_update())
+        return S.rule_now
+    S.rule.update = _update_now
 for _c in S.cameras():  # the first frame rendered in a container takes minutes (Isaac Sim prepares the stage for its
     S.render_frame(_c)  # renderer once): it is rendered here, before the service answers, not in an agent's call
 DT = S.dt
@@ -123,7 +145,6 @@ SPEC = {
     "control_hz": CTRL_HZ,
     "physics_substeps": SUBSTEPS,
     "max_chunk_s": MAX_CHUNK_S,
-    "max_watch_s": MAX_WATCH_S,
     "max_control_steps": M.MAX_STEPS,
     "cameras": {
         c: {
@@ -176,7 +197,9 @@ SPEC = {
     },
     "budget": {"reset": 0, "steps": None, "wall_clock_s": WALL_CLOCK_S},
     "max_frames_per_call": MAX_FRAMES,
-    "episode": f"one episode, no reset: it ends the moment the goal is reached (success), when your time is over, or after {CAP}",
+    "episode": (f"one episode, no reset: it ends when you POST /finish (finished), when your time is over (timeout), or after "
+                f"{CAP} (step_limit); reaching the goal does not end it, and the episode is judged as it ends" if AE.ENABLED else
+                f"one episode, no reset: it ends the moment the goal is reached (success), when your time is over, or after {CAP}"),
     "robot_spec": ROBOT_SPEC,
     "kinematics": {
         "endpoint": "/kinematics",
@@ -253,13 +276,68 @@ def summary() -> dict:
         "n_actions": len(ROWS),
         "instance_ok_live": bool(S.instance_ok),
         "start_exact_live": bool(S.start_exact),
+        **({"end_window_steps": E.get("end_window_steps")} if AE.ENABLED else {}),
         **EP.final_fields(),
+        **AE.final_fields(E, n),
     }
+
+
+def ae_success() -> bool:
+    """Agent-ended episodes: the family's verdict on the episode as it stands (see the module docstring)."""
+    if TASK in AE_EVENT:
+        return S.first_success_step is not None
+    if TASK == "heat_liquid":
+        return S.first_success_step is not None and S.rule._on_plate(S.centre(S.rule.obj))
+    return bool(S.rule_now) and S.rule.phase == AE_STATE[TASK]
+
+
+def ae_holding() -> bool:
+    """A hold the rule is counting toward its success: the condition met for some, not yet all, of its steps."""
+    r = S.rule
+    if TASK == "pour":
+        return bool(r.returned) and 0.0 < r.timer < 1.0
+    if TASK == "shake":
+        return r.count >= 5 and 0 < len(r.window) < M.HOLD_STEPS
+    if TASK == "heat_liquid":
+        return False
+    return r.phase == AE_STATE.get(TASK, r.phase) and 0 < r.hold < M.HOLD_STEPS
+
+
+AE_HOLD = 2 * M.HOLD_STEPS   # the longest hold a rule counts (pour's 84 steps) fits
 
 
 def finish(reason: str) -> None:
     """The episode is over: the task's verdict on the steps executed, then the record for the collect hook."""
     if E["done"]:
+        return
+    if AE.ENABLED:
+        if reason == "max_control_steps":   # the technical cap: the step limit, judged as it stands
+            reason = "step_limit"
+        E["done"] = True
+        E["reason"] = reason
+        E["t_end"] = time.time()
+        if reason in ("finished", "timeout"):
+            try:
+                hold, n = S.command(), 0
+                while ae_holding() and not ae_success() and not S.done and n < AE_HOLD:
+                    n += 1
+                    a = S._row(hold)
+                    S.step(a)
+                    ROWS.append(a)
+                    EP.journal(a)
+                E["end_window_steps"] = n
+            except Exception as exc:  # noqa: BLE001 -- judged as it stands
+                traceback.print_exc()
+                EP.log({"ev": "end_window_error", "error": repr(exc)[:300]})
+        E["episode_control_steps"] = ctrl_steps()
+        try:
+            E["success"] = reason in AE.END_STATE_REASONS + ("error",) and ae_success()
+        except Exception:  # noqa: BLE001
+            E["success"] = False
+        E["score"] = 1.0 if E["success"] else 0.0
+        EP.log({"ev": "end", "reason": reason, "step": E["step"], "control_steps": ctrl_steps(), "success": bool(E["success"]),
+                "end_window_steps": E.get("end_window_steps")})
+        dump()
         return
     E["done"] = True
     E["reason"] = reason
@@ -294,6 +372,8 @@ def ctrl_step(a, rec) -> bool:
     ROWS.append(a)
     stop = EP.journal(a)
     rec.tick()
+    if AE.ENABLED:  # the state's success, recorded only (never shown); a success never ends the episode
+        AE.hidden_success(E, ae_success(), EP.log, ctrl_steps())
     if not running:
         finish(S.reason or "done")
     return E["done"] or stop
@@ -393,6 +473,7 @@ def meta_common(cams) -> dict:
         "done": E["done"],
         "reason": E["reason"],
         "cameras": {c: S.camera_info(c) for c in cams},
+        **AE.steps_left(n),
     }
 
 
@@ -489,8 +570,8 @@ def parse_observe(meta: dict):
     cams, fps = cameras_of(meta), video_fps(meta)
     seconds = number(meta, "seconds", 0.0)
     video = meta.get("video", "frames")
-    if seconds < 0 or seconds > MAX_WATCH_S:
-        raise ValueError(f"seconds must be in [0, {MAX_WATCH_S}]")
+    if seconds < 0 or seconds > MAX_CHUNK_S:
+        raise ValueError(f"seconds must be in [0, {MAX_CHUNK_S}] (max_chunk_s)")
     if not isinstance(video, str) or video not in ("mp4", "frames", "both", "none"):
         raise ValueError("video must be mp4|frames|both|none")
     frames_ok(int(round(seconds / DT)), fps, video, cams, meta)
@@ -538,6 +619,7 @@ def status() -> dict:
         "done": E["done"],
         "reason": E["reason"],
         "elapsed_s": round(time.time() - E["t0"], 1),
+        **AE.steps_left(ctrl_steps()),
     }
 
 
@@ -578,8 +660,8 @@ write_final()
 open(PID_FILE, "w").write(str(os.getpid()))
 print(f"{L.PROTOCOL} LabUtopia sim ready ({TASK}; startup {EP.n_startups}, resumes {EP.resumes}; scene built in {S.build_s} s)", flush=True)
 try:
-    L.serve(
-        L.Service(
+    AE.serve(
+        AE.Service(
             spec=SPEC,
             lock=LOCK,
             state=E,
@@ -592,6 +674,8 @@ try:
             episode=EP,
             state_sha=S.state_sha,
             proprio=proprio_row,
+            **({"finish": lambda: finish("finished"),
+                "end_step_limit": lambda: finish("step_limit")} if AE.ENABLED else {}),
         ),
         port=int(os.environ.get("RCB_PORT", "8000")),
     )

@@ -84,6 +84,12 @@ measured on the frozen instance.
 | base odometry (pose, velocity), arm joint angles and velocities, finger position | the goal check before the episode ends (`success` / `failed` only) |
 | `spec()`: action layout and bounds, arm joint axes, positions, limits and torques, the grasp point, camera fields of view and poses, control rate, episode length, budget | masses, friction, the simulator |
 
+## Agent-ended episodes
+Every standard task runs with `RCB_AGENT_END=1` (PROTOCOL §3, agent-ended episodes): KinDER's goal check no longer ends
+the episode and no reply shows it. The episode ends at the agent's `POST /finish`, after `max_steps` control steps
+(reason `step_limit`), at the end of the session or on a simulator error, and is judged on KinDER's goal check as things
+stand then (`end_judgement = "state"`). KinDER has no failure terminations.
+
 ## Run
 
 ```bash

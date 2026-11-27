@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:dexjoco-0.1.2` |
 
 ## Task
-DexJoCo `bimanual_unlock_ipad` (two Franka Panda arms, each with a 16-DoF Allegro hand) on the same frozen instance as `dexjoco-bimanual-unlock-ipad-i00-privileged`: Enter the passcode 1-2-3 on the iPad's screen. You may pick the iPad up, but you do not have to. A digit counts as pressed when a fingertip of the right hand touches its button, and touches by the left hand do not count. Pressing any digit other than the next one in 1-2-3 ends the episode as a failure. Success: the screen is unlocked (1, 2, 3 in order) and stays unlocked for 10 consecutive control steps.
+DexJoCo `bimanual_unlock_ipad` (two Franka Panda arms, each with a 16-DoF Allegro hand) on the same frozen instance as `dexjoco-bimanual-unlock-ipad-i00-privileged`: Unlock the iPad by typing the passcode 1-2-3 on its screen with the right hand's fingertips; touches by the left hand do not count.
 Standard mode (eai-standard/2.2): the agent drives the robot through a client in one episode, with the robot's own
 sensors, calibrated cameras (RGB, optional depth) and the robot's kinematics.
 
@@ -25,7 +25,7 @@ mistakes without starting over.
 ## Reference solution
 `solution/oracle_stream.py` streams the privileged reference's rows (`solution/oracle_trajectory.npz`, 392 rows, float32-exact)
 through the client as `ee_pose` chunks; it uses no privileged information at run time. The service's recorded
-trajectory is then exactly the privileged reference, and the episode ends with success after 392 control steps.
+trajectory is then exactly the privileged reference (392 control steps), whose end state is a success.
 
 ## Verification
 The verdict is the live episode's (`graded_by = "live"`, `replays = 0`): the sim service judges the episode it runs with

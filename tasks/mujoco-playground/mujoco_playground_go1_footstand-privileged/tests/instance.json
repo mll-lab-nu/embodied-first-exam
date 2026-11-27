@@ -45,7 +45,7 @@
   0.0,
   0.0
  ],
- "text": "Make the Unitree Go1 stand up on its hind legs, nose up, front legs in the air, and balance there for 2 s.",
+ "text": "Make the robot stand up on its hind legs, nose up and front legs in the air, and balance there for 2 s.",
  "facts": {
   "start_xy_m": [
    -0.396,

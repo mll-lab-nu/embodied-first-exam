@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/robolab-block-stacking-specified-order-i00-privileged"
-description = "NVIDIA RoboLab block_stacking_specified_order (Franka + Robotiq 2F-85, Isaac Lab 2.3 / Isaac Sim 5.1): produce one replayable trajectory. Stack the blocks in the order from bottom to top: red, blue, green, yellow. Frozen scene instance (the state after RoboLab's canonical seed-0 reset)."
+description = "NVIDIA RoboLab block_stacking_specified_order (Franka + Robotiq 2F-85, Isaac Lab 2.3 / Isaac Sim 5.1): produce one replayable trajectory. Stack the blocks into one tower: red at the bottom, then blue, green, and yellow on top. Frozen scene instance (the state after RoboLab's canonical seed-0 reset)."
 keywords = ["robotics", "robolab", "isaac-lab", "isaac-sim", "franka", "code-as-policy", "trajectory", "block_stacking_specified_order"]
 
 [metadata]

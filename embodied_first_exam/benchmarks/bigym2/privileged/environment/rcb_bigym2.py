@@ -101,6 +101,7 @@ class Episode:
     # ------------------------------------------------------------------ episode
     def reset(self) -> None:
         self.ts = self.tools.reset(self.seed)
+        self.run_on = getattr(self, "run_on", False)   # agent-ended episodes (done): set by the sim service
         self.last_row = None  # the last command executed (clipped), for hold_row()
         self.t0_sha = self.state_sha()
         self.t0_scene_sha = self.scene_sha()
@@ -129,7 +130,26 @@ class Episode:
 
     @property
     def done(self) -> bool:
-        return bool(self.ts.last())
+        """Upstream ended the episode. With run_on (an agent-ended episode of the standard / realtime service, PROTOCOL
+        §3), an end upstream makes on the task's held success alone is not one: the episode runs on."""
+        if not self.ts.last():
+            return False
+        return not (self.run_on and self.success_end())
+
+    def success_end(self) -> bool:
+        """The last step ended upstream's episode on the task's held success alone (no task failure, no physics error,
+        not the time limit)."""
+        inner = self.tools.inner
+        return bool(inner.success) and not bool(inner.fail) and self.env.last_truncation_reason() is None
+
+    def success_now(self) -> bool:
+        """The task's held success as things stand (upstream's success-hold counter at its mark, now) and no fall in the
+        episode: the end-state verdict of an agent-ended episode (upstream's is_success latches the first one)."""
+        return bool(self.tools.inner.success) and not self.fell()
+
+    def time_limit(self) -> bool:
+        """The last step reached the task's horizon (upstream's time-limit truncation)."""
+        return self.env.last_truncation_reason() == "time_limit"
 
     def step(self, row) -> bool:
         """One control step of a physical action row (clipped into the bounds, as upstream does); True when upstream
@@ -278,11 +298,13 @@ class Episode:
             pass
 
 
-def replay(instance: dict, rows, video: str | None = None) -> dict:
+def replay(instance: dict, rows, video: str | None = None, run_on: bool = False) -> dict:
     """The rows from the frozen instance in this process's own fresh environment, until upstream ends the episode
-    or the rows run out. success = upstream's is_success at that point."""
+    or the rows run out. success = upstream's is_success at that point. run_on: an agent-ended episode's rows (the
+    episode ran on past upstream's success end: Episode.done)."""
     t = time.time()
     ep = Episode(instance)
+    ep.run_on = bool(run_on)
     check = ep.instance_check(instance)
     rows = np.asarray(rows, dtype=np.float64)
     if rows.ndim != 2 or rows.shape[1] != ep.action_dim:

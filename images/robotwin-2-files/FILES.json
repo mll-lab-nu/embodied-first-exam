@@ -1,8 +1,8 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe:robotwin-2-files-0.3.1@sha256:aa57746ba34311816d470e28e33825b44cacaffb9e1b6b52b32fc61614187d28",
+ "image": "ghcr.io/mll-lab-nu/efe:robotwin-2-files-0.6.0@sha256:9b3dd5042f66f0ebe69684fc8abe62da6bbc80971e6c109053c7d3b193f1462d",
  "source": "embodied_first_exam/benchmarks/robotwin-2",
  "files": {
   "sim/rcb_live.py": "46901f894ac798afc2c145936f4dd101b78192327e3c0ee29bbed4043f2c3326",
-  "sim/server.py": "c45e7990b2f1c039d7667a0a38e68a4dfb9b86d7dbf229e574d73f5e1f31ff5f"
+  "sim/server.py": "268d8d6e260841f7605d005e2835d00e7c42b7323e63481aad6ced1548b7a3d2"
  }
 }

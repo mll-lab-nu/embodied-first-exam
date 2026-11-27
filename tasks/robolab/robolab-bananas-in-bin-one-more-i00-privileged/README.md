@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robolab-0.2.2` |
 
 ## Task
-Put one (1) more bananas in the grey bin.
+Put exactly one more banana into the grey bin.
 
 ## Difficulty
 RoboLab labels this task "moderate" (1 subtasks; attributes: semantics, counting); its success term (`object_in_container`) asks for exactly one of the three bananas outside the grey bin moved into it (no more). The tooling gives only thin primitives (move_ee on Isaac Lab's differential IK, joint moves, gripper, hold), so every grasp, transport and placement is the agent's to build. RoboLab ships no expert solution.

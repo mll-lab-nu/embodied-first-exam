@@ -18,7 +18,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/humanoidbench-loco-sit-simple-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.1): HumanoidBench sit_simple on the same frozen instance as humanoidbench-loco-sit-simple-i00-privileged. The agent only gets a client: /observe, /submit and /reset (head-camera RGB, joint proprioception, a pelvis IMU, a fixed room camera; joint-position chunks). Up to 50 resets (each a new episode from the frozen start), no privileged state, no reward; the sim service records the episodes and grades the last one as it ran (the live episode; nothing is replayed)."
+description = "STANDARD MODE (robot as a service, eai-standard/2.1): HumanoidBench sit_simple on the same frozen instance as humanoidbench-loco-sit-simple-i00-privileged. Task: Sit down on the chair right behind you and stay seated, upright and still. The agent only gets a client: /observe, /submit and /reset (head-camera RGB, joint proprioception, a pelvis IMU, a fixed room camera; joint-position chunks). Up to 50 resets (each a new episode from the frozen start), no privileged state, no reward; the sim service records the episodes and grades the last one as it ran (the live episode; nothing is replayed)."
 keywords = ["robotics", "humanoidbench", "mujoco", "h1", "locomotion", "standard-mode", "trajectory", "sit_simple"]
 
 [metadata]
@@ -72,6 +72,13 @@ build_timeout_sec = 1800.0
 cpus = 3
 memory_mb = 4096
 storage_mb = 10240
+
+# The robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): Harbor starts this server for the agent.
+[[environment.mcp_servers]]
+name = "efe-robot"
+transport = "stdio"
+command = "python3"
+args = ["/opt/tools/efe_mcp/server.py"]
 
 [verifier.environment]
 build_timeout_sec = 600.0

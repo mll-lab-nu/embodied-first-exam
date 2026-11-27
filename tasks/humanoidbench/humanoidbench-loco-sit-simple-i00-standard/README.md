@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:humanoidbench-0.2.0` |
 
 ## Task
+Sit down on the chair right behind you and stay seated, upright and still.
+
 Standard mode (robot as a service, `eai-standard/2.1`) of `humanoidbench-loco-sit-simple-i00-privileged`: the
 same frozen instance and the same success rule. HumanoidBench runs in the `sim` sidecar
 (`environment/docker-compose.yaml`, GPU on the sidecar for rendering), which holds the reward, judges the
@@ -32,14 +34,14 @@ one per control step (`dt` = 0.02 s, `interpolate="hold"`), as an agent would se
 episode the moment the return reaches the pass mark. No privileged information at run time.
 
 ## Verification
-`success` = live success: the episode the sim service ran reached the pass mark (HumanoidBench's own rule,
-judged on the live simulator; the episode ends there), for the last episode (the one after the last reset;
-earlier episodes are in `trajectory_live.f64` and `episode.jsonl`, not graded). Nothing is replayed to grade
-it (owner, 2026-10-17). The scene's start is checked against the frozen instance's recorded state
-when an episode begins (a mismatch is `instance_mismatch`, infrastructure). `tests/grade.py` reads
-`/data/final.json` and copies the evidence to `/logs/verifier/`: `trajectory.npz` (the deliverable,
-replayable) and `replay.mp4`, rendered from it in one pass after the verdict (a lost video never changes the
-verdict). The oracle (`solution/solve.sh`) scores 1; `nop` scores 0.
+`success` = live success: the episode the sim service ran reached the pass mark at some step (HumanoidBench's own rule,
+judged on the live simulator as the episode ran: reaching it does not end the episode, and it still counts when a fall
+or another failure rule ends the episode afterwards), for the last episode (the one after the last reset; earlier
+episodes are in `trajectory_live.f64` and `episode.jsonl`, not graded). Nothing is replayed to grade it (owner,
+2026-10-17). The scene's start is checked against the frozen instance's recorded state when an episode begins (a
+mismatch is `instance_mismatch`, infrastructure). `tests/grade.py` reads `/data/final.json` and copies the evidence to
+`/logs/verifier/`: `trajectory.npz` (the deliverable, replayable) and `replay.mp4`, rendered from it in one pass after
+the verdict (a lost video never changes the verdict). The oracle (`solution/solve.sh`) scores 1; `nop` scores 0.
 
 ## Resources
 Caps per container (PROTOCOL §6).

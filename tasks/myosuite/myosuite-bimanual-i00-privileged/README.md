@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:myosuite-0.1.1` |
 
 ## Task
-MyoSuite `myoChallengeBimanual-v0` (MyoArm + MPL, a musculoskeletal right arm and hand next to a motorized prosthetic left arm (the Modular Prosthetic Limb), 63 muscles and 17 other actuators): Pick up the object with the MyoHand, pass it to the prosthetic hand, and place it on the goal pillar. Success needs the object within about 15 cm of the pillar top after it has touched only the pillar for a tenth of a second, and MyoChallenge 2024's contact check on the object's whole history: the MyoHand held it for at least 1 s, the prosthetic hand held it for at least 1 s, it touches only the pillar at the end, and it never touched the table or the floor. The episode ends in failure if the object is dropped below a height of about 30 cm, or after 10 s.
+MyoSuite `myoChallengeBimanual-v0` (MyoArm + MPL, a musculoskeletal right arm and hand next to a motorized prosthetic left arm (the Modular Prosthetic Limb), 63 muscles and 17 other actuators): Pick up the object with your right hand, pass it to the prosthetic left hand, and set it on top of the goal pillar. Each hand must hold it for at least 1 s, and it must never touch the table or the floor.
 The MyoArm (right, muscles) and a prosthetic MPL arm (left, motors) stand at a table; an object lies in front of the MyoHand and a pillar marks the goal on the far side. The deliverable is one replayable trajectory of actuator commands (`/app/output/trajectory.npz`, `(T, 80)`, one row per 10 ms control step).
 
 ## Difficulty

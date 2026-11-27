@@ -64,8 +64,8 @@ Every image is public: Harbor pulls it.
   of straight down (handstand) or up (footstand), the IMU at least 0.40 m high (Playground aims at 0.55 / 0.53 m) and the
   feet of the lifted pair off the ground; no termination before: the up axis below -0.25, or a front leg's thigh, calf
   or hip on the floor (Playground's rule), and for the footstand the same for a hind leg (see below).
-- Standard episodes end on success (getup, hand/footstand), at the horizon, on a termination (a failure), on `done` or
-  on timeout. The joystick schedule is in `spec["command_schedule"]` and every response's `meta["command_now"]`; the gait
+- Standard episodes end at the agent's `POST /finish` (or `done`), at the horizon, on a termination (a failure) or on
+  timeout; a success never ends them ("Agent-ended episodes" below). The joystick schedule is in `spec["command_schedule"]` and every response's `meta["command_now"]`; the gait
   in `spec["gait"]`. Pushes are not announced in standard mode.
 
 ## Modes
@@ -144,7 +144,7 @@ Outside Harbor, the standard service run on each reference (`std_local` check): 
   beside `grader_error = 1`.
 - **Resets.** The quadruped standard tasks allow 10 resets: `RCB_RESET_BUDGET` (the compose files' default 10; 0 = a
   single episode), `POST /reset` (JSON or RCB1 `{cameras, video_fps, depth}`, no physics) abandons the running or ended
-  episode and restarts from the frozen start; 409 after a success, once the agent's time is up and once the budget is
+  episode and restarts from the frozen start; 409 after `/finish`, once the agent's time is up and once the budget is
   spent; only the last episode is graded (`trajectory.npz` holds its rows); `meta` / `/status` add `episode`,
   `resets_left`, `control_steps_total`; `final.json` and `reward.json` add `resets`, `reset_budget`, `episodes`. Crash
   recovery replays the journal with the committed resets. `server_mj.py` has the same optional capability (default 0):
@@ -173,6 +173,20 @@ Outside Harbor, the standard service run on each reference (`std_local` check): 
   the agent's calls (`sim_crashed_on_call`), a simulator error from a call (2.2 / 2.1: `sim_error`, the agent's 0; 2.3:
   the layer's own rule, PROTOCOL §3), a fall, a timeout are the agent's result. A video that fails is only a missing
   video.
+
+### Agent-ended episodes
+
+Every standard and realtime task sets `RCB_AGENT_END "1"` in its sim service (PROTOCOL §3; ALOHA and Panda:
+`server_mj.py`; the quadrupeds' standard tasks: `sim/server.py` with the 2.2 layer `rcb_agent_end.py`; realtime:
+`rcb_service.py`). A success never ends the episode and is never shown: the task's check is still run (after every call,
+or for the quadrupeds after every control step) and only recorded. The agent ends the episode with `POST /finish`
+(reason `finished`; a quadruped's `done` action is the same end); the end of its session (`timeout`) and the horizon
+(`step_limit`) end it too, and each is judged on the state it ends in (end judgement `state`: the task's check on the
+steps executed, so a getup or two-leg stand must have held its pose through the last steps, and a joystick episode
+passes only at the end of its schedule). The termination rule (a fall, a joint out of range) still ends the episode with
+0. Resets stay possible until `POST /finish`. `final.json` adds the shared fields (`success_signal`, `ended_by`,
+`end_judgement`, `hidden_success_seen`, `hidden_success_first_step`, `trial_hidden_success_seen`, `finish_time_s`).
+Without `RCB_AGENT_END` the service behaves as described above.
 
 ## Realtime (`eai-standard/2.3`)
 The dynamic families (PROTOCOL §2: each task's `[metadata] dynamics`) get a `-realtime` twin. Among the quadrupeds that is **BarkourJoystick** (its torso is pushed 12 times at
@@ -205,7 +219,7 @@ The task directories are the deliverable; the tooling that built them is kept ou
 ## Standard-mode service details
 
 **MuJoCo service (DexToolBench, MuJoCo Playground manipulation; `eai-standard/2.1`).** Same endpoints and RCB1 frames,
-served by `images/mujoco/limited/server_mj.py`. Differences: one action type, `joint_position` with the task's own
+served by `embodied_first_exam/benchmarks/mujoco-playground/sim/server_mj.py`. Differences: one action type, `joint_position` with the task's own
 actuator layout (DexToolBench 29, ALOHA 14, Panda 8), rows `dt` apart where `dt` is a multiple of `control_dt` (1/60 s
 DexToolBench, 1/50 s Playground), hold or linear interpolation per control step. Actions are sent as **float64** (MuJoCo
 on CPU replays bit-exactly, and float32 rounding changes a chaotic tool swing). `meta.task` carries the task definition
@@ -216,7 +230,7 @@ principal_x / sensor_x, cy = H / 2 + H × principal_y / sensor_y; ALOHA's overhe
 216.45 px) and camera-to-world pose: the viewpoint the image is rendered from (not MuJoCo's left-eye camera), in the
 state the response ends in, one pose per returned frame (`cam2world_gl/<cam>`). Cameras carry `moving` (true for ALOHA's wrist cameras). `final.json` is `finalized` as soon as the
 live episode's verdict is in it; the video is rendered afterwards and sets `video_done`, which is what the collect hook waits
-for (the MetaWorld+ service, `images/metaworld/standard/server_mw.py`, follows the same rules). DexToolBench's own eval
+for (the MetaWorld+ service, `embodied_first_exam/benchmarks/metaworldplus/sim/server_mw.py`, follows the same rules). DexToolBench's own eval
 gives each goal 10 s; here the standard twins have **no per-goal limit** and **20 resets** (the optional reset
 capability) and an episode cap of 360,000 control steps (100 min of
 robot time, `spec.max_control_steps`), while the privileged tasks give each goal 30 s (replayed offline, free resets).

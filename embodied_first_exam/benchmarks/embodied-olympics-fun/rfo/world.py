@@ -835,9 +835,14 @@ class World:
         return self.ref.success
 
     # ------------------------------------------------------------------ one control step
+    run_after_done = False                          # (agent-ended episodes: see step())
+
     def step(self, raw) -> bool:
-        """One control step of a sim row. Returns True when the episode is over."""
-        if self.ref.done:
+        """One control step of a sim row. Returns True when the episode is over. With `run_after_done` (a
+        standard-mode service whose episodes the agent ends, PROTOCOL §3) the physics goes on after the referee's
+        call, which stays as it was made (the referee does nothing once it is done); without it a step after the call
+        is refused."""
+        if self.ref.done and not self.run_after_done:
             raise RuntimeError("the episode is over")
         raw = np.asarray(raw, dtype=np.float64)
         L = self.L

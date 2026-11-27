@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:embodiedswe-0.3.0` |
 
 ## Task
+Put the SO101 arm's elbow together with the screwdriver: seat the servo in the upper arm and fasten it with the four small screws, then fit the forearm onto the servo and fasten it with the eight larger screws.
+
 Assemble the SO101 arm's elbow: servo, four tab screws, forearm, eight horn screws (two Frankas, operational-space control). EmbodiedSWE's `assembly.so101.bimanual_franka.osc` task (robobench at commit `67f44e8a2ca5`), privileged mode, with a program as the
 deliverable: `solution/solve.py` exposing `solve(env)`.
 

@@ -1,5 +1,10 @@
-# Seed 202 of this match (tests/match_instance.json under this directory: the privileged verifier's frozen settings); the text
-# that names the seed: compose RO_SEED, the privileged instruction, the full-simulator adapter's INSTANCES.
+[[replace]]
+old = "## Robot Interface\nTwo simulated Unitree G1 humanoids fence one epee bout, phrase by phrase: before each phrase each fencer chooses one of\nnine tactical intentions. You are seat `A` against the scripted level-2 fencer, seed 35: the same fixed bout as the\nstandard twin (`embodied-olympics-match-fencing-bout-i02-standard`), with the same robot, actions, rules, limits and\nopponent. It is turn-based: the bout waits for your decision. You have the full simulator to develop with; you hand in a\nprogram that plays the bout."
+new = "## Robot Interface\nTwo simulated Unitree G1 humanoids fence one epee bout, phrase by phrase: before each phrase each fencer chooses one of\nnine tactical intentions. You are seat `A` against the scripted level-2 fencer, seed 202: the same fixed bout as the\nstandard twin (`embodied-olympics-match-fencing-bout-i02-standard`), with the same robot, actions, rules, limits and\nopponent. It is turn-based: the bout waits for your decision. You have the full simulator to develop with; you hand in a\nprogram that plays the bout."
+
+[[replace]]
+old = "### Session\n```python\nfrom tools.fullsim.turn import TurnSession\ns = TurnSession(\"fencing\", level=2, seed=35)\ns.spec()          # the action interface and the rules (as the twin's `game spec`)\ns.state()         # the observation\ns.world           # the whole mutable bout\ns.act(command)    # plays your intention for the next phrase and the opponent's answer, at once\ns.reset()         # rebuilds the whole same-seed bout\n```\nThe simulator and its source are at `/opt/fullsim`; `/opt/fullsim/README.md` documents the program API, the `truth`\nfields, the units and a self-test of `program.py`."
+new = "### Session\n```python\nfrom tools.fullsim.turn import TurnSession\ns = TurnSession(\"fencing\", level=2, seed=202)\ns.spec()          # the action interface and the rules (as the twin's `game spec`)\ns.state()         # the observation\ns.world           # the whole mutable bout\ns.act(command)    # plays your intention for the next phrase and the opponent's answer, at once\ns.reset()         # rebuilds the whole same-seed bout\n```\nThe simulator and its source are at `/opt/fullsim`; `/opt/fullsim/README.md` documents the program API, the `truth`\nfields, the units and a self-test of `program.py`."
 
 [[replace]]
 old = "RO_SEED: \"35\""
@@ -16,10 +21,6 @@ new = "level=2, seed=202)"
 [[replace]]
 old = "--seed 35 "
 new = "--seed 202 "
-
-[[replace]]
-old = ", seed 35:"
-new = ", seed 202:"
 
 [[replace]]
 old = ", seed 35,"

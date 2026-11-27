@@ -1,1 +1,1 @@
-Keep the wrist locked. Turn only the top layer of the cube a quarter turn counter-clockwise, as seen from above, then turn it back to where it started, and then turn it a quarter turn counter-clockwise again and hold it still. Stabilize the free cube body with other fingers; no external support or object actuation is allowed.
+Keep the wrist locked and hold the cube body steady with your other fingers. Turn only the top layer a quarter turn counter-clockwise, as seen from above, then back to where it started, then a quarter turn counter-clockwise again, and hold it still.

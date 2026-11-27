@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:robotwin-0.1.2` |
 
 ## Task
-RoboTwin 2.0 scan_object (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Pick up the scanner with one arm and the tea box with the other. Keep holding both, with the scanner's head pointed straight at the middle of the box and almost touching it. Frozen scene instance (RoboTwin seed 60417).
+RoboTwin 2.0 scan_object (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Pick up the scanner with one arm and the tea box with the other, and keep holding both, with the scanner's head pointed straight at the middle of the box and almost touching it. Frozen scene instance (RoboTwin seed 60417).
 
 ## Difficulty
 Bimanual: the two grasps and the two lifts are executed simultaneously (`env.move(actions_left, actions_right)`), then the box is held at a fixed pose and the scanner's functional point must be aimed along its -z axis at the box within 2.5 cm laterally and between 0 and 7 cm along the axis, with both grippers still closed. The predicate is orientation-sensitive (scanner head direction), the objects are randomly rotated meshes with limited grasp contact points, and the expert fails on 3 of 6 uncommon seeds (about 2.3k physics steps when it succeeds).
@@ -45,4 +45,4 @@ Caps per container (PROTOCOL §6).
 | RoboTwin eval step limit | 500 (policy-eval budget upstream; indicative of task length) |
 
 ### Goal
-Pick up the scanner with one arm and the tea box with the other. Keep holding both, with the scanner's head pointed straight at the middle of the box and almost touching it.
+Pick up the scanner with one arm and the tea box with the other, and keep holding both, with the scanner's head pointed straight at the middle of the box and almost touching it.

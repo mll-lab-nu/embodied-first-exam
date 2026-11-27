@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/embodiedswe-cutting-slice-franka-osc-i00-privileged"
-description = "EmbodiedSWE cutting.slice.franka.osc (robobench at 67f44e8a2ca5, Isaac Lab 2.3.2 / Isaac Sim 5.1, GPU PhysX): deliver a program, solution/solve.py with solve(env), that completes the task when the verifier runs it against a fresh simulator built from the frozen instance (seed 0)."
+description = "EmbodiedSWE cutting.slice.franka.osc (robobench at 67f44e8a2ca5, Isaac Lab 2.3.2 / Isaac Sim 5.1, GPU PhysX): Pick up the knife and cut the carrot into slices along its scored lines, keeping every piece on the chopping board. Deliver a program, solution/solve.py with solve(env), that completes the task when the verifier runs it against a fresh simulator built from the frozen instance (seed 0)."
 keywords = ["robotics", "embodiedswe", "isaac-lab", "isaac-sim", "code-as-policy", "program", "cutting", "tool-use", "franka", "cutting.slice.franka.osc"]
 
 [metadata]

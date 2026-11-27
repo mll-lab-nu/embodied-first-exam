@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:autobio-0.1.0` |
 
 ## Task
-AutoBio's `thermal_mixer` (Operate thermal mixer panel) on the same frozen instance as `autobio-thermal-mixer-i00-privileged`: Set the thermal mixer by pressing the buttons of its panel: time 30 s, temperature 33 °C, mixing speed 600 rpm. The panel's display shows the current settings (time, set / actual temperature, speed), and each setting has an up and a down button. The episode is judged in the state in which it ends: success iff the panel is then set to exactly these three values. The score reported as `progress` is 0.5 x temperature + 0.3 x time + 0.2 x speed, each term the fraction of the way from the initial to the target value.
+AutoBio's `thermal_mixer` (Operate thermal mixer panel) on the same frozen instance as `autobio-thermal-mixer-i00-privileged`: Set the thermal mixer to time 30 s, temperature 33 °C, mixing speed 600 rpm, with the buttons on its front panel.
 On the bench: a thermal mixer (an Eppendorf ThermoMixer C model) with a thermoblock on top and a front panel: a display and buttons for time, temperature and speed (up and down each), menu navigation, five program keys, `short` and `start/stop`. Standard mode (eai-standard/2.2): the agent drives the robot through a client in one episode, with only its proprioception and the scene's cameras.
 
 ## Difficulty

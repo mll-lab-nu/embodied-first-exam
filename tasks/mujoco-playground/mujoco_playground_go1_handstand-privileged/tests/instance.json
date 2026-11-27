@@ -45,7 +45,7 @@
   0.0,
   0.0
  ],
- "text": "Make the Unitree Go1 do a handstand: balance on its front legs, nose down, hind legs in the air, for 2 s.",
+ "text": "Make the robot do a handstand: balance on its front legs, nose down and hind legs in the air, for 2 s.",
  "facts": {
   "start_xy_m": [
    -0.396,

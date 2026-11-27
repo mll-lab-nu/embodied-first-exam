@@ -13,7 +13,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/dexjoco-hammer-nail-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.2): DexJoCo hammer_nail (a Franka Panda arm with a 16-DoF Allegro hand) on the same frozen instance as dexjoco-hammer-nail-i00-privileged. Pick up the hammer and drive the nail into the wooden block by striking the nail's head with it. The agent only gets a client: calibrated cameras (RGB, optional depth), the robot's joints and tcp poses, tcp-target + hand-joint chunks at 50 Hz, the robot's kinematics; one episode, no reset, no object state; the sim service records the episode and grades it live (no grading replay)."
+description = "STANDARD MODE (robot as a service, eai-standard/2.2): DexJoCo hammer_nail (a Franka Panda arm with a 16-DoF Allegro hand) on the same frozen instance as dexjoco-hammer-nail-i00-privileged. Pick up the hammer and hammer the nail about 4 cm into the wooden block. The agent only gets a client: calibrated cameras (RGB, optional depth), the robot's joints and tcp poses, tcp-target + hand-joint chunks at 50 Hz, the robot's kinematics; one episode, no reset, no object state; the sim service records the episode and grades it live (no grading replay)."
 keywords = ["robotics", "dexjoco", "mujoco", "allegro", "dexterous-manipulation", "standard-mode", "robot-as-a-service", "hammer_nail"]
 
 [metadata]
@@ -66,6 +66,13 @@ build_timeout_sec = 1800.0
 cpus = 4
 memory_mb = 10240
 storage_mb = 10240
+
+# The robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): Harbor starts this server for the agent.
+[[environment.mcp_servers]]
+name = "efe-robot"
+transport = "stdio"
+command = "python3"
+args = ["/opt/tools/efe_mcp/server.py"]
 
 [verifier.env]
 RCB_LIMITS_ENFORCE = "${RCB_LIMITS_ENFORCE:-0}"

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robolab-0.2.2` |
 
 ## Task
-Sort all rubiks cubes into the bin.
+Put the 3 Rubik's cubes in the grey bin.
 
 ## Difficulty
 RoboLab labels this task "complex" (3 subtasks; attributes: sorting); its success term (`object_in_container`) asks for 3 objects into grey_bin. The tooling gives only thin primitives (move_ee on Isaac Lab's differential IK, joint moves, gripper, hold), so every grasp, transport and placement is the agent's to build. RoboLab ships no expert solution.

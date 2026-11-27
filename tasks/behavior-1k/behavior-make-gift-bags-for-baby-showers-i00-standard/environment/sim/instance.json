@@ -3,7 +3,7 @@
  "challenge_task": "make_gift_bags_for_baby_showers",
  "instance_id": 301,
  "mode": "public_test",
- "text": "Make two gift bags in the living room. The two sacks lie on the breakfast table, the two toy dice stand on the cabinet, and the two wafers are inside that cabinet. Move both sacks onto the coffee table and put one toy die and one wafer into each sack.",
+ "text": "Put both sacks on the coffee table with one toy die and one wafer in each.",
  "robot_config": "r1pro_primitives_eval.yaml",
  "robot_config_sha": "d9d0c8bceea2",
  "state_sha": "0d037790f62e2bb2",

@@ -9,10 +9,10 @@
 | Family / instance | `throw_bottles` / seed 0 (allowed seeds: [0, 1, 6]; PROTOCOL §2) |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:abc-sim-0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe:abc-sim-0.5.1` |
 
 ## Task
-ABC Sim `throw_plastic_bottles_in_bin` (two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each) side by side at the near edge of a table, facing +x (the left arm is the one at +y)): Throw or put all four plastic bottles into the bin. Success: all 4 bottles are inside the bin at the same time: each bottle's centre of mass within the bin's inner wall radius of the bin's axis, not below the bin's floor, and at most about 0.11 m (a little over half a bottle length) above its rim (a bottle may still be held). The goal must hold for 30 consecutive control steps (1.02 s); the episode then ends in success.
+ABC Sim `throw_plastic_bottles_in_bin` (two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each) side by side at the near edge of a table, facing +x (the left arm is the one at +y)): Get all four plastic bottles into the bin.
 Four empty plastic bottles lie on the table; a round bin stands on the table (it is a loose object, not fixed). The robot is a service; the episode it runs is graded.
 
 ## Difficulty

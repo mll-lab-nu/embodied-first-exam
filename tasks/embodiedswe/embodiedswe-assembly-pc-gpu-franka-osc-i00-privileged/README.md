@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:embodiedswe-0.3.0` |
 
 ## Task
+Install the graphics card in the PC: press it fully into the motherboard's PCIe x16 slot.
+
 Install a graphics card in a PC case (Franka, operational-space control). EmbodiedSWE's `assembly.pc_gpu.franka.osc` task (robobench at commit `67f44e8a2ca5`), privileged mode, with a program as the
 deliverable: `solution/solve.py` exposing `solve(env)`.
 

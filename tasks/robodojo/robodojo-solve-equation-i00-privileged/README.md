@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-An arithmetic equation (a op b = result) is laid out on pads with exactly one number or operator missing; pick the correct missing digit or operator tile from the loose tiles on the table, place it on the empty pad, and bring the arms home. (RoboDojo's `solve_equation`). RoboDojo capability dimension: Open. Instance i00 is RoboDojo's own evaluation layout
+Complete the equation on the pads: put the loose tile that makes it true on the empty pad, face up and the same way round as the tiles already there. Then move both arms back to where they started. (RoboDojo's `solve_equation`). RoboDojo capability dimension: Open. Instance i00 is RoboDojo's own evaluation layout
 `arx_x5/0/solve_equation_0.json` (sha256 `df2d8ee1b5e6b3d9`), frozen in `instance.json`. The deliverable is one replayable trajectory of
 RoboDojo's 14-D joint action at 25 Hz (`/app/output/trajectory.npz`), graded by RoboDojo's own reward check for the task,
 with no step cap (RoboDojo's own evaluation gives a policy 300 actions; PROTOCOL §3).

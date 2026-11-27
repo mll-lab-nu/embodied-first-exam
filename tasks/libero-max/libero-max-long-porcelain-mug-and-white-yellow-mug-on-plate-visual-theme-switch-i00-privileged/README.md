@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:libero-max-0.1.1` |
 
 ## Task
-LIBERO-MAX case `pro-position-10-t04-i00-visual_theme_switch-d1-p195`: a Franka Panda arm at a table, instructed **"Put the white mug on the left plate and put the yellow and white mug on the right plate."**, on a LIBERO-PRO variant
+LIBERO-MAX case `pro-position-10-t04-i00-visual_theme_switch-d1-p195`: a Franka Panda arm at a table, instructed **"Put the white mug on the plate on the robot's right and the yellow-and-white mug on the plate on the robot's left."**, on a LIBERO-PRO variant
 of a libero_10 task (position). Online event (visual-theme switch): the first time the gripper comes within
 0.18 m of `porcelain_mug_1`, LIBERO-MAX changes the scene once (the image colours change (channels permuted (1, 2, 0), scaled (1.25, 0.7, 1.1))). The deliverable is one
 replayable trajectory of LIBERO's OSC control steps (`/app/output/trajectory.npz`, `(T, 7)`, T ≤ 520), graded by

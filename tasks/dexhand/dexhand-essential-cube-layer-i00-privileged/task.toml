@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/dexhand-essential-cube-layer-i00-privileged"
-description = "Keep a free cube body steady while independently turning its top layer through an ordered quarter-turn reversal."
+description = "Keep a free cube body steady while independently turning its top layer through an ordered quarter-turn reversal. Task: Keep the wrist locked and hold the cube body steady with your other fingers. Turn only the top layer a quarter turn counter-clockwise, as seen from above, then back to where it started, then a quarter turn counter-clockwise again, and hold it still."
 keywords = ["robotics", "dexterous-hand", "mujoco", "sharpa-wave", "wuji-hand-2.2", "essential_articulated"]
 
 [metadata]

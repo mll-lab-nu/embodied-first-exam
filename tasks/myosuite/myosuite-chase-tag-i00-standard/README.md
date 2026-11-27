@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:myosuite-0.1.1` |
 
 ## Task
-MyoSuite `myoChallengeChaseTagP1-v0` (MyoLegs, 80 muscles) on the same frozen instance as `myosuite-chase-tag-i00-privileged`: Tag the opponent within 20 s: bring your pelvis within about half a metre of it, measured along the ground. This is MyoChallenge 2023 ChaseTag P1, task CHASE. The episode ends in failure at the time limit, if you leave the arena, or if you fall, with your pelvis dropping below about half a metre.
+MyoSuite `myoChallengeChaseTagP1-v0` (MyoLegs, 80 muscles) on the same frozen instance as `myosuite-chase-tag-i00-privileged`: Tag the opponent: get your pelvis within 0.5 m of it.
 A musculoskeletal body with two legs stands in a square arena; an opponent stands somewhere in it (in this frozen instance it does not move). Standard mode (eai-standard/2.2): the agent drives the body through a client, with only its own proprioception and the scene's cameras, and 10 resets (only the last episode is graded).
 
 ## Difficulty
@@ -41,7 +41,7 @@ Caps per container (PROTOCOL §6).
 | Upstream | MyoSuite 2.12.2 (Apache-2.0) on MuJoCo 3.6.0, the models that ship in its wheel |
 | Service | `environment/sim/server.py` (the adapter) on the shared 2.2 layer `rcb_limited.py` (`embodied_first_exam/standard/`); cameras `topview`, `opponent_view`, `agent_view` (640 x 480); forward kinematics of the body's links |
 | Resources | 4 CPUs, no GPU (CPU physics, OSMesa rendering); after the agent's phase the collect hook only renders the video (one pass over the graded episode), it replays nothing to grade |
-| Reset budget | 10 (`RCB_RESET_BUDGET`, compose default; PROTOCOL §2): `POST /reset` starts a new episode from the frozen instance; only the last episode is graded, a success ends the trial; results under another budget are reported separately |
+| Reset budget | 10 (`RCB_RESET_BUDGET`, compose default; PROTOCOL §2): `POST /reset` starts a new episode from the frozen instance; only the last episode is graded, when the agent sends `POST /finish` or its session ends (a success ends nothing); results under another budget are reported separately |
 
 ### Provenance
 The frozen instance (`environment/sim/instance.npz`) and its scene facts were made at generation time; see `tasks/myosuite/README.md`.

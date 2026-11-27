@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0` |
 
 ## Task
-A small cube, the part, rides a powered roller conveyor, and an unpowered cart is already coasting along a straight channel towards a passive hinged switch that splits the track into two diagonal branches. Grasp the part with both fingers while it is still moving and lift it. Drop it into the moving cart without stopping the cart, which must keep coasting until the switch is set. Then, before the cart reaches the switch, push the switch with a finger so that it will steer the cart into the branch selected for this instance, which is given under Goal geometry. The cart must then be deflected by the switch into that branch. Finally, grasp the part again, lift it out of the cart and hold it up before the cart runs too far down the branch. The deliverable is one replayable trajectory of 100 Hz joint-target actions (`/app/output/trajectory.npz`,
+Grasp the part from the moving conveyor, lift it about a hand's length and drop it into the coasting cart without stopping the cart. Before the cart reaches the switch, push the switch with a finger so that it sends the cart into the branch nearer to you, then lift the part back out of the cart and hold it up. The deliverable is one replayable trajectory of 100 Hz joint-target actions (`/app/output/trajectory.npz`,
 8 values per row), graded by the task's own staged success check: 5 phases (`moving_part_pickup`, `load_coasting_cart`, `physical_switch_operation`, `selected_branch`, `payload_recovery`), in order,
 with no failure event and no safety-limit violation, within the task's horizon of 25 s.
 

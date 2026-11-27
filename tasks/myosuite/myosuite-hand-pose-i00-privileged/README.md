@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:myosuite-0.1.1` |
 
 ## Task
-MyoSuite `myoHandPoseFixed-v0` (MyoHand, a musculoskeletal model of a human forearm and hand, 39 muscles): Put the hand in the target pose and hold it for a full second, with the norm of the 23 hand and wrist joint-angle errors below about 40 degrees. The episode ends in failure if that norm goes above a full turn, about 360 degrees. The target joint angles are given below. Target joint angles (rad): pro_sup +0.000, deviation +0.000, flexion +0.000, cmc_abduction -0.090, cmc_flexion +0.082, mp_flexion -0.682, ip_flexion -0.515, mcp2_flexion +0.000, mcp2_abduction -0.014, pm2_flexion -0.046, md2_flexion +0.000, mcp3_flexion +0.676, mcp3_abduction -0.021, pm3_flexion +0.770, md3_flexion +0.660, mcp4_flexion +0.000, mcp4_abduction +0.000, pm4_flexion +0.000, md4_flexion +0.000, mcp5_flexion +0.479, mcp5_abduction -0.099, pm5_flexion +0.958, md5_flexion +0.000.
+MyoSuite `myoHandPoseFixed-v0` (MyoHand, a musculoskeletal model of a human forearm and hand, 39 muscles): Put your hand in the target pose that the see-through fingertip markers show, and hold it for a second. The pose's joint angles are at the end of Robot Interface.
 The hand starts in its rest posture; translucent markers show where the five fingertips are in the target pose. The deliverable is one replayable trajectory of actuator commands (`/app/output/trajectory.npz`, `(T, 39)`, one row per 20 ms control step).
 
 ## Difficulty

@@ -12,11 +12,11 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:myosuite-0.1.1` |
 
 ## Task
-MyoSuite `myoChallengeOslRunFixed-v0` (MyoLeg + OSL, a free-standing musculoskeletal model of a human whose right leg is an Open-Source Leg knee-ankle prosthesis, 54 muscles and 2 other actuators): Run forward along the track for 29 m to the finish, MyoChallenge 2024 OSL Run's own win condition, staying on your feet and within about a metre of the track's centre line. The right leg is the prosthesis (`osl_knee_angle_r`, `osl_ankle_angle_r`) and is driven by its own controller, so you command only the 54 muscles. The episode ends in failure if you fall, leave the track sideways, or move about 2 m backwards. There is no time limit.
+MyoSuite `myoChallengeOslRunFixed-v0` (MyoLeg + OSL, a free-standing musculoskeletal model of a human whose right leg is an Open-Source Leg knee-ankle prosthesis, 54 muscles and 2 other actuators): Run 29 m down the track to the finish, staying on your feet and within 1 m of the track's centre line.
 A musculoskeletal body whose right leg is an Open-Source Leg prosthesis (knee and ankle motors driven by its own controller) stands at the start of a straight, flat running track. The deliverable is one replayable trajectory of actuator commands (`/app/output/trajectory.npz`, `(T, 56)`, one row per 5 ms control step).
 
 ## Difficulty
-First-pass rating: hard. The action is muscle-level (54 muscles, each only pulling, several crossing more than one joint, with activation delays): the agent has to build its own joint control from muscle excitations. Success is the challenge's own event; nothing short of it counts, and the challenge's failure conditions and time limit apply.
+First-pass rating: hard. The action is muscle-level (54 muscles, each only pulling, several crossing more than one joint, with activation delays): the agent has to build its own joint control from muscle excitations. Success is the challenge's own event (reaching the finish 29 m down the track); nothing short of it counts, and the challenge's failure conditions apply (a fall, more than 1 m off the centre line, 2 m backwards). There is no time limit.
 
 ## Reference solution
 None. Solvability evidence: a successful model trial on this frozen instance: Claude Code + Claude Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-10-06), trial `myosuite-osl-run-i00-privileged__cWgLuKv` (6714 rows); today's verifier scores its trajectory 1 in two fresh trials (tasks/myosuite/README.md); human review in PR #65.

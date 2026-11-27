@@ -79,8 +79,8 @@ class Task(TaskBase):
                   clay_friction=0.6, start_behind_line_m=0.30, opp_start_s=0.5, opp_vx=0.8, opp_wz_max=1.0,
                   opp_turn_gain=2.0, opp_self_collision=0, fall_z_m=0.35, start_x_m=0.71, mound_half_m=3.35)   # (the last two: derived)
 
-    sentence = ("Win a sumo bout: force the opponent robot out of the ring, or make any part of it other than its "
-                "feet touch the ground, before the same happens to you.")
+    sentence = (("Win a sumo bout: make your opponent step out of the ring or touch down with anything but its "
+                 "feet before you do."))
     rules = ("The bout is on a dohyo: a clay mound {mound_height_m} m high, {mound_size_m} m square, with a ring of "
              "straw bales whose inside edge is a circle {ring_diameter_m} m across (the bales stand "
              "{bale_proud_m} m proud of the clay). You stand facing the opponent behind your starting line "
@@ -311,6 +311,11 @@ class Task(TaskBase):
         side, rest = bn.split("_", 1)
         return f"{side}_{PART_OF_BODY.get(rest, rest)}"
 
+    def actuate(self, w, ref):
+        j = ref.ph % w.SUB                                # the opponent's motors for the next physics step
+        if j:
+            self.arb.apply(w.d, j + 1)
+
     def substep(self, w, ref):
         tr = self.trackers
         lost, kick, touch = self._verdicts(w, ref)
@@ -328,9 +333,6 @@ class Task(TaskBase):
             ref.event("opponent lost", how=lost[2][0], part=lost[2][1])
             if ref.stage("win", how=lost[2][0]):
                 ref.succeed()
-        j = ref.ph % w.SUB                                # the opponent's motors for the next physics step
-        if j:
-            self.arb.apply(w.d, j + 1)
 
     def privileged(self, w):
         ox, oy, oyaw = self._opp_pose(w)

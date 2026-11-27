@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:libero-max-0.1.1` |
 
 ## Task
-LIBERO-MAX case `pro-visual-noise-glare-object-t08-i07-distractor_burst-d1-p195`: a Franka Panda arm at a table, instructed **"Pick up the chocolate pudding and place it in the basket."**, on a LIBERO-PRO variant
+LIBERO-MAX case `pro-visual-noise-glare-object-t08-i07-distractor_burst-d1-p195`: a Franka Panda arm at a table, instructed **"Put the chocolate pudding in the basket."**, on a LIBERO-PRO variant
 of a libero_object task (visual_noise_glare). Online event (distractor burst): the first time the gripper comes within
 0.18 m of `chocolate_pudding_1`, LIBERO-MAX changes the scene once (5 other objects appear on the table (`ketchup_1`, `orange_juice_1`, `alphabet_soup_1`, `bbq_sauce_1`, `salad_dressing_1`)). The deliverable is one
 replayable trajectory of LIBERO's OSC control steps (`/app/output/trajectory.npz`, `(T, 7)`, T ≤ 280), graded by

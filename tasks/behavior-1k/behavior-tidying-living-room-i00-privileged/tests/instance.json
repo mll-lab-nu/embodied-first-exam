@@ -3,7 +3,7 @@
  "challenge_task": "tidying_living_room",
  "instance_id": 301,
  "mode": "public_test",
- "text": "Tidy the living room. Put the potted plant and the newspaper, which lie on the floor, on the coffee table; put the hardback book from the coffee table inside a bookcase; and put the notebook from the coffee table on the desk.",
+ "text": "Put the plant and the newspaper on the coffee table, the hardback into a bookcase, and the notebook on the desk.",
  "robot_config": "r1pro_primitives_eval.yaml",
  "robot_config_sha": "d9d0c8bceea2",
  "state_sha": "6d104fc93899a146",

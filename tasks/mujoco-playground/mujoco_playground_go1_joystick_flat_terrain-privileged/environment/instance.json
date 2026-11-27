@@ -71,7 +71,7 @@
    "wz": 0.0
   }
  ],
- "text": "Make the Unitree Go1 follow the joystick command schedule on flat ground for the whole 20 s episode without falling over.",
+ "text": "Make the robot follow the joystick's commands for the whole schedule without falling over.",
  "facts": {
   "start_xy_m": [
    -0.493,

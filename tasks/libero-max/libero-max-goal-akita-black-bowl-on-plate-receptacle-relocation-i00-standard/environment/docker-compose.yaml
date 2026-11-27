@@ -21,9 +21,10 @@ services:
     tmpfs:
       - /tmp                                            # robosuite writes its log there
     environment:
+      RCB_AGENT_END: "1"                               # agent-ended episodes (PROTOCOL §3)
       RCB_INSTANCE: /srv/instance.json
       RCB_TASK_TEXT: "Put the bowl on the plate."
-      RCB_EPISODE: "Ends when the task succeeds (reason \"success\"), after 9000 control steps (\"failed\"), when your time is up (\"timeout\"), or on a simulator error (\"error\")."
+      RCB_EPISODE: "Ends at your POST /finish, after 9000 control steps (\"step_limit\"), when your time is up (\"timeout\"), or on a simulator error (\"error\"); judged on how things stand when it ends (a success does not end it)."
       RCB_WALL_CLOCK_S: "1800.0"
       RCB_MAX_CONTROL_STEPS: "9000"
       RCB_IMAGE_HW: "256"

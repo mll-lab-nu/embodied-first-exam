@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Pick up the broom, hand it to the right arm, sweep all the small cubes into the dustpan, which stays on the table, and leave the broom on the dustpan's open right side. Then bring both arms back to where they started. (RoboDojo's `sweep_blocks`). RoboDojo capability dimension: Generalization. Instance i00 is RoboDojo's own evaluation layout
+Sweep all the small cubes into the dustpan, keeping the dustpan flat on the table, and leave the broom well to the right of the dustpan. Then move both arms back to where they started. (RoboDojo's `sweep_blocks`). RoboDojo capability dimension: Generalization. Instance i00 is RoboDojo's own evaluation layout
 `arx_x5/0/sweep_blocks_0.json` (sha256 `1eebf38dc48de8c8`), frozen in `instance.json`. The deliverable is one replayable trajectory of
 RoboDojo's 14-D joint action at 25 Hz (`/app/output/trajectory.npz`), graded by RoboDojo's own reward check for the task,
 with no step cap (RoboDojo's own evaluation gives a policy 1000 actions; PROTOCOL §3).

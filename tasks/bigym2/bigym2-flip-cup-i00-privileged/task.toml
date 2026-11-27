@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/bigym2-flip-cup-i00-privileged"
-description = "BiGym 2.0 flip-cup (Unitree G1 with GR00T-WBC, MuJoCo 3.8.1) in privileged mode: produce one replayable trajectory. Turn the upside-down cup over and stand it the right way up on the counter. Then let go, with both grippers off the cup. Frozen instance: upstream task flip_cup, seed 0."
+description = "BiGym 2.0 flip-cup (Unitree G1 with GR00T-WBC, MuJoCo 3.8.1) in privileged mode: produce one replayable trajectory. Turn the upside-down cup the right way up on the counter and let go. Frozen instance: upstream task flip_cup, seed 0."
 keywords = ["robotics", "bigym2", "mujoco", "unitree-g1", "humanoid", "loco-manipulation", "trajectory", "flip-cup"]
 
 [metadata]

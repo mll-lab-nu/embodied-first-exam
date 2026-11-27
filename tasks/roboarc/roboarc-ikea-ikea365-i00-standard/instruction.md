@@ -1,45 +1,35 @@
-# IKEA MuJoCo · IKEA 365+ serving stand — STANDARD MODE (robot as a service, eai-standard/2.4)
+# RoboARC · IKEA 365+ serving stand (standard)
 
-You control a robot (**two 7-DoF Franka Panda arms, each with the MuJoCo Menagerie Panda hand (two-finger, tendon-coupled)**; plain MuJoCo 3.14.0 on the CPU) **as if it were real hardware**: the simulator
-runs in a service you cannot open. You get one client and one episode: cameras, proprioception and joint commands.
-**Task:** To rebuild the IKEA 365+ serving stand, take the screw out of member A and set it down on its own, away from both members, lay member B across member A, hold the screw upright and still with its tip just inside the hole in member B, and screw it in through both members until it seats. Then lift the stand more than 10 cm off the bench, turn it upside down while it is in the air, set it down, and place the bowl on it.
+## Task
+Rebuild the IKEA 365+ serving stand: take the screw out of member A and set it down by itself, away from both members,
+lay member B across member A, and screw the screw back in through both members until it seats. After that, lift the
+stand about a hand's width off the bench, turn it upside down in the air, set it down and put the bowl on it. Then let
+go of everything and move both arms clear.
 
-## Success requirements
+## Goal
+Success: these steps were done in that order, and at the end the screw is seated through both members, member B lies
+across member A, and the stand is upside down on the bench with the bowl on it, standing firmly on its own; no arm
+touches any part and everything is still. Forcing parts deep into each other breaks the simulation and ends the episode
+at once, without success.
 
-- The seven operations are accepted in this order: remove the screw, park the screw, cross the members, return the screw, reinstall the screw, turn the stand, place the bowl.
-- At the end the screw is retained in member A and aligned with its seated pose relative to both members, and member B is retained and aligned with member A (gates: axial 0.1 mm, lateral 0.6 mm, axis 1.5 degrees; member B may be rotated 180 degrees).
-- Released and settled: no robot contact with any part, every part slower than 0.025 m/s, the bench carries the parts; the bowl touches the members and member A is turned over (its z axis pointing down).
-- A support probe on a copy of the final state: the bench must carry the whole weight, and the weight plus a 2 N downward test load on member A (the grader applies it; it never acts during your episode), with the arms holding their last commands.
+When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts. Make sure
+everything is at rest when you send `/finish`.
 
-The benchmark's terminal rules, the same in every IKEA MuJoCo task, come on top of these requirements. When your rows end: (1) the requirements above hold; (2) the parts are released: no robot link touches any part; (3) every part is at rest: at most 0.01 m/s and 0.05 rad/s; (4) the simulation never broke down: no non-finite state, no MuJoCo BADQACC / BADQPOS / BADQVEL warning, no contact of a part deeper than 10 mm, at any time. The grader then holds your last row for 1.0 s more and requires (1)-(4) again at its end.
+Rules:
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+  benchmark's demonstrations, trained policies); trials are reviewed.
+- One episode, no reset: what you knock over stays knocked over.
+- You get only the cameras and the robot's own sensor readings: no object poses, no scene layout, no success signal.
 
-Here the service checks (1)-(4) after every `submit` and every `get_obs(seconds > 0)`. When they all hold, it also checks
-them after holding your last row 1.0 s more, on a copy (the robot is not moved): if that settled check passes too, the
-episode ends with success (`meta["reason"]` is `success`); if not, the episode goes on and you can still fix it
-(`meta["settle_failed"]` counts such checks). A breakdown ends the episode at once (`meta["reason"]` is
-`sim_breakdown`), with no success. An episode that ends otherwise (your time is up) is judged as it stands by the same
-two checks. The task is scored 1 only if the live episode succeeded; nothing is replayed afterwards.
+## Robot Interface
+Two 7-DoF Franka Panda arms, each with the MuJoCo Menagerie Panda hand (two-finger, tendon-coupled), at a table
+(RoboARC's IKEA furniture-assembly suite, MuJoCo). The robot runs as a service you reach through its client or its MCP
+tools, as if it were real hardware: one live episode.
 
-## Physics and mechanism
+`POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
-- Parts move only through contact with the robot, gravity and the scene's own mechanism. The M4 x 0.5 thread is exact convex pieces: the screw advances only by being turned. Two retention welds (screw to member A, member B to member A) switch on with the current relative pose once the reinstalled screw is seated.
-- Grasps are physical: friction from the finger contacts. Nothing attaches a part to a gripper, and there is no assist.
-
-## Rules (real-robot rules)
-- **No reset.** The episode ends on success (above), on a simulator breakdown, when your time is up, or on a simulator
-  error. What you do to the scene stays done: plan, observe, then act in small chunks.
-- **No privileged state.** You see what the cameras see (RGB, and depth when you ask for it) plus the robot's own state:
-  joint positions, velocities and actuator forces, gripper openings, tool-frame poses. Nothing tells you where the parts,
-  the table or the work surface are (no poses, positions or heights of the scene). The success check is not exposed; the
-  requirements above still apply in full.
-- **Your only budget is the time limit (`## Time limit`)**; there is no step budget. The service also ends the episode
-  itself (`meta["reason"]` is `timeout`; it is graded as it stands) when its own count of that limit,
-  `meta["time_left_s"]`, reaches 0. That count starts at your first request to the service, so it never reaches 0 before
-  your time is up.
-- There is nothing to hand in: the service records your episode as the trajectory and grades it. Leave the script that
-  drove the robot at `/app/output/gen.py`, and save useful frames and scripts under `/app/output/` as you go.
-
-## Client (already installed; `python` from any directory)
+### Client
+`/opt/tools/rcb_client.py` (already installed; `python` from any directory):
 ```python
 from rcb_client import Robot
 r = Robot()                                    # finds the service (sim:8000 / localhost:8000), waits until it is ready
@@ -51,50 +41,79 @@ obs.group("tcp_pose", now=True)                # proprio groups: joint_pos, join
 res = r.submit("joint_position", rows, dt=0.0025, interpolate="linear", cameras=["cam_high"], video="mp4")
 res.meta["executed_rows"], res.meta["clipped"], res.meta["done"], res.meta["reason"], res.meta["time_left_s"]
 res.video["cam_high"]                          # mp4 bytes of the chunk; video="frames" gives res.frames[cam] (N, H, W, 3)
-obs = r.get_obs(seconds=2.0)                   # hold the last command, simulate 2 s and return the video (<= 30 s)
+obs = r.hold(2.0)                              # hold the last command, simulate 2 s and return the video
+obs = r.get_obs(last_s=1.0)                    # the frames recorded over the last 1 s (reading moves no time)
 r.fk(q); r.ik({"left_tcp": [x, y, z, qw, qx, qy, qz]})   # stateless kinematics on the robot's model
 r.status()                                     # calls, control steps, done, reason, time left
 ```
+
 A connection error means the service crashed and is resuming the SAME episode: call `r.wait_ready()` and check
-`r.status()` before you continue (`spec()["on_service_error"]`).
+`r.status()` before you continue (`spec()["on_service_error"]`). One call returns at most 1000 images.
 
-One call returns at most 1000 images (`max_frames_per_call`, PROTOCOL §3 "Images per call").
+One control step takes about 5.5 ms of wall clock here (the simulation runs at about 0.46x real time), so a `submit` of
+the maximum 10 s chunk takes about 22 s. The client waits long enough for any call; a client timeout or a connection
+error means the connection or the service failed (above), not that the call is still on its way: do not resend it
+blindly. `r.operation_status()` (the last call's operation, or `r.operation_status(operation_id)`) asks the service what
+became of a call.
 
-## Robot, actions, observations
-- **Action** `joint_position`: rows of 16 values, float32 or float64, layout `spec()["action_types"]["joint_position"]["layout"]`:
-  per arm (`left_`, then `right_`): `actuator1`..`actuator7` = joint position targets (rad; joint 7, the wrist, has no joint limit in these scenes, unlike the real Panda), `actuator8` = gripper command (0 = closed, 255 = open; the hand squeezes at its tendon force limit, about 70 N per finger, at any width when commanded 0). One control step is 2.5 ms (400 Hz: the row is applied for 4 physics steps of
-  0.625 ms). `dt` must be a multiple of 0.0025 s (at most 0.5 s); `hold` keeps each row for
-  its `dt`, `linear` interpolates the arm targets. A chunk covers at most 10 s. Out-of-range values are clipped to the
-  actuator's control range and reported in `meta["clipped"]`. Speed rule (the robot's real limits; clamp, not fail): arm joint targets move at most 0.0054375 rad per control step on joints 1-4 (`actuator1`..`actuator4`: 2.175 rad/s) and 0.006525 rad on joints 5-7 (`actuator5`..`actuator7`: 2.61 rad/s), the Franka Panda's joint velocity limits
-  (`spec()["robot_spec"]["controller"]`); a row that asks for more takes the control steps it needs, and
-  `meta["clipped"]` says so. The gripper command is not limited: it switches at the row. The arms are position servos with the scene's
-  gains and force limits; use `obs.group("joint_cmd", now=True)` as the starting row to move smoothly.
+### MCP tools
+- The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
+  `observe`, `submit`, `kinematics`, `finish`. A tool takes its endpoint's request fields (any other field in `fields`)
+  and returns the service's reply `meta` unchanged; images, arrays and video are written as files under `/app/obs/`
+  (`.png`, `.npy`, `.mp4`) and the result lists them. Long action chunks can be passed as a file (`actions_file`).
+- `observe` returns at once with what is already recorded: the current frame, or the last `last_s` seconds. Time passes
+  only through `submit`, which answers when its rows have run; a `submit` with `interpolate` "hold", `seconds` and no
+  rows lets time pass with the robot holding still.
+- A call still running after 45 s returns `pending` with an `operation` id; `observe(operation=id)` collects its reply.
+- The client and the tools drive the same robot in the same episode; use either, or both.
+
+### Actions
+- **Action** `joint_position`: rows of 16 values, float32 or float64, layout
+  `spec()["action_types"]["joint_position"]["layout"]`: per arm (`left_`, then `right_`): `actuator1`..`actuator7` =
+  joint position targets (rad; joint 7, the wrist, has no joint limit in these scenes, unlike the real Panda),
+  `actuator8` = gripper command (0 = closed, 255 = open). Commanded 0, the hand squeezes at its tendon force limit,
+  about 70 N per finger, at any width. One control step is 2.5 ms (400 Hz: the row is applied for 4 physics steps of
+  0.625 ms). `dt` must be a multiple of 0.0025 s (at most 0.5 s); `hold` keeps each row for its `dt`, `linear`
+  interpolates the arm targets. A chunk covers at most 10 s. Out-of-range values are clipped to the actuator's control
+  range and reported in `meta["clipped"]`. Speed rule (the robot's real limits; clamp, not fail): arm joint targets move
+  at most 0.0054375 rad per control step on joints 1-4 (`actuator1`..`actuator4`: 2.175 rad/s) and 0.006525 rad on
+  joints 5-7 (`actuator5`..`actuator7`: 2.61 rad/s). These are the Franka Panda's joint velocity limits
+  (`spec()["robot_spec"]["controller"]`). A row that asks for more takes the control steps it needs, and
+  `meta["clipped"]` says so. The gripper command is not limited; it switches to its new value at the start of its row.
+  The arms are position servos with the scene's gains and force limits; use `obs.group("joint_cmd", now=True)` as the
+  starting row to move smoothly.
+
+### Observations
 - **Cameras** (ALOHA-style, 848 x 480, vertical field of view 58 deg): `cam_high` (static, above the front of the work
-  area, looking down), `cam_low` (static, low at the front), `cam_left_wrist` and `cam_right_wrist` (on each hand, looking
-  at the fingers; they move, so use the pose that comes with each frame). Intrinsics and mounts in `spec()["cameras"]`,
-  the per-frame world -> camera pose in every response; depth on request.
+  area, looking down), `cam_low` (static, low at the front), `cam_left_wrist` and `cam_right_wrist` (on each hand,
+  looking at the fingers; they move, so use the pose that comes with each frame). Intrinsics and mounts in
+  `spec()["cameras"]`, the per-frame world -> camera pose in every response; depth on request.
 - **Proprioception** (`spec()["proprio_layout"]`, groups in `spec()["proprio_groups"]`): per arm the 7 joint positions
-  and velocities, the gripper opening (m), the tool-frame pose (`left_tcp` / `right_tcp` (between the fingertips): x y z + qw qx qy qz, world frame), the
-  applied commands and the actuator forces.
+  and velocities, the gripper opening (m), the tool-frame pose (`left_tcp` / `right_tcp`, between the fingertips; x y z
+  + qw qx qy qz, world frame), the applied commands and the actuator forces.
 - **World frame**: origin at the left arm's base link (`left_link0`) on its mounting, +z up, x along that arm's forward
-  direction; metres, quaternions **WXYZ**. The proprio tool-frame poses, the camera extrinsics and mounts and `/kinematics`
-  are all in it; no positions of the scene are given. `spec()["robot_spec"]["base"]` gives the right arm's base pose in it
-  (the rig's fixed geometry).
-- Not available (simulator privilege): part poses, positions of anything in the scene, the scene files, contact forces on
-  parts, the success check itself.
+  direction; metres, quaternions **WXYZ**. The proprio tool-frame poses, the camera extrinsics and mounts and
+  `/kinematics` are all in it; no positions of the scene are given. `spec()["robot_spec"]["base"]` gives the right arm's
+  base pose in it (the rig's fixed geometry).
+- Not available (simulator privilege): part poses, positions of anything in the scene, the scene files, contact forces
+  on parts, the success check itself.
 
-## Time per call
-One control step takes about 5.5 ms of wall clock here (the simulation runs at about 0.46x real time), so a `submit` of the maximum 10 s chunk takes about 22 s. The client waits long enough for any call; a client timeout or a connection error means the connection or the
-service failed (see above), not that the call is still on its way: do not resend it blindly. `r.operation_status()`
-(the last call's operation, or `r.operation_status(operation_id)`) asks the service what became of a call.
+### Grasping
+- Grasps are physical: only the friction of the finger contacts holds a part; nothing attaches it to a gripper.
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+## Others
+- The screw goes in only by being turned. Once it is seated, the screw and member B lock to member A where they are.
 
-## Resources
-Your container: **4 CPUs**, **10 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
-
-## Time limit
-You have 10800 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
-
-This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` counts the same limit from your first request to the service, so it never runs out before your time does: your real time left is `time_left_s` minus the time you spent before that request. Plan by it. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+## Limits
+- Time: 10800 s of wall-clock time from the start of your session. Everything counts, including waiting for the service.
+  At the end you are stopped without warning. Time left: `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`).
+  Trust this file: the `time_left_s` in the service's replies starts only at your first request. A call into a
+  long-running process can block for its whole wait time. Use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, including the simulator's and the benchmark's source.
+- Resources: 4 CPUs, 10 GiB memory, 1024 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`),
+  no GPU; the simulator runs in its own container and does not count. Going over a cap can get a process killed (the CPU
+  cap only slows you down). Usage: `/run/rcb-limits/usage.json`.
+- Resets: none. You get one episode.
+- Finish: if you never send `/finish`, the episode is graded when your session ends.

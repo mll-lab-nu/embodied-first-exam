@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robolab-0.2.2` |
 
 ## Task
-Stack the blocks into a tower.
+Stack the red, blue, green and yellow blocks into one tower, in any order.
 
 ## Difficulty
 RoboLab labels this task "complex" (3 subtasks; attributes: stacking); its success term (`stacked`) asks for stack 4 objects (any order). The tooling gives only thin primitives (move_ee on Isaac Lab's differential IK, joint moves, gripper, hold), so every grasp, transport and placement is the agent's to build. RoboLab ships no expert solution.

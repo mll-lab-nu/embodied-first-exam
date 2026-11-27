@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:labutopia-0.1.0` |
 
 ## Task
-LabUtopia's `place` (Place (LabUtopia's level-2 TransportBeaker is the same task)) on the same frozen instance as `labutopia-place-i00-privileged`: Pick up the glass beaker, set it down on the white square plate and let go of it. Success the moment, after the beaker's centre has been more than 10 cm above where it stood, the beaker has stood on the plate for one second (60 control steps in a row): its centre within 5 cm (horizontally) of the plate's centre and within 5 cm of the height at which it started, with the gripper more than 5 cm away from the beaker's centre (measured from the point between the fingertips).
+LabUtopia's `place` (Place (LabUtopia's level-2 TransportBeaker is the same task)) on the same frozen instance as `labutopia-place-i00-privileged`: Pick up the beaker, lifting it more than a hand's width, and set it down in the middle of the white square plate; then let go and move the hand away.
 On the bench in front of the arm: a glass beaker, about 11 cm across and 9 cm tall, and a white square plate, 10 cm x 10 cm, lying flat on the bench. Standard mode (eai-standard/2.2): the agent drives the robot through a client in one episode, with only its proprioception and the scene's cameras.
 
 ## Difficulty

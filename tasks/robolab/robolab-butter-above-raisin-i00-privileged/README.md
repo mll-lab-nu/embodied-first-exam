@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robolab-0.2.2` |
 
 ## Task
-Pick up the butter box and place it on top of the raisin box.
+Put the butter box on top of the raisin box.
 
 ## Difficulty
 RoboLab labels this task "simple" (1 subtasks; attributes: spatial); its success term (`object_on_top`) asks for the butter box placed on top of the raisin box. The tooling gives only thin primitives (move_ee on Isaac Lab's differential IK, joint moves, gripper, hold), so every grasp, transport and placement is the agent's to build. RoboLab ships no expert solution.

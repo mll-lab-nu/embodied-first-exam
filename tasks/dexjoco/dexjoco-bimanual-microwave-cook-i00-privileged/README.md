@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:dexjoco-0.1.2` |
 
 ## Task
-DexJoCo `bimanual_microwave_cook` (two Franka Panda arms, each with a 16-DoF Allegro hand): Open the microwave door, put the hot dog inside, close the door and press the start button. Success, at one control step: the hot dog is inside the cavity (1 cm margin), the door hinge is within 0.01 rad of closed, and the start button is in contact with something.
+DexJoCo `bimanual_microwave_cook` (two Franka Panda arms, each with a 16-DoF Allegro hand): Put the hot dog in the microwave, close the door and press the start button.
 Privileged mode: the agent works in the simulator's container with live object poses, unlimited resets and thin motion
 primitives, and hands in one trajectory replayed open-loop from the frozen instance.
 

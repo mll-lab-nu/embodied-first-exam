@@ -243,5 +243,5 @@
  },
  "genesis_version": "0.4.7",
  "robowits_commit": "9cc30aedbbeb",
- "text": "Build a stable two-layer stack so the red cube's center is above the green colored dot."
+ "text": "Set the two grey cubes side by side, touching, and put the red cube on top of them, right above the green dot."
 }

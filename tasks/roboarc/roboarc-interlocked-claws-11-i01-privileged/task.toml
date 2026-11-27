@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/roboarc-interlocked-claws-11-i01-privileged"
-description = "RoboARC interlocked_claws (ALOHA 2, MuJoCo): produce one replayable trajectory. Completely separate the C ring from the AB plate and briefly hold both still. Frozen scene instance (variation interlocked_claws_cast_abc, seed 0)."
+description = "RoboARC interlocked_claws (ALOHA 2, MuJoCo): produce one replayable trajectory. Pull the C ring completely off the AB plate and keep both still for a moment. Frozen scene instance (variation interlocked_claws_cast_abc, seed 0)."
 keywords = ["robotics", "roboarc", "mujoco", "aloha", "code-as-policy", "trajectory", "interlocked_claws"]
 
 [metadata]

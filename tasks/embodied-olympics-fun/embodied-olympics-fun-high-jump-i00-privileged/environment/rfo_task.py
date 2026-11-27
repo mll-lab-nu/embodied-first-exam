@@ -119,8 +119,7 @@ class Task(TaskBase):
                   bar_rest_dz_m=0.005, bar_still_m_s=0.05, bar_still_rad_s=0.5,
                   bar_impulse_max_Ns=2.0)
 
-    sentence = ("Do a high jump: approach the bar, take off from one foot, go over the bar between the uprights "
-                "without knocking it off its supports, and come down on the landing mat.")
+    sentence = ("Do a high jump: run up, take off from one foot and clear the bar without knocking it off.")
     rules = ("World Athletics rules for the high jump. The bar ({bar_length_m} m long, {bar_diameter_m} m thick, "
              "{bar_mass_kg} kg) rests with its upper side {bar_height_m} m above the ground on two flat supports "
              "({support_width_m} m wide, {support_length_m} m long) that face each other from two uprights "

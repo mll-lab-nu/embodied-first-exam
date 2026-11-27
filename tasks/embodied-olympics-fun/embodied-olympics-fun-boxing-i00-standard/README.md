@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Punch the heavy bag once with the knuckles of your right fist, on the marked band, hard enough to give it an impulse of at least 12 N s. Then bring the fist back to your guard, close to your right shoulder, and stand. (Embodied Olympics `boxing`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Punch the heavy bag once, hard, with the knuckles of your right fist on the marked band, then bring the fist back to your guard and stand. (Embodied Olympics `boxing`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
 
 ## Difficulty
 12.0 N s in a tenth of a second cannot be pushed out of arm motors of 40 N m: the fist has to arrive at speed with the arm's and the trunk's mass behind it, end first, and leave again at once. The reaction must not tip a body that only stands by an open-loop stance, and the bag swings back. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 5 resets (only the last attempt is graded).

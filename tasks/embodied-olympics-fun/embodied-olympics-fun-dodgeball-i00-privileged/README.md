@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Dodge: five cloth dodgeballs are thrown at you by ball machines that aim at you; do not let a live ball touch you, stay inside your court and on your feet. (Embodied Olympics `dodgeball`: one Unitree G1 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
+Dodge the 5 balls the machines throw at you: do not let a live ball touch you, and stay on your feet inside your court. (Embodied Olympics `dodgeball`: one Unitree G1 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
 
 ## Difficulty
 A ball thrown at you reaches you about 0.75 s after it leaves the machine, aimed where you were: standing still is a hit; the G1 has to be moving when each ball is thrown and keep moving, within its court, with a walking policy that makes about 0.5 m/s, and turn its narrow side to the throws.

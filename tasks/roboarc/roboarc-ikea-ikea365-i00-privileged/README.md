@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:ikea-mujoco-0.3.0` |
 
 ## Task
-IKEA 365+ serving stand (AA-2568481-2) in plain MuJoCo 3.14.0 (CPU, float64) with two 7-DoF Franka Panda arms, each with the MuJoCo Menagerie Panda hand (two-finger, tendon-coupled): produce one replayable trajectory. To rebuild the IKEA 365+ serving stand, take the screw out of member A and set it down on its own, away from both members, lay member B across member A, hold the screw upright and still with its tip just inside the hole in member B, and screw it in through both members until it seats. Then lift the stand more than 10 cm off the bench, turn it upside down while it is in the air, set it down, and place the bowl on it.
+IKEA 365+ serving stand (AA-2568481-2) in plain MuJoCo 3.14.0 (CPU, float64) with two 7-DoF Franka Panda arms, each with the MuJoCo Menagerie Panda hand (two-finger, tendon-coupled): produce one replayable trajectory. Rebuild the IKEA 365+ serving stand: take the screw out of member A and set it down by itself, away from both members, lay member B across member A, and screw the screw back in through both members until it seats. After that, lift the stand about a hand's width off the bench, turn it upside down in the air, set it down and put the bowl on it. Then let go of everything and move both arms clear.
 
 ## Difficulty
 Bimanual furniture assembly with physical grasps (no assist), 16-D actuator action at 400 Hz
@@ -51,7 +51,7 @@ Caps per container (PROTOCOL §6).
 | Initial state | sha256 `4e9e040022202b3e…` of the mjSTATE_INTEGRATION vector |
 
 ### Goal
-To rebuild the IKEA 365+ serving stand, take the screw out of member A and set it down on its own, away from both members, lay member B across member A, hold the screw upright and still with its tip just inside the hole in member B, and screw it in through both members until it seats. Then lift the stand more than 10 cm off the bench, turn it upside down while it is in the air, set it down, and place the bowl on it.
+Rebuild the IKEA 365+ serving stand: take the screw out of member A and set it down by itself, away from both members, lay member B across member A, and screw the screw back in through both members until it seats. After that, lift the stand about a hand's width off the bench, turn it upside down in the air, set it down and put the bowl on it. Then let go of everything and move both arms clear.
 
 ### Success requirements
 - The seven operations are accepted in this order: remove the screw, park the screw, cross the members, return the screw, reinstall the screw, turn the stand, place the bowl.

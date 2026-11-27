@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/robocasa-pnp-microwave-to-counter-i00-privileged"
-description = "RoboCasa (PnPMicrowaveToCounter, a Franka Panda arm on an Omron mobile base (with a torso lift)): Pick the onion from the microwave and place it on the plate located on the counter. Produce one replayable trajectory of the robot's native controller commands on a frozen instance; graded on the state after the last action."
+description = "RoboCasa (PnPMicrowaveToCounter, a Franka Panda arm on an Omron mobile base (with a torso lift)): Take the onion out of the microwave and put it on the plate on the counter, away from the plate's edge, and move your hand away. Produce one replayable trajectory of the robot's native controller commands on a frozen instance; graded on the state after the last action."
 keywords = ["robotics", "robosuite", "robocasa", "mobile-manipulation", "code-as-policy", "trajectory", "privileged"]
 
 [metadata]

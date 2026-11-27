@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-In the bedroom, pack the art supplies lying on the desk (a glue stick, a rubber eraser, a paintbrush and a marker) into the carryall, which stands on the floor, and put the carryall on the desk.
+Pack the four art supplies into the carryall and put it on the desk.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - the glue stick (`glue_stick.n.01_1`), the rubber eraser (`rubber_eraser.n.01_1`), the paintbrush (`paintbrush.n.01_1`) and the marker (`marker.n.03_1`) are each inside the carryall (`carryall.n.01_1`)

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0` |
 
 ## Task
-A ball is tossed up next to the robot when the episode starts. Catch it on the flat, rimless plate the Panda holds and settle it at the plate's centre. Carry it through two waypoints that make a turn without letting it roll off, and settle it again. Then tip it off the plate into a basin that slides back and forth along a rail, where it must come to rest while the basin is moving. The deliverable is one replayable trajectory of 100 Hz joint-target actions (`/app/output/trajectory.npz`,
+Catch the ball on the flat plate and settle it in the middle. Carry it through the two waypoints without letting it roll off, settle it again, and tip it into the sliding basin while the basin is moving. The deliverable is one replayable trajectory of 100 Hz joint-target actions (`/app/output/trajectory.npz`,
 8 values per row), graded by the task's own staged success check: 5 phases (`airborne_plate_catch`, `recenter`, `turning_transport`, `rolling_recovery`, `moving_basin_release`), in order,
 with no failure event and no safety-limit violation, within the task's horizon of 25 s.
 

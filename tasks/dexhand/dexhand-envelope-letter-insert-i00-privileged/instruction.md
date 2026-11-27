@@ -1,41 +1,39 @@
-# DexHand: Put a folded letter into an envelope
+# DexHand · Put a folded letter into an envelope (privileged)
 
-Put the folded letter into the envelope. A tri-folded A4 letter (a stiff 99 x 210 x 2 mm card, 5 g) lies flat on the desk at (0.48, -0.14) m; an empty DL wallet envelope (110 x 220 mm, 6 g) lies flat at (0.48, 0.16) m with its open mouth along its +X long edge and the open flap on the desk beyond the mouth. The envelope is a pocket: back and front walls 4 mm apart, permanent 3 mm side seams (narrowing to nothing over the last 10 mm before the mouth) and a 4 mm bottom seam, and a 30 mm elastic mouth lip that starts closed (flush with the front wall, 4 mm above the back wall); a fingertip or the letter can lift it. Both objects are free and move only through contact. Move the letter to the mouth and feed it in through the mouth, then let go. Stages, measured on the letter's four corners (centre plane) in the envelope's own frame (origin at the envelope centre on the desk, x towards the mouth, mouth line x = 55 mm): (1) the letter is at the mouth: both leading corners are at least 10 mm past the mouth line, inside the side seams (|y| <= 107.6 mm) and between the walls (height 1.2 to 4.4 mm) while both trailing corners are still outside the mouth line; (2) the letter is inserted: at most 5 % of its 99 mm length (4.95 mm) is outside the mouth line, all four corners are inside the side seams, in front of the bottom seam (x >= -51.6 mm) and between the walls; (3) released: stage 2 holds with no contact between the hand and the letter or the envelope, and both objects at rest (linear speed <= 0.01 m/s, angular speed <= 0.2 rad/s), for 50 consecutive controls (1 s). Stages count in order; the episode ends with success when the hold completes. The episode ends immediately with failure, checked after every 2 ms physics substep, when the letter or the envelope falls below the desk top (origin z < 0.698 m), touches the floor, is dropped (touches nothing - no hand, desk or envelope - while its centre of mass falls faster than 0.1 m/s), leaves the desk (origin x outside [0.18, 0.78] m, y outside [-0.40, 0.40] m, or z > 1.00 m), when the letter is pressed through an envelope wall, seam or the mouth lip (any point of the letter's mid-plane inside one of them) or interpenetrates the envelope by more than 0.7 mm, when the envelope is pushed more than 5 cm from its start or tilted more than 0.35 rad, when the robot's arm, stand or parked left hand touches the letter or the envelope, or when the physics becomes unstable; later actions cannot undo a failure. Only robot actuator targets are allowed; no object teleports, welds, scripted object motion or object forces. The episode allows at most 6000 controls at 50 Hz; reaching that limit without success is a failure. Simplifications: the folded letter is simulated as one rigid 2 mm card with rounded fold edges (paper bending is not simulated); the envelope is one rigid pocket whose seams are solid walls, whose open flap is a thin wedge on the desk and whose mouth lip is a passive spring hinge; the flap is never sealed. The hand is on the right arm of a dual-arm robot standing at the desk's +x edge; the left arm stays parked.
+## Task
+Put the folded letter into the envelope.
 
-You control the right arm and hand of a fixed Tianji Marvin dual-arm robot (a stand with two seven-joint arms and a
-dexterous hand on each wrist). The robot stands at the desk's +x edge (base origin (1.15, -0.25, 0.10) m, facing -x; its base plate stands on the floor at z = 0); the
-left arm is parked beside the torso and only the right arm and hand do the task. Arm joints and fingers are position
-servos in the physics engine under native force bounds; pressing, sliding, pushing and releasing require physical
-contact. The controller runs at 50 Hz, with ten 2 ms physics substeps.
+## Goal
+Success: the letter goes in through the mouth of the envelope until all but a sliver of it is inside, between the side
+seams and the walls; then the hand has let go of the letter and the envelope, and both lie still for a second. A replay
+ends as soon as the task is done; later rows are not run.
 
-## Hands
-Two genuine manufacturer hand models are available: `sharpa` (Sharpa Wave, 22 finger actuators; the default) and `wuji` (Wuji Hand 2.2, 20 finger actuators). The task, scene, mount, objects and success predicate are the same for both; only one hand is used per episode.
-Each row starts with the 14 Marvin arm joint targets (left arm J1-J7, then right arm J1-J7), followed by the left hand's finger targets and then the right hand's (22 per hand for `sharpa`, 20 per hand for `wuji`); the left arm is parked and only the right arm/hand perform the task.
-Choose the hand with `Session(..., hand="wuji")` or the environment variable `DEXHAND_HAND=wuji` (default `sharpa`). Action rows are `58` wide for `sharpa` and `54` wide for `wuji`; `s.actuator_names` gives the exact order. `s.save_trajectory(actions, path)` records the hand in the archive (`hand` member). The verifier rebuilds the scene with the recorded hand (default `sharpa` when the member is absent) and rejects a trajectory whose width does not match that hand; rows are never padded, truncated or converted between hands.
+Any of these ends the episode at once as a failure, which later actions cannot undo:
+- The letter or the envelope falls below the desk top, touches the floor, is dropped or leaves the desk.
+- The letter is pressed through a wall, a seam or the mouth lip of the envelope.
+- The envelope is pushed away or tilted.
+- The robot's arm, stand or parked left hand touches the letter or the envelope.
+- The physics becomes unstable.
 
-## Action layout
-Each row is one 50 Hz control in native actuator order (`s.actuator_names`), radians:
+Deliverable: `/app/output/trajectory.npz` with a finite numeric `actions` array of shape `(T, 58)` for `sharpa` or
+`(T, 54)` for `wuji`, at most 6000 rows, plus the `hand` member (`s.save_trajectory` writes both), and
+`/app/output/gen.py`, the script that produced it. Save it compressed with `numpy.savez_compressed` (`s.save_trajectory`
+does this). An archive larger than 64 MB is rejected. Save a valid one early and overwrite it when you have a better
+one.
 
-- `sharpa`: 58 values: the 7 left-arm joint targets `SHOULDER_PITCH_L_J1_target, SHOULDER_ROLL_L_J2_target,
-  ELBOW_PITCH_L_J3_target, ELBOW_YAW_L_J4_target, WRIST_PITCH_L_J5_target, WRIST_YAW_L_J6_target,
-  WRIST_ROLL_L_J7_target`, the 7 right-arm joint targets (`..._R_J1_target` ... `..._R_J7_target`), then the 22
-  left-hand and the 22 right-hand Sharpa Wave finger targets (`left_thumb_CMC_FE` ... `left_pinky_DIP`,
-  `right_thumb_CMC_FE` ... `right_pinky_DIP`).
-- `wuji`: 54 values: the same 14 arm targets, then the 20 left-hand and the 20 right-hand Wuji Hand 2.2 finger
-  targets (`l_wuji_l_THJ0..3, FFJ0..3, MFJ0..3, RFJ0..3, LFJ0..3`, then the same for `r_wuji_r_`).
+Rules: **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+benchmark's demonstrations, trained policies); trials are reviewed.
 
-Every target must lie within `s.model.actuator_ctrlrange`. Both hands start from the same arm targets (`task.json`
-`initial_targets`); keep the left arm parked (its start targets), it must not touch the letter or the envelope.
+Only the robot's actuator targets act on the scene: no object teleports, grasp welds, scripted object motion or applied
+forces.
 
-## Deliverable
-Save `/app/output/trajectory.npz` with a finite numeric `actions` array of shape `(T, 58)` for `sharpa` or `(T, 54)`
-for `wuji`, at most 6000 rows, plus the `hand` member (`s.save_trajectory` writes both), and
-`/app/output/gen.py`, the script that produced it. The separate verifier rebuilds the frozen scene with the recorded
-hand and replays only these motor targets in one fresh process, which must succeed. A replay stops at the first success or the first failure; later rows are not executed. Object poses,
-configuration overrides, pickled arrays and success claims are not deliverables and are never read.
-Save the archive compressed (`numpy.savez_compressed`; `s.save_trajectory` does): an archive file larger than 64 MB is rejected with reward 0.
+## Robot Interface
+The right arm and hand of a fixed Tianji Marvin robot (two 7-joint arms, a dexterous hand on each wrist; the left arm
+stays parked), at a desk (DexHand, MuJoCo). The scene is one fixed instance. You have the full simulator to develop
+with; you hand in a trajectory of motor targets.
 
-## Tooling
+### Session
+`/opt/tools/rcb_dexhand.py`, importable as `rcb_dexhand`:
 ```python
 from rcb_dexhand import Session
 s = Session("envelope_letter_insert")               # default hand: DEXHAND_HAND or "sharpa"
@@ -52,20 +50,47 @@ s.reset()                                       # exact frozen reset
 s.replay(actions)                               # reset, run rows until the episode ends, return status()
 s.save_trajectory(actions, "/app/output/trajectory.npz")
 ```
-Read `/opt/tools/task.json`, `scene.py`, `checker.py` and `runtime.py` for the complete geometry, failure checks and predicate.
-The world frame has z up; lengths are in metres and angles in radians. The desk top is at z = 0.70 m. The robot's
-base pose is `task.json` `marvin`; `s.data.xpos` / `s.data.xmat` of the body `right_hand_C_MC` (the hand root on the right
-flange) give the hand's pose, and MuJoCo's Jacobians (`mujoco.mj_jacBody`) are available for your own inverse
-kinematics (none is supplied). The envelope frame used by the predicate is the `envelope` body; the letter is the
-`letter` body.
+The world frame has z up; lengths are in metres and angles in radians. The desk top is at z = 0.70 m. The robot's base
+pose is `task.json` `marvin`; `s.data.xpos` / `s.data.xmat` of the body `right_hand_C_MC` (the hand root on the right
+flange) give the hand's pose, and MuJoCo's Jacobians (`mujoco.mj_jacBody`) are available for your own inverse kinematics
+(none is supplied).
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+### Actions
+Each row is one 50 Hz control in native actuator order (`s.actuator_names`), radians:
 
-## Resources
-Your container: **2 CPUs**, **10 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
+- `sharpa`: 58 values: the 7 left-arm joint targets
+  `SHOULDER_PITCH_L_J1_target, SHOULDER_ROLL_L_J2_target, ELBOW_PITCH_L_J3_target, ELBOW_YAW_L_J4_target, WRIST_PITCH_L_J5_target, WRIST_YAW_L_J6_target, WRIST_ROLL_L_J7_target`,
+  the 7 right-arm joint targets (`..._R_J1_target` ... `..._R_J7_target`), then the 22 left-hand and the 22 right-hand
+  Sharpa Wave finger targets (`left_thumb_CMC_FE` ... `left_pinky_DIP`, `right_thumb_CMC_FE` ... `right_pinky_DIP`).
+- `wuji`: 54 values: the same 14 arm targets, then the 20 left-hand and the 20 right-hand Wuji Hand 2.2 finger targets
+  (`l_wuji_l_THJ0..3, FFJ0..3, MFJ0..3, RFJ0..3, LFJ0..3`, then the same for `r_wuji_r_`).
 
-## Time limit
-You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+Every target must lie within `s.model.actuator_ctrlrange`. Both hands start from the same arm targets (`task.json`
+`initial_targets`); keep the left arm parked (its start targets), it must not touch the letter or the envelope.
 
-This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+### Hands
+Two hand models: `sharpa` (Sharpa Wave, 22 finger actuators; the default) and `wuji` (Wuji Hand 2.2, 20 finger
+actuators); the task is the same for both. Choose the hand with `Session(..., hand="wuji")` or the environment variable
+`DEXHAND_HAND=wuji` (default `sharpa`). `s.save_trajectory(actions, path)` records the hand in the archive as the `hand`
+member; an archive without it counts as `sharpa`. A trajectory whose row width does not match its hand is rejected.
+Action rows are `58` wide for `sharpa` and `54` wide for `wuji`; `s.actuator_names` gives the exact order.
+
+### Robot
+You control the right arm and hand of a fixed Tianji Marvin dual-arm robot (a stand with two seven-joint arms and a
+dexterous hand on each wrist). The robot stands at the desk's +x edge (base origin (1.15, -0.25, 0.10) m, facing -x; its
+base plate stands on the floor at z = 0); the left arm is parked beside the torso and only the right arm and hand do the
+task. Arm joints and fingers are position servos in the physics engine under native force bounds; pressing, sliding,
+pushing and releasing require physical contact. The controller runs at 50 Hz, with ten 2 ms physics substeps.
+
+## Limits
+- Time: 3600 s of wall-clock time from the start of your session. Everything counts, including the simulator's start-up.
+  At the end you are stopped without warning and only what is in `/app/output/` at that moment is graded. Time left:
+  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`). A call into a long-running process can block for its
+  whole wait time. Use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, including the simulator's and the benchmark's source.
+- Resources: 2 CPUs, 10 GiB memory, 1024 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`),
+  no GPU. Going over a cap can get a process killed (the CPU cap only slows you down). Usage:
+  `/run/rcb-limits/usage.json`.
+- Resets: as many as you like (`s.reset()`).

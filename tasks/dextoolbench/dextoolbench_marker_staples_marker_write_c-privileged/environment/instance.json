@@ -3,7 +3,7 @@
  "category": "marker",
  "object": "staples_marker",
  "task": "write_c",
- "text": "Pick up the staples marker and move it through the demonstrated motion (writing the letter C): bring it to each goal pose in order (the green marker shows the current goal).",
+ "text": "Pick up the marker and write a letter C, following the green ghost marker through its poses in order.",
  "start_pose": [
   0.01306997726970571,
   0.03544438294549135,

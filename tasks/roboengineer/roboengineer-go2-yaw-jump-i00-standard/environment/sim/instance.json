@@ -607,7 +607,7 @@
     },
     "evaluation_backend": "native MuJoCo CPU / NumPy CPU / OSMesa software rendering",
     "feedback": "37 noisy proprioceptive/public-command channels and sampled images; no global position, velocity, contact flags, scores, hidden parameters or seeds.",
-    "goal": "Jump through a commanded 110\u2013150 degree heading change with verified airborne rotation and stable touchdown; ground spinning is rejected.",
+    "goal": "Make the Go2 jump and turn to its left in the air by the commanded angle, then land steadily in place.",
     "held_out_cases": 10,
     "image_interval_s": 1.0,
     "limitations": "A simulated port of published quadruped performance tasks, not a hardware calibration; MuJoCo contacts differ from other simulators.",

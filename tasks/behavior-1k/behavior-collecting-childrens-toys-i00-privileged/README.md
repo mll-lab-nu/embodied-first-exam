@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Collect the children's toys in the child's room. Two dice and a board game lie on the bed, two teddy bears on the floor, and a train set and another board game on the desk; put all seven toys inside one and the same bookcase of the child's room.
+Put all seven toys into the same bookcase.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - both dice (`die.n.01_1`, `_2`), both teddy bears (`teddy.n.01_1`, `_2`), both board games (`board_game.n.01_1`, `_2`) and the train set (`train_set.n.01_1`) are inside the same bookcase (`bookcase.n.01_*`: any one bookcase of the child's room)

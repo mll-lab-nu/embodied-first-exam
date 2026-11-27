@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Put the three cans of soda from the living room inside the trash can in the kitchen (BDDL: every `can__of__soda.n.01`
+Put the three soda cans into the kitchen trash can (BDDL: every `can__of__soda.n.01`
 `inside` `ashcan.n.01_1`).
 
 ## Difficulty

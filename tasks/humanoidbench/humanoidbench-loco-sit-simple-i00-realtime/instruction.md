@@ -1,81 +1,35 @@
-# sit_simple — instance 00 — REALTIME MODE (robot as a service; time does not stop)
+# HumanoidBench · sit_simple (realtime)
 
-You control a simulated Unitree H1 humanoid (HumanoidBench / MuJoCo) **as if it were real hardware**: the
-simulator runs in a service you cannot open, and you reach it only through a client. Like real hardware, it
-does not wait for you: once an episode is running, the robot moves in real time while you think. **Task:** sit
-the robot down on the chair and keep it seated, upright and still.
+## Task
+Sit down on the chair right behind you and stay seated, upright and still.
 
-## Rules (real-robot rules)
-- **Time does not stop.** An episode starts paused, on the frozen starting state, its servos holding their
-  starting targets. Its clock starts at your first `submit` (or `get_obs(seconds=s)`) and from then on the
-  robot runs at 50 Hz in real time, one control step every 0.02 s of wall-clock time, whether or not you send
-  anything, until the episode ends. Between your commands it executes what you planned, then holds the last
-  servo targets you sent; nothing pauses for you, not your thinking, not your tool calls.
-- **You are far too slow to steer it turn by turn.** One turn of yours (a model response, a tool call) takes
-  seconds, and the robot falls within a few seconds of robot time without active balance. Drive it with a
-  program: a controller of your own (Python in your container, with numpy and the client) that runs a loop at
-  the control rate, reads the proprioception and sends targets, started in the background
-  (`nohup python /app/output/gen.py > /app/output/run.log 2>&1 &`) so that your session is free while it runs.
-  Use your turns to start episodes, read what happened, and improve the program.
-- **Episodes and resets.** An episode ends when the task succeeds, when the robot falls (its pelvis drops
-  below about half its standing height, not far below its height when seated), after 1000 control steps (20 s
-  after its clock started), when your time is up, or on a simulator error. Nothing else ends it: a robot that
-  has fallen without meeting one of these (lying on its side, sitting, face down) goes on until step 1000, so
-  an episode that is still running does not mean the robot is still up. You have **50 resets**
-  (`spec()["budget"]["reset"]`, which is authoritative: if it says 0, there is no reset and the one episode is
-  the run). `r.reset()` puts the robot and the scene back on the same frozen starting state and starts a new
-  episode, paused until your next `submit`, with its own 1000 control steps, either abandoning the running
-  episode or after one has ended. Once an episode has ended, `submit` raises `EpisodeOver` (its message gives
-  `resets_left`) until you reset. **Only the last episode is graded**: an episode you reset away is never
-  graded, a success ends the run at once (no reset after it), and when your time is up the episode then
-  running is the one graded. The wall clock is the run's and never restarts; `meta["episode"]` and
-  `meta["resets_left"]` count the episodes.
-- **No privileged state, no score.** You see what the robot's two head cameras see (RGB, 256×256), its own
-  joint angles and joint velocities, a pelvis IMU and `room_camera`, a camera fixed in the room. Not where the
-  robot is in the room, not the chair's pose, not the reward: the service judges the episode and only tells
-  you that it ended and why (`meta["done"]`, `meta["reason"]`: `"success"`, `"error"` after a simulator error,
-  else `"failed"`). `spec()` gives the robot's own facts, as its URDF would: each actuator's range, each
-  joint's axis and position, each link's mass and centre of mass, the feet's collision boxes, the IMU's frame,
-  each camera's field of view and pose.
-- There is nothing to hand in: the service records every control step it ran and grades the last episode as it
-  ran. Keep the controller that drives the robot at `/app/output/gen.py` for the record: save it early and
-  keep it current.
-- Wall-clock budget: the time limit (`## Time limit`). It ends without warning, and ending your session
-  earlier ends the run the same way (and stops your background programs), so do not stop early: while the
-  episode runs, or a reset is left, the run can still pass.
+## Goal
+Success: the robot sits down on the chair quickly and stays seated on it, upright, still and without straining, for most
+of the episode. Success counts as it happens: every moment the robot does this well adds to its score over the episode
+(its full length is in Limits). Once you have sat well for long enough, the task is passed, even if you fall afterwards.
 
-## Time and streaming
-- `submit` answers at once, with the robot as it is now: the rows you sent have not run yet. They become the
-  plan from control step `at` (an episode step number; by default the next step), replacing whatever was
-  planned from `at` on and keeping what is planned before it. When the plan runs out, the last target is held.
-  `res.meta["control_steps"]` is the number of steps run so far in this episode (so the next step has that
-  number), `res.meta["proprio"]["now"]` the robot's proprioception now, `res.meta["plan_end_step"]` where the
-  plan now ends.
-- Closed loop: send one row per control step, `r.submit("joint_position", a[None], cameras=[])`, and compute
-  the next one from the proprioception it returns. `cameras=[]` skips the images (the fastest call); sending
-  faster than 50 Hz only replaces the same step's target again.
-- Open loop: send up to 10 s of rows at once (a chunk, `dt` a multiple of 0.02) and the next chunk before the
-  plan runs out, with `at` = the step where it should take over; `at` may be up to
-  `spec()["timing"]["max_ahead_steps"]` steps ahead.
-- Latency: a reading is a few milliseconds old when it reaches you, and a row takes effect at the next control
-  step at the earliest. A row whose step has already run when the request arrives is dropped
-  (`res.meta["late_steps"]` counts them); the rest of its chunk applies from the next step.
-- `get_obs()` reads the robot now; `get_obs(seconds=s)` (at most 30) waits while s seconds of robot time run
-  and returns what the cameras saw meanwhile (the robot keeps executing its plan). `spec()["timing"]` states
-  all this; `r.status()` shows `running` and `lag_s`.
+When you are done, send `/finish` to end the episode and get it graded.
 
-## Scoring
-HumanoidBench scores the *whole episode*, not a final state: it passes iff the summed per-step reward reaches
-**750**: a total of rewards, not a number of steps (an episode is at most 1000 steps). A product: the average
-of two seat terms — how close the pelvis is to the height it has when seated, and whether the robot is over
-the seat rather than beside it — multiplied by staying upright, a seated posture (the head's height above the
-torso), not moving, and low actuator force. Every step spent not yet sitting forfeits the reward that step
-could have paid, so both *how fast* and *how steadily* the robot sits matter. The service ends the episode the
-moment the pass mark is reached (`reason = "success"`); that live episode is the verdict.
+The episode ends at once as a failure if the robot falls (its pelvis drops clearly lower than when seated).
 
-## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.3`, realtime mode)
-Your whole interface to the robot. Its docstring is the full reference
-(`python -c "import rcb_client; help(rcb_client)"`); the calls and the endpoints they use:
+Rules:
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+  benchmark's demonstrations, trained policies); trials are reviewed.
+- Episodes: 50 resets (`spec()["budget"]["reset"]`), each a new episode from the same starting state; within an episode
+  a robot that has fallen stays down until you reset. Only the last episode is graded.
+- You get only the robot's camera images (its two head cameras and `room_camera`, fixed in the room) and its own joint
+  angles, joint velocities and pelvis IMU: not where the robot is in the room, not the chair's pose; no object poses, no
+  scene layout, no score, no success signal.
+
+## Robot Interface
+A simulated Unitree H1 humanoid (HumanoidBench, MuJoCo). The robot runs as a service you reach through its client or its
+MCP tools, as if it were real hardware, on a clock that does not stop while you think.
+
+`POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
+
+### Client
+`/opt/tools/rcb_client.py` (protocol `eai-standard/2.3`, realtime mode); its docstring is the full reference
+(`python -c "import rcb_client; help(rcb_client)"`). The calls and the endpoints they use:
 
 | call | endpoint | what it does |
 |---|---|---|
@@ -83,15 +37,9 @@ Your whole interface to the robot. Its docstring is the full reference
 | `r.spec()` | `GET /spec` | the robot's facts: the actuators' order and ranges, `control_dt` (0.02 s), `max_control_steps` (1000), `timing`, the cameras, `proprio_layout`, `budget` |
 | `r.status()` | `GET /status` | `calls`, `rows`, `control_steps`, `done`, `reason`, `elapsed_s`, `running`, `planned_steps`, `lag_s`, and `episode`, `resets_left`, `control_steps_total` (all episodes) |
 | `r.submit("joint_position", A, dt=0.02, interpolate="linear", at=None, cameras=None)` | `POST /submit` | plans `A`, rows of 19 targets `dt` seconds apart (a chunk covers at most 10 s), from step `at`; answers at once; the first one starts the episode's clock |
-| `r.get_obs(cameras=None, seconds=0, include_depth=False, video="frames")` | `POST /observe` | the robot now, or what the cameras saw over the next `seconds` |
+| `r.get_obs(cameras=None, last_s=0, include_depth=False, video="frames")` | `POST /observe` | the robot now, or with `last_s=n` what the cameras recorded over the last n seconds; it never waits |
 | `r.reset(cameras=None, include_depth=False)` | `POST /reset` | a new episode from the frozen starting state, paused (at most 50 in all); returns the start's frames |
 
-One call returns at most 3000 images (`max_frames_per_call`, PROTOCOL §3 "Images per call"). A watch is refused with a 429 while the images in flight (pending watches and answers not read yet) would exceed it or 8 of them are outstanding; a `submit` or a `get_obs()` without seconds is never refused for its images: its answer then comes without its frames and `meta["frames_skipped"]` is set.
-
-The answers are binary (RCB1) and come back decoded: `res.meta` (the counters, `done`, `reason`, `proprio["now"]`,
-`clipped`), `res.last[camera]` (the last frame), `res.frames` or `res.video` (what the cameras saw during a watch),
-`res.proprio` (proprioception rows). Values outside [-1, 1] are clipped and reported in `meta["clipped"]`, never
-refused; a malformed request raises `ValueError` and changes nothing.
 ```python
 from rcb_client import Robot
 r = Robot()
@@ -102,30 +50,96 @@ while True:                                     # the first submit starts the cl
         break
     a = ...                                     # from res.meta["proprio"]["now"]
 ```
-Measured cost here in standard mode: about 5.2 ms per one-row call asking for one head camera, physics
-included; a call with `cameras=[]` skips the rendering. A control step is 20 ms.
+The answers come back decoded: `res.meta` (the counters, `done`, `reason`, `proprio["now"]`, `clipped`),
+`res.last[camera]` (the last frame), `res.frames` or `res.video` (what the cameras recorded), `res.proprio`
+(proprioception rows). Values outside [-1, 1] are clipped and reported in `meta["clipped"]`, never refused; a malformed
+request raises `ValueError` and changes nothing. One call returns at most 3000 images. No call is refused for its
+images. While 8 answers with images are still waiting to be read, a `submit` or a `get_obs()` answers without its frames
+and sets `meta["frames_skipped"]`. Time per call (standard mode): about 5.2 ms per one-row call asking for one head
+camera, physics included; a call with `cameras=[]` skips the rendering. A control step is 20 ms. `r.reset()` puts the
+robot and the scene back on the same starting state and starts a new episode with its own 1000 control steps. You can
+call it during a running episode, which it abandons, or after one has ended. It returns the start's images and
+proprioception; the new episode stays paused until your next `submit`. Once an episode has ended, `submit` raises
+`EpisodeOver` (its message gives `resets_left`) until you reset. `meta["episode"]` and `meta["resets_left"]` count the
+episodes; the wall clock never restarts.
 
-Each proprioception row (`meta["proprio"]["now"]`, `res.proprio`) has, in `spec()["proprio_layout"]` order,
-the joints' angles (`*_pos`, rad), their velocities (`*_vel`, rad/s), then the IMU (`imu_gyro_*`,
-`imu_gravity_*`).
+### MCP tools
+- The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
+  `observe`, `submit`, `reset`, `finish`. A tool takes its endpoint's request fields (any other field in `fields`) and
+  returns the service's reply `meta` unchanged; images, arrays and video are written as files under `/app/obs/` (`.png`,
+  `.npy`, `.mp4`) and the result lists them. Long action chunks can be passed as a file (`actions_file`).
+- `observe` returns at once with what is already recorded: the current frame, or the last `last_s` seconds. `submit`
+  answers at once, as the endpoint does. The clock does not wait for a tool call, and a call also takes your harness's
+  own time; each result's `tool_s` is the tool's part.
+- A call still running after 45 s returns `pending` with an `operation` id; `observe(operation=id)` collects its reply.
+- The client and the tools drive the same robot in the same episode; use either, or both.
 
-The 19 actuators are position servos, in this order: `left_hip_yaw`, `left_hip_roll`, `left_hip_pitch`,
-`left_knee`, `left_ankle`, `right_hip_yaw`, `right_hip_roll`, `right_hip_pitch`, `right_knee`, `right_ankle`,
-`torso`, `left_shoulder_pitch`, `left_shoulder_roll`, `left_shoulder_yaw`, `left_elbow`,
-`right_shoulder_pitch`, `right_shoulder_roll`, `right_shoulder_yaw`, `right_elbow`
-(`spec()["action_types"]["joint_position"]["layout"]`; the proprioception measures the same joints in the same
-order). A target of −1 or +1 commands one end of that servo's range,
-`spec()["action_types"]["joint_position"]["range_rad"]` in radians, and the scale is linear, so 0 is
-mid-range, not 0 rad. A constant action commands joint *targets*, not a pose: whether the robot stays there
-depends on whether that pose is stable under gravity and contact.
+### Actions
+One action type, `joint_position`, with one row per control step (`control_dt` = 0.02 s, 50 Hz). Rows are `dt` apart (a
+multiple of 0.02 s), and a chunk covers at most 10 s. Every number is HumanoidBench's normalised servo target in [-1,
+1]. The mapping is linear: -1 and +1 command the two ends of that servo's range
+(`spec()["action_types"]["joint_position"]["range_rad"]`, radians), so 0 is mid-range, not 0 rad. The 19 actuators are
+position servos, in this order: `left_hip_yaw`, `left_hip_roll`, `left_hip_pitch`, `left_knee`, `left_ankle`,
+`right_hip_yaw`, `right_hip_roll`, `right_hip_pitch`, `right_knee`, `right_ankle`, `torso`, `left_shoulder_pitch`,
+`left_shoulder_roll`, `left_shoulder_yaw`, `left_elbow`, `right_shoulder_pitch`, `right_shoulder_roll`,
+`right_shoulder_yaw`, `right_elbow` (`spec()["action_types"]["joint_position"]["layout"]`; the proprioception measures
+the same joints in the same order). A constant action commands joint *targets*, not a pose: whether the robot stays
+there depends on whether that pose is stable under gravity and contact.
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+### Observations
+- Cameras: the robot's two head cameras (`left_eye_camera`, `right_eye_camera`, RGB, 256 × 256) and `room_camera`, fixed
+  in the room.
+- Each row of the proprioception (`obs.meta["proprio"]`) holds, in `spec()["proprio_layout"]` order, the joints' angles
+  (`*_pos`, rad), their velocities (`*_vel`, rad/s), then the IMU (`imu_gyro_*`, `imu_gravity_*`).
+- The robot's own facts, as its URDF would give them, are in `r.spec()`: each actuator's range, each joint's axis and
+  position, each link's mass and centre of mass, the feet's collision boxes, the IMU's frame, each camera's field of
+  view and pose.
+- When an episode has ended, `meta["reason"]` says why: `"finished"` after your finish, `"step_limit"` at the end of its
+  control steps, `"error"` after a simulator error, else `"failed"`.
 
-## Resources
-Your container: **4 CPUs**, **4 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
+### Time and streaming
+- Time does not stop. An episode starts paused, on the frozen starting state, its servos holding their starting targets.
+  Its clock starts at your first `submit` and from then on the robot runs at 50 Hz in real time, one control step every
+  0.02 s of wall-clock time, whether or not you send anything, until the episode ends. Between your commands it executes
+  what you planned, then holds the last servo targets you sent; nothing pauses for you, not your thinking, not your tool
+  calls.
+- You are far too slow to steer it turn by turn. One turn of yours (a model response, a tool call) takes seconds, and
+  the robot falls within a few seconds of robot time without active balance. Drive it with a program: your own
+  controller (Python in your container, with numpy and the client) that runs a loop at the control rate, reads the
+  proprioception and sends targets. Start it in the background (`nohup python /app/ctrl.py > /app/ctrl.log 2>&1 &`). Use
+  your turns to start episodes, read what happened, and improve the program.
+- `submit` answers at once, with the robot as it is now: the rows you sent have not run yet. They become the plan from
+  control step `at` (an episode step number; by default the next step). They replace whatever was planned from `at` on
+  and keep what is planned before it. When the plan runs out, the last target is held. `res.meta["control_steps"]` is
+  the number of steps run so far in this episode, so the next step has that number. `res.meta["proprio"]["now"]` is the
+  robot's proprioception now. `res.meta["plan_end_step"]` is where the plan now ends.
+- Closed loop: send one row per control step, `r.submit("joint_position", a[None], cameras=[])`, and compute the next
+  one from the proprioception it returns. `cameras=[]` skips the images (the fastest call); sending faster than 50 Hz
+  only replaces the same step's target again.
+- Open loop: send up to 10 s of rows at once (a chunk, `dt` a multiple of 0.02). Send the next chunk before the plan
+  runs out, with `at` set to the step where it should take over. `at` may be up to `spec()["timing"]["max_ahead_steps"]`
+  steps ahead.
+- Latency: a reading is a few milliseconds old when it reaches you, and a row takes effect at the next control step at
+  the earliest. A row whose step has already run when the request arrives is dropped; `res.meta["late_steps"]` counts
+  them. The rest of the chunk applies from the next step.
+- `get_obs()` reads the robot now. `get_obs(last_s=n)` returns at once what the cameras recorded over the last n seconds
+  (the robot keeps executing its plan). `spec()["timing"]` states all this; `r.status()` shows `running` and `lag_s`.
 
-## Time limit
-You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+## Others
+- A fall that leaves the pelvis above that height (slumped against the chair) does not end the episode. It goes on, so
+  an episode that is still running does not mean the robot is still up.
 
-This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` counts the same limit from your first request to the service, so it never runs out before your time does: your real time left is `time_left_s` minus the time you spent before that request. Plan by it. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+## Limits
+- Time: 3600 s of wall-clock time from the start of your session. Everything counts, including waiting for the service.
+  At the end you are stopped without warning. Time left: `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`).
+  Trust this file: the `time_left_s` in the service's replies starts only at your first request. A call into a
+  long-running process can block for its whole wait time. Use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, including the simulator's and the benchmark's source.
+- Resources: 4 CPUs, 4 GiB memory, 1024 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`), no
+  GPU; the simulator runs in its own container and does not count. Going over a cap can get a process killed (the CPU
+  cap only slows you down). Usage: `/run/rcb-limits/usage.json`.
+- Resets: at most 50 (`spec()["budget"]["reset"]`), each a new episode from the same starting state.
+- Steps: at most 1,000 control steps (20 s of robot time), then the episode ends.
+- Finish: if you never send `/finish`, the last episode is graded when your session ends.

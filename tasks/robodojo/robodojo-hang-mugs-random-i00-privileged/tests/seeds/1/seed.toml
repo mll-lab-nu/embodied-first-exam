@@ -7,12 +7,12 @@ old = "## Goal\nSuccess: each of the three mugs hangs on the mug rack: the red m
 new = "## Goal\nSuccess: each of the three mugs hangs by its handle, handle above the mug, on a rack arm that points left or right, and both arms\nare back where they started. A replay ends as soon as the task is done; later rows are not run."
 
 [[replace]]
-old = "## Others\n- Labels in `s.objects()`: `mug0` (the red mug); `mug1`, `mug2` (the two pink pumpkin mugs); `cup_holder` (the mug\n  rack).\n- RoboDojo's own reset settles the scene again from where it is, so after actions a reset gives the same layout and\n  start pose but not bit-for-bit the same state; a replay after such a reset can end slightly differently from the\n  grader's. Each graded replay runs the first episode of a newly started Session (nothing stepped before it): test on\n  that."
-new = "## Others\n- Labels in `s.objects()`: `mug0`..`mug2` (the three mugs); `cup_holder` (the mug\n  rack).\n- RoboDojo's own reset settles the scene again from where it is, so after actions a reset gives the same layout and\n  start pose but not bit-for-bit the same state; a replay after such a reset can end slightly differently from the\n  grader's. Each graded replay runs the first episode of a newly started Session (nothing stepped before it): test on\n  that."
+old = "## Others\n- Labels in `s.objects()`: `mug0` (the red mug); `mug1`, `mug2` (the two pink pumpkin mugs); `cup_holder` (the mug\n  rack).\n- RoboDojo's own reset settles the scene again from where it is. So a reset after actions gives the same layout and\n  start pose, but not bit-for-bit the same state, and a replay after such a reset can end slightly differently from the\n  grader's. Each graded replay is the first episode of a newly started Session, with nothing stepped before it. Test\n  your trajectory the same way."
+new = "## Others\n- Labels in `s.objects()`: `mug0`..`mug2` (the three mugs); `cup_holder` (the mug\n  rack).\n- RoboDojo's own reset settles the scene again from where it is. So a reset after actions gives the same layout and\n  start pose, but not bit-for-bit the same state, and a replay after such a reset can end slightly differently from the\n  grader's. Each graded replay is the first episode of a newly started Session, with nothing stepped before it. Test\n  your trajectory the same way."
 
 [[replace]]
-old = "## Goal\nSuccess: each of the three mugs hangs on the mug rack: the red mug by its handle, handle above the mug, on an arm that\npoints left or right; each pink pumpkin mug with its opening facing up or up-left and its handle sideways; and both arms\nare back where they started. What counts is how things stand at the end of the episode: a success reached earlier and\nlost by the end does not count, so finish in the state you want graded and stop sending commands."
-new = "## Goal\nSuccess: each of the three mugs hangs by its handle, handle above the mug, on a rack arm that points left or right, and both arms\nare back where they started. What counts is how things stand at the end of the episode: a success reached earlier and\nlost by the end does not count, so finish in the state you want graded and stop sending commands."
+old = "## Goal\nSuccess: each of the three mugs hangs on the mug rack: the red mug by its handle, handle above the mug, on an arm that\npoints left or right; each pink pumpkin mug with its opening facing up or up-left and its handle sideways; and both arms\nare back where they started."
+new = "## Goal\nSuccess: each of the three mugs hangs by its handle, handle above the mug, on a rack arm that points left or right, and\nboth arms are back where they started."
 
 [[replace]]
 old = "arx_x5/0/hang_mugs_random_0.json"
@@ -23,5 +23,5 @@ old = "sha256 `9fb225ebf9b90391`"
 new = "sha256 `5cdede7e82cd29e9`"
 
 [[replace]]
-old = "Using only the rack arms that point left or right, hang the red mug by its handle and hang each of the two pink pumpkin mugs on one of the two left-pointing arms with its opening facing left along the arm. Then bring both arms back to where they started."
-new = "Hang each of the three mugs by its handle on one of the four rack arms that point left or right, not on the two arms that point toward or away from you. Then bring both arms back to where they started."
+old = "Hang the three mugs on the mug rack: the red mug by its handle on an arm that points left or right, and the two pink pumpkin mugs on any arm, opening facing up or up-left and handle sideways. Then move both arms back to where they started."
+new = "Hang the three mugs by their handles on the rack arms that point left or right. Then move both arms back to where they started."

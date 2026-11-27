@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/robotwin_2_0_stamp_seal-privileged"
-description = "RoboTwin 2.0 stamp_seal (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Pick up the stamp and set it down right in the middle of the olive mat, then let go. Frozen scene instance (RoboTwin seed 91573)."
+description = "RoboTwin 2.0 stamp_seal (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Set the stamp down right in the middle of the olive mat, then let go. Frozen scene instance (RoboTwin seed 91573)."
 keywords = ["robotics", "robotwin", "sapien", "aloha-agilex", "dual-arm", "code-as-policy", "trajectory", "stamp_seal"]
 
 [metadata]

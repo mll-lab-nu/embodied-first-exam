@@ -14,7 +14,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/robodojo-pour-by-language-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.2): RoboDojo pour_by_language (Open) on the same frozen layout as the privileged task (arx_x5/0/pour_by_language_0.json). Task: Pour each bottle named in the instruction into the bowl it names, in the order first, second, third. The agent only gets a client: get_obs (RGB, depth + proprioception of both arms), submit (joint_position or ee_pose chunks). No reset, no privileged state; the sim service records the episode as a trajectory and grades the live episode."
+description = "STANDARD MODE (robot as a service, eai-standard/2.2): RoboDojo pour_by_language (Open) on the same frozen layout as the privileged task (arx_x5/0/pour_by_language_0.json). Task: Pour the violet bottle into the black bowl, then the red bottle into the white bowl, then the turquoise bottle into the brown bowl, in that order. The agent only gets a client: get_obs (RGB, depth + proprioception of both arms), submit (joint_position or ee_pose chunks). No reset, no privileged state; the sim service records the episode as a trajectory and grades the live episode."
 keywords = ["robotics", "robodojo", "isaac-lab", "isaac-sim", "bimanual", "arx-x5", "standard-mode", "trajectory"]
 
 [metadata]
@@ -72,6 +72,13 @@ cpus = 2
 memory_mb = 8192
 storage_mb = 10240
 gpu_types = ["L40S", "L40", "L4", "RTX 4090", "RTX 6000 Ada"]
+
+# The robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): Harbor starts this server for the agent.
+[[environment.mcp_servers]]
+name = "efe-robot"
+transport = "stdio"
+command = "python3"
+args = ["/opt/tools/efe_mcp/server.py"]
 
 [verifier.env]
 RCB_LIMITS_ENFORCE = "${RCB_LIMITS_ENFORCE:-0}"

@@ -9,10 +9,10 @@
 | Family / instance | `nuts_bolts` / seed 0 (allowed seeds: [0, 3, 7]; PROTOCOL §2) |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:abc-sim-0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe:abc-sim-0.5.1` |
 
 ## Task
-ABC Sim `sort_nuts_and_bolts` (two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each) side by side at the near edge of a table, facing +x (the left arm is the one at +y)): Put all the nuts into one bin and all the bolts into the other. Success: every nut is in one bin and every bolt in the other, at the same time (the rule also accepts the bins swapped); a part is in a bin when its centre is inside the bin's interior region (between its walls, from just above its floor to below its rim). The goal must hold for 30 consecutive control steps (1.02 s); the episode then ends in success.
+ABC Sim `sort_nuts_and_bolts` (two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each) side by side at the near edge of a table, facing +x (the left arm is the one at +y)): Put all the nuts in one bin and all the bolts in the other.
 9 nuts and 10 bolts lie on the table with two bins, a teal one and an orange one (loose objects, turned at some angle). The robot is a service; the episode it runs is graded.
 
 ## Difficulty

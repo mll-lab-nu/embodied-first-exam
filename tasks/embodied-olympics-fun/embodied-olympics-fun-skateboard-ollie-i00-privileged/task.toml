@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/embodied-olympics-fun-skateboard-ollie-i00-privileged"
-description = "Embodied Olympics skateboard-ollie (one Unitree G1 on the Embodied Olympics simulator, MuJoCo 3.3.7, CPU) in privileged mode: produce one replayable trajectory. Ollie the skateboard from a standstill: pop the tail and lift the board with your feet until all of it is at least 5 cm off the ground, then land on it and stand still on it for a second. A referee of events, geometry and contact rules decides the success."
+description = "Embodied Olympics skateboard-ollie (one Unitree G1 on the Embodied Olympics simulator, MuJoCo 3.3.7, CPU) in privileged mode: produce one replayable trajectory. Do an ollie: pop the skateboard into the air with your feet, land on it with both feet and all four wheels down, and stand still on it. A referee of events, geometry and contact rules decides the success."
 keywords = ["robotics", "embodied-olympics", "sports", "mujoco", "unitree-g1", "humanoid", "trajectory", "skateboard-ollie"]
 
 [metadata]

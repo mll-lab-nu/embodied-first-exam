@@ -13,6 +13,13 @@ both handles held). There is no live_verdict(). Nothing is replayed to grade it;
 trajectory after the verdict (render_video). `start_sha` is the frozen instance's recorded state hash: the layer refuses
 a fresh episode whose scene does not start there (instance_mismatch, infrastructure).
 
+Agent-ended episodes (RCB_AGENT_END=1, PROTOCOL §3; rcb_service.py's generic fields): the Session runs in its agent_end
+mode (a success never ends the episode; step() returns the state's success, which the layer only records), the episode
+ends at POST /finish, the end of the session or a failure (the ball off the tray: "failed", 0, after a success too), and
+the verdict is the end state's: `end_window_steps` = HOLD_STEPS (about a second of the last command held, the goal held
+for all of it at the window's end) for the hold rule, none for the ball tray (the countdown completed and the ball still
+on the tray).
+
 What the agent gets is what the standard twin gives, minus the 2.2 additions the realtime layer does not serve
 (`/kinematics`, per-frame camera poses, depth modes): the cameras (RGB and depth), the robot's own proprioception and the
 14-number joint-position action. Nothing about the scene leaves this process.
@@ -37,6 +44,7 @@ import rcb_abc as M  # noqa: E402  (first: it picks the rendering backend before
 import mujoco  # noqa: E402
 
 M.SESSION_LOG = ""           # the sidecar's Session is not the agent's interaction log
+import rcb_service  # noqa: E402
 from rcb_service import main  # noqa: E402
 
 GL2CV = np.diag([1.0, -1.0, -1.0, 1.0])
@@ -54,6 +62,10 @@ class AbcSim:
         self.instance = instance
         self.info = task_info
         self.s = M.Session(instance=instance)
+        self.s.agent_end = rcb_service.AGENT_END                # agent-ended: a success never ends the episode
+        self.end_judgement = "state"                            # the end state's success (rcb_service.py)
+        self.end_window_steps = 0 if self.s.rule == "tray" else M.HOLD_STEPS   # the hold rule's window from the end
+        self.hidden_keys = ("step_cap",)
         self.start_sha = self.s.instance_sha                    # the frozen instance's recorded start (the layer checks it)
         m = self.m = self.s.model
         self.H, self.W = image_hw
@@ -101,7 +113,11 @@ class AbcSim:
         m = self.m
         action = {"dim": 14, "layout": list(M.ACTION_LAYOUT), "lower": self.lo.tolist(), "upper": self.hi.tolist(),
                   "units": "rad (joints), opening in [0, 1.042] (grippers)", "semantics": JOINT_TEXT}
-        episode = ("an episode ends in success the moment the task's goal has held for "
+        episode = ("an episode ends at POST /finish, when your time is up, on a simulator error"
+                   + (", or in failure the moment the ball leaves the tray or a handle is let go during the countdown"
+                      if self.s.rule == "tray" else "") + "; nothing tells you whether you have succeeded"
+                   if self.s.agent_end else
+                   "an episode ends in success the moment the task's goal has held for "
                    f"{M.HOLD_STEPS} control steps in a row ({round(M.HOLD_STEPS * self.control_dt, 2)} s), when your "
                    "time is up, or on a simulator error" if self.s.rule != "tray" else
                    "an episode ends in success when the tray's countdown completes with the ball on the tray and both "

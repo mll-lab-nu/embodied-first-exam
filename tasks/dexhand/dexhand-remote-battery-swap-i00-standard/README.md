@@ -40,13 +40,12 @@ verdict, and nothing is replayed to grade it. The isolated verifier reads only t
 service then renders `replay.mp4` from the recorded trajectory in one video-only pass, which never changes the
 verdict. A missing or unfinished record, a give-up after crashes between the agent's calls and a frozen instance
 that does not build at the episode's start are infrastructure errors.
-The episode ends at the first success or the first failure. Failures are
+Failures are
 fail-fast and permanent and are checked after every 2 ms physics substep: a cell, the door, the remote or the tray
 below the table top or outside the workspace box, any of them touching the floor, the remote or the tray moved more
 than 3 cm or tilted more than 15 degrees, the gray cell touching the table, the green cell touching the table again
 after it was lifted, a cell without hand contact moving down faster than 0.886 m/s (a drop from more than 4 cm), a
-cell touching nothing at all moving down faster than 0.5 m/s (no catch window), the parked left arm or left hand touching a task object, unstable physics, or the 6,000-control
-budget. The frozen instance and thresholds come from the task, never from an agent archive. A no-op
+cell touching nothing at all moving down faster than 0.5 m/s (no catch window), the parked left arm or left hand touching a task object, or unstable physics. At the 6,000-control budget the episode ends and is judged on the state it leaves. The frozen instance and thresholds come from the task, never from an agent archive. A no-op
 fails. Human review and full agent-trial calibration remain pending; report this task as provisional.
 
 ## Resources

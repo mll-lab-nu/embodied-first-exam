@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Go over the steeplechase hurdle in front of you and over or through the water pit behind it, get out beyond the pit's far edge and stand on your feet. (Embodied Olympics `steeplechase`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Go over the steeplechase barrier and across the water pit behind it, then stand beyond the pit. (Embodied Olympics `steeplechase`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
 
 ## Difficulty
 The bar is at hip height and the walking policy lifts its feet a few centimetres: the hurdle has to be jumped or climbed with whole-body joint control by a 67 kg robot whose best standing jump raises it far less than 0.914 m. Behind the bar the ground is 0.5 m lower than the track, so the landing is a drop of up to 1.4 m, and the way out is a slope. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 5 resets (only the last attempt is graded).

@@ -5,7 +5,3 @@ new = "RCB_INSTANCE_SHA: \"2c9eef8ade1bf8b67d538889df7232451afd4fed71fb1772e2b8a
 [[replace]]
 old = "RCB_START_SHA: \"d7d0094898883200f4144eb52e758b66f9c2e5a4b411eaaed6e496082cedd84a\""
 new = "RCB_START_SHA: \"3df080be13e9424b6aa642839f1947f05490f3bad299333a07f3870b3ac6e9c7\""
-
-[[replace]]
-old = "(object and goal positions; seed 0)"
-new = "(object and goal positions; seed 2)"

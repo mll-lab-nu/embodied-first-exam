@@ -68,7 +68,7 @@ benchmark re-verifies on its frozen instance and whose instruction identifies th
 - **Success.** VLABench's own success check, the task's termination condition (`task.should_terminate_episode`). The
   native episode ends the moment it holds, so a trajectory ends there and the graded state is its final state
   (PROTOCOL §3): the privileged verifier rejects a trajectory with actions after the termination
-  (`invalid_trajectory`), and the standard service ends the episode with `reason = "success"`.
+  (`invalid_trajectory`); the standard service does not end the episode there (Agent-ended episodes, below).
 - **Predicates are VLABench's.** They are graded as upstream defines them, including their looseness: e.g.
   `select_fruit`'s containment checks the fruit's root point against the plate's footprint and a 0–0.1 m height band,
   not that the fruit rests on the plate (found by the red-team trial). Changing them would make it another benchmark.
@@ -97,6 +97,14 @@ benchmark re-verifies on its frozen instance and whose instruction identifies th
   used: VLABench's goals are relations between objects, not a target point).
 - **Egress.** VLABench's experts are public upstream, so `task.toml` allowlists the model APIs and the package registries only (as HumanoidBench and
   DexToolBench do).
+
+## Agent-ended episodes
+Every standard task runs with `RCB_AGENT_END=1` (PROTOCOL §3, agent-ended episodes): VLABench's termination condition no
+longer ends the episode and no reply shows it (`vlb_tool.Session.run_on` replaces `task.should_terminate_episode` with a
+never-terminating one after the start-state check, so dm_control does not reset the scene, and reads the original as the
+success check). The episode ends at the agent's `POST /finish`, after 9,000 control steps (reason `step_limit`), at the
+end of the session or on a simulator error, and is judged on VLABench's check as things stand then
+(`end_judgement = "state"`). Actions after a success are allowed live.
 
 ## Image
 `images/vlabench/Dockerfile` is the full, pinned recipe and needs no build context: Python 3.10.18 by digest, Debian
@@ -131,7 +139,7 @@ renders); the collect hook waits for the verdict and then, as long as its timeou
 hung or killed render costs the video and never the verdict. The reset budget is pinned to 0 in the compose file (the
 instruction says one episode, no reset).
 `server.py` is VLABench's adapter (the `Sim` contract): cameras, proprioception, `joint_position` clipping into the
-actuators' bounds, holding the last targets while watching, the frozen start's hash, and the video's re-run (`vlb_tool.Session`). The
+actuators' bounds, holding the last targets during a hold chunk, the frozen start's hash, and the video's re-run (`vlb_tool.Session`). The
 agent's client and the verifier (`grade.py`: `success = live_success`) are main's copies too.
 
 ## Rebuilding

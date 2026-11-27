@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0` |
 
 ## Task
-At the start a square puck slides fast along a raised source lane towards the Panda, and the paddle hangs just above its path. Strike the puck while it is still sliding at 25 cm per second or more, so that it slides onto the bridge, a platform that turns continuously about a vertical axis, and from the bridge onto an exit lane. Intercept it there with the paddle, let it separate, and strike it again. Send it along the exit lane through the doorway of a swinging gate that opens and closes by itself, without touching the gate, and on across a goal line, with the paddle not touching it as it crosses and the gate still open. The deliverable is one replayable trajectory of 100 Hz joint-target actions (`/app/output/trajectory.npz`,
+Strike the incoming puck with the paddle while it is still sliding fast, so that it slides over the turning bridge onto the exit lane. Stop it there, then strike it again through the doorway of the swinging gate while the gate is wide open, without touching the gate, and across the goal line in front of the backstop. The deliverable is one replayable trajectory of 100 Hz joint-target actions (`/app/output/trajectory.npz`,
 8 values per row), graded by the task's own staged success check: 5 phases (`incoming_strike`, `physical_bridge_transfer`, `exit_interception`, `second_strike`, `closing_gate_goal`), in order,
 with no failure event and no safety-limit violation, within the task's horizon of 32 s.
 

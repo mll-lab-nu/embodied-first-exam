@@ -13,7 +13,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/robowits-hold-cup-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.2): RoboWits hold_cup on the same frozen instance as the privileged task (evaluation scene 0 of task 9). Put the cup on the green target area on the slope without sliding down. The agent only gets a client: get_obs (RGB, optional depth, proprioception, calibrated cameras), submit (joint_position or ee_pose chunks), stateless kinematics. No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
+description = "STANDARD MODE (robot as a service, eai-standard/2.2): RoboWits hold_cup on the same frozen instance as the privileged task (evaluation scene 0 of task 9). Stand the cup upright on the green target area on the slope, so that it stays there without sliding down. The agent only gets a client: get_obs (RGB, optional depth, proprioception, calibrated cameras), submit (joint_position or ee_pose chunks), stateless kinematics. No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
 keywords = ["robotics", "robowits", "genesis", "marvin-bimanual", "dual-arm", "standard-mode", "trajectory", "hold_cup"]
 
 [metadata]
@@ -69,6 +69,13 @@ build_timeout_sec = 1800.0
 cpus = 4
 memory_mb = 5120
 storage_mb = 10240
+
+# The robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): Harbor starts this server for the agent.
+[[environment.mcp_servers]]
+name = "efe-robot"
+transport = "stdio"
+command = "python3"
+args = ["/opt/tools/efe_mcp/server.py"]
 
 [verifier.env]
 RCB_LIMITS_ENFORCE = "${RCB_LIMITS_ENFORCE:-0}"

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:robotwin-0.1.2` |
 
 ## Task
-RoboTwin 2.0 move_pillbottle_pad (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Set the pill bottle down upright in the middle of the pad, then let go. Frozen scene instance (RoboTwin seed 60417).
+RoboTwin 2.0 move_pillbottle_pad (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Stand the pill bottle upright in the middle of the pad, then let go. Frozen scene instance (RoboTwin seed 60417).
 
 ## Difficulty
 RoboTwin's scripted expert needs 3 planned motions (28 lines); official data-generation success on ALOHA-AgileX 67% (the expert's own pass rate over random layouts); in our image the expert passed on seed 60417 on attempt 1 of 6 with 2105 physics steps. Tags from the code: single-arm. RoboTwin evaluation budget 400 policy actions. The trajectory is the raw per-step drive-target record, so any plan failure or a grasp that slips during replay scores 0.
@@ -45,4 +45,4 @@ Caps per container (PROTOCOL §6).
 | RoboTwin eval step limit | 400 (policy-eval budget upstream; indicative of task length) |
 
 ### Goal
-Set the pill bottle down upright in the middle of the pad, then let go.
+Stand the pill bottle upright in the middle of the pad, then let go.

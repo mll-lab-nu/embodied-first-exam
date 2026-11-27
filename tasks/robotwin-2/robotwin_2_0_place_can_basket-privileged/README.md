@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:robotwin-0.1.2` |
 
 ## Task
-RoboTwin 2.0 place_can_basket (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Put the can into the basket with one arm. Then lift the basket a little off the table with the other arm and hold it upright, with the can still inside. Frozen scene instance (RoboTwin seed 60417).
+RoboTwin 2.0 place_can_basket (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Put the can into the basket. Then lift the basket a little off the table and hold it upright, with the can still inside. Frozen scene instance (RoboTwin seed 60417).
 
 ## Difficulty
 Two objects and both arms in sequence: one arm grasps the can and places it inside the basket at one of the basket's two functional points without knocking the basket over, then the other arm grasps the basket's rim/handle and lifts it while the can stays inside. The predicate combines heights, the basket's up-axis, can-to-basket distance and physical contact checks (can touches basket, not table). The expert needs 11 planned motions and carries a fallback path for when the in-basket place plan fails; it passes on 6 of 6 uncommon seeds, so difficulty here is coordination and contact reasoning rather than expert fragility.
@@ -45,4 +45,4 @@ Caps per container (PROTOCOL §6).
 | RoboTwin eval step limit | 700 (policy-eval budget upstream; indicative of task length) |
 
 ### Goal
-Put the can into the basket with one arm. Then lift the basket a little off the table with the other arm and hold it upright, with the can still inside.
+Put the can into the basket. Then lift the basket a little off the table and hold it upright, with the can still inside.

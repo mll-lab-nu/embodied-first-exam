@@ -1,65 +1,48 @@
-# DexHand: Plug a USB cable into a hub port
+# DexHand · Plug a USB cable into a hub port (standard)
 
-Connect the USB cable to the hub. You drive the right arm and hand of a Tianji Marvin robot standing in front of the desk (left arm parked). A four-port USB hub rests free on the desk with its ports facing the desk's front edge (world -y); the cable's USB-A plug lies on its side on the desk, with its 0.5 m cable. Pick up the plug, turn it so its polarized (top) face points up, and insert it into port 4, the rightmost port (hub-local x = +33 mm), then let go. Success requires three stages in order. (1) Grasped and lifted: the thumb and at least one other finger touch the rigid plug (shell, housing or strain relief), the plug touches nothing else, and the plug origin (the centre of its metal shell tip) is at z >= 0.73 m (30 mm above the desk top at z = 0.70 m). (2) Seated in port 4: in that port's frame the shell tip is at least 10.8 mm deep in the 12 mm cavity (90%), within 0.6 mm of the port axis sideways and 0.5 mm vertically, the plug axis is within 5 degrees of the port axis, and the plug's top face is within 20 degrees of the hub's top face (correct polarity). (3) Released: the plug stays seated in port 4 with no hand contact on the plug, its cable or the hub and a plug speed of at most 0.01 m/s for 50 consecutive controls (1 s). The episode ends with success at that moment. A plug seated in any other port never counts. The episode ends immediately with failure when the hub moves more than 20 mm from its start position or tilts more than 20 degrees, when the plug falls below z = 0.685 m, when the plug or hub leaves the workspace box x in [0.25, 1.15] m, y in [-0.40, 0.95] m, z in [0.685, 1.10] m, when the cable's far USB-B end falls more than 5 cm below the desk top, when an arm link, the robot's stand or torso, or the parked left hand touches anything (`robot_collision`: the desk, the floor, the hub, the plug or cable, the working hand or another robot part), when the plug is dropped (after stage 1, at the first control at which the plug has no hand contact on it or its cable, is not engaged at least 3 mm deep in a port, and either falls faster than 0.2 m/s or lies on the desk or floor), or when the physics becomes unstable; later actions cannot undo a failure. Only robot actuator targets are allowed; no object teleports, grasp welds, scripted object motion or direct object forces. Each port is an open rectangular cavity with generous clearance (0.25 mm per side across, 0.15 mm per side in height); the receptacle tongue and contacts are visual, and there are no retention springs, so the plug stays in by friction and its own weight. The episode allows at most 3000 controls at 50 Hz; reaching that limit without success is a failure.
+## Task
+Pick up the cable's plug and lift it a few centimetres off the desk, then plug it into the hub's rightmost port (seen
+from the front) with its top face up, and let go.
 
-You control the right arm and right hand of a fixed Tianji Marvin robot: a stand with two 7-joint arms and a dexterous
-hand on each wrist. The robot stands on the floor in front of the desk, right of the hub (base centre at x = 0.93,
-y = -0.52 on the floor at z = -0.20, facing the desk at yaw 135 deg, i.e. toward world (-1, +1)/sqrt(2); shoulders
-at z = 1.021 m, 1.221 m above the floor). The left arm stays parked beside the torso with its hand open; the task is done by the right
-arm and hand alone. Every arm and finger joint is a position servo inside the physics engine under native force
-bounds; arm servos have stiffness 700 N m/rad, damping 48 N m s/rad and **no gravity compensation** (a held target sags
-under the arm's weight unless your targets account for it). Grasping, carrying, inserting and releasing require
-physical contact. Only the working right hand may touch the desk and the task objects: any contact of an arm link, the
-stand or torso, or the parked left hand with anything fails the episode at once (`robot_collision`). The controller
-runs at 50 Hz, with ten 2 ms physics substeps.
+## Goal
+Success: in this order, the plug is grasped by the thumb and at least one other finger and lifted off the desk; it is
+pushed nearly all the way into port 4, the rightmost port seen from the front, straight and with its top face up; then
+it stays there with the hand off the plug, its cable and the hub, still for a second.
 
-## Scene
-- Desk: top at z = 0.70 m (0.90 m above the floor at z = -0.20), front edge at y = -0.114 m (world frame, z up,
-  metres and radians); its two front legs stand back under the top (x 0.32, y 0.00 and x 1.08, y 0.46), clear of
-  the robot's base plate.
-- Hub: the original four-port USB hub (103 x 30 x 10 mm, 21.8 g) rests free on the desk on rubber pads, its port face
-  flush with the desk's front edge and facing -y; it is not fixed or held. Ports 1-4 are at hub-local
-  x = -27, -7, +13, +33 mm; port 4 (the target) is the rightmost seen from the front. Its own upstream cable is drawn
-  lying on the desk and has no physics.
-- Plug: a free USB-A plug (7 g; metal shell 12.0 x 4.5 x 12 mm, housing 15 x 20 x 8 mm, strain relief) lying on its
-  side on the desk, with a passive 0.5 m cable (20 ball-jointed links, 15 g) ending in a free USB-B plug on the desk.
-  The plug frame origin is the centre of the shell tip; its +y axis points out of the shell (insertion direction)
-  and +z is the polarized top face. Inserted correctly, the plug's +y aligns with the hub's +y and +z with the hub's +z.
-- Ports are open rectangular cavities 12.5 x 4.8 x 12 mm (0.25 mm clearance per side across, 0.15 mm in height); the
-  receptacle tongue and contacts are visual only, polarity is part of the success predicate, and there are no
-  retention springs: a seated plug stays by friction and its own weight.
-- Cameras: `overview` (desk, hub and plug from the front left) and `closeup` (the hub's port face).
+Any of these ends the episode at once as a failure, which later actions cannot undo:
+- The hub is moved or tilted.
+- The plug falls below the desk top.
+- The plug or the hub leaves the work area.
+- The cable's far end falls off the desk.
+- An arm link, the robot's stand or torso, or the parked left hand touches anything.
+- After it was grasped, the plug is dropped (let go while it is not in a port).
+- The physics becomes unstable.
 
-## Hands
-Two genuine manufacturer hand models are available: `sharpa` (Sharpa Wave, 22 finger actuators; the default) and `wuji` (Wuji Hand 2.2, 20 finger actuators). The task, scene, mount, objects and success predicate are the same for both; only one hand is used per episode.
-Each row starts with the 14 Marvin arm joint targets (left arm J1-J7, then right arm J1-J7), followed by the left hand's finger targets and then the right hand's (22 per hand for `sharpa`, 20 per hand for `wuji`); the left arm is parked and only the right arm/hand perform the task.
-The robot service runs the hand named by `DEXHAND_HAND` on the sim service (default `sharpa`); the agent cannot switch it during an episode. `spec()["hand"]` names it, and `spec()["action_types"]["joint_position"]` gives the row width (`58` for `sharpa`, `54` for `wuji`) and the exact order. The episode record names the hand; the service grades the episode it ran with that hand.
+Each step of the Goal before the last one counts at the moment it happens.
 
-## Episodes and resets
-You have **20 resets** (`spec["budget"]["reset"]`, which is authoritative: if it says 0, there is no reset
-and the one episode is the run). A reset puts the robot and every object back in the same frozen starting state and
-starts a new episode, either abandoning the running one or after one has ended; it takes no simulated time and
-returns the start's images and proprioception:
-```python
-res = r._post("/reset", {"cameras": ["overview"]}, [], 900)   # POST /reset (the 2.2 client has no reset())
-res.meta["episode"], res.meta["resets_left"]
-```
-Once an episode has ended, `submit` raises `EpisodeOver` until you reset. **Only the last episode is graded**: an
-episode you reset away is never graded, a success ends the run at once (no reset after it), and when your time is up
-the episode then running is the one graded. The wall clock is the run's and never restarts; `meta["episode"]` and
-`meta["resets_left"]` count the episodes (`meta["control_steps"]` is the current episode's,
-`meta["control_steps_total"]` all of them).
+When you are done, send `/finish` to end the episode and get it graded. Everything else is judged on the state at that
+point.
 
-## Robot service
-The simulator runs in a separate service. You receive camera RGB, optional calibrated depth, and the robot's own
-joint positions, velocities, actuator efforts, wrist pose (`wrist_stage`, the right hand's mount on the arm flange) and current targets; object
-poses, contacts and the verdict state are not observable (`r.status()` only reports whether the episode ended and
-whether it succeeded). An episode ends at the first success
-or the first failure (see the task text); after that the service accepts no more actions until a reset (see
-`## Episodes and resets`). The service records every action and watch step, then judges the graded episode as it ran
-(that is the verdict; nothing is replayed). Leave your controller at `/app/output/gen.py`; no trajectory hand-in is
-needed.
+Rules:
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+  benchmark's demonstrations, trained policies); trials are reviewed.
+- Episodes: 20 resets (`spec()["budget"]["reset"]`), each a new episode from the same starting state; within an episode
+  what you knock over stays knocked over until you reset. Only the last episode is graded. No reset is possible after
+  `/finish`.
+- You get only the cameras and the robot's own sensor readings: no live object poses, no score, no success signal.
 
+Only the robot's actuator targets act on the scene: no object teleports, grasp welds, scripted object motion or applied
+forces.
+
+## Robot Interface
+The right arm and hand of a fixed Tianji Marvin robot (two 7-joint arms, a dexterous hand on each wrist; the left arm
+stays parked), in front of a desk (DexHand, MuJoCo). The robot runs as a service you reach through its client or its MCP
+tools, as if it were real hardware.
+
+`POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
+
+### Client
+`/opt/tools/rcb_client.py`:
 ```python
 from rcb_client import Robot
 r = Robot()
@@ -73,33 +56,102 @@ q = obs.group("joint_pos", now=True)
 res = r.submit("joint_position", rows, dt=0.02, interpolate="hold", video="none")
 r.fk(q)                       # robot-link forward kinematics; no physics is stepped
 r.status()
-res.save("/app/runs/001")
+# a new episode: POST /reset, or the MCP tool `reset` (this client has no reset() call)
 ```
+Requests can return RGB frames or mp4, with depth `none`, `last` or `frames`. Each call returns at most 1,000 camera
+images, counting per-frame depth; reduce cameras, fps or duration for larger chunks. `hold(s)` holds the current targets
+and records those steps. `get_obs()` only observes the current state. Forward kinematics uses only the robot's own
+links; no IK primitive is supplied. If the service connection fails, call `r.wait_ready()` and inspect `r.status()`
+before continuing. Crash recovery resumes the same journaled episode, without a reset, and the wall-clock budget keeps
+running.
+
+Resets: `POST /reset` (MCP tool `reset`) starts a new episode from the same starting state. You can call it during a
+running episode, which it abandons, or after one has ended. It takes no simulated time and returns the start's images
+and proprioception. Once an episode has ended, `submit` raises `EpisodeOver` until you reset. `meta["episode"]` and
+`meta["resets_left"]` count the episodes. `meta["control_steps"]` counts the current episode's control steps,
+`meta["control_steps_total"]` those of all episodes.
+
+### MCP tools
+- The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
+  `observe`, `submit`, `reset`, `kinematics`, `finish`. A tool takes its endpoint's request fields (any other field in
+  `fields`) and returns the service's reply `meta` unchanged; images, arrays and video are written as files under
+  `/app/obs/` (`.png`, `.npy`, `.mp4`) and the result lists them. Long action chunks can be passed as a file
+  (`actions_file`).
+- `observe` returns at once with what is already recorded: the current frame, or the last `last_s` seconds. Time passes
+  only through `submit`, which answers when its rows have run; a `submit` with `interpolate` "hold", `seconds` and no
+  rows lets time pass with the robot holding still.
+- A call still running after 45 s returns `pending` with an `operation` id; `observe(operation=id)` collects its reply.
+- The client and the tools drive the same robot in the same episode; use either, or both.
+
+### Actions
 `rows` is `(T, D)` in `spec["action_types"]["joint_position"]["layout"]` order, all in radians: the 14 Marvin arm
-targets (left arm `SHOULDER_PITCH_L_J1` ... `WRIST_ROLL_L_J7`, keep them at the parked start values; then the right
-arm `..._R_J1` ... `..._R_J7`), the left hand's finger targets, then the right hand's. `D` is 58 for `sharpa` (22 Sharpa
-Wave finger joints per hand, `left_thumb_CMC_FE` ... `left_pinky_DIP`, then `right_thumb_CMC_FE` ...
-`right_pinky_DIP`) and 54 for `wuji` (20 Wuji Hand 2.2 finger joints per hand, `l_wuji_l_THJ0..3` ...
-`l_wuji_l_LFJ0..3`, then `r_wuji_r_THJ0..3`, `r_wuji_r_FFJ0..3`, `r_wuji_r_MFJ0..3`, `r_wuji_r_RFJ0..3`, `r_wuji_r_LFJ0..3`). Actuator targets are clipped to the published joint limits
-and clipping is reported. `dt` must be a multiple of 0.02 s, between 0.02 and 0.5 s; a chunk covers at most 10 s. Hold
-interpolation holds each row for `dt`; linear interpolation starts from the previous target. The robot has no scalar
-gripper opening. Quaternions in measured poses use WXYZ; world z is up, the desk top is at z = 0.70 m and its front
-edge at y = -0.114 m. Cameras are overview and closeup, at 640 x 480. Requests can return RGB frames or mp4, with depth
-`none`, `last` or `frames`. Each call returns at most 1,000 camera images, counting per-frame depth; reduce cameras,
-fps or duration for larger chunks. `get_obs(seconds=...)` holds the current targets for up to 30 s and records those
-steps. Calling it without seconds only observes the current state. Forward kinematics uses only the robot's own links;
-no IK primitive is supplied. If the service connection fails, call `r.wait_ready()` and inspect `r.status()` before
-continuing. Crash recovery resumes the same journaled episode, without a reset, and the wall-clock budget keeps running.
+targets (left arm `SHOULDER_PITCH_L_J1` ... `WRIST_ROLL_L_J7`, keep them at the parked start values; then the right arm
+`..._R_J1` ... `..._R_J7`), the left hand's finger targets, then the right hand's. `D` is 58 for `sharpa` (22 Sharpa
+Wave finger joints per hand, `left_thumb_CMC_FE` ... `left_pinky_DIP`, then `right_thumb_CMC_FE` ... `right_pinky_DIP`)
+and 54 for `wuji` (20 Wuji Hand 2.2 finger joints per hand, `l_wuji_l_THJ0..3` ... `l_wuji_l_LFJ0..3`, then
+`r_wuji_r_THJ0..3`, `r_wuji_r_FFJ0..3`, `r_wuji_r_MFJ0..3`, `r_wuji_r_RFJ0..3`, `r_wuji_r_LFJ0..3`). Actuator targets
+are clipped to the published joint limits and clipping is reported. `dt` must be a multiple of 0.02 s, between 0.02 and
+0.5 s; a chunk covers at most 10 s. Hold interpolation holds each row for `dt`; linear interpolation starts from the
+previous target. The robot has no scalar gripper opening.
 
-One call returns at most 1000 images (`max_frames_per_call`, PROTOCOL §3 "Images per call").
+Each row starts with the 14 Marvin arm joint targets (left arm J1-J7, then right arm J1-J7), followed by the left hand's
+finger targets and then the right hand's (22 per hand for `sharpa`, 20 per hand for `wuji`). The left arm is parked;
+only the right arm and hand perform the task.
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+### Observations
+You receive camera RGB, optional calibrated depth, and the robot's own joint positions, velocities, actuator efforts,
+wrist pose (`wrist_stage`, the right hand's mount on the arm flange) and current targets; object poses, contacts are not
+observable (`r.status()` only reports whether the episode ended and why). Quaternions in measured poses use WXYZ; world
+z is up, the desk top is at z = 0.70 m and its front edge at y = -0.114 m. Cameras are overview and closeup, at 640 x
+480.
 
-## Resources
-Your container: **2 CPUs**, **4 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
+### Hands
+Two hand models: `sharpa` (Sharpa Wave, 22 finger actuators; the default) and `wuji` (Wuji Hand 2.2, 20 finger
+actuators); the task is the same for both, and one hand is used per episode. The service runs the hand that
+`DEXHAND_HAND` names on the sim service (default `sharpa`); you cannot switch it during an episode. The hand in use is
+`spec()["hand"]`; `spec()["action_types"]["joint_position"]` gives the row width (`58` for `sharpa`, `54` for `wuji`)
+and the exact order.
 
-## Time limit
-You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+### Robot
+You control the right arm and right hand of a fixed Tianji Marvin robot: a stand with two 7-joint arms and a dexterous
+hand on each wrist. The robot stands on the floor in front of the desk, right of the hub (base centre at x = 0.93, y =
+-0.52 on the floor at z = -0.20, facing the desk at yaw 135 deg, i.e. toward world (-1, +1)/sqrt(2); shoulders at z =
+1.021 m, 1.221 m above the floor). The left arm stays parked beside the torso with its hand open; the task is done by
+the right arm and hand alone. Every arm and finger joint is a position servo inside the physics engine under native
+force bounds. Arm servos have stiffness 700 N m/rad, damping 48 N m s/rad and no gravity compensation, so a held target
+sags under the arm's weight unless your targets account for it. Grasping, carrying, inserting and releasing require
+physical contact. Only the working right hand may touch the desk and the task objects: any contact of an arm link, the
+stand or torso, or the parked left hand with anything fails the episode at once (`robot_collision`). The controller runs
+at 50 Hz, with ten 2 ms physics substeps.
 
-This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` counts the same limit from your first request to the service, so it never runs out before your time does: your real time left is `time_left_s` minus the time you spent before that request. Plan by it. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+### Scene
+- Desk: top at z = 0.70 m (0.90 m above the floor at z = -0.20), front edge at y = -0.114 m (world frame, z up, metres
+  and radians); its two front legs stand back under the top (x 0.32, y 0.00 and x 1.08, y 0.46), clear of the robot's
+  base plate.
+- Hub: the original four-port USB hub (103 x 30 x 10 mm, 21.8 g) rests free on the desk on rubber pads, its port face
+  flush with the desk's front edge and facing -y; it is not fixed or held. Ports 1-4 are at hub-local x = -27, -7, +13,
+  +33 mm; port 4 (the target) is the rightmost seen from the front. Its own upstream cable is drawn lying on the desk
+  and has no physics.
+- Plug: a free USB-A plug (7 g; metal shell 12.0 x 4.5 x 12 mm, housing 15 x 20 x 8 mm, strain relief) lying on its side
+  on the desk, with a passive 0.5 m cable (20 ball-jointed links, 15 g) ending in a free USB-B plug on the desk. The
+  plug frame origin is the centre of the shell tip; its +y axis points out of the shell (insertion direction) and +z is
+  the polarized top face. Inserted correctly, the plug's +y aligns with the hub's +y and +z with the hub's +z.
+- Ports are open rectangular cavities 12.5 x 4.8 x 12 mm (0.25 mm clearance per side across, 0.15 mm in height); the
+  receptacle tongue and contacts are visual only, and there are no retention springs: a seated plug stays by friction
+  and its own weight.
+- Cameras: `overview` (desk, hub and plug from the front left) and `closeup` (the hub's port face).
+
+## Limits
+- Time: 3600 s of wall-clock time from the start of your session. Everything counts, including waiting for the service.
+  At the end you are stopped without warning. Time left: `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`).
+  Trust this file: the `time_left_s` in the service's replies starts only at your first request. A call into a
+  long-running process can block for its whole wait time. Use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, including the simulator's and the benchmark's source.
+- Resources: 2 CPUs, 4 GiB memory, 1024 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`), no
+  GPU; the simulator runs in its own container and does not count. Going over a cap can get a process killed (the CPU
+  cap only slows you down). Usage: `/run/rcb-limits/usage.json`.
+- Resets: at most 20 (`spec()["budget"]["reset"]`), each a new episode from the same starting state.
+- Steps: at most 3,000 control steps (60 s of simulated time) per episode, then the episode ends.
+- Finish: if you never send `/finish`, the last episode is graded when your session ends.

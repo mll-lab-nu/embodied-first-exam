@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0` |
 
 ## Task
-At the start a small cube, the part, rides along a powered roller conveyor, and a shallow carriage is already coasting along a frictionless rail. Grasp the part with the gripper while it is moving and lift it. Set it on the moving carriage and let go while the carriage is still moving. Then grip the carriage's vertical handle with both fingers and bring the carriage to a stop, with the part still on it, before it reaches the end of its rail. Grasp the part again and lift it off the carriage. Finally set it down in a fixed dock and leave it there at rest. The deliverable is one replayable trajectory of 100 Hz joint-target actions (`/app/output/trajectory.npz`,
+Grasp the part from the moving conveyor, lift it about a hand's length and set it on the coasting carriage, letting go while the carriage is moving. Then grip the carriage's handle and stop it, with the part still on it, before it reaches the end of its rail; finally lift the part off and set it down in the dock. The deliverable is one replayable trajectory of 100 Hz joint-target actions (`/app/output/trajectory.npz`,
 8 values per row), graded by the task's own staged success check: 5 phases (`moving_acquisition`, `loaded_carriage_release`, `handle_braking`, `payload_regrasp`, `dock_deposit`), in order,
 with no failure event and no safety-limit violation, within the task's horizon of 25 s.
 

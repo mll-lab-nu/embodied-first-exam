@@ -13,7 +13,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:bigym2-0.1.1` |
 
 ## Task
-Take both cups from the counter and put them on the bottom shelf of the wall cabinet. Then let go, with both grippers off the cups. (BiGym 2.0 `put_cups`; the robot as a service on a clock that does not stop: its three onboard cameras and
+Put both cups from the counter on the bottom shelf of the wall cabinet and let go. (BiGym 2.0 `put_cups`; the robot as a service on a clock that does not stop: its three onboard cameras and
 its proprioception only, one episode.)
 
 ## Difficulty

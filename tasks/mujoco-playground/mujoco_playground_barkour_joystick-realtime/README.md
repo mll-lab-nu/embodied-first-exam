@@ -13,7 +13,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:mujoco-0.1.3` |
 
 ## Task
-MuJoCo Playground `BarkourJoystick` (Google Barkour vB) on the same frozen instance as `mujoco_playground_barkour_joystick-privileged`: Make Google's Barkour quadruped follow the joystick command schedule for the whole 10 s episode, through random pushes, without falling over.
+MuJoCo Playground `BarkourJoystick` (Google Barkour vB) on the same frozen instance as `mujoco_playground_barkour_joystick-privileged`: Make the robot follow the joystick's commands for the whole schedule without falling over, even when it gets pushed.
 For 10 s the robot gets a joystick command schedule (2 segments: planar velocity and yaw rate in its own frame) and must track it without falling over. Its torso is pushed 12 times. Realtime mode (eai-standard/2.3, slowdown S = 1): once an episode's clock starts the
 robot runs at 100 Hz whatever the agent does; it drives the robot through the realtime client from a program
 of its own, with 10 resets (only the last episode is graded), the robot's own sensors and the cameras that

@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-match-0.1.0@sha256:99255569bf68bcf27f4e4867b58bad55c1d54fe73281920882e97c310836b6c7` |
 
 ## Task
+Win a game of singles badminton to 11 points against the other robot.
+
 The privileged twin of `embodied-olympics-match-badminton-duelrl-i01-realtime`: singles badminton on a 0.4-scale court (BWF Laws, one game to 11): a Franka Panda with a racket on a gantry base against the built-in RL opponent (seat B, the same robot; its contact, shot and positioning learned by policy search); seed 1001, S = 20.
 
 ## Difficulty

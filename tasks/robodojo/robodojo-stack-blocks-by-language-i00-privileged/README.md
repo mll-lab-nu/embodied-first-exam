@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Stack the three coloured cubes into one tower in the bottom-to-top colour order the instruction gives. Then bring both arms back to where they started. (RoboDojo's `stack_blocks_by_language`). RoboDojo capability dimension: Open. Instance i00 is RoboDojo's own evaluation layout
+Stack the three cubes into one tower: blue at the bottom, yellow in the middle and orange on top. Then move both arms back to where they started. (RoboDojo's `stack_blocks_by_language`). RoboDojo capability dimension: Open. Instance i00 is RoboDojo's own evaluation layout
 `arx_x5/0/stack_blocks_by_language_0.json` (sha256 `03aa18bd083b56ac`), frozen in `instance.json`. The deliverable is one replayable trajectory of
 RoboDojo's 14-D joint action at 25 Hz (`/app/output/trajectory.npz`), graded by RoboDojo's own reward check for the task,
 with no step cap (RoboDojo's own evaluation gives a policy 400 actions; PROTOCOL §3).

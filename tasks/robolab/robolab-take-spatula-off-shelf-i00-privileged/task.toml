@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/robolab-take-spatula-off-shelf-i00-privileged"
-description = "NVIDIA RoboLab take_spatula_off_shelf (Franka + Robotiq 2F-85, Isaac Lab 2.3 / Isaac Sim 5.1): produce one replayable trajectory. Take the spatula off the shelf and put it on the table. Frozen scene instance (the state after RoboLab's canonical seed-0 reset)."
+description = "NVIDIA RoboLab take_spatula_off_shelf (Franka + Robotiq 2F-85, Isaac Lab 2.3 / Isaac Sim 5.1): produce one replayable trajectory. Take the spatula off the wire shelf and put it on the table. Frozen scene instance (the state after RoboLab's canonical seed-0 reset)."
 keywords = ["robotics", "robolab", "isaac-lab", "isaac-sim", "franka", "code-as-policy", "trajectory", "take_spatula_off_shelf"]
 
 [metadata]

@@ -17,7 +17,7 @@ Standard mode (robot as a service, `eai-standard/2.1`) of `kinder-scoop-pour-i01
 cameras, joint encoders, the base's odometry -- and
 never the scene's state or the goal check. No reset: one episode, which is graded.
 
-Task: move all 50 small dark-red cubes from the yellow bin into the green bin. You may use the scoop in the scene. The task succeeds the moment every cube's centre is inside the green bin, at least 1 cm from each of its inner walls and at least 0.5 cm below its rim.
+Task: Move all 50 small cubes from the yellow bin into the green bin. There is a scoop you can use.
 
 ## Difficulty
 Nonprehensile, tool use, dynamics: move 50 small cubes from one bin to another with a scoop, each ending well inside the target bin. The variant is upstream's o50 (both cube families use theirs, tasks/kinder/README.md).
@@ -26,7 +26,7 @@ Nonprehensile, tool use, dynamics: move 50 small cubes from one bin to another w
 None, and no positive example yet: the task is unvalidated (`validated = false`, docs/protocol/README.md §2, §4) until a human review records one.
 
 ## Verification
-The sidecar judges the episode as it runs (KinDER's goal check at every control step; the episode ends there) and,
+The sidecar runs the episode live: it ends at the agent's `POST /finish`, at the step cap, when the agent's time is up, or on a simulator error (a success never ends it and is never shown), and KinDER's goal check is judged on the state it ends in. The sidecar,
 when the collect hook ends the trial, writes that verdict to `/data/final.json` (`graded_by = "live"`): nothing is
 replayed to grade it (owner, 2026-10-17). The scene's start is checked against the frozen instance's
 recorded state (`scene_sha`) when the episode begins (a mismatch is `instance_mismatch`, infrastructure).

@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | Embodied Olympics - Match |
-| Mode | standard (`eai-standard-lockstep/1.0`) |
+| Mode | standard (`eai-standard/2.1+match/1.0`) |
 | Twin | `embodied-olympics-match-badminton-match-i04-privileged` |
 | Simulator / robot | `mujoco` / `franka-panda` |
 | Family / instance | `badminton_match` / seed 1034 (allowed seeds: [1034, 1, 2]; PROTOCOL §2) |
@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-match-0.1.0` |
 
 ## Task
+Win a game of singles badminton to 11 points against the scripted opponent.
+
 Robot badminton against the scripted opponent (level 5), program play: robot singles badminton on a small court (the BWF court's lengths x 0.4, the net at its BWF height 1.524 m) in real time (slowed down): a Franka Panda arm held to the real Panda's limits, with a racket, on an x-y gantry of ball-screw axes (2 m/s, 15 m/s^2), a point-mass shuttle with the real shuttle's high quadratic drag (terminal speed 6.8 m/s) and no bounce, a racket contact law of gain 4 (shuttles leave the racket at up to about 10 m/s); rally scoring, one game to 11 points; the players' robots serve (the rally winner serves next): the server tosses the shuttle (from rest or rising up to 0.5 m) at a point it chooses and hits it underhand, below 1.15 m, into the diagonal service court; format match-wallclock: you against a scripted computer opponent (levels 1-3, `game spec` match.opponent_level), format duel-wallclock: two players.
 
 **Opponent level 5.** Level 5 is a tier of this exported task only (the sport's own levels 1-3 are described under Rules): the level 2 opponent (reach 0.85 m, level 2's attacks, 0.25 s to spare on its shots except its kills) with a reaction of 0.22 s (level 2: 0.25 s, level 3: 0.20 s), level 3's walk back after its own stroke (2 m/s instead of 0.6 m/s) and level 3's kills, in 90 % of its attacks (level 2: 50 %). Like every level it predicts the shuttle's flight exactly; its base and arm obey the same limits as yours. `game spec` match.opponent_level is 5.
@@ -50,4 +52,4 @@ Source: Embodied Olympics task `badminton-match-wallclock-program-standard`, rev
 opponent, the observation, the review between points and the grader are ours, unchanged; only the seat is
 unmetered (Harbor records the model's usage) and the instance is frozen.
 
-Standard twin of `embodied-olympics-match-badminton-match-i04-realtime`: the same export, the world in lockstep (`environment/sim/core/lockstep.py`; `eai-standard-lockstep/1.0` in tasks/embodied-olympics-match/README.md).
+Standard twin of `embodied-olympics-match-badminton-match-i04-realtime`: the same export, the world in lockstep (`environment/sim/core/lockstep.py`; `eai-standard/2.1+match/1.0` in tasks/embodied-olympics-match/README.md).

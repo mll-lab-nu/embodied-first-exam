@@ -70,9 +70,8 @@ class Task(TaskBase):
     stages = ["down", "1 windmill", "2 windmills", "3 windmills"]
     params = dict(n_windmills=3, fop_m=8.0, roll_frac=0.85, torso_touch=True, axis_max_deg=30.0, pelvis_max_m=0.45)
 
-    sentence = ("Breaking: go down to the floor and do three windmills in a row, rolling over your upper back, "
-                "shoulders and chest while your legs circle above the floor and neither your hips nor your legs touch "
-                "it.")
+    sentence = ("Get down on the floor and do three windmills in a row, rolling over your back, shoulders and chest "
+                "while your legs circle above the floor.")
     rules = ("A windmill revolution is counted on your torso. Its long axis (from your pelvis up to your neck) must "
              "turn once round the vertical (360 degrees of heading) and in the same time your torso must roll once "
              "about that axis (back, shoulder, chest, shoulder, back towards the floor: at least {roll_frac} of a "

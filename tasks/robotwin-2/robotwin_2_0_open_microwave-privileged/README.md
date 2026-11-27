@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:robotwin-0.1.2` |
 
 ## Task
-RoboTwin 2.0 open_microwave (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Open the microwave door: pull it open until its hinge joint reaches at least 60 percent of its joint range. Frozen scene instance (RoboTwin seed 28831).
+RoboTwin 2.0 open_microwave (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Pull the microwave door open, well past halfway. Frozen scene instance (RoboTwin seed 28831).
 
 ## Difficulty
 Articulated object with a fixed base. The door handle must be grasped and pulled along the hinge arc; a single planned end-effector motion does not open it, so RoboTwin's own expert re-grasps along a sequence of contact points on the door in a loop of up to 50 pulls and has a fallback strategy when the door stalls, and still fails on 3 of 6 uncommon seeds (about 6k to 10k physics steps when it succeeds). The agent has to reason about the door's kinematics (`env.microwave.get_qpos()`, `get_qlimits()`), keep the grasp while moving along an arc, and avoid pushing the door closed again.
@@ -45,4 +45,4 @@ Caps per container (PROTOCOL §6).
 | RoboTwin eval step limit | 1500 (policy-eval budget upstream; indicative of task length) |
 
 ### Goal
-Open the microwave door: pull it open until its hinge joint reaches at least 60 percent of its joint range.
+Pull the microwave door open, well past halfway.

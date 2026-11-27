@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Hide the Easter eggs in the garden. The three eggs are inside the wicker basket on the lawn; take all three out and lay them on the lawn next to one tree (any tree in the garden, but the same tree for all three).
+Take the three Easter eggs out of the basket and lay them on the lawn next to the same tree.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - there is one tree such that all three Easter eggs (`easter_egg.n.01_1`, `easter_egg.n.01_2`, `easter_egg.n.01_3`) are next to that tree

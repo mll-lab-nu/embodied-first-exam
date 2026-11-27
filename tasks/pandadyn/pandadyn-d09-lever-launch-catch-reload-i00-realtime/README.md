@@ -16,7 +16,7 @@
 Realtime twin of `pandadyn-d09-lever-launch-catch-reload-i00-privileged` (same frozen instance and success check as it and as `pandadyn-d09-lever-launch-catch-reload-i00-standard`): the agent gets only
 the realtime client (`eai-standard/2.3`, docs/protocol/standard_mode.md Part 3); the simulator runs in the `sim` sidecar on a clock
 that does not stop, at slowdown **S = 3** (one 10 ms control step every 30 ms of wall-clock time), with
-3 resets (only the last episode is graded). A ball starts in the right arm's cup. The right arm must load it into the small basket of a passive see-saw launcher and move its cup away. The left arm, holding a mallet, must strike the lever so that the ball is flung up into free flight, and the right arm must catch it in its cup. The right arm then loads the ball into the basket a second time and clears away, and the left arm launches it again. In the end the ball must come to rest inside an open box that slides back and forth on a rail, while the box is moving. The left arm's mallet must never touch the ball.
+3 resets (only the last episode is graded). Load the ball from the right cup into the launcher's basket and move the cup well clear; strike the lever with the left mallet so that the ball flies up, and catch it in the right cup. Do it a second time, then get the ball into the sliding box while the box is moving. The mallet must never touch the ball.
 
 ## Difficulty
 That of `pandadyn-d09-lever-launch-catch-reload-i00-standard`, but the scene does not wait between calls: once an episode's clock starts, the moving objects and
@@ -59,7 +59,7 @@ Caps per container (PROTOCOL §6).
 | | |
 |---|---|
 | Episode | it ends at the first control step where the task has succeeded or failed (the task's horizon, 25 s of robot time, is a failure), when the agent's time is up, or on a simulator error; 3 resets (`POST /reset`: the scene rebuilt from the frozen instance, paused) |
-| Action space | `submit` chunks of `joint_position` (16: per arm 7 joint targets + the aperture, one row per 10 ms control step or `dt` apart) planned from step `at`; `observe` now or a watch window; binary RCB1 responses |
+| Action space | `submit` chunks of `joint_position` (16: per arm 7 joint targets + the aperture, one row per 10 ms control step or `dt` apart) planned from step `at`; `observe` now or the last seconds recorded (`last_s`); binary RCB1 responses |
 | Cameras | `overview` and `closeup` (static), 640×480 RGB, z-depth on request, rendered by SAPIEN on the sidecar's GPU |
 | Images | the `sim` sidecar runs efe:pandadyn (`images/pandadyn/`); the agent container and the verifier run the shared client image with its pip pins (`embodied_first_exam/standard/client.env`) |
 | Crash recovery | the shared realtime layer's: a checkpoint every second of robot time, `restart: on-failure:6`, the service resumes the same episode, paused |

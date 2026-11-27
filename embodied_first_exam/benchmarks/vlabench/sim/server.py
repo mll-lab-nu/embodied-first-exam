@@ -17,6 +17,14 @@ condition) at every control step and the episode ends there, so nothing is repla
 the trajectory once, after the verdict, to film it. The frozen start: vlb_tool.Session refuses a scene whose initial
 state or compiled model differs from instance.json (InstanceMismatch here), and start_sha (the instance's
 initial_state_sha256) is checked by rcb_service when an episode begins.
+Agent-ended episodes (RCB_AGENT_END, PROTOCOL §3; every VLABench standard task): the task's termination condition (its
+success) no longer ends the episode (vlb_tool Session.run_on, also in the video's replay); step() reports it as things
+stand and the episode is judged on the state it ends in (end_judgement "state": the conditions are predicates on the
+scene); RCB_MAX_CONTROL_STEPS is the step cap, judged as it stands. The exceptions are EVENT_TASKS: their success
+holds only while a button is held down (VLABench's Button.is_pressed()), so they are judged on events (end_judgement
+"events"): the episode counts once the task's whole condition has held at one control step (heat_food: the food in the
+microwave and its door closed while the start button is pressed), as their privileged twins count it (the episode ends
+there).
 """
 
 from __future__ import annotations
@@ -44,6 +52,11 @@ def frame(spec: dict) -> str:
 
 # The Panda's documented joint limits (rad). VLABench's model sets none (its arm actuators accept any angle), so they
 # are given as facts, not enforced.
+# The tasks whose success is a button held down (Button.is_pressed()): pressed, released and /finish would be judged 0
+# on the end state, while the privileged twin counts the press. These standard tasks are judged on events (coordinator
+# 2026-11-26): the first control step at which the task's condition held counts (rcb_service end_judgement "events").
+EVENT_TASKS = frozenset({"friction_qa", "magnetism_qa", "reflection_qa", "select_painting", "heat_food"})
+
 PANDA_LIMITS = [[-2.8973, 2.8973], [-1.7628, 1.7628], [-2.8973, 2.8973], [-3.0718, -0.0698], [-2.8973, 2.8973],
                 [-0.0175, 3.7525], [-2.8973, 2.8973]]  # fmt: skip
 
@@ -63,6 +76,8 @@ class VLABench:
                 raise InstanceMismatch(str(exc)) from exc
             raise
         self.start_sha = self.s.spec["initial_state_sha256"]   # rcb_service checks it when an episode begins
+        # agent-ended episodes: how the end is judged (rcb_service AGENT_END; EVENT_TASKS above)
+        self.end_judgement = "events" if self.s.spec.get("native_task") in EVENT_TASKS else "state"
         self.task_text = task_text or self.s.instruction
         self.episode = episode
         self.hw = int(image_hw)

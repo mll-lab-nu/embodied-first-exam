@@ -2,7 +2,7 @@
   "schema": "control-transfer/1",
   "protocol": "eai-policy/1.1",
   "name": "go2-weave",
-  "goal": "Execute a predeclared body velocity command schedule to pass four alternating poles without contact; no global-position feedback.",
+  "goal": "Make the Go2 weave forward past the four poles ahead, passing to the left of the first, to the right of the next and so on, without touching any or falling.",
   "score": "Success requires four ordered alternating crossings, clearance >=0.16 m, no pole/body-ground collision, final x beyond last pole +0.35 m; the score is the share of poles passed correctly, capped at 49 when unsuccessful.",
   "max_rounds": 3,
   "adaptation_cases": 3,

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:autobio-0.1.0` |
 
 ## Task
-AutoBio's `screw_loose` (Unscrew centrifuge tube cap), with two ALOHA arms (`arm1` and `arm2`; 6 joints and a parallel gripper each), fixed to the bench on either side of the rack: Unscrew the cap of the 50 mL centrifuge tube and lift it off. Success at the first control step where the cap is more than 0.15 m above the tube body's origin (screwed on it sits 0.1197 m above it, so more than 3.03 cm up), `arm1`'s left finger (geom `1/aloha:leftfinger`) touches the cap (geom `6/cap_cyl`), and the cap's thread (geom `6/nut`) no longer touches the tube's (geom `7/bolt`).
+AutoBio's `screw_loose` (Unscrew centrifuge tube cap), with two ALOHA arms (`arm1` and `arm2`; 6 joints and a parallel gripper each), fixed to the bench on either side of the rack: Unscrew the cap of the 50 mL tube and lift it off, holding the cap with `arm1`.
 On the bench: a rack with a 50 mL tube standing in it, its cap screwed on. The thread is a real one: the cap comes off only by turning it. AutoBio's prompt for this task: "one stabilizes tube while the other twists cap". The deliverable is one replayable trajectory of joint position targets (`/app/output/trajectory.npz`, `(T, 14)`, one row per 2 ms control step).
 
 ## Difficulty

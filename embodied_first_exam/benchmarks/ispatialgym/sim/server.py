@@ -9,7 +9,9 @@ As BEHAVIOR-1K's service (the same robot on the same simulator), except:
   gripper commands switched at the row; there is no ee_pose action (POST /kinematics solves IK, statelessly);
 - the episode ends when upstream's geometric success holds (success), when its control steps run out (max_steps: run_isg's
   policy budget, reason "failed: the episode's control steps ran out"), on the collect hook's signal (timeout) or on a
-  simulator error (error); there is no fall rule (upstream has none);
+  simulator error (error); there is no fall rule (upstream has none). With agent-ended episodes (RCB_AGENT_END,
+  rcb_agent_end.py) a success never ends it: POST /finish (finished), the session's end (timeout) or max_steps
+  (step_limit) does, and the state it ends in is judged (see finish());
 - every pose leaves in the odometry frame (the robot's base at the start of the episode), never in the world frame;
 - the verdict is the live episode's (owner 2026-10-17): upstream's success under settle-eval, judged
   at every control step the episode runs, is `success`; nothing replays it. When it ends the service writes
@@ -29,6 +31,7 @@ import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import rcb_limited as L  # noqa: E402
+import rcb_agent_end as AE  # noqa: E402
 
 PROTOCOL = L.PROTOCOL
 DATA = os.environ.get("RCB_DATA", "/out")   # /data holds the licensed BEHAVIOR dataset here
@@ -36,12 +39,12 @@ os.makedirs(DATA, exist_ok=True); os.makedirs(os.path.join(DATA, "calls"), exist
 INSTANCE = os.environ.get("RCB_INSTANCE", os.path.dirname(os.path.abspath(__file__)))
 TASK_TEXT = open(os.path.join(INSTANCE, "task_text.txt")).read().strip()
 OBS_CALIBRATION = os.environ.get("RCB_OBS_CALIBRATION", "1") == "1"
-MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10")); MAX_WATCH_S = float(os.environ.get("RCB_MAX_WATCH_S", "30"))
+MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10"))
 MAX_FRAMES = 300                        # images per response (cameras x frames): 1080x1080 RGB is 3.5 MB a frame
 LOCK = threading.Lock()
 E = {"ready": False, "step": 0, "calls": 0, "done": False, "reason": None, "success": False, "t0": time.time(), "error": None}
 DIM = 23                                # the R1Pro's JoyLo action (asserted once the scene exists)
-EP = L.Episode(DATA, dim=DIM, resume="approx")
+EP = L.Episode(DATA, dim=DIM, resume="approx", persist=AE.persist())
 EP.startup()
 log = EP.log
 MAX_STEPS_REASON = "failed: the episode's control steps ran out"
@@ -55,6 +58,18 @@ except BaseException as exc:            # Kit ends the process with exit code 0 
     log({"ev": "startup_error", "error": repr(exc)[:500]})
     sys.stdout.flush(); sys.stderr.flush()
     os._exit(1)
+
+# The served task sentence: task_text.txt's, or the family's own where the picture is not the whole goal (the head
+# camera's pose is graded; the start grasp must be kept). The family is upstream.json's `task_family` (Session.up).
+FAMILY_TEXT = {
+    "camera_relocalization": ("Move the robot until its head camera sees the scene as the goal image /app/goal.png shows it; "
+                              "its arms and grippers do not have to match it."),
+    "mental_rotation": ("Make the scene look like the goal image /app/goal.png, the head camera's view once the task is done, "
+                        "and keep holding what the robot holds at the start; the rest of the robot does not have to match it."),
+    "object_scaling": ("Make the scene look like the goal image /app/goal.png, the head camera's view once the task is done, "
+                       "and keep holding what the robot holds at the start; the rest of the robot does not have to match it."),
+}
+TASK_TEXT = FAMILY_TEXT.get((getattr(S, "up", None) or {}).get("task_family"), TASK_TEXT)
 if not S.instance_ok:                   # before the agent is served: the episode must start from the frozen instance
     EP.give_up(f"instance_mismatch: the frozen start state did not rebuild here (start {S.start_sha}, frozen {S.facts['start_sha']})", infra=True)
 assert S.action_dim == DIM, (S.action_dim, DIM)
@@ -112,7 +127,7 @@ def write_final() -> None:
         "success": bool(E["success"]), "steps": E["step"], "calls": E["calls"], "control_steps": S.n, "max_steps": S.max_steps,
         "elapsed_s": round((E.get("t_end") or time.time()) - E["t0"], 1), "reason": E["reason"], "done": E["done"],
         "subtask": S.up["subtask"], "protocol": PROTOCOL, "finalized": False, "n_actions": E.get("n_actions"),
-        "live_sha": E.get("live_sha"), "start_sha": S.start_sha, **EP.final_fields()})
+        "live_sha": E.get("live_sha"), "start_sha": S.start_sha, **EP.final_fields(), **AE.final_fields(E, S.n)})
 
 
 def dump() -> None:
@@ -132,12 +147,36 @@ def dump() -> None:
         "success_step": st["success_step"], "symbolic_success": st["symbolic_success"], "geometric_success": st["geometric_success"],
         "error_metric": st["error_metric"], "graded_by": "live", "replays": 0,
         "startup": EP.n_startups, "pid": os.getpid(),   # which service start wrote it (finalize.sh's late-exit check)
-        **EP.final_fields()})
+        **({"end_window_steps": E.get("end_window_steps")} if AE.ENABLED else {}),
+        **EP.final_fields(), **AE.final_fields(E, S.n)})
     write_final()
 
 
 def finish(reason: str) -> None:
     if E["done"]: return
+    if AE.ENABLED:
+        # agent-ended episodes (PROTOCOL §3, rcb_agent_end.py; rcb_ispatialgym.AGENT_END): the state the episode ends in is
+        # judged with upstream's success under settle-eval (the goal and every target held, the objects and the robot at
+        # rest, over the last 45 control steps). At POST /finish and at the session's end the settle window runs from that
+        # state: the last command held (base at 0, journaled and recorded) until upstream's success holds or 45 steps
+        # have passed, so the steps already held count. max_steps is the step limit, judged as it stands; a simulator
+        # error is judged as it stands
+        if reason == MAX_STEPS_REASON:
+            reason = "step_limit"
+        E["done"] = True; E["reason"] = reason; E["t_end"] = time.time()
+        if reason in ("finished", "timeout"):
+            try:
+                hold = S.hold_action(); n = 0
+                while not S.success and n < M.SETTLE_STEPS:
+                    n += 1; S.step(hold, cap=False); EP.journal(hold); video_step()
+                E["end_window_steps"] = n
+            except Exception as exc:  # noqa: BLE001 -- judged as it stands
+                traceback.print_exc(); log({"ev": "end_window_error", "error": repr(exc)[:300]})
+        E["success"] = reason in AE.END_STATE_REASONS + ("error",) and check_success()
+        log({"ev": "end", "reason": reason, "step": E["step"], "control_steps": S.n, "elapsed_s": round(E["t_end"] - E["t0"], 1),
+             "success": bool(E["success"]), "end_window_steps": E.get("end_window_steps")})
+        dump()
+        return
     E["done"] = True; E["reason"] = reason; E["t_end"] = time.time(); E["success"] = E["success"] or check_success()
     log({"ev": "end", "reason": reason, "step": E["step"], "control_steps": S.n, "elapsed_s": round(E["t_end"] - E["t0"], 1), "success": bool(E["success"])})
     dump()
@@ -152,12 +191,11 @@ def cam_spec(c: str) -> dict:
 SPEC = {
     "protocol": PROTOCOL, "protocol_compat": L.COMPAT, "simulator": "iSpatialGym eval v1.0 (OmniGibson / Isaac Sim, BEHAVIOR-1K fork)",
     "robot": "r1pro", "task_text": TASK_TEXT, "control_hz": CTRL_HZ, "physics_substeps": SUBSTEPS,
-    "max_chunk_s": MAX_CHUNK_S, "max_watch_s": MAX_WATCH_S, "max_control_steps": S.max_steps, "max_frames_per_call": MAX_FRAMES,
+    "max_chunk_s": MAX_CHUNK_S, "max_control_steps": S.max_steps, "max_frames_per_call": MAX_FRAMES,
     "cameras": {c: cam_spec(c) for c in CAMS},
     "default_cameras": [S.head_camera],
     "goal_image": {"file": "/app/goal.png", "camera": S.head_camera,
-                   "note": "the head camera's view once the task is done (same camera, same resolution and intrinsics); the robot "
-                           "itself does not have to match it"},
+                   "note": "the head camera's view once the task is done (same camera, same resolution and intrinsics)"},
     "action_types": {
         "joint_position": {"dim": DIM, "layout": LAYOUT, "blocks": {k: [min(v), max(v) + 1] for k, v in IDX.items()},
                            "units": "base_0..2: a velocity command in [-1, 1] in the robot's own frame (forward, left, yaw rate; robot_spec.base); "
@@ -178,7 +216,10 @@ SPEC = {
               "camera_timing": "a frame shows the scene as rendered 2 control steps (67 ms) before its frame_step while the robot moves; its "
                                "extrinsic_cv is the pose it was rendered with; proprio is the state at frame_step"},
     "budget": {"reset": 0, "steps": None, "wall_clock_s": float(os.environ.get("RCB_WALL_CLOCK_S", "3600"))},
-    "episode": (f"one episode, no reset: it ends at the first control step at which the scene matches the goal image (success), after "
+    "episode": (f"one episode, no reset: it ends when you POST /finish (finished), after {S.max_steps} control steps "
+                f"({S.max_steps / CTRL_HZ:.1f} s of simulated time; step_limit), when your time is up (timeout) or on a simulator error "
+                "(error); reaching the goal does not end it, and the state it ends in is judged") if AE.ENABLED else
+               (f"one episode, no reset: it ends at the first control step at which the scene matches the goal image (success), after "
                 f"{S.max_steps} control steps ({S.max_steps / CTRL_HZ:.1f} s of simulated time; reason \"{MAX_STEPS_REASON}\"), when your "
                 "time is up (timeout) or on a simulator error (error)"),
     "robot_spec": RSPEC,
@@ -260,7 +301,7 @@ def recorder(cams, fps: int, meta: dict) -> L.Recorder:
 def meta_common(cams) -> dict:
     n = ctrl_steps()
     return {"step": E["step"], "calls": E["calls"], "control_steps": n, "physics_steps": n * SUBSTEPS, "sim_time_s": round(n / CTRL_HZ, 3),
-            "control_steps_left": max(0, S.max_steps - n),
+            "control_steps_left": max(0, S.max_steps - n), **AE.steps_left(n),
             "time_s": round(L.agent_time(E), 2), "time_left_s": max(0.0, round(SPEC["budget"]["wall_clock_s"] - L.agent_time(E), 1)),
             "proprio": {"layout": SPEC["proprio_layout"], "now": proprio_row().tolist()}, "done": E["done"], "reason": E["reason"],
             **({"cameras": calib(cams)} if OBS_CALIBRATION else {})}
@@ -292,6 +333,10 @@ def ctrl_step(a: np.ndarray, rec: L.Recorder) -> bool:
     """One recorded and journaled control step. True when the call must stop: the episode is over, or the layer stops
     the call (max_call_wall_s, the client hung up)."""
     done = S.step(a); stop = EP.journal(a); rec.tick(); video_step()
+    if AE.ENABLED:       # the state's success, recorded only (never shown); a success never ends the episode
+        AE.hidden_success(E, S.success, log, S.n)
+        if done: finish(MAX_STEPS_REASON)
+        return E["done"] or stop
     if done: finish("success" if S.success else MAX_STEPS_REASON)
     return E["done"] or stop
 
@@ -342,7 +387,7 @@ def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
 def do_observe(meta: dict) -> tuple[dict, list]:
     cams = request_cameras(meta)
     seconds = request_number(meta, "seconds", 0.0); fps = video_fps(meta); video = meta.get("video", "frames")
-    if seconds < 0 or seconds > MAX_WATCH_S: raise ValueError(f"seconds must be in [0, {MAX_WATCH_S}]")
+    if seconds < 0 or seconds > MAX_CHUNK_S: raise ValueError(f"seconds must be in [0, {MAX_CHUNK_S}] (max_chunk_s)")
     if video not in ("mp4", "frames", "both", "none"): raise ValueError("video must be mp4|frames|both|none")
     L.check_frames(len(cams), int(round(seconds * CTRL_HZ)) // max(1, int(round(CTRL_HZ / max(1, fps)))) + 2, limit=MAX_FRAMES)
     rec = recorder(cams, fps, meta); before = ctrl_steps()
@@ -368,7 +413,7 @@ def do_kinematics(req: dict) -> dict:
 
 def status() -> dict:
     return {"step": E["step"], "calls": E["calls"], "control_steps": ctrl_steps(), "done": E["done"], "reason": E["reason"],
-            "elapsed_s": round(time.time() - E["t0"], 1)}
+            "elapsed_s": round(time.time() - E["t0"], 1), **AE.steps_left(ctrl_steps())}
 
 
 def _end_from_signal():
@@ -407,7 +452,7 @@ resumed = EP.begin(state=E, step=replay_row, state_sha=S.state_sha, proprio=prop
                    start_event={"subtask": S.up["subtask"], "start_sha": S.start_sha, "cameras": CAMS}, on_end=_end_from_signal)
 if resumed and S.done and not E["done"]:
     log({"ev": "resume_ended_early", "skipped_rows": REPLAY["skipped"], "end_reason": S.reason, "success": S.success})
-    if S.success:
+    if S.success and not AE.ENABLED:     # agent-ended: only max_steps ends the replay, before the logged episode did
         E["ready"] = True
         with LOCK: finish("success")
         E["ready"] = False
@@ -424,5 +469,7 @@ if resumed and not E["done"]:
 E["ready"] = True; write_final()
 open(os.path.join(DATA, "server.pid"), "w").write(str(os.getpid()))
 print(f"{PROTOCOL} sim ready (startup {EP.n_startups}, resumes {EP.resumes}{', resumed at call ' + str(E['calls']) if resumed else ''})", flush=True)
-L.serve(L.Service(spec=SPEC, lock=LOCK, state=E, submit=do_submit, observe=do_observe, kinematics=do_kinematics, status=status,
-                  on_submit_error=lambda exc: finish("error"), log=log, episode=EP, state_sha=S.state_sha, proprio=proprio_row))
+AE.serve(AE.Service(spec=SPEC, lock=LOCK, state=E, submit=do_submit, observe=do_observe, kinematics=do_kinematics, status=status,
+                    on_submit_error=lambda exc: finish("error"), log=log, episode=EP, state_sha=S.state_sha, proprio=proprio_row,
+                    **({"finish": lambda: finish("finished"),
+                        "end_step_limit": lambda: finish("step_limit")} if AE.ENABLED else {})))

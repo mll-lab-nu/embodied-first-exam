@@ -191,6 +191,20 @@ Positive examples: no reference solution ships. The internal references of two s
 the service's start-up and streamed through the client, score 1 (Harbor, L40S): stack_blocks and fruit_delivery. The
 other 22 have no positive example yet. `nop` scores 0 on all 24.
 
+### Agent-ended episodes
+
+Standard episodes are agent-ended (PROTOCOL §3 "Agent-ended episodes"; `RCB_AGENT_END` in the sim service,
+`/srv/rcb_agent_end.py`). The agent never sees a success: no `success` or progress in any meta, status or spec, and a
+success never ends the episode. The episode ends at the agent's `POST /finish` (reason `finished`), when its time runs
+out (`timeout`), at the technical cap on control steps (`step_limit`), on a failure rule of the task (a 0, even after a
+success) or on a simulator error (judged as without the feature). It is then judged on how things stand when it ends;
+`episode.json` records `ended_by`, `hidden_success_seen` and the step of the first hidden success as evidence. No
+`RCB_STEP_LIMIT` is set: EmbodiedSWE states no step count; its cap is technical.
+
+The grader's check is run after every control step as hidden evidence; the verdict is the grader's `verdict` on the live
+end state, so what the task puts in the past tense (the scene's own record) counts as it happened and the rest must hold
+at the end. Touching the bread with the hand (the tool-only rule) is a 0, also after a success.
+
 ## Time budget
 
 The limit is EmbodiedSWE's rollout limit, 1800 s per candidate, start-up and import included. Measured on an L40S host
@@ -210,6 +224,16 @@ the hash must match (a mismatch is the verifier's error, `instance_mismatch`); o
 recorded (`instance_ok`, `instance_same_gpu`, `instance_max_abs_diff`, `instance_within_tol` at 1e-4 in
 `reward.json`), never an error. A run on another GPU model may differ in its bits; a closed-loop solve that reads the
 state is robust to that, an open-loop action sequence may not be.
+
+## Before you run
+
+The base image may not be redistributed (Isaac Sim's licence and the asset bundle's mixed licences: `## Image` below),
+so every host builds it once from `images/embodiedswe/` before the first run, from the repository root:
+`docker build -t ghcr.io/mll-lab-nu/efe-private:embodiedswe-$(cat images/embodiedswe/VERSION) images/embodiedswe`.
+The build accepts NVIDIA's Isaac Sim terms, RoboLab's and EmbodiedSWE's Apache-2.0 licences and the licences of the
+assets in EmbodiedSWE's bundle (`images/embodiedswe/BUILD_ONLY` lists them); it needs no account or token, and RoboLab's
+recipe inside it needs about 60 GB of free disk and 20-60 min. The tasks name the image in their `FROM`; `harbor run`
+does not build it.
 
 ## Image
 

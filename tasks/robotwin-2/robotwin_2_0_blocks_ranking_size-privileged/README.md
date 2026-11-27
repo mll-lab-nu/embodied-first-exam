@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:robotwin-0.1.2` |
 
 ## Task
-RoboTwin 2.0 blocks_ranking_size (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Line up the three blocks in a straight row, close together, from the largest on your left to the smallest on your right, then let go. Frozen scene instance (RoboTwin seed 60417).
+RoboTwin 2.0 blocks_ranking_size (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Line up the three blocks in a row, close together, from the largest on the robot's left to the smallest on its right. Then let go. Frozen scene instance (RoboTwin seed 60417).
 
 ## Difficulty
 RoboTwin's scripted expert needs 5 planned motions (46 lines); official data-generation success on ALOHA-AgileX 96% (the expert's own pass rate over random layouts); in our image the expert passed on seed 60417 on attempt 1 of 6 with 5880 physics steps. Tags from the code: dual-arm. RoboTwin evaluation budget 1200 policy actions. The trajectory is the raw per-step drive-target record, so any plan failure or a grasp that slips during replay scores 0.
@@ -45,4 +45,4 @@ Caps per container (PROTOCOL §6).
 | RoboTwin eval step limit | 1200 (policy-eval budget upstream; indicative of task length) |
 
 ### Goal
-Line up the three blocks in a straight row, close together, from the largest on your left to the smallest on your right, then let go.
+Line up the three blocks in a row, close together, from the largest on the robot's left to the smallest on its right. Then let go.

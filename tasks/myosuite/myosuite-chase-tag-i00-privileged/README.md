@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:myosuite-0.1.1` |
 
 ## Task
-MyoSuite `myoChallengeChaseTagP1-v0` (MyoLegs, a free-standing musculoskeletal model of a human torso and both legs, 80 muscles): Tag the opponent within 20 s: bring your pelvis within about half a metre of it, measured along the ground. This is MyoChallenge 2023 ChaseTag P1, task CHASE. The episode ends in failure at the time limit, if you leave the arena, or if you fall, with your pelvis dropping below about half a metre.
+MyoSuite `myoChallengeChaseTagP1-v0` (MyoLegs, a free-standing musculoskeletal model of a human torso and both legs, 80 muscles): Tag the opponent: get your pelvis within 0.5 m of it.
 A musculoskeletal body with two legs stands in a square arena; an opponent stands somewhere in it (in this frozen instance it does not move). The deliverable is one replayable trajectory of actuator commands (`/app/output/trajectory.npz`, `(T, 80)`, one row per 10 ms control step).
 
 ## Difficulty

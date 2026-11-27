@@ -3,9 +3,11 @@ the 2.1 base is its Part 1) plus the operations capability of its Part 4: operat
 and request deadlines (408 / 409), GET /operations/<id>, the service-owned call watchdog, the physics-tick ledger
 (journal.ticks.i64) and fsynced journals. First served by RoboTangle (whose release called it 2.3).
 
-The source is scripts/eai_standard/v2_4/rcb_limited.py; the generators copy it unchanged into every 2.4 task's
-environment/sim/ (ci_checks/check-tooling-identity.sh). A service keeps its simulator to itself (scene, action
-execution, cameras, kinematic model) and hands this module plain callables:
+The source is embodied_first_exam/standard/v2_4/rcb_limited.py; every 2.4 task's sim image takes it unchanged from the
+files-only image standard-files (`COPY --from`, images/standard-files/FILES.json, scripts/files_image.py;
+ci_checks/check-tooling-identity.sh checks the pin).
+A service keeps its simulator to itself (scene, action execution, cameras, kinematic model) and hands
+this module plain callables:
 
     import rcb_limited as L
     EP = L.Episode(DATA, dim=N, resume="exact")   # before the scene is built; "approx" for a nondeterministic simulator
@@ -35,10 +37,20 @@ carries a field the protocol forbids (segmentation, object identities or sizes, 
 Crash recovery (class Episode; PROTOCOL §4.7): every executed control step is journaled, every completed call
 checkpointed (rows, state hash, the robot's proprio row); after a crash compose restarts the container and the service
 replays the journal and continues the SAME episode, never a reset. `python rcb_limited.py end <data dir>` is the shared
-first half of a collect hook."""
+first half of a collect hook.
+eai-standard/3.0 (standard_call, StandardRing; docs/protocol/standard_mode.md): the layer answers /observe `seconds` > 0 with a 400
+(observe never lets time pass), serves /observe last_s = n from the ring that Recorder.tick fills while a /submit runs
+(every /spec camera at RCB_CAMERA_FPS, RCB_LOOKBACK_S seconds), runs a rows-free hold chunk {type, interpolate: "hold",
+seconds} through the adapter's own observe watch and answers it as a submit, and adds duration_s / planned_duration_s
+to every submit answer; adapters need no change (one that serves /reset itself calls RING.clear(); one whose
+rendering has effects of its own passes Service(record_frames=False): no recorder). It also answers, before the
+adapter runs, the 400s every layer answers (check_common, check_chunk): dt, seconds, video_fps, last_s not a JSON
+number, video_fps outside [1, max_video_fps()], interpolate not linear or hold, a chunk whose rows x dt exceed
+max_chunk_s (not for a planner type such as ee_pose)."""
 from __future__ import annotations
 import errno, faulthandler, json, math, os, re, select, signal, socket, sys, tempfile, threading, time, traceback, zlib
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from urllib.parse import urlparse
 from typing import Any, Callable
 
 import numpy as np
@@ -158,7 +170,7 @@ def depth_frames_part(name: str, stack) -> tuple[str, str, bytes, dict]:
     return (name, "bytes", Deflate(stack), {"codec": "zlib", "dtype": "uint16", "shape": shape, "unit": "mm"})
 
 
-def encode_mp4(frames, fps: int) -> bytes:
+def encode_mp4(frames, fps: float) -> bytes:
     """H.264 mp4 (yuv420p, faststart) of uint8 (N,H,W,3) frames (an array or a list of (H,W,3) frames): the same
     encoding every 2.0 service used."""
     import imageio.v2 as imageio
@@ -197,6 +209,7 @@ class Recorder:
         self.frames: dict = {c: [] for c in self.cams}; self.depth: dict = {c: [] for c in self.cams}
         self.ext: dict = {c: [] for c in self.cams}; self.last_depth: dict = {}
         self.prop: list = []; self.steps: list = []; self.n = 0; self.missing = 0
+        self._cap = None                    # (step, {cam: rgb}, {cam: ext}, proprio) of the last capture (RING)
 
     def tick(self, force: bool = False, last: bool = False) -> None:
         now = float(self._time_clock())
@@ -208,6 +221,7 @@ class Recorder:
             while self._next_time <= now + 1e-10:
                 self._next_time += 1 / self.fps
         self.n += 1
+        RING.feed(self, last)                # the standard recorder (eai-standard/3.0)
 
     def _capture(self, last: bool) -> None:
         want = self.mode in ("frames", "legacy") or (last and self.mode == "last")
@@ -239,6 +253,8 @@ class Recorder:
         self.prop.append(np.asarray(self._prop(), dtype=np.float32).reshape(-1))
         self.steps.append(int(self._clock()))
         self.times.append(float(self._time_clock()))
+        self._cap = (self.steps[-1], {c: self.frames[c][-1] for c in self.cams}, {c: self.ext[c][-1] for c in self.cams},
+                     self.prop[-1])
 
     def parts(self, video: str, fps: int) -> list:
         if self.mode == "last" and not self.last_depth and self.prop:   # no last=True tick: the state has not moved since
@@ -603,6 +619,7 @@ class Episode:
         self._wd_fd = None
         self._tf = None
         self.rows = 0                       # control steps executed in this episode (journaled)
+        self.row_cap: int | None = None     # a layer's cap on this call: it stops at this many rows (rcb_agent_end's RCB_STEP_LIMIT)
         self.max_call_wall_s = MAX_CALL_WALL_S
         self.n_startups = 0; self.resumes = 0; self.mismatches = 0; self.max_tcp_dev = 0.0; self.max_joint_dev = 0.0
         self._jf = None; self._call: dict | None = None; self._ids = 0; self._ck: tuple | None = None
@@ -679,12 +696,18 @@ class Episode:
                 c["polled"] = now
                 if _peer_closed(c["sock"]):
                     c["stopped"] = "client_disconnected"
-        return c["stopped"] is not None
+        return c["stopped"] is not None or self.capped
+
+    @property
+    def capped(self) -> bool:
+        """The call in progress reached row_cap (the episode's step limit): it stops at this step boundary, as for
+        meta.stopped, but no `stopped` is reported (the layer that set the cap ends the episode there)."""
+        return self._call is not None and self.row_cap is not None and self.rows >= self.row_cap
 
     @property
     def stopping(self) -> bool:
         """The call in progress must stop (adapters whose loops test E["done"] test this too)."""
-        return bool(self._call and self._call["stopped"])
+        return bool(self._call and (self._call["stopped"] or self.capped))
 
     @property
     def stop_reason(self) -> str | None:
@@ -928,6 +951,8 @@ class Episode:
         self.log({"ev": "restart_refused", "reason": reason})
         if not final_verdict(self.data):
             fin = _read_json(self.f_final)
+            if "ended_by" in fin:            # an agent-ended episode's record (rcb_agent_end) of an earlier end: the
+                fin["ended_by"] = "error"    # trial ends on this give-up, no end the agent or the task chose
             fin.update({"success": False, "live_success": False, "done": True, "reason": reason, "finalized": True,
                         "gave_up": True, "replays": 0, "protocol": PROTOCOL, **({} if infra else {"graded_by": "live"}),
                         **self.final_fields(), **({"infra_error": 1} if infra else {})})
@@ -979,6 +1004,407 @@ def refuse_forever(reason: str, infra: bool, port: int | None = None) -> None:
 
 
 # ---------------------------------------------------------------- the HTTP layer
+def _finite(v) -> bool:
+    try:
+        return math.isfinite(float(v))
+    except (TypeError, ValueError, OverflowError):
+        return False
+
+
+def parse_request(path: str, meta, parts: dict):
+    """What every adapter needs checked before it touches the simulator (ValueError -> 400; PROTOCOL §4.6: a malformed
+    request steps no physics and never ends the episode, whatever is wrong with it: a JSON object where rows are
+    expected, a number too large for a float, NaN, a field of the wrong JSON type). Returns the action rows of a
+    /submit as a float64 array (shape and limits are the adapter's to check), None for /observe."""
+    if not isinstance(meta, dict):
+        raise ValueError("the request's meta must be a JSON object")
+    for k in ("dt", "seconds", "video_fps"):
+        if meta.get(k) is not None and not _finite(meta[k]):
+            raise ValueError(f"{k} must be a finite number (got {meta[k]!r:.60})")
+    for k in ("type", "interpolate", "video"):
+        if meta.get(k) is not None and not isinstance(meta[k], str):
+            raise ValueError(f"{k} must be a string (got {meta[k]!r:.60})")
+    cams = meta.get("cameras")
+    if cams is not None and not (isinstance(cams, (list, tuple)) and all(isinstance(c, str) for c in cams)):
+        raise ValueError("cameras must be a list of camera names")
+    if cams is not None:   # each camera once, in the order asked for: N copies of a name were rendered and returned N * N times
+        meta["cameras"] = list(dict.fromkeys(cams))
+    if path != "/submit":
+        return None
+    try:
+        src = parts["actions"]["data"] if "actions" in parts else meta.get("actions", [])
+        if src is None or isinstance(src, (dict, str, bytes)):
+            raise TypeError(f"got {type(src).__name__}")
+        A = np.asarray(src, dtype=np.float64)
+    except (TypeError, ValueError, OverflowError, AttributeError, KeyError) as exc:
+        raise ValueError("actions must be an RCB1 array part `actions` or a JSON list of rows of numbers "
+                         f"({type(exc).__name__}: {str(exc)[:120]})") from None
+    if not np.all(np.isfinite(A)):
+        raise ValueError("actions contain NaN/inf")
+    return A
+
+
+# ---------------------------------------------------------------- eai-standard/3.0: observe reads, hold chunks, the recorder
+EAI_STANDARD = "eai-standard/3.0"          # the semantics every layer serves (docs/protocol/standard_mode.md); /spec.standard
+CAMERA_FPS = float(os.environ.get("RCB_CAMERA_FPS") or 10.0)       # the standard recorder's frame rate (robot time)
+LOOKBACK_S = float(os.environ.get("RCB_LOOKBACK_S") or 3.0)        # robot seconds of recorded frames kept (the ring)
+OBSERVE_SECONDS_GONE = ('observe never lets time pass (eai-standard/3.0): to let n seconds pass, submit a hold chunk '
+                        '{"type": <type>, "interpolate": "hold", "seconds": n} with no rows; last_s = n returns the frames '
+                        'recorded in the last n seconds')
+VIDEO_MODES = ("mp4", "frames", "both", "none")
+INTERPOLATIONS = ("linear", "hold")
+MAX_VIDEO_FPS = 30           # video_fps in [1, 30] (2.1's bound); an adapter with a faster control rate may go up to it,
+                             # and one that declares /spec.max_video_fps is held to that instead
+PLANNER_TYPES = ("ee_pose",)  # rows the benchmark's planner executes (their dt is the planner's): no rows x dt cap here
+NUMBER_FIELDS = ("dt", "seconds", "video_fps", "last_s")
+
+
+def _num(v) -> float | None:
+    try:
+        f = float(v)
+    except (TypeError, ValueError, OverflowError):
+        return None
+    return f if math.isfinite(f) else None
+
+
+def _real(meta: dict, key: str) -> float | None:
+    """meta[key] as a float: a JSON number (not a boolean, not a string), finite; None when absent or null. ValueError
+    (400) otherwise -- what every layer answers (the 2.1 sidecar, the 2.3 layer)."""
+    v = meta.get(key)
+    if v is None:
+        return None
+    if isinstance(v, bool) or not isinstance(v, (int, float)) or _num(v) is None:
+        raise ValueError(f"{key} must be a finite number (got {v!r:.60})")
+    return float(v)
+
+
+def max_video_fps(spec: dict) -> float:
+    """The highest video_fps this service takes: /spec.max_video_fps where the adapter declares it, else 30 (or the
+    control rate, where that is higher: at most one frame per control step)."""
+    own = spec.get("max_video_fps")
+    if isinstance(own, (int, float)) and not isinstance(own, bool) and own >= 1:
+        return float(own)
+    return max(float(MAX_VIDEO_FPS), _num(spec.get("control_hz")) or 0.0)
+
+
+def check_common(path: str, meta: dict, spec: dict) -> None:
+    """The 400s every layer answers before anything runs (docs/protocol/standard_mode.md, Errors; the OpenAPI
+    BadRequest), checked here so that no adapter can miss one: the numeric fields are JSON numbers, video_fps in
+    [1, max_video_fps], and on /submit interpolate is linear or hold. A chunk's rows x dt cap is checked in
+    standard_call once the rows are parsed. A null numeric field is absent (as in every layer): it is dropped here, so
+    no adapter reads a None (the toy's float(meta.get("seconds", 0)) raised, and a 500 ended the episode)."""
+    for k in NUMBER_FIELDS:
+        if k in meta and meta[k] is None:
+            del meta[k]
+        _real(meta, k)
+    fps = _real(meta, "video_fps")
+    if fps is not None and not 1.0 <= fps <= max_video_fps(spec) + 1e-9:
+        raise ValueError(f"video_fps must be in [1, {max_video_fps(spec):g}] (got {meta['video_fps']!r:.60})")
+    if path == "/submit" and meta.get("interpolate") is not None and meta["interpolate"] not in INTERPOLATIONS:
+        raise ValueError(f"interpolate must be one of {list(INTERPOLATIONS)} (got {meta['interpolate']!r:.60})")
+
+
+def check_chunk(meta: dict, A, spec: dict) -> None:
+    """A chunk with rows covers at most max_chunk_s: rows x dt (dt: the request's, else one control period), for every
+    type whose rows are dt apart (not a planner type, PLANNER_TYPES)."""
+    if meta.get("type") in PLANNER_TYPES or getattr(A, "ndim", 0) < 1:
+        return
+    hz = _num(spec.get("control_hz")) or 0.0
+    dt = _real(meta, "dt") or (1.0 / hz if hz > 0 else None)
+    cap = _num(spec.get("max_chunk_s"))
+    if dt is None or cap is None:
+        return
+    if int(A.shape[0]) * dt > cap + 1e-9:
+        raise ValueError(f"the chunk covers {int(A.shape[0]) * dt:g} s ({int(A.shape[0])} rows x {dt:g} s): more than "
+                         f"max_chunk_s = {cap:g}")
+
+
+class StandardRing:
+    """The standard recorder (eai-standard/3.0): while a /submit runs (a hold chunk too), every 1 / RCB_CAMERA_FPS of robot
+    time the RGB frame of every /spec camera, each camera's extrinsics, the proprio row and the control step go into a
+    ring of the last RCB_LOOKBACK_S robot seconds; /observe last_s = n reads it (the world is frozen between submits, so
+    nothing is recorded outside them). Fed by Recorder.tick, which hands over what the call's own Recorder grabbed at the
+    same step (one render per camera and step); the rest is grabbed with the Recorder's own callables. No depth. A step
+    clock that goes back (a reset, a new episode) empties it; a process restart starts it empty."""
+
+    def __init__(self):
+        self.cams: list = []; self.hz = 0.0; self.every = 1; self.keep = 0
+        self.active = False
+        self.enabled = True             # Service(record_frames=False): no recorder, last_s answers the current frame
+        self.frames: list = []          # [(step, {cam: uint8 HxWx3}, {cam: (3,4)}, proprio row, robot time)], oldest first
+
+    def configure(self, spec: dict) -> None:
+        cams = spec.get("cameras") or {}
+        self.cams = list(cams.keys() if isinstance(cams, dict) else cams)
+        self.hz = float(_num(spec.get("control_hz")) or 0.0)
+        fps = min(max(CAMERA_FPS, 1e-3), self.hz) if self.hz > 0 else CAMERA_FPS
+        self.every = max(1, int(round(self.hz / fps))) if self.hz > 0 else 1
+        self.keep = int(round(LOOKBACK_S * self.hz)) if self.hz > 0 else 0
+
+    @property
+    def fps(self) -> float:
+        return self.hz / self.every if self.hz > 0 else CAMERA_FPS
+
+    def spec(self) -> dict:
+        if not self.enabled:
+            return {"cameras": [], "fps": round(self.fps, 3), "buffer_s": LOOKBACK_S,
+                    "records": "nothing: last_s returns the current frame", "depth": []}
+        return {"cameras": list(self.cams), "fps": round(self.fps, 3), "buffer_s": LOOKBACK_S, "records": "during /submit",
+                "depth": []}                 # RGB only: depth comes with the current frame (last_s = 0)
+
+    def clear(self) -> None:
+        self.frames = []
+
+    def feed(self, rec, last: bool = False) -> None:
+        if not self.active or not self.enabled or not self.cams:
+            return
+        step = int(rec._clock())
+        if self.frames and step < self.frames[-1][0]:
+            self.frames = []                 # the step clock went back: another episode
+        if self.frames and not last and step - self.frames[-1][0] < self.every:
+            return
+        if self.frames and step == self.frames[-1][0]:
+            self.frames.pop()                # the newest state of that step replaces it
+        cap = getattr(rec, "_cap", None)
+        imgs, ext, prop = {}, {}, None
+        if cap is not None and cap[0] == step:
+            imgs = {c: cap[1][c] for c in self.cams if cap[1].get(c) is not None}
+            ext = {c: cap[2][c] for c in imgs}
+            prop = cap[3]
+        miss = [c for c in self.cams if c not in imgs]
+        if miss:
+            rgb, _ = rec._grab(miss, False)
+            e = rec._ext(miss)
+            for c in miss:
+                img = rgb.get(c)
+                if img is None:
+                    continue
+                imgs[c] = np.ascontiguousarray(np.asarray(img)[..., :3].astype(np.uint8))
+                ec = e.get(c)
+                ext[c] = np.full((3, 4), np.nan) if ec is None else np.asarray(ec, dtype=np.float64).reshape(3, 4)
+        if prop is None:
+            prop = np.asarray(rec._prop(), dtype=np.float32).reshape(-1)
+        self.frames.append((step, imgs, ext, prop, float(rec._time_clock())))   # the Recorder's time: the tick ledger
+        lo = step - self.keep
+        while self.frames and self.frames[0][0] < lo:
+            self.frames.pop(0)
+
+    def select(self, last_s: float, fps: float) -> list:
+        """The frames of the last `last_s` robot seconds, `fps` apart (the newest always), oldest first."""
+        if not self.frames:
+            return []
+        newest = self.frames[-1][0]
+        lo = newest - int(round(min(last_s, LOOKBACK_S) * self.hz))
+        stride = max(1, int(round(self.hz / fps))) if fps and self.hz > 0 else self.every
+        out, prev = [], None
+        for f in reversed(self.frames):
+            if f[0] < lo:
+                break
+            if prev is None or prev - f[0] >= stride:
+                out.append(f); prev = f[0]
+        return out[::-1]
+
+
+RING = StandardRing()
+
+
+def configure_standard(spec: dict, record_frames: bool = True) -> None:
+    """/spec.standard and /spec.timing.recorder (the standard recorder), once, when the handler is built. record_frames
+    False (Service(record_frames=False): an adapter whose rendering has effects of its own) turns the recorder off, as
+    the 2.1 sidecar's record_frames: /spec says it records nothing and last_s answers the current frame."""
+    RING.configure(spec)
+    RING.enabled = bool(record_frames)
+    spec["standard"] = EAI_STANDARD
+    timing = spec.get("timing")
+    if not isinstance(timing, dict):
+        timing = spec["timing"] = {}
+    timing.setdefault("recorder", RING.spec())
+    spec.setdefault("max_video_fps", int(max_video_fps(spec)))   # /spec always states it (the default where the adapter states none)
+
+
+def _spec_types(spec: dict) -> list:
+    return [t for t in (spec.get("action_types") or {}) if t != "not_yet"]
+
+
+def hold_request(meta: dict, parts: dict, spec: dict):
+    """(type, seconds to run, seconds as sent) of a rows-free hold chunk {"type", "interpolate": "hold", "seconds": n}
+    (the seconds to run are at least one control step); None for a chunk with rows. ValueError (400) for rows together
+    with seconds, or a malformed hold chunk."""
+    sec = meta.get("seconds")
+    part = parts.get("actions")
+    data = part.get("data") if isinstance(part, dict) else part
+    rows = ((part is not None and data is not None and np.size(data) > 0)
+            or meta.get("actions") not in (None, []) or meta.get("rows") not in (None, []))
+    if sec is None:
+        return None
+    s = _real(meta, "seconds")
+    if rows:
+        raise ValueError("a chunk with rows takes no `seconds` (its rows and dt say how long it runs); a hold chunk "
+                         '{"type": <type>, "interpolate": "hold", "seconds": n} has no rows')
+    if meta.get("interpolate") != "hold":
+        raise ValueError('a chunk without rows is a hold chunk: {"type": <type>, "interpolate": "hold", "seconds": n}')
+    types = _spec_types(spec)
+    if meta.get("type") not in types:
+        raise ValueError(f"type must be one of {sorted(types)}")
+    cap = _num(spec.get("max_chunk_s")) or 10.0
+    if not 0.0 < s <= cap + 1e-9:
+        raise ValueError(f"seconds must be in (0, {cap:g}] (max_chunk_s)")
+    hz = _num(spec.get("control_hz")) or 0.0
+    sent = s
+    if hz > 0 and round(s * hz) < 1:
+        s = 1.0 / hz                         # at least one control step (planned_duration_s stays what was sent)
+    return meta["type"], s, sent
+
+
+def _steps_ran(ep, rows0: int, out: dict, *keys) -> int | None:
+    if ep is not None:
+        return int(ep.rows - rows0)
+    for k in keys:
+        if isinstance(out.get(k), (int, float)):
+            return int(out[k])
+    return None
+
+
+def _durations(spec: dict, out: dict, steps: int | None, planned: float | None) -> dict:
+    hz = _num(spec.get("control_hz")) or 0.0
+    d = {}
+    if steps is not None and hz > 0:
+        d["duration_s"] = round(steps / hz, 4)
+    if "planned_duration_s" not in out and planned is not None:
+        d["planned_duration_s"] = round(float(planned), 4)
+    return d
+
+
+def _observe_view(svc, meta: dict, last_s: float):
+    """/observe last_s = n > 0 from the ring: the adapter answers last_s = 0 (its meta, the current last/ frames and
+    last depth), and the ring's frames replace its frames, video, extrinsics, proprio rows and frame steps."""
+    spec = svc.spec
+    cams = meta.get("cameras")
+    if cams is None:
+        cams = spec.get("default_cameras") or RING.cams
+    cams = list(dict.fromkeys(cams))
+    unknown = [c for c in cams if c not in RING.cams]
+    if unknown:
+        raise ValueError(f"unknown camera(s) {unknown}; the recorder records {RING.cams}")
+    dmode = depth_mode(meta)
+    if dmode in ("frames", "legacy"):
+        raise ValueError("depth with last_s > 0: the recorder keeps no depth for these cameras (spec "
+                         "timing.recorder.depth lists the cameras it keeps depth for): ask for depth with last_s = 0 "
+                         "(depth: \"last\")")
+    video = meta.get("video", "frames")
+    if video not in VIDEO_MODES:
+        raise ValueError(f"video must be one of {list(VIDEO_MODES)}")
+    fps = _num(meta.get("video_fps")) or RING.fps
+    if fps <= 0:
+        raise ValueError("video_fps must be positive")
+    sel = RING.select(last_s, fps)
+    base = {k: v for k, v in meta.items() if k not in ("last_s", "seconds", "video")}
+    out, blobs = svc.observe({**base, "video": "frames"})
+    cs = out.get("control_steps")
+    if sel and isinstance(cs, (int, float)) and int(cs) < sel[-1][0]:
+        RING.clear(); sel = []               # recorded in another episode (a reset): nothing of this one yet
+    if not sel:
+        return {**out, "last_s": 0.0}, blobs
+    keep = [p for p in blobs if p[0].startswith(("last/", "last_depth/"))]
+    parts = []
+    hz = RING.hz or 1.0
+    gap = (sel[-1][0] - sel[0][0]) / (len(sel) - 1) if len(sel) > 1 else 0
+    rate = hz / gap if gap and RING.hz else float(max(1, int(round(fps))))   # the frames' real rate, as 2.1's
+    for c in cams:
+        good = [f[1][c] for f in sel if f[1].get(c) is not None]
+        hw = good[-1].shape[:2] if good else (1, 1)
+        frames = [f[1][c] if f[1].get(c) is not None else np.zeros(hw + (3,), np.uint8) for f in sel]
+        if video in ("mp4", "both"):
+            parts.append((f"video/{c}", "mp4", encode_mp4(frames, rate), {"fps": round(rate, 3), "n": len(frames)}))
+        if video in ("frames", "both"):
+            parts.append(rcb1.frames_part(f"frames/{c}", list(frames)))
+        parts.append(rcb1.array_part(f"extrinsic_cv/{c}", np.stack([f[2].get(c, np.full((3, 4), np.nan)) for f in sel])))
+    parts += keep
+    parts.append(rcb1.array_part("proprio", np.stack([f[3] for f in sel]).astype(np.float32)))
+    st = np.asarray([f[0] for f in sel], dtype=np.int64)
+    parts.append(rcb1.array_part("frame_step", st))
+    parts.append(rcb1.array_part("frame_time_s", np.asarray([f[4] for f in sel], dtype=np.float64)))
+    return {**out, "last_s": round(sel[-1][4] - sel[0][4], 4), "frame_step": int(sel[-1][0])}, parts
+
+
+IMAGE_PARTS = ("last/", "frames/", "video/")
+
+
+def with_frame_step(out: dict, blobs: list) -> tuple[dict, list]:
+    """meta.frame_step (eai-standard/3.0) on every answer that carries images: the control step of its newest image (the
+    last value of the frame_step part, else the answer's control_steps)."""
+    if "frame_step" in out or not any(str(b[0]).startswith(IMAGE_PARTS) for b in blobs):
+        return out, blobs
+    for b in blobs:
+        if b[0] == "frame_step" and b[1] == "array" and b[3].get("shape") and b[3]["shape"][0] > 0:
+            return {**out, "frame_step": int(np.frombuffer(b[2], dtype=b[3]["dtype"])[-1])}, blobs
+    cs = out.get("control_steps", out.get("step"))
+    return ({**out, "frame_step": int(cs)} if isinstance(cs, (int, float)) and not isinstance(cs, bool) else out), blobs
+
+
+def standard_call(svc, path: str, meta: dict, parts: dict, ep, rows0: int, rows_of: Callable):
+    """One /submit or /observe under eai-standard/3.0, around the adapter's submit(meta, A) and observe(meta):
+    - /observe never lets time pass: `seconds` > 0 is a 400 (OBSERVE_SECONDS_GONE); last_s = 0 is the adapter's current
+      frame, last_s = n the ring's last n seconds (_observe_view);
+    - a rows-free hold chunk runs the adapter's own hold (its observe watch, `seconds` = n: the command in force held for
+      n seconds) and answers as a submit: chunk_id, type, hold, executed_rows 0, duration_s;
+    - every submit answer adds duration_s (control steps run x control_dt) and planned_duration_s (rows x dt; for a
+      planner type only the adapter's own, where it reports one);
+    - every answer with images adds meta.frame_step (with_frame_step).
+    - the 400s every layer answers (check_common, check_chunk) before the adapter runs.
+    rows_of(meta, parts) -> the rows of an ordinary chunk (the layer's own parsing; ValueError -> 400)."""
+    spec = svc.spec
+    check_common(path, meta, spec)
+    if path == "/observe":
+        if (_real(meta, "seconds") or 0.0) != 0.0:
+            raise ValueError(OBSERVE_SECONDS_GONE)
+        ls = meta.get("last_s")
+        last_s = 0.0 if ls is None else _real(meta, "last_s")
+        if last_s < 0:
+            raise ValueError("last_s must be a finite number of seconds >= 0")
+        if last_s > 0:
+            return with_frame_step(*_observe_view(svc, meta, last_s))
+        out, blobs = svc.observe({k: v for k, v in meta.items() if k != "last_s"})
+        return with_frame_step({**out, "last_s": 0.0} if ls is not None else out, blobs)
+    hold = hold_request(meta, parts, spec)
+    RING.active = True
+    try:
+        if hold is not None:
+            typ, s, sent = hold
+            m = {k: v for k, v in meta.items() if k not in ("type", "interpolate", "dt", "at", "actions", "rows", "last_s")}
+            m["seconds"] = s
+            m.setdefault("video", "mp4")
+            out, blobs = svc.observe(m)
+            out = dict(out)
+            chunk = out.pop("obs_id", None)
+            watched = out.pop("control_steps_watch", None)
+            out.pop("physics_steps_watch", None); out.pop("seconds", None)
+            steps = _steps_ran(ep, rows0, {"w": watched}, "w")
+            # chunk_id: the adapter's call counter, which its submits' chunk_id is (E["calls"], counted over every
+            # call), so a hold chunk's id never repeats a chunk's; obs_id only where an adapter reports no calls
+            calls = out.get("calls")
+            cid = calls if isinstance(calls, int) and not isinstance(calls, bool) else chunk
+            out.update({"chunk_id": cid, "type": typ, "hold": True,
+                        "executed_rows": 0, **({"control_steps_chunk": steps} if steps is not None else {}),
+                        **_durations(spec, out, steps, sent)})
+            return with_frame_step(out, blobs)
+        A = rows_of(meta, parts)
+        if getattr(A, "ndim", 0) >= 1 and int(A.shape[0]) == 0:
+            raise ValueError('a chunk without rows is a hold chunk: {"type": <type>, "interpolate": "hold", "seconds": n}')
+        check_chunk(meta, A, spec)
+        out, blobs = svc.submit(meta, A)
+        hz = _num(spec.get("control_hz")) or 0.0
+        dt = _real(meta, "dt") or (1.0 / hz if hz > 0 else None)
+        n = int(A.shape[0]) if getattr(A, "ndim", 0) >= 1 else 0
+        steps = _steps_ran(ep, rows0, out, "control_steps_chunk")
+        # a planner type's rows are not dt apart (an ee_pose row runs as many steps as its plan takes): no rows x dt,
+        # only the adapter's own planned_duration_s where it reports one
+        planned = None if meta.get("type") in PLANNER_TYPES or not dt else n * dt
+        return with_frame_step({**out, **_durations(spec, out, steps, planned)}, blobs)
+    finally:
+        RING.active = False
+
+
 class Service:
     """What a sim service hands to serve(): spec (dict), lock, state (the service's E dict: done, reason, exiting, error),
     submit(meta, actions) and observe(meta) -> (meta_out, rcb1 parts), kinematics(req) -> dict, status() -> dict,
@@ -987,14 +1413,17 @@ class Service:
 
     def __init__(self, *, spec: dict, lock, state: dict, submit: Callable, observe: Callable, kinematics: Callable,
                  status: Callable, on_submit_error: Callable, log: Callable, max_resp: int = MAX_RESP,
-                 episode: Episode | None = None, state_sha: Callable | None = None, proprio: Callable | None = None):
+                 episode: Episode | None = None, state_sha: Callable | None = None, proprio: Callable | None = None,
+                 record_frames: bool = True):
         self.spec, self.lock, self.state, self.submit, self.observe = spec, lock, state, submit, observe
+        self.record_frames = bool(record_frames)   # False: no standard recorder (configure_standard)
         self.kinematics, self.status, self.on_submit_error, self.log, self.max_resp = kinematics, status, on_submit_error, log, max_resp
         self.episode, self.state_sha, self.proprio = episode, state_sha, proprio
         self.kin_calls = 0
 
 
 def make_handler(svc: Service):
+    configure_standard(svc.spec, getattr(svc, "record_frames", True))   # /spec.standard, timing.recorder; the ring
     class H(BaseHTTPRequestHandler):
         def _send(self, code: int, ctype: str, body: bytes) -> None:
             try:
@@ -1011,6 +1440,12 @@ def make_handler(svc: Service):
 
         def log_message(self, *a):
             pass
+
+        def parse_request(self):             # every request, of any method and path (a subclass's endpoints too)
+            ok = super().parse_request()
+            if ok:
+                self.path = urlparse(self.path).path   # a query string is ignored, as by 2.1 and 2.3
+            return ok
 
         def _body(self):
             try:
@@ -1075,7 +1510,8 @@ def make_handler(svc: Service):
             if operation is not None and (not isinstance(operation, str) or not re.fullmatch(r"[A-Za-z0-9_-]{1,80}", operation)):
                 return self._json(400, {"error": "invalid operation ID"})
             try:                             # (math.isfinite raises on a JSON integer beyond the float range)
-                bad_deadline = deadline is not None and (not isinstance(deadline, (int, float)) or not math.isfinite(deadline))
+                bad_deadline = deadline is not None and (isinstance(deadline, bool) or not isinstance(deadline, (int, float))
+                                                         or not math.isfinite(deadline))
             except OverflowError:
                 bad_deadline = True
             if bad_deadline:
@@ -1099,16 +1535,9 @@ def make_handler(svc: Service):
                 rows0 = ep.rows if ep else 0
                 out = blobs = err = None; stopped = None
                 try:
-                    if self.path == "/submit":
-                        try:
-                            A = np.asarray(parts["actions"]["data"] if "actions" in parts else meta.get("actions", []), dtype=np.float64)
-                        except (TypeError, ValueError, OverflowError):   # a JSON object, null or an integer too large
-                            # for a float among the rows: the caller's error, a 400 before anything executes (PROTOCOL
-                            # §4.6), never a 500 that ends the episode
-                            raise ValueError("actions must be a numeric array") from None
-                        out, blobs = svc.submit(meta, A)
-                    else:
-                        out, blobs = svc.observe(meta)
+                    parse_request("/observe", meta, parts)   # the common fields: ValueError -> 400, before the adapter runs
+                    out, blobs = standard_call(svc, self.path, meta, parts, ep, rows0,
+                                               lambda m, p: parse_request("/submit", m, p))
                 except ValueError as exc:
                     err = (400, {"error": str(exc)})
                 except Exception as exc:  # noqa: BLE001

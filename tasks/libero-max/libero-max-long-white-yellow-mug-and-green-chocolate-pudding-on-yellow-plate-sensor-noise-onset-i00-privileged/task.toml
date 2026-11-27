@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/libero-max-long-white-yellow-mug-and-green-chocolate-pudding-on-yellow-plate-sensor-noise-onset-i00-privileged"
-description = "LIBERO-MAX (libero_10, sensor-noise onset; Franka Panda): Put the white-and-yellow mug on the plate. Put the chocolate pudding next to the plate, on the robot's left of the plate. Mid-task, once the gripper comes within 0.18 m of the white_yellow_mug_1, the scene changes (sensor-noise onset). Produce one replayable trajectory of LIBERO's native OSC control steps on a frozen instance; graded by LIBERO's success check at the trajectory's end."
+description = "LIBERO-MAX (libero_10, sensor-noise onset; Franka Panda): Put the yellow-and-white mug on the plate and the chocolate pudding on the table just to the robot's left of the plate. Mid-task, once the gripper comes within 0.18 m of the white_yellow_mug_1, the scene changes (sensor-noise onset). Produce one replayable trajectory of LIBERO's native OSC control steps on a frozen instance; graded by LIBERO's success check at the trajectory's end."
 keywords = ["robotics", "libero", "libero-max", "robosuite", "franka-panda", "online-event", "code-as-policy", "trajectory", "privileged"]
 
 [metadata]

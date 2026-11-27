@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:roboarc-0.2.0` |
 
 ## Task
-RoboARC hedgehog_in_cage (Franka Panda + Robotiq 2F-85, MuJoCo): produce one replayable trajectory. Separate the hedgehog ball from the cage and put the whole of it, every spike included, inside the green dashed goal region. Leave all the cage parts behind, no closer to the goal region than they were at the start. Frozen scene instance (variation hedgehog_in_cage_medium, seed 0).
+RoboARC hedgehog_in_cage (Franka Panda + Robotiq 2F-85, MuJoCo): produce one replayable trajectory. Take the hedgehog ball out of the cage and put all of it, every spike included, inside the green dashed goal square. Leave the cage parts behind, no closer to the goal than they were at the start. Frozen scene instance (variation hedgehog_in_cage_medium, seed 0).
 
 ## Difficulty
 A 7-dof franka panda arm with a robotiq 2f-85 parallel gripper on a fixed base with a 8-D joint-target action space at 40 Hz; success needs the task's predicate (above) held for 2 s. Grasping: assisted grasping (contact_weld_v1).
@@ -49,7 +49,7 @@ Caps per container (PROTOCOL §6).
 | Success rule | task-native success (goal_complete True; frozen parameters; terminal revision hedgehog_placement_v4_grasp_contact_2mm); the author's qualification record for this variation matches, as metadata only (record profile: Panda/Robotiq JOINT_ABS, CPU float64, 25 ms World tick / 40 substeps, bilateral-contact contact_weld_v1; medium default parameters, seed 0 only; no scene-variation qualification); this instance runs CPU 2.5 ms ticks x 4 substeps with joint-position actions and frozen contact_weld_v1 grasp assistance, which the record does not cover |
 
 ### Goal
-Separate the hedgehog ball from the cage and put the whole of it, every spike included, inside the green dashed goal region. Leave all the cage parts behind, no closer to the goal region than they were at the start.
+Take the hedgehog ball out of the cage and put all of it, every spike included, inside the green dashed goal square. Leave the cage parts behind, no closer to the goal than they were at the start.
 
 ### Success requirements
 - Put every part of the whole hedgehog ball, including every spike inside the fixed goal volume, leaving at least 1 mm inside its horizontal border. The centre alone is insufficient; no tip, spike, ring segment or cord segment may remain outside.

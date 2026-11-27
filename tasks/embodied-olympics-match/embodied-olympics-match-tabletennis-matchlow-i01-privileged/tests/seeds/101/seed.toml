@@ -1,5 +1,6 @@
-# Seed 101 of this match (tests/match_instance.json under this directory: the privileged verifier's frozen settings); the text
-# that names the seed: compose RO_SEED, the privileged instruction, the full-simulator adapter's INSTANCES.
+[[replace]]
+old = "## Robot Interface\nRobot table tennis: each player is a Franka Panda arm with a paddle on an x-y rail base behind its end line, and the arm\nand the base are both held to the real robot's limits. You see the game only through two cameras, four frames each. The\nplayers' robots serve by the ITTF service laws, with a toss device on the robot. You are seat `A` against the scripted\nlevel-1 opponent, seed 22: the same fixed match as the realtime twin\n(`embodied-olympics-match-tabletennis-matchlow-i01-realtime`), with the same robot, actions, rules, limits and opponent.\nThe world runs at 1/10 of real speed. The low level: the twin's skill in the loop without its plumbing. Your program\nreturns the robot's low-level commands (traj / slew / hold / toss) itself; there is no hit skill and no skill server\n(what the twin's skill computes, your program computes). The toolkit is under `sports/tabletennis/seat/`.\n`from tools.fullsim.session import Session`; `Session(\"tabletennis\", level=1, seed=22)` gives `state()`, `world`,\n`spec()`, `act(command)`, `step(n)`, `ready()` and `reset()`. You have the full simulator to develop with; you hand in a\nprogram that plays the match."
+new = "## Robot Interface\nRobot table tennis: each player is a Franka Panda arm with a paddle on an x-y rail base behind its end line, and the arm\nand the base are both held to the real robot's limits. You see the game only through two cameras, four frames each. The\nplayers' robots serve by the ITTF service laws, with a toss device on the robot. You are seat `A` against the scripted\nlevel-1 opponent, seed 101: the same fixed match as the realtime twin\n(`embodied-olympics-match-tabletennis-matchlow-i01-realtime`), with the same robot, actions, rules, limits and opponent.\nThe world runs at 1/10 of real speed. The low level: the twin's skill in the loop without its plumbing. Your program\nreturns the robot's low-level commands (traj / slew / hold / toss) itself; there is no hit skill and no skill server\n(what the twin's skill computes, your program computes). The toolkit is under `sports/tabletennis/seat/`.\n`from tools.fullsim.session import Session`; `Session(\"tabletennis\", level=1, seed=101)` gives `state()`, `world`,\n`spec()`, `act(command)`, `step(n)`, `ready()` and `reset()`. You have the full simulator to develop with; you hand in a\nprogram that plays the match."
 
 [[replace]]
 old = "RO_SEED: \"22\""
@@ -16,10 +17,6 @@ new = "level=1, seed=101)"
 [[replace]]
 old = "--seed 22 "
 new = "--seed 101 "
-
-[[replace]]
-old = ", seed 22:"
-new = ", seed 101:"
 
 [[replace]]
 old = ", seed 22,"

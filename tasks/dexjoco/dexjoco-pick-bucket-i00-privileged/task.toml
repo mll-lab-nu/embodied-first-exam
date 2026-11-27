@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/dexjoco-pick-bucket-i00-privileged"
-description = "DexJoCo pick_bucket (a Franka Panda arm with a 16-DoF Allegro hand, MuJoCo): produce one replayable trajectory. Put the boxed food into the bucket, then lift the bucket with the food still inside. Frozen scene instance (the initial state of a DexJoCo human demonstration)."
+description = "DexJoCo pick_bucket (a Franka Panda arm with a 16-DoF Allegro hand, MuJoCo): produce one replayable trajectory. Put the boxed food into the bucket, then lift the bucket, with the food still inside, about a hand's length off the table. Frozen scene instance (the initial state of a DexJoCo human demonstration)."
 keywords = ["robotics", "dexjoco", "mujoco", "allegro", "dexterous-manipulation", "code-as-policy", "trajectory", "pick_bucket"]
 
 [metadata]

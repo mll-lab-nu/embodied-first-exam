@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/dexhand-ram-module-install-i00-privileged"
-description = "Pick a DDR4 DIMM out of its anti-static foam holder with a dexterous hand (Sharpa Wave by default, or Wuji Hand 2.2), turn it to match the socket key, insert it straight down into the outer DIMM socket of a fixed motherboard until its passive latch snaps closed, and let go."
+description = "Pick a DDR4 DIMM out of its anti-static foam holder with a dexterous hand (Sharpa Wave by default, or Wuji Hand 2.2), turn it to match the socket key, insert it straight down into the outer DIMM socket of a fixed motherboard until its passive latch snaps closed, and let go. Task: Take the memory module out of its foam holder and install it in the motherboard's outer memory slot, the one nearest the board edge, the right way round; press it in until the latch snaps shut, then let go."
 keywords = ["robotics", "dexterous-hand", "mujoco", "sharpa-wave", "wuji-hand-2.2", "assembly", "insertion", "connector", "latch", "thin-object-grasp", "electronics"]
 
 [metadata]

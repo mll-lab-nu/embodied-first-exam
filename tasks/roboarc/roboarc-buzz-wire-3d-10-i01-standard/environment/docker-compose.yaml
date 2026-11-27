@@ -32,6 +32,7 @@ services:
     command: sh /srv/run.sh
     restart: on-failure:6          # N >= 3 (docs/protocol/standard_mode.md); a resume continues the episode
     environment:
+      RCB_AGENT_END: "1"                               # agent-ended episodes (PROTOCOL §3)
       NPY_DISABLE_CPU_FEATURES: AVX512F,AVX512CD,AVX512_SKX,AVX512_CLX,AVX512_CNL,AVX512_ICL,AVX512_SPR
       OPENBLAS_CORETYPE: Haswell
       RCB_TASK: buzz_wire_3d

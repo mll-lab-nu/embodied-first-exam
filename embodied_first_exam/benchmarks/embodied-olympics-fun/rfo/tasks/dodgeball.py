@@ -820,8 +820,8 @@ class Task(TaskBase):
     time_limit_s = 2.0 + 4 * 2.5 + 3.0 + 0.5
     MACHINE_Y = (0.0, -3.0, 3.0, -1.5, 1.5)   # where the machines stand across the court, in the order they throw
 
-    sentence = ("Dodge: five cloth dodgeballs are thrown at you by ball machines that aim at you; do not let a live "
-                "ball touch you, stay inside your court and on your feet.")
+    sentence = (("Dodge the 5 balls the machines throw at you: do not let a live ball touch you, and stay on your"
+                 " feet inside your court."))
     rules = ("You stand in your fair territory on a WDBF cloth dodgeball court ({court_length_m} m x "
              "{court_width_m} m, lines 5 cm wide drawn inside it), 5 m behind the centre line, facing it (+x). Five "
              "ball machines stand in the opponents' half, {machine_x_m} m beyond the centre line, 1.5 m apart across "

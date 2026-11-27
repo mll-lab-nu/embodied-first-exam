@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:roboarc-0.2.0` |
 
 ## Task
-RoboARC lock_picking (Franka Panda + Robotiq 2F-85, MuJoCo): produce one replayable trajectory. Pick up the two-tab key from its rest. Insert the tabbed key through all three rotor plates and the final END plate, while respecting their slots and stops. The key's leading tab is longer than its second tab, which sits one plate spacing behind it. Frozen scene instance (variation lock_picking_easy, seed 0).
+RoboARC lock_picking (Franka Panda + Robotiq 2F-85, MuJoCo): produce one replayable trajectory. Pick up the two-tab key from its rest and push it through all three rotor plates and the END plate, passing its tabs only through the plates' slots. Frozen scene instance (variation lock_picking_easy, seed 0).
 
 ## Difficulty
 A 7-dof franka panda arm with a robotiq 2f-85 parallel gripper on a fixed base with a 8-D joint-target action space at 40 Hz; success needs the task's predicate (above) held for 0.5 s. Grasping: assisted grasping (contact_weld_v1).
@@ -52,7 +52,7 @@ Caps per container (PROTOCOL §6).
 | Success rule | task-native success (goal_complete True; frozen parameters; terminal revision terminal_v6_chain_lock) |
 
 ### Goal
-Pick up the two-tab key from its rest. Insert the tabbed key through all three rotor plates and the final END plate, while respecting their slots and stops. The key's leading tab is longer than its second tab, which sits one plate spacing behind it.
+Pick up the two-tab key from its rest and push it through all three rotor plates and the END plate, passing its tabs only through the plates' slots.
 
 ### Success requirements
 - Keep the finite-length shaft passing through the full thickness of all four plates at once, facing the insertion direction. Reaching END with only the shaft tip is insufficient.

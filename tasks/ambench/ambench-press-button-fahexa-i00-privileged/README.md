@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:ambench-0.3.1` |
 
 ## Task
-A wall stands in front of the hovering aerial manipulator, and a push button is mounted flat on the wall's front face, facing the robot: a red circular plunger in a dark-grey circular housing. Press the button: push its spring-loaded plunger straight into the housing by at least 4 mm of its 10 mm travel. AM-Bench environment `PressButton-Am-FAHexa-Abs-PID-Direct-v0` (the fully actuated hexarotor with the 4-joint arm, AM-Bench's PID
+Press the red button on the wall in, nearly halfway or more. AM-Bench environment `PressButton-Am-FAHexa-Abs-PID-Direct-v0` (the fully actuated hexarotor with the 4-joint arm, AM-Bench's PID
 controller), its seeded reset with seed 0. The deliverable is one replayable trajectory of AM-Bench's absolute
 end-effector pose actions at 120 Hz (`/app/output/trajectory.npz`), graded by AM-Bench's own success check within the
 task's episode length of 20 s.

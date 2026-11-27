@@ -1052,8 +1052,8 @@ class Task(TaskBase):
                   max_steps=2, step_gap_s=0.03, pivot_slide_m=0.20, retouch_grace_s=0.05, touch_gap_s=0.03,
                   catch_hold_s=0.10, fall_z_m=0.35)
 
-    sentence = ("Catch and shoot: catch the chest pass that comes to you from the left wing with your two hands, "
-                "then shoot from where you stand so that the ball enters the basket from above.")
+    sentence = (("Catch the pass with both hands, then shoot it into the basket from where you stand, without "
+                 "travelling."))
     rules = ("The official basket: a rigid ring of {ring_inner_diameter_m} m inner diameter ({ring_metal_m} m metal), "
              "its top edge {ring_height_m} m above the floor, its centre {ring_centre_to_board_m} m in front of a "
              "backboard {board_width_m} m wide and {board_height_m} m high whose lower edge is {board_bottom_m} m "

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robolab-0.2.2` |
 
 ## Task
-Stack the rubiks cubes in a tower.
+Stack the 3 Rubik's cubes into one tower.
 
 ## Difficulty
 RoboLab labels this task "moderate" (2 subtasks; attributes: stacking); its success term (`stacked`) asks for stack 3 objects (any order). The tooling gives only thin primitives (move_ee on Isaac Lab's differential IK, joint moves, gripper, hold), so every grasp, transport and placement is the agent's to build. RoboLab ships no expert solution.

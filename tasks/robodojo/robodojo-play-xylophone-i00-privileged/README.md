@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Pick up the mallet from its stand and strike the 8 xylophone keys one after another, from left to right, lifting the mallet clear of the keys between strikes. (RoboDojo's `play_Xylophone`). RoboDojo capability dimension: Precision. Instance i00 is RoboDojo's own evaluation layout
+Pick up the mallet and strike all eight xylophone keys in order from left to right, lifting the mallet head clear of the keys between strikes. (RoboDojo's `play_Xylophone`). RoboDojo capability dimension: Precision. Instance i00 is RoboDojo's own evaluation layout
 `arx_x5/0/play_Xylophone_0.json` (sha256 `acb2c7dacf66afe3`), frozen in `instance.json`. The deliverable is one replayable trajectory of
 RoboDojo's 14-D joint action at 25 Hz (`/app/output/trajectory.npz`), graded by RoboDojo's own reward check for the task,
 with no step cap (RoboDojo's own evaluation gives a policy 500 actions; PROTOCOL §3).

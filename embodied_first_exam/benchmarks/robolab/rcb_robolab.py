@@ -64,6 +64,7 @@ os.environ.setdefault("OMNI_KIT_ALLOW_ROOT", "1")
 os.environ.setdefault("PYTHONUNBUFFERED", "1")
 
 import argparse
+import functools
 import hashlib
 import json
 import math
@@ -119,13 +120,13 @@ DEFAULT_PHYSICS = {"device": os.environ.get("RCB_ROBOLAB_DEVICE", "cpu"),       
 TASKS: dict[str, dict] = {
     "banana_in_bowl": dict(
         robolab_task="BananaInBowlTask",
-        text="Pick up the banana and place it in the bowl.",
+        text="Put the banana in the bowl.",
         objects=["banana", "bowl"],
         simulator="robolab", robot="franka-robotiq-2f85", image="robolab",
     ),
     "rubiks_cube_left_of_bowl": dict(
         robolab_task="RubiksCubeLeftOfBowlTask",
-        text="Put the rubiks cube to the left of the bowl.",
+        text="Put the Rubik's cube to the left of the bowl, as seen from the robot.",
         objects=["rubiks_cube", "banana", "bowl"],
         simulator="robolab", robot="franka-robotiq-2f85", image="robolab",
     ),
@@ -137,7 +138,7 @@ TASKS: dict[str, dict] = {
     ),
     "apple_and_yogurt_in_bowl": dict(
         robolab_task="AppleAndYogurtInBowlTask",
-        text="Put the apple and yogurt in the bowl.",
+        text="Put the apple and the yogurt cup in the wooden bowl.",
         objects=["ceramic_mug", "glasses", "keyboard", "marker", "remote_control", "smartphone", "wooden_bowl", "spoon_big", "computer_mouse", "yogurt_cup", "pitcher", "plasticpail_a02", "apple_01"],
         simulator="robolab", robot="franka-robotiq-2f85", image="robolab",
     ),
@@ -149,19 +150,19 @@ TASKS: dict[str, dict] = {
     ),
     "banana_then_rubiks_cube": dict(
         robolab_task="BananaThenRubiksCubeTask",
-        text="Put the banana then the cube in the bowl.",
+        text="Put the banana in the bowl, then the Rubik's cube.",
         objects=["rubiks_cube", "banana", "bowl"],
         simulator="robolab", robot="franka-robotiq-2f85", image="robolab",
     ),
     "bananas_out_of_bin": dict(
         robolab_task="BananasOutOfBinTask",
-        text="Take the bananas out.",
+        text="Take both bananas out of the grey bin.",
         objects=["banana", "banana_01", "banana_02", "banana_03", "banana_04", "grey_bin"],
         simulator="robolab", robot="franka-robotiq-2f85", image="robolab",
     ),
     "bbq_sauce_in_bin": dict(
         robolab_task="BBQSauceInBinTask",
-        text="Put the red BBQ sauce bottles in the grey bin.",
+        text="Put the 2 red BBQ sauce bottles in the grey bin.",
         objects=["grey_bin", "mug", "mustard", "bowl", "ranch_dressing", "bbq_sauce_bottle", "oatmeal_raisin_cookies", "canned_tuna", "soft_scrub", "wood_block", "coffee_pot", "bbq_sauce_bottle_01"],
         simulator="robolab", robot="franka-robotiq-2f85", image="robolab",
     ),
@@ -173,19 +174,19 @@ TASKS: dict[str, dict] = {
     ),
     "block_stacking_order_agnostic": dict(
         robolab_task="BlockStackingOrderAgnosticTask",
-        text="Stack the blocks into a tower.",
+        text="Stack the red, blue, green and yellow blocks into one tower, in any order.",
         objects=["red_block", "blue_block", "green_block", "yellow_block"],
         simulator="robolab", robot="franka-robotiq-2f85", image="robolab",
     ),
     "block_stacking_specified_order": dict(
         robolab_task="BlockStackingSpecifiedOrderTask",
-        text="Stack the blocks in the order from bottom to top: red, blue, green, yellow.",
+        text="Stack the blocks into one tower: red at the bottom, then blue, green, and yellow on top.",
         objects=["red_block", "blue_block", "green_block", "yellow_block"],
         simulator="robolab", robot="franka-robotiq-2f85", image="robolab",
     ),
     "blocks_in_bin": dict(
         robolab_task="BlocksInBinTask",
-        text="Sort all colored blocks into the bin.",
+        text="Put the 4 coloured blocks in the grey bin.",
         objects=["rubiks_cube", "rubiks_cube_1", "rubiks_cube_2", "grey_bin", "lizard_figurine", "birdhouse", "yellow_block", "red_block", "green_block", "blue_block", "lizard_figurine_01"],
         simulator="robolab", robot="franka-robotiq-2f85", image="robolab",
     ),
@@ -203,31 +204,31 @@ TASKS: dict[str, dict] = {
     ),
     "clutter_plastic": dict(
         robolab_task="ClutterPlasticTask",
-        text="Put all plastic bottles away in the bin.",
+        text="Put the 3 plastic bottles (the small white bottle, the milk jug and the utility jug) in the blue bin.",
         objects=["lemon_01", "lemon_02", "lime01", "lime01_01", "orange_01", "orange_02", "pomegranate01", "pumpkinlarge", "pumpkinsmall", "red_onion", "whitepackerbottle_a01", "avocado01", "crabbypenholder", "milkjug_a01", "serving_bowl", "utilityjug_a03", "right_bin"],
         simulator="robolab", robot="franka-robotiq-2f85", image="robolab",
     ),
     "clutter_pumpkin": dict(
         robolab_task="ClutterPumpkinTask",
-        text="Put all the pumpkins away in the bin.",
+        text="Put both pumpkins in the blue bin.",
         objects=["lemon_01", "lemon_02", "lime01", "lime01_01", "orange_01", "orange_02", "pomegranate01", "pumpkinlarge", "pumpkinsmall", "red_onion", "whitepackerbottle_a01", "avocado01", "crabbypenholder", "milkjug_a01", "serving_bowl", "utilityjug_a03", "right_bin"],
         simulator="robolab", robot="franka-robotiq-2f85", image="robolab",
     ),
     "condiments_in_bin": dict(
         robolab_task="CondimentsInBinTask",
-        text="Sort the sauce condiments into the grey bin.",
+        text="Put the 4 sauce bottles (mustard, ranch dressing and both BBQ sauces) in the grey bin.",
         objects=["grey_bin", "mug", "mustard", "bowl", "ranch_dressing", "bbq_sauce_bottle", "oatmeal_raisin_cookies", "canned_tuna", "soft_scrub", "wood_block", "coffee_pot", "bbq_sauce_bottle_01"],
         simulator="robolab", robot="franka-robotiq-2f85", image="robolab",
     ),
     "cooking_clear_plate": dict(
         robolab_task="CookingClearPlateTask",
-        text="Put the two measuring cups outside of the plate.",
+        text="Take the orange measuring cup and the small blue measuring scoop off the plate and put them on the table.",
         objects=["redonion", "serving_bowl", "clay_plates", "wooden_spoons", "spatula", "storage_box", "tomato_sauce_can", "measuring_cups_1", "pink_spaghetti_spoon", "spoon_1", "green_serving_spoon", "storage_box_01", "ladle", "wooden_bowl", "potato_masher"],
         simulator="robolab", robot="franka-robotiq-2f85", image="robolab",
     ),
     "cubes_and_blocks_in_bin": dict(
         robolab_task="CubesAndBlocksInBinTask",
-        text="Put all the cubes and blocks in the bin.",
+        text="Put the 3 Rubik's cubes and the 4 coloured blocks in the grey bin.",
         objects=["rubiks_cube", "rubiks_cube_1", "rubiks_cube_2", "grey_bin", "lizard_figurine", "birdhouse", "yellow_block", "red_block", "green_block", "blue_block", "lizard_figurine_01"],
         simulator="robolab", robot="franka-robotiq-2f85", image="robolab",
     ),
@@ -251,7 +252,7 @@ TASKS: dict[str, dict] = {
     ),
     "food_packing2_cans": dict(
         robolab_task="FoodPacking2CansTask",
-        text="Pack canned foods into the bin.",
+        text="Put the tomato soup can and the tuna can in the dark grey bin.",
         objects=["bin_a06", "cheez_it", "mustard", "sugar_box", "tomato_soup_can", "tuna_can"],
         simulator="robolab", robot="franka-robotiq-2f85", image="robolab",
     ),
@@ -263,7 +264,7 @@ TASKS: dict[str, dict] = {
     ),
     "food_packing3_cans": dict(
         robolab_task="FoodPacking3CansTask",
-        text="Pack canned foods into the bin.",
+        text="Put the Spam, tomato soup and tuna cans in the dark grey bin.",
         objects=["bin_a06", "cheez_it", "chocolate_pudding", "mustard", "spam_can", "sugar_box", "tomato_soup_can", "tuna_can"],
         simulator="robolab", robot="franka-robotiq-2f85", image="robolab",
     ),
@@ -275,7 +276,7 @@ TASKS: dict[str, dict] = {
     ),
     "fruits_green_limes_on_plate": dict(
         robolab_task="FruitsGreenLimesOnPlateTask",
-        text="Put all the green fruit on the plate.",
+        text="Put both limes on the plate.",
         objects=["lemon_01", "lemon_02", "lime01", "lime01_01", "orange_01", "orange_02", "pomegranate01", "pumpkinlarge", "pumpkinsmall", "redonion", "serving_bowl", "clay_plates", "wooden_spoons", "spatula", "storage_box"],
         simulator="robolab", robot="franka-robotiq-2f85", image="robolab",
     ),
@@ -287,7 +288,7 @@ TASKS: dict[str, dict] = {
     ),
     "fruits_on_plate3": dict(
         robolab_task="FruitsOnPlate3Task",
-        text="Put three (3) fruits on the plate.",
+        text="Add fruit (not the pumpkins) to the plate until exactly 3 fruits are on it, then let go; the orange already there counts.",
         objects=["lemon_01", "lemon_02", "lime01", "lime01_01", "orange_01", "orange_02", "pomegranate01", "pumpkinlarge", "pumpkinsmall", "redonion", "serving_bowl", "clay_plates", "wooden_spoons", "spatula", "storage_box"],
         simulator="robolab", robot="franka-robotiq-2f85", image="robolab",
     ),
@@ -323,7 +324,7 @@ TASKS: dict[str, dict] = {
     ),
     "plastic_bottles_in_square_pail": dict(
         robolab_task="PlasticBottlesInSquarePailTask",
-        text="Put all the small plastic bottles in the square pail.",
+        text="Put the 3 small white plastic bottles in the square pail.",
         objects=["large_storage_rack", "whitepackerbottle_a01", "whitepackerbottle_a02", "utilityjug_a01", "utilityjug_a02", "squarepail_a01", "plasticpail_a02", "whitepackerbottle_a03"],
         simulator="robolab", robot="franka-robotiq-2f85", image="robolab",
     ),
@@ -335,13 +336,13 @@ TASKS: dict[str, dict] = {
     ),
     "put_two_mugs_on_shelf": dict(
         robolab_task="PutTwoMugsOnShelfTask",
-        text="Put two (2) mugs on the wire shelf.",
+        text="Put 2 of the mugs on the wire shelf.",
         objects=["wireshelving_a01", "spatula_01", "plate_small", "fork_big", "fork_small", "ceramic_mug", "mug", "mug_01"],
         simulator="robolab", robot="franka-robotiq-2f85", image="robolab",
     ),
     "recycle_carton": dict(
         robolab_task="RecycleCartonTask",
-        text="Put the recyclable cartons in the grey bin.",
+        text="Put the milk carton and the orange juice carton in the grey bin.",
         objects=["container_a01", "milk_carton", "orange_juice_carton", "alphabet_soup_can", "smartphone", "mayonnaise_bottle", "ketchup_bottle", "mug"],
         simulator="robolab", robot="franka-robotiq-2f85", image="robolab",
     ),
@@ -353,13 +354,13 @@ TASKS: dict[str, dict] = {
     ),
     "recycle_cartons_vertical_crate": dict(
         robolab_task="RecycleCartonsVerticalCrateTask",
-        text="Put the cartons that can be recycled in the vertical crate.",
+        text="Put the milk carton and the orange juice carton in the vertical crate.",
         objects=["container_a01", "milk_carton", "orange_juice_carton", "alphabet_soup_can", "smartphone", "mayonnaise_bottle", "ketchup_bottle", "mug"],
         simulator="robolab", robot="franka-robotiq-2f85", image="robolab",
     ),
     "red_dishes_in_bin": dict(
         robolab_task="RedDishesInBinTask",
-        text="Put the red dishware in the grey bin.",
+        text="Put the red mug and the red bowl in the grey bin.",
         objects=["mug", "bowl", "grey_bin", "banana", "rubiks_cube"],
         simulator="robolab", robot="franka-robotiq-2f85", image="robolab",
     ),
@@ -377,7 +378,7 @@ TASKS: dict[str, dict] = {
     ),
     "reorient_red_mug": dict(
         robolab_task="ReorientRedMugTask",
-        text="Put the red mug upright so that the opening is facing upwards.",
+        text="Stand the red mug upright, opening up.",
         objects=["red_mug", "bowl", "ceramic_mug", "upright_white_mug", "sideways_white_mug", "cordless_drill", "measuring_cup"],
         simulator="robolab", robot="franka-robotiq-2f85", image="robolab",
     ),
@@ -389,19 +390,19 @@ TASKS: dict[str, dict] = {
     ),
     "rubiks_cube_and_banana": dict(
         robolab_task="RubiksCubeAndBananaTask",
-        text="Put the cube and the banana in the bowl.",
+        text="Put the Rubik's cube and the banana in the bowl.",
         objects=["rubiks_cube", "banana", "bowl"],
         simulator="robolab", robot="franka-robotiq-2f85", image="robolab",
     ),
     "rubiks_cube_then_banana": dict(
         robolab_task="RubiksCubeThenBananaTask",
-        text="Put the cube then the banana in the bowl.",
+        text="Put the Rubik's cube in the bowl, then the banana.",
         objects=["rubiks_cube", "banana", "bowl"],
         simulator="robolab", robot="franka-robotiq-2f85", image="robolab",
     ),
     "rubiks_cubes_in_bin": dict(
         robolab_task="RubiksCubesInBinTask",
-        text="Sort all rubiks cubes into the bin.",
+        text="Put the 3 Rubik's cubes in the grey bin.",
         objects=["rubiks_cube", "rubiks_cube_1", "rubiks_cube_2", "grey_bin", "lizard_figurine", "birdhouse", "yellow_block", "red_block", "green_block", "blue_block", "lizard_figurine_01"],
         simulator="robolab", robot="franka-robotiq-2f85", image="robolab",
     ),
@@ -413,19 +414,19 @@ TASKS: dict[str, dict] = {
     ),
     "stack3_rubiks_cube": dict(
         robolab_task="Stack3RubiksCubeTask",
-        text="Stack the rubiks cubes in a tower.",
+        text="Stack the 3 Rubik's cubes into one tower.",
         objects=["rubiks_cube", "rubiks_cube_1", "rubiks_cube_2"],
         simulator="robolab", robot="franka-robotiq-2f85", image="robolab",
     ),
     "take_mugs_off_of_shelf": dict(
         robolab_task="TakeMugsOffOfShelfTask",
-        text="Take the mugs off the shelf.",
+        text="Take both mugs off the shelf and put them on the table.",
         objects=["ceramic_mug", "mug", "rack_l04", "serving_bowl", "utilityjug_a01"],
         simulator="robolab", robot="franka-robotiq-2f85", image="robolab",
     ),
     "throw_away_snacks": dict(
         robolab_task="ThrowAwaySnacksTask",
-        text="Put away the snacks in the bin.",
+        text="Put the apple and the yogurt cup in the trash bin.",
         objects=["ceramic_mug", "glasses", "keyboard", "marker", "remote_control", "smartphone", "wooden_bowl", "spoon_big", "computer_mouse", "yogurt_cup", "pitcher", "plasticpail_a02", "apple_01"],
         simulator="robolab", robot="franka-robotiq-2f85", image="robolab",
     ),
@@ -443,13 +444,13 @@ TASKS: dict[str, dict] = {
     ),
     "unstack_rubiks_cube": dict(
         robolab_task="UnstackRubiksCubeTask",
-        text="Unstack the rubiks cube tower.",
+        text="Unstack the Rubik's cube tower and set each cube on the table.",
         objects=["mug", "banana", "ketchup_bottle", "rubiks_cube_middle", "rubiks_cube_top", "rubiks_cube_bottom", "bowl", "grey_bin"],
         simulator="robolab", robot="franka-robotiq-2f85", image="robolab",
     ),
     "utensils_in_mug": dict(
         robolab_task="UtensilsInMugTask",
-        text="Put the fork and spoon in the ceramicmug.",
+        text="Put the fork and the spoon in the ceramic mug.",
         objects=["bowl", "banana", "bagel_07", "coffee_can", "banana_01", "yogurt_cup", "coffee_pot", "ceramic_mug", "pitcher", "fork_big", "spoon_big", "apple_01", "orange2", "milk_carton", "orange_juice_carton", "bagel_01", "bagel_02", "plate_small", "plate_large"],
         simulator="robolab", robot="franka-robotiq-2f85", image="robolab",
     ),
@@ -467,25 +468,25 @@ TASKS: dict[str, dict] = {
     ),
     "rubiks_cube_behind_bowl": dict(
         robolab_task="RubiksCubeBehindBowlTask",
-        text="Put the rubiks cube behind the bowl.",
+        text="Put the Rubik's cube on the table behind the bowl, on its far side from the robot.",
         objects=["rubiks_cube", "banana", "bowl"],
         simulator="robolab", robot="franka-robotiq-2f85", image="robolab",
     ),
     "rubiks_cube_in_front_of_bowl": dict(
         robolab_task="RubiksCubeInFrontOfBowlTask",
-        text="Put the rubiks cube in front of the bowl.",
+        text="Put the Rubik's cube in front of the bowl, between it and the robot.",
         objects=["rubiks_cube", "banana", "bowl"],
         simulator="robolab", robot="franka-robotiq-2f85", image="robolab",
     ),
     "rubiks_cube_right_of_bowl": dict(
         robolab_task="RubiksCubeRightOfBowlTask",
-        text="Put the rubiks cube to the right of the bowl.",
+        text="Put the Rubik's cube to the right of the bowl, as seen from the robot.",
         objects=["rubiks_cube", "banana", "bowl", "mug", "grey_bin"],
         simulator="robolab", robot="franka-robotiq-2f85", image="robolab",
     ),
     "white_mug_in_center_of_table": dict(
         robolab_task="WhiteMugInCenterOfTableTask",
-        text="Put the white mug in the center of the table.",
+        text="Put the white mug in the centre of the table.",
         objects=["mug", "bowl", "alphabet_soup_can", "orange_juice_carton", "smartphone", "milk_carton", "banana", "rubiks_cube"],
         simulator="robolab", robot="franka-robotiq-2f85", image="robolab",
     ),
@@ -503,19 +504,19 @@ TASKS: dict[str, dict] = {
     ),
     "pick_up_blue_pitcher": dict(
         robolab_task="PickUpBluePitcherTask",
-        text="Pick up the large blue pitcher.",
+        text="Pick up the large blue pitcher and lift it clear of the table.",
         objects=["plasticjerrican_a02", "plasticpail_a02", "pitcher"],
         simulator="robolab", robot="franka-robotiq-2f85", image="robolab",
     ),
     "bananas_in_bin_one_more": dict(
         robolab_task="BananasInBinOneMoreTask",
-        text="Put one (1) more bananas in the grey bin.",
+        text="Put exactly one more banana into the grey bin.",
         objects=["banana", "banana_01", "banana_02", "banana_03", "banana_04", "grey_bin"],
         simulator="robolab", robot="franka-robotiq-2f85", image="robolab",
     ),
     "bananas_in_bin_three_total": dict(
         robolab_task="BananasInBinThreeTotalTask",
-        text="Make sure there are 3 (three) bananas in the grey bin.",
+        text="Put one more banana into the grey bin, so that it holds 3.",
         objects=["banana", "banana_01", "banana_02", "banana_03", "banana_04", "grey_bin"],
         simulator="robolab", robot="franka-robotiq-2f85", image="robolab",
     ),
@@ -533,13 +534,13 @@ TASKS: dict[str, dict] = {
     ),
     "spoon_in_mug": dict(
         robolab_task="SpoonInMugTask",
-        text="Put the metal spoon that's in the wooden bowl in the mug.",
+        text="Put the metal spoon from the wooden bowl in the mug.",
         objects=["ceramic_mug", "glasses", "keyboard", "lizard_figurine", "marker", "remote_control", "smartphone", "wooden_bowl", "spoon_big", "computer_mouse", "yogurt_cup", "granola_bars", "grey_bin"],
         simulator="robolab", robot="franka-robotiq-2f85", image="robolab",
     ),
     "take_spatula_off_shelf": dict(
         robolab_task="TakeSpatulaOffShelfTask",
-        text="Take the spatula off the shelf and put it on the table.",
+        text="Take the spatula off the wire shelf and put it on the table.",
         objects=["wireshelving_a01", "spatula_01", "plate_small", "fork_big", "fork_small", "ceramic_mug", "mug", "mug_01"],
         simulator="robolab", robot="franka-robotiq-2f85", image="robolab",
     ),
@@ -563,7 +564,7 @@ TASKS: dict[str, dict] = {
     ),
     "butter_above_raisin": dict(
         robolab_task="ButterAboveRaisinTask",
-        text="Pick up the butter box and place it on top of the raisin box.",
+        text="Put the butter box on top of the raisin box.",
         objects=["butter", "raisin_box"],
         simulator="robolab", robot="franka-robotiq-2f85", image="robolab",
     ),
@@ -581,37 +582,37 @@ TASKS: dict[str, dict] = {
     ),
     "keyboard_out_of_bin": dict(
         robolab_task="KeyboardOutOfBinTask",
-        text="Take the keyboard out of the bin and put it on the table.",
+        text="Take the keyboard out of the grey bin and put it on the table.",
         objects=["ceramic_mug", "glasses", "keyboard", "lizard_figurine", "marker", "remote_control", "smartphone", "wooden_bowl", "spoon_big", "computer_mouse", "yogurt_cup", "granola_bars", "grey_bin"],
         simulator="robolab", robot="franka-robotiq-2f85", image="robolab",
     ),
     "mustard_above_raisin": dict(
         robolab_task="MustardAboveRaisinTask",
-        text="Place the mustard on the raisin box.",
+        text="Put the mustard bottle on top of the raisin box.",
         objects=["mustard_bottle", "raisin_box"],
         simulator="robolab", robot="franka-robotiq-2f85", image="robolab",
     ),
     "mustard_in_left_bin": dict(
         robolab_task="MustardInLeftBinTask",
-        text="Put the mustard in the left bin.",
+        text="Put the mustard bottle in the bin on the robot's left.",
         objects=["mustard", "grey_bin_right", "grey_bin_left"],
         simulator="robolab", robot="franka-robotiq-2f85", image="robolab",
     ),
     "mustard_in_right_bin": dict(
         robolab_task="MustardInRightBinTask",
-        text="Put the mustard in the right bin.",
+        text="Put the mustard bottle in the bin on the robot's right.",
         objects=["mustard", "grey_bin_right", "grey_bin_left"],
         simulator="robolab", robot="franka-robotiq-2f85", image="robolab",
     ),
     "pick_glasses": dict(
         robolab_task="PickGlassesTask",
-        text="Pick up the eye glasses.",
+        text="Pick up the eyeglasses and lift them clear of the table.",
         objects=["ceramic_mug", "glasses", "keyboard", "lizard_figurine", "marker", "remote_control", "rubiks_cube", "smartphone", "wooden_bowl", "spoon_big", "computer_mouse", "yogurt_cup", "oatmeal_raisin_cookies", "granola_bars"],
         simulator="robolab", robot="franka-robotiq-2f85", image="robolab",
     ),
     "pick_orange_object": dict(
         robolab_task="PickOrangeObjectTask",
-        text="Pick up the orange measuring cup.",
+        text="Pick up the orange measuring cup and lift it clear of the table.",
         objects=["redonion", "serving_bowl", "clay_plates", "wooden_spoons", "spatula", "storage_box", "tomato_sauce_can", "measuring_cups_1", "pink_spaghetti_spoon", "spoon_1", "green_serving_spoon", "storage_box_01", "ladle", "wooden_bowl", "potato_masher"],
         simulator="robolab", robot="franka-robotiq-2f85", image="robolab",
     ),
@@ -623,7 +624,7 @@ TASKS: dict[str, dict] = {
     ),
     "tools_picking_drill": dict(
         robolab_task="ToolsPickingDrillTask",
-        text="Select the cordless drill and put it on the table.",
+        text="Take the cordless drill out of its bin and put it on the table.",
         objects=["clamp", "cordless_drill", "spring_clamp", "husky_hammer", "blue_hammer", "red_hammer", "wood_hammer", "left_bin", "center_bin", "right_bin", "clamp_01"],
         simulator="robolab", robot="franka-robotiq-2f85", image="robolab",
     ),
@@ -635,13 +636,13 @@ TASKS: dict[str, dict] = {
     ),
     "larger_object_raisin_box_in_bin": dict(
         robolab_task="LargerObjectRaisinBoxInBinTask",
-        text="Place the larger object in the grey bin.",
+        text="Put the larger of the two boxes in the grey bin.",
         objects=["butter", "grey_bin", "raisin_box"],
         simulator="robolab", robot="franka-robotiq-2f85", image="robolab",
     ),
     "take_measuring_spoon_out": dict(
         robolab_task="TakeMeasuringSpoonOutTask",
-        text="Take the white colored measuring spoon out of the red bowl and put it on the table.",
+        text="Take the white measuring spoon out of the red bowl and put it on the table.",
         objects=["red_mug", "bowl", "ceramic_mug", "upright_white_mug", "sideways_white_mug", "cordless_drill", "measuring_cup"],
         simulator="robolab", robot="franka-robotiq-2f85", image="robolab",
     ),
@@ -671,6 +672,12 @@ ON_TABLE = ("take_measuring_spoon_out", "cooking_clear_plate")
 # row for SETTLE_STEPS more control steps (2 s), the success term still checked at every step, so that a release in the
 # last rows completes; a trajectory that ends holding the object goes on holding it.
 SETTLE_STEPS = 30
+# Agent-ended episodes (PROTOCOL §3; the standard task's sim service sets RCB_AGENT_END=1): the success term never ends the
+# episode and is never shown. Session wraps the term: RoboLab's termination manager still evaluates it at every control step
+# (stateful conditionals see every step, as before), the value is kept in Session.term_now, and the term returns False, so
+# the env never terminates on it. The service judges the state the episode ends in: the last command held for SETTLE_STEPS
+# control steps from there, the term at the window's last step.
+AGENT_END = os.environ.get("RCB_AGENT_END") == "1"
 
 ARM_SLICE = slice(0, 7)
 GRIP_INDEX = 7
@@ -960,6 +967,9 @@ class Session:
             term = cfg.terminations.success
             params = {k: v for k, v in dict(term.params).items() if k != "require_contact_with"}
             term.func = object_outside_of_and_on_surface; term.params = {**params, "surface": "table"}
+        self.term_now = False               # AGENT_END: the success term's value at the last control step
+        if AGENT_END:
+            self._hide_success_term(cfg.terminations.success)
         if self.depth_enabled:              # every camera also renders z-depth (read by render_depth; never touches physics)
             from isaaclab.sensors import CameraCfg
             for name, cam in list(vars(cfg.scene).items()):
@@ -1105,8 +1115,24 @@ class Session:
         self._recording = None
         self.episode_done = False
         self.n_steps = 0
+        self.term_now = False
         self._restore(self.initial_state)
         self._targets = self._current_targets()
+
+    def _hide_success_term(self, term) -> None:
+        """AGENT_END: the success term is evaluated as before at every control step, its value kept in term_now, and it
+        never terminates the env (it returns False)."""
+        func, sess, torch = term.func, self, self.th
+
+        # functools.wraps: IsaacLab's manager reads the term's parameters from inspect.signature(func), which follows
+        # __wrapped__; a bare (env, **params) signature is refused at env creation ("expects mandatory parameters")
+        @functools.wraps(func)
+        def hidden_success(env, **params):
+            v = func(env, **params)
+            sess.term_now = bool(torch.as_tensor(v).reshape(-1)[0].item())
+            return torch.zeros_like(torch.as_tensor(v), dtype=torch.bool)
+        hidden_success.__name__ = getattr(func, "__name__", "success") + "_hidden"
+        term.func = hidden_success
 
     def _current_targets(self) -> np.ndarray:
         q = self.robot.data.joint_pos[0].detach().cpu().numpy().astype(np.float64)

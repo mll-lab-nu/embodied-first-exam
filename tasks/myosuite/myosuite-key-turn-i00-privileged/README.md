@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:myosuite-0.1.1` |
 
 ## Task
-MyoSuite `myoHandKeyTurnFixed-v0` (MyoHand, a musculoskeletal model of a human forearm and hand, 39 muscles): Turn the key held between the thumb and the index finger by more than half a turn, and keep it past half a turn for a full second. The episode ends in failure if the index fingertip or the thumb tip moves more than about a hand's width away from the key head.
+MyoSuite `myoHandKeyTurnFixed-v0` (MyoHand, a musculoskeletal model of a human forearm and hand, 39 muscles): Turn the key more than half a turn and hold it there for a second.
 The key sits in a lock in front of the palm; its head is between the thumb and the index finger. The deliverable is one replayable trajectory of actuator commands (`/app/output/trajectory.npz`, `(T, 39)`, one row per 20 ms control step).
 
 ## Difficulty

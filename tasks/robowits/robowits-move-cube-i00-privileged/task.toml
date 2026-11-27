@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/robowits-move-cube-i00-privileged"
-description = "RoboWits move_cube (bimanual Marvin, Genesis): produce one replayable trajectory. Move any one of the three cubes past the yellow goal line, to the side away from the robot, and leave it on the table there. Frozen scene instance (RoboWits evaluation scene 0 of task 28)."
+description = "RoboWits move_cube (bimanual Marvin, Genesis): produce one replayable trajectory. Move one of the three cubes across the goal line, to the side away from the robot, and leave it on the table there. Frozen scene instance (RoboWits evaluation scene 0 of task 28)."
 keywords = ["robotics", "robowits", "genesis", "marvin-bimanual", "dual-arm", "code-as-policy", "trajectory", "move_cube"]
 
 [metadata]

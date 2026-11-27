@@ -18,7 +18,7 @@ client (docs/protocol/standard_mode.md Part 1, with the optional reset capabilit
 live and records every control step it ran. Between the agent's calls the world is frozen; 3 resets, only the last
 episode graded. The sidecar's adapter (`environment/sim/server.py`) is the benchmark's realtime twins', code for code,
 on the same shared service layer, so where a family has that twin the two modes differ only in the clock. Compare against the
-privileged task to measure the cost of losing privileged state, free resets and self-replay. A small block, the cue, slides along a raised deck toward the robot at the start. Strike it with the paddle so that it hits a spring-held gate latch and swings the gate open. This releases a ball, the payload, that waits behind the gate on an inclined chute: within a second of the cue's impact the ball must be past the gate and rolling down the chute. Intercept the ball with the paddle after it has left the chute and send it through a narrow passage between two walls. Then touch it again and bring it to rest in a target zone on the table beyond the passage.
+privileged task to measure the cost of losing privileged state, free resets and self-replay. Strike the sliding block with the paddle so that it hits the gate's latch and releases the ball on the chute. Once the ball has left the chute, hit it through the passage between the two walls, then touch it again and stop it in the target zone beyond the passage.
 
 ## Difficulty
 That of `pandadyn-s04-impact-release-relay-i00-privileged` (its README), without object poses or the success signal and with 3 resets: the moving objects
@@ -60,7 +60,7 @@ Caps per container (PROTOCOL §6).
 | | |
 |---|---|
 | Episode | it ends at the first control step where the task has succeeded or failed (the task's horizon, 25 s of simulated time, is a failure), when the agent's time is up, or on a simulator error; 3 resets (`POST /reset`: the scene rebuilt from the frozen instance); no step budget, the wall clock is the only budget |
-| Action space | `submit` chunks of `joint_position` (8: per arm 7 joint targets + the aperture, one row per 10 ms control step or `dt` apart, a chunk at most 10 s); `observe` frames or a watch window (at most 30 s); binary RCB1 responses |
+| Action space | `submit` chunks of `joint_position` (8: per arm 7 joint targets + the aperture, one row per 10 ms control step or `dt` apart, a chunk at most 10 s); `observe` the current frames or those recorded over the last seconds (`last_s`); hold chunks (`hold(s)`); binary RCB1 responses |
 | Cameras | `overview` and `closeup` (static), 640×480 RGB, z-depth on request |
 | Images | the `sim` sidecar runs efe:pandadyn (`images/pandadyn/`); the agent container and the verifier run the shared client image with its pip pins (`embodied_first_exam/standard/client.env`) |
 | Crash recovery | the shared service layer's: every control step journaled, a checkpoint with the state hash after every call; `restart: on-failure:6`, the service resumes the same episode |

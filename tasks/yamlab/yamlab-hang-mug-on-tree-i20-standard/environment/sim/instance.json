@@ -5,7 +5,7 @@
   "mug": "Mug/mug_020",
   "mug_tree": "MugTree/mug_tree_020"
  },
- "text": "Pick up the mug with the left arm, hand it over to the right arm (the right gripper takes it and the left one lets go while the mug stays lifted), and hang the mug on the mug tree, released by both grippers.",
+ "text": "Pick up the mug with the left arm, pass it to the right arm in the air, and hang it on the mug tree.",
  "stages": [
   "pick",
   "handover",

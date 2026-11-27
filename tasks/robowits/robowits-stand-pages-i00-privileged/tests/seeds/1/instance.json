@@ -3,7 +3,7 @@
  "robowits_task": "robowits/07-stand-pages-v0",
  "eval_json": "dataset/robowits/eval_dataset_50/07.json",
  "eval_index": 1,
- "text": "Assemble the two pages using the stabilizing bar to create a standing hinge structure.",
+ "text": "Stand the two pages upright on the table and let go of them and the bar so they stay standing.",
  "scene": {
   "stabilizing bar": {
    "pos": [

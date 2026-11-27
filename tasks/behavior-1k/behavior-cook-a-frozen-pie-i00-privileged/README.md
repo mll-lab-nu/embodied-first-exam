@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Cook the frozen pie. A frozen apple pie is inside the refrigerator in the kitchen, a tray lies on the countertop and there is an oven in the kitchen; cook the pie and put it on the tray.
+Cook the pie and put it on the tray.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - the apple pie (`apple_pie.n.01_1`) is cooked

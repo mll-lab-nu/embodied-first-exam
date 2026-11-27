@@ -17,7 +17,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/pandadyn-s10-swinging-load-transit-dock-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.1): Panda Dynamic Scenes S10 Swinging load transit and dock (one Franka Panda) on the same frozen instance as the privileged task. Task: A carrier rests on two small ledges between the gripper's open fingers. It is a short bar with a pendulum (a rod ending in a ball) hanging from a hinge under it, and the pendulum is already swinging. Grip the bar with both fingers and damp the swing. Carry the carrier, still gripped, through two waypoints without letting the carrier or its pendulum touch a block obstacle, brake to rest at the second waypoint, and damp the residual swing again. Finally lower it slowly until the pendulum's ball rests centred in a dock, with the swing settled and the bar still gripped. The agent only gets a client: get_obs (RGB, depth + proprioception), submit (joint_position chunks at 100 Hz) and reset; between calls the world is frozen. 3 resets (the benchmark's budget in both standard modes), only the last episode graded; no privileged state; the sim service records every executed control step and grades the last episode as it ran live (no replay)."
+description = "STANDARD MODE (robot as a service, eai-standard/2.1): Panda Dynamic Scenes S10 Swinging load transit and dock (one Franka Panda) on the same frozen instance as the privileged task. Task: Grip the carrier's bar and damp the swinging pendulum. Carry it through the two waypoints without touching the obstacle block, stop at the second and damp the swing again, then lower it slowly until the pendulum's ball rests in the dock, still holding the bar. The agent only gets a client: get_obs (RGB, depth + proprioception), submit (joint_position chunks at 100 Hz) and reset; between calls the world is frozen. 3 resets (the benchmark's budget in both standard modes), only the last episode graded; no privileged state; the sim service records every executed control step and grades the last episode as it ran live (no replay)."
 keywords = ["robotics", "pandadyn", "maniskill", "sapien", "franka-panda", "single-arm", "dynamic-manipulation", "standard-mode", "trajectory"]
 
 [metadata]
@@ -72,6 +72,13 @@ build_timeout_sec = 1800.0
 cpus = 4
 memory_mb = 10240
 storage_mb = 10240
+
+# The robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): Harbor starts this server for the agent.
+[[environment.mcp_servers]]
+name = "efe-robot"
+transport = "stdio"
+command = "python3"
+args = ["/opt/tools/efe_mcp/server.py"]
 
 [verifier.env]
 RCB_LIMITS_ENFORCE = "${RCB_LIMITS_ENFORCE:-0}"

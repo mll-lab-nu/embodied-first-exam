@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Clear the dirty dishes. Two bowls and two plates stand on the booth in the dining room; put all four into the sink in the kitchen (the dirt on them does not matter).
+Put both bowls and both plates into the kitchen sink.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - both bowls (`bowl.n.01_1`, `bowl.n.01_2`) are inside the sink (`sink.n.01_1`)

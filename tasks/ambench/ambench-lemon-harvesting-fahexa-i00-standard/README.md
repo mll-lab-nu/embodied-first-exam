@@ -13,7 +13,7 @@
 
 ## Task
 Standard-mode twin of `ambench-lemon-harvesting-fahexa-i00-privileged` (the same frozen instance: AM-Bench environment `LemonHarvesting-Am-FAHexa-Abs-PID-Direct-v0`, its seeded reset with seed
-0): One lemon and six limes are fixed to the front face of a wall in front of the hovering aerial manipulator, and a grey storage tote sits on a small table against the wall to the robot's left. Harvest the lemon: pull it off the wall, put it into the tote and open the gripper fully. Success needs the lemon's reference point (the base of the fruit) inside the tote's nominal box while the gripper is fully open. The agent gets only the `eai-standard/2.2` client (docs/protocol/standard_mode.md); the simulator runs in
+0): Pull the lemon off the wall, drop it into the grey tote on the table to your left and open the gripper all the way. The agent gets only the `eai-standard/2.2` client (docs/protocol/standard_mode.md); the simulator runs in
 the `sim` sidecar (`environment/docker-compose.yaml`, GPU on the sidecar), which owns the scene and records the episode as a
 (T, 8) trajectory of AM-Bench's own end-effector pose actions. The collect hook (`environment/sim/finalize.sh`) ends the
 episode, lets the service exit, writes `final.json` from the live episode's record (no replay) and then films the
@@ -21,7 +21,7 @@ trajectory once (the video only); the verifier runs in a separate sandbox (`test
 resets and privileged state.
 
 ## Difficulty
-That of `ambench-lemon-harvesting-fahexa-i00-privileged` (its README), without resets, object poses or a success measure (the episode just ends, reason `success`, when the check holds): The fruits' positions, which fruit is the lemon, the tote's and table's poses and whether the lemon is still attached are not given: the yellow lemon has to be told from the green limes and located on the concrete wall with the onboard cameras, and the tote found on the table. The gripper width comes from proprioception; whether the lemon is in the tote can only be judged visually. Success is reported only by the episode's end (reason `success`).
+That of `ambench-lemon-harvesting-fahexa-i00-privileged` (its README), without resets, object poses or a success measure (a success is never shown and does not end the episode; the agent ends it with `POST /finish`): The fruits' positions, which fruit is the lemon, the tote's and table's poses and whether the lemon is still attached are not given: the yellow lemon has to be told from the green limes and located on the concrete wall with the onboard cameras, and the tote found on the table. The gripper width comes from proprioception; whether the lemon is in the tote can only be judged visually. Success is reported only by the episode's end (reason `success`).
 
 ## Reference solution
 `solution/oracle_replay.py` streams the privileged oracle's rows (`solution/oracle_qpos.npy`: AM-Bench's scripted expert for
@@ -32,8 +32,7 @@ step the service reports.
 ## Verification
 Graded by the live episode (owner 2026-10-17): `success` = the live episode's success, judged by the sim service on the episode the agent ran, with no grading replay (until 2026-10-17: live success ∧ two fresh-process replays that succeed and agree on the outcome). The live service runs camera-free physics (its cameras are drawn by a separate render process), the same computation as a fresh-process replay of its rows. `tests/grade.py` reads `final.json` with no network and writes the reward fields (`graded_by_live` = 1,
 `replays` = 0, `infra_error`, the crash-recovery fields), plus `/logs/verifier/replay.mp4` (the recorded rows drawn by the
-render worker in one film pass after the verdict, an illustration: its failure costs the video only). AM-Bench's success
-check is evaluated after every control step; the episode ends at the first step where it holds. Before serving, the
+render worker in one film pass after the verdict, an illustration: its failure costs the video only). The episode ends at the agent's `POST /finish`, at the task's own time-out, when the agent's time is up, or on a simulator error (a success never ends it and is never shown); AM-Bench's success check is judged on the state it ends in. Before serving, the
 service checks the rebuilt scene's state hash against the frozen instance's (`instance_mismatch`: an infrastructure
 failure), and GPU faults in the live episode's physics (`live_gpu_faults`) make it no verdict on the agent
 (`infra_error`). Oracle: success at control step 1739; the live
@@ -55,8 +54,8 @@ Caps per container (PROTOCOL §6).
 ## Details
 | | |
 |---|---|
-| Episode | one episode, no reset, no step budget: it ends at the first control step where AM-Bench's success check holds, at the task's own time-out (episode length 30 s: control step 3599, reason `episode_timeout`), when the agent's time is up, or on a simulator error; simulated time advances only with the agent's calls |
-| Action space | `submit` chunks of `ee_pose` (8: AM-Bench's own action, the tool frame's target pose + the gripper command, streamed at 120 Hz with the agent's `dt`, a multiple of 1/120 s, `hold` or `linear`); `observe` frames or a watch window; `/kinematics` (FK / IK of the arm on its airframe, stateless); binary RCB1 responses |
+| Episode | one episode, no reset, no step budget: it ends at the agent's `POST /finish`, at the task's own time-out (episode length 30 s: control step 3599, reason `step_limit`), when the agent's time is up, or on a simulator error (a success never ends it); simulated time advances only with the agent's calls |
+| Action space | `submit` chunks of `ee_pose` (8: AM-Bench's own action, the tool frame's target pose + the gripper command, streamed at 120 Hz with the agent's `dt`, a multiple of 1/120 s, `hold` or `linear`); `observe` the current frames or those recorded over the last seconds (`last_s`); hold chunks (`hold(s)`); `/kinematics` (FK / IK of the arm on its airframe, stateless); binary RCB1 responses |
 | Cameras | `ee_camera` (on the end effector), `base_camera` (on the airframe, looking forward), 384×384 RGB, z-depth on request; drawn by a render-only Isaac process from the physics state |
 | Images | the `sim` sidecar runs efe-private:ambench (BUILD_ONLY, `images/ambench/BUILD_ONLY`); the agent container and the verifier run the shared client image with its pip pins (`embodied_first_exam/standard/client.env`) |
 | Crash recovery | resume class `approx` (GPU PhysX replays the journal to the checkpointed state almost always; a rare race can leave the last bits different, so a resume's deviation is recorded, `resume_state_mismatch`, and the episode continues; the live state after it is graded): every control step journaled, a checkpoint with the state hash after every call; `restart: on-failure:6`, the service resumes the same episode (docs/protocol/standard_mode.md §13) |

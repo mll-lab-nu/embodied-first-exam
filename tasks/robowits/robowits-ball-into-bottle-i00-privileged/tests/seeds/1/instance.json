@@ -3,7 +3,7 @@
  "robowits_task": "robowits/12-ball-into-bottle-v0",
  "eval_json": "dataset/robowits/eval_dataset_50/12.json",
  "eval_index": 1,
- "text": "Transfer the ball from the blue container into the red bottle.",
+ "text": "Move the small ball from the blue container down to the bottom of the red bottle.",
  "scene": {
   "ball container": {
    "pos": [

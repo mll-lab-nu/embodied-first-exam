@@ -17,7 +17,7 @@ Standard mode (robot as a service, `eai-standard/2.1`) of `kinder-sweep-simple-i
 cameras, joint encoders, the base's odometry -- and
 never the scene's state or the goal check. No reset: one episode, which is graded.
 
-Task: get the fifty small dark-red cubes scattered on the floor into the translucent grey box marked on the floor at the kitchen island's end nearest the robot. The kitchen island is the free-standing counter with the white top, and a wiper stands on the floor near the cubes. The task succeeds the moment all fifty cubes' centres are inside that box.
+Task: Get the 50 small cubes on the floor into the grey box marked on the floor right in front of you, at the near end of the kitchen island. There is a wiper you can use.
 
 ## Difficulty
 Nonprehensile, tool use: fifty small cubes spread over 2 m² of floor into a box marked at the kitchen island's end, with a wiper standing about 1.7 m from where the robot starts. The variant is upstream's o50 (both cube families use theirs, tasks/kinder/README.md); of its three goals, the one upstream's README gives as the family's example.
@@ -26,7 +26,7 @@ Nonprehensile, tool use: fifty small cubes spread over 2 m² of floor into a box
 None, and no positive example yet: the task is unvalidated (`validated = false`, docs/protocol/README.md §2, §4) until a human review records one.
 
 ## Verification
-The sidecar judges the episode as it runs (KinDER's goal check at every control step; the episode ends there) and,
+The sidecar runs the episode live: it ends at the agent's `POST /finish`, at the step cap, when the agent's time is up, or on a simulator error (a success never ends it and is never shown), and KinDER's goal check is judged on the state it ends in. The sidecar,
 when the collect hook ends the trial, writes that verdict to `/data/final.json` (`graded_by = "live"`): nothing is
 replayed to grade it (owner, 2026-10-17). The scene's start is checked against the frozen instance's
 recorded state (`scene_sha`) when the episode begins (a mismatch is `instance_mismatch`, infrastructure).

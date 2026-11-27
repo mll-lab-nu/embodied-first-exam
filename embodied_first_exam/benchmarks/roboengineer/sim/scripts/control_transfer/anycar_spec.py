@@ -14,7 +14,7 @@ def make_spec(index):
         schema="control-transfer/1",
         protocol="eai-policy/1.1",
         name="anycar",
-        goal="Track one prescribed-time lap of a randomized ellipse across rigid traction patches; avoid barriers, rollover and offtrack excursions.",
+        goal="Drive the car round one timed lap of the oval track, over ground whose grip changes from patch to patch, keeping up with the moving target that sets the pace, without hitting a barrier or leaving the track.",
         score="Ordered completion and time-indexed position/heading/speed accuracy. Safety violation gives zero. No nearest-waypoint score.",
         max_rounds=3,
         adaptation_cases=3,
@@ -88,7 +88,7 @@ def make_circuit_spec(index, track_id="zigzag", revision="circuit-sector/1"):
             horizon_s=30.0, target_lap_time_s=28.0, scaled_length_m=row["length_m"],
             runtime_budget=compact_route_budget(layout),
             completion="Every ordered forward gate and the finish line within 30 simulated seconds",
-            goal="Track a complete compact F1-inspired lap, targeted at 28 seconds within a 30-second episode, avoiding collisions/offtrack.",
+            goal="Drive the car round one lap of the small F1-style track, keeping up with the moving target that sets the pace, without a collision or leaving the track.",
             geometry=compact_catalog()["geometry"],
             geometry_modifications={key: row[key] for key in ("smoothing_sigma_samples", "source_samples", "minor_axis_widening")},
         )

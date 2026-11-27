@@ -83,7 +83,7 @@ has its own prefix (`task_conventions.py benchmarks --check`, `ci_scope.py --che
    `check-verifier-isolation.sh` requires exactly its list. The cutoff, `[agent] timeout_sec`, is yours to set in this
    pull request within PROTOCOL §2 and to state in its Contract; what `normalize` renders from it and how the clock
    runs: docs/protocol/running.md "The agent's time". Your own text never repeats the limit as a duration: say "the
-   time limit (`## Time limit`)", and add what is particular to your benchmark (a simulator's start-up cost). Your
+   time limit (Limits)", and add what is particular to your benchmark (a simulator's start-up cost). Your
    service's `time_s` / `time_left_s` count from the agent's first request to it, never from the service's start, and
    a resumed service keeps that moment (docs/protocol/standard_mode.md, "The agent's clock": the shared layers do it
    for you; a test must show it).
@@ -142,7 +142,8 @@ bash ci_checks/run_all.sh tasks/<benchmark>/<your tasks>      # both tiers: fix 
 bash ci_checks/run_all.sh --changed               # what CI runs on your pull request (scope: ci_checks/ci_scope.py)
 python3 scripts/task_conventions.py --check tasks/<benchmark>/<your tasks>     # README, task.toml, test.sh in the standard layout
 python3 ci_checks/check-resources.py tasks/<benchmark>/<your tasks>             # the caps of every container + README / instruction (PROTOCOL §6)
-python3 ci_checks/check-cutoffs.py tasks/<benchmark>/<your tasks>               # the time cutoff: task.toml = instruction = README = sim service, twins equal, cap (PROTOCOL §2)
+python3 ci_checks/check-cutoffs.py tasks/<benchmark>/<your tasks>               # the time cutoff: task.toml = instruction = README = sim service, cap (PROTOCOL §2)
+python3 ci_checks/check-twins.py tasks/<benchmark>/<your tasks>                 # twins: the same cutoff and seeds (H.7)
 python3 scripts/stamp_mtimes.py tasks             # before any image build from the checkout (below)
 harbor run -p tasks/<benchmark>/<task> -a oracle               # on a sample: >= 2 tasks per mode
 harbor run -p tasks/<benchmark>/<task> -a nop                  # must score 0
@@ -156,7 +157,7 @@ mtime match, and a checkout gives many files one mtime, so a task can silently r
 
 For a new simulator or family, also replay the oracle (or a positive example) twice in fresh processes and include
 the matching state hashes (the determinism check of a task's construction, PROTOCOL §4; the standard modes' video is
-rendered from the trajectory). Where fresh replays end in different states, the task declares `[metadata] replays = 3`
+rendered from the trajectory, or recorded live where the simulator does not replay bit-wise, PROTOCOL §4). Where fresh replays end in different states, the task declares `[metadata] replays = 3`
 and its grader stops at the first successful replay.
 
 ## Tasks without an oracle
@@ -207,17 +208,16 @@ The checklist is in PROTOCOL §4.
   pinned files-only image, the benchmark's `images/<folder>-files/` (sources under `embodied_first_exam/benchmarks/<folder>/`; the same image
   serves its agent and verifier images; besides it, a benchmark may have files images that hold only data, such as goal
   pictures or build inputs, and one per further simulator image it runs on, as RoboARC's IKEA suite),
-  or `images/standard-files/` for the 2.2 / 2.4 / realtime layers: the sidecar is built from its directory
+  or `images/standard-files/` for the 2.1 / 2.2 / 2.4 / realtime layers (the 2.1 clients and grader of `v2_1/` too): the sidecar is built from its directory
   (`build: context: sim`, its `Dockerfile`: `COPY . /srv/`, then `COPY --from=<image@digest>` of those files at their paths
   under `/srv`; `.dockerignore` keeps the two build files out). A private evaluator's own data (hidden plants, case banks)
   and files that may not be redistributed stay in the task dir.
 - Pin everything (`FROM` tags or digests, pip versions); no network access during verification.
 - The agent's egress (PROTOCOL Appendix H.6, docs/protocol/running.md "Network"): the allowlist by default; a task
-  whose author chooses open egress declares `[agent] network_mode = "public"` and writes its own `## External material`
-  paragraph. Bake
+  whose author chooses open egress declares `[agent] network_mode = "public"` and writes its own Network line
+  in `## Limits`. Bake
   what the task itself needs at run time into the image or the task directory (an agent may install packages; a task
-  must not depend on it). `normalize` writes the `## External material` paragraph, an honour rule, into
-  `instruction.md`. If a distribution on PyPI ships your benchmark's solutions or task sources, add it to the table in
+  must not depend on it). `normalize` writes the Network line of `## Limits` into `instruction.md`. If a distribution on PyPI ships your benchmark's solutions or task sources, add it to the table in
   [docs/protocol/leakage.md](docs/protocol/leakage.md) ("Packages on PyPI"). Keep provenance (source repository, dataset, demonstration
   file, expert module) out of every file under `environment/` that the agent reads, and look through a new image for
   recorded episodes and links to them (`ci_checks/check-agent-pointers.py` covers the task's own files only).

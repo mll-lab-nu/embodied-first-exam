@@ -12,6 +12,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 Q = np.load(os.path.join(HERE, "oracle_qpos.npy")).astype(np.float32)           # (N, action_dim), one row per K control steps
 M = json.load(open(os.path.join(HERE, "oracle_meta.json"))) if os.path.exists(os.path.join(HERE, "oracle_meta.json")) else {}
 K = int(M.get("K", 1)); interp = M.get("interpolate", "hold")
+SETTLE_S = float(M.get("settle_s", 1.0))     # 0: finish on the replay's last state (the end-state window still applies)
 r = Robot(); spec = r.spec(); hz = float(spec.get("control_hz", 30)); dt = K / hz
 print("spec:", spec["protocol"], "rows:", len(Q), "dt:", dt, flush=True)
 rows_per_chunk = max(1, int(spec.get("max_chunk_s", 10) / dt + 1e-9))
@@ -42,6 +43,8 @@ while i < len(Q):
     if rows == 0:
         break
     i += rows
-if not done:
-    obs = r.get_obs(seconds=1.0, cameras=[next(iter(spec["cameras"]))], video="none"); print("settle:", obs.meta["done"], obs.meta["reason"])
+if not done and SETTLE_S > 0:
+    obs = r.hold(SETTLE_S, cameras=[next(iter(spec["cameras"]))], video="none"); print("settle:", obs.meta["done"], obs.meta["reason"])
+try: print("finish:", r.finish())                       # the agent ends the episode (eai-standard/3.0: POST /finish)
+except EpisodeOver as e: print("finish: the episode had already ended:", e)
 print("status:", r.status(), "wall %.0fs" % (time.time() - t0))

@@ -1,68 +1,46 @@
-# Panda Dynamic Scenes · Moving bank relay (D06) — frozen instance i00
+# Panda Dynamic Scenes · Moving bank relay (D06) (privileged)
 
-You control two simulated **Franka Panda** arms (`panda-0` on the left, `panda-1` on the right; each with its standard hand and the task's tool where it has one) in a simulated scene (ManiSkill 3 / SAPIEN, rigid-body CPU PhysX at 1000 Hz) via Python.
-**Task:** A low-friction puck is already sliding toward the right arm at the start, through the first of two gaps in a row of posts across the table. The right Panda's paddle must strike it back toward the left. The puck must then come back through that same gap, hit a small bank board that slides back and forth by itself on the left arm's side of the posts, while the board is moving, and then hit the left Panda's paddle. The right paddle strikes the puck back a second time. The puck must then come back through the second gap and hit the left paddle again, with the paddle at a clearly different position and angle from the first rebound. Finally the left paddle must send the same puck back out through the second gap and across a goal line in front of a backstop wall on the right arm's side, with the right paddle not touching it after it passes the gap.
+## Task
+Strike the sliding puck back with the right paddle so that it returns through the gap it came through, bounces off the
+moving bank board and hits the left paddle. Strike it back again so that it comes through the other gap, next to the
+side rail, onto the left paddle held at a new place and angle; then send it with the left paddle back out through that
+gap and across the goal line in front of the middle of the backstop.
 
-This is a *fixed scene instance*: everything starts the same way after every reset, and you may reset and retry as many
-times as you want. Your deliverable is **one replayable trajectory** of the robot's low-level actions, not a general
-policy. Things move by themselves from the first control step on: the scene does not wait for the robot.
+## Goal
+Success: the right paddle strikes the puck briskly back toward the left arm; it comes back through the gap it came
+through, hits the bank board while the board is moving, and then hits the left paddle; the right paddle strikes it back
+a second time; it comes back through the other gap, next to the side rail, and hits the left paddle again, the paddle
+clearly moved and turned from where it was at the first rebound; finally the left paddle sends it back out through that
+gap and across the goal line in front of the middle of the backstop, the right paddle not touching it after it passes
+the gap.
 
-## Scene
-panda-0 (left): base at (-0.55, -0.22, 0), yaw 0 (facing +x). panda-1 (right): base at (0.74, 0.22, 0), yaw pi (facing -x). Each carries a flat rigid paddle, 0.10 m long (2 x `tool_half`, `tool_half` = 0.05 m for both arms), 0.05 m tall and 12 mm thick, on a rigid adapter on its back (tool -x) side: a horizontal bar 0.035 m above the tool origin (tool x from -0.132 to -0.038), a vertical post at tool x = -0.05 (z from -0.005 to 0.035) and a 12 mm square bridge from the post to the paddle's back face (x from -0.044 to -0.006, z from 0.009 to 0.021); paddle and adapter form one rigid tool link. The tool frame is the paddle centre, with x normal to its faces, y along its length and z up. The TCP sits 0.12 m behind the paddle centre (tool -x) and 0.04 m above it. Left paddle start: centre (-0.10, 0.17, 0.045), orientation identity (faces normal to world x, length along world y). Right paddle start: centre (0.27, -0.11, 0.045), quaternion (0, 0, 0, 1) (yawed 180 deg). At the start height each paddle's lower edge is 0.020 m above the table. Role labels (panda-0 / panda-1) by phase: right_first_strike preparing_board / striker; left_first_rebound rebound_operator / preparing_receiver; right_recovery_strike relay_shooter / striker; left_changed_rebound rebound_operator / cleared_striker; terminal_goal goal_shooter / cleared_striker. On both arms the tool's adapter runs between the fingertips: closing a gripper to less than about 12 mm of aperture makes its fingers touch the adapter, which ends the episode as `self_collision` (both grippers start fully open, at 0.08 m).
+The steps count only in this order. Once a step is done, it stays done. The replay ends as soon as the task is done or
+has failed; the task also fails at once when:
+- the task's horizon is reached before the task is done (Robot Interface);
+- an object leaves the workspace (falls well below the table top or flies far away);
+- a robot part touches what it may not: each paddle may touch only the puck, a paddle must not touch its own arm, no
+  other robot part may touch anything, and the two arms must never touch each other;
+- an arm touches itself, a robot part touches the table or the floor, or a contact presses deep into anything;
+- an arm goes beyond the Franka Panda's own safety limits (Robot Interface, Safety).
 
-A small orange square puck (44 mm x 44 mm, 24 mm tall) slides on the table with very little friction. At t = 0 it is already moving toward the right arm. Four short orange posts (24 mm x 50 mm, 60 mm tall) stand in a row across the table between the arms. The middle two overlap into a single block, so the row leaves two equal gaps, and the puck starts in line with the first gap. The posts are not bouncy. A long, very bouncy rail (70 mm tall) runs along the +y side of the course. A short backstop wall (0.14 m wide, 70 mm tall, not bouncy) stands behind the goal line on the right arm's side. On the left arm's side of the posts, at the end of the first gap's lane, a small yellow bank board (80 mm long, 12 mm thick, 32 mm tall, very bouncy) stands in a slot in the table with its face turned 45 deg, toward +x and +y. A motor slides it back and forth along its own face line the whole time, several centimetres each way, with a period of several seconds. Apart from the puck and the board, everything is fixed. The table top is the world's z = 0 plane.
+Deliverable: `/app/output/trajectory.npz`, written with `Session.save_trajectory(...)`. It holds `task` and `actions`;
+`actions` is a (T, 16) float array of at most 4,500 rows, one per control step. Anything else (another shape, NaN, more
+rows, a file that is not such an npz) scores 0. It is replayed open-loop from the fixed start and scores 1 if the task
+succeeds in the replay, else 0. Keep the script that produced it at `/app/output/gen.py`. Save a valid one early and
+overwrite it when you have a better one.
 
-Exactly (privileged information, also readable through the tooling): Puck: box 0.044 x 0.044 x 0.024 m, mass `object_mass` = 0.035 kg, friction 0.012, restitution 0.65. At reset it is placed at (0.12, u, 0.0125), with u drawn uniformly in [-0.03, 0.01] m. Its initial velocity is (+`incoming_speed`, 0, 0) = (0.35, 0, 0) m/s, heading +x through gap 0. Table friction `table_friction` = 0.015. Route posts route_0_-1, route_0_1, route_1_-1 and route_1_1 are static (friction 0.3, restitution 0.05). Each is 0.024 (x) x 0.050 (y) x 0.060 m, centred at x = 0.16 and z = 0.03. Gap 0 is formed by the posts at y = -0.085 and 0.065: y in [-0.06, 0.04], centre -0.01. Gap 1 is formed by the posts at y = 0.085 and 0.235: y in [0.11, 0.21], centre 0.16. The posts at 0.065 and 0.085 overlap. return_rail (static, restitution 0.7): 0.48 x 0.016 x 0.070 m, centred at (0.15, 0.29, 0.035), running along x from -0.09 to 0.39. backstop (static, restitution 0.05): 0.02 x 0.14 x 0.07 m, centred at (0.48, 0.16, 0.035). Bank board (fixture `bank`; joint state reported as `bank_state` = [s, ds/dt]): a box 12 mm thick x 80 mm long x 32 mm tall (friction 0.05, restitution 0.95, mass 0.15 kg) on a prismatic joint; at s = 0 its centre is at (-0.04, -0.032, 0.019) (bottom at z = 0.003). Its face normal points along (0.707, 0.707) (0.785 rad in the table plane) and its long side and sliding axis along (-0.707, 0.707): s > 0 moves it toward -x and +y. Joint limits [-0.12, 0.12] m, no friction or damping. A motor (PD kp 80 N/m, kd 8 N s/m, at most 10 N) drives it along s(t) = 0.09 sin(w (t + c)) m with velocity target 0.09 w cos(w (t + c)), w = `fixture_speed` / 0.09 = 0.667 rad/s (peak speed `fixture_speed` = 0.06 m/s, period about 9.42 s); c = `bank_clock` = 0 (`fixture_phase` = 0: no draw). At reset s = 0 with velocity +0.06 m/s. Paddles: `tool_half` = 0.05, `tool_mass` = 0.2 kg, `tool_friction` = 0.3, restitution 0.05. The table top spans x in [-0.54, 0.70] and y in [-0.48, 0.48]. A puck sliding off it falls below z = -0.2 (generic out_of_bounds). Horizon `horizon` = 25 s. The only random draw is u, made at reset.
+Rules: **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+benchmark's demonstrations, trained policies); trials are reviewed.
 
-The instance's parameters (`s.params()`, SI units): `horizon` = 25, `object_mass` = 0.035, `tool_mass` = 0.2, `tool_half` = 0.05, `incoming_speed` = 0.35, `fixture_speed` = 0.06, `fixture_phase` = 0, `table_friction` = 0.015, `tool_friction` = 0.3, `bank_clock` = 0.
+## Robot Interface
+Two simulated Franka Panda arms on a table (ManiSkill 3 / SAPIEN, rigid-body physics at 1000 Hz). `panda-0` is on the
+left and `panda-1` on the right; each has its standard hand and the task's tool where it has one. The scene is one fixed
+instance: everything starts the same way after every reset. Things move by themselves from the first control step on:
+the scene does not wait for the robot. You have the full simulator to develop with; you hand in a trajectory of robot
+actions.
 
-**Goal geometry.** Crossing lines for the puck's centre. Gap 0 line: x = 0.16 with |y + 0.01| < 0.048 m, crossed in -x (left_first_rebound). Gap 1 line: x = 0.16 with |y - 0.16| < 0.048 m, crossed in -x (left_changed_rebound) and in +x (terminal_goal). Strike release: puck centre at x > 0.18. Goal line: x = 0.42 with |y - 0.16| < 0.055 m, crossed in +x, announced at reset as `goal_goal` = (0.42, 0.16, 0.012).
-
-## Success (the task's own check)
-The task has 5 phases. They are checked after every physics step (1 ms) and must be completed **in this order**
-(a phase is checked only once the previous one is complete, and a completed phase stays complete):
-1. **right_first_strike**: The right paddle strikes the puck back toward the left arm. The phase completes at a step within 0.05 s after the puck's last contact with the right paddle at which the puck touches neither paddle, its centre is at world x > 0.18 (on the right arm's side of the posts) and its velocity along x is -0.20 m/s or less (moving toward the left arm at 0.20 m/s or more).
-2. **left_first_rebound**: The puck's centre crosses the line x = 0.16 moving in -x with |y - (-0.01)| < 0.048 m, i.e. back through gap 0 (x >= 0.16 on the previous physics step and < 0.16 now). After that crossing it hits the bank board while the board slides at 0.02 m/s or more (its joint speed on the previous physics step), and after that bank contact it hits the left paddle while approaching at 0.08 m/s or more (the puck's horizontal speed on the previous physics step). The phase completes at that left-paddle contact, and the left paddle's tool-frame pose (position and orientation) is recorded. A right-paddle contact at any point, or a left-paddle contact before the bank contact, cancels the crossing: a new crossing of gap 0 is then needed. A bank contact while the board is slower does not count, and neither does a left-paddle contact after the bank contact at a lower approach speed; neither cancels anything.
-3. **right_recovery_strike**: As right_first_strike: the right paddle strikes the puck back toward the left arm (within 0.05 s after its last right-paddle contact, which must be made during this phase, the puck touches neither paddle, is at x > 0.18 and moves at -0.20 m/s or less along x), at a step more than 0.06 s after this phase began.
-4. **left_changed_rebound**: During this phase the puck's centre crosses x = 0.16 moving in -x with |y - 0.16| < 0.048 m, i.e. through gap 1. After that crossing the puck hits the left paddle while approaching at 0.08 m/s or more, with two pose conditions holding: the paddle's tool-frame origin is more than 0.035 m from the recorded first-rebound position, and its orientation is rotated by more than 0.24 rad (about 13.8 deg) from the recorded orientation, i.e. |q . q_first| < cos 0.12. A right-paddle contact cancels the crossing. Left contacts that do not meet the speed or pose conditions do not count, but they neither cancel the crossing nor fail the task. The bank board plays no part in this phase.
-5. **terminal_goal**: The puck's centre crosses x = 0.16 moving in +x with |y - 0.16| < 0.048 m, i.e. out through gap 1; a right-paddle contact after that crossing cancels it. The phase completes when, after such a crossing, the puck's centre crosses x = 0.42 moving in +x with |y - 0.16| < 0.055 m while it does not touch the right paddle, and the left paddle has touched the puck at some step after this phase began. This completes the task.
-
-The episode **ends by itself** at the first control step where the last phase is complete (success; rows after it are
-never executed) or where the task has failed. `s.status()` reports the phase you are in and the failure, if any.
-
-**The task fails** (the episode ends, reward 0) as soon as any of these happens:
-- the task's own failure conditions: none (only the rules below apply);
-- the task's horizon is reached: 25 s of simulated time (`timeout`);
-- an object leaves the workspace: its centre falls below z = -0.2 m or gets more than 1.8 m from the world's z axis
-  (`out_of_bounds`);
-- a forbidden contact or a deep interpenetration (below);
-- a safety limit is exceeded (`limit_violation`, below).
-
-**Contacts.** Each paddle may touch only the puck. The paddles must not touch the posts, the rail, the backstop, the bank board, the table or the robot pedestals. No other robot part, the fingers included, may touch anything. The two arms and their paddles must never touch each other, and a paddle must not touch its own arm. In every task: the two arms (and their tools) never touch each other
-(`arm_arm_or_tool_collision`), an arm never touches itself (`self_collision`), no robot part touches the table or the floor
-(`forbidden_collision`, `tool_table_collision`), a robot link other than an allowed one touches no object or fixture
-(`forbidden_arm_object_contact`, `forbidden_arm_scene_contact`, `forbidden_arm_fixture_contact`), a tool touches only the
-task's objects and the fixtures the task allows (`forbidden_tool_fixture_contact`), and no contact penetrates deeper than
-4 mm (`excessive_penetration`).
-
-**Safety limits** (the Franka Panda's own limits, checked every 1 ms on each arm; `s.robot_spec()["safety_limits"]`):
-measured joint positions within the joint limits (+0.002 rad); measured joint speeds at most 1.01 x (2.175, 2.175, 2.175,
-2.175, 2.61, 2.61, 2.61) rad/s; finger speeds at most 0.051 m/s; the hand's TCP at most 1.01 x 1.7 m/s and 1.01 x
-2.5 rad/s; joint accelerations (measured over every 20 ms window) at most 1.05 x (15, 7.5, 10, 12.5, 15, 20, 20) rad/s²
-and jerks at most 1.05 x (7500, 3750, 5000, 6250, 7500, 10000, 10000) rad/s³; the TCP's acceleration (20 ms windows) at
-most 1.05 x 13 m/s² and 1.05 x 25 rad/s²; motor torques at most (87, 87, 87, 87, 12, 12, 12) N m, changing at most
-1000 N m/s. The servo's own reference motion is checked against the same speed, acceleration and jerk limits. A contact
-(a catch, a strike) moves the arm too: what is measured counts, whatever was commanded.
-
-## Deliverable
-Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below). It is replayed
-open-loop from the same initial state in one fresh process and scored 1 if the task succeeds in the replay,
-else 0. Also leave the script that produced it at `/app/output/gen.py`. Save a working trajectory
-as soon as you have one and overwrite it as you improve it: whatever is in `/app/output/` when the time is up is graded.
-The file holds `task` and `actions`, a (T, 16) float array of at most **4,500 rows** (one per control step);
-anything else (another shape, NaN, more rows, a file that is not such an npz) scores 0.
-
-## Tooling (already installed; run `python` from any directory)
+### Session
+`rcb_pandadyn`, already installed (run `python` from any directory):
 ```python
 from rcb_pandadyn import Session
 s = Session(instance="/app/instance.json")   # ~5-15 s: builds the scene and resets it to the frozen instance
@@ -84,35 +62,66 @@ s.camera_info()                    # per camera: intrinsic_cv, extrinsic_cv (wor
 s.render_video(actions, "/app/output/check.mp4")   # replays from the frozen state while filming the overview camera
 s.u                                # the ManiSkill environment itself (`panda_dynamics` in /opt/pandadyn: read-only reference)
 ```
-The tooling is deliberately thin: joint targets, kinematics and state. Catching, striking, carrying and timing are yours to
-build. The environment's source, the task included, is in `/opt/pandadyn/panda_dynamics` (`tasks/dual/moving_bank_relay.py`).
 
-The grader replays once, in a fresh process; it is exactly this CLI (a fresh process, so run it to self-check):
-`python /opt/tools/rcb_pandadyn.py replay --instance /app/instance.json --traj /app/output/trajectory.npz`
+The tooling is deliberately thin: joint targets, kinematics and state. Catching, striking, carrying and timing are yours
+to build. The environment's source is in `/opt/pandadyn/panda_dynamics`. Check a trajectory as the grader replays it:
+`python /opt/tools/rcb_pandadyn.py replay --instance /app/instance.json --traj /app/output/trajectory.npz`. One
+`Session` per process. Stepping runs at roughly 40-150 control steps per second; rendering happens only when a frame is
+asked for and never moves anything. Do not call `s.close()` before writing every output.
 
-## Conventions
-- World frame: metres, z up, the table top is the plane z = 0; quaternions are **wxyz**. Each arm's base pose is in the robot spec (`arms`).
-- Action row (16 values per control step): `[panda-0 joint1..7, panda-0 aperture, panda-1 joint1..7, panda-1 aperture]`. Each arm's 8 values are its 7 absolute joint-position
-  targets (rad, `panda_joint1..7`) and its total gripper aperture target (m, 0 = closed .. 0.08 = open; each finger moves at
-  most 0.025 m/s). Values outside the joint limits (`s.robot_spec()`) are clipped to them before they are executed, and the
-  trajectory records the clipped row.
-- The servo: every control step, each arm's latest target is turned into a smooth reference motion by a jerk-limited
-  trajectory generator (Ruckig, the joints synchronised to arrive together) within 65 % (speed), 55 % (acceleration) and 5 % (jerk) of the Panda's joint
-  speed, acceleration and jerk limits, and the arm tracks that reference with torque control (PD + inverse dynamics, the
-  Panda's torque and torque-rate limits). A new target replans from the current reference motion, so a target far away is
-  reached smoothly, not in one step. `s.robot_spec()["servo"]` has the exact limits and gains.
-- Control runs at 100 Hz (10 ms per row), physics at 1000 Hz. There is no step budget: the time limit (`## Time limit`) is
-  your only budget. A simulated episode ends at the latest at the task's horizon (25 s, 2500 rows).
-- One `Session` per process. Stepping runs at roughly 40-150 control steps per second; rendering happens only when a frame
-  is asked for and never moves anything. Do not call `s.close()` before writing every output.
+### Actions
+- Action row (16 values per control step): `[panda-0 joint1..7, panda-0 aperture, panda-1 joint1..7, panda-1 aperture]`.
+  Each arm has 8 values: its 7 absolute joint-position targets (rad, `panda_joint1..7`) and its total gripper aperture
+  target (m, 0 = closed .. 0.08 = open). Each finger moves at most 0.025 m/s. Values outside the joint limits
+  (`s.robot_spec()`) are clipped to them before they are executed, and the trajectory records the clipped row.
+- The servo: every control step, a jerk-limited trajectory generator (Ruckig) turns each arm's latest target into a
+  smooth reference motion, with the joints synchronised to arrive together. That motion stays within 65 % of the Panda's
+  joint speed limits, 55 % of its acceleration limits and 5 % of its jerk limits. The arm tracks that reference with
+  torque control (PD + inverse dynamics, within the Panda's torque and torque-rate limits). A new target replans from
+  the current reference motion, so a target far away is reached smoothly, not in one step. `s.robot_spec()["servo"]` has
+  the exact limits and gains.
+- Control runs at 100 Hz (10 ms per row), physics at 1000 Hz. A simulated episode ends at the latest at the task's
+  horizon (25 s, 2500 rows).
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+### Observations
+- World frame: metres, z up, the table top is the plane z = 0; quaternions are wxyz. Each arm's base pose is in the
+  robot spec (`arms`).
+- Cameras: `s.render_frame("overview")` (the whole workspace) or `s.render_frame("closeup")` (the working area), RGB 640
+  x 480; `s.camera_info()` has their calibration. `s.proprio()` and `s.state()` (above) give the robot's and the scene's
+  state.
 
-## Resources
-Your container: **5 CPUs**, **10 GiB of memory**, **1024 processes and threads**, **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`) and **one GPU, 3 GiB of its memory**. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
+### Arms and tools
+panda-0 (left): base at (-0.55, -0.22, 0), yaw 0 (facing +x). panda-1 (right): base at (0.74, 0.22, 0), yaw pi (facing
+-x). Each carries a flat rigid paddle, 0.10 m long, 0.05 m tall and 12 mm thick, on a rigid adapter on its back (tool
+-x) side. The adapter has a horizontal bar 0.035 m above the tool origin (tool x from -0.132 to -0.038), a vertical post
+at tool x = -0.05 (z from -0.005 to 0.035) and a 12 mm square bridge from the post to the paddle's back face (x from
+-0.044 to -0.006, z from 0.009 to 0.021). Paddle and adapter form one rigid tool link. The tool frame is the paddle
+centre, with x normal to its faces, y along its length and z up. The TCP sits 0.12 m behind the paddle centre (tool -x)
+and 0.04 m above it. Left paddle start: centre (-0.10, 0.17, 0.045), orientation identity (faces normal to world x,
+length along world y). Right paddle start: centre (0.27, -0.11, 0.045), quaternion (0, 0, 0, 1) (yawed 180 deg). At the
+start height each paddle's lower edge is 0.020 m above the table. On both arms the tool's adapter runs between the
+fingertips. If you close a gripper to less than about 12 mm of aperture, its fingers touch the adapter, and the episode
+ends as a collision with its own tool. Both grippers start fully open, at 0.08 m.
 
-## Time limit
-You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+### Safety
+The task fails when an arm goes beyond the Franka Panda's own safety limits. These limits cover joint positions, joint
+and finger speeds, the hand's speed and acceleration, joint accelerations and jerks, motor torques, and how fast the
+torques change. The numbers are in the robot spec's `safety_limits`. The limits apply to the motion as measured,
+whatever was commanded (a catch or a strike moves the arm too). The servo's own reference motion must also stay within
+the same speed, acceleration and jerk limits.
 
-This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+## Others
+- State labels (`s.objects()`, `s.fixtures()`): `puck` is the puck; `bank` (in `s.fixtures()`) the bank board.
+
+## Limits
+- Time: 3600 s of wall-clock time from the start of your session. Everything counts, including the simulator's start-up.
+  At the end you are stopped without warning and only what is in `/app/output/` at that moment is graded. Time left:
+  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`). A call into a long-running process can block for its
+  whole wait time. Use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, including the simulator's and the benchmark's source.
+- Resources: 5 CPUs, 10 GiB memory, 1024 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`),
+  one GPU (3 GiB of its memory). Going over a cap can get a process killed (the CPU cap only slows you down). Usage:
+  `/run/rcb-limits/usage.json`.
+- Resets: as many as you like (`s.reset()`).

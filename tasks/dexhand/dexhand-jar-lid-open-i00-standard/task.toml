@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/dexhand-jar-lid-open-i00-standard"
-description = "Unscrew the twist-off lid of a filled jam jar with a dexterous hand on a Tianji Marvin arm (Sharpa Wave by default, or Wuji Hand 2.2), lift it clear and set it down upright on the worktop beside the jar; the lid releases only through a contact-only lug thread, and a tipped or slid jar or a dropped lid fails the episode at once."
+description = "Unscrew the twist-off lid of a filled jam jar with a dexterous hand on a Tianji Marvin arm (Sharpa Wave by default, or Wuji Hand 2.2), lift it clear and set it down upright on the worktop beside the jar; the lid releases only through a contact-only lug thread, and a tipped or slid jar or a dropped lid fails the episode at once. Task: Open the jam jar with the robot's right hand, then set the lid upright on the worktop, clear of the jar, and let go."
 keywords = ["robotics", "dexterous-hand", "mujoco", "sharpa-wave", "wuji-hand-2.2", "articulated_manipulation", "twist-off-lid", "lug-thread", "unscrewing", "pick-and-place", "contact-mechanism"]
 
 [metadata]
@@ -55,6 +55,13 @@ build_timeout_sec = 1800.0
 cpus = 2
 memory_mb = 4096
 storage_mb = 10240
+
+# The robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): Harbor starts this server for the agent.
+[[environment.mcp_servers]]
+name = "efe-robot"
+transport = "stdio"
+command = "python3"
+args = ["/opt/tools/efe_mcp/server.py"]
 
 [verifier.env]
 RCB_LIMITS_ENFORCE = "${RCB_LIMITS_ENFORCE:-0}"

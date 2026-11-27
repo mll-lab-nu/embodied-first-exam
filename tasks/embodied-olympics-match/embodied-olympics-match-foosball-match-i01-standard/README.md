@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | Embodied Olympics - Match |
-| Mode | standard (`eai-standard-lockstep/1.0`) |
+| Mode | standard (`eai-standard/2.1+match/1.0`) |
 | Twin | `embodied-olympics-match-foosball-match-i01-privileged` |
 | Simulator / robot | `mujoco` / `foosball-rods` |
 | Family / instance | `foosball_match` / seed 7 (allowed seeds: [7, 303, 313]; PROTOCOL §2) |
@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-match-0.1.0` |
 
 ## Task
+Win a game of foosball to 5 goals against the computer team.
+
 Foosball against the scripted opponent (level 3), program play: table football on a physical table: you drive the four motorised rods of one team (goalkeeper rod with 3 figures, 2-rod 2, 5-rod 5, 3-rod 3) by slide and angle targets that the motors follow along a speed- and acceleration-limited path, and see the table only through an overhead camera; one game to 5 goals under the ITSF rules (opening sequence, possession time limits per rod, no spinning); in the `match` format the other team is a scripted computer team, in the `duel` format another player.
 
 ## Difficulty
@@ -48,4 +50,4 @@ Source: Embodied Olympics task `foosball-match-wallclock-program-standard`, revi
 opponent, the observation, the review between points and the grader are ours, unchanged; only the seat is
 unmetered (Harbor records the model's usage) and the instance is frozen.
 
-Standard twin of `embodied-olympics-match-foosball-match-i01-realtime`: the same export, the world in lockstep (`environment/sim/core/lockstep.py`; `eai-standard-lockstep/1.0` in tasks/embodied-olympics-match/README.md).
+Standard twin of `embodied-olympics-match-foosball-match-i01-realtime`: the same export, the world in lockstep (`environment/sim/core/lockstep.py`; `eai-standard/2.1+match/1.0` in tasks/embodied-olympics-match/README.md).

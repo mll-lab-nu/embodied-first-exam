@@ -3,7 +3,7 @@
  "challenge_task": "freeze_fruit",
  "instance_id": 301,
  "mode": "public_test",
- "text": "Put the fruit into the refrigerator. Two apples lie in a bowl and two strawberries on a tray on the kitchen countertop, and two tupperwares are inside a kitchen cabinet. Put one apple and one strawberry into each tupperware, put both tupperwares into the refrigerator, and close it.",
+ "text": "Put one apple and one strawberry into each tupperware, put both tupperwares into the fridge and close it.",
  "robot_config": "r1pro_primitives_eval.yaml",
  "robot_config_sha": "d9d0c8bceea2",
  "state_sha": "ccade6e4da536ff6",

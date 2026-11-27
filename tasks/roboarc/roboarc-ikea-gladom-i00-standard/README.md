@@ -14,7 +14,7 @@
 ## Task
 IKEA GLADOM tray table (AA-1832218-3), full seven-operation scope in plain MuJoCo 3.14.0 (CPU, float64) with two 7-DoF Franka Panda arms, each with the MuJoCo Menagerie Panda hand (two-finger, tendon-coupled), through the robot service (eai-standard/2.4; 2.1 / 2.2
 requests are served unchanged): RGB from four ALOHA-style cameras (optional depth), proprioception, `joint_position`
-chunks, stateless kinematics, every pose in the robot's frame; no reset and no privileged state. Build the GLADOM tray table: cross frame B into frame A, drive the long screw and the bottom screw, place the ring and drive its two screws, and set the tray on the ring.
+chunks, stateless kinematics, every pose in the robot's frame; no reset and no privileged state. Build the GLADOM tray table: fit frame B crosswise into frame A, drive in the long screw and the bottom screw, put on the ring and drive its two screws, and set the tray on the ring. Then let go of everything and move both arms clear.
 
 ## Difficulty
 The privileged twin's bimanual assembly with physical grasps, from cameras and proprioception only, in one episode
@@ -77,7 +77,7 @@ episode with reason `timeout` when it runs out; that count never runs out before
   verifier.
 
 ### Goal
-Build the GLADOM tray table: cross frame B into frame A, drive the long screw and the bottom screw, place the ring and drive its two screws, and set the tray on the ring.
+Build the GLADOM tray table: fit frame B crosswise into frame A, drive in the long screw and the bottom screw, put on the ring and drive its two screws, and set the tray on the ring. Then let go of everything and move both arms clear.
 
 ### Success requirements
 - The retention joints of frame B, the ring and the four screws are all latched.

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:robowits-0.1.1` |
 
 ## Task
-Push the red block onto the green target area. One replayable trajectory from the frozen instance (evaluation scene 0
+Get the red block onto the green target area. One replayable trajectory from the frozen instance (evaluation scene 0
 of RoboWits task 6), with the privileged tooling (`rcb_robowits.py`: the scene's state, resets, thin primitives,
 replay); the success criterion as graded is in `instruction.md`.
 

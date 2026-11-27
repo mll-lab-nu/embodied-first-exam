@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/myosuite-bimanual-i00-privileged"
-description = "MyoSuite bimanual (MyoArm + MPL, 63 muscles, MuJoCo): produce one replayable trajectory of actuator commands. Hand the object over: pick it up with the MyoHand, pass it to the prosthetic hand, and place it on the goal pillar. Frozen scene instance (myoChallengeBimanual-v0, reset seed 0); graded by two fresh-process replays."
+description = "MyoSuite bimanual (MyoArm + MPL, 63 muscles, MuJoCo): produce one replayable trajectory of actuator commands. Task: Pick up the object with your right hand, pass it to the prosthetic left hand, and set it on top of the goal pillar. Each hand must hold it for at least 1 s, and it must never touch the table or the floor. Hand the object over: pick it up with the MyoHand, pass it to the prosthetic hand, and place it on the goal pillar. Frozen scene instance (myoChallengeBimanual-v0, reset seed 0); graded by two fresh-process replays."
 keywords = ["robotics", "myosuite", "mujoco", "musculoskeletal", "myoarm-mpl", "code-as-policy", "trajectory", "bimanual", "privileged"]
 
 [metadata]

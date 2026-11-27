@@ -3,7 +3,7 @@
  "category": "hammer",
  "object": "mallet_hammer",
  "task": "swing_side",
- "text": "Pick up the mallet hammer and move it through the demonstrated motion (a sideways hammer swing): bring it to each goal pose in order (the green marker shows the current goal).",
+ "text": "Pick up the mallet and swing it sideways, following the green ghost mallet through its poses in order.",
  "start_pose": [
   0.06800833480302415,
   0.08594741307439036,

@@ -1,97 +1,39 @@
-# RoboPaint · 行书 臨帖 · 山 — STANDARD MODE (robot as a service, eai-standard/2.2)
+# RoboPaint · 行书 臨帖 · 山 (standard)
 
-You control a **Franka Panda arm holding a large Chinese writing brush (毛笔)** (ManiSkill 3.0.1 physics; the brush's mark comes from
-a dynamic model of a real brush) **as if it were real hardware**: the simulator runs in a service you cannot open. You get one
-client and one episode. **Task (臨帖):** copy the exemplar character **山** in running script (行书), shown in the picture
-`/app/target.png`, onto the main sheet with brush and ink, **in at most 4 strokes**.
+## Task
+Copy the character 山 (running script, 行书) in `/app/target.png` onto the main sheet with brush and ink, in at most 4
+strokes.
 
-## Rules (real-robot rules)
-- **No reset.** The episode starts when the service comes up and ends when your time is up (or on a simulator error). Ink is
-  permanent: every stroke you make stays on the paper.
-- **No privileged state.** You see what the cameras see (RGB; depth on request) plus the robot's own joint positions, velocities and
-  efforts and its brush-tip pose. There is no sheet readout, no brush state and **no score**: the grader computes it afterwards from
-  the service's own record of your episode.
-- A **practice sheet** lies beside the main sheet: test the brush there as much as you like; it is never scored or counted.
-- Steps are unlimited; **the time limit (`## Time limit`)** is your only budget (`meta["time_left_s"]` is the service's count of
-  it). Actions and simulated time are reported as cost (a runaway guard stops the robot after 72000 control steps = 1 h of
-  simulated time; watching with `seconds > 0` also advances it).
-- There is nothing to hand in: the service records your episode as the trajectory and scores the main sheet as your episode left it. Leave your
-  script at `/app/output/gen.py` for the record.
-- **A service restart is not a reset.** If the service crashes, it restarts and resumes the SAME episode in the state after the
-  last call it completed (the call that was running is lost as a whole: you get a connection error). `r.wait_ready()` waits
-  until it answers again (resuming replays the episode so far without rendering; the clock keeps running), then
-  `r.status()` tells `calls` and `control_steps`, so you know what was executed (`spec["on_service_error"]`).
-- **Nothing is put into your context automatically.** Images and videos come back as arrays/bytes in a Python object; what you
-  look at and where you store it is your code's decision.
+## Goal
+Success: the ink on the main sheet matches the exemplar's writing character for character (every stroke inked along its
+whole length and fully covered, its edges where the exemplar's are, almost no ink anywhere else), you used at most 4
+strokes as the process rules count them, and the process rules below hold; a small shift of the whole writing does not
+matter. The main sheet is scored as the episode leaves it.
 
-## The brush, the ink and the sheets (`spec["static"]`)
-- The brush is a rigid handle with a **30 mm soft hair tuft** (no collision; the handle itself hits the paper when the tip is 30 mm
-  below its surface); the proprio "tip" pose is the tip of the unbent tuft. Hold the brush vertical (as at the start).
-- **Ink**: the brush starts **dry** (strokes leave no mark). The ink stone, radius 20 mm, lies on a rigid plate on the robot's left
-  (+y). **Dipping** = the tip inside the stone's circle and below the ink surface: the brush is then inked (it never runs dry) and
-  its hairs are gathered back to a point. The robot does not report whether the brush is inked; the tuft looks dark on the cameras
-  when it is.
-- **Sheets**: the **main sheet**, a 227.18 mm square in front of the robot, is scored; the **practice sheet**, 227.18 × 99.41 mm, on
-  the robot's right of the main sheet, is not.
-- The brush behaves like a soft brush: wherever the inked tip is below a sheet's surface, the pressed hairs leave a mark, and what
-  the mark looks like depends on how you press and move. You have to find out how (the practice sheet is there for that).
-- One continuous contact of the inked tip with the main sheet is one **stroke**. The arm is position-controlled (PD, 20 Hz
-  targets): a moving target is followed with a lag.
+When you are done, send `/finish` to end the episode and get it graded.
 
-## Target and score
-- **The target is this picture**: `/app/target.png` (1024 × 1024 px, RGB) shows the exemplar at its true size and place on the main
-  sheet: the image covers the main sheet exactly, 0.2219 mm per pixel. Pixel (column u, row v), counted from 0 at the image's
-  top-left, has its centre at sheet millimetres X = (u + 0.5) · 227.18 / 1024, Y = (v + 0.5) · 227.18 / 1024 (X to the robot's
-  right, Y towards the robot, origin = the sheet's far-left corner as seen from the robot's base). Image top = the sheet's far edge
-  (+x), image left = the robot's left (+y): the same orientation as `canvas_cam`. `spec["static"]["target_image"]` repeats these
-  facts.
-- Before scoring, the main sheet is **aligned with the picture**: your ink is moved by the single translation (no rotation or
-  scaling, one shift for the whole sheet; whole pixels of 0.22 mm, at most 5 mm along each axis) that overlaps the exemplar's ink
-  best, and every quantity below is taken after that shift (reported as `register_dx_mm`, `register_dy_mm`); if the best overlap
-  lies at the 5 mm limit, no shift is applied.
-- The main sheet is scored against the picture: its **inked area** (ink coverage ≥ 0.5) vs the exemplar's ink in the picture:
-  **IoU**; **boundary F** (how well the edges of your ink match the edges of the exemplar's ink, precision / recall within 1 mm);
-  **region coverage** (the exemplar's ink is divided into 5 regions; the fraction of each region covered by your ink; the
-  worst one counts); **stray ink**
-  (ink more than 1 mm away from the exemplar's ink, as a fraction of the exemplar's inked area); the **number of strokes** on the
-  main sheet. **Success iff IoU ≥ 0.80, boundary F ≥ 0.75, every region covered ≥ 0.80, stray ink ≤ 0.04 and at most
-  4 strokes (continuous brush contacts) on the main sheet** (scored on the main sheet as your episode left it). The continuous score
-  is the IoU (scaled by 4 / strokes above 4 strokes).
+Your writing is scored on how closely its ink matches the exemplar's.
 
-## Process rules
-Write the character with brush strokes, the way a person writes it: each stroke of the exemplar is written along its length,
-with the brush pressed for the stroke's width (vary the press where the width changes); going over a stroke again is fine.
-Colouring in or filling the shapes, zigzag or serpentine fills, and contour-offset fills (paths that go round and round inside a
-shape) are not allowed and fail the task, even when the sheet matches the picture. The grader checks this on the live
-episode with two numbers you can compute yourself; only inked strokes on the main sheet count (the practice sheet is free):
-- `path_mm`: the total length of the brush tip's path while it presses on the main sheet with ink (all strokes together, sampled
-  at every physics step);
-- `mark_width_mm`: the average width of your marks = the area each stroke inks on its own (its own mark, ink coverage ≥ 0.5;
-  where different strokes overlap, each counts its own), summed over the strokes, divided by `path_mm`.
+Write with brush strokes, the way a person writes: each stroke of the exemplar is written along its length, with the
+brush pressed for the stroke's width; going over a stroke again is fine. These fail the task even when the sheet matches
+the picture: colouring in or filling the shapes, zigzag or serpentine fills, and fills that go round and round inside a
+shape. The exact checks are under Process rules in Robot Interface.
 
-**Colouring in = `path_mm` > 1200 mm and `mark_width_mm` < 3.06 mm** (a long path of thin marks): it
-fails the task. Our reference solution writes this exemplar with `path_mm` 608 mm and `mark_width_mm`
-6.75 mm; the limits are 3 times the path (rounded up) and 0.3 times the mark width (rounded down)
-of an earlier reference solution, which wrote it with `path_mm` 399 mm and `mark_width_mm` 10.21 mm. A pressed brush, even over a stroke again, keeps the marks wide enough, and a light hand on a short path stays
-under the path limit: both are fine.
+Rules:
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+  benchmark's demonstrations, trained policies); trials are reviewed.
+- One episode, no reset: ink is permanent; every stroke you make stays on the paper.
+- You see only what the cameras see and feel the robot's own joint positions, velocities and efforts and its brush-tip
+  pose: no sheet readout, no brush state, no score.
 
-**The stroke cap counts strokes as they are written, not contacts** (this refines "one continuous contact is one stroke"
-above). A contact is cut into two strokes wherever the brush moves more than 5 mm along the main sheet without
-marking it (its mark narrower than 0.1 mm: a press too light to ink), and a stroke longer than
-1360 mm of path counts as one stroke per started 1360 mm (5 times our
-reference solution's longest stroke, 270 mm, rounded up). Pieces joined by a touch too light to ink are
-therefore separate strokes, and one contact held down to write and re-write for a long time counts as several; a stroke
-written with the brush down and lifted at its end is one. **Strokes are sweeps:** at most 10 % of
-`path_mm` may lie in strokes whose path is longer than 12 times the diagonal of their bounding box (taken as at
-least 10 mm): back-and-forth, zigzag, spiral or looping fills inside one stroke fail (our reference solution's
-strokes stay under 5 times).
+## Robot Interface
+A simulated Franka Panda arm holding a large Chinese writing brush (毛笔). The robot runs as a service you reach through
+its client or its MCP tools, as if it were real hardware: one live episode.
 
-**Success iff the picture rule above holds, the run is not colouring in, the counted strokes are within the cap and the strokes
-are sweeps.** The continuous score is the one above, × min(1,
-1200 / `path_mm`) when it is colouring in, × (1 − that share) when the strokes are not sweeps, and with the cap's
-scaling taken on the counted strokes.
+`POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
-## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`)
+### Client
+`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
 ```python
 from rcb_client import Robot
 r = Robot()                                   # connects (waits while the service builds the scene, under a minute)
@@ -100,7 +42,8 @@ spec = r.spec()                               # action types, dims, joint limits
 obs = r.get_obs()                             # current frames of spec["default_cameras"] (all but practice_cam): obs.last[cam] -> uint8 (H,W,3)
 obs.meta["proprio"]                           # {"layout": [...28 names], "now": [...]}: 7 joints, tip x y z qw qx qy qz, joint velocities, efforts
 obs.meta["cameras"]                           # per camera intrinsic_cv / extrinsic_cv / cam2world_gl at the last frame (static cameras)
-obs = r.get_obs(seconds=2.0, video="mp4")     # hold the last command and watch for 2 s (max 30): obs.video[cam] = mp4 bytes
+obs = r.hold(2.0)                             # hold the last command for 2 s of robot time: obs.video[cam] = mp4 bytes
+obs = r.get_obs(last_s=1.0)                   # the frames recorded over the last 1 s (reading moves no time)
 
 res = r.submit("ee_pose", P, dt=0.05)         # P: (T, 7) brush-tip targets, rows dt apart; IK per control step
 res = r.submit("joint_position", A, dt=0.05)  # A: (T, 7) joint targets, rows dt apart; streamed at 20 Hz, linear interpolation
@@ -112,45 +55,122 @@ r.status()                                    # calls, control_steps, done, reas
 r.wait_ready()                                # after a connection error: wait until the service has resumed
 res.save("/app/runs/003")                     # meta.json, <cam>.mp4, frames/<cam>/NNN.jpg, last/<cam>.jpg, proprio.npy, frame_meta.npz, depth
 ```
-Cameras (all static): `canvas_cam` (1024×1024, straight above the main sheet; image top = the sheet's far edge, image left = the
-robot's left; the arm hides the sheet when it is above it), `practice_cam` (512×1024 portrait, above the practice sheet, same
-orientation), `scene_cam` (640×480, across the table facing the robot) and `side_cam` (640×360, low on the robot's right, a grazing
-view along the sheets that shows the brush height).
-
-### Optional inputs (eai-standard/2.2; nothing changes unless you ask)
-- **Depth**: `r.get_obs(depth=True)` → `obs.last_depth[cam]`, float32 (H,W) z-depth in metres of the last frame, pixel-aligned with
-  `obs.last[cam]` (0 = no reading); `depth="frames"` in `r.submit(...)` or a watch → `res.depth[cam]` (N,H,W), one map per frame
-  (1 mm steps). Depth is geometry only: ink on the paper never shows in it.
-- **Every frame**: `res.frame_step` (control steps since the episode start), `res.frame_time_s` (simulated time) and
+- One call returns at most 640 images; a larger request is refused.
+- Every frame: `res.frame_step` (control steps since the episode start), `res.frame_time_s` (simulated time) and
   `res.extrinsic_cv[cam]` (N,3,4), world → camera (constant: the cameras are static).
-- **`spec`**: `spec["cameras"][cam]` → `intrinsic_cv` (3×3), `mount` (its static world pose), `depth_range_m`; `spec["world"]` (frame,
-  units, `wxyz` quaternions); `spec["robot_spec"]`: joint limits, PD gains, 20 Hz control / 100 Hz physics, the tool frame `tip` (no
-  gripper); `spec["proprio_groups"]` names the proprio columns: `res.group("joint_vel")`, `res.group("joint_effort")` (a PD
-  drive-effort estimate), `res.group("tcp_pose")` (the brush tip), `res.group(name, now=True)` for `meta["proprio"]["now"]`.
-- **Kinematics** (stateless: no motion, no simulated time, free): `r.fk(q)["poses"]` → `{frame: [x,y,z,qw,qx,qy,qz]}` for the
-  Panda's links and `tip`; `r.ik({"tip": pose}, seed=q)` → `{"ok", "q", "error"}`, the solver the `ee_pose` action uses.
+- `spec`: `spec["cameras"][cam]` → `intrinsic_cv` (3×3), `mount` (its static world pose), `depth_range_m`;
+  `spec["world"]` (frame, units, `wxyz` quaternions); `spec["robot_spec"]`: joint limits, PD gains, 20 Hz control / 100
+  Hz physics, the tool frame `tip` (no gripper); `spec["proprio_groups"]` names the proprio columns:
+  `res.group("joint_vel")`, `res.group("joint_effort")` (a PD drive-effort estimate), `res.group("tcp_pose")` (the brush
+  tip), `res.group(name, now=True)` for `meta["proprio"]["now"]`.
+- Kinematics (stateless: no motion, no simulated time, free): `r.fk(q)["poses"]` → `{frame: [x,y,z,qw,qx,qy,qz]}` for
+  the Panda's links and `tip`; `r.ik({"tip": pose}, seed=q)` → `{"ok", "q", "error"}`, the solver the `ee_pose` action
+  uses.
+- Depth: `r.get_obs(depth=True)` → `obs.last_depth[cam]`, float32 (H,W) z-depth in metres of the last frame,
+  pixel-aligned with `obs.last[cam]` (0 = no reading); `depth="frames"` in `r.submit(...)` or `r.hold(...)` →
+  `res.depth[cam]` (N,H,W), one map per frame (1 mm steps).
+- `meta["time_left_s"]` is the service's count of the time left.
 
-### Action types
-- `ee_pose` (7): `x y z qw qx qy qz` of the **brush tip** in the world frame (z up, the robot base at (-0.615, 0, 0),
-  x away from the base, y to the robot's left); quaternion wxyz — the proprio quaternion at the start points the brush straight
-  down. Rows are `dt` apart (`1/20 ≤ dt ≤ 0.5` s, a multiple of 1/20 s): the tip target moves on a straight line from the
-  previous row's target at the 20 Hz control rate, one IK solve per control step (no collision checking), at most 0.25 m/s (a
-  faster row is slowed down; `meta["plan"]` reports it and any IK failure). At most 400 rows and 10 s per submit.
-- `joint_position` (7): `panda_joint1..7` absolute joint targets in radians (PD-tracked), rows `dt` apart, `interpolate` =
-  `"linear"` (default) or `"hold"`; a chunk may cover at most 10 s; out-of-limit values are clipped and listed in
+A service restart is not a reset. If the service crashes, it restarts and resumes the same episode in the state after
+the last call it completed. The call that was running is lost as a whole, and you get a connection error.
+`r.wait_ready()` waits until the service answers again; resuming replays the episode so far without rendering, and the
+clock keeps running. Then `r.status()` tells `calls` and `control_steps`, so you know what was executed
+(`spec["on_service_error"]`).
+
+### MCP tools
+- The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
+  `observe`, `submit`, `kinematics`, `finish`. A tool takes its endpoint's request fields (any other field in `fields`)
+  and returns the service's reply `meta` unchanged; images, arrays and video are written as files under `/app/obs/`
+  (`.png`, `.npy`, `.mp4`) and the result lists them. Long action chunks can be passed as a file (`actions_file`).
+- `observe` returns at once with what is already recorded: the current frame, or the last `last_s` seconds. Time passes
+  only through `submit`, which answers when its rows have run; a `submit` with `interpolate` "hold", `seconds` and no
+  rows lets time pass with the robot holding still.
+- A call still running after 45 s returns `pending` with an `operation` id; `observe(operation=id)` collects its reply.
+- The client and the tools drive the same robot in the same episode; use either, or both.
+
+### Actions
+Two action types:
+- `ee_pose` (7): `x y z qw qx qy qz` of the brush tip in the world frame (z up, the robot base at (-0.615, 0, 0), x away
+  from the base, y to the robot's left); quaternion wxyz — the proprio quaternion at the start points the brush straight
+  down. Rows are `dt` apart (`1/20 ≤ dt ≤ 0.5` s, a multiple of 1/20 s). The tip target moves on a straight line from
+  the previous row's target at the 20 Hz control rate, with one IK solve per control step (no collision checking), at
+  most 0.25 m/s. A faster row is slowed down; `meta["plan"]` reports it and any IK failure. At most 400 rows and 10 s
+  per submit.
+- `joint_position` (7): `panda_joint1..7` absolute joint targets in radians (PD-tracked), rows `dt` apart, `interpolate`
+  = `"linear"` (default) or `"hold"`; a chunk may cover at most 10 s; out-of-limit values are clipped and listed in
   `meta["clipped"]` (limits in the spec).
-- One call returns at most 640 images (`max_frames_per_call`, PROTOCOL §3 "Images per call").
 
-The exemplar picture is derived from a public-domain historical work of running-script calligraphy (Wikimedia Commons, PD-Art);
-rendered by Embodied First Exam (RoboPaint): `/app/NOTICE-exemplar.md`.
+### Observations
+- Cameras (all static): `canvas_cam` (1024×1024, straight above the main sheet; image top = the sheet's far edge, image
+  left = the robot's left; the arm hides the sheet when it is above it), `practice_cam` (512×1024 portrait, above the
+  practice sheet, same orientation), `scene_cam` (640×480, across the table facing the robot) and `side_cam` (640×360,
+  low on the robot's right, a grazing view along the sheets that shows the brush height).
+- Depth on request: float32 (H,W) z-depth in metres, pixel-aligned with the image (0 = no reading). Depth is geometry
+  only: ink on the paper never shows in it.
+- Proprioception: the robot's own joint positions, velocities and efforts and its brush-tip pose.
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+### The brush, the ink and the sheets
+- The brush is a rigid handle with a 30 mm soft hair tuft (no collision; the handle itself hits the paper when the tip
+  is 30 mm below its surface); the proprio "tip" pose is the tip of the unbent tuft. Hold the brush vertical (as at the
+  start).
+- Ink: the brush starts dry (strokes leave no mark). The ink stone, radius 20 mm, lies on a rigid plate on the robot's
+  left (+y). Dipping = the tip inside the stone's circle and below the ink surface: the brush is then inked (it never
+  runs dry) and its hairs are gathered back to a point. The robot does not report whether the brush is inked; the tuft
+  looks dark on the cameras when it is.
+- Sheets: the main sheet, a 227.18 mm square in front of the robot, is scored; the practice sheet, 227.18 × 99.41 mm, on
+  the robot's right of the main sheet, is not.
+- The brush behaves like a soft brush: wherever the inked tip is below a sheet's surface, the pressed hairs leave a
+  mark, and what the mark looks like depends on how you press and move. You have to find out how (the practice sheet is
+  there for that).
+- One continuous contact of the inked tip with the main sheet is one stroke. The arm is position-controlled (PD, 20 Hz
+  targets): a moving target is followed with a lag.
 
-## Resources
-Your container: **8 CPUs**, **5 GiB of memory**, **2048 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
+### The target picture
+`/app/target.png` (1024 × 1024 px, RGB) shows the exemplar at its true size and place on the main sheet: the image
+covers the main sheet exactly, 0.2219 mm per pixel. Pixel (column u, row v), counted from 0 at the image's top-left, has
+its centre at sheet millimetres X = (u + 0.5) · 227.18 / 1024, Y = (v + 0.5) · 227.18 / 1024. X runs to the robot's
+right and Y towards the robot; the origin is the sheet's far-left corner as seen from the robot's base. Image top = the
+sheet's far edge (+x), image left = the robot's left (+y): the same orientation as `canvas_cam`.
 
-## Time limit
-You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+### Process rules
+These rules are checked on the episode; only inked strokes on the main sheet count (the practice sheet is free). They
+use two numbers you can compute yourself:
+- `path_mm`: the total length of the brush tip's path while it presses on the main sheet with ink (all strokes together,
+  sampled at every physics step);
+- `mark_width_mm`: the average width of your marks. It is the area each stroke inks on its own, summed over the strokes
+  and divided by `path_mm`; a stroke's own area is its own mark where ink coverage is ≥ 0.5, and where different strokes
+  overlap, each counts its own.
 
-This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` counts the same limit from your first request to the service, so it never runs out before your time does: your real time left is `time_left_s` minus the time you spent before that request. Plan by it. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+The rules:
+- No colouring in: `path_mm` above 1200 mm together with `mark_width_mm` below 3.06 mm (a long path of thin marks) fails
+  the task. A pressed brush keeps the marks wide enough, even when it goes over a stroke again, and a light hand on a
+  short path stays under the path limit.
+- Strokes are counted as they are written, not as contacts (this refines "one continuous contact is one stroke" above).
+  A contact is cut into two strokes wherever the brush moves more than 5 mm along the main sheet without marking it (its
+  mark narrower than 0.1 mm: a press too light to ink). A stroke longer than 1360 mm of path counts as one stroke per
+  started 1360 mm. So pieces joined by a touch too light to ink are separate strokes, and one contact held down for a
+  long time to write and re-write counts as several; a stroke written with the brush down and lifted at its end counts
+  as one.
+- Strokes are sweeps: at most 10 % of `path_mm` may lie in strokes whose path is longer than 12 times the diagonal of
+  their bounding box (the diagonal taken as at least 10 mm). Back-and-forth, zigzag, spiral or looping fills inside one
+  stroke fail.
+- Breaking a process rule fails the task.
+
+The score (`final_reward`, 0 to 1) is how well your ink overlaps the exemplar's (1 = the same); it is scaled down above
+the stroke cap and when a process rule fails.
+
+## Limits
+- Time: 3600 s of wall-clock time from the start of your session. Everything counts, including waiting for the service.
+  At the end you are stopped without warning. Time left: `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`).
+  Trust this file: the `time_left_s` in the service's replies starts only at your first request. A call into a
+  long-running process can block for its whole wait time. Use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, including the simulator's and the benchmark's source.
+- Resources: 8 CPUs, 5 GiB memory, 2048 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`), no
+  GPU; the simulator runs in its own container and does not count. Going over a cap can get a process killed (the CPU
+  cap only slows you down). Usage: `/run/rcb-limits/usage.json`.
+- Resets: none. You get one episode.
+- Steps: no step budget. Actions and simulated time are reported as cost. A runaway guard stops the robot after 72000
+  control steps (1 h of simulated time). `hold(s)` also adds to that count.
+- Finish: if you never send `/finish`, the episode is graded when your session ends.

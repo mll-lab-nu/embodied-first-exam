@@ -13,7 +13,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:bigym2-0.1.1` |
 
 ## Task
-Turn the upside-down cup over and stand it the right way up on the counter. Then let go, with both grippers off the cup. (BiGym 2.0 `flip_cup`; the robot as a service on a clock that does not stop: its three onboard cameras and
+Turn the upside-down cup the right way up on the counter and let go. (BiGym 2.0 `flip_cup`; the robot as a service on a clock that does not stop: its three onboard cameras and
 its proprioception only, one episode.)
 
 ## Difficulty

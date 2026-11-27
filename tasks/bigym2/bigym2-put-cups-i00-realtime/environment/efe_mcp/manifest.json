@@ -1,0 +1,14 @@
+{
+ "manifest": "efe-mcp-manifest/1",
+ "kind": "rcb",
+ "suite": "bigym2",
+ "task": "bigym2-put-cups-i00-realtime",
+ "protocol": "eai-standard/2.3",
+ "realtime": true,
+ "tools": [
+  "spec",
+  "observe",
+  "submit",
+  "finish"
+ ]
+}

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Put the jar of honey, which stands on the kitchen countertop, inside the cabinet in the entryway.
+Put the honey jar into the entryway cabinet.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - the jar of honey (`jar__of__honey.n.01_1`) is inside the entryway cabinet (`cabinet.n.01_1`)

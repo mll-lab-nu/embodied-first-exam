@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:ispatialgym-0.2.2` |
 
 ## Task
+Make the scene look like the goal image /app/goal.png, the head camera's view once the task is done, and keep holding what the robot holds at the start; the rest of the robot does not have to match it.
+
 iSpatialGym `object_scaling` (family `object_scaling`), upstream subtask `object_scaling_apple`, instance 0 (house_double_floor_lower): The object is held in the right hand; the goal is a change of its depth along the head camera's optical axis. The task is given
 only as the goal image (`/app/goal.png`, the head camera's view once it is done), as in iSpatialGym's own
 evaluation; the instruction names no object.
@@ -53,7 +55,7 @@ Caps per container (PROTOCOL §6).
 | | |
 |---|---|
 | Protocol | `eai-standard/2.2`: RGB + proprioception through the client; no reset, no object poses, no success predicate |
-| Action space | `submit` chunks of `joint_position` (23: base velocity command, trunk, both arms, one command per gripper; iSpatialGym's JoyLo action) streamed at the 30 Hz control rate; `observe` frames or a watch window; stateless `/kinematics` |
+| Action space | `submit` chunks of `joint_position` (23: base velocity command, trunk, both arms, one command per gripper; iSpatialGym's JoyLo action) streamed at the 30 Hz control rate; `observe` the current frames or those recorded over the last seconds (`last_s`); hold chunks (`hold(s)`); stateless `/kinematics` |
 | Goal | `/app/goal.png` (from the files-only image `ispatialgym-goals-files`): upstream's goal image of this instance, the head camera at 1080×1080 |
 | Instance | `environment/sim/instance.json`, byte-identical to the privileged twin's: the start only (scene, template keys the loader reads, start-only TRO, objects without upstream's role names); `environment/sim/goal.json` (sidecar only) restores upstream's targets onto it, checked by sha256; start-state hash 572f8d06c14fd44f |
 | Dataset | the licensed BEHAVIOR dataset, mounted read-only into the sidecar from `$RCB_BEHAVIOR_DATA` (a precondition) |

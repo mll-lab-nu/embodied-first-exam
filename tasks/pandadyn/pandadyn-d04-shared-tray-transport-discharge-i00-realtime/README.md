@@ -16,7 +16,7 @@
 Realtime twin of `pandadyn-d04-shared-tray-transport-discharge-i00-privileged` (same frozen instance and success check as it and as `pandadyn-d04-shared-tray-transport-discharge-i00-standard`): the agent gets only
 the realtime client (`eai-standard/2.3`, docs/protocol/standard_mode.md Part 3); the simulator runs in the `sim` sidecar on a clock
 that does not stop, at slowdown **S = 4** (one 10 ms control step every 40 ms of wall-clock time), with
-3 resets (only the last episode is graded). The two Pandas hold one tray between them. Each arm's small open fork cradles a tab on one end of the tray, and an orange ball lies loose in the tray. Working together, the arms must first hold the tray steadily. They then carry it through two waypoints that make a turn. When the environment pushes the ball, they must bring it back to rest near the tray centre. Next they bring the tray to an exit position beside a fixed basin, and finally they tip the ball out so that it settles in the basin. Both forks must support the tray during the transport phases, the ball must not leave the tray before the discharge, and the tray must never drop low.
+3 resets (only the last episode is graded). Hold the tray with the ball in it between the two forks and carry it through the two waypoints. When the ball gets pushed, bring it back to rest in the middle of the tray; then bring the tray to the exit position beside the basin and tip the ball into the basin.
 
 ## Difficulty
 That of `pandadyn-d04-shared-tray-transport-discharge-i00-standard`, but the scene does not wait between calls: once an episode's clock starts, the moving objects and
@@ -59,7 +59,7 @@ Caps per container (PROTOCOL §6).
 | | |
 |---|---|
 | Episode | it ends at the first control step where the task has succeeded or failed (the task's horizon, 25 s of robot time, is a failure), when the agent's time is up, or on a simulator error; 3 resets (`POST /reset`: the scene rebuilt from the frozen instance, paused) |
-| Action space | `submit` chunks of `joint_position` (16: per arm 7 joint targets + the aperture, one row per 10 ms control step or `dt` apart) planned from step `at`; `observe` now or a watch window; binary RCB1 responses |
+| Action space | `submit` chunks of `joint_position` (16: per arm 7 joint targets + the aperture, one row per 10 ms control step or `dt` apart) planned from step `at`; `observe` now or the last seconds recorded (`last_s`); binary RCB1 responses |
 | Cameras | `overview` and `closeup` (static), 640×480 RGB, z-depth on request, rendered by SAPIEN on the sidecar's GPU |
 | Images | the `sim` sidecar runs efe:pandadyn (`images/pandadyn/`); the agent container and the verifier run the shared client image with its pip pins (`embodied_first_exam/standard/client.env`) |
 | Crash recovery | the shared realtime layer's: a checkpoint every second of robot time, `restart: on-failure:6`, the service resumes the same episode, paused |

@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/humanoidbench-manip-door-i00-privileged"
-description = "HumanoidBench door: produce one replayable trajectory that walks the Unitree H1 through a closed door, frozen scene instance 00."
+description = "HumanoidBench door: produce one replayable trajectory that walks the Unitree H1 through a closed door, frozen scene instance 00. Task: Open the door by pressing the handle and pulling it towards you, then walk through the doorway."
 keywords = ["robotics", "humanoidbench", "code-as-policy", "trajectory", "h1", "manipulation", "door"]
 
 [metadata]

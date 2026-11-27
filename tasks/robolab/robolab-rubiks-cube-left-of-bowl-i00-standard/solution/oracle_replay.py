@@ -45,7 +45,9 @@ while i < len(Q) and not done:
     i = steps // K
 if not done:
     try:
-        obs = r.get_obs(seconds=1.0, cameras=cam, video="none"); print("settle:", obs.meta["done"], obs.meta["reason"])
+        obs = r.hold(1.0, cameras=cam, video="none"); print("settle:", obs.meta["done"], obs.meta["reason"])
     except (EpisodeOver, ValueError, requests.exceptions.RequestException) as e:
         print("settle failed:", repr(e)[:200])
+try: print("finish:", r.finish())                       # the agent ends the episode (eai-standard/3.0: POST /finish)
+except EpisodeOver as e: print("finish: the episode had already ended:", e)
 print("status:", r.status(), "service crashes seen:", crashes, "wall %.0fs" % (time.time() - t0))

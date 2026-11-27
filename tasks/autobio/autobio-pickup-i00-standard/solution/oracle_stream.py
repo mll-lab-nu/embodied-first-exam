@@ -45,8 +45,8 @@ while i < len(A):
     i = n
 if not over:  # a task judged on its final state: the rows are in, end the episode there
     try:
-        res = r.submit("done", [], note="oracle: all rows executed")
-        print("done:", res.meta["done"], res.meta["reason"], flush=True)
+        fin = r.finish()
+        print("finish:", fin, flush=True)
     except EpisodeOver as e:
         print("episode over:", e)
 print("status:", r.status(), "wall %.0fs" % (time.time() - t0))

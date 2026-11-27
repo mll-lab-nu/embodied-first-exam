@@ -14,8 +14,9 @@ harbor run -d embodied-first-exam@all -p tasks/dextoolbench -a codex -m openai/g
 Every image is public: Harbor pulls it.
 
 The task directories are the deliverable; the tooling that built them is kept outside this repository. The standard
-twins share `images/mujoco/limited/server_mj.py` with the MuJoCo Playground ALOHA and Panda twins
-(tasks/mujoco-playground/README.md); `ci_checks/check-tooling-identity.sh` holds the task copies together.
+twins run `embodied_first_exam/benchmarks/dextoolbench/sim/server_mj.py`, the same file as the MuJoCo Playground ALOHA
+and Panda twins' `embodied_first_exam/benchmarks/mujoco-playground/sim/server_mj.py` (tasks/mujoco-playground/README.md);
+`ci_checks/check-tooling-identity.sh` holds the task copies together.
 
 ## Tasks
 | category | object | task | goals | oracle |
@@ -51,12 +52,12 @@ README gives the count); `full`: it reaches all of them.
 | privileged | the tooling (`rcb_dtb.Session`), the full state, free resets | unlimited | 30 s | the handed-in trajectory, replayed from the start |
 | standard (`eai-standard/2.1`) | the robot's cameras (RGB-D, calibrated) and proprioception, the current goal pose, through `rcb_client.py` | **20**; `RCB_RESET_BUDGET=0`: none | none (episode cap 360,000 control steps) | the last episode as it ran (live) |
 
-Both modes give the agent 60 minutes (PROTOCOL §2, docs/protocol/running.md "The agent's time").
+Both modes give the agent the same time: the time limit (Limits) of each task's instruction (PROTOCOL §2, docs/protocol/running.md "The agent's time").
 
 ## Resets in standard mode
 `POST /reset` (`r.reset()`) abandons the running episode and starts a new one from the frozen start: the robot at its
 home pose, the tool at its start pose, goal 1 current (`Session.reset()`). At most 20 times; only the last episode is
-graded, a success ends the trial, and once the agent's time is up no reset is accepted. The clock keeps running.
+graded, and after `/finish` or once the agent's time is up no reset is accepted. The clock keeps running.
 `meta` and `/status` carry `episode`, `resets_left` and `control_steps_total`; `final.json` and the verifier's
 `reward.json` record `resets` and `reset_budget`. Why 20: with one episode the first grasp decided the trial (a tool
 knocked off the table took most of the hour to recover). After every reset the state hash, all four cameras' RGB and
@@ -83,10 +84,22 @@ so both modes apply one rule (H.7); there is no settle window after the last goa
   Crashes all inside the agent's calls (`sim_crashed_on_call`) and a simulator error from a call (`sim_error`) are the
   agent's 0; a failed video is only a missing video.
 
+### Agent-ended episodes
+
+Every standard task sets `RCB_AGENT_END "1"` in its sim service (PROTOCOL §3). The goal is a sequence of poses, judged
+as it happens (end judgement `events`): the goal tracker still runs on every executed control step, and the episode
+passes when it has reached every goal in order before the episode ends (`POST /finish`, reason `finished`; the step cap,
+`step_limit`; the end of the session, `timeout`). Reaching the last goal no longer ends the episode and is never shown:
+`meta["task"]` keeps showing the last goal once it is reached (`goals_reached` stops at `n_goals - 1`,
+`steps_left_on_goal` is null), so the agent cannot tell whether the sequence is complete. Resets stay possible until
+`POST /finish` (only the last episode is graded). `final.json` adds the shared fields (`success_signal`, `ended_by`,
+`end_judgement`, `hidden_success_seen`, `hidden_success_first_step`, `trial_hidden_success_seen`, `finish_time_s`).
+Without `RCB_AGENT_END` the service behaves as described above.
+
 ## Standard-mode service details
 
 **MuJoCo service (DexToolBench, MuJoCo Playground manipulation; `eai-standard/2.1`).** Same endpoints and RCB1 frames,
-served by `images/mujoco/limited/server_mj.py`. Differences: one action type, `joint_position` with the task's own
+served by `embodied_first_exam/benchmarks/dextoolbench/sim/server_mj.py`. Differences: one action type, `joint_position` with the task's own
 actuator layout (DexToolBench 29, ALOHA 14, Panda 8), rows `dt` apart where `dt` is a multiple of `control_dt` (1/60 s
 DexToolBench, 1/50 s Playground), hold or linear interpolation per control step. Actions are sent as **float64** (MuJoCo
 on CPU replays bit-exactly, and float32 rounding changes a chaotic tool swing). `meta.task` carries the task definition
@@ -95,7 +108,7 @@ on CPU replays bit-exactly, and float32 rounding changes a chaotic tool swing). 
 sensor size: ALOHA's overhead and wrist cameras, 158.52 and 216.45 px) and camera-to-world pose: the viewpoint the
 image is rendered from, in the state the response ends in. Cameras carry `moving` (true for ALOHA's wrist cameras).
 `final.json` is `finalized` as soon as the live episode's verdict is in it; the video is rendered afterwards and sets
-`video_done`, which is what the collect hook waits for (the MetaWorld+ service, `images/metaworld/standard/server_mw.py`,
+`video_done`, which is what the collect hook waits for (the MetaWorld+ service, `embodied_first_exam/benchmarks/metaworldplus/sim/server_mw.py`,
 follows the same rules). DexToolBench's own eval gives each goal 10 s; here the standard twins have **no per-goal
 limit** and **20 resets** and an episode cap of 360,000 control steps (100 min of robot time, `spec.max_control_steps`),
 while the privileged tasks give each goal 30 s (replayed offline, free resets); the twins share the success rule but

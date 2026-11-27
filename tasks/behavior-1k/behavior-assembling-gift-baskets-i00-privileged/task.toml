@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/behavior-assembling-gift-baskets-i00-privileged"
-description = "BEHAVIOR-1K v3.9.2 (2026 BEHAVIOR Challenge) assembling_gift_baskets (R1Pro mobile manipulator, OmniGibson / Isaac Sim): produce one replayable trajectory. Assemble four gift baskets in the living room. The four wicker baskets stand on the floor; four candles, four butter cookies, four pieces of Swiss cheese and four bows lie on the table. Put one candle, one butter cookie, one piece of Swiss cheese and one bow into each basket. Frozen scene instance (challenge public_test instance 301)."
+description = "BEHAVIOR-1K v3.9.2 (2026 BEHAVIOR Challenge) assembling_gift_baskets (R1Pro mobile manipulator, OmniGibson / Isaac Sim): produce one replayable trajectory. Put one candle, one cookie, one piece of cheese and one bow into each of the four gift baskets. Frozen scene instance (challenge public_test instance 301)."
 keywords = ["robotics", "behavior", "omnigibson", "isaac-sim", "r1pro", "mobile-manipulation", "code-as-policy", "trajectory", "assembling_gift_baskets"]
 
 [metadata]

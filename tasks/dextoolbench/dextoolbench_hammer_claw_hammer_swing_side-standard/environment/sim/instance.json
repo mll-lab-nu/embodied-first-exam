@@ -3,7 +3,7 @@
  "category": "hammer",
  "object": "claw_hammer",
  "task": "swing_side",
- "text": "Pick up the claw hammer and move it through the demonstrated motion (a sideways hammer swing): bring it to each goal pose in order (the green marker shows the current goal).",
+ "text": "Pick up the hammer and swing it sideways, following the green ghost hammer through its poses in order.",
  "start_pose": [
   0.09895555097856323,
   0.07287310223873444,

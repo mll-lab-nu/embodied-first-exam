@@ -5,7 +5,7 @@
   "pot": "Pot/pot_004",
   "cooktop": "Cooktop/cooktop_004"
  },
- "text": "Pick up the pot with both arms (both grippers grasping it) and put it down on the cooktop, upright, then release it with both grippers.",
+ "text": "Lift the pot with both grippers and set it down on the cooktop.",
  "stages": [
   "pick",
   "place"

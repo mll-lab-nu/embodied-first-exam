@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Take the paper out to recycling. A sack stands on the kitchen floor and a newspaper lies on the kitchen countertop; put both inside the recycling bin that stands on the garden floor, and close the bin.
+Put the sack and the newspaper into the recycling bin in the garden and close the bin.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - the sack (`sack.n.01_1`) is inside the recycling bin (`recycling_bin.n.01_1`)

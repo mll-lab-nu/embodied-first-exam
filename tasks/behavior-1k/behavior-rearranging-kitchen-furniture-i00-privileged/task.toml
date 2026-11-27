@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/behavior-rearranging-kitchen-furniture-i00-privileged"
-description = "BEHAVIOR-1K v3.9.2 (2026 BEHAVIOR Challenge) rearranging_kitchen_furniture (R1Pro mobile manipulator, OmniGibson / Isaac Sim): produce one replayable trajectory. Put the toaster, the food processor and the French press, which stand on the kitchen countertop, away into one kitchen cabinet, and close that cabinet. Frozen scene instance (challenge public_test instance 301)."
+description = "BEHAVIOR-1K v3.9.2 (2026 BEHAVIOR Challenge) rearranging_kitchen_furniture (R1Pro mobile manipulator, OmniGibson / Isaac Sim): produce one replayable trajectory. Put the toaster, the food processor and the French press into one cabinet and close it. Frozen scene instance (challenge public_test instance 301)."
 keywords = ["robotics", "behavior", "omnigibson", "isaac-sim", "r1pro", "mobile-manipulation", "code-as-policy", "trajectory", "rearranging_kitchen_furniture"]
 
 [metadata]

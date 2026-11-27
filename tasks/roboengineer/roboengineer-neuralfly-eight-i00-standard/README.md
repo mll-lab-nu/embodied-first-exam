@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:control-transfer-0.2.0` |
 
 ## Task
-Track six timed vertical figure-eight laps: x=1.25 sin(t), y=0, z=1.8+0.75 sin(2t), with randomized phase, horizontal center and initial position offset.
+Fly the drone through six timed laps of a vertical figure eight, keeping close to the moving target the whole time.
 
 ## Difficulty
 Infer transfer failures from video and noisy sensors across bounded adaptation rounds.

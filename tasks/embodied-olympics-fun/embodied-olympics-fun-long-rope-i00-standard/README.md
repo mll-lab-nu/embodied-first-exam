@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Jump the long rope: standing in the middle of a rope turned by two rope-turning machines, jump it 10 times in a row, the rope passing under both your feet while you are in the air, without the rope ever touching you. (Embodied Olympics `long-rope`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Jump the long rope 10 times in a row without the rope touching you, then land on your feet and stand still. (Embodied Olympics `long-rope`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
 
 ## Difficulty
 Neither built-in gait can jump: the robot must hop again and again, in time with a rope it has to watch, with its feet off the ground at the very moment the rope passes and back on balance before the next turn. Each landing must be absorbed while the next take-off is already being prepared, and any drift out of the middle or a toe left behind catches the rope. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 5 resets (only the last attempt is graded).

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Standing on the block behind the high bar, jump up and catch the bar with both hands, then do one giant swing: take your extended body in a full circle around the bar, without letting go. (Embodied Olympics `high-bar-swing`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Jump from the block, catch the high bar with both hands and swing one full circle round it with your body straight, without letting go. (Embodied Olympics `high-bar-swing`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
 
 ## Difficulty
 A real jump: the legs must lift the whole robot about 0.15 m and forwards so that the bar enters the open hands, and the fingers must close round it in flight. Then nothing pushes you: the swing has to be pumped up from a hang by the legs, the waist and the shoulders, against motors of 88 N m at the hips and 25 N m in the arms, until the body goes over the top of the bar extended; the bottom of a giant swing pulls about four times your weight through the fingers and the arms, and the hands slide round the fixed bar against their own friction. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 5 resets (only the last attempt is graded).

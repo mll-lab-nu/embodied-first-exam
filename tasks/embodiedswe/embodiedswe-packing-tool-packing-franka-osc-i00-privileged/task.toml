@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/embodiedswe-packing-tool-packing-franka-osc-i00-privileged"
-description = "EmbodiedSWE packing.tool_packing.franka.osc (robobench at 67f44e8a2ca5, Isaac Lab 2.3.2 / Isaac Sim 5.1, GPU PhysX): deliver a program, solution/solve.py with solve(env), that completes the task when the verifier runs it against a fresh simulator built from the frozen instance (seed 0)."
+description = "EmbodiedSWE packing.tool_packing.franka.osc (robobench at 67f44e8a2ca5, Isaac Lab 2.3.2 / Isaac Sim 5.1, GPU PhysX): Put the stapler in the top drawer of the chest, the scissors in the second drawer and the utility knife in the third, then close all four drawers. Deliver a program, solution/solve.py with solve(env), that completes the task when the verifier runs it against a fresh simulator built from the frozen instance (seed 0)."
 keywords = ["robotics", "embodiedswe", "isaac-lab", "isaac-sim", "code-as-policy", "program", "packing", "articulated", "drawers", "franka", "packing.tool_packing.franka.osc"]
 
 [metadata]

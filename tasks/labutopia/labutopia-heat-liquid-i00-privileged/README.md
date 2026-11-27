@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:labutopia-0.1.0` |
 
 ## Task
-LabUtopia's `heat_liquid` (HeatLiquid), with a Franka Panda arm (7 joints) with its two-finger gripper, fixed to a laboratory bench: Put the beaker on the heater's plate and leave it there, then press the heater's button. Success, at the first control step at which the third condition is met: (1) the beaker's centre has been above z = 0.82 m; (2) after that, the beaker has been on the plate: its centre at or below z = 0.86 m and within 0.05 m in x and in y of the plate's frame (`/World/heat_device/heat_device/heat_device/plat`); (3) after that, the beaker is on the plate as in (2) and the button's frame (`/World/heat_device/button`) is below z = 0.761 m.
+LabUtopia's `heat_liquid` (HeatLiquid), with a Franka Panda arm (7 joints) with its two-finger gripper, fixed to a laboratory bench: Put the beaker in the middle of the heater's plate and leave it there, then press the heater's red button.
 On the bench in front of the arm: a small glass beaker, about 6.5 cm across and 10 cm tall, and a heater: a white hot plate about 25 cm x 18 cm x 9 cm with a square plate on top, a display on its front and a round red button at one front corner. The deliverable is one replayable trajectory of joint targets (`/app/output/trajectory.npz`, `(T, 18)`, one row per 1/60 s control step: 9 position targets, then 9 velocity targets).
 
 ## Difficulty

@@ -77,7 +77,7 @@
    "wz": -0.6673171520233154
   }
  ],
- "text": "Make Boston Dynamics Spot follow the joystick command schedule on flat ground for the whole 20 s episode without falling over.",
+ "text": "Make the robot follow the joystick's commands for the whole schedule without falling over.",
  "facts": {
   "start_xy_m": [
    0.0,

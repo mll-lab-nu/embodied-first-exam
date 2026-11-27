@@ -2,7 +2,7 @@
   "schema": "control-transfer/1",
   "protocol": "eai-policy/1.1",
   "name": "go2-yaw-jump",
-  "goal": "Jump through a commanded 110\u2013150 degree heading change with verified airborne rotation and stable touchdown; ground spinning is rejected.",
+  "goal": "Make the Go2 jump and turn to its left in the air by the commanded angle, then land steadily in place.",
   "score": "Success requires flight >=0.08 s, height rise >=0.07 m, airborne yaw >=70% command with first-touch yaw error <0.25 rad, final yaw error <0.18 rad, drift <0.25 m, and final 1 s stable support; unsuccessful score capped at 49.",
   "max_rounds": 3,
   "adaptation_cases": 3,

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Standard-mode twin of `behavior-store-honey-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Put the jar of honey, which stands on the kitchen countertop, inside the cabinet in the entryway.
+Standard-mode twin of `behavior-store-honey-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Put the honey jar into the entryway cabinet.
 
 ## Difficulty
 Same scene, frozen instance and success rule as `behavior-store-honey-i00-privileged` (see its Difficulty). In standard mode the agent has no reset, no privileged state and no planning primitives: it sees the robot's cameras (RGB, depth on request) and its proprioception only, acts through the client, and gets one episode.
@@ -49,7 +49,7 @@ Caps per container (PROTOCOL §6).
 | | |
 |---|---|
 | Protocol | `eai-standard/2.2`: RGB-D + proprioception through the client; no reset, no object poses, no success predicate |
-| Action space | `submit` chunks of `joint_position` (25, streamed at the 30 Hz control rate with the agent's `dt`; base entries are per-step targets) or of `ee_pose` (16, both end effectors, cuRobo IK per row); `observe` frames or a watch window; binary RCB1 responses |
+| Action space | `submit` chunks of `joint_position` (25, streamed at the 30 Hz control rate with the agent's `dt`; base entries are per-step targets) or of `ee_pose` (16, both end effectors, cuRobo IK per row); `observe` the current frames or those recorded over the last seconds (`last_s`); hold chunks (`hold(s)`); binary RCB1 responses |
 | Crash recovery | `restart: on-failure:6`; the service journals every control step (`journal.f64`) and resumes the same episode after a crash (resume class `approx`, docs/protocol/standard_mode.md §13.1); startup watchdog `RCB_STARTUP_TIMEOUT_S` = 1800 s |
 | Dataset | the licensed BEHAVIOR dataset, mounted read-only into the sidecar from `$RCB_BEHAVIOR_DATA` (a precondition) |
 | Budget | the agent's time is the `Agent time budget` row (the number is this task's `[agent] timeout_sec`; tasks/behavior-1k/README.md) |

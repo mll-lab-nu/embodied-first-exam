@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Put the fruit into the refrigerator. Two apples lie in a bowl and two strawberries on a tray on the kitchen countertop, and two tupperwares are inside a kitchen cabinet. Put one apple and one strawberry into each tupperware, put both tupperwares into the refrigerator, and close it.
+Put one apple and one strawberry into each tupperware, put both tupperwares into the fridge and close it.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - each apple (`apple.n.01_1`, `_2`) is inside a different tupperware (`tupperware.n.01_1`, `_2`)

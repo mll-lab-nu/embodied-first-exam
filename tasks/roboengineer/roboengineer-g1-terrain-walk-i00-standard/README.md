@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:control-transfer-0.2.0` |
 
 ## Task
-Train a blind 29-DoF Unitree G1 policy in mjlab/MuJoCo Warp and transfer to CPU MuJoCo over flat, sloped, rough and stepped terrain. Stand 2 s, then follow a public forward velocity command of 0.5–0.65 m/s for 18 s.
+Make the G1 stand, then walk forward at its commanded speed over flat, sloped, rough or stepped ground without falling.
 
 ## Difficulty
 Infer transfer failures from video and noisy sensors across bounded adaptation rounds.

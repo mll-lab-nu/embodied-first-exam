@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/robolab-pick-orange-object-i00-privileged"
-description = "NVIDIA RoboLab pick_orange_object (Franka + Robotiq 2F-85, Isaac Lab 2.3 / Isaac Sim 5.1): produce one replayable trajectory. Pick up the orange measuring cup. Frozen scene instance (the state after RoboLab's canonical seed-0 reset)."
+description = "NVIDIA RoboLab pick_orange_object (Franka + Robotiq 2F-85, Isaac Lab 2.3 / Isaac Sim 5.1): produce one replayable trajectory. Pick up the orange measuring cup and lift it clear of the table. Frozen scene instance (the state after RoboLab's canonical seed-0 reset)."
 keywords = ["robotics", "robolab", "isaac-lab", "isaac-sim", "franka", "code-as-policy", "trajectory", "pick_orange_object"]
 
 [metadata]

@@ -15,7 +15,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/behavior-polishing-shoes-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.2): BEHAVIOR-1K v3.9.2 polishing_shoes on the same frozen instance as the privileged task (2026 challenge public_test instance 301). Polish the shoes in the bedroom. Two dusty shoes lie on the bedroom floor and a scrub brush lies on the stand; there are two footstools in the room. Brush all the dust off both shoes, set them next to each other and next to the same footstool, and leave the scrub brush on the stand. The agent only gets a client: get_obs (RGB-D + proprioception), submit (joint_position or ee_pose chunks). No reset, no privileged state; the sim service records the episode as a trajectory, resumes it after a crash, and grades the episode it ran (no replay)."
+description = "STANDARD MODE (robot as a service, eai-standard/2.2): BEHAVIOR-1K v3.9.2 polishing_shoes on the same frozen instance as the privileged task (2026 challenge public_test instance 301). Brush the dust off both shoes, set them side by side next to one footstool, and leave the brush on the stand. The agent only gets a client: get_obs (RGB-D + proprioception), submit (joint_position or ee_pose chunks). No reset, no privileged state; the sim service records the episode as a trajectory, resumes it after a crash, and grades the episode it ran (no replay)."
 keywords = ["robotics", "behavior", "omnigibson", "isaac-sim", "r1pro", "mobile-manipulation", "standard-mode", "trajectory", "polishing_shoes"]
 
 [metadata]
@@ -68,6 +68,13 @@ cpus = 8
 memory_mb = 24576
 storage_mb = 10240
 gpu_types = ["L40S", "L40", "L4", "RTX 4090", "RTX 6000 Ada"]
+
+# The robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): Harbor starts this server for the agent.
+[[environment.mcp_servers]]
+name = "efe-robot"
+transport = "stdio"
+command = "python3"
+args = ["/opt/tools/efe_mcp/server.py"]
 
 [verifier.env]
 RCB_LIMITS_ENFORCE = "${RCB_LIMITS_ENFORCE:-0}"

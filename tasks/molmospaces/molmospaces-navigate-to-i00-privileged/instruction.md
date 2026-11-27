@@ -1,62 +1,78 @@
-# MolmoSpaces · navigate-to — frozen episode
+# MolmoSpaces · navigate-to (privileged)
 
-**Task:** Navigate to any tablelamp (2 available).
+## Task
+Go to one of the two table lamps and stop close by, with the lamp in view of the head camera.
 
-You control a Rainbow Robotics RB-Y1 mobile manipulator: holonomic base, 6-joint torso, two 7-joint arms with parallel grippers, head camera in one episode of Ai2's MolmoSpaces benchmark (upstream package `holodeck-objaverse/NavToObjDataGenConfig/NavToObjHolodeckBench_20260115_json_benchmark`,
-episode 237: several objects of the target type (the nearest counts)), simulated by upstream's own code (molmo-spaces 0.2.9, MuJoCo 3.5.0) via Python.
-The episode is frozen: the house, every object and the robot start the same way after every reset, and you may reset as
-often as you like. Your deliverable is **one open-loop trajectory**, not a general policy.
+## Goal
+Success: the robot's base is next to a table lamp, and that lamp shows in the head camera. Your trajectory is replayed
+from the fixed start. What counts is the state after its last action. Rows past the step limit (Limits) are never run.
+To stop there once the task holds, end your trajectory.
 
-## Success (upstream's rule, judged by upstream's code)
-The episode ends after the last row of your trajectory, or after **500 control steps** (the benchmark's
-100 s horizon at 5 Hz), whichever comes first. Success is upstream's `judge_success()` on the state
-at that moment: for the one of the 2 target objects nearest to the robot base (horizontal distance), the horizontal distance from the base to its position (the origin of its body, not its nearest surface) is less than 1.5 m and at least one of its pixels shows in head_camera. The task has to hold at the end: met earlier and undone by then does not count, and ending
-your trajectory right after the task is met is how you stop there. The grader replays your trajectory open-loop from the
-same start in a fresh process; it scores 1 only if that replay succeeds.
+Deliverable: `/app/output/trajectory.npz` with `actions`, float64 (T, 25), one row per control step (the layout is under
+Actions); at most 100,000 rows (a longer file scores 0). `s.save_trajectory(rows, "/app/output/trajectory.npz")` writes
+it. It is replayed open-loop from the fixed start. Leave the script that produced it at `/app/output/gen.py`. Also leave
+`/app/output/rcb_session_log.jsonl` where it is: the tooling writes it with your sessions, resets and simulated steps,
+reported as cost. That log is not graded. Save a valid trajectory early and overwrite it when you have a better one.
 
-## Deliverable
-`/app/output/trajectory.npz` with `actions`: float64 (T, 25) with T at most 100,000 (a longer file scores 0), one row per control step, the targets of upstream's
-joint-position controllers in this order: `base_x`, `base_y`, `base_theta`, `torso_0`, `torso_1`, `torso_2`, `torso_3`, `torso_4`, `torso_5`, `left_arm_0`, `left_arm_1`, `left_arm_2`, `left_arm_3`, `left_arm_4`, `left_arm_5`, `left_arm_6`, `right_arm_0`, `right_arm_1`, `right_arm_2`, `right_arm_3`, `right_arm_4`, `right_arm_5`, `right_arm_6`, `left_gripper`, `right_gripper` (base_x, base_y in m and base_theta in rad (world frame); torso, arm joints in rad; grippers: the finger motor's force, -100 .. 100 (positive closes, negative opens, 0 exerts none)). `s.save_trajectory(rows)` writes it. Also leave the
-script that produced it at `/app/output/gen.py`. Save a working trajectory as soon as you have one and overwrite it as
-you improve it: whatever is in `/app/output/` when your time is up is graded. The tooling also writes
-`/app/output/rcb_session_log.jsonl` (your sessions, resets and simulated steps, reported as cost; not graded): leave it
-there.
+Rules: **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+benchmark's demonstrations, trained policies); trials are reviewed.
 
-## Tooling (installed; `python` from any directory)
+## Robot Interface
+A Rainbow Robotics RB-Y1 mobile manipulator (holonomic base, 6-joint torso, two 7-joint arms with parallel grippers,
+head camera) in a simulated house (Ai2's MolmoSpaces, MuJoCo). The episode is one fixed instance: the house, every
+object and the robot start the same way after every reset. You have the full simulator to develop with; you hand in one
+open-loop trajectory of robot actions, not a general policy.
+
+### Session
+`/opt/tools/rcb_molmospaces.py`, importable as `rcb_molmospaces` (run `python` from any directory):
 ```python
 from rcb_molmospaces import Session
 s = Session("/app/instance.json")    # builds the episode (10-40 s: the Franka scenes ~10 s, the RB-Y1 houses up to ~40 s)
 s.layout; row = s.hold_row()         # the row layout; the row that keeps every controller at its current target
-s.step(row)                          # one control step = one upstream Task.step; False once the episode is over
-s.done; s.status()                   # upstream's is_done(); {"success", "done", "steps", "horizon", "state_sha", "resets"}
+s.step(row)                          # one control step = one simulator Task.step; False once the episode is over
+s.done; s.status()                   # the simulator's is_done(); {"success", "done", "steps", "horizon", "state_sha", "resets"}
 s.state()                            # {"bodies": {name: [x y z qw qx qy qz]}, "joints": {name: [qpos]}, "task", "time", "mujoco"}
 s.model, s.data                      # the live MuJoCo model and data (read them; changing them is not part of the replay)
 s.render(cam); s.render_depth(cam)   # uint8 (H, W, 3); float32 (H, W) depth in m. Cameras: s.cameras
 s.camera_info(cam)                   # intrinsic_cv, extrinsic_cv (world -> camera, OpenCV axes), cam2world_gl, mount
 s.proprio(); s.robot_spec()          # joint pos / vel / effort, gripper openings, tcp poses; joints, limits, commands
-s.kinematics({"op": "fk", "q": q})   # upstream's kinematic model, no physics: tcp poses for joint positions q
+s.kinematics({"op": "fk", "q": q})   # the robot's kinematic model, no physics: tcp poses for joint positions q
 s.kinematics({"op": "ik", "targets": {"left_gripper": pose7}})   # joint positions for a tcp pose (x y z qw qx qy qz)
-s.reset()                            # rebuild the frozen episode
+s.reset()                            # back to the fixed start (as often as you like)
 s.replay(rows)                       # reset, run the rows, return the status
 s.save_trajectory(rows, "/app/output/trajectory.npz")
 ```
-`q` follows `s.kinematics_spec()["joint_names"]`. The upstream package `molmo_spaces` is installed (without its scripted
-experts); the frozen episode is `/app/instance.json`. The grader runs exactly this CLI in a fresh process, so run it
-to check yourself:
-`python /opt/tools/rcb_molmospaces.py replay --instance /app/instance.json --traj /app/output/trajectory.npz`
+- `q` follows `s.kinematics_spec()["joint_names"]`; poses are x y z qw qx qy qz.
+- The simulator's package `molmo_spaces` is installed (without its scripted experts); the episode is
+  `/app/instance.json`.
+- The replay CLI does what the grader does; run it to check yourself:
+  `python /opt/tools/rcb_molmospaces.py replay --instance /app/instance.json --traj /app/output/trajectory.npz`
 
-## Conventions
-- World frame of the house, z up, metres; quaternions **wxyz**.
-- One control step is 0.2 s of simulated time (MuJoCo steps of 2 ms); a row holds until the next one.
-- Physics is MuJoCo on the CPU: the same rows from the same start give the same result in every fresh process.
+### Actions
+- The house's world frame, z up, metres; quaternions wxyz.
+- A row (`s.layout`) has 25 entries, the targets of the robot's joint-position controllers, in this order: `base_x`,
+  `base_y`, `base_theta`, `torso_0`, `torso_1`, `torso_2`, `torso_3`, `torso_4`, `torso_5`, `left_arm_0`, `left_arm_1`,
+  `left_arm_2`, `left_arm_3`, `left_arm_4`, `left_arm_5`, `left_arm_6`, `right_arm_0`, `right_arm_1`, `right_arm_2`,
+  `right_arm_3`, `right_arm_4`, `right_arm_5`, `right_arm_6`, `left_gripper`, `right_gripper` (base_x, base_y in m and
+  base_theta in rad (world frame); torso, arm joints in rad; grippers: the finger motor's force, -100 .. 100 (positive
+  closes, negative opens, 0 exerts none)).
+- One control step is 0.2 s of simulated time (MuJoCo steps of 2 ms); a row holds until the next one, and `s.hold_row()`
+  keeps every controller at its current target.
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+## Others
+- `s.state()["task"]`: `pickup_obj_candidates` are the two table lamps.
+- Physics is MuJoCo on the CPU: the same rows from the same start give the same result every time.
 
-## Resources
-Your container: **7 CPUs**, **20 GiB of memory**, **2048 processes and threads**, **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`) and **one GPU, 7 GiB of its memory**. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
-
-## Time limit
-You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
-
-This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+## Limits
+- Time: 3600 s of wall-clock time from the start of your session. Everything counts, including the simulator's start-up.
+  At the end you are stopped without warning and only what is in `/app/output/` at that moment is graded. Time left:
+  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`). A call into a long-running process can block for its
+  whole wait time. Use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, including the simulator's and the benchmark's source.
+- Resources: 7 CPUs, 20 GiB memory, 2048 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`),
+  one GPU (7 GiB of its memory). Going over a cap can get a process killed (the CPU cap only slows you down). Usage:
+  `/run/rcb-limits/usage.json`.
+- Resets: as many as you like (`s.reset()`).
+- Steps: at most 500 control steps (the benchmark's 100 s horizon), then the replay stops.

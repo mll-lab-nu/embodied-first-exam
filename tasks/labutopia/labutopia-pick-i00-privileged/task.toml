@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/labutopia-pick-i00-privileged"
-description = "LabUtopia pick (Pick; a chemistry laboratory with a Franka Panda on Isaac Sim): produce one replayable trajectory of joint targets. Pick up the conical flask that stands on the bench and hold it up. Frozen scene instance (LabUtopia's reset, seed 0); graded by one fresh-process replay with a copy of LabUtopia's own success check."
+description = "LabUtopia pick (Pick; a chemistry laboratory with a Franka Panda on Isaac Sim): produce one replayable trajectory of joint targets. Pick up the conical flask and hold it up, more than a hand's width off the bench, for a second. Frozen scene instance (LabUtopia's reset, seed 0); graded by one fresh-process replay with a copy of LabUtopia's own success check."
 keywords = ["robotics", "labutopia", "isaac-sim", "laboratory", "chemistry", "franka-panda", "code-as-policy", "trajectory", "pick", "privileged"]
 
 [metadata]

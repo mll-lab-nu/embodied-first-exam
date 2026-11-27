@@ -44,8 +44,8 @@ class Task(TaskBase):
     params = dict(length_m=5.00, width_m=0.10, height_m=1.25, depth_m=0.16, end_zone_m=0.50, stand_s=2.0,
                   stand_tilt_deg=20.0, still_m_s=0.35)
 
-    sentence = ("Walk along the balance beam from the end you stand on to the far end, marked yellow, and stand "
-                "there, touching the beam only with your feet and never touching the floor.")
+    sentence = ("Walk along the balance beam to its far, yellow end and stand there, touching the beam only with "
+                "your feet.")
     rules = ("The beam is a competition balance beam: {length_m} m long, {width_m} m wide on top and {depth_m} m "
              "deep, its top {height_m} m above the floor; it runs along +x from x = 0 to x = {length_m} m, centred on y = 0, on two "
              "supports. You must get from the end you start on to the far end on your feet. The far end is the last "

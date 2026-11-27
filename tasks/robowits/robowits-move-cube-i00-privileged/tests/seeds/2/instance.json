@@ -3,7 +3,7 @@
  "robowits_task": "robowits/28-move-cube-v0",
  "eval_json": "dataset/robowits/eval_dataset_50/28.json",
  "eval_index": 2,
- "text": "Move any of the three cubes to the left of the goal line.",
+ "text": "Move one of the three cubes across the goal line, to the side away from the robot, and leave it on the table there.",
  "scene": {
   "goal line": {
    "pos": [

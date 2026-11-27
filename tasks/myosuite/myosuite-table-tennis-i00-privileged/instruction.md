@@ -1,99 +1,35 @@
-# MyoSuite · table_tennis — frozen instance
+# MyoSuite · table_tennis (privileged)
 
-You control the **MyoArm with torso**, a musculoskeletal model of a human torso, right arm and hand on a pelvis that slides on the floor (MyoSuite 2.12.2 on MuJoCo), via Python, through its actuators — 273
-muscles and 2 non-muscle actuators: there is no joint-level controller.
-**Task:** Return the served ball: hit it with the paddle so that it lands on the opponent's half of the table (MyoChallenge 2025 TableTennis P1's own success test on the ball's contact history: after the serve's bounce on your half, the paddle touches it once, then it touches the opponent's half, with no second paddle touch and no further bounce on your half). Failure (the episode ends): any other outcome of the rally, the ball falling below 0.3 m, or 3 s of simulated time.
+## Task
+Return the served ball: after it bounces once on your half, hit it once with the paddle so that it lands on the
+opponent's half, with no second paddle touch and no second bounce on your half.
 
-You stand at a table-tennis table holding a paddle in the right hand; a ball is served toward you from the far side. `s.state()` gives the task's observation dict (privileged): `pelvis_pos`, `body_qpos`, `body_qvel`, `ball_pos`, `ball_vel`, `paddle_pos`, `paddle_vel`, `paddle_ori`, `padde_ori_err`, `reach_err`, `palm_pos`, `palm_err`, `touching_info`, `act`.
-MyoSuite's reward code (from `/usr/local/lib/python3.11/site-packages/myosuite/envs/myo/myochallenge/tabletennis_v0.py`; `solved` is the goal test,
-`done` the failure test):
-```python
-def get_reward_dict(self, obs_dict):
-    reach_dist = np.abs(np.linalg.norm(self.obs_dict["reach_err"], axis=-1))
-    palm_dist = np.abs(np.linalg.norm(self.obs_dict["palm_err"], axis=-1))
-    act_mag = (
-        np.linalg.norm(self.obs_dict["act"], axis=-1) / self.mj_model.na
-        if self.mj_model.na != 0
-        else 0
-    )
-    ball_pos = (
-        obs_dict["ball_pos"][0][0]
-        if obs_dict["ball_pos"].ndim == 3
-        else obs_dict["ball_pos"]
-    )
-    solved = evaluate_pingpong_trajectory(self.contact_trajectory) == None
-    paddle_quat_err = np.linalg.norm(obs_dict["padde_ori_err"], axis=-1)
-    torso_err = abs(
-        self.mj_data.qpos[
-            self.mj_model.jnt_qposadr[self.mj_model.joint("flex_extension").id]
-        ]
-    )
-    paddle_touch = (
-        obs_dict["touching_info"][0][0]
-        if obs_dict["touching_info"].ndim == 3
-        else obs_dict["touching_info"]
-    )
-    # =========== for the baseline, we provide an h5 file in which you could perform simple imitation learning ===========
-    # ======== uncomment to load the files and rewards =======================
-    # qpos_ref, qvel_ref, qpos_err, qvel_err = self.ref_traj()()
-    # ref_qpos_err = np.linalg.norm(qpos_err)
-    # ref_qvel_err = np.linalg.norm(qvel_err)
+## Goal
+Success: after the serve bounces once on your half, you hit the ball once with the paddle and it then lands on the
+opponent's half, with no second paddle touch and no second bounce on your half. The episode ends as soon as the task is
+done. It ends as a failure on any other outcome of the rally, if the ball falls toward the floor, and after 3 s.
 
-    rwd_dict = collections.OrderedDict(
-        (
-            # Perform reward tuning here --
-            # Update Optional Keys section below
-            # Update reward keys (DEFAULT_RWD_KEYS_AND_WEIGHTS) accordingly to update final rewards
-            # Examples: Env comes pre-packaged with two keys pos_dist and rot_dist
-            # Optional Keys
-            ("reach_dist", np.exp(-1.0 * reach_dist)),
-            ("palm_dist", np.exp(-5.0 * palm_dist)),
-            ("paddle_quat", np.exp(-5 * paddle_quat_err)),
-            ("torso_up", np.exp(-5 * torso_err)),
-            # ('ref_qpos_err', -1 * ref_qpos_err), use these for your imitation learning script
-            # ('ref_qvel_err', -1 * ref_qvel_err),
-            # Must keys
-            ("act_reg", -1.0 * act_mag),
-            ("sparse", paddle_touch[0] == 1),  # paddle_touching
-            ("solved", np.array([[solved]])),
-            ("done", np.array([[self._get_done(ball_pos[-1], solved)]])),
-        )
-    )
+Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, path)`. It is replayed open-loop
+from the same initial state and scores 1 if its episode ends in success. It holds at most 108,000 rows (one per control
+step: 360 s of replay at the control rate), and a longer file scores 0. Leave the script that produced it at
+`/app/output/gen.py`. Save a valid one early and overwrite it when you have a better one.
 
-    rwd_dict["dense"] = sum(
-        float(wt) * float(np.array(rwd_dict[key]).squeeze())
-        for key, wt in self.rwd_keys_wt.items()
-    )
+Rules: **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+benchmark's demonstrations, trained policies); trials are reviewed.
 
-    if rwd_dict["solved"]:
-        self.cur_rally += 1
-    if rwd_dict["solved"] and self.cur_rally < self.rally_count:
-        rwd_dict["done"] = False
-        rwd_dict["solved"] = False
-        self.obs_dict["time"] = 0
-        self.mj_data.time = 0
-        self.contact_trajectory = []
-        self.relaunch_ball()
-    return rwd_dict
-```
-`solved` is the challenge's own success event: the episode ends in success at the first control step where it holds; `done` without it (its failure conditions, its own time limit) ends it as a failure. The gym step budget (`max_episode_steps`) is lifted; the challenge's own time limit is not.
+## Robot Interface
+The MyoArm with torso, a musculoskeletal model of a human torso, right arm and hand on a pelvis that slides on the floor
+(MyoSuite, MuJoCo), driven only through its actuators (273 muscles and 2 other actuators): there is no joint-level
+controller. The scene is one fixed instance. You have the full simulator to develop with; you hand in a trajectory of
+actuator commands.
 
-This is a *fixed scene instance*: the start pose, the objects and the goal never change between resets. You may reset and
-retry as many times as you want. Your deliverable is **one replayable trajectory**, not a general policy.
-
-## Deliverable
-Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below). It is replayed
-open-loop from the same initial state in a fresh process and scored 1 if the episode ends in success, else 0. It holds at most **108,000 rows** (one per control step: 360 s of replay at the rate under Conventions),
-and a longer file scores 0. Also leave the script that produced it at `/app/output/gen.py`.
-
-Save a trajectory as soon as you have one that works, improve it while time remains, and do not stop early.
-
-## Tooling (already installed; run `python` from any directory)
+### Session
+`rcb_myosuite` (installed; run `python` from any directory):
 ```python
 from rcb_myosuite import Session
 s = Session("table_tennis", instance="/app/instance.npz")   # a few seconds
 s.reset()                          # back to the frozen initial state (unlimited; an exact snapshot restore)
-s.state()                          # the task's observation dict (privileged; see above)
+s.state()                          # the task's observation dict (privileged; see Observations)
 s.actuators(); s.muscles(); s.joints()   # 275 actuators (kind, command); muscles; hinge/slide joints (qpos/dof address, range)
 s.moment_arms()                    # (275, nv) actuator moment arms at the current pose
 s.model, s.data                    # MuJoCo model / data: read them freely; only the actions you record are replayed
@@ -102,29 +38,41 @@ s.step(a)                          # one control step (10 ms): 275 commands; Fal
 s.rest_action()                    # every command at -1 (muscles relaxed)
 s.status()                         # {'success', 'done', 'reason', 'steps', 'resets', 'solved_run', 'rule', 'state_sha', 'info', ...}
 s.record_start(); ...; actions = s.record_stop()   # (T, 275) commands, one row per control step
-s.replay(actions)                  # resets, replays open-loop until the episode ends, returns status -> self-check
+s.replay(actions)                  # resets, replays open-loop until the episode ends, returns status
 s.save_trajectory(actions, "/app/output/trajectory.npz")
 s.render_frame("default")            # RGB uint8 (480, 640, 3); cameras: topview, default, close_up, hand_top, hand_bottom, hand_side_inter, hand_side_exter, plam_lookat
 s.render_video(actions, "/app/output/check.mp4", cameras=["default"])
 ```
-There are no motion primitives: every skill is yours to build from actuator commands.
+There are no motion primitives: every skill is yours to build from actuator commands. Control step 10 ms (5 physics
+substeps). There is no step budget: your wall-clock time is the limit (~300 control steps/s here). An episode ends at
+success or failure; `s.step` then refuses further actions until `s.reset()`.
 
-CLI equivalent of the grader:
-`python /opt/tools/rcb_myosuite.py replay --instance /app/instance.npz --traj /app/output/trajectory.npz`
+### Actions
+An action has 275 real numbers per control step, one per actuator in order: 273 muscles and 2 non-muscle actuators. A
+muscle's command a maps to its excitation u = 1 / (1 + exp(-5 (a - 0.5))) and is not clipped (a = -1: u ~ 0.0006, a =
+0.5: 0.5, a = 1: 0.92, a = 2: 0.9994). Activation follows excitation with a first-order delay (~10 ms up, ~40 ms down).
+Muscles only pull, and one muscle can cross several joints. A muscle's force also depends on its length and velocity.
+The non-muscle actuators: `pelvis_x` (index 273): normalized: a in [-1, 1] maps linearly onto [-1, 0.05] (position of
+joint pelvis_x); `pelvis_y` (index 274): normalized: a in [-1, 1] maps linearly onto [-1, 1] (position of joint
+pelvis_y).
 
-## Conventions
-- Action: 275 real numbers per control step, one per actuator in order: 273 muscles and 2 non-muscle actuators. A muscle's command a maps to its excitation u = 1 / (1 + exp(-5 (a - 0.5))) and is not clipped (a = -1: u ~ 0.0006, a = 0.5: 0.5, a = 1: 0.92, a = 2: 0.9994); activation follows excitation with a first-order delay (~10 ms up, ~40 ms down); muscles only pull; one muscle can cross several joints; its force also depends on its length and velocity. The non-muscle actuators: `pelvis_x` (index 273): normalized: a in [-1, 1] maps linearly onto [-1, 0.05] (position of joint pelvis_x); `pelvis_y` (index 274): normalized: a in [-1, 1] maps linearly onto [-1, 1] (position of joint pelvis_y).
-- Control step 10 ms (5 physics substeps). There is no step budget: your wall-clock time is the limit
-  (~300 control steps/s here). An episode ends at success or failure; `s.step` then refuses further
-  actions until `s.reset()`.
+### Observations
+`s.state()`: the task's observation dict: `pelvis_pos`, `body_qpos`, `body_qvel`, `ball_pos`, `ball_vel`, `paddle_pos`,
+`paddle_vel`, `paddle_ori`, `padde_ori_err`, `reach_err`, `palm_pos`, `palm_err`, `touching_info`, `act`.
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+## Others
+- To check a trajectory the way it is graded, replay it from the command line:
+  `python /opt/tools/rcb_myosuite.py replay --instance /app/instance.npz --traj /app/output/trajectory.npz`.
 
-## Resources
-Your container: **4 CPUs**, **12 GiB of memory**, **4096 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
-
-## Time limit
-You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
-
-This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+## Limits
+- Time: 3600 s of wall-clock time from the start of your session. Everything counts, including the simulator's start-up.
+  At the end you are stopped without warning and only what is in `/app/output/` at that moment is graded. Time left:
+  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`). A call into a long-running process can block for its
+  whole wait time. Use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, including the simulator's and the benchmark's source.
+- Resources: 4 CPUs, 12 GiB memory, 4096 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`),
+  no GPU. Going over a cap can get a process killed (the CPU cap only slows you down). Usage:
+  `/run/rcb-limits/usage.json`.
+- Resets: as many as you like (`s.reset()`).

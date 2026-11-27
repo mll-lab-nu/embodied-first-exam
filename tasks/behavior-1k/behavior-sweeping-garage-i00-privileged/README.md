@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Sweep the garage. The garage floor is covered with sand and dust, and a broom and a bucket lie on it; remove all the sand and all the dust from the floor.
+Sweep all the sand and dust off the garage floor.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - no sand (`sand.n.04_1`) is left on the garage floor (`floor.n.01_1`)

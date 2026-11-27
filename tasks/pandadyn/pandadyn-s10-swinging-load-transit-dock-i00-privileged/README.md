@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0` |
 
 ## Task
-A carrier rests on two small ledges between the gripper's open fingers. It is a short bar with a pendulum (a rod ending in a ball) hanging from a hinge under it, and the pendulum is already swinging. Grip the bar with both fingers and damp the swing. Carry the carrier, still gripped, through two waypoints without letting the carrier or its pendulum touch a block obstacle, brake to rest at the second waypoint, and damp the residual swing again. Finally lower it slowly until the pendulum's ball rests centred in a dock, with the swing settled and the bar still gripped. The deliverable is one replayable trajectory of 100 Hz joint-target actions (`/app/output/trajectory.npz`,
+Grip the carrier's bar and damp the swinging pendulum. Carry it through the two waypoints without touching the obstacle block, stop at the second and damp the swing again, then lower it slowly until the pendulum's ball rests in the dock, still holding the bar. The deliverable is one replayable trajectory of 100 Hz joint-target actions (`/app/output/trajectory.npz`,
 8 values per row), graded by the task's own staged success check: 5 phases (`grasp_settle_and_damp`, `obstacle_transit`, `turn_and_brake`, `residual_swing_cancel`, `load_dock`), in order,
 with no failure event and no safety-limit violation, within the task's horizon of 25 s.
 

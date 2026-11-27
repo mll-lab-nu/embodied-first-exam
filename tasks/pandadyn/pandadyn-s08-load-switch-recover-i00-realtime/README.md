@@ -16,7 +16,7 @@
 Realtime twin of `pandadyn-s08-load-switch-recover-i00-privileged` (same frozen instance and success check as it and as `pandadyn-s08-load-switch-recover-i00-standard`): the agent gets only
 the realtime client (`eai-standard/2.3`, docs/protocol/standard_mode.md Part 3); the simulator runs in the `sim` sidecar on a clock
 that does not stop, at slowdown **S = 6** (one 10 ms control step every 60 ms of wall-clock time), with
-3 resets (only the last episode is graded). A small cube, the part, rides a powered roller conveyor, and an unpowered cart is already coasting along a straight channel towards a passive hinged switch that splits the track into two diagonal branches. Grasp the part with both fingers while it is still moving and lift it. Drop it into the moving cart without stopping the cart, which must keep coasting until the switch is set. Then, before the cart reaches the switch, push the switch with a finger so that it will steer the cart into the branch selected for this instance, which is given under Goal geometry. The cart must then be deflected by the switch into that branch. Finally, grasp the part again, lift it out of the cart and hold it up before the cart runs too far down the branch.
+3 resets (only the last episode is graded). Grasp the part from the moving conveyor, lift it about a hand's length and drop it into the coasting cart without stopping the cart. Before the cart reaches the switch, push the switch with a finger so that it sends the cart into the branch nearer to you, then lift the part back out of the cart and hold it up.
 
 ## Difficulty
 That of `pandadyn-s08-load-switch-recover-i00-standard`, but the scene does not wait between calls: once an episode's clock starts, the moving objects and
@@ -59,7 +59,7 @@ Caps per container (PROTOCOL §6).
 | | |
 |---|---|
 | Episode | it ends at the first control step where the task has succeeded or failed (the task's horizon, 25 s of robot time, is a failure), when the agent's time is up, or on a simulator error; 3 resets (`POST /reset`: the scene rebuilt from the frozen instance, paused) |
-| Action space | `submit` chunks of `joint_position` (8: per arm 7 joint targets + the aperture, one row per 10 ms control step or `dt` apart) planned from step `at`; `observe` now or a watch window; binary RCB1 responses |
+| Action space | `submit` chunks of `joint_position` (8: per arm 7 joint targets + the aperture, one row per 10 ms control step or `dt` apart) planned from step `at`; `observe` now or the last seconds recorded (`last_s`); binary RCB1 responses |
 | Cameras | `overview` and `closeup` (static), 640×480 RGB, z-depth on request, rendered by SAPIEN on the sidecar's GPU |
 | Images | the `sim` sidecar runs efe:pandadyn (`images/pandadyn/`); the agent container and the verifier run the shared client image with its pip pins (`embodied_first_exam/standard/client.env`) |
 | Crash recovery | the shared realtime layer's: a checkpoint every second of robot time, `restart: on-failure:6`, the service resumes the same episode, paused |

@@ -1018,9 +1018,8 @@ class Task(TaskBase):
         max_touch_s=0.05, retouch_gap_s=0.05, bounce_gap_s=0.02, fall_z_m=0.35,
         net_panels=NET_PANELS, net_cable_tension_n=NET_CABLE_T_N, net_mass_kg=NET_MASS_KG)
 
-    sentence = ("Return the serve: after the tennis ball has bounced once in your service box, hit it with the racket "
-                "held in your right hand back over the net so that it lands in the singles court on the far "
-                "side, without letting go of the racket.")
+    sentence = (("Return the serve: after it bounces once, hit it with the racket in your right hand over the net"
+                 " into the singles court, without letting go of the racket."))
     rules = (
         "The court is the ITF singles court: {court_length_m} m long and {court_width_m} m wide, measured to the "
         "outside of the lines, with a service line {service_line_m} m from the net on each side. The net stands "

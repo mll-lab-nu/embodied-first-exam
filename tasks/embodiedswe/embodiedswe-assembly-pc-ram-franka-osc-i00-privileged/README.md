@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:embodiedswe-0.3.0` |
 
 ## Task
+Install the two RAM sticks in the PC: the stick from the holder farther from the robot in the outermost memory slot, the other in the second slot from the CPU socket.
+
 Install two RAM sticks (Franka, operational-space control). EmbodiedSWE's `assembly.pc_ram.franka.osc` task (robobench at commit `67f44e8a2ca5`), privileged mode, with a program as the
 deliverable: `solution/solve.py` exposing `solve(env)`.
 

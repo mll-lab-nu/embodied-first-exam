@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/robowits-stack-bowls-i00-privileged"
-description = "RoboWits stack_bowls (bimanual Marvin, Genesis): produce one replayable trajectory. Nest the smaller bowl concentrically inside the larger one. Frozen scene instance (RoboWits evaluation scene 0 of task 19)."
+description = "RoboWits stack_bowls (bimanual Marvin, Genesis): produce one replayable trajectory. Put the smaller bowl inside the larger one, centred. Frozen scene instance (RoboWits evaluation scene 0 of task 19)."
 keywords = ["robotics", "robowits", "genesis", "marvin-bimanual", "dual-arm", "code-as-policy", "trajectory", "stack_bowls"]
 
 [metadata]

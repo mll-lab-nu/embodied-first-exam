@@ -17,6 +17,15 @@ def write(ok, out):
 def _startups():
     try: return sum(1 for _ in open(f"{DATA}/startups.jsonl"))
     except OSError: return 0
+def agent_end_fields(d):
+    """An agent-ended episode's record (PROTOCOL §3: final.json success_signal / ended_by, step_limit / steps_used):
+    evidence only, never the verdict; the runner reads ended_session_end."""
+    if d.get("success_signal") != "hidden": return {}
+    by = d.get("ended_by")
+    out = {"ended_finish": int(by == "finish"), "ended_step_limit": int(by == "step_limit"),
+           "ended_session_end": int(by == "session_end"), "hidden_success_seen": int(bool(d.get("hidden_success_seen")))}
+    if d.get("step_limit"): out.update(step_limit=int(d.get("step_limit") or 0), steps_used=int(d.get("steps_used") or 0))
+    return out
 def main():
     p = f"{DATA}/final.json"
     if not os.path.exists(p):
@@ -37,7 +46,8 @@ def main():
                "elapsed_s": float(d.get("elapsed_s") or 0), "video_rendered": int(bool(d.get("video"))),
                "video_pending": int(bool(d.get("video_pending"))), "live_video": int(bool(d.get("live_video"))), "live_frames": int(d.get("live_frames") or 0),
                "infra_error": int(infra), "sim_error": int(reason == "error"), "sim_crashed_on_call": int(reason == "sim_crashed_on_call"),
-               "instance_mismatch": int(mismatch), "sim_startups": _startups(), "grader_error": int(bool(d.get("finalize_error")))}
+               "instance_mismatch": int(mismatch), "sim_startups": _startups(), "grader_error": int(bool(d.get("finalize_error"))),
+               **agent_end_fields(d)}
     except Exception:  # noqa: BLE001 — an unreadable final.json is not the agent's failure
         traceback.print_exc()
         write(False, {**FAIL, "infra_error": 1, "grader_error": 1, "sim_startups": _startups()}); return

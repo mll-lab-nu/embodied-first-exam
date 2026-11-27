@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:robowits-0.1.1` |
 
 ## Task
-Align the three cubes perfectly in a straight line. One replayable trajectory from the frozen instance (evaluation
+Line up the three cubes on the table in a perfectly straight line. One replayable trajectory from the frozen instance (evaluation
 scene 0 of RoboWits task 1), with the privileged tooling (`rcb_robowits.py`: the scene's state, resets, thin
 primitives, replay); the success criterion as graded is in `instruction.md`.
 

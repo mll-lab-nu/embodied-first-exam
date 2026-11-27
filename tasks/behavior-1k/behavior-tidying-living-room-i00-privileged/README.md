@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Tidy the living room. Put the potted plant and the newspaper, which lie on the floor, on the coffee table; put the hardback book from the coffee table inside a bookcase; and put the notebook from the coffee table on the desk.
+Put the plant and the newspaper on the coffee table, the hardback into a bookcase, and the notebook on the desk.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - the potted plant (`pot_plant.n.01_1`) is on top of the coffee table (`coffee_table.n.01_1`)

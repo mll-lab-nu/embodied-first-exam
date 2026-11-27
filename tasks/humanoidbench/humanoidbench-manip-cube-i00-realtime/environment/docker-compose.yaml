@@ -22,10 +22,11 @@ services:
     command: python /srv/rcb_realtime.py
     restart: on-failure:6                               # a crash resumes the same episode, paused, never a reset
     environment:
+      RCB_AGENT_END: "1"                               # agent-ended episodes (PROTOCOL §3)
       RCB_TASK: cube
       RCB_INSTANCE: /srv/instance.npz
-      RCB_TASK_TEXT: "A cube starts just above and in front of each palm. Rotate both cubes, without dropping them, until each matches the orientation of the translucent cube with the same faces that floats above and between the hands."
-      RCB_EPISODE: "Ends when the summed reward reaches the pass mark (success), when the robot falls (its pelvis drops too low), when either cube drops, after 500 control steps, when your time is up (timeout), or on a simulator error."
+      RCB_TASK_TEXT: "Turn the two cubes on your palms until each sits the same way round as the see-through cube floating above your hands, without dropping either."
+      RCB_EPISODE: "Ends at your POST /finish, when the robot falls (its pelvis drops too low), when either cube drops, after 500 control steps, when your time is up (timeout), or on a simulator error. Reaching the pass mark does not end it: it counts once reached, even when a failure ends the episode afterwards."
       RCB_WALL_CLOCK_S: "3600.0"
       # Knobs: ${NAME:-default} takes NAME from the shell that runs harbor. The defaults are the standard
       # configuration; results under other settings are reported separately.

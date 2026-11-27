@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:embodiedswe-0.3.0` |
 
 ## Task
+Put three of the eggs upright in three different pockets of the egg carton, then close its lid. The fourth egg can stay on the table.
+
 Put three eggs in the carton and close the lid (Unitree G1, fixed pelvis, Pink IK). EmbodiedSWE's `packing.egg_carton.g1.pink_ik` task (robobench at commit `67f44e8a2ca5`), privileged mode, with a program as the
 deliverable: `solution/solve.py` exposing `solve(env)`.
 

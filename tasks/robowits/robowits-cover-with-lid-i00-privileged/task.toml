@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/robowits-cover-with-lid-i00-privileged"
-description = "RoboWits cover_with_lid (bimanual Marvin, Genesis): produce one replayable trajectory. Cover the pot precisely using one lid. Frozen scene instance (RoboWits evaluation scene 0 of task 13)."
+description = "RoboWits cover_with_lid (bimanual Marvin, Genesis): produce one replayable trajectory. Put the lid that fits onto the pot, neatly centred. Frozen scene instance (RoboWits evaluation scene 0 of task 13)."
 keywords = ["robotics", "robowits", "genesis", "marvin-bimanual", "dual-arm", "code-as-policy", "trajectory", "cover_with_lid"]
 
 [metadata]

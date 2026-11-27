@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/labutopia-open-door-i00-privileged"
-description = "LabUtopia open_door (Open Door; a chemistry laboratory with a Franka Panda on Isaac Sim): produce one replayable trajectory of joint targets. Open the door of the drying oven and let go of it. Frozen scene instance (LabUtopia's reset, seed 4); graded by one fresh-process replay with a copy of LabUtopia's own success check."
+description = "LabUtopia open_door (Open Door; a chemistry laboratory with a Franka Panda on Isaac Sim): produce one replayable trajectory of joint targets. Open the drying oven's door, then let go of it and move the hand away. Frozen scene instance (LabUtopia's reset, seed 4); graded by one fresh-process replay with a copy of LabUtopia's own success check."
 keywords = ["robotics", "labutopia", "isaac-sim", "laboratory", "chemistry", "franka-panda", "code-as-policy", "trajectory", "open_door", "privileged"]
 
 [metadata]

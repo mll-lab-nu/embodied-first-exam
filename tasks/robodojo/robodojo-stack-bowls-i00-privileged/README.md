@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Nest the three identical bowls into one stack. Then bring both arms back to where they started. (RoboDojo's `stack_bowls`). RoboDojo capability dimension: Generalization. Instance i00 is RoboDojo's own evaluation layout
+Stack the three bowls one inside another, all upright. Then move both arms back to where they started. (RoboDojo's `stack_bowls`). RoboDojo capability dimension: Generalization. Instance i00 is RoboDojo's own evaluation layout
 `arx_x5/0/stack_bowls_0.json` (sha256 `8ec7c160815f8955`), frozen in `instance.json`. The deliverable is one replayable trajectory of
 RoboDojo's 14-D joint action at 25 Hz (`/app/output/trajectory.npz`), graded by RoboDojo's own reward check for the task,
 with no step cap (RoboDojo's own evaluation gives a policy 800 actions; PROTOCOL §3).

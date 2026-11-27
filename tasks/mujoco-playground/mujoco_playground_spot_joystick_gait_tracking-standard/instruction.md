@@ -1,81 +1,107 @@
-# MuJoCo Playground · SpotJoystickGaitTracking — STANDARD MODE (robot as a service, eai-standard/2.2)
+# MuJoCo Playground · SpotJoystickGaitTracking (standard)
 
-**Task:** Make Boston Dynamics Spot follow the joystick command schedule for the whole 20 s episode without falling over. Move its feet in the commanded gait, matching its swing pattern, rhythm and foot height.
+## Task
+Make the robot follow the joystick's commands for the whole schedule without falling over, moving its feet in the
+commanded gait: the same stepping pattern, rhythm and foot height.
 
-You control the Boston Dynamics Spot quadruped — **as if it were real hardware** — in MuJoCo Playground's
-`SpotJoystickGaitTracking` environment (plain MuJoCo 3.3.7 with Playground's scene, commit 4057c14). The simulator runs in a service you
-cannot open. You get one client and up to 11 episodes.
+## Goal
+Success: the robot never falls, and through every command of the schedule its speed and turning follow that command
+closely on average, and its feet follow the gait's target heights closely. A fall (the trunk tilting well over) ends the
+episode at once, as a failure. Success is judged on the whole run, and only an episode that lasts to the end of the
+schedule can succeed. The `done` action is the same as `/finish`.
 
-## The episode
-The robot starts standing still at Playground's `home` pose (this environment's reset does not move it). The ground is flat.
-For 20 s (1000 control steps) it is given this command schedule, drawn by Playground's command process (a new draw every 201 control steps, zero with probability 0.1). A command is a velocity in the robot's own frame: vx forward, vy to the left (the trunk's planar velocity), and the yaw rate:
+When you are done, send `/finish` to end the episode and get it graded.
 
-| from (s) | vx (m/s) | vy (m/s) | yaw rate (rad/s) |
-|---:|---:|---:|---:|
-| 0.00 | +0.994 | +0.371 | +0.447 |
-| 4.02 | +0.924 | -0.362 | -0.327 |
-| 8.04 | -0.939 | +0.092 | +0.450 |
-| 12.06 | -0.960 | -0.295 | +0.569 |
-| 16.08 | +0.866 | +0.185 | -0.297 |
+Rules:
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+  benchmark's demonstrations, trained policies); trials are reviewed.
+- Episodes: 10 resets, each a new episode from the same starting state (Robot Interface). Only the last episode is
+  graded. No reset is possible after `/finish`.
+- You get only the cameras and the robot's own sensors (joint positions, velocities and torques, the IMU, foot
+  contacts): no world positions, no success signal.
 
-The feet must also follow a **pace** gait at 3.66 Hz with a swing height of 0.129 m: foot i's target height at control step t is Playground's `gait.get_rz(wrap(phase0[i] + t * phase_dt), foot_height)` (a cubic Bezier up over the first half of the phase, then down), with phase0 = [0.0, 3.1416, 0.0, 3.1416] (feet FL, FR, HL, HR) and phase_dt = 0.4597 rad.
+## Robot Interface
+Boston Dynamics Spot (MuJoCo Playground's scene, in MuJoCo), driven by 12 joint position actuators: there is no walking
+or balance controller. The robot runs as a service you reach through its client or its MCP tools, as if it were real
+hardware.
 
-The same schedule is `spec["command_schedule"]`; every response's `meta["command_now"]` is the current command. The gait is `spec["gait"]`.
+`POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
-## Rules (real-robot rules)
-- **Episodes and resets.** You have **10 resets** (`spec["budget"]["reset"]`, which is authoritative: if it
-  says 0, there is no reset and the one episode is the run). A reset (`POST /reset`, below) puts the robot back on the
-  same frozen starting state and starts a new episode, either abandoning the running one or after one has ended; it
-  takes no simulated time and returns the start's images and proprioception. Once an episode has ended, `submit`
-  raises `EpisodeOver` until you reset. **Only the last episode is graded**: an episode you reset away is never graded,
-  a success ends the run at once (no reset after it), and when your time is up the episode then running is the one
-  graded. The wall clock is the run's and never restarts; `meta["episode"]` and `meta["resets_left"]` count the
-  episodes (`meta["control_steps"]` is the current episode's).
-- **No privileged state.** You see the cameras that follow the robot (RGB, depth if you ask) and the robot's own
-  sensors: joint positions, velocities and torques, the IMU (gyro, accelerometer, gravity's direction, the trunk's
-  velocity), foot contacts. No world positions, no success check.
-- **The episode ends** after 1000 control steps, the whole schedule (`spec["max_control_steps"]`, counted by `meta["control_steps"]`), when the robot meets its termination rule (the trunk tilted by more than about 32 deg (the z component of the IMU frame's z axis below 0.85): a failure), when you submit `done`, or when your time is up (before the end of the schedule, both are failures).
-- **Success** is judged on the whole schedule: no termination, and in every command segment, after its first 25 control steps, a mean |v_xy - cmd_xy| of at most 0.2 m/s (`imu_linvel`) and a mean |w_z - cmd_wz| of at most 0.3 rad/s (`imu_gyro`), and a mean RMS foot-height error to the gait's targets of at most 0.05 m.
-- Your only budget is the time limit (`## Time limit`). Simulated time only advances with your commands (and
-  `get_obs(seconds=...)`, which holds the current targets). `meta["time_left_s"]` is the service's count of the limit,
-  from your first request to the service: it never runs out before your time does, so plan by it.
-- Nothing to hand in: the service records the episode and grades it. Leave your script at `/app/output/gen.py`.
-- **If the service crashes**, a call fails with a connection error: it restarts and resumes the SAME episode (a crash
-  is never a reset and costs none) in the state after the last call it completed. `r.wait_ready()` waits for it; then check `r.status()`.
-- Nothing is put into your context automatically: images come back as arrays in Python objects.
-
-## Client (`/opt/tools/rcb_client.py`)
+### Client
+`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
 ```python
 from rcb_client import Robot
 r = Robot()                                    # connects (waits while the service starts)
 spec = r.spec()                                # action types, limits, cameras, robot_spec (home pose, gains), kinematics, command_schedule, gait
 obs = r.get_obs()                              # obs.last[cam] -> uint8 (240, 320, 3); obs.meta["proprio"] {"layout", "now"}
 res = r.submit("joint_position", A, dt=0.02)   # A: (T, 12) rows dt apart; res.proprio (one row per frame), res.meta
-obs = r.get_obs(seconds=1.0, video="mp4")      # hold the current targets and watch for 1 s (max 30)
+obs = r.hold(1.0)                              # hold the targets for 1 s of robot time
+obs = r.get_obs(last_s=1.0)                    # the frames recorded over the last 1 s (reading moves no time)
 r.fk(q); r.ik({"FL": [x, y, z, 1, 0, 0, 0]}, seed=q)   # feet in the trunk frame <-> joints (no physics)
-r.submit("done", [])                           # end the episode now
+r.submit("done", [])                           # end the episode now (the same as finish)
 r.status()                                     # calls, control steps, done, reason, elapsed time, episode, resets_left
-obs = r._post("/reset", {"cameras": ["track"]}, [], 900)   # POST /reset: a new episode (the 2.2 client has no reset())
+# a new episode: POST /reset, or the MCP tool `reset` (this client has no reset() call)
 ```
-Cameras: `track`, `side`, `back`, `top` (they follow the robot); `spec["cameras"]` gives each one's mounting and intrinsics, and every response carries its pose. Proprioception (`spec["proprio_groups"]`): `joint_pos`, `joint_vel`, `joint_effort` (12 each, action
-One call returns at most 3000 images (`max_frames_per_call`, PROTOCOL §3 "Images per call").
-order), `imu_gyro`, `imu_accelerometer`, `imu_gravity`, `imu_linvel` (3 each, IMU frame: x forward, y left, z up),
-`foot_contact` (FL, FR, HL, HR).
 
-### `joint_position` (12)
-FL, FR, HL, HR legs, each hx (abduction), hy (hip pitch), kn (knee): absolute targets of the joint position actuators (rad; kp = 400 N m/rad, joint damping 10 N m s/rad, plus the actuators' own damping of 20 N m s/rad).
-Rows are `dt` apart (a whole multiple of the 0.02 s control period, at most 0.5 s), `interpolate="linear"` (default) or
-`"hold"` between rows; a chunk covers at most 10 s; values outside the limits
+Simulated time only advances with your commands (and `hold(s)`, which holds the current targets). A reset
+(`POST /reset`, the `_post` line above) puts the robot back on the same frozen starting state and starts a new episode.
+You can reset during an episode (abandoning it) or after one has ended. A reset takes no simulated time and returns the
+start's images and proprioception. Once an episode has ended, `submit` raises `EpisodeOver` until you reset. The wall
+clock covers the whole run and never restarts. `meta["episode"]` and `meta["resets_left"]` count the episodes;
+`meta["control_steps"]` counts only the current episode's steps. If the service crashes, a call fails with a connection
+error. The service restarts and resumes the same episode (never a reset), in the state after the last call it completed.
+`r.wait_ready()` waits for it; then check `r.status()`. One call returns at most 3000 images.
+
+### MCP tools
+- The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
+  `observe`, `submit`, `reset`, `kinematics`, `finish`. A tool takes its endpoint's request fields (any other field in
+  `fields`) and returns the service's reply `meta` unchanged; images, arrays and video are written as files under
+  `/app/obs/` (`.png`, `.npy`, `.mp4`) and the result lists them. Long action chunks can be passed as a file
+  (`actions_file`).
+- `observe` returns at once with what is already recorded: the current frame, or the last `last_s` seconds. Time passes
+  only through `submit`, which answers when its rows have run; a `submit` with `interpolate` "hold", `seconds` and no
+  rows lets time pass with the robot holding still.
+- A call still running after 45 s returns `pending` with an `operation` id; `observe(operation=id)` collects its reply.
+- The client and the tools drive the same robot in the same episode; use either, or both.
+
+### Actions
+Action type `joint_position` (12): FL, FR, HL, HR legs, each hx (abduction), hy (hip pitch), kn (knee): absolute targets
+of the joint position actuators (rad; kp = 400 N m/rad, joint damping 10 N m s/rad, plus the actuators' own damping of
+20 N m s/rad). Rows are `dt` apart (a whole multiple of the 0.02 s control period, at most 0.5 s). Between rows, use
+`interpolate="linear"` (default) or `"hold"`. A chunk covers at most 10 s. Values outside the limits
 (`spec["action_types"]["joint_position"]["limits"]`) are clipped and listed in `res.meta["clipped"]`. Feedback control
 means short chunks: each response tells you where the robot is now.
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+### Observations
+Cameras: `track`, `side`, `back`, `top` (they follow the robot); `spec["cameras"]` gives each one's mounting and
+intrinsics, and every response carries its pose. Proprioception (`spec["proprio_groups"]`): `joint_pos`, `joint_vel`,
+`joint_effort` (12 each, action order), `imu_gyro`, `imu_accelerometer`, `imu_gravity`, `imu_linvel` (3 each, IMU frame:
+x forward, y left, z up), `foot_contact` (FL, FR, HL, HR).
 
-## Resources
-Your container: **2 CPUs**, **4 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
+### Commands
+A command is a velocity in the robot's own frame: vx forward, vy to the left (the trunk's planar velocity), and the yaw
+rate. The schedule is `spec["command_schedule"]` (each segment's start and command); every response's
+`meta["command_now"]` is the current command. The gait: a pace at 3.66 Hz, swing height h = 0.129 m. Foot i's target
+height at control step t follows its phase phi = phase0[i] + t * phase_dt, wrapped to [-pi, pi), with phase0 = [0.0,
+3.1416, 0.0, 3.1416] (feet FL, FR, HL, HR) and phase_dt = 0.4597 rad: with x = (phi + pi) / (2 pi), it rises as h (s^3 +
+3 s^2 (1 - s)) with s = 2x over x in [0, 0.5] and falls as h minus that with s = 2x - 1 over [0.5, 1]. `spec["gait"]`
+gives it.
 
-## Time limit
-You have 1800 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+### Episode
+The robot starts standing still at its `home` pose. The ground is flat. The episode lasts the whole schedule (20 s, 1000
+control steps).
 
-This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` counts the same limit from your first request to the service, so it never runs out before your time does: your real time left is `time_left_s` minus the time you spent before that request. Plan by it. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+## Limits
+- Time: 1800 s of wall-clock time from the start of your session. Everything counts, including waiting for the service.
+  At the end you are stopped without warning. Time left: `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`).
+  Trust this file: the `time_left_s` in the service's replies starts only at your first request. A call into a
+  long-running process can block for its whole wait time. Use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, including the simulator's and the benchmark's source.
+- Resources: 2 CPUs, 4 GiB memory, 1024 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`), no
+  GPU; the simulator runs in its own container and does not count. Going over a cap can get a process killed (the CPU
+  cap only slows you down). Usage: `/run/rcb-limits/usage.json`.
+- Resets: at most 10 (`spec()["budget"]["reset"]`), each a new episode from the same starting state.
+- Steps: the episode ends at the end of the schedule, after 20 s of robot time.
+- Finish: if you never send `/finish`, the last episode is graded when your session ends.

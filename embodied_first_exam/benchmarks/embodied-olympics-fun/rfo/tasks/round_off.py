@@ -50,8 +50,8 @@ class Task(TaskBase):
                   stand_s=1.0, stand_tilt_deg=20.0,
                   stand_still_m_s=0.35, fall_pelvis_m=0.25, area_m=12.0)
 
-    sentence = ("Do a round-off: go from your feet onto your hands, turn half round through the handstand and come "
-                "down onto both feet together facing back the way you came, then stand.")
+    sentence = ("Do a round-off: go over onto your hands with a half turn, land on both feet together facing back "
+                "the way you came, and stand.")
     rules = ("You face +x at the start. The hand support counts when only your hands touch the floor and your torso "
              "is upside down, its long axis (from the pelvis up to the neck) within {max_dev_deg} degrees of "
              "pointing straight down. After it, the landing: your feet come down with no hand on the floor, the "

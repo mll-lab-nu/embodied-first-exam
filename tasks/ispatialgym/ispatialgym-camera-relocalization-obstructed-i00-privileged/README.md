@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:ispatialgym-0.2.2` |
 
 ## Task
+Move the robot until its head camera sees the scene as the goal image /app/goal.png shows it; its arms and grippers do not have to match it.
+
 iSpatialGym `camera_relocalization_obstructed` (family `camera_relocalization`), upstream subtask `camera_relocalization_obstructed_hamper_1`, instance 0 (house_single_floor): As in Standard, but an obstacle on the shortest path forces a different route. The task is given
 only as the goal image (`/app/goal.png`, the head camera's view once it is done), as in iSpatialGym's own
 evaluation; the instruction names no object.

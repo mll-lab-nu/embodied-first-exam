@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/robowits-ball-onto-tower-i00-privileged"
-description = "RoboWits ball_onto_tower (bimanual Marvin, Genesis): produce one replayable trajectory. Place the ball stably on top of the tower. Frozen scene instance (RoboWits evaluation scene 0 of task 17)."
+description = "RoboWits ball_onto_tower (bimanual Marvin, Genesis): produce one replayable trajectory. Put the ball on top of the tower and leave it resting there. Frozen scene instance (RoboWits evaluation scene 0 of task 17)."
 keywords = ["robotics", "robowits", "genesis", "marvin-bimanual", "dual-arm", "code-as-policy", "trajectory", "ball_onto_tower"]
 
 [metadata]

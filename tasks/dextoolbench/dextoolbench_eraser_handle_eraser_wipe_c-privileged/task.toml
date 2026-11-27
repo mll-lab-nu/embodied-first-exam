@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/dextoolbench_eraser_handle_eraser_wipe_c-privileged"
-description = "DexToolBench (SimToolReal) handle_eraser / wipe_c in MuJoCo: KUKA iiwa 14 + Sharpa HA4 hand; produce one replayable joint-target trajectory that carries the handle eraser through the 31 demonstrated goal poses in order."
+description = "DexToolBench (SimToolReal) handle_eraser / wipe_c in MuJoCo: KUKA iiwa 14 + Sharpa HA4 hand; produce one replayable joint-target trajectory that carries the handle eraser through the 31 demonstrated goal poses in order. Task: Pick up the eraser and wipe a letter C, following the green ghost eraser through its poses in order."
 keywords = ["robotics", "dextoolbench", "simtoolreal", "mujoco", "dexterous", "tool-use", "iiwa", "sharpa", "code-as-policy", "trajectory"]
 
 [metadata]

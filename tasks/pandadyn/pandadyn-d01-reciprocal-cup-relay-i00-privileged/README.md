@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0` |
 
 ## Task
-A ball is thrown high into the air when the episode starts and comes down near the left Panda. The left arm catches it in its cup and throws it through the air to the right arm, whose cup must be moving when the ball enters it. The right arm carries the ball to a second transfer region and throws it back from there. The left arm catches it again and delivers it into an open box that slides back and forth along a rail, where the ball must settle while the box is moving. The deliverable is one replayable trajectory of 100 Hz joint-target actions (`/app/output/trajectory.npz`,
+Catch the falling ball in the left cup and throw it high through the air to the right cup, which must be moving as it catches it. Carry it with the right cup to the second transfer point and throw it back from there; catch it again in the left cup and drop it into the sliding cart while the cart is moving. The deliverable is one replayable trajectory of 100 Hz joint-target actions (`/app/output/trajectory.npz`,
 16 values per row), graded by the task's own staged success check: 6 phases (`left_initial_catch`, `left_to_right_flight`, `right_catch`, `second_region`, `right_to_left_flight`, `left_catch_and_deliver`), in order,
 with no failure event and no safety-limit violation, within the task's horizon of 25 s.
 

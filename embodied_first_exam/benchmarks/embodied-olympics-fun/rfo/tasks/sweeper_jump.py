@@ -91,8 +91,8 @@ class Task(TaskBase):
         self.stages = [f"jump {i}" for i in range(1, int(p["jumps_required"]) + 1)] + ["landing", "stand"]
         self._derived()
 
-    sentence = ("Jump the sweeper: standing on your podium, jump over the padded boom each time it sweeps round, "
-                "{jumps_required} times in a row without being hit, then stand still on the podium.")
+    sentence = (("Jump the sweeping boom 3 times in a row without being hit, then land on your podium and stand "
+                 "still before it comes round again."))
     rules = ("You stand on a round podium, {podium_diameter_m} m across and {podium_height_m} m high, whose centre "
              "is {podium_radius_m} m from the axis of the motion base, facing the base. A foam boom "
              "{boom_diameter_m} m thick, its axis {boom_axis_above_podium_m} m above the podium's top, turns round "

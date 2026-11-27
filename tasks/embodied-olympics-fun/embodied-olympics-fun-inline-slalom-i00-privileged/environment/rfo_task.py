@@ -53,9 +53,8 @@ class Task(TaskBase):
         "success is a valid run within {time_limit_s} s, the family's own round number for this robot: the "
         "rule book only ranks times",
     ]
-    sentence = ("Skate the speed slalom: from the start box, skate up to the 20 cones and through them on one foot, "
-                "passing them alternately on the left and the right, then cross the end line on that foot, all within "
-                "one minute.")
+    sentence = ("Skate the speed slalom: from the start box, skate on one foot through the 20 cones, passing them "
+                "alternately left and right, and over the end line.")
     rules = ("You wear inline skates (rigid boots on your feet, four wheels in a line on each, the outer ones "
              "{wheel_d_outer_m} m and the inner ones {wheel_d_inner_m} m in diameter, {axle_pitch_m} m apart). The "
              "course runs along +x on a level sports floor: the start line at x = 0 and a second line {box_depth_m} m "

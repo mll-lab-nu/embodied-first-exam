@@ -11,7 +11,8 @@ Differences from the RoboLab service, all from the task:
 - `ee_pose` rows are brush-tip poses `dt` apart: the tip target moves on a straight line (orientation slerped) from the previous row's
   target at the 20 Hz control rate, one IK solve per control step (SAPIEN's Pinocchio CLIK, no collision checking), at most
   0.25 m/s (a faster row is slowed down and reported);
-- painting has no terminal state: the episode ends only when the agent phase ends (the collect hook) or on a simulator error;
+- painting has no terminal state: the episode ends only when the agent phase ends (the collect hook), at the agent's POST
+  /finish (agent-ended episodes, PROTOCOL §3: RCB_AGENT_END, rcb_agent_end.py) or on a simulator error;
 - the verdict is the live episode's (docs/protocol/README.md H.4): when the collect hook ends the episode
   (environment/sim/finalize.sh, after the agent's container is stopped) this service commits a stroke still pressed, scores its
   live main sheet with the graders' scorer and rules (rcb_brush_strict.py: the picture rule and the process rules, the same
@@ -30,15 +31,18 @@ import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import rcb_limited as L  # noqa: E402
+import rcb_agent_end as AE  # noqa: E402
 
 PROTOCOL = L.PROTOCOL
 DATA = os.environ.get("RCB_DATA", "/data"); os.makedirs(DATA, exist_ok=True); os.makedirs(os.path.join(DATA, "calls"), exist_ok=True)
 TASK = os.environ.get("RCB_TASK", "calli_yong"); INSTANCE = os.environ.get("RCB_INSTANCE", os.path.join(os.path.dirname(__file__), "instance.json"))
 OBS_CALIBRATION = os.environ.get("RCB_OBS_CALIBRATION", "1") == "1"
 CTRL_HZ = 20; SUBSTEPS = 5
-MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10")); MAX_WATCH_S = float(os.environ.get("RCB_MAX_WATCH_S", "30"))
+MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10"))
 VIDEOS = ("mp4", "frames", "both", "none")
-MAX_VIDEO_FPS = 1000                   # the mp4 encoder's frame rate; the recorder keeps at most one frame per control step
+# The response video's frame rate: its frames are control steps of robot time (the recorder keeps at most one frame per
+# control step, recorder()), so a rate above the 20 Hz control rate would play faster than robot time: capped there
+MAX_VIDEO_FPS = CTRL_HZ
 # The images one call may hold (PROTOCOL §3 "Images per call"): every frame a call records stays in memory until its
 # response is sent, so a call without a bound could exhaust the sidecar's memory, and a service killed for memory is never
 # the agent's failure, so one large request could void a failed trial. Cameras x frames at the recorder's real stride,
@@ -47,7 +51,7 @@ MAX_VIDEO_FPS = 1000                   # the mp4 encoder's frame rate; the recor
 MAX_FRAMES = 640                       # /spec max_frames_per_call
 LOCK = threading.Lock()
 E = {"ready": False, "step": 0, "calls": 0, "done": False, "reason": None, "t0": time.time(), "error": None}
-EP = L.Episode(DATA, dim=7, resume="exact", persist=("tip_target",))   # the journal rows are Session.step's 7 joint targets
+EP = L.Episode(DATA, dim=7, resume="exact", persist=AE.persist(("tip_target",)))   # the journal rows are Session.step's 7 joint targets
 EP.startup()                           # before the scene is built: start count, back-off after failed starts, startup watchdog
 log = EP.log
 _fin = L.final_verdict(DATA)
@@ -104,9 +108,12 @@ def dump() -> list | None:
     n = int(E.get("episode_control_steps") or 0)
     metrics = {k: v for k, v in numbers(live).items() if not isinstance(v, bool)}
     ok = bool(live.get("success")) and err is None
+    if AE.ENABLED and ok:   # the sheet is scored only at the end: the success is seen there (final.json hidden_success_*)
+        AE.hidden_success(E, True, log, n)
     rec = {"steps": E["step"], "calls": E["calls"], "control_steps": n, "physics_steps": n * SUBSTEPS,
            "elapsed_s": round((E.get("t_end") or time.time()) - E["t0"], 1), "reason": E["reason"], "done": True, "task": TASK, "protocol": PROTOCOL,
-           "n_actions": E.get("n_actions"), "live_sha": E.get("live_sha"), **EP.final_fields(), "live": numbers(live)}
+           "n_actions": E.get("n_actions"), "live_sha": E.get("live_sha"), **EP.final_fields(), **AE.final_fields(E, n),
+           "live": numbers(live)}
     json.dump(rec, open(os.path.join(DATA, "episode.json"), "w"))
     verdict = {**rec, "success": ok, "live_success": ok, "graded_by": "live", "replays": 0, "finalized": True,
                "success_rule": {k: float(v) for k, v in S.inst["target"]["success"].items()},
@@ -137,7 +144,12 @@ def render(acts) -> None:
 
 
 def finish(reason: str) -> None:
+    """The episode ends. Painting has no terminal state, so the verdict is always the sheet as the episode leaves it (dump(),
+    at the collect hook): agent-ended episodes (PROTOCOL §3, RCB_AGENT_END) add only POST /finish (reason "finished"), after
+    which the robot does nothing more, and the runaway guard's end is called "step_limit" (judged as it stands)."""
     if E["done"]: return
+    if AE.ENABLED and reason == "step_guard":
+        reason = "step_limit"
     E["done"] = True; E["reason"] = reason; E["t_end"] = time.time(); E["episode_control_steps"] = ctrl_steps()
     log({"ev": "end", "reason": reason, "step": E["step"], "control_steps": ctrl_steps(), "elapsed_s": round(E["t_end"] - E["t0"], 1)})
 
@@ -155,6 +167,8 @@ except RuntimeError as exc:
     # failure. Give up at once with a record (final.json: finalized, gave_up, infra_error = 1), before the agent is served.
     traceback.print_exc(); log({"ev": "instance_mismatch", "error": str(exc)[:300]})
     EP.give_up(f"instance_mismatch: {exc}"[:300], infra=True)     # never returns
+if AE.STEP_LIMIT:                       # RCB_STEP_LIMIT (agent-ended episodes): a lower step cap than the runaway guard's
+    S.max_steps = min(int(S.max_steps), int(AE.STEP_LIMIT))
 if not S.render_enabled:
     raise SystemExit("the sim service needs a Vulkan-capable GPU for its cameras")
 LAYOUT = [f"panda_joint{i}" for i in range(1, 8)]
@@ -254,8 +268,9 @@ SPEC = {
     "protocol": PROTOCOL, "protocol_compat": L.COMPAT, "simulator": "maniskill 3.0.1 (SAPIEN 3.0.3, PhysX CPU) + a virtual brush",
     "robot": ROBOT_TEXT,
     "task_text": TASK_TEXT,
-    "control_hz": CTRL_HZ, "physics_substeps": SUBSTEPS, "physics_hz": CTRL_HZ * SUBSTEPS, "max_chunk_s": MAX_CHUNK_S, "max_watch_s": MAX_WATCH_S,
+    "control_hz": CTRL_HZ, "max_video_fps": MAX_VIDEO_FPS, "physics_substeps": SUBSTEPS, "physics_hz": CTRL_HZ * SUBSTEPS, "max_chunk_s": MAX_CHUNK_S,
     "max_frames_per_call": MAX_FRAMES,
+    "max_control_steps": int(S.max_steps),   # the step cap (the runaway guard, or RCB_STEP_LIMIT when smaller): step_limit
     "cameras": {c: {"rgb": True, "depth": True, "mounted": MOUNT.get(c, "static"), "resolution": [int(FIRST[c].shape[1]), int(FIRST[c].shape[0])],
                     "calibration_in_obs": OBS_CALIBRATION, "intrinsic_cv": CALIB[c]["intrinsic_cv"], "depth_range_m": NEAR_FAR[c],
                     "mount": {"type": "static", "extrinsic_cv": CALIB[c]["extrinsic_cv"], "cam2world_gl": CALIB[c]["cam2world_gl"]}} for c in CAMS},
@@ -360,6 +375,8 @@ def ctrl_step(a: np.ndarray, rec: L.Recorder) -> bool:
         finish("step_guard"); return True
     stop = EP.journal(a)
     rec.tick()
+    if S.n_steps >= S.max_steps:
+        finish("step_guard")           # the cap reached at this step: the call that reached it ends it
     return E["done"] or stop
 
 
@@ -395,7 +412,7 @@ def run_ee_pose(A: np.ndarray, dt: float, rec: L.Recorder, plan: list) -> None:
             if not ok: fails += 1
             if ctrl_step(q if ok else S.hold_action(), rec):
                 E["tip_target"] = (p0 + (p1 - p0) * t, M.quat_slerp(q0, q1, t))
-                plan.append({"row": ri, "steps": k, "ik_failures": fails, "slowed": n > n_dt, "stopped": EP.stop_reason or "episode over"}); return
+                plan.append({"row": ri, "steps": k, "planned_steps": n, "ik_failures": fails, "slowed": n > n_dt, "stopped": EP.stop_reason or "episode over"}); return
         E["tip_target"] = (p1, q1)
         plan.append({"row": ri, "steps": n, "ik_failures": fails, "slowed": n > n_dt})
 
@@ -434,10 +451,10 @@ def note_of(meta: dict) -> str:
 
 
 def video_fps(meta: dict) -> int:
-    """Frames per second of the returned video (absent or null: 5). A rate the mp4 encoder cannot write (negative, or
-    beyond any real rate) is a 400 here, before the chunk runs (failing after it had run would end the episode)."""
+    """Frames per second of the returned video (absent or null: 5), at most the control rate (its frames are control
+    steps); anything else is a 400 here, before the chunk runs (failing after it had run would end the episode)."""
     fps = number(meta, "video_fps", 5)
-    if not (0 <= fps <= MAX_VIDEO_FPS): raise ValueError(f"video_fps must be in [0, {MAX_VIDEO_FPS}]")
+    if not (1 <= fps <= MAX_VIDEO_FPS): raise ValueError(f"video_fps must be in [1, {MAX_VIDEO_FPS}] (the control rate)")
     return int(fps)
 
 
@@ -502,6 +519,8 @@ def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
     out = {**meta_common(cams), "chunk_id": E["calls"], "type": typ, "executed_rows": E["step"] - step0, "control_steps_chunk": ctrl_steps() - before,
            "physics_steps_chunk": (ctrl_steps() - before) * SUBSTEPS, "clipped": clipped[:200], "n_clipped": len(clipped), "plan": plan[:400],
            "rejected": None, "ok": True}
+    if typ != "joint_position":   # eai-standard/3.0: the planner's planned duration (a row it slows takes longer than dt)
+        out["planned_duration_s"] = round(sum(p.get("planned_steps", p["steps"]) for p in plan) / CTRL_HZ, 4)
     log({"ev": "submit", "call": E["calls"], "type": typ, "rows": E["step"] - step0, "dt": dt, "interpolate": interp, "cameras": cams,
          "note": note, "control_steps": ctrl_steps() - before, "n_clipped": len(clipped),
          "ik_failures": int(sum(p.get("ik_failures", 0) for p in plan)), "depth": rec.mode})
@@ -515,7 +534,7 @@ def parse_observe(meta: dict):
     cams = list(dict.fromkeys(c for c in (meta.get("cameras") or CAMS) if c in CAMS)) or CAMS    # each camera once
     seconds = number(meta, "seconds", 0.0); fps = video_fps(meta); video = meta.get("video", "frames")
     L.depth_mode(meta)
-    if not (0 <= seconds <= MAX_WATCH_S): raise ValueError(f"seconds must be in [0, {MAX_WATCH_S}]")
+    if not (0 <= seconds <= MAX_CHUNK_S): raise ValueError(f"seconds must be in [0, {MAX_CHUNK_S}] (max_chunk_s)")
     if video not in VIDEOS: raise ValueError("video must be mp4|frames|both|none")
     frames_ok(cams, 0 if E["done"] else int(round(seconds * CTRL_HZ)), fps, meta)
     return cams, seconds, fps, video
@@ -568,5 +587,7 @@ if E.get("tip_target") is not None:    # restored from the checkpoint (JSON list
 E["ready"] = True; write_final()
 open(os.path.join(DATA, "server.pid"), "w").write(str(os.getpid()))
 print(f"{PROTOCOL} sim ready (startup {EP.n_startups}, resumes {EP.resumes}{', resumed at control step %d' % ctrl_steps() if resumed else ''})", flush=True)
-L.serve(L.Service(spec=SPEC, lock=LOCK, state=E, submit=do_submit, observe=do_observe, kinematics=do_kinematics, status=status,
-                  on_submit_error=lambda exc: finish("error"), log=log, episode=EP, state_sha=S.state_sha, proprio=proprio_row))
+AE.serve(AE.Service(spec=SPEC, lock=LOCK, state=E, submit=do_submit, observe=do_observe, kinematics=do_kinematics, status=status,
+                    on_submit_error=lambda exc: finish("error"), log=log, episode=EP, state_sha=S.state_sha, proprio=proprio_row,
+                    **({"finish": lambda: finish("finished"),
+                        "end_step_limit": lambda: finish("step_limit")} if AE.ENABLED else {})))

@@ -1,5 +1,5 @@
 {
- "task_text": "Put all the nuts into one bin and all the bolts into the other. Success: every nut is in one bin and every bolt in the other, at the same time (the rule also accepts the bins swapped); a part is in a bin when its centre is inside the bin's interior region (between its walls, from just above its floor to below its rim). The goal must hold for 30 consecutive control steps (1.02 s); the episode then ends in success.",
+ "task_text": "Put all the nuts in one bin and all the bolts in the other.",
  "default_cameras": [
   "top",
   "left",

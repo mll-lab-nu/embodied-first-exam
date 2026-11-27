@@ -3,7 +3,7 @@
  "category": "marker",
  "object": "staples_marker",
  "task": "draw_smile",
- "text": "Pick up the staples marker and move it through the demonstrated motion (drawing a smiley face): bring it to each goal pose in order (the green marker shows the current goal).",
+ "text": "Pick up the marker and draw a smiley face, following the green ghost marker through its poses in order.",
  "start_pose": [
   0.0007053400880538364,
   0.03615152907360053,

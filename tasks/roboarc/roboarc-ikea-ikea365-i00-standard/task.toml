@@ -21,7 +21,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/roboarc-ikea-ikea365-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.4): IKEA MuJoCo IKEA 365+ serving stand (dual Franka Panda + Menagerie Panda hand, MuJoCo 3.14.0 CPU) on the same frozen scene as the privileged task. To rebuild the IKEA 365+ serving stand, take the screw out of member A and set it down on its own, away from both members, lay member B across member A, hold the screw upright and still with its tip just inside the hole in member B, and screw it in through both members until it seats. Then lift the stand more than 10 cm off the bench, turn it upside down while it is in the air, set it down, and place the bowl on it. The agent only gets a client: get_obs (RGB from four ALOHA-style cameras, optional depth, proprioception, calibrated cameras), submit (joint_position chunks, joint targets within the robot's joint velocity limits), stateless kinematics, every pose in the robot's frame. No reset, no privileged state; the sim service records and grades the live episode (no grading replay)."
+description = "STANDARD MODE (robot as a service, eai-standard/2.4): IKEA MuJoCo IKEA 365+ serving stand (dual Franka Panda + Menagerie Panda hand, MuJoCo 3.14.0 CPU) on the same frozen scene as the privileged task. Rebuild the IKEA 365+ serving stand: take the screw out of member A and set it down by itself, away from both members, lay member B across member A, and screw the screw back in through both members until it seats. After that, lift the stand about a hand's width off the bench, turn it upside down in the air, set it down and put the bowl on it. Then let go of everything and move both arms clear. The agent only gets a client: get_obs (RGB from four ALOHA-style cameras, optional depth, proprioception, calibrated cameras), submit (joint_position chunks, joint targets within the robot's joint velocity limits), stateless kinematics, every pose in the robot's frame. No reset, no privileged state; the sim service records and grades the live episode (no grading replay)."
 keywords = ["robotics", "roboarc", "ikea", "furniture-assembly", "mujoco", "panda", "bimanual", "standard-mode", "trajectory"]
 
 [metadata]
@@ -71,6 +71,13 @@ build_timeout_sec = 1800.0
 cpus = 4
 memory_mb = 10240
 storage_mb = 10240
+
+# The robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): Harbor starts this server for the agent.
+[[environment.mcp_servers]]
+name = "efe-robot"
+transport = "stdio"
+command = "python3"
+args = ["/opt/tools/efe_mcp/server.py"]
 
 [verifier.environment]
 build_timeout_sec = 1800.0

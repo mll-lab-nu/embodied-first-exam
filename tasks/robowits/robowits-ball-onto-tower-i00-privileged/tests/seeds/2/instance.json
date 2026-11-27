@@ -3,7 +3,7 @@
  "robowits_task": "robowits/17-ball-onto-tower-v0",
  "eval_json": "dataset/robowits/eval_dataset_50/17.json",
  "eval_index": 2,
- "text": "Place the ball stably on top of the tower.",
+ "text": "Put the ball on top of the tower and leave it resting there.",
  "scene": {
   "small ring": {
    "pos": [

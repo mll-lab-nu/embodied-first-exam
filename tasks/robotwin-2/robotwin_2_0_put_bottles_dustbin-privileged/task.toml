@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/robotwin_2_0_put_bottles_dustbin-privileged"
-description = "RoboTwin 2.0 put_bottles_dustbin (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Put all three bottles into the dustbin on the floor to your left. Only the left arm can reach the dustbin, so pass the bottles on the right half of the table from the right arm to the left arm. Frozen scene instance (RoboTwin seed 28831)."
+description = "RoboTwin 2.0 put_bottles_dustbin (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Put all three bottles into the dustbin on the floor at the robot's left. Only the left arm can reach the dustbin. Frozen scene instance (RoboTwin seed 28831)."
 keywords = ["robotics", "robotwin", "sapien", "aloha-agilex", "dual-arm", "code-as-policy", "trajectory", "put_bottles_dustbin"]
 
 [metadata]

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Drop in from the start platform and ride the in-run. Take off from the kicker and do a 360, then land on your skis and ride away past the finish line. (Embodied Olympics `freeski-360`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Ski down the in-run, jump off the kicker and spin one full turn in the air, then land on your skis and ride away over the finish line. (Embodied Olympics `freeski-360`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
 
 ## Difficulty
 The robot must start itself from a standstill on level snow, ride a 35 degree in-run to about 16 m/s and leave a 25 degree kicker with the right rotation for its trick, finish the rotation in about 1.5 s of air and land on a 36 degree slope with no balance controller of its own. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 5 resets (only the last attempt is graded).

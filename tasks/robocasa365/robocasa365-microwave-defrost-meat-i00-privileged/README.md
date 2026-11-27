@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:robocasa365-0.1.0` |
 
 ## Task
-RoboCasa365's `MicrowaveDefrostMeat` kitchen task with a Franka Panda arm on an Omron mobile base (with a torso lift): Take the tupperware containing the frozen chicken drumstick out of the freezer and place it in the microwave. Close the microwave door and press the start button to defrost the meat. Produce one replayable trajectory of the robot's native controller commands on one frozen instance; graded on the state after the last action. Benchmark notes in `tasks/robocasa365/README.md`.
+RoboCasa365's `MicrowaveDefrostMeat` kitchen task with a Franka Panda arm on an Omron mobile base (with a torso lift): Take the tupperware with the frozen chicken drumstick out of the freezer, put it in the microwave, close the door and press start, then move your hand away. Produce one replayable trajectory of the robot's native controller commands on one frozen instance; graded on the state after the last action. Benchmark notes in `tasks/robocasa365/README.md`.
 
 ## Difficulty
 Full privileged state, unlimited resets and self-replay; a mobile manipulator in one of RoboCasa365's large, cluttered kitchens, long-horizon contact-rich manipulation with a 20 Hz controller. The standard twin removes the privileged state.

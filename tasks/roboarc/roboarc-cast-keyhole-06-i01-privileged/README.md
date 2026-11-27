@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:roboarc-0.2.0` |
 
 ## Task
-RoboARC cast_keyhole (ALOHA 2, MuJoCo): produce one replayable trajectory. Separate the silver keyhole piece from the puzzle and put the whole of it inside the green dashed goal region. Leave the gold piece behind, no closer to the goal region than it was at the start. Frozen scene instance (variation cast_keyhole_double_maze, seed 0).
+RoboARC cast_keyhole (ALOHA 2, MuJoCo): produce one replayable trajectory. Take the silver keyhole piece out of the puzzle and put all of it inside the green dashed goal square. Leave the gold piece behind, no closer to the goal than it was at the start. Frozen scene instance (variation cast_keyhole_double_maze, seed 0).
 
 ## Difficulty
 Two 6-dof aloha (viperx) arms with parallel-jaw grippers on a fixed base with a 14-D joint-target action space at 40 Hz; success needs the task's predicate (above) held for 0.5 s. Grasping: assisted grasping (contact_weld_v1).
@@ -49,7 +49,7 @@ Caps per container (PROTOCOL §6).
 | Success rule | task-native success (goal_complete True; frozen parameters; terminal revision cast_keyhole_placement_v4_grasp_contact_2mm) |
 
 ### Goal
-Separate the silver keyhole piece from the puzzle and put the whole of it inside the green dashed goal region. Leave the gold piece behind, no closer to the goal region than it was at the start.
+Take the silver keyhole piece out of the puzzle and put all of it inside the green dashed goal square. Leave the gold piece behind, no closer to the goal than it was at the start.
 
 ### Success requirements
 - Put every part of the entire silver keyhole piece inside the fixed goal volume, leaving at least 1 mm inside its horizontal border. The centre alone is insufficient; no tip, spike, ring segment or cord segment may remain outside.

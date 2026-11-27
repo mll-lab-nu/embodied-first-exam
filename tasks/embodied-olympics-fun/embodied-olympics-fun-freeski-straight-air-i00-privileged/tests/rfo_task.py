@@ -913,8 +913,8 @@ class FreeskiTask(TaskBase):
         land_heading_deg=45.0, settle_s=0.5, ride_turn_deg=90.0, dns_s=20.0, stop_speed_m_s=0.3, stop_s=3.0,
         lip_window_m=4.0, min_angle_deg=10.0)
 
-    sentence = ("Drop in from the start platform and ride the in-run. Take off from the kicker and do a {trick}, then "
-                "land on your skis and ride away past the finish line.")
+    sentence = ("Ski down the in-run, jump off the kicker with no spin or flip, then land on your skis and ride "
+                "away over the finish line.")
     rules = ("FIS big air, one jump, judged on one trick: {trick_rule} Your feet are bound to freestyle skis (1.35 m "
              "twin tips). You stand on the level start platform with your boots {start_back} m behind its edge (the "
              "start line); the start signal is given at t = 0 and you must leave the platform by your own action "

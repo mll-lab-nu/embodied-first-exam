@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/embodied-olympics-fun-free-kick-wall-i00-privileged"
-description = "Embodied Olympics free-kick-wall (one Unitree G1 on the Embodied Olympics simulator, MuJoCo 3.3.7, CPU) in privileged mode: produce one replayable trajectory. Take a direct free kick: with one kick of a foot, send the ball over or around the wall of mannequins into the official goal 20 m away. A referee of events, geometry and contact rules decides the success."
+description = "Embodied Olympics free-kick-wall (one Unitree G1 on the Embodied Olympics simulator, MuJoCo 3.3.7, CPU) in privileged mode: produce one replayable trajectory. Take a direct free kick: with one kick, send the ball over or round the wall into the goal. A referee of events, geometry and contact rules decides the success."
 keywords = ["robotics", "embodied-olympics", "sports", "mujoco", "unitree-g1", "humanoid", "trajectory", "free-kick-wall"]
 
 [metadata]

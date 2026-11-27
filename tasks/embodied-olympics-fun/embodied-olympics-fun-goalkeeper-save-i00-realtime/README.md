@@ -13,7 +13,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Keep goal: three penalty kicks are shot at the official goal you stand in; keep every ball out, with a foot on the goal line at each kick. (Embodied Olympics `goalkeeper-save`; the robot as a service on a clock that does not stop, slowdown S = 1: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Keep goal: stop all 3 penalty kicks, with a foot on the goal line at each kick, and stay inside the goal area. (Embodied Olympics `goalkeeper-save`; the robot as a service on a clock that does not stop, slowdown S = 1: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
 
 ## Difficulty
 Each ball arrives about 0.55 s after it leaves the machine at 20 m/s and 0.43 kg: the body has to be in its line when it is kicked, standing with a foot on the line, and the ball must come off it away from the goal; between the kicks a 67 kg robot whose walking policy makes about 0.3 m/s sideways has to cross up to 2.5 m of goal and stop on the line again in time. The scene is dynamic (Three ball machines on the penalty-mark line shoot at kick1_s and every kick_gap_s after it.), and in realtime mode time does not stop: once an attempt's clock starts the venue's timed events happen whatever the agent does, so it has to plan or stream the robot's rows from a program of its own, with no simulator and no state, and 5 resets (only the last attempt is graded).

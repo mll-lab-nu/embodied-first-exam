@@ -1,0 +1,15 @@
+{
+ "manifest": "efe-mcp-manifest/1",
+ "kind": "rcb",
+ "suite": "roboarc",
+ "task": "roboarc-blanket-fold-05-i01-standard",
+ "protocol": "eai-standard/2.4",
+ "realtime": false,
+ "tools": [
+  "spec",
+  "observe",
+  "submit",
+  "kinematics",
+  "finish"
+ ]
+}

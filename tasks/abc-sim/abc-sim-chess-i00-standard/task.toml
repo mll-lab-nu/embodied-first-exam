@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, { source
 
 [task]
 name = "embodied-first-exam/abc-sim-chess-i00-standard"
-description = "ABC Sim set up chess pieces (two I2RT YAM arms, MuJoCo): Put the 6 pieces that stand next to the board (3 black pawns, a black bishop, the black king, the black queen) upright on the empty squares where the standard starting position puts a piece of their kind. The robot as a service (eai-standard/2.2); graded by the live episode."
+description = "ABC Sim set up chess pieces (two I2RT YAM arms, MuJoCo): Put the black pieces that stand next to the board back on their empty starting squares, standing upright. The robot as a service (eai-standard/2.2); graded by the live episode."
 keywords = ["robotics", "abc-sim", "mujoco", "yam", "bimanual", "chess", "standard"]
 
 [metadata]
@@ -55,6 +55,13 @@ build_timeout_sec = 1800.0
 cpus = 4
 memory_mb = 10240
 storage_mb = 20480
+
+# The robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): Harbor starts this server for the agent.
+[[environment.mcp_servers]]
+name = "efe-robot"
+transport = "stdio"
+command = "python3"
+args = ["/opt/tools/efe_mcp/server.py"]
 
 [verifier.env]
 RCB_LIMITS_ENFORCE = "${RCB_LIMITS_ENFORCE:-0}"

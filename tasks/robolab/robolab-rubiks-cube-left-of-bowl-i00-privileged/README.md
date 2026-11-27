@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robolab-0.2.2` |
 
 ## Task
-Put the rubiks cube to the left of the bowl.
+Put the Rubik's cube to the left of the bowl, as seen from the robot.
 
 ## Difficulty
 The second RoboLab task next to `robolab-banana-in-bowl-i00`, chosen to test something different: a **spatial relation** instead of containment. RoboLab's success term is `object_left_of(rubiks_cube, bowl, frame_of_reference="robot", require_gripper_detached=True)`: the horizontal vector from the bowl's pose to the cube's pose, in the robot's base frame, must lie within a 45 deg cone around the robot's +y axis, and the gripper must have let go. There is no distance limit and no support or level check. The scene (bowl, cube, banana on a different table from the banana task, top at z = 0.05 m) starts with the cube to the bowl's right, so the cube has to be carried across, past the bowl. The trap is the cube's reference point: the RoboLab asset puts the cube's origin on one of its faces, ~3 cm from its geometric centre (on the -y face at the reset pose), and both the success check and `s.objects()[...]["position"]` use that origin. A grasp aimed at `position` straddles the cube's edge: one finger lands on the cube's top, the descent stalls 2 cm high and the gripper cannot close (what the first oracle did, three times). The instructions of both modes state where the reference point is.

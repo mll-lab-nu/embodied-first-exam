@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/embodied-olympics-fun-trampoline-i00-privileged"
-description = "Embodied Olympics trampoline (one Unitree G1 on the Embodied Olympics simulator, MuJoCo 3.3.7, CPU) in privileged mode: produce one replayable trajectory. On the trampoline, bounce as you like, then do one tuck jump and land on both feet. Stop the bounce with at most one more straight bounce, then stand still. A referee of events, geometry and contact rules decides the success."
+description = "Embodied Olympics trampoline (one Unitree G1 on the Embodied Olympics simulator, MuJoCo 3.3.7, CPU) in privileged mode: produce one replayable trajectory. On the trampoline, do one tuck jump, land on both feet, then stop the bounce and stand still. A referee of events, geometry and contact rules decides the success."
 keywords = ["robotics", "embodied-olympics", "sports", "mujoco", "unitree-g1", "humanoid", "trajectory", "trampoline"]
 
 [metadata]

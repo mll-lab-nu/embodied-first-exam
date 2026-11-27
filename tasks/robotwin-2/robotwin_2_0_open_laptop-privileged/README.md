@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:robotwin-0.1.2` |
 
 ## Task
-RoboTwin 2.0 open_laptop (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. With the left arm, open the laptop lid much wider than it is now, and keep the left gripper on the lid at the end. Frozen scene instance (RoboTwin seed 60417).
+RoboTwin 2.0 open_laptop (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. With the left arm, open the laptop lid at least twice as far as it is now, and keep the left gripper at the lid. Frozen scene instance (RoboTwin seed 60417).
 
 ## Difficulty
 RoboTwin's scripted expert needs 2 planned motions (28 lines); official data-generation success on ALOHA-AgileX 82% (the expert's own pass rate over random layouts); in our image the expert passed on seed 60417 on attempt 1 of 1 with 2055 physics steps. Tags from the code: articulated, single-arm, contact-predicate, joint-predicate, loop/timing. RoboTwin evaluation budget 700 policy actions. The trajectory is the raw per-step drive-target record, so any plan failure or a grasp that slips during replay scores 0.
@@ -45,4 +45,4 @@ Caps per container (PROTOCOL §6).
 | RoboTwin eval step limit | 700 (policy-eval budget upstream; indicative of task length) |
 
 ### Goal
-With the left arm, open the laptop lid much wider than it is now, and keep the left gripper on the lid at the end.
+With the left arm, open the laptop lid at least twice as far as it is now, and keep the left gripper at the lid.

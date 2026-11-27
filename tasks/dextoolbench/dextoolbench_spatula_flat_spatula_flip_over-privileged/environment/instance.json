@@ -3,7 +3,7 @@
  "category": "spatula",
  "object": "flat_spatula",
  "task": "flip_over",
- "text": "Pick up the flat spatula and move it through the demonstrated motion (flipping something over): bring it to each goal pose in order (the green marker shows the current goal).",
+ "text": "Pick up the spatula and make a flipping motion, following the green ghost spatula through its poses in order.",
  "start_pose": [
   0.09034473935297553,
   0.055795850120749425,

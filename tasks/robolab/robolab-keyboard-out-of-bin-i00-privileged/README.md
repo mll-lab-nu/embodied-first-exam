@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robolab-0.2.2` |
 
 ## Task
-Take the keyboard out of the bin and put it on the table.
+Take the keyboard out of the grey bin and put it on the table.
 
 ## Difficulty
 RoboLab labels this task "simple" (1 subtasks; attributes: spatial); its success term (`object_outside_of_and_on_surface`) asks for the keyboard taken out of the grey bin and laid on the table. The tooling gives only thin primitives (move_ee on Isaac Lab's differential IK, joint moves, gripper, hold), so every grasp, transport and placement is the agent's to build. RoboLab ships no expert solution.

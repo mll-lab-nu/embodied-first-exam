@@ -12,12 +12,12 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:robowits-0.1.1` |
 
 ## Task
-Nest the smaller bowl concentrically inside the larger one. One replayable trajectory from the frozen instance
+Put the smaller bowl inside the larger one, centred. One replayable trajectory from the frozen instance
 (evaluation scene 0 of RoboWits task 19), with the privileged tooling (`rcb_robowits.py`: the scene's state, resets,
 thin primitives, replay); the success criterion as graded is in `instruction.md`.
 
 ## Difficulty
-Nest the smaller bowl concentrically inside the larger one. Concentric alignment leverages circular geometry; matching
+Put the smaller bowl inside the larger one, centred. Concentric alignment leverages circular geometry; matching
 rims provide a strong geometric signal for proper nesting. The tooling's primitives are thin (IK moves, joint moves,
 gripper, hold).
 

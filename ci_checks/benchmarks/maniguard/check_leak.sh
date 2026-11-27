@@ -25,6 +25,13 @@ else:
              "Dockerfile", ".dockerignore"}}   # the sidecar's image: images/maniguard/Dockerfile (the recipe, normalize writes it),
                                                # then sim/ at /srv and its shared files from files-only images
 dirs["rcb_monitor"] = {"limits.json"}   # the resource monitor sidecar's limits, mounted only into it (its code is in the image; check-monitor.py)
+if not name.endswith("-privileged"):    # the robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): the server's
+    MCP_SRC = Path(sys.argv[2]) / "embodied_first_exam/standard/mcp"   # files, unchanged from their source, + manifest.json
+    dirs["efe_mcp"] = {"server.py", "rcb_tools.py", "schema.py", "workspace.py", "schema", "manifest.json"}
+    for q in sorted(Path(env, "efe_mcp").rglob("*")) if os.path.isdir(os.path.join(env, "efe_mcp")) else []:
+        rel = q.relative_to(Path(env, "efe_mcp")).as_posix()
+        if q.is_file() and rel != "manifest.json" and (not (MCP_SRC / rel).is_file() or q.read_bytes() != (MCP_SRC / rel).read_bytes()):
+            bad.append(f"environment/efe_mcp/{rel}: not the file of embodied_first_exam/standard/mcp/")
 for f in sorted(os.listdir(env)):
     p = os.path.join(env, f)
     if os.path.isdir(p):

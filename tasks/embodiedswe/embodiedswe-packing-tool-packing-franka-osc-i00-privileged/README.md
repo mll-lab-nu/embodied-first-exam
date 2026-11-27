@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:embodiedswe-0.3.0` |
 
 ## Task
+Put the stapler in the top drawer of the chest, the scissors in the second drawer and the utility knife in the third, then close all four drawers.
+
 Pack three tools into their drawers (Franka, operational-space control). EmbodiedSWE's `packing.tool_packing.franka.osc` task (robobench at commit `67f44e8a2ca5`), privileged mode, with a program as the
 deliverable: `solution/solve.py` exposing `solve(env)`.
 

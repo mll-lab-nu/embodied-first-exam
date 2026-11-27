@@ -304,9 +304,8 @@ class Task(TaskBase):
                   touch_gap_s=0.03, basket_touch_s=0.30, max_steps=2, step_gap_s=0.03, foot_slide_m=0.20, stand_s=1.0,
                   stand_speed_m_s=0.35, stand_upright_cos=0.94, fall_z_m=0.35)
 
-    sentence = ("Dunk the basketball with both hands: holding it in your two hands, take at most two steps, jump and "
-                "force it down through the ring from above with both hands on it. Then let go of it, land on your "
-                "feet and stand.")
+    sentence = ("Dunk the basketball with both hands: with at most two steps, jump and push it down through the "
+                "ring with both hands on it, then let go, land on your feet and stand.")
     rules = ("The basket (official size, lowered): a rigid ring of {ring_inner_diameter_m} m inner diameter "
              "({ring_metal_m} m metal), "
              "its top edge {ring_height_m} m above the floor, its centre {ring_centre_to_board_m} m in front of a "

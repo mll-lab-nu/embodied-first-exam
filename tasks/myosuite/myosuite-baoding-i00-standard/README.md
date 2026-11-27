@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:myosuite-0.1.1` |
 
 ## Task
-MyoSuite `myoChallengeBaodingP1-v1` (MyoHand, 39 muscles) on the same frozen instance as `myosuite-baoding-i00-privileged`: Rotate the two Baoding balls around each other in the palm so that each ball follows its own moving target. The targets circle the palm once every 5 s. Keep both balls within about 1.5 cm of their targets for one full orbit of the targets in a row. The episode ends in failure as soon as a ball drops out of the palm, or after 25 s without success, where MyoSuite's target trajectory ends.
+MyoSuite `myoChallengeBaodingP1-v1` (MyoHand, 39 muscles) on the same frozen instance as `myosuite-baoding-i00-privileged`: Roll the two balls around each other in your palm so that each one follows its moving marker, for one full circle of the markers.
 Two balls rest in the palm of the upturned hand; two small markers show where each ball should be now. Standard mode (eai-standard/2.2): the agent drives the body through a client, with only its own proprioception and the scene's cameras, and 10 resets (only the last episode is graded).
 
 ## Difficulty
@@ -41,7 +41,7 @@ Caps per container (PROTOCOL §6).
 | Upstream | MyoSuite 2.12.2 (Apache-2.0) on MuJoCo 3.6.0, the models that ship in its wheel |
 | Service | `environment/sim/server.py` (the adapter) on the shared 2.2 layer `rcb_limited.py` (`embodied_first_exam/standard/`); cameras `side_view`, `front_view`, `hand_top`, `hand_bottom`, `hand_side_inter`, `hand_side_exter`, `plam_lookat` (640 x 480); forward kinematics of the body's links |
 | Resources | 4 CPUs, no GPU (CPU physics, OSMesa rendering); after the agent's phase the collect hook only renders the video (one pass over the graded episode), it replays nothing to grade |
-| Reset budget | 10 (`RCB_RESET_BUDGET`, compose default; PROTOCOL §2): `POST /reset` starts a new episode from the frozen instance; only the last episode is graded, a success ends the trial; results under another budget are reported separately |
+| Reset budget | 10 (`RCB_RESET_BUDGET`, compose default; PROTOCOL §2): `POST /reset` starts a new episode from the frozen instance; only the last episode is graded, when the agent sends `POST /finish` or its session ends (a success ends nothing); results under another budget are reported separately |
 
 ### Provenance
 The frozen instance (`environment/sim/instance.npz`) and its scene facts were made at generation time; see `tasks/myosuite/README.md`.

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Cook the bacon. A tray with six slices of bacon is inside the kitchen refrigerator and a frying pan stands on the stove; cook all six slices and leave the refrigerator closed.
+Cook all six slices of bacon and close the fridge.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - all six slices of bacon (`bacon.n.01_1` to `_6`) are cooked

@@ -449,7 +449,7 @@
    "task_type": "open"
   },
   "language": {
-   "task_description": "open the dishwasher.",
+   "task_description": "Open the dishwasher.",
    "referral_expressions": {
     "pickup_obj_name": "dishwasher"
    },
@@ -467,7 +467,7 @@
  "instance": "i00",
  "variant": "a hinged door (revolute joint)",
  "facts": {
-  "goal": "open the dishwasher.",
+  "goal": "Open the dishwasher.",
   "horizon_steps": 455,
   "horizon_s": 30,
   "control_hz": 15.152,

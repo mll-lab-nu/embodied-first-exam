@@ -12,7 +12,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/robocasa-gr1-placemat-to-basket-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.1): RoboCasa-GR1 (PosttrainPnPNovelFromPlacematToBasketSplitA, a Fourier GR1 humanoid (arms, waist and two dexterous six-command Fourier hands; fixed base)): pick the croissant from the placemat and place it in the basket. The agent only gets a client: the robot's calibrated RGB-D cameras, its own joints and end effector, and native controller commands in chunks; no reset, no object poses; the sim service records the episode and grades it live."
+description = "STANDARD MODE (robot as a service, eai-standard/2.1): RoboCasa-GR1 (PosttrainPnPNovelFromPlacematToBasketSplitA, a Fourier GR1 humanoid (arms, waist and two dexterous six-command Fourier hands; fixed base)): Put the croissant from the placemat in the basket, and move both hands away. The agent only gets a client: the robot's calibrated RGB-D cameras, its own joints and end effector, and native controller commands in chunks; no reset, no object poses; the sim service records the episode and grades it live."
 keywords = ["robotics", "robosuite", "robocasa-gr1", "humanoid", "dexterous-hands", "code-as-policy", "trajectory", "standard-mode"]
 
 [metadata]
@@ -67,6 +67,13 @@ build_timeout_sec = 1800.0
 cpus = 3
 memory_mb = 16384
 storage_mb = 10240
+
+# The robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): Harbor starts this server for the agent.
+[[environment.mcp_servers]]
+name = "efe-robot"
+transport = "stdio"
+command = "python3"
+args = ["/opt/tools/efe_mcp/server.py"]
 
 [verifier.environment]
 build_timeout_sec = 600.0

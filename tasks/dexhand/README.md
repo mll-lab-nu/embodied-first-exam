@@ -65,11 +65,30 @@ Every family follows the same three rules, checked by the trusted runtime from s
    boundaries.
 2. **No partial credit.** Success needs every ordered stage and the terminal (released or held) condition for its full
    window of consecutive samples; four of five layers, five of six debris pieces or a placed but still-held pot is a
-   failure. Success ends the episode too.
+   failure. In privileged mode, success ends the episode too.
 3. **Judged by a trusted simulator, never claimed.** Privileged: the grader rebuilds the frozen scene with the
    recorded hand in a fresh process and replays only the motor targets; that replay must succeed. Standard: the sim service's own record of the episode it ran is the verdict (no replay; see
    "Standard-mode grading by the live episode" below). Success flags, object poses,
    configuration overrides or any other member of an agent's archive are never read.
+
+## Agent-ended episodes
+
+Standard episodes are agent-ended (PROTOCOL §3 "Agent-ended episodes"; `RCB_AGENT_END` in the sim service,
+`/srv/rcb_agent_end.py`). The agent never sees a success: no `success` or progress in any meta, status or spec, and a
+success never ends the episode. The episode ends at the agent's `POST /finish` (reason `finished`), when its time runs
+out (`timeout`), at the family's stated episode budget (Limits; `step_limit`, enforced by the server as `BUDGET`), on a
+failure rule of the task (a 0, even after a success) or on a simulator error (judged as without the feature). It is then
+judged on how things stand when it ends; `episode.json` records `ended_by`, `hidden_success_seen` and the step of the
+first hidden success as evidence. No `RCB_STEP_LIMIT` is set: the budget counts per episode with resets, so the server
+applies it rather than the shared per-trial limit.
+
+The family runtimes latch success and stop; in standard mode the server saves the verdict state (the checker's own
+fields, or `RUNTIME_VERDICT` on runtimes that hold it) before each step and restores it after a step that latched
+success, so physics and the check go on (the success is recorded as hidden evidence). At the end, a success not yet held
+is given up to 3 s with the hand held still (`end_window_steps`). Fail-fast failures still end the episode as a 0, also
+after a success. Ordered stages before the last count as they happened. Resets stay available until `/finish`; the
+graded episode is the one ended by finish, or else the one running when the session ends; after finish `/reset`,
+`/submit` and `/finish` are 409.
 
 ## Hands
 
@@ -218,7 +237,7 @@ each task's `checker.py`: ordered stages with consecutive holds, guards while a 
 terminal hold. A stage or the terminal hold counts a control sample only if its bounds held at every 2 ms substep of
 that control interval; stages complete in order and a stage cannot use the sample that completed the previous one;
 missing or non-finite features fail closed; the first violated invariant or guard, a non-finite feature or unstable
-physics fails the episode immediately and permanently; success ends the episode at the end of the terminal hold. The
+physics fails the episode immediately and permanently; success ends the episode (privileged) at the end of the terminal hold. The
 instructions render the exact predicate and define every feature (`force`: largest contact force on any task object,
 N; `speed`: largest task-object velocity, m/s or rad/s; `palm_drift` / `wrist_rotation`: palm motion from reset;
 `support`: object-environment contacts; contact counts in fingers). The bounds below are the frozen instances' (six
@@ -313,7 +332,7 @@ tomato, lettuce and the sesame top bun start on preparation supports. **Success*
 ingredient centre within 12 mm horizontally of the plate centre, every layer upright within 0.22 rad, heights strictly
 increasing in the order bottom bun, patty, cheese, tomato, lettuce, top bun, all five consecutive pairs in physical
 contact and the bottom bun touching the plate; then released: no hand contact on any ingredient, every ingredient
-slower than 0.025 m/s and 0.25 rad/s, the whole condition for 100 consecutive controls (2 s). Success ends the episode;
+slower than 0.025 m/s and 0.25 rad/s, the whole condition for 100 consecutive controls (2 s). Success ends the episode (privileged);
 a partial stack never counts. **Immediate failure**, checked after every 2 ms substep: an ingredient touches the table
 top or the floor (`ingredient_dropped`), an ingredient body falls below the table top (z < 0.30 m), an ingredient
 leaves the box x in [-0.64, 0.64] m, y in [-0.52, 0.52] m, z in [0.30, 0.80] m, a cheese or lettuce bending angle
@@ -334,7 +353,7 @@ spacing); the half with x <= 0.08 m is glued to a backing next to a dark clamp, 
 **Success**: 100 consecutive 50 Hz samples (2 s) with no hand-paper contact and fold angle of the free half above
 2.6 rad, mean plastic crease on the centre line above 2.2 rad with at least 90 % of its hinges above 2.2 rad, free edge
 within 18 mm of the fixed edge, stretch below 8 %, and the whole sheet over the table top: every vertex within
-x from -0.345 to 0.135 m, y from -0.30 to 0.30 m and at z >= 0.298 m (2 mm tolerance). Success ends the episode. **Immediate
+x from -0.345 to 0.135 m, y from -0.30 to 0.30 m and at z >= 0.298 m (2 mm tolerance). Success ends the episode (privileged). **Immediate
 failure**, checked every 0.5 ms: a vertex more than 10 mm below the table top (z < 0.29 m), a vertex outside the
 workspace box x from -0.03 to 0.19 m, y from -0.09 to 0.09 m, z <= 0.45 m, stretch above 8 %, unstable physics, or 1,500 controls
 (30 s) without success. A fold that springs back, a crease that is not permanent or a hand still touching the paper
@@ -389,7 +408,7 @@ horizontally of (0.46, 0.31) and within 0.012 m of z = 0.79, axis within 0.10 ra
 every part of the pot inside the bay and at most 0.05 m in front of the board's front edge at y = 0.12 (y >= 0.07: a
 50 mm open-front allowance, because the 438 mm handle span reaches about 34 mm past the front edge at the target; side
 walls, back wall and top board are strict),
-and every hand collision surface at least 0.04 m from the pot. Success ends the episode. **Immediate failure**, the only early failures ("touches" means at least 0.02 N):
+and every hand collision surface at least 0.04 m from the pot. Success ends the episode (privileged). **Immediate failure**, the only early failures ("touches" means at least 0.02 N):
 1. the pot base below z = 0.70 m;
 2. the base outside x in [-0.10, 1.10] m, y in [-0.50, 0.85] m, z <= 1.45 m;
 3. the axis more than 0.5 rad from +z;
@@ -866,13 +885,13 @@ simulator code. The `sim` sidecar (each standard task's `environment/sim/server.
 `embodied_first_exam/standard/`) serves calibrated RGB and depth, the robot's own joints, efforts and link poses and
 robot-link forward kinematics; object poses, contact forces, checker stages and scene bodies are not served. The
 reset budget is 20 (`budget.reset`, `RCB_RESET_BUDGET` in the compose file; see "Standard-mode resets" below); every
-action, watch step and reset is journaled, and a crashed service resumes the same episode from its journal, resetting
+action, hold chunk and reset is journaled, and a crashed service resumes the same episode from its journal, resetting
 where the committed resets did (resume class `exact`). The control rate is the family's (`spec()["control_hz"]`); the agent's clock
 (`meta["time_left_s"]`) counts from its first request. The collect hook (`finalize.sh` / `finalize.py`) ends the
-episode and seals `final.json` from the service's record of it (`episode.json`: the live success and end-state hash;
+episode and seals `final.json` from the service's record of it (`episode.json`: the verdict on the end state and its hash;
 no replay), then renders an evidence video (`/data/replay.mp4`) from `/data/trajectory.npz` in one
 fresh process in the collect hook's remaining time (its `timeout_sec` minus 60 s, at most `video_timeout_s`); the
-separate verifier reads only `final.json` and needs the live success. Missing trusted evidence is an infrastructure
+separate verifier reads only `final.json` and needs its verdict. Missing trusted evidence is an infrastructure
 error; the video never decides a verdict.
 
 **Oracles.** Every family uses the same oracle runners: privileged `solve.sh`
@@ -927,7 +946,7 @@ the agent has no simulator of its own in standard mode, so with one episode the 
 capability is the one of docs/protocol/standard_mode.md ("Optional reset capability"), implemented in the DexHand adapter
 `environment/sim/server.py` the way the MyoSuite 2.2 service implements it (the shared 2.2 layer has
 no reset): `POST /reset` (JSON or RCB1 `{cameras, video_fps, depth}`, no physics) calls the family's
-`Session.reset()` and returns the new episode's first frames; 409 after a success, once the budget is spent and after
+`Session.reset()` and returns the new episode's first frames; 409 after `/finish`, once the budget is spent and after
 the agent's time; `/status` and every meta add `episode`, `resets_left` and `control_steps_total`. Only the last
 episode is graded: `trajectory.npz` holds its rows, the service's verdict on that episode is the grade, and
 `reward.json` adds `resets` and `reset_budget`. `Session.reset()` restores the frozen start exactly in all ten families
@@ -941,8 +960,7 @@ Results with a different budget are reported separately.
 `Session.status()["success"]` after the last executed row, the family's full predicate (every ordered stage, the
 terminal hold, the invariants at every physics substep), evaluated by `execute()` in
 the task's `environment/sim/server.py` and written to `episode.json` by `end_episode()`. `Session.step` also refuses an out-of-range target or a moved locked
-wrist (the service clips to the published ranges first), and a success ends the episode, so no settle or hold window is
-added. The collect hook: `finalize.py` copies the record into `final.json` with `graded_by = "live"`, `replays = 0`, `live_success`, `live_sha`,
+wrist (the service clips to the published ranges first). The end window: "Agent-ended episodes" (up to 3 s). The collect hook: `finalize.py` copies the record into `final.json` with `graded_by = "live"`, `replays = 0`, `live_success`, `live_sha`,
 `video_pending`, then the family's `replay.py --video` films the trajectory once (`video.json`, `video.log`;
 `video_source = "render"`); a failed or late video sets `video = false` and changes nothing else. `reward.json` carries
 `graded_by_live`, `replays`, `gave_up`, `instance_mismatch` and `video_rendered`. When a fresh episode begins (not on a crash resume) the service compares the

@@ -43,8 +43,13 @@ INSTRUCTION = ["bash", str(ROOT / "ci_checks/check-instruction.sh")]
 RP_LEAK = ["bash", str(ROOT / "ci_checks/benchmarks/robopaint/invariant-leak.sh")]
 EOM_MI = [sys.executable, str(ROOT / "ci_checks/benchmarks/embodied-olympics-match/invariant-match-instance.py")]
 ARC_BIND = [sys.executable, str(ROOT / "ci_checks/benchmarks/roboarc/invariant-runtime-binding.py")]
+AGENT_END = [sys.executable, str(ROOT / "ci_checks/check-agent-end.py"), "--tier", "invariants"]
+MG_LEAK = ["bash", str(ROOT / "ci_checks/benchmarks/maniguard/invariant-leak.sh")]
+RE_BOUND = [sys.executable, str(ROOT / "ci_checks/benchmarks/roboengineer/invariant-boundary.py")]
+EOM_STD = [sys.executable, str(ROOT / "ci_checks/benchmarks/embodied-olympics-match/invariant-eai-std.py")]
 # the checks that enforce Appendix H (run_invariants.sh); every other check here is advisory
-INVARIANT_CMDS = (ISOLATION, POINTERS, TWINS, INSTANCE, STDIMG, MONITOR, DIGESTS, RP_LEAK, EOM_MI, ARC_BIND)
+INVARIANT_CMDS = (ISOLATION, POINTERS, TWINS, INSTANCE, STDIMG, MONITOR, DIGESTS, RP_LEAK, EOM_MI, ARC_BIND, AGENT_END,
+                  MG_LEAK, RE_BOUND, EOM_STD)
 WITH_NEIGHBOURS = (IDENTITY, TWINS, EOM_MI)   # run on the broken copy among (links to) every other task
 
 STD = "behavior-boxing-books-up-for-storage-i00-standard"      # a sim sidecar with a trusted cache volume
@@ -54,7 +59,7 @@ MG_P = "maniguard-cabinet-pickup-i19-privileged"               # its frozen inst
 ARC_P = "roboarc-blanket-flatten-01-i01-privileged"            # an instance lock, runtime_binding.json, in tests/ and environment/
 EOM_P = "embodied-olympics-match-soccer-match-i00-privileged"  # a match's settings (tests/match_instance.json), its twin's in compose
 RT = "humanoidbench-loco-walk-i00-realtime"           # a realtime task: main and sim capped
-# benchmarks whose generators have no check mode: their shared files are held together by check-tooling-identity.sh
+# benchmarks whose task dirs share files from a files-only image: the copies are held together by check-tooling-identity.sh
 DTB, DTB_P = "dextoolbench_hammer_claw_hammer_swing_down-standard", "dextoolbench_hammer_claw_hammer_swing_down-privileged"
 MJ = "mujoco_playground_aloha_hand_over-standard"              # serves DexToolBench's service (server_mj.py)
 MWP, MWP_P = "metaworldplus-coffee-button-i00-standard", "metaworldplus-coffee-button-i00-privileged"
@@ -62,6 +67,8 @@ TWIN_P = "robotwin_2_0_grab_roller-privileged"
 OPEN = "embodied-olympics-fun-sprint-i00-standard"                      # declares open egress, `[agent] network_mode = "public"` (Appendix H.6)
 FUN_P = "embodied-olympics-fun-sprint-i00-privileged"                   # its tooling and grader from a files-only image (COPY --from)
 RP = "robopaint-acrylic-applesoranges-i00-privileged"           # a benchmark with its own leak hook (ci_checks/benchmarks/*/invariant-*)
+RE = "roboengineer-anycar-compact-lap-monaco-6-i00-standard"     # roboEngineer's public/private boundary hook
+EOM_X = "embodied-olympics-match-soccer-jointgpu-i01-standard"   # a match that serves the match extension (eai_std/ copy)
 
 
 def check_name(cmd: list[str]) -> str:
@@ -218,8 +225,24 @@ MUTATIONS = [
      PRIV, TEST_COMPOSE, in_service("main", "    networks: [default]"), ISOLATION, "service main: `networks` is not allowed"),
     ("... `network_mode: host` in the verifier's compose file",
      PRIV, TEST_COMPOSE, in_service("main", "    network_mode: host"), ISOLATION, "service main: `network_mode: host` is not allowed"),
-    ("the instruction no longer states the external-material rule",
-     STD, "instruction.md", sub(r"(?ms)^## External material\n.*?(?=^## )", ""), RESOURCES, "does not state `## External material`"),
+    ("a standard task's sim service shows the success again (no RCB_AGENT_END: H.3, PROTOCOL §3)",
+     STD, COMPOSE, sub(r"^[ \t]*RCB_AGENT_END:.*\n", ""), AGENT_END, "does not set RCB_AGENT_END"),
+    ("... its instruction no longer says how to end the episode (the Finish line)",
+     STD, "instruction.md", sub(r"(?ms)^- Finish: .*?(?=^- |\Z)", ""), AGENT_END, "has 0 Finish lines, not one"),
+    ("... its Finish line says something else than the one normalize renders",
+     STD, "instruction.md", sub(r"^(- Finish: .*?)\.$", r"\1, or when you stop."), AGENT_END, "Finish line is"),
+    ("... its Robot Interface no longer has the /finish line (moved into the Goal)",
+     STD, "instruction.md", lambda s: sub(r"^## Goal\n", "## Goal\n" + tc.robot_finish(tc.task_dir(STD)) + "\n")(
+         sub(r"^" + re.escape(tc.robot_finish(tc.task_dir(STD))) + r"\n", "")(s)),
+     AGENT_END, "`## Robot Interface` has no line"),
+    ("... RCB_AGENT_END moved from the sim service to main (only the service's own setting counts)",
+     STD, COMPOSE, lambda s: in_service("main", "    environment:\n      RCB_AGENT_END: \"1\"")(
+         sub(r"^[ \t]*RCB_AGENT_END:.*\n", "")(s)), AGENT_END, "does not set RCB_AGENT_END"),
+    ("... a protocol that only looks like its mode's (a trailing space) with RCB_AGENT_END removed (H.3 bypass)",
+     STD, TOML, {TOML: sub(r'^(protocol = "eai-standard/2\.2)"', r'\1 "'),
+           COMPOSE: sub(r"^[ \t]*RCB_AGENT_END:.*\n", "")}, AGENT_END, "is neither one of standard mode's"),
+    ("the instruction no longer states the network rule (what the network reaches)",
+     STD, "instruction.md", sub(r"(?ms)^- Network: .*?(?=^- )", ""), RESOURCES, "does not state the Network line"),
     ("the frozen instance the agent reads names where its scene came from",
      PRIV, "environment/instance.json", sub(r"^\{", '{"source_url": "https://example.org/demos/data/manifest.json", ', count=1, flags=0),
      POINTERS, "key `source_url` locates upstream material"),
@@ -244,13 +267,21 @@ MUTATIONS = [
     ("the standard instruction states a condition in the checker's terms (an object-local axis, a predicate, an indexed label)",
      STD, "instruction.md", append("\nAlso required: mug_0 local +y within 45 deg of world +x (is_axis_aligned).\n"), INSTRUCTION,
      "an object-local axis 'local y'"),
-    ("the instruction states the external-material rule in other words",
-     STD, "instruction.md", sub(r"This is an honour rule; trials are reviewed\.", "Do as you like."), RESOURCES,
-     "does not state `## External material`"),
+    ("the instruction states the network rule in other words",
+     STD, "instruction.md", sub(r"You\s+may\s+install\s+packages", "Download any solution you like"), RESOURCES,
+     "does not state the Network line"),
+    ("the instruction brings back retired rule wording (owner 11-24: \"Write your own controller.\", a \"real-robot rules\" heading)",
+     STD, "instruction.md", sub(r"^Rules:$", "Real-robot rules:"), RESOURCES, "still has retired rule wording"),
+    ("the standard instruction asks for a script at /app/output/gen.py again (owner 11-24: no deliverable in standard)",
+     STD, "instruction.md", append("\nKeep the script that drives the robot at `/app/output/gen.py`.\n"), INSTRUCTION,
+     "asks for no script"),
+    ("... a privileged \"Only the actions count\" line",
+     PRIV, "instruction.md", sub(r"trials are reviewed\.", "trials are reviewed. Only the actions count: changing the simulator's "
+                                 "state while you develop changes nothing in the replay."), RESOURCES, "still has retired rule wording"),
     # ---- the agent's time cutoff (PROTOCOL §2): the task's own number; task.toml, the instruction and the sim service agree
     ("task.toml's cutoff changed without normalizing (the instruction still states the old number)",
      STD, TOML, sub(r"(^\[agent\]\n(?:(?!\[).*\n)*?timeout_sec = )[0-9.]+", r"\g<1>1234.0"), CUTOFFS,
-     "does not end with the `## Time limit` section rendered for its 1234 s"),
+     "does not end with the `## Limits` section rendered for its 1234 s"),
     ("a cutoff above the 14400 s cap",
      STD, TOML, sub(r"(^\[agent\]\n(?:(?!\[).*\n)*?timeout_sec = )[0-9.]+", r"\g<1>28800.0"), CUTOFFS, "is above the 14400 s cap"),
     ("a cutoff that is not a whole number of seconds",
@@ -259,43 +290,40 @@ MUTATIONS = [
     ("a task.toml without the agent's cutoff",
      PRIV, TOML, sub(r"(^\[agent\]\n(?:(?!\[).*\n)*?)timeout_sec = [0-9.]+[^\n]*\n", r"\g<1>"), CUTOFFS,
      "has no `[agent] timeout_sec`"),
-    ("the instruction's cutoff sentence with another number",
-     STD, "instruction.md", sub(r"^You have \d+ seconds to complete this task\.", "You have 28800 seconds to complete this task."),
-     CUTOFFS, "does not end with the `## Time limit` section"),
-    ("the instruction without the cutoff sentence",
-     PRIV, "instruction.md", sub(r"^You have \d+ seconds to complete this task\.[^\n]*\n\n", ""), CUTOFFS, "the sentence is missing"),
-    ("the cutoff section is not the end of the instruction: something follows it",
-     PRIV, "instruction.md", append("\nOne more remark after the time limit.\n"), CUTOFFS, "does not end with the `## Time limit` section"),
-    ("the cutoff paragraphs under the title instead of at the end",
+    ("the instruction's Time line with another number",
+     STD, "instruction.md", sub(r"^- Time: \d+ s of wall-clock", "- Time: 28800 s of wall-clock"),
+     CUTOFFS, "does not end with the `## Limits` section"),
+    ("the instruction without the Time line",
+     PRIV, "instruction.md", sub(r"(?ms)^- Time: .*?(?=^- )", ""), CUTOFFS, "does not end with the `## Limits` section"),
+    ("the limits section is not the end of the instruction: something follows it",
+     PRIV, "instruction.md", append("\nOne more remark after the limits.\n"), CUTOFFS, "does not end with the `## Limits` section"),
+    ("the limits section before Goal instead of at the end",
      PRIV, "instruction.md",
-     lambda s: (lambda head, sep, block: head.split("\n", 1)[0] + "\n\n" + block.split("\n", 1)[1] + "\n" + head.split("\n", 1)[1])(*s.partition("\n## Time limit\n"))
-     if "\n## Time limit\n" in s else (_ for _ in ()).throw(AssertionError("no `## Time limit` section")),
-     CUTOFFS, "does not end with the `## Time limit` section"),
-    ("a privileged task with the standard modes' second paragraph",
+     lambda s: (lambda head, sep, block: re.sub(r"(?m)^## Goal$", lambda _: "## Limits\n" + block.rstrip("\n") + "\n\n## Goal",
+                                                head, count=1) + "\n")(*s.partition("\n## Limits\n"))
+     if "\n## Limits\n" in s else (_ for _ in ()).throw(AssertionError("no `## Limits` section")),
+     CUTOFFS, "does not end with the `## Limits` section"),
+    ("a privileged task with the standard modes' words for the timeout",
      PRIV, "instruction.md", sub(r"only what is in `/app/output/` at that moment is\s+graded", "the episode is graded as it stands"),
-     CUTOFFS, "does not end with the `## Time limit` section"),
-    ("the closing sections in another order (`## Time limit` before `## Resources`)",
-     STD, "instruction.md",
-     lambda s: (lambda a, b, c: a + "\n## Time limit\n" + c.rstrip("\n") + "\n\n## Resources\n" + b.rstrip("\n") + "\n")(
-         s.split("\n## Resources\n")[0], *s.split("\n## Resources\n")[1].split("\n## Time limit\n")),
-     CUTOFFS, "does not end with the `## Time limit` section"),
-    ("... which the resources check refuses too (the limits paragraph is the last thing before `## Time limit`)",
-     STD, "instruction.md",
-     lambda s: (lambda a, b, c: a + "\n## Time limit\n" + c.rstrip("\n") + "\n\n## Resources\n" + b.rstrip("\n") + "\n")(
-         s.split("\n## Resources\n")[0], *s.split("\n## Resources\n")[1].split("\n## Time limit\n")),
-     RESOURCES, "does not end (before `## Time limit`) with the `## Resources` paragraph"),
+     CUTOFFS, "does not end with the `## Limits` section"),
+    ("the limits lines in another order (Resources before Network)",
+     STD, "instruction.md", sub(r"(?ms)^(- Network: .*?)(^- Resources: .*?)(?=^- |\Z)", r"\2\1"),
+     CUTOFFS, "does not end with the `## Limits` section"),
+    ("... which the resources check refuses too",
+     STD, "instruction.md", sub(r"(?ms)^(- Network: .*?)(^- Resources: .*?)(?=^- |\Z)", r"\2\1"),
+     RESOURCES, "does not end with its rendered `## Limits`"),
     ("the instruction states the limit a second time, in a benchmark's old words",
-     STD, "instruction.md", sub(r"^(## External material)$", r"Your wall-clock budget is 4 h (14400 s); there is no step budget.\n\n\1"),
+     STD, "instruction.md", sub(r"^(## Limits)$", r"Your wall-clock budget is 4 h (14400 s); there is no step budget.\n\n\1"),
      CUTOFFS, "states the agent's limit a second time"),
     ("... 'You have 60 minutes of wall-clock time'",
-     PRIV, "instruction.md", sub(r"^(## External material)$", r"- You have 60 minutes of wall-clock time.\n\n\1"),
+     PRIV, "instruction.md", sub(r"^(## Limits)$", r"- You have 60 minutes of wall-clock time.\n\n\1"),
      CUTOFFS, "states the agent's limit a second time"),
     ("... in words nobody has used yet: 'You have one hour.'",
-     STD, "instruction.md", sub(r"^(## External material)$", r"You have one hour.\n\n\1"), CUTOFFS, "states the agent's limit a second time"),
+     STD, "instruction.md", sub(r"^(## Limits)$", r"You have one hour.\n\n\1"), CUTOFFS, "states the agent's limit a second time"),
     ("... 'The limit is 3600 seconds.'",
-     PRIV, "instruction.md", sub(r"^(## External material)$", r"The limit is 3600 seconds.\n\n\1"), CUTOFFS, "states the agent's limit a second time"),
+     PRIV, "instruction.md", sub(r"^(## Limits)$", r"The limit is 3600 seconds.\n\n\1"), CUTOFFS, "states the agent's limit a second time"),
     ("... 'Finish within 60 minutes.'",
-     STD, "instruction.md", sub(r"^(## External material)$", r"Finish within 60 minutes.\n\n\1"), CUTOFFS, "states the agent's limit a second time"),
+     STD, "instruction.md", sub(r"^(## Limits)$", r"Finish within 60 minutes.\n\n\1"), CUTOFFS, "states the agent's limit a second time"),
     ("the README's `Agent time budget` row with another number than the task's cutoff",
      STD, "README.md", sub(r"^(\| Agent time budget \| )\d+ s;", r"\g<1>28800 s;"), CUTOFFS, "README.md's `Agent time budget` row does not say"),
     ("the sim service is told another wall clock than the task's cutoff",
@@ -348,11 +376,11 @@ MUTATIONS = [
     ("a sidecar image whose tag is a variable", STD, COMPOSE, sub(r"^(    image: ghcr\.io/mll-lab-nu/efe:monitor)-\S+", r"\1-${TAG:-latest}"), DOCKERFILE, "must be pinned"),
     ("tests/test.sh removes only a look-alike of the verifier's logs",
      STD, TEST_SH, sub(r"^rm -rf /logs/verifier/\*", "rm -rf /logs/verifier/*.bak"), ISOLATION, "must empty /logs/verifier"),
-    # ---- review round 3, M6: benchmarks without a generator check mode (one task hand-edited, its digest refreshed)
+    # ---- review round 3, M6: shared files of a benchmark's task dirs (one task hand-edited, its digest refreshed)
     ("DexToolBench: one task's grader is another file of the files image", DTB, TEST_DF,
      sub(r" /standard/tests/grade\.py /tests/grade\.py$", " /privileged/tests/grade.py /tests/grade.py"), IDENTITY,
      "dextoolbench: 2 versions of standard tests/grade.py"),
-    ("... its service", DTB, None, sidecar_drift(DTB, "server_mj.py"), IDENTITY, "environment/sim/server_mj.py differs from images/mujoco/limited/server_mj.py"),
+    ("... its service", DTB, None, sidecar_drift(DTB, "server_mj.py"), IDENTITY, "environment/sim/server_mj.py differs from embodied_first_exam/benchmarks/dextoolbench/sim/server_mj.py"),
     ("... its client (from the standard client image, another digest)", DTB, "environment/Dockerfile",
      sub(r"(efe:standard-files-\S+@sha256:)[0-9a-f]{64}( /rcb1\.py )", r"\g<1>" + "0" * 64 + r"\2"), IDENTITY, "not the pinned"),
     ("... its tooling module (from the files image, another digest)", DTB_P, TEST_DF,
@@ -360,7 +388,7 @@ MUTATIONS = [
      "not the pinned"),
     ("... tests/test.sh without the resource step", DTB_P, TEST_SH, NO_TRAP, IDENTITY, "dextoolbench: 2 versions of privileged tests/test.sh"),
     ("MuJoCo Playground (ALOHA): the same service edited", MJ, None, sidecar_drift(MJ, "server_mj.py"), IDENTITY, "dextoolbench: 2 versions of standard environment/sim/server_mj.py"),
-    ("MetaWorld+: one task's service edited", MWP, None, sidecar_drift(MWP, "server_mw.py"), IDENTITY, "environment/sim/server_mw.py differs from images/metaworld/standard/server_mw.py"),
+    ("MetaWorld+: one task's service edited", MWP, None, sidecar_drift(MWP, "server_mw.py"), IDENTITY, "environment/sim/server_mw.py differs from embodied_first_exam/benchmarks/metaworldplus/sim/server_mw.py"),
     ("... its grader (from the files image, another digest)", MWP_P, TEST_DF,
      sub(r"(efe:metaworldplus-files-\S+@sha256:)[0-9a-f]{64}( /privileged/environment/mw_tool\.py )", r"\g<1>" + "0" * 64 + r"\2"), IDENTITY,
      "not the pinned"),
@@ -458,6 +486,17 @@ MUTATIONS = [
      RP_LEAK, "only an allowed agent-side file of the pinned"),
     ("a RoboPaint task dir's own rcb_brush.py with grader code, next to the files-only image's", RP, "+environment/rcb_brush.py",
      append("def score_canvas(sheet):\n    pass\n"), RP_LEAK, "grader code ('def score_canvas') in the agent's tooling"),
+    # the other benchmark hooks (ci_checks/benchmarks/*/invariant-*, run_invariants.sh EXPECTED_HOOKS)
+    ("a ManiGuard agent build context gets a file of its own", HEAVY, "+environment/demos.txt",
+     append("demo 1\n"), MG_LEAK, "environment/demos.txt: not a file the generator writes"),
+    ("a ManiGuard compose file names the scripted demonstrations", HEAVY, COMPOSE,
+     append("# replays episodes.jsonl\n"), MG_LEAK, "names a reference solution source ('episodes.jsonl')"),
+    ("a roboEngineer agent copy gets a reference solution", RE, "+environment/public/solve.sh", append("#!/bin/sh\n"),
+     RE_BOUND, "environment/public/solve.sh: an evaluator, instance or reference file"),
+    ("a roboEngineer agent Dockerfile copies the private sidecar dir", RE, "environment/Dockerfile",
+     append("COPY sim/ /opt/sim/\n"), RE_BOUND, "copies sim/ from the build context"),
+    ("a match's eai_std copy drifts from its source", EOM_X, "environment/sim/eai_std/serve.py", append("# drift\n"),
+     EOM_STD, "environment/sim/eai_std/serve.py differs from"),
     # PROTOCOL §2: a realtime task declares its slowdown S and its reset budget once, in its sim service
     ("a copy of the slowdown S in [metadata]",
      "humanoidbench-loco-walk-i00-realtime", TOML, sub(r'^(dynamics = .*\n)', r'\1slowdown = 1\n'), REALTIME,
@@ -506,7 +545,7 @@ def twin_cutoffs(tmp: Path) -> int:
     (t / "task.toml").write_text(sub(r"(^\[agent\]\n(?:(?!\[).*\n)*?timeout_sec = )[0-9.]+", rf"\g<1>{sec}.0")(toml))
     r = subprocess.run([sys.executable, str(ROOT / "scripts/task_conventions.py"), str(t)], capture_output=True, text=True)
     expect(r.returncode == 0, "normalize a task whose cutoff changed", r.stdout + r.stderr)
-    expect(f"\nYou have {sec} seconds to complete this task." in (t / "instruction.md").read_text(),
+    expect(f"\n- Time: {sec} s of wall-clock time" in (t / "instruction.md").read_text(),
            f"the instruction does not say {sec} seconds after normalize")
     expect(f"| Agent time budget | {sec} s;" in (t / "README.md").read_text(), f"the README row does not say {sec} s")
     expect(f'RCB_WALL_CLOCK_S: "{sec}"' in (t / "environment/docker-compose.yaml").read_text(),

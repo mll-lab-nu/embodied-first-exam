@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Put the shot that rests on your open right palm at your neck, pushing it from the shoulder with that hand alone, so that it lands inside the sector at least 6 m from the circle. Then leave the circle from its rear half and stand. (Embodied Olympics `shot-put`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Put the shot from the circle so that it lands inside the sector at least 6 m out, then leave the circle from its back half and stand. (Embodied Olympics `shot-put`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
 
 ## Difficulty
 The shot weighs 7.26 kg and rests on a flat palm without fingers: every move of the trunk or the arm that tilts the palm or accelerates the hand sideways rolls it off, and the H1-2's arm motors (40 N m at the shoulder, 18 N m at the elbow, soft servos) only just carry it, so the legs and the trunk have to drive the put while the palm stays under and behind the shot, inside a circle two steps wide. 6.0 m needs a release near 7 m/s at about 40 degrees. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 5 resets (only the last attempt is graded).

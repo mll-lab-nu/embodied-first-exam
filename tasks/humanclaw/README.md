@@ -49,6 +49,18 @@ What differs from HumanCLAW's own evaluator:
 Network: HumanCLAW's public repository holds recorded rollouts of these very episodes (its docs/analysis has
 action chains), so the agent reaches the model APIs and the package registries only (`allowlist`), in both modes.
 
+### Agent-ended episodes
+
+Every standard task sets `RCB_AGENT_END "1"` in its sim service (PROTOCOL §3). HumanCLAW's episode is agent-ended by its
+own rule already (an active stop declares that the agent is done, and only a stop can succeed), so `POST /finish` is the
+stop: `server.py` runs the stop action as the episode's last control step (journaled like any other row) and HumanCLAW
+judges the episode there (reason `finished`; a stop action the agent sends ends it the same way). The end of the agent's
+session runs the stop too, before the episode is judged (reason `timeout`). The 100th action still ends the episode
+whatever it is (`step_limit`, HumanCLAW's own limit: a non-stop 100th action fails). No `RCB_STEP_LIMIT` is set: the 100
+actions are HumanCLAW's non-idle actions, while `hold(s)` (a hold chunk) adds idle control steps that the generic step cap
+would count. A success is never shown (the service only says that the episode ended). Without `RCB_AGENT_END` the
+service behaves as before.
+
 ## Selection
 The 55 episodes are those of HumanCLAW's 1,218 validation episodes that GPT-6 Luna (Codex 0.164, effort xhigh) failed
 in both modes, in one run over all 1,218 episodes x 2 modes (privileged 1,161 / 1,218 solved, standard

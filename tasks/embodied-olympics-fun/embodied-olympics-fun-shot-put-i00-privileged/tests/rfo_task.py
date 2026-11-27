@@ -150,9 +150,8 @@ class Task(TaskBase):
                   chin_above_shoulders_m=0.20, chin_forward_m=0.09, drop_below_shoulders_m=0.0,
                   behind_shoulders_m=0.0, push_fraction=0.5, release_gap_s=0.03, stand_s=1.0, fall_pelvis_m=0.50)
 
-    sentence = ("Put the shot that rests on your open right palm at your neck, pushing it from the shoulder with that "
-                "hand alone, so that it lands inside the sector at least {qualifying_mark_m:g} m from the circle. "
-                "Then leave the circle from its rear half and stand.")
+    sentence = ("Put the shot from the circle so that it lands inside the sector at least 6 m out, then leave the "
+                "circle from its back half and stand.")
     rules = ("The men's shot ({shot_mass_kg} kg, {shot_diameter_m} m across) starts resting on your open right palm "
              "beside your neck, leaning against the neck: you have taken your stance. Your hands have no fingers and "
              "no grip (the grip columns do nothing; nothing is grippable): only the palm's support, your neck and "

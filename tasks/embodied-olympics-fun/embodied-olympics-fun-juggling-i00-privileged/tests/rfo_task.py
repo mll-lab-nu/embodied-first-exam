@@ -139,8 +139,8 @@ class Task(TaskBase):
     params = dict(touches=10, rise_m=0.22, carry_s=0.15, touch_gap_s=0.05, hold_gap_s=0.03, release_grace_s=0.15,
                   touch_gain=0.95, fall_z_m=0.35)
 
-    sentence = ("Juggle the football: drop it from between your palms and keep it in the air for ten touches in a "
-                "row with your feet, legs or head, without it touching the ground or a hand again.")
+    sentence = ("Drop the football from your hands and keep it up for ten touches in a row with your feet, legs or "
+                "head, without it touching the ground.")
     rules = ("A size-5 football (0.22 m across, 0.43 kg, in air) starts pressed between your two open palms; your "
              "hands have no fingers and no grip (the grip columns of the action rows do nothing in this task): only "
              "the squeeze of your arms and friction hold the ball, and it slips out when they press too little. "

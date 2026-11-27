@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:myosuite-0.1.1` |
 
 ## Task
-MyoSuite `myoChallengeBimanual-v0` (MyoArm + MPL, 63 muscles) on the same frozen instance as `myosuite-bimanual-i00-privileged`: Pick up the object with the MyoHand, pass it to the prosthetic hand, and place it on the goal pillar. Success needs the object within about 15 cm of the pillar top after it has touched only the pillar for a tenth of a second, and MyoChallenge 2024's contact check on the object's whole history: the MyoHand held it for at least 1 s, the prosthetic hand held it for at least 1 s, it touches only the pillar at the end, and it never touched the table or the floor. The episode ends in failure if the object is dropped below a height of about 30 cm, or after 10 s.
+MyoSuite `myoChallengeBimanual-v0` (MyoArm + MPL, 63 muscles) on the same frozen instance as `myosuite-bimanual-i00-privileged`: Pick up the object with your right hand, pass it to the prosthetic left hand, and set it on top of the goal pillar. Each hand must hold it for at least 1 s, and it must never touch the table or the floor.
 The MyoArm (right, muscles) and a prosthetic MPL arm (left, motors) stand at a table; an object lies in front of the MyoHand and a pillar marks the goal on the far side. Standard mode (eai-standard/2.2): the agent drives the body through a client, with only its own proprioception and the scene's cameras, and 10 resets (only the last episode is graded).
 
 ## Difficulty
@@ -41,7 +41,7 @@ Caps per container (PROTOCOL §6).
 | Upstream | MyoSuite 2.12.2 (Apache-2.0) on MuJoCo 3.6.0, the models that ship in its wheel |
 | Service | `environment/sim/server.py` (the adapter) on the shared 2.2 layer `rcb_limited.py` (`embodied_first_exam/standard/`); cameras `side_view`, `front_view`, `hand_top`, `hand_bottom`, `hand_side_inter`, `hand_side_exter`, `plam_lookat` (640 x 480); forward kinematics of the body's links |
 | Resources | 4 CPUs, no GPU (CPU physics, OSMesa rendering); after the agent's phase the collect hook only renders the video (one pass over the graded episode), it replays nothing to grade |
-| Reset budget | 10 (`RCB_RESET_BUDGET`, compose default; PROTOCOL §2): `POST /reset` starts a new episode from the frozen instance; only the last episode is graded, a success ends the trial; results under another budget are reported separately |
+| Reset budget | 10 (`RCB_RESET_BUDGET`, compose default; PROTOCOL §2): `POST /reset` starts a new episode from the frozen instance; only the last episode is graded, when the agent sends `POST /finish` or its session ends (a success ends nothing); results under another budget are reported separately |
 
 ### Provenance
 The frozen instance (`environment/sim/instance.npz`) and its scene facts were made at generation time; see `tasks/myosuite/README.md`.

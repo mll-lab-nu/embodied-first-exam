@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robolab-0.2.2` |
 
 ## Task
-Pick up the eye glasses.
+Pick up the eyeglasses and lift them clear of the table.
 
 ## Difficulty
 RoboLab labels this task "simple" (2 subtasks; attributes: semantics); its success term (`object_picked_up`) asks for the eyeglasses held and lifted at least 5 cm clear of the table. The tooling gives only thin primitives (move_ee on Isaac Lab's differential IK, joint moves, gripper, hold), so every grasp, transport and placement is the agent's to build. RoboLab ships no expert solution.

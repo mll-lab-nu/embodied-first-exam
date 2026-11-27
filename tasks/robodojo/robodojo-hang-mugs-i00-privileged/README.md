@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Hang each of the three mugs by its handle on one of the four rack arms that point left or right, not on the two arms that point toward or away from you. Then bring both arms back to where they started. (RoboDojo's `hang_mugs`). RoboDojo capability dimension: Generalization. Instance i00 is RoboDojo's own evaluation layout
+Hang the three mugs by their handles on the rack arms that point left or right. Then move both arms back to where they started. (RoboDojo's `hang_mugs`). RoboDojo capability dimension: Generalization. Instance i00 is RoboDojo's own evaluation layout
 `arx_x5/0/hang_mugs_0.json` (sha256 `d257f31ef0597bcc`), frozen in `instance.json`. The deliverable is one replayable trajectory of
 RoboDojo's 14-D joint action at 25 Hz (`/app/output/trajectory.npz`), graded by RoboDojo's own reward check for the task,
 with no step cap (RoboDojo's own evaluation gives a policy 800 actions; PROTOCOL §3).

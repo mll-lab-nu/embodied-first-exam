@@ -143,8 +143,7 @@ wash_dog_toys.
 
 ## Time budget
 7200 s for every task of both modes (each task's own `[agent] timeout_sec`; `instruction.md`
-states it once, in its closing `## Time limit` section, and the benchmark's own text says "the time limit (`## Time
-limit`)"). Every Python process pays an Isaac launch and scene load (about 2-3 minutes with a warm Kit cache; the first
+states it once, in the Time line of its closing `## Limits`, and the benchmark's own text says "the time limit (Limits)"). Every Python process pays an Isaac launch and scene load (about 2-3 minutes with a warm Kit cache; the first
 launch of a trial adds about 4 minutes to compile shaders into the trial's own cache, below), and the simulator runs
 7-18 control steps/s depending on the host (30 Hz control), while these tasks take thousands of steps.
 
@@ -328,6 +327,21 @@ the episode ends as a success if the goal holds (the live episode's verdict), ot
 least twice every measured build. A resume replays the episode at ~14-20 steps/s (a 50k-step episode: 45-60 min of
 downtime on the agent's wall clock). Artifacts: `final.json`, `episode.jsonl`, `trajectory.npz`, `journal.f64`,
 `startups.jsonl`, `server.log`, the live video (and the video-only render's log when it ran).
+
+### Agent-ended episodes
+
+Standard episodes are agent-ended (PROTOCOL §3 "Agent-ended episodes"; `RCB_AGENT_END` in the sim service,
+`/srv/rcb_agent_end.py`). The agent never sees a success: no `success` or progress in any meta, status or spec, and a
+success never ends the episode. The episode ends at the agent's `POST /finish` (reason `finished`), when its time runs
+out (`timeout`), at the runaway guard (`step_limit`), on a failure rule of the task (a 0, even after a success) or on a
+simulator error (judged as without the feature). It is then judged on how things stand when it ends; `episode.json`
+records `ended_by`, `hidden_success_seen` and the step of the first hidden success as evidence. No `RCB_STEP_LIMIT` is
+set: BEHAVIOR states no step count; its guard is technical.
+
+Success is the same rule as without the feature (goal held for 1 s, released and at rest): `rcb_behavior.Session` with
+`agent_end` records it (`now_success`) instead of ending the episode. When the episode ends by `/finish` or its time,
+the robot is held still (the last command, the base at 0) for up to 5 s (`SETTLE_STEPS`), and a success that settles in
+that window counts. A fall or a simulator breakdown, also in that window, is a 0.
 
 ## Tooling (file names)
 | main's convention | BEHAVIOR-1K |

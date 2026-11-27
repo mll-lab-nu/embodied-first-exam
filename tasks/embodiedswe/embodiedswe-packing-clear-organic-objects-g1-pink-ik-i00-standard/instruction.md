@@ -1,27 +1,68 @@
-# Sort the front-row items into the crate and onto the tray (Unitree G1, fixed pelvis, Pink IK) — standard mode
+# EmbodiedSWE · sort the front-row items into the crate and onto the tray, Unitree G1 (standard)
 
-The task of `embodiedswe-packing-clear-organic-objects-g1-pink-ik-i00-privileged`, on the same frozen scene. You drive a Unitree G1 humanoid with three-finger hands, its pelvis fixed, its arms and waist under EmbodiedSWE's Pink IK, as if it were real hardware: the simulator runs in a service you cannot open, and you get its client, one episode and no reset. The client's docstring is its manual (`/opt/tools/rcb_client.py`); `r.spec()` gives the numbers.
+## Task
+Put the two lemons from the front row of the table in the blue crate on your right, and the two limes from that row on
+the round tray on your left.
 
-## The task
-A work table holds a colourful spread of fruits, vegetables and household items, with an open blue plastic crate on one side and a round serving tray on the other.
-Goal: sort the fruit in the front row of the table. Move the two yellow lemons that sit in the front working row into the blue crate, and move the two green limes from that row onto the round tray. Items further back on the table are part of the scene and stay where they are. The job is done when each listed item rests in its correct destination and nothing that is not food has been put in the crate.
+## Goal
+Success: both lemons are in the blue crate and both limes on the round tray, each resting there and still, and nothing
+that is not food is in the crate.
 
-Success, exactly: at the end of the run both yellow lemons of the front working row (its two right-hand items) [lemon_a, lemon_b] are in the blue crate on the robot's right. Each lemon's origin (at its base), in the crate's frame, is within ±0.1043 m along the table's width and ±0.0788 m along its depth of the crate's base centre, and 0.012-0.1739 m above the crate's base. Both green limes of that row (its two left-hand items) [lime_a, lime_b] are on the round tray on the robot's left: origin within 0.0896 m horizontally of the tray's geometric centre and 0-0.1731 m above the tray's base. All four move slower than 0.06 m/s. None of the five non-food items (milk jug, white bottle, crab pen holder, utility jug, serving bowl) has its origin inside that crate box, whatever its speed. The crate stands upright, up-axis within 56.95° of vertical; it is fixed, so this always holds. Other produce in the crate does not matter. Not true at the start.
+When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
-## This robot
-- Action: `ee_pose` only, 28 values: the world poses of the left and right `wrist_yaw_link` (`x y z qw qx qy qz` each), then 14 hand joint targets (rad). Rows are streamed at the 60 Hz control rate with your `dt`; `spec["action_types"]["ee_pose"]` has the layout, the controller and the joint limits. Coordinates are the simulator's world frame (metres, z up; `spec["world"]`).
-- Cameras (RGB 640×480, depth on request): `overview` (static) and `head` (on the torso, where the real G1 carries its depth camera). One call returns at most 240 images (`max_frames_per_call`, PROTOCOL §3 "Images per call": cameras × the frames captured, the first, one every round(60 / `video_fps`) control steps and the last, a per-frame depth one more image; `video="none"` captures only the first and the last); a larger request is refused (400) before anything runs. A call that names no cameras gets `overview`, `head` at 3 frames per second, so every call up to `max_chunk_s` / `max_watch_s` fits.
-- The episode ends after the first call at whose end the success condition holds (judged on the live simulator), when your time is up, on a simulator error, or after 400,000 control steps (1.9 h of simulated time, reason `step_guard`); it is graded as it stands then. Simulated time advances only inside your calls.
-- The service answers one request at a time: while a long call runs, every other request waits, so a client-side timeout means "busy", not "crashed".
-- Leave your scripts in `/app/output/` for the record.
+Rules:
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+  benchmark's demonstrations, trained policies); trials are reviewed.
+- One episode, no reset: what you knock over stays knocked over.
+- You get only the cameras and the robot's own sensor readings: no object poses, no scene layout, no success signal.
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+## Robot Interface
+A Unitree G1 humanoid with three-finger hands, its pelvis fixed, its arms and waist under EmbodiedSWE's Pink IK. The
+robot runs as a service you reach through its client or its MCP tools, as if it were real hardware: one live episode.
 
-## Resources
-Your container: **8 CPUs**, **24 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
+`POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
-## Time limit
-You have 14400 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+### Client
+`/opt/tools/rcb_client.py`: its docstring is its manual; `r.spec()` gives the numbers. The service answers one request
+at a time: while a long call runs, every other request waits, so a client-side timeout means "busy", not "crashed".
+Simulated time advances only inside your calls. One call returns at most 240 images; a larger request is refused (400)
+before anything runs. The count is cameras × frames captured, where the frames are the first, one every round(60 /
+`video_fps`) control steps, and the last. Each depth frame counts as one more image. `video="none"` captures only the
+first and the last frame. A call that names no cameras gets `overview` and `head` at 3 frames per second, so every call
+up to `max_chunk_s` stays within that limit.
 
-This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` counts the same limit from your first request to the service, so it never runs out before your time does: your real time left is `time_left_s` minus the time you spent before that request. Plan by it. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+### MCP tools
+- The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
+  `observe`, `submit`, `kinematics`, `finish`. A tool takes its endpoint's request fields (any other field in `fields`)
+  and returns the service's reply `meta` unchanged; images, arrays and video are written as files under `/app/obs/`
+  (`.png`, `.npy`, `.mp4`) and the result lists them. Long action chunks can be passed as a file (`actions_file`).
+- `observe` returns at once with what is already recorded: the current frame, or the last `last_s` seconds. Time passes
+  only through `submit`, which answers when its rows have run; a `submit` with `interpolate` "hold", `seconds` and no
+  rows lets time pass with the robot holding still.
+- A call still running after 45 s returns `pending` with an `operation` id; `observe(operation=id)` collects its reply.
+- The client and the tools drive the same robot in the same episode; use either, or both.
+
+### Actions
+The action is `ee_pose` only, 28 values: the world poses of the left and right `wrist_yaw_link` (`x y z qw qx qy qz`
+each), then 14 hand joint targets (rad). Rows are streamed at the 60 Hz control rate with your `dt`;
+`spec["action_types"]["ee_pose"]` has the layout, the controller and the joint limits. Coordinates are the simulator's
+world frame (metres, z up; `spec["world"]`).
+
+### Observations
+Cameras (RGB 640×480, depth on request): `overview` (static) and `head` (on the torso, where the real G1 carries its
+depth camera).
+
+## Limits
+- Time: 14400 s of wall-clock time from the start of your session. Everything counts, including waiting for the service.
+  At the end you are stopped without warning. Time left: `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`).
+  Trust this file: the `time_left_s` in the service's replies starts only at your first request. A call into a
+  long-running process can block for its whole wait time. Use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, including the simulator's and the benchmark's source.
+- Resources: 8 CPUs, 24 GiB memory, 1024 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`),
+  no GPU; the simulator runs in its own container and does not count. Going over a cap can get a process killed (the CPU
+  cap only slows you down). Usage: `/run/rcb-limits/usage.json`.
+- Resets: none. You get one episode.
+- Steps: at most 400,000 control steps (1.9 h of simulated time), then the episode ends.
+- Finish: if you never send `/finish`, the episode is graded when the step limit is reached or your session ends.

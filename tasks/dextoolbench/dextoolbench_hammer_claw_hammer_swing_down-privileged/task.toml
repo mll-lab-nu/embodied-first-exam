@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/dextoolbench_hammer_claw_hammer_swing_down-privileged"
-description = "DexToolBench (SimToolReal) claw_hammer / swing_down in MuJoCo: KUKA iiwa 14 + Sharpa HA4 hand; produce one replayable joint-target trajectory that carries the hammer through the 37 demonstrated goal poses in order."
+description = "DexToolBench (SimToolReal) claw_hammer / swing_down in MuJoCo: KUKA iiwa 14 + Sharpa HA4 hand; produce one replayable joint-target trajectory that carries the hammer through the 37 demonstrated goal poses in order. Task: Pick up the hammer and swing it down, following the green ghost hammer through its poses in order."
 keywords = ["robotics", "dextoolbench", "simtoolreal", "mujoco", "dexterous", "tool-use", "iiwa", "sharpa", "code-as-policy", "trajectory"]
 
 [metadata]

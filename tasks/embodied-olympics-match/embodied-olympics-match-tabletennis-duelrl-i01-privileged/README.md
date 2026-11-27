@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-match-0.1.0@sha256:99255569bf68bcf27f4e4867b58bad55c1d54fe73281920882e97c310836b6c7` |
 
 ## Task
+Win a game of table tennis to 5 points against the other robot.
+
 The privileged twin of `embodied-olympics-match-tabletennis-duelrl-i01-realtime`: table tennis (ITTF, one game to 5): a Franka Panda with a paddle on an x-y rail base against the built-in RL opponent (seat B, the same robot; learned shot choices and its own joint-level swing); seed 8, S = 10.
 
 ## Difficulty

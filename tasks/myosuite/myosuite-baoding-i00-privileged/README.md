@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:myosuite-0.1.1` |
 
 ## Task
-MyoSuite `myoChallengeBaodingP1-v1` (MyoHand, a musculoskeletal model of a human forearm and hand, 39 muscles): Rotate the two Baoding balls around each other in the palm so that each ball follows its own moving target. The targets circle the palm once every 5 s. Keep both balls within about 1.5 cm of their targets for one full orbit of the targets in a row. The episode ends in failure as soon as a ball drops out of the palm, or after 25 s without success, where MyoSuite's target trajectory ends.
+MyoSuite `myoChallengeBaodingP1-v1` (MyoHand, a musculoskeletal model of a human forearm and hand, 39 muscles): Roll the two balls around each other in your palm so that each one follows its moving marker, for one full circle of the markers.
 Two balls rest in the palm of the upturned hand; two small markers show where each ball should be now. The deliverable is one replayable trajectory of actuator commands (`/app/output/trajectory.npz`, `(T, 39)`, one row per 25 ms control step).
 
 ## Difficulty

@@ -823,8 +823,8 @@ class Task(TaskBase):
                   aim1_y_m=-0.8, aim1_z_m=0.9, aim2_y_m=0.8, aim2_z_m=1.1, aim3_y_m=-0.5, aim3_z_m=0.95)
     time_limit_s = 6.0 + 2 * 9.0 + 2.5 + 0.5
 
-    sentence = ("Keep goal: three penalty kicks are shot at the official goal you stand in; keep every ball out, "
-                "with a foot on the goal line at each kick.")
+    sentence = (("Keep goal: stop all 3 penalty kicks, with a foot on the goal line at each kick, and stay inside"
+                 " the goal area."))
     rules = ("You are the goalkeeper. You stand on the goal line, in the middle of the goal, facing the penalty mark "
              "{mark_distance_m} m in front of you (+x). The goal behind you is {goal_width_m} m wide between the "
              "posts and {goal_height_m} m high under the crossbar (posts and bar {post_m} m thick, on the goal line, "

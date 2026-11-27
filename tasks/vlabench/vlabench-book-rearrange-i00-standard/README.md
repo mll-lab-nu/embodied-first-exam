@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:vlabench-0.2.0` |
 
 ## Task
-VLABench's `book_rearrange` as a robot service: a Franka Panda arm at a table, instructed **"Put the three books from the table into the bookshelf side by side, in order of publication from left to right as the robot sees them, oldest on the left."**
+VLABench's `book_rearrange` as a robot service: a Franka Panda arm at a table, instructed **"Put the three books from the table into the bookshelf side by side, in the order they were published: the oldest on the robot's left, the newest on its right."**
 (a direct command), on the same frozen instance as `vlabench-book-rearrange-i00-privileged`. The simulator runs in the
 `sim` sidecar (`environment/sim/server.py` on main's `rcb_service.py`); the agent only has the client: four cameras
 (RGB 320×320, depth on request, calibrated), the robot's own state, and joint-position chunks. One episode, no reset,

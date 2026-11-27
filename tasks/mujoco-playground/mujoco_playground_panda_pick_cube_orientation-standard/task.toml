@@ -11,7 +11,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/mujoco_playground_panda_pick_cube_orientation-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.1): MuJoCo Playground PandaPickCubeOrientation in plain MuJoCo: Franka Panda; produce one replayable trajectory that picks up the box and holds it at the target position and orientation, frozen instance (seed 60417). The agent only gets a client: camera RGB-D + proprioception and joint-target chunks; no reset, no object poses; the sim service records the episode and grades it live (no grading replay)."
+description = "STANDARD MODE (robot as a service, eai-standard/2.1): MuJoCo Playground PandaPickCubeOrientation in plain MuJoCo: Franka Panda; produce one replayable trajectory that picks up the box and holds it at the target position and orientation, frozen instance (seed 60417). Task: Pick up the green box and hold it at the see-through red box, tilted the same way. The agent only gets a client: camera RGB-D + proprioception and joint-target chunks; no reset, no object poses; the sim service records the episode and grades it live (no grading replay)."
 keywords = ["robotics", "mujoco", "mujoco-playground", "franka-panda", "pick-place", "orientation", "code-as-policy", "trajectory", "standard-mode"]
 
 [metadata]
@@ -64,6 +64,13 @@ build_timeout_sec = 1800.0
 cpus = 4
 memory_mb = 16384
 storage_mb = 20480
+
+# The robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): Harbor starts this server for the agent.
+[[environment.mcp_servers]]
+name = "efe-robot"
+transport = "stdio"
+command = "python3"
+args = ["/opt/tools/efe_mcp/server.py"]
 
 [verifier.environment]
 build_timeout_sec = 600.0

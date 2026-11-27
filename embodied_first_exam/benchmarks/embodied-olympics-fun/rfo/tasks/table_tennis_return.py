@@ -922,9 +922,8 @@ class Task(TaskBase):
         machine_speed_m_s=3.1453, machine_elevation_deg=32.0489, machine_azimuth_deg=-6.4406, feed_lead_s=0.077,
         net_panels=6, net_cord_tension_n=45.0, net_mass_kg=0.04)
 
-    sentence = ("Return the service: after the table tennis ball has bounced once on your court, strike it with the "
-                "paddle held in your right hand so that it touches the opponent's court, without letting go "
-                "of the paddle.")
+    sentence = (("Return the serve: after it bounces once on your side, hit it with the paddle in your right hand"
+                 " onto the opponent's side, without letting go of the paddle."))
     rules = ("The table is the official one: {table_length_m} m long, {table_width_m} m wide, its playing surface "
              "{table_height_m} m above the floor, with a net {net_height_m} m high across its middle that reaches "
              "{net_overhang_m} m beyond each side line. Your court is the half of the playing surface on your side of "

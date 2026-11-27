@@ -78,12 +78,13 @@ success rate), load rotor 14.7 / 1.0.
   an expert's run replays bit for bit. An agent that wants 50 Hz repeats a row ten times (privileged: `s.step(a, n=10)`;
   standard: `dt=0.02`).
 - **Success** is AutoBio's own `check()`, evaluated after every control step (the upstream's rule stays):
-  - rule `first`, AutoBio's `early_stop` tasks (eight families): the first step at which it holds ends the episode in
-    success. This is "success at any step": it is how AutoBio's evaluator scores these tasks.
+  - rule `first`, AutoBio's `early_stop` tasks (eight families): in privileged mode the first step at which it holds
+    ends the episode in success ("success at any step", how AutoBio's evaluator scores these tasks). Standard episodes
+    are agent-ended and judged on the end state with the `final` rule ("Agent-ended episodes" below).
   - rule `final`, the thermal mixer: `check()` is a score in [0, 1] (0.5 x temperature + 0.3 x time + 0.2 x speed, each
     the fraction of the way from the initial to the target setting), and AutoBio scores the state at the end. Here:
     success iff the score is 1 in the state in which the episode ends (privileged: after the last row; standard: at the
-    agent's `done`, or when its time is over); the score is reported as `progress`.
+    agent's `POST /finish` or `done`, or when its time is over); the score is reported as `progress`.
   - AutoBio's time limits (15 to 45 s of simulated time) are lifted: the wall clock is the budget. One technical cap
     bounds an episode: it ends after 600000 control steps (1200 s of simulated time), stated in the instructions and in
     `/spec` (`max_control_steps`).
@@ -110,8 +111,8 @@ success rate), load rotor 14.7 / 1.0.
   are in `/spec` (`robot_spec.base`). `ci_checks/benchmarks/autobio/advisory-world-frame.sh` checks the standard texts.
 - **Texts.** The instructions describe each check in our own words and point to its source in the image
   (`/opt/AutoBio/autobio/<module>.py`); AutoBio's code is not quoted (no licence).
-- **Budget: 3600 s**, both modes (each task's `[agent] timeout_sec`, stated in its instruction's closing
-  `## Time limit` section).
+- **Budget: 3600 s**, both modes (each task's `[agent] timeout_sec`, stated in the Time line of its
+  instruction's closing `## Limits`).
 
 ## Modes
 - **Privileged:** `rcb_autobio.Session` in the agent's container: AutoBio's task object (`s.task`: its scene helpers and
@@ -163,12 +164,27 @@ success rate), load rotor 14.7 / 1.0.
   copy of the state; nothing calls `mj_forward` on the live data (that would change the solver's warm start and with
   it the trajectory). A replay with rendering ends in the same state as one without.
 
+## Agent-ended episodes
+
+Standard episodes are agent-ended (PROTOCOL §3 "Agent-ended episodes"; `RCB_AGENT_END` in the sim service,
+`/srv/rcb_agent_end.py`). The agent never sees a success: no `success` or progress in any meta, status or spec, and a
+success never ends the episode. The episode ends at the agent's `POST /finish` (reason `finished`), when its time runs
+out (`timeout`), at the service's technical cap on control steps (`step_limit`), on a failure rule of the task (a 0,
+even after a success) or on a simulator error (judged as without the feature). It is then judged on how things stand
+when it ends; `episode.json` records `ended_by`, `hidden_success_seen` and the step of the first hidden success as
+evidence. No `RCB_STEP_LIMIT` is set: AutoBio states no step count; its cap is technical.
+
+Under the feature the service checks AutoBio's own `check()` with the `final` rule after every control step
+(`native_rule` in the record keeps the task's own rule); the action type `done` is the same as `POST /finish`. AutoBio's
+checks are state checks; the pipette's latches (the dip and the drawing of liquid) count as they happened, and the final
+lift must hold at the end. A simulator warning (unstable state) is a failure, also after a success.
+
 ## Reference solutions
 AutoBio's scripted experts (`class <Task>Expert` in each task module), run from the frozen instance in a checkout that
 still has them: the targets in effect at every physics step, clipped to the actuators' ranges, rounded to float32 (what
 the standard client sends, so both modes execute the same rows) and, for rule `first`, cut at the first success:
 `solution/oracle.npz` in every task. The privileged oracle hands the rows in; the standard oracle streams them through
-the client (and ends the mixer's episode with `done`). Replayed through `ctrl[action_indices]` alone on a task without
+the client and ends the episode with `r.finish()`. Replayed through `ctrl[action_indices]` alone on a task without
 its expert, the unrounded rows reproduce the expert's own run bit for bit (final state and the whole `check()`
 timeline), in all nine families; rounded to float32 they still succeed (the success step moves by at most 22 control
 steps).

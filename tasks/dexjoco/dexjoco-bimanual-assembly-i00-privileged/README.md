@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:dexjoco-0.1.2` |
 
 ## Task
-DexJoCo `bimanual_assembly` (two Franka Panda arms, each with a 16-DoF Allegro hand): Hold the tray with one hand and insert the round peg into its socket with the other. Success: the peg touches the socket's bottom for 30 consecutive control steps.
+DexJoCo `bimanual_assembly` (two Franka Panda arms, each with a 16-DoF Allegro hand): Push the round peg all the way down into the socket in the tray.
 Privileged mode: the agent works in the simulator's container with live object poses, unlimited resets and thin motion
 primitives, and hands in one trajectory replayed open-loop from the frozen instance.
 

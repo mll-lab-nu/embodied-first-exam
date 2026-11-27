@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-match-0.1.0@sha256:99255569bf68bcf27f4e4867b58bad55c1d54fe73281920882e97c310836b6c7` |
 
 ## Task
+Win a game of singles badminton to 11 points against the scripted opponent.
+
 The privileged twin of `embodied-olympics-match-badminton-match-i04-realtime`: singles badminton on a 0.4-scale court (BWF Laws, one game to 11): Franka Panda with a racket on a gantry base against the scripted opponent; level 5, seed 1034, S = 20.
 
 ## Difficulty

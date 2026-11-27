@@ -886,8 +886,10 @@ class AlpineRace(TaskBase):
         a = self.pr.slope_at(float(p[0]))
         return (float(p[2]) - float(self.pr.z_at(float(p[0])))) * math.cos(a)
 
+    def actuate(self, w, ref):
+        self.ss.apply(w.d)                               # the snow's forces for the next physics step
+
     def substep(self, w, ref):
-        self.ss.apply(w.d)
         if not (ref.failed or ref.success):              # the snow's fall rule, after every physics step (1 ms)
             bad = ref.parts_touching(self.snow_mask) - set(self.legal_ground)
             if bad:
@@ -1040,8 +1042,8 @@ class Task(AlpineRace):
     params = dict(platform_m=6.0, start_back_m=0.30, dns_s=20.0, slope_deg=18.3, brink_radius_m=6.0, outrun_radius_m=60.0, outrun_m=80.0, course_width_m=40.0,
                   n_gates=18, first_gate_m=12.0, gate_spacing_m=13.5, offset_m=1.0, gate_width_m=4.0, first_side=1.0,
                   course_m=256.0, finish_width_m=12.0, stance_m=0.40, fall_h_m=0.35, stop_speed_m_s=0.10, stop_s=1.5)
-    sentence = ("Ride the parallel slalom on your snowboard: one run down the course, the board and both feet "
-                "through each of the {n_gates} gates in order, then over the finish line.")
+    sentence = ("Snowboard down the parallel-slalom course in one run, through all 18 gates in order, and cross the "
+                "finish line.")
     rules = ("FIS snowboard parallel slalom, one run on one course (of the minimum vertical drop). The course is a groomed slope "
              "falling at {slope_deg} degrees along +x (the fall line), {course_width_m} m wide, centred on y = 0. "
              "Both your feet are bound to one snowboard, the left foot forward (regular), across the board. You "

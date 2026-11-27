@@ -7,9 +7,5 @@ old = "`solution/oracle.npy`, 1288 rows"
 new = "`solution/oracle.npy`, 1054 rows"
 
 [[replace]]
-old = "all 2 scraps"
-new = "all 3 scraps"
-
-[[replace]]
 old = "2 crumpled paper scraps"
 new = "3 crumpled paper scraps"

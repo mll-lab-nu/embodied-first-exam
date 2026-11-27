@@ -54,6 +54,10 @@ SUBSTEPS = 4
 TOLERANCE_SCALE = 3.0       # run_isg --mode policy's default --tolerance-scale
 SETTLE_EVAL = True          # upstream's settle-eval (subset.toml): with it off, a blind sweep of a held object's poses succeeds
 SETTLE_STEPS = 45           # configs/eval.yaml settle_steps
+# agent-ended episodes (PROTOCOL §3; the standard service's RCB_AGENT_END): a success is recorded (Session.success is the
+# state's success now, success_step the first one) and never ends the episode; only max_steps does (sim/server.py judges
+# the state the episode ends in, with the settle window from it)
+AGENT_END = os.environ.get("RCB_AGENT_END") == "1"
 IMAGE_SIZE, HEAD_APERTURE_MM = 1080, 40.0   # configs/eval.yaml: evaluation camera profile isg-v1 (the goal images')
 TCP_FRAMES = {"left": "left_tcp", "right": "right_tcp"}
 GL2CV = np.diag([1.0, -1.0, -1.0, 1.0])     # camera frame, OpenGL axes (x right, y up, z back) -> OpenCV (x right, y down, z forward)
@@ -390,8 +394,9 @@ class Session:
         a[_np(self.robot.controller_action_idx["base"]).astype(int)] = 0.0
         return a
 
-    def step(self, action) -> bool:
-        """One control step of `action` (23 floats); True once the episode is over (success or max_steps)."""
+    def step(self, action, cap: bool = True) -> bool:
+        """One control step of `action` (23 floats); True once the episode is over (success or max_steps; with AGENT_END
+        max_steps only). cap=False (AGENT_END's settle window after the episode's end) never ends it at max_steps."""
         a = np.asarray(action, dtype=np.float32).reshape(-1)
         if a.size != self.action_dim or not np.all(np.isfinite(a)):
             raise ValueError(f"an action is {self.action_dim} finite numbers")
@@ -402,6 +407,13 @@ class Session:
         if not self.judge:
             return False
         self.isg = self._isg_info(info)                                  # upstream's reader (OmniGibson nests it)
+        if AGENT_END:
+            self.success = bool(self.isg["official_success"])
+            if self.success and self.success_step is None:
+                self.success_step = self.n
+            if cap and self.n >= self.max_steps:
+                self.done, self.reason = True, "max_steps"
+            return self.done
         if self.isg["official_success"]:
             self.success, self.done, self.reason, self.success_step = True, True, "success", self.n
         elif self.n >= self.max_steps:

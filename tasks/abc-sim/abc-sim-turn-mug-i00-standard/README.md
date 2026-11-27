@@ -9,10 +9,10 @@
 | Family / instance | `turn_mug` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:abc-sim-0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe:abc-sim-0.5.1` |
 
 ## Task
-ABC Sim `turn_mug_right_side_up` (two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each) side by side at the near edge of a table, facing +x (the left arm is the one at +y)): Turn every mug right side up and set it back down. Success: every mug stands upright (its axis within 18 deg of vertical, opening up) with its centre no more than 0.03 m higher than where it started (set back down). The goal must hold for 30 consecutive control steps (1.02 s); the episode then ends in success.
+ABC Sim `turn_mug_right_side_up` (two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each) side by side at the near edge of a table, facing +x (the left arm is the one at +y)): Turn both mugs right side up and set them down.
 2 mugs stand upside down on a tray on the table. The robot is a service; the episode it runs is graded.
 
 ## Difficulty

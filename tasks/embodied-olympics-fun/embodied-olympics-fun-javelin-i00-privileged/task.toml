@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/embodied-olympics-fun-javelin-i00-privileged"
-description = "Embodied Olympics javelin (one Unitree H1-2 on the Embodied Olympics simulator, MuJoCo 3.3.7, CPU) in privileged mode: produce one replayable trajectory. Throw the javelin, held by its cord in your right hand, over your shoulder from behind the arc so that its head strikes the ground first, inside the sector and at least 20 m from the arc. Then leave the runway behind the arc and stand. A referee of events, geometry and contact rules decides the success."
+description = "Embodied Olympics javelin (one Unitree H1-2 on the Embodied Olympics simulator, MuJoCo 3.3.7, CPU) in privileged mode: produce one replayable trajectory. Throw the javelin over your shoulder from behind the arc so that it lands point first inside the sector at least 20 m out, then leave the runway behind the arc and stand. A referee of events, geometry and contact rules decides the success."
 keywords = ["robotics", "embodied-olympics", "sports", "mujoco", "unitree-h1-2", "humanoid", "trajectory", "javelin"]
 
 [metadata]

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:robowits-0.1.1` |
 
 ## Task
-Place the lemon on the green target area. One replayable trajectory from the frozen instance (evaluation scene 0 of
+Put the lemon on the green target area. One replayable trajectory from the frozen instance (evaluation scene 0 of
 RoboWits task 3), with the privileged tooling (`rcb_robowits.py`: the scene's state, resets, thin primitives, replay);
 the success criterion as graded is in `instruction.md`.
 

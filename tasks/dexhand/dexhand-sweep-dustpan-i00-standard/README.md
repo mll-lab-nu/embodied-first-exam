@@ -34,12 +34,14 @@ fingers onto the frozen shafts); holding its targets keeps both tools for the wh
 force-bearing contacts per handle, grip drift <= 4.4 mm, rotation <= 0.022 rad). No Wuji success is claimed.
 
 ## Verification
-The trusted simulator service journals every executed row with the hand it runs (`DEXHAND_HAND`, default `sharpa`),
-evaluates the predicate after every 0.5 ms physics step and ends the episode at the first success or failure. That
-live episode is the verdict (`final.json`, `graded_by = "live"`): nothing is replayed to grade it (owner, 2026-10-17)
-The separate verifier reads only the service's `final.json`: reward 1 requires live success. The
-collect hook then renders `replay.mp4` from the recorded rows in one video-only pass, which never changes the
-verdict. Missing service evidence is an infrastructure error. Release status: provisional (human review).
+The trusted simulator service journals every executed row with the hand it runs (`DEXHAND_HAND`, default `sharpa`) and
+evaluates the predicate after every 0.5 ms physics step. A failure ends the episode at once; a success never ends it and
+is never shown. The episode ends at the agent's `POST /finish`, at a failure, at the episode budget, on a simulator
+error or when the session ends, and is judged on the state it ends in (the stages before the last count when they
+happen). That live episode is the verdict (`final.json`, `graded_by = "live"`): nothing is replayed to grade it (owner,
+2026-10-17) The separate verifier reads only the service's `final.json`: reward 1 requires live success. The collect
+hook then renders `replay.mp4` from the recorded rows in one video-only pass, which never changes the verdict. Missing
+service evidence is an infrastructure error. Release status: provisional (human review).
 
 ## Resources
 Caps per container (PROTOCOL §6).

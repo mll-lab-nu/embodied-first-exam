@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:robotwin-0.1.2` |
 
 ## Task
-RoboTwin 2.0 rotate_qrcode (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Pick up the QR-code board and set it back down on the table standing upright, with the QR code facing straight toward you. Then let go. Frozen scene instance (RoboTwin seed 28831).
+RoboTwin 2.0 rotate_qrcode (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Pick up the QR-code board and stand it back on the table, upright, with the QR code facing straight toward the robot. Then let go. Frozen scene instance (RoboTwin seed 28831).
 
 ## Difficulty
 RoboTwin's scripted expert needs 3 planned motions (26 lines); official data-generation success on ALOHA-AgileX 75% (the expert's own pass rate over random layouts); in our image the expert passed on seed 28831 on attempt 2 of 2 with 2067 physics steps. Tags from the code: single-arm. RoboTwin evaluation budget 400 policy actions. The trajectory is the raw per-step drive-target record, so any plan failure or a grasp that slips during replay scores 0.
@@ -45,4 +45,4 @@ Caps per container (PROTOCOL §6).
 | RoboTwin eval step limit | 400 (policy-eval budget upstream; indicative of task length) |
 
 ### Goal
-Pick up the QR-code board and set it back down on the table standing upright, with the QR code facing straight toward you. Then let go.
+Pick up the QR-code board and stand it back on the table, upright, with the QR code facing straight toward the robot. Then let go.

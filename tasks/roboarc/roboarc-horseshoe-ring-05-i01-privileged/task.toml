@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/roboarc-horseshoe-ring-05-i01-privileged"
-description = "RoboARC horseshoe_ring (ALOHA 2, MuJoCo): produce one replayable trajectory. Separate the removable ring from the puzzle and put the whole of it inside the green dashed goal region. Leave the horseshoes and chains behind, no closer to the goal region than they were at the start. Frozen scene instance (variation horseshoe_ring_hard, seed 0)."
+description = "RoboARC horseshoe_ring (ALOHA 2, MuJoCo): produce one replayable trajectory. Take the removable ring out of the puzzle and put all of it inside the green dashed goal square. Leave the horseshoes and chains behind, no closer to the goal than they were at the start. Keep every chain hooked in its horseshoe. Frozen scene instance (variation horseshoe_ring_hard, seed 0)."
 keywords = ["robotics", "roboarc", "mujoco", "aloha", "code-as-policy", "trajectory", "horseshoe_ring"]
 
 [metadata]

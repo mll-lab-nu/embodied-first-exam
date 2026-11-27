@@ -21,7 +21,7 @@ GRASS = (0.16, 0.50, 0.20, 1)
 #   reset(w):           self.keeper.reset(w)            (the board at its rail's centre, at rest; t = 0 placement)
 #   referee_reset:      self.trackers["keeper"] = self.keeper   (its setpoint profile is part of the state hash)
 #   before_step(w):     self.keeper.command(target_y)   (optional: where the servo's setpoint should go; omit = hold)
-#   substep(w, ref):    self.keeper.substep(w)          (REQUIRED, first thing: advances the setpoint by 1 ms)
+#   actuate(w, ref):    self.keeper.substep(w)          (REQUIRED: advances the setpoint by 1 ms, also after the call)
 #   self.keeper.y(w), .vy(w), .force(w)                 (the board's world y, its speed and the motor's force)
 #   self.keeper.bind(w).qa / .va / .aid                 (its qpos / dof / actuator addresses, read-only use)
 class Keeper:
@@ -962,8 +962,8 @@ class Task(TaskBase):
                   launch_azimuth_deg=-105.873, launch_wx_rad_s=-28.85, launch_wy_rad_s=8.21,
                   keeper_mass_kg=80.0, keeper_force_n=800.0)
 
-    sentence = ("Volley the cross: strike the football that is crossed to you from the wing with a foot before it "
-                "touches the ground, into the official goal 11 m away, past the goalkeeper dummy.")
+    sentence = (("Volley the cross into the goal: strike it with a foot before it touches the ground and send it "
+                 "past the goalkeeper dummy."))
     rules = ("You stand on the penalty mark, facing the goal; the goal line is {mark_distance_m} m ahead of you. The "
              "goal is {goal_width_m} m wide between the posts and {goal_height_m} m high under the crossbar (posts and "
              "bar {post_m} m thick), centred on the line you face along. A goalkeeper dummy, a board "
@@ -1053,9 +1053,11 @@ class Task(TaskBase):
     def before_step(self, w):
         self.bm.write(w, w.t)                # the machine's controller: wheel speeds, the gate
 
+    def actuate(self, w, ref):
+        self.keeper.substep(w)               # the keeper's servo (it holds the board at the centre)
+
     def substep(self, w, ref):
         p, tr = self.p, self.trackers
-        self.keeper.substep(w)               # the keeper's servo (it holds the board at the centre)
         if not tr["launched"]:
             if ref.touching(ref.robot_mask, self.ball | self.mach):
                 return ref.fail("the ball machine or the waiting ball was touched",

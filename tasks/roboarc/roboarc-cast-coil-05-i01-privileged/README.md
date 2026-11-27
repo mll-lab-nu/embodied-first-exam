@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:roboarc-0.2.0` |
 
 ## Task
-RoboARC cast_coil (ALOHA 2, MuJoCo): produce one replayable trajectory. Fit the gold and silver Cast Coil pieces fully together, interlocked the way they are made to fit, with the assembly resting on the table. Then let go of both and move the robot clear of them. Frozen scene instance (variation cast_coil_hard, seed 0).
+RoboARC cast_coil (ALOHA 2, MuJoCo): produce one replayable trajectory. Fit the gold and silver pieces fully together, interlocked the way they are made to fit, resting on the table. Then let go of them and move both arms clear of them. Frozen scene instance (variation cast_coil_hard, seed 0).
 
 ## Difficulty
 Two 6-dof aloha (viperx) arms with parallel-jaw grippers on a fixed base with a 14-D joint-target action space at 40 Hz; success needs the task's predicate (above) held for 0.5 s. Grasping: assisted grasping (contact_weld_v1).
@@ -49,7 +49,7 @@ Caps per container (PROTOCOL §6).
 | Success rule | task-native success (goal_complete True; frozen parameters; terminal revision release_settling_v2_grasp_contact_2mm) |
 
 ### Goal
-Fit the gold and silver Cast Coil pieces fully together, interlocked the way they are made to fit, with the assembly resting on the table. Then let go of both and move the robot clear of them.
+Fit the gold and silver pieces fully together, interlocked the way they are made to fit, resting on the table. Then let go of them and move both arms clear of them.
 
 ### Success requirements
 - Align the pieces' matching assembly frames with relative position error below 1 mm and relative angular error below 0.02 rad.

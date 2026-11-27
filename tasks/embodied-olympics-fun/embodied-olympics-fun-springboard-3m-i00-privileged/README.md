@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Do dive 101A, a forward dive straight, from the 3 m springboard: take off from both feet from your standing start at its end, turn half a somersault forwards in the straight position, and enter the water head first and vertical, with your arms stretched beyond your head. (Embodied Olympics `springboard-3m`: one Unitree G1 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
+Dive from the 3 m springboard: take off from both feet, do a forward half somersault with your body straight, and go into the water head first, straight and vertical. (Embodied Olympics `springboard-3m`: one Unitree G1 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
 
 ## Difficulty
 The robot must time its push with a board that bends and recoils under its 33 kg, take off high with exactly the right forward rotation, and then hold a straight body with the legs drawn together, the toes pointed and the short arms stretched overhead through a 1 s fall. Nothing can be corrected once it is in the air.

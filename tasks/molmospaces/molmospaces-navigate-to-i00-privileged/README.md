@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:molmospaces-0.2.5` |
 
 ## Task
-Navigate to any tablelamp (2 available). One frozen episode of Ai2's MolmoSpaces benchmark (upstream package `holodeck-objaverse/NavToObjDataGenConfig/NavToObjHolodeckBench_20260115_json_benchmark`, episode 237:
+Go to one of the two table lamps and stop close by, with the lamp in view of the head camera. One frozen episode of Ai2's MolmoSpaces benchmark (upstream package `holodeck-objaverse/NavToObjDataGenConfig/NavToObjHolodeckBench_20260115_json_benchmark`, episode 237:
 several objects of the target type (the nearest counts)), with a Rainbow Robotics RB-Y1 mobile manipulator: holonomic base, 6-joint torso, two 7-joint arms with parallel grippers, head camera. Privileged mode: full simulator state, unlimited resets; the deliverable is one
 open-loop trajectory of joint-position targets, one row per control step.
 

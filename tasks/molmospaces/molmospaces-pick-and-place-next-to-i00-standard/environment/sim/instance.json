@@ -565,7 +565,7 @@
   },
   "task_relevant_objects": [],
   "language": {
-   "task_description": "Pick up the compact black rail mount with slots and place it next to the bread",
+   "task_description": "Put the black rail mount down right beside the bread, almost touching it.",
    "referral_expressions": {
     "pickup_name": "compact black rail mount with slots",
     "place_name": "bread"
@@ -711,7 +711,7 @@
  "instance": "i00",
  "variant": "an Objaverse object",
  "facts": {
-  "goal": "Pick up the compact black rail mount with slots and place it next to the bread",
+  "goal": "Put the black rail mount down right beside the bread, almost touching it.",
   "horizon_steps": 455,
   "horizon_s": 30,
   "control_hz": 15.152,

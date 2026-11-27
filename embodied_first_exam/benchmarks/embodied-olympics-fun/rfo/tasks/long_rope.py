@@ -313,10 +313,8 @@ class Task(TaskBase):
         p["turner_y_m"] = round(p["turner_distance_m"] / 2, 6)
         self.stages = [f"jump {i}" for i in range(1, int(p["jumps_required"]) + 1)] + ["landing", "stand"]
 
-    sentence = ("Jump the long rope: standing in the middle of a rope turned by two rope-turning machines, jump it "
-                "{jumps_required} "
-                "times in a row, the rope passing under both your feet while you are in the air, without the rope "
-                "ever touching you.")
+    sentence = (("Jump the long rope 10 times in a row without the rope touching you, then land on your feet and "
+                 "stand still."))
     rules = ("Two rope-turning machines stand on the turners' spots, {turner_distance_m} m apart, one on each side "
              "of you (on the y axis, at y = -{turner_y_m} and +{turner_y_m} m); they turn a {rope_length_m} m rope, "
              "{rope_diameter_m} m thick, tied {rope_held_from_end_m} m from each end to the tip of a crank arm, at a "
@@ -428,9 +426,11 @@ class Task(TaskBase):
     def _rope_nodes(self, w) -> np.ndarray:
         return w.d.site_xpos[self.nodes]
 
+    def actuate(self, w, ref):
+        self._command(w, ref.time + w.PHYS_DT)          # the motors' command for the next physics step
+
     def substep(self, w, ref):
         p, tr, d, r = self.p, self.trackers, w.d, w.robot
-        self._command(w, ref.time + w.PHYS_DT)          # the motors' command for the next physics step
         fl = tr["flights"]
         landed = fl.update()
         if ref.touching(self.rope, self.robot_sel):

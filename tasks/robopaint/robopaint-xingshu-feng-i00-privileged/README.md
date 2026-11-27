@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:robopaint-0.2.0` |
 
 ## Task
+Copy the character 風 (running script, 行书) in `/app/target.png` onto the main sheet with brush and ink, in at most 6 strokes.
+
 **Process rules** (tasks/robopaint/README.md) on top of the picture rule, so that the exemplar has to be made with strokes rather
 than coloured in: colouring in fails: a brush-tip path on the main sheet (`path_mm`) longer than 2150 mm (3 × an earlier reference solution's 714 mm) made of marks narrower than 2.42 mm on average (`mark_width_mm`: each stroke's own
 inked area / `path_mm`; 0.3 × that reference's 8.09 mm; the current reference solution: 1181 mm and 5.00 mm). The cap counts strokes as written: a contact is cut where the brush moves more than 5 mm without a mark

@@ -75,8 +75,7 @@ class Task(TaskBase):
                   gun_min_s=1.2, gun_max_s=2.2, gun_after_set_s=1.74, reaction_min_s=0.100, start_move_m=0.05,
                   finish_limit_s=30.0, down_z_m=0.40, down_limit_s=10.0)
 
-    sentence = ("Run the 50 m: wait for the starter's gun, then sprint down your lane until your torso reaches the "
-                "finish line.")
+    sentence = ("Run the 50 m: start on the gun and sprint down your lane until your torso reaches the finish line.")
     rules = ("World Athletics rules for the straight sprint. The lane runs along +x, {lane_width_m} m wide, centred "
              "on y = 0. The start line is {start_line_m} m wide; its far edge is x = 0 and the finish line's near "
              "edge is x = {distance_m} m. The start: \"on your marks\" at t = 0, \"set\" {set_at_s} s later, the gun "

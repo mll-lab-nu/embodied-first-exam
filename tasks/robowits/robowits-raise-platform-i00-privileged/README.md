@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:robowits-0.1.1` |
 
 ## Task
-Place the book on the cup supports. One replayable trajectory from the frozen instance (evaluation scene 0 of RoboWits
+Lay the book across the two cups so that it rests on top of them. One replayable trajectory from the frozen instance (evaluation scene 0 of RoboWits
 task 24), with the privileged tooling (`rcb_robowits.py`: the scene's state, resets, thin primitives, replay); the
 success criterion as graded is in `instruction.md`.
 

@@ -20,13 +20,16 @@ success    : RoboDojo's own reward manager for the task (its `run_reward` check 
              pass (success) or when a check fails for good. RoboDojo's evaluation also ends a policy's episode after the
              task's step_lim actions; no task's check reads that limit, and here there is none (PROTOCOL D1: no step caps),
              only the runaway guard MAX_ACTIONS, unless a standard task's service ends its episodes the agent's way
-             (RCB_AGENT_END, RCB_STEP_LIMIT: below).
+             (RCB_AGENT_END, RCB_STEP_LIMIT: below; such an episode is judged when it ends, per task as END_JUDGEMENT
+             says).
 
 CLI
 ---
   python rcb_robodojo.py make-instance --task stack_bowls --seed 0 --layout 0 --out instance.json
   python rcb_robodojo.py run-actions   --task stack_bowls --instance instance.json --actions actions.npy --out traj.npz
   python rcb_robodojo.py replay        --task stack_bowls --instance instance.json --traj traj.npz [--video replay.mp4]
+  RCB_AGENT_END=1 RCB_STEP_LIMIT=<step_lim> python rcb_robodojo.py replay ...   # a standard trial's trajectory.npz, judged
+                                                                                 # as the standard service judges it
 
 Python (what the agent gets)
 ----------------------------
@@ -73,10 +76,84 @@ MAX_ACTIONS = 15000                    # no step budget (PROTOCOL D1; the wall c
 # actions; a policy never sees the reward. With RCB_AGENT_END the checks never end the episode: _hidden_episode_end
 # replaces EvalEnv.is_episode_end for the Session's env: the same reward call, its value kept as the state's success
 # (Session.success), and only a failure (a check that marks the env failed, e.g. a query over its count) or the step
-# limit end the episode, as RoboDojo's own rule does. The reward is a latch (check lists only shrink, query counts only
-# grow; only a failure takes a reached 1 back): env._rcb_latch keeps "the reward reached 1", which a later failure does
-# not take back (Session.latched: the verdict, as RoboDojo's, whose episode had ended at that action).
+# limit end the episode, as RoboDojo's own rule does. RoboDojo's reward is staged: each check stage, once it passes, is
+# popped and never looked at again (check lists only shrink, query counts only grow). So "the reward is 1" alone would
+# keep a goal that was reached and then undone (bowls stacked, then knocked over). An agent-ended episode is judged on
+# how things stand when it ends (owner 11-25, board 0309 D216 / 0611 D1=B), per task as END_JUDGEMENT says.
 AGENT_END = os.environ.get("RCB_AGENT_END") == "1"
+# END_JUDGEMENT: how an agent-ended episode of each of RoboDojo's 54 tasks is judged when it ends (its /finish, the step
+# limit or the end of the agent's session). Every task needs an entry: Session refuses an agent-ended task without one.
+#   "end":     RoboDojo's staged reward is 1 (every earlier check stage passed during the episode, in order; its queries
+#              met; no failure) AND the task's LAST check stage holds on the final state. RoboDojo's own check function
+#              (reward_manager.check_once, the one its step() runs) re-checks that stage after every action once RoboDojo has
+#              popped it, so the value after the last action is the end state's (a stage's "at rest" checks, is_not_moved
+#              with update, compare with the action before, as RoboDojo's step() would). For a one-stage task: the whole goal
+#              holds at the end.
+#   "history": RoboDojo's staged reward as it stands at the end, no re-check: the goal is a sequence of moments (strikes,
+#              presses) or is judged by RoboDojo at a trigger (a bottle stood upright again, the arms back home), so there
+#              is no end state to re-check. A failure still ends the episode with 0.
+END_JUDGEMENT = {
+    # ---- one check stage: the whole goal is re-checked on the final state
+    "align_blocks": ("end", "cubes in a row, square to it, both arms home"),
+    "arrange_largest_number": ("end", "digit blocks on their mats in the largest number, both arms home"),
+    "arrange_largest_number_random": ("end", "digit blocks on their mats in the largest number, both arms home"),
+    "build_tower": ("end", "the tower's structure, every piece upright, both arms home"),
+    "classify_objects": ("end", "each category in one basket, settled, both arms home"),
+    "classify_objects_by_language": ("end", "each category in its named basket, settled, both arms home"),
+    "deposit_coin": ("end", "the coin inside the piggy bank, both arms home"),
+    "fasten_screws": ("end", "each nut down its bolt, face up, grippers open, both arms home"),
+    "fill_egg_holder": ("end", "the eggs in the cups, the lid closed, both arms home"),
+    "fill_pen_holder": ("end", "the pens in the holder the right way up, the holder upright, both arms home"),
+    "general_pickup": ("end", "the target still lifted above where it lay"),
+    "hang_mugs": ("end", "the mugs hanging by their handles, at rest, both arms home"),
+    "hang_mugs_random": ("end", "the mugs on the rack, at rest, both arms home"),
+    "insert_key": ("end", "the key in the keyhole, pushed in and turned"),
+    "insert_tubes": ("end", "the tubes in the rack, cap up and pushed down, both arms home"),
+    "make_toast": ("end", "a slice in each slot, the others on the shelf, the lever down, both arms home"),
+    "make_toast_random": ("end", "a slice in each slot, the others on the shelf, the lever down, both arms home"),
+    "match_and_pick_from_conveyor": ("end", "the matching object still lifted above the belt"),
+    "organize_table": ("end", "the four items in place and at rest, both arms home"),
+    "pack_objects_into_box": ("end", "the four objects in the box the right way, the box upright, both arms home"),
+    "pack_objects_into_box_random": ("end", "the four objects in the box the right way, the box upright, both arms home"),
+    "pick_from_conveyor_by_image": ("end", "the object on the basket's floor, the basket still lifted"),
+    "play_stacking_toy": ("end", "the blocks on their pegs, both arms home"),
+    "play_tic_tac_toe": ("end", "nine pieces flat in nine cells"),
+    "plug_in_charger": ("end", "the charger upright in an outlet, prongs in, both arms home"),
+    "pour_balls_into_vase": ("end", "the balls in the vase, the cup upright, both arms home"),
+    "push_T": ("end", "the block flat over the pad, the same way round, both arms home"),
+    "push_T_random": ("end", "the block flat over the pad, the same way round, both arms home"),
+    "put_bottles_into_dustbin": ("end", "the bottles in the dustbin, both arms home"),
+    "solve_equation": ("end", "the right tile on the empty pad, square, both arms home"),
+    "sort_nesting_dolls_by_size": ("end", "the five upright in a row by size, both arms home"),
+    "sort_nesting_dolls_by_size_random": ("end", "the five upright in a row by size, both arms home"),
+    "stack_blocks": ("end", "the three blocks in one tower, both arms home"),
+    "stack_blocks_by_language": ("end", "the three cubes in the named order, both arms home"),
+    "stack_blocks_random": ("end", "the three blocks in one tower, both arms home"),
+    "stack_bowls": ("end", "the bowls nested, upright, both arms home"),
+    "stack_bowls_random": ("end", "the bowls nested, upright, both arms home"),
+    "store_laptop_and_headphones": ("end", "the headphones on the stand, the laptop closed in its rack, both arms home"),
+    "store_laptop_and_headphones_random": ("end", "the headphones on the stand, the laptop closed in its rack, both arms home"),
+    "store_tools_in_toolbox": ("end", "each tool in its slot, the right side up, both arms home"),
+    "swap_T": ("end", "each T block where the other one was, turned as it was, both arms home"),
+    "sweep_blocks": ("end", "the cubes in the dustpan, the dustpan flat, the broom to its right, both arms home"),
+    "sweep_blocks_random": ("end", "the objects in the dustpan, the dustpan flat, the broom to its right, both arms home"),
+    # ---- ordered check stages: the earlier ones from the episode (as RoboDojo counts them), the last one re-checked
+    "cover_blocks": ("end", "the covering and uncovering in order; last: all blocks uncovered, cups mouth-down, both arms home"),
+    "imitate_sorting_sequence": ("end", "the five objects into the basket in the opponent's order; last: all five in it, "
+                                        "both arms home"),
+    "make_kong": ("end", "the three matching tiles face up before the front stack is touched; last: the tiles as they "
+                         "should be, the front tile standing at the row's end, grippers open"),
+    "swap_blocks": ("end", "the three moves and the presses in order (the count of presses: as it happened); last: both "
+                           "arms home with the cap pulled up"),
+    # ---- the goal is a sequence of moments, or judged at a trigger: RoboDojo's staged reward, no end re-check
+    "play_Xylophone": ("history", "eight key strikes in order: each a moment, no end state"),
+    "press_by_number": ("history", "button presses counted as they happen; the arms' return judged at the last release"),
+    "pour_liquid_into_cup": ("history", "the pour judged when the bottle stands upright again (a trigger)"),
+    "pour_liquid_into_cup_random": ("history", "the pour judged when the bottle stands upright again (a trigger)"),
+    "pour_by_language": ("history", "each pour judged when its bottle stands upright again (a trigger)"),
+    "fold_clothes": ("history", "the fold judged when both arms come home with open grippers (a trigger)"),
+    "fold_clothes_random": ("history", "the fold judged when both arms come home with open grippers (a trigger)"),
+}
 # RCB_STEP_LIMIT (with RCB_AGENT_END): the episode ends after the task's own step_lim actions, as in RoboDojo's evaluation
 # (EvalEnv.take_action_batch / is_episode_end count one per 14-D action, the 25 Hz action of step() here), instead of the
 # runaway guard MAX_ACTIONS; the number must be the task's step_lim (Session refuses another).
@@ -85,8 +162,9 @@ STEP_LIMIT = int(os.environ.get("RCB_STEP_LIMIT") or 0) or None
 
 def _hidden_episode_end(env) -> bool:
     """EvalEnv.is_episode_end (RoboDojo @ cb2a37d, src/eval_client/eval_env.py) without the success end: the
-    reward is computed exactly as there (final checks only at the step limit or after a failure) and kept in
-    env._rcb_goal; the episode ends at a failure, or at the step limit (then judged: success iff the reward is 1)."""
+    reward is computed exactly as there (final checks only at the step limit or after a failure); the episode ends at a
+    failure, or at the step limit (then judged as below). env._rcb_goal: the state's success, judged as END_JUDGEMENT
+    says: for an "end" task the reward is 1 AND the last check stage (env._rcb_end_stage) holds now."""
     pre_end_flag = deepcopy(env.end_flag)
     final_check = False
     for env_idx in range(env.num_envs):
@@ -97,9 +175,9 @@ def _hidden_episode_end(env) -> bool:
     for env_idx in range(env.num_envs):
         if env.end_flag[env_idx]:
             continue
-        goal = reward_list[env_idx] > 1 - 1e-3
+        holds = _end_stage_holds(env, env_idx)    # every action (not only at reward 1): see when the stage was popped
+        goal = reward_list[env_idx] > 1 - 1e-3 and holds
         env._rcb_goal[env_idx] = bool(goal)
-        env._rcb_latch[env_idx] = bool(env._rcb_latch[env_idx] or goal)
         if env.take_action_cnt[env_idx] >= env.step_lim:
             env.end_flag[env_idx] = True
             env.success[env_idx] = bool(goal)
@@ -109,6 +187,27 @@ def _hidden_episode_end(env) -> bool:
     if changed:
         env.get_obs_batch(env_idx_list=changed, last_frame=True)
     return all(env.end_flag)
+
+
+def _end_stage_holds(env, env_idx: int) -> bool:
+    """An "end" task (END_JUDGEMENT): whether its last check stage holds in the state after this action. True for a
+    "history" task (nothing re-checked) and while the stage is still RoboDojo's to check. At the action whose
+    reward_manager.step() popped the stage it has just passed there; at every later action it is checked again here with
+    RoboDojo's own check function (check_once over the stage's checks in order, stopping at the first that fails, as
+    its step() does), so after the last action the value is the end state's."""
+    stage = env._rcb_end_stage[env_idx]
+    if stage is None:
+        return True
+    rm = env.reward_manager
+    if not env.success[env_idx] or len(rm.check_list[env_idx]) > 0:   # failed, or not every stage passed yet
+        return False
+    if not env._rcb_end_popped[env_idx]:      # popped by RoboDojo at this action: it has just passed
+        env._rcb_end_popped[env_idx] = True
+        return True
+    for check in stage:
+        if not rm.check_once(check, env_idx):
+            return False
+    return True
 ARMS = ("left", "right")
 ARM_SLICE = {"left": slice(0, 6), "right": slice(7, 13)}
 GRIP_INDEX = {"left": 6, "right": 13}
@@ -393,9 +492,11 @@ class Session:
         env.step_lim = cap
         self.step_lim = cap
         if AGENT_END:        # the episode's end without the success end (see _hidden_episode_end)
+            if self.task not in END_JUDGEMENT:
+                raise RuntimeError(f"RCB_AGENT_END=1, but END_JUDGEMENT does not say how {self.task}'s episode is judged at its end")
             import types
             env._rcb_goal = [False] * int(env.num_envs)
-            env._rcb_latch = [False] * int(env.num_envs)
+            env._rcb_end_stage, env._rcb_end_popped = [None] * int(env.num_envs), [False] * int(env.num_envs)
             env.is_episode_end = types.MethodType(_hidden_episode_end, env)
         return env
 
@@ -412,7 +513,7 @@ class Session:
         env = self.env
         env.success, env.end_flag, env.take_action_cnt = [True], [False], [0]
         if AGENT_END:
-            env._rcb_goal, env._rcb_latch = [False], [False]
+            env._rcb_goal, env._rcb_end_stage, env._rcb_end_popped = [False], [None], [False]
         env.episode_nums, env.unstable_nums = 1, 0
         env.reset(seed=[self._layout_id])
         # the start of RoboDojo's episode (EvalEnv.run_eval): register the task's checks, its process score, and for the
@@ -423,6 +524,12 @@ class Session:
         rm = getattr(env, "reward_manager", None)
         if rm is None or not any(len(getattr(rm, k)[0]) for k in ("check_list", "final_check_list", "trigger_check_list")):
             raise RuntimeError(f"RoboDojo registered no success check for task {self.task}: the episode would read as a success at once")
+        if AGENT_END and END_JUDGEMENT[self.task][0] == "end":
+            # the task's last check stage, re-checked on the state after every action once RoboDojo has popped it (popping
+            # takes the stage out of check_list, never changes it: the list kept here is the registered one)
+            if not rm.check_list[0]:
+                raise RuntimeError(f"END_JUDGEMENT says {self.task} is judged on its end state, but it registered no check stage")
+            env._rcb_end_stage = [rm.check_list[0][-1]]
         if hasattr(env, "get_score"):
             env.get_score()
         if getattr(env, "interact", False) and hasattr(env, "query_support_arm_traj"):
@@ -464,13 +571,10 @@ class Session:
         return bool(self.env.end_flag[0])
 
     def success(self) -> bool:
-        if AGENT_END:     # the state's success: the reward reached 1 (latched stages) and the env not failed
+        if AGENT_END:     # the state's success as END_JUDGEMENT judges it (_hidden_episode_end) and the env not failed:
+            # after the episode's last action, its verdict
             return bool(self.env._rcb_goal[0]) and bool(self.env.success[0])
         return bool(self.env.end_flag[0]) and bool(self.env.success[0])
-
-    def latched(self) -> bool:
-        """RoboDojo's reward reached 1 at some action of this episode (a later failure does not take it back)."""
-        return bool(self.env._rcb_latch[0])
 
     def end_reason(self) -> str | None:
         if not self.done:
@@ -513,7 +617,8 @@ class Session:
 
     def status(self) -> dict[str, Any]:
         return {"success": self.success(), "done": self.done, "end_reason": self.end_reason(), "actions": int(self.n_steps),
-                "max_actions": self.step_lim, "resets": self._resets, "state_sha": self.state_sha()}
+                "max_actions": self.step_lim, "resets": self._resets, "state_sha": self.state_sha(),
+                **({"judged": END_JUDGEMENT[self.task][0]} if AGENT_END else {})}
 
     # ---- state hash: every rigid body's world pose (PhysX) + both arms' joint positions (+ particle positions, if any)
     def state_sha(self) -> str:

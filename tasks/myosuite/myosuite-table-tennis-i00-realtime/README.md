@@ -13,7 +13,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:myosuite-0.1.1` |
 
 ## Task
-MyoSuite `myoChallengeTableTennisP1-v0` (MyoArm with torso, 273 muscles) on the same frozen instance as `myosuite-table-tennis-i00-privileged`: Return the served ball: hit it with the paddle so that it lands on the opponent's half of the table (MyoChallenge 2025 TableTennis P1's own success test on the ball's contact history: after the serve's bounce on your half, the paddle touches it once, then it touches the opponent's half, with no second paddle touch and no further bounce on your half). Failure (the episode ends): any other outcome of the rally, the ball falling below 0.3 m, or 3 s of simulated time.
+MyoSuite `myoChallengeTableTennisP1-v0` (MyoArm with torso, 273 muscles) on the same frozen instance as `myosuite-table-tennis-i00-privileged`: Return the served ball: after it bounces once on your half, hit it once with the paddle so that it lands on the opponent's half, with no second paddle touch and no second bounce on your half.
 You stand at a table-tennis table holding a paddle in the right hand; a ball is served toward you from the far side. Realtime mode (eai-standard/2.3, slowdown S = 1): once an episode's clock starts the body and the ball move whatever the agent does; it drives the body through the realtime client from a program of its own, with only its own proprioception and the scene's cameras, and 10 resets (only the last episode is graded).
 
 ## Difficulty
@@ -44,7 +44,7 @@ Caps per container (PROTOCOL §6).
 | Slowdown | S = 1 (`RCB_SLOWDOWN`'s default): measured RTF 2.1-2.7 (2026-10-14, an RTX 4090 workstation (32 cores, load 30-60), the service capped at 4 CPUs: 2.08 with the realtime service's clock flat out (RCB_SLOWDOWN = 0.01, 11 episodes, 13.3 s of robot time), 2.6-2.7 for the bare physics; S = ceil(1.5 / 2.08) = 1. At S = 1 a controller at the control rate with a camera image every 0.25 s ran 11 episodes with no stall (largest lag 0.23 s), and an EGL frame takes 5 ms (an OSMesa one 1.3 s)) |
 | Service | the realtime layer of HumanoidBench, BiGym 2.0 and RoboOlympics (`rcb_realtime.py`, `rcb_service.py`, unchanged) with `server.py`, which implements `rcb_service.Sim` on `rcb_myosuite.Session` (the standard twin's scene, action and success rule); cameras `topview`, `default`, `close_up`, `hand_top`, `hand_bottom`, `hand_side_inter`, `hand_side_exter`, `plam_lookat` (640 x 480, EGL on the GPU) |
 | Resources | 4 CPUs and a GPU for rendering (the physics is on the CPU) |
-| Reset budget | 10 (`RCB_RESET_BUDGET`, compose default; PROTOCOL §2): `POST /reset` starts a new episode from the frozen instance, paused; only the last episode is graded, a success ends the trial; results under another budget or slowdown are reported separately |
+| Reset budget | 10 (`RCB_RESET_BUDGET`, compose default; PROTOCOL §2): `POST /reset` starts a new episode from the frozen instance, paused; only the last episode is graded, when the agent sends `POST /finish` or its session ends (a success ends nothing); results under another budget or slowdown are reported separately |
 
 ### Provenance
 The frozen instance (`environment/sim/instance.npz`) and its scene facts were made at generation time; the realtime

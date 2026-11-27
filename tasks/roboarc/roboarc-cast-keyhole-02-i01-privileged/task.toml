@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/roboarc-cast-keyhole-02-i01-privileged"
-description = "RoboARC cast_keyhole (ALOHA 2, MuJoCo): produce one replayable trajectory. Separate the silver keyhole piece from the puzzle and put the whole of it inside the green dashed goal region. Leave the gold piece behind, no closer to the goal region than it was at the start. Frozen scene instance (variation easier, seed 0)."
+description = "RoboARC cast_keyhole (ALOHA 2, MuJoCo): produce one replayable trajectory. Take the silver keyhole piece out of the puzzle and put all of it inside the green dashed goal square. Leave the gold piece behind, no closer to the goal than it was at the start. Frozen scene instance (variation easier, seed 0)."
 keywords = ["robotics", "roboarc", "mujoco", "aloha", "code-as-policy", "trajectory", "cast_keyhole"]
 
 [metadata]

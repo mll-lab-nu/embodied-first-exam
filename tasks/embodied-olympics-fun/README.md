@@ -66,7 +66,7 @@ Every family names its rule book and lists each deviation with its reason in its
 
 **Reset budget 5** in standard and realtime: a sport is attempts, and 5 is about the trials a field event
 gives an athlete, enough to correct from the referee's call and too few to search for a plan by trial and error. The
-last attempt is graded and a success ends the trial. With resets the first attempt is kept (`trajectory.first.npz`,
+last attempt is graded; a success ends nothing, `POST /finish` ends the trial ("Agent-ended episodes" below). With resets the first attempt is kept (`trajectory.first.npz`,
 `replay.first.mp4`; `first_success` in `final.json` and `reward.json`): the no-reset view.
 
 ## Grading
@@ -79,6 +79,22 @@ last attempt is graded and a success ends the trial. With resets the first attem
   no grading replay); the start is checked against the instance's state hash, and a crash resumes the attempt from the
   sidecar's journal.
 
+### Agent-ended episodes
+
+Every standard and realtime task sets `RCB_AGENT_END "1"` in its sim service (PROTOCOL §3, the shared `rcb_service.py`;
+realtime through `rcb_realtime.py`): the referee's success call is never shown and does not end the attempt. The
+referee's call is an event (`end_judgement` "events"): a success counts the moment the referee makes it, and since the
+referee does nothing more once it has called the attempt, nothing after it undoes it; the physics goes on
+(`rfo.World.run_after_done`) until the agent's `POST /finish` (reason `finished`), the end of its session (`timeout`), a
+reset (the attempt is abandoned, only the last is graded) or the attempt's time limit (the service's step cap,
+`step_limit`). A foul, a fall or a physics blow-up the referee calls before a success ends the attempt at once as a
+failure (`failed`, 0), and only then does a reply carry the call (`meta["outcome"]`, the rule broken); `stages_reached`
+and a success are never shown. The privileged replay (`rcb_rfo.replay`) is unchanged; the standard video replays every
+row with `after_done`. This differs from the generic rule (a failure after a success gives 0): the referee is Embodied
+Olympics' own and is frozen at its call. `final.json` adds the shared fields (`ended_by`, `hidden_success_seen`,
+`hidden_success_first_step`, `end_judgement`, ...). Without `RCB_AGENT_END` the service behaves as before (the referee's
+call ends the attempt and is shown).
+
 ## Reference solutions
 
 19 families have a real controller that succeeds in the task's own setting (`oracle = "full"`, marked below); the
@@ -89,8 +105,8 @@ controller or a magic action that makes the sport's events happen in physics) an
 
 The tasks declare open egress, `[agent] network_mode = "public"`: the instruction encourages the agent to find, vet and adapt public
 tools, robot models and pretrained controllers (fair equipment, as a published walking controller is for a real G1)
-and asks only that it not look up a ready-made solution to the task, such as this repository's reference solutions
-(an honour rule; trials are reviewed). Results are open-network results; the harness's web search stays off in
+and asks only that it not use an existing solution to the task, such as this repository's reference solutions
+(its **No cheating.** rule; trials are reviewed). Results are open-network results; the harness's web search stays off in
 official runs; trial rows stay private (a passing trajectory is a complete solution).
 
 ## Compute

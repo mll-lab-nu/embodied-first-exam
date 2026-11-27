@@ -14,7 +14,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/ambench-ndt-fahexa-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.2): AM-Bench NDT-Am-FAHexa-Abs-PID-Direct-v0 (a fully actuated hexarotor with a 4-joint arm and a two-finger gripper, Isaac Lab / Isaac Sim 5.1) on the same frozen instance as the privileged task. Task: The hovering aerial manipulator starts outside a large warehouse building, facing one of its long walls, and high up on that wall a small rectangle is marked out with yellow-and-black hazard tape. Inspect the marked rectangle as a non-destructive test would: bring the end effector to the fixed inspection point in front of it, which the goal geometry gives, and hold it there for 100 control steps in a row. The agent only gets a client: get_obs (RGB, depth + proprioception of the airframe and the arm), submit (AM-Bench's end-effector pose rows). No reset, no privileged state; the sim service records the episode as a trajectory and grades the live episode."
+description = "STANDARD MODE (robot as a service, eai-standard/2.2): AM-Bench NDT-Am-FAHexa-Abs-PID-Direct-v0 (a fully actuated hexarotor with a 4-joint arm and a two-finger gripper, Isaac Lab / Isaac Sim 5.1) on the same frozen instance as the privileged task. Task: Hold the end effector at the inspection point (Robot Interface), in front of the taped rectangle high up on the warehouse wall ahead, for almost a second. The agent only gets a client: get_obs (RGB, depth + proprioception of the airframe and the arm), submit (AM-Bench's end-effector pose rows). No reset, no privileged state; the sim service records the episode as a trajectory and grades the live episode."
 keywords = ["robotics", "ambench", "aerial-manipulation", "isaac-lab", "isaac-sim", "hexarotor", "standard-mode", "trajectory"]
 
 [metadata]
@@ -67,6 +67,13 @@ cpus = 2                          # the agent's container (the client only); the
 memory_mb = 4096
 storage_mb = 10240
 gpu_types = ["L40S", "L40", "RTX 4090", "RTX PRO 6000 Blackwell"]
+
+# The robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): Harbor starts this server for the agent.
+[[environment.mcp_servers]]
+name = "efe-robot"
+transport = "stdio"
+command = "python3"
+args = ["/opt/tools/efe_mcp/server.py"]
 
 [verifier.env]
 RCB_LIMITS_ENFORCE = "${RCB_LIMITS_ENFORCE:-0}"

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:control-transfer-0.2.0` |
 
 ## Task
-Jump through a commanded 110–150 degree heading change with verified airborne rotation and stable touchdown; ground spinning is rejected.
+Make the Go2 jump and turn to its left in the air by the commanded angle, then land steadily in place.
 
 ## Difficulty
 Infer transfer failures from video and noisy sensors across bounded adaptation rounds.

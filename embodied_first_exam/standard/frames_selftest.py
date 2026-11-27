@@ -11,9 +11,10 @@ toy simulators (numpy only, no image, a few seconds):
     response leaves (same zlib bytes; compression stops once its output passes it, and the depth is dropped);
   - 2.1 (every distinct rcb_service.py, the abc-sim copy included): the real capture count under the service's
     pattern; a call at the budget is accepted, one image over refused, at the real stride;
-  - 2.3 (rcb_realtime): an answer built but not sent counts against max_frames_per_call with the pending watches (429
-    for a watch until it is sent), at most MAX_UNSENT_BODIES such answers and watches wait, and a submit or an
-    /observe now is never refused for its images (answered without them, meta frames_skipped).
+  - 2.3 (rcb_realtime): /observe never waits (seconds > 0: 400); an answer built but not sent counts against
+    max_frames_per_call, at most MAX_UNSENT_BODIES such answers wait, and a submit or an /observe now is never refused
+    for its images (answered without them, meta frames_skipped); with the simulator thread's recorder an /observe is a
+    read of its ring, at most MAX_UNSENT_BODIES with images at a time.
 """
 import hashlib
 import importlib.util
@@ -229,8 +230,8 @@ def load(path: Path, name: str):
 
 
 copies: dict[str, Path] = {}
-for p in sorted([*(ROOT / "embodied_first_exam/benchmarks").glob("*/*/rcb_service.py"),
-                 ROOT / "images/abc-sim/tools/realtime/rcb_service.py"]):
+for p in sorted([*(ROOT / "embodied_first_exam/benchmarks").glob("**/rcb_service.py"),
+                 *(ROOT / "images").glob("*/tools/**/rcb_service.py")]):
     copies.setdefault(hashlib.sha256(p.read_bytes()).hexdigest(), p)
 for h, path in copies.items():
     S = load(path, f"rcb_service_{h[:8]}")
@@ -264,78 +265,64 @@ for h, path in copies.items():
     finally:
         shutil.rmtree(d)
 
-# 2.3 on one 2.1 copy
+# 2.3 on one 2.1 copy. eai-standard/3.0: no watch any more (/observe never waits); what an answer holds until it is
+# sent still counts against max_frames_per_call and MAX_UNSENT_BODIES
 path = next(iter(copies.values()))
 sys.modules["rcb_service"] = load(path, "rcb_service")
 R = load(STD / "realtime/rcb_realtime.py", "rcb_realtime")
+
+
+class ToyNoRec(Toy):
+    record_frames = "delivered"                              # no recorder: /observe answers now on the simulator thread
+
+
 d = tempfile.mkdtemp()
 try:
-    svc = R.RealtimeService(Toy(), data=d, max_frames_per_call=300, slowdown=1.0)
+    svc = R.RealtimeService(ToyNoRec(), data=d, max_frames_per_call=300, slowdown=1.0)
     svc.start()
-    view = (["a", "b"], 25, "frames", False)                 # 2 images a frame, a frame every 2 steps
-    job1 = R._Job("POST", "/observe")
-    svc._rt_observe({"seconds": 2.0, "view": view}, job1)    # 100 steps -> 52 frames x 2 = 104 images
-    w = svc.watches[0]
-    svc._complete_watch(w)                                   # done, not sent yet: its images are still in flight
-    check(svc.unsent_images == 104 and svc.unsent_bodies == 1, f"2.3: unsent {svc.unsent_images} / {svc.unsent_bodies}")
-    job2 = R._Job("POST", "/observe")
-    svc._rt_observe({"seconds": 3.6, "view": view}, job2)    # 180 steps -> 92 frames x 2 = 184: 104 + 184 = 288 <= 300
-    svc._complete_watch(svc.watches[0])
+    check(not svc.recording and svc.cameras is None, "2.3: record_frames = 'delivered' still records")
+    view = (["a", "b"], 25, "frames", False)                 # 2 images a frame
+    check(R.RealtimeService._check_observe(svc, {"last_s": 1.0})["seconds"] == 0.0, "2.3: last_s check")
     try:
-        svc._rt_observe({"seconds": 0.1, "view": view}, R._Job("POST", "/observe"))   # 4 x 2 = 8 more: 296 ok
-        svc._complete_watch(svc.watches[0])
-        svc._rt_observe({"seconds": 0.1, "view": view}, R._Job("POST", "/observe"))   # 8 more: 304 > 300
-        check(False, "2.3: a watch over the budget with unsent answers was accepted")
+        svc._check_observe({"seconds": 2.0})
+        check(False, "2.3: observe seconds > 0 was accepted")
     except R.Refused as exc:
-        check(exc.code == 429 and exc.body.get("images_in_flight") == 296, f"2.3: refusal {exc.code} {exc.body}")
-    for j in (job1, job2):
-        svc._sent(j)
-    check(svc.unsent_images == 8 and svc.unsent_bodies == 1, f"2.3: after sending {svc.unsent_images}")
-    svc._rt_observe({"seconds": 0.1, "view": view}, R._Job("POST", "/observe"))       # accepted again
-    check(len(svc.watches) == 1, "2.3: a watch within the budget after the answers were sent was refused")
-    svc.watches.clear()
-    svc.unsent_images, svc.unsent_bodies = 0, R.MAX_UNSENT_BODIES
-    try:
-        svc._rt_observe({"seconds": 0.1, "view": view}, R._Job("POST", "/observe"))
-        check(False, "2.3: a watch with MAX_UNSENT_BODIES answers waiting was accepted")
-    except R.Refused as exc:
-        check(exc.code == 429, f"2.3: bodies refusal {exc.code}")
-    j = R._Job("POST", "/observe")                           # the present is never refused: answered without frames
-    svc._rt_observe({"seconds": 0.0, "view": view}, j)
-    check(j.reply[1].get("frames_skipped") == 1 and j.images == 0 and not j.reply[2].cams,
-          f"2.3: an observe now with MAX_UNSENT_BODIES answers waiting: {j.reply[1].get('frames_skipped')}, {j.images}")
-    svc.unsent_bodies = 0
-    j = R._Job("POST", "/observe")
-    svc._rt_observe({"seconds": 0.0, "view": (["a"], 25, "none", False)}, j)       # seconds = 0: answered at once
-    check(j.images == 1 and svc.unsent_images == 1, f"2.3: an immediate answer's images {j.images}")
+        check(exc.code == 400 and "never waits" in exc.body.get("error", ""), f"2.3: seconds refusal {exc.code} {exc.body}")
+    j = R._Job("POST", "/observe")                           # the present: answered at once, its images in flight
+    svc._rt_observe({"seconds": 0.0, "last_s": 0.0, "view": view}, j)   # (an upper bound: 2 a camera)
+    check(j.images == 4 and svc.unsent_images == 4 and svc.unsent_bodies == 1 and j.reply[1]["last_s"] == 0.0,
+          f"2.3: an immediate answer's images {j.images} / {svc.unsent_images}")
     svc._reply_rcb1(j.reply[1], j.reply[2].parts())
     svc._sent(j)
     check(svc.unsent_images == 0 and svc.unsent_bodies == 0, "2.3: _sent did not release")
+    svc.unsent_bodies = R.MAX_UNSENT_BODIES
+    j = R._Job("POST", "/observe")                           # the present is never refused: answered without frames
+    svc._rt_observe({"seconds": 0.0, "last_s": 0.0, "view": view}, j)
+    check(j.reply[1].get("frames_skipped") == 1 and j.images == 0 and not j.reply[2].cams,
+          f"2.3: an observe now with MAX_UNSENT_BODIES answers waiting: {j.reply[1].get('frames_skipped')}, {j.images}")
+    svc.unsent_bodies = 0
 
     # a submit is never refused for its images: past the budget (or with MAX_UNSENT_BODIES answers unsent) it is
-    # answered without its last frames (meta frames_skipped); pending watches do not count against MAX_UNSENT_BODIES
+    # answered without its last frames (meta frames_skipped)
     def submit(view):
         job = R._Job("POST", "/submit")
         svc._rt_submit({"type": "joints", "actions": np.zeros((1, 2)), "dt": 0.02, "k": 1, "interpolate": "hold",
                         "at": None, "view": view, "note": ""}, job)
         return job
     full = (["a", "b"], 25, "frames", True)                  # its last frames: 2 + 1 depth = 3 images
-    svc._rt_observe({"seconds": 5.9, "view": view}, R._Job("POST", "/observe"))       # 297 steps -> 150 x 2 = 300
+    svc.unsent_images = 299
     j = submit(full)
     check(j.reply[1].get("frames_skipped") == 1 and j.images == 0 and not j.reply[2].cams,
           f"2.3: a submit past the budget: {j.reply[1].get('frames_skipped')} skipped, {j.images} images")
     j = R._Job("POST", "/observe")
-    svc._rt_observe({"seconds": 0.0, "view": full}, j)
+    svc._rt_observe({"seconds": 0.0, "last_s": 0.0, "view": full}, j)
     check(j.reply[1].get("frames_skipped") == 1 and j.images == 0 and not j.reply[2].cams,
           f"2.3: an observe now past the budget: {j.reply[1].get('frames_skipped')} skipped, {j.images} images")
-    svc.watches.clear()
-    for _ in range(R.MAX_UNSENT_BODIES):
-        svc._rt_observe({"seconds": 0.1, "view": (["a"], 25, "frames", False)}, R._Job("POST", "/observe"))
+    svc.unsent_images = 0
     j = submit(full)
-    check("frames_skipped" not in j.reply[1] and j.images == 3,
-          f"2.3: a submit with {R.MAX_UNSENT_BODIES} pending watches lost its frames ({j.images} images)")
+    check("frames_skipped" not in j.reply[1] and j.images == 3 and j.reply[1]["duration_s"] == 0.02,
+          f"2.3: a submit within the budget lost its frames ({j.images} images) {j.reply[1]}")
     svc._sent(j)
-    svc.watches.clear()
     svc.unsent_bodies = R.MAX_UNSENT_BODIES
     j = submit(full)
     check(j.reply[1].get("frames_skipped") == 1 and j.images == 0, "2.3: a submit with the unsent answers full kept its frames")
@@ -343,8 +330,28 @@ try:
 finally:
     shutil.rmtree(d)
 
+# 2.3 with the recorder on the simulator's thread (an adapter without render hooks): /observe is a pure read of the
+# ring on the HTTP thread; at most MAX_UNSENT_BODIES such answers with images are built at a time (the rest: none)
+d = tempfile.mkdtemp()
+try:
+    svc = R.RealtimeService(Toy(), data=d, max_frames_per_call=300, slowdown=1.0)
+    svc.start()
+    check(svc.recording and isinstance(svc.cameras, R._ThreadCameras) and len(svc.cameras.ring) == 1,
+          "2.3: the simulator thread's recorder did not take the start frame")
+    out = svc.front("POST", "/observe", 2, lambda n: b"{}")
+    _, got = rcb1.decode(bytes(out[3]))
+    check(out[0] == "reply" and out[1] == 200 and "last/a" in got, f"2.3: a recorded observe: {out[:3]}")
+    taken = [svc._obs_slots.acquire(blocking=False) for _ in range(R.MAX_UNSENT_BODIES)]
+    out = svc.front("POST", "/observe", 2, lambda n: b"{}")
+    m, got = rcb1.decode(bytes(out[3]))
+    check(m.get("frames_skipped") == 1 and "last/a" not in got, f"2.3: observe with every slot taken: {m}")
+    for t in taken:
+        svc._obs_slots.release()
+finally:
+    shutil.rmtree(d)
+
 if fails:
     print(f"{len(fails)} failure(s)")
     sys.exit(1)
 print(f"ok per-call image budget: rcb1 frames_part/size, 2.2 stride count + max_images + depth as sent, "
-      f"{len(copies)} distinct rcb_service.py (at the budget / one over), 2.3 unsent answers in flight, submit / observe now never refused")
+      f"{len(copies)} distinct rcb_service.py (at the budget / one over), 2.3 unsent answers in flight, submit / observe now never refused, the thread recorder's reads")

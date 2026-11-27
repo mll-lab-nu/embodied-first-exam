@@ -1,7 +1,7 @@
 """MetaWorld+ tooling: one Meta-World v3 environment on a frozen instance.
 
 Used by the privileged agent (importable as `mw_tool`), by the privileged verifier, and by the standard-mode sim
-service (images/metaworld/standard/server_mw.py).
+service (embodied_first_exam/benchmarks/metaworldplus/sim/server_mw.py).
 
     import mw_tool
     s = mw_tool.Session("/app/instance.npz")  # the frozen instance; s.env is the Meta-World env, s.model / s.data MuJoCo

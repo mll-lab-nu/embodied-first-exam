@@ -13,7 +13,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/molmospaces-pick-and-place-next-to-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.2): MolmoSpaces pick-and-place-next-to on the same frozen episode as molmospaces-pick-and-place-next-to-i00-privileged. Pick up the compact black rail mount with slots and place it next to the bread. The agent only gets a client: camera images (RGB, depth) and proprioception, joint-position chunks, upstream's kinematic model, done. No reset, no object state; the sim service records the episode and grades it with upstream's success check."
+description = "STANDARD MODE (robot as a service, eai-standard/2.2): MolmoSpaces pick-and-place-next-to on the same frozen episode as molmospaces-pick-and-place-next-to-i00-privileged. Put the black rail mount down right beside the bread, almost touching it. The agent only gets a client: camera images (RGB, depth) and proprioception, joint-position chunks, upstream's kinematic model, done. No reset, no object state; the sim service records the episode and grades it with upstream's success check."
 keywords = ["robotics", "molmospaces", "mujoco", "franka-robotiq-2f85", "standard-mode", "trajectory", "pick-and-place-next-to"]
 
 [metadata]
@@ -63,6 +63,13 @@ build_timeout_sec = 1800.0
 cpus = 3
 memory_mb = 4096
 storage_mb = 12288
+
+# The robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): Harbor starts this server for the agent.
+[[environment.mcp_servers]]
+name = "efe-robot"
+transport = "stdio"
+command = "python3"
+args = ["/opt/tools/efe_mcp/server.py"]
 
 [verifier.env]
 RCB_LIMITS_ENFORCE = "${RCB_LIMITS_ENFORCE:-0}"

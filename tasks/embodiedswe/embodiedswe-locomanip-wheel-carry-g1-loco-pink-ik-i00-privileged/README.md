@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:embodiedswe-0.3.0` |
 
 ## Task
+Carry the steering wheel from the table in front of you to the basket on the other table, off to your right, and leave it in the basket.
+
 Carry the wheel to the basket (Unitree G1, walking, Pink IK). EmbodiedSWE's `locomanip.wheel_carry.g1.loco_pink_ik` task (robobench at commit `67f44e8a2ca5`), privileged mode, with a program as the
 deliverable: `solution/solve.py` exposing `solve(env)`.
 

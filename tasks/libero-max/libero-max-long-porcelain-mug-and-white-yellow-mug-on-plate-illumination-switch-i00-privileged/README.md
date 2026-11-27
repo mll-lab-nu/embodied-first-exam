@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:libero-max-0.1.1` |
 
 ## Task
-LIBERO-MAX case `pro-camera-view-angle-10-t04-i09-illumination_switch-d0-p195`: a Franka Panda arm at a table, instructed **"Put the white mug on the left plate and put the yellow and white mug on the right plate."**, on a LIBERO-PRO variant
+LIBERO-MAX case `pro-camera-view-angle-10-t04-i09-illumination_switch-d0-p195`: a Franka Panda arm at a table, instructed **"Put the white mug on the plate on the robot's right and the yellow-and-white mug on the plate on the robot's left."**, on a LIBERO-PRO variant
 of a libero_10 task (camera_view_angle). Online event (illumination switch): the first time the gripper comes within
 0.18 m of `porcelain_mug_1`, LIBERO-MAX changes the scene once (the lighting is scaled by 0.2). The deliverable is one
 replayable trajectory of LIBERO's OSC control steps (`/app/output/trajectory.npz`, `(T, 7)`, T ≤ 520), graded by

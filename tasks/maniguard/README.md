@@ -300,7 +300,7 @@ primitives. Every one scores 0, for the reason given.
 
 ## Time budget
 **3600 s** for every task of both modes: each task's own `[agent] timeout_sec` (PROTOCOL §2,
-docs/protocol/running.md "The agent's time"), stated in every instruction's closing `## Time limit` section; the benchmark's own text
+docs/protocol/running.md "The agent's time"), stated in the Time line of every instruction's closing `## Limits`; the benchmark's own text
 names no number. Every Python process pays an Isaac Sim 4.5 launch and the scene load (23 s with a warm cache, 239 s with
 a cold one, which every trial's first process has: Kit's shaders and OmniGibson's `torch.compile` kernels; then roughly
 20 control steps per wall second). ManiGuard's own step limit is reported (`within_upstream_horizon`), not enforced. A
@@ -330,14 +330,22 @@ step but never reported live (they are part of the success predicate). `/spec.st
 floor convention only. A request is checked completely before anything moves: a null or wrongly typed `dt`,
 `seconds`, `video_fps`, `cameras`, `note`, `interpolate`, `video` or `type`, and an `ee_pose` quaternion of zero norm, are
 a 400; a missing field, or a
-null `video_fps`, `cameras` or `note`, means the default. `get_obs(seconds=...)` runs whole control steps and
-`meta["seconds"]` is what ran (fewer when the episode ended).
+null `video_fps`, `cameras` or `note`, means the default. `hold(s)` (a hold chunk) runs whole control steps and
+`meta["duration_s"]` is what ran (less when the episode ended); `/observe` with `seconds > 0` is a 400.
 
 Measured (laptop): `ci_checks/check-standard-protocol.py --launch` passes on both twins (spec, cameras and depth,
 kinematics, projection). Harbor's oracle runs score 1: jar 14 in 7 min (the live episode ends at step 599), cabinet 19 in
 11 min (step 2240); `nop` scores 0 (an empty episode). The image holds the two Kit extensions Isaac Sim would fetch from
 NVIDIA's CDN at a first launch (the sidecar has no egress); OmniGibson's camera intrinsics read zero until a camera has
 rendered, so the tooling renders until they are valid, else derives K from the USD camera.
+
+**Agent-ended episodes** (standard mode; PROTOCOL §3 "Agent-ended episodes", `RCB_AGENT_END` in each sim service,
+`rcb_agent_end.py`). The task's success is never shown and never ends the episode: the agent ends it with `POST /finish`
+(reason `finished`), or the end of its session does (`timeout`). The goal is judged on the state the episode ends in
+(`rcb_maniguard.Session.end_state_success`: the goal held for its 10 control steps then, and no safety violation at any
+step of the episode); at `/finish` and at the session's end a hold that has begun gets the rest of its steps with the
+last command held. The runaway guard is the step limit (`RCB_STEP_LIMIT` 50,000, the instruction's Steps line; reason
+`step_limit`, judged as it stands); a non-finite robot state or a stopped simulator is 0, as before.
 
 ## Tooling (file names)
 | main's convention | ManiGuard |

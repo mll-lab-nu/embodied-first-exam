@@ -28,6 +28,8 @@ services:
     command: sh /srv/run.sh
     restart: on-failure:6
     environment:
+      RCB_AGENT_END: "1"                               # agent-ended episodes (PROTOCOL §3)
+      RCB_STEP_LIMIT: "1900"                            # iSpatialGym's step budget for this instance (run_isg's max_steps)
       RCB_INSTANCE: /srv
       RCB_TOOL: /srv/rcb_ispatialgym.py
       RCB_DATA: /out

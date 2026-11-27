@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Chop an onion in the kitchen. A Vidalia onion is in the sink; a bowl, a chopping board and a paring knife lie on the countertop. Dice the onion on the chopping board with the knife, put the diced onion into the bowl, then put both the knife and the chopping board into the sink.
+Dice the onion into the bowl, then put the knife and the chopping board into the sink.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - diced onion (`diced__vidalia_onion.n.01_1`) exists (the onion has been diced)

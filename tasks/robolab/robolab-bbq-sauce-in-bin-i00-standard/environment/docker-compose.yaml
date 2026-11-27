@@ -28,6 +28,7 @@ services:
     command: sh /srv/run.sh
     restart: on-failure:6
     environment:
+      RCB_AGENT_END: "1"                               # agent-ended episodes (PROTOCOL §3)
       RCB_TASK: bbq_sauce_in_bin
       RCB_INSTANCE: /srv/instance.json
       RCB_TOOL: /srv/rcb_robolab.py

@@ -12,8 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:metaworld-0.1.0` |
 
 ## Task
-Standard-mode twin of `metaworldplus-reach-wall-i00-privileged`: the same instance and success check (Move the gripper around the wall to the target position.), served
-as a robot service (`images/metaworld/standard/server_mw.py`, protocol eai-standard/2.1, tool module `mw_tool`). The
+Standard-mode twin of `metaworldplus-reach-wall-i00-privileged`: the same instance and success check (Move the gripper around the wall to the target.), served
+as a robot service (`embodied_first_exam/benchmarks/metaworldplus/sim/server_mw.py`, protocol eai-standard/2.1, tool module `mw_tool`). The
 agent sees camera RGB-D, the robot's own state and the target point; no object poses, no reset; one episode.
 
 ## Difficulty

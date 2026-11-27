@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/vlabench-put-box-on-painting-i00-privileged"
-description = "VLABench put_box_on_painting (Franka Panda): Please put the box on the painting “Dinner and Love on the River”. Produce one replayable trajectory of joint-position control steps on a frozen scene instance; graded by VLABench's own success check at the trajectory's end."
+description = "VLABench put_box_on_painting (Franka Panda): Put the box on the painting “Dinner and Love on the River”. Produce one replayable trajectory of joint-position control steps on a frozen scene instance; graded by VLABench's own success check at the trajectory's end."
 keywords = ["robotics", "vlabench", "mujoco", "franka-panda", "code-as-policy", "trajectory", "privileged"]
 
 [metadata]

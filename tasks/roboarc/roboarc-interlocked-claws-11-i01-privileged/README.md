@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:roboarc-0.2.0` |
 
 ## Task
-RoboARC interlocked_claws (ALOHA 2, MuJoCo): produce one replayable trajectory. Completely separate the C ring from the AB plate and briefly hold both still. Frozen scene instance (variation interlocked_claws_cast_abc, seed 0).
+RoboARC interlocked_claws (ALOHA 2, MuJoCo): produce one replayable trajectory. Pull the C ring completely off the AB plate and keep both still for a moment. Frozen scene instance (variation interlocked_claws_cast_abc, seed 0).
 
 ## Difficulty
 Two 6-dof aloha (viperx) arms with parallel-jaw grippers on a fixed base with a 14-D joint-target action space at 40 Hz; success needs the task's predicate (above) held for 0.5 s. Grasping: assisted grasping (contact_weld_v1).
@@ -49,7 +49,7 @@ Caps per container (PROTOCOL §6).
 | Success rule | task-native success (goal_complete True; frozen parameters; terminal revision claws_separation_v1_grasp_contact_2mm) |
 
 ### Goal
-Completely separate the C ring from the AB plate and briefly hold both still.
+Pull the C ring completely off the AB plate and keep both still for a moment.
 
 ### Success requirements
 - Leave at least 10 mm between the complete pieces, with a plane separating all of their geometry; a gap inside the interlock is insufficient.

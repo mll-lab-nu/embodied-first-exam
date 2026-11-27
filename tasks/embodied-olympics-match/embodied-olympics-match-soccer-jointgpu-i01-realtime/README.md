@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | Embodied Olympics - Match |
-| Mode | realtime (`eai-standard-realtime/1.0`) |
+| Mode | realtime (`eai-standard/2.3+match/1.0`) |
 | Twin | `embodied-olympics-match-soccer-jointgpu-i01-privileged` |
 | Simulator / robot | `mujoco` / `booster-t1` |
 | Family / instance | `soccer_jointmatch` / seed 101 (allowed seeds: [101, 1, 2]; PROTOCOL §2) |
@@ -13,6 +13,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-match-soccer-0.1.0` |
 
 ## Task
+Win a 2 v 2 robot soccer match against the other team.
+
 Humanoid robot soccer 2 v 2 at the joint level, coach format: the agent commands both Booster T1s (lower bodies) of its
 team with 12 leg joint targets per robot every 20 ms (no walking policy, no kick skill), against a learned opponent team at the joint level (level 5: its two T1s walk on a policy trained with reinforcement learning on the same joint interface and limits as yours; a learned strategy layer decides what each robot does),
 under the RoboCup Humanoid Soccer League rules with stated deviations. Any method: hand-written control, planning,

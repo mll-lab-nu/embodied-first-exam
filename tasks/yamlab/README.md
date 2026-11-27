@@ -171,7 +171,7 @@ hash exactly, resumes the same episode, the oracle continues from the reported s
 
 ## Time budget
 3600 s for every task of both modes: each task's own `[agent] timeout_sec` (PROTOCOL §2,
-docs/protocol/running.md "The agent's time"); every instruction states it in its closing `## Time limit` section, and the benchmark's
+docs/protocol/running.md "The agent's time"); every instruction states it in the Time line of its closing `## Limits`, and the benchmark's
 own text names no number. Every Python process pays ~1.5-2.5 min of Isaac Sim launch and scene build (more on a loaded
 host). A trial's first Isaac start in a container compiles the shaders into the trial's fresh Kit cache (up to ~10 min on
 a heavily loaded host); the standard sidecar's startup watchdog is therefore 1800 s (as BEHAVIOR-1K), and the standard
@@ -194,6 +194,15 @@ right joint1..6); 58 proprio columns (joints and fingers, both tool poses, gripp
 arm efforts). docs/protocol/standard_mode.md §16. Requests are checked completely before the first control step, as RoboLab's
 (tasks/robolab/README.md, Standard mode): wrong types, out-of-range values, an `ee_pose` position more than 3 m from
 the world origin on any axis or a zero quaternion are 400s that execute nothing.
+
+**Agent-ended episodes** (standard mode; PROTOCOL §3 "Agent-ended episodes", `RCB_AGENT_END` in each sim service,
+`rcb_agent_end.py`). The task's success is never shown and never ends the episode: the agent ends it with `POST /finish`
+(reason `finished`), or the end of its session does (`timeout`). YAMLab's stages are latched; with `RCB_AGENT_END` the
+tooling reopens the last stage's latch before every step (`rcb_yamlab.LAST_STAGE`), so the earlier stages count as they
+happened and the last one must still hold, with its hold counter complete, when the episode ends; at `/finish` and at
+the session's end a hold that has begun is run out with the last command held. An object falling off the table is 0,
+also after a success; the technical cap is the step limit (`step_limit`, judged as it stands). There is no
+`RCB_STEP_LIMIT` (no step budget).
 
 ## Declarations
 - **Tooling: thin wrappers only.** IK moves, joint moves, gripper commands, hold, plus the frozen instance, state, stage

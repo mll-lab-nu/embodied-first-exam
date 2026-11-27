@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/humanoidbench-loco-balance-hard-i00-privileged"
-description = "HumanoidBench balance_hard: produce one replayable trajectory that keeps the Unitree H1 standing on a board balanced on a rolling sphere, frozen scene instance 00."
+description = "HumanoidBench balance_hard: produce one replayable trajectory that keeps the Unitree H1 standing on a board balanced on a rolling sphere, frozen scene instance 00. Task: Stand on the balance board and keep your balance on it, upright and still."
 keywords = ["robotics", "humanoidbench", "code-as-policy", "trajectory", "h1", "locomotion", "balance_hard"]
 
 [metadata]

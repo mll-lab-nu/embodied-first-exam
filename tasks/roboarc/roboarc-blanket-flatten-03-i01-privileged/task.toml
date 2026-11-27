@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/roboarc-blanket-flatten-03-i01-privileged"
-description = "RoboARC blanket_flatten (ALOHA 2, MuJoCo): produce one replayable trajectory. Unfold the blanket and spread it flat on the table, with no part folded over another and without stretching it. Then let go of it and move the robot clear of it. Frozen scene instance (variation easier, seed 0)."
+description = "RoboARC blanket_flatten (ALOHA 2, MuJoCo): produce one replayable trajectory. Unfold the blanket and spread it flat on the table, with no part folded over another and without stretching it. Then let go of it and move both arms clear of it. Frozen scene instance (variation easier, seed 0)."
 keywords = ["robotics", "roboarc", "mujoco", "aloha", "code-as-policy", "trajectory", "blanket_flatten"]
 
 [metadata]

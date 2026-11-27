@@ -12,20 +12,20 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Standard-mode twin of `robodojo-fill-egg-holder-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/fill_egg_holder_0.json`). Move the four eggs from the egg basket into the egg holder, the tray with a lid, and close its lid. Then bring both arms back to where they started. (RoboDojo's `fill_egg_holder`). The agent drives the
+Standard-mode twin of `robodojo-fill-egg-holder-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/fill_egg_holder_0.json`). Put the four eggs from the egg basket into the egg holder and close its lid. Then move both arms back to where they started. (RoboDojo's `fill_egg_holder`). The agent drives the
 robot only through the eai-standard/2.2 client (the simulator runs in the `sim` sidecar), which owns the scene and records
 the episode as a (T, 14) trajectory of RoboDojo's own joint action at 25 Hz.
 
 ## Difficulty
-A RoboDojo Long-Horizon task (mixed (rigid eggs + articulated egg holder with a hinged lid) objects), graded by RoboDojo's own success thresholds (its evaluation gives a policy 700 actions; no step cap here, PROTOCOL §3). Here the agent sees only the three cameras (RGB, optional depth) and the arms' proprioception: no object
-poses, no success signal, no reset, one episode (no step cap; RoboDojo's own evaluation gives a policy 700 actions).
+A RoboDojo Long-Horizon task (mixed (rigid eggs + articulated egg holder with a hinged lid) objects), graded by RoboDojo's own success thresholds (at most 700 steps here, one 25 Hz action each: RoboDojo's own step limit for this task). Here the agent sees only the three cameras (RGB, optional depth) and the arms' proprioception: no object
+poses, no success signal, no reset, one episode (at most 700 steps, RoboDojo's own step limit).
 
 ## Reference solution
 None (see the privileged twin): RoboDojo releases no expert or planner script, and its training demonstrations record no
 initial state, so none replays on a frozen layout. The task is marked unvalidated (PROTOCOL §2 `validated`).
 
 ## Verification
-The sim service ends the episode on RoboDojo's own check (success), a failed check, the runaway guard or the time limit, and
+The sim service ends the episode at the agent's `/finish`, the step limit, a failed check or the time limit, judges it as the Episode row of Details says, and
 writes `/data/trajectory.npz` and `/data/episode.json` (the live result); the collect hook (`environment/sim/finalize.sh`)
 writes `final.json` from them (no replay) and encodes the video the service kept during the episode (`live.mp4`, a frame of
 `cam_head` at the actions the agent's calls rendered; a failed encode costs the video only); `tests/grade.py` scores 1 iff
@@ -48,7 +48,7 @@ Caps per container (PROTOCOL §6).
 ## Details
 | | |
 |---|---|
-| Episode | one episode, no reset: it ends at the first action where RoboDojo's check passes, when a check fails for good, when the agent's time is up, or on a simulator error; no step cap (RoboDojo's evaluation gives a policy 700 actions; a runaway guard at 15000) |
-| Action space | `submit` chunks of `joint_position` (14: RoboDojo's own action at 25 Hz, the agent's `dt` a multiple of 1/25 s) or `ee_pose` (16: both arms' link6 targets, IK per row); `observe` frames or a watch window; `/kinematics` (FK / IK of both arms, stateless); binary RCB1 responses |
+| Episode | one episode, no reset, ended by the agent (PROTOCOL §3 "Agent-ended episodes"): at its `/finish`, after RoboDojo's own step limit of 700 steps (one 25 Hz action each), when its time is up, when a check fails for good (a 0) or on a simulator error; judged on how things stand when it ends: RoboDojo's check holds on the final state (`rcb_robodojo.py` `END_JUDGEMENT`) |
+| Action space | `submit` chunks of `joint_position` (14: RoboDojo's own action at 25 Hz, the agent's `dt` a multiple of 1/25 s) or `ee_pose` (16: both arms' link6 targets, IK per row); `observe` the current frames or those recorded over the last seconds (`last_s`); hold chunks (`hold(s)`); `/kinematics` (FK / IK of both arms, stateless); binary RCB1 responses |
 | Source | RoboDojo @ `cb2a37d` (MIT), its Isaac Lab 2.3 fork @ `afca7b0`, its cuRobo fork @ `d17b54c`; assets from `RoboDojo-Benchmark/RoboDojo` @ `35efbc7` (Apache-2.0) |
 | Benchmark notes | tasks/robodojo/README.md |

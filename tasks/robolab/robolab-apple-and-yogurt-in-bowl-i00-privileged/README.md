@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robolab-0.2.2` |
 
 ## Task
-Put the apple and yogurt in the bowl.
+Put the apple and the yogurt cup in the wooden bowl.
 
 ## Difficulty
 RoboLab labels this task "moderate" (2 subtasks; attributes: affordance); its success term (`object_in_container`) asks for 2 objects into wooden_bowl. The tooling gives only thin primitives (move_ee on Isaac Lab's differential IK, joint moves, gripper, hold), so every grasp, transport and placement is the agent's to build. RoboLab ships no expert solution.

@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:robopaint-0.2.0` |
 
 ## Task
+Copy the characters 南宮 (cursive script, 草书) in `/app/target.png` onto the main sheet with brush and ink, in at most 5 strokes.
+
 **Process rules** (tasks/robopaint/README.md) on top of the picture rule, so that the exemplar has to be made with strokes rather
 than coloured in: colouring in fails: a brush-tip path on the main sheet (`path_mm`) longer than 2680 mm (3 × the reference
 solution's 890 mm) made of marks narrower than 0.93 mm on average (`mark_width_mm`: each stroke's own

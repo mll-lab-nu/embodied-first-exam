@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Polish the shoes in the bedroom. Two dusty shoes lie on the bedroom floor and a scrub brush lies on the stand; there are two footstools in the room. Brush all the dust off both shoes, set them next to each other and next to the same footstool, and leave the scrub brush on the stand.
+Brush the dust off both shoes, set them side by side next to one footstool, and leave the brush on the stand.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - no dust (`dust.n.01_1`) is left on either shoe (`shoe.n.01_1`, `_2`)

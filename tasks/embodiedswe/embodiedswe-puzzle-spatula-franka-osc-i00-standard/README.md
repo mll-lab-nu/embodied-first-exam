@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:embodiedswe-0.3.0` |
 
 ## Task
+Flip the bread in the pan with the spatula, then lift it out on the spatula and set it down flat on the plate.
+
 Flip a slice of bread in the pan with a spatula, then serve it onto the plate (Franka, operational-space control): the scene, frozen instance and success predicate of `embodiedswe-puzzle-spatula-franka-osc-i00-privileged`, with a Franka Panda arm with its parallel gripper, under EmbodiedSWE's operational-space (torque) controller, in standard mode
 (tasks/embodiedswe/README.md "Standard mode").
 

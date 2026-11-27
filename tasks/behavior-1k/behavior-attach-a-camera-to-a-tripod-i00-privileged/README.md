@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Attach the digital camera to the camera tripod. Both lie on the bedroom floor.
+Attach the camera to the tripod.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - the digital camera (`digital_camera.n.01_1`) is attached to the camera tripod (`camera_tripod.n.01_1`)

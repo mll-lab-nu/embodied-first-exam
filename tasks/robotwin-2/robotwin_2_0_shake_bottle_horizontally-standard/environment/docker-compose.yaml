@@ -20,6 +20,7 @@ services:
     command: python /srv/server.py
     restart: on-failure:6          # a crash retries; mid-episode the service resumes the same episode from its journal (never a reset; server.py)
     environment:
+      RCB_AGENT_END: "1"                               # agent-ended episodes (PROTOCOL §3)
       RCB_TASK: shake_bottle_horizontally
       RCB_INSTANCE: /srv/instance.json
       PYTHONPATH: /srv:/opt/RoboTwin

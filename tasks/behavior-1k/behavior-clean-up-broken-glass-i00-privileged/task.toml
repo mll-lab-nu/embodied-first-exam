@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/behavior-clean-up-broken-glass-i00-privileged"
-description = "BEHAVIOR-1K v3.9.2 (2026 BEHAVIOR Challenge) clean_up_broken_glass (R1Pro mobile manipulator, OmniGibson / Isaac Sim): produce one replayable trajectory. Three pieces of broken glass lie on the dining-room floor; put all of them inside the trash can that stands on the corridor floor. Frozen scene instance (challenge public_test instance 301)."
+description = "BEHAVIOR-1K v3.9.2 (2026 BEHAVIOR Challenge) clean_up_broken_glass (R1Pro mobile manipulator, OmniGibson / Isaac Sim): produce one replayable trajectory. Put the three pieces of broken glass into the trash can in the corridor. Frozen scene instance (challenge public_test instance 301)."
 keywords = ["robotics", "behavior", "omnigibson", "isaac-sim", "r1pro", "mobile-manipulation", "code-as-policy", "trajectory", "clean_up_broken_glass"]
 
 [metadata]

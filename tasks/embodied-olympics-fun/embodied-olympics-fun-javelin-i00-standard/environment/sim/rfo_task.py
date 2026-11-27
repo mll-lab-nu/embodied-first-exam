@@ -213,9 +213,8 @@ class Task(TaskBase):
                   qualifying_mark_m=20.0, release_above_shoulder_m=0.0, back_turn_deg=135.0, grip_gap_s=0.02,
                   retouch_grace_s=0.20, retouch_dv_m_s=0.5, carry_s=0.20, stand_s=1.0, fall_pelvis_m=0.50, grip_scale=1.0)
 
-    sentence = ("Throw the javelin, held by its cord in your right hand, over your shoulder from behind the arc so "
-                "that its head strikes the ground first, inside the sector and at least {qualifying_mark_m:g} m from "
-                "the arc. Then leave the runway behind the arc and stand.")
+    sentence = ("Throw the javelin over your shoulder from behind the arc so that it lands point first inside the "
+                "sector at least 20 m out, then leave the runway behind the arc and stand.")
     rules = ("The women's javelin ({javelin_mass_kg} kg, {javelin_length_m} m long, its centre of gravity "
              "{javelin_cg_from_tip_m} m from the tip, a metal head of {javelin_head_m} m; its cord grip, "
              "{cord_length_m} m long and {cord_diameter_m} m across, covers the centre of gravity) starts held at its "

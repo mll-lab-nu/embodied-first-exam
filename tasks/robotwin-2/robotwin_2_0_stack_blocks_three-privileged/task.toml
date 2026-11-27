@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/robotwin_2_0_stack_blocks_three-privileged"
-description = "RoboTwin 2.0 stack_blocks_three (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Stack the three blocks with the red block at the bottom, the green block in the middle and the blue block on top. Then let go. Frozen scene instance (RoboTwin seed 60417)."
+description = "RoboTwin 2.0 stack_blocks_three (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Stack the three blocks: red at the bottom, green in the middle and blue on top. Then let go. Frozen scene instance (RoboTwin seed 60417)."
 keywords = ["robotics", "robotwin", "sapien", "aloha-agilex", "dual-arm", "code-as-policy", "trajectory", "stack_blocks_three"]
 
 [metadata]

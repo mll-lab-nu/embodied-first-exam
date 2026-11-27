@@ -10,8 +10,9 @@
 #                                with origin/main). Shared code changed -> the full suite (as with no arguments). Only
 #                                some benchmarks' own paths changed -> the per-task checks on those benchmarks' tasks
 #                                and the cheap repo-level checks on everything; the CI
-#                                mutation self-test runs in the full suite only (it tests ci_checks/, which a scoped change
-#                                does not touch). Nothing a scoped run skips goes unchecked: pushes to main run the full suite.
+#                                mutation self-test runs in the full suite only (it tests the shared checks and the
+#                                benchmarks' invariant hooks, and a change to either is shared code: ci_scope.py). Nothing
+#                                a scoped run skips goes unchecked: pushes to main run the full suite.
 # Everything runs concurrently (ci_checks/parallel.py; RCB_CI_JOBS=N caps it, default: the CPUs), each command's output
 # printed in one piece when it ends. RCB_SKIP_UNIT_TESTS=1: leave out check-unit-tests.sh (the CI workflow runs it, with
 # --all, in a job of its own). Benchmark-specific checks are each benchmark's own hooks, ci_checks/benchmarks/<bench>/advisory-*
@@ -92,21 +93,35 @@ add bash ci_checks/check-tooling-identity.sh                # shared sources (PR
 add bash ci_checks/check-standard-client.sh                 # standard agent + verifier images: the pinned client base and pins
 add python3 ci_checks/check-recipe-copies.py               # base-image recipes inside other images' recipes: byte-identical to their source
 # PROTOCOL §6: the caps of every container ([environment], the compose files, x-gpu-memory-gb), the rules of
-# scripts/task_resources.toml applied, and the instruction's and README's `## Resources` rendered from them
+# scripts/task_resources.toml applied, and the Resources line of the instruction's `## Limits` and the README's
+# `## Resources` rendered from them
 add python3 ci_checks/check-resources.py"$pargs"
-# PROTOCOL §2: the agent's time cutoff, each task's own `[agent] timeout_sec` (no table): at most 14400 s, the closing
-# `## Time limit` section of instruction.md, the README row and the standard modes' sim service say it, nothing else states
+# PROTOCOL §2: the agent's time cutoff, each task's own `[agent] timeout_sec` (no table): at most 14400 s, the Time line
+# of instruction.md's `## Limits`, the README row and the standard modes' sim service say it, nothing else states
 # the limit (the twins' equal number is an invariant: check-twins.py). Per task: a scoped run checks its benchmarks' tasks only
 add python3 ci_checks/check-cutoffs.py"$targs"
 add python3 ci_checks/check-seeds.py"$pargs"
 # PROTOCOL §2: a realtime task states its slowdown S (its sim service's default, the instruction) and allows resets
 add python3 ci_checks/check-realtime.py"$pargs"
+# docs/protocol/standard_mode.md "MCP tools": every standard / realtime task has the robot's MCP tools (or a stated
+# exception), and every agent-facing endpoint the layers and adapters serve has a tool
+add python3 ci_checks/check-mcp-tools.py"$pargs"
+# docs/protocol/standard_mode.md "Version 3.0": the reference services of 2.1–2.4 answer as
+# docs/protocol/eai-standard-3.0.openapi.yaml says (paths, status codes, bodies against the schemas); in CI the
+# unit-tests job runs it with its modules installed (RCB_SKIP_UNIT_TESTS=1 here)
+[ "${RCB_SKIP_UNIT_TESTS:-0}" = 1 ] || add python3 ci_checks/check-openapi-contract.py
+# the same document against the benchmarks' own 2.1 servers (their own HTTP layer, no shared layer), read from
+# their source: the keys /status, every answer meta and /spec must carry (static: no simulator)
+add python3 ci_checks/check-v21-servers.py
 # PROTOCOL §4: every task renders a video and the runner can collect it; a declared video time bound is not
 # shorter than the verdict replay's (privileged)
 add python3 ci_checks/check-video.py"$targs"
 # PROTOCOL H.4: the standard modes' graders transcribe the live episode's verdict (graded_by_live), no replay
 # decides, and agent-caused ends are never infrastructure failures (synthetic records through each distinct grade.py)
 add python3 ci_checks/check-live-verdict.py"$targs"
+# PROTOCOL §3: an agent-ended task's Goal says how its episode is judged and ends (the environment and the Finish line
+# are invariants: run_invariants.sh)
+add python3 ci_checks/check-agent-end.py --tier advisory"$targs"
 # The task protocol (docs/protocol/README.md): the protocol version per mode, oracle fields, the image registry, no results/, no personal paths, internal names or host /data/ paths
 add python3 ci_checks/check-protocol.py"$pargs"
 # PROTOCOL §6: the resource monitor sidecar's copies and the verifier step (its isolation: run_invariants.sh)
@@ -125,6 +140,8 @@ add python3 scripts/task_conventions.py readme --check
 add python3 scripts/task_conventions.py taxonomy --check
 # every files-only image's sources still hash to its FILES.json (the checks read the sources for what the pinned image holds)
 add python3 scripts/files_image.py check
+# every tracked .py file compiles (compile() only: no import); the CI job unit-tests runs it as a failing step too
+add python3 ci_checks/check-py-compile.py
 
 t0=$SECONDS
 printf %s "$cmds" | python3 "$root/ci_checks/parallel.py" --advisory; rc=$?

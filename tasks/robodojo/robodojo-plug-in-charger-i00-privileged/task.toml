@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/robodojo-plug-in-charger-i00-privileged"
-description = "RoboDojo plug_in_charger (Precision; two ARX X5 arms with parallel grippers, Isaac Sim 5.1 / Isaac Lab): produce one replayable trajectory of RoboDojo's 14-D joint actions. Task: Pick up the charger and plug it into the socket of the power strip so that it sits upright and fully inserted, then return the arms to their start pose. Frozen scene instance: RoboDojo's own evaluation layout arx_x5/0/plug_in_charger_0.json; graded by RoboDojo's own reward check."
+description = "RoboDojo plug_in_charger (Precision; two ARX X5 arms with parallel grippers, Isaac Sim 5.1 / Isaac Lab): produce one replayable trajectory of RoboDojo's 14-D joint actions. Task: Plug the charger into the power strip, upright and pushed all the way in. Then move both arms back to where they started. Frozen scene instance: RoboDojo's own evaluation layout arx_x5/0/plug_in_charger_0.json; graded by RoboDojo's own reward check."
 keywords = ["robotics", "robodojo", "isaac-lab", "isaac-sim", "bimanual", "arx-x5", "code-as-policy", "trajectory", "privileged"]
 
 [metadata]

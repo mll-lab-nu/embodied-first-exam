@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Put the Halloween decorations away. Two pumpkins, three candles and a cauldron stand on the living-room floor. Put the pumpkins and the candles inside the living-room cabinets (any of them), close every living-room cabinet, and leave the cauldron next to a living-room table.
+Put the pumpkins and the candles away in the living-room cabinets, close every cabinet, and leave the cauldron next to a living-room table.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - both pumpkins (`pumpkin.n.02_1`, `_2`) and all three candles (`candle.n.01_1` to `_3`) are inside living-room cabinets (`cabinet.n.01_*`: any of them)

@@ -7,12 +7,12 @@ old = "## Goal\nSuccess: the five yellow rubber ducks stand upright in a straigh
 new = "## Goal\nSuccess: the five nesting dolls stand upright in a straight left-to-right row, smallest on the left to largest on\nthe right, a little apart, and both arms are back where they started. A replay ends as soon as the task is done; later\nrows are not run."
 
 [[replace]]
-old = "## Others\n- Labels in `s.objects()`: `doll0`..`doll4` (the yellow rubber ducks).\n- RoboDojo's own reset settles the scene again from where it is, so after actions a reset gives the same layout and\n  start pose but not bit-for-bit the same state; a replay after such a reset can end slightly differently from the\n  grader's. Each graded replay runs the first episode of a newly started Session (nothing stepped before it): test on\n  that."
-new = "## Others\n- Labels in `s.objects()`: `doll0`..`doll4` (the nesting dolls).\n- RoboDojo's own reset settles the scene again from where it is, so after actions a reset gives the same layout and\n  start pose but not bit-for-bit the same state; a replay after such a reset can end slightly differently from the\n  grader's. Each graded replay runs the first episode of a newly started Session (nothing stepped before it): test on\n  that."
+old = "## Others\n- Labels in `s.objects()`: `doll0`..`doll4` (the yellow rubber ducks).\n- RoboDojo's own reset settles the scene again from where it is. So a reset after actions gives the same layout and\n  start pose, but not bit-for-bit the same state, and a replay after such a reset can end slightly differently from the\n  grader's. Each graded replay is the first episode of a newly started Session, with nothing stepped before it. Test\n  your trajectory the same way."
+new = "## Others\n- Labels in `s.objects()`: `doll0`..`doll4` (the nesting dolls).\n- RoboDojo's own reset settles the scene again from where it is. So a reset after actions gives the same layout and\n  start pose, but not bit-for-bit the same state, and a replay after such a reset can end slightly differently from the\n  grader's. Each graded replay is the first episode of a newly started Session, with nothing stepped before it. Test\n  your trajectory the same way."
 
 [[replace]]
-old = "## Goal\nSuccess: the five yellow rubber ducks stand upright in a straight left-to-right row, smallest on the left to largest on\nthe right, a little apart, and both arms are back where they started. What counts is how things stand at the end of the\nepisode: a success reached earlier and lost by the end does not count, so finish in the state you want graded and stop\nsending commands."
-new = "## Goal\nSuccess: the five nesting dolls stand upright in a straight left-to-right row, smallest on the left to largest on\nthe right, a little apart, and both arms are back where they started. What counts is how things stand at the end of the\nepisode: a success reached earlier and lost by the end does not count, so finish in the state you want graded and stop\nsending commands."
+old = "## Goal\nSuccess: the five yellow rubber ducks stand upright in a straight left-to-right row, smallest on the left to largest on\nthe right, a little apart, and both arms are back where they started."
+new = "## Goal\nSuccess: the five nesting dolls stand upright in a straight left-to-right row, smallest on the left to largest on the\nright, a little apart, and both arms are back where they started."
 
 [[replace]]
 old = "arx_x5/0/sort_nesting_dolls_by_size_0.json"
@@ -23,9 +23,9 @@ old = "sha256 `a01c86062db05ce7`"
 new = "sha256 `672f1afe9aaa8ce7`"
 
 [[replace]]
-old = "Stand the five yellow rubber ducks upright in one straight left-to-right row, ordered by size from the smallest on the left to the largest on the right. Then bring both arms back to where they started."
-new = "Stand the five nesting dolls upright in one straight left-to-right row, ordered by size from the smallest on the left to the largest on the right. Then bring both arms back to where they started."
-
-[[replace]]
 old = "five yellow rubber ducks"
 new = "five nesting dolls"
+
+[[replace]]
+old = "Stand the five yellow rubber ducks upright in a straight left-to-right row, smallest on the left to largest on the right, a little apart. Then move both arms back to where they started."
+new = "Stand the five nesting dolls upright in a straight left-to-right row, smallest on the left to largest on the right, a little apart. Then move both arms back to where they started."

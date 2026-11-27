@@ -202,12 +202,14 @@ class Episode:
         self.world.close()
 
 
-def replay(instance: dict, rows, video: str | None = None, camera: str | None = None) -> dict:
+def replay(instance: dict, rows, video: str | None = None, camera: str | None = None, after_done: bool = False) -> dict:
     """The sim rows from the frozen start in this process's own fresh world, until the referee ends the episode or
     the rows run out. success = the referee's verdict there (a success is latched the moment it happens and ends the
-    episode, so the rows must reach it)."""
+    episode, so the rows must reach it). `after_done` (a standard-mode episode the agent ended, PROTOCOL §3): every row
+    runs, the physics going on after the referee's call (World.run_after_done); the verdict is the same."""
     t = time.time()
     ep = Episode(instance)
+    ep.world.run_after_done = bool(after_done)
     check = ep.instance_check(instance)
     rows = np.asarray(rows, dtype=np.float64)
     if rows.ndim != 2 or rows.shape[1] != ep.raw_dim:
@@ -222,7 +224,7 @@ def replay(instance: dict, rows, video: str | None = None, camera: str | None = 
     n, bad_row = 0, None
     film()
     for row in rows:
-        if ep.done:
+        if ep.done and not after_done:
             break
         try:
             ep.step_raw(row)

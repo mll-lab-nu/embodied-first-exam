@@ -1,63 +1,28 @@
-# RoboARC (simulator package `topogym`) · knot_untying — frozen instance
+# RoboARC · knot_untying (privileged)
 
-You control a simulated robot (**two 6-DoF ALOHA (ViperX) arms with parallel-jaw grippers on a fixed base**; RoboARC on MuJoCo 3.14.0 physics, Nyx rendering) via Python.
-**Task:** Untie the rope and spread it out flat on the table so that, seen from above, it nowhere crosses or overlaps itself. Then let go of it and move the robot clear of it.
+## Task
+Untie the rope and lay it out flat on the table so that, seen from above, it nowhere crosses or overlaps itself. Then
+let go of it and move both arms clear of it.
 
-## Success requirements
+## Goal
+Success: the rope lies untangled and flat on the table, with no crossing, overlap or fold-back seen from above and a
+clear gap between parts of it that are not neighbours along the rope; both arms have let go of it and moved clear, and
+the rope is still. A replay ends, as a success, as soon as all of this has held for 0.5 s; later rows are not run.
 
-- Remove projected crossings, overlaps, collapsed projected segments and exact foldbacks. Nonlocal rope segments must be separated by at least one rope diameter in the top-down view; merely changing over/under order is insufficient.
-- Keep the entire rope close to the tabletop: no point more than 1 mm below it, and no point higher than one rope diameter plus 3 mm above it.
-- Release all target parts and disengage any assisted grasp. Keep at least 1 mm of verified clearance between the rope and grippers or other robot links that can move. World-fixed bases may touch the rope normally. Interior overlap with any robot part is forbidden; ambiguous bounding-volume overlaps require a native-solid geometry check.
-- During confirmation, every target point or rigid body's linear speed must be at most 1 mm/s and its displacement from the start of confirmation at most 1 mm.
-- Keep all final conditions satisfied together for at least 0.5 s of simulation time. If any final condition stops holding, the confirmation interval starts again. A brief qualifying pose is not enough; let the simulation advance through the full interval.
+Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, path)`: the (T, 14) actions, one row
+per control step (1/40 s), at most 11000 rows (a longer trajectory is invalid). Leave the script that produced it at
+`/app/output/gen.py`. It is replayed once from the fixed start and passes if the task gets done within your rows. Save a
+valid one early and overwrite it when you have a better one.
 
-## Grader details (in addition to the requirements above)
+Rules: **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+benchmark's demonstrations, trained policies); trials are reviewed.
 
-- The rope is a chain of 301 rigid capsule links (4.5 mm long, 8 mm thick) joined end to end; each joint bends and twists against a spring set by the rope's material (Young's modulus 50 kPa), with damping, and stops bending at 0.9 rad, where neighbouring links touch. The links do not deform: nothing about the rope's shape or volume ends the episode. A link moving faster than 2 m/s or spinning faster than 150 rad/s is slowed by extra damping (a speed clamp); this is not reported and does not end the episode. Pulled harder than about 14.9 N, the rope's links get extra rotational inertia (a tension guard), which only removes energy and is not reported.
-- Robot safety (this benchmark's tooling): no gripper target goes lower than 15 mm below the tabletop; a commanded target that would bring any part of a gripper lower is stopped there, on the commanded path. The fingertips reach about 16 mm beyond the tool frame (TCP) along its approach axis, open or closed. Arm drive torques are capped (the effort limits in robot_spec), so an arm pushing against an obstacle stalls at that torque. If any part of an arm goes more than 5 mm into a fixed object, such as a fixture or the table, the arm is stopped where it is. For that control step its joint targets are set to its measured joint positions, so it stops pushing. The safety readings report these stops as static_guard.
-- Forcing is recorded, not judged: an arm drive (not a gripper drive) at 95% of its torque cap or more while that arm's gripper, or a part it holds, presses on anything else with 20 N or more in total is forcing; 0.5 s of it on every physics tick is a forcing event in the evidence (`s.safety()`, `s.status()["forcing"]`), shown to the reviewer when a success is reviewed. Forcing does not end the episode and does not change the grade by itself.
-- Simulator breakdown (a MuJoCo instability: a non-finite or diverging acceleration, position or velocity): the episode ends as an infrastructure error, not your failure, unless an arm was forcing (even for one tick) within the 0.25 s before it: then it is your failure (forced_breakdown: what broke and what forced it).
-- The rope is 8 mm thick (radius 4 mm), so its highest point may be at most 11 mm above the tabletop.
-- "Nonlocal" means at least 16 mm apart along the rope: such parts of the rope's centreline must be at least 8 mm apart in the top view. Closer parts are exempt, but an actual crossing always counts.
-- The release check bounds the rope's volume mesh (carried rigidly by its capsule links), element by element, against the robot's collision geometries and decides the close ones with the exact solids: every robot part that can move (grippers, arm links) needs at least 1 mm of clearance from the rope; a world-fixed base may touch it. An overlap with the interior of any robot part means the release is not certified: no success while it lasts, never a failure.
-- Grading: the verifier replays your trajectory once in a fresh process. This family's physics runs on the CPU (MuJoCo, float64), so a replay reproduces your own run on the same host; the rule is kept as a margin: the replay runs the rows with the thresholds above and, if the episode has not ended after the last row, holds the final targets for up to 2 s (80 control steps), stopping at the first success or failure, so a confirmation that starts a few physics ticks later than in your own run can still complete; during that hold it accepts rope speeds up to 1.25 mm/s instead of 1 mm/s. Success needs the replay to succeed AND to reach the goal with the thresholds above within your own rows (not only in the hold; `s.replay(actions, grading=True)` reports it as `["grading"]["strict_success"]`). Nothing else is relaxed: every other condition, the failure conditions and the confirmation time are the same. A recording stops at your own success, so a replay whose confirmation ends a few ticks later needs more rows: you may append copies of the final row (holding still) before saving. `s.replay(actions, grading=True)` replays as the verifier does.
-- A failure is reported in `s.status()["episode_end"]` as "forced_breakdown: <what>" (<what>: the readable reason); `s.safety()` reports forcing, contact depths, volume ratios and table-guard stops against these limits.
+## Robot Interface
+Two 6-DoF ALOHA (ViperX) arms with parallel-jaw grippers on a fixed base, at a table (RoboARC, MuJoCo). The scene is one
+fixed instance. You have the full simulator to develop with; you hand in a trajectory of robot actions.
 
-The scene objects are the task's entities (`s.objects()`: `rope` (a chain of rigid capsule links)).
-Implementation reference: `KnotUntyingHardTask.evaluate_state` (module `topogym.tasks.knot_untying.knot_untying_hard`).
-This is a partial implementation excerpt; delegated helpers, passage history and the shared release/confirmation
-checks also apply. The complete public goal requirements are stated above.
-```python
-    def evaluate_state(self, state):
-        soft = state["fem"]["rope"]
-        points = sample_material_centerline(soft, *self.centerline_map)
-        indices, material_s = self.centerline_map
-        radius, cfg = self.layout.rope_radius_m, self.config["terminal"]
-        stations = material_s[indices]
-        if stations.ndim == 2:
-            stations = stations.mean(axis=1)
-        clear, geometry = planar_clearance(points, stations, 2*radius)
-        z = np.asarray(soft["position_m"])[:, 2]
-        on_table = bool(z.min() >= self.table_height_m-cfg["penetration_tolerance_m"]
-                        and z.max() <= self.table_height_m+2*radius+cfg["table_clearance_m"])
-        quiet, speed = soft_speed(soft, cfg["maximum_speed_m_s"])
-        intact = ipc_integrity(state, ("rope",))
-        return (bool(clear and on_table and quiet and intact is True),
-                "rope_volume_invalid" if intact is False else None,
-                dict(planar_clear=bool(clear), on_table=on_table, quiet=quiet, **geometry, **speed,
-                     evaluation_status="available" if intact is not None else "unavailable",
-                     thresholds_calibrated=False, goal_evaluation_complete=bool(self.goal_complete)))
-```
-
-This is a *fixed scene instance*: object poses and the robot's start pose never change between resets. You may reset
-and retry as many times as you want. Your deliverable is **one replayable trajectory**, not a general policy.
-
-## Deliverable
-Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below).
-It is replayed open-loop once from the same initial state in a fresh process and scored 1 if the task is
-completed at the end of the replay, else 0. Also leave the script that produced it at `/app/output/gen.py`.
-
-## Tooling (already installed; run `python` from any directory)
+### Session
+`/opt/tools/rcb_topogym.py`, importable as `rcb_topogym`:
 ```python
 from rcb_topogym import Session
 s = Session("knot_untying", instance="/app/instance.json")   # builds the frozen scene (instance.json) and compiles kernels
@@ -67,7 +32,7 @@ s.objects()                        # objects: name -> position, orientation_wxyz
 p["move_ee"]("left", pos, quat_wxyz, linear=3)   # IK on the robot's model to a TCP pose, then joint interpolation
 p["move_joints"]("left", q_arm); p["set_gripper"]("left", 0.0); p["open_gripper"]("left"); p["hold"](10)
 s.ee_pose("left"); s.joint_positions(); s.ik("left", pos, quat_wxyz)    # kinematics helpers (arms: ['left', 'right'])
-s.render_frame("cam_high")         # RGB uint8 (480, 848, 3) from one camera (s.VIDEO_CAMERAS); s.render_grid()
+s.render_frame("cam_high")         # RGB uint8 (480, 848, 3) from one camera (s.VIDEO_CAMERAS)
 s.render_depth("cam_high")         # float32 (480, 848) z-depth in metres (0 = no reading), pixel-aligned with render_frame
 s.camera_info()                    # per camera: intrinsic_cv, extrinsic_cv (world -> camera, OpenCV axes), cam2world_gl, mount
 s.robot_spec()                     # joints (limits), grippers (the grasping rule), PD gains, tool frames ['left_tcp', 'right_tcp']
@@ -75,7 +40,7 @@ s.kinematics({"op": "fk", "q": q})   # stateless FK / IK on the robot's model; {
 s.joint_velocities(); s.joint_efforts(); s.gripper_width("left")   # measured state in action layout (efforts: the PD drives')
 s.object_pose(name); s.object_bounds(name); s.state_sha()          # one object's pose / AABB; the state hash that replays compare
 p["object_in_hand"]("left"); p["set_joint_targets"](row, steps=1); p["gripper_quat"](yaw, approach)   # help(p[...])
-s.step(action)                     # one low-level action (14 entries, below) = one control step (1/40 s)
+s.step(action)                     # one low-level action = one control step (1/40 s)
 s.record_start(); ...; actions = s.record_stop()   # (T, 14) actions, one row per control step
 s.status()                         # {'success', 'progress', 'sim_steps', 'resets', 'state_sha', 'episode_end', 'review', 'forcing'}
 s.safety()                         # since the last call: forcing / deepest contacts / rope volume / table-guard stops vs the limits
@@ -83,37 +48,63 @@ s.replay(actions)                  # resets, replays open-loop, returns status  
 s.save_trajectory(actions, "/app/output/trajectory.npz")
 s.render_video(actions, "/app/output/check.mp4")   # replays from the frozen state and writes a tiled camera video
 ```
-The primitives are deliberately thin (IK moves, joint moves, gripper, hold): grasping, placing and every other skill
-are yours to build from them.
 
-CLI equivalent of the grader:
-`python /opt/tools/rcb_topogym.py replay --task knot_untying --instance /app/instance.json --traj /app/output/trajectory.npz`
+- The primitives are deliberately thin: IK moves, joint moves, gripper, hold. You build grasping, placing and every
+  other skill from them.
+- One `Session` per process (one simulator per process). Building the scene and compiling its kernels can take minutes.
+  Every `Session` holds its own scene in GPU memory, including the one that a replay or render CLI command starts, so
+  keep only one alive at a time. Do not call `s.close()` before writing every output.
+- Once the episode has ended (`s.status()["episode_end"]`), later steps neither move the scene nor change the execution
+  record. `s.reset()` starts over.
+- A failure is reported in `s.status()["episode_end"]` as "forced_breakdown: <what>", where <what> is the readable
+  reason. `s.safety()` reports forcing, contact depths, volume ratios and table-guard stops, each next to its limit.
+- The grader replays with this command (run it to self-check):
+  `python /opt/tools/rcb_topogym.py replay --task knot_untying --instance /app/instance.json --traj /app/output/trajectory.npz`
 
-## Conventions
-- World frame: +z up. Quaternions are **WXYZ**. The ee_pose action and the proprio TCP pose are given in this world frame.
-- Action (14): arm `left`: 6 joint targets (rad), then `left_gripper` = opening width (m, 0 closed .. 0.057385 open); arm `right`: 6 joint targets (rad), then `right_gripper` = opening width (m, 0 closed .. 0.057385 open); absolute position targets tracked by PD controllers, out-of-limit
-  values clipped. `s.hold_action()` is the no-op.
-- Control runs at 40 Hz (5 physics step(s) per control step). There is no step budget, but a trajectory may have at most
-  11000 rows (4.6 min of simulated time): the verifier has to replay it within its own time limit, so `s.step` stops
-  after that many control steps since the last reset, and a longer trajectory is rejected as invalid (reward 0). The time limit
-  (`## Time limit`) is your only budget. One control step takes about 1.3 s of wall clock here, so budget your experiments.
-- Grippers: physical grasping only (no assisted grasping): closing on an object squeezes it with the gripper's PD force; friction holds it.
-- Tool frame (TCP, the ee pose and IK frame): a fixed point near the closed finger pads; approach axis (hand -> fingertips) = local [1.0, 0.0, -0.023], finger-closing axis = local [0.0, 1.0, 0.008]. The ee_pose action, the proprio tcp pose and the IK use this frame.
-  `p["top_down_quat"](yaw)` builds a vertical approach whose fingers close along `yaw`; `p["gripper_quat"](yaw, approach)` any other.
-- The task succeeds once its predicate has held continuously for 0.5 s; that, or one of its failure predicates,
-  ends the simulated episode: later steps do not change the execution record or move the scene (`s.status()["episode_end"]`), and
-  `s.reset()` starts over.
-- One `Session` per process (one simulator per process). Building the scene and compiling its kernels can take minutes;
-  every `Session`, including the one a replay or render CLI command starts, holds its own scene in GPU memory, so keep
-  one alive at a time. Do not call `s.close()` before writing every output.
+### Actions
+- Action (14): arm `left`: 6 joint targets (rad), then `left_gripper` = opening width (m, 0 closed .. 0.057385 open);
+  arm `right`: 6 joint targets (rad), then `right_gripper` = opening width (m, 0 closed .. 0.057385 open); absolute
+  position targets tracked by PD controllers, out-of-limit values clipped. `s.hold_action()` is the no-op.
+- Control runs at 40 Hz (5 physics step(s) per control step). One control step takes about 1.3 s of wall clock here:
+  budget your experiments.
+- World frame: +z up. Quaternions are **WXYZ**. The ee_pose action and the proprio TCP pose are given in this world
+  frame.
+- Tool frame (TCP, the ee pose and IK frame): a fixed point near the closed finger pads; approach axis (hand ->
+  fingertips) = local [1.0, 0.0, -0.023], finger-closing axis = local [0.0, 1.0, 0.008]. The ee_pose action, the proprio
+  tcp pose and the IK use this frame. `p["top_down_quat"](yaw)` builds a vertical approach whose fingers close along
+  `yaw`. `p["gripper_quat"](yaw, approach)` builds any other approach.
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+### Grasping
+- Physical grasping only (no assisted grasping): closing on an object squeezes it with the gripper's PD force; friction
+  holds it.
 
-## Resources
-Your container: **7 CPUs**, **23 GiB of memory**, **1024 processes and threads**, **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`) and **one GPU, 4 GiB of its memory**. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
+### Safety
+- Robot safety: no gripper target goes lower than 15 mm below the tabletop. If a commanded target would bring any part
+  of a gripper lower, the gripper is stopped at that height, on the commanded path. The fingertips reach about 16 mm
+  beyond the tool frame (TCP) along its approach axis, open or closed. Arm drive torques are capped (the effort limits
+  in robot_spec), so an arm pushing against an obstacle stalls at that torque. If any part of an arm is more than 5 mm
+  deep in a fixed object (a fixture, the table), the arm is stopped where it is. For that control step its joint targets
+  are set to its measured joints, so it stops pushing. The safety readings report these stops as static_guard.
+- Forcing means an arm drive is near its torque cap while its gripper, or a part it holds, presses hard on something.
+  Forcing is recorded as evidence (`s.safety()`, `s.status()["forcing"]`) and shown to the reviewer when a success is
+  reviewed. By itself, it does not end the episode or change the grade. If the simulator breaks down, the episode ends.
+  This counts as your failure if an arm was forcing just before the breakdown, and as an infrastructure error otherwise.
 
-## Time limit
-You have 10800 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+## Others
+- The scene's objects (`s.objects()`: `rope` (a chain of rigid capsule links)).
+- Your own run stops at your success, but the replay's confirmation can end a few physics ticks later. Before saving,
+  append a few copies of the last row (holding still). `s.replay(actions, grading=True)` replays as the grader does and
+  reports whether the goal was reached within your rows (`["grading"]["strict_success"]`).
 
-This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+## Limits
+- Time: 10800 s of wall-clock time from the start of your session. Everything counts, including the simulator's
+  start-up. At the end you are stopped without warning and only what is in `/app/output/` at that moment is graded. Time
+  left: `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`). A call into a long-running process can block for
+  its whole wait time. Use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, including the simulator's and the benchmark's source.
+- Resources: 7 CPUs, 23 GiB memory, 1024 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`),
+  one GPU (4 GiB of its memory). Going over a cap can get a process killed (the CPU cap only slows you down). Usage:
+  `/run/rcb-limits/usage.json`.
+- Resets: as many as you like (`s.reset()`).

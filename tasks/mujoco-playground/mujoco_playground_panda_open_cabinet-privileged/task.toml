@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/mujoco_playground_panda_open_cabinet-privileged"
-description = "MuJoCo Playground PandaOpenCabinet in plain MuJoCo: Franka Panda; produce one replayable trajectory that pulls the handle along its slide to the target, frozen instance (seed 60417)."
+description = "MuJoCo Playground PandaOpenCabinet in plain MuJoCo: Franka Panda; produce one replayable trajectory that pulls the handle along its slide to the target, frozen instance (seed 60417). Task: Pull the green handle along its slide until it is at the red ball."
 keywords = ["robotics", "mujoco", "mujoco-playground", "franka-panda", "articulated", "pull", "code-as-policy", "trajectory"]
 
 [metadata]

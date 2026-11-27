@@ -3,7 +3,7 @@
  "robowits_task": "robowits/14-stack-cubes-v0",
  "eval_json": "dataset/robowits/eval_dataset_50/14.json",
  "eval_index": 2,
- "text": "Build a stable two-layer stack so the red cube's center is above the green colored dot.",
+ "text": "Set the two grey cubes side by side, touching, and put the red cube on top of them, right above the green dot.",
  "scene": {
   "apex cube": {
    "pos": [

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:autobio-0.1.0` |
 
 ## Task
-AutoBio's `pickup` (Pick up centrifuge tube), with an ALOHA arm (6 joints and a parallel gripper), fixed to the bench: Pick up the 50 mL centrifuge tube that stands in the rack. Success, at the first control step where both hold: the tube's body is above z = 0.925 m (it stands at 0.830 m, so 9.5 cm up) and the gripper's left finger (geom `1/aloha:leftfinger`) touches the tube's cap (geom `1/cap_cyl`).
+AutoBio's `pickup` (Pick up centrifuge tube), with an ALOHA arm (6 joints and a parallel gripper), fixed to the bench: Pick up the 50 mL tube from the rack by its cap and lift it more than a hand's width.
 On the bench: a 10-slot tube rack (2 rows of 5) with one capped 50 mL tube standing in it. The deliverable is one replayable trajectory of joint position targets (`/app/output/trajectory.npz`, `(T, 7)`, one row per 2 ms control step).
 
 ## Difficulty

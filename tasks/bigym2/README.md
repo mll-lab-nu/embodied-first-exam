@@ -130,6 +130,16 @@ The success check stays visible in privileged mode: it is sparse, and every inst
 states its thresholds. Upstream's reward shaping for the plate tasks (`event_progress`) is off by default and never
 graded.
 
+## Agent-ended episodes
+Every standard and realtime task runs with `RCB_AGENT_END=1` (PROTOCOL §3, agent-ended episodes): a success never ends
+the episode and no reply shows it. The episode ends at the agent's `POST /finish`, a task failure (a plate or block on
+the floor, a gripper on the sandwich) or a physics error, the pelvis 10 m from the scene's origin, the step cap
+(upstream's time limit, reason `step_limit`) or the end of the session. The tooling's `Episode.run_on` keeps upstream's
+success termination from stopping the episode (also in the video's replay). The verdict is judged on the end state
+(`end_judgement = "state"`): upstream's held success as things stand (`Episode.success_now`: the success-hold counter at
+its mark and no fall in the episode), read after an end window of upstream's hold
+(`end_window_steps = success_hold_steps`, 1 s of standing still from the end state).
+
 ## Where upstream holds answers
 | where | what | handling |
 |---|---|---|

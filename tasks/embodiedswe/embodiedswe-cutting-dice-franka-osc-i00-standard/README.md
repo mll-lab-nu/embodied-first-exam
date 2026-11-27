@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:embodiedswe-0.3.0` |
 
 ## Task
+Pick up the knife and dice the tomato along its scored lines, keeping every piece on the chopping board.
+
 Dice the food with a chef knife (Franka, operational-space control): the scene, frozen instance and success predicate of `embodiedswe-cutting-dice-franka-osc-i00-privileged`, with a Franka Panda arm with its parallel gripper, under EmbodiedSWE's operational-space (torque) controller, in standard mode
 (tasks/embodiedswe/README.md "Standard mode").
 

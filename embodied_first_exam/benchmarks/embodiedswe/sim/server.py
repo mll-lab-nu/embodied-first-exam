@@ -16,7 +16,10 @@ The episode: no reset. It ends at the end of the first call after which the task
 grader's check_success, the privileged verdict's predicate), when a tool-only rule is broken (spatula), when the
 agent's time is up (the collect hook), on a simulator error, or at the runaway cap (rcb_embodiedswe.MAX_STEPS). The
 verdict is read on the live state at the end (rcb_embodiedswe._final: success, progress = the rubric's score, the
-tool-only record), no grading replay. GPU PhysX repeats a run bit for bit only in the same process history (the cameras
+tool-only record), no grading replay. With agent-ended episodes (RCB_AGENT_END=1, PROTOCOL §3) a success never ends the
+episode and is never shown: it ends at the agent's POST /finish, at a broken tool-only rule (a failure, also after a
+success), at the runaway cap (reason step_limit), on a simulator error or when the agent's time is up, and the same
+verdict is read on the state it ends in (the rubric's own stage memory included: what it records as it happens counts). GPU PhysX repeats a run bit for bit only in the same process history (the cameras
 in the scene and this start-up's reads of the articulation change the later bits; drawing them does not): a replay in
 another process is not bit-exact, so the video is filmed live (live_video.py) and crash recovery is class `approx` (the
 journal holds the native action rows).
@@ -31,6 +34,7 @@ import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import rcb_limited as L  # noqa: E402
+import rcb_agent_end as AE  # noqa: E402
 import live_video  # noqa: E402
 
 PROTOCOL = L.PROTOCOL
@@ -40,14 +44,14 @@ TASK_FILE = os.environ.get("RCB_TASK_FILE", os.path.join(SRV, "task.json")); TAS
 PRESET = TASK["preset"]
 INSTANCE = os.environ.get("RCB_INSTANCE", os.path.join(os.path.dirname(TASK_FILE), "instance.json"))
 GRADER = os.path.join(os.path.dirname(TASK_FILE), TASK["grader"])
-MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10")); MAX_WATCH_S = float(os.environ.get("RCB_MAX_WATCH_S", "30"))
+MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10"))
 # images per call (cameras x frames, per-frame depth counted again): 240 RGB frames of 640x480 are 221 MB, so the largest
 # legal response stays under the shared layer's 256 MiB body limit (rcb_limited.MAX_RESP) with its mp4s, and nothing is dropped
 MAX_FRAMES = int(os.environ.get("RCB_MAX_FRAMES_PER_CALL", "240"))
 NATIVE_DIM = {"franka.osc": 8, "bimanual_franka.osc": 16, "g1.pink_ik": 28, "g1.loco_pink_ik": 32}[PRESET.split(".", 2)[2]]
 LOCK = threading.Lock(); PID_FILE = os.path.join(DATA, "server.pid")
 E = {"ready": False, "step": 0, "calls": 0, "done": False, "reason": None, "success": False, "t0": time.time(), "error": None, "tgt": None}
-EP = L.Episode(DATA, dim=NATIVE_DIM, resume="approx", persist=("tgt", "verdict"))   # the verdict: success stays success through a resume
+EP = L.Episode(DATA, dim=NATIVE_DIM, resume="approx", persist=AE.persist(("tgt", "verdict")))   # the verdict: success stays success through a resume
 EP.startup()
 log = EP.log
 
@@ -125,7 +129,7 @@ CAMS = [v["name"] for v in CAMS_OBJ.views]
 # 30 s watch with raw frames, fits max_frames_per_call: every call legal at the defaults is answered in full
 MOUNTED_CAMS = [v["name"] for v in CAMS_OBJ.views if v.get("link_prim")]
 DEFAULT_CAMS = [next(c for c in ("front", "wide", "overview") if c in CAMS)] + MOUNTED_CAMS
-DEFAULT_FPS = next((f for f in range(5, 0, -1) if len(DEFAULT_CAMS) * (int(round(MAX_WATCH_S * CTRL_HZ))
+DEFAULT_FPS = next((f for f in range(5, 0, -1) if len(DEFAULT_CAMS) * (int(round(30.0 * CTRL_HZ))
                     // max(1, int(round(CTRL_HZ / f))) + 2) <= MAX_FRAMES), 0)
 if not DEFAULT_FPS:
     raise RuntimeError(f"no default video_fps fits max_frames_per_call = {MAX_FRAMES} with the cameras {DEFAULT_CAMS}")
@@ -183,7 +187,7 @@ STEP_S = 1.0 / CTRL_HZ
 SPEC = {
     "protocol": PROTOCOL, "protocol_compat": list(L.COMPAT), "simulator": "embodiedswe (robobench on Isaac Lab 2.3.2 / Isaac Sim 5.1, GPU PhysX)",
     "robot": RIG.robot_spec()["name"], "task_text": TASK["text"] + ("\n\n" + TASK["success"] if TASK.get("success") else ""), "control_hz": CTRL_HZ, "physics_substeps": SUBSTEPS, "physics_hz": 1.0 / env.dt,
-    "max_chunk_s": MAX_CHUNK_S, "max_watch_s": MAX_WATCH_S, "max_frames_per_call": MAX_FRAMES,
+    "max_chunk_s": MAX_CHUNK_S, "max_frames_per_call": MAX_FRAMES,
     "cameras": {c: {"rgb": True, "depth": True, "mounted": v["what"], "resolution": [X.W, X.H], "calibration_in_obs": True,
                     "intrinsic_cv": CAM0[c]["intrinsic_cv"], "mount": CALIB[c]["mount"], "depth_range_m": [0.01, 100.0]}
                 for c, v in ((v["name"], v) for v in CAMS_OBJ.views)},
@@ -217,7 +221,12 @@ SPEC = {
     "episode": ("one episode, no reset: it ends after the first call at whose end the task is complete (checked after every "
                 "call), " + ("when the hand or a finger touches the bread (the tool-only rule: that disqualifies the episode), " if TOOL else "")
                 + f"when your time is up, on a simulator error, or after {int(R.MAX_STEPS):,} control steps "
-                f"({R.MAX_STEPS / CTRL_HZ / 3600:.1f} h of simulated time: a technical cap, reason \"step_guard\"); graded as it stands then"),
+                f"({R.MAX_STEPS / CTRL_HZ / 3600:.1f} h of simulated time: a technical cap, reason \"step_guard\"); graded as it stands then"
+                if not AE.ENABLED else
+                "one episode, no reset: a success never ends it and is never shown; it ends at your POST /finish, "
+                + ("when the hand or a finger touches the bread (the tool-only rule: that disqualifies the episode), " if TOOL else "")
+                + f"when your time is up, on a simulator error, or after {int(R.MAX_STEPS):,} control steps "
+                f"({R.MAX_STEPS / CTRL_HZ / 3600:.1f} h of simulated time: a technical cap, reason \"step_limit\"); graded as it stands then"),
     "robot_spec": RIG.robot_spec(),
     "kinematics": KIN,
     "depth": {"modes": list(L.DEPTH_MODES), "default": "none", "kind": "z-depth", "unit": "m", "invalid": 0, "max_m": L.DEPTH_MAX_M,
@@ -235,7 +244,7 @@ def write_final() -> None:
     L._write_json(os.path.join(DATA, "final.json"),
                   {"success": bool(E["success"]), "steps": E["step"], "calls": E["calls"], "control_steps": n, "physics_steps": n * SUBSTEPS,
                    "elapsed_s": round((E.get("t_end") or time.time()) - E["t0"], 1), "reason": E["reason"], "done": E["done"], "task": PRESET,
-                   "protocol": PROTOCOL, "finalized": False, **EP.final_fields()})
+                   "protocol": PROTOCOL, "finalized": False, **EP.final_fields(), **AE.final_fields(E, n)})
 
 
 def verdict() -> dict:
@@ -282,7 +291,7 @@ def dump() -> None:
                   {**{k: v for k, v in V.items() if k != "final_sha"}, "success": bool(V.get("success")), "live_sha": V.get("final_sha"),
                    "steps": E["step"], "calls": E["calls"], "control_steps": n, "physics_steps": n * SUBSTEPS,
                    "elapsed_s": round((E.get("t_end") or time.time()) - E["t0"], 1), "reason": E["reason"], "task": PRESET, "protocol": PROTOCOL,
-                   "n_actions": n, "success_seen_step": E.get("success_step"), **INSTANCE_CHECK, **EP.final_fields(),
+                   "n_actions": n, "success_seen_step": E.get("success_step"), **INSTANCE_CHECK, **EP.final_fields(), **AE.final_fields(E, n),
                    **({"infra_error": 1} if E["reason"] == "infra_error" else {})})
     write_final()
     VIDEO.last(ctrl_steps(), frame=last_frame)
@@ -458,10 +467,12 @@ def ctrl_step(target: np.ndarray, rec: L.Recorder) -> bool:
     """One control step towards `target` (a full ee_pose row); journaled. True when the call must stop here."""
     native = RIG.native(target)
     native_step(native); stop = EP.journal(native); rec.tick(); VIDEO.offer(ctrl_steps())
+    if AE.ENABLED:    # agent-ended: the success is only recorded, never ends the episode
+        AE.hidden_success(E, check_success(), log, ctrl_steps())
     if TOOL is not None and TOOL.touched:
         finish("tool_contact")
     elif ctrl_steps() >= R.MAX_STEPS:
-        finish("step_guard")
+        finish("step_limit" if AE.ENABLED else "step_guard")
     return E["done"] or stop
 
 
@@ -513,7 +524,7 @@ def run_submit(A, dt, k, interp, cams, fps, video, note, depth) -> tuple[dict, l
         if stop:
             break
     rec.tick(force=True, last=True)
-    if not E["done"] and check_success():
+    if not AE.ENABLED and not E["done"] and check_success():
         E["success_step"] = ctrl_steps(); finish("success")
     out = {**meta_common(cams), "chunk_id": E["calls"], "type": "ee_pose", "executed_rows": E["step"] - step0,
            "control_steps_chunk": ctrl_steps() - before, "physics_steps_chunk": (ctrl_steps() - before) * SUBSTEPS,
@@ -528,8 +539,8 @@ def run_submit(A, dt, k, interp, cams, fps, video, note, depth) -> tuple[dict, l
 def parse_observe(meta: dict) -> tuple:
     cams = cameras(meta); seconds = number(meta, "seconds", 0.0); fps = video_fps(meta)
     video = choice(meta, "video", "frames", ("mp4", "frames", "both", "none")); depth = L.depth_mode(meta)
-    if seconds < 0 or seconds > MAX_WATCH_S:
-        raise ValueError(f"seconds must be in [0, {MAX_WATCH_S}]")
+    if seconds < 0 or seconds > MAX_CHUNK_S:
+        raise ValueError(f"seconds must be in [0, {MAX_CHUNK_S}] (max_chunk_s)")
     steps = int(round(seconds * CTRL_HZ))
     frames_ok(cams, steps, fps, depth, video)
     return cams, seconds, steps, fps, video, depth
@@ -548,7 +559,7 @@ def run_observe(cams, seconds, steps, fps, video, depth) -> tuple[dict, list]:
             if ctrl_step(hold, rec):
                 break
         rec.tick(force=True, last=True)
-        if not E["done"] and check_success():
+        if not AE.ENABLED and not E["done"] and check_success():
             E["success_step"] = ctrl_steps(); finish("success")
     else:
         rec.tick(force=True, last=True)
@@ -568,7 +579,7 @@ def do_kinematics(req: dict) -> dict:
 
 def status() -> dict:
     return {"step": E["step"], "calls": E["calls"], "control_steps": ctrl_steps(), "done": E["done"], "reason": E["reason"],
-            "elapsed_s": round(time.time() - E["t0"], 1)}
+            "elapsed_s": round(time.time() - E["t0"], 1), **AE.steps_left(ctrl_steps())}
 
 
 def end_from_signal() -> None:
@@ -601,5 +612,8 @@ if resumed:
 E["ready"] = True; write_final()
 open(PID_FILE, "w").write(str(os.getpid()))
 print(f"{PROTOCOL} sim ready: {PRESET} (startup {EP.n_startups}, resumes {EP.resumes})", flush=True)
-L.serve(L.Service(spec=SPEC, lock=LOCK, state=E, submit=do_submit, observe=do_observe, kinematics=do_kinematics, status=status,
-                  on_submit_error=lambda exc: finish("infra_error" if isinstance(exc, InfraError) else "error"), log=log, episode=EP, state_sha=lambda: R.state_sha(env), proprio=proprio_row))
+AE.serve(AE.Service(spec=SPEC, lock=LOCK, state=E, submit=do_submit, observe=do_observe, kinematics=do_kinematics, status=status,
+                    on_submit_error=lambda exc: finish("infra_error" if isinstance(exc, InfraError) else "error"), log=log, episode=EP,
+                    state_sha=lambda: R.state_sha(env), proprio=proprio_row,
+                    **({"finish": lambda: finish("finished"),
+                        "end_step_limit": lambda: finish("step_limit")} if AE.ENABLED else {})))

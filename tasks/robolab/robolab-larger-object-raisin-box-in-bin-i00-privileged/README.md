@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robolab-0.2.2` |
 
 ## Task
-Place the larger object in the grey bin.
+Put the larger of the two boxes in the grey bin.
 
 ## Difficulty
 RoboLab labels this task "simple" (1 subtasks; attributes: size); its success term (`object_in_container`) asks for the larger of two boxes (the raisin box) put into the grey bin. The tooling gives only thin primitives (move_ee on Isaac Lab's differential IK, joint moves, gripper, hold), so every grasp, transport and placement is the agent's to build. RoboLab ships no expert solution.

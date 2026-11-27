@@ -14,9 +14,8 @@ and docker read it, and nothing else.
   (main, and in privileged mode the services the agent drives) holds a GPU, since the monitor checks one GPU-memory cap
   for the scope;
 - the caps of the task's rule in scripts/task_resources.toml are the ones applied (task_conventions.py writes them);
-- instruction.md ends (before `## Time limit`) with the `## Resources` paragraph rendered from main's caps, after the
-  `## External material` paragraph every task states in the same words (§5), and the README's `## Resources` is the one
-  rendered from every container's caps.
+- instruction.md ends with its rendered `## Limits`, whose Network line (§5) and Resources line (main's caps) are the
+  ones rendered for the task, and the README's `## Resources` is the one rendered from every container's caps.
 
 Usage: check-resources.py [task dirs...]   (default: every task under tasks/)
 """
@@ -29,8 +28,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
 from task_conventions import (  # noqa: E402  (one renderer of the paragraph and the README section, one rule reader)
-    CUTOFF_HEADING, RESOURCES_HEADING, RTX_GPU_MODELS, iter_tasks, mode_of, readme_resources, render_external,
-    render_resources, rule_for, task_caps)
+    RESOURCES_HEADING, RTX_GPU_MODELS, iter_tasks, mode_of, readme_resources, rule_for, task_caps)
 import task_conventions as tconv  # noqa: E402  (instructions v2: render_limits)
 from rcb_monitor import inject  # noqa: E402  (one reader of the compose file's services and caps)
 
@@ -186,27 +184,20 @@ def check(task: Path) -> list[str]:
             errs.append(f"[environment].gpu_types {gt} differs from scripts/task_resources.toml {r.get('gpu_types')}")
     if errs:
         return errs
-    # instruction.md: `## External material`, then `## Resources`, before the closing `## Time limit`
+    # instruction.md: the rendered `## Limits` last
     ins = (task / "instruction.md").read_text() if (task / "instruction.md").is_file() else ""
-    if tconv.is_v2(ins):      # instructions v2: the Network and Resources lines of `## Limits`, rendered
-        lim = tconv.render_limits(task, ins)
-        for lab, text in (("Network", tconv.limits_network(task, dict(tconv.limits_lines(ins)).get("Network"))),
-                          ("Resources", tconv.limits_resources(task))):
-            if " ".join(f"{lab}: {text}".split()) not in " ".join(ins.split()):
-                errs.append(f"instruction.md's `{tconv.LIMITS_HEADING}` does not state the {lab} line rendered for the task "
-                            f"(run python3 scripts/task_conventions.py {rel(task)})")
-        if not ins.endswith("\n" + lim):
-            errs.append(f"instruction.md does not end with its rendered `{tconv.LIMITS_HEADING}` (run python3 "
-                        f"scripts/task_conventions.py {rel(task)})")
-        ins = None
-    if ins is None:
-        pass
-    elif not (ins := re.sub(rf"(?ms)\n^{re.escape(CUTOFF_HEADING)}[ \t]*\n.*\Z", "", ins)).endswith("\n" + (want := render_resources(task))):
-        errs.append(f"instruction.md does not end (before `## Time limit`) with the `{RESOURCES_HEADING}` paragraph "
-                    f"rendered from the caps (run python3 scripts/task_conventions.py {rel(task)})")
-    elif not ins[: -len(want)].endswith("\n" + render_external(task) + "\n"):   # v1
-        errs.append("instruction.md does not state `## External material` (PROTOCOL §5; scripts/task_conventions.py "
-                    f"EXTERNAL_TEXT) just before `{RESOURCES_HEADING}`")
+    if m := tconv.RETIRED_RULES_RE.search(" ".join(ins.split())):   # owner 11-24: wording that is gone from every task
+        errs.append(f"instruction.md still has retired rule wording ({m.group(0)[:60]!r}; scripts/task_conventions.py "
+                    "RETIRED_RULES_RE): drop it, the No cheating rule and the rules heading are rendered words")
+    lim = tconv.render_limits(task, ins)      # the Network and Resources lines of `## Limits`, rendered
+    for lab, text in (("Network", tconv.limits_network(task, dict(tconv.limits_lines(ins)).get("Network"))),
+                      ("Resources", tconv.limits_resources(task))):
+        if " ".join(f"{lab}: {text}".split()) not in " ".join(ins.split()):
+            errs.append(f"instruction.md's `{tconv.LIMITS_HEADING}` does not state the {lab} line rendered for the task "
+                        f"(run python3 scripts/task_conventions.py {rel(task)})")
+    if not ins.endswith("\n" + lim):
+        errs.append(f"instruction.md does not end with its rendered `{tconv.LIMITS_HEADING}` (run python3 "
+                    f"scripts/task_conventions.py {rel(task)})")
     readme = (task / "README.md").read_text() if (task / "README.md").is_file() else ""
     if "\n".join(readme_resources(task, readme)) not in readme:
         errs.append(f"README.md `{RESOURCES_HEADING}` does not match the caps (run python3 scripts/task_conventions.py "

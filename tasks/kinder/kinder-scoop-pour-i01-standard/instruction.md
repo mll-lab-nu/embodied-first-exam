@@ -1,71 +1,100 @@
-# KinDER task, instance i01 — STANDARD MODE (robot as a service)
+# KinDER · scoop-pour (standard)
 
-You control a simulated TidyBot++ mobile manipulator (KinDER / MuJoCo) -- a holonomic base, a Kinova Gen3 7-DoF
-arm and a Robotiq 2F-85 gripper -- **as if it were real hardware**: the simulator runs in a service you cannot open,
-and you reach it only through a client. **Task:** move all 50 small dark-red cubes from the yellow bin into the green bin. You may use the scoop in the scene. The task succeeds the moment every cube's centre is inside the green bin, at least 1 cm from each of its inner walls and at least 0.5 cm below its rim.
+## Task
+Move all 50 small cubes from the yellow bin into the green bin. There is a scoop you can use.
 
-## Rules (real-robot rules)
-- **No reset: one episode.** The episode starts when the service comes up. It ends when the task succeeds, after
-  1000 control steps (100 s of robot time), when your time is up, or on a simulator error; nothing else ends it.
-  No other episode follows (`spec()["budget"]["reset"]` is 0, and it is authoritative), and **this episode is graded**: a success ends the run at once, and when your time is up it is graded as it stands. Once it has ended, `submit` raises `EpisodeOver`.
-- **Time moves only inside calls.** `submit` runs your actions, and `get_obs(seconds=s)` holds the last command for
-  s seconds; both use up the episode's control steps. Between calls the robot waits, frozen, while you think;
-  `get_obs()` with no seconds is free.
-- **No privileged state, no score.** You get the robot's own sensors: its two cameras (RGB, 480×640: `robot_base` on the base, `robot_wrist` on the arm's last link, which also gives depth), its joint encoders (the arm's angles and velocities, the gripper) and the base's odometry (where it is relative to where it started). Not where anything else is, not
-  the goal check: the service judges the episode and only tells you that it ended and why (`meta["done"]`,
-  `meta["reason"]`: `"success"`, `"failed"` when its control steps ran out, or `"error"` after a simulator error).
-  `spec()` gives the robot's own facts, as its documentation would: each arm joint's axis, position and limits, the
-  gripper's grasp point, each camera's field of view and pose.
-- There is nothing to hand in: the service records the episode and grades it as it ran. Keep the script
-  that drives the robot at `/app/output/gen.py` for the record: save it early and keep it current.
-- Wall-clock budget: the time limit (`## Time limit`). It ends without warning, and ending your session earlier ends the run
-  the same way, so do not stop early: while the episode runs, the run can still pass.
+## Goal
+Success: all 50 cubes are well inside the green bin, below its rim.
 
-## Scoring
-The run passes iff the episode reaches the goal above, as KinDER's own goal check judges it, within 1000
-control steps (`reason = "success"`); that live episode is the verdict. There is no partial credit.
+When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
-## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`)
-Your whole interface to the robot. Its docstring is the full reference (`python -c "import rcb_client;
-help(rcb_client)"`); the calls and the endpoints they use:
+Rules:
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+  benchmark's demonstrations, trained policies); trials are reviewed.
+- One episode, no reset: what you knock over stays knocked over.
+- You get only the robot's own sensors: its two cameras (with their calibration), its joint encoders and the base's
+  odometry; no object poses, no scene layout, no score, no success signal.
+
+## Robot Interface
+A TidyBot++ mobile manipulator (a holonomic base, a Kinova Gen3 7-joint arm and a Robotiq 2F-85 gripper), in a simulated
+scene (KinDER, MuJoCo). The robot runs as a service you reach through its client or its MCP tools, as if it were real
+hardware: one live episode.
+
+`POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
+
+### Client
+`/opt/tools/rcb_client.py` (protocol `eai-standard/2.1`); its docstring is the full reference
+(`python -c "import rcb_client; help(rcb_client)"`). The calls and the endpoints they use:
 
 | call | endpoint | what it does |
 |---|---|---|
 | `r = Robot()` | | connects (`http://sim:8000`, then `http://localhost:8000`) and waits until the scene is ready |
 | `r.spec()` | `GET /spec` | the robot's facts: the action's layout and bounds, `control_dt` (0.1 s), `max_control_steps` (1000), the cameras, `proprio_layout`, `budget` |
 | `r.status()` | `GET /status` | `calls`, `rows`, `control_steps`, `done`, `reason`, `elapsed_s` |
-| `r.get_obs(cameras=None, seconds=0, include_depth=False, video="frames")` | `POST /observe` | the current frames (free), or hold the last command and watch for `seconds` (at most 30) |
+| `r.get_obs(cameras=None, last_s=0, include_depth=False, video="frames")` | `POST /observe` | the current frames (free), or with `last_s=n` the frames recorded over the last n seconds; no time passes |
+| `r.hold(seconds, cameras=None, video="mp4")` | `POST /submit` | hold the last command for `seconds` of robot time and return the video, like a submit |
 | `r.submit("delta", A, cameras=None, video="mp4", include_depth=False)` | `POST /submit` | runs `A`, one row of 11 values per control step, at most 100 rows a call; stops early when the episode ends |
 
-One call returns at most 3000 images (`max_frames_per_call`, PROTOCOL §3 "Images per call").
-
-The answers are binary (RCB1) and come back decoded: `res.meta` (the counters, `done`, `reason`, `proprio["now"]`,
-`clipped`), `res.last[camera]` (the last frame), `res.frames` or `res.video` (what the cameras saw during the call),
-`res.depth` (metres), `res.proprio` (one row per frame). Values outside the bounds are clipped and reported in
-`meta["clipped"]`, never refused; a malformed request raises `ValueError` and runs nothing.
 ```python
 from rcb_client import Robot
 r = Robot()
 res = r.submit("delta", A)       # A: (T, 11), one 10 Hz control step per row
 ```
-Measured cost here, on a lightly loaded host (slower when the host is busy): about 117.3 ms per control step in
-one-row calls asking for one camera, 97.8 ms with both robot cameras' images (and the wrist's depth), 78.1 ms per step in chunks of 10 rows
-asking for one camera (video="none" each time).
+The answers come back decoded: `res.meta` (the counters, `done`, `reason`, `proprio["now"]`, `clipped`),
+`res.last[camera]` (the last frame), `res.frames` or `res.video` (what the cameras saw during the call), `res.depth`
+(metres), `res.proprio` (one row per frame). One call returns at most 3000 images. Values outside the bounds are
+clipped, not refused, and `meta["clipped"]` reports them. A malformed request raises `ValueError` and runs nothing. Once
+the episode has ended, `submit` raises `EpisodeOver`. Time per call, on a lightly loaded host: about 117.3 ms per
+control step in one-row calls asking for one camera, 97.8 ms with both cameras' images (and the wrist's depth), 78.1 ms
+per step in chunks of 10 rows asking for one camera (`video="none"` each time).
 
-Each proprioception row (`meta["proprio"]["now"]`, `res.proprio`) has, in `spec()["proprio_layout"]` order: `base_x`, `base_y`, `base_yaw` (the odometry frame: where the base started, x the way it faced, y left), `base_vx`, `base_vy`, `base_yaw_rate`, `arm_1` ... `arm_7`, `arm_1_vel` ... `arm_7_vel`, `gripper` (the fingers' position: 0 open, 1 at their joint's closed limit, about 0.98 when they close on nothing) and `gripper_vel`; `spec()["proprio"]` gives the units.
+### MCP tools
+- The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
+  `observe`, `submit`, `finish`. A tool takes its endpoint's request fields (any other field in `fields`) and returns
+  the service's reply `meta` unchanged; images, arrays and video are written as files under `/app/obs/` (`.png`, `.npy`,
+  `.mp4`) and the result lists them. Long action chunks can be passed as a file (`actions_file`).
+- `observe` returns at once with what is already recorded: the current frame, or the last `last_s` seconds. Time passes
+  only through `submit`, which answers when its rows have run; a `submit` with `interpolate` "hold", `seconds` and no
+  rows lets time pass with the robot holding still.
+- A call still running after 45 s returns `pending` with an `operation` id; `observe(operation=id)` collects its reply.
+- The client and the tools drive the same robot in the same episode; use either, or both.
 
-Each row of a `delta` chunk is 11 numbers, one 10 Hz control step, in the order of `spec()["action_types"]["delta"]["layout"]`:
-- `base_x`, `base_y`: how far to move the base, metres in the odometry frame, together at most 0.1 a step; `base_yaw`: how far to turn it, radians (+ = counter-clockwise), at most 0.1.
-- `arm_1` ... `arm_7`: radians to add to each of the 7 arm joints' measured angles, each at most 0.1 a step; the sums are the joints' new targets, which the arm's PD controller tracks.
+### Actions
+One action type, `delta`: 11 numbers per row, one 10 Hz control step, in the order of
+`spec()["action_types"]["delta"]["layout"]`; at most 100 rows a call:
+- `base_x`, `base_y`: how far to move the base, metres in the odometry frame, together at most 0.1 a step; `base_yaw`:
+  how far to turn it, radians (+ = counter-clockwise), at most 0.1.
+- `arm_1` ... `arm_7`: radians to add to each of the 7 arm joints' measured angles, each at most 0.1 a step; the sums
+  are the joints' new targets, which the arm's PD controller tracks.
 - `gripper`: 0 = open, 1 = closed (a command, not a change).
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+### Observations
+- Cameras: `robot_base` on the base and `robot_wrist` on the arm's last link (which also gives depth), RGB 480 × 640,
+  each with its calibration.
+- The proprioception (`obs.meta["proprio"]`) has, in `spec()["proprio_layout"]` order: `base_x`, `base_y`, `base_yaw`
+  (the odometry frame: where the base started, x the way it faced, y left, z up), `base_vx`, `base_vy`, `base_yaw_rate`,
+  `arm_1` ... `arm_7`, `arm_1_vel` ... `arm_7_vel`, `gripper` (the fingers' position: 0 open, 1 at their joint's closed
+  limit, about 0.98 when they close on nothing) and `gripper_vel`; `spec()["proprio"]` gives the units.
+- The robot's own facts, as its documentation would give them, are in `r.spec()`: each arm joint's axis, position and
+  limits, the gripper's grasp point, each camera's field of view and pose; nothing about where anything else is.
+- When the episode has ended, `meta["reason"]` says why: `"finished"` after your finish, `"step_limit"` when its control
+  steps ran out, or `"error"` after a simulator error.
 
-## Resources
-Your container: **4 CPUs**, **16 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
+### Time
+Time moves only inside calls: running your actions and holding the last command (`hold(s)`) use up the episode's control
+steps. Between calls the robot waits, frozen, while you think; an observation is free.
 
-## Time limit
-You have 1800 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
-
-This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` counts the same limit from your first request to the service, so it never runs out before your time does: your real time left is `time_left_s` minus the time you spent before that request. Plan by it. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+## Limits
+- Time: 1800 s of wall-clock time from the start of your session. Everything counts, including waiting for the service.
+  At the end you are stopped without warning. Time left: `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`).
+  Trust this file: the `time_left_s` in the service's replies starts only at your first request. A call into a
+  long-running process can block for its whole wait time. Use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, including the simulator's and the benchmark's source.
+- Resources: 4 CPUs, 16 GiB memory, 1024 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`),
+  no GPU; the simulator runs in its own container and does not count. Going over a cap can get a process killed (the CPU
+  cap only slows you down). Usage: `/run/rcb-limits/usage.json`.
+- Resets: none. You get one episode.
+- Steps: at most 1,000 control steps (100 s of robot time), then the episode ends. The task has to be done by then.
+- Finish: if you never send `/finish`, the episode is graded when the step limit is reached or your session ends.

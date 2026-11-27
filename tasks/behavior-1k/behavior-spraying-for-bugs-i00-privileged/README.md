@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Spray the potted plants against bugs. An insectifuge atomizer and two potted plants stand on the garden floor; spray insectifuge onto both plants until each of them is covered with it.
+Spray both potted plants until they are covered with insectifuge.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - both potted plants (`pot_plant.n.01_1`, `_2`) are covered with insectifuge (`insectifuge.n.01_1`)

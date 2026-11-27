@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:embodiedswe-0.3.0` |
 
 ## Task
+Flip the bread in the pan with the spatula, then lift it out on the spatula and set it down flat on the plate.
+
 Flip a slice of bread in the pan with a spatula, then serve it onto the plate (Franka, operational-space control). EmbodiedSWE's `puzzle.spatula.franka.osc` task (robobench at commit `67f44e8a2ca5`), privileged mode, with a program as the
 deliverable: `solution/solve.py` exposing `solve(env)`.
 

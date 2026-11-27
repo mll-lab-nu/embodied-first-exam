@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:mujoco-0.1.3` |
 
 ## Task
-MuJoCo Playground `Go1Getup` (Unitree Go1), rebuilt in plain MuJoCo from Playground's scene files: The Unitree Go1 has fallen over. Make it get up and stand upright at its standing height.
+MuJoCo Playground `Go1Getup` (Unitree Go1), rebuilt in plain MuJoCo from Playground's scene files: The robot has fallen over. Get it back up, standing upright at its normal height.
 It starts lying with its trunk tilted 110 deg (Playground's random drop, then a 0.5 s settle) and has 6 s to stand upright at its standing height. The deliverable is one replayable trajectory of joint position targets
 (`/app/output/trajectory.npz`, `(T, 12)`, 1 <= T <= 300).
 

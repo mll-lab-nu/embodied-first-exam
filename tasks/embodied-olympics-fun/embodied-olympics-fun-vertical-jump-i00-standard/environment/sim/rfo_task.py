@@ -40,8 +40,8 @@ class Task(TaskBase):
                   vane_mass_kg=0.05, vane_ahead_m=0.04, two_foot_window_s=0.05, foot_shift_m=0.03, min_air_s=0.10, rise_min_m=0.05,
                   stand_s=1.0, fall_z_m=0.35)
 
-    sentence = ("Do a vertical jump: from a standstill, jump off both feet without a step, touch the vane above you "
-                "with a hand at the top of the jump, land on your feet and stand.")
+    sentence = ("Jump straight up from both feet without a step, touch the vane above you with a hand, land on your "
+                "feet and stand.")
     rules = ("Your standing reach (the top of a hand, flat-footed, legs straight, arm stretched up) is "
              "{standing_reach_m} m. A vane hangs over you with its underside {vane_above_reach_m} m above that: a "
              "light plate ({vane_mass_kg} kg) {vane_length_m} m long from your left to your right and "

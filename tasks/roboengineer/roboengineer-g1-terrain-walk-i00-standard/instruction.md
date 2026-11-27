@@ -1,28 +1,72 @@
-# g1-terrain-walk
+# roboEngineer · g1-terrain-walk (standard)
 
-Train a blind 29-DoF Unitree G1 policy in mjlab/MuJoCo Warp and transfer to CPU MuJoCo over flat, sloped, rough and stepped terrain. Stand 2 s, then follow a public forward velocity command of 0.5–0.65 m/s for 18 s.
+## Task
+Make the G1 stand, then walk forward at its commanded speed over flat, sloped, rough or stepped ground without falling.
 
-## Train, deploy, inspect and revise
-Train the public terrain curriculum with `python -m control_public.g1_training --upstream /opt/control-assets/unitree_rl_mjlab --out /app/output/trained --gpu 0`. You may edit training code. Submit the exported `policy.npz` using `client.artifact(path)`. The fixed actor architecture and PD wrapper are the deployment ABI. Record actual training steps, logs and hardware. Your container has one NVIDIA GPU (`cuda:0`); measured on an L40S, the trainer's default 256 environments take about 2 GB of GPU memory and 1.1-1.4 s per PPO iteration, 1024 environments (its cap) about 5 GB and 1.4 s, 4096 environments about 17 GB and 2.0-2.5 s, at about one CPU core.
+## Goal
+Success: on every kind of ground the G1 stays up for the whole run, walks forward close to the commanded speed, covers
+most of the commanded distance and does not drift far sideways. The evaluator runs the policy you select on 12 held-out
+cases (new episodes of the same hidden plant, never shown to you): success needs every case to pass, and `final_reward`
+reports the mean score (0-100).
 
-Use `from control_public.client import Client, artifact`; `Client().describe()` provides the public defaults and bounds. Call `deploy(policy, diagnosis)` for up to three rounds. A deployment can take minutes: if your tool call times out and the response is lost, `result(round_id)` returns that completed round's stored response again (it runs nothing). An episode that crashes, leaves its course or arena, or makes the simulation diverge ends at that moment: its telemetry and frames stop there. Each round reuses the same 4 development cases. Diagnose failures from the returned video frames and noisy telemetry, then revise. Preserve code, training logs, policies and exact feedback under `/app/output/`. The client saves the exact response and image bytes. A diagnosis should briefly state the observed failure, proposed change and expected effect.
+Deliverable: the policy of one completed deployment round. Choose that round with `seal(round_id, summary)`. You can
+seal only once, and sealing ends adaptation. If you seal none, the latest round completed before the cutoff counts; with
+no completed round the score is zero. Preserve code, training logs, policies and exact feedback under `/app/output/`.
+The client saves the exact response and image bytes.
 
-`seal(round_id, summary)` selects a completed round. No held-out feedback is returned. At agent exit the evaluator uses the sealed round or the latest round completed before cutoff; no eligible round scores zero. Hidden simulation runs in a separate container and accepts data-only policies. Network endpoint: `http://127.0.0.1:8000`. No reset or privileged-state endpoint exists.
+Rules:
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, trained
+  policies for this task) or hidden evaluator information; trials are reviewed. Write your own fitting, training and
+  analysis code.
+- No reset: deployments are your only runs on the hidden evaluator, at most three rounds, each on the same 4 development
+  cases from their start; no reset or privileged-state endpoint exists.
+- A deployment returns only noisy telemetry and camera frames. It never returns the evaluation dynamics, seeds, true
+  state, contacts or grades, nor anything about the held-out cases.
 
-## Verification and score
-100 * walking survival fraction * exp(-speed MAE/commanded speed) * clipped forward-progress fraction. Success requires full 20 s survival, speed MAE<0.25 m/s, forward travel>65% of commanded walking distance, lateral drift<2 m. Standing still scores zero.
-The selected policy is tested on 12 disjoint cases in two fresh processes. Binary success requires all cases to pass; `final_reward` reports the continuous mean score. Evaluation dynamics, seeds, true state, contacts and grades are never returned during adaptation.
+## Robot Interface
+A simulated 29-DoF Unitree G1 humanoid (MuJoCo). You tune its numeric controller on the public nominal model in your
+container. Then you deploy it to a hidden evaluator whose dynamics differ in ways you are not told. The evaluator runs
+as a service that you reach only through its client.
 
-## Modeling limitations
-Simulation transfer only, not hardware. Fixed 98→512→256→128→29 ELU actor and public PD wrapper. Coding-agent feedback is noisy joint angles, public commands and images.
+### Client
+- `from control_public.client import Client, artifact`; `Client().describe()` provides the public defaults and bounds.
+- `deploy(policy, diagnosis)` for one deployment round: it runs your policy on the development cases and returns their
+  feedback. A diagnosis should briefly state the observed failure, proposed change and expected effect.
+- A deployment can take minutes: if your tool call times out and the response is lost, `result(round_id)` returns that
+  completed round's stored response again (it runs nothing).
+- `seal(round_id, summary)` selects a completed round for grading.
+- The service: `http://127.0.0.1:8000`; it accepts data-only policies.
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+### Training
+Train the public terrain curriculum with
+`python -m control_public.g1_training --upstream /opt/control-assets/unitree_rl_mjlab --out /app/output/trained --gpu 0`.
+You may edit training code. Submit the exported `policy.npz` using `client.artifact(path)`. The actor network's
+architecture and its PD wrapper are fixed: only the weights change. Record actual training steps, logs and hardware.
+Your container has one NVIDIA GPU (`cuda:0`); measured on an L40S, the trainer's default 256 environments take about 2
+GB of GPU memory and 1.1-1.4 s per PPO iteration, 1024 environments (its cap) about 5 GB and 1.4 s, 4096 environments
+about 17 GB and 2.0-2.5 s, at about one CPU core.
 
-## Resources
-Your container: **4 CPUs**, **12 GiB of memory**, **1024 processes and threads**, **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`) and **one GPU, 20 GiB of its memory**. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
+### Feedback
+Each round reuses the same 4 development cases. An episode that crashes, leaves its course or arena, or makes the
+simulation diverge ends at that moment: its telemetry and frames stop there. Diagnose failures from the returned video
+frames and noisy telemetry, then revise.
 
-## Time limit
-You have 14400 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+### Model
+- Fixed 98→512→256→128→29 ELU actor and public PD wrapper. Coding-agent feedback is noisy joint angles, public commands
+  and images.
 
-This is wall-clock time from the start of your session; the time you wait for the deployment service counts, deployments included. When it is up you are stopped without warning and the evaluator takes the round you sealed or, if you sealed none, the latest deployment that completed before that moment; a deployment still running then is not graded. The service's own deadline counts the same limit from your first request to it, so it never runs out before your time does. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+## Limits
+- Time: 14400 s of wall-clock time from the start of your session. Everything counts, including waiting for the
+  deployment service and the deployments. At the end you are stopped without warning. The evaluator then takes the round
+  you sealed; if you sealed none, it takes the latest deployment that finished before then. A deployment still running
+  is not graded. Time left: `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`). The service's own deadline
+  counts the same limit from your first request to it. A call into a long-running process can block for its whole wait
+  time. Use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, including the simulator's and the benchmark's source.
+- Resources: 4 CPUs, 12 GiB memory, 1024 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`),
+  one GPU (20 GiB of its memory); the simulator runs in its own container and does not count. Going over a cap can get a
+  process killed (the CPU cap only slows you down). Usage: `/run/rcb-limits/usage.json`.
+- Resets: none. Deployments are your only runs, each starting its development cases afresh.
+- Rounds: at most three deployment rounds (`Client().describe()` has what is left).

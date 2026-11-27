@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, { source
 
 [task]
 name = "embodied-first-exam/abc-sim-count-one-i00-standard"
-description = "ABC Sim count into a box: exactly 1 (two I2RT YAM arms, MuJoCo): Follow the directive 'put exactly 1 red object in the box'. The robot as a service (eai-standard/2.2); graded by the live episode."
+description = "ABC Sim count into a box: exactly 1 (two I2RT YAM arms, MuJoCo): Put exactly one red object in the box, and nothing else. The robot as a service (eai-standard/2.2); graded by the live episode."
 keywords = ["robotics", "abc-sim", "mujoco", "yam", "bimanual", "count_one", "standard"]
 
 [metadata]
@@ -55,6 +55,13 @@ build_timeout_sec = 1800.0
 cpus = 4
 memory_mb = 10240
 storage_mb = 20480
+
+# The robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): Harbor starts this server for the agent.
+[[environment.mcp_servers]]
+name = "efe-robot"
+transport = "stdio"
+command = "python3"
+args = ["/opt/tools/efe_mcp/server.py"]
 
 [verifier.env]
 RCB_LIMITS_ENFORCE = "${RCB_LIMITS_ENFORCE:-0}"

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Clean up the garden. Four branches lie on the ground in the garden, where the recycling bin also stands; put all four inside the recycling bin and leave the bin standing on the ground.
+Put the four branches into the recycling bin and leave the bin standing on the ground.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - all four branches (`branch.n.02_1`, `branch.n.02_2`, `branch.n.02_3`, `branch.n.02_4`) are inside the recycling bin (`recycling_bin.n.01_1`)

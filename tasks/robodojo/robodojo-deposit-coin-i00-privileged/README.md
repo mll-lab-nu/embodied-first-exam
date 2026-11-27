@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Take the coin out of the upright coin holder and drop it into the piggy bank through its slot. Then bring both arms back to where they started. (RoboDojo's `deposit_coin`). RoboDojo capability dimension: Precision. Instance i00 is RoboDojo's own evaluation layout
+Take the coin from the coin holder and drop it into the piggy bank through the slot. Then move both arms back to where they started. (RoboDojo's `deposit_coin`). RoboDojo capability dimension: Precision. Instance i00 is RoboDojo's own evaluation layout
 `arx_x5/0/deposit_coin_0.json` (sha256 `53bd0820af9e5a81`), frozen in `instance.json`. The deliverable is one replayable trajectory of
 RoboDojo's 14-D joint action at 25 Hz (`/app/output/trajectory.npz`), graded by RoboDojo's own reward check for the task,
 with no step cap (RoboDojo's own evaluation gives a policy 300 actions; PROTOCOL §3).

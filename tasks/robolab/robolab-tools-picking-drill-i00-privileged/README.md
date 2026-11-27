@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robolab-0.2.2` |
 
 ## Task
-Select the cordless drill and put it on the table.
+Take the cordless drill out of its bin and put it on the table.
 
 ## Difficulty
 RoboLab labels this task "simple" (1 subtasks; attributes: spatial, semantics); its success term (`object_outside_of_and_on_surface`) asks for the cordless drill, which starts in the right bin, set on the table (the success term: outside the left bin and on the table). The tooling gives only thin primitives (move_ee on Isaac Lab's differential IK, joint moves, gripper, hold), so every grasp, transport and placement is the agent's to build. RoboLab ships no expert solution.

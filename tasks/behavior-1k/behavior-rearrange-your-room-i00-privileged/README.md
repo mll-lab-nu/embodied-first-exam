@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Rearrange the bedroom. Move the tissue dispenser from the armchair onto one of the stands, and put the two pillows that lie on the floor onto the two beds, one pillow on each bed.
+Put the tissue dispenser on a stand and one pillow on each bed.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - the tissue dispenser (`tissue_dispenser.n.01_1`) is on top of a stand (any of the bedroom's `stand.n.04_*`)

@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:mujoco-0.1.2` |
 
 ## Task
+Pick up the spatula and make a flipping motion, following the green ghost spatula through its poses in order.
+
 DexToolBench task `spatula / spoon_spatula / flip_over` (SimToolReal, MIT) ported to plain MuJoCo for this benchmark.
 
 ## Difficulty

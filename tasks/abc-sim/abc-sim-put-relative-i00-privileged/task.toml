@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/abc-sim-put-relative-i00-privileged"
-description = "ABC Sim put relative (two I2RT YAM arms, MuJoCo): Follow the directive 'put the soap dispenser to the right of the boxed food'. Directions are as the arms face the table: left = +y, right = -y, behind = +x (farther from the arms), in front = -x (nearer to them). Frozen scene instance; one replayable trajectory, graded by two fresh-process replays."
+description = "ABC Sim put relative (two I2RT YAM arms, MuJoCo): Set the soap dispenser down a short way to the right of the boxed food, as the arms face the table. Frozen scene instance; one replayable trajectory, graded by two fresh-process replays."
 keywords = ["robotics", "abc-sim", "mujoco", "yam", "bimanual", "put_relative", "privileged"]
 
 [metadata]

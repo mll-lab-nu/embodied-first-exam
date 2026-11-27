@@ -20,6 +20,8 @@ The trajectory is replayed by the grader exactly like replay(): a fresh process 
     must hold again at its end (final_check());
   - a breakdown anywhere (a non-finite state, a MuJoCo BADQACC / BADQPOS / BADQVEL warning, a part contact deeper than
     BREAKDOWN_DEPTH_M) makes success impossible for the episode.
+Identical parts (the same asset) are interchangeable: any of them may take any of their places, one part per place
+(IDENTICAL_PARTS: VESKEN, STEGESUND, GLADOM, EKET; the scene's mechanism and success.py otherwise unchanged).
 
 CLI (the grader's replay): python rcb_ikea.py replay --task lack --traj /app/output/trajectory.npz [--scene-dir D] [--out F]
 Only mujoco and numpy are needed.
@@ -327,6 +329,886 @@ def load_trajectory(path: str, nu: int, timestep: float | None = None, max_rows:
         raise InvalidTrajectory(f"not a readable trajectory .npz file: {exc!r}"[:300])
 
 
+# ---- Identical parts (the benchmark's rule, on top of a scene's mechanism and success.py) ---------------------------
+# Parts that are the same asset (same inertia, geoms, meshes, colours, joints and child bodies, checked on the compiled
+# model at every build: _same_part; EKET's two side panels up to a turn: _turned_same_part) cannot be told apart, so
+# any of them may take any of their places, one part per place. VESKEN, STEGESUND, GLADOM and EKET ported source graders
+# that bound every place to one named part (foot_0 into corner 0, bolt_1 into the A-front bore, screw_bottom into the
+# bottom nut, side_a into side A): a correct assembly with two identical parts swapped never connected or failed the
+# check. Here:
+#   - VESKEN (feet; the 12 columns; trays 1-2; caps): every open snap operation tracks its own parts with the source's
+#     computation, unchanged, and every other free part of the same groups (same zone, gates and dwell, measured at the
+#     place's own design points); the first that connects takes the place from then on, and the operation's retention
+#     weld is pointed at the bodies that are there. success.py measures each place against the parts that took it.
+#   - STEGESUND (the two halves; the four bolts): a bolt arms on any free bore it threads into (not only its own) and is
+#     welded with that bore's thread and the half its head clamps there; success.py's assembled check passes when it
+#     passes for some one-to-one assignment of the halves and of the bolts to their places.
+#   - GLADOM (the three short screws): each short screw may take any free short-screw nut (bottom or ring); the frame-b
+#     and ring connections wait for their nuts to be taken by any short screw; success.py measures the screws against
+#     the one-to-one assignment with the smallest summed lateral error (the source did this for the two ring screws).
+#   - EKET (the two side panels: one panel, side_b is side_a turned 180 deg about its long axis, _turned_same_part):
+#     side A's place may take either panel (the first accepted side_a_entry, measured on the panel turned into side A's
+#     frame); the other panel is then side B, and the frame joints, success.py's gates and the end-pose rule follow.
+# Order rules are unchanged (they are rules on the places), and a run that puts every part only into its own place is
+# computed exactly as before, bit for bit.
+IDENTICAL_PARTS = {
+    "vesken": (("foot_0", "foot_1", "foot_2", "foot_3"),
+               tuple(f"column_{lv}_{k}" for lv in range(3) for k in range(4)),
+               ("tray_1", "tray_2"),
+               ("cap_0", "cap_1", "cap_2", "cap_3")),
+    "stegesund": (("half_A", "half_B"), ("bolt_1", "bolt_2", "bolt_3", "bolt_4")),
+    "gladom": (("screw_bottom", "screw_ring_l", "screw_ring_r"),),
+    "eket": (("side_a", "side_b"),),
+}
+
+
+def _same_part(m, a: int, b: int, root: bool = True) -> bool:
+    """Bodies a and b are the same asset: inertial, every geom (type, size, pose in the body, mesh, contact and colour
+    fields), every joint but a free one, and the child bodies (in the same pose, recursively)."""
+    eq = np.array_equal
+    if not all(eq(x[a], x[b]) for x in (m.body_mass, m.body_inertia, m.body_ipos, m.body_iquat)):
+        return False
+    if not root and not (eq(m.body_pos[a], m.body_pos[b]) and eq(m.body_quat[a], m.body_quat[b])):
+        return False
+    ga, gb = np.flatnonzero(m.geom_bodyid == a), np.flatnonzero(m.geom_bodyid == b)
+    if len(ga) != len(gb):
+        return False
+    for x, y in zip(ga, gb):
+        if not all(eq(f[x], f[y]) for f in (m.geom_type, m.geom_size, m.geom_pos, m.geom_quat, m.geom_contype,
+                                             m.geom_conaffinity, m.geom_condim, m.geom_priority, m.geom_friction,
+                                             m.geom_solref, m.geom_solimp, m.geom_solmix, m.geom_margin, m.geom_gap,
+                                             m.geom_rgba, m.geom_matid, m.geom_group)):
+            return False
+        if int(m.geom_type[x]) in (int(mujoco.mjtGeom.mjGEOM_MESH), int(mujoco.mjtGeom.mjGEOM_SDF)):
+            i, j = int(m.geom_dataid[x]), int(m.geom_dataid[y])
+            if i != j:
+                vi = m.mesh_vert[m.mesh_vertadr[i]:m.mesh_vertadr[i] + m.mesh_vertnum[i]]
+                vj = m.mesh_vert[m.mesh_vertadr[j]:m.mesh_vertadr[j] + m.mesh_vertnum[j]]
+                fi = m.mesh_face[m.mesh_faceadr[i]:m.mesh_faceadr[i] + m.mesh_facenum[i]]
+                fj = m.mesh_face[m.mesh_faceadr[j]:m.mesh_faceadr[j] + m.mesh_facenum[j]]
+                if not (eq(vi, vj) and eq(fi, fj) and eq(m.mesh_scale[i], m.mesh_scale[j])):
+                    return False
+    ja, jb = np.flatnonzero(m.jnt_bodyid == a), np.flatnonzero(m.jnt_bodyid == b)
+    if len(ja) != len(jb):
+        return False
+    for x, y in zip(ja, jb):
+        if int(m.jnt_type[x]) != int(m.jnt_type[y]):
+            return False
+        if int(m.jnt_type[x]) == int(mujoco.mjtJoint.mjJNT_FREE):
+            continue
+        dx, dy, qx, qy = m.jnt_dofadr[x], m.jnt_dofadr[y], m.jnt_qposadr[x], m.jnt_qposadr[y]
+        if not (all(eq(f[x], f[y]) for f in (m.jnt_axis, m.jnt_pos, m.jnt_range, m.jnt_limited, m.jnt_stiffness))
+                and eq(m.qpos_spring[qx], m.qpos_spring[qy]) and eq(m.qpos0[qx], m.qpos0[qy])
+                and all(eq(f[dx], f[dy]) for f in (m.dof_damping, m.dof_armature, m.dof_frictionloss))):
+            return False
+    ca = [c for c in range(1, m.nbody) if m.body_parentid[c] == a and c != a]
+    cb = [c for c in range(1, m.nbody) if m.body_parentid[c] == b and c != b]
+    return len(ca) == len(cb) and all(_same_part(m, x, y, root=False) for x, y in zip(ca, cb))
+
+
+def _vesken_rule(groups):
+    import itertools, math
+    import vesken_mechanism as VM
+    import success as SU
+    from ikea_runtime import rotate
+
+    class Mechanism(VM.VeskenMechanism):
+        """VeskenMechanism with identical parts interchangeable (see IDENTICAL_PARTS). `bound`: a part name of the
+        source (a role) -> the body that took its place (set when the operation that places it connects)."""
+
+        def __init__(self, model, data, task):
+            self.group = {n: g for g in groups for n in g}
+            super().__init__(model, data, task)
+            m = model
+            self.eq_obj0 = (m.eq_obj1id.copy(), m.eq_obj2id.copy())
+            self.roles = {o['key']: list(dict.fromkeys([o['part'], o['host']] + [c['receiver'] for c in o['connectors']]))
+                          for o in self.ops}
+            self.socket = {o['part']: o for o in self.ops}             # a role's own operation (its place)
+            self.jinfo = {j['name']: (int(m.jnt_qposadr[m.joint(j['joint']).id]), float(j['axis'][0])) for j in task['jaws']}
+            self.jparent = {j['name']: m.body(int(m.body_parentid[m.body(j['name']).id])).name for j in task['jaws']}
+            # a jaw of a role played by another body of its group -> that body's jaw in the same pose
+            kids = {}
+            for jn in self.jinfo:
+                kids.setdefault(self.jparent[jn], []).append(jn)
+            self.jmap = {}
+            for jn, par in self.jparent.items():
+                for b in self.group.get(par, ()):
+                    for c in kids.get(b, ()):
+                        if np.array_equal(m.body_pos[m.body(c).id], m.body_pos[m.body(jn).id]):
+                            self.jmap[(jn, b)] = c
+            self.reset()
+
+        def reset(self):
+            super().reset()
+            self.bound, self.alt = {}, {}
+            if hasattr(self, 'eq_obj0'):
+                for i in self.eq.values():
+                    self.m.eq_obj1id[i], self.m.eq_obj2id[i] = self.eq_obj0[0][i], self.eq_obj0[1][i]
+
+        def state(self):
+            s = super().state()
+            s.update(bound=dict(self.bound), alt=copy.deepcopy(self.alt),
+                     eq_obj={k: (int(self.m.eq_obj1id[i]), int(self.m.eq_obj2id[i])) for k, i in self.eq.items()})
+            return s
+
+        def set_state(self, s):
+            super().set_state(s)
+            self.bound, self.alt = dict(s.get('bound', {})), copy.deepcopy(s.get('alt', {}))
+            for k, i in self.eq.items():
+                o1, o2 = s.get('eq_obj', {}).get(k, (self.eq_obj0[0][i], self.eq_obj0[1][i]))
+                self.m.eq_obj1id[i], self.m.eq_obj2id[i] = o1, o2
+
+        # -- candidates: role -> body
+        def _opts(self, r, taken):
+            if r in self.bound:
+                return [self.bound[r]]
+            if r not in self.group:
+                return [r]
+            free = [b for b in self.group[r] if b not in taken]
+            return ([r] if r in free else []) + [b for b in free if b != r]
+
+        def candidates(self, o):
+            """[(A, own)]: the operation's own parts first (own: every role played by its own part, the source's
+            case, measured however far), then every assignment of free identical parts whose part sits within `near`
+            of its place on the host (the source's prefilter); a receiver played by another part must sit at its
+            own place already."""
+            k, d = o['key'], self.d
+            P, H = o['part'], o['host']
+            taken = set(self.bound.values())
+            parts, hosts = self._opts(P, taken), self._opts(H, taken)
+            rest = [r for r in self.roles[k] if r not in (P, H)]
+            ropts = []
+            for r in rest:
+                ro = self._opts(r, taken)
+                if r not in self.bound and r in self.group:
+                    p = self._where(r)
+                    ro = [b for b in ro if b == r or (p is not None and np.linalg.norm(d.xpos[self.bid[b]] - p) <= self.near)]
+                ropts.append(ro)
+            out = []
+            if not parts:
+                return out
+            pid = np.array([self.bid[b] for b in parts])
+            for h in hosts:
+                hb = self.bid[h]
+                tgt = d.xpos[hb] + d.xmat[hb].reshape(3, 3) @ (self.c[P] - self.c[H])
+                near = np.linalg.norm(d.xpos[pid] - tgt, axis=1) <= self.near
+                for p, ok in zip(parts, near):
+                    if p == h or not (ok or (p == P and h == H)):
+                        continue
+                    for combo in itertools.product(*ropts):
+                        A = dict(zip(rest, combo)); A[P] = p; A[H] = h
+                        if len(set(A.values())) != len(A):
+                            continue
+                        own = all(b == r for r, b in A.items())
+                        if own or ok:
+                            out.append((A, own))
+            out.sort(key=lambda x: not x[1])          # the source's own case first
+            return out
+
+        def _where(self, r):
+            """world position of role r's place (its own operation's design pose on its host's body), or None"""
+            o = self.socket.get(r)
+            if o is None:
+                return None
+            hb = self.bid[self.bound.get(o['host'], o['host'])]
+            return self.d.xpos[hb] + self.d.xmat[hb].reshape(3, 3) @ (self.c[r] - self.c[o['host']])
+
+        def _jaws(self, o, A):
+            return [self.jmap[(j, A[self.jparent[j]])] if A[self.jparent[j]] != self.jparent[j] else j for j in o['jaws']]
+
+        def _geometry(self, o, A):
+            d = self.d; P = o['part']; bp = self.bid[A[P]]
+            pp = d.xpos[bp]; qp = d.xquat[bp]; qh = d.xquat[self.bid[A[o['host']]]]
+            out = rotate(qh, o['outward'])
+            gaps, lats = [], []
+            for c in o['connectors']:
+                r = c['receiver']; pt = np.asarray(c['point'], float); br = self.bid[A[r]]
+                actual = pp + rotate(qp, pt - self.c[P])
+                desired = d.xpos[br] + rotate(d.xquat[br], pt - self.c[r])
+                dl = actual - desired; g = float(dl @ out)
+                gaps.append(g); lats.append(float(np.linalg.norm(dl - g * out)))
+            gap = max(gaps, key=abs); lat = max(lats)
+            ax = math.degrees(math.acos(float(np.clip(rotate(qp, o['outward']) @ out, -1, 1))))
+            return gap, lat, ax
+
+        def update(self):
+            self.counter += 1
+            if self.counter % self.PERIOD:
+                return
+            dt = self.m.opt.timestep * self.PERIOD
+            z = self.zone; d = self.d
+            R = d.xmat[self.hid].reshape(-1, 3, 3)
+            dist = np.linalg.norm(d.xpos[self.pid] - d.xpos[self.hid] - np.einsum('nij,nj->ni', R, self.rel), axis=1)
+            seen = set()
+            for idx, o in enumerate(self.ops):
+                k = o['key']
+                if d.eq_active[self.eq[k]]:
+                    continue
+                for A, own in self.candidates(o):
+                    if own:                  # the source's computation, unchanged
+                        s = self.st[k]
+                        if dist[idx] > self.near:
+                            if s['max_gap'] is not None:
+                                s.update(max_gap=None, peak=[0.] * len(o['jaws']), dwell=0.)
+                            continue
+                        gap, lat, ax = self.geometry(o)
+                        jn, part, cps = None, o['part'], o['counterparts']
+                    else:                    # another part within `near` of the place (candidates())
+                        ck = k + '|' + ','.join(A[r] for r in self.roles[k])
+                        seen.add(ck)
+                        s = self.alt.setdefault(ck, dict(max_gap=None, peak=[0.] * len(o['jaws']), dwell=0.))
+                        gap, lat, ax = self._geometry(o, A)
+                        jn, part = self._jaws(o, A), A[o['part']]
+                        cps = [A[x] if x in A else jn[o['jaws'].index(x)] for x in o['counterparts']]
+                    if not (lat < z['lateral_m'] and z['gap_min_m'] < gap < z['gap_max_m'] and ax < z['axis_deg']):
+                        if s['max_gap'] is not None:
+                            s.update(max_gap=None, peak=[0.] * len(o['jaws']), dwell=0.)
+                        continue
+                    jaws = self.jaw_travel(k) if own else [float(d.qpos[self.jinfo[j][0]]) * self.jinfo[j][1] for j in jn]
+                    s['max_gap'] = gap if s['max_gap'] is None else max(s['max_gap'], gap)
+                    s['peak'] = [max(a, b) for a, b in zip(s['peak'], jaws)]
+                    g = o['gates']
+                    v = self.h.state13(part)[7:10]; speed = float(np.linalg.norm(v))
+                    contact = self.h.contact_force_between(part, cps)
+                    deps = all(self.connected(x) for x in o['dependencies'])
+                    good = (abs(gap) < g['axial_m'] and lat < g['lateral_m'] and ax < g['axis_deg'] and speed < g['speed_m_s']
+                            and s['max_gap'] - gap >= g['min_travel_m'] and contact > g['min_contact_N']
+                            and all(p > self.jg['peak_travel_min_m'] for p in s['peak'])
+                            and all(j < self.jg['final_travel_max_m'] for j in jaws) and deps)
+                    s['dwell'] = s['dwell'] + dt if good else 0.
+                    if own or good:
+                        self.metrics[k] = dict(gap_m=gap, lateral_m=lat, axis_deg=ax, speed_m_s=speed, travel_m=s['max_gap'] - gap,
+                                               contact_N=contact, jaw_m=jaws, jaw_peak_m=list(s['peak']), dependencies_ok=deps,
+                                               dwell_s=s['dwell'])
+                        if not own:
+                            self.metrics[k]['parts'] = {r: b for r, b in A.items() if r != b}
+                    if s['dwell'] >= g['dwell_s']:
+                        self.take(o, A, own)
+                        break
+            self.alt = {ck: v for ck, v in self.alt.items() if ck in seen}
+
+        def take(self, o, A, own):
+            for r, b in A.items():
+                if r in self.group and r not in self.bound:
+                    self.bound[r] = b
+            if own:
+                self.connect(o)
+                return
+            i = self.eq[o['key']]
+            m = self.m
+            for ids, ids0 in ((m.eq_obj1id, self.eq_obj0[0]), (m.eq_obj2id, self.eq_obj0[1])):
+                n = m.body(int(ids0[i])).name
+                ids[i] = self.bid[A[n]] if n in A else ids0[i]
+            r, q = self.h.rel_pose(A[o['host']], A[o['part']])    # part pose in the host frame (body1=host, body2=part)
+            m.eq_data[i, 0:3] = 0; m.eq_data[i, 3:6] = r; m.eq_data[i, 6:10] = q; m.eq_data[i, 10] = 1
+            self.d.eq_active[i] = 1
+            self.engaged_at[o['key']] = float(self.d.time)
+
+    class Monitor(SU.Monitor):
+        """success.py with each place measured against the parts that took it (Mechanism.bound)."""
+
+        def _op(self, o):
+            mech = self.scene.mech
+            A = {r: mech.bound.get(r, r) for r in mech.roles[o['key']]}
+            if all(b == r for r, b in A.items()):
+                return super()._op(o)
+            d = self.d; P = o['part']
+            pp, qp = self.h.pose(A[P]); _, qh = self.h.pose(A[o['host']])
+            out = rotate(qh, o['outward']); gaps, lats = [], []
+            for c in o['connectors']:
+                r = c['receiver']; pt = np.asarray(c['point'], float); pr, qr = self.h.pose(A[r])
+                dl = (pp + rotate(qp, pt - self.c[P])) - (pr + rotate(qr, pt - self.c[r]))
+                g = float(dl @ out); gaps.append(abs(g)); lats.append(float(np.linalg.norm(dl - g * out)))
+            ax = math.degrees(math.acos(float(np.clip(rotate(qp, o['outward']) @ out, -1, 1))))
+            g = o['gates']; conn = bool(d.eq_active[self.eq[o['key']]])
+            return dict(key=o['key'], connected=conn, gap_m=max(gaps), lateral_m=max(lats), axis_deg=ax, parts=A,
+                        passed=bool(conn and max(gaps) < g['axial_m'] and max(lats) < g['lateral_m'] and ax < g['axis_deg']))
+
+    return Mechanism, Monitor
+
+
+def _stegesund_rule(groups):
+    import itertools, math
+    import seat_weld as SW
+    import stegesund_mech as SM
+    import success as SU
+    halves, bolts = groups
+
+    class Mechanism(SM.StegesundMechanism):
+        """StegesundMechanism with identical parts interchangeable (see IDENTICAL_PARTS). `bore`: bolt -> the bore (seat)
+        it was armed in; the bore's thread, and the half at that bore, are the ones welded and switched off."""
+
+        def __init__(self, model, data, task):
+            super().__init__(model, data, task)
+            m = model
+            self.fx = {f.name: f for f in self.welder.f}
+            self.seat0 = {b: task['fasteners'][b]['seat'] for b in self.fx}             # each bore's source bolt
+            self.src = {s: b for b, s in self.seat0.items()}
+            self.order = {b: [self.seat0[b]] + [self.seat0[x] for x in sorted(self.fx) if x != b] for b in self.fx}
+            self.own_n = {b: len(self.arm_geoms[b][0]) for b in self.fx}
+            self.off0 = {b: list(f.off_geoms) for b, f in self.fx.items()}
+            self.welds0 = {b: list(f.welds) for b, f in self.fx.items()}
+            self.clamped0 = {b: list(f.clamped) for b, f in self.fx.items()}
+            self.obj1_0 = m.eq_obj1id.copy()
+            self.bolt_of = np.full(m.ngeom, -1); self.seat_of = np.full(m.ngeom, -1)
+            self.names = sorted(self.fx)
+            for i, b in enumerate(self.names):
+                self.bolt_of[self.arm_geoms[b][0]] = i
+                self.seat_of[self.arm_geoms[b][1]] = i          # bore i = the source bore of bolt i
+            asm = {k: np.array(v) for k, v in task['assembled_poses_world'].items()}
+            # each bore's bolt origin in the frame of the half it clamps (source: bolt_1/2 -> half_A, bolt_3/4 -> half_B)
+            self.at_half = {s: (np.linalg.inv(asm[self.clamped0[b][0]]) @ asm[b])[:3, 3] for s, b in self.src.items()}
+            self.welder.apply_event = self._apply
+            self.bore = {}
+
+        def reset(self):
+            super().reset()
+            self.bore = {}
+            if hasattr(self, 'obj1_0'):
+                self.m.eq_obj1id[:] = self.obj1_0
+                for b in self.fx:
+                    self._bind(b, self.seat0[b], record=False)
+
+        def _bind(self, b, seat, record=True):
+            f, sb = self.fx[b], self.src[seat]
+            if record:
+                self.bore[b] = seat
+            f.off_geoms = self.off0[b][:self.own_n[b]] + self.off0[sb][self.own_n[sb]:]
+            f.welds = [self.welds0[b][0]] + self.welds0[sb][1:]
+            f.clamped = list(self.clamped0[sb])
+
+        def _claimed(self, seat, b):
+            return any(s == seat and x != b and (self.fx[x].armed or self.fx[x].welded) for x, s in self.bore.items())
+
+        def _arm(self):
+            """the source arms a bolt at its first contact with its own nut's thread; here with any free bore's thread
+            (its own checked first), and an armed bolt that is not welded yet moves to another free bore it threads
+            into (not touching its own bore's thread any more)"""
+            if all(f.welded for f in self.welder.f):
+                return
+            c = self.d.contact[: self.d.ncon]
+            if not len(c):
+                return
+            g1, g2 = np.asarray(c.geom1), np.asarray(c.geom2)
+            hits = set()
+            for x, y in ((g1, g2), (g2, g1)):
+                sel = (self.bolt_of[x] >= 0) & (self.seat_of[y] >= 0)
+                if sel.any():
+                    hits.update(zip(self.bolt_of[x][sel].tolist(), self.seat_of[y][sel].tolist()))
+            if not hits:
+                return
+            sidx = {s: self.names.index(b) for s, b in self.src.items()}
+            for f in self.welder.f:
+                if f.welded:
+                    continue
+                i = self.names.index(f.name)
+                cur = self.bore.get(f.name) if f.armed else None
+                if cur is not None and (i, sidx[cur]) in hits:
+                    continue
+                if f.armed and cur is None and (i, sidx[self.seat0[f.name]]) in hits:
+                    continue
+                for seat in self.order[f.name]:
+                    if seat == cur or (i, sidx[seat]) not in hits or self._claimed(seat, f.name):
+                        continue
+                    if f.armed and seat == self.seat0[f.name] and cur is None:
+                        break
+                    self._bind(f.name, seat)
+                    if not f.armed:
+                        self.welder.arm(f.name)
+                        ev = {"time": float(self.d.time), "fastener": f.name}
+                        if seat != self.seat0[f.name]:
+                            ev["seat"] = seat
+                        self.arm_events.append(ev)
+                    break
+
+        def _half_at(self, f, seat):
+            """the half whose leg the bolt went through at this bore: the source's unless the other half is there"""
+            src = self.clamped0[self.src[seat]][0]
+            p = self.d.xpos[f.bid]
+            err = {}
+            for h in halves:
+                hb = self.m.body(h).id
+                err[h] = float(np.linalg.norm(self.d.xmat[hb].reshape(3, 3).T @ (p - self.d.xpos[hb]) - self.at_half[seat]))
+            other = next(h for h in halves if h != src)
+            return other if err[other] < 0.02 and err[other] < err[src] else src
+
+        def _apply(self, m, d, ev, fasteners):
+            f = self.fx[ev["fastener"]]
+            seat = self.bore.get(f.name, self.seat0[f.name])
+            half = self._half_at(f, seat)
+            eq = self.welds0[self.src[seat]][1][0]
+            hid = m.body(half).id
+            m.eq_obj1id[eq] = hid
+            f.welds = [self.welds0[f.name][0], (eq, hid)]
+            if half != f.clamped[0] or seat != self.seat0[f.name]:
+                f.clamped = [half]
+                ev["clamped"] = [half]
+                ev["seat"] = seat
+            SW.SeatWelder.apply_event(m, d, ev, fasteners)
+
+        def status(self):
+            out = super().status()
+            for b, s in self.bore.items():
+                out[b]["seat"] = s
+            return out
+
+        def state(self):
+            s = super().state()
+            s.update(bore=dict(self.bore), eq_obj1id=self.m.eq_obj1id.copy())
+            return s
+
+        def set_state(self, s):
+            super().set_state(s)
+            self.bore = dict(s.get('bore', {}))
+            self.m.eq_obj1id[:] = s.get('eq_obj1id', self.obj1_0)
+            for b, f in self.fx.items():
+                self._bind(b, self.bore.get(b, self.seat0[b]), record=False)
+                eq = f.welds[1][0]
+                f.welds = [f.welds[0], (eq, int(self.m.eq_obj1id[eq]))]
+                if f.welds[1][1] != self.welds0[self.src[self.bore.get(b, self.seat0[b])]][1][1]:
+                    f.clamped = [self.m.body(f.welds[1][1]).name]
+
+    def mapped_report(m, d, task, M):
+        """success.assembled_report with role -> body M (the same checks, each place measured on the body that took it)"""
+        asm = {k: np.array(v) for k, v in task["assembled_poses_world"].items()}
+        rep, ok = {}, True
+        for n in task["part_types"]:
+            if n in ("half_A", "hex_key"):
+                continue
+            ref = "shelf" if n.startswith("bolt") else "half_A"
+            want = np.linalg.inv(asm[ref]) @ asm[n]
+            have = np.linalg.inv(SU._T(d, m.body(M[ref]).id)) @ SU._T(d, m.body(M[n]).id)
+            err = np.linalg.inv(want) @ have
+            dp = float(np.linalg.norm(err[:3, 3])) * 1e3
+            if n.startswith("bolt"):
+                da = math.degrees(math.acos(min(max(float(err[2, 2]), -1.0), 1.0)))
+                dp_ax = float(err[2, 3]) * 1e3
+                lat = float(np.hypot(err[0, 3], err[1, 3])) * 1e3
+                good = abs(dp_ax) < 0.6 and lat < 0.6 and da < 2
+                rep[n] = dict(axial_mm=round(dp_ax, 3), lateral_mm=round(lat, 3), tilt_deg=round(da, 3), ok=bool(good))
+            else:
+                da = min(SU._angle_deg(err[:3, :3] @ S) for S in SU._symmetries(task, n))
+                tol = 3.0 if n == "rod" else 0.6
+                good = dp < tol and da < 1.0
+                rep[n] = dict(pos_mm=round(dp, 3), rot_deg=round(da, 3), ok=bool(good))
+            if M[n] != n:
+                rep[n]["part"] = M[n]
+            ok = ok and rep[n]["ok"]
+        up = d.xmat[m.body(M["half_A"]).id].reshape(3, 3)[:, 2]
+        rep["stand_upright_tilt_deg"] = round(math.degrees(math.acos(min(max(float(up[2]), -1.0), 1.0))), 3)
+        ok = ok and rep["stand_upright_tilt_deg"] < 1.0
+        rep["all_ok"] = bool(ok)
+        return rep
+
+    class Monitor(SU.Monitor):
+        """success.py's assembled check, passed when it passes for some one-to-one assignment of the identical parts."""
+
+        def report(self):
+            rep = SU.assembled_report(self.m, self.d, self.task)
+            if not rep["all_ok"]:
+                ident = {n: n for n in self.task["part_types"]}
+                for hp in itertools.permutations(halves):
+                    for bp in itertools.permutations(bolts):
+                        M = dict(ident, **dict(zip(halves, hp)), **dict(zip(bolts, bp)))
+                        if M == ident:
+                            continue
+                        r2 = mapped_report(self.m, self.d, self.task, M)
+                        if r2["all_ok"]:
+                            rep = dict(r2, assignment={k: v for k, v in M.items() if k != v})
+                            break
+                    if rep["all_ok"]:
+                        break
+            out = {"success": rep["all_ok"], "assembled": rep}
+            if self.mech is not None:
+                out["fasteners"] = self.mech.status()
+            return out
+
+    return Mechanism, Monitor
+
+
+def _gladom_rule(groups):
+    import itertools, math
+    import gladom_mechanism as GM
+    import success as SU
+    short = set(groups[0])
+
+    class Mechanism(GM.GladomRetention):
+        """GladomRetention with the three short screws interchangeable (see IDENTICAL_PARTS): each takes any free
+        short-screw nut; a nut's prerequisite pose (frame_b aligned for the bottom nut, the ring placed for the ring
+        nuts) and the connections that wait for it follow the nut, not the screw."""
+
+        def __init__(self, model, data, task):
+            super().__init__(model, data, task)
+            self.short = [o['key'] for o in self.ops if o['part'] in short]
+            self.nut = {}          # target position (tuple) -> the short operation that owns it in the source
+            for o in self.ops:
+                if o['key'] in self.short:
+                    for p in [o['target_pos']] + o.get('alt_target_pos', []):
+                        self.nut.setdefault(tuple(p), o)
+            self.pre = {p: o.get('prerequisite_poses', []) for p, o in self.nut.items()}
+
+        def _candidates(self, o):
+            if o['key'] not in self.short:
+                return super()._candidates(o)
+            taken = [tuple(self.claimed[k]) for k in self.short if k != o['key'] and k in self.claimed]
+            c = [o['target_pos']] + o.get('alt_target_pos', [])
+            c = c + [list(p) for p in self.nut if list(p) not in c]
+            return [p for p in c if tuple(p) not in taken]
+
+        def _deps_ok(self, o):
+            """a dependency on a short screw's operation waits for that screw's nut to be taken by any short screw"""
+            held = {tuple(self.claimed[k]) for k in self.short if k in self.claimed and self.active(k)}
+            for x in o.get('dependencies', []):
+                if x not in self.eq:
+                    continue
+                if x in self.short:
+                    if tuple(next(q for q in self.ops if q['key'] == x)['target_pos']) not in held:
+                        return False
+                elif not self.active(x):
+                    return False
+            return True
+
+        def update(self):
+            self.counter += 1
+            if self.counter % self.period:
+                return
+            dt = self.m.opt.timestep * self.period
+            for o in self.ops:
+                k = o['key']
+                if self.active(k):
+                    continue
+                g = o['gates']
+                if self._far(o):
+                    self.dwell[k] = 0.; self.prev_q.pop(k, None); self.peak.pop(k, None)
+                    continue
+                deps_ok = self._deps_ok(o)
+                if not deps_ok and not o.get('count_turns'):
+                    gap, lat = self._gap_lat(o)
+                    self.peak[k] = max(self.peak.get(k, gap), gap) if lat < self.CORRIDOR_M else gap
+                    self.dwell[k] = 0.
+                    continue
+                me = self.measure(o)
+                if me is None:
+                    continue
+                if me['lateral'] < self.CORRIDOR_M:
+                    self.peak[k] = max(self.peak.get(k, me['gap']), me['gap'])
+                else:
+                    self.peak[k] = me['gap']
+                travel = self.peak[k] - me['gap']
+                if o.get('count_turns'):
+                    c = o['thread_corridor']
+                    inside = (me['lateral'] < c['lateral_m'] and me['angle'] < c['axis_deg'] and c['gap_min_m'] < me['gap'] < c['gap_max_m'])
+                    q = me['qrel']
+                    if inside and k in self.prev_q:
+                        dq = GM.qmul(q, GM.qinv(self.prev_q[k]))
+                        if dq[0] < 0: dq = -dq
+                        self.turns[k] += 2 * math.atan2(float(dq[1:] @ me['axis_host']), dq[0]) * o.get('turn_sign', 1) / (2 * math.pi)
+                    if inside: self.prev_q[k] = q
+                    else: self.prev_q.pop(k, None)
+                contact = self._pair_force(o['part'], o['counterparts']) if o.get('counterparts') else 1e9
+                ok = deps_ok and GM.gates_ok(me, g) and contact > g.get('min_contact_N', -1)
+                if o.get('min_turns') is not None:
+                    ok = ok and self.turns[k] >= o['min_turns']
+                if o.get('min_travel_m') is not None:
+                    ok = ok and travel >= o['min_travel_m']
+                pre_ok = True
+                pres = self.pre.get(tuple(me['target_pos']), o.get('prerequisite_poses', [])) if k in self.short else o.get('prerequisite_poses', [])
+                for pr in pres:
+                    pm = GM.pose_error(self.h, pr['part'], o['host'], pr['target_pos'], pr['target_quats'], tilt=pr.get('tilt', 'full'))
+                    pre_ok &= GM.gates_ok(pm, pr['gates'])
+                ok = ok and pre_ok
+                self.dwell[k] = self.dwell[k] + dt if ok else 0.
+                self.metrics[k] = dict(gap_m=me['gap'], lateral_m=me['lateral'], angle_deg=me['angle'], speed_m_s=me['speed'],
+                                       contact_N=contact if contact < 1e8 else None, turns=self.turns[k], travel_m=travel,
+                                       prerequisites_ok=bool(pre_ok), dependencies_ok=bool(deps_ok), dwell_s=self.dwell[k])
+                if self.dwell[k] >= g['dwell_s']:
+                    self.claimed[k] = list(me['target_pos'])
+                    self.engage(o)
+
+    class Monitor(SU.Monitor):
+        """success.py with the three short screws measured against the one-to-one assignment to the bottom and ring
+        nuts with the smallest summed lateral error (the source's rule for the two ring screws, extended)."""
+
+        def evaluate(self):
+            rep = dict(geometry={}, joints={}, failures=[])
+            o = self.ops
+            rep['geometry']['frame_b'] = self._pose('frame_b', o['s1-cross-align']['target_pos'], [o['s1-cross-align']['target_quat']] + o['s1-cross-align']['alt_target_quat'])
+            rep['geometry']['ring'] = self._pose('ring', o['s3-ring-place']['target_pos'], [o['s3-ring-place']['target_quat']] + o['s3-ring-place']['alt_target_quat'])
+            rep['geometry']['tray'] = self._pose('tray', o['s4-tray-place']['target_pos'], yaw_period=self.t['tray']['yaw_period_deg'])
+            rep['geometry'][o['s1-123451']['part']] = self._pose(o['s1-123451']['part'], o['s1-123451']['target_pos'], tilt='axis')
+            B, L, R = o['s2-122202'], o['s3-122202-left'], o['s3-122202-right']
+            nuts = (B['target_pos'], L['target_pos'], R['target_pos'])
+            parts = (B['part'], L['part'], R['part'])
+            # the source's two choices first (ring screws as placed, then swapped); ties keep the earlier one
+            orders = [(0, 1, 2), (0, 2, 1)] + [p for p in itertools.permutations(range(3)) if p not in ((0, 1, 2), (0, 2, 1))]
+            best = None
+            for p in orders:
+                ms = [self._pose(parts[i], nuts[j], tilt='axis') for i, j in zip(p, range(3))]
+                tot = sum(x['lateral_m'] for x in ms)
+                if best is None or tot < best[0]:
+                    best = (tot, p, ms)
+            _, p, ms = best
+            got = dict(zip(p, ms))
+            for i in range(3):
+                rep['geometry'][parts[i]] = got[i]
+            rep['ring_screws_swapped'] = p == (0, 2, 1)
+            if p not in ((0, 1, 2), (0, 2, 1)):
+                rep['short_screw_nuts'] = {parts[i]: ('bottom', 'ring_left', 'ring_right')[j] for i, j in zip(p, range(3))}
+            for n, r in rep['geometry'].items():
+                r['passed'] = self._ok(r)
+                if not r['passed']: rep['failures'].append('geometry:' + n)
+            for pt, i in self.weld_ids.items():
+                rep['joints'][pt] = bool(self.d.eq_active[i])
+                if not rep['joints'][pt]: rep['failures'].append('missing_required_model_joint:' + pt)
+            tray_ring, touch = self._contacts()
+            hist = np.array(self.tray_hist if len(self.tray_hist) else [tray_ring])
+            thr = self.t['tray']['min_contact_N']
+            support = bool(len(hist) >= self.win and np.count_nonzero(hist > thr) >= math.ceil(self.t['tray']['min_active_fraction'] * self.win) and hist.mean() > thr)
+            if not support: rep['failures'].append('unforced_gravity_support:tray')
+            released = not touch and not any(self.touch_hist)
+            if not released: rep['failures'].append('robot_contact_with_furniture')
+            rep.update(tray_ring_contact_N=tray_ring, support=support, released=released,
+                       geometry_fraction=float(np.mean([r['passed'] for r in rep['geometry'].values()])),
+                       joint_fraction=float(np.mean(list(rep['joints'].values()))))
+            if self.scene is not None and getattr(self.scene, 'mech', None) is not None:
+                rep['operations'] = {k: dict(v, engaged=self.scene.mech.active(k)) for k, v in self.scene.mech.metrics.items()}
+                for k in self.scene.mech.eq:
+                    rep.setdefault('operations', {}).setdefault(k, {})['engaged'] = self.scene.mech.active(k)
+            rep['instant_ok'] = not rep['failures']
+            return rep
+
+    return Mechanism, Monitor
+
+
+def _turned_same_part(m, a: int, b: int, R: np.ndarray, tol: float = 1e-6) -> bool:
+    """Body b is body a turned by R about its centre of mass (b's geometry = R (a's - a's CoM) + b's CoM): the same
+    mass, principal inertia and frame (to 1e-6 relative), and every geom of a, turned, has a geom of b of the same type, colour and contact
+    fields whose vertices (mesh) or corners (box) lie within tol of a's."""
+    close = lambda x, y: np.allclose(x, y, rtol=1e-6, atol=1e-12)   # noqa: E731  (inertia from the meshes, last bits)
+    if not (close(m.body_mass[a], m.body_mass[b]) and close(m.body_inertia[a], m.body_inertia[b])
+            and close(m.body_iquat[a], m.body_iquat[b]) and np.array_equal(np.abs(R), np.eye(3))):
+        return False
+
+    def clouds(x, Rt):
+        out = []
+        for g in np.flatnonzero(m.geom_bodyid == x):
+            q = np.zeros(9); mujoco.mju_quat2Mat(q, m.geom_quat[g]); Rg = q.reshape(3, 3)
+            if int(m.geom_type[g]) == int(mujoco.mjtGeom.mjGEOM_MESH):
+                i = int(m.geom_dataid[g])
+                v = m.mesh_vert[m.mesh_vertadr[i]:m.mesh_vertadr[i] + m.mesh_vertnum[i]]
+            elif int(m.geom_type[g]) == int(mujoco.mjtGeom.mjGEOM_BOX):
+                v = np.array([[i, j, k] for i in (-1, 1) for j in (-1, 1) for k in (-1, 1)]) * m.geom_size[g]
+            else:
+                return None
+            pts = ((m.geom_pos[g] + v @ Rg.T) - m.body_ipos[x]) @ Rt.T
+            key = (int(m.geom_type[g]), tuple(m.geom_rgba[g]), int(m.geom_contype[g]), int(m.geom_conaffinity[g]),
+                   tuple(m.geom_friction[g]), len(pts))
+            out.append((key, pts, pts.mean(axis=0)))
+        return out
+
+    ca, cb = clouds(a, R), clouds(b, np.eye(3))
+    if ca is None or cb is None or len(ca) != len(cb):
+        return False
+    used = set()
+    for key, pts, cen in ca:
+        hit = None
+        for j, (kb, pb, cb_) in enumerate(cb):
+            if j in used or kb != key or np.abs(cen - cb_).max() > tol:
+                continue
+            d = np.linalg.norm(pts[:, None, :] - pb[None, :, :], axis=2)
+            if max(d.min(axis=0).max(), d.min(axis=1).max()) <= tol:
+                hit = j
+                break
+        if hit is None:
+            return False
+        used.add(hit)
+    return True
+
+
+# EKET: the two side panels are one panel (side_b = side_a turned 180 deg about its long x axis; _turned_same_part).
+EKET_SIDE_TURN = np.diag([1.0, -1.0, -1.0])
+
+
+def _eket_rule(groups):
+    import eket_ops as EO
+    import success as SU
+    sa, sb = groups[0]
+    R = EKET_SIDE_TURN
+    qR = np.zeros(4); mujoco.mju_mat2Quat(qR, R.reshape(-1))
+
+    class Measure(EO.Measure):
+        """eket_ops.Measure with the two side panels' roles possibly swapped (`swap`): a role played by the other
+        panel is measured at that panel's pose turned into the role's frame (EKET_SIDE_TURN about the CoM)."""
+
+        def __init__(self, m, d, swap=False):
+            super().__init__(m, d)
+            self.swap = swap
+            self.ipos = {r: m.body_ipos[self.bid[r]].copy() for r in (sa, sb)}
+
+        def body(self, role):
+            return {sa: sb, sb: sa}.get(role, role) if self.swap else role
+
+        def pose(self, role):
+            """world position, rotation matrix and quaternion of role's frame"""
+            d = self.d
+            b = self.bid[self.body(role)]
+            if not self.swap or role not in (sa, sb):
+                return d.xpos[b], d.xmat[b].reshape(3, 3), d.xquat[b]
+            Rb = d.xmat[b].reshape(3, 3)
+            q = np.zeros(4); mujoco.mju_mulQuat(q, d.xquat[b], qR)
+            return d.xpos[b] + Rb @ (self.ipos[self.body(role)] - R @ self.ipos[role]), Rb @ R, q
+
+        def relative(self, role, parent='top'):
+            if not self.swap or role not in (sa, sb):
+                return super().relative(role, parent)
+            m, d = self.m, self.d
+            a, b = self.bid[parent], self.bid[self.body(role)]
+            qa = d.xquat[a]; Ra = d.xmat[a].reshape(3, 3)
+            pb, _, qb = self.pose(role)
+            delta = pb - d.xpos[a]
+            va = np.zeros(6); vb = np.zeros(6)
+            mujoco.mj_objectVelocity(m, d, mujoco.mjtObj.mjOBJ_BODY, a, va, 0)
+            mujoco.mj_objectVelocity(m, d, mujoco.mjtObj.mjOBJ_BODY, b, vb, 0)
+            omega = vb[:3] - va[:3]
+            vbp = vb[3:] + EO._cross(vb[:3], pb - d.xpos[b])            # the role frame's origin on body b
+            vel = vbp - va[3:] - EO._cross(va[:3], delta)
+            return Ra.T @ delta, EO.qmul(EO.qconj(qa), qb), Ra.T @ vel, float(np.linalg.norm(omega))
+
+        def contacts(self, role):
+            out = super().contacts(self.body(role))
+            return {self.body(k): v for k, v in out.items()} if self.swap else out
+
+    class Tracker(EO.OpTracker):
+        """OpTracker where side_a_entry may be done by either side panel: until it is accepted, a second tracker
+        measures side_b in side_a's place (and so side_a in side_b's); the first accepted decides the roles. The
+        source's own tracker is computed exactly as before."""
+
+        def __init__(self, m, d, canonical):
+            super().__init__(m, d, canonical)
+            self.alt = None
+            self.reset()
+
+        def reset(self):
+            super().reset()
+            self.swap = False
+            self.meas = Measure(self.m, self.d, swap=False)
+            if hasattr(self, 'alt'):
+                self.alt = EO.OpTracker(self.m, self.d, {k: v.tolist() for k, v in self.canon.items()})
+                self.alt.meas = Measure(self.m, self.d, swap=True)
+
+        def update(self):
+            if self.alt is None:
+                return super().update()
+            done = super().update()
+            if done is not None:
+                self.alt = None          # the source's case: side_a took side A
+                return done
+            alt = self.alt.update()
+            if alt is not None:          # side_b took side A: from now on the roles are swapped
+                st = self.alt.state()
+                self.alt = None
+                self.swap = True
+                self.meas = Measure(self.m, self.d, swap=True)
+                self.set_state(dict(st, swap=True, alt=None))
+            return alt
+
+        def state(self):
+            s = super().state()
+            s.update(swap=self.swap, alt=None if self.alt is None else self.alt.state())
+            return s
+
+        def set_state(self, s):
+            super().set_state(s)
+            self.swap = bool(s.get('swap', False))
+            self.meas = Measure(self.m, self.d, swap=self.swap)
+            if s.get('alt') is not None:
+                self.alt = EO.OpTracker(self.m, self.d, {k: v.tolist() for k, v in self.canon.items()})
+                self.alt.meas = Measure(self.m, self.d, swap=True)
+                self.alt.set_state(s['alt'])
+            else:
+                self.alt = None
+
+    class Mechanism(EO.EketMechanism):
+        """EketMechanism on Tracker; a frame joint latched with the side panels' roles swapped joins the panel that is
+        there (its weld pointed at that body, the current relative pose as in the source)."""
+
+        def __init__(self, model, data, task):
+            super().__init__(model, data, task)
+            self.obj0 = (model.eq_obj1id.copy(), model.eq_obj2id.copy())
+            self.tracker = Tracker(model, data, task['canonical_in_cabinet_frame'])
+            self.reset()
+
+        def reset(self):
+            super().reset()
+            if hasattr(self, 'obj0'):
+                for i in self.eq.values():
+                    self.m.eq_obj1id[i], self.m.eq_obj2id[i] = self.obj0[0][i], self.obj0[1][i]
+
+        def role_pose(self, role):
+            return self.tracker.meas.pose(role)[:2]
+
+        def latch(self, j):
+            if not self.tracker.swap:
+                return super().latch(j)
+            a, b = (self.tracker.meas.body(x) for x in EO.JOINT_PAIRS[j])
+            m, d = self.m, self.d
+            ia, ib = m.body(a).id, m.body(b).id
+            i = self.eq[j]
+            m.eq_obj1id[i], m.eq_obj2id[i] = ia, ib
+            Ra = d.xmat[ia].reshape(3, 3)
+            r = Ra.T @ (d.xpos[ib] - d.xpos[ia]); q = EO.qmul(EO.qconj(d.xquat[ia]), d.xquat[ib])
+            m.eq_data[i, 0:3] = 0; m.eq_data[i, 3:6] = r; m.eq_data[i, 6:10] = q / np.linalg.norm(q); m.eq_data[i, 10] = 1
+            d.eq_active[i] = 1
+            self.events.append(dict(time_s=float(d.time), joint=j, body1=a, body2=b, local_pos=r.tolist(), local_quat_wxyz=q.tolist()))
+
+        def state(self):
+            s = super().state()
+            s['eq_obj'] = {j: (int(self.m.eq_obj1id[i]), int(self.m.eq_obj2id[i])) for j, i in self.eq.items()}
+            return s
+
+        def set_state(self, s):
+            super().set_state(s)
+            for j, i in self.eq.items():
+                self.m.eq_obj1id[i], self.m.eq_obj2id[i] = s.get('eq_obj', {}).get(j, (self.obj0[0][i], self.obj0[1][i]))
+
+    class Monitor(SU.Monitor):
+        """success.py on its own Tracker (as the source's independent replay of the measurement journal)."""
+
+        def __init__(self, model, data, task, scene=None):
+            super().__init__(model, data, task, scene)
+            self.tracker = Tracker(model, data, task['canonical_in_cabinet_frame'])
+            self.reset()
+
+        def report(self):
+            rep = super().report()
+            if self.tracker.swap:
+                rep['side_panels_swapped'] = True
+            return rep
+
+    return Mechanism, Monitor
+
+
+_IDENTICAL_RULES = {"vesken": _vesken_rule, "stegesund": _stegesund_rule, "gladom": _gladom_rule, "eket": _eket_rule}
+
+
+def identical_parts(task: str, S) -> None:
+    """IDENTICAL_PARTS: check that each group is one asset on the compiled model, then give the built scene S the
+    scene's mechanism and success monitor with those parts interchangeable, and reset it (the same initial state)."""
+    groups = IDENTICAL_PARTS.get(task)
+    if not groups:
+        return
+    m = S.model
+    for g in groups:
+        bad = [n for n in g[1:] if not (_turned_same_part(m, m.body(g[0]).id, m.body(n).id, EKET_SIDE_TURN) if task == "eket"
+                                        else _same_part(m, m.body(g[0]).id, m.body(n).id))]
+        if bad:
+            raise RuntimeError(f"IDENTICAL_PARTS[{task!r}]: {bad} are not the same part as {g[0]}")
+    mech_cls, mon_cls = _IDENTICAL_RULES[task](groups)
+    S.mech = mech_cls(S.model, S.data, S.task)
+    S.monitor = mon_cls(S.model, S.data, S.task, S)
+    S.reset()
+
+
 class Session:
     def __init__(self, task: str, scene_dir: str | None = None):
         self.task = task
@@ -342,6 +1224,7 @@ class Session:
     def reset(self) -> None:
         """A fresh build of the scene (keyframe 'home'), bit-identical to the grader's initial state."""
         self.S = self._mod.load()
+        identical_parts(self.task, self.S)            # IDENTICAL_PARTS (vesken, stegesund, gladom, eket)
         self.model, self.data = self.S.model, self.S.data
         self.nu = int(self.model.nu)
         self.timestep = float(self.model.opt.timestep)
@@ -445,9 +1328,11 @@ class Session:
         f = r["frame_id"]
         Rf = d.xmat[f].reshape(3, 3)
         worst_mm, worst_deg, bad = 0.0, 0.0, []
+        role_pose = getattr(self.S.mech, "role_pose", None)     # IDENTICAL_PARTS: the part that took the place
         for p, b in r["ids"].items():
-            err = float(np.linalg.norm(Rf.T @ (d.xpos[b] - d.xpos[f]) - r["goal_pos"][p]))
-            Rrel = Rf.T @ d.xmat[b].reshape(3, 3)
+            xb, Rb = role_pose(p) if role_pose else (d.xpos[b], d.xmat[b].reshape(3, 3))
+            err = float(np.linalg.norm(Rf.T @ (xb - d.xpos[f]) - r["goal_pos"][p]))
+            Rrel = Rf.T @ Rb
             ang = float(np.degrees(np.arccos(np.clip((np.trace(Rrel) - 1.0) / 2.0, -1.0, 1.0))))
             if not (np.isfinite(err) and np.isfinite(ang)) or err > r["pos_m"] or ang > r["angle_deg"]:
                 bad.append(p)

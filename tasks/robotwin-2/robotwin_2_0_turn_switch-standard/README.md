@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:robotwin-0.1.2` |
 
 ## Task
+Flip the switch all the way over.
+
 Standard-mode twin of `robotwin_2_0_turn_switch-privileged` (same frozen instance, RoboTwin seed 91573): the agent gets
 only the `eai-standard/2.1` client (docs/protocol/standard_mode.md); the simulator runs in the `sim` sidecar
 (`environment/docker-compose.yaml`, GPU on the sidecar), which owns the seed, judges the live episode, records it as a
@@ -26,8 +28,9 @@ Same scene, instance and success rule as `robotwin_2_0_turn_switch-privileged` (
 `solution/`: streams the privileged-mode expert's joint targets (every 25 physics steps, dt = 0.1 s, linear interpolation) as `joint_position` chunks
 
 ## Verification
-`success` = the live episode's: RoboTwin's `check_success` holds after one of the agent's calls (which ends the
-episode) or on the final state when the agent's time is up, judged by the sim sidecar on the episode it ran
+`success` = the live episode's: RoboTwin's `check_success` holds on the state the episode ends in (the agent's
+`POST /finish`, or the end of its session; a success during it neither ends nor counts), judged by the sim sidecar
+on the episode it ran
 (`final.json`: `graded_by = "live"`, `replays = 0`, the end state's hash `live_sha`); nothing is replayed to grade it.
 The scene is checked against the frozen instance's initial-state hash when it is built, before the agent is served
 (a mismatch is `instance_mismatch`, an infrastructure failure). After the verdict the sidecar renders the recorded
@@ -49,4 +52,4 @@ Caps per container (PROTOCOL §6).
 ## Details
 | | |
 |---|---|
-| action space | `eai-standard/2.1`: `submit` chunks of `joint_position` (14, streamed at 250 Hz with the agent's `dt`) or `ee_pose` (16, CuRobo-planned); `observe` frames or a watch window; binary RCB1 responses |
+| action space | `eai-standard/2.1`: `submit` chunks of `joint_position` (14, streamed at 250 Hz with the agent's `dt`) or `ee_pose` (16, CuRobo-planned); `observe` the current frames or those recorded over the last seconds (`last_s`); hold chunks (`hold(s)`); binary RCB1 responses |

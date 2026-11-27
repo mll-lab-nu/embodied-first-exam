@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robolab-0.2.2` |
 
 ## Task
-Put the metal spoon that's in the wooden bowl in the mug.
+Put the metal spoon from the wooden bowl in the mug.
 
 ## Difficulty
 RoboLab labels this task "moderate" (1 subtasks; attributes: affordance, spatial); its success term (`object_in_container`) asks for the metal spoon moved from the wooden bowl into the ceramic mug. The tooling gives only thin primitives (move_ee on Isaac Lab's differential IK, joint moves, gripper, hold), so every grasp, transport and placement is the agent's to build. RoboLab ships no expert solution.

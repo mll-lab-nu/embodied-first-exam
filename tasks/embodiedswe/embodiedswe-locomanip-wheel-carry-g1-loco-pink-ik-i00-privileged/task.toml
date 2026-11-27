@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/embodiedswe-locomanip-wheel-carry-g1-loco-pink-ik-i00-privileged"
-description = "EmbodiedSWE locomanip.wheel_carry.g1.loco_pink_ik (robobench at 67f44e8a2ca5, Isaac Lab 2.3.2 / Isaac Sim 5.1, GPU PhysX): deliver a program, solution/solve.py with solve(env), that completes the task when the verifier runs it against a fresh simulator built from the frozen instance (seed 0)."
+description = "EmbodiedSWE locomanip.wheel_carry.g1.loco_pink_ik (robobench at 67f44e8a2ca5, Isaac Lab 2.3.2 / Isaac Sim 5.1, GPU PhysX): Carry the steering wheel from the table in front of you to the basket on the other table, off to your right, and leave it in the basket. Deliver a program, solution/solve.py with solve(env), that completes the task when the verifier runs it against a fresh simulator built from the frozen instance (seed 0)."
 keywords = ["robotics", "embodiedswe", "isaac-lab", "isaac-sim", "code-as-policy", "program", "loco-manipulation", "humanoid", "unitree-g1", "walking", "locomanip.wheel_carry.g1.loco_pink_ik"]
 
 [metadata]

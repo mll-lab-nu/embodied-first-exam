@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/robowits-align-blocks-i00-privileged"
-description = "RoboWits align_blocks (bimanual Marvin, Genesis): produce one replayable trajectory. Align the three cubes perfectly in a straight line. Frozen scene instance (RoboWits evaluation scene 0 of task 1)."
+description = "RoboWits align_blocks (bimanual Marvin, Genesis): produce one replayable trajectory. Line up the three cubes on the table in a perfectly straight line. Frozen scene instance (RoboWits evaluation scene 0 of task 1)."
 keywords = ["robotics", "robowits", "genesis", "marvin-bimanual", "dual-arm", "code-as-policy", "trajectory", "align_blocks"]
 
 [metadata]

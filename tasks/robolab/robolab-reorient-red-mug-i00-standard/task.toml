@@ -14,7 +14,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/robolab-reorient-red-mug-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.2): NVIDIA RoboLab reorient_red_mug on the same frozen instance as the privileged task (the state after RoboLab's canonical seed-0 reset). Put the red mug upright so that the opening is facing upwards. The agent only gets a client: get_obs (RGB, depth + proprioception), submit (joint_position or ee_pose chunks). No reset, no privileged state; the sim service records the episode as a trajectory and grades the live episode."
+description = "STANDARD MODE (robot as a service, eai-standard/2.2): NVIDIA RoboLab reorient_red_mug on the same frozen instance as the privileged task (the state after RoboLab's canonical seed-0 reset). Stand the red mug upright, opening up. The agent only gets a client: get_obs (RGB, depth + proprioception), submit (joint_position or ee_pose chunks). No reset, no privileged state; the sim service records the episode as a trajectory and grades the live episode."
 keywords = ["robotics", "robolab", "isaac-lab", "isaac-sim", "franka", "standard-mode", "trajectory", "reorient_red_mug"]
 
 [metadata]
@@ -65,6 +65,13 @@ cpus = 8
 memory_mb = 24576
 storage_mb = 10240
 gpu_types = ["L40S", "L40", "L4", "RTX 4090", "RTX 6000 Ada", "RTX PRO 6000 Blackwell"]
+
+# The robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): Harbor starts this server for the agent.
+[[environment.mcp_servers]]
+name = "efe-robot"
+transport = "stdio"
+command = "python3"
+args = ["/opt/tools/efe_mcp/server.py"]
 
 [verifier.env]
 RCB_LIMITS_ENFORCE = "${RCB_LIMITS_ENFORCE:-0}"

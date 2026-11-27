@@ -15,11 +15,11 @@ Every image is public: Harbor pulls it.
 | upstream | DexJoCo @ `8d23b0f` (MIT); human demonstrations: Hugging Face dataset `DexJoCo/DexJoCo-Datasets-Raw` (public) |
 | simulator | `dexjoco`: DexJoCo's gymnasium envs on MuJoCo 3.4.0, CPU physics (bit-exact replay in a fresh process), OSMesa rendering; no GPU |
 | robots | `franka-allegro` (6 tasks), `franka-allegro-bimanual` (5 tasks, two arms side by side) |
-| score | binary: DexJoCo's own success check (its episode ends at the first success or task failure); `water_plant` adds an aiming condition (below) |
+| score | binary: DexJoCo's own success check (its episode ends at the first success (privileged) or task failure); `water_plant` adds an aiming condition (below) |
 | tasks | 11 families × 2 modes: `tasks/dexjoco/dexjoco-<family>-i00-privileged` and `-standard` (`eai-standard/2.2`) |
 | image | `ghcr.io/mll-lab-nu/efe:dexjoco-0.1.2` (`images/dexjoco/`: DexJoCo @ 8d23b0f and its pinned dependency closure; no demonstrations, no policies) |
 | oracle | full, both modes: the demonstration's own actions |
-| agent time budget | 3600 s for every task, one number for both modes; each task's own `[agent] timeout_sec`, stated in every instruction's closing `## Time limit` section (PROTOCOL §2) |
+| agent time budget | 3600 s for every task, one number for both modes; each task's own `[agent] timeout_sec`, stated in the Time line of every instruction's closing `## Limits` (PROTOCOL §2) |
 | egress | allowlisted to the model APIs and the package registries in both modes: the reference demonstrations are public (PROTOCOL H.2) |
 
 ## Tasks
@@ -63,7 +63,8 @@ tasks keep their names.
 - **Action.** DexJoCo's own row per control step (50 Hz, 10 physics substeps of 2 ms): per arm the tcp target pose
   (xyz, quaternion wxyz, world frame), which DexJoCo's operational-space controller tracks, and 16 Allegro joint targets.
   Single arm 23 values, bimanual 46 (right first; the left hand's fingers in DexJoCo's mirrored order).
-- **Episode.** As in DexJoCo's evaluation: it ends at the first success or task failure. DexJoCo's episode cap, its
+- **Episode.** In privileged mode, as in DexJoCo's evaluation, it ends at the first success or task failure (standard
+  mode: "Agent-ended episodes"). DexJoCo's episode cap, its
   real-time pacing, its per-step camera rendering and hanoi's wall-clock auto-reset are lifted (`rcb_dexjoco.py`):
   the wall clock is the only budget.
 - **Threads.** The replay is bit-exact for one OpenBLAS thread count. DexJoCo's operational-space controller does its
@@ -130,7 +131,7 @@ unchanged), resume class `exact`:
   `max_frames_per_call`), checked before anything is executed (400). Every frame is held until the response is sent;
   measured on the layer's Recorder with 640 x 480 frames: 2.7 GB per 1000 RGB frames, 5.1 GB per 1000 images of one
   camera with per-frame depth, on top of the simulator's 1.9 GB. The default camera at
-  the default 10 fps needs 302 images for the longest watch (30 s) and 102 for the longest chunk (10 s);
+  the default 10 fps needs 102 images for the longest chunk or hold chunk (10 s, `max_chunk_s`);
   proprioception `joint_pos`, `joint_vel`, `joint_effort` (7 + 16 per arm), `tcp_pose`, plus `tcp_target` and
   `hand_target` (the targets being tracked); no gripper-opening column (a dexterous hand).
 - **kinematics:** stateless FK of the arm links, the hand mount and the tcp; IK of each tcp over its arm's 7 joints
@@ -140,8 +141,8 @@ unchanged), resume class `exact`:
 - **grading: the live episode.** `success` = DexJoCo's own success check
   (`Session.step`, with this benchmark's tightened checks such as water_plant's aim and 30-step hold) on the episode the
   service ran, recorded by the service in `episode.json` when the episode ends; `final.json` has `graded_by = "live"`,
-  `replays = 0`, `live_success`, `live_sha` (the final-state hash). Nothing is replayed to grade it. No settle window
-  is needed: the episode ends at the first success.
+  `replays = 0`, `live_success`, `live_sha` (the final-state hash). Nothing is replayed to grade it. The end window:
+  "Agent-ended episodes".
 - **start state:** the service checks the frozen instance when the episode begins (`server.py`, before
   `Episode.begin`): a scene that does not rebuild to the instance's recorded state hash (`instance_exact`) gets no
   episode; the service gives up (`instance_mismatch = 1`, `infra_error = 1`, 409 to every request) before the agent is
@@ -172,6 +173,22 @@ unchanged), resume class `exact`:
 - `ci_checks/check-standard-protocol.py` passes against a live service of a single-arm and a bimanual task (velocity limits are null:
   WARN only). Crash recovery: the service killed between calls and inside a call resumes the same episode
   (`resumes = 2`, exact hash) and the oracle still ends in success.
+
+### Agent-ended episodes
+
+Standard episodes are agent-ended (PROTOCOL §3 "Agent-ended episodes"; `RCB_AGENT_END` in the sim service,
+`/srv/rcb_agent_end.py`). The agent never sees a success: no `success` or progress in any meta, status or spec, and a
+success never ends the episode. The episode ends at the agent's `POST /finish` (reason `finished`), when its time runs
+out (`timeout`), at the runaway guard (`step_limit`), on a failure rule of the task (a 0, even after a success) or
+on a simulator error (judged as without the feature). It is then judged on how things stand when it ends; `episode.json`
+records `ended_by`, `hidden_success_seen` and the step of the first hidden success as evidence. No `RCB_STEP_LIMIT` is
+set: the runaway guard (`rcb_dexjoco.MAX_STEPS`) maps to `step_limit`.
+
+`rcb_dexjoco.Session(hide_success=True)` records DexJoCo's `succeed` (`now_success`) without ending the episode; its
+other terminations stay failures. The microwave, photograph and water-plant tasks are judged as events (seen during the
+episode, with its conditions at that moment); the assembly, Hanoi, unlock-iPad, click-mouse, fold-glasses and
+pinch-tongs tasks get up to 1.2 s with the hands held still at the end for a success that is completing; the rest are
+judged on the end state.
 
 ## World-frame information
 Privileged mode gives world coordinates (object poses through the tooling, the table height and the arm bases in the

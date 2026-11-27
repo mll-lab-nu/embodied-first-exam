@@ -9,10 +9,10 @@
 | Family / instance | `inhand_transfer` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:abc-sim-0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe:abc-sim-0.5.1` |
 
 ## Task
-ABC Sim `inhand_transfer_item_to_other_side` (two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each) side by side at the near edge of a table, facing +x (the left arm is the one at +y)): Pick up the cream cheese stick with the right arm, pass it to the left gripper, and put it down on the table on the left side, toward +y, at least 10 cm past the middle line between the two arms. Success: the cream cheese stick's centre is at least 0.10 m past the middle line between the two arms, on the left arm's side, no more than 0.10 m above the table top, and over the table (the hand-over itself is not checked). The goal must hold for 30 consecutive control steps (1.02 s); the episode then ends in success.
+ABC Sim `inhand_transfer_item_to_other_side` (two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each) side by side at the near edge of a table, facing +x (the left arm is the one at +y)): Move the cream cheese stick to the left arm's side of the table, at least a hand's width past the middle, and set it down there.
 A cream cheese stick lies on the right (-y) half of the table, on its arm's side. The robot is a service; the episode it runs is graded.
 
 ## Difficulty

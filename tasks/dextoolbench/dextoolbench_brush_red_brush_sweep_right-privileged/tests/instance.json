@@ -3,7 +3,7 @@
  "category": "brush",
  "object": "red_brush",
  "task": "sweep_right",
- "text": "Pick up the red brush and move it through the demonstrated motion (a sweep to the right): bring it to each goal pose in order (the green marker shows the current goal).",
+ "text": "Pick up the brush and sweep it, following the green ghost brush through its poses in order.",
  "start_pose": [
   0.11418250238204197,
   0.02560754300850676,

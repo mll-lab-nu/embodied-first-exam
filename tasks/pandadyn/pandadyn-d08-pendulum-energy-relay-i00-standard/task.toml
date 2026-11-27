@@ -17,7 +17,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/pandadyn-d08-pendulum-energy-relay-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.1): Panda Dynamic Scenes D08 Pendulum energy relay (two Franka Pandas) on the same frozen instance as the privileged task. Task: A passive pendulum (a rod with a ball-shaped bob) hangs between the two arms, each of which holds a flat paddle. The left arm must actively push the pendulum so that it swings out toward the right arm. The right arm must catch it while it is still swinging fast and brake it, taking at least 60 % of its swing energy out, then actively drive it back so that it swings out toward the left arm, no longer touching it. The left arm must then touch it again, and the pendulum must end up hanging almost straight down and almost still, and stay that way for one second without the right paddle touching it. The agent only gets a client: get_obs (RGB, depth + proprioception), submit (joint_position chunks at 100 Hz) and reset; between calls the world is frozen. 3 resets (the benchmark's budget in both standard modes), only the last episode graded; no privileged state; the sim service records every executed control step and grades the last episode as it ran live (no replay)."
+description = "STANDARD MODE (robot as a service, eai-standard/2.1): Panda Dynamic Scenes D08 Pendulum energy relay (two Franka Pandas) on the same frozen instance as the privileged task. Task: Push the hanging pendulum with the left paddle so that it swings toward the right arm. Catch it with the right paddle while it still swings fast, brake most of its swing and push it back toward the left arm; touch it again with the left paddle and bring it to hang still, straight down. The agent only gets a client: get_obs (RGB, depth + proprioception), submit (joint_position chunks at 100 Hz) and reset; between calls the world is frozen. 3 resets (the benchmark's budget in both standard modes), only the last episode graded; no privileged state; the sim service records every executed control step and grades the last episode as it ran live (no replay)."
 keywords = ["robotics", "pandadyn", "maniskill", "sapien", "franka-panda", "bimanual", "dynamic-manipulation", "standard-mode", "trajectory"]
 
 [metadata]
@@ -72,6 +72,13 @@ build_timeout_sec = 1800.0
 cpus = 4
 memory_mb = 10240
 storage_mb = 10240
+
+# The robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): Harbor starts this server for the agent.
+[[environment.mcp_servers]]
+name = "efe-robot"
+transport = "stdio"
+command = "python3"
+args = ["/opt/tools/efe_mcp/server.py"]
 
 [verifier.env]
 RCB_LIMITS_ENFORCE = "${RCB_LIMITS_ENFORCE:-0}"

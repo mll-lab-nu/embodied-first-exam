@@ -17,7 +17,7 @@ Standard mode (robot as a service, `eai-standard/2.1`) of `kinder-sweep-into-dra
 cameras, joint encoders, the base's odometry -- and
 never the scene's state or the goal check. No reset: one episode, which is graded.
 
-Task: get the five small dark-red cubes on top of the kitchen island into the middle drawer of the island's upper row of drawers. The drawer starts closed, and a wiper lies next to the cubes. The task succeeds the moment all five cubes' centres are inside that drawer, each at least 2.5 cm from the drawer's two side walls.
+Task: Get the five small cubes on top of the kitchen island into the middle drawer of the island's top row. There is a wiper you can use.
 
 ## Difficulty
 Nonprehensile, tool use, dynamics: open a closed drawer, then sweep five small cubes off the counter into it with a wiper. KinDER's paper reports at most 0.14 success for its best method on this variant and 0.00 for sampling MPC on the true simulator.
@@ -26,7 +26,7 @@ Nonprehensile, tool use, dynamics: open a closed drawer, then sweep five small c
 None. Solvability rests on the positive example in `oracle_evidence` (task.toml), checked by a human reviewer (docs/protocol/README.md §4).
 
 ## Verification
-The sidecar judges the episode as it runs (KinDER's goal check at every control step; the episode ends there) and,
+The sidecar runs the episode live: it ends at the agent's `POST /finish`, at the step cap, when the agent's time is up, or on a simulator error (a success never ends it and is never shown), and KinDER's goal check is judged on the state it ends in. The sidecar,
 when the collect hook ends the trial, writes that verdict to `/data/final.json` (`graded_by = "live"`): nothing is
 replayed to grade it (owner, 2026-10-17). The scene's start is checked against the frozen instance's
 recorded state (`scene_sha`) when the episode begins (a mismatch is `instance_mismatch`, infrastructure).

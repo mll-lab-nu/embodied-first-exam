@@ -18,9 +18,8 @@ task succeeds in any replay. Replays of this task can end in different states (t
 particles and does not replay exactly): leave a margin. Save a valid one early and overwrite it when you have a better
 one.
 
-Rules: **No cheating.** Write your own controller. Do not search for, download or use any existing solution (published
-or reference solutions, the benchmark's demonstrations, trained policies); trials are reviewed. Only the actions count:
-changing the simulator's state while you develop changes nothing in the replay.
+Rules: **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+benchmark's demonstrations, trained policies); trials are reviewed.
 
 ## Robot Interface
 Two simulated ARX X5 arms with parallel two-finger grippers at a table, in RoboDojo's dual-arm simulation (Isaac Sim /
@@ -58,9 +57,9 @@ with this command; run it to self-check (it stops at the first success):
 
 ### Actions
 - Action (14): `[left joint1..6, left gripper, right joint1..6, right gripper]`, RoboDojo's joint action. Joints:
-  absolute position targets (rad); RoboDojo's controller moves each arm from where it is to the new target over the
-  action's 10 physics steps (linear for 8, then holding). Gripper: RoboDojo's normalised command, clipped to 0..1 (1 =
-  fully open, as at the start; 0 = closed; a closing gripper stops at whatever is between its fingers).
+  absolute position targets (rad). RoboDojo's controller moves each arm from where it is to the new target over the
+  action's 10 physics steps: linearly for 8, then holding. Gripper: RoboDojo's normalised command, clipped to 0..1: 1 =
+  fully open (as at the start), 0 = closed. A closing gripper stops at whatever is between its fingers.
   `s.hold_action()` keeps the current targets.
 - Control runs at 25 Hz (physics dt 4 ms, 10 physics steps per action).
 - World frame: RoboDojo's env frame, metres; quaternions are **WXYZ**. Axes: x to the right as seen from behind the arms
@@ -73,20 +72,20 @@ with this command; run it to self-check (it stops at the first success):
 ## Others
 - Labels in `s.objects()`: `bottle_0`..`bottle_2` (the violet, red and turquoise bottles), with their liquids
   `wine_0`..`wine_2`; `bowl_0`..`bowl_2` (the black, white and brown bowls).
-- RoboDojo's own reset settles the scene again from where it is, so after actions a reset gives the same layout and
-  start pose but not bit-for-bit the same state; a replay after such a reset can end slightly differently from the
-  grader's. Each graded replay runs the first episode of a newly started Session (nothing stepped before it): test on
-  that.
+- RoboDojo's own reset settles the scene again from where it is. So a reset after actions gives the same layout and
+  start pose, but not bit-for-bit the same state, and a replay after such a reset can end slightly differently from the
+  grader's. Each graded replay is the first episode of a newly started Session, with nothing stepped before it. Test
+  your trajectory the same way.
 
 ## Limits
-- Time: 3600 s of wall-clock time from the start of your session; everything counts (the simulator's start-up too). At
-  the end you are stopped without warning and only what is in `/app/output/` at that moment is graded. Time left:
-  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`). Calls into a long-running process can block for their
-  whole wait time: use short waits or one-shot scripts.
+- Time: 3600 s of wall-clock time from the start of your session. Everything counts, including the simulator's start-up.
+  At the end you are stopped without warning and only what is in `/app/output/` at that moment is graded. Time left:
+  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`). A call into a long-running process can block for its
+  whole wait time. Use short waits or one-shot scripts.
 - Tokens: no separate limit.
 - Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
-  and read anything in your container, the simulator's and the benchmark's source included.
+  and read anything in your container, including the simulator's and the benchmark's source.
 - Resources: 8 CPUs, 39 GiB memory, 8192 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`),
-  one GPU (16 GiB of its memory). Over a cap a process can be killed (the CPU cap only slows you down); usage:
+  one GPU (16 GiB of its memory). Going over a cap can get a process killed (the CPU cap only slows you down). Usage:
   `/run/rcb-limits/usage.json`.
 - Resets: as many as you like (`s.reset()`).

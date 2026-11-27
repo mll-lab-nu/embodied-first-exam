@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Put the half banana and the half pomegranate, which lie on the kitchen countertop, inside the trash can that stands on the kitchen floor.
+Put the half banana and the half pomegranate into the trash can.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - the half banana (`half__banana.n.01_1`) is inside the trash can (`ashcan.n.01_1`)

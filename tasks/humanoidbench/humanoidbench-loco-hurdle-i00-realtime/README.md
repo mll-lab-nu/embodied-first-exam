@@ -13,6 +13,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:humanoidbench-0.2.0` |
 
 ## Task
+Sprint forward down the track and over the hurdles, without touching the walls.
+
 Realtime mode (robot as a service on a clock that does not stop, `eai-standard/2.3`, PROTOCOL §3) of
 `humanoidbench-loco-hurdle-i00-privileged`: the same frozen instance and the same success rule as it and as
 `humanoidbench-loco-hurdle-i00-standard`, but time does not stop. Once an episode's clock starts (its first
@@ -42,19 +44,20 @@ interesting tasks. What replaces it (docs/protocol/README.md §4): the floor abo
 pass), the evidence that the task has a solution (`oracle_evidence` in task.toml), and a human reviewer.
 
 ## Verification
-`success` = live success: the episode the sim service ran reached the pass mark (HumanoidBench's own rule,
-judged on the live simulator), for the last episode; nothing is replayed to grade it (owner, 2026-10-17, board
-0151). The scene's start is checked against the frozen instance's recorded state when an episode begins
-(`instance_mismatch`, infrastructure). The trajectory records the servo targets the simulator applied at each
-control step (`trajectory_live.f64`, `trajectory.npz`), not the ones the agent submitted, so it reproduces the
-live run whatever the timing was (the video is rendered from it after the verdict); `ticks.f64` records each
-step's wall time and the call that planned it, `calls.jsonl` and `submitted.f64` every call and every row as
-sent, and `final.json` the clock's lag (`max_lag_s`, `stalls`) and the held and late steps. `tests/grade.py`
-reads `/data/final.json` and copies the evidence to `/logs/verifier/` (`replay.mp4`). After the agent's first
-command, a simulator error raised by a control step and a simulator crash inside a control step (a fatal
-signal) are the agent's 0; a kill, a crash outside a control step, anything before the first command, a failed
-resume and a reset that does not rebuild the scene are infrastructure (`infra_error = 1`; owner, 2026-10-17,
-docs/protocol/standard_mode.md). No oracle; human review in PR #83. `nop` scores 0.
+`success` = live success: the episode the sim service ran reached the pass mark at some step (HumanoidBench's own rule,
+judged on the live simulator as the episode ran: reaching it does not end the episode, and it still counts when a fall
+or another failure rule ends the episode afterwards), for the last episode; nothing is replayed to grade it (owner,
+2026-10-17, board 0151). The scene's start is checked against the frozen instance's recorded state when an episode
+begins (`instance_mismatch`, infrastructure). The trajectory records the servo targets the simulator applied at each
+control step (`trajectory_live.f64`, `trajectory.npz`), not the ones the agent submitted, so it reproduces the live run
+whatever the timing was (the video is rendered from it after the verdict); `ticks.f64` records each step's wall time and
+the call that planned it, `calls.jsonl` and `submitted.f64` every call and every row as sent, and `final.json` the
+clock's lag (`max_lag_s`, `stalls`) and the held and late steps. `tests/grade.py` reads `/data/final.json` and copies
+the evidence to `/logs/verifier/` (`replay.mp4`). After the agent's first command, a simulator error raised by a control
+step and a simulator crash inside a control step (a fatal signal) are the agent's 0; a kill, a crash outside a control
+step, anything before the first command, a failed resume and a reset that does not rebuild the scene are infrastructure
+(`infra_error = 1`; owner, 2026-10-17, docs/protocol/standard_mode.md). No oracle; human review in PR #83. `nop` scores
+0.
 
 ## Resources
 Caps per container (PROTOCOL §6).
@@ -72,7 +75,7 @@ Caps per container (PROTOCOL §6).
 | | |
 |---|---|
 | mode / sensors | realtime: head-camera RGB + joint angles and velocities (HumanoidBench's own `image` and `proprio` sensors), a pelvis IMU and a camera fixed in the room; no root pose, no hurdle or wall positions, no reward; 50 resets (a new episode from the frozen start each, paused until its first `submit`; only the last episode is graded) |
-| time | the episode's clock starts at its first `submit` (or `get_obs(seconds > 0)`) and runs one control step every 0.02 s of wall time until the episode ends; `submit` writes a plan of future targets (from step `at`) and answers at once; the last target is held when the plan runs out |
+| time | the episode's clock starts at its first `submit` and runs one control step every 0.02 s of wall time until the episode ends; `submit` writes a plan of future targets (from step `at`) and answers at once; the last target is held when the plan runs out |
 | action space | HumanoidBench's own: 19 normalised position targets, 50 Hz, streamed one row at a time or in chunks of up to 10 s |
 | knobs (compose env) | `RCB_SLOWDOWN` (1: real time, the official configuration; S: one control step every S x 0.02 s, results reported apart from S = 1), `RCB_RESET_BUDGET` (50: HumanoidBench's configuration, an exception to the mode's default of 0, PROTOCOL §2), `RCB_OBS_PROPRIO` (1), `RCB_OBS_IMU` (1), `RCB_OBS_ROOM_CAMERA` (1), `RCB_OBS_DEPTH` (0): the defaults are this task's configuration; a run that changes one is reported separately, and `episode.jsonl` records the `/spec` it ran under |
 | agent API | `environment/rcb_client.py` (the realtime client; its docstring is the reference); `instruction.md` lists the endpoints |

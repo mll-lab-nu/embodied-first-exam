@@ -1,38 +1,31 @@
-# YAMLab · HangMugOnTree-v0 — STANDARD MODE (robot as a service, eai-standard/2.2)
+# YAMLab · HangMugOnTree-v0 (standard)
 
-You control two **I2RT YAM arms with parallel two-finger grippers** on a workstation table (YAMLab's bimanual setup)
-**as if they were real hardware**: the simulator runs in a service you cannot open. You get one client and one episode.
-**Task:** Pick up the mug with the **left** arm and hand it to the **right** arm, keeping the mug in the air: the right gripper takes it, then the left gripper lets go. Then hang the mug on the mug tree and let go of it with both grippers. The scene has the mug and the mug tree on the table.
+## Task
+Pick up the mug with the left arm, pass it to the right arm in the air, and hang it on the mug tree.
 
-## Success
-1. **pick**: the **left** gripper grasps the mug (YAMLab's grasp detection: both fingers of that gripper touch the mug with at least 0.1 N, on their pads) and the mug's centre is more than 5 cm above its resting height, for 8 consecutive control steps;
-2. **handover**: the **right** gripper grasps the mug, the left gripper does not, and the mug's centre stays more than 5 cm above its resting height, for 30 consecutive control steps (as in YAMLab, the left fingers' friction is raised when the left gripper first grasps the mug and lowered again when both grippers hold it: YAMLab's own handover aid);
-3. **hang**: the mug's centre within 0.13459 m (horizontally) of the mug tree's centre and more than 5 cm above the height it would rest at on the table, **neither** gripper grasping it, and its height steady (within 3.0 cm of where this stage started), for 30 consecutive control steps.
+## Goal
+Success: the left gripper picks up the mug, the right gripper then takes it in the air and holds it up on its own for
+about a second, and then the mug hangs on the mug tree with neither gripper holding it, steady for about a second. The
+steps count in this order. Every step except the last counts for good once done. An object falling off the table ends
+the episode as a failure.
 
-Each condition must hold for the stated number of consecutive control steps (1/30 s each); the stages count in order and
-stay counted once reached. The episode **ends by itself** at the first control step where every stage has been reached
-(success), or when a task object falls off the table (failure).
+When you are done, send `/finish` to end the episode and get it graded. Everything else is judged on the state at that
+point.
 
-## Rules (real-robot rules)
-- **No reset.** The episode starts when the service comes up and ends on success, when an object falls off the table, when
-  your time is up, or on a simulator error. A dropped or knocked-over object stays that way.
-- **No privileged state.** You see what the cameras see (RGB, and depth if you ask) plus the robot's own proprioception
-  (joints, grippers, tool-frame poses, velocities, drive efforts). No object poses, no success signal.
-- There is no step budget: the time limit (`## Time limit`) is your only budget (`meta["time_left_s"]`). Actions and simulated time
-  are reported as cost. One technical cap: the episode ends after **100,000 control steps** (55.6 min of simulated time;
-  `spec["max_control_steps"]`, reason `step_guard`) and is graded as it stands. The service steps faster than real time
-  (60-120 control steps/s), so long watches and far-away `ee_pose` targets can reach it: `meta["control_steps"]` counts.
-- There is nothing to hand in: the service records your episode as the trajectory and grades it. Leave your script at
-  `/app/output/gen.py` for the record. The episode is graded as it stands when your time is up: keep working until it has
-  succeeded.
-- **If the service crashes**, a call fails with a connection error: the simulator restarts and resumes the SAME episode
-  (never a reset) in the state after the last call it completed, which you may not have received. `r.wait_ready()` waits
-  until it answers again (resuming replays the episode so far, which can take minutes; the wall clock keeps running), then
-  check `r.status()["control_steps"]` before you continue (`spec["on_service_error"]`).
-- **Nothing is put into your context automatically.** Images and videos come back as arrays/bytes in a Python object;
-  what you look at and where you store it is your code's decision.
+Rules:
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+  benchmark's demonstrations, trained policies); trials are reviewed.
+- One episode, no reset: what you knock over stays knocked over.
+- You get only the cameras and the robot's own sensor readings: no object poses, no scene layout, no success signal.
 
-## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`)
+## Robot Interface
+Two I2RT YAM arms with parallel two-finger grippers on a workstation table (YAMLab's bimanual setup, Isaac Sim). The
+robot runs as a service you reach through its client or its MCP tools, as if it were real hardware: one live episode.
+
+`POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
+
+### Client
+`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
 ```python
 from rcb_client import Robot
 r = Robot()                                   # connects: waits while Isaac Sim starts and builds the scene (see below)
@@ -41,7 +34,8 @@ spec = r.spec()                               # action types, dims, joint limits
 obs = r.get_obs()                             # current frames from 3 cameras: obs.last[cam] -> uint8 (480, 640, 3)
 obs.meta["proprio"]                           # {"layout": [...58 names], "now": [...]}: joints, grippers, tool poses, ...
 obs.meta["cameras"]                           # per-camera intrinsic_cv / extrinsic_cv / cam2world_gl at the LAST frame
-obs = r.get_obs(seconds=2.0, video="mp4")     # hold the last command and watch for 2 s (max 30): obs.video[cam] = mp4 bytes
+obs = r.hold(2.0)                             # hold the last command for 2 s of robot time: obs.video[cam] = mp4 bytes
+obs = r.get_obs(last_s=1.0)                   # the frames recorded over the last 1 s (reading moves no time)
 
 res = r.submit("joint_position", A, dt=0.1)   # A: (T, 14) rows dt seconds apart; streamed at 30 Hz with linear interpolation
 res = r.submit("ee_pose", P)                  # P: (T, 16) tool-frame targets of both arms; differential IK per row
@@ -49,53 +43,79 @@ res.meta["done"], res.meta["reason"], res.meta["plan"], res.meta["clipped"], res
 res.video["top"]                              # mp4 bytes of the execution (video="mp4" | "frames" | "both" | "none")
 res.frames["left_wrist"]                      # uint8 (N,H,W,3) at video_fps if requested
 res.last["right_wrist"]; res.proprio          # last frame per camera; float32 (N, 58) proprio at each video frame
-res.save("/app/runs/003")                     # meta.json, <cam>.mp4, frames/<cam>/NNN.jpg, last/<cam>.jpg, proprio.npy
 ```
+
 The service's first start in a trial compiles Isaac's shaders: `Robot()` can wait ~2-12 min (it prints its progress to
-stderr once a minute). It gives up after 3600 s (`Robot(timeout=...)`) with `RuntimeError("sim service unavailable ...")`:
-then call it again (nothing has happened in the episode yet; your wall clock runs from the start of the trial).
+stderr once a minute). After 3600 s (`Robot(timeout=...)`) it gives up with
+`RuntimeError("sim service unavailable ...")`. Then call it again: nothing has happened in the episode yet. Your wall
+clock runs from the start of the trial.
 
-Cameras (640×480 each): `top` (static, above the table looking down at the workspace), `left_wrist` and `right_wrist` (on
-each arm's wrist; they move: `res.extrinsic_cv[cam]` has their pose at every frame).
-
-### Optional inputs (eai-standard/2.2; ask only for what you need)
+Optional inputs (ask only for what you need):
 - Depth: `r.get_obs(depth=True)` -> `obs.last_depth[cam]` float32 (H,W) z-depth in metres, 0 = no reading, pixel-aligned
-  with `obs.last[cam]`; `r.submit(..., depth="frames")` -> also `res.depth[cam]` (N,H,W), one map per frame (1 mm steps).
+  with `obs.last[cam]`; `r.submit(..., depth="frames")` -> also `res.depth[cam]` (N,H,W), one map per frame (1 mm
+  steps).
 - Per frame: `res.frame_step` (control step), `res.frame_time_s`, `res.extrinsic_cv[cam]` (N,3,4 world -> camera, OpenCV
-  axes). `spec["cameras"][cam]`: `intrinsic_cv` and `mount` (static pose, or a wrist camera on link `<arm>_link_6` with a
-  fixed `link_T_cam_cv`).
-- `spec["robot_spec"]` (joints and their limits, grippers, controller gains, tool frames, the arm bases), `spec["world"]`
-  (frame, units, wxyz), `spec["proprio_groups"]` + `res.group("joint_vel")` (joint_pos, tcp_pose, gripper_cmd, joint_vel,
-  gripper_opening, joint_effort).
-- `r.fk(q12)` -> poses of `spec["kinematics"]["links"]`; `r.ik({"left_tcp": pose7}, seed=q12)` -> `{"ok", "q", "error"}`:
-  stateless models of both arms (no physics, no simulated time); `q12` = left joint1..6 then right joint1..6.
+  axes). `spec["cameras"][cam]`: `intrinsic_cv` and `mount` (static pose, or a wrist camera on link `<arm>_link_6` with
+  a fixed `link_T_cam_cv`).
+- `r.fk(q12)` -> poses of `spec["kinematics"]["links"]`, and `r.ik({"left_tcp": pose7}, seed=q12)` ->
+  `{"ok", "q", "error"}`. Both are stateless models of the two arms (no physics, no simulated time). `q12` = left
+  joint1..6 then right joint1..6.
+- `res.group("joint_vel")`: proprio columns by group name (`spec["proprio_groups"]`).
 
-### Action types
+If the service crashes, a call fails with a connection error. The simulator restarts and resumes the SAME episode (never
+a reset), in the state after the last call it completed. You may not have received that call's reply. `r.wait_ready()`
+waits until it answers again. Resuming replays the episode so far and can take minutes; the wall clock keeps running.
+Then check `r.status()["control_steps"]` before you continue (`spec["on_service_error"]`). One call returns at most 5412
+images.
+
+### MCP tools
+- The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
+  `observe`, `submit`, `kinematics`, `finish`. A tool takes its endpoint's request fields (any other field in `fields`)
+  and returns the service's reply `meta` unchanged; images, arrays and video are written as files under `/app/obs/`
+  (`.png`, `.npy`, `.mp4`) and the result lists them. Long action chunks can be passed as a file (`actions_file`).
+- `observe` returns at once with what is already recorded: the current frame, or the last `last_s` seconds. Time passes
+  only through `submit`, which answers when its rows have run; a `submit` with `interpolate` "hold", `seconds` and no
+  rows lets time pass with the robot holding still.
+- A call still running after 45 s returns `pending` with an `operation` id; `observe(operation=id)` collects its reply.
+- The client and the tools drive the same robot in the same episode; use either, or both.
+
+### Actions
 - `joint_position` (14): `left_joint1..6, left_gripper, right_joint1..6, right_gripper`, YAMLab's own action. Joints:
   absolute targets (rad) tracked by PD controllers. Gripper: the position target of that arm's finger in metres,
-  **-0.0475 = fully open .. 0.0 = closed** (continuous; a closing gripper stops at whatever is between its fingers). Rows
-  are `dt` apart (`1/30 ≤ dt ≤ 0.5` s, a multiple of the 30 Hz control period: 1/30, 2/30, ...; any other `dt` is
-  rejected, never rounded); `interpolate="linear"` (default) or `"hold"`; a chunk may cover at most 10 s; out-of-limit
-  values are clipped and listed in `meta["clipped"]` (limits in the spec). Start from `obs.meta["proprio"]["now"]` (the
-  first 14 columns are the measured joints and fingers) to move smoothly.
+  **-0.0475 = fully open .. 0.0 = closed** (continuous; a closing gripper stops at whatever is between its fingers).
+  Rows are `dt` apart: `1/30 ≤ dt ≤ 0.5` s, a multiple of the 30 Hz control period (1/30, 2/30, ...). Any other `dt` is
+  rejected, never rounded. Interpolation: `interpolate="linear"` (default) or `"hold"`. A chunk may cover at most 10 s.
+  Out-of-limit values are clipped and listed in `meta["clipped"]` (limits in the spec). Start from
+  `obs.meta["proprio"]["now"]` (the first 14 columns are the measured joints and fingers) to move smoothly.
 - `ee_pose` (16): per arm, left then right, `x y z qw qx qy qz gripper` in the world frame (metres; x forward from the
-  arm bases towards the far side of the table, y to the left, z up; quaternions wxyz). Each row drives both tool frames to
-  their targets together by differential IK in closed loop (at most 0.25 m/s); an arm that does not converge within 6 mm is
-  reported in `meta["plan"]`. The tool frame `<arm>_tcp` is the midpoint of that gripper's two fingertips, 0.1426 m from
-  `link_6` along `link_6`'s +z (approach) axis, with `link_6`'s orientation. At the start both arms are at their home pose
-  (all joints 0, grippers open), tool frames pointing forward. At most 50 rows per submit; a position more than 3 m from
-  the world origin on any axis, or a zero quaternion, is rejected (400), nothing moves.
-  One call returns at most 5412 images (`max_frames_per_call`, PROTOCOL §3 "Images per call").
+  arm bases towards the far side of the table, y to the left, z up; quaternions wxyz). Each row drives both tool frames
+  to their targets together by differential IK in closed loop (at most 0.25 m/s); an arm that does not converge within 6
+  mm is reported in `meta["plan"]`. The tool frame `<arm>_tcp` is the midpoint of that gripper's two fingertips, 0.1426
+  m from `link_6` along `link_6`'s +z (approach) axis, with `link_6`'s orientation. At the start both arms are at their
+  home pose (all joints 0, grippers open), tool frames pointing forward. At most 50 rows per submit. If a position is
+  more than 3 m from the world origin on any axis, or a quaternion is zero, the submit is rejected (400) and nothing
+  moves.
 - A malformed request (a wrong type, a value out of range) is answered 400 with the reason and executes nothing.
 - Control runs at 30 Hz (simulated time; sim dt 1/120 s, decimation 4).
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+### Observations
+- Cameras (640×480 each): `top` (static, above the table looking down at the workspace), `left_wrist` and `right_wrist`
+  (on each arm's wrist; they move: every frame comes with its pose).
+- In the spec: `robot_spec` (joints and their limits, grippers, controller gains, tool frames, the arm bases), `world`
+  (frame, units, wxyz), `proprio_groups` (joint_pos, tcp_pose, gripper_cmd, joint_vel, gripper_opening, joint_effort).
 
-## Resources
-Your container: **5 CPUs**, **4 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
-
-## Time limit
-You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
-
-This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` counts the same limit from your first request to the service, so it never runs out before your time does: your real time left is `time_left_s` minus the time you spent before that request. Plan by it. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+## Limits
+- Time: 3600 s of wall-clock time from the start of your session. Everything counts, including waiting for the service.
+  At the end you are stopped without warning. Time left: `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`).
+  Trust this file: the `time_left_s` in the service's replies starts only at your first request. A call into a
+  long-running process can block for its whole wait time. Use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, including the simulator's and the benchmark's source.
+- Resources: 5 CPUs, 4 GiB memory, 1024 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`), no
+  GPU; the simulator runs in its own container and does not count. Going over a cap can get a process killed (the CPU
+  cap only slows you down). Usage: `/run/rcb-limits/usage.json`.
+- Resets: none. You get one episode.
+- Steps: at most 100,000 control steps (1/30 s each, about 56 min of simulated time), then the episode ends. The service
+  runs 60-120 control steps per second, so long holds can reach this limit.
+- Finish: if you never send `/finish`, the episode is graded when the step limit is reached or your session ends.

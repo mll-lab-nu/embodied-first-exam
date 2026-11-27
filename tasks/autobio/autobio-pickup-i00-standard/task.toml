@@ -13,7 +13,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/autobio-pickup-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.2): AutoBio pickup (Pick up centrifuge tube) on the same frozen instance as autobio-pickup-i00-privileged: Pick up the 50 mL centrifuge tube with the orange screw cap from the blue rack: hold it by its cap and lift it at least 10 cm. The agent only gets a client: cameras (RGB, optional depth, calibration), the robot's proprioception, joint position chunks, arm kinematics; one episode, no reset, no object or instrument state; the sim service records the episode and grades the live episode (no grading replay)."
+description = "STANDARD MODE (robot as a service, eai-standard/2.2): AutoBio pickup (Pick up centrifuge tube) on the same frozen instance as autobio-pickup-i00-privileged: Pick up the 50 mL tube from the rack by its cap and lift it more than a hand's width. The agent only gets a client: cameras (RGB, optional depth, calibration), the robot's proprioception, joint position chunks, arm kinematics; one episode, no reset, no object or instrument state; the sim service records the episode and grades the live episode (no grading replay)."
 keywords = ["robotics", "autobio", "mujoco", "laboratory", "biology", "aloha-2-arm", "code-as-policy", "trajectory", "pickup", "standard-mode"]
 
 [metadata]
@@ -71,6 +71,13 @@ build_timeout_sec = 1800.0
 cpus = 4
 memory_mb = 4096
 storage_mb = 10240
+
+# The robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): Harbor starts this server for the agent.
+[[environment.mcp_servers]]
+name = "efe-robot"
+transport = "stdio"
+command = "python3"
+args = ["/opt/tools/efe_mcp/server.py"]
 
 [verifier.env]
 RCB_LIMITS_ENFORCE = "${RCB_LIMITS_ENFORCE:-0}"

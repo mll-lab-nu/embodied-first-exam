@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:autobio-0.1.0` |
 
 ## Task
-AutoBio's `thermal_cycler_close` (Close thermal cycler lid) on the same frozen instance as `autobio-thermal-cycler-close-i00-privileged`: Close the lid of the thermal cycler and lock it: swing the lid fully down and turn the lever on the lid to the locked end of its travel. Success the moment both are within 0.01 rad of those end positions.
+AutoBio's `thermal_cycler_close` (Close thermal cycler lid) on the same frozen instance as `autobio-thermal-cycler-close-i00-privileged`: Close the thermal cycler's lid and lock it with the lever on the lid.
 On the bench: a thermal cycler (a Bio-Rad C1000 model) with its lid open. The lid carries a lever that locks it and a force knob. Standard mode (eai-standard/2.2): the agent drives the robot through a client in one episode, with only its proprioception and the scene's cameras.
 
 ## Difficulty

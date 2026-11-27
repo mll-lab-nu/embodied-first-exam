@@ -102,7 +102,7 @@ locomotion challenges and by hand_pose); elbow and finger pose / reach (near-dup
   is a height in the world frame ("a ball's height below 1.25 m"). No object or goal position is given in either mode.
 - **Budget: 3600 s**, uniform within the benchmark and both modes. The number lives in each task's own
   `[agent] timeout_sec` (PROTOCOL §2, docs/protocol/running.md "The agent's time"), and every instruction
-  states it in its closing `## Time limit` section.
+  states it in the Time line of its closing `## Limits`.
 
 ## Modes
 - **Privileged:** `rcb_myosuite.Session` in the agent's container: reset, the task's observation dict, MuJoCo model and
@@ -147,7 +147,7 @@ locomotion challenges and by hand_pose); elbow and finger pose / reach (near-dup
   the verifier books a missing, unreadable or never-finalized `final.json` as `infra_error = 1`;
   `finalize.sh` writes `final.json` atomically. One call returns at most 1000 images (cameras x frames, per-frame depth
   counted again; `/spec` `max_frames_per_call`), checked before anything runs (400): every frame is held until the
-  response is sent (2.7 GB per 1000 640 x 480 RGB frames). The default camera at 10 fps needs 302 images for the longest watch. One gap is left in the shared 2.2 layer (`embodied_first_exam/standard/
+  response is sent (2.7 GB per 1000 640 x 480 RGB frames). The default camera at 10 fps needs 102 images for the longest chunk or hold chunk (10 s, `max_chunk_s`). One gap is left in the shared 2.2 layer (`embodied_first_exam/standard/
   rcb_limited.py`, not MyoSuite's): JSON `actions` holding an object is a TypeError there, still a 500.
 - **Reset budget: 10** (PROTOCOL §2: the task's own budget). MyoSuite's own termination ends most standard episodes
   within one or two seconds of simulated time, so a single episode would be one blind attempt at muscle-level control.
@@ -155,7 +155,7 @@ locomotion challenges and by hand_pose); elbow and finger pose / reach (near-dup
   layer has no reset, so the adapter adds `POST /reset` itself (`environment/sim/server.py`, the semantics of
   [`docs/protocol/standard_mode.md`](../../docs/protocol/standard_mode.md) "Optional reset capability"): it abandons the running
   episode, or follows one that has ended, and restores the frozen instance (`Session.reset()`, the privileged mode's
-  reset); only the last episode is graded (its rows are `trajectory.npz`), a success ends the trial (409 after it), the
+  reset); only the last episode is graded (its rows are `trajectory.npz`), `/finish` ends the trial (409 after it), the
   wall clock never restarts; `/status`, every `meta` and `final.json` count `episode`, `resets_left`,
   `control_steps_total`, and `reward.json` adds `episodes`, `resets`, `reset_budget` and `sim_steps_total`. Crash
   recovery replays the whole journal and resets at the journal rows where the committed resets happened (they are
@@ -309,6 +309,19 @@ only after the whole reference with the on-track share, the final step and the w
   video is never infra.
 - **Cost.** The hook steps the graded episode's physics once (the render pass). All CPU (OSMesa); the realtime twin's
   GPU is for the agent's images.
+
+**Agent-ended episodes** (standard mode; PROTOCOL §3 "Agent-ended episodes", `RCB_AGENT_END` in each sim service,
+`rcb_agent_end.py`). The task's success is never shown and never ends the episode: the agent ends it with `POST /finish`
+(reason `finished`), or the end of its session does (`timeout`). Resets stay available after a success (a success no
+longer ends the trial); `/finish` ends the trial (409 after it, `/reset` too), and only the episode running then, or at
+the session's end, is graded. `rcb_myosuite.AGENT_END`: the hold families are judged on the state the episode ends in
+(the goal held for the hold time up to the end; at `/finish` and the session's end a hold that has begun is run out with
+the last command held); a challenge's success event (the `event` rule) counts once it has happened, also when the
+challenge's failure ends the episode after it (its own `done` at the event ends nothing); MyoDex's track is judged over
+the whole reference motion, whose end, like baoding's 1000 target points, is the episode's own length (`step_limit`,
+judged as it stands). Any other failure ends the episode with 0, also after a held goal. There is no `RCB_STEP_LIMIT`
+(no step budget). The realtime twin declares the same through rcb_service's adapter fields (`end_judgement`,
+`end_window_steps`, `info["step_cap"]`).
 
 ## Files
 Each task directory carries its frozen instance (`instance.npz`: the privileged task's `environment/` and `tests/`, a

@@ -7,8 +7,8 @@ old = "## Goal\nSuccess: the three cubes stand in one tower, blue at the bottom,
 new = "## Goal\nSuccess: the three cubes stand in one tower, red at the bottom, orange in the middle and green on top, each nearly\ncentred on the one below, and both arms are back where they started. A replay ends as soon as the task is done; later\nrows are not run."
 
 [[replace]]
-old = "## Goal\nSuccess: the three cubes stand in one tower, blue at the bottom, yellow in the middle and orange on top, each nearly\ncentred on the one below, and both arms are back where they started. What counts is how things stand at the end of the\nepisode: a success reached earlier and lost by the end does not count, so finish in the state you want graded and stop\nsending commands."
-new = "## Goal\nSuccess: the three cubes stand in one tower, red at the bottom, orange in the middle and green on top, each nearly\ncentred on the one below, and both arms are back where they started. What counts is how things stand at the end of the\nepisode: a success reached earlier and lost by the end does not count, so finish in the state you want graded and stop\nsending commands."
+old = "## Goal\nSuccess: the three cubes stand in one tower, blue at the bottom, yellow in the middle and orange on top, each nearly\ncentred on the one below, and both arms are back where they started."
+new = "## Goal\nSuccess: the three cubes stand in one tower, red at the bottom, orange in the middle and green on top, each nearly\ncentred on the one below, and both arms are back where they started."
 
 [[replace]]
 old = "arx_x5/0/stack_blocks_by_language_0.json"
@@ -17,3 +17,7 @@ new = "arx_x5/1/stack_blocks_by_language_0.json"
 [[replace]]
 old = "sha256 `03aa18bd083b56ac`"
 new = "sha256 `86179629f19adbf2`"
+
+[[replace]]
+old = "Stack the three cubes into one tower: blue at the bottom, yellow in the middle and orange on top. Then move both arms back to where they started."
+new = "Stack the three cubes into one tower: red at the bottom, orange in the middle and green on top. Then move both arms back to where they started."

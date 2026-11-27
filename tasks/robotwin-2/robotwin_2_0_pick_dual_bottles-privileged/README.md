@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:robotwin-0.1.2` |
 
 ## Task
-RoboTwin 2.0 pick_dual_bottles (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Pick up both bottles, one in each hand, and bring them closer to you. Hold them up well above the table, side by side near the middle, with the bottle that started on your left still on the left. Frozen scene instance (RoboTwin seed 60417).
+RoboTwin 2.0 pick_dual_bottles (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Pick up both bottles, one in each hand, and hold them up at least a hand's length above the table, side by side near the middle and a little closer to the robot, with the bottle that started on the robot's left still on the left. Frozen scene instance (RoboTwin seed 60417).
 
 ## Difficulty
 RoboTwin's scripted expert needs 3 planned motions (41 lines); official data-generation success on ALOHA-AgileX 92% (the expert's own pass rate over random layouts); in our image the expert passed on seed 60417 on attempt 1 of 1 with 1683 physics steps. Tags from the code: dual-arm. RoboTwin evaluation budget 400 policy actions. The trajectory is the raw per-step drive-target record, so any plan failure or a grasp that slips during replay scores 0.
@@ -45,4 +45,4 @@ Caps per container (PROTOCOL §6).
 | RoboTwin eval step limit | 400 (policy-eval budget upstream; indicative of task length) |
 
 ### Goal
-Pick up both bottles, one in each hand, and bring them closer to you. Hold them up well above the table, side by side near the middle, with the bottle that started on your left still on the left.
+Pick up both bottles, one in each hand, and hold them up at least a hand's length above the table, side by side near the middle and a little closer to the robot, with the bottle that started on the robot's left still on the left.

@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/dexhand-bicycle-pump-stroke-i00-standard"
-description = "Connect and use a portable bicycle pump with a dexterous hand on a Tianji Marvin arm (Sharpa Wave by default, or Wuji Hand 2.2): push the disconnected hose head onto the Schrader valve and close its thumb lock, pump 28 full strokes of the passive air-spring piston (200.0 to 210.6 kPa), then open the lock, pull the head off the valve and release the handle at the top; tipping or shifting the free-standing pump or losing the connection early fails the episode at once."
+description = "Connect and use a portable bicycle pump with a dexterous hand on a Tianji Marvin arm (Sharpa Wave by default, or Wuji Hand 2.2): push the disconnected hose head onto the Schrader valve and close its thumb lock, pump 28 full strokes of the passive air-spring piston (200.0 to 210.6 kPa), then open the lock, pull the head off the valve and release the handle at the top; tipping or shifting the free-standing pump or losing the connection early fails the episode at once. Task: Pump up the bicycle tire: push the pump's hose head onto the valve and close its lock, pump the handle 28 full strokes, then open the lock, pull the head off and let go of the pump."
 keywords = ["robotics", "dexterous-hand", "mujoco", "sharpa-wave", "wuji-hand-2.2", "tool_use", "tool-use", "bicycle-pump", "valve-connection", "thumb-lock", "passive-mechanism", "repetitive-strokes", "free-standing-object"]
 
 [metadata]
@@ -55,6 +55,13 @@ build_timeout_sec = 1800.0
 cpus = 2
 memory_mb = 4096
 storage_mb = 10240
+
+# The robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): Harbor starts this server for the agent.
+[[environment.mcp_servers]]
+name = "efe-robot"
+transport = "stdio"
+command = "python3"
+args = ["/opt/tools/efe_mcp/server.py"]
 
 [verifier.env]
 RCB_LIMITS_ENFORCE = "${RCB_LIMITS_ENFORCE:-0}"

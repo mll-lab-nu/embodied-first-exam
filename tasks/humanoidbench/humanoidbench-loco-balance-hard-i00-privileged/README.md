@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:humanoidbench-0.2.0` |
 
 ## Task
+Stand on the balance board and keep your balance on it, upright and still.
+
 HumanoidBench balance_hard: produce one replayable trajectory that keeps the Unitree H1 standing on a board balanced on a rolling sphere, frozen scene instance 00.
 
 ## Difficulty

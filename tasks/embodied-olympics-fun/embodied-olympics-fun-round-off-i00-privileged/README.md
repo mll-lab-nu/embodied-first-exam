@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Do a round-off: go from your feet onto your hands, turn half round through the handstand and come down onto both feet together facing back the way you came, then stand. (Embodied Olympics `round-off`: one Unitree G1 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
+Do a round-off: go over onto your hands with a half turn, land on both feet together facing back the way you came, and stand. (Embodied Olympics `round-off`: one Unitree G1 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
 
 ## Difficulty
 The round-off passes your whole weight over two small fists while the body turns half round in the air above them, and ends in a two-foot landing that must stop the rotation: there is no built-in action for any of it and the arms' motors give 25 N m.

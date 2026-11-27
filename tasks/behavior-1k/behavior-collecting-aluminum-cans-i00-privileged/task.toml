@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/behavior-collecting-aluminum-cans-i00-privileged"
-description = "BEHAVIOR-1K v3.9.2 (2026 BEHAVIOR Challenge) collecting_aluminum_cans (R1Pro mobile manipulator, OmniGibson / Isaac Sim): produce one replayable trajectory. Collect the six soda cans in the bedroom, three lying on the bed and three on the floor, into the bucket that stands on the bedroom floor. Frozen scene instance (challenge public_test instance 301)."
+description = "BEHAVIOR-1K v3.9.2 (2026 BEHAVIOR Challenge) collecting_aluminum_cans (R1Pro mobile manipulator, OmniGibson / Isaac Sim): produce one replayable trajectory. Collect all six soda cans into the bucket. Frozen scene instance (challenge public_test instance 301)."
 keywords = ["robotics", "behavior", "omnigibson", "isaac-sim", "r1pro", "mobile-manipulation", "code-as-policy", "trajectory", "collecting_aluminum_cans"]
 
 [metadata]

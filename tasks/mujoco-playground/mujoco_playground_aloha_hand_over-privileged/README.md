@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:mujoco-0.1.2` |
 
 ## Task
+Pick up the red box with the left arm, pass it to the right arm, and hold it at the see-through target box. Then take the left arm off the box.
+
 MuJoCo Playground's `AlohaHandOver` ported to plain MuJoCo (CPU, deterministic) for this benchmark.
 
 ## Difficulty

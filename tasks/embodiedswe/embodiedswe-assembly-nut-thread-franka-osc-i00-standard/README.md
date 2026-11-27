@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:embodiedswe-0.3.0` |
 
 ## Task
+Pick up the nut and screw it all the way down onto the bolt.
+
 Thread a nut onto a bolt (Franka, operational-space control): the scene, frozen instance and success predicate of `embodiedswe-assembly-nut-thread-franka-osc-i00-privileged`, with a Franka Panda arm with its parallel gripper, under EmbodiedSWE's operational-space (torque) controller, in standard mode
 (tasks/embodiedswe/README.md "Standard mode").
 

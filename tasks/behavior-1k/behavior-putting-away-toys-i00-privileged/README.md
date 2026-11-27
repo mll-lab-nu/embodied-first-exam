@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Put the toys away. Eight toy figures lie on the floor, four in the living room and four in the dining room; one toy box stands on the living-room floor and another on the dining-room table. Put every toy figure inside a toy box (either box).
+Put every toy figure into a toy box.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - every toy figure (`toy_figure.n.01_1` to `_8`) is inside a toy box (`toy_box.n.01_1` or `_2`)

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Clean and jerk the barbell: lift it from its blocks to your shoulders, then to locked arms overhead, and hold it there motionless until the down signal. (Embodied Olympics `clean-and-jerk`: one Unitree H1-2 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
+Clean and jerk the barbell: lift it from its blocks with both hands to your shoulders, then overhead on locked arms, and hold it still until the down signal. (Embodied Olympics `clean-and-jerk`: one Unitree H1-2 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
 
 ## Difficulty
 The bar is light, but the hands hold it only by their fingers' friction. Turning it over from the hang to the shoulders, slowly, asks about half of what the elbow and shoulder motors give; too fast, and the bar slides out of the hands. Nothing balances the robot under a load, and no built-in action bends down to the bar or straightens the knees.

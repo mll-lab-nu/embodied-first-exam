@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:embodiedswe-0.3.0` |
 
 ## Task
+Put the two lemons from the front row of the table in the blue crate on your right, and the two limes from that row on the round tray on your left.
+
 Sort the front-row items into the crate and onto the tray (Unitree G1, fixed pelvis, Pink IK): the scene, frozen instance and success predicate of `embodiedswe-packing-clear-organic-objects-g1-pink-ik-i00-privileged`, with a Unitree G1 humanoid with three-finger hands, its pelvis fixed, its arms and waist under EmbodiedSWE's Pink IK, in standard mode
 (tasks/embodiedswe/README.md "Standard mode").
 

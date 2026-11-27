@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:yamlab-0.2.1` |
 
 ## Task
+Lift the pot with both grippers and set it down on the cooktop.
+
 Two I2RT YAM arms on a workstation table lift a pot together (both grippers must hold it) and put it down upright on a cooktop, then let go: YAMLab's PutPotOnCooktop. Instance i03: YAMLab's objects `pot` = `Pot/pot_003` and `cooktop` = `Cooktop/cooktop_003`, placed as in YAMLab teleoperation demonstration
 `putpot_003.hdf5 demo_3` (its recorded initial state: both arms at the home pose, grippers open; placement-schedule entry 3: the pot at x = 0.711 m, y = 0.150 m, yaw -118°). The deliverable is one replayable
 trajectory of YAMLab's own 14-D joint-position actions at 30 Hz (`/app/output/trajectory.npz`), graded by YAMLab's staged

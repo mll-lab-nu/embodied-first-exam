@@ -1,42 +1,32 @@
-# AM-Bench · Rotate Valve — STANDARD MODE (robot as a service, eai-standard/2.2)
+# AM-Bench · ambench-rotate-valve-fahexa-i00 (standard)
 
-You control a simulated **aerial manipulator** **as if it were real hardware**: a fully actuated hexarotor (six tilted
-rotors, so it can hold any attitude while hovering) carrying a small arm (four joints: three pitch joints and a roll joint)
-with a two-finger gripper, in AM-Bench on Isaac Lab / Isaac Sim 5.1. The simulator runs in a service you cannot open. You
-get one client and one episode. **Task:** A valve is mounted on the front face of a wall in front of the hovering aerial manipulator: a large red wheel disc on a short shaft, with a handle bar sticking out of the disc's face toward the robot. Turn the valve: rotate the wheel clockwise, as seen from the robot's side of the wall, by at least 170 degrees from its starting angle.
+## Task
+Turn the red valve wheel clockwise, as seen from you, by about half a turn or more.
 
-## Scene
-The ground is the world's z = 0 plane. In front of the robot stands an immovable (kinematic) wall: a slab 0.1 m thick, 2.0 m wide and 2.0 m tall with a concrete-block surface, its front face turned toward the robot. The wall is upright (no tilt in this task); its distance and sideways offset vary between instances. A valve is mounted on the wall's front face with its axis perpendicular to the wall: a dark-blue circular base plate (about 47 cm across) fixed just in front of the wall, a short shaft, and a red disc of the same size that turns with the shaft. On the disc's robot-facing side, off the axis, is a handle bar (square cross-section about 6 cm, 16 cm long, parallel to the axis); at reset it sits directly below the hub (the 6 o'clock position), and it can also spin freely about its own long axis. The valve's height and sideways position on the wall vary between instances. The shaft has no spring and no end stops: it stays at whatever angle it is left, its motion resisted by damping and friction. Nothing moves by itself. The robot starts hovering level and motionless, facing the wall, with its arm at its zero joint configuration (end effector a little ahead of and above the airframe) and the gripper closed.
+## Goal
+Success: the wheel has turned clockwise, as seen from the robot, by about half a turn or more in all; turning it back
+counter-clockwise takes away from the total.
 
-## Success
-Success when the valve has turned clockwise by at least 17/18 pi = 2.96706 rad (170 degrees; valve_target_angle): the unwrapped angle of the revolute joint base_to_shaft, counted from its 0 rad at the reset, is >= 2.96706 rad. Positive is the right-hand rotation about the shaft axis base_link +z, which points into the wall (world +x): clockwise when viewed from the robot's side, so a handle starting straight below the hub first moves toward world +y (the robot's left) and at 170 degrees is 10 degrees short of straight up. The joint has no limits, and PhysX reports its position wrapped into [-pi, pi]: a counter-clockwise turn of 190 degrees would also read +170 degrees there, so the check uses the unwrapped angle, the sum of the joint's per-step changes since the reset. Only a clockwise turn counts; turning the wheel back counter-clockwise subtracts. AM-Bench also reports a subtask criterion valve_engaged (joint position >= 0.05 x 17/18 pi = 0.1484 rad); it is informational only. Evaluated after every control step (decimation 1, so after every 1/120 s physics step) on the simulated state; no hold time is required. The episode terminates at the first step where it holds. Otherwise it is truncated by the time limit: episode_length_s = 20 s, i.e. max_episode_length = 2400 control steps; AM-Bench raises the time-out when episode_length_buf >= max_episode_length - 1, i.e. at the 2399th step.
-The episode **ends by itself** at the first control step where the check holds (success), or when the task's episode
-length of **20 s** of simulated time runs out (a failure: AM-Bench's time-out ends the episode at control step
-2399; reason `episode_timeout`).
+When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
-The valve's pose and angle are not given: the red disc, the blue base plate and the handle have to be located with the onboard cameras, and the turned angle can only be judged from the handle's position around the hub. Clockwise refers to the view from the robot's side of the wall.
+Rules:
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
+  benchmark's demonstrations, trained policies); trials are reviewed.
+- One episode, no reset: what you knock over stays knocked over.
+- You get only the cameras and the robot's own sensor readings: no object poses, no scene layout, no success signal.
+- Simulated time moves only while the robot runs your commands or holds still (`hold(s)`): between your calls the world
+  is frozen.
 
-## Rules (real-robot rules)
-- **No reset.** The episode starts when the service comes up and ends on success, at the time-out above, when your time
-  is up, or on a simulator error. Whatever you knock over or push stays that way.
-- **No privileged state.** You see what the two onboard cameras see (RGB, and depth if you ask) plus the robot's own
-  proprioception (airframe pose and velocity, arm joints, gripper, tool-frame pose, joint efforts, the target in force).
-  No object poses and no success measure; when AM-Bench's check holds, the episode ends at that control step
-  (`meta["done"]` true, `meta["reason"]` `"success"`).
-- **Simulated time only moves when you move the robot** (`submit`, or `get_obs(seconds=...)`): between your calls the
-  world is frozen, and the episode lasts at most 20 s of simulated time. There is no step budget otherwise:
-  the time limit (`## Time limit`) is your only budget (`meta["time_left_s"]`).
-- There is nothing to hand in: the service records your episode as the trajectory and grades it. Leave your script at
-  `/app/output/gen.py` for the record. The episode is graded as it stands when your time is up.
-- **If the service crashes**, a call fails with a connection error: the simulator restarts and resumes the SAME episode
-  (never a reset) in the state after the last call it completed (to the last bits: a rare GPU race
-  can leave those different), which you may not have received. `r.wait_ready()` waits
-  until it answers again (resuming replays the episode so far, which can take minutes; the wall clock keeps running), then
-  check `r.status()["control_steps"]` before you continue (`spec["on_service_error"]`).
-- **Nothing is put into your context automatically.** Images and videos come back as arrays/bytes in a Python object;
-  what you look at and where you store it is your code's decision.
+## Robot Interface
+A simulated aerial manipulator in AM-Bench (Isaac Lab). It is a fully actuated hexarotor: six tilted rotors let it hold
+any attitude while hovering. It carries a small arm with four joints (three pitch joints and a roll joint) and a
+two-finger gripper. The robot runs as a service you reach through its client or its MCP tools, as if it were real
+hardware: one live episode.
 
-## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`)
+`POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
+
+### Client
+`/opt/tools/rcb_client.py` (protocol `eai-standard/2.2`):
 ```python
 from rcb_client import Robot
 r = Robot()                                   # connects: waits while Isaac Sim starts and builds the scene (see below)
@@ -45,7 +35,8 @@ spec = r.spec()                               # the action, cameras, proprio lay
 obs = r.get_obs()                             # current frames: obs.last[cam] -> uint8 (384, 384, 3), cam in ee_camera, base_camera
 obs.meta["proprio"]                           # {"layout": [...45 names], "now": [...]}: joints, gripper, tool and airframe poses, ...
 obs.meta["cameras"]                           # per-camera intrinsic_cv / extrinsic_cv / cam2world_gl at the LAST frame
-obs = r.get_obs(seconds=1.0, video="mp4")     # hold the current target and watch for 1 s (max 30; simulated time advances)
+obs = r.hold(1.0)                             # hold the current target for 1 s of robot time (simulated time advances)
+obs = r.get_obs(last_s=1.0)                   # the frames recorded over the last 1 s (reading moves no time)
 
 res = r.submit("ee_pose", A, dt=1/120, interpolate="hold")   # A: (T, 8) rows dt apart (see Action)
 res.meta["done"], res.meta["reason"], res.meta["clipped"], res.meta["control_steps_chunk"]
@@ -54,54 +45,91 @@ res.frames["base_camera"]                     # uint8 (N,H,W,3) at video_fps if 
 res.last["ee_camera"]; res.proprio            # last frame per camera; float32 (N, 45) proprio at each video frame
 res.save("/app/runs/003")                     # meta.json, <cam>.mp4, frames/<cam>/NNN.jpg, last/<cam>.jpg, proprio.npy
 ```
+
 The service's first start in a trial compiles Isaac's shaders: `Robot()` can wait ~2-12 min (it prints its progress to
-stderr once a minute). It gives up after 3600 s (`Robot(timeout=...)`) with `RuntimeError("sim service unavailable ...")`:
-then call it again (nothing has happened in the episode yet; your wall clock runs from the start of the trial).
+stderr once a minute). After 3600 s (`Robot(timeout=...)`) it gives up with
+`RuntimeError("sim service unavailable ...")`. Then call it again: nothing has happened in the episode yet. Your wall
+clock runs from the start of the trial.
 
-Cameras (384×384 each, both moving with the robot): `ee_camera` (on the end effector, looking along the gripper) and
-`base_camera` (on the airframe, looking forward). `res.extrinsic_cv[cam]` has their pose at every frame.
-One call returns at most 3000 images (`max_frames_per_call`, PROTOCOL §3 "Images per call").
+If the service crashes, a call fails with a connection error. The simulator restarts and resumes the SAME episode (never
+a reset), in the state after the last call it completed. You may not have received that call's reply. `r.wait_ready()`
+waits until it answers again. Resuming replays the episode so far and can take minutes; the wall clock keeps running.
+Then check `r.status()["control_steps"]` before you continue (`spec["on_service_error"]`).
 
-### Optional inputs (eai-standard/2.2; ask only for what you need)
+Simulated time moves only in `submit` and in `hold(s)` (the robot holds its current target for s seconds). One call
+returns at most 3000 images.
+
+Optional inputs (ask only for what you need):
 - Depth: `r.get_obs(depth=True)` -> `obs.last_depth[cam]` float32 (H,W) z-depth in metres, 0 = no reading, pixel-aligned
-  with `obs.last[cam]`; `r.submit(..., depth="frames")` -> also `res.depth[cam]` (N,H,W), one map per frame (1 mm steps).
+  with `obs.last[cam]`; `r.submit(..., depth="frames")` -> also `res.depth[cam]` (N,H,W), one map per frame (1 mm
+  steps).
 - Per frame: `res.frame_step` (control step), `res.frame_time_s`, `res.extrinsic_cv[cam]` (N,3,4 world -> camera, OpenCV
   axes). `spec["cameras"][cam]`: `intrinsic_cv` and `mount` (the parent link and a fixed `link_T_cam_cv`).
 - `spec["robot_spec"]` (the arm's joints and limits, the gripper and its command, the controller, the tool frame),
-  `spec["world"]` (frame, units, wxyz), `spec["proprio_groups"]` + `res.group("base_pose")` (joint_pos, joint_vel, tcp_pose,
-  gripper_opening, gripper_cmd, joint_effort, base_pose, base_vel, ee_cmd).
-- `r.fk(q4, base_pose=base7)` -> poses of `spec["kinematics"]["links"]` (in the airframe frame without `base_pose`, world
-  with it); `r.ik({"tcp": pose7}, seed=q4, base_pose=base7)` -> `{"ok", "q", "error"}`: a stateless model of the arm on its
-  airframe (no physics, no simulated time); `q4` = the arm's four joints. AM-Bench's own controller moves the airframe too
-  (below): this model is the arm alone, for reasoning about reach and camera poses.
+  `spec["world"]` (frame, units, wxyz), `spec["proprio_groups"]` + `res.group("base_pose")` (joint_pos, joint_vel,
+  tcp_pose, gripper_opening, gripper_cmd, joint_effort, base_pose, base_vel, ee_cmd).
+- `r.fk(q4, base_pose=base7)` -> poses of `spec["kinematics"]["links"]`, in the airframe frame without `base_pose` and
+  in the world frame with it. `r.ik({"tcp": pose7}, seed=q4, base_pose=base7)` -> `{"ok", "q", "error"}`. Both use a
+  stateless model of the arm on its airframe (no physics, no simulated time); `q4` = the arm's four joints. AM-Bench's
+  own controller moves the airframe too (below): this model is the arm alone, for reasoning about reach and camera
+  poses.
 
-### Action
-- `ee_pose` (8 per row): `x y z qw qx qy qz gripper` — AM-Bench's own action. The target pose of the tool frame `tcp`
-  (the end-effector link, the frame of proprio `tcp_pose`; position in metres, world frame; orientation wxyz) and the
-  gripper command (**-1 = closed .. +1 = open**). Every control step, AM-Bench's whole-body controller turns the target into
-  an airframe pose (its floating-base inverse kinematics), the airframe pose into the six rotor thrusts (a PID) and the arm
-  joints into targets for their drives: you command where the end effector should be, the airframe follows.
-- Rows are `dt` apart (`1/120 ≤ dt ≤ 0.5` s, a multiple of the 120 Hz control period: 1/120, 2/120, ...; any other `dt` is
-  rejected, never rounded); `interpolate="hold"` (each row exactly as given, for its dt) or `"linear"` (default: from the
-  previous target, positions linear, orientation slerp, gripper linear); a chunk may cover at most 10 s; a gripper value
-  outside [-1, 1] is clipped and listed in `meta["clipped"]`. Start from the target in force (`res.group("ee_cmd")`, or the
-  proprio `tcp_pose`) to move smoothly: at the start the target is the end effector's own pose and the gripper is closed.
-- A malformed request (a wrong type, a value out of range, a position more than 30 m from the origin, a zero quaternion) is
-  answered 400 with the reason and executes nothing.
+### MCP tools
+- The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
+  `observe`, `submit`, `kinematics`, `finish`. A tool takes its endpoint's request fields (any other field in `fields`)
+  and returns the service's reply `meta` unchanged; images, arrays and video are written as files under `/app/obs/`
+  (`.png`, `.npy`, `.mp4`) and the result lists them. Long action chunks can be passed as a file (`actions_file`).
+- `observe` returns at once with what is already recorded: the current frame, or the last `last_s` seconds. Time passes
+  only through `submit`, which answers when its rows have run; a `submit` with `interpolate` "hold", `seconds` and no
+  rows lets time pass with the robot holding still.
+- A call still running after 45 s returns `pending` with an `operation` id; `observe(operation=id)` collects its reply.
+- The client and the tools drive the same robot in the same episode; use either, or both.
+
+### Actions
+- World frame: metres, z up, the ground is the plane z = 0. Positions are relative to the environment's origin; the
+  action, the proprio poses, the camera extrinsics and `r.fk` with `base_pose` all use this frame. Quaternions are wxyz.
+- At the start the airframe hovers level, facing +x, with the arm at its zero joint configuration and the gripper
+  closed.
+- `ee_pose` (8 per row): `x y z qw qx qy qz gripper` — AM-Bench's own action. The target pose of the tool frame `tcp`,
+  and the gripper command (-1 = closed .. +1 = open). `tcp` is the end-effector link, the frame of proprio `tcp_pose`;
+  its position is in metres in the world frame, its orientation wxyz. Every control step, AM-Bench's whole-body
+  controller turns the target into an airframe pose (its floating-base inverse kinematics). A PID turns the airframe
+  pose into the six rotor thrusts, and the arm joints become targets for their drives. You command where the end
+  effector should be; the airframe follows.
+- Rows are `dt` apart. `dt` must be a multiple of the 120 Hz control period (1/120, 2/120, ...) with `1/120 ≤ dt ≤ 0.5`
+  s; any other `dt` is rejected, never rounded. With `interpolate="hold"` each row is used exactly as given, for its dt;
+  with `"linear"` (default) the target moves from the previous one: positions linear, orientation slerp, gripper linear.
+  A chunk may cover at most 10 s. A gripper value outside [-1, 1] is clipped and listed in `meta["clipped"]`. To move
+  smoothly, start from the current target (`res.group("ee_cmd")`, or the proprio `tcp_pose`). At the start, the target
+  is the end effector's own pose and the gripper is closed.
+- A malformed request (a wrong type, a value out of range, a position more than 30 m from the origin, a zero quaternion)
+  is answered 400 with the reason and executes nothing.
 - Control and physics run at 120 Hz (simulated time; one physics step of 1/120 s per control step).
 
-## Conventions
-- World frame: metres, z up, the ground is the plane z = 0; positions relative to the environment's origin (the same frame
-  for the action, the proprio poses, the camera extrinsics and `/kinematics` with `base_pose`); quaternions are **wxyz**.
-- At the start the airframe hovers level, facing +x, with the arm at its zero joint configuration and the gripper closed.
+### Observations
+- Cameras (384×384 each, both moving with the robot): `ee_camera` (on the end effector, looking along the gripper) and
+  `base_camera` (on the airframe, looking forward); their intrinsics and mounts are in the spec's `cameras`, their pose
+  at every frame comes with each reply.
+- Depth (`depth=True`): z-depth in metres, 0 = no reading, pixel-aligned with the colour image, in 1 mm steps.
+- Proprioception: 45 values a row (their `layout` comes with them). They are the arm's joint positions, velocities and
+  efforts, the gripper's opening and command, the tool frame's pose (`tcp_pose`), the airframe's pose and velocity
+  (`base_pose`, `base_vel`) and the current end-effector target (`ee_cmd`). The groups are in the spec's
+  `proprio_groups`.
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+### Episode
+One episode lasts 20 s of simulated time.
 
-## Resources
-Your container: **2 CPUs**, **4 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
-
-## Time limit
-You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
-
-This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` counts the same limit from your first request to the service, so it never runs out before your time does: your real time left is `time_left_s` minus the time you spent before that request. Plan by it. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+## Limits
+- Time: 3600 s of wall-clock time from the start of your session. Everything counts, including waiting for the service.
+  At the end you are stopped without warning. Time left: `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`).
+  Trust this file: the `time_left_s` in the service's replies starts only at your first request. A call into a
+  long-running process can block for its whole wait time. Use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, including the simulator's and the benchmark's source.
+- Resources: 2 CPUs, 4 GiB memory, 1024 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`), no
+  GPU; the simulator runs in its own container and does not count. Going over a cap can get a process killed (the CPU
+  cap only slows you down). Usage: `/run/rcb-limits/usage.json`.
+- Resets: none. You get one episode.
+- Steps: at most 20 s of simulated time, then the episode ends.
+- Finish: if you never send `/finish`, the episode is graded when the step limit is reached or your session ends.

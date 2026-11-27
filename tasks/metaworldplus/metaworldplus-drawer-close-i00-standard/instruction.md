@@ -1,31 +1,29 @@
-# MetaWorld+ · drawer-close — STANDARD MODE (robot as a service)
+# MetaWorld+ · drawer-close (standard)
 
-A **Sawyer** arm stands at a table: Meta-World's `drawer-close-v3` environment (MuJoCo). **Task: Push the drawer closed.**
-The scene is one frozen instance of Meta-World's own randomization.
+## Task
+Push the drawer closed.
 
-You control the robot **as if it were real hardware**: the simulator runs in a service you cannot open. You get one
-client and one episode.
+## Goal
+Success: the drawer is pushed closed, its handle at the target point.
 
-## Rules (real-robot rules)
-- **No reset.** What you knock over stays knocked over.
-- **No privileged state.** You see what the cameras see (RGB, optional depth, with each camera's calibration), the
-  robot's own state and the task's target point. No object poses, no success signal.
-- Your only budget is the time limit (`## Time limit`). `meta["time_left_s"]` is the service's count of it, from your first
-  request to the service: it never runs out before your time does, so plan by it. There is nothing to hand in: the
-  service records the episode as the trajectory and grades it. Leave your script at `/app/output/gen.py` for the
-  record.
-- Do not use Meta-World's scripted policies or any published solution for this benchmark; write your own controller.
-- Images come back as arrays in a Python object; what you look at and where you store it is up to your code.
+When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
-## Scoring
-The episode runs until your time is up. The service then applies Meta-World's own success check for `drawer-close-v3` to the
-live episode's state **after the last executed control step**. A success reached earlier and then lost does not count:
-end in the state you want graded and stop submitting.
+Rules:
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions,
+  Meta-World's scripted policies, trained policies); trials are reviewed.
+- One episode, no reset: what you knock over stays knocked over.
+- You get only the cameras, the robot's own sensor readings and the task's target point: no object poses, no success
+  signal.
 
-For `drawer-close-v3` the check is: The drawer's handle is within 6.5 cm of the target point. ("The target point" is `meta["task"]["target_pos"]`; everything the
-check needs to hold must hold in that final state.)
+## Robot Interface
+A Sawyer arm at a table (Meta-World, MuJoCo). The robot runs as a service you reach through its client or its MCP tools,
+as if it were real hardware: one live episode.
 
-## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`)
+`POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
+
+### Client
+`/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`.
+
 ```python
 from rcb_client import Robot
 r = Robot()                                   # connects (waits while the service starts)
@@ -35,35 +33,55 @@ obs = r.get_obs(cameras=cams, include_depth=True)   # obs.last[cam] -> uint8 (24
 obs.meta["proprio"]                           # {"layout": [...], "now": [...]}
 obs.meta["cameras"]                           # per camera: intrinsic_cv, cam2world_gl (OpenGL: looks along -z)
 obs.meta["task"]["target_pos"]                # the task's target point (world frame)
-obs = r.get_obs(cameras=cams[:1], seconds=2.0, video="mp4")    # hold still and watch for 2 s (max 30)
+obs = r.hold(2.0, cameras=cams[:1])                            # hold still for 2 s of robot time
+obs = r.get_obs(last_s=1.0)                                    # the frames recorded over the last 1 s (reading moves no time)
 res = r.submit("ee_delta", A, dt=spec["control_dt"], cameras=cams[:1], video="mp4")   # A: (T, 4)
-res.meta["done"], res.meta["reason"], res.meta["control_steps"]
-res.video[cam]; res.frames[cam]; res.last[cam]; res.proprio; res.save("/app/runs/003")
+res.meta["done"], res.meta["reason"]
+res.video[cam]; res.frames[cam]; res.last[cam]; res.proprio
 ```
-- Action `ee_delta` (4: `dx, dy, dz, grip`, float64, each clipped to [-1, 1]) is Meta-World's native action, applied
-  once per control step (`control_dt` = 0.0125 s). The hand's target moves by `[dx, dy, dz]` × 1 cm per control step
-  and stays inside x ∈ [-0.5, 0.5], y ∈ [0.4, 1], z ∈ [0.05, 0.5]; the hand follows it. `grip` drives the two fingers (+1 closes, -1 opens). The wrist does
-  not rotate. Rows are `dt` apart (a multiple of `control_dt`); with `dt = control_dt` each row is one native action.
-  A chunk covers at most 10 s.
-- `get_obs(seconds=s)` holds the hand still (zero motion, same grip) while physics runs for `s` seconds; those control
-  steps are part of the episode.
-- Proprioception (`meta["proprio"]["layout"]`): `tcp_x/y/z` (the point between the fingertips), `gripper_opening`
-  (0 closed … 1 open), `mocap_x/y/z` (the hand's target), the arm joints' positions and velocities, the finger joints'
-  positions, and `cmd_*` (the last action).
-- World frame: metres; x to the robot's right, y forward (away from the robot's base), z up; the table top is at z = 0. Quaternions are w x y z. The four cameras are fixed.
-- Calibration: `meta["cameras"][cam]` holds `intrinsic_cv` (pinhole, pixels) and `cam2world_gl` (4x4 camera-to-world,
-  OpenGL axes: x right, y up, the camera looks along -z; the viewpoint the image is rendered from). Depth is the
-  distance along the viewing axis, in metres.
 
-One call returns at most 3000 images (`max_frames_per_call`, PROTOCOL §3 "Images per call").
+One call returns at most 3000 images. `hold(s)` holds the hand still (zero motion, same grip) while physics runs for `s`
+seconds; those control steps are part of the episode.
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+### MCP tools
+- The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
+  `observe`, `submit`, `finish`. A tool takes its endpoint's request fields (any other field in `fields`) and returns
+  the service's reply `meta` unchanged; images, arrays and video are written as files under `/app/obs/` (`.png`, `.npy`,
+  `.mp4`) and the result lists them. Long action chunks can be passed as a file (`actions_file`).
+- `observe` returns at once with what is already recorded: the current frame, or the last `last_s` seconds. Time passes
+  only through `submit`, which answers when its rows have run; a `submit` with `interpolate` "hold", `seconds` and no
+  rows lets time pass with the robot holding still.
+- A call still running after 45 s returns `pending` with an `operation` id; `observe(operation=id)` collects its reply.
+- The client and the tools drive the same robot in the same episode; use either, or both.
 
-## Resources
-Your container: **2 CPUs**, **5 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
+### Actions
+- Action `ee_delta` is Meta-World's native action: 4 float64 values, `dx, dy, dz, grip`, each clipped to [-1, 1]. It is
+  applied once per control step (`control_dt` = 0.0125 s). The hand's target moves by `[dx, dy, dz]` × 1 cm per control
+  step and stays inside x ∈ [-0.5, 0.5], y ∈ [0.4, 1], z ∈ [0.05, 0.5]; the hand follows it. `grip` drives the two
+  fingers (+1 closes, -1 opens). The wrist does not rotate. Rows are `dt` apart (a multiple of `control_dt`); with
+  `dt = control_dt` each row is one native action. A chunk covers at most 10 s.
 
-## Time limit
-You have 1800 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+### Observations
+- Proprioception (names as in the spec's proprio layout): `tcp_x/y/z` (the point between the fingertips),
+  `gripper_opening` (0 closed … 1 open), `mocap_x/y/z` (the hand's target), the arm joints' positions and velocities,
+  the finger joints' positions, and `cmd_*` (the last action).
+- World frame: metres; x to the robot's right, y forward (away from the robot's base), z up; the table top is at z = 0.
+  Quaternions are w x y z. The four cameras are fixed.
+- Calibration, per camera, is in `obs.meta["cameras"]`: `intrinsic_cv` (pinhole, pixels) and `cam2world_gl`.
+  `cam2world_gl` is the 4x4 camera-to-world pose of the viewpoint the image is rendered from, in OpenGL axes: x right, y
+  up, the camera looks along -z. Depth is the distance along the viewing axis, in metres.
+- The target point that Goal names is `target_pos` in `meta["task"]` (world frame), in every reply.
 
-This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` counts the same limit from your first request to the service, so it never runs out before your time does: your real time left is `time_left_s` minus the time you spent before that request. Plan by it. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+## Limits
+- Time: 1800 s of wall-clock time from the start of your session. Everything counts, including waiting for the service.
+  At the end you are stopped without warning. Time left: `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`).
+  Trust this file: the `time_left_s` in the service's replies starts only at your first request. A call into a
+  long-running process can block for its whole wait time. Use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, including the simulator's and the benchmark's source.
+- Resources: 2 CPUs, 5 GiB memory, 1024 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`), no
+  GPU; the simulator runs in its own container and does not count. Going over a cap can get a process killed (the CPU
+  cap only slows you down). Usage: `/run/rcb-limits/usage.json`.
+- Resets: none. You get one episode.
+- Finish: if you never send `/finish`, the episode is graded when your session ends.

@@ -1,69 +1,94 @@
-# VLABench · select_drink — instance i00 — STANDARD MODE (robot as a service)
+# VLABench · select_drink (standard)
 
-You control a simulated **Franka Panda** arm (VLABench on MuJoCo) **as if it were real hardware**: the simulator runs in
-a service you cannot open, and you reach it only through a client. **Task: Take out the juice from the fridge.**
+## Task
+Take the juice out of the fridge.
 
-## Rules (real-robot rules)
-- **One episode, no reset.** The episode starts when the service comes up. It ends when the task succeeds, after
-  9000 control steps (900 s of robot time; a technical cap so that the episode's video can be
-  rendered in its time limit), when your time is up, or on a simulator error. `spec()["budget"]["reset"]` is 0.
-- **Time moves only inside calls.** `submit` runs your targets and `get_obs(seconds=s)` holds the last ones for `s`
-  seconds; both use up control steps. Between calls the robot waits, frozen, while you think; `get_obs()` with no
-  seconds is free.
-- **No privileged state, no score.** You see four cameras (`forward`, `left`, `right` fixed, `wrist` on the hand; RGB
-  320×320, depth on request, each camera's intrinsics and pose in `spec()["cameras"]`) and the robot's
-  own state: joint angles and velocities, finger positions, the hand's pose (`tcp_*`) and the last command. Not the
-  objects' poses, not the task's conditions or success check: the service only tells you that the episode ended and
-  why (`meta["done"]`, `meta["reason"]`: `"success"`, `"failed"` at the step cap, `"error"` after a simulator error).
-- There is nothing to hand in: the service records the episode and grades it as it ran. Keep the script that
-  drives the robot at `/app/output/gen.py` for the record: save it early and keep it current.
-- Wall-clock budget: the time limit (`## Time limit`). It ends without warning, and ending your session earlier ends the run the same way, so
-  do not stop early.
-- Do not use VLABench's expert solutions or any published solution for this benchmark; write your own controller.
+## Goal
+Success: the juice is out of the fridge.
 
-## Scoring
-VLABench's own success check for `select_drink` (the task's termination condition). The service ends the episode the
-moment it holds (`reason = "success"`); that live episode is the verdict.
+When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
-## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`)
-Your whole interface to the robot. Its docstring is the full reference (`python -c "import rcb_client;
-help(rcb_client)"`; its examples come from another benchmark: the numbers here and in `spec()` are this task's).
+Rules:
+- **No cheating.** Do not search for, download or use any existing solution (published or reference solutions,
+  VLABench's expert solutions, trained policies); trials are reviewed.
+- One episode, no reset: what you knock over stays knocked over.
+- You get only the cameras and the robot's own sensor readings: no object poses, no scene layout, no success signal.
+
+## Robot Interface
+A Franka Panda arm at a table (VLABench on MuJoCo). The robot runs as a service you reach through its client or its MCP
+tools, as if it were real hardware: one live episode.
+
+`POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
+
+### Client
+`/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`. Its docstring is the full reference:
+`python -c "import rcb_client; help(rcb_client)"`. Where the docstring's example numbers differ, this page and `spec()`
+are right.
 
 | call | endpoint | what it does |
 |---|---|---|
 | `r = Robot()` | | connects (`http://sim:8000`, then `http://localhost:8000`) and waits until the scene is ready |
 | `r.spec()` | `GET /spec` | the robot's facts: `action_types`, `control_dt` (0.1 s), `max_control_steps` (9000), `cameras`, `proprio_layout`, `frames`, `budget` |
 | `r.status()` | `GET /status` | `calls`, `rows`, `control_steps`, `done`, `reason`, `elapsed_s` |
-| `r.get_obs(cameras=None, seconds=0, include_depth=False, video="frames")` | `POST /observe` | the current frames (free), or hold the last targets and watch for `seconds` (at most 30) |
+| `r.get_obs(cameras=None, last_s=0, include_depth=False, video="frames")` | `POST /observe` | the current frames (free), or with `last_s=n` the frames recorded over the last n seconds; no time passes |
+| `r.hold(seconds, cameras=None, video="mp4")` | `POST /submit` | hold the last targets for `seconds` of robot time and return the video, like a submit |
 | `r.submit("joint_position", A, dt=0.1, interpolate="linear", cameras=None, video="mp4")` | `POST /submit` | runs `A`, rows of 9 targets `dt` seconds apart (a multiple of 0.1; a chunk covers at most 10 s); stops early when the episode ends |
 
-One call returns at most 3000 images (`max_frames_per_call`, PROTOCOL §3 "Images per call").
-
-The answers come back decoded: `res.meta` (the counters, `done`, `reason`, `proprio["now"]`, `clipped`), `res.last[cam]`
-(the last frame), `res.frames` or `res.video` (what the cameras saw during the call), `res.proprio` (rows).
 ```python
 from rcb_client import Robot
 r = Robot()
 res = r.submit("joint_position", A, dt=0.1, cameras=["forward"], video="none")   # A: (T, 9)
 ```
-- Action `joint_position` (9, float64): absolute position targets for VLABench's own actuators, the 7 arm joints (rad)
-  and the 2 fingers (m, 0 closed … 0.04 open), each row held for its control steps (0.1 s, 100 physics steps each).
-  The model sets no arm joint limits; stay inside the Panda's own, `spec()["action_types"]["joint_position"]
-  ["panda_joint_limits_rad"]`.
-- Proprioception (`spec()["proprio_layout"]`): `joint1..7_pos` (rad), `joint1..7_vel` (rad/s), `finger1_pos`,
+
+One call returns at most 3000 images. The answers come back decoded: `res.meta` (the counters, `done`, `reason`,
+`proprio["now"]`, `clipped`), `res.last[cam]` (the last frame), `res.frames` or `res.video` (what the cameras saw during
+the call), `res.proprio` (rows). Measured cost here: about 40 ms of simulation per control step, plus about 15 ms per
+camera image.
+
+### MCP tools
+- The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
+  `observe`, `submit`, `finish`. A tool takes its endpoint's request fields (any other field in `fields`) and returns
+  the service's reply `meta` unchanged; images, arrays and video are written as files under `/app/obs/` (`.png`, `.npy`,
+  `.mp4`) and the result lists them. Long action chunks can be passed as a file (`actions_file`).
+- `observe` returns at once with what is already recorded: the current frame, or the last `last_s` seconds. Time passes
+  only through `submit`, which answers when its rows have run; a `submit` with `interpolate` "hold", `seconds` and no
+  rows lets time pass with the robot holding still.
+- A call still running after 45 s returns `pending` with an `operation` id; `observe(operation=id)` collects its reply.
+- The client and the tools drive the same robot in the same episode; use either, or both.
+
+### Actions
+- Action `joint_position` has 9 float64 values: absolute position targets for VLABench's own actuators, the 7 arm joints
+  (rad) and the 2 fingers (m, 0 closed … 0.04 open). Each row is held for its control steps (0.1 s, 100 physics steps
+  each). The model sets no arm joint limits; stay inside the Panda's own,
+  `spec()["action_types"]["joint_position"]["panda_joint_limits_rad"]`.
+
+### Observations
+- Four cameras: `forward`, `left`, `right` fixed, `wrist` on the hand; RGB 320×320, depth on request, each camera's
+  intrinsics and pose in `spec()["cameras"]`.
+- Proprioception (the spec's `proprio_layout`): `joint1..7_pos` (rad), `joint1..7_vel` (rad/s), `finger1_pos`,
   `finger2_pos` (m), `tcp_x/y/z` (m) and `tcp_qw/qx/qy/qz` (the hand's pose), `cmd_*` (the last command).
 - World frame: metres; the robot's base is at (0, -0.4, 0.78) facing +y: x to the robot's right, y forward (across the
-  table), z up; quaternions are w x y z. Each camera's `cam2world_gl` is its pose (OpenGL convention: it looks along
-  its -z axis, +y up); `intrinsic_cv` its pinhole intrinsics in pixels.
-- Measured cost here: about 40 ms of simulation per control step, plus about 15 ms per camera image.
+  table), z up; quaternions are w x y z. Each camera's `cam2world_gl` is its pose, in the OpenGL convention: the camera
+  looks along its -z axis, with +y up. Its `intrinsic_cv` holds its pinhole intrinsics in pixels.
 
-## External material
-You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+### Episode
+Time moves only inside calls. A submitted chunk runs its control steps, and holding still (`hold(s)`) runs `s` seconds
+of them. Between calls the robot waits, frozen, while you think. Reading the cameras (`get_obs()`, or
+`get_obs(last_s=n)` for the last n seconds) takes no time. `meta["done"]` says whether the episode has ended, and
+`meta["reason"]` says why: `"finished"` after your finish, `"step_limit"` at the step cap, `"error"` after a simulator
+error.
 
-## Resources
-Your container: **4 CPUs**, **5 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
-
-## Time limit
-You have 1800 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
-
-This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` counts the same limit from your first request to the service, so it never runs out before your time does: your real time left is `time_left_s` minus the time you spent before that request. Plan by it. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+## Limits
+- Time: 1800 s of wall-clock time from the start of your session. Everything counts, including waiting for the service.
+  At the end you are stopped without warning. Time left: `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`).
+  Trust this file: the `time_left_s` in the service's replies starts only at your first request. A call into a
+  long-running process can block for its whole wait time. Use short waits or one-shot scripts.
+- Tokens: no separate limit.
+- Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
+  and read anything in your container, including the simulator's and the benchmark's source.
+- Resources: 4 CPUs, 5 GiB memory, 1024 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`), no
+  GPU; the simulator runs in its own container and does not count. Going over a cap can get a process killed (the CPU
+  cap only slows you down). Usage: `/run/rcb-limits/usage.json`.
+- Resets: none. You get one episode.
+- Steps: at most 9,000 control steps (900 s of robot time), then the episode ends.
+- Finish: if you never send `/finish`, the episode is graded when the step limit is reached or your session ends.

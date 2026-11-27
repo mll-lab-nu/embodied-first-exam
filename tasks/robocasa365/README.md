@@ -96,11 +96,10 @@ it bit for bit). The toaster ovens and electric kettles of other tasks move by t
   the collect hook waits up to 840 s for the verdict and 870 s for the video. The robot's cameras move with it:
   their intrinsics are in `/spec`, their current poses in every proprioception row (`cam_<camera>_*`, the standard
   twin's `cam2world_gl`). Not served: the 2.1 service's per-response calibration dictionary.
-- **Episode.** The standard twin grades the state after the last step of an episode as long as the agent's time; on a
-  clock that does not stop that episode would be up to an hour long. Here an episode ends at the first
-  control step after which the success check holds (the privileged rule applied to the trajectory up to that step),
-  after 3000 control steps (150 s of robot time, the privileged deliverable's cap; `RCB_MAX_CONTROL_STEPS`), when the
-  agent's time is up, or on a simulator error. No reset (reset budget 0, PROTOCOL §2), as in standard: one episode.
+- **Episode.** On a clock that does not stop, an episode as long as the agent's time would run for up to an hour, so
+  the realtime twin also caps it: an episode ends at the agent's `POST /finish`, after 3000 control steps (150 s of
+  robot time, the privileged deliverable's cap; `RCB_MAX_CONTROL_STEPS`), when the agent's time is up, or on a
+  simulator error, and is judged on the state it ends in ("Agent-ended episodes" below). A success never ends it. No reset (reset budget 0, PROTOCOL §2), as in standard: one episode.
 - **Slowdown S = 2.** Real-time factor 1.29 with the realtime clock flat out (the service capped at 4 CPUs); PROTOCOL
   §2: S = ceil(1.5 / 1.29) = 2, one control step every 0.1 s of wall time. An OSMesa frame takes about 0.12 s per
   camera; `server.py` makes the renderer at start and after every reset, so the first image does not stall the clock.
@@ -108,6 +107,18 @@ it bit for bit). The toaster ovens and electric kettles of other tasks move by t
   controller streaming one row per control step with an image every 0.5 s over 3 episodes: no stall, largest lag
   0.05 s.
 - **Cutoff** 3600 s, the standard twin's.
+
+### Agent-ended episodes
+
+Every standard and realtime task sets `RCB_AGENT_END "1"` in its sim service (PROTOCOL §3). `server_casa.py` (standard)
+or `rcb_service.py` (realtime) never shows the task's success and a success never ends the episode: the environment's
+own check is still run after every call (as before, twice per control step) and only recorded
+(`hidden_success_first_step`). The agent ends the episode with `POST /finish` (reason `finished`); the end of its
+session (`timeout`), and in realtime the 3000-step cap (`step_limit`) ends it too, and each is judged on the state it
+ends in (end judgement `state`: the environment's `_check_success`, whose timers and event memory are the environment's
+own; no settle window), with the rule that a scene solved at the start is no success. `final.json` adds the shared
+fields (`success_signal`, `ended_by`, `end_judgement`, `hidden_success_seen`, `hidden_success_first_step`,
+`trial_hidden_success_seen`, `finish_time_s`). Without `RCB_AGENT_END` the service behaves as described above.
 
 ## Egress
 The demonstrations are public, so `task.toml` closes agent egress to the model APIs and the package registries. The image contains no

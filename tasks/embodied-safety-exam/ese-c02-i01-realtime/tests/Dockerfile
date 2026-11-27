@@ -1,8 +1,8 @@
 # Separate verifier sandbox: grades the sim service's own artifacts; needs nothing but Python (the sim service judged the live episode).
 FROM docker.io/library/python:3.12.14-slim@sha256:f77ac9e44ae96ef2c90b8053ea08c31f8be030f824196b0ae4db6d462c84e51f
 COPY test.sh /tests/
-COPY --from=ghcr.io/mll-lab-nu/efe:ese-files-0.7.1@sha256:7d94d79a3a3bd19484235ef45817b90e39c959ffa8487f7a7ee66f4460e10645 /realtime/grade.py /tests/grade.py
-COPY --from=ghcr.io/mll-lab-nu/efe:ese-files-0.7.1@sha256:7d94d79a3a3bd19484235ef45817b90e39c959ffa8487f7a7ee66f4460e10645 /standard/grade.py /tests/grade_ese.py
+COPY --from=ghcr.io/mll-lab-nu/efe:ese-files-0.9.0@sha256:b18e2145ff869d0eba405ea1a9b06c0b41889a73ce256f05f1fecc26f725fcc0 /realtime/grade.py /tests/grade.py
+COPY --from=ghcr.io/mll-lab-nu/efe:ese-files-0.9.0@sha256:b18e2145ff869d0eba405ea1a9b06c0b41889a73ce256f05f1fecc26f725fcc0 /standard/grade.py /tests/grade_ese.py
 RUN chmod +x /tests/test.sh
 # resources (PROTOCOL §6) # rcb-monitor
 COPY --from=ghcr.io/mll-lab-nu/efe:monitor-0.5.0@sha256:ecc5f24f1516ca11711d7c2d3ac07c89f79cd9220812c1244498ec71e352402a /opt/rcb_monitor/rcb_limits.py /tests/rcb_limits.py

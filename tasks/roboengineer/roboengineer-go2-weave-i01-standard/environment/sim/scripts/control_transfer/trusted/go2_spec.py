@@ -20,13 +20,13 @@ def make_spec(index=0, task="attitude"):
         ]
 
     goals = {
-        "weave": "Execute a predeclared body velocity command schedule to pass four alternating poles without contact; no global-position feedback.",
-        "attitude": "Track public roll/pitch sinusoids after a 1 s acquisition interval while maintaining ground support.",
-        "forward-jump": "Jump a commanded 0.70–1.00 m forward distance with verified flight and stable touchdown; walking to the goal is rejected.",
-        "yaw-jump": "Jump through a commanded 110–150 degree heading change with verified airborne rotation and stable touchdown; ground spinning is rejected.",
+        "weave": "Make the Go2 weave forward past the four poles ahead, passing to the left of the first, to the right of the next and so on, without touching any or falling.",
+        "attitude": "Make the Go2 tilt its body to follow the commanded roll and pitch while it stands in place with its feet on the ground.",
+        "forward-jump": "Make the Go2 jump straight ahead the commanded distance in one real jump and land steadily.",
+        "yaw-jump": "Make the Go2 jump and turn to its left in the air by the commanded angle, then land steadily in place.",
     }
     score = {
-        "weave": "Success requires four ordered alternating crossings, clearance >=0.16 m, no pole/body-ground collision, final x beyond last pole +0.35 m; score combines crossing fraction and tracking quality, unsuccessful capped at 49.",
+        "weave": "Success requires four ordered alternating crossings, clearance >=0.16 m, no pole/body-ground collision, final x beyond last pole +0.35 m; the score is the share of poles passed correctly, capped at 49 when unsuccessful.",
         "attitude": "Success requires full horizon, roll/pitch RMSE <0.08 rad, base drift <0.25 m, supported fraction >=0.95, and no body-ground collision; unsuccessful score capped at 49.",
         "forward-jump": "Success requires flight >=0.08 s, height rise >=0.07 m, airborne x displacement >=70% command, first-touch and final x error <0.15 m, lateral error <0.15 m, and final 1 s stable support; unsuccessful score capped at 49.",
         "yaw-jump": "Success requires flight >=0.08 s, height rise >=0.07 m, airborne yaw >=70% command with first-touch yaw error <0.25 rad, final yaw error <0.18 rad, drift <0.25 m, and final 1 s stable support; unsuccessful score capped at 49.",

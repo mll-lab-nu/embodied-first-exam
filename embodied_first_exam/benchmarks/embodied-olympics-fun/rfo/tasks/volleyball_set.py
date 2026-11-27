@@ -878,8 +878,8 @@ class Task(TaskBase):
                   gate_time_s=2.8, machine_x_m=1.5, machine_y_m=5.5, machine_z_m=0.9, launch_speed_m_s=8.9218,
                   launch_elevation_deg=58.1915, launch_azimuth_deg=-102.805)
 
-    sentence = ("Set the pass: with one overhead contact of your hands, send the volleyball that comes down above you "
-                "at least a metre above the net and into the outside hitter's target along the net.")
+    sentence = (("Set the ball: with one overhead touch of your hands, send it high above the net and into the "
+                 "hitter's target along the net."))
     rules = ("You are the setter on an official volleyball court ({court_half_length_m} m by {court_width_m} m on each "
              "side of the net; the net's top {net_height_m} m high). You stand in your front zone facing along the "
              "net: the net is {net_side_m} m to your right, the attack line {attack_line_m} m from the centre line "

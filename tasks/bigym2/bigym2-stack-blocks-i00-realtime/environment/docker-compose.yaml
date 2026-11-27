@@ -21,9 +21,10 @@ services:
     command: python /srv/rcb_realtime.py
     restart: on-failure:6                               # a crash resumes the same episode, never a reset (rcb_service.py)
     environment:
+      RCB_AGENT_END: "1"                               # agent-ended episodes (PROTOCOL §3)
       RCB_INSTANCE: /srv/instance.json
-      RCB_TASK_TEXT: "Move all three blocks to the other table and stack them into one tower on the green pad. Then let go, with both grippers off the blocks."
-      RCB_EPISODE: "one episode, no reset: it succeeds when this has held for 1 s (50 control steps): the three blocks form one stack on the green pad: the lowest touching the pad, each of the others touching the block below it, at least 0.03 m higher and within 0.05 m of it horizontally; no block held by a gripper (held = a finger of the gripper touching the object); a block touching the floor ends the episode as a failure; a fall (pelvis tilted beyond ~53 degrees or below 0.30 m) fails it without ending it; it ends at the success, a failure, the pelvis 10 m from the scene's origin, a simulator error, or after 8750 control steps"
+      RCB_TASK_TEXT: "Move all three blocks to the other table, stack them into one tower on the green pad and let go."
+      RCB_EPISODE: "one episode, no reset: it succeeds when this has held for 1 s (50 control steps): the three blocks form one stack on the green pad: the lowest touching the pad, each of the others touching the block below it, at least 0.03 m higher and within 0.05 m of it horizontally; no block held by a gripper (held = a finger of the gripper touching the object); a block touching the floor ends the episode as a failure; a fall (pelvis tilted beyond ~53 degrees or below 0.30 m) fails it without ending it; it ends at your POST /finish, a failure, the pelvis 10 m from the scene's origin, a simulator error, or after 8750 control steps; judged on how things stand when it ends (a success does not end it)"
       RCB_WALL_CLOCK_S: "3600"
       # Knobs: ${NAME:-default} takes NAME from the shell that runs harbor. The defaults are the standard
       # configuration; results under other settings are reported separately.

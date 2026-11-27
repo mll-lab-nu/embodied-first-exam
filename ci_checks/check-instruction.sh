@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# instruction.md names the deliverable under /app/output/ and never leaks the verifier's /tests/ copy.
+# instruction.md never leaks the verifier's /tests/ copy, and a privileged one names the deliverable under /app/output/
+# (a standard mode has no deliverable: the service grades the live episode).
 # Standard modes (the sidecar modes of the mode registry; PROTOCOL §5, "written in terms the agent can observe"): the
 # instruction's prose names no code-like term on its own: an object-local axis (`local +y`), a predicate function
 # (`is_A_in_B`, `all_robot_back_to_origin`), a label with an index suffix (`cube_0`, `mahjong9_0`) or a bare indexed label
@@ -11,11 +12,15 @@
 # uses. Code spans, fenced blocks, headings and a bold `**Task: ...**` sentence (the upstream benchmark's own words) are
 # not read. Findings are advisory (a pattern only sees words; review covers the rest).
 t="$1"; rc=0
-grep -q '/app/output/' "$t/instruction.md" || { echo "FAIL $t: instruction.md must state the deliverable under /app/output/"; rc=1; }
 grep -q '/tests/' "$t/instruction.md" && { echo "FAIL $t: instruction.md must not reference /tests/"; rc=1; }
 modes="${RCB_MODES_TABLE:-$(python3 "$(dirname "$0")/../scripts/task_conventions.py" modes)}"
 n="$(basename "${t%/}")"; side=0
 while read -r m sidecar _tw; do [ -n "$m" ] && [[ "$n" == *"-$m" ]] && { side="$sidecar"; break; }; done <<< "$modes"
+# the deliverable: privileged mode only (a standard mode has none: the service grades the live episode)
+[ "$side" = 1 ] || grep -q '/app/output/' "$t/instruction.md" || {
+  echo "FAIL $t: a privileged instruction must state the deliverable under /app/output/"; rc=1; }
+[ "$side" = 1 ] && grep -q '/app/output/gen\.py' "$t/instruction.md" && {
+  echo "FAIL $t: a standard instruction asks for no script (/app/output/gen.py): the service grades the live episode"; rc=1; }
 [ "$side" = 1 ] || exit $rc
 python3 - "$t" <<'PY' || rc=1
 import re, sys

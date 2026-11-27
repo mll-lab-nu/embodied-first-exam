@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:ambench-0.3.1` |
 
 ## Task
-The hovering aerial manipulator starts holding a metal peg (a cylinder 15 cm long and 4 cm in diameter) in its gripper, pointing straight ahead. A wall stands ahead with a blue square socket mounted on its front face: a square frame whose square opening faces the robot and is closed at the back by a red plate. Insert the peg: push the centre of its front end, the end that points ahead at the start, into the square opening until it is more than two-thirds of the way to the red plate at the back. AM-Bench environment `PegInHole-Am-FAHexa-Abs-PID-Direct-v0` (the fully actuated hexarotor with the 4-joint arm, AM-Bench's PID
+Push the peg you are holding, front end first, into the blue socket on the wall, most of the way to the red plate at its back. AM-Bench environment `PegInHole-Am-FAHexa-Abs-PID-Direct-v0` (the fully actuated hexarotor with the 4-joint arm, AM-Bench's PID
 controller), its seeded reset with seed 0. The deliverable is one replayable trajectory of AM-Bench's absolute
 end-effector pose actions at 120 Hz (`/app/output/trajectory.npz`), graded by AM-Bench's own success check within the
 task's episode length of 20 s.

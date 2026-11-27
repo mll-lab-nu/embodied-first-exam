@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/robotwin_2_0_open_microwave-privileged"
-description = "RoboTwin 2.0 open_microwave (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Open the microwave door: pull it open until its hinge joint reaches at least 60 percent of its joint range. Frozen scene instance (RoboTwin seed 28831)."
+description = "RoboTwin 2.0 open_microwave (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Pull the microwave door open, well past halfway. Frozen scene instance (RoboTwin seed 28831)."
 keywords = ["robotics", "robotwin", "sapien", "aloha-agilex", "dual-arm", "code-as-policy", "trajectory", "open_microwave"]
 
 [metadata]

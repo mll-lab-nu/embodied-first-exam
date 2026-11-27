@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Make microwave popcorn. A bag of popcorn kernels lies on the kitchen countertop and there is a microwave in the kitchen; heat the bag in the microwave until the popcorn is cooked, so that the cooked (popped) popcorn ends up inside the bag.
+Pop the popcorn in the microwave, inside its bag.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - cooked popcorn (`cooked__popcorn.n.01_1`) exists (the kernels have popped)

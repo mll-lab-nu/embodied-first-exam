@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:ambench-0.3.1` |
 
 ## Task
-A wall stands in front of the hovering aerial manipulator, with a horizontal slider mounted on its front face: a straight rail about 1 m long and a red knob that slides along it. Push the red knob from the left end of the rail, as seen from the robot facing the wall, to its right end, stopping no more than 5 cm short of it. AM-Bench environment `PushSlider-Am-FAHexa-Abs-PID-Direct-v0` (the fully actuated hexarotor with the 4-joint arm, AM-Bench's PID
+Push the red knob along the rail all the way to its right end, as seen from you. AM-Bench environment `PushSlider-Am-FAHexa-Abs-PID-Direct-v0` (the fully actuated hexarotor with the 4-joint arm, AM-Bench's PID
 controller), its seeded reset with seed 0. The deliverable is one replayable trajectory of AM-Bench's absolute
 end-effector pose actions at 120 Hz (`/app/output/trajectory.npz`), graded by AM-Bench's own success check within the
 task's episode length of 26 s.

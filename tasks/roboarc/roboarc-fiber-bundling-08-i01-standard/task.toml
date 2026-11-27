@@ -20,7 +20,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/roboarc-fiber-bundling-08-i01-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.4): RoboARC fiber_bundling on the same frozen instance as the privileged task. Pass every fine fiber, tip first, and the front sheath through the fixed copper ring, touching only the thick sheath with the gripper. Leave the rear terminal anchored where it is. The agent only gets a client: get_obs (RGB, optional depth, proprioception, calibrated cameras), submit (joint_position or ee_pose chunks), stateless kinematics. No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
+description = "STANDARD MODE (robot as a service, eai-standard/2.4): RoboARC fiber_bundling on the same frozen instance as the privileged task. Feed every fine fiber, tip first, and the front of the sheath through the fixed copper ring, touching only the thick sheath with the gripper. Leave the rear terminal anchored where it is. The red fiber has to come out at 7:40 on the ring (within 20°), read as a clock face from the side the fibers go in. The agent only gets a client: get_obs (RGB, optional depth, proprioception, calibrated cameras), submit (joint_position or ee_pose chunks), stateless kinematics. No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
 keywords = ["robotics", "roboarc", "mujoco", "panda_robotiq", "standard-mode", "trajectory", "fiber_bundling"]
 
 [metadata]
@@ -71,6 +71,13 @@ build_timeout_sec = 1800.0
 cpus = 4
 memory_mb = 16384
 storage_mb = 10240
+
+# The robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): Harbor starts this server for the agent.
+[[environment.mcp_servers]]
+name = "efe-robot"
+transport = "stdio"
+command = "python3"
+args = ["/opt/tools/efe_mcp/server.py"]
 
 [verifier.env]
 RCB_LIMITS_ENFORCE = "${RCB_LIMITS_ENFORCE:-0}"

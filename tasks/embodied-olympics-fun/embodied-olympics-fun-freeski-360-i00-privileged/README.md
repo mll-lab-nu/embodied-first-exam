@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Drop in from the start platform and ride the in-run. Take off from the kicker and do a 360, then land on your skis and ride away past the finish line. (Embodied Olympics `freeski-360`: one Unitree G1 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
+Ski down the in-run, jump off the kicker and spin one full turn in the air, then land on your skis and ride away over the finish line. (Embodied Olympics `freeski-360`: one Unitree G1 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
 
 ## Difficulty
 The robot must start itself from a standstill on level snow, ride a 35 degree in-run to about 16 m/s and leave a 25 degree kicker with the right rotation for its trick, finish the rotation in about 1.5 s of air and land on a 36 degree slope with no balance controller of its own.

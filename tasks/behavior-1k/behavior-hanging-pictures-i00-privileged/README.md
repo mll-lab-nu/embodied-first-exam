@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Hang the poster, which lies on the kitchen countertop, on one of the wall nails in the kitchen.
+Hang the poster on a wall nail in the kitchen.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - the poster (`poster.n.01_1`) is attached to a wall nail (any wall nail in the kitchen)

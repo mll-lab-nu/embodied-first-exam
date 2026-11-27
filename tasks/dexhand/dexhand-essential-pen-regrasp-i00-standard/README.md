@@ -12,6 +12,8 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:dexhand-0.2.0@sha256:0d42994b83d95ab5301c592b35586550c9ee426490115e4b43f3b8cf8cc43350` |
 
 ## Task
+Keep the wrist fixed and never let go of the pen. Slide it about 3 cm along its length toward the fingertips, then swing its length about 45 degrees away from where it pointed, and hold it still by its marked grip band with the tips of the thumb, index and middle fingers, clear of the palm.
+
 Keep the wrist fixed. Slide the pen about 3 cm along its length toward the fingertips, then turn it about 45 degrees and hold it by its marked grip band with the tips of the thumb, index and middle fingers. The initial pen rests against the central palm surfaces; the final pen must clear those central palm surfaces. All three named fingertips must contact the marked band. Other finger links may also contribute contact; an exclusive fingertip-only grasp is not required. No table support, other hand or whole-object release is allowed.
 
 ## Difficulty

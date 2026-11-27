@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/embodied-olympics-fun-golf-putt-i00-privileged"
-description = "Embodied Olympics golf-putt (one Unitree G1 on the Embodied Olympics simulator, MuJoCo 3.3.7, CPU) in privileged mode: produce one replayable trajectory. Hole the 3 m putt: with one stroke of the putter held in your right hand, roll the golf ball that lies on the green into the hole, without letting go of the putter. A referee of events, geometry and contact rules decides the success."
+description = "Embodied Olympics golf-putt (one Unitree G1 on the Embodied Olympics simulator, MuJoCo 3.3.7, CPU) in privileged mode: produce one replayable trajectory. Hole the putt: with one stroke of the putter in your right hand, roll the ball into the hole without letting go of the putter. A referee of events, geometry and contact rules decides the success."
 keywords = ["robotics", "embodied-olympics", "sports", "mujoco", "unitree-g1", "humanoid", "trajectory", "golf-putt"]
 
 [metadata]

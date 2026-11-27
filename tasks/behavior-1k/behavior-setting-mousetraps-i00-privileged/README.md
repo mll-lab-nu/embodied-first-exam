@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Set the four mousetraps, which lie on the bathroom cabinet, on the bathroom floor, with exactly two of them under or next to one of the bathroom sinks.
+Put the four mousetraps on the floor of one room, exactly two of them under or next to the same sink.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - all four mousetraps (`mousetrap.n.01_1` to `_4`) are on top of one and the same floor

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
-Can the sausages. The four cooked bratwursts lie on the chopping board on the kitchen countertop, and the two hinged jars are inside the kitchen cabinet. Put exactly two bratwursts into each jar, close both jars, have both jars inside that cabinet at the end, and leave the cabinet closed.
+Put two bratwursts into each jar, close both jars, put them back in the cabinet they came from and close that cabinet.
 
 **Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
 - each hinged jar (`hinged_jar.n.01_1`, `hinged_jar.n.01_2`) holds exactly two of the four bratwursts (`bratwurst.n.01_1`, `bratwurst.n.01_2`, `bratwurst.n.01_3`, `bratwurst.n.01_4`) inside it

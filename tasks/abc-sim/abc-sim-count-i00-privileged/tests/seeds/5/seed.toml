@@ -1,4 +1,12 @@
 [[replace]]
+old = "## Task\nPut all the yellow triangular pieces in the box, and nothing else."
+new = "## Task\nPut all the orange triangular pieces in the box, and nothing else."
+
+[[replace]]
+old = "## Goal\nSuccess: the box holds every yellow triangular piece from the table and nothing else. The replay ends as soon as the\ntask is done."
+new = "## Goal\nSuccess: the box holds every orange triangular piece from the table and nothing else. The replay ends as soon as the\ntask is done."
+
+[[replace]]
 old = "state hash `080ddb7334cfb5d4`"
 new = "state hash `b3984a2736d52a00`"
 
@@ -7,9 +15,5 @@ old = "`solution/oracle.npy`, 277 rows"
 new = "`solution/oracle.npy`, 224 rows"
 
 [[replace]]
-old = "put all yellow triangles in the box"
-new = "put all orange triangles in the box"
-
-[[replace]]
-old = "every yellow triangular prism on the table"
-new = "every orange triangular prism on the table"
+old = "): Put all the yellow triangular pieces in the box, and nothing else."
+new = "): Put all the orange triangular pieces in the box, and nothing else."

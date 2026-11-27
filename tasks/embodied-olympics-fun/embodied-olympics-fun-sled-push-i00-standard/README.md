@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Push the weighted sled by its two upright handles, touching it only with your hands on the handles, until the whole sled is over the finish line 12.5 m ahead, within a minute. (Embodied Olympics `sled-push`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Push the sled by its handles along your lane until all of it is over the line ahead. (Embodied Olympics `sled-push`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
 
 ## Difficulty
 The sled weighs 5.0 kg on high-friction turf: keeping it moving takes a steady push of about 22 N, against which the walking policy (trained for walking, not pushing) has to keep its balance on 67 kg. Bare palms can only push: if the sled drifts sideways or the hands slip off a handle, nothing holds it. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 5 resets (only the last attempt is graded).

@@ -13,7 +13,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:bigym2-0.1.1` |
 
 ## Task
-Take the spoon out of the mug and put it back the other way round, so that the end that pointed up now points down. Then let go, with both grippers off the spoon and the mug. (BiGym 2.0 `flip_cutlery`; the robot as a service on a clock that does not stop: its three onboard cameras and
+Take the spoon out of the mug, put it back in the other way round, and let go of the spoon and the mug. (BiGym 2.0 `flip_cutlery`; the robot as a service on a clock that does not stop: its three onboard cameras and
 its proprioception only, one episode.)
 
 ## Difficulty
