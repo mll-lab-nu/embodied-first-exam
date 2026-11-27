@@ -21,7 +21,7 @@ GRASS = (0.16, 0.50, 0.20, 1)
 #   reset(w):           self.keeper.reset(w)            (the board at its rail's centre, at rest; t = 0 placement)
 #   referee_reset:      self.trackers["keeper"] = self.keeper   (its setpoint profile is part of the state hash)
 #   before_step(w):     self.keeper.command(target_y)   (optional: where the servo's setpoint should go; omit = hold)
-#   substep(w, ref):    self.keeper.substep(w)          (REQUIRED, first thing: advances the setpoint by 1 ms)
+#   actuate(w, ref):    self.keeper.substep(w)          (REQUIRED: advances the setpoint by 1 ms, also after the call)
 #   self.keeper.y(w), .vy(w), .force(w)                 (the board's world y, its speed and the motor's force)
 #   self.keeper.bind(w).qa / .va / .aid                 (its qpos / dof / actuator addresses, read-only use)
 class Keeper:
@@ -1050,9 +1050,11 @@ class Task(TaskBase):
         R = w.d.xmat[w.robot.torso].reshape(3, 3)
         return [float(x) for x in (pts - w.d.xpos[w.robot.torso]) @ R[:, 2]]
 
+    def actuate(self, w, ref):
+        self.keeper.substep(w)               # the keeper's servo (it holds the board at the centre)
+
     def substep(self, w, ref):
         p, tr = self.p, self.trackers
-        self.keeper.substep(w)               # the keeper's servo (it holds the board at the centre)
         if not tr["launched"]:
             if ref.touching(ref.robot_mask, self.ball | self.mach):
                 return ref.fail("the ball machine or the waiting ball was touched",

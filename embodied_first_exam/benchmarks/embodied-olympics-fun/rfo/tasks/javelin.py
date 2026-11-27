@@ -415,8 +415,10 @@ class Task(TaskBase):
                            self.p["javelin_cg_from_tip_m"])
         d.xfrc_applied[b, :3], d.xfrc_applied[b, 3:] = F, M
 
+    def actuate(self, w, ref):
+        self.air(w)                                     # the air on the javelin, also after the call
+
     def substep(self, w, ref):
-        self.air(w)
         tr, p, g = self.trackers, self.p, self.geometry()
         mk = self._marks(w, ref)
         if mk is not None:

@@ -886,8 +886,10 @@ class AlpineRace(TaskBase):
         a = self.pr.slope_at(float(p[0]))
         return (float(p[2]) - float(self.pr.z_at(float(p[0])))) * math.cos(a)
 
+    def actuate(self, w, ref):
+        self.ss.apply(w.d)                               # the snow's forces for the next physics step
+
     def substep(self, w, ref):
-        self.ss.apply(w.d)
         if not (ref.failed or ref.success):              # the snow's fall rule, after every physics step (1 ms)
             bad = ref.parts_touching(self.snow_mask) - set(self.legal_ground)
             if bad:

@@ -1125,8 +1125,10 @@ class FreeskiTask(TaskBase):
                 return False
         return True
 
+    def actuate(self, w, ref):
+        self.ss.apply(w.d)                               # the snow's forces for the next physics step
+
     def substep(self, w, ref):
-        self.ss.apply(w.d)
         tr, d, r, p = self.trackers, w.d, w.robot, self.p
         dt = w.m.opt.timestep
         self.track_heading(w)

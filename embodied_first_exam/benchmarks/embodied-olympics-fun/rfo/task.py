@@ -48,8 +48,14 @@ class TaskBase:
     def before_step(self, w) -> None:
         """At the start of every control step, before the action (launch a ball, move a target)."""
 
+    def actuate(self, w, ref) -> None:
+        """After every physics step (1 ms), before substep, also after the referee's call: the scene's own actuators
+        for the next physics step (a servo's setpoint, a turning machine, the air on a rope, the snow's forces). In an
+        agent-ended episode the physics goes on after the call (World.run_after_done), so whatever moves the scene
+        goes here, never in substep, which stops at the call: a scene that froze there would show the verdict."""
+
     def substep(self, w, ref) -> None:
-        """After every physics step (1 ms): contact events, crossings."""
+        """After every physics step (1 ms), until the referee's call: contact events, crossings (judging only)."""
 
     def step(self, w, ref) -> None:
         """After every control step (10 ms): slower conditions, the final success."""
