@@ -11,8 +11,8 @@ and then waypoint B; when the ball is pushed, the arms bring it back to rest nea
 supporting the tray; the tray is brought, on both forks, to the exit position beside the basin; finally the ball is
 tipped out and settles in the basin, clear of the tray.
 
-The steps count only in this order, and a step once done stays done: the task is done once its last step is, and it
-stays done even when a failure ends the episode afterwards. The task fails, and the episode ends at once, when:
+The steps count only in this order. Once a step is done, it stays done. The task is done when its last step is done, and
+it stays done even if a failure ends the episode afterwards. The task fails, and the episode ends at once, when:
 - the ball leaves the tray before it is tipped out;
 - the tray drops low (well below where it starts) at any time;
 - an object leaves the workspace (falls well below the table top or flies far away);
@@ -27,15 +27,15 @@ Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
   benchmark's demonstrations, trained policies); trials are reviewed.
 - Episodes and resets: you have 3 resets (the spec's reset budget is authoritative). A reset puts the robot and the
-  scene back on the same frozen starting state (the scene is rebuilt, about a second) and starts a new episode, paused
-  until your next command, abandoning the running one or after one has ended. Only the last episode is graded: an
-  episode you reset away is never graded. Do not stop early: while the episode runs, or a reset is left, the run can
-  still pass.
+  scene back on the same frozen starting state and starts a new episode, paused until your next command. Rebuilding the
+  scene takes about a second. You can reset while an episode runs (it is abandoned) or after one has ended. Only the
+  last episode is graded: an episode you reset away is never graded. Do not stop early: while the episode runs, or a
+  reset is left, the run can still pass.
 - You get only the cameras and the robot's own sensor readings: no object poses, no scene layout, no success signal.
 
 ## Robot Interface
-Two simulated Franka Panda arms (`panda-0` on the left, `panda-1` on the right; each with its standard hand and the
-task's tool where it has one) on a table (ManiSkill 3 / SAPIEN, rigid-body physics at 1000 Hz). The robot runs as a
+Two simulated Franka Panda arms on a table (ManiSkill 3 / SAPIEN, rigid-body physics at 1000 Hz). `panda-0` is on the
+left and `panda-1` on the right; each has its standard hand and the task's tool where it has one. The robot runs as a
 service you reach through its client or its MCP tools, as if it were real hardware, on a clock that does not stop while
 you think. Slowdown: S = 4: the world runs at 1/S of real speed, one control step (10 ms of robot time) every 40 ms of
 wall-clock time (`spec()["timing"]["slowdown"]`).
@@ -62,11 +62,12 @@ binary (RCB1) and come back decoded: `res.meta` (the counters, `done`, `reason`,
 `include_depth=True`, metres), `res.proprio` (proprioception rows). A malformed request raises `ValueError` and changes
 nothing. `cameras=None` means both: name the one you need, or `[]` for none.
 
-How an episode ended: `meta["done"]`, `meta["reason"]` (`finished` after your finish, `failed`, `step_limit` at the step
-cap, or `error` after a simulator error); the `submit` that ended it names the failure in `meta["why"]`. `r.reset()`
-returns the new start's frames and proprioception; `meta["episode"]` and `meta["resets_left"]` count the episodes. If
-the service crashes, a call fails with a connection error: it restarts and resumes the same episode, paused (never a
-reset). `r.status()` answers again once it is back; check `control_steps` before you continue.
+`meta["done"]` and `meta["reason"]` tell how an episode ended. `meta["reason"]` is `finished` after your finish,
+`failed`, `step_limit` at the step cap, or `error` after a simulator error. The `submit` that ended the episode names
+the failure in `meta["why"]`. `r.reset()` returns the new start's frames and proprioception; `meta["episode"]` and
+`meta["resets_left"]` count the episodes. If the service crashes, a call fails with a connection error. The service then
+restarts and resumes the same episode, paused (never a reset). `r.status()` answers again once it is back; check
+`control_steps` before you continue.
 
 ```python
 from rcb_client import Robot
@@ -91,12 +92,12 @@ while not r.status()["done"]:
 - The client and the tools drive the same robot in the same episode; use either, or both.
 
 ### Actions
-- `joint_position` (16 per row): `[panda-0 joint1..7, panda-0 aperture, panda-1 joint1..7, panda-1 aperture]`. Each
-  arm's 8 values are its 7 absolute joint-position targets (rad, `panda_joint1..7`) and its total gripper aperture
-  target (m, 0 = closed .. 0.08 = open; each finger moves at most 0.025 m/s). Rows are `dt` apart (a multiple of the
-  0.01 s control period); `interpolate="linear"` (default: a straight line from the targets in force) or `"hold"`; a
-  chunk may cover at most 10 s; out-of-limit values are clipped and listed in `meta["clipped"]` (limits in
-  `spec()["action_types"]["joint_position"]`). The service executes the rows as sent.
+- `joint_position` (16 per row): `[panda-0 joint1..7, panda-0 aperture, panda-1 joint1..7, panda-1 aperture]`. Each arm
+  has 8 values: its 7 absolute joint-position targets (rad, `panda_joint1..7`) and its total gripper aperture target (m,
+  0 = closed .. 0.08 = open). Each finger moves at most 0.025 m/s. Rows are `dt` apart (a multiple of the 0.01 s control
+  period). `interpolate` is `"linear"` (the default: a straight line from the targets in force) or `"hold"`. A chunk may
+  cover at most 10 s. Out-of-limit values are clipped and listed in `meta["clipped"]`; the limits are in
+  `spec()["action_types"]["joint_position"]`. The service executes the rows as sent.
 - The servo: every control step, each arm's latest target is turned into a smooth reference motion by a jerk-limited
   trajectory generator (Ruckig, the joints synchronised to arrive together) within 65 % (speed), 30 % (acceleration) and
   2 % (jerk) of the Panda's joint speed, acceleration and jerk limits, and the arm tracks that reference with torque
@@ -126,11 +127,11 @@ while not r.status()["done"]:
   and keep what is planned before it. When the plan runs out, the last targets are held. `res.meta["control_steps"]` is
   the number of steps run so far in this episode, so the next step has that number. `res.meta["proprio"]["now"]` is the
   proprioception now. `res.meta["plan_end_step"]` is where the plan now ends.
-- Open loop: plan a movement at once (rows `dt` apart, a multiple of 0.01 s; a chunk covers at most 10 s of robot time),
-  from step `at = 0` for the episode's start:
+- Open loop: plan a movement at once. Rows are `dt` apart (a multiple of 0.01 s), a chunk covers at most 10 s of robot
+  time, and step `at = 0` is the episode's start.
   `r.submit("joint_position", rows, dt=0.01, interpolate="hold", at=0, cameras=[])` starts the clock and runs exactly
-  those rows from the first step; plan the next chunk with its own `at` (at most `spec()["timing"]["max_ahead_steps"]`
-  steps ahead of the next one) before the plan runs out.
+  those rows from the first step. Before the plan runs out, plan the next chunk with its own `at`, at most
+  `spec()["timing"]["max_ahead_steps"]` steps ahead of the next control step.
 - Closed loop: send one row per control step, `r.submit("joint_position", a[None], cameras=[])`, computed from the
   proprioception the previous call returned. `cameras=[]` skips the images (the fastest call).
 - Latency: a reading is a few milliseconds old when it reaches you, and a row takes effect at the next control step at
@@ -149,9 +150,9 @@ frame is the centre of the cradle floor's top surface, z up. The TCP sits 0.12 m
 frame. Left fork start: (-0.075, 0, 0.22), orientation identity (open side toward world +x). Right fork start: (0.215,
 0, 0.22), quaternion (0, 0, 0, 1) (yawed 180 deg, open side toward world -x). The two open sides face each other. In
 this task both arms' servos plan their reference motion with lower acceleration and jerk fractions than usual (0.30 and
-0.025, default 0.55 and 0.05). On both arms the tool's adapter runs between the fingertips: closing a gripper to less
-than about 12 mm of aperture makes its fingers touch the adapter, which ends the episode as a collision with its own
-tool (both grippers start fully open, at 0.08 m).
+0.025, default 0.55 and 0.05). On both arms the tool's adapter runs between the fingertips. If you close a gripper to
+less than about 12 mm of aperture, its fingers touch the adapter, and the episode ends as a collision with its own tool.
+Both grippers start fully open, at 0.08 m.
 
 ### Episode clock
 The scene is dynamic: from the episode's first control step on, things move by themselves, and they do not wait for the
@@ -163,10 +164,11 @@ tool calls. The episode lasts at most 25 s of robot time (the task's horizon, 25
 wall-clock time): when it is reached before the task is complete, the task has failed.
 
 ### Safety
-The task fails when an arm goes beyond the Franka Panda's own safety limits on joint positions, joint and finger speeds,
-the hand's speed and acceleration, joint accelerations and jerks, and motor torques and how fast they change (the
-numbers: the robot spec's `safety_limits`). They count on the motion as measured, whatever was commanded (a catch or a
-strike moves the arm too), and the servo's own reference motion is held to the same speed, acceleration and jerk limits.
+The task fails when an arm goes beyond the Franka Panda's own safety limits. These limits cover joint positions, joint
+and finger speeds, the hand's speed and acceleration, joint accelerations and jerks, motor torques, and how fast the
+torques change. The numbers are in the robot spec's `safety_limits`. The limits apply to the motion as measured,
+whatever was commanded (a catch or a strike moves the arm too). The servo's own reference motion must also stay within
+the same speed, acceleration and jerk limits.
 
 ### Goal points
 - The waypoints and the exit position are not marked. They are for the centre of the tray's floor, in the world frame:

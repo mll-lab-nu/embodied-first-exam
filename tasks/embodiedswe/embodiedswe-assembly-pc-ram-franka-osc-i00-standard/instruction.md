@@ -26,10 +26,11 @@ as a service you reach through its client or its MCP tools, as if it were real h
 ### Client
 `/opt/tools/rcb_client.py`: its docstring is its manual; `r.spec()` gives the numbers. The service answers one request
 at a time: while a long call runs, every other request waits, so a client-side timeout means "busy", not "crashed".
-Simulated time advances only inside your calls. One call returns at most 240 images (cameras × the frames captured: the
-first, one every round(15 / `video_fps`) control steps and the last; a per-frame depth one more image; `video="none"`
-captures only the first and the last); a larger request is refused (400) before anything runs. A call that names no
-cameras gets `front`, `wrist` at 4 frames per second, so every call up to `max_chunk_s` fits.
+Simulated time advances only inside your calls. One call returns at most 240 images; a larger request is refused (400)
+before anything runs. The count is cameras × frames captured, where the frames are the first, one every round(15 /
+`video_fps`) control steps, and the last. Each depth frame counts as one more image. `video="none"` captures only the
+first and the last frame. A call that names no cameras gets `front`, `wrist` at 4 frames per second, so every call up to
+`max_chunk_s` fits.
 
 ### MCP tools
 - The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,

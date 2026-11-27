@@ -9,8 +9,8 @@ fixed start. What counts is the state after its last action.
 
 Deliverable: `/app/output/trajectory.npz` with key `actions`: Meta-World's native actions, shape `(T, 4)` with 1 ≤ T ≤
 500 (Meta-World's episode length), one row per control step (1/80 s). Write it with `s.save_trajectory()` so the format
-is right: the grader reads a plain `.npz` of at most 2 MB that holds arrays only (no pickled objects, at most 64
-members), and grades anything else as an invalid trajectory. Leave the script that produced it at `/app/output/gen.py`.
+is right. The grader reads a plain `.npz` of at most 2 MB that holds only arrays (no pickled objects, at most 64
+members). Anything else is graded as an invalid trajectory. Leave the script that produced it at `/app/output/gen.py`.
 Save a valid one early and overwrite it when you have a better one.
 
 Rules: **No cheating.** Do not search for, download or use any existing solution (published or reference solutions,

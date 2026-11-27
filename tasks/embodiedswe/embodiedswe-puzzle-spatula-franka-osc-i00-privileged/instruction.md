@@ -9,8 +9,8 @@ and set down from it, and it now lies flat on the plate (either side up), at res
 does not count. What counts is how things stand when the graded run of your program ends. Only success counts as solved;
 partial progress (EmbodiedSWE's rubric for this task, `progress`) is recorded too and ranks your checkpoints.
 
-Deliverable: the folder `/app/output/solution/`, whose entry point `/app/output/solution/solve.py` defines
-`def solve(env) -> None`, run once in the graded run (Robot Interface). Everything else in the folder ships with it
+Deliverable: the folder `/app/output/solution/`. Its entry point, `/app/output/solution/solve.py`, defines
+`def solve(env) -> None`, which the graded run calls once (Robot Interface). Everything else in the folder ships with it
 (helper modules, calibration data); nothing outside it does. At grading time `solve.py`'s directory is on the import
 path, so sibling imports and files read relative to `__file__` work. Only regular files count (no symbolic links); at
 most 20,000 files and 2 GiB. Keep module level light: no simulator launch or env build at import time (a
@@ -21,18 +21,18 @@ Checkpoints, as in EmbodiedSWE: `submit "a short note"` copies `/app/output/solu
 `/app/output/submissions/NNNNNN/` (with a receipt, `submission.json`). At most 64 checkpoints; the final
 `/app/output/solution/` is graded as well. Every distinct checkpoint and the final folder are each graded in their own
 fresh simulator, as in the graded run (Robot Interface; 30 minutes each); identical copies are graded once. The result
-is the one with the highest progress; a tie goes to the one with success, then to the earliest (the final folder counts
-as the last). Its success is the verdict. Do not edit `/app/output/submissions/` by hand: a checkpoint whose files no
-longer match its receipt scores 0. Leaving the best version in `solution/` is enough; checkpoints are a safety net for
-versions you might break later.
+is the version with the highest progress. On a tie, the one with success wins; if still tied, the earliest wins (the
+final folder counts as the last). That version's success is the verdict. Do not edit `/app/output/submissions/` by hand:
+a checkpoint whose files no longer match its receipt scores 0. Leaving the best version in `solution/` is enough;
+checkpoints are a safety net for versions you might break later.
 
 Rules: **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
-benchmark's demonstrations, trained policies); trials are reviewed. In the graded run (whatever the proxy lets through):
-change the world only by stepping forward with `env.step`; never reset, restore states, move objects, modify physics,
-the task, the scene or the robot's controller, or reach the grading code or its files. Tool only: the robot's hand and
-fingers (`panda_hand`, `panda_leftfinger`, `panda_rightfinger`) must never touch the bread; a single touch in the graded
-run fails it, progress included. The spatula may touch the bread. In development, `rcb_embodiedswe.tool_contact(env)`
-returns the record so far, and `check` reports it (`tool_contact`, `disqualified`).
+benchmark's demonstrations, trained policies); trials are reviewed. In the graded run, whatever the proxy lets through,
+change the world only by stepping forward with `env.step`. Never reset, restore states, move objects, modify physics,
+the task, the scene or the robot's controller, and never reach the grading code or its files. Tool only: the robot's
+hand and fingers (`panda_hand`, `panda_leftfinger`, `panda_rightfinger`) must never touch the bread; a single touch in
+the graded run fails it, progress included. The spatula may touch the bread. In development,
+`rcb_embodiedswe.tool_contact(env)` returns the record so far, and `check` reports it (`tool_contact`, `disqualified`).
 
 ## Robot Interface
 A Franka Emika Panda arm with a parallel-jaw gripper, fixed to the table. You have the full simulator to develop with;
@@ -62,8 +62,8 @@ them (a larger value is a larger step); it clamps each joint torque to 100 N·m.
 targets in metres (0 closed, 0.04 open); the joint limits bound them.
 
 ### The graded run
-Your `solve.py` runs in another process, as an unprivileged user with no network and no GPU, against a simulator built
-from the same frozen instance and reset; it gets a proxy `env` that forwards to it:
+Your `solve.py` runs in another process, as an unprivileged user with no network and no GPU. The simulator it runs
+against is built from the same frozen instance and reset. It gets a proxy `env` that forwards to that simulator:
 - reading works as in development, but returns copies: `env.scene.<...>.data.root_pos_w` gives a CPU tensor, a list of
   assets gives proxies of them, and calling a method that only reads (`env.scene.success()`, `env.describe()`,
   `env.get_states()`, the scene's and robot's query methods) returns its result;
@@ -73,31 +73,31 @@ from the same frozen instance and reset; it gets a proxy `env` that forwards to 
   queries (state, progress and geometry reads such as `success()`, `seated()`, `get_state()`), assigning attributes, and
   private or `__dunder__` attributes. Modifying a tensor you read changes only your copy.
 - if `env.step(action)` raises (the env cannot take that action, e.g. the controller hits a singular pose), the error is
-  raised in `solve`, as in EmbodiedSWE: the run goes on if `solve` handles it, and otherwise ends there, with the
-  verdict read on the state at that moment.
+  raised in `solve`, as in EmbodiedSWE. If `solve` handles it, the run goes on; otherwise the run ends there, and the
+  verdict is read on the state at that moment.
 
 What `solve.py` can use: its process has no simulator and no Isaac Sim app; it is sandboxed and sees only its own files:
 - it can import the Python standard library, `numpy`, `torch` (CPU only; 4 threads), `scipy`, `pinocchio` and `pink`,
   the pure-Python parts of `robobench` that import no Isaac module, and your own modules in `solution/`; it can read the
   files in `solution/` (relative to `__file__`) and the installed packages;
-- it cannot import `isaaclab`, `isaacsim`, `omni` or `pxr` (they need the running app; `isaaclab.utils.math` included:
-  copy the few quaternion helpers you need into your folder), and calling the robot's controller objects through the
-  proxy is refused like any other non-read;
+- it cannot import `isaaclab`, `isaacsim`, `omni` or `pxr`, because they need the running app. That includes
+  `isaaclab.utils.math`: copy the few quaternion helpers you need into your folder. Calling the robot's controller
+  objects through the proxy is refused like any other non-read;
 - it can write only to its own scratch directory (`$TMPDIR`, also its working directory and `$HOME`), not to
   `solution/`; it sees no other process, no `/tmp`, no `/app`, and has no network;
 - it can start subprocesses (at most 512 processes in all); every one of them is ended with it.
 
 The graded run has its own time limit of 30 minutes, counted from the start of the grading process: the simulator's
-start-up and the import of `solve.py` count (as in EmbodiedSWE). It ends when `solve` returns or raises, its process
-ends, or the 30 minutes are up; every process it started is then ended, and the verdict is read on the state at that
-moment (a crash or a hang is not retried). That verdict is the run's result: success on that state, and EmbodiedSWE's
-rubric score as progress.
+start-up and the import of `solve.py` count (as in EmbodiedSWE). The run ends when `solve` returns or raises, when its
+process ends, or when the 30 minutes are up. Every process it started is then ended, and the verdict is read on the
+state at that moment. A crash or a hang is not retried. That verdict is the run's result: success on that state, and
+EmbodiedSWE's rubric score as progress.
 
-Test the graded path itself before you finish:
-`python /opt/efe/rcb_embodiedswe.py check --solution /app/output/solution` runs your folder exactly as grading does (a
-fresh simulator, your `solve` as an unprivileged process behind the proxy, the same 30-minute limit from the process's
-start) and prints, as its last line, a JSON summary with `success`, `n_actions`, `solve_status`, `boot_s` and the
-proxy's refusals (it takes a few minutes: one Isaac Sim launch plus your rollout).
+Test the graded path itself before you finish.
+`python /opt/efe/rcb_embodiedswe.py check --solution /app/output/solution` runs your folder exactly as grading does: a
+fresh simulator, your `solve` as an unprivileged process behind the proxy, and the same 30-minute limit from the
+process's start. Its last printed line is a JSON summary with `success`, `n_actions`, `solve_status`, `boot_s` and the
+proxy's refusals. It takes a few minutes: one Isaac Sim launch plus your rollout.
 
 ### Development
 - The first Isaac Sim launch in the container takes a few minutes (shader cache); later ones are faster. Run long jobs
@@ -105,7 +105,7 @@ proxy's refusals (it takes a few minutes: one Isaac Sim launch plus your rollout
   results is fine.
 - Physics runs on the GPU. Do not count on a recorded action sequence repeating exactly: the grading machine's GPU may
   be another model than yours, and drawing frames between steps changes later physics in some scenes. A closed-loop
-  solve that reads the state and reacts is robust to both; the proxy adds a little time per call (about 0.05 ms per read
+  solve that reads the state and reacts is robust to both. The proxy adds a little time per call (about 0.05 ms per read
   or step request, measured), so reading state every step is fine.
 - You can look at the scene: add a camera (`make_env(cameras=True)`, then Isaac Lab's `Camera`), save frames to PNG and
   look at the images themselves. The graded run draws nothing, so judge a solution by `check`, not by a rendered run.

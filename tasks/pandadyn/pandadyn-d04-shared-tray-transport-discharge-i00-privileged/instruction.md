@@ -11,8 +11,8 @@ and then waypoint B; when the ball is pushed, the arms bring it back to rest nea
 supporting the tray; the tray is brought, on both forks, to the exit position beside the basin; finally the ball is
 tipped out and settles in the basin, clear of the tray.
 
-The steps count only in this order, and a step once done stays done. The replay ends as soon as the task is done or has
-failed; the task also fails at once when:
+The steps count only in this order. Once a step is done, it stays done. The replay ends as soon as the task is done or
+has failed; the task also fails at once when:
 - the ball leaves the tray before it is tipped out;
 - the tray drops low (well below where it starts) at any time;
 - the task's horizon is reached before the task is done (Robot Interface);
@@ -22,18 +22,18 @@ failed; the task also fails at once when:
 - an arm touches itself, a robot part touches the table or the floor, or a contact presses deep into anything;
 - an arm goes beyond the Franka Panda's own safety limits (Robot Interface, Safety).
 
-Deliverable: `/app/output/trajectory.npz`, written with `Session.save_trajectory(...)`: it holds `task` and `actions`, a
-(T, 16) float array of at most 4,500 rows (one per control step); anything else (another shape, NaN, more rows, a file
-that is not such an npz) scores 0. It is replayed open-loop from the fixed start and scores 1 if the task succeeds in
-the replay, else 0. Keep the script that produced it at `/app/output/gen.py`. Save a valid one early and overwrite it
-when you have a better one.
+Deliverable: `/app/output/trajectory.npz`, written with `Session.save_trajectory(...)`. It holds `task` and `actions`;
+`actions` is a (T, 16) float array of at most 4,500 rows, one per control step. Anything else (another shape, NaN, more
+rows, a file that is not such an npz) scores 0. It is replayed open-loop from the fixed start and scores 1 if the task
+succeeds in the replay, else 0. Keep the script that produced it at `/app/output/gen.py`. Save a valid one early and
+overwrite it when you have a better one.
 
 Rules: **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
 benchmark's demonstrations, trained policies); trials are reviewed.
 
 ## Robot Interface
-Two simulated Franka Panda arms (`panda-0` on the left, `panda-1` on the right; each with its standard hand and the
-task's tool where it has one) on a table (ManiSkill 3 / SAPIEN, rigid-body physics at 1000 Hz). The scene is one fixed
+Two simulated Franka Panda arms on a table (ManiSkill 3 / SAPIEN, rigid-body physics at 1000 Hz). `panda-0` is on the
+left and `panda-1` on the right; each has its standard hand and the task's tool where it has one. The scene is one fixed
 instance: everything starts the same way after every reset. Things move by themselves from the first control step on:
 the scene does not wait for the robot. You have the full simulator to develop with; you hand in a trajectory of robot
 actions.
@@ -70,8 +70,8 @@ asked for and never moves anything. Do not call `s.close()` before writing every
 
 ### Actions
 - Action row (16 values per control step): `[panda-0 joint1..7, panda-0 aperture, panda-1 joint1..7, panda-1 aperture]`.
-  Each arm's 8 values are its 7 absolute joint-position targets (rad, `panda_joint1..7`) and its total gripper aperture
-  target (m, 0 = closed .. 0.08 = open; each finger moves at most 0.025 m/s). Values outside the joint limits
+  Each arm has 8 values: its 7 absolute joint-position targets (rad, `panda_joint1..7`) and its total gripper aperture
+  target (m, 0 = closed .. 0.08 = open). Each finger moves at most 0.025 m/s. Values outside the joint limits
   (`s.robot_spec()`) are clipped to them before they are executed, and the trajectory records the clipped row.
 - The servo: every control step, each arm's latest target is turned into a smooth reference motion by a jerk-limited
   trajectory generator (Ruckig, the joints synchronised to arrive together) within 65 % (speed), 30 % (acceleration) and
@@ -97,15 +97,16 @@ frame is the centre of the cradle floor's top surface, z up. The TCP sits 0.12 m
 frame. Left fork start: (-0.075, 0, 0.22), orientation identity (open side toward world +x). Right fork start: (0.215,
 0, 0.22), quaternion (0, 0, 0, 1) (yawed 180 deg, open side toward world -x). The two open sides face each other. In
 this task both arms' servos plan their reference motion with lower acceleration and jerk fractions than usual (0.30 and
-0.025, default 0.55 and 0.05). On both arms the tool's adapter runs between the fingertips: closing a gripper to less
-than about 12 mm of aperture makes its fingers touch the adapter, which ends the episode as a collision with its own
-tool (both grippers start fully open, at 0.08 m).
+0.025, default 0.55 and 0.05). On both arms the tool's adapter runs between the fingertips. If you close a gripper to
+less than about 12 mm of aperture, its fingers touch the adapter, and the episode ends as a collision with its own tool.
+Both grippers start fully open, at 0.08 m.
 
 ### Safety
-The task fails when an arm goes beyond the Franka Panda's own safety limits on joint positions, joint and finger speeds,
-the hand's speed and acceleration, joint accelerations and jerks, and motor torques and how fast they change (the
-numbers: the robot spec's `safety_limits`). They count on the motion as measured, whatever was commanded (a catch or a
-strike moves the arm too), and the servo's own reference motion is held to the same speed, acceleration and jerk limits.
+The task fails when an arm goes beyond the Franka Panda's own safety limits. These limits cover joint positions, joint
+and finger speeds, the hand's speed and acceleration, joint accelerations and jerks, motor torques, and how fast the
+torques change. The numbers are in the robot spec's `safety_limits`. The limits apply to the motion as measured,
+whatever was commanded (a catch or a strike moves the arm too). The servo's own reference motion must also stay within
+the same speed, acceleration and jerk limits.
 
 ### Goal points
 - The waypoints and the exit position are not marked. They are for the centre of the tray's floor, in the world frame:

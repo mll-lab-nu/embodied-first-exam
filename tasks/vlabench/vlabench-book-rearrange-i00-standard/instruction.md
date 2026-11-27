@@ -59,9 +59,9 @@ camera image.
 - The client and the tools drive the same robot in the same episode; use either, or both.
 
 ### Actions
-- Action `joint_position` (9, float64): absolute position targets for VLABench's own actuators, the 7 arm joints (rad)
-  and the 2 fingers (m, 0 closed … 0.04 open), each row held for its control steps (0.1 s, 100 physics steps each). The
-  model sets no arm joint limits; stay inside the Panda's own,
+- Action `joint_position` has 9 float64 values: absolute position targets for VLABench's own actuators, the 7 arm joints
+  (rad) and the 2 fingers (m, 0 closed … 0.04 open). Each row is held for its control steps (0.1 s, 100 physics steps
+  each). The model sets no arm joint limits; stay inside the Panda's own,
   `spec()["action_types"]["joint_position"]["panda_joint_limits_rad"]`.
 
 ### Observations
@@ -70,8 +70,8 @@ camera image.
 - Proprioception (the spec's `proprio_layout`): `joint1..7_pos` (rad), `joint1..7_vel` (rad/s), `finger1_pos`,
   `finger2_pos` (m), `tcp_x/y/z` (m) and `tcp_qw/qx/qy/qz` (the hand's pose), `cmd_*` (the last command).
 - World frame: metres; the robot's base is at (0, -0.4, 0.78) facing +y: x to the robot's right, y forward (across the
-  table), z up; quaternions are w x y z. Each camera's `cam2world_gl` is its pose (OpenGL convention: it looks along its
-  -z axis, +y up); `intrinsic_cv` its pinhole intrinsics in pixels.
+  table), z up; quaternions are w x y z. Each camera's `cam2world_gl` is its pose, in the OpenGL convention: the camera
+  looks along its -z axis, with +y up. Its `intrinsic_cv` holds its pinhole intrinsics in pixels.
 
 ### Episode
 Time moves only inside calls: a submitted chunk runs its control steps, and holding still (`hold(s)`) runs `s` seconds

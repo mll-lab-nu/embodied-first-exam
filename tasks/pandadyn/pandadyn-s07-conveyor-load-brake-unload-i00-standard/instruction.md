@@ -11,8 +11,8 @@ set on the moving carriage and let go while the carriage still moves; then both 
 handle only) and bring the carriage to a stop, the part still on it; the part is grasped again and lifted about a hand's
 length off the carriage; finally it is set down in the dock and left there at rest.
 
-The steps count only in this order, and a step once done stays done: the task is done once its last step is, and it
-stays done even when a failure ends the episode afterwards. The task fails, and the episode ends at once, when:
+The steps count only in this order. Once a step is done, it stays done. The task is done when its last step is done, and
+it stays done even if a failure ends the episode afterwards. The task fails, and the episode ends at once, when:
 - the carriage reaches an end of its rail before it is stopped;
 - the part falls off during the braking or the regrasp;
 - an object leaves the workspace (falls well below the table top or flies far away);
@@ -27,9 +27,10 @@ Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
   benchmark's demonstrations, trained policies); trials are reviewed.
 - Episodes and resets: you have 3 resets (the spec's reset budget is authoritative). A reset puts the robot and the
-  scene back on the same frozen starting state (the scene is rebuilt, about a second; no robot time passes) and starts a
-  new episode, abandoning the running one or after one has ended. Only the last episode is graded: an episode you reset
-  away is never graded. Do not stop early: while the episode runs, or a reset is left, the run can still pass.
+  scene back on the same frozen starting state and starts a new episode. Rebuilding the scene takes about a second; no
+  robot time passes. You can reset while an episode runs (it is abandoned) or after one has ended. Only the last episode
+  is graded: an episode you reset away is never graded. Do not stop early: while the episode runs, or a reset is left,
+  the run can still pass.
 - You get only the cameras and the robot's own sensor readings: no object poses, no scene layout, no success signal.
 
 ## Robot Interface
@@ -41,7 +42,7 @@ as if it were real hardware.
 
 ### Client
 `/opt/tools/rcb_client.py` (protocol `eai-standard/2.1`). Its docstring (`help(rcb_client)`) lists the calls and their
-arguments; the robot facts it names as examples are another robot's: this robot's are in `r.spec()` and below.
+arguments. Its examples name another robot's facts; this robot's facts are in `r.spec()` and below.
 
 | call | what it does |
 |---|---|
@@ -61,12 +62,13 @@ returns. One call returns at most 3000 images. A malformed request raises `Value
 has ended, `submit` raises `EpisodeOver` (409) and `get_obs` still answers (no time passes). `cameras=None` (or `[]`)
 means both: name the one you need. `video="none"` returns only the last frame (the fastest call).
 
-How an episode ended: `meta["done"]`, `meta["reason"]` (`finished` after your finish, `failed`, `step_limit` at the step
-cap, or `error` after a simulator error); the `submit` that ended it names the failure in `meta["why"]`. `r.reset()`
-returns the new start's frames and proprioception; `meta["episode"]` and `meta["resets_left"]` count the episodes. If
-the service crashes, a call fails with a connection error (or a 5xx): it restarts and resumes the same episode (never a
-reset) in the state after the last call it completed, which you may not have received. `r.status()` answers again once
-it is back; check `control_steps` before you continue (`spec()["on_service_error"]`).
+`meta["done"]` and `meta["reason"]` tell how an episode ended. `meta["reason"]` is `finished` after your finish,
+`failed`, `step_limit` at the step cap, or `error` after a simulator error. The `submit` that ended the episode names
+the failure in `meta["why"]`. `r.reset()` returns the new start's frames and proprioception; `meta["episode"]` and
+`meta["resets_left"]` count the episodes. If the service crashes, a call fails with a connection error (or a 5xx). The
+service then restarts and resumes the same episode (never a reset), in the state after the last call it completed. You
+may not have received that call's answer. `r.status()` answers again once it is back; check `control_steps` before you
+continue (`spec()["on_service_error"]`).
 
 ```python
 from rcb_client import Robot
@@ -93,18 +95,18 @@ if res.meta["done"]:
 - The client and the tools drive the same robot in the same episode; use either, or both.
 
 ### Actions
-- `joint_position` (8 per row): `[joint1..7, aperture]`. Each arm's 8 values are its 7 absolute joint-position targets
-  (rad, `panda_joint1..7`) and its total gripper aperture target (m, 0 = closed .. 0.08 = open; each finger moves at
-  most 0.025 m/s). Rows are `dt` apart (a multiple of the 0.01 s control period); `interpolate="linear"` (default: a
-  straight line from the targets in force) or `"hold"`; a chunk may cover at most 10 s; out-of-limit values are clipped
-  and listed in `meta["clipped"]` (limits in `spec()["action_types"]["joint_position"]`). The service executes the rows
-  as sent.
-- The servo: every control step, each arm's latest target is turned into a smooth reference motion by a jerk-limited
-  trajectory generator (Ruckig, the joints synchronised to arrive together) within 65 % (speed), 55 % (acceleration) and
-  5 % (jerk) of the Panda's joint speed, acceleration and jerk limits, and the arm tracks that reference with torque
-  control (PD + inverse dynamics, the Panda's torque and torque-rate limits). A new target replans from the current
-  reference motion, so a target far away is reached smoothly, not in one step. `spec()["robot_spec"]["servo"]` has the
-  exact limits and gains.
+- `joint_position` (8 per row): `[joint1..7, aperture]`. Each arm has 8 values: its 7 absolute joint-position targets
+  (rad, `panda_joint1..7`) and its total gripper aperture target (m, 0 = closed .. 0.08 = open). Each finger moves at
+  most 0.025 m/s. Rows are `dt` apart (a multiple of the 0.01 s control period). `interpolate` is `"linear"` (the
+  default: a straight line from the targets in force) or `"hold"`. A chunk may cover at most 10 s. Out-of-limit values
+  are clipped and listed in `meta["clipped"]`; the limits are in `spec()["action_types"]["joint_position"]`. The service
+  executes the rows as sent.
+- The servo: every control step, a jerk-limited trajectory generator (Ruckig) turns each arm's latest target into a
+  smooth reference motion, with the joints synchronised to arrive together. That motion stays within 65 % of the Panda's
+  joint speed limits, 55 % of its acceleration limits and 5 % of its jerk limits. The arm tracks that reference with
+  torque control (PD + inverse dynamics, within the Panda's torque and torque-rate limits). A new target replans from
+  the current reference motion, so a target far away is reached smoothly, not in one step.
+  `spec()["robot_spec"]["servo"]` has the exact limits and gains.
 - Control runs at 100 Hz (10 ms per row), physics at 1000 Hz.
 
 ### Observations
@@ -126,17 +128,18 @@ along world y; the fingers start 0.048 m apart (each at 0.024 m). The action's l
 
 ### Episode clock
 The scene is dynamic: from the episode's first control step on, things move by themselves, and they do not wait for the
-robot. The simulated clock advances only through your calls: every row you send and every second you hold (`hold(s)`)
-runs control steps (10 ms each); between calls the world is frozen, however long you think. A call that runs control
+robot. The simulated clock advances only through your calls. Every row you send and every second you hold (`hold(s)`)
+runs control steps (10 ms each). Between calls the world is frozen, however long you think. A call that runs control
 steps runs them all (unless the episode ends during it), whatever happens meanwhile, and returns what the cameras saw.
-The episode lasts at most 25 s of robot time (the task's horizon, 2500 control steps): when it is reached before the
-task is complete, the task has failed.
+The episode lasts at most 25 s of robot time (the task's horizon, 2500 control steps). If the horizon is reached before
+the task is complete, the task has failed.
 
 ### Safety
-The task fails when an arm goes beyond the Franka Panda's own safety limits on joint positions, joint and finger speeds,
-the hand's speed and acceleration, joint accelerations and jerks, and motor torques and how fast they change (the
-numbers: the robot spec's `safety_limits`). They count on the motion as measured, whatever was commanded (a catch or a
-strike moves the arm too), and the servo's own reference motion is held to the same speed, acceleration and jerk limits.
+The task fails when an arm goes beyond the Franka Panda's own safety limits. These limits cover joint positions, joint
+and finger speeds, the hand's speed and acceleration, joint accelerations and jerks, motor torques, and how fast the
+torques change. The numbers are in the robot spec's `safety_limits`. The limits apply to the motion as measured,
+whatever was commanded (a catch or a strike moves the arm too). The servo's own reference motion must also stay within
+the same speed, acceleration and jerk limits.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At

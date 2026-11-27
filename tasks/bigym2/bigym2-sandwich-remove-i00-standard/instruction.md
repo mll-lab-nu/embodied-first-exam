@@ -19,11 +19,10 @@ Rules:
   proprioception; not where any object is now, no success signal.
 
 ## Robot Interface
-A simulated Unitree G1 humanoid robot with two-finger grippers (BiGym 2.0, MuJoCo). NVIDIA's GR00T whole-body
-controller, a learned policy that runs inside every control step, drives the legs and waist and keeps the robot
-balanced: you command where it walks, how high its pelvis is, how far its torso leans forward, its arm joints and its
-grippers. The robot runs as a service you reach through its client or its MCP tools, as if it were real hardware: one
-live episode.
+A simulated Unitree G1 humanoid robot with two-finger grippers (BiGym 2.0, MuJoCo). NVIDIA's GR00T whole-body controller
+drives the legs and waist and keeps the robot balanced. It is a learned policy that runs inside every control step. You
+command where it walks, how high its pelvis is, how far its torso leans forward, its arm joints and its grippers. The
+robot runs as a service you reach through its client or its MCP tools, as if it were real hardware: one live episode.
 
 `POST /finish` (MCP tool `finish`): ends the episode; it is graded right away.
 
@@ -56,8 +55,8 @@ that ends the episode also carries `meta["outcome"]`, BiGym's own label of how i
 `fell`, `terminated`, `physics_error`). Standing still is the row with the current height, lean, arm and gripper targets
 and zero `vx`, `vy`, `wz`; `hold(s)` does that from your last row. Measured here: a control step costs about 14 ms of
 service time inside a `submit` (a 1 s chunk returns in about 0.7 s); `get_obs()` about 10 ms. The client's docstring
-explains the protocol with another benchmark's examples (`joint_position`, bounds [-1, 1], `imu`, `links`, `depth`): for
-this task `spec()` is authoritative.
+explains the protocol with examples from another benchmark (`joint_position`, bounds [-1, 1], `imu`, `links`, `depth`).
+For this task, `spec()` is what counts.
 
 ### MCP tools
 - The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
@@ -79,36 +78,36 @@ joints, 12-18: the right arm's, each in the order shoulder pitch, shoulder roll,
 pitch, wrist yaw: absolute joint targets (rad), bounds shoulder pitch [-3.0892, 2.6704], shoulder roll [-1.5882,
 2.2515], shoulder yaw [-2.618, 2.618], elbow [-1.0472, 2.0944], wrist roll [-1.9722, 1.9722], wrist pitch [-1.6144,
 1.6144], wrist yaw [-1.6144, 1.6144] (the same for both arms); `left_gripper` (19) and `right_gripper` (20): 0 open .. 1
-closed, in [0, 1]. Values outside the bounds are clipped. The row that stands still at the start: zeros but `height`
-0.74, `left_gripper` 0.6, `right_gripper` 0.6. `right_shoulder_roll_joint`'s bounds are BiGym's action bounds, not the
-joint's own range [-2.2515, 1.5882]: a command outside them is clipped.
+closed, in [0, 1]. Values outside the bounds are clipped. The row that stands still at the start is all zeros except
+`height` 0.74, `left_gripper` 0.6 and `right_gripper` 0.6. `right_shoulder_roll_joint`'s bounds are BiGym's action
+bounds, not the joint's own range [-2.2515, 1.5882]: a command outside them is clipped.
 
 ### Observations
 Cameras: `head`, `left_wrist`, `right_wrist` (RGB, 84x84); `spec()["cameras"]` gives each camera's field of view and its
-pose at the start. Each proprioception row has, in `spec()["proprio_layout"]` order: the positions (`*_pos`) of the 3
-waist joints (they show the lean you command), each arm's 7 joints (rad) and its gripper's 2 finger joints (slides, m),
-and the pelvis (`pelvis_x_pos`, `pelvis_y_pos`, `pelvis_z_pos` in m and `pelvis_rz_pos`, its heading, in rad: the room's
-frame, z up, heading 0 along the room's +x axis and counter-clockwise positive): 25 values; then their velocities
-(`*_vel`, per second) in the same order; then `left_gripper_state` and `right_gripper_state` (0 open .. 1 closed); then
-the pelvis pose again as the base controller tracks it (`pelvis_x`, `pelvis_y`, `pelvis_z`, `pelvis_yaw`).
-`spec()["joints"]` gives each arm, waist and finger joint's axis, a point on it and its range (the pelvis frame with
-every joint at 0: `spec()["joint_frame"]`; the sign convention: `spec()["joint_sign"]`), `spec()["grippers"]` the point
-between each gripper's finger pads on its wrist link, and `spec()["cameras"][camera]["mount"]` each camera's pose on its
-link.
+pose at the start. Each proprioception row has these values, in `spec()["proprio_layout"]` order. First 25 positions
+(`*_pos`): the 3 waist joints (they show the lean you command), each arm's 7 joints (rad) and its gripper's 2 finger
+joints (slides, m), and the pelvis (`pelvis_x_pos`, `pelvis_y_pos`, `pelvis_z_pos` in m and `pelvis_rz_pos`, its
+heading, in rad). The pelvis values are in the room's frame: z up, heading 0 along the room's +x axis and
+counter-clockwise positive. Then their velocities (`*_vel`, per second) in the same order. Then `left_gripper_state` and
+`right_gripper_state` (0 open .. 1 closed). Then the pelvis pose again as the base controller tracks it (`pelvis_x`,
+`pelvis_y`, `pelvis_z`, `pelvis_yaw`). `spec()["joints"]` gives each arm, waist and finger joint's axis, a point on that
+axis and the joint's range. These are in the pelvis frame with every joint at 0 (`spec()["joint_frame"]`); the sign
+convention is in `spec()["joint_sign"]`. `spec()["grippers"]` gives the point between each gripper's finger pads, on its
+wrist link. `spec()["cameras"][camera]["mount"]` gives each camera's pose on its link.
 
 ### Notes
 The episode also ends when the pelvis gets more than 10 m from the scene's origin, on a simulator error, and after 3150
 control steps (63 s of robot time).
 
-- The whole-body controller: it follows velocity commands with some lag and wobble, so read the pelvis pose and close
-  the loop rather than dead-reckon; a planar speed command below 0.055 m/s means standing still (use 0 or at least
-  0.06); standing still, the base drifts a few centimetres, and further while the hands push on furniture or the torso
+- The whole-body controller follows velocity commands with some lag and wobble, so read the pelvis pose and close the
+  loop rather than dead-reckon. A planar speed command below 0.055 m/s means standing still (use 0 or at least 0.06).
+  When it stands still, the base drifts a few centimetres, and further while the hands push on furniture or the torso
   leans far (measured here: 0.27 m and 15 degrees with the hands pressing on a cabinet, 0.11 m and 24 degrees from a 0.8
-  rad lean); heights above about 0.8 m lock the knees (the pelvis stays near 0.78 m); squatting (a lower height) is how
-  the hands reach low objects, and while squatting the controller does not step: walk first, then squat in place. It
-  keeps the robot balanced but does not stop it from walking into things.
-- Keep your own copy of the last row you sent: a row rebuilt from the measured joint angles sits a little below the
-  targets the arms were holding (the servos track with a small error), so holding with it lets the arms sag.
+  rad lean). Heights above about 0.8 m lock the knees (the pelvis stays near 0.78 m). Squatting (a lower height) is how
+  the hands reach low objects. While squatting the controller does not step: walk first, then squat in place. It keeps
+  the robot balanced but does not stop it from walking into things.
+- Keep your own copy of the last row you sent. A row rebuilt from the measured joint angles sits a little below the
+  targets the arms were holding, because the servos track with a small error. Holding with such a row lets the arms sag.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
