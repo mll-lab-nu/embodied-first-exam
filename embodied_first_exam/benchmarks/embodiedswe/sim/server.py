@@ -615,4 +615,5 @@ print(f"{PROTOCOL} sim ready: {PRESET} (startup {EP.n_startups}, resumes {EP.res
 AE.serve(AE.Service(spec=SPEC, lock=LOCK, state=E, submit=do_submit, observe=do_observe, kinematics=do_kinematics, status=status,
                     on_submit_error=lambda exc: finish("infra_error" if isinstance(exc, InfraError) else "error"), log=log, episode=EP,
                     state_sha=lambda: R.state_sha(env), proprio=proprio_row,
-                    **({"finish": lambda: finish("finished")} if AE.ENABLED else {})))
+                    **({"finish": lambda: finish("finished"),
+                        "end_step_limit": lambda: finish("step_limit")} if AE.ENABLED else {})))

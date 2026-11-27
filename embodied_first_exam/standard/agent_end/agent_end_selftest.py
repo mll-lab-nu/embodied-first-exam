@@ -11,7 +11,8 @@ adapter that uses the module the way every adapter does (numpy only, CPU, about 
   - RCB_STEP_LIMIT, enforced by the layer (the toy has no cap of its own): the episode ends by itself at the limit
     (reason step_limit, the chunk or hold chunk cut there), graded as it stands; /finish after it is a 409;
   - a finish() that raises: a 500 with a JSON error, the episode ends "error" (on_submit_error), checkpointed;
-  - fail closed: an adapter without finish(), and RCB_STEP_LIMIT without RCB_AGENT_END, do not start.
+  - fail closed: an adapter without finish(), RCB_STEP_LIMIT without RCB_AGENT_END, and RCB_STEP_LIMIT with an adapter
+    that passes no end_step_limit, do not start.
 """
 from __future__ import annotations
 
@@ -58,12 +59,17 @@ PLAIN = [
      '"done": E["done"], "reason": E["reason"],\n            "proprio"'),
     ('"last_note": E.get("last_note"), **AE.steps_left(ctrl_steps())}', '"last_note": E.get("last_note")}'),
     ("AE.serve(AE.Service(", "L.serve(L.Service("),
-    ("proprio=proprio_row, **({\"finish\": lambda: finish(\"finished\")} if AE.ENABLED else {})), port=", "proprio=proprio_row), port="),
+    ('proprio=proprio_row, **({"finish": lambda: finish("finished"),\n'
+     '                                           "end_step_limit": lambda: finish("step_limit")} if AE.ENABLED else {})), port=',
+     "proprio=proprio_row), port="),
 ]
-DROP_FINISH = ', **({"finish": lambda: finish("finished")} if AE.ENABLED else {})'
-# variants: a finish() that raises before it ends anything; an adapter with a step cap of its own (it ends the episode
+DROP_FINISH = (', **({"finish": lambda: finish("finished"),\n'
+               '                                           "end_step_limit": lambda: finish("step_limit")} if AE.ENABLED else {})')
+# variants: a finish() that raises before it ends anything; an adapter without end_step_limit (it must not start
+# with RCB_STEP_LIMIT); an adapter with a step cap of its own (it ends the episode
 # itself at RCB_STEP_LIMIT, as RoboPaint or DexJoCo do: the layer must not end it again)
-VARIANT = {"raise_finish": ('{"finish": lambda: finish("finished")}', '{"finish": lambda: 1 / 0}'),
+VARIANT = {"raise_finish": ('{"finish": lambda: finish("finished"),', '{"finish": lambda: 1 / 0,'),
+           "no_end_step_limit": (',\n                                           "end_step_limit": lambda: finish("step_limit")}', '}'),
            "own_cap": ('        AE.hidden_success(E, S.success(), EP.log, ctrl_steps())\n',
                        '        AE.hidden_success(E, S.success(), EP.log, ctrl_steps())\n'
                        '        if AE.STEP_LIMIT is not None and ctrl_steps() >= AE.STEP_LIMIT:\n'
@@ -188,6 +194,7 @@ def script(src, env=None):
 def main() -> None:
     plain, ae, ae_nofinish = adapter(False), adapter(True), adapter(True, drop_finish=True)
     ae_raise, ae_own = adapter(True, variant="raise_finish"), adapter(True, variant="own_cap")
+    ae_noend = adapter(True, variant="no_end_step_limit")
     try:
         ref, fin_ref = script(plain)
         for env in (None, {"RCB_AGENT_END": "0"}):
@@ -295,13 +302,15 @@ def main() -> None:
               f"3.0: after /finish a last_s read and a hold chunk are 409s: {[x['code'] for x in a]}")
 
         for src, env, what in ((ae_nofinish, {"RCB_AGENT_END": "1"}, "an adapter without finish()"),
-                               (ae, {"RCB_STEP_LIMIT": "30"}, "RCB_STEP_LIMIT without RCB_AGENT_END")):
+                               (ae, {"RCB_STEP_LIMIT": "30"}, "RCB_STEP_LIMIT without RCB_AGENT_END"),
+                               (ae_noend, {"RCB_AGENT_END": "1", "RCB_STEP_LIMIT": "30"},
+                                "RCB_STEP_LIMIT and an adapter without end_step_limit")):
             t = Toy(src, env)
             time.sleep(1.0)
             check(t.p.poll() is not None and t.p.returncode != 0, f"fail closed: {what} served")
             t.end()
     finally:
-        for d in (plain, ae, ae_nofinish, ae_raise, ae_own):
+        for d in (plain, ae, ae_nofinish, ae_raise, ae_own, ae_noend):
             shutil.rmtree(d, ignore_errors=True)
     if fails:
         print(f"{len(fails)} failure(s)")

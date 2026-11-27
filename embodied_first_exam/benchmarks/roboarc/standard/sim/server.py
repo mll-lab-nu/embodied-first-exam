@@ -920,7 +920,7 @@ threading.Thread(target=AE.serve, daemon=True, args=(AE.Service(
     spec=SPEC, lock=LOCK, state=E, submit=lambda meta, A: on_main(do_submit, meta, A), observe=lambda meta: on_main(do_observe, meta),
     kinematics=lambda req: on_main(do_kinematics, req), status=status, on_submit_error=lambda exc: on_main(on_error, exc), log=log,
     episode=EP, state_sha=lambda: on_main(S.state_sha), proprio=lambda: on_main(proprio_row),
-    finish=lambda: on_main(finish, "finished")),)).start()
+    finish=lambda: on_main(finish, "finished"), end_step_limit=lambda: on_main(finish, "step_limit")),)).start()
 while True:                                 # the main thread: simulator jobs in order; signals are handled between them
     if deadline_reached():
         finish("timeout")

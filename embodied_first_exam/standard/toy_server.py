@@ -196,4 +196,5 @@ open(os.path.join(DATA, "server.pid"), "w").write(str(os.getpid()))
 print(f"{L.PROTOCOL} toy sim ready (startup {EP.n_startups}, resumes {EP.resumes})", flush=True)
 AE.serve(AE.Service(spec=SPEC, lock=LOCK, state=E, submit=do_submit, observe=do_observe, kinematics=lambda req: {"ok": True, "op": req["op"]},
                   status=status, on_submit_error=lambda exc: finish("error"), log=EP.log, episode=EP, state_sha=S.state_sha,
-                  proprio=proprio_row, **({"finish": lambda: finish("finished")} if AE.ENABLED else {})), port=int(os.environ.get("RCB_TOY_PORT", "8000")))
+                  proprio=proprio_row, **({"finish": lambda: finish("finished"),
+                                           "end_step_limit": lambda: finish("step_limit")} if AE.ENABLED else {})), port=int(os.environ.get("RCB_TOY_PORT", "8000")))

@@ -18,16 +18,16 @@ An adapter (robodojo's sim/server.py is the reference): records the state's succ
 hidden_success() instead of ending the episode, judges the end state in its own finish() for the ends in
 END_STATE_REASONS (a settle or hold window, where the task has one, runs from that state), adds final_fields() to
 final.json, builds its rcb_limited.Episode with persist=persist(...) and serves with
-serve(Service(..., finish=lambda: finish("finished"))) instead of rcb_limited's. The step limit's end is the same call
-with reason "step_limit" (Service end_step_limit=, by default made from that finish callable); the episode's control steps are
-its status()["control_steps"]. Tests: agent_end_selftest.py.
+serve(Service(..., finish=lambda: finish("finished"), end_step_limit=lambda: finish("step_limit"))) instead of
+rcb_limited's: the step limit's end is the same call with reason "step_limit", passed explicitly (a service without it does
+not start when RCB_STEP_LIMIT is set); the episode's control steps are its status()["control_steps"]. Tests:
+agent_end_selftest.py.
 """
 from __future__ import annotations
 
 import os
 import time
 import traceback
-import types
 from typing import Callable
 
 import rcb_limited as L
@@ -90,28 +90,16 @@ def steps_left(used: int) -> dict:
     return {"step_limit": STEP_LIMIT, "steps_left": max(0, STEP_LIMIT - int(used))} if STEP_LIMIT is not None else {}
 
 
-def end_from_finish(finish: Callable | None) -> Callable | None:
-    """The adapter's end with reason "step_limit", from its finish callable: the same call with the constant "finished"
-    replaced (lambda: finish("finished") -> finish("step_limit"); lambda: on_main(finish, "finished") likewise). None
-    when the callable names no "finished" constant."""
-    code = getattr(finish, "__code__", None)
-    if code is None or "finished" not in code.co_consts:
-        return None
-    consts = tuple("step_limit" if c == "finished" else c for c in code.co_consts)
-    return types.FunctionType(code.replace(co_consts=consts), finish.__globals__, "end_step_limit",
-                              finish.__defaults__, finish.__closure__)
-
-
 class Service(L.Service):
     """rcb_limited.Service with finish() (the adapter ends the episode, reason "finished": POST /finish) and hidden_keys
     (meta / status keys that would tell the agent about the task's success or progress, dropped from every answer).
     With RCB_STEP_LIMIT it enforces the limit around the adapter's submit / observe (a hold chunk runs as an observe
-    watch): end_step_limit() (default: end_from_finish(finish)) ends the episode, reason "step_limit"."""
+    watch): end_step_limit() (the adapter's finish with reason "step_limit") ends the episode there."""
 
     def __init__(self, *, finish: Callable | None = None, hidden_keys=(), end_step_limit: Callable | None = None, **kw):
         super().__init__(**kw)
         self.finish, self.hidden_keys = finish, frozenset(hidden_keys or ())
-        self.end_step_limit = end_step_limit or end_from_finish(finish)
+        self.end_step_limit = end_step_limit
         if ENABLED and STEP_LIMIT is not None:
             self.submit, self.observe = self._limited(self.submit), self._limited(self.observe)
 
@@ -255,7 +243,7 @@ def serve(svc: Service, port: int = 8000) -> None:
             raise RuntimeError("RCB_AGENT_END=1, but this service has no finish(): it does not implement agent-ended episodes")
         svc.spec["success_signal"] = SUCCESS_SIGNAL_NOTE
         if STEP_LIMIT is not None and getattr(svc, "end_step_limit", None) is None:
-            raise RuntimeError("RCB_STEP_LIMIT is set, but this service's finish() gives no end_step_limit(): pass "
-                               "Service(end_step_limit=...)")
+            raise RuntimeError("RCB_STEP_LIMIT is set, but this service has no end_step_limit(): pass "
+                               "Service(end_step_limit=lambda: finish(\"step_limit\"))")
     L.check_spec(svc.spec)
     L.bind(port, make_handler(svc)).serve_forever()

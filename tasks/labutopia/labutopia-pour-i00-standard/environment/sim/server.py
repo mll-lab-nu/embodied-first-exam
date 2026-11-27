@@ -674,7 +674,8 @@ try:
             episode=EP,
             state_sha=S.state_sha,
             proprio=proprio_row,
-            **({"finish": lambda: finish("finished")} if AE.ENABLED else {}),
+            **({"finish": lambda: finish("finished"),
+                "end_step_limit": lambda: finish("step_limit")} if AE.ENABLED else {}),
         ),
         port=int(os.environ.get("RCB_PORT", "8000")),
     )

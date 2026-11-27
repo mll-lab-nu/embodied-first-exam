@@ -1061,7 +1061,8 @@ threading.Thread(target=AE.serve, daemon=True, args=(AE.Service(
     spec=SPEC, lock=LOCK, state=E, submit=lambda meta, A: on_main(do_submit, meta, A), observe=lambda meta: on_main(do_observe, meta),
     kinematics=lambda req: on_main(do_kinematics, req), status=status, on_submit_error=lambda exc: on_main(fail, exc), log=log,
     episode=EP, state_sha=lambda: on_main(s.state_sha), proprio=lambda: on_main(proprio_row), hidden_keys=HIDDEN_KEYS,
-    **({"finish": lambda: on_main(finish, "finished")} if AE.ENABLED else {})),)).start()
+    **({"finish": lambda: on_main(finish, "finished"),
+       "end_step_limit": lambda: on_main(finish, "step_limit")} if AE.ENABLED else {})),)).start()
 while True:
     if deadline_reached():                      # between simulator jobs: never inside a call
         finish("timeout")
