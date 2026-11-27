@@ -92,7 +92,8 @@ for f in (mp4, os.path.join(d, "video.json")):
 log = open(os.path.join(d, "video.log"), "w")
 p = subprocess.Popen([sys.executable, os.path.join(os.environ.get("RCB_SRV") or "/srv", "video.py"),
                       "--task", task, "--instance", instance, "--traj", os.path.join(d, "trajectory.npz"),
-                      "--out", mp4, "--json", os.path.join(d, "video.json"), "--deadline-s", str(int(left - 30.0))],
+                      "--out", mp4, "--json", os.path.join(d, "video.json"), "--deadline-s", str(int(left - 30.0))]
+                     + (["--agent-end"] if ep.get("success_signal") == "hidden" else []),
                      stdout=log, stderr=subprocess.STDOUT, env=dict(os.environ, RCB_SESSION_LOG=""))
 try:
     p.wait(timeout=left)

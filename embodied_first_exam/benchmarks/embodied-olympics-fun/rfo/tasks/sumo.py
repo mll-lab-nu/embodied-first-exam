@@ -311,6 +311,11 @@ class Task(TaskBase):
         side, rest = bn.split("_", 1)
         return f"{side}_{PART_OF_BODY.get(rest, rest)}"
 
+    def actuate(self, w, ref):
+        j = ref.ph % w.SUB                                # the opponent's motors for the next physics step
+        if j:
+            self.arb.apply(w.d, j + 1)
+
     def substep(self, w, ref):
         tr = self.trackers
         lost, kick, touch = self._verdicts(w, ref)
@@ -328,9 +333,6 @@ class Task(TaskBase):
             ref.event("opponent lost", how=lost[2][0], part=lost[2][1])
             if ref.stage("win", how=lost[2][0]):
                 ref.succeed()
-        j = ref.ph % w.SUB                                # the opponent's motors for the next physics step
-        if j:
-            self.arb.apply(w.d, j + 1)
 
     def privileged(self, w):
         ox, oy, oyaw = self._opp_pose(w)

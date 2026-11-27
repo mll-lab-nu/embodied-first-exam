@@ -7,14 +7,17 @@ from the collect hook ends the episode, /data evidence. Differences, all from ro
 - the action type is the robot's native composite-controller command, laid out per instance by the tool module
   (casa_tool.action_spec): named after its arm channels -- `ee_delta` (mobile Panda, OSC deltas), `joint_position`
   (mobile Panda, absolute joint targets) or `ee_pose` (GR1, absolute grip-site poses solved by whole-body IK);
-- watching (/observe with seconds > 0) holds the robot still (S.hold_targets(): delta channels zero, the rest kept);
+- a hold chunk (/submit {"interpolate": "hold", "seconds": n}, no rows; eai-standard/3.0) holds the robot still
+  (S.hold_targets(): delta channels zero, the rest kept); /observe only reads (seconds > 0 is a 400);
 - cameras are the robot's own (they move with its base), so every response carries their current calibration;
 - protocol v1.0 items the MuJoCo service gets in the migration (docs/protocol/README.md §7): the eai-standard/2.1 name, a
   simulator error (500) ends the episode with reason "error", an oversized body is answered with 413.
 
 What the agent gets: camera RGB (+ depth) with each camera's calibration, the robot's own joints, end-effector
 positions and last command, and the task's instruction. Never an object's pose, the scene layout or the success check.
-The episode runs until the agent's time is up; the state after the last executed control step is graded.
+With RCB_AGENT_END (every standard and realtime task from 3.0) the episode runs until the agent's POST /finish, the
+step limit, the end of its session or a simulator error, and the state it ends in is graded; the success is never
+shown. Without it the episode runs until the agent's time is up; the state after the last control step is graded.
 
 The verdict is the live episode's (docs/protocol/README.md H.4): the environment's own success
 check on the state after the last control step this service executed, not already solved at the start, and the
@@ -197,7 +200,8 @@ def _remove(*paths: str) -> None:
 
 
 def _give_up(reason: str, infra: bool) -> None:
-    """End the trial's episode without a new one: mark it failed, keep the PID file for the collect hook, and idle.
+    """End the trial's episode without a new one: mark it failed, keep the PID file for the collect hook, and answer
+    every request with the refusal (409, _refuse_forever) until the container is removed.
     A verdict already on disk is never overwritten (PROTOCOL §4.7), whatever else the file says: at most its missing
     "finalized" flag is set, or a "video_pending" left by a process that died rendering the video is cleared (that
     video is lost), which changes nothing the verdict says."""
@@ -216,6 +220,52 @@ def _give_up(reason: str, infra: bool) -> None:
     open(os.path.join(DATA, "server.pid"), "w").write(str(os.getpid()))
     signal.signal(signal.SIGUSR1, lambda *_: None)
     print(f"restart refused: {reason}", flush=True)
+    _refuse_forever(reason, infra)
+
+
+def _refuse_forever(reason: str, infra: bool) -> None:
+    """After a give-up: answer every request 409 {"error", "reason", "gave_up": true, "infra_error"} until the container is
+    removed (as the MuJoCo service's and the 2.2 layer's refuse_forever), so the agent's client stops at once
+    (EpisodeOver) instead of waiting out its timeout for a service that will never serve. The verdict is on disk
+    already; this never changes it."""
+    body = json.dumps({"error": "the sim service gave up on this episode and will not serve it", "reason": reason,
+                       "gave_up": True, "infra_error": int(bool(infra))}).encode()
+
+    class Refusal(BaseHTTPRequestHandler):
+        timeout = 30  # a client that stops sending must not hold the thread
+
+        def _refuse(self):
+            try:
+                n = int(self.headers.get("Content-Length") or 0)
+                if 0 < n <= 64 << 20:
+                    self.rfile.read(n)  # take the request first: the client then sees the answer
+                self.send_response(409)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+            except (OSError, ValueError):
+                pass
+            self.close_connection = True
+
+        do_GET = do_POST = _refuse
+
+        def log_message(self, *a):
+            pass
+
+    def answer():
+        port = int(os.environ.get("RCB_PORT", "8000"))
+        while True:  # the port may still be held: wait for it
+            try:
+                HTTPServer(("0.0.0.0", port), Refusal).serve_forever()
+                return
+            except OSError as exc:
+                if exc.errno != errno.EADDRINUSE:
+                    traceback.print_exc()
+                    return
+            time.sleep(1.0)
+
+    threading.Thread(target=answer, daemon=True).start()
     while True:
         time.sleep(3600)
 
@@ -609,7 +659,7 @@ def _hold_seconds(meta: dict, parts: dict):
         raise ValueError('a chunk without rows is a hold chunk: {"type": <type>, "interpolate": "hold", "seconds": n}')
     v = meta.get("seconds")
     try:
-        if isinstance(v, bool):
+        if isinstance(v, (bool, str)):
             raise TypeError
         n = float(v)
     except (TypeError, ValueError, OverflowError):
@@ -624,6 +674,8 @@ def _last_s(meta: dict) -> float:
     s = meta.get("seconds")
     if s is not None:
         try:
+            if isinstance(s, (bool, str)):
+                raise TypeError
             s = float(s)
         except (TypeError, ValueError, OverflowError):
             raise ValueError("seconds must be a number") from None
@@ -633,7 +685,7 @@ def _last_s(meta: dict) -> float:
     if v is None:
         return 0.0
     try:
-        if isinstance(v, bool):
+        if isinstance(v, (bool, str)):
             raise TypeError
         v = float(v)
     except (TypeError, ValueError, OverflowError):
@@ -667,8 +719,8 @@ def _number(meta: dict, key: str, default: float) -> float:
     if v is None:
         return float(default)
     try:
-        if isinstance(v, bool):  # JSON true is no number (float(True) is 1.0: `dt: true` ran as one second per row)
-            raise TypeError
+        if isinstance(v, (bool, str)):  # JSON true is no number (float(True) is 1.0: `dt: true` ran as one second per
+            raise TypeError             # row), nor is a string ("10"): eai-standard/3.0's field checks
         x = float(v)
     except (TypeError, ValueError, OverflowError):
         raise ValueError(f"{key} must be a number") from None
@@ -710,15 +762,21 @@ def _frame_budget(cams, fps: int, steps: int, depth: bool) -> None:
         )
 
 
+def _video(meta: dict, default: str = "mp4") -> str:
+    """The call's `video` (absent or null: `default`); anything else than mp4|frames|both|none: ValueError (400)."""
+    video = meta.get("video")
+    video = default if video is None else video
+    if not isinstance(video, str) or video not in ("mp4", "frames", "both", "none"):
+        raise ValueError("video must be mp4|frames|both|none")
+    return video
+
+
 def _parse_hold(meta: dict, hold: float) -> dict:
     """A validated rows-free hold chunk (do_hold executes it)."""
     k = max(1, int(round(hold / CTRL_DT)))
     cams = _cameras(meta, list(CAMS)[:1])
     fps = _fps(meta)
-    video = meta.get("video")
-    video = "mp4" if video is None else video
-    if not isinstance(video, str) or video not in ("mp4", "frames", "both", "none"):
-        raise ValueError("video must be mp4|frames|both|none")
+    video = _video(meta)
     depth = bool(meta.get("include_depth", False))
     _frame_budget(cams, fps, k, depth)
     return {"hold": hold, "k": k, "cams": cams, "fps": fps, "video": video, "depth": depth, "note": str(meta.get("note") or "")[:500]}
@@ -756,8 +814,7 @@ def parse_submit(meta: dict, parts: dict) -> dict:
         raise ValueError("interpolate must be hold|linear")
     cams = _cameras(meta, list(CAMS)[:1])
     fps = _fps(meta)
-    video = meta.get("video")
-    video = "mp4" if video is None else video
+    video = _video(meta)
     depth = bool(meta.get("include_depth", False))
     note = meta.get("note")
     note = "" if note is None else note
@@ -782,8 +839,7 @@ def parse_observe(meta: dict) -> dict:
     cams = _cameras(meta, list(CAMS))
     last_s = _last_s(meta)
     fps = _fps(meta)
-    video = meta.get("video")
-    video = "frames" if video is None else video
+    video = _video(meta, "frames")
     depth = bool(meta.get("include_depth", False))
     if last_s > 0 and depth:  # the recorder keeps RGB only (spec timing.recorder.depth = [])
         raise ValueError(DEPTH_PAST)
@@ -1112,10 +1168,15 @@ class Hd(BaseHTTPRequestHandler):
             return self._json(400, {"error": "bad Content-Length"})
         if self._n > MAX_BODY:
             return self._json(413, {"error": f"request body over {MAX_BODY} bytes"})
-        try:
-            self._req = self._body()
-        except Exception as exc:  # noqa: BLE001
-            return self._json(400, {"error": str(exc)[:200]})
+        if self.path == "/finish":  # its body is read (bounded above) and ignored, never parsed (eai-standard/3.0)
+            if self._n:
+                self.rfile.read(self._n)
+            self._req = ({}, {})
+        else:
+            try:
+                self._req = self._body()
+            except Exception as exc:  # noqa: BLE001
+                return self._json(400, {"error": str(exc)[:200]})
         with LOCK:
             log({"ev": "call_begin", "path": self.path, "call": E["calls"] + 1})
             try:

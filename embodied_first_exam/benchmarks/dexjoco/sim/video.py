@@ -30,13 +30,16 @@ def main() -> int:
     ap.add_argument("--out", required=True)
     ap.add_argument("--json", required=True)
     ap.add_argument("--deadline-s", type=float, default=0.0, help="stop this long after the start (0: never)")
+    ap.add_argument("--agent-end", action="store_true",
+                    help="an agent-ended episode (PROTOCOL §3): a success never ends it, as in the service (hide_success)")
     a = ap.parse_args()
     t0 = time.time()
     res = {"video": False, "rows": 0}
     try:
         A = np.asarray(np.load(a.traj, allow_pickle=False)["actions"], dtype=np.float64)
         res["rows"] = int(len(A))
-        s = M.Session(a.task, instance=a.instance)
+        # agent-ended: the Session as the service ran it (a success never ends it), so the film runs to the end state
+        s = M.Session(a.task, instance=a.instance, hide_success=bool(a.agent_end))
         s.render_video(A, a.out, cameras=s.video_cameras(), every=max(2, -(-len(A) // MAX_FRAMES)),
                        deadline=(t0 + a.deadline_s) if a.deadline_s else None)
         s.close()

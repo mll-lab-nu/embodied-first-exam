@@ -31,7 +31,7 @@ def write(out: dict) -> None:
 
 
 def no_verdict(**flags: int) -> dict:
-    return {"success": 0, "live_success": 0, "graded_by_live": 1, "replays": 0, "finalized": 0, "missing_log": 0,
+    return {"success": 0, "live_success": 0, "graded_by_live": 0, "replays": 0, "finalized": 0, "missing_log": 0,
             "sim_error": 0, "infra_error": 1, "grader_error": 0, **flags}
 
 
@@ -41,6 +41,19 @@ def num(v, kind=float):
         return kind(v or 0)
     except (TypeError, ValueError, OverflowError):
         return kind(0)
+
+
+def agent_end_fields(d: dict) -> dict:
+    """An agent-ended episode's record (PROTOCOL §3: final.json success_signal / ended_by, step_limit / steps_used):
+    evidence only, never the verdict; the runner reads ended_session_end."""
+    if d.get("success_signal") != "hidden":
+        return {}
+    by = d.get("ended_by")
+    out = {"ended_finish": int(by == "finish"), "ended_step_limit": int(by == "step_limit"),
+           "ended_session_end": int(by == "session_end"), "hidden_success_seen": int(bool(d.get("hidden_success_seen")))}
+    if d.get("step_limit"):
+        out.update(step_limit=num(d.get("step_limit"), int), steps_used=num(d.get("steps_used"), int))
+    return out
 
 
 def main() -> None:
@@ -72,7 +85,7 @@ def main() -> None:
     out = {
         "success": int(ok),
         "live_success": int(live),
-        "graded_by_live": 1,
+        "graded_by_live": int(d.get("graded_by") == "live"),   # the service's live verdict is on disk
         "replays": 0,
         "finalized": int(bool(d.get("finalized"))),
         "no_verdict": int(unfinished),
@@ -88,6 +101,7 @@ def main() -> None:
         "instance_mismatch": int(reason.startswith("instance_mismatch")),
         "infra_error": int(infra),
         "grader_error": int(failed_finalize),
+        **agent_end_fields(d),
     }
     write(out)
 

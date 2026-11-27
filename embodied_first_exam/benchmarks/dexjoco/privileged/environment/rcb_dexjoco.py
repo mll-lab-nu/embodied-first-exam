@@ -444,8 +444,13 @@ class Session:
             succeed = self._rcb_count >= 30
             failed = bool(terminated) and not bool(info.get("succeed", False)) and bool(self.base._trigger_pulled)
             terminated = failed                        # upstream's own success no longer ends the episode
-        self.now_success = succeed
-        if succeed and self.hide_success:
+        # agent-ended (hide_success): upstream's terminated is terminated or success, so on a success step only an illegal
+        # state (its own flag) tells a failure that happened at the same step: that failure ends the episode (no success)
+        illegal = self.hide_success and succeed and bool(info.get("illegal_state"))
+        self.now_success = succeed and not illegal
+        if illegal:
+            self.done, self.reason = True, _failure_reason(self.task, info)
+        elif succeed and self.hide_success:
             pass                                       # upstream's terminated = terminated or success: not a failure
         elif succeed:
             self.done, self.success, self.reason = True, True, "success"

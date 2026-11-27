@@ -426,9 +426,11 @@ class Task(TaskBase):
     def _rope_nodes(self, w) -> np.ndarray:
         return w.d.site_xpos[self.nodes]
 
+    def actuate(self, w, ref):
+        self._command(w, ref.time + w.PHYS_DT)          # the motors' command for the next physics step
+
     def substep(self, w, ref):
         p, tr, d, r = self.p, self.trackers, w.d, w.robot
-        self._command(w, ref.time + w.PHYS_DT)          # the motors' command for the next physics step
         fl = tr["flights"]
         landed = fl.update()
         if ref.touching(self.rope, self.robot_sel):

@@ -2,8 +2,9 @@
 Owns the scene and the seed. HTTP surface: GET /spec, GET /status, POST /observe, POST /submit (both RCB1 bodies,
 RCB1 responses: videos / frames / depth / proprio as raw blobs, never base64). Logs every call to /data/episode.jsonl,
 keeps /data/final.json current, and on episode end grades the live episode: success = RoboTwin's check_success on the
-episode this service ran (it ends at the first call after which the check holds; at the end of the agent's time the
-final state is checked once more), nothing replayed (docs/protocol/README.md H.4). The verdict
+state the episode ends in (agent-ended, RCB_AGENT_END=1: the agent's POST /finish, the step limit RCB_STEP_LIMIT, the
+end of the agent's session or a simulator error ends it; the success is never shown and never ends it), nothing
+replayed (docs/protocol/README.md H.4). /observe only reads (eai-standard/3.0); a hold chunk lets time pass. The verdict
 goes to final.json first ("finalized": true, "graded_by": "live"); then the recorded (T,34) trajectory, which is the
 deliverable, is rendered once for people: the six-view /data/replay.mp4 and /data/live.mp4 (rcb_live.py: call-stamped
 frames only while physics ran, skipped while nothing moved) in one pass ("video_pending": true while it runs; it never
@@ -39,10 +40,19 @@ signal.signal(signal.SIGUSR1, lambda *_: _USR1.__setitem__("pending", True))
 # task's success and a success never ends the episode (RoboTwin's check_success is still read after every call, and only
 # recorded); POST /finish (JSON {}) ends it (reason "finished"), and so does the end of the agent's session ("timeout");
 # both are judged on the state they leave: RoboTwin's check_success on it (no settle window: the check is one state's).
-# This service has no step cap, so RCB_STEP_LIMIT (which may only lower one) is refused.
+# RCB_STEP_LIMIT=N (with RCB_AGENT_END=1) adds a step limit: N physics steps (1/250 s, the control step: `dt` is a
+# multiple of it); the chunk that reaches it stops there and the episode ends (reason "step_limit"), judged on the state
+# it leaves. A value that is no positive whole number is ignored, never a startup crash (compose would restart it in a loop).
 AGENT_END = os.environ.get("RCB_AGENT_END") == "1"
-if os.environ.get("RCB_STEP_LIMIT"):
-    raise RuntimeError("RCB_STEP_LIMIT: RoboTwin's standard service has no step cap to lower")
+
+
+def _step_limit():
+    try: n = int(str(os.environ.get("RCB_STEP_LIMIT") or "0").strip())
+    except ValueError: n = 0
+    if os.environ.get("RCB_STEP_LIMIT") and (n < 1 or not AGENT_END):
+        print(f"[sim] RCB_STEP_LIMIT={os.environ.get('RCB_STEP_LIMIT')!r} ignored (a positive number of steps, with RCB_AGENT_END=1)", flush=True)
+    return n if n >= 1 and AGENT_END else None
+STEP_LIMIT = _step_limit()
 END_STATE_REASONS = ("finished", "timeout", "step_limit")     # ends judged on the state they leave
 END_JUDGEMENT = "state"
 ENDED_BY = {"finished": "finish", "step_limit": "step_limit", "timeout": "session_end", "error": "error",
@@ -55,11 +65,12 @@ E.update({"now_success": False, "seen_step": None, "trial_seen": False, "finish_
 
 
 def _hidden_success(ok, step: int) -> None:
-    """The task's success as the state now is (after a call): kept, never latched and never shown."""
+    """The task's success as the state now is (after a call): kept, never latched and never shown. `step`: the control
+    (= physics) step the call ended at, the unit of hidden_success_first_step in every 2.1 adapter."""
     E["now_success"] = bool(ok)
     if ok and E["seen_step"] is None:
         E["seen_step"], E["trial_seen"] = int(step), True
-        log({"ev": "hidden_success", "step": int(step)})
+        log({"ev": "hidden_success", "control_steps": int(step)})
 
 
 def _ae_state() -> dict:
@@ -74,7 +85,31 @@ def _ae_fields() -> dict:
     return {"success_signal": "hidden", "ended_by": ENDED_BY.get(r, "failed") if r else None, "end_judgement": END_JUDGEMENT,
             "hidden_success_seen": E["seen_step"] is not None, "hidden_success_first_step": E["seen_step"],
             "trial_hidden_success_seen": bool(E["trial_seen"]),
-            "finish_time_s": round(float(ft) - float(t0), 1) if ft and t0 else None}
+            "finish_time_s": round(float(ft) - float(t0), 1) if ft and t0 else None,
+            **({"step_limit": STEP_LIMIT, "steps_used": _ep_steps()} if STEP_LIMIT else {})}
+
+
+def _ep_steps() -> int:
+    """The episode's physics (= control) steps so far: frozen at its end (the video's render pass resets the scene)."""
+    if E.get("episode_physics_steps") is not None: return int(E["episode_physics_steps"])
+    return int(S._sim_steps) if E.get("built") else 0
+
+
+def _cap_hit() -> bool:
+    return bool(STEP_LIMIT) and int(S._sim_steps) >= STEP_LIMIT
+
+
+def _steps_left() -> dict:
+    """With a step limit: the limit and what is left of it, in every meta and /status."""
+    return {"step_limit": STEP_LIMIT, "steps_left": max(0, STEP_LIMIT - _ep_steps())} if STEP_LIMIT else {}
+
+
+def _check_success() -> bool:
+    """RoboTwin's check_success on the state now. A task class may latch its success in `stage_success_tag` (press_stapler
+    sets it at the first touch and never clears it); it is cleared before every judgement, so the verdict is the state's
+    (as the privileged verifier's one check on the replay's end state), never an earlier moment's."""
+    if hasattr(ENV, "stage_success_tag"): ENV.stage_success_tag = False
+    return bool(ENV.check_success())
 
 # Startup watchdog: a scene build that hangs (seen under GPU memory pressure: no crash, so compose never restarted it)
 # must end the process so compose's restart (on-failure) retries. Neither a Python thread (it needs the GIL, which a hang
@@ -196,20 +231,24 @@ def start_finalize() -> None:
 def finish(reason: str) -> None:
     if E["done"]: return
     E["done"] = True; E["reason"] = reason; E["t_end"] = time.time(); E["episode_physics_steps"] = int(S._sim_steps)
+    judge = (reason in END_STATE_REASONS) if AGENT_END else not E["success"]
     if AGENT_END:      # an end-state end is judged on the state it leaves (a success earlier counts for nothing); else 0
         if reason == "finished": E["finish_t"] = E["t_end"]
         E["success"] = False
-        if reason in END_STATE_REASONS:
-            try: E["success"] = bool(ENV.check_success())
-            except Exception: pass  # noqa
-    elif not E["success"]:
-        try: E["success"] = bool(ENV.check_success())
-        except Exception: pass
+    if judge:
+        try: E["success"] = _check_success()
+        except Exception as exc:  # noqa — the judgement failed: no verdict on the agent (an infrastructure error, not its 0)
+            traceback.print_exc(); E["success"] = False; E["finalize_error"] = f"grading: {exc!r}"[:300]
+            log({"ev": "grading_error", "error": repr(exc)[:300]})
     # rows: the journal rows the end belongs to. A resume keeps an end only if its rows are within the last checkpoint: an
     # end logged by a call that was lost with a crash never happened (as the call itself)
     log({"ev": "end", "reason": reason, "step": E["step"], "physics_steps": int(S._sim_steps), "elapsed_s": round(E["t_end"] - E["t0"], 1), "success": bool(E["success"]),
-         "rows": len(S._recording or []), **({"finish_t": E["finish_t"]} if reason == "finished" else {})})
-    write_final(); start_finalize()
+         "rows": len(S._recording or []), **({"finish_t": E["finish_t"]} if reason == "finished" else {}),
+         **({"grading_error": E["finalize_error"]} if E.get("finalize_error") else {})})
+    write_final()
+    # at the step limit /observe still answers until the agent's session ends (the collect hook's signal finalizes:
+    # the render pass resets the scene); every other end is final now
+    if reason != "step_limit": start_finalize()
 
 
 # ---------------------------------------------------------------- scene
@@ -296,8 +335,13 @@ SPEC = {
 }
 if AGENT_END:
     SPEC["success_signal"] = SUCCESS_SIGNAL_NOTE
-    SPEC["episode"] = ("one episode, no reset: it ends at your POST /finish, when your time is up, or on a simulator error; "
-                       "the state at that end is graded (RoboTwin's check_success)")
+    SPEC["episode"] = ("one episode, no reset: it ends at your POST /finish, " + ("at the step limit, " if STEP_LIMIT else "")
+                       + "when your time is up, or on a simulator error; the state at that end is graded (RoboTwin's check_success)")
+if STEP_LIMIT:
+    SPEC["max_control_steps"] = STEP_LIMIT; SPEC["budget"]["steps"] = STEP_LIMIT
+    SPEC["step_limit_note"] = (f"the episode ends by itself after {STEP_LIMIT} control steps (physics steps of 1/{PHYS_HZ} s; "
+                               "meta.physics_steps counts them, meta.steps_left what is left): the chunk that reaches it stops "
+                               "there and the state it leaves is graded; then /submit and /finish are refused (409), /observe still answers")
 
 
 # ---- proprioception (what a real arm reports: encoders, gripper position, forward kinematics, motor effort)
@@ -520,38 +564,19 @@ def _hold_seconds(meta: dict, parts: dict):
         raise ValueError("a chunk has either rows or `seconds` (a hold chunk without rows), not both")
     if meta.get("interpolate") != "hold":
         raise ValueError('a chunk without rows is a hold chunk: {"type": <type>, "interpolate": "hold", "seconds": n}')
-    v = meta.get("seconds")
-    try:
-        if isinstance(v, bool):
-            raise TypeError
-        n = float(v)
-    except (TypeError, ValueError, OverflowError):
-        raise ValueError("seconds must be a number") from None
-    if not (math.isfinite(n) and 0 < n <= MAX_CHUNK_S + 1e-9):
+    n = real(meta, "seconds")
+    if not (0 < n <= MAX_CHUNK_S + 1e-9):
         raise ValueError(f"a hold chunk's seconds must be in (0, max_chunk_s = {MAX_CHUNK_S:g}]")
     return n
 
 
 def _last_s(meta: dict) -> float:
     """/observe's request: `seconds` > 0 is refused (HOLD_HINT); last_s >= 0 (0 = the current frame)."""
-    s = meta.get("seconds")
-    if s is not None:
-        try:
-            s = float(s)
-        except (TypeError, ValueError, OverflowError):
-            raise ValueError("seconds must be a number") from None
-        if s != 0:
-            raise ValueError(HOLD_HINT)
-    v = meta.get("last_s")
-    if v is None:
-        return 0.0
-    try:
-        if isinstance(v, bool):
-            raise TypeError
-        v = float(v)
-    except (TypeError, ValueError, OverflowError):
-        raise ValueError("last_s must be a number of seconds") from None
-    if not (math.isfinite(v) and v >= 0):
+    s = real(meta, "seconds")
+    if s is not None and s != 0:
+        raise ValueError(HOLD_HINT)
+    v = real(meta, "last_s", 0.0)
+    if v < 0:
         raise ValueError("last_s must be a finite number >= 0")
     return v
 
@@ -577,7 +602,7 @@ def meta_common() -> dict:
     return {"step": E["step"], "calls": E["calls"], "physics_steps": int(S._sim_steps), "sim_time_s": round(int(S._sim_steps) / PHYS_HZ, 3),
             "time_s": round(t, 2), "time_left_s": max(0.0, round(SPEC["budget"]["wall_clock_s"] - t, 1)),
             "proprio": {"layout": SPEC["proprio_layout"], "now": proprio_row().tolist()}, "done": E["done"], "reason": E["reason"],
-            **({"cameras": calib()} if OBS_CALIBRATION else {})}   # the calibration of the state this response ends in
+            **_steps_left(), **({"cameras": calib()} if OBS_CALIBRATION else {})}   # the calibration of the state this response ends in
 
 
 def save_call_evidence(idx: int, meta: dict, rec: Recorder) -> None:
@@ -613,7 +638,8 @@ def current_joint_cmd() -> np.ndarray:
     return np.array(list(lj) + list(rj), dtype=np.float64)
 
 
-def run_joint_position(A: np.ndarray, dt: float, interp: str, rec: Recorder, clipped: list) -> None:
+def run_joint_position(A: np.ndarray, dt: float, interp: str, rec: Recorder, clipped: list) -> int:
+    """Stream the chunk; returns the rows begun (fewer than the chunk's when the step limit ends it inside)."""
     steps_per_row = max(1, int(round(dt * PHYS_HZ))); dt_step = 1.0 / PHYS_HZ
     q_prev = current_joint_cmd()
     rows = [clip_joint_row(row[:14].astype(np.float64), clipped, ri) for ri, row in enumerate(A)]
@@ -632,10 +658,12 @@ def run_joint_position(A: np.ndarray, dt: float, interp: str, rec: Recorder, cli
     for i in range(1, len(Q)):
         apply_joint_target(Q[i], V[i])
         S.step(); LIVE.tick(); rec.tick()
-        if E["done"]: return
+        if E["done"] or _cap_hit(): return (i - 1) // steps_per_row + 1
+    return len(rows)
 
 
-def run_ee_pose(A: np.ndarray, rec: Recorder, plan: list) -> None:
+def run_ee_pose(A: np.ndarray, rec: Recorder, plan: list) -> int:
+    """Plan and run each row; returns the rows begun (fewer when the step limit ends the chunk inside)."""
     for ri, row in enumerate(A):
         lq, rq = row[3:7], row[11:15]
         row = row.copy(); row[3:7] = lq / max(1e-9, np.linalg.norm(lq)); row[11:15] = rq / max(1e-9, np.linalg.norm(rq))
@@ -654,7 +682,8 @@ def run_ee_pose(A: np.ndarray, rec: Recorder, plan: list) -> None:
             a = (k + 1) / n
             ROBOT.set_gripper(gl0 + (gl - gl0) * a, "left"); ROBOT.set_gripper(gr0 + (gr - gr0) * a, "right")
             S.step(); LIVE.tick(); rec.tick()
-            if E["done"]: return
+            if E["done"] or _cap_hit(): return ri + 1
+    return len(A)
 
 
 def _plan_steps(plan: list) -> int:
@@ -670,23 +699,25 @@ def flush_traj() -> None:
         E["flushed"] = len(rows)
 
 
-def _fps(meta: dict) -> int:
-    try: fps = int(meta.get("video_fps", 10))
-    except (TypeError, ValueError, OverflowError): raise ValueError("video_fps must be an integer") from None
+def real(meta: dict, key: str, default=None):
+    """meta[key] as a float: a JSON number (not true/false, not a string), finite; absent or null -> `default`. Anything
+    else is a ValueError (400), the same field check as every eai-standard/3.0 layer (rcb_service.real)."""
+    v = meta.get(key)
+    if v is None: return default
+    if isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(float(v)):
+        raise ValueError(f"{key} must be a finite number (got {v!r:.60})")
+    return float(v)
+
+
+def _fps(meta: dict) -> float:
+    fps = real(meta, "video_fps", 10.0)
     if not 1 <= fps <= MAX_VIDEO_FPS: raise ValueError(f"video_fps must be in [1, {MAX_VIDEO_FPS}]")
     return fps
 
 
 def _num(meta: dict, key: str, default: float) -> float:
     """A numeric request field; anything else is the caller's mistake (400), never a simulator error."""
-    try:
-        v = meta.get(key, default)
-        if isinstance(v, bool): raise TypeError     # JSON true is no number (float(True) is 1.0)
-        v = float(v)
-    except (TypeError, ValueError, OverflowError):
-        raise ValueError(f"{key} must be a number") from None
-    if not math.isfinite(v): raise ValueError(f"{key} must be a finite number")
-    return v
+    return real(meta, key, default)
 
 
 def _cams(meta: dict, default: list) -> list:
@@ -713,100 +744,135 @@ def _frame_budget(cams, fps: int, steps: int, depth: bool) -> None:
                                                  f"the limit is max_frames_per_call = {MAX_FRAMES_PER_CALL}: use fewer cameras, a lower video_fps or a shorter chunk")
 
 
-def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
-    try:   # validation only: nothing below this block runs unless the whole request is well-formed
-        typ = meta.get("type"); dt = _num(meta, "dt", 0.02); interp = meta.get("interpolate", "linear")
-        cams = _cams(meta, ["head_camera"])
-        fps = _fps(meta); video = meta.get("video", "mp4"); depth = bool(meta.get("include_depth", False))
-        if not isinstance(typ, str) or typ not in ("joint_position", "ee_pose"): raise ValueError(f"type must be one of joint_position, ee_pose (not yet: {SPEC['action_types']['not_yet']})")
+def _video(meta: dict, default: str) -> str:
+    v = meta.get("video", default)
+    if v is None: return default
+    if not isinstance(v, str) or v not in ("mp4", "frames", "both", "none"): raise ValueError("video must be mp4|frames|both|none")
+    return v
+
+
+def _type(meta: dict) -> str:
+    typ = meta.get("type")
+    if not isinstance(typ, str) or typ not in ("joint_position", "ee_pose"): raise ValueError(f"type must be one of joint_position, ee_pose (not yet: {SPEC['action_types']['not_yet']})")
+    return typ
+
+
+def parse_submit(meta: dict, parts: dict) -> dict:
+    """Validate a /submit request completely (a chunk of rows or a rows-free hold chunk); returns what do_submit /
+    do_hold execute. No physics, no state change: whatever is wrong here is the caller's mistake (ValueError, 400)."""
+    try:
+        hold = _hold_seconds(meta, parts)     # a rows-free hold chunk (eai-standard/3.0), or None
+        typ = _type(meta); cams = _cams(meta, ["head_camera"])
+        fps = _fps(meta); video = _video(meta, "mp4"); depth = bool(meta.get("include_depth", False))
+        note_full = "" if meta.get("note") is None else str(meta.get("note"))
+        if hold is not None:
+            steps = max(1, int(round(hold * PHYS_HZ)))
+            _frame_budget(cams, fps, steps, depth)
+            return {"hold": hold, "steps": steps, "type": typ, "cams": cams, "fps": fps, "video": video, "depth": depth, "note": note_full}
+        try: A = np.asarray(parts["actions"]["data"] if "actions" in parts else meta.get("actions", []), dtype=np.float64)
+        except (TypeError, ValueError, KeyError, OverflowError, AttributeError) as exc: raise ValueError(f"actions: {exc}"[:200]) from None
+        dt = _num(meta, "dt", 0.02); interp = meta.get("interpolate", "linear")
         dim = SPEC["action_types"][typ]["dim"]; dims = (dim, SPEC["action_types"][typ].get("optional_dim", dim))
         if A.ndim != 2 or A.shape[1] not in dims: raise ValueError(f"{typ} actions must be (T, {dim}) or (T, {dims[1]}), got {list(A.shape)}")
-        if A.shape[0] < 1: raise ValueError(f"{typ} actions must have at least one row, got {list(A.shape)}")
+        if A.shape[0] < 1: raise ValueError('a chunk without rows is a hold chunk: {"type": <type>, "interpolate": "hold", "seconds": n}')
         if not np.all(np.isfinite(A)): raise ValueError("actions contain NaN/inf")
         if not (1.0 / PHYS_HZ - 1e-9 <= dt <= 0.5): raise ValueError(f"dt must be in [{1.0/PHYS_HZ:.4f}, 0.5] s")
         if typ == "joint_position" and abs(dt * PHYS_HZ - round(dt * PHYS_HZ)) > 1e-6: raise ValueError(f"dt must be a multiple of the physics step 1/{PHYS_HZ} s (e.g. 0.004, 0.008, 0.02)")
         # an ee_pose call's length is known only while it runs: it stops filming at the budget (Recorder budget=True)
         _frame_budget(cams, fps, A.shape[0] * max(1, int(round(dt * PHYS_HZ))) if typ == "joint_position" else 0, depth)
-        if typ == "joint_position" and A.shape[0] * dt > MAX_CHUNK_S: raise ValueError(f"chunk longer than max_chunk_s={MAX_CHUNK_S}: {A.shape[0]} rows x {dt} s")
+        if typ == "joint_position" and A.shape[0] * dt > MAX_CHUNK_S + 1e-9: raise ValueError(f"chunk longer than max_chunk_s={MAX_CHUNK_S}: {A.shape[0]} rows x {dt} s")
         if typ == "ee_pose" and A.shape[0] > 50: raise ValueError("ee_pose: at most 50 rows per submit")
         if not isinstance(interp, str) or interp not in ("hold", "linear"): raise ValueError("interpolate must be hold|linear")
-        if not isinstance(video, str) or video not in ("mp4", "frames", "both", "none"): raise ValueError("video must be mp4|frames|both|none")
-        note_full = "" if meta.get("note") is None else str(meta.get("note"))
-    except (TypeError, OverflowError, AttributeError, KeyError) as exc:
+        return {"A": A, "type": typ, "dt": dt, "interp": interp, "cams": cams, "fps": fps, "video": video, "depth": depth, "note": note_full}
+    except (TypeError, OverflowError, AttributeError, KeyError, IndexError) as exc:
         raise _bad_request(exc) from None
+
+
+def parse_observe(meta: dict) -> dict:
+    """Validate an /observe request completely; returns what do_observe executes (ValueError: 400)."""
+    try:
+        cams = _cams(meta, ALL_CAMS[:4])
+        last_s = _last_s(meta); fps = _fps(meta); video = _video(meta, "frames"); depth = bool(meta.get("include_depth", False))
+        if last_s > 0 and depth: raise ValueError(DEPTH_PAST)   # the recorder keeps RGB only (spec timing.recorder.depth = [])
+        _frame_budget(cams, fps, 0, depth)
+        return {"cams": cams, "last_s": last_s, "fps": fps, "video": video, "depth": depth}
+    except (TypeError, OverflowError, AttributeError, KeyError, IndexError) as exc:
+        raise _bad_request(exc) from None
+
+
+def _judge_after_call(succ_label: str) -> bool:
+    """After a call: the task's success on the state now. Agent-ended: recorded only (evidence: never shown, never an end,
+    and a failing check is logged, not a simulator error). Without the feature: the first success ends the episode."""
+    if AGENT_END:
+        try: _hidden_success(_check_success(), int(S._sim_steps))
+        except Exception as exc:  # noqa — the hidden record is evidence only
+            log({"ev": "hidden_success_error", "after": succ_label, "error": repr(exc)[:300]})
+        return False
+    succ = _check_success(); E["success"] = E["success"] or succ
+    return succ
+
+
+def do_submit(q: dict) -> tuple[dict, list]:
+    if "hold" in q: return do_hold(q)
+    A, typ, dt, interp, cams, fps, video, depth, note_full = (q[k] for k in ("A", "type", "dt", "interp", "cams", "fps", "video", "depth", "note"))
     rec = Recorder(cams, fps, depth, budget=typ == "ee_pose", ring=True); clipped: list = []; plan: list = []
     note = note_full.replace("\n", " ")[:40]
     LIVE.set_label(E["calls"] + 1, f"submit {typ} x{A.shape[0]}" + (f" dt={dt:g}" if typ == "joint_position" else "") + (f"  [{note}]" if note else ""))
     before = int(S._sim_steps); rec.tick(force=True)
-    if typ == "joint_position": run_joint_position(A, dt, interp, rec, clipped)
-    else: run_ee_pose(A, rec, plan)
+    if typ == "joint_position": executed = run_joint_position(A, dt, interp, rec, clipped)
+    else: executed = run_ee_pose(A, rec, plan)
     rec.tick(force=True); LIVE.end_call()
-    E["step"] += int(A.shape[0]); E["calls"] += 1
-    succ = bool(ENV.check_success())
-    if AGENT_END: _hidden_success(succ, E["step"]); succ = False      # recorded, never shown, never an end
-    else: E["success"] = E["success"] or succ
+    E["step"] += int(executed); E["calls"] += 1
+    succ = _judge_after_call("submit")
     planned = round(int(A.shape[0]) * dt, 6) if typ == "joint_position" else round(_plan_steps(plan) / PHYS_HZ, 6)
-    out = {**meta_common(), "chunk_id": E["calls"], "type": typ, "executed_rows": int(A.shape[0]), "physics_steps_chunk": int(S._sim_steps) - before,
+    out = {**meta_common(), "chunk_id": E["calls"], "type": typ, "executed_rows": int(executed), "physics_steps_chunk": int(S._sim_steps) - before,
            "duration_s": round((int(S._sim_steps) - before) / PHYS_HZ, 6), "planned_duration_s": planned,
            "clipped": clipped[:200], "n_clipped": len(clipped), "plan": plan, "rejected": None,
            "frame_step": int(S._sim_steps), "ok": True,   # the physics step its newest image shows (as /observe's)
            **({"frames_skipped": rec.skipped} if rec.skipped else {})}
-    log({"ev": "submit", "call": E["calls"], "type": typ, "rows": int(A.shape[0]), "dt": dt, "interpolate": interp, "cameras": cams, "note": note_full[:500],
+    log({"ev": "submit", "call": E["calls"], "type": typ, "rows": int(A.shape[0]), "executed_rows": int(executed), "dt": dt, "interpolate": interp, "cameras": cams, "note": note_full[:500],
          "physics_steps": int(S._sim_steps) - before, "n_clipped": len(clipped), "plan": plan[:50], "success": succ})
     save_call_evidence(E["calls"], {k: v for k, v in out.items() if k != "cameras"}, rec)
     try: np.save(os.path.join(DATA, "calls", f"{E['calls']:06d}", "actions.npy"), A.astype(np.float32))
     except Exception: pass  # noqa
     flush_traj(); log({"ev": "checkpoint", "call": E["calls"], "step": E["step"], "rows": E.get("flushed", 0), "success": E["success"], "state_sha": S.state_sha(), **_ae_state()})
     if succ: finish("success")
-    out["done"] = E["done"]; out["reason"] = E["reason"]
+    elif _cap_hit(): finish("step_limit")
+    out["done"] = E["done"]; out["reason"] = E["reason"]; out.update(_steps_left())
     return out, rec.parts(video, 1.0 / (RING_DT * rec.every))   # the capture's real frame rate
 
 
-def do_hold(meta: dict, n: float) -> tuple[dict, list]:
-    """A rows-free hold chunk (eai-standard/3.0): the drives hold their targets for n seconds of robot time, answered as a
-    /submit (what /observe with seconds > 0 did before)."""
-    try:   # validation only (as in do_submit)
-        typ = meta.get("type"); cams = _cams(meta, ["head_camera"])
-        fps = _fps(meta); video = meta.get("video", "mp4"); depth = bool(meta.get("include_depth", False))
-        if not isinstance(typ, str) or typ not in ("joint_position", "ee_pose"): raise ValueError(f"type must be one of joint_position, ee_pose (not yet: {SPEC['action_types']['not_yet']})")
-        if not isinstance(video, str) or video not in ("mp4", "frames", "both", "none"): raise ValueError("video must be mp4|frames|both|none")
-        steps = max(1, int(round(n * PHYS_HZ)))
-        _frame_budget(cams, fps, steps, depth)
-        note_full = "" if meta.get("note") is None else str(meta.get("note"))
-    except (TypeError, OverflowError, AttributeError, KeyError) as exc:
-        raise _bad_request(exc) from None
+def do_hold(q: dict) -> tuple[dict, list]:
+    """A rows-free hold chunk (eai-standard/3.0): the drives hold their position targets, at rest (velocity targets 0: the
+    last chunk's feed-forward is not carried on), for q["steps"] physics steps of robot time, answered as a /submit (what
+    /observe with seconds > 0 did before)."""
+    typ, cams, fps, video, depth, steps, n = (q[k] for k in ("type", "cams", "fps", "video", "depth", "steps", "hold"))
     rec = Recorder(cams, fps, depth, ring=True); before = int(S._sim_steps)
     LIVE.set_label(E["calls"] + 1, f"submit hold {n:g}s"); rec.tick(force=True)
+    q0 = current_joint_cmd(); zero = np.zeros(6)
+    ROBOT.set_arm_joints(q0[0:6], zero, "left"); ROBOT.set_arm_joints(q0[7:13], zero, "right")
     for _ in range(steps):
         S.step(); LIVE.tick(); rec.tick()
-        if E["done"]: break
+        if E["done"] or _cap_hit(): break
     rec.tick(force=True); LIVE.end_call(); E["calls"] += 1
-    succ = bool(ENV.check_success())
-    if AGENT_END: _hidden_success(succ, E["step"]); succ = False      # recorded, never shown, never an end
-    else: E["success"] = E["success"] or succ
+    succ = _judge_after_call("hold")
     out = {**meta_common(), "chunk_id": E["calls"], "type": typ, "hold": True, "executed_rows": 0, "physics_steps_chunk": int(S._sim_steps) - before,
            "duration_s": round((int(S._sim_steps) - before) / PHYS_HZ, 6), "planned_duration_s": round(n, 6),
            "clipped": [], "n_clipped": 0, "plan": [], "rejected": None, "frame_step": int(S._sim_steps), "ok": True}
-    log({"ev": "submit", "call": E["calls"], "type": typ, "rows": 0, "hold_s": n, "cameras": cams, "note": note_full[:500],
+    log({"ev": "submit", "call": E["calls"], "type": typ, "rows": 0, "hold_s": n, "cameras": cams, "note": q["note"][:500],
          "physics_steps": int(S._sim_steps) - before, "n_clipped": 0, "success": succ})
     save_call_evidence(E["calls"], {k: v for k, v in out.items() if k != "cameras"}, rec); flush_traj()
     log({"ev": "checkpoint", "call": E["calls"], "step": E["step"], "rows": E.get("flushed", 0), "success": E["success"], "state_sha": S.state_sha(), **_ae_state()})
     if succ: finish("success")
-    out["done"] = E["done"]; out["reason"] = E["reason"]
+    elif _cap_hit(): finish("step_limit")
+    out["done"] = E["done"]; out["reason"] = E["reason"]; out.update(_steps_left())
     return out, rec.parts(video, 1.0 / (RING_DT * rec.every))   # the capture's real frame rate
 
 
-def do_observe(meta: dict) -> tuple[dict, list]:
+def do_observe(q: dict) -> tuple[dict, list]:
     """/observe never lets time pass (eai-standard/3.0): last_s = 0 the current frames, last_s = n the recorder's frames of
     the last n robot seconds (none recorded yet: the current frames)."""
-    try:   # validation only (as in do_submit)
-        cams = _cams(meta, ALL_CAMS[:4])
-        last_s = _last_s(meta); fps = _fps(meta); video = meta.get("video", "frames"); depth = bool(meta.get("include_depth", False))
-        if not isinstance(video, str) or video not in ("mp4", "frames", "both", "none"): raise ValueError("video must be mp4|frames|both|none")
-        if last_s > 0 and depth: raise ValueError(DEPTH_PAST)   # the recorder keeps RGB only (spec timing.recorder.depth = [])
-        _frame_budget(cams, fps, 0, depth)
-    except (TypeError, OverflowError, AttributeError, KeyError) as exc:
-        raise _bad_request(exc) from None
+    cams, last_s, fps, video, depth = (q[k] for k in ("cams", "last_s", "fps", "video", "depth"))
     pick = _ring_pick(last_s, fps, len(cams)) if last_s > 0 else []
     E["calls"] += 1
     log({"ev": "observe", "call": E["calls"], "last_s": last_s, "cameras": cams, "physics_steps": 0})
@@ -828,8 +894,8 @@ def do_observe(meta: dict) -> tuple[dict, list]:
 
 
 def _status() -> dict:
-    return {"step": E["step"], "calls": E["calls"], "physics_steps": int(S._sim_steps), "done": E["done"], "reason": E["reason"],
-            "elapsed_s": round(time.time() - E["t0"], 1)}
+    return {"step": E["step"], "calls": E["calls"], "physics_steps": _ep_steps(), "done": E["done"], "reason": E["reason"],
+            "elapsed_s": round(time.time() - E["t0"], 1), **_steps_left()}
 
 
 class H(BaseHTTPRequestHandler):
@@ -843,11 +909,15 @@ class H(BaseHTTPRequestHandler):
         body = rcb1.encode(meta, parts)
         self.send_response(200); self.send_header("Content-Type", "application/x-rcb1"); self.send_header("Content-Length", str(len(body))); self.end_headers(); self.wfile.write(body)
     def log_message(self, *a): pass
-    def _body(self):
-        try: n = int(self.headers.get("Content-Length", 0))
+    def _length(self) -> int:
+        """The body's Content-Length: ValueError for a bad or negative one (400), "request too large" above MAX_BODY (413)."""
+        try: n = int(self.headers.get("Content-Length", 0) or 0)
         except ValueError: raise ValueError("bad Content-Length")
         if n < 0: raise ValueError("bad Content-Length")   # read(-1) would read until the client hangs up, without any bound
         if n > MAX_BODY: raise ValueError("request too large")
+        return n
+    def _body(self):
+        n = self._length()
         raw = self.rfile.read(n) if n else b""
         if raw[:4] == rcb1.MAGIC:
             meta, parts = rcb1.decode(raw)
@@ -861,44 +931,41 @@ class H(BaseHTTPRequestHandler):
         if self.path == "/spec": return self._json(200, SPEC)
         if self.path == "/status": return self._json(200, _status())
         return self._json(404, {"error": "no such endpoint"})
+    def _over(self) -> bool:
+        """The call is refused (409) because the episode is over: after /finish every POST; after any end /submit and
+        /finish; /observe too once the render pass runs (it resets the scene). Asked before LOCK as well: finalize()
+        holds LOCK while it renders the videos, and a refused call must not wait for that."""
+        if not E["done"]: return False
+        return self.path != "/observe" or (AGENT_END and E["reason"] == "finished") or bool(E.get("finalizing"))
     def do_POST(self):
         if self.path not in ("/submit", "/observe") + (("/finish",) if AGENT_END else ()): return self._json(404, {"error": "no such endpoint"})
-        try: meta, parts = self._body()
+        try:
+            if self.path == "/finish":   # its body is ignored (never parsed); only its size is checked
+                n = self._length()
+                if n: self.rfile.read(n)
+                meta, parts = {}, {}
+            else: meta, parts = self._body()
         except Exception as exc: return self._json(413 if str(exc) == "request too large" else 400, {"error": str(exc)[:200]})
+        touch_clock()
+        if self._over(): return self._json(409, {"error": "episode finished", "reason": E["reason"]})
         with LOCK:
-            touch_clock()
             log({"ev": "call_begin", "path": self.path, "call": E["calls"] + 1})
             try: return self._serve(meta, parts)
             finally: log({"ev": "call_end", "path": self.path})
 
     def _serve(self, meta, parts):
+        if self._over(): return self._json(409, {"error": "episode finished", "reason": E["reason"]})
         if self.path == "/finish":   # agent-ended episodes: the agent ends the episode; the state it leaves is graded
-            if E["done"] or E.get("finalizing"): return self._json(409, {"error": "episode finished", "reason": E["reason"]})
             finish("finished"); return self._json(200, {"ok": True, **_status()})
-        if self.path == "/observe" and AGENT_END and E["done"] and E["reason"] == "finished":
-            return self._json(409, {"error": "episode finished", "reason": E["reason"]})   # after /finish: /spec, /status only
-        if True:
-            if self.path == "/submit":
-                if E["done"]: return self._json(409, {"error": "episode finished", "reason": E["reason"]})
-                try: hold = _hold_seconds(meta, parts)     # a rows-free hold chunk (eai-standard/3.0), or None
-                except ValueError as exc: return self._json(400, {"error": str(exc)})
-                try: A = np.asarray(parts["actions"]["data"] if "actions" in parts else meta.get("actions", []), dtype=np.float64)
-                except (TypeError, ValueError, KeyError, OverflowError, AttributeError) as exc: return self._json(400, {"error": f"actions: {exc}"[:200]})
-                try:
-                    out, blobs = do_hold(meta, hold) if hold is not None else do_submit(meta, A)
-                except ValueError as exc:
-                    return self._json(400, {"error": str(exc)})
-                except Exception as exc:  # noqa
-                    traceback.print_exc(); E["error"] = repr(exc); log({"ev": "error", "error": repr(exc)}); finish("error")
-                    return self._json(500, {"error": "simulator error", "detail": repr(exc)[:200]})
-            else:
-                try:
-                    out, blobs = do_observe(meta)
-                except ValueError as exc:
-                    return self._json(400, {"error": str(exc)})
-                except Exception as exc:  # noqa
-                    traceback.print_exc(); E["error"] = repr(exc); log({"ev": "error", "error": repr(exc)}); finish("error")
-                    return self._json(500, {"error": "simulator error", "detail": repr(exc)[:200]})
+        try:   # the whole request is checked before any physics: whatever is wrong with it is a 400 and changes nothing
+            q = parse_submit(meta, parts) if self.path == "/submit" else parse_observe(meta)
+        except ValueError as exc:
+            return self._json(400, {"error": str(exc)[:300]})
+        try:   # from here on the simulator runs: any failure is a simulator error (500), which ends the episode
+            out, blobs = do_submit(q) if self.path == "/submit" else do_observe(q)
+        except Exception as exc:  # noqa
+            traceback.print_exc(); E["error"] = repr(exc); log({"ev": "error", "error": repr(exc)}); finish("error")
+            return self._json(500, {"error": "simulator error", "detail": repr(exc)[:200]})
         return self._rcb1(out, blobs)
 
 
@@ -960,6 +1027,7 @@ def _resume_or_start() -> None:
         # end-state end is judged only in finish(), the checkpoints keep success False; without the feature: a timeout's
         # check_success). A crash between the end and finalize() must not turn a success into 0.
         E["success"] = bool(ended[-1].get("success", E["success"]))
+        if ended[-1].get("grading_error"): E["finalize_error"] = ended[-1]["grading_error"]   # still no verdict on the agent
     log({"ev": "resumed", "rows": n, "calls": E["calls"], "state_sha": S.state_sha(), "crashed_in_call": in_call, "downtime_s": round(time.time() - float(ev[-1]["ts"]), 1)})
     if not E["done"] and E["success"]:
         # the call that succeeded completed (its checkpoint holds the success) and the crash came before its end was
@@ -967,6 +1035,8 @@ def _resume_or_start() -> None:
         E["done"] = True; E["reason"] = "success"; E["t_end"] = float(last.get("ts") or time.time()); E["episode_physics_steps"] = int(S._sim_steps)
         log({"ev": "end", "reason": "success", "step": E["step"], "physics_steps": int(S._sim_steps), "elapsed_s": round(E["t_end"] - E["t0"], 1),
              "success": True, "rows": n, "on_resume": True})
+    if not E["done"] and _cap_hit():
+        finish("step_limit")   # the call that reached the step limit completed; the crash came before its end was logged
     write_final()
 
 

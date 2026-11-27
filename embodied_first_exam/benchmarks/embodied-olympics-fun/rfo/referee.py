@@ -266,6 +266,7 @@ class Referee:
     def substep(self) -> None:
         self.ph += 1
         self._scan()
+        self.w.task.actuate(self.w, self)           # the scene's actuators run on after the call (agent-ended episodes)
         if not self.done:
             self.w.task.substep(self.w, self)
 

@@ -6,12 +6,13 @@ per-call checkpoints, at most RCB_MAX_RESUMES resumes), startup watchdog, SIGUSR
 episode, /data evidence. Differences, all from Meta-World:
 - the action type is the tool module's (mw_tool.ACTION_TYPE: `ee_delta`, Meta-World's native [dx, dy, dz, grip]);
   Meta-World's Sawyer has no arm actuators (the hand is driven by a mocap weld), so there is no `joint_position`;
-- watching (/observe with seconds > 0) holds the hand still (S.hold_targets()), since actions are deltas;
+- a hold chunk (eai-standard/3.0: /submit {"interpolate": "hold", "seconds": n}, no rows) holds the hand still
+  (S.hold_targets()), since actions are deltas; /observe only reads (`last_s`, the recorder);
 - cameras and proprioception come from the tool module (mw_tool.CAMERA_VIEWS, mw_tool.PROPRIO_LAYOUT);
 - like the MuJoCo service since the migration (docs/protocol/README.md §7): a simulator error (500) ends the episode with
   reason "error", an oversized body is answered with 413. Requests are validated in full before any physics runs: a
-  malformed one (`dt` / `seconds` / `video_fps` not a finite number, `cameras` not a list of names, ...) is a 400 that
-  changes nothing.
+  malformed one (`dt` / `seconds` / `video_fps` / `last_s` not a finite JSON number, `cameras` not a list of names, ...)
+  is a 400 that changes nothing. A /finish body is never parsed (only its size is checked).
 - final.json is `finalized` as soon as the verdict is in it; the video is rendered after that and never changes or
   delays the verdict (`video_pending` while it renders; `video_done` tells the collect hook that nothing more comes).
 - `time_s` / `time_left_s` count from the agent's first request to the service, not from the service's start.
@@ -20,7 +21,8 @@ episode, /data evidence. Differences, all from Meta-World:
 
 What the agent gets: camera RGB (+ depth) with each camera's calibration, the robot's own state (hand position, gripper
 opening, mocap target, arm and finger joints, last command) and the task's target point. Never an object's pose.
-The episode runs until the agent's time is up; the state after the last executed control step is graded.
+The episode is agent-ended (RCB_AGENT_END=1): it runs until the agent's POST /finish, the step cap or the end of the
+agent's session, and the state after the last executed control step is graded; the success is never shown.
 
 Grading (owner 2026-10-17; docs/benchmarks/metaworldplus.md "Grading"): the verdict is the live
 episode's. When the episode ends, Meta-World's own success check (`evaluate_state`, the one the privileged verifier
@@ -598,38 +600,19 @@ def _hold_seconds(meta: dict, parts: dict):
         raise ValueError("a chunk has either rows or `seconds` (a hold chunk without rows), not both")
     if meta.get("interpolate") != "hold":
         raise ValueError('a chunk without rows is a hold chunk: {"type": <type>, "interpolate": "hold", "seconds": n}')
-    v = meta.get("seconds")
-    try:
-        if isinstance(v, bool):
-            raise TypeError
-        n = float(v)
-    except (TypeError, ValueError, OverflowError):
-        raise ValueError("seconds must be a number") from None
-    if not (math.isfinite(n) and 0 < n <= MAX_CHUNK_S + 1e-9):
+    n = real(meta, "seconds")
+    if not (0 < n <= MAX_CHUNK_S + 1e-9):
         raise ValueError(f"a hold chunk's seconds must be in (0, max_chunk_s = {MAX_CHUNK_S:g}]")
     return n
 
 
 def _last_s(meta: dict) -> float:
     """/observe's request: `seconds` > 0 is refused (HOLD_HINT); last_s >= 0 (0 = the current frame)."""
-    s = meta.get("seconds")
-    if s is not None:
-        try:
-            s = float(s)
-        except (TypeError, ValueError, OverflowError):
-            raise ValueError("seconds must be a number") from None
-        if s != 0:
-            raise ValueError(HOLD_HINT)
-    v = meta.get("last_s")
-    if v is None:
-        return 0.0
-    try:
-        if isinstance(v, bool):
-            raise TypeError
-        v = float(v)
-    except (TypeError, ValueError, OverflowError):
-        raise ValueError("last_s must be a number of seconds") from None
-    if not (math.isfinite(v) and v >= 0):
+    s = real(meta, "seconds")
+    if s is not None and s != 0:
+        raise ValueError(HOLD_HINT)
+    v = real(meta, "last_s", 0.0)
+    if v < 0:
         raise ValueError("last_s must be a finite number >= 0")
     return v
 
@@ -657,28 +640,27 @@ def _ctrl_step(tg, rec) -> bool:
 VIDEO_MODES = ("mp4", "frames", "both", "none")
 
 
-def _fps(meta: dict) -> int:
-    try:
-        fps = int(meta.get("video_fps", 10))
-    except (TypeError, ValueError, OverflowError):
-        raise ValueError("video_fps must be an integer") from None
+def real(meta: dict, key: str, default=None):
+    """meta[key] as a float: a JSON number (not true/false, not a string), finite; absent or null -> `default`. Anything
+    else is a ValueError (400), the same field check as every eai-standard/3.0 layer (rcb_service.real)."""
+    v = meta.get(key)
+    if v is None:
+        return default
+    if isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(float(v)):
+        raise ValueError(f"{key} must be a finite number (got {v!r:.60})")
+    return float(v)
+
+
+def _fps(meta: dict) -> float:
+    fps = real(meta, "video_fps", 10.0)
     if not 1 <= fps <= MAX_VIDEO_FPS:
         raise ValueError(f"video_fps must be in [1, {MAX_VIDEO_FPS}]")
     return fps
 
 
 def _num(meta: dict, key: str, default: float) -> float:
-    """A finite numeric request field; anything else (null, a string, NaN, Infinity) is a 400."""
-    try:
-        v = meta.get(key, default)
-        if isinstance(v, bool):  # JSON true is no number (float(True) is 1.0)
-            raise TypeError
-        v = float(v)
-    except (TypeError, ValueError, OverflowError):
-        raise ValueError(f"{key} must be a number") from None
-    if not math.isfinite(v):
-        raise ValueError(f"{key} must be a finite number")
-    return v
+    """A finite numeric request field (a JSON number); anything else (a string, true/false, NaN, Infinity) is a 400."""
+    return real(meta, key, default)
 
 
 def _cameras(meta: dict, default: list) -> list:
@@ -1080,7 +1062,12 @@ class Hd(BaseHTTPRequestHandler):
         if self._n > MAX_BODY:
             return self._json(413, {"error": f"request body over {MAX_BODY} bytes"})
         try:
-            self._req = self._body()
+            if self.path == "/finish":  # its body is ignored, never parsed (only its size was checked)
+                if self._n:
+                    self.rfile.read(self._n)
+                self._req = ({}, {})
+            else:
+                self._req = self._body()
         except Exception as exc:  # noqa: BLE001
             return self._json(400, {"error": str(exc)[:200]})
         with LOCK:

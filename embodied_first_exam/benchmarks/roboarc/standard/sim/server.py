@@ -1,4 +1,4 @@
-"""eai-standard/2.2 sim service for TopoGym (Genesis 1.2.1 on CUDA, Nyx RGB; docs/protocol/standard_mode.md): the TopoGym
+"""eai-standard/2.4 sim service for TopoGym (Genesis 1.2.1 on CUDA, Nyx RGB; docs/protocol/standard_mode.md): the TopoGym
 adapter of the shared layer rcb_limited.py (scripts/eai_standard/, copied unchanged into every standard task). Adapted from
 Embodied First Exam's RoboWits service. HTTP surface (rcb_limited.py): GET /spec, GET /status, POST /observe, POST /submit
 (RCB1 bodies, RCB1 responses), POST /kinematics (stateless FK / IK on the robot's own model). Logs every call to
@@ -28,9 +28,10 @@ assistance (the gripper `command` text of /spec says the rule). Genesis' CUDA co
 scene, so every simulator call runs on the main thread: the HTTP layer serves from a thread and hands submit / observe /
 kinematics, the per-call checkpoint's state hash and proprio row, and the episode end to the main thread's job queue.
 
-Agent-ended episodes (PROTOCOL §3; RCB_AGENT_END "1" in the task's sim service, rcb_agent_end.py): a success never ends the
-episode and is never shown; POST /finish ends it (reason "finished"), and so does the end of the agent's session
-("timeout"). Those two ends, and the runaway guard ("step_limit"), are judged on the end state: the task's success
+Agent-ended episodes (PROTOCOL §3; RCB_AGENT_END "1" in the task's sim service, rcb_agent_end.py; the service refuses to
+start without it): a success never ends the episode and is never shown; POST /finish ends it (reason "finished"), and so
+does the end of the agent's session ("timeout"). Those two ends, and the step cap ("step_limit": the runaway guard,
+rcb_topogym.MAX_STEPS, or RCB_STEP_LIMIT when smaller), are judged on the end state: the task's success
 predicate must be true when the episode ends and stay true for the family's confirmation window (stable_duration_s:
 0.5 s, 1 s for buzz-wire, 2 s for hedgehog-in-cage), the control steps it already held before the end counting, the rest
 run after the end with the last targets held (recorded after `live_rows`, so never part of the live rows). To keep the
@@ -42,7 +43,11 @@ The task's failure predicates (a piece dropped off the table, a blanket falling,
 the episode at once, with 0 even after a success. A
 success with a deep task contact is still held for review (finalize.sh) instead of credited. Calls are served one at a
 time: a /finish sent while a /submit or /observe runs (an operation in flight) waits for it to complete; after /finish
-every call but GET /spec, /status and /operations/<id> is a 409."""
+every call but GET /spec, /status and /operations/<id> is a 409. Once the episode has ended (the step cap, the wall clock),
+/observe and /status show the state it ended in (its control steps, its frames: END_VIEW), never the confirmation window
+run after the end. A service-side fault (an execution checkpoint or journal row that could not be committed, the host's
+OSError / MemoryError) ends the episode as "service_error" and an exception while judging the end state is
+finalize_error: both are infrastructure (infra_error), never the agent's 0."""
 from __future__ import annotations
 import json, math, os, queue, sys, threading, time, traceback
 import numpy as np
@@ -50,6 +55,9 @@ import numpy as np
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import rcb_limited as L  # noqa: E402
 import rcb_agent_end as AE  # noqa: E402
+
+if not AE.ENABLED:   # every RoboARC TopoGym standard task is agent-ended (v3.0): no first-success service is kept
+    raise RuntimeError("RoboARC TopoGym standard service: RCB_AGENT_END=1 is required (agent-ended episodes)")
 
 PROTOCOL = L.PROTOCOL
 DATA = os.environ.get("RCB_DATA", "/data"); os.makedirs(DATA, exist_ok=True); os.makedirs(os.path.join(DATA, "calls"), exist_ok=True)
@@ -94,7 +102,14 @@ def ctrl_steps() -> int:
 # Episode ends that are infrastructure failures, never the agent's: a numerically unstable simulation
 # (rcb_topogym.SIMULATOR_INSTABILITY: a cloth particle faster than PARTICLE_SPEED_LIMIT_M_S, before the task's own failure
 # predicates). A simulator error the agent's call raised (reason "error") is the agent's 0 (PROTOCOL §4).
-INFRA_REASONS = ("simulator_instability",)
+# A service-side fault in a call (SERVICE_ERROR: on_error) is infrastructure too.
+SERVICE_ERROR = "service_error"
+INFRA_REASONS = ("simulator_instability", SERVICE_ERROR)
+
+
+def infra_now() -> int:
+    """final.json / episode.json infra_error: an infrastructure end, or the end state could not be judged."""
+    return int(E["reason"] in INFRA_REASONS or bool(E.get("finalize_error")))
 
 
 def instability_fields() -> dict:
@@ -110,7 +125,7 @@ def write_final() -> None:
         return
     n = int(E.get("episode_control_steps") or ctrl_steps())
     L._write_json(os.path.join(DATA, "final.json"), {
-        "success": bool(E["success"]), "infra_error": int(E["reason"] in INFRA_REASONS), **instability_fields(), "steps": E["step"], "calls": E["calls"], "control_steps": n, "physics_steps": S.physics_steps, "sim_time_s": S.sim_time_s,
+        "success": bool(E["success"]), "infra_error": infra_now(), **instability_fields(), "steps": E["step"], "calls": E["calls"], "control_steps": n, "physics_steps": S.physics_steps, "sim_time_s": S.sim_time_s,
         "elapsed_s": round((E.get("t_end") or time.time()) - E["t0"], 1), "reason": E["reason"], "done": E["done"], "task": TASK,
         "protocol": PROTOCOL, "finalized": False, "n_actions": E.get("n_actions"), "live_rows": E.get("live_rows"),
         "live_sha": E.get("live_sha"), **EP.final_fields(), **ae_fields(n)})
@@ -118,10 +133,9 @@ def write_final() -> None:
 
 def ae_fields(n: int) -> dict:
     """Agent-ended episodes: rcb_agent_end's final fields plus how this adapter judged the end state."""
-    if not AE.ENABLED:
-        return AE.final_fields(E, n)
     return {**AE.final_fields(E, n), "ae_mode": HOLD.get("mode"), "ae_window_s": HOLD.get("window"),
-            "ae_end_held_s": E.get("ae_end_held_s")}
+            "ae_end_held_s": E.get("ae_end_held_s"),
+            **({"finalize_error": E["finalize_error"]} if E.get("finalize_error") else {})}
 
 
 def dump() -> None:
@@ -133,13 +147,13 @@ def dump() -> None:
     try:
         acts = S.record_stop(); E["live_sha"] = S.state_sha(); E["n_actions"] = int(len(acts))
         n_live = E.get("end_row"); E["live_rows"] = int(len(acts) if n_live is None else min(int(n_live), len(acts)))
-        S.save_trajectory(acts, os.path.join(DATA, "trajectory.npz"), meta={"source": "standard-mode episode (eai-standard/2.2)", "steps": E["step"],
+        S.save_trajectory(acts, os.path.join(DATA, "trajectory.npz"), meta={"source": f"standard-mode episode ({PROTOCOL})", "steps": E["step"],
                                                                             "reason": E["reason"], "live_rows": E["live_rows"], "resumes": EP.resumes})
     except Exception as exc:  # noqa
         traceback.print_exc(); log({"ev": "dump_error", "error": repr(exc)})
     n = int(E.get("episode_control_steps") or 0)
     L._write_json(os.path.join(DATA, "episode.json"), {
-        "success": bool(E["success"]), "infra_error": int(E["reason"] in INFRA_REASONS), **instability_fields(), "steps": E["step"], "calls": E["calls"], "control_steps": n, "physics_steps": S.physics_steps, "sim_time_s": S.sim_time_s,
+        "success": bool(E["success"]), "infra_error": infra_now(), **instability_fields(), "steps": E["step"], "calls": E["calls"], "control_steps": n, "physics_steps": S.physics_steps, "sim_time_s": S.sim_time_s,
         "elapsed_s": round((E.get("t_end") or time.time()) - E["t0"], 1), "reason": E["reason"], "task": TASK, "protocol": PROTOCOL,
         "n_actions": E.get("n_actions"), "live_rows": E.get("live_rows"), "live_sha": E.get("live_sha"), **EP.final_fields(),
         **ae_fields(n)})
@@ -149,15 +163,16 @@ def dump() -> None:
 def finish(reason: str) -> None:
     if E["done"]: return
     E["done"] = True; E["reason"] = reason; E["t_end"] = time.time(); E["episode_control_steps"] = ctrl_steps()
-    E.setdefault("end_row", len(S._recording) if S._recording is not None else None)   # timeout / error / guard ends
-    if AE.ENABLED:          # agent-ended: only finish, the session's end and the runaway guard are judged, on the end state
-        try: E["success"] = reason in AE.END_STATE_REASONS and judge_end()
-        except Exception: traceback.print_exc(); E["success"] = False
-        if E["success"]:                # the end state is a success: seen (at the episode's last control step) if not before
-            AE.hidden_success(E, True, log, E["episode_control_steps"])
-    elif not E["success"]:
-        try: E["success"] = check_success()
-        except Exception: pass
+    E.setdefault("end_row", len(S._recording) if S._recording is not None else None)   # timeout / error / cap ends
+    if reason in ("step_limit", "timeout") and not E.get("exiting"):
+        end_view_take()     # what /observe shows from now on: the state it ended in, not the window run after it
+    # agent-ended: only finish, the session's end and the step cap are judged, on the end state
+    try:
+        E["success"] = reason in AE.END_STATE_REASONS and judge_end()
+    except Exception as exc:  # noqa: BLE001 - the end state was not judged: infrastructure (infra_now), never a 0
+        traceback.print_exc(); E["success"] = False; E["finalize_error"] = repr(exc)[:300]
+    if E["success"]:                # the end state is a success: seen (at the episode's last control step) if not before
+        AE.hidden_success(E, True, log, E["episode_control_steps"])
     log({"ev": "end", "reason": reason, "step": E["step"], "control_steps": E["episode_control_steps"], "elapsed_s": round(E["t_end"] - E["t0"], 1), "success": bool(E["success"])})
     dump()
 
@@ -169,8 +184,6 @@ HOLD = {"s": 0.0, "mode": None, "window": None}
 
 
 def ae_setup() -> None:
-    if not AE.ENABLED:
-        return
     T = getattr(S.env, "_task", None)
     cfg = getattr(T, "config", None)
     if T is None or not hasattr(T, "_goal_active") or not isinstance(cfg, dict) or "stable_duration_s" not in cfg:
@@ -193,6 +206,21 @@ def ae_setup() -> None:
         return result
     T.update = counting_update
     log({"ev": "ae_mode", "mode": "window", "window_s": HOLD["window"]})
+
+
+# The state an episode ended in (finish(), before judge_end runs the confirmation window on): its frames, depth,
+# extrinsics, calibration, proprio row and readings, which /observe answers from then on.
+END_VIEW: dict = {}
+
+
+def end_view_take() -> None:
+    try:
+        rgb, dep = grab(CAMS, True)
+        END_VIEW.update(rgb=rgb, depth=dep, ext=extrinsics(CAMS), calib=calib(CAMS) if OBS_CALIBRATION else None,
+                        proprio=proprio_row(), safety=robot_felt(S.safety()), physics_steps=S.physics_steps,
+                        sim_time_s=S.sim_time_s, step=ctrl_steps())
+    except Exception:  # noqa: BLE001 - evidence for later /observe calls only; the verdict does not depend on it
+        traceback.print_exc(); END_VIEW.clear(); log({"ev": "end_view_error"})
 
 
 def held_now() -> bool:
@@ -234,7 +262,9 @@ def judge_end() -> bool:
 # ---------------------------------------------------------------- scene
 import rcb_topogym as M  # noqa: E402
 try:
-    S = M.Session(TASK, instance=INSTANCE, strict=True)
+    # the step cap: the runaway guard (rcb_topogym.MAX_STEPS) or RCB_STEP_LIMIT (rcb_agent_end), the smaller
+    S = M.Session(TASK, instance=INSTANCE, strict=True,
+                  **({"max_steps": min(int(M.MAX_STEPS), int(AE.STEP_LIMIT))} if AE.STEP_LIMIT else {}))
     M.atomic_json(os.path.join(DATA, "startup_binding.json"), dict(
         instance_exact=S.instance_exact, runtime_binding=S.runtime_binding,
         instance_generated=bool(getattr(S, "instance_generated", False)), instance_sha=S.instance_sha,
@@ -363,7 +393,7 @@ SPEC = {
     "instance_binding_id": (S.runtime_binding or {}).get("binding_id"),
     "protocol": PROTOCOL, "protocol_compat": L.COMPAT, "simulator": f"topogym ({S.engine_name(True)}, Nyx RGB)", "robot": R_SPEC["name"],
     "task_text": S.spec["text"], "control_hz": CTRL_HZ, "physics_substeps": SUBSTEPS, "max_chunk_s": MAX_CHUNK_S,
-    "max_frames_per_call": MAX_FRAMES,
+    "max_frames_per_call": MAX_FRAMES, "max_video_fps": CTRL_HZ,   # request_fields: video_fps an integer in [1, control_hz]
     "cameras": {c: {"rgb": True, "depth": True, "mounted": MOUNT[c], "resolution": list(CAM_INFO[c]["image_size"]), "calibration_in_obs": OBS_CALIBRATION,
                     "intrinsic_cv": CAM_INFO[c]["intrinsic_cv"], "mount": camera_to_robot(CAM_INFO[c]["mount"]), "depth_range_m": CAM_INFO[c]["depth_range_m"]} for c in CAMS},
     "default_cameras": list(CAMS),
@@ -397,13 +427,14 @@ SPEC = {
               "camera_axes": "intrinsic_cv / extrinsic_cv: OpenCV camera axes (x right, y down, z forward); cam2world_gl: OpenGL axes "
                              "(x right, y up, z backward)"},
     # no step budget (budget.steps stays null: the wall clock is the budget), but a technical episode cap (PROTOCOL §4.5,
-    # max_control_steps): the tooling's runaway guard (rcb_topogym.MAX_STEPS) ends the episode (reason step_guard) at
+    # max_control_steps): the tooling's runaway guard (rcb_topogym.MAX_STEPS, or RCB_STEP_LIMIT when smaller: S.max_steps)
+    # ends the episode (reason step_limit) at
     # that many control steps, /observe watches included
     "budget": {"reset": 0, "steps": None, "wall_clock_s": float(os.environ.get("RCB_WALL_CLOCK_S", "10800")),
                "clock": "time_s and elapsed_s count from your first request to the service; time_left_s is wall_clock_s minus "
                         "that, so it never runs out before the harness's limit does"},   # docs/protocol/standard_mode.md §5 (the 2.2 layer's key)
     "max_control_steps": int(S.max_steps),
-    "episode": (("one episode, no reset. It ends when you call POST /finish (reason finished), when the wall-clock budget is used "
+    "episode": ("one episode, no reset. It ends when you call POST /finish (reason finished), when the wall-clock budget is used "
                  "up (budget.wall_clock_s, counted from your first request to this service, any endpoint; meta time_s / time_left_s; "
                  f"reason timeout), after {int(S.max_steps)} control steps (max_control_steps, a technical cap: reason step_limit), "
                  "when the task's own failure predicate fires (reason task_failed or the task's own reason: no success, whatever "
@@ -418,21 +449,7 @@ SPEC = {
                  f"holds, presses on something with {M.FORCING['contact_n']:g} N or more) within the {M.FORCING['attribution_s']:g} s "
                  f"before (reason {M.FORCED_BREAKDOWN}: the agent's failure); forcing itself and task-contact penetration do not end "
                  "it (meta safety records them), but a success with a deep task contact (meta safety review) is held for review "
-                 "instead of credited automatically; the live episode is graded as it ended (nothing is replayed to grade it)")
-                if AE.ENABLED else
-                ("ends at the first success (the task predicate is evaluated after every /submit and every /observe that watches), "
-                "when the task's own failure predicate fires (reason task_failed), when the wall-clock budget is used up (budget.wall_clock_s, "
-                "counted from your first request to this service, any endpoint; meta time_s / time_left_s), after "
-                f"{int(S.max_steps)} control steps (max_control_steps, a technical cap: reason step_guard, graded as it stands), or on a "
-                "simulator error; a simulator "
-                f"breakdown (a non-finite state, any cloth particle faster than {M.PARTICLE_SPEED_LIMIT_M_S:g} m/s, an invalid "
-                f"soft-body solver state, a rigid task contact deeper than {M.BREAKDOWN_PENETRATION_M * 1000:g} mm) ends it with "
-                f"reason {M.SIMULATOR_INSTABILITY}, graded as an infrastructure error, not as the task's failure, unless an arm was "
-                f"forcing (an arm drive at {M.FORCING['near_cap']:.0%} of its torque cap or more while the gripper, or a part it "
-                f"holds, presses on something with {M.FORCING['contact_n']:g} N or more) within the {M.FORCING['attribution_s']:g} s "
-                f"before (reason {M.FORCED_BREAKDOWN}: the agent's failure); forcing itself and task-contact penetration do not end "
-                "it (meta safety records them), but a success with a deep task contact (meta safety review) is held for review "
-                "instead of credited automatically; the live episode is graded as it ended (nothing is replayed to grade it)")),
+                 "instead of credited automatically; the live episode is graded as it ended (nothing is replayed to grade it)"),
     "robot_spec": R_SPEC,
     "kinematics": K_SPEC,
     "depth": {"modes": list(L.DEPTH_MODES), "default": "none", "kind": "z-depth", "unit": "m", "invalid": 0, "max_m": L.DEPTH_MAX_M,
@@ -441,10 +458,6 @@ SPEC = {
                         "it may differ from the RGB at transparent surfaces"},
 }
 L.check_spec(SPEC)                      # refuse to start with an incomplete spec or a forbidden field
-
-
-def check_success() -> bool:
-    return S.success()
 
 
 def proprio_row() -> np.ndarray:
@@ -491,6 +504,18 @@ class Rec(L.Recorder):
     speed-limited joint row takes is known only then. At the budget it takes no more frames -- the motion goes on, the
     last frame is always taken -- and meta["frames_skipped"] counts the frames left out."""
     skipped = 0
+    viewing = False
+
+    def tick(self, force: bool = False, last: bool = False) -> None:
+        if E["done"] and END_VIEW and not self.viewing:
+            # the episode has ended (in this call or before it): every later frame is the state it ended in (END_VIEW),
+            # never the confirmation window judge_end ran on after the end
+            V = END_VIEW
+            self._grab = lambda c, want: ({k: V["rgb"][k] for k in c}, {k: V["depth"][k] for k in c} if want else {})
+            self._prop, self._clock = (lambda: V["proprio"]), (lambda: V["step"])
+            self._ext, self._time_clock = (lambda c: {k: V["ext"][k] for k in c}), (lambda: V["sim_time_s"])
+            self.viewing = True
+        super().tick(force, last)
 
     def _capture(self, last: bool) -> None:
         per = len(self.cams) * (2 if self.mode in ("frames", "legacy") else 1)   # as L.check_frames counts
@@ -522,11 +547,17 @@ def robot_felt(safety: dict) -> dict:
 
 
 def meta_common(cams) -> dict:
-    n = ctrl_steps()
-    return {"step": E["step"], "calls": E["calls"], "control_steps": n, "physics_steps": S.physics_steps, "sim_time_s": S.sim_time_s,
+    """Every answer's meta. An ended episode reports its own control steps and, where the end was taken (END_VIEW), the
+    state it ended in: never the confirmation window judge_end ran after the end."""
+    V = END_VIEW if E["done"] and END_VIEW else None
+    n = E["episode_control_steps"] if E["done"] and E.get("episode_control_steps") is not None else ctrl_steps()
+    cal = ({c: V["calib"][c] for c in cams} if V["calib"] is not None else calib(cams)) if V else None
+    return {"step": E["step"], "calls": E["calls"], "control_steps": n,
+            "physics_steps": V["physics_steps"] if V else S.physics_steps, "sim_time_s": V["sim_time_s"] if V else S.sim_time_s,
             "time_s": round(agent_time(), 2), "time_left_s": max(0.0, round(SPEC["budget"]["wall_clock_s"] - agent_time(), 1)),
-            "proprio": {"layout": SPEC["proprio_layout"], "now": proprio_row().tolist()}, "done": E["done"], "reason": E["reason"],
-            "safety": robot_felt(S.safety()), **({"cameras": calib(cams)} if OBS_CALIBRATION else {})}
+            "proprio": {"layout": SPEC["proprio_layout"], "now": (V["proprio"] if V else proprio_row()).tolist()},
+            "done": E["done"], "reason": E["reason"], "safety": V["safety"] if V else robot_felt(S.safety()),
+            **({"cameras": cal if V else calib(cams)} if OBS_CALIBRATION else {})}
 
 
 def save_call_evidence(idx: int, meta: dict, rec: L.Recorder) -> None:
@@ -561,7 +592,7 @@ def ctrl_step(a: np.ndarray, rec: L.Recorder, *, row_start=False, notes: list | 
     if EP.poll_stop():
         return True
     before = S.n_steps
-    guard = S.step(row)
+    S.step(row)
     if S.n_steps != before and row_start:
         E["step"] += 1
     if S.n_steps != before and S.last_guard and notes is not None:
@@ -577,21 +608,19 @@ def ctrl_step(a: np.ndarray, rec: L.Recorder, *, row_start=False, notes: list | 
                     text = (f"{reason} would have reached {e['asked_mm']:+.1f} mm from the tabletop; its target stopped at "
                             f"{e['stopped_mm']:+.1f} mm (no gripper target goes lower than {M.table_guard_words()})")
                 notes.append({"row": ri, "index": int(ARM[arm][1]), "reason": text})
-    stop = EP.journal(S.hold_action(), physics_steps=S.last_step_ticks) if S.n_steps != before else EP.poll_stop()
+    try:
+        stop = EP.journal(S.hold_action(), physics_steps=S.last_step_ticks) if S.n_steps != before else EP.poll_stop()
+    except Exception as exc:  # noqa: BLE001 - a journal row that could not be written: the service's fault (on_error)
+        exc.efe_service_fault = True
+        raise
     rec.tick()
-    if AE.ENABLED:
-        if S.n_steps != before:
-            AE.hidden_success(E, held_now(), log, ctrl_steps())
-        if S.episode_end is not None and S.episode_end != "success":
-            E.setdefault("end_row", len(S._recording) if S._recording is not None else None)
-            finish(S.episode_end)       # a failure predicate / breakdown: 0, after a success too
-        elif S.episode_done:
-            finish("step_limit")        # the runaway guard: judged on the state it leaves
-        return E["done"] or stop
-    if S.episode_end is not None and "end_row" not in E and S._recording is not None:
-        E["end_row"] = len(S._recording)      # the row at which the live episode ended (success or a failure predicate)
-    if S.episode_end is not None: finish(S.episode_end)
-    elif guard: finish("step_guard")
+    if S.n_steps != before:
+        AE.hidden_success(E, held_now(), log, ctrl_steps())
+    if S.episode_end is not None and S.episode_end != "success":
+        E.setdefault("end_row", len(S._recording) if S._recording is not None else None)
+        finish(S.episode_end)       # a failure predicate / breakdown: 0, after a success too
+    elif S.episode_done:
+        finish("step_limit")        # the step cap (S.max_steps): judged on the state it leaves
     return E["done"] or stop
 
 
@@ -667,7 +696,8 @@ def number(meta: dict, key: str, default: float) -> float:
     (PROTOCOL §4.6): null, a string, a non-finite value or a JSON integer beyond the float range (math.isfinite and
     float() raise OverflowError on it) must never reach float() / int() as a 500, which would end the one episode as an
     infrastructure error."""
-    v = meta.get(key, default)
+    v = meta.get(key)
+    v = default if v is None else v     # null is the default (eai-standard/3.0 field checks)
     try:
         if isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v):
             raise OverflowError
@@ -691,7 +721,15 @@ def request_fields(meta: dict) -> tuple[list, int, str]:
     return list(dict.fromkeys(c for c in (cams or CAMS) if c in CAMS)) or CAMS, int(fps), (note or "")[:500]
 
 
+class EpisodeFinished(Exception):
+    """A /submit admitted while the episode ran, whose job found it over (the wall clock ended it in between, on the main
+    thread): answered 409 "episode finished" like any /submit after the end (_touching_handler), nothing executed;
+    on_error leaves the ended episode as it is."""
+
+
 def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
+    if E["done"]:
+        raise EpisodeFinished(E["reason"])
     typ = meta.get("type"); dt = number(meta, "dt", 1.0 / CTRL_HZ); interp = meta.get("interpolate", "linear")
     cams, fps, note = request_fields(meta); video = meta.get("video", "mp4")
     if typ not in ("joint_position", "ee_pose"): raise ValueError(f"type must be one of joint_position, ee_pose (not yet: {SPEC['action_types']['not_yet']})")
@@ -712,14 +750,12 @@ def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
     if typ == "joint_position": run_joint_position(A, dt, interp, rec, clipped)
     else: run_ee_pose(A, rec, plan, clipped)
     rec.tick(force=True, last=True)
-    succ = False if AE.ENABLED else check_success(); E["success"] = E["success"] or succ
     out = {**meta_common(cams), "chunk_id": E["calls"], "type": typ, "executed_rows": E["step"] - step0, "control_steps_chunk": ctrl_steps() - before,
            "physics_steps_chunk": S.physics_steps - before_ticks, "clipped": clipped[:200], "n_clipped": len(clipped), "plan": plan, "rejected": None, "ok": True,
            **({"frames_skipped": rec.skipped} if rec.skipped else {})}
     log({"ev": "submit", "call": E["calls"], "type": typ, "rows": E["step"] - step0, "dt": dt, "interpolate": interp, "cameras": cams, "note": note,
-         "control_steps": ctrl_steps() - before, "n_clipped": len(clipped), "plan": plan[:50], "success": succ})
+         "control_steps": ctrl_steps() - before, "n_clipped": len(clipped), "plan": plan[:50]})
     save_call_evidence(E["calls"], {k: v for k, v in out.items() if k != "cameras"}, rec)
-    if succ: finish("success")
     out["done"] = E["done"]; out["reason"] = E["reason"]
     return out, rec.parts(video, fps)
 
@@ -738,9 +774,6 @@ def do_observe(meta: dict) -> tuple[dict, list]:
         for _ in range(int(round(seconds * CTRL_HZ))):
             if ctrl_step(hold, rec): break
         rec.tick(force=True, last=True)
-        if not AE.ENABLED:
-            succ = check_success(); E["success"] = E["success"] or succ
-            if succ: finish("success")
     E["calls"] += 1
     out = {**meta_common(cams), "obs_id": E["calls"], "seconds": seconds, "control_steps_watch": ctrl_steps() - before,
            "physics_steps_watch": S.physics_steps - before_ticks, "ok": True, **({"frames_skipped": rec.skipped} if rec.skipped else {})}
@@ -802,10 +835,39 @@ def _touching_handler(svc):
         def do_POST(self):
             touch()
             return base.do_POST(self)
+
+        def _json(self, code, body):
+            if code == 500 and isinstance(body, dict) and str(body.get("detail") or "").startswith("EpisodeFinished("):
+                code, body = 409, {"error": "episode finished", "reason": E.get("reason")}   # do_submit: EpisodeFinished
+            return base._json(self, code, body)
     return Handler
 
 
 L.make_handler = _touching_handler
+
+
+def on_error(exc: BaseException) -> None:
+    """The layer's on_submit_error (main thread): an exception in /submit or /observe, or the execution checkpoint after
+    it, ends the episode. The service's own faults (a checkpoint or journal row not committed, the host's OSError /
+    MemoryError) as SERVICE_ERROR (infrastructure); anything else the agent's rows raised in the simulator as "error"
+    (the agent's 0, PROTOCOL §4). A /submit that found the episode over (EpisodeFinished) changes nothing."""
+    if isinstance(exc, EpisodeFinished):
+        return
+    service = getattr(exc, "efe_service_fault", False) or isinstance(exc, (OSError, MemoryError))
+    finish(SERVICE_ERROR if service else "error")
+
+
+def _committing_checkpoint(*a, **kw):
+    """EP.checkpoint as the layer calls it after every call: a checkpoint that could not be committed is the service's
+    fault (on_error), tagged so."""
+    try:
+        return _CHECKPOINT(*a, **kw)
+    except Exception as exc:  # noqa: BLE001
+        exc.efe_service_fault = True
+        raise
+
+
+_CHECKPOINT = EP.checkpoint
 
 
 def deadline_reached():
@@ -835,10 +897,9 @@ def replay_row(row) -> None:
     Session.step records the row without moving the scene, and the row of that end is remembered (`live_rows`)."""
     if not S.episode_done:
         S.step(np.asarray(row, dtype=np.float32))
-        if AE.ENABLED:
-            AE.hidden_success(E, held_now(), None, ctrl_steps())
-            if S.episode_end is None or S.episode_end == "success":
-                return
+        AE.hidden_success(E, held_now(), None, ctrl_steps())
+        if S.episode_end is None or S.episode_end == "success":
+            return
         if S.episode_end is not None and "end_row" not in E and S._recording is not None:
             E["end_row"] = len(S._recording)
 
@@ -852,13 +913,14 @@ _first = [e for e in EP.events() if e.get("ev") == "first_request"]
 if _first:                              # a resumed service: the agent's clock keeps running from its first request
     start_clock(float(_first[0]["t_first"]))
 write_final()
+EP.checkpoint = _committing_checkpoint  # the layer's per-call checkpoint: a commit failure is the service's fault
 open(PID_FILE, "w").write(str(os.getpid()))
 print(f"{PROTOCOL} sim ready (startup {EP.n_startups}, resumes {EP.resumes})", flush=True)
 threading.Thread(target=AE.serve, daemon=True, args=(AE.Service(
     spec=SPEC, lock=LOCK, state=E, submit=lambda meta, A: on_main(do_submit, meta, A), observe=lambda meta: on_main(do_observe, meta),
-    kinematics=lambda req: on_main(do_kinematics, req), status=status, on_submit_error=lambda exc: on_main(finish, "error"), log=log,
+    kinematics=lambda req: on_main(do_kinematics, req), status=status, on_submit_error=lambda exc: on_main(on_error, exc), log=log,
     episode=EP, state_sha=lambda: on_main(S.state_sha), proprio=lambda: on_main(proprio_row),
-    **({"finish": lambda: on_main(finish, "finished")} if AE.ENABLED else {})),)).start()
+    finish=lambda: on_main(finish, "finished")),)).start()
 while True:                                 # the main thread: simulator jobs in order; signals are handled between them
     if deadline_reached():
         finish("timeout")

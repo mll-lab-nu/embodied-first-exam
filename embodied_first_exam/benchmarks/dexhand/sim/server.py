@@ -220,6 +220,7 @@ SPEC = {
     "physics_substeps": SUBSTEPS,
     "max_chunk_s": 10.0,
     "max_frames_per_call": 1000,
+    "max_video_fps": MAX_FPS,   # what options() accepts (the layer's default would be max(30, control_hz))
     "cameras": {camera: camera_spec(camera) for camera in CAMERAS},
     "default_cameras": DEFAULT_CAMERAS,
     "action_types": {
@@ -242,7 +243,6 @@ SPEC = {
         "camera_axes": "OpenCV",
     },
     "budget": {"reset": RESET_BUDGET, "steps": None, "wall_clock_s": WALL},
-    **({"max_control_steps": int(S.max_control_steps)} if getattr(S, "max_control_steps", None) else {}),
     "robot_spec": {
         "name": ROBOT,
         "joints": JOINT_SPEC,
@@ -340,6 +340,17 @@ def family_budget() -> int | None:
             return int(getattr(S, name))
     cfg = getattr(S, "config", None)
     return int(cfg["max_steps"]) if isinstance(cfg, dict) and cfg.get("max_steps") else None
+
+
+def step_cap() -> int | None:
+    """The episode's step cap: the family's episode budget (an essential family has none) and, agent-ended,
+    RCB_STEP_LIMIT, the smaller of the two."""
+    caps = [c for c in (family_budget(), AE.STEP_LIMIT) if c]
+    return min(caps) if caps else None
+
+
+if step_cap():
+    SPEC["max_control_steps"] = step_cap()
 
 
 def _verdict_owner():
@@ -456,8 +467,26 @@ def options(meta, steps: int):
     if video == "none" and depth not in ("frames", "legacy"):
         def capture(cams, want_depth):
             return grab(cams, want_depth) if RENDER["final"] else ({}, {})
-    recorder = L.Recorder(cameras, every, capture, proprio_row, extrinsics, clock, depth=depth, clock_hz=HZ)
+    recorder = CallRecorder(cameras, every, grab, proprio_row, extrinsics, clock, depth=depth, clock_hz=HZ)
+    recorder.call_grab = capture
     return recorder, video, int(fps)
+
+
+class CallRecorder(L.Recorder):
+    """L.Recorder whose own frames (the call's answer) come from `call_grab`, which skips rendering the frames a
+    video "none" call never returns; the standard ring (L.RING, fed from Recorder.tick through `_grab`) keeps the real
+    grab, so /observe last_s after such a chunk shows the frames it recorded, not black ones."""
+
+    call_grab = None
+
+    def _capture(self, last: bool) -> None:
+        if self.call_grab is None:
+            return super()._capture(last)
+        real, self._grab = self._grab, self.call_grab
+        try:
+            super()._capture(last)
+        finally:
+            self._grab = real
 
 
 def response(recorder, video, fps, **extra):
@@ -524,15 +553,17 @@ def do_submit(meta, actions):
 
 
 def do_observe(meta):
+    # eai-standard/3.0: the layer refuses /observe with seconds > 0; `seconds` reaches here only from its hold chunk
+    # (standard_call: the command in force held for n seconds, at most max_chunk_s, already checked there)
     seconds = meta.get("seconds")
     seconds = 0.0 if seconds is None else seconds
     if (
         isinstance(seconds, bool)
         or not isinstance(seconds, (float, int))
         or not math.isfinite(seconds)
-        or not 0 <= seconds <= 30
+        or not 0 <= seconds <= SPEC["max_chunk_s"]
     ):
-        raise ValueError("seconds must be in [0, 30]")
+        raise ValueError(f"seconds must be in [0, {SPEC['max_chunk_s']:g}]")
     rec, video, fps = options(meta, int(round(seconds * HZ)))
     rec.tick(force=True)
     E["calls"] += 1
@@ -752,7 +783,7 @@ if not any(event.get("ev") == "start" for event in EP.events()):   # a fresh epi
 else:
     INSTANCE = {}
 
-BUDGET = family_budget() if AE.ENABLED else None
+BUDGET = step_cap() if AE.ENABLED else None
 RESUMED = EP.begin(
     state=E,
     step=replay_row if RESET_BUDGET else execute,

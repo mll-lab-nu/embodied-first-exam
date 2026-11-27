@@ -20,7 +20,7 @@ GRASS = (0.16, 0.50, 0.20, 1)
 #   reset(w):           self.keeper.reset(w)            (the board at its rail's centre, at rest; t = 0 placement)
 #   referee_reset:      self.trackers["keeper"] = self.keeper   (its setpoint profile is part of the state hash)
 #   before_step(w):     self.keeper.command(target_y)   (optional: where the servo's setpoint should go; omit = hold)
-#   substep(w, ref):    self.keeper.substep(w)          (REQUIRED, first thing: advances the setpoint by 1 ms)
+#   actuate(w, ref):    self.keeper.substep(w)          (REQUIRED: advances the setpoint by 1 ms, also after the call)
 #   self.keeper.y(w), .vy(w), .force(w)                 (the board's world y, its speed and the motor's force)
 #   self.keeper.bind(w).qa / .va / .aid                 (its qpos / dof / actuator addresses, read-only use)
 class Keeper:
@@ -253,8 +253,10 @@ class Task(TaskBase):
             if bv[0] > 0.1 and b[0] < g["goal_x"]:
                 self.keeper.command(b[1] + bv[1] * (g["goal_x"] - b[0]) / bv[0])
 
-    def substep(self, w, ref):
+    def actuate(self, w, ref):
         self.keeper.substep(w)                     # the servo's setpoint, every physics step
+
+    def substep(self, w, ref):
         p, tr = self.p, self.trackers
         if ref.touching(self.ball, self.other):
             return ref.fail("the ball was touched by something other than a foot",

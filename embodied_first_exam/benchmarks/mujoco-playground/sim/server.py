@@ -63,6 +63,11 @@ import mujoco  # noqa: E402
 EP = L.Episode(DATA, dim=Q.N, resume="exact", persist=AE.persist(("t_first", "resets", "reset_at")))
 EP.startup()  # start count, back-off after failed starts, the startup watchdog until scene_built()
 S = Q.Session(INSTANCE, check_hash=False)   # the start is checked here, as a give-up the agent is told about (below)
+# The episode's step cap: the instance's horizon, lowered by RCB_STEP_LIMIT (agent-ended episodes). A lower limit
+# shortens the episode itself (S.horizon): /spec reports it, and the task's check is judged up to it (a joystick's
+# "every control step of the schedule executed" means the schedule's first CAP steps; otherwise no run could pass).
+CAP = min(S.horizon, AE.STEP_LIMIT or S.horizon)
+S.horizon = CAP
 if not S.instance_ok:
     # The frozen initial state is checked when the episode begins (the verdict is the live episode's, so no later replay
     # checks it): a scene that did not rebuild to the instance's recorded hash (the image no longer builds it) is no trial
@@ -180,7 +185,7 @@ def schedule_text() -> list:
     if S.commands is None:
         return []
     return [{"from_s": round(int(c["start_step"]) * DT, 2), "vx_mps": round(c["vx"], 4), "vy_mps": round(c["vy"], 4),
-             "wz_radps": round(c["wz"], 4)} for c in S.inst["commands"]]
+             "wz_radps": round(c["wz"], 4)} for c in S.inst["commands"] if int(c["start_step"]) < CAP]
 
 
 ONE = "one episode, no reset" if not RESET_BUDGET else (
@@ -197,7 +202,6 @@ TASK_EPISODE = {
                     f"floor), after {S.horizon} control steps, when you "
                     "submit `done`, or when your time is over",
 }[S.kind]
-CAP = min(S.horizon, AE.STEP_LIMIT or S.horizon)   # agent-ended episodes: the step cap (RCB_STEP_LIMIT may only lower it)
 if AE.ENABLED:
     _ONE = "one episode, no reset" if not RESET_BUDGET else (
         f"an episode (with up to {RESET_BUDGET} resets: POST /reset starts a new one; only the last is graded)")
@@ -252,7 +256,7 @@ SPEC = {
               "units": {"length": "m", "angle": "rad", "time": "s"}, "quaternion_order": "wxyz",
               "camera_axes": "intrinsic_cv / extrinsic_cv: OpenCV camera axes (x right, y down, z forward); cam2world_gl: OpenGL axes"},
     "budget": {"reset": RESET_BUDGET, "steps": CAP if AE.STEP_LIMIT else None, "wall_clock_s": WALL_CLOCK_S},   # + "clock" (rcb_limited.CLOCK_NOTE): what time_left_s counts from
-    "max_control_steps": S.horizon,
+    "max_control_steps": CAP,                # the horizon, or RCB_STEP_LIMIT below it (S.horizon = CAP)
     "episode": TASK_EPISODE,
     "command_schedule": schedule_text(),
     **({"gait": {k: S.gait[k] for k in ("name", "frequency_hz", "foot_height_m", "phase0", "phase_dt")} | {

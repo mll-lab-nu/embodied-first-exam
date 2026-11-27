@@ -78,7 +78,9 @@ if not THREADS["threads_ok"]:
     if not L.final_verdict(DATA):
         L._write_json(os.path.join(DATA, "final.json"), {**L._read_json(os.path.join(DATA, "final.json")), "too_few_cpus": 1, **THREADS})
     EP.give_up("too_few_cpus", infra=True)   # writes the verdict (never overwrites one) and idles until the container ends
-S = M.Session(TASK, instance=INSTANCE, image_size=(CAM_H, CAM_W), hide_success=AE.ENABLED)   # agent-ended: a success never ends it
+# agent-ended: a success never ends it; the step cap is the runaway guard (rcb_dexjoco.MAX_STEPS) or RCB_STEP_LIMIT
+S = M.Session(TASK, instance=INSTANCE, image_size=(CAM_H, CAM_W), hide_success=AE.ENABLED,
+              max_steps=min(M.MAX_STEPS, AE.STEP_LIMIT) if AE.STEP_LIMIT else M.MAX_STEPS)
 if not S.instance_exact and not any(e.get("ev") == "start" for e in EP.events()):
     # The frozen initial state is checked when the episode begins (the verdict is the live episode's, so no later replay
     # checks it): a scene that did not rebuild to the instance's recorded hash (the image no longer builds it) is no
@@ -357,6 +359,7 @@ SPEC = {
     "physics_hz": CTRL_HZ * SUBSTEPS,
     "max_chunk_s": MAX_CHUNK_S,
     "max_frames_per_call": MAX_FRAMES,
+    "max_control_steps": int(S.max_steps),   # the episode's step cap (the runaway guard, or RCB_STEP_LIMIT): step_limit
     "cameras": {c: {"rgb": True, "depth": True, "mounted": _mounted(c), "resolution": [CAM_W, CAM_H], "intrinsic_cv": _intrinsic(c),
                     "mount": _mount(c)} for c in CAMS},
     "default_cameras": DEFAULT_CAMS,
@@ -560,6 +563,8 @@ def ctrl_step(a, rec) -> bool:
         AE.hidden_success(E, S.now_success, EP.log, ctrl_steps())
     if not running:
         finish(S.reason or "done")
+    elif AE.ENABLED and S.steps >= S.max_steps:   # the cap reached at this step: the call that reached it ends it
+        finish("step_limit")
     return E["done"] or stop
 
 

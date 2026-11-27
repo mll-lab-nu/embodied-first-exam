@@ -9,9 +9,11 @@ positions, velocities and current targets, and the task's definition (DexToolBen
 as SimToolReal's deployment gives its policy; Playground: the target). Never the object's pose.
 
 Actions: `joint_position` rows (the tooling's N actuator targets), each held for `dt` (a multiple of the control step,
-hold or linear interpolation per control step). DexToolBench episodes end when all goals are reached, when a goal times
-out (only if RCB_DTB_GOAL_TIMEOUT_S > 0; the standard twins set 0), at RCB_MAX_CONTROL_STEPS, or when the agent's time is
-up; Playground episodes run until the agent phase ends and the final state is graded.
+hold or linear interpolation per control step; a hold chunk, eai-standard/3.0, holds the current targets). Episodes are
+agent-ended (RCB_AGENT_END=1): they end at the agent's POST /finish, at the step cap (RCB_MAX_CONTROL_STEPS, lowered by
+RCB_STEP_LIMIT), when a DexToolBench goal times out (only if RCB_DTB_GOAL_TIMEOUT_S > 0; the standard twins set 0) or
+when the agent's time is up; reaching the goals never ends one and is never announced (DexToolBench: the goals are
+judged as they are reached; Playground: the final state).
 
 Evidence under /data: episode.jsonl (every call), calls/NNNNNN/ (meta + actions), and at the end trajectory.npz
 ((T, N) per control step), final.json and replay.mp4. The verdict is the live episode's (docs/protocol/README.md H.4; owner,
@@ -24,14 +26,14 @@ comes). The frozen start is checked when the episode begins: the built scene's s
 recorded one (instance.json `state_sha`, else RCB_START_SHA); a mismatch gets no episode (instance_mismatch, an
 infrastructure failure).
 
-Requests are validated in full before any physics runs: a malformed one (dt / seconds / video_fps not a finite number,
-cameras not a list of names, ...) is answered 400 and changes nothing; only a failure of the simulator itself is a 500
+Requests are validated in full before any physics runs: a malformed one (dt / seconds / video_fps / last_s not a finite
+JSON number, cameras not a list of names, ...) is answered 400 and changes nothing (a /finish body is never parsed); only a failure of the simulator itself is a 500
 that ends the episode. `time_s` / `time_left_s` count from the agent's first request to the service.
 
 Optional reset capability (PROTOCOL §4.5; RCB_RESET_BUDGET = N > 0, default 0; DexToolBench's standard twins set 20):
 POST /reset abandons the running episode and starts a new one from the frozen start state (Session.reset()), N times
-in all. Only the last episode is graded (trajectory.npz holds its rows, replayable from the frozen start); a
-success ends the trial (no reset after it), as does the agent's time (SIGUSR1). Without a budget /reset is a 404."""
+in all. Only the last episode is graded (trajectory.npz holds its rows, replayable from the frozen start); the agent's
+/finish or its time (SIGUSR1) ends the trial (no reset after it). Without a budget /reset is a 404."""
 from __future__ import annotations
 import errno, importlib, json, math, os, signal, sys, threading, time, traceback
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -365,16 +367,15 @@ def _robot_qd():
 
 def task_info() -> dict:
     if KIND == "dtb":
-        p = S.progress()
-        if AGENT_END:   # the last goal stays shown once it is reached: reaching the whole sequence is never announced
-            i = min(int(p["reached"]), int(p["n_goals"]) - 1)
-            return {"goal_index": i, "n_goals": p["n_goals"], "goal": list(S.goals[i]), "goals_reached": i,
-                    "failed_on_timeout": p["failed"], "steps_left_on_goal": None if p["done"] else p["steps_left_on_goal"],
-                    "goal_time_limit_s": round(TOOL.GOAL_TIMEOUT_STEPS * CTRL_DT, 3) or None,
-                    "pose_format": "x y z qx qy qz qw (world frame, metres)"}
-        return {"goal_index": p["reached"], "n_goals": p["n_goals"], "goal": None if p["done"] else list(S.goals[p["reached"]]),
-                "goals_reached": p["reached"], "failed_on_timeout": p["failed"], "steps_left_on_goal": p["steps_left_on_goal"],
-                "goal_time_limit_s": round(TOOL.GOAL_TIMEOUT_STEPS * CTRL_DT, 3) or None,
+        # The per-goal progress is shown (the instruction says so), but the last goal stays shown once it is reached:
+        # reaching the whole sequence is never announced, so nothing here may depend on p["done"] (progress() itself
+        # sets steps_left_on_goal to None exactly then). The countdown is computed here from steps_on_goal instead; with a
+        # goal timeout (no standard twin sets one) it stops at the last goal's reach.
+        p = S.progress(); T = int(TOOL.GOAL_TIMEOUT_STEPS or 0)
+        i = min(int(p["reached"]), int(p["n_goals"]) - 1)
+        return {"goal_index": i, "n_goals": p["n_goals"], "goal": list(S.goals[i]), "goals_reached": i,
+                "failed_on_timeout": p["failed"], "steps_left_on_goal": None if not T or p["failed"] else max(0, T - int(p["steps_on_goal"])),
+                "goal_time_limit_s": round(T * CTRL_DT, 3) or None,
                 "pose_format": "x y z qx qy qz qw (world frame, metres)"}
     info = {"target_pos": np.asarray(S.target_pos).tolist()} if hasattr(S, "target_pos") else {}
     if hasattr(S, "target_quat"): info["target_quat_wxyz"] = np.asarray(S.target_quat).tolist()
@@ -408,8 +409,8 @@ SPEC = {"protocol": PROTOCOL, "simulator": "mujoco", "task_text": S.inst.get("te
                              "time_s. The harness counts the same limit from the start of your session, so time_left_s never runs out "
                              "before the harness stops you: your real time left is time_left_s minus the time you spent before that "
                              "first request. Plan by time_left_s.")},
-        "episode": (("ends when every goal is reached" + (f", when a goal is not reached within {TOOL.GOAL_TIMEOUT_STEPS * CTRL_DT:g} s" if TOOL.GOAL_TIMEOUT_STEPS else "")
-                     + (f", after {MAX_CONTROL_STEPS} control steps" if MAX_CONTROL_STEPS else "") + ", or when your time is up; the recorded trajectory is scored")
+        "episode": (("ends" + (f" when a goal is not reached within {TOOL.GOAL_TIMEOUT_STEPS * CTRL_DT:g} s," if TOOL.GOAL_TIMEOUT_STEPS else "")
+                     + (f" after {MAX_CONTROL_STEPS} control steps or" if MAX_CONTROL_STEPS else "") + " when your time is up; every goal must have been reached in order")
                     if KIND == "dtb" else "runs until the agent phase ends; the final state is graded")}
 if RESET_BUDGET:
     SPEC["reset"] = ("POST /reset abandons the running episode and starts a new one from the same starting state, "
@@ -430,15 +431,10 @@ if AGENT_END:
                          "The clock (time_left_s) keeps running. meta and /status add episode, resets_left and control_steps_total")
 
 
-def _success() -> bool:
-    """The running episode has succeeded (DexToolBench: every goal reached): the trial is over, no reset after it."""
-    return not AGENT_END and E["done"] and E["reason"] == "all goals reached"   # agent-ended: a success ends nothing
-
-
 def _reset_counters() -> dict:
     if not RESET_BUDGET: return {}
     return {"episode": E["resets"] + 1, "control_steps_total": E["journal_rows"],
-            "resets_left": 0 if _success() or E["stopping"] else RESET_BUDGET - E["resets"]}
+            "resets_left": 0 if E["stopping"] else RESET_BUDGET - E["resets"]}
 
 
 def _agent_time() -> float:
@@ -591,38 +587,19 @@ def _hold_seconds(meta: dict, parts: dict):
         raise ValueError("a chunk has either rows or `seconds` (a hold chunk without rows), not both")
     if meta.get("interpolate") != "hold":
         raise ValueError('a chunk without rows is a hold chunk: {"type": <type>, "interpolate": "hold", "seconds": n}')
-    v = meta.get("seconds")
-    try:
-        if isinstance(v, bool):
-            raise TypeError
-        n = float(v)
-    except (TypeError, ValueError, OverflowError):
-        raise ValueError("seconds must be a number") from None
-    if not (math.isfinite(n) and 0 < n <= MAX_CHUNK_S + 1e-9):
+    n = real(meta, "seconds")
+    if not (0 < n <= MAX_CHUNK_S + 1e-9):
         raise ValueError(f"a hold chunk's seconds must be in (0, max_chunk_s = {MAX_CHUNK_S:g}]")
     return n
 
 
 def _last_s(meta: dict) -> float:
     """/observe's request: `seconds` > 0 is refused (HOLD_HINT); last_s >= 0 (0 = the current frame)."""
-    s = meta.get("seconds")
-    if s is not None:
-        try:
-            s = float(s)
-        except (TypeError, ValueError, OverflowError):
-            raise ValueError("seconds must be a number") from None
-        if s != 0:
-            raise ValueError(HOLD_HINT)
-    v = meta.get("last_s")
-    if v is None:
-        return 0.0
-    try:
-        if isinstance(v, bool):
-            raise TypeError
-        v = float(v)
-    except (TypeError, ValueError, OverflowError):
-        raise ValueError("last_s must be a number of seconds") from None
-    if not (math.isfinite(v) and v >= 0):
+    s = real(meta, "seconds")
+    if s is not None and s != 0:
+        raise ValueError(HOLD_HINT)
+    v = real(meta, "last_s", 0.0)
+    if v < 0:
         raise ValueError("last_s must be a finite number >= 0")
     return v
 
@@ -633,12 +610,12 @@ SPEC["timing"] = {"recorder": {"cameras": RING_CAMS, "fps": round(1.0 / (RING_DT
 
 
 def _ctrl_step(tg, rec) -> bool:
-    """One control step with targets `tg`; returns True if the episode ended (DexToolBench goal rule)."""
+    """One control step with targets `tg`; returns True if the episode ended (the step cap, a DexToolBench goal timeout).
+    Reaching every goal ends nothing (it is recorded, never shown; the verdict reads the tracker at the end)."""
     S.step(tg); row = np.asarray(S.targets, float).copy(); RECORD.append(row); RECF.write(row.tobytes()); E["journal_rows"] += 1; rec.tick()
     if KIND == "dtb":
         p = S.progress()
         if AGENT_END: _hidden_success(p["done"], len(RECORD))   # counted, never shown; the episode goes on
-        elif p["done"]: finish("all goals reached"); return True
         if p["failed"]: finish("goal timeout"); return True
     if MAX_CONTROL_STEPS and len(RECORD) >= MAX_CONTROL_STEPS: finish(CAP_REASON); return True
     return False
@@ -651,22 +628,25 @@ def _ctrl_step(tg, rec) -> bool:
 VIDEO_MODES = ("mp4", "frames", "both", "none")
 
 
-def _fps(meta: dict) -> int:
-    try: fps = int(meta.get("video_fps", 10))
-    except (TypeError, ValueError, OverflowError): raise ValueError("video_fps must be an integer") from None
+def real(meta: dict, key: str, default=None):
+    """meta[key] as a float: a JSON number (not true/false, not a string), finite; absent or null -> `default`. Anything
+    else is a ValueError (400), the same field check as every eai-standard/3.0 layer (rcb_service.real)."""
+    v = meta.get(key)
+    if v is None: return default
+    if isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(float(v)):
+        raise ValueError(f"{key} must be a finite number (got {v!r:.60})")
+    return float(v)
+
+
+def _fps(meta: dict) -> float:
+    fps = real(meta, "video_fps", 10.0)
     if not 1 <= fps <= MAX_VIDEO_FPS: raise ValueError(f"video_fps must be in [1, {MAX_VIDEO_FPS}]")
     return fps
 
 
 def _num(meta: dict, key: str, default: float) -> float:
-    """A finite numeric request field; anything else (null, a string, NaN, Infinity) is a 400."""
-    try:
-        v = meta.get(key, default)
-        if isinstance(v, bool): raise TypeError     # JSON true is no number (float(True) is 1.0)
-        v = float(v)
-    except (TypeError, ValueError, OverflowError): raise ValueError(f"{key} must be a number") from None
-    if not math.isfinite(v): raise ValueError(f"{key} must be a finite number")
-    return v
+    """A finite numeric request field (a JSON number); anything else (a string, true/false, NaN, Infinity) is a 400."""
+    return real(meta, key, default)
 
 
 def _cameras(meta: dict, default: list) -> list:
@@ -734,16 +714,18 @@ def do_submit(q: dict):
     A, dt, k, interp, cams, fps, video, depth = (q[x] for x in ("A", "dt", "k", "interp", "cams", "fps", "video", "depth"))
     before = len(RECORD)
     rec = Recorder(cams, fps, depth, ring=True); rec.tick(force=True); prev = np.asarray(S.targets, float).copy(); n_clip = 0; done = False
+    executed = 0   # rows begun: fewer than the chunk's when the episode ends inside it (the step cap, a goal timeout)
     for row in A.astype(np.float64):
+        executed += 1
         tgt = np.clip(row, S.lower, S.upper); n_clip += int(np.any(tgt != row))
         for j in range(1, k + 1):
             tg = tgt if interp == "hold" else prev + (tgt - prev) * (j / k)
             if _ctrl_step(tg, rec): done = True; break
         prev = tgt
         if done: break
-    rec.tick(force=True); E["calls"] += 1; E["rows"] += int(A.shape[0]); RECF.flush()
+    rec.tick(force=True); E["calls"] += 1; E["rows"] += executed; RECF.flush()
     if AGENT_END and KIND != "dtb": _hidden_success(S.check()["success"], len(RECORD))   # the state's success: never shown
-    out = {**meta_common(), "chunk_id": E["calls"], "type": "joint_position", "executed_rows": int(A.shape[0]), "n_clipped_rows": n_clip,
+    out = {**meta_common(), "chunk_id": E["calls"], "type": "joint_position", "executed_rows": executed, "n_clipped_rows": n_clip,
            "duration_s": round((len(RECORD) - before) * CTRL_DT, 6), "planned_duration_s": round(int(A.shape[0]) * dt, 6),
            "frame_step": len(RECORD), "ok": True}   # frame_step: the control step its newest image shows (eai-standard/3.0)
     log({"ev": "submit", "call": E["calls"], "type": "joint_position", "rows": int(A.shape[0]), "dt": dt, "interpolate": interp, "cameras": cams,
@@ -816,11 +798,11 @@ class Refused(Exception):
 
 
 def check_reset() -> None:
-    """409 when no new episode may start: the trial is over (a success, or the agent's time is up), or the budget is spent."""
+    """409 when no new episode may start: the trial is over (the agent's /finish or its time is up), or the budget is spent."""
     if AGENT_END and E["done"] and E["reason"] in ("finished", "timeout"):
         raise Refused({"error": "episode finished", "reason": E["reason"], "resets_left": 0})
-    if _success() or E["stopping"] or E.get("finalizing"):
-        raise Refused({"error": "trial finished: " + ("an episode succeeded" if _success() else "your time is up"), "reason": E["reason"], "resets_left": 0})
+    if E["stopping"] or E.get("finalizing"):
+        raise Refused({"error": "trial finished: your time is up", "reason": E["reason"], "resets_left": 0})
     if E["resets"] >= RESET_BUDGET:
         raise Refused({"error": "reset budget exhausted", "reason": "reset budget exhausted", "budget": RESET_BUDGET, "resets_left": 0})
 
@@ -920,11 +902,14 @@ class Hd(BaseHTTPRequestHandler):
             parts = [p for p in parts if not (p[0].startswith("frames/") or p[0].startswith("depth/"))]; meta = {**meta, "degraded": "frames/depth dropped (response too large)"}
         body = rcb1.encode(meta, parts)
         self.send_response(200); self.send_header("Content-Type", "application/x-rcb1"); self.send_header("Content-Length", str(len(body))); self.end_headers(); self.wfile.write(body)
-    def _body(self):
+    def _length(self) -> int:
         try: n = int(self.headers.get("Content-Length", 0) or 0)
         except ValueError: raise ValueError("bad Content-Length") from None
         if n < 0: raise ValueError("bad Content-Length")   # read(-1) would read until the client hangs up, without any bound
         if n > MAX_BODY: raise ValueError("request too large")
+        return n
+    def _body(self):
+        n = self._length()
         raw = self.rfile.read(n) if n else b""
         if raw[:4] == rcb1.MAGIC: return rcb1.decode(raw)
         b = json.loads(raw or b"{}")
@@ -938,7 +923,12 @@ class Hd(BaseHTTPRequestHandler):
     def do_POST(self):
         _touch()
         if self.path not in ("/submit", "/observe") + (("/reset",) if RESET_BUDGET else ()) + (("/finish",) if AGENT_END else ()): return self._json(404, {"error": "no such endpoint"})
-        try: self._req = self._body()
+        try:
+            if self.path == "/finish":   # its body is ignored, never parsed: only its size is checked
+                n = self._length()
+                if n: self.rfile.read(n)
+                self._req = ({}, {})
+            else: self._req = self._body()
         except Exception as exc: return self._json(413 if str(exc) == "request too large" else 400, {"error": str(exc)[:200]})
         with LOCK:
             log({"ev": "call_begin", "path": self.path, "call": E["calls"] + 1})

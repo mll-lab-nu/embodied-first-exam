@@ -550,11 +550,13 @@ class Task(TaskBase):
         x, y = w.pelvis()[:2]
         return abs(x) <= self.p["zone_half_x_m"] and abs(y) <= self.p["zone_half_y_m"]
 
+    def actuate(self, w, ref):
+        if self.drive is not None:
+            self.drive.ctrl(w.m, w.d, ref.time + w.PHYS_DT)   # the turners' targets for the next physics step
+            self.drag.apply(w.d)                              # the air on the ropes for the next physics step
+
     def substep(self, w, ref):
         p, tr, d, r = self.p, self.trackers, w.d, w.robot
-        if self.drive is not None:
-            self.drive.ctrl(w.m, d, ref.time + w.PHYS_DT)     # the turners' targets for the next physics step
-            self.drag.apply(d)                                # the air on the ropes for the next physics step
         fl = tr["flights"]
         landed = fl.update()
         if ref.touching(self.ropes_any, self.robot_sel):

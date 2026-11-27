@@ -242,6 +242,7 @@ SPEC = {
     "physics_substeps": SUBSTEPS,
     "max_chunk_s": MAX_CHUNK_S,
     "max_frames_per_call": MAX_FRAMES,
+    "max_video_fps": CTRL_HZ,   # video_fps(): at most control_hz (1 / 0.034 s = 29.41)
     "cameras": {c: {"rgb": True, "depth": True, "resolution": [W, H], "intrinsic_cv": _intrinsic(c),
                     "depth_range_m": [float(MD.vis.map.znear * MD.stat.extent), float(MD.vis.map.zfar * MD.stat.extent)],
                     "mounted": MOUNTED[c], "mount": MOUNTS[c]} for c in CAMS},
