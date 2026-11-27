@@ -121,7 +121,7 @@ has its own prefix (`task_conventions.py benchmarks --check`, `ci_scope.py --che
    largest call the task allows) and make sure the oracle stays inside them, unless the benchmark's README states an
    exception: a process over any cap but CPU can be killed (PROTOCOL §6). Then run `scripts/task_conventions.py` on the tasks; `check-resources.py` checks the result.
 4. Base images: `images/<sim>/Dockerfile`, versioned in `images/<sim>/VERSION`, built and pushed with
-   `scripts/build_images.sh` / `scripts/push_images.sh`. Images that cannot be published carry `images/<sim>/BUILD_ONLY`
+   `scripts/images.sh build` / `scripts/images.sh push`. Images that cannot be published carry `images/<sim>/BUILD_ONLY`
    and build instructions. A task on a private image builds it itself when the runner cannot pull it: its Dockerfile
    starts with the recipe between `# >>> images/<sim>/Dockerfile` and `# <<< images/<sim>/Dockerfile` (the recipe's
    first `FROM ... AS <sim>-base`, the task's own stage `FROM <sim>-base`; `normalize` writes the current recipe there),
@@ -130,7 +130,7 @@ has its own prefix (`task_conventions.py benchmarks --check`, `ci_scope.py --che
    context: every file it takes comes from a public files-only image (`COPY --from=<image@digest>`) or a public URL
    (`ADD --checksum`; a URL into this repository names a commit that a tag keeps reachable, since main is squashed and
    GitHub drops unreachable commits), system packages from a dated snapshot (e.g. snapshot.debian.org). The private image is that
-   recipe built with BuildKit's inline cache (`scripts/build_images.sh` adds it to every BUILD_ONLY image): a runner
+   recipe built with BuildKit's inline cache (`scripts/images.sh build` adds it to every BUILD_ONLY image): a runner
    that can pull it takes its layers, any other runner builds the same layers from public sources.
 5. Run agents with Harbor's native agents only (`-a codex`, `-a claude-code`, …). No adapters, and no gateway that
    holds credentials or changes requests; the optional usage gateway that only records token usage is allowed (docs/protocol/running.md "Official runs").
@@ -174,7 +174,7 @@ The checklist is in PROTOCOL §4.
    benchmark's tasks (and `check-cutoffs.py` on its tasks); the cheap repo-level checks (resources,
    protocol, ...) always run on every task. Anything shared -- `ci_checks/`, `.github/`, the shared `scripts/` modules and tables
    (`task_conventions.py`, `task_resources.toml`, ...),
-   `embodied_first_exam/standard/`, `images/monitor/`, `images/VERSION`, the protocol documents (`docs/protocol/`), or a
+   `embodied_first_exam/standard/`, `images/monitor/`, the protocol documents (`docs/protocol/`), or a
    path the scope table does not know -- runs the full suite, as does every push to `main`, the nightly run and a manual
    run (`workflow_dispatch`). The CI mutation self-test (`check-ci-selftest.py`) runs with the full suite.
    The checks are in two tiers (PROTOCOL Appendix H): the job **`invariants`** (`ci_checks/run_invariants.sh`: the checks

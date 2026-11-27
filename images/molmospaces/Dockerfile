@@ -3,7 +3,7 @@
 # the privileged tasks' environment and verifier and the standard tasks' `sim` service (PROTOCOL D5); tasks COPY their
 # own tooling and instance. tasks/molmospaces/README.md.
 # Build: run images/molmospaces/prepare_assets.sh first (it builds the `base` stage, installs and prunes the assets in a
-# container of it, and stages them in images/molmospaces/build/), then scripts/build_images.sh, or in this directory:
+# container of it, and stages them in images/molmospaces/build/), then scripts/images.sh build, or in this directory:
 #   docker build -t ghcr.io/mll-lab-nu/efe:molmospaces-$(cat VERSION) .
 # Not included (PROTOCOL §2.7): upstream's scripted experts (molmo_spaces/policy/solvers: stubs only) and every grasp file.
 # Licences: code Apache-2.0; scenes and AI2-THOR objects CC BY 4.0; Objaverse objects ODC-BY 1.0 and each its creator's

@@ -47,7 +47,7 @@ Host
   without the renderer takes about 6 GB). Nothing is fetched at run time: the tasks run without network.
 
 Build and publish (maintainers; from the repository root)
-  RCB_PUSH_PRIVATE=1 scripts/build_images.sh builds every image (this one with BuildKit's inline cache); alone:
+  RCB_PUSH_PRIVATE=1 scripts/images.sh build builds every image (this one with BuildKit's inline cache); alone:
     docker build --build-arg BUILDKIT_INLINE_CACHE=1 -t ghcr.io/mll-lab-nu/efe-private:labutopia-$(cat images/labutopia/VERSION) images/labutopia
     docker push ghcr.io/mll-lab-nu/efe-private:labutopia-$(cat images/labutopia/VERSION)
   A new VERSION: change the tag in the tasks' `cache_from` and normalize them.

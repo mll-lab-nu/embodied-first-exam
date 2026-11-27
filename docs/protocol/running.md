@@ -398,8 +398,8 @@ RoboCasa365 and RoboCasa-GR1 `COLLECT_TIMEOUT_S`; RoboLab, YAMLab, DexJoCo, BEHA
 pages) and, for Embodied Olympics - Match's exported matches, a match's wall time at its slowdown plus the reviews between points.
 
 ## Base images
-Every base image is a tag of one of two packages (PROTOCOL §1): `ghcr.io/mll-lab-nu/efe:<name>-<images/<name>/VERSION>` (public), or `ghcr.io/mll-lab-nu/efe-private:<name>-<VERSION>` for an image with `images/<name>/BUILD_ONLY` (org members only): `scripts/build_images.sh`
-builds them all, `scripts/push_images.sh` pushes all but the `BUILD_ONLY` ones (needs `docker login ghcr.io` with a token
+Every base image is a tag of one of two packages (PROTOCOL §1): `ghcr.io/mll-lab-nu/efe:<name>-<images/<name>/VERSION>` (public), or `ghcr.io/mll-lab-nu/efe-private:<name>-<VERSION>` for an image with `images/<name>/BUILD_ONLY` (org members only): `scripts/images.sh build`
+builds them all, `scripts/images.sh push` pushes all but the `BUILD_ONLY` ones (needs `docker login ghcr.io` with a token
 that has `write:packages`). A new image is a new tag of `efe`, which is public, so nothing needs an admin's visibility
 change (a new package would start private, and the API cannot change that). An image with `images/<name>/BUILD_ONLY` is one that may not be redistributed (Isaac Sim's
 licence, assets without a licence for a public copy, or data behind a token; the marker file says which) and is never

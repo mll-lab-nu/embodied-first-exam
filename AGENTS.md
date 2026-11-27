@@ -28,8 +28,8 @@ invariants of Appendix H bind and no task value overrides them), `docs/protocol/
   adapter; `embodied_first_exam/README.md`). Its tasks get it from a files-only image (`scripts/files_image.py`,
   `images/<name>/FILES.json`): the tasks' Dockerfiles `COPY --from=<image@digest>` each file to the path a copy would have
   had (a sidecar's too: built from its own `environment/sim/Dockerfile`, which puts the directory and those files at `/srv`).
-- `images/<sim>/Dockerfile`: simulator base images, tagged from `images/<sim>/VERSION` if present else
-  `images/VERSION`; `scripts/build_images.sh`. MuJoCo tasks (`dextoolbench_*`, `mujoco_playground_*`) use `images/mujoco/`
+- `images/<sim>/Dockerfile`: simulator base images, tagged from `images/<sim>/VERSION`;
+  `scripts/images.sh build|push`. MuJoCo tasks (`dextoolbench_*`, `mujoco_playground_*`) use `images/mujoco/`
   (run `prepare_assets.sh` first); notes in `tasks/<benchmark>/README.md`.
 - Every resource number is a cap for one container; the format, where each is written and what enforces it: PROTOCOL
   §6 (running.md "Resources" for runs). Edit the `[[cap]]` rules of `scripts/task_resources.toml`, never a task's caps

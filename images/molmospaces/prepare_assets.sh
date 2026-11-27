@@ -5,7 +5,7 @@
 #      instances use, a traced run-time build marks the files they open, the rest is deleted, the hashes are checked).
 #      The downloads land in $MS_ASSETS_WORK (default /data/$USER/molmospaces/image_assets: several GB before pruning);
 #   3. copy the pruned tree, the instances and the tooling into build/.
-# Then build the image (scripts/build_images.sh, or `docker build` in this directory: Dockerfile).
+# Then build the image (scripts/images.sh build, or `docker build` in this directory: Dockerfile).
 set -euo pipefail
 HERE=$(cd "$(dirname "$0")" && pwd); ROOT=$(cd "$HERE/../.." && pwd); VER=$(cat "$HERE/VERSION")
 WORK="${MS_ASSETS_WORK:-/data/$USER/molmospaces/image_assets}"

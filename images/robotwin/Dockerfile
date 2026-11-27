@@ -3,7 +3,7 @@
 # Needs an NVIDIA GPU at runtime (CuRobo planning on CUDA, SAPIEN rendering on Vulkan): tasks pass it through
 # with environment/docker-compose.yaml (see docs). NVIDIA_DRIVER_CAPABILITIES=all makes the container runtime
 # mount the driver's Vulkan/EGL libraries; the ICD json files below point the loaders at them.
-# Build from repo root: scripts/build_images.sh   (submodule third_party/RoboTwin pinned to the 2.0 commit)
+# Build from repo root: scripts/images.sh build   (submodule third_party/RoboTwin pinned to the 2.0 commit)
 FROM nvidia/cuda:12.4.1-devel-ubuntu22.04
 ENV DEBIAN_FRONTEND=noninteractive PYTHONUNBUFFERED=1 UV_LINK_MODE=copy CUDA_HOME=/usr/local/cuda \
     NVIDIA_VISIBLE_DEVICES=all NVIDIA_DRIVER_CAPABILITIES=all

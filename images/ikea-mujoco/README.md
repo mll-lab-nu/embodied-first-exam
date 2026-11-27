@@ -45,7 +45,7 @@ docker build -f images/ikea-mujoco/Dockerfile -t ghcr.io/mll-lab-nu/efe:ikea-muj
 docker build -t ghcr.io/mll-lab-nu/efe:ikea-mujoco-sim-$(cat images/ikea-mujoco/sim/VERSION) images/ikea-mujoco/sim
 ```
 
-`scripts/build_images.sh` does the same once the context is staged (`BUILD_CONTEXT`; `sim/` is built after the base as
+`scripts/images.sh build` does the same once the context is staged (`BUILD_CONTEXT`; `sim/` is built after the base as
 its sub-image). The build needs network access to docker.io, pypi.org (and download.pytorch.org, dl.polyhaven.org for
 `sim/`); the fetch to raw.githubusercontent.com and huggingface.co; running needs none. Host: Linux x86_64, Docker; the base image needs no GPU, the sidecar an NVIDIA GPU with
 Vulkan and EGL.

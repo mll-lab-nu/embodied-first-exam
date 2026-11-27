@@ -122,7 +122,7 @@ realtime: sidecar 4 CPUs / 8 GiB and 4 GiB of GPU memory, agent 4 CPUs / 10 GiB 
 harbor run -p tasks/embodied-olympics-fun/embodied-olympics-fun-sprint-i00-privileged -a oracle        # or -a nop: scores 0
 harbor run -p tasks/embodied-olympics-fun/embodied-olympics-fun-penalty-kick-i00-standard -a codex -m openai/gpt-6-astra --env-file .env
 ```
-Build the image with `scripts/build_images.sh` (context `images/embodied-olympics-fun/`); after a change to a shared
+Build the image with `scripts/images.sh build` (context `images/embodied-olympics-fun/`); after a change to a shared
 file, rebuild and re-pin the files image (`scripts/files_image.py build|pin embodied-olympics-fun-files`).
 
 ## The 79 families

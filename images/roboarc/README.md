@@ -7,7 +7,7 @@
 `ghcr.io/mll-lab-nu/efe:roboarc-<images/roboarc/VERSION>` is a public image: RoboARC's simulator (the pruned
 `topogym` package of the release commit), Genesis 1.2.1, libuipc (the audited determinism-patched wheel, plus an sm_86 build
 of the same recipe), PyTorch, Nyx and every task's frozen instance. The tasks `FROM` it, and the standard `sim` service runs
-it. Maintainers push it with `scripts/push_images.sh` after validating a build.
+it. Maintainers push it with `scripts/images.sh push` after validating a build.
 
 - **Nyx.** The image contains Genesis AI's Nyx renderer (the `gs-nyx` wheels on PyPI). The benchmark owner has permission to
   redistribute it in this image.
@@ -61,7 +61,7 @@ images/roboarc/fetch_image_context.sh [<download dir>]     # images/roboarc/cont
 docker build -f images/roboarc/Dockerfile -t ghcr.io/mll-lab-nu/efe:roboarc-$(cat images/roboarc/VERSION) images/roboarc/context
 ```
 
-`scripts/build_images.sh` builds it from `images/roboarc/BUILD_CONTEXT` once the context exists, and skips it otherwise.
+`scripts/images.sh build` builds it from `images/roboarc/BUILD_CONTEXT` once the context exists, and skips it otherwise.
 The image is not cache-warmed: every container compiles its kernels on first use, and scene ready took 67-296 s for the
 rigid families on a shared 4090, against the 1800 s startup watchdog. The release tree's `images/topogym/warm_cache.sh`
 does not apply here. It expects `topogym-*` task directories with their own `instance.json`, and RoboARC's tasks stage

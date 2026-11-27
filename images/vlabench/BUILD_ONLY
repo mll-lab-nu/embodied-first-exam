@@ -4,7 +4,7 @@ lerobot/vlabench-assets @ 08d7a44, VLABench's Google Drive release) carries no l
 published. It is the tasks' build cache: every VLABench task's Dockerfiles start with this recipe (stage vlabench-base)
 and name the image in compose build.cache_from, so a runner with the organization's token pulls its layers and any other
 runner builds the same recipe from public sources on its first run (tasks/vlabench/README.md). To build and push it
-(scripts/build_images.sh adds BuildKit's inline cache to it):
+(scripts/images.sh build adds BuildKit's inline cache to it):
   docker build --build-arg BUILDKIT_INLINE_CACHE=1 -t ghcr.io/mll-lab-nu/efe-private:vlabench-$(cat images/vlabench/VERSION) images/vlabench
 The files image efe:vlabench-files (task code, and this recipe's two files: embodied_first_exam/benchmarks/vlabench/image/)
 is public.
