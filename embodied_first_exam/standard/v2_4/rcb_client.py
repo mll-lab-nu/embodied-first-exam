@@ -250,6 +250,7 @@ class Robot:
     def operation_status(self, operation_id=None):
         operation_id = operation_id or self.last_operation_id
         r = requests.get(self.base + "/operations/" + operation_id, timeout=(5, 60))
+        if r.status_code == 409: raise EpisodeOver(_over(r))   # after /finish, or the service gave up
         r.raise_for_status()
         return r.json()
 
@@ -274,6 +275,7 @@ class Robot:
     def kinematics(self, body: dict) -> dict:
         """POST /kinematics (stateless: never moves the robot, never advances time). Raises ValueError on a bad request."""
         r = requests.post(self.base + "/kinematics", json=body, timeout=(5, 120))
+        if r.status_code == 409: raise EpisodeOver(_over(r))   # after /finish, or the service gave up
         if r.status_code >= 400:
             try: err = r.json()
             except Exception: err = {"error": r.text[:300]}

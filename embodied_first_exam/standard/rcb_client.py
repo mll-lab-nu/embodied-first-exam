@@ -263,6 +263,7 @@ class Robot:
     def kinematics(self, body: dict) -> dict:
         """POST /kinematics (stateless: never moves the robot, never advances time). Raises ValueError on a bad request."""
         r = requests.post(self.base + "/kinematics", json=body, timeout=(5, 120))
+        if r.status_code == 409: raise EpisodeOver(_over(r))   # after /finish, or the service gave up
         if r.status_code >= 400:
             try: err = r.json()
             except Exception: err = {"error": r.text[:300]}
