@@ -96,6 +96,7 @@ for _label, _folder in tc.BENCHMARK_DIRS.items():
 # changes that no check reads: they need only the repo-level checks (which always run). Everything not listed here and
 # not a benchmark's own path runs the full suite.
 NO_TASK_EFFECT = ("README.md", "CONTRIBUTING.md", "AGENTS.md", "CLAUDE.md", "LICENSE", "SECURITY.md", "CODE_OF_CONDUCT.md", "docs/protocol/running.md",
+                  "docs/operations.md",
                   "docs/REVIEWING.md", ".gitignore",
                   "docs/core_set.toml")   # read by reports only; its own check (run_all.sh) and test (run_invariants.sh) always run
 # tasks/dataset.toml: not committed (generated for a release; check-dataset-manifest.sh fails when it is tracked)
