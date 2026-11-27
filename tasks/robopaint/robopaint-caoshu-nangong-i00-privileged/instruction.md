@@ -13,9 +13,9 @@ matter. Your trajectory is replayed from the fixed start. What counts is the sta
 You are scored on how closely your ink matches the exemplar's.
 
 Write with brush strokes, the way a person writes: each stroke of the exemplar is written along its length, with the
-brush pressed for the stroke's width; going over a stroke again is fine. Colouring in or filling the shapes, zigzag or
-serpentine fills, and fills that go round and round inside a shape fail the task, even when the sheet matches the
-picture. The exact checks are under Process rules in Robot Interface.
+brush pressed for the stroke's width; going over a stroke again is fine. These fail the task even when the sheet matches
+the picture: colouring in or filling the shapes, zigzag or serpentine fills, and fills that go round and round inside a
+shape. The exact checks are under Process rules in Robot Interface.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, path)`; it is replayed open-loop
 from the frozen start and succeeds if the replay meets the rules above. Also leave the script that produced it at
@@ -83,59 +83,60 @@ brush points straight down with the tip at about (0.000, 0.000, 0.093).
   unbent tuft. Hold the brush vertical (as at the start); the model uses the tip's position and ignores tilt (the
   maximum tilt is reported).
 - Ink: the brush starts dry (strokes leave no mark). The ink stone lies on a plate on the robot's left (+y): centre (x,
-  y) = (-0.100, 0.150), radius 20 mm, ink surface z = 0.028 m (plate top 0.026 m, rigid). Dipping = the tip inside the
-  stone's circle and below the ink surface: the brush is then inked (it never runs dry) and restored: the hairs are
-  gathered back to a point (no spread, no bend). `s.wells()` returns these facts.
+  y) = (-0.100, 0.150), radius 20 mm, ink surface z = 0.028 m (plate top 0.026 m, rigid). Dipping means having the tip
+  inside the stone's circle and below the ink surface. The brush is then inked (it never runs dry) and restored: the
+  hairs are gathered back to a point, with no spread and no bend. `s.wells()` returns these facts.
 - Sheets (surface z = 0.020 m, lying on the board): the main sheet, a 227.18 mm square centred at world (-0.100, 0.000),
   is the one that is scored; the practice sheet, 227.18 x 99.41 mm centred at (-0.100, -0.1856) (the robot's right of
   the main sheet), is for test strokes and is never scored or counted. `s.sheet_facts()`.
-- How the brush marks the paper (the dynamic brush of Wang, Chen, Deng, Hutchinson, Dellaert, IROS 2020, arXiv
-  1911.08002, re-implemented; the code is `WangBrush` in `/opt/tools/rcb_brush.py`): wherever the tip is below a sheet's
-  surface over the sheet with ink on the brush, the pressed hairs leave a mark. The mark is not a disc under the tip:
-  its width and its length (a tapering "drag" tail) grow with the press depth (a light touch makes a hairline, about 15
-  mm press makes a mark about 17 mm wide; deeper presses do not spread it further, and the handle hits the paper at 30
-  mm); the part of the tuft on the paper stays put until the handle has moved a press-dependent distance away (up to
-  about 11 mm), then is dragged behind it, so the mark trails the handle and cuts inside turns; lifting releases the
-  bend (the mark's root snaps back under the handle). The state of the hairs carries over between strokes until the next
-  dip. The tip is sampled at every physics step (100 Hz); one continuous contact with a sheet is one stroke; ink is
-  permanent (only `s.reset()` clears it).
+- How the brush marks the paper: wherever the brush has ink and its tip is below a sheet's surface over the sheet, the
+  pressed hairs leave a mark. The model is the dynamic brush of Wang, Chen, Deng, Hutchinson, Dellaert (IROS 2020, arXiv
+  1911.08002), re-implemented; the code is `WangBrush` in `/opt/tools/rcb_brush.py`. The mark is not a disc under the
+  tip. Its width and its length (a tapering "drag" tail) grow with the press depth: a light touch makes a hairline, and
+  a press of about 15 mm makes a mark about 17 mm wide. Deeper presses do not spread it further, and the handle hits the
+  paper at 30 mm. The part of the tuft on the paper stays put until the handle has moved a press-dependent distance away
+  (up to about 11 mm); then it is dragged behind the handle, so the mark trails the handle and cuts inside turns.
+  Lifting releases the bend: the mark's root snaps back under the handle. The state of the hairs carries over between
+  strokes until the next dip. The tip is sampled at every physics step (100 Hz); one continuous contact with a sheet is
+  one stroke; ink is permanent (only `s.reset()` clears it).
 - The arm is position-controlled (PD, 20 Hz targets): a moving target is followed with a lag of about 0.1 s (2 mm at 2
   cm/s).
 
 ### The target picture
 `/app/target.png` (1024 x 1024 px, RGB) shows the exemplar at its true size and place on the main sheet: the image
 covers the main sheet exactly, 0.2219 mm per pixel. Pixel (column u, row v), counted from 0 at the image's top-left, has
-its centre at sheet millimetres X = (u + 0.5) · 227.18 / 1024, Y = (v + 0.5) · 227.18 / 1024 (X to the robot's right, Y
-towards the robot, origin = the sheet's far-left corner as seen from the robot's base), i.e. at world x = -0.100 +
-0.1136 - Y/1000, y = 0.1136 - X/1000 (m) (`s.geo.mm_to_world(X, Y)`). Image top = the sheet's far edge (+x), image left
-= the robot's left (+y): the same orientation as `s.canvas()` and `canvas_cam`.
+its centre at sheet millimetres X = (u + 0.5) · 227.18 / 1024, Y = (v + 0.5) · 227.18 / 1024. X runs to the robot's
+right and Y towards the robot; the origin is the sheet's far-left corner as seen from the robot's base. In the world
+frame that is x = -0.100 + 0.1136 - Y/1000, y = 0.1136 - X/1000 (m) (`s.geo.mm_to_world(X, Y)`). Image top = the sheet's
+far edge (+x), image left = the robot's left (+y): the same orientation as `s.canvas()` and `canvas_cam`.
 
 ### Process rules
 The grader checks the process rules in Goal on the replayed trajectory with two numbers you can compute yourself; only
 inked strokes on the main sheet count (the practice sheet is free):
 - `path_mm`: the total length of the brush tip's path while it presses on the main sheet with ink (all strokes together,
   sampled at every physics step);
-- `mark_width_mm`: the average width of your marks = the area each stroke inks on its own (its own mark, ink coverage ≥
-  0.5; where different strokes overlap, each counts its own), summed over the strokes, divided by `path_mm`.
+- `mark_width_mm`: the average width of your marks. It is the area each stroke inks on its own, summed over the strokes
+  and divided by `path_mm`; a stroke's own area is its own mark where ink coverage is ≥ 0.5, and where different strokes
+  overlap, each counts its own.
 
-Colouring in = `path_mm` > 2680 mm and `mark_width_mm` < 0.93 mm (a long path of thin marks): it fails the task. A
-pressed brush, even over a stroke again, keeps the marks wide enough, and a light hand on a short path stays under the
-path limit: both are fine. The stroke cap counts strokes as they are written, not contacts (this refines "one continuous
-contact is one stroke" above). A contact is cut into two strokes wherever the brush moves more than 5 mm along the main
-sheet without marking it (its mark narrower than 0.1 mm: a press too light to ink), and a stroke longer than 1960 mm of
-path counts as one stroke per started 1960 mm. Pieces joined by a touch too light to ink are therefore separate strokes,
-and one contact held down to write and re-write for a long time counts as several; a stroke written with the brush down
-and lifted at its end is one. Strokes are sweeps: at most 10 % of `path_mm` may lie in strokes whose path is longer than
-12 times the diagonal of their bounding box (taken as at least 10 mm): back-and-forth, zigzag, spiral or looping fills
-inside one stroke fail. Breaking a process rule fails the task. `s.score()` reports `path_mm`, `mark_width_mm`,
-`max_path_mm`, `min_mark_width_mm`, `colour_in`, `n_strokes_counted`, `n_marked_pieces`, `longest_counted_stroke_mm`,
-`max_stroke_path_mm`, `strokes_counted_ok`, `scribble_share`, `scribble_ok`, `image_success` (the picture rule alone),
-`strict_ok` (the process rules) and `success` (both); `s.strokes()` holds each stroke's samples (the mark's width is the
-fourth column, in m) and its own mark.
+Colouring in = `path_mm` > 2680 mm and `mark_width_mm` < 0.93 mm (a long path of thin marks): it fails the task. Both of
+these are fine: a pressed brush keeps the marks wide enough, even when it goes over a stroke again, and a light hand on
+a short path stays under the path limit. The stroke cap counts strokes as they are written, not contacts (this refines
+"one continuous contact is one stroke" above). A contact is cut into two strokes wherever the brush moves more than 5 mm
+along the main sheet without marking it (its mark narrower than 0.1 mm: a press too light to ink), and a stroke longer
+than 1960 mm of path counts as one stroke per started 1960 mm. So pieces joined by a touch too light to ink are separate
+strokes, and one contact held down for a long time to write and re-write counts as several. A stroke written with the
+brush down and lifted at its end counts as one. Strokes are sweeps: at most 10 % of `path_mm` may lie in strokes whose
+path is longer than 12 times the diagonal of their bounding box (the diagonal taken as at least 10 mm). Back-and-forth,
+zigzag, spiral or looping fills inside one stroke fail. Breaking a process rule fails the task. `s.score()` reports
+`path_mm`, `mark_width_mm`, `max_path_mm`, `min_mark_width_mm`, `colour_in`, `n_strokes_counted`, `n_marked_pieces`,
+`longest_counted_stroke_mm`, `max_stroke_path_mm`, `strokes_counted_ok`, `scribble_share`, `scribble_ok`,
+`image_success` (the picture rule alone), `strict_ok` (the process rules) and `success` (both); `s.strokes()` holds each
+stroke's samples (the mark's width is the fourth column, in m) and its own mark.
 
 The score (`final_reward`, 0 to 1) is how well your ink overlaps the exemplar's (1 = the same); it is scaled down above
 the stroke cap and when a process rule fails. `s.score()` returns the grader's metrics for the current sheet, `success`
-and `final_reward` included: a scoring service replays the actions you have executed since your last `s.reset()` and
+and `final_reward` included. A scoring service replays the actions you have executed since your last `s.reset()` and
 scores the resulting sheet, so a call after a long episode takes as long as that replay.
 
 ## Limits
