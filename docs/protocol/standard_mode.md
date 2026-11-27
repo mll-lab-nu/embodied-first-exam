@@ -116,6 +116,7 @@ connections are refused and the client retries.
 | GET | `/status` | — | JSON: the shared sidecar (`rcb_service.py`): `{calls, rows, control_steps, done, reason, elapsed_s}`, plus `step_limit`, `steps_left` with a step limit and `episode`, `control_steps_total`, `resets_left` with a reset budget; a benchmark's own service: `{step, calls, physics_steps, done, reason, elapsed_s}` |
 | POST | `/observe` | RCB1 or JSON `{cameras, last_s, video_fps, include_depth, video}` (3.0; before: `seconds`) | RCB1 |
 | POST | `/submit` | RCB1: header `{type, dt, interpolate, cameras, video_fps, video, include_depth, note}` + part `actions` float32 (T, dim); a hold chunk (3.0): header `{type, interpolate: "hold", seconds, ...}`, no part | RCB1 |
+| POST | `/finish` | optional, ignored (clients send `{}`) | JSON `{"ok": true, ...}` with `/status`'s fields: the episode ends (`reason = "finished"`), every later call but `GET /spec` and `GET /status` is a 409 ("Agent-ended episodes"; required from 3.0) |
 
 Anything else (`/state`, `/success`, …) returns **404**; so does `/reset` unless the task declares a reset budget
 (below).
@@ -321,7 +322,11 @@ client that never calls `/finish` is served as before, its session's end ending 
   agent-ended task is graded on its end state, not failed on top (`scripts/write_task_results.py`, by the task's mode).
 - Implementation for the 2.2 and 2.4 layers: `embodied_first_exam/standard/agent_end/rcb_agent_end.py` (`Service`,
   `serve`, `hidden_success`, `final_fields`, `steps_left`; files-only image `agent-end-files`); an adapter without
-  `finish()` refuses to start with the feature on; tests `agent_end_selftest.py`.
+  `finish()` refuses to start with the feature on. `Service` enforces `RCB_STEP_LIMIT` for every adapter: the call
+  (a hold chunk too) stops at the step that reaches it (`Episode.row_cap`), the adapter's `finish("step_limit")` ends
+  the episode there and the answer says so (`done`, `reason`, a `duration_s` of the steps run); an adapter with a cap
+  of its own that ends the episode first is not ended again. A `finish()` that raises is a simulator error (500, the
+  episode ends `error`). Tests `agent_end_selftest.py`.
 - Implementation for the 2.1 sidecar and the 2.3 realtime layer: `rcb_service.py` (`AGENT_END`; the adapter's
   `end_judgement` = `"state"` or `"events"`, `end_window_steps` for a settle or hold window, `hidden_keys` for progress
   fields of `step()`'s info, `info["step_cap"]` for a done that is the episode's length) and `rcb_realtime.py` (the
@@ -727,8 +732,8 @@ means "required of a service that reports 2.4" (what a 2.4 client may rely on).
   `POST /kinematics` and the per-call wall bound, and 2.3's realtime capability (Part 3). So a 2.2 service that adds the
   operations capability is a 2.4 service.
 - Standard-mode tasks may declare `protocol = "eai-standard/2.4"`. Realtime tasks stay on 2.3.
-- Everything in Parts 1 and 2 holds unchanged: four endpoints (plus `/kinematics`, `/reset` within a declared budget and
-  the one below), RCB1, and grading by the live episode.
+- Everything in Parts 1 and 2 holds unchanged: five endpoints (`/spec`, `/status`, `/observe`, `/submit`, `/finish`;
+  plus `/kinematics`, `/reset` within a declared budget and the one below), RCB1, and grading by the live episode.
 - `/spec.protocol` is `eai-standard/2.4`.
 
 Why: a native simulator call can run for minutes (IPC and PBD deformables). Under 2.2, a client whose HTTP read timed

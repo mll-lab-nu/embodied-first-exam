@@ -10,6 +10,7 @@
 
 ## Contract
 - Mode(s): privileged / standard / realtime — protocol (standard: `eai-standard/2.1`/`2.2`/`2.4`; realtime: `eai-standard/2.3`): `eai-standard/2.__`
+- [ ] Standard / realtime: `eai-standard/3.0` (`/spec.standard`), agent-ended episodes: `RCB_AGENT_END: "1"` in the `sim` service, `POST /finish` served, the success hidden, the end state judged; the instruction's `## Limits` has the Finish line (`ci_checks/check-agent-end.py`; docs/protocol/standard_mode.md "Agent-ended episodes")
 - Oracle: full / partial / none — evidence: ___
 - Base image(s): `efe:<sim>-<ver>` (published) / `efe-private:<sim>-<ver>` (BUILD_ONLY)
 - Agent time cutoff: ___ s per mode, `[agent] timeout_sec` in each task's task.toml (rules: PROTOCOL §2); the reason if not 3600. A change of an existing task's cutoff: old -> new, decided by ___
@@ -24,9 +25,9 @@
 - [ ] Runs with Harbor's native agents (no custom runner, gateway or adapter)
 - [ ] Names `<base>-privileged` / `<base>-standard` / `<base>-realtime`; README in the standard layout; no `results/`
 - [ ] A new benchmark: its row is in `scripts/task_conventions.py` `BENCHMARK_TABLE` (shared-files pull request), with a prefix of its own
-- [ ] The cutoff is each task's `[agent] timeout_sec`; `instruction.md` ends with the `## Time limit` section `normalize` renders from it and states the limit nowhere else (`ci_checks/check-cutoffs.py`; docs/protocol/running.md "The agent's time")
+- [ ] The cutoff is each task's `[agent] timeout_sec`; the Time line of `instruction.md`'s `## Limits` (`normalize` renders it) states it, and nothing else in the instruction does (`ci_checks/check-cutoffs.py`; docs/protocol/running.md "The agent's time")
 - [ ] The agent's egress is the allowlist (model APIs + package registries) and the oracle passes under it (the task itself downloads nothing at run time); no file the agent reads, in the task or its image, names or locates a solution, a demonstration or its dataset (PROTOCOL Appendix H.2, H.6)
-- [ ] The caps of every container (a `[[cap]]` rule in `scripts/task_resources.toml`) set from measured peaks with a margin; the oracle stays inside them; `instruction.md` and the README have the rendered `## Resources` (PROTOCOL §6)
+- [ ] The caps of every container (a `[[cap]]` rule in `scripts/task_resources.toml`) set from measured peaks with a margin; the oracle stays inside them; the Resources line of `instruction.md`'s `## Limits` and the README's `## Resources` are rendered from them (PROTOCOL §6)
 - [ ] No credentials, personal paths or files > 2 MB; each changed task's `DIGEST` current (`normalize` writes it; `tasks/dataset.toml` is generated, not committed)
 
 ## Evidence

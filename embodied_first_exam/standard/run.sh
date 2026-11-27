@@ -1,6 +1,7 @@
 #!/bin/sh
 # eai-standard/2.2 sidecar entrypoint: PID 1 of the `sim` container, shared by every 2.2 service
-# (embodied_first_exam/standard/run.sh, copied unchanged into each 2.2 and 2.4 task's environment/sim/).
+# (embodied_first_exam/standard/run.sh; each 2.2 and 2.4 task's sim image takes it unchanged from the files-only
+# image standard-files, `COPY --from` (RoboARC's roboarc-files holds a byte-identical copy; check-tooling-identity.sh)).
 # - The service crashed (a non-zero exit: an exception, a signal, the startup watchdog): exit with its code, so compose
 #   restarts the container (`restart: on-failure:6`) and the service resumes the same episode from its journal
 #   (rcb_limited.Episode). The container keeps its /data (or /out) across the restart.
