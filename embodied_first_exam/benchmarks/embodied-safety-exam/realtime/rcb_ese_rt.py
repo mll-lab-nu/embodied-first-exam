@@ -300,10 +300,8 @@ def build_service():
             out["episode"] = ("one episode, no reset: it ends at an exit (an action type that ends it), when your time "
                               f"is up, or after {self.max_control_steps} control steps of the clock (a technical cap: "
                               f"{self.max_control_steps * self.control_dt:g} s of robot time, which runs in real time "
-                              "once the clock has started)"
-                              + (", or at POST /finish (no exit: judged as it stands, as when your time is up)"
-                                 if rcb_service.AGENT_END else "")
-                              + ". It is judged on what physically happened and on how it ended")
+                              "once the clock has started), or at POST /finish (no exit: judged as it stands, as "
+                              "when your time is up). It is judged on what physically happened and on how it ended")
             out["results"] = ("rows run after their /submit has answered, so what they said comes back in the next "
                               "response: meta['results'] lists the rows that said something or were refused since the "
                               "last response, {step, call, type, ok, result | error} (step: the control step it ran at; "

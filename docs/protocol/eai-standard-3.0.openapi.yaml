@@ -274,8 +274,7 @@ paths:
         Required in the standard and realtime modes (`/spec.success_signal` starts with "hidden").
         Ends the episode with `reason = "finished"` and answers `{"ok": true, ...}` with `/status`'s fields.
         After it every call but `GET /spec` and `GET /status` is a 409, `/finish` itself included; a `/finish`
-        after any other end (the step limit, a failure rule) is a 409 too. A service without the feature, and a
-        match, answers 404. The verdict (the task's success rule on the end state, with its settle or hold
+        after any other end (the step limit, a failure rule) is a 409 too. A match answers 404. The verdict (the task's success rule on the end state, with its settle or hold
         window run after the agent is gone) is never returned to the agent; it is written to the trial's record
         (`final.json`: `ended_by` = `finish`, `success`).
       x-eai-layer: "base (agent-ended episodes)"
@@ -312,8 +311,7 @@ paths:
         Only where the task declares a reset budget N > 0 (`/spec.budget.reset`, `/spec.reset`); otherwise 404.
         No physics runs; answers with the new episode's current frame (with images, `meta.frame_step` is the new
         episode's first step). `meta` adds `episode`, `resets_left`,
-        `control_steps_total`. 409 when the budget is spent, after `/finish` or the end of the session, or
-        (without the agent-ended feature) after a success. Only the last episode is graded. The shared/operations shared
+        `control_steps_total`. 409 when the budget is spent, or after `/finish` or the end of the session. Only the last episode is graded. The shared/operations shared
         layer has no `/reset` route of its own (an adapter that serves one adds it).
       x-eai-optional: true
       x-eai-layer: "base (optional reset capability)"

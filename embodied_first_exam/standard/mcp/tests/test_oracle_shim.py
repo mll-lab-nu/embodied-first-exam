@@ -32,6 +32,8 @@ ORACLE = textwrap.dedent('''
               {c: f.shape for c, f in res.frames.items()}, int(res.last["top"].sum()))
         if res.meta["done"]:
             break
+    f = r.finish()                                            # agent-ended: the episode ends here, its state is judged
+    print("finish", f.get("done"), f.get("reason"))
     print("status", r.status().get("done"))
 ''')
 
@@ -66,9 +68,11 @@ def main():
         p = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
         s = json.loads(p.stdout.strip().splitlines()[-1])
         assert p.returncode == 0, p.stdout + p.stderr
-        assert "journal.f64" in s["same"] and {"observe", "spec", "submit"} <= set(s["mcp_tools_called"]), s
+        assert "journal.f64" in s["same"] and {"observe", "spec", "submit", "finish"} <= set(s["mcp_tools_called"]), s
         out = (pathlib.Path(s["out"]) / "api" / "oracle.out").read_text()
-        assert "True success" in out, out
+        assert "finish True finished" in out and "status True" in out, out
+        final = json.loads((pathlib.Path(s["out"]) / "api" / "data" / "final.json").read_text())
+        assert final.get("success") is True and final.get("reason") == "finished", final
         print(f"ok {version} layer: API path = MCP path on the toy service:", ", ".join(s["same"]),
               "identical; tools", s["mcp_tools_called"], "; evidence", s["out"])
 

@@ -28,8 +28,7 @@ assistance (the gripper `command` text of /spec says the rule). Genesis' CUDA co
 scene, so every simulator call runs on the main thread: the HTTP layer serves from a thread and hands submit / observe /
 kinematics, the per-call checkpoint's state hash and proprio row, and the episode end to the main thread's job queue.
 
-Agent-ended episodes (PROTOCOL §3; RCB_AGENT_END "1" in the task's sim service, rcb_agent_end.py; the service refuses to
-start without it): a success never ends the episode and is never shown; POST /finish ends it (reason "finished"), and so
+Agent-ended episodes (PROTOCOL §3; rcb_agent_end.py): a success never ends the episode and is never shown; POST /finish ends it (reason "finished"), and so
 does the end of the agent's session ("timeout"). Those two ends, and the step cap ("step_limit": the runaway guard,
 rcb_topogym.MAX_STEPS, or RCB_STEP_LIMIT when smaller), are judged on the end state: the task's success
 predicate must be true when the episode ends and stay true for the family's confirmation window (stable_duration_s:
@@ -55,9 +54,6 @@ import numpy as np
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import rcb_limited as L  # noqa: E402
 import rcb_agent_end as AE  # noqa: E402
-
-if not AE.ENABLED:   # every RoboARC TopoGym standard task is agent-ended (v3.0): no first-success service is kept
-    raise RuntimeError("RoboARC TopoGym standard service: RCB_AGENT_END=1 is required (agent-ended episodes)")
 
 PROTOCOL = L.PROTOCOL
 DATA = os.environ.get("RCB_DATA", "/data"); os.makedirs(DATA, exist_ok=True); os.makedirs(os.path.join(DATA, "calls"), exist_ok=True)

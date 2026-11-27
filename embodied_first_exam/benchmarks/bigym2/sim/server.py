@@ -15,7 +15,7 @@ no fall) and the episode ends where upstream ends it, so nothing is replayed to 
 trajectory once, after the verdict, to film it. The frozen start is checked when the scene is built (instance_check: the
 instance's t0 state exactly, or within upstream's tolerance on another CPU): a scene that does not rebuild it is
 InstanceMismatch, and start_sha (the start this image accepts) is checked by rcb_service when an episode begins.
-Agent-ended episodes (RCB_AGENT_END, PROTOCOL §3; every BiGym 2.0 standard and realtime task): a success never ends
+Agent-ended episodes (PROTOCOL §3): a success never ends
 the episode (rcb_bigym2 Episode.run_on: upstream's end on the held success alone is passed over), step() reports the
 held success as things stand (success_now: upstream's success-hold counter at its mark, no fall in the episode), and an
 end-state end runs upstream's own hold window (end_window_steps = its success-hold steps, 1 s) from the state the
@@ -34,7 +34,7 @@ import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from rcb_bigym2 import CAMERAS, Episode, load_instance, replay  # noqa: E402
-from rcb_service import AGENT_END, InstanceMismatch, main  # noqa: E402
+from rcb_service import InstanceMismatch, main  # noqa: E402
 
 ACTION = "whole_body"
 
@@ -61,9 +61,9 @@ class BiGym2:
         self.facts = self.instance["t0"]["robot"]  # the robot's description: joint axes, camera mounts
         self.cmd = self.ep.hold_row()
         # agent-ended episodes: the end state is judged after upstream's own hold window (its success-hold steps)
-        self.ep.run_on = AGENT_END
+        self.ep.run_on = True
         self.end_judgement = "state"
-        self.end_window_steps = int(self.ep.tools.inner.success_hold_steps) if AGENT_END else 0
+        self.end_window_steps = int(self.ep.tools.inner.success_hold_steps)
 
     # ------------------------------------------------------------------ the rcb_service.Sim contract
     def spec(self) -> dict:
@@ -133,19 +133,18 @@ class BiGym2:
         return ACTION, self.ep.hold_row()
 
     def step(self, row: np.ndarray) -> tuple[bool, bool, dict]:
-        if AGENT_END and self.ep.done:   # over already (a settle window after the horizon): nothing more runs
+        if self.ep.done:   # over already (a settle window after the horizon): nothing more runs
             cap = self.ep.time_limit()
             return True, cap and self.ep.success_now(), ({"step_cap": True} if cap else {})
         done = self.ep.step(row)
         self.cmd = np.asarray(row, dtype=np.float64)
-        if AGENT_END:   # the held success as things stand; an end is a failure, or the horizon (the step cap)
-            if not done:
-                return False, self.ep.success_now(), {}
-            if self.ep.time_limit():
-                return True, self.ep.success_now(), {"step_cap": True, "outcome": "timeout"}
-            out = self.ep.outcome()
-            return True, False, {"outcome": "terminated" if out == "success" else out}
-        return done, self.ep.success(), ({"outcome": self.ep.outcome()} if done else {})
+        # the held success as things stand; an end is a failure, or the horizon (the step cap)
+        if not done:
+            return False, self.ep.success_now(), {}
+        if self.ep.time_limit():
+            return True, self.ep.success_now(), {"step_cap": True, "outcome": "timeout"}
+        out = self.ep.outcome()
+        return True, False, {"outcome": "terminated" if out == "success" else out}
 
     def reset(self) -> None:
         self.ep.reset()
@@ -161,7 +160,7 @@ class BiGym2:
 
     def render_video(self, rows: np.ndarray, path: str) -> None:
         """The episode's video, after the verdict: the trajectory re-run once from the frozen instance, filmed."""
-        replay(self.instance, rows, video=path, run_on=AGENT_END)
+        replay(self.instance, rows, video=path, run_on=True)
         try:  # the last frame, for the verifier's evidence
             import subprocess
             subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-sseof", "-0.1", "-i", path, "-frames:v", "1",

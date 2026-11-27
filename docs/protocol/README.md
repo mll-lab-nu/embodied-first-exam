@@ -99,7 +99,7 @@ infrastructure, a reference implementation, one benchmark using it, CI support t
     one, the service's own step cap (`/spec.max_control_steps`, the task's episode length) ends the episode the same
     way. The episode ends at whichever comes first: `/finish`, the step limit or cap, the agent's time limit (its
     cutoff, §2), its token budget (the run's, running.md "Official runs"), the agent's own exit, or the task's failure
-    rule or a simulator error as without the feature.
+    rule or a simulator error.
   - *The verdict.* The task's success rule on the state at that end, with the task's settle or hold window run from
     there. A success reached and then undone is 0. A goal the task judges as events (moments in a sequence, a scored
     goal, a check at a trigger) is judged on them as they happened. A failure rule that ends the episode gives 0 on a

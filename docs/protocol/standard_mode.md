@@ -180,11 +180,9 @@ the wall clock; the simulated time is recorded as cost.
 | 500 | simulator error; the episode ends with `reason = "error"` (the client raises `EpisodeOver`; the verifier reports `sim_error = 1`) |
 
 ### Episode semantics
-The service starts the episode when it is ready (seed hidden inside). From protocol v3.0 the agent ends it (POST
-`/finish`, "Agent-ended episodes" below; required in the standard and realtime modes), or the step cap, the end of the
-agent's session (`timeout`), the task's failure rule or an error does; the state it ends in is judged. Before v3.0 (and
-in a service without the feature) the first success ended it; otherwise it ended when the agent phase ended
-(`timeout`) or on an error, and the predicate was evaluated once more at episode end.
+The service starts the episode when it is ready (seed hidden inside). The agent ends it (POST `/finish`, "Agent-ended
+episodes" below; required in the standard and realtime modes), or the step cap, the end of the agent's session
+(`timeout`), the task's failure rule or an error does; the state it ends in is judged.
 
 **The agent's clock (every 2.x service).** `meta.time_s` is the wall time since the agent's **first
 request** to the service, whatever the endpoint (`GET /spec`, which the shipped clients send first, counts), and
@@ -282,23 +280,22 @@ PROTOCOL §3 "Agent-ended episodes": required for every standard and realtime ta
 `ci_checks/check-agent-end.py` checks it). `RCB_STEP_LIMIT: "<N>"` adds a step limit
 (what one step is: the service's `/spec` and the task's instruction); without one, the service's own step cap
 (`/spec.max_control_steps`, the task's episode length) ends the episode the same way (`reason = "step_limit"`). Every
-2.x service implements it (2.1: the sidecar `rcb_service.py`; 2.2 and 2.4: `rcb_agent_end.py` with the adapter; 2.3:
-`rcb_realtime.py` over `rcb_service.py`; a benchmark's own 2.1 server: the same wire). The wire, additive (a 2.0 or 2.1
-client that never calls `/finish` is served as before, its session's end ending the episode):
+service implements it (the sidecar layer: `rcb_service.py`; the shared and the operations layers: `rcb_agent_end.py`
+with the adapter; the realtime layer: `rcb_realtime.py` over `rcb_service.py`; a benchmark's own server: the same wire).
+A client that never calls `/finish` has its episode ended by its session's end. The wire:
 - `/spec.success_signal` says the success is hidden; with a step limit `/spec.budget.steps = /spec.max_control_steps = N`,
   and every `meta` and `/status` add `step_limit` and `steps_left`.
 - No answer depends on the task's success: no `done` / `reason = "success"`, no 409, no early end of a chunk and no
   per-call work caused by it, `resets_left` and `/reset` as before a success, no success or progress field of the
   service's own (stages reached, a settled-check counter) in `meta` or `/status`.
-- `POST /finish` (its body is optional and ignored: the shared layers 2.1-2.4 never parse it; clients send `{}`,
+- `POST /finish` (its body is optional and ignored: no layer parses it; clients send `{}`,
   which every service accepts, as it does an empty body) ends the episode (`reason = "finished"`) and answers `{"ok": true, ...}` with `/status`'s
-  fields; after it every call but `GET /spec` and `GET /status` is a 409. Without the feature it is a 404.
+  fields; after it every call but `GET /spec` and `GET /status` is a 409.
 - At the step limit the episode ends by itself (`reason = "step_limit"`; the chunk stops at that step); then `/submit`
   and `/finish` are 409, `/observe` still answers.
 - The collect hook's signal at the end of the agent's session ends the episode with `reason = "timeout"`.
-- Realtime (2.3): `/finish` is answered by the simulator thread between control steps; the clock stops with the episode
-  (no step runs after it) and a settle or hold window runs after the agent is gone, off the clock. (Before 3.0 the
-  pending watches were answered here; from 3.0 `/observe` never waits, so none is pending.)
+- Realtime: `/finish` is answered by the simulator thread between control steps; the clock stops with the episode
+  (no step runs after it) and a settle or hold window runs after the agent is gone, off the clock.
 - Resets: as before a success (`resets_left` counts as without one); after `/finish` or the session's end `/reset` is a
   409; after a failure end or the step cap it is allowed while the budget lasts. Only the last episode is graded.
 - The verdict: the task's own rule on the state the episode ended in, with its settle or hold window run from there on
@@ -309,7 +306,7 @@ client that never calls `/finish` is served as before, its session's end ending 
   running to the end, with one rule by judgement type: on a goal judged on the end state, a failure rule that ends the
   episode gives 0, after a success too; on a goal judged as events, an event that happened stands (a referee's call or
   a scored point is not taken back by a later foul or fall), and a failure rule ends the episode with the events
-  reached so far. A simulator error is judged as without the feature.
+  reached so far. A simulator error ends the episode with reason `error`.
 - `final.json` adds `success_signal = "hidden"`, `ended_by` (`finish`, `step_limit`, `session_end`, `failed`: the
   task's own failure rule, `error`), `hidden_success_seen`, `hidden_success_first_step`, `trial_hidden_success_seen`,
   `finish_time_s` and, with a step limit, `step_limit` and `steps_used`; `reward.json` adds `ended_finish`,
@@ -318,9 +315,9 @@ client that never calls `/finish` is served as before, its session's end ending 
   runner's record: Harbor's `AgentTimeoutError` for the time limit, the gateway's `budget_stop` for the token
   budget; over the token budget an agent-ended task is graded on its end state, not failed on top
   (`scripts/write_task_results.py`, by the task's mode).
-- Implementation for the 2.2 and 2.4 layers: `embodied_first_exam/standard/agent_end/rcb_agent_end.py` (`Service`,
+- Implementation for the shared and the operations layers: `embodied_first_exam/standard/agent_end/rcb_agent_end.py` (`Service`,
   `serve`, `hidden_success`, `final_fields`, `steps_left`; files-only image `agent-end-files`); an adapter without
-  `finish()` refuses to start with the feature on. `Service` enforces `RCB_STEP_LIMIT` for every adapter: the call
+  `finish()` refuses to start. `Service` enforces `RCB_STEP_LIMIT` for every adapter: the call
   (a hold chunk too) stops at the step that reaches it (`Episode.row_cap`), the adapter's `finish("step_limit")` ends
   the episode there and the answer says so (`done`, `reason`, a `duration_s` of the steps run); an adapter with a cap
   of its own that ends the episode first is not ended again; `/spec.max_control_steps` and `/spec.budget.steps` state

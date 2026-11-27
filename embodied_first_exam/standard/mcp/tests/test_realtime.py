@@ -42,6 +42,8 @@ ORACLE = textwrap.dedent('''
     time.sleep(2.5)                         # the plan (1.6 s) runs out on the clock; then a read of the robot as it is
     w = r.get_obs(cameras=["top"])
     print("watched", round(w.meta["proprio"]["now"][0], 4), w.meta["done"], w.meta["reason"], int(w.last["top"].sum()))
+    f = r.finish()                          # the agent ends the episode: the state it is in is judged
+    print("finish", f["done"], f["reason"])
 ''')
 
 ORACLE_21 = textwrap.dedent('''
@@ -54,16 +56,18 @@ ORACLE_21 = textwrap.dedent('''
     print("now", x, int(o.last["top"].sum()))
     while True:                              # closed loop on the measured x: steps of at most 0.05 (the toy's clip)
         n = 10
-        rows = np.zeros((n, 2)); rows[:, 0] = min(0.05, (1.0 - x) / n + 1e-6)
+        rows = np.zeros((n, 2)); rows[:, 0] = min(0.05, (1.0 - x) / n + 1e-4)   # past 1 by a margin float32 proprio shows
         res = r.submit("joint_position", rows, cameras=["top"], video="frames")
         x = res.meta["proprio"]["now"][0]
         print("step", round(x, 6), res.meta["done"], res.meta["reason"], int(res.last["top"].sum()))
-        if res.meta["done"]:
+        if x >= 1.0 or res.meta["done"]:
             break
+    f = r.finish()                           # the agent ends the episode: the state it is in is judged
+    print("finish", f["done"], f["reason"])
 ''')
 
 TIMING = ("max_lag_s,clock_s,max_queue_wait_s,request_busy_s,stalled_s,lag_s,stalled_share,request_mb,stalls,"
-          "elapsed_s,control_steps,control_steps_total,held_steps,render_s_max,render_s_p50")   # render_s_*: camera_worker's
+          "elapsed_s,control_steps,control_steps_total,held_steps,render_s_max,render_s_p50,finish_time_s")   # render_s_*: camera_worker's
 
 
 def free_port():
@@ -92,7 +96,8 @@ def equivalence(tmp, tools, man):
     assert p.returncode == 0, p.stdout + p.stderr
     assert {"trajectory_live.f64", "submitted.f64", "final.json"} <= set(s["same"]), s
     out = (pathlib.Path(s["out"]) / "mcp" / "oracle.out").read_text()
-    assert "True success" in out and "plan 48 80 0" in out, out
+    assert "finish True finished" in out and "plan 48 80 0" in out, out
+    assert s["verdict"]["api"].get("reason") == "finished", s   # (the verdict itself is written at the session's end)
     return s
 
 
@@ -107,11 +112,12 @@ def standard_21(tmp):
     cmd = [sys.executable, str(HERE / "equivalence.py"),
            "--service", f"{sys.executable} {HERE / 'toy_realtime.py'} {{port}} --standard",
            "--tools", str(d), "--manifest", str(d / "manifest.json"), "--oracle", f"{sys.executable} {d / 'oracle.py'}",
-           "--out", str(d)]
+           "--out", str(d), "--ignore-keys", "elapsed_s,finish_time_s"]   # wall time
     p = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
     s = json.loads(p.stdout.strip().splitlines()[-1])
     assert p.returncode == 0, p.stdout + p.stderr
     assert s["same"] and s["verdict"]["api"] == s["verdict"]["mcp"] and s["verdict"]["api"].get("done"), s
+    assert s["verdict"]["api"].get("reason") == "finished", s   # (the verdict itself is written at the session's end)
     return s
 
 
@@ -173,7 +179,7 @@ def rules_v3(tmp):
     load(STD.parent / "benchmarks/humanoidbench/sim/rcb_service.py", "rcb_service")
     R = load(STD / "realtime/rcb_realtime.py", "rcb_realtime")
     d = tmp / "v3"; d.mkdir()
-    svc = R.RealtimeService(toy.Toy(), data=str(d), slowdown=1.0, agent_end=True)
+    svc = R.RealtimeService(toy.Toy(), data=str(d), slowdown=1.0)
     svc.start()
 
     def call(svc, path, body):
@@ -225,7 +231,7 @@ def rules_v3(tmp):
     t2.spec = lambda: {"cameras": {"top": {"shape": [8, 8, 3]}, "side": {"shape": [8, 8, 3]}},
                        "action_types": {"joint_position": {"dim": 2, "layout": ["dx", "unused"]}}}
     d2 = tmp / "v3_depth"; d2.mkdir()
-    svc2 = R.RealtimeService(t2, data=str(d2), slowdown=1.0, agent_end=True)
+    svc2 = R.RealtimeService(t2, data=str(d2), slowdown=1.0)
     svc2.start()
     assert svc2.spec["timing"]["recorder"]["depth"] == ["top"], svc2.spec["timing"]["recorder"]
     code, m, _ = call(svc2, "/observe", {"last_s": 0.4, "cameras": ["top", "side"], "include_depth": True})
@@ -237,7 +243,7 @@ def rules_v3(tmp):
     # a service without a recorder (record_frames not True) still answers /submit's images with meta.frame_step
     t3 = toy.Toy(); t3.record_frames = False
     d3 = tmp / "v3_norec"; d3.mkdir()
-    svc3 = R.RealtimeService(t3, data=str(d3), slowdown=1.0, agent_end=True)
+    svc3 = R.RealtimeService(t3, data=str(d3), slowdown=1.0)
     svc3.start()
     assert not svc3.recording
     code, m, _ = call(svc3, "/submit", {"type": "joint_position", "dt": 0.04, "actions": [[0.01, 0]] * 2, "cameras": ["top"]})

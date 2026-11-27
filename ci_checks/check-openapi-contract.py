@@ -10,9 +10,9 @@
      realtime    rcb_realtime.py over rcb_service.py (realtime mode)  embodied_first_exam/standard/mcp/tests/toy_realtime.py
      shared      rcb_limited.py (the shared layer)                    embodied_first_exam/standard/toy_server.py
      operations  operations/rcb_limited.py (toy_server.py staged next to it in the work directory)
-   sidecar and realtime run with RCB_AGENT_END=1 and a reset budget of 1; shared and operations without the feature,
-   and again as agent-ended adapters (shared-ae, operations-ae: toy_server.py is one, with rcb_agent_end.py staged next
-   to it, run with RCB_AGENT_END=1): /finish validated against FinishResponse, then the 409s after it. With a step
+   Every service is agent-ended (toy_server.py with rcb_agent_end.py staged next to it); sidecar and realtime run with a
+   reset budget of 1. shared and operations check the layer's answers; shared-finish and operations-finish /finish,
+   validated against FinishResponse, then the 409s after it. With a step
    limit (sidecar-limit, shared-limit, operations-limit: RCB_STEP_LIMIT): steps_left, the chunk cut at the limit (reason
    step_limit), then /submit and /finish 409 while /observe answers. A service that gave up (shared-gaveup:
    RCB_TOY_REFUSE): every endpoint 409 with gave_up. Every request is sent, and every answer is checked:
@@ -529,7 +529,7 @@ def common_400s(t: Target, J: str, dim: int, status: bool = True) -> None:
 
 
 def shared_layer(t: Target, operations: bool = False) -> None:
-    """The shared layer (rcb_limited.py) on toy_server.py: no agent-ended feature, no reset budget; /kinematics."""
+    """The shared layer (rcb_limited.py) on toy_server.py: no reset budget; /kinematics."""
     J = "joint_position"
     _, spec, _ = t.get("/spec", label="spec")
     check(spec["protocol"] == "eai-standard/3.0" and bool(spec.get("operations")) == operations and "kinematics" in spec,
@@ -568,7 +568,6 @@ def shared_layer(t: Target, operations: bool = False) -> None:
     _, k, _ = t.post_json("/kinematics", {"op": "fk", "q": [0, 0, 0]}, label="kinematics fk")
     check(k.get("ok") is True and k.get("op") == "fk", f"{t.name} kinematics {k}")
     t.post_json("/kinematics", {"op": "xx"}, expect=(400,), label="kinematics bad op", valid=False)
-    t.post_json("/finish", {}, expect=(404,), label="finish without the feature")
     t.post_json("/reset", {}, expect=(404,), label="reset without a budget")
     t.post_raw_length("/submit", str(65 * 1024 * 1024), (413,), "body over 64 MiB")
     t.post_raw_length("/observe", "-1", (400,), "negative Content-Length")
@@ -606,7 +605,7 @@ def operations_layer(t: Target) -> None:
 
 
 def agent_ended(t: Target, operations: bool = False) -> None:
-    """The shared and the operations layers with the agent-ended feature (rcb_agent_end.py on the toy): /finish (FinishResponse), the 409s after it."""
+    """The shared and the operations layers' /finish (rcb_agent_end.py on the toy; FinishResponse), the 409s after it."""
     J = "joint_position"
     _, spec, _ = t.get("/spec", label="spec")
     check(spec["protocol"] == "eai-standard/3.0" and bool(spec.get("operations")) == operations
@@ -643,7 +642,7 @@ def agent_ended_operations(t: Target) -> None:
 
 
 def step_limit(t: Target) -> None:
-    """RCB_STEP_LIMIT=30 (agent-ended): steps_left in every meta and /status, the hold chunk cut at the limit (reason
+    """RCB_STEP_LIMIT=30: steps_left in every meta and /status, the hold chunk cut at the limit (reason
     step_limit), then /submit and /finish 409 while /observe answers."""
     J = "joint_position"
     _, spec, _ = t.get("/spec", label="spec")
@@ -679,9 +678,9 @@ def gave_up(t: Target) -> None:
         check(b.get("gave_up") is True and b.get("reason"), f"{t.name} {path}: {b}")
 
 
-def stage(work: pathlib.Path, std: pathlib.Path, name: str, layer: str, agent_end: bool) -> pathlib.Path:
-    """toy_server.py staged with a layer (shared: rcb_limited.py; operations: operations/rcb_limited.py), rcb1.py and rcb_agent_end.py
-    (the toy is an agent-ended adapter; agent_end: the target runs it with RCB_AGENT_END=1). Returns the directory."""
+def stage(work: pathlib.Path, std: pathlib.Path, name: str, layer: str) -> pathlib.Path:
+    """toy_server.py staged with a layer (shared: rcb_limited.py; operations: operations/rcb_limited.py), rcb1.py and
+    rcb_agent_end.py (the toy is an agent-ended adapter). Returns the directory."""
     d = work / f"stage_{name}"
     d.mkdir(exist_ok=True)
     shutil.copy2(std / "toy_server.py", d / "toy_server.py")
@@ -704,15 +703,16 @@ runpy.run_path(os.path.join(here, "toy_server.py"), run_name="__main__")
 
 
 # ---------------------------------------------------------------------------------------------- main
-# the toy_server.py targets: (layer file, agent-ended, extra environment, scenario)
-TOYS = {"shared": ("rcb_limited.py", False, {}, shared_layer),
-        "shared-ae": ("rcb_limited.py", True, {}, agent_ended),
-        "shared-limit": ("rcb_limited.py", True, {"RCB_STEP_LIMIT": "30"}, step_limit),
-        "shared-gaveup": ("rcb_limited.py", False, {"RCB_TOY_REFUSE": "the contract check's refusal"}, gave_up),   # (+ RCB_PORT)
-        "operations": ("operations/rcb_limited.py", False, {}, operations_layer),
-        "operations-ae": ("operations/rcb_limited.py", True, {}, agent_ended_operations),
-        "operations-limit": ("operations/rcb_limited.py", True, {"RCB_STEP_LIMIT": "30"}, step_limit)}
-TARGETS = ("sidecar", "sidecar-limit", "realtime", "shared", "shared-ae", "shared-limit", "shared-gaveup", "operations", "operations-ae", "operations-limit")
+# the toy_server.py targets: (layer file, extra environment, scenario)
+TOYS = {"shared": ("rcb_limited.py", {}, shared_layer),
+        "shared-finish": ("rcb_limited.py", {}, agent_ended),
+        "shared-limit": ("rcb_limited.py", {"RCB_STEP_LIMIT": "30"}, step_limit),
+        "shared-gaveup": ("rcb_limited.py", {"RCB_TOY_REFUSE": "the contract check's refusal"}, gave_up),   # (+ RCB_PORT)
+        "operations": ("operations/rcb_limited.py", {}, operations_layer),
+        "operations-finish": ("operations/rcb_limited.py", {}, agent_ended_operations),
+        "operations-limit": ("operations/rcb_limited.py", {"RCB_STEP_LIMIT": "30"}, step_limit)}
+TARGETS = ("sidecar", "sidecar-limit", "realtime", "shared", "shared-finish", "shared-limit", "shared-gaveup", "operations",
+           "operations-finish", "operations-limit")
 
 
 def main() -> int:
@@ -736,7 +736,7 @@ def main() -> int:
     work = pathlib.Path(a.work) if a.work else pathlib.Path(tempfile.mkdtemp(prefix="openapi_contract_"))
     work.mkdir(parents=True, exist_ok=True)
     base_env = {**os.environ, "PYTHONDONTWRITEBYTECODE": "1", "RCB_WALL_CLOCK_S": "600", "RCB_STARTUP_TIMEOUT_S": "120"}
-    for k in ("RCB_AGENT_END", "RCB_STEP_LIMIT", "RCB_RESET_BUDGET", "RCB_SLOWDOWN", "RCB_CAMERA_FPS", "RCB_LOOKBACK_S"):
+    for k in ("RCB_STEP_LIMIT", "RCB_RESET_BUDGET", "RCB_SLOWDOWN", "RCB_CAMERA_FPS", "RCB_LOOKBACK_S"):
         base_env.pop(k, None)
     toy = std / "mcp/tests/toy_realtime.py"
     py = sys.executable
@@ -750,21 +750,18 @@ def main() -> int:
             shutil.rmtree(data, ignore_errors=True)            # a fresh trial: never an episode a previous run ended
             env = {**base_env, "RCB_DATA": str(data)}
             if name in ("sidecar", "realtime", "sidecar-limit"):
-                env.update(RCB_AGENT_END="1", RCB_RESET_BUDGET="1")
+                env.update(RCB_RESET_BUDGET="1")
                 if name == "sidecar-limit":
                     env.update(RCB_STEP_LIMIT="30")
                 argv = [py, str(toy), str(port)] + (["--standard"] if name != "realtime" else [])
                 run = {"sidecar": sidecar_layer, "realtime": realtime_layer, "sidecar-limit": step_limit}[name]
             elif name in TOYS:
                 # toy_server.py (the shared-layer toy) staged next to the layer (operations/rcb_limited.py for operations: the
-                # repository has no runnable operations toy service), the agent-ended targets with rcb_agent_end.py; a
-                # launcher gives the operations module the one helper the toy needs that it lacks (agent_time, the shared
+                # repository has no runnable operations toy service), with rcb_agent_end.py; a launcher gives the operations module the one helper the toy needs that it lacks (agent_time, the shared
                 # layer's first-request clock)
-                layer, agent_end, extra, run = TOYS[name]
-                d = stage(work, std, name, layer, agent_end)
+                layer, extra, run = TOYS[name]
+                d = stage(work, std, name, layer)
                 env.update(RCB_TOY_PORT=str(port), RCB_PORT=str(port), **extra)   # RCB_PORT: the give-up's refusal
-                if agent_end:
-                    env.update(RCB_AGENT_END="1")
                 argv = [py, str(d / "launch_toy.py")]
             else:
                 check(False, f"unknown target {name}")

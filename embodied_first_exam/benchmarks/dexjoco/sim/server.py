@@ -10,9 +10,8 @@ The robot is a Franka Panda with a 16-DoF Allegro hand, or two of them side by s
   joint_position  per arm: 7 arm joint targets + 16 Allegro joint targets; the arm's targets are turned into a tcp target
                   by forward kinematics (the controller tracks the tcp pose, not the joints).
 Either way, the executed (journaled, recorded) row is DexJoCo's own row, so the recorded trajectory replays in the
-privileged tooling unchanged. As in DexJoCo's evaluation the episode ends at the first success or task failure;
-otherwise when the agent's time is over (the collect hook's SIGUSR1). With agent-ended episodes (RCB_AGENT_END=1,
-PROTOCOL §3) a success never ends the episode and is never shown: it ends at the agent's POST /finish, at a task failure
+privileged tooling unchanged. Agent-ended episodes (PROTOCOL §3): a success never ends the episode and is never shown:
+it ends at the agent's POST /finish, at a task failure
 (a failure, even after a success; on an event task the event seen before it stands), at the runaway guard (reason step_limit) or when the agent's time
 is over, and is judged on the state it ends in (END_JUDGEMENT / END_WINDOW below). Nothing about the objects leaves this process: a
 camera that rides on a body of the scene (bimanual_photograph's `cam_pos_z`, on the camera the hands pick up) gives
@@ -79,7 +78,7 @@ if not THREADS["threads_ok"]:
         L._write_json(os.path.join(DATA, "final.json"), {**L._read_json(os.path.join(DATA, "final.json")), "too_few_cpus": 1, **THREADS})
     EP.give_up("too_few_cpus", infra=True)   # writes the verdict (never overwrites one) and idles until the container ends
 # agent-ended: a success never ends it; the step cap is the runaway guard (rcb_dexjoco.MAX_STEPS) or RCB_STEP_LIMIT
-S = M.Session(TASK, instance=INSTANCE, image_size=(CAM_H, CAM_W), hide_success=AE.ENABLED,
+S = M.Session(TASK, instance=INSTANCE, image_size=(CAM_H, CAM_W), hide_success=True,
               max_steps=min(M.MAX_STEPS, AE.STEP_LIMIT) if AE.STEP_LIMIT else M.MAX_STEPS)
 if not S.instance_exact and not any(e.get("ev") == "start" for e in EP.events()):
     # The frozen initial state is checked when the episode begins (the verdict is the live episode's, so no later replay
@@ -398,9 +397,7 @@ SPEC = {
               "camera_axes": "intrinsic_cv / extrinsic_cv: OpenCV camera axes (x right, y down, z forward); cam2world_gl: OpenGL axes"},
     "budget": {"reset": 0, "steps": None, "wall_clock_s": WALL_CLOCK_S},
     "episode": ("one episode, no reset: a success never ends it and is never shown; it ends at your POST /finish, at a "
-                "task failure (see task_text), or when your time is over, and is judged on the state it ends in"
-                if AE.ENABLED else
-                "one episode, no reset: it ends at the first success, at a task failure (see task_text), or when your time is over"),
+                "task failure (see task_text), or when your time is over, and is judged on the state it ends in"),
     "robot_spec": {
         "name": ROBOT_NAME,
         "description": ("two Franka Panda arms side by side, each with a 16-DoF Allegro hand (right arm first)" if BIM
@@ -492,8 +489,7 @@ END_WINDOW = {t: int(1.2 * CTRL_HZ) for t in ("bimanual_assembly", "bimanual_han
 
 
 def end_fields() -> dict:
-    return ({"end_judgement": END_JUDGEMENT.get(TASK, "state"), "end_window_steps": int(E.get("end_window_steps") or 0)}
-            if AE.ENABLED else {})
+    return {"end_judgement": END_JUDGEMENT.get(TASK, "state"), "end_window_steps": int(E.get("end_window_steps") or 0)}
 
 
 def judge_end(reason: str) -> bool:
@@ -523,16 +519,12 @@ def finish(reason: str) -> None:
     E["done"] = True
     E["reason"] = reason
     E["t_end"] = time.time()
-    if AE.ENABLED:   # agent-ended: the state it ends in; on an event task a task failure keeps the events seen before
-        try:             # it (as rcb_service._end); a simulator error is never a success
-            event_failure = END_JUDGEMENT.get(TASK, "state") == "event" and reason not in AE.ENDED_BY
-            E["success"] = (reason in AE.END_STATE_REASONS or event_failure) and judge_end(reason)
-        except Exception:
-            traceback.print_exc()
-            E["success"] = False
-    else:
-        # a simulator error ends the episode: the state after it is judged by nothing (PROTOCOL §4.6), never a success
-        E["success"] = bool(S.success) and reason != "error"
+    try:             # the state it ends in; on an event task a task failure keeps the events seen before it
+        event_failure = END_JUDGEMENT.get(TASK, "state") == "event" and reason not in AE.ENDED_BY   # (as rcb_service._end)
+        E["success"] = (reason in AE.END_STATE_REASONS or event_failure) and judge_end(reason)   # a simulator error: never
+    except Exception:
+        traceback.print_exc()
+        E["success"] = False
     E["episode_control_steps"] = ctrl_steps()
     EP.log({"ev": "end", "reason": reason, "step": E["step"], "control_steps": ctrl_steps(), "success": bool(E["success"])})
     dump()
@@ -552,18 +544,17 @@ def dump() -> None:
 def ctrl_step(a, rec) -> bool:
     """One executed control step (DexJoCo's own row), journaled. True when the call must stop here."""
     a = np.asarray(a, dtype=np.float64)
-    if AE.ENABLED and S.steps >= S.max_steps:   # agent-ended: the runaway guard ends it, judged on the state it leaves
+    if S.steps >= S.max_steps:   # the runaway guard ends it, judged on the state it leaves
         finish("step_limit")
         return True
     running = S.step(a)
     ROWS.append(a.copy())
     stop = EP.journal(a)
     rec.tick()
-    if AE.ENABLED:
-        AE.hidden_success(E, S.now_success, EP.log, ctrl_steps())
+    AE.hidden_success(E, S.now_success, EP.log, ctrl_steps())
     if not running:
         finish(S.reason or "done")
-    elif AE.ENABLED and S.steps >= S.max_steps:   # the cap reached at this step: the call that reached it ends it
+    elif S.steps >= S.max_steps:   # the cap reached at this step: the call that reached it ends it
         finish("step_limit")
     return E["done"] or stop
 
@@ -814,8 +805,7 @@ def replay_row(row) -> None:
     """A journaled row during a resume."""
     S.step(row)
     ROWS.append(np.asarray(row, dtype=np.float64))
-    if AE.ENABLED:
-        E["now_success"] = bool(S.now_success)
+    E["now_success"] = bool(S.now_success)
 
 
 EP.begin(state=E, step=replay_row, state_sha=S.state_sha, proprio=proprio_row, spec=SPEC, on_end=end_from_signal,
@@ -828,6 +818,5 @@ open(PID_FILE, "w").write(str(os.getpid()))
 print(f"{L.PROTOCOL} DexJoCo sim ready ({TASK}; startup {EP.n_startups}, resumes {EP.resumes})", flush=True)
 AE.serve(AE.Service(spec=SPEC, lock=LOCK, state=E, submit=do_submit, observe=do_observe, kinematics=do_kinematics, status=status,
                     on_submit_error=lambda exc: finish("error"), log=EP.log, episode=EP, state_sha=S.state_sha,
-                    proprio=proprio_row, **({"finish": lambda: finish("finished"),
-                                             "end_step_limit": lambda: finish("step_limit")} if AE.ENABLED else {})),
+                    proprio=proprio_row, finish=lambda: finish("finished"), end_step_limit=lambda: finish("step_limit")),
          port=int(os.environ.get("RCB_PORT", "8000")))

@@ -1,5 +1,5 @@
 """finish through the efe-robot tools in an agent-ended episode (CPU, ~20 s): the toy service on the shared layer, an
-agent-ended adapter, run with RCB_AGENT_END=1 (/spec success_signal is the sentence SUCCESS_SIGNAL_NOTE, which starts
+agent-ended adapter (/spec success_signal is the sentence SUCCESS_SIGNAL_NOTE, which starts
 with "hidden"):
 
 1. the tools: `finish` sends POST /finish and the episode ends ("finished"; final.json ended_by "finish"); a submit after
@@ -39,7 +39,7 @@ ORACLE = textwrap.dedent('''
 
 
 def tools_direct(src: str, tmp: pathlib.Path):
-    toy = AES.Toy(src, {"RCB_AGENT_END": "1", "PYTHONPATH": src})
+    toy = AES.Toy(src, {"PYTHONPATH": src})
     try:
         c = McpClient(cmd=[sys.executable, str(MCP / "server.py"), "--manifest", str(HERE / "toy_manifest.json")],
                       env={"SIM_URL": f"http://127.0.0.1:{toy.port}", "EFE_MCP_TOOLS_DIR": str(STD),
@@ -67,7 +67,7 @@ def tools_direct(src: str, tmp: pathlib.Path):
 def oracle_shim(src: str, tmp: pathlib.Path):
     (tmp / "oracle.py").write_text(ORACLE)
     cmd = [sys.executable, str(HERE / "equivalence.py"), "--service", f"{sys.executable} {src}/toy_server.py",
-           "--port-env", "RCB_TOY_PORT", "--service-env", f"PYTHONPATH={src}", "--service-env", "RCB_AGENT_END=1",
+           "--port-env", "RCB_TOY_PORT", "--service-env", f"PYTHONPATH={src}",
            "--tools", str(STD), "--manifest", str(HERE / "toy_manifest.json"),
            "--oracle", f"{sys.executable} {tmp / 'oracle.py'}", "--out", str(tmp / "equiv"),
            "--compare", "journal.f64,final.json", "--ignore-keys", "finish_time_s"]     # wall time, 0.1 s steps
@@ -85,7 +85,7 @@ def oracle_shim(src: str, tmp: pathlib.Path):
 
 def main():
     tmp = pathlib.Path(tempfile.mkdtemp(prefix="efe_mcp_ae_"))
-    src = AES.adapter(True)
+    src = AES.adapter()
     fin = tools_direct(src, tmp)
     print("ok finish through the tools ends an agent-ended episode: ended_by", fin["ended_by"])
     s = oracle_shim(src, tmp)

@@ -740,8 +740,9 @@ def no_twin_reason(task: Path) -> str | None:
     return None
 
 
-# PROTOCOL §3 "Agent-ended episodes": a task opts in in its sim service's environment (`RCB_AGENT_END: "1"`, and
-# `RCB_STEP_LIMIT: "<N>"` for a step limit; embodied_first_exam/standard/agent_end/). Its instruction then has the
+# PROTOCOL §3 "Agent-ended episodes": every standard and realtime service is agent-ended; its sim service's environment
+# says so to the benchmark's tooling (`RCB_AGENT_END: "1"`, which normalize writes) and sets `RCB_STEP_LIMIT: "<N>"` for a
+# step limit (embodied_first_exam/standard/agent_end/). Its instruction then has the
 # finish line in `## Robot Interface` (ROBOT_FINISH) and the Finish (and Steps) lines of `## Limits` (render_limits).
 AGENT_END_RE = re.compile(r'^\s*RCB_AGENT_END:\s*"?1"?\s*(?:#.*)?$', re.M)
 STEP_LIMIT_RE = re.compile(r'^\s*RCB_STEP_LIMIT:\s*"?([0-9]+)"?\s*(?:#.*)?$', re.M)
@@ -752,8 +753,8 @@ MAX_CONTROL_STEPS_RE = re.compile(r'^\s*RCB_MAX_CONTROL_STEPS:\s*"?([0-9]+)"?\s*
 
 
 def agent_end_of(task: Path) -> dict | None:
-    """A standard-mode task's agent-ended episode (PROTOCOL §3): {"step_limit": N or None}, None when it does not opt
-    in (its sim service's RCB_AGENT_END, RCB_STEP_LIMIT)."""
+    """A standard-mode task's agent-ended episode (PROTOCOL §3): {"step_limit": N or None}, None when its sim service
+    does not set RCB_AGENT_END (RCB_STEP_LIMIT: the limit)."""
     if not MODE_REGISTRY.get(mode_of(task), {}).get("sidecar"):
         return None
     c = read_text(task / "environment/docker-compose.yaml") or ""

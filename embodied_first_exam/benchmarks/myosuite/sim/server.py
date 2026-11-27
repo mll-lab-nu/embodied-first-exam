@@ -25,8 +25,8 @@ ends in success once its window is complete). Nothing is replayed to grade it. T
 the episode begins: a fresh start whose built scene does not hash to the instance's recorded sha gives up as an
 infrastructure failure (`instance_mismatch`) before the agent is served.
 
-Agent-ended episodes (RCB_AGENT_END, rcb_agent_end.py, PROTOCOL §3; rcb_myosuite.AGENT_END): a success never ends the
-episode and is never shown, and it no longer ends the trial (resets stay available). POST /finish ends the trial
+Agent-ended episodes (rcb_agent_end.py, PROTOCOL §3; rcb_myosuite.AGENT_END): a success never ends the
+episode and is never shown, and it does not end the trial (resets stay available). POST /finish ends the trial
 (finished: every call after it, /reset too, is a 409); the session's end (timeout) judges the episode then running. The
 verdict is Session.success as the episode ends: the hold families' goal held for the hold time up to the end (at
 /finish or the session's end a hold that has begun is run out from that state, the last command held: finish()); the
@@ -340,7 +340,7 @@ def do_kinematics(req: dict) -> dict:
 TASK_TEXT = TASK_INFO["task_text"]
 ONE = "one episode, no reset" if not RESET_BUDGET else (
     f"an episode (with up to {RESET_BUDGET} resets: POST /reset starts a new one; only the last is graded)")
-EPISODE_AE = {
+EPISODE = {
     "hold": f"{ONE}: it ends when you POST /finish (finished), at the task's failure (see task_text), or when your time is "
     f"over (timeout); reaching the goal does not end it. It is judged as it ends: the goal held for {S.hold_steps} control "
     f"steps in a row ({round(S.hold_steps * DT, 3)} s) up to then",
@@ -349,14 +349,6 @@ EPISODE_AE = {
     "it has happened",
     "track": f"{ONE}: it lasts {S.track_steps} control steps (the reference motion; then it is judged: step_limit), ends "
     "early at MyoDex's termination (failure), when you POST /finish (finished) or when your time is over (timeout), judged as it stands",
-}[S.rule]
-EPISODE = EPISODE_AE if AE.ENABLED else {
-    "hold": f"{ONE}: it ends the moment the task's goal has held for {S.hold_steps} control steps in a row "
-    f"({round(S.hold_steps * DT, 3)} s; success), at the task's failure (see task_text), or when your time is over",
-    "event": f"{ONE}: it ends at the challenge's success event (success), at its failure conditions or "
-    "its own time limit (see task_text), or when your time is over",
-    "track": f"{ONE}: it lasts {S.track_steps} control steps (the reference motion; then it is judged), "
-    "ends early at MyoDex's termination (failure), or when your time is over",
 }[S.rule]
 MUSCLE_TEXT = (
     "muscles: one real number a per muscle; excitation u = 1 / (1 + exp(-5 (a - 0.5))), a not clipped (a = -1: u ~ "
@@ -489,8 +481,7 @@ if RESET_BUDGET:
         f"POST /reset (JSON or RCB1 {{cameras, video_fps, depth}}; no physics) abandons the running episode, or follows "
         f"one that has ended, and starts a new one from the same frozen starting state, {RESET_BUDGET} times in all; it "
         "returns the new episode's first frames and proprioception. Only the last episode is graded: an episode you "
-        "reset away is never graded, " + ("POST /finish ends the trial (409 after it, /reset too)" if AE.ENABLED else
-                                           "a success ends the trial (409 after it)") +
+        "reset away is never graded, POST /finish ends the trial (409 after it, /reset too)"
         ", and when your time is up the episode then running is the one graded. The wall clock never restarts. /status and every meta add `episode`, `resets_left` "
         "and `control_steps_total` (all episodes); `control_steps` counts the current episode's."
     )
@@ -558,7 +549,7 @@ def summary() -> dict:
         "resets": E["resets"],
         "reset_budget": RESET_BUDGET,
         "control_steps_total": EP.rows,
-        **({"end_window_steps": E.get("end_window_steps")} if AE.ENABLED else {}),
+        "end_window_steps": E.get("end_window_steps"),
         **EP.final_fields(),
         **AE.final_fields(E, n),
     }
@@ -568,40 +559,27 @@ def finish(reason: str) -> None:
     """The episode is over: the task's verdict on the steps executed, then the record for the collect hook."""
     if E["done"]:
         return
-    if AE.ENABLED:
-        if S.at_limit and reason not in ("finished", "timeout", "error"):
-            reason = "step_limit"           # the episode's own length (MyoDex's reference motion, baoding's targets)
-        E["done"] = True
-        E["reason"] = reason
-        E["t_end"] = time.time()
-        if reason in ("finished", "timeout") and S.rule == "hold":
-            try:                            # a hold that has begun runs out from the end state, the last command held
-                hold, n = last_command(), 0
-                while 0 < S.solved_run < S.hold_steps and not S.done and n < S.hold_steps:
-                    n += 1
-                    S.step(hold)
-                    ROWS.append(np.asarray(hold, dtype=np.float64))
-                    EP.journal(hold)
-                E["end_window_steps"] = n
-            except Exception as exc:  # noqa: BLE001 -- judged as it stands
-                traceback.print_exc()
-                EP.log({"ev": "end_window_error", "error": repr(exc)[:300]})
-        E["episode_control_steps"] = ctrl_steps()
-        E["success"] = bool(S.success) and reason != "error"
-        EP.log({"ev": "end", "reason": reason, "step": E["step"], "control_steps": ctrl_steps(), "success": bool(E["success"]),
-                "episode": E["resets"] + 1, "journal_rows": EP.rows, "end_window_steps": E.get("end_window_steps")})
-        dump()
-        return
+    if S.at_limit and reason not in ("finished", "timeout", "error"):
+        reason = "step_limit"           # the episode's own length (MyoDex's reference motion, baoding's targets)
     E["done"] = True
     E["reason"] = reason
     E["t_end"] = time.time()
+    if reason in ("finished", "timeout") and S.rule == "hold":
+        try:                            # a hold that has begun runs out from the end state, the last command held
+            hold, n = last_command(), 0
+            while 0 < S.solved_run < S.hold_steps and not S.done and n < S.hold_steps:
+                n += 1
+                S.step(hold)
+                ROWS.append(np.asarray(hold, dtype=np.float64))
+                EP.journal(hold)
+            E["end_window_steps"] = n
+        except Exception as exc:  # noqa: BLE001 -- judged as it stands
+            traceback.print_exc()
+            EP.log({"ev": "end_window_error", "error": repr(exc)[:300]})
     E["episode_control_steps"] = ctrl_steps()
-    # a simulator error ends the episode: the state after it is judged by nothing (PROTOCOL §4.6), never a success
     E["success"] = bool(S.success) and reason != "error"
-    EP.log(
-        {"ev": "end", "reason": reason, "step": E["step"], "control_steps": ctrl_steps(), "success": bool(E["success"]),
-         "episode": E["resets"] + 1, "journal_rows": EP.rows}
-    )
+    EP.log({"ev": "end", "reason": reason, "step": E["step"], "control_steps": ctrl_steps(), "success": bool(E["success"]),
+            "episode": E["resets"] + 1, "journal_rows": EP.rows, "end_window_steps": E.get("end_window_steps")})
     dump()
 
 
@@ -625,8 +603,7 @@ def ctrl_step(a, rec) -> bool:
     ROWS.append(np.asarray(a, dtype=np.float64))
     stop = EP.journal(a)
     rec.tick()
-    if AE.ENABLED:  # the episode's success as it stands, recorded only (never shown); it never ends the episode
-        AE.hidden_success(E, S.success, EP.log, ctrl_steps())
+    AE.hidden_success(E, S.success, EP.log, ctrl_steps())   # the episode's success as it stands, recorded only (never shown)
     if not running:
         finish(S.reason or "done")
     return E["done"] or stop
@@ -835,7 +812,7 @@ def do_observe(meta: dict):
 def reset_counters() -> dict:
     if not RESET_BUDGET:
         return {}
-    over = (AE.finished(E) or E.get("exiting")) if AE.ENABLED else (E["success"] or E.get("exiting"))
+    over = AE.finished(E) or E.get("exiting")
     left = 0 if over else RESET_BUDGET - E["resets"]
     return {"episode": E["resets"] + 1, "resets_left": left, "control_steps_total": EP.rows}
 
@@ -869,8 +846,6 @@ def do_reset(meta: dict):
         L.check_frames(len(cams), 2, L.depth_mode(meta) in ("frames", "legacy"), MAX_FRAMES)
     if AE.finished(E):
         raise Refused({"error": "episode finished", "reason": E["reason"], "resets_left": 0})
-    if E["success"] and not AE.ENABLED:
-        raise Refused({"error": "trial finished: an episode succeeded", "reason": E["reason"], "resets_left": 0})
     if E["resets"] >= RESET_BUDGET:
         raise Refused({"error": "reset budget exhausted", "reason": "reset budget exhausted", "budget": RESET_BUDGET,
                        "resets_left": 0})
@@ -880,8 +855,7 @@ def do_reset(meta: dict):
     E["resets"] += 1
     E["reset_at"] = list(E["reset_at"]) + [EP.rows]
     E.update(done=False, reason=None, success=False, t_end=None, episode_control_steps=None, dumped=False)
-    if AE.ENABLED:  # the new episode's own hidden success (the trial's is kept: trial_seen)
-        E.update(now_success=False, seen_step=None, end_window_steps=None)
+    E.update(now_success=False, seen_step=None, end_window_steps=None)   # the new episode's own hidden success (trial_seen kept)
     EP._ck = None  # the state changed without a journal row: the checkpoint after this call must hash it anew
     E["calls"] += 1
     EP.log({"ev": "reset", "call": E["calls"], "episode": E["resets"] + 1, "journal_rows": EP.rows,
@@ -1022,10 +996,9 @@ def serve(svc: L.Service, port: int) -> None:
     service restarts is waited for, not a crash)."""
     svc.spec.setdefault("on_service_error", L.ON_SERVICE_ERROR)
     svc.spec.setdefault("max_call_wall_s", EP.max_call_wall_s)
-    if AE.ENABLED:   # as rcb_agent_end.serve: no finish(), no start (fail closed); /spec states the success signal
-        if getattr(svc, "finish", None) is None:
-            raise RuntimeError("RCB_AGENT_END=1, but this service has no finish()")
-        svc.spec["success_signal"] = AE.SUCCESS_SIGNAL_NOTE
+    if getattr(svc, "finish", None) is None:   # as rcb_agent_end.serve: no finish(), no start (fail closed)
+        raise RuntimeError("this service has no finish(): it does not implement agent-ended episodes")
+    svc.spec["success_signal"] = AE.SUCCESS_SIGNAL_NOTE   # /spec states the success signal
     L.check_spec(svc.spec)
     L.bind(port, make_handler(svc)).serve_forever()
 
@@ -1045,8 +1018,8 @@ try:
             episode=EP,
             state_sha=S.state_sha,
             proprio=proprio_row,
-            **({"finish": lambda: finish("finished"),
-                "end_step_limit": lambda: finish("step_limit")} if AE.ENABLED else {}),
+            finish=lambda: finish("finished"),
+            end_step_limit=lambda: finish("step_limit"),
         ),
         port=int(os.environ.get("RCB_PORT", "8000")),
     )

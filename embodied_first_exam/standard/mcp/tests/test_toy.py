@@ -1,6 +1,6 @@
-"""End-to-end test of the efe-robot MCP server against the toy service on the shared layer (CPU, ~10 s), run without
-RCB_AGENT_END (the toy is an agent-ended adapter; without the feature a success ends its episode): the endpoint
-tools' request and reply, a hold chunk (no rows), a refusal, the end of the episode, finish refused where the success is not hidden (and sent where it is: test_agent_end.py, run at the end), a tool added from /spec (kinematics: tools/list after the first call), a pending call collected with
+"""End-to-end test of the efe-robot MCP server against the toy service on the shared layer (CPU, ~10 s; an agent-ended
+adapter): the endpoint tools' request and reply, a hold chunk (no rows), a refusal, the end of the episode by `finish`
+(and the oracle shim's finish: test_agent_end.py, run at the end), a tool added from /spec (kinematics: tools/list after the first call), a pending call collected with
 observe(operation=...), one deadline per call (the wait for an earlier call included) and a call that finds an earlier
 one still running not sent (`sent` false).
 
@@ -23,7 +23,7 @@ def free_port():
 def main():
     tmp = pathlib.Path(tempfile.mkdtemp(prefix="efe_mcp_toy_"))
     port = free_port()
-    env = {k: v for k, v in os.environ.items() if k not in ("RCB_AGENT_END", "RCB_STEP_LIMIT")}
+    env = {k: v for k, v in os.environ.items() if k != "RCB_STEP_LIMIT"}
     env.update({"RCB_DATA": str(tmp / "data"), "RCB_TOY_PORT": str(port), "PYTHONPATH": str(STD), "RCB_TOY_STEP_S": "0.02"})
     sim = subprocess.Popen([sys.executable, str(STD / "toy_server.py")], env=env, stdout=subprocess.DEVNULL,
                            stderr=subprocess.DEVNULL)
@@ -109,14 +109,11 @@ def main():
         assert p6.get("pending") and "meta" in ob and not ob.get("sent") is False, (p6, ob)
         np.save(tmp / "app" / "rows.npy", np.array([[0.5 + 0.05 * k, 0, 0] for k in range(10)], dtype=np.float32))
         r = c.call("submit", type="joint_position", actions_file="rows.npy", dt=0.1, cameras=["top"], video="none")
-        assert r["meta"]["done"] and r["meta"]["reason"] == "success", r["meta"]
+        assert not r["meta"]["done"] and r["meta"]["reason"] is None, r["meta"]      # a success is never shown
+        f = c.call("finish")
+        assert f.get("done") and f.get("reason") == "finished", f
         r = c.call("submit", type="joint_position", actions=[[1.0, 0, 0]], dt=0.05)
         assert r.get("episode_over") and r.get("http_status") == 409, r
-        try:
-            c.call("finish")
-            raise AssertionError("finish sent in a task whose success is not hidden")
-        except McpToolError as e:
-            assert "nothing sent" in str(e), e
         ep = [json.loads(l) for l in (tmp / "data" / "episode.jsonl").read_text().splitlines()]
         n_sub = sum(1 for e in ep if e.get("ev") == "submit")
         log = [json.loads(l) for l in (tmp / "efe-mcp.jsonl").read_text().splitlines()]

@@ -15,7 +15,7 @@ live_verdict(): nothing is left that a replay applied and the live run did not. 
 video is rendered from the trajectory after the verdict (render_video). `start_sha` is the frozen instance's recorded
 state hash: the layer refuses a fresh episode whose scene does not start there (instance_mismatch, infrastructure).
 
-Agent-ended episodes (RCB_AGENT_END; rcb_service.py's AGENT_END block, rcb_myosuite.AGENT_END): step()'s success is the
+Agent-ended episodes (PROTOCOL §3; rcb_myosuite.AGENT_END): step()'s success is the
 episode's as it stands, never an end. The adapter declares how its rule is judged: a challenge's success event as it
 happened (end_judgement "events"); a hold family's goal on the end state with the hold window run from it
 (end_window_steps = its hold time; Session.solved_run counts the steps already held); MyoDex's track at the end of the
@@ -125,7 +125,7 @@ class MyoSuite:
         self.H, self.W = image_hw
         self.control_dt = float(self.s.dt)
         self.max_control_steps = int(self.s.max_steps)          # a runaway guard: the task's own rule ends an episode
-        # agent-ended episodes (rcb_service.py AGENT_END): how the episode is judged when it ends
+        # agent-ended episodes: how the episode is judged when it ends
         self.end_judgement = "events" if self.s.rule == "event" else "state"
         self.end_window_steps = int(self.s.hold_steps) if self.s.rule == "hold" else 0
         self.hidden_keys = set()   # step()'s info carries only why an episode ended, never the success
@@ -232,9 +232,7 @@ class MyoSuite:
                      + (f" and {len(self.other)} other actuators" if self.other else ""),
             "task_text": self.info["task_text"],
             "episode": ("an episode ends when you POST /finish, at the task's own failure or time limit (see task_text), "
-                        "when your time is up, or on a simulator error; a success does not end it" if M.AGENT_END else
-                        "an episode ends at the task's own success event or failure (see task_text), when your time is "
-                        "up, or on a simulator error"),
+                        "when your time is up, or on a simulator error; a success does not end it"),
             "action_types": {self.atype: action},
             "cameras": {c: self._camera_fact(c) for c in self.cameras},
             "default_camera": self.info["default_cameras"][0],
@@ -317,7 +315,7 @@ class MyoSuite:
         running = self.s.step(row)
         self.cmd = np.asarray(row, dtype=np.float64).copy()
         info = {} if running else {"why": self.s.reason}
-        if M.AGENT_END and not running and self.s.at_limit:
+        if not running and self.s.at_limit:
             info["step_cap"] = True   # the episode's own length: judged as it stands (a failure after the success event
             # is an ordinary failure end, which the layer judges on the event it recorded: end_judgement "events")
         return (not running), bool(self.s.success), info

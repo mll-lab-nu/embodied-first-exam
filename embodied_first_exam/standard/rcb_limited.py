@@ -1351,7 +1351,7 @@ class Service:
 
 
 def make_handler(svc: Service):
-    configure_standard(svc.spec, getattr(svc, "record_frames", True))   # /spec.standard, timing.recorder; the ring
+    configure_standard(svc.spec, getattr(svc, "record_frames", True))   # /spec.timing.recorder, max_video_fps; the ring
     if isinstance(svc.spec.get("budget"), dict):
         svc.spec["budget"].setdefault("clock", CLOCK_NOTE)   # what time_s / time_left_s count from, in every shared-layer /spec
 

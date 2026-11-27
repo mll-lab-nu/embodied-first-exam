@@ -23,7 +23,8 @@ WALL = {"elapsed_s", "wall_s", "t", "ts", "time", "time_s", "t_wall", "wall", "s
         "started_at", "time_left_s", "lag_s", "max_lag_s", "clock_s", "request_busy_s", "max_queue_wait_s", "request_mb",
         "busy_s", "dur_s", "startup_s", "build_s", "replay_s", "pid", "unix_s", "wall_clock_s", "elapsed", "deadline",
         "note", "operation_id", "request_deadline_unix_s", "host", "hostname", "stalled_s", "stalled_share", "stalls",
-        "sim_wall_s", "real_time_factor", "rtf", "mem_mb", "rss_mb", "call_wall_s", "wall_time_s", "t0", "t1"}
+        "sim_wall_s", "real_time_factor", "rtf", "mem_mb", "rss_mb", "call_wall_s", "wall_time_s", "t0", "t1",
+        "finish_time_s"}
 
 
 def free_port():

@@ -180,27 +180,26 @@ def settle(step) -> bool:
 
 def finish(reason: str) -> None:
     if E["done"]: return
-    if AE.ENABLED:
-        # agent-ended episodes (PROTOCOL §3, rcb_agent_end.py): a success never ends the episode (no settle window inside a
-        # call); the end of the agent's session is one reason, "timeout" (agent_exit is kept as evidence), the runaway guard
-        # is the step limit; the settle window runs from the state the episode ends in (/finish, the session's end); at the
-        # step limit no step can run, so the goal there is judged as it stands
-        if reason == "agent_exit":
-            E["agent_exit"], reason = True, "timeout"
-        elif reason == "step_guard":
-            reason = "step_limit"
+    # agent-ended episodes (PROTOCOL §3, rcb_agent_end.py): a success never ends the episode (no settle window inside a
+    # call); the end of the agent's session is one reason, "timeout" (agent_exit is kept as evidence), the runaway guard
+    # is the step limit; the settle window runs from the state the episode ends in (/finish, the session's end); at the
+    # step limit no step can run, so the goal there is judged as it stands
+    if reason == "agent_exit":
+        E["agent_exit"], reason = True, "timeout"
+    elif reason == "step_guard":
+        reason = "step_limit"
     E["done"] = True; E["reason"] = reason; E["t_end"] = time.time()
-    if AE.ENABLED and reason == "finished":
+    if reason == "finished":
         # POST /finish: the agent's own call (rcb_agent_end's handler has begun it): the window runs inside it
         try:
             E["success"] = settle(journal_step)
             E["final_window"] = int(E["settle"]["steps"]); E["final_window_end"] = ctrl_steps()
         except Exception:  # noqa
             traceback.print_exc(); E["success"] = False
-    elif AE.ENABLED and reason == "step_limit":
+    elif reason == "step_limit":
         try: E["success"] = check_success()
         except Exception: E["success"] = False  # noqa
-    elif not E["success"] and reason in ("timeout", "agent_exit"):
+    elif not E["success"] and reason == "timeout":
         # the agent phase is over: the last command is held for the settle window and the verdict taken there (as the
         # privileged grader does after the last action of a trajectory); never after a simulator error or at the step cap.
         # The window is the end of the agent's last call (docs/protocol/running.md): it runs as a call ("/settle"), so a crash of the
@@ -322,16 +321,7 @@ SPEC = {
                 "then 2 s in which the goal (the task predicate, the graded objects released by the robot) must hold and the "
                 "graded objects stay at rest, within 2 mm; part of the episode), which decides the verdict. It also ends on a "
                 "simulator error, or after max_control_steps control steps (a technical cap, reason \"step_limit\", judged as it "
-                "stands, with no window); nothing is replayed to grade it") if AE.ENABLED else
-               ("ends at the first success: after every /submit and every /observe that watches, the goal is checked (the task "
-                "predicate, the graded objects released by the robot); when it holds, the service holds the last command for a "
-                "settle window (1 s, then 2 s in which the goal must hold and the graded objects stay at rest, within 2 mm; part "
-                "of the call and of the episode) and the episode ends with reason \"success\" if the window passes, else it goes "
-                "on (meta[\"settle\"] says why). It also ends when the agent's phase ends (the same window then decides; reason "
-                "\"agent_exit\" when the agent ended its session with time left, \"timeout\" at the time limit), on a simulator "
-                "error, or after max_control_steps control steps (a technical cap, reason \"step_guard\": the call in progress "
-                "stops there, and no settle window is run, so the episode ends as a failure); the verdict is the live episode's: "
-                "the settle window that ended it (its steps are part of the recording; nothing is replayed to grade it)"),
+                "stands, with no window); nothing is replayed to grade it"),
 }
 L.check_spec(SPEC)                      # refuse to start with an incomplete spec or a forbidden field
 
@@ -410,8 +400,7 @@ def ctrl_step(a: np.ndarray, rec: L.Recorder) -> bool:
     past max_call_wall_s / its client hung up (EP.journal)."""
     row = np.asarray(a, dtype=np.float32)   # exactly what the simulator gets (Session.step casts to float32): the journal row
     guard = S.step(row); stop = EP.journal(row); rec.tick()
-    if AE.ENABLED:                      # the goal right now, recorded only (final.json hidden_success_*); never shown
-        AE.hidden_success(E, check_success(), log, ctrl_steps())
+    AE.hidden_success(E, check_success(), log, ctrl_steps())   # the goal right now, recorded only (final.json hidden_success_*)
     if guard: finish("step_guard")
     return E["done"] or stop
 
@@ -530,18 +519,13 @@ def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
     before = ctrl_steps(); rec.tick(force=True)
     if typ == "joint_position": run_joint_position(A, dt, interp, rec, clipped)
     else: run_ee_pose(A, rec, plan, clipped)
-    succ = False; settled = None
-    if not AE.ENABLED and not E["done"] and not EP.stopping and check_success():
-        succ = settle(lambda a: ctrl_step(a, rec)); settled = E["settle"]
-    rec.tick(force=True, last=True)
-    E["success"] = E["success"] or succ
+    rec.tick(force=True, last=True)     # a success never ends the episode: ctrl_step recorded it
     out = {**meta_common(cams), "chunk_id": E["calls"], "type": typ, "executed_rows": E["step"] - step0, "control_steps_chunk": ctrl_steps() - before,
            "physics_steps_chunk": (ctrl_steps() - before) * SUBSTEPS, "clipped": clipped[:200], "n_clipped": len(clipped), "plan": plan, "rejected": None, "ok": True,
-           **({"frames_skipped": rec.skipped} if rec.skipped else {}), **({"settle": settled} if settled else {})}
+           **({"frames_skipped": rec.skipped} if rec.skipped else {})}
     log({"ev": "submit", "call": E["calls"], "type": typ, "rows": E["step"] - step0, "dt": dt, "interpolate": interp, "cameras": cams, "note": note,
-         "control_steps": ctrl_steps() - before, "n_clipped": len(clipped), "plan": plan[:50], "success": succ})
+         "control_steps": ctrl_steps() - before, "n_clipped": len(clipped), "plan": plan[:50]})
     save_call_evidence(E["calls"], {k: v for k, v in out.items() if k != "cameras"}, rec)
-    if succ: finish("success")          # settle() recorded the window: the recorded rows end with it
     out["done"] = E["done"]; out["reason"] = E["reason"]
     return out, rec.parts(video, fps)
 
@@ -552,21 +536,17 @@ def do_observe(meta: dict) -> tuple[dict, list]:
     if seconds < 0 or seconds > MAX_CHUNK_S: raise ValueError(f"seconds must be in [0, {MAX_CHUNK_S}] (max_chunk_s)")
     watch = seconds > 0 and not E["done"]
     frames_ok(cams, int(round(seconds * CTRL_HZ)) if watch else 0, fps, meta)   # (the depth mode is checked here: ValueError)
-    rec = recorder(cams, fps, meta); before = ctrl_steps(); settled = None
+    rec = recorder(cams, fps, meta); before = ctrl_steps()
     # ---- the request is valid
     rec.tick(force=True, last=not watch)
     if watch:
         hold = np.asarray(S.hold_action(), dtype=np.float64)
         for _ in range(int(round(seconds * CTRL_HZ))):
             if ctrl_step(hold, rec): break
-        if not AE.ENABLED and not E["done"] and not EP.stopping and check_success():
-            E["success"] = settle(lambda a: ctrl_step(a, rec)); settled = E["settle"]
         rec.tick(force=True, last=True)
-        if E["success"] and not AE.ENABLED: finish("success")  # settle() recorded the window (finish drops it if rows came after it)
     E["calls"] += 1
     out = {**meta_common(cams), "obs_id": E["calls"], "seconds": seconds, "control_steps_watch": ctrl_steps() - before,
-           "physics_steps_watch": (ctrl_steps() - before) * SUBSTEPS, "ok": True, **({"frames_skipped": rec.skipped} if rec.skipped else {}),
-           **({"settle": settled} if settled else {})}
+           "physics_steps_watch": (ctrl_steps() - before) * SUBSTEPS, "ok": True, **({"frames_skipped": rec.skipped} if rec.skipped else {})}
     log({"ev": "observe", "call": E["calls"], "seconds": seconds, "cameras": cams, "control_steps": ctrl_steps() - before})
     if seconds > 0: save_call_evidence(E["calls"], {k: v for k, v in out.items() if k != "cameras"}, rec)
     return out, rec.parts(video if seconds > 0 else ("frames" if video == "mp4" else video), fps)
@@ -612,5 +592,4 @@ open(os.path.join(DATA, "server.pid"), "w").write(str(os.getpid()))
 print(f"{PROTOCOL} sim ready (startup {EP.n_startups}, resumes {EP.resumes})", flush=True)
 AE.serve(AE.Service(spec=SPEC, lock=LOCK, state=E, submit=do_submit, observe=do_observe, kinematics=do_kinematics, status=status,
                     on_submit_error=lambda exc: finish("error"), log=log, episode=EP, state_sha=S.state_sha, proprio=proprio_row,
-                    **({"finish": lambda: finish("finished"),
-                        "end_step_limit": lambda: finish("step_limit")} if AE.ENABLED else {})))
+                    finish=lambda: finish("finished"), end_step_limit=lambda: finish("step_limit")))

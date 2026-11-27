@@ -10,7 +10,7 @@
 
 ## Contract
 - Mode(s): privileged / standard / realtime — protocol: `eai-standard/3.0`
-- [ ] Standard / realtime: `eai-standard/3.0` (`/spec.standard`), agent-ended episodes: `RCB_AGENT_END: "1"` in the `sim` service, `POST /finish` served, the success hidden, the end state judged; the instruction's `## Limits` has the Finish line (`ci_checks/check-agent-end.py`; docs/protocol/standard_mode.md "Agent-ended episodes")
+- [ ] Standard / realtime: `eai-standard/3.0` (`/spec.protocol`), agent-ended episodes: `RCB_AGENT_END: "1"` in the `sim` service, `POST /finish` served, the success hidden, the end state judged; the instruction's `## Limits` has the Finish line (`ci_checks/check-agent-end.py`; docs/protocol/standard_mode.md "Agent-ended episodes")
 - Oracle: full / partial / none — evidence: ___
 - Base image(s): `efe:<sim>-<ver>` (published) / `efe-private:<sim>-<ver>` (BUILD_ONLY)
 - Agent time cutoff: ___ s per mode, `[agent] timeout_sec` in each task's task.toml (rules: PROTOCOL §2); the reason if not 3600. A change of an existing task's cutoff: old -> new, decided by ___

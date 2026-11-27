@@ -12,14 +12,11 @@ Actions (esw_std): only `ee_pose`, streamed: rows `dt` apart (a multiple of the 
 target of that step (Franka: the OSC pose target of panda_hand, its action smoothing inverted; G1: the native wrist
 poses + hand targets [+ base command]). Between calls the last row stays in force (a watch holds it).
 
-The episode: no reset. It ends at the end of the first call after which the task's success predicate holds (the
-grader's check_success, the privileged verdict's predicate), when a tool-only rule is broken (spatula), when the
-agent's time is up (the collect hook), on a simulator error, or at the runaway cap (rcb_embodiedswe.MAX_STEPS). The
-verdict is read on the live state at the end (rcb_embodiedswe._final: success, progress = the rubric's score, the
-tool-only record), no grading replay. With agent-ended episodes (RCB_AGENT_END=1, PROTOCOL §3) a success never ends the
-episode and is never shown: it ends at the agent's POST /finish, at a broken tool-only rule (a failure, also after a
-success), at the runaway cap (reason step_limit), on a simulator error or when the agent's time is up, and the same
-verdict is read on the state it ends in (the rubric's own stage memory included: what it records as it happens counts). GPU PhysX repeats a run bit for bit only in the same process history (the cameras
+The episode: no reset, agent-ended (PROTOCOL §3): a success (the grader's check_success, the privileged verdict's
+predicate) never ends the episode and is never shown: it ends at the agent's POST /finish, at a broken tool-only rule
+(spatula: a failure, also after a success), at the runaway cap (rcb_embodiedswe.MAX_STEPS, reason step_limit), on a
+simulator error or when the agent's time is up (the collect hook). The verdict is read on the live state it ends in
+(rcb_embodiedswe._final: success, progress = the rubric's score, the tool-only record), no grading replay (the rubric's own stage memory included: what it records as it happens counts). GPU PhysX repeats a run bit for bit only in the same process history (the cameras
 in the scene and this start-up's reads of the articulation change the later bits; drawing them does not): a replay in
 another process is not bit-exact, so the video is filmed live (live_video.py) and crash recovery is class `approx` (the
 journal holds the native action rows).
@@ -218,12 +215,7 @@ SPEC = {
               "quaternion_order": "wxyz",
               "camera_axes": "intrinsic_cv / extrinsic_cv: OpenCV camera axes (x right, y down, z forward); cam2world_gl: OpenGL axes (x right, y up, z back)"},
     "max_control_steps": int(R.MAX_STEPS),
-    "episode": ("one episode, no reset: it ends after the first call at whose end the task is complete (checked after every "
-                "call), " + ("when the hand or a finger touches the bread (the tool-only rule: that disqualifies the episode), " if TOOL else "")
-                + f"when your time is up, on a simulator error, or after {int(R.MAX_STEPS):,} control steps "
-                f"({R.MAX_STEPS / CTRL_HZ / 3600:.1f} h of simulated time: a technical cap, reason \"step_guard\"); graded as it stands then"
-                if not AE.ENABLED else
-                "one episode, no reset: a success never ends it and is never shown; it ends at your POST /finish, "
+    "episode": ("one episode, no reset: a success never ends it and is never shown; it ends at your POST /finish, "
                 + ("when the hand or a finger touches the bread (the tool-only rule: that disqualifies the episode), " if TOOL else "")
                 + f"when your time is up, on a simulator error, or after {int(R.MAX_STEPS):,} control steps "
                 f"({R.MAX_STEPS / CTRL_HZ / 3600:.1f} h of simulated time: a technical cap, reason \"step_limit\"); graded as it stands then"),
@@ -467,12 +459,11 @@ def ctrl_step(target: np.ndarray, rec: L.Recorder) -> bool:
     """One control step towards `target` (a full ee_pose row); journaled. True when the call must stop here."""
     native = RIG.native(target)
     native_step(native); stop = EP.journal(native); rec.tick(); VIDEO.offer(ctrl_steps())
-    if AE.ENABLED:    # agent-ended: the success is only recorded, never ends the episode
-        AE.hidden_success(E, check_success(), log, ctrl_steps())
+    AE.hidden_success(E, check_success(), log, ctrl_steps())   # the success is only recorded, never ends the episode
     if TOOL is not None and TOOL.touched:
         finish("tool_contact")
     elif ctrl_steps() >= R.MAX_STEPS:
-        finish("step_limit" if AE.ENABLED else "step_guard")
+        finish("step_limit")
     return E["done"] or stop
 
 
@@ -524,8 +515,6 @@ def run_submit(A, dt, k, interp, cams, fps, video, note, depth) -> tuple[dict, l
         if stop:
             break
     rec.tick(force=True, last=True)
-    if not AE.ENABLED and not E["done"] and check_success():
-        E["success_step"] = ctrl_steps(); finish("success")
     out = {**meta_common(cams), "chunk_id": E["calls"], "type": "ee_pose", "executed_rows": E["step"] - step0,
            "control_steps_chunk": ctrl_steps() - before, "physics_steps_chunk": (ctrl_steps() - before) * SUBSTEPS,
            "clipped": clipped[:200], "n_clipped": len(clipped), "plan": [], "rejected": None, "ok": True}
@@ -559,8 +548,6 @@ def run_observe(cams, seconds, steps, fps, video, depth) -> tuple[dict, list]:
             if ctrl_step(hold, rec):
                 break
         rec.tick(force=True, last=True)
-        if not AE.ENABLED and not E["done"] and check_success():
-            E["success_step"] = ctrl_steps(); finish("success")
     else:
         rec.tick(force=True, last=True)
     E["calls"] += 1
@@ -615,5 +602,4 @@ print(f"{PROTOCOL} sim ready: {PRESET} (startup {EP.n_startups}, resumes {EP.res
 AE.serve(AE.Service(spec=SPEC, lock=LOCK, state=E, submit=do_submit, observe=do_observe, kinematics=do_kinematics, status=status,
                     on_submit_error=lambda exc: finish("infra_error" if isinstance(exc, InfraError) else "error"), log=log, episode=EP,
                     state_sha=lambda: R.state_sha(env), proprio=proprio_row,
-                    **({"finish": lambda: finish("finished"),
-                        "end_step_limit": lambda: finish("step_limit")} if AE.ENABLED else {})))
+                    finish=lambda: finish("finished"), end_step_limit=lambda: finish("step_limit")))

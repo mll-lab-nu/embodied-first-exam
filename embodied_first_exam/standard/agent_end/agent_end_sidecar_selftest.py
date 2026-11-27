@@ -3,7 +3,6 @@
 and the abc-sim realtime copy) and in the realtime layer on top of it (rcb_realtime.py), in process on a toy
 simulator (numpy only, CPU, a few seconds):
 
-  - feature off: POST /finish is a 404 and a success ends the episode as before;
   - the oracle and /finish: 1; nothing done and /finish: 0; a success undone before /finish: 0; a success then the
     task's failure rule: 0; a success never changes an answer (no done, no reason, no success key in meta);
   - after /finish: /submit, /observe, /reset are 409, /spec and /status answer;
@@ -134,10 +133,10 @@ def end_session(svc):
     svc.poll()
 
 
-def scenario(S, tag, name, *, sim=None, agent_end=True, step_limit=None, budget=0, run=None):
+def scenario(S, tag, name, *, sim=None, step_limit=None, budget=0, run=None):
     d = tempfile.mkdtemp()
     try:
-        svc = S.Service(sim or Toy(), data=d, reset_budget=budget, agent_end=agent_end, step_limit=step_limit)
+        svc = S.Service(sim or Toy(), data=d, reset_budget=budget, step_limit=step_limit)
         svc.start()
         res = run(svc, d)
         return res
@@ -150,14 +149,6 @@ def scenario(S, tag, name, *, sim=None, agent_end=True, step_limit=None, budget=
 
 
 def suite_21(S, tag):
-    # feature off: /finish 404, a success ends the episode
-    def off(svc, d):
-        check(call(svc, "/finish")[0] == 404, f"{tag} off: /finish is not 404")
-        c, m = submit(svc, [1, 0])
-        check(m["done"] and m["reason"] == "success", f"{tag} off: a success did not end the episode ({m['reason']})")
-        check("success_signal" not in svc.spec, f"{tag} off: spec states a success signal")
-    scenario(S, tag, "off", agent_end=False, run=off)
-
     def oracle(svc, d):
         check("success_signal" in svc.spec and svc.spec["success_signal"].startswith("hidden"), f"{tag}: spec has no success_signal")
         c, m = submit(svc, [0.5, 0], [0.5, 0], [0, 0])
@@ -305,12 +296,12 @@ def suite_21(S, tag):
     # a crash mid-episode: the restart resumes the hidden success with the episode
     d = tempfile.mkdtemp()
     try:
-        svc = S.Service(Toy(), data=d, agent_end=True)
+        svc = S.Service(Toy(), data=d)
         svc.start()
         submit(svc, [1, 0])
         with open(os.path.join(d, "startups.jsonl"), "a") as fh:
             fh.write(json.dumps({"ts": 0, "process": 1}) + "\n" + json.dumps({"ts": 0, "process": 2}) + "\n")
-        svc2 = S.Service(Toy(), data=d, agent_end=True)
+        svc2 = S.Service(Toy(), data=d)
         svc2.start()
         check(svc2.now_success and svc2.seen_step == 1 and not svc2.done, f"{tag} resume: hidden state {svc2.now_success} {svc2.seen_step}")
         call(svc2, "/finish")
@@ -339,7 +330,7 @@ for h, path in copies.items():
     for want, rows in ((True, [[0.5, 0], [0.5, 0]]), (False, [[1.0, 0], [-0.5, 0]])):
         d = tempfile.mkdtemp()
         try:
-            svc = R.RealtimeService(Toy(), data=d, slowdown=1.0, agent_end=True)
+            svc = R.RealtimeService(Toy(), data=d, slowdown=1.0)
             svc.start()
             job = R._Job("POST", "/submit")
             svc._rt_submit({"type": "joints", "actions": np.array(rows), "dt": 0.02, "k": 1, "interpolate": "hold",
@@ -372,7 +363,7 @@ for h, path in copies.items():
             shutil.rmtree(d, ignore_errors=True)
     d = tempfile.mkdtemp()                      # eai-standard/3.0 review: the wire of the realtime layer
     try:
-        svc = R.RealtimeService(Toy(), data=d, slowdown=1.0, agent_end=True)
+        svc = R.RealtimeService(Toy(), data=d, slowdown=1.0)
         svc.start()
         big = R._Job("POST", "/finish", b"", content_length=rcb1_max + 1)
         svc.dispatch(big)
@@ -394,20 +385,10 @@ for h, path in copies.items():
     try:
         class NoRec(Toy):
             record_frames = False
-        svc = R.RealtimeService(NoRec(), data=d, slowdown=1.0, agent_end=True)
+        svc = R.RealtimeService(NoRec(), data=d, slowdown=1.0)
         rec = svc.spec["timing"].get("recorder", {})
         check(rec.get("cameras") == [] and rec.get("depth") == [] and "nothing" in rec.get("records", ""),
               f"{tag}: no recorder: /spec.timing.recorder {rec}")
-    finally:
-        shutil.rmtree(d, ignore_errors=True)
-    # off: /finish is a 404 in realtime too
-    d = tempfile.mkdtemp()
-    try:
-        svc = R.RealtimeService(Toy(), data=d, slowdown=1.0, agent_end=False)
-        svc.start()
-        j = R._Job("POST", "/finish", b"{}")
-        svc.dispatch(j)
-        check(j.reply[1] == 404, f"{tag} off: /finish is {j.reply[1]}")
     finally:
         shutil.rmtree(d, ignore_errors=True)
 

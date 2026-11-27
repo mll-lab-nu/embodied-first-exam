@@ -2,8 +2,8 @@
 Owns the scene and the seed. HTTP surface: GET /spec, GET /status, POST /observe, POST /submit (both RCB1 bodies,
 RCB1 responses: videos / frames / depth / proprio as raw blobs, never base64). Logs every call to /data/episode.jsonl,
 keeps /data/final.json current, and on episode end grades the live episode: success = RoboTwin's check_success on the
-state the episode ends in (agent-ended, RCB_AGENT_END=1: the agent's POST /finish, the step limit RCB_STEP_LIMIT, the
-end of the agent's session or a simulator error ends it; the success is never shown and never ends it), nothing
+state the episode ends in (agent-ended: the agent's POST /finish, the step limit RCB_STEP_LIMIT, the end of the
+agent's session or a simulator error ends it; the success is never shown and never ends it), nothing
 replayed (docs/protocol/README.md H.4). /observe only reads (eai-standard/3.0); a hold chunk lets time pass. The verdict
 goes to final.json first ("finalized": true, "graded_by": "live"); then the recorded (T,34) trajectory, which is the
 deliverable, is rendered once for people: the six-view /data/replay.mp4 and /data/live.mp4 (rcb_live.py: call-stamped
@@ -35,23 +35,21 @@ E = {"ready": False, "step": 0, "calls": 0, "done": False, "reason": None, "succ
 _USR1 = {"pending": False}
 signal.signal(signal.SIGUSR1, lambda *_: _USR1.__setitem__("pending", True))
 
-# Agent-ended episodes (docs/protocol/README.md §3 "Agent-ended episodes", standard_mode.md; required for every standard
-# task from protocol v3.0; the same rules as rcb_service.py's AGENT_END). RCB_AGENT_END=1: the service never shows the
-# task's success and a success never ends the episode (RoboTwin's check_success is still read after every call, and only
+# Agent-ended episodes (docs/protocol/README.md §3 "Agent-ended episodes", standard_mode.md; the same rules as
+# rcb_service.py's): the service never shows the task's success and a success never ends the episode (RoboTwin's check_success is still read after every call, and only
 # recorded); POST /finish (JSON {}) ends it (reason "finished"), and so does the end of the agent's session ("timeout");
 # both are judged on the state they leave: RoboTwin's check_success on it (no settle window: the check is one state's).
-# RCB_STEP_LIMIT=N (with RCB_AGENT_END=1) adds a step limit: N physics steps (1/250 s, the control step: `dt` is a
+# RCB_STEP_LIMIT=N adds a step limit: N physics steps (1/250 s, the control step: `dt` is a
 # multiple of it); the chunk that reaches it stops there and the episode ends (reason "step_limit"), judged on the state
-# it leaves. A value that is no positive whole number, or one without RCB_AGENT_END=1, refuses to start (as rcb_service).
-AGENT_END = os.environ.get("RCB_AGENT_END") == "1"
+# it leaves. A value that is no positive whole number refuses to start (as rcb_service).
 
 
 def _step_limit():
     raw = os.environ.get("RCB_STEP_LIMIT")
     try: n = int(raw or 0) or None
     except ValueError: n = -1
-    if n is not None and (not AGENT_END or n < 1):
-        raise RuntimeError(f"RCB_STEP_LIMIT={raw!r}: RCB_STEP_LIMIT needs RCB_AGENT_END=1 and a positive number of steps")
+    if n is not None and n < 1:
+        raise RuntimeError(f"RCB_STEP_LIMIT={raw!r}: RCB_STEP_LIMIT needs a positive number of steps")
     return n
 STEP_LIMIT = _step_limit()
 END_STATE_REASONS = ("finished", "timeout", "step_limit")     # ends judged on the state they leave
@@ -67,7 +65,7 @@ E.update({"now_success": False, "seen_step": None, "trial_seen": False, "finish_
 
 def _hidden_success(ok, step: int) -> None:
     """The task's success as the state now is (after a call): kept, never latched and never shown. `step`: the control
-    (= physics) step the call ended at, the unit of hidden_success_first_step in every 2.1 adapter."""
+    (= physics) step the call ended at, the unit of hidden_success_first_step in every sidecar adapter."""
     E["now_success"] = bool(ok)
     if ok and E["seen_step"] is None:
         E["seen_step"], E["trial_seen"] = int(step), True
@@ -75,13 +73,11 @@ def _hidden_success(ok, step: int) -> None:
 
 
 def _ae_state() -> dict:
-    return {"now_success": E["now_success"], "seen_step": E["seen_step"], "trial_seen": E["trial_seen"]} if AGENT_END else {}
+    return {"now_success": E["now_success"], "seen_step": E["seen_step"], "trial_seen": E["trial_seen"]}
 
 
 def _ae_fields() -> dict:
-    """final.json's record of an agent-ended episode (evidence only; nothing without the feature)."""
-    if not AGENT_END:
-        return {}
+    """final.json's record of the agent-ended episode (evidence only)."""
     r, t0, ft = E["reason"], E.get("t_agent0"), E.get("finish_t")
     return {"success_signal": "hidden", "ended_by": ENDED_BY.get(r, "failed") if r else None, "end_judgement": END_JUDGEMENT,
             "hidden_success_seen": E["seen_step"] is not None, "hidden_success_first_step": E["seen_step"],
@@ -232,11 +228,9 @@ def start_finalize() -> None:
 def finish(reason: str) -> None:
     if E["done"]: return
     E["done"] = True; E["reason"] = reason; E["t_end"] = time.time(); E["episode_physics_steps"] = int(S._sim_steps)
-    judge = (reason in END_STATE_REASONS) if AGENT_END else not E["success"]
-    if AGENT_END:      # an end-state end is judged on the state it leaves (a success earlier counts for nothing); else 0
-        if reason == "finished": E["finish_t"] = E["t_end"]
-        E["success"] = False
-    if judge:
+    if reason == "finished": E["finish_t"] = E["t_end"]
+    E["success"] = False   # an end-state end is judged on the state it leaves (a success earlier counts for nothing); else 0
+    if reason in END_STATE_REASONS:
         try: E["success"] = _check_success()
         except Exception as exc:  # noqa — the judgement failed: no verdict on the agent (an infrastructure error, not its 0)
             traceback.print_exc(); E["success"] = False; E["finalize_error"] = f"grading: {exc!r}"[:300]
@@ -335,12 +329,10 @@ SPEC = {
                                    "time_s. The harness counts the same limit from the start of your session, so time_left_s never runs out "
                                    "before the harness stops you: your real time left is time_left_s minus the time you spent before that "
                                    "first request. Plan by time_left_s.")},
-    "episode": "one episode, no reset: it ends at the first success (RoboTwin's check_success), when your time is up, or on a simulator error",
+    "episode": ("one episode, no reset: it ends at your POST /finish, " + ("at the step limit, " if STEP_LIMIT else "")
+                + "when your time is up, or on a simulator error; the state at that end is graded (RoboTwin's check_success)"),
+    "success_signal": SUCCESS_SIGNAL_NOTE,
 }
-if AGENT_END:
-    SPEC["success_signal"] = SUCCESS_SIGNAL_NOTE
-    SPEC["episode"] = ("one episode, no reset: it ends at your POST /finish, " + ("at the step limit, " if STEP_LIMIT else "")
-                       + "when your time is up, or on a simulator error; the state at that end is graded (RoboTwin's check_success)")
 if STEP_LIMIT:
     SPEC["max_control_steps"] = STEP_LIMIT; SPEC["budget"]["steps"] = STEP_LIMIT
     SPEC["step_limit_note"] = (f"the episode ends by itself after {STEP_LIMIT} control steps (physics steps of 1/{PHYS_HZ} s; "
@@ -809,16 +801,12 @@ def parse_observe(meta: dict) -> dict:
         raise _bad_request(exc) from None
 
 
-def _judge_after_call(succ_label: str) -> bool:
-    """After a call: the task's success on the state now. Agent-ended: recorded only (evidence: never shown, never an end,
-    and a failing check is logged, not a simulator error). Without the feature: the first success ends the episode."""
-    if AGENT_END:
-        try: _hidden_success(_check_success(), int(S._sim_steps))
-        except Exception as exc:  # noqa — the hidden record is evidence only
-            log({"ev": "hidden_success_error", "after": succ_label, "error": repr(exc)[:300]})
-        return False
-    succ = _check_success(); E["success"] = E["success"] or succ
-    return succ
+def _record_success(succ_label: str) -> None:
+    """After a call: the task's success on the state now, recorded only (evidence: never shown, never an end, and a
+    failing check is logged, not a simulator error)."""
+    try: _hidden_success(_check_success(), int(S._sim_steps))
+    except Exception as exc:  # noqa — the hidden record is evidence only
+        log({"ev": "hidden_success_error", "after": succ_label, "error": repr(exc)[:300]})
 
 
 def do_submit(q: dict) -> tuple[dict, list]:
@@ -832,7 +820,7 @@ def do_submit(q: dict) -> tuple[dict, list]:
     else: executed = run_ee_pose(A, rec, plan)
     rec.tick(force=True); LIVE.end_call()
     E["step"] += int(executed); E["calls"] += 1
-    succ = _judge_after_call("submit")
+    _record_success("submit")
     planned = round(int(A.shape[0]) * dt, 6) if typ == "joint_position" else round(_plan_steps(plan) / PHYS_HZ, 6)
     out = {**meta_common(), "chunk_id": E["calls"], "type": typ, "executed_rows": int(executed),
            "control_steps_chunk": int(S._sim_steps) - before, "physics_steps_chunk": int(S._sim_steps) - before,   # control step = physics step
@@ -841,21 +829,19 @@ def do_submit(q: dict) -> tuple[dict, list]:
            "frame_step": int(S._sim_steps), "ok": True,   # the physics step its newest image shows (as /observe's)
            **({"frames_skipped": rec.skipped} if rec.skipped else {})}
     log({"ev": "submit", "call": E["calls"], "type": typ, "rows": int(A.shape[0]), "executed_rows": int(executed), "dt": dt, "interpolate": interp, "cameras": cams, "note": note_full[:500],
-         "physics_steps": int(S._sim_steps) - before, "n_clipped": len(clipped), "plan": plan[:50], "success": succ})
+         "physics_steps": int(S._sim_steps) - before, "n_clipped": len(clipped), "plan": plan[:50]})
     save_call_evidence(E["calls"], {k: v for k, v in out.items() if k != "cameras"}, rec)
     try: np.save(os.path.join(DATA, "calls", f"{E['calls']:06d}", "actions.npy"), A.astype(np.float32))
     except Exception: pass  # noqa
     flush_traj(); log({"ev": "checkpoint", "call": E["calls"], "step": E["step"], "rows": E.get("flushed", 0), "success": E["success"], "state_sha": S.state_sha(), **_ae_state()})
-    if succ: finish("success")
-    elif _cap_hit(): finish("step_limit")
+    if _cap_hit(): finish("step_limit")
     out["done"] = E["done"]; out["reason"] = E["reason"]; out.update(_steps_left())
     return out, rec.parts(video, 1.0 / (RING_DT * rec.every))   # the capture's real frame rate
 
 
 def do_hold(q: dict) -> tuple[dict, list]:
     """A rows-free hold chunk (eai-standard/3.0): the drives hold their position targets, at rest (velocity targets 0: the
-    last chunk's feed-forward is not carried on), for q["steps"] physics steps of robot time, answered as a /submit (what
-    /observe with seconds > 0 did before)."""
+    last chunk's feed-forward is not carried on), for q["steps"] physics steps of robot time, answered as a /submit."""
     typ, cams, fps, video, depth, steps, n = (q[k] for k in ("type", "cams", "fps", "video", "depth", "steps", "hold"))
     rec = Recorder(cams, fps, depth, ring=True); before = int(S._sim_steps)
     LIVE.set_label(E["calls"] + 1, f"submit hold {n:g}s"); rec.tick(force=True)
@@ -865,17 +851,16 @@ def do_hold(q: dict) -> tuple[dict, list]:
         S.step(); LIVE.tick(); rec.tick()
         if E["done"] or _cap_hit(): break
     rec.tick(force=True); LIVE.end_call(); E["calls"] += 1
-    succ = _judge_after_call("hold")
+    _record_success("hold")
     out = {**meta_common(), "chunk_id": E["calls"], "type": typ, "hold": True, "executed_rows": 0,
            "control_steps_chunk": int(S._sim_steps) - before, "physics_steps_chunk": int(S._sim_steps) - before,
            "duration_s": round((int(S._sim_steps) - before) / PHYS_HZ, 6), "planned_duration_s": round(n, 6),
            "clipped": [], "n_clipped": 0, "plan": [], "rejected": None, "frame_step": int(S._sim_steps), "ok": True}
     log({"ev": "submit", "call": E["calls"], "type": typ, "rows": 0, "hold_s": n, "cameras": cams, "note": q["note"][:500],
-         "physics_steps": int(S._sim_steps) - before, "n_clipped": 0, "success": succ})
+         "physics_steps": int(S._sim_steps) - before, "n_clipped": 0})
     save_call_evidence(E["calls"], {k: v for k, v in out.items() if k != "cameras"}, rec); flush_traj()
     log({"ev": "checkpoint", "call": E["calls"], "step": E["step"], "rows": E.get("flushed", 0), "success": E["success"], "state_sha": S.state_sha(), **_ae_state()})
-    if succ: finish("success")
-    elif _cap_hit(): finish("step_limit")
+    if _cap_hit(): finish("step_limit")
     out["done"] = E["done"]; out["reason"] = E["reason"]; out.update(_steps_left())
     return out, rec.parts(video, 1.0 / (RING_DT * rec.every))   # the capture's real frame rate
 
@@ -947,9 +932,9 @@ class H(BaseHTTPRequestHandler):
         /finish; /observe too once the render pass runs (it resets the scene). Asked before LOCK as well: finalize()
         holds LOCK while it renders the videos, and a refused call must not wait for that."""
         if not E["done"]: return False
-        return self.path != "/observe" or (AGENT_END and E["reason"] == "finished") or bool(E.get("finalizing"))
+        return self.path != "/observe" or E["reason"] == "finished" or bool(E.get("finalizing"))
     def do_POST(self):
-        if self.path not in ("/submit", "/observe") + (("/finish",) if AGENT_END else ()): return self._json(404, {"error": "no such endpoint"})
+        if self.path not in ("/submit", "/observe") + ("/finish",): return self._json(404, {"error": "no such endpoint"})
         try:
             if self.path == "/finish":   # its body is ignored (never parsed); only its size is checked
                 n = self._length()
@@ -1025,18 +1010,17 @@ def _resume_or_start() -> None:
     E["calls"] = int(last.get("call", 0)); E["step"] = int(last.get("step", 0)); E["success"] = bool(last.get("success")); E["t0"] = float(starts[0]["ts"])
     _first = [e for e in ev if e.get("ev") == "first_request"]
     if _first: E["t_agent0"] = float(_first[0]["ts"])
-    if AGENT_END:   # the hidden success of the episode, as the checkpoint had it
-        E["now_success"], E["seen_step"], E["trial_seen"] = bool(last.get("now_success")), last.get("seen_step"), bool(last.get("trial_seen"))
-        _fin = [e for e in ev if e.get("ev") == "end" and e.get("reason") == "finished"]
-        E["finish_t"] = _fin[-1].get("finish_t") if _fin else None
+    # the hidden success of the episode, as the checkpoint had it
+    E["now_success"], E["seen_step"], E["trial_seen"] = bool(last.get("now_success")), last.get("seen_step"), bool(last.get("trial_seen"))
+    _fin = [e for e in ev if e.get("ev") == "end" and e.get("reason") == "finished"]
+    E["finish_t"] = _fin[-1].get("finish_t") if _fin else None
     # the episode's end, if it is within the last checkpoint: an end past it was logged by a call lost with the crash (an
     # end record without rows is kept)
     ended = [e for e in ev if e.get("ev") == "end" and int(e.get("rows") or 0) <= n]
     if ended:
         E["done"] = True; E["reason"] = ended[-1].get("reason"); E["t_end"] = float(ended[-1]["ts"]); E["episode_physics_steps"] = int(ended[-1].get("physics_steps") or n)
-        # the verdict finish() judged is the end record's: the checkpoint before it does not hold it (agent-ended: an
-        # end-state end is judged only in finish(), the checkpoints keep success False; without the feature: a timeout's
-        # check_success). A crash between the end and finalize() must not turn a success into 0.
+        # the verdict finish() judged is the end record's: the checkpoint before it does not hold it (an end-state end
+        # is judged only in finish(), the checkpoints keep success False). A crash between the end and finalize() must not turn a success into 0.
         E["success"] = bool(ended[-1].get("success", E["success"]))
         if ended[-1].get("grading_error"): E["finalize_error"] = ended[-1]["grading_error"]   # still no verdict on the agent
     log({"ev": "resumed", "rows": n, "calls": E["calls"], "state_sha": S.state_sha(), "crashed_in_call": in_call, "downtime_s": round(time.time() - float(ev[-1]["ts"]), 1)})

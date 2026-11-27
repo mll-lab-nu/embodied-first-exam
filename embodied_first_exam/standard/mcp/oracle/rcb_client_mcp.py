@@ -160,6 +160,8 @@ def _post(url, data=None, json=None, **_):          # noqa: A002 (requests' own 
     if err is not None:
         return err
     out.pop("tool_s", None)
+    if path == "/finish":                           # its reply carries the status fields: GET /status answers them
+        _LAST_META.update({k: v for k, v in out.items() if k != "ok"})
     return _json(200, out)
 
 

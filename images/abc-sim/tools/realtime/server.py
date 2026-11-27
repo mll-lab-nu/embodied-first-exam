@@ -7,13 +7,12 @@ byte-identical copy of the other realtime benchmarks') for one frozen instance, 
 rcb_abc.Session -- the same scene, action and success rule as the standard twin's eai-standard/3.0 service. The
 protocol, the clock, the plan, the episode, crash recovery and the finalize are rcb_realtime.py's and rcb_service.py's.
 
-Grading: the verdict is the live episode's, judged by the layer from step(): the task's rule as Session.step applies it
-to the steps this service ran (the 1.02 s success hold; ball tray: the countdown completed with the ball on the tray and
-both handles held). There is no live_verdict(). Nothing is replayed to grade it; the video is rendered from the
+Grading: the verdict is the live episode's, judged by the layer on the state the episode ends in (below). There is no
+live_verdict(). Nothing is replayed to grade it; the video is rendered from the
 trajectory after the verdict (render_video). `start_sha` is the frozen instance's recorded state hash: the layer refuses
 a fresh episode whose scene does not start there (instance_mismatch, infrastructure).
 
-Agent-ended episodes (RCB_AGENT_END=1, PROTOCOL §3; rcb_service.py's generic fields): the Session runs in its agent_end
+Agent-ended episodes (PROTOCOL §3; rcb_service.py's generic fields): the Session runs in its agent_end
 mode (a success never ends the episode; step() returns the state's success, which the layer only records), the episode
 ends at POST /finish, the end of the session or a failure (the ball off the tray: "failed", 0, after a success too), and
 the verdict is the end state's: `end_window_steps` = HOLD_STEPS (about a second of the last command held, the goal held
@@ -44,7 +43,6 @@ import rcb_abc as M  # noqa: E402  (first: it picks the rendering backend before
 import mujoco  # noqa: E402
 
 M.SESSION_LOG = ""           # the sidecar's Session is not the agent's interaction log
-import rcb_service  # noqa: E402
 from rcb_service import main  # noqa: E402
 
 GL2CV = np.diag([1.0, -1.0, -1.0, 1.0])
@@ -62,7 +60,7 @@ class AbcSim:
         self.instance = instance
         self.info = task_info
         self.s = M.Session(instance=instance)
-        self.s.agent_end = rcb_service.AGENT_END                # agent-ended: a success never ends the episode
+        self.s.agent_end = True                                 # agent-ended: a success never ends the episode
         self.end_judgement = "state"                            # the end state's success (rcb_service.py)
         self.end_window_steps = 0 if self.s.rule == "tray" else M.HOLD_STEPS   # the hold rule's window from the end
         self.hidden_keys = ("step_cap",)
@@ -115,14 +113,7 @@ class AbcSim:
                   "units": "rad (joints), opening in [0, 1.042] (grippers)", "semantics": JOINT_TEXT}
         episode = ("an episode ends at POST /finish, when your time is up, on a simulator error"
                    + (", or in failure the moment the ball leaves the tray or a handle is let go during the countdown"
-                      if self.s.rule == "tray" else "") + "; nothing tells you whether you have succeeded"
-                   if self.s.agent_end else
-                   "an episode ends in success the moment the task's goal has held for "
-                   f"{M.HOLD_STEPS} control steps in a row ({round(M.HOLD_STEPS * self.control_dt, 2)} s), when your "
-                   "time is up, or on a simulator error" if self.s.rule != "tray" else
-                   "an episode ends in success when the tray's countdown completes with the ball on the tray and both "
-                   "handles held throughout, in failure the moment the ball leaves the tray or a handle is let go during "
-                   "the countdown, when your time is up, or on a simulator error")
+                      if self.s.rule == "tray" else "") + "; nothing tells you whether you have succeeded")
         return {
             "simulator": "ABC Sim (abc_sim) on MuJoCo 3.6.0 (CPU physics; cameras rendered over EGL)",
             "robot": "two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each) at a table",

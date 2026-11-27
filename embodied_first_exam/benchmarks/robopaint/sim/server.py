@@ -12,7 +12,7 @@ Differences from the RoboLab service, all from the task:
   target at the 20 Hz control rate, one IK solve per control step (SAPIEN's Pinocchio CLIK, no collision checking), at most
   0.25 m/s (a faster row is slowed down and reported);
 - painting has no terminal state: the episode ends only when the agent phase ends (the collect hook), at the agent's POST
-  /finish (agent-ended episodes, PROTOCOL §3: RCB_AGENT_END, rcb_agent_end.py) or on a simulator error;
+  /finish (agent-ended episodes, PROTOCOL §3: rcb_agent_end.py) or on a simulator error;
 - the verdict is the live episode's (docs/protocol/README.md H.4): when the collect hook ends the episode
   (environment/sim/finalize.sh, after the agent's container is stopped) this service commits a stroke still pressed, scores its
   live main sheet with the graders' scorer and rules (rcb_brush_strict.py: the picture rule and the process rules, the same
@@ -108,7 +108,7 @@ def dump() -> list | None:
     n = int(E.get("episode_control_steps") or 0)
     metrics = {k: v for k, v in numbers(live).items() if not isinstance(v, bool)}
     ok = bool(live.get("success")) and err is None
-    if AE.ENABLED and ok:   # the sheet is scored only at the end: the success is seen there (final.json hidden_success_*)
+    if ok:                  # the sheet is scored only at the end: the success is seen there (final.json hidden_success_*)
         AE.hidden_success(E, True, log, n)
     rec = {"steps": E["step"], "calls": E["calls"], "control_steps": n, "physics_steps": n * SUBSTEPS,
            "elapsed_s": round((E.get("t_end") or time.time()) - E["t0"], 1), "reason": E["reason"], "done": True, "task": TASK, "protocol": PROTOCOL,
@@ -145,10 +145,10 @@ def render(acts) -> None:
 
 def finish(reason: str) -> None:
     """The episode ends. Painting has no terminal state, so the verdict is always the sheet as the episode leaves it (dump(),
-    at the collect hook): agent-ended episodes (PROTOCOL §3, RCB_AGENT_END) add only POST /finish (reason "finished"), after
+    at the collect hook): agent-ended episodes (PROTOCOL §3) add only POST /finish (reason "finished"), after
     which the robot does nothing more, and the runaway guard's end is called "step_limit" (judged as it stands)."""
     if E["done"]: return
-    if AE.ENABLED and reason == "step_guard":
+    if reason == "step_guard":
         reason = "step_limit"
     E["done"] = True; E["reason"] = reason; E["t_end"] = time.time(); E["episode_control_steps"] = ctrl_steps()
     log({"ev": "end", "reason": reason, "step": E["step"], "control_steps": ctrl_steps(), "elapsed_s": round(E["t_end"] - E["t0"], 1)})
@@ -589,5 +589,4 @@ open(os.path.join(DATA, "server.pid"), "w").write(str(os.getpid()))
 print(f"{PROTOCOL} sim ready (startup {EP.n_startups}, resumes {EP.resumes}{', resumed at control step %d' % ctrl_steps() if resumed else ''})", flush=True)
 AE.serve(AE.Service(spec=SPEC, lock=LOCK, state=E, submit=do_submit, observe=do_observe, kinematics=do_kinematics, status=status,
                     on_submit_error=lambda exc: finish("error"), log=log, episode=EP, state_sha=S.state_sha, proprio=proprio_row,
-                    **({"finish": lambda: finish("finished"),
-                        "end_step_limit": lambda: finish("step_limit")} if AE.ENABLED else {})))
+                    finish=lambda: finish("finished"), end_step_limit=lambda: finish("step_limit")))

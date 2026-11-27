@@ -755,7 +755,7 @@ class RealtimeService(Service):
             return ("reply", *self._spec_reply)
         if method == "GET" and path == "/status":
             return ("/status", None)
-        if method == "POST" and path == "/finish" and self.agent_end:   # agent-ended episodes (rcb_service.AGENT_END)
+        if method == "POST" and path == "/finish":   # agent-ended episodes
             if n < 0:                                # its length is checked as every POST's; its body is read and
                 return self._refusal(Refused(400, {"error": "bad Content-Length"}))   # dropped, never parsed
             if n > MAX_BODY:

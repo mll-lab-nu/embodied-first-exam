@@ -3,9 +3,9 @@
 §4), on a toy simulator (numpy only, no image, a few seconds), for every distinct rcb_service.py in
 embodied_first_exam/benchmarks/ (the copies are byte-identical; a copy without the record is reported, not failed):
 
-  - one attempt that succeeds: first_success = success = 1, no first-episode files;
-  - fail (the task's rule), reset, success: success 1, first_success 0 ("failed"), trajectory.first.npz holds episode 1's
-    rows, replay.first.mp4 is rendered after the graded video;
+  - one attempt that reaches the goal and is finished (POST /finish): first_success = success = 1, no first-episode files;
+  - fail (the task's rule), reset, the goal reached and finished: success 1, first_success 0 ("failed"),
+    trajectory.first.npz holds episode 1's rows, replay.first.mp4 is rendered after the graded video;
   - abandon (reset mid-episode), reset, fail: first_reason "reset";
   - one attempt that times out: first_success 0 ("timeout");
   - a first-episode video that fails to render: the verdict and the graded video are unchanged (evidence only).
@@ -14,10 +14,10 @@ and, for every distinct copy (also humanclaw's and abc-sim's realtime base), the
 seconds > 0 is a 400 that names the hold chunk; a /submit answers duration_s and planned_duration_s; the recorder keeps
 the submit's frames and /observe last_s = n returns them (frame_step, proprio rows); a hold chunk (no rows, "hold",
 seconds) runs round(seconds / control_dt) control steps and is answered as a submit; rows with seconds, or no rows
-without "hold", are a 400; a reset empties the recorder; /spec states standard and timing.recorder; seconds, last_s, dt
+without "hold", are a 400; a reset empties the recorder; /spec states the protocol and timing.recorder; seconds, last_s, dt
 and video_fps must be JSON numbers (true, "0.1": 400); a step's info["blocked"] stops a hold chunk as it stops a chunk
 with rows; record_frames = "delivered" with two cameras sent in turn: /observe last_s keeps frames/<cam>, proprio and
-frame_step on one frame axis; with agent-ended episodes, resets_left is 0 after /finish (in /status and in the 409
+frame_step on one frame axis; resets_left is 0 after /finish (in /status and in the 409
 bodies), a /finish body over 64 MiB is a 413, and the first episode's first_success is its own end judgement.
 """
 import hashlib
@@ -115,6 +115,9 @@ def run(S, plan, budget=5, broken=False):
             if item == "reset":
                 svc._reset({"cameras": []}, {})
                 continue
+            if item == "finish":
+                svc._agent_finish()
+                continue
             for r in item:
                 if svc.done:
                     break
@@ -138,13 +141,13 @@ def test(path: Path) -> None:
     tag = path.relative_to(ROOT)
     check({"first_success", "first_reason", "first_n_actions", "first_video"} <= S.RESERVED, f"{tag}: first_* not RESERVED")
 
-    fin, files = run(S, [[[0.5, 0], [0.6, 0]]])
-    check(fin["success"] and fin["first_success"] is True and fin["first_reason"] == "success" and fin["resets"] == 0,
+    fin, files = run(S, [[[0.5, 0], [0.6, 0]], "finish"])
+    check(fin["success"] and fin["first_success"] is True and fin["first_reason"] == "finished" and fin["resets"] == 0,
           f"{tag}: one success: {fin}")
     check("first_video" not in fin and "trajectory.first.npz" not in files and "replay.first.mp4" not in files,
           f"{tag}: one success left first-episode files: {sorted(files)}")
 
-    fin, files = run(S, [[[0.2, 0], [0.1, 1]], "reset", [[0.5, 0], [0.6, 0]]])
+    fin, files = run(S, [[[0.2, 0], [0.1, 1]], "reset", [[0.5, 0], [0.6, 0]], "finish"])
     check(fin["success"] and fin["first_success"] is False and fin["first_reason"] == "failed" and fin["resets"] == 1,
           f"{tag}: fail, reset, success: {fin}")
     check(fin["first_n_actions"] == 2 and fin["_first_rows"] == [[0.2, 0.0], [0.1, 1.0]] and fin["n_actions"] == 2,
@@ -160,8 +163,8 @@ def test(path: Path) -> None:
     check(not fin["success"] and fin["first_success"] is False and fin["first_reason"] == "timeout"
           and "trajectory.first.npz" not in files, f"{tag}: timeout: {fin}")
 
-    good, _ = run(S, [[[0.2, 0], [0.1, 1]], "reset", [[0.5, 0], [0.6, 0]]])
-    fin, files = run(S, [[[0.2, 0], [0.1, 1]], "reset", [[0.5, 0], [0.6, 0]]], broken=True)
+    good, _ = run(S, [[[0.2, 0], [0.1, 1]], "reset", [[0.5, 0], [0.6, 0]], "finish"])
+    fin, files = run(S, [[[0.2, 0], [0.1, 1]], "reset", [[0.5, 0], [0.6, 0]], "finish"], broken=True)
     same = {k: fin.get(k) for k in ("success", "live_success", "reason", "n_actions", "video", "graded_by")}
     check(same == {k: good.get(k) for k in same} and fin["first_video"] is False and "replay.first.mp4" not in files
           and files.get("replay.mp4") == b"mp4 2" and fin["video_pending"] is False,
@@ -177,7 +180,7 @@ def test_v3(path: Path) -> None:
     tag = path.relative_to(ROOT)
     d = tempfile.mkdtemp()
     try:
-        svc = S.Service(Toy(), data=d, reset_budget=1, agent_end=False)
+        svc = S.Service(Toy(), data=d, reset_budget=1)
         svc.start()
 
         def post(path_, obj):
@@ -264,7 +267,7 @@ def test_v3_more(S, tag) -> None:
 
     d = tempfile.mkdtemp()
     try:                                         # strict numbers, a blocked hold chunk
-        svc = S.Service(Blocky(), data=d, agent_end=False)
+        svc = S.Service(Blocky(), data=d)
         svc.start()
         post = poster(svc)
         for bad in ({"type": "joints", "interpolate": "hold", "seconds": True},
@@ -285,7 +288,7 @@ def test_v3_more(S, tag) -> None:
 
     d = tempfile.mkdtemp()
     try:                                         # record_frames "delivered", two cameras asked for in turn
-        svc = S.Service(Toy2(), data=d, agent_end=False)
+        svc = S.Service(Toy2(), data=d)
         svc.start()
         post = poster(svc)
         for cam in ("a", "b"):
@@ -311,8 +314,8 @@ def test_v3_more(S, tag) -> None:
         shutil.rmtree(d)
 
     d = tempfile.mkdtemp()
-    try:                                         # agent-ended: resets_left after /finish, a /finish body over the limit
-        svc = S.Service(Toy(), data=d, reset_budget=1, agent_end=True)
+    try:                                         # resets_left after /finish, a /finish body over the limit
+        svc = S.Service(Toy(), data=d, reset_budget=1)
         svc.start()
         post = poster(svc)
         code, m, _ = post("/finish", None, raw=b"", length=S.MAX_BODY + 1)
@@ -328,8 +331,8 @@ def test_v3_more(S, tag) -> None:
         shutil.rmtree(d)
 
     d = tempfile.mkdtemp()
-    try:                                         # agent-ended: the first episode's own end judgement
-        svc = S.Service(Toy(), data=d, reset_budget=1, agent_end=True, step_limit=3)
+    try:                                         # the first episode's own end judgement
+        svc = S.Service(Toy(), data=d, reset_budget=1, step_limit=3)
         svc.start()
         post = poster(svc)
         code, m, _ = post("/submit", {"type": "joints", "actions": [[0.5, 0], [0.6, 0], [0.0, 0]], "video": "none"})
@@ -342,7 +345,7 @@ def test_v3_more(S, tag) -> None:
         fin = json.load(open(os.path.join(d, "final.json")))
         if "first_success" in S.RESERVED:
             check(fin.get("first_success") is True and fin.get("first_reason") == "step_limit" and fin["success"] is False,
-                  f"{tag}: agent-ended first episode (a success at the step limit, then a reset): {fin}")
+                  f"{tag}: first episode (a success at the step limit, then a reset): {fin}")
     finally:
         shutil.rmtree(d)
 
