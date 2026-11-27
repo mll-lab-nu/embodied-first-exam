@@ -24,7 +24,8 @@ Differences from the RoboTwin service, all from the simulator:
   over (the tooling's fall rule, OmniGibson's Falling held for 10 s of simulated time: reason "failure: the robot fell
   over"), on a simulator breakdown (non-finite or runaway robot or goal-object state: reason "failure: simulator
   breakdown (...)", a failure recorded as `sim_breakdown`), on the collect hook's signal (timeout), on a simulator error, or at the tooling's runaway guard
-  (MAX_STEPS control steps, reason "step_guard"; /spec max_control_steps); /spec "episode" says so;
+  (MAX_STEPS control steps, reason "step_guard"; agent-ended, RCB_AGENT_END=1: reason "step_limit", judged as it stands;
+  /spec max_control_steps); /spec "episode" says so;
 - a malformed request is a 400 before anything is executed (PROTOCOL §4.6): every field of /submit and /observe is
   checked first (request_number, request_cameras, request_note, video_fps; dt must be a whole number of control
   periods, it is never rounded), so a wrong type, a null or an out-of-range value never reaches the simulator and never
@@ -339,7 +340,7 @@ def cam_spec(c: str) -> dict:
 SPEC = {
     "protocol": PROTOCOL, "protocol_compat": L.COMPAT, "simulator": "behavior-1k 3.9.2 (OmniGibson / Isaac Sim)", "robot": "r1pro", "task_text": S.spec["text"],
     "control_hz": CTRL_HZ, "physics_substeps": SUBSTEPS, "max_chunk_s": MAX_CHUNK_S, "max_frames_per_call": MAX_FRAMES,
-    "max_control_steps": int(M.MAX_STEPS),   # the tooling's runaway guard (PROTOCOL §4.5): the episode ends there, reason "step_guard"
+    "max_control_steps": int(M.MAX_STEPS),   # the tooling's runaway guard (PROTOCOL §4.5): the episode ends there, reason "step_guard" (agent-ended: "step_limit")
     "cameras": {c: cam_spec(c) for c in CAMS},
     "default_cameras": [c for c in S.VIDEO_CAMERAS if c in CAMS],   # the 2.0 client's default: head, left wrist, right wrist
     "action_types": {
